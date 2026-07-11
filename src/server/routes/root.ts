@@ -28,12 +28,26 @@ function attachRenderContext(req: Request, res: Response, next: NextFunction): v
 }
 
 /**
+ * Marks a response cross-origin isolated (COOP + COEP), which is what unlocks
+ * `SharedArrayBuffer` — required by the multi-threaded (Lazy SMP) analysis engine build.
+ *
+ * Applied ONLY to the analysis page: `require-corp` would block cross-origin subresources
+ * that don't send CORP (Turnstile, YouTube embeds, the analytics beacon) on other pages.
+ * The analysis page's engine assets (worker, wasm, rayon snippet workers) are all
+ * same-origin, so they're allowed without extra CORP headers.
+ */
+function crossOriginIsolation(_req: Request, res: Response, next: NextFunction): void {
+	res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+	res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+	next();
+}
+/**
  * Registers a GET page route. Runs resolveAuth then attaches the render
  * context, before the route's own handler. Ensures auth doesn't run
  * on requests that merely pass through this catch-all ('/') mount.
  */
-function page(path: string, handler: RequestHandler): void {
-	router.get(path, resolveAuth, attachRenderContext, handler);
+function page(path: string, handler: RequestHandler, ...before: RequestHandler[]): void {
+	router.get(path, resolveAuth, attachRenderContext, ...before, handler);
 }
 
 /** Cache all variant groups and their variants. */
@@ -48,11 +62,15 @@ page('/game/:id', (req: Request, res: Response) => {
 	if (state === undefined) return send404(req, res); // Malformed or nonexistent id
 	res.render('game.njk', state);
 });
-page('/analysis(.html)?/:id?', (req: Request, res: Response) => {
-	const state = getAnalysisPageState(req);
-	if (state === undefined) return send404(req, res); // Malformed or nonexistent id
-	res.render('analysis.njk', state);
-});
+page(
+	'/analysis(.html)?/:id?',
+	(req: Request, res: Response) => {
+		const state = getAnalysisPageState(req);
+		if (state === undefined) return send404(req, res); // Malformed or nonexistent id
+		res.render('analysis.njk', state);
+	},
+	crossOriginIsolation, // Cross-origin isolate so the multi-threaded engine's SharedArrayBuffer works.
+);
 page('/news(.html)?', (_req: Request, res: Response) => res.render('news.njk'));
 page('/leaderboard(.html)?', (_req: Request, res: Response) => res.render('leaderboard.njk'));
 page('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk'));

@@ -10,14 +10,22 @@
  * Between slices it yields to the message queue, so position/settings/stop
  * commands stay responsive even though each search slice blocks the thread.
  *
- * Single-threaded only. (The engine also has a multithreaded build, but the site
- * doesn't wire it up currently — analysis is locked to one thread.)
+ * Multithreaded (Lazy SMP) build: `initThreadPool` spins up helper search threads, and
+ * the page can abort an in-flight slice instantly by writing the shared stop flag (posted
+ * back as {@link AnalysisResponse} 'sharedmem') — so switching positions never discards the
+ * warm transposition table. Requires the page to be cross-origin isolated (SharedArrayBuffer).
  */
 
-// @ts-ignore without this, the type check job fails
-import wasmUrl from '../../../../pkg/hydrochess/pkg/hydrochess_wasm_bg.wasm';
-// @ts-ignore without this, the type check job fails
-import init, * as wasmBindings from '../../../../pkg/hydrochess/pkg/hydrochess_wasm.js';
+/**
+ * The engine glue is served UNBUNDLED at a content-versioned `/engine/<hash>/` path (see
+ * build/engine-wasm.ts) and loaded via a runtime dynamic import — NOT a static import. Its URL
+ * arrives in the 'init' message (the page reads it from the asset manifest). wasm-bindgen-rayon
+ * self-spawns its Lazy SMP threads by resolving the glue's own `import.meta.url`, which only works
+ * when the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
+ */
+
+/** The engine module's exports (default init + Engine + initThreadPool + stop_flag_ptr + …). */
+let wasm: any;
 
 // Protocol types --------------------------------------------------------------
 
@@ -53,7 +61,12 @@ interface GoOptions {
 
 /** Messages accepted by this worker. */
 type AnalysisCommand =
-	| { cmd: 'init'; hashMb: number }
+	/**
+	 * `engineUrl` is the served glue path (from the manifest). `threads` > 0 spins up
+	 * the Lazy SMP pool and posts the shared stop flag (the search worker); omit it for
+	 * the idle legal-moves helper.
+	 */
+	| { cmd: 'init'; hashMb: number; engineUrl: string; threads?: number }
 	| { cmd: 'position'; icn: string; newGame?: boolean; resetSearch?: boolean }
 	| { cmd: 'go'; opts: GoOptions }
 	| { cmd: 'legalmoves'; requestId: number; icn: string }
@@ -61,8 +74,11 @@ type AnalysisCommand =
 
 /** Messages posted back to the main thread. */
 type AnalysisResponse =
-	| { type: 'ready' }
+	/** `mt` is whether this engine build supports Lazy SMP (exports `initThreadPool`). */
+	| { type: 'ready'; mt: boolean }
 	| { type: 'initerror'; message: string }
+	/** The wasm shared memory + byte offset of the stop flag, for instant search abort from the page. */
+	| { type: 'sharedmem'; buffer: ArrayBufferLike; stopFlagPtr: number }
 	| { type: 'info'; requestId: number; info: AnalysisInfo }
 	| { type: 'legalmoves'; requestId: number; moves: string[] }
 	| {
@@ -70,24 +86,22 @@ type AnalysisResponse =
 			requestId: number;
 			reason: 'depth' | 'mate' | 'terminal';
 			info: AnalysisInfo;
-	  };
+	  }
+	/** The search threw (likely a wasm panic, which poisons the module) — the main thread must respawn the worker. */
+	| { type: 'searcherror'; message: string };
 
 export type { AnalysisCommand, AnalysisResponse, AnalysisInfo, AnalysisLine, GoOptions };
 
 // State ------------------------------------------------------------------------
 
-let engine: wasmBindings.Engine | undefined;
+let engine: any;
 let wasmReady = false;
 
 /**
- * Wall-clock budget per engine call. The engine runs continuous iterative deepening
- * (fast: each depth seeds the next), completing WHOLE depths and stopping once this
- * budget elapses — never mid-depth, so results stay deterministic. Each completed depth
- * is streamed to the UI as it finishes (even during the call). Between calls the loop
- * yields, so a new position/settings/stop command is honored within ~one slice — this
- * is what caps how long a superseded ("lingering") search keeps the engine busy.
+ * Wall-clock budget per engine call; 0 = unbounded (run to maxDepth in ONE call). The page
+ * aborts an in-flight call instantly via the shared stop flag, so slicing isn't needed.
  */
-const SLICE_MS = 180;
+const SLICE_MS = 0;
 
 /** Bumped whenever the desired analysis (position/settings) changes; in-flight slice results with an older generation are dropped. */
 let generation = 0;
@@ -111,10 +125,30 @@ let reachedDepth = 0;
 
 async function initialize(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promise<void> {
 	try {
-		await init({ module_or_path: wasmUrl });
-		wasmBindings.set_hash_size(msg.hashMb);
+		// Absolute, computed specifier so the bundler leaves this as a runtime import.
+		const glueUrl = new URL(msg.engineUrl, self.location.origin).href;
+		wasm = await import(glueUrl);
+		const output = await wasm.default(); // Loads the sibling .wasm from the same /engine/<hash>/ dir.
+		wasm.set_hash_size(msg.hashMb);
+
+		// A single-threaded engine build exports no initThreadPool; guard so it degrades
+		// gracefully to a 1-thread search instead of throwing.
+		const engineIsMultithreaded = typeof wasm.initThreadPool === 'function';
+
+		if (msg.threads && msg.threads > 0) {
+			// Search worker: bring up the Lazy SMP pool BEFORE any search (analyse() calls into
+			// rayon), then hand the page the shared stop flag for instant, warm-hash position
+			// switches (the search polls the flag even single-threaded).
+			if (msg.threads > 1 && engineIsMultithreaded) await wasm.initThreadPool(msg.threads);
+			postMessage({
+				type: 'sharedmem',
+				buffer: output.memory.buffer,
+				stopFlagPtr: wasm.stop_flag_ptr(),
+			} satisfies AnalysisResponse);
+		}
+
 		wasmReady = true;
-		postMessage({ type: 'ready' } satisfies AnalysisResponse);
+		postMessage({ type: 'ready', mt: engineIsMultithreaded } satisfies AnalysisResponse);
 	} catch (e) {
 		console.error('[Analysis Engine] Failed to initialize wasm', e);
 		postMessage({
@@ -135,7 +169,7 @@ function yieldToMessageQueue(): Promise<void> {
 function syncPosition(): void {
 	if (currentIcn === undefined || appliedIcn === currentIcn) return;
 	if (!engine) {
-		engine = wasmBindings.Engine.from_icn(currentIcn, {});
+		engine = wasm.Engine.from_icn(currentIcn, {});
 	} else {
 		engine.set_position(currentIcn);
 	}
@@ -154,7 +188,7 @@ function postLegalMoves(requestId: number, icn: string): void {
 		return;
 	}
 
-	const legalMoveEngine = wasmBindings.Engine.from_icn(icn, {});
+	const legalMoveEngine = wasm.Engine.from_icn(icn, {});
 	const legalMoves: { from: string; to: string; promotion?: string | null }[] =
 		legalMoveEngine.get_legal_moves_js();
 	const moves = legalMoves.map((move) => {
@@ -167,13 +201,10 @@ function postLegalMoves(requestId: number, icn: string): void {
 }
 
 /**
- * The ongoing analysis loop. Each engine call searches EXACTLY ONE iterative-deepening
- * depth to completion, with no time limit — the search never aborts mid-depth, so
- * given the same position and settings the results are fully deterministic (a
- * wall-clock-based slice budget would cut the search at run-dependent points,
- * yielding different transposition-table states and thus different evals/moves
- * between runs). The loop yields to the message queue between depths, which is when
- * stop / position / settings commands are honored.
+ * The ongoing analysis loop: each engine call runs unbounded ({@link SLICE_MS} = 0) toward the
+ * target depth, streaming every completed depth, and returns on completion or when the page
+ * writes the shared stop flag. The loop then yields so queued stop/position/go commands are
+ * honored before it finishes or re-searches the new desired position.
  */
 async function runLoop(): Promise<void> {
 	if (loopRunning) return;
@@ -185,12 +216,12 @@ async function runLoop(): Promise<void> {
 			const opts = goOptions;
 			const requestId = opts.requestId;
 
-			// One time-sliced call: resume at the next depth and search toward the target,
-			// completing as many whole depths as fit in SLICE_MS. Each depth streams via
-			// the callback as it finishes.
+			// One unbounded call: resume at the next depth and search toward the target,
+			// streaming each completed depth via the callback. It returns on completion or
+			// when the page writes the shared stop flag.
 			const startDepth = Math.min(reachedDepth + 1, opts.maxDepth);
 
-			const summary: AnalysisInfo | null = engine!.analyse(
+			const summary: AnalysisInfo | null = engine.analyse(
 				{
 					multi_pv: opts.multiPv,
 					max_depth: opts.maxDepth,
@@ -216,12 +247,13 @@ async function runLoop(): Promise<void> {
 			// Decide whether the analysis of this position is finished.
 			let reason: Extract<AnalysisResponse, { type: 'done' }>['reason'] | undefined;
 			if (!summary || summary.lines.length === 0) reason = 'terminal';
-			else if (summary.lines[0]!.mate !== undefined && summary.lines[0]!.mate !== null)
+			else if (summary.lines.every((line) => line.mate !== undefined && line.mate !== null))
 				reason = 'mate';
 			else if (reachedDepth >= opts.maxDepth) reason = 'depth';
 
 			if (reason !== undefined) {
 				analysing = false;
+				wasm.stop_analysis_helpers(); // Retire the Lazy SMP helpers; the position is finished.
 				postMessage({
 					type: 'done',
 					requestId,
@@ -232,8 +264,16 @@ async function runLoop(): Promise<void> {
 			}
 		}
 	} catch (e) {
+		// A throw here is almost always a Rust/wasm panic, which leaves the wasm module
+		// in a poisoned state — every subsequent engine call would throw too. Tell the main
+		// thread so it can terminate & respawn this worker (fresh wasm) rather than hang
+		// forever waiting for an 'info'/'done' that will never come.
 		console.error('[Analysis Engine] Search loop crashed', e);
 		analysing = false;
+		postMessage({
+			type: 'searcherror',
+			message: e instanceof Error ? e.message : String(e),
+		} satisfies AnalysisResponse);
 	} finally {
 		loopRunning = false;
 	}
@@ -257,7 +297,7 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 			if (msg.newGame && wasmReady) {
 				// Brand-new game: drop the persistent searcher & TT so stale entries
 				// from an unrelated position can't pollute the analysis.
-				wasmBindings.reset_engine_state();
+				wasm.reset_engine_state();
 				engine?.free();
 				engine = undefined;
 				appliedIcn = undefined;
@@ -275,6 +315,7 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 		case 'stop':
 			generation++;
 			analysing = false;
+			if (wasmReady) wasm.stop_analysis_helpers();
 			break;
 	}
 };

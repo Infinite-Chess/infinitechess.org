@@ -76,10 +76,16 @@ const SaveStateSchema = z.strictObject({
 	...positionDataFields,
 });
 
+// Constants --------------------------------------------------------------------
+
+/** Name of the IndexedDB key for the board editor autosave */
+const EDITOR_AUTOSAVE_NAME = 'infinitechess-boardeditor-autosave';
+
 // Exports --------------------------------------------------------------------
 
 export default {
 	positionDataFields,
 	AbridgedSaveStateSchema,
 	SaveStateSchema,
+	EDITOR_AUTOSAVE_NAME,
 };

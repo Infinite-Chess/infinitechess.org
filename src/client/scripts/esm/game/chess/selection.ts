@@ -46,7 +46,6 @@ import frametracker from '../rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { animateMove } from './graphicalchanges.js';
-import analysismovetree from '../../views/analysis/movetree.js';
 import { listener_canvas } from './gamecore.js';
 
 // Types -----------------------------------------------------------------------------
@@ -56,6 +55,12 @@ import { listener_canvas } from './gamecore.js';
  * The board editor may inject its own implementation to override the default move logic.
  */
 type MoveHandler = (gamefile: GameFile, mesh: Mesh | undefined, moveTagged: MoveTagged) => Edit;
+
+/**
+ * Branches the game from the currently-viewed ply so a new
+ * continuation can be played from it. The analysis page injects this.
+ */
+type ViewedPositionBrancher = (gamefile: GameFile, mesh: Mesh | undefined) => void;
 
 // Variables -----------------------------------------------------------------------------
 
@@ -83,6 +88,8 @@ let promoteTo: number | undefined;
 
 /** The move logic override, if registered. The board editor may register one. */
 let moveHandler: MoveHandler | undefined;
+/** The "branch from viewed position" handler, if registered. The analysis page registers one. */
+let viewedPositionBrancher: ViewedPositionBrancher | undefined;
 
 // Events ----------------------------------------------------------------------------------------
 
@@ -145,6 +152,11 @@ function promoteToType(type: number): void {
 /** Overrides the default move logic with the provided handler. */
 function setEditorMoveHandler(handler: MoveHandler): void {
 	moveHandler = handler;
+}
+
+/** Registers the analysis-page's "branch from viewed position" handler. */
+function setViewedPositionBrancher(handler: ViewedPositionBrancher): void {
+	viewedPositionBrancher = handler;
 }
 
 // Updating ---------------------------------------------------------------------------------------------
@@ -336,9 +348,10 @@ function viewFrontIfNotViewingLatestMove(gamefile: GameFile, mesh: Mesh | undefi
 	// If we're viewing the latest move, nothing to do.
 	if (moveutil.areWeViewingLatestMove(gamefile)) return false;
 
-	if (gamesession.getGameType() === 'analysis') {
-		analysismovetree.beginBranchFromViewedPosition(gamefile);
-		branchFromViewedPosition(gamefile, mesh);
+	// Analysis branches from this ply (via the injected brancher) instead
+	// of forwarding, so a new continuation can be played from here.
+	if (viewedPositionBrancher) {
+		viewedPositionBrancher(gamefile, mesh);
 		return false; // State is now consistent at this ply; let the selection proceed.
 	}
 
@@ -347,18 +360,6 @@ function viewFrontIfNotViewingLatestMove(gamefile: GameFile, mesh: Mesh | undefi
 	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	animateMove(lastMove.changes);
 	return true;
-}
-
-/**
- * Truncates the game to the currently-viewed ply: fast-forwards the logical front to
- * align with the board, then rewinds move-by-move (deleting each) back to the viewed
- * index. Afterward the gamefile genuinely sits at that position — board, turn, and
- * global state all consistent — so a new move can be played from it.
- */
-function branchFromViewedPosition(gamefile: GameFile, mesh: Mesh | undefined): void {
-	const target = gamefile.state.local.moveIndex;
-	movesequence.viewFront(gamefile, mesh);
-	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
 }
 
 // Can Select/Move/Drop Piece Type ---------------------------------------------------------------------------------
@@ -618,6 +619,7 @@ export default {
 	isAPieceSelected,
 	getPieceSelected,
 	setEditorMoveHandler,
+	setViewedPositionBrancher,
 	reselectPiece,
 	unselectPiece,
 	getLegalMovesOfSelectedPiece,

@@ -5,6 +5,7 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { ModalMode } from '../../components/gameSetupModalHandoff.js';
 import type { GameMode, TimeControl } from '../../../../../shared/types.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
@@ -15,11 +16,9 @@ import toast from '../../components/toast.js';
 import timeControls from './timeControls.js';
 import variantSelector from './variantSelector.js';
 import modifierSelector from './modifierSelector.js';
+import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
 
 // Types ----------------------------------------------
-
-/** The active game creation flow: online seek, friend challenge, or computer game. */
-type ModalMode = 'online' | 'friend' | 'computer';
 
 /** The data-* attribute keys that each identify an exclusive-select toggle button group. */
 type ToggleGroupAttribute = 'data-time' | 'data-mode' | 'data-side' | 'data-level';
@@ -60,6 +59,7 @@ let currentMode: ModalMode;
 // Initialization ----------------------------------------------
 
 initModal();
+void consumePendingHandoff();
 
 // Functions ----------------------------------------------
 
@@ -188,6 +188,18 @@ function close(): void {
 	element_modalOverlay.classList.add('hidden');
 	variantSelector.closeVariantDropdown();
 	modifierSelector.closeModifierDropdown();
+}
+
+/**
+ * Auto-opens the modal pre-filled from a handoff another page (e.g. analysis
+ * "continue from here") stashed before navigating here. Any position errors
+ * surface via the modal's own validation.
+ */
+async function consumePendingHandoff(): Promise<void> {
+	const handoff = await gameSetupModalHandoff.take();
+	if (handoff === undefined) return;
+	openModal(handoff.mode);
+	variantSelector.applyIcn(handoff.icn);
 }
 
 export default { close };

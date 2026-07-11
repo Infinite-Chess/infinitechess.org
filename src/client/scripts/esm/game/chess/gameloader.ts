@@ -15,8 +15,8 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MetaData, MovePacket, TimeControl } from '../../../../../shared/types.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MovePacket, TimeControl } from '../../../../../shared/types.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';

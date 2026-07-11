@@ -169,6 +169,13 @@ function closeSocket(): void {
 	socket.close(1000, 'Connection closed by client');
 }
 
+// Page lifecycle --------------------------------------------------------------
+
+// Close the socket ourselves on page-away so the server gets a prompt, voluntary
+// "1000". Left to teardown, browsers abandon the connection (1006, or no close frame)
+// — read as an involuntary disconnect, the server unnecessarily giving them a cushion window.
+window.addEventListener('pagehide', closeSocket);
+
 // Resubscription --------------------------------------------------------------
 
 /**

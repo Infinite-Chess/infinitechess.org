@@ -7,33 +7,46 @@
  */
 
 import type { Request } from 'express';
+import type { Player } from '../../shared/chess/util/typeutil.js';
+import type { GameMetaViewModel } from './gamePageController.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import { decodeGameId } from '../database/gamesManager.js';
-import { produceStaticGameState } from '../game/gamemanager/gamemanager.js';
+import { getDeadGameViewState } from './gamePageController.js';
 
 /** The full render context for `analysis.njk`. */
 interface AnalysisPageState {
-	/** Base62 game id to auto-load client-side, or null for a fresh board. */
-	gameId: string | null;
+	/** Numeric id of a game to auto-load client-side, or null for a fresh board. */
+	gameId: number | null;
+	/** The viewer's color if they were a participant, so the board auto-orients to their side. */
+	role?: Player;
 	/** Variant dropdown contents, in display order. */
 	variantGroups: { name: string; variants: { code: string; name: string }[] }[];
+	/** Game metadata shown when analysis is opened for a saved/live game. */
+	meta?: GameMetaViewModel;
 }
 
 /**
- * Resolves the render state for `/analysis/:id?`, or `undefined`
- * if an id was given but is malformed or names no existing game.
+ * Resolves the render state for `/analysis/:id?`, or `undefined` if an id was
+ * given but is malformed or names no game in the database (live-only games included).
  * @throws If a database error occurs (from the underlying producers).
  */
 export function getAnalysisPageState(req: Request): AnalysisPageState | undefined {
-	let gameId: string | null = null;
+	let gameId: number | null = null;
 	const idParam = req.params['id'];
+	let role: Player | undefined;
+	let meta: GameMetaViewModel | undefined;
 	if (idParam !== undefined) {
+		// A game_id was provided in the URL
 		const id = decodeGameId(idParam);
 		if (id === undefined) return undefined; // Malformed id
-		if (produceStaticGameState(id) === undefined) return undefined; // Game doesn't exist
-		gameId = idParam;
+		// The analysis page loads games from the DB only, so 404 on anything not in it
+		// (unlike the game page, a still-live game not yet persisted doesn't count).
+		const deadState = getDeadGameViewState(req, id);
+		if (deadState === undefined) return undefined; // Game not in the database
+		gameId = id;
+		({ role, meta } = deadState);
 	}
 
 	const variantGroups = variantregistry.getVariantGroupsWithVariants().map((g) => ({
@@ -44,5 +57,10 @@ export function getAnalysisPageState(req: Request): AnalysisPageState | undefine
 		})),
 	}));
 
-	return { gameId, variantGroups };
+	return {
+		gameId,
+		...(role !== undefined && { role }),
+		variantGroups,
+		...(meta && { meta }),
+	};
 }

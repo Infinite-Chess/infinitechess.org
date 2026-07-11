@@ -11,6 +11,7 @@ import stripComments from 'glsl-strip-comments';
 import { transform, browserslistToTargets } from 'lightningcss';
 import esbuild, { BuildOptions, Metafile, Plugin, PluginBuild } from 'esbuild';
 
+import { getEngineGlueUrl } from './engine-wasm.js';
 import { getESBuildLogStatusLogger } from './plugins.js';
 
 // ================================= CONSTANTS =================================
@@ -160,11 +161,18 @@ const ManifestPlugin: Plugin = {
  */
 function writeManifest(metafile: Metafile): void {
 	const manifest: Record<string, string> = {};
+
 	for (const [rawOutputPath, output] of Object.entries(metafile.outputs)) {
 		if (!output.entryPoint) continue; // Skip shared chunks — only track entry points.
 		const key = output.entryPoint.replace(/^src\/client\//, ''); // "src/client/scripts/esm/views/index.ts" → "scripts/esm/views/index.ts"
 		manifest[key] = '/' + rawOutputPath.replace(/^dist\/client\//, '');
 	}
+
+	// The engine glue can't be an esbuild entry point (it's served unbundled); copyEngineToDist
+	// hashes it separately, so fold its URL in here so templates resolve it like any other asset.
+	const engineGlueUrl = getEngineGlueUrl();
+	if (engineGlueUrl !== undefined) manifest['engine'] = engineGlueUrl;
+
 	fs.writeFileSync('./dist/manifest.json', JSON.stringify(manifest, null, 2));
 }
 

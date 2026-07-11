@@ -10,6 +10,7 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
+import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
@@ -54,16 +55,30 @@ function init(nextOptions: EngineLegalMovesDebugOptions): void {
 
 /** Toggles the overlay on/off, requesting moves when enabling and dropping pending requests when disabling. */
 function toggle(): void {
-	enabled = !enabled;
-	console.log(`Toggled engine move gen highlights: ${enabled}`);
-
-	if (!enabled) {
-		requestKeyById.clear();
-		pendingRequestIds.length = 0;
-		frametracker.onVisualChange();
+	if (enabled) {
+		disable();
 		return;
 	}
+	if (!options?.canRequest()) {
+		toast.show('Engine legal moves debug disabled: pieces outside world border', { error: true }); // prettier-ignore
+		return;
+	}
+	enabled = true;
+	console.log('Toggled engine debug: true');
 	requestMovesForCurrentPosition();
+}
+
+/**
+ * Forces the overlay off, e.g. when the position goes outside
+ * the engine's safe world border. No-op if already off.
+ */
+function disable(): void {
+	if (!enabled) return;
+	enabled = false;
+	console.log('Toggled engine debug: false');
+	requestKeyById.clear();
+	pendingRequestIds.length = 0;
+	frametracker.onVisualChange();
 }
 
 /** Requests the engine's legal moves for the viewed position, skipping if already cached or in flight. */
@@ -168,6 +183,7 @@ function clear(): void {
 
 export default {
 	init,
+	disable,
 	receiveMoves,
 	receiveMovesForOldestRequest,
 	requestMovesForCurrentPosition,

@@ -10,12 +10,10 @@ import type { VariantCode } from '../../../../../shared/chess/variants/variantre
 import type { TimeControl } from '../../../../../shared/types.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
-import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/util/winconutil.js';
+import { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
-import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
 import gamesession from '../../game/chess/gamesession.js';
 import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
@@ -46,10 +44,13 @@ function startGame(options: { variant: VariantCode; timeControl: TimeControl }):
  * THIS FUNCTION AND gameforulator.formulateGame()!!!!!!!!
  *
  * @param longformOut - The game in longformat (from parsing the icn).
- * @param viewWhitePerspective - Board orientation override (defaults to the current game's perspective).
+ * @param gameConclusion - The game's conclusion, if it ended.
+ * @param viewWhitePerspective - Board orientation override; defaults to retaining
+ * the current game's perspective, or white's if this is the initial load.
  */
 async function pasteGame(
 	longformOut: LongFormatOut,
+	gameConclusion?: GameConclusion,
 	viewWhitePerspective?: boolean,
 ): Promise<void> {
 	// Build the gamefile options from the longformat...
@@ -64,12 +65,13 @@ async function pasteGame(
 			position,
 			specialRights,
 		}),
+		gameConclusion,
 	};
 	// FUTURE: transfer the pasted move comments into the gamefile here too.
 	if (longformOut.moves) additional.moves = icnimport.movePacketsFromParsed(longformOut.moves);
 
-	// Retain the same perspective as the current loaded game, unless overridden (e.g. flip board).
-	// No game loaded yet (initial /analysis/:id load): default to white's perspective.
+	// Explicit override (e.g. the loaded game's participant orientation) wins; otherwise retain
+	// the current game's perspective, defaulting to white's on the initial /analysis/:id load.
 	const vwp =
 		viewWhitePerspective ?? (gameslot.getGamefile() ? gameslot.areViewingWhite() : true);
 
@@ -91,16 +93,7 @@ async function pasteGame(
 			gamesession.concludeGameIfOver(); // Logical loaded: conclude if already-over.
 			return graphical;
 		})
-		.then(() => {
-			gamesession.markLoadingDone(); // Graphical loaded
-
-			const gamefile = gameslot.getGamefile()!;
-
-			// If there's too many pieces, notify them that the win condition changed from checkmate to royalcapture.
-			const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
-			if (pieceCount >= pieceCountToDisableCheckmate)
-				toast.show('Checkmate win condition was swapped for royal captured.');
-		})
+		.then(() => gamesession.markLoadingDone()) // Graphical loaded
 		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 

@@ -18,9 +18,6 @@ import validatorama from '../../../util/validatorama';
 
 // Constants -------------------------------------------------------------
 
-/** Name of editor autosave in local storage */
-const EDITOR_AUTOSAVE_NAME = 'editor-autosave';
-
 /** Schema for validating an AutosaveState */
 const AutosaveStateSchema = z.strictObject({
 	active_position: z
@@ -77,7 +74,7 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 		const variantOptions = eactions.getCurrentPositionInformation(false);
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 
-		await IndexedDB.saveItem(EDITOR_AUTOSAVE_NAME, {
+		await IndexedDB.saveItem(estoretypes.EDITOR_AUTOSAVE_NAME, {
 			active_position: boardeditor.getActivePosition(),
 			dirty: boardeditor.isPositionDirty(),
 			timestamp: Date.now(),
@@ -128,7 +125,7 @@ function stopPositionAutosave(): void {
 }
 
 function clearAutosave(): void {
-	IndexedDB.deleteItem(EDITOR_AUTOSAVE_NAME).catch((err) => {
+	IndexedDB.deleteItem(estoretypes.EDITOR_AUTOSAVE_NAME).catch((err) => {
 		console.error('Failed to clear board editor autosave:', err);
 	});
 }
@@ -141,7 +138,7 @@ function clearAutosave(): void {
  * account switch).
  */
 async function loadAutosave(): Promise<EditorAutosaveState | undefined> {
-	const raw = await IndexedDB.loadItem(EDITOR_AUTOSAVE_NAME);
+	const raw = await IndexedDB.loadItem(estoretypes.EDITOR_AUTOSAVE_NAME);
 	if (raw === undefined) return undefined;
 	const parsed = AutosaveStateSchema.safeParse(raw);
 	if (!parsed.success) {

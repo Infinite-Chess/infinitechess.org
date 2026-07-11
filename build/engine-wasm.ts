@@ -8,6 +8,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import * as z from 'zod';
 
 import { logZodError } from '../src/server/utility/zodlogger';
@@ -32,14 +33,25 @@ const releaseDataSchema = z.object({
 	),
 });
 
+/** Parent of the versioned engine dirs (dist/client is the web root, so these serve under /engine/). */
+const ENGINE_DIST_DIR = path.join(process.cwd(), 'dist', 'client', 'engine');
+
+/**
+ * Web path (no trailing slash) of the content-versioned engine
+ * dir, e.g. "/engine/1a2b3c4d". Set by {@link copyEngineToDist}.
+ */
+let engineWebBase: string | undefined;
+
+/** Prefix for this script's console logs. */
+const label = '[hydrochess]';
+
 // Functions -------------------------------------------------------------------
 
 /**
  * Ensures the HydroChess WASM engine is available and up-to-date.
  * Automatically downloads the pre-built WASM if there is a new release.
  */
-export async function setupEngineWasm(): Promise<void> {
-	const label = '[hydrochess]';
+export async function downloadEngineWasm(): Promise<void> {
 	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
 	const wasmFile = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
 	const jsFile = path.join(pkgDir, 'hydrochess_wasm.js');
@@ -146,4 +158,49 @@ export async function setupEngineWasm(): Promise<void> {
 			error instanceof Error ? error.message : String(error),
 		);
 	}
+}
+
+/**
+ * Copies the engine pkg (wasm-bindgen glue, .wasm, rayon `snippets/`) into a content-hashed
+ * `dist/client/engine/<hash>/`. Served UNBUNDLED because rayon self-spawns its threads via the
+ * glue's own `import.meta.url`, which needs the files as real served siblings (bundling breaks it).
+ * The `<hash>` busts stale browser/CDN caches on an engine update. Must run before the client
+ * build so the hashed URL lands in the manifest.
+ */
+export function copyEngineToDist(): void {
+	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
+	const glueSrc = path.join(pkgDir, 'hydrochess_wasm.js');
+	const wasmSrc = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
+	if (!fs.existsSync(glueSrc)) {
+		console.warn(`${label} Engine pkg not found; skipping dist/engine copy.`);
+		return;
+	}
+	// Hash glue + wasm together; either changing (a new release or local rebuild) busts the cache.
+	const hash = crypto
+		.createHash('sha256')
+		.update(fs.readFileSync(glueSrc))
+		.update(fs.readFileSync(wasmSrc))
+		.digest('hex')
+		.slice(0, 8);
+	const versionedDir = path.join(ENGINE_DIST_DIR, hash);
+
+	fs.mkdirSync(versionedDir, { recursive: true });
+	for (const file of ['hydrochess_wasm.js', 'hydrochess_wasm_bg.wasm']) {
+		fs.copyFileSync(path.join(pkgDir, file), path.join(versionedDir, file));
+	}
+	const snippets = path.join(pkgDir, 'snippets');
+	if (fs.existsSync(snippets)) {
+		fs.cpSync(snippets, path.join(versionedDir, 'snippets'), { recursive: true });
+	}
+	engineWebBase = `/engine/${hash}`;
+	console.log(`${label} Copied engine pkg to dist/client/engine/${hash}.`);
+}
+
+/**
+ * Manifest URL of the engine glue for the analysis page, or undefined if the engine pkg wasn't
+ * copied. Folded into dist/manifest.json by the client build's manifest writer, then handed to
+ * the worker via the page's `analysisPageData` — the same channel as the hashed worker URL.
+ */
+export function getEngineGlueUrl(): string | undefined {
+	return engineWebBase !== undefined ? `${engineWebBase}/hydrochess_wasm.js` : undefined;
 }

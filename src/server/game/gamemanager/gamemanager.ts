@@ -349,6 +349,14 @@ function pushGameClock(servergame: ServerGame): number | undefined {
 	return data;
 }
 
+/** A player has lost on time: set the game conclusion. */
+function onPlayerLostOnTime(servergame: ServerGame): void {
+	const winner = typeutil.invertPlayer(servergame.whosTurn);
+	onGameConclusion(servergame, { victor: winner, condition: 'time' });
+}
+
+// Game Life Cycle -----------------------------------------------------------------------
+
 /**
  * Sets the game conclusion, broadcasts it to all clients, frees -> finalizes -> evicts game.
  * Typically called for non-move-triggered conclusions (e.g. resignation, time loss...).
@@ -385,8 +393,6 @@ function applyConclusion(servergame: ServerGame, conclusion: GameConclusion): vo
 
 	// Set end time
 	if (servergame.match.timeEnded === undefined) servergame.match.timeEnded = Date.now();
-
-	liveGameValues.onGameConcluded(servergame); // Persiste the state to the db
 }
 
 /** Game has ended: console log the result for debugging. */
@@ -400,7 +406,7 @@ function consoleLogGameOver(servergame: ServerGame): void {
 			s: data.identifier.signedIn,
 		};
 	}
-	console.log(`Game ${servergame.match.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.gameConclusion)}. Moves: ${servergame.moves.length}.`); // prettier-ignore
+	console.log(`Game ${servergame.match.id} over & logged. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.gameConclusion)}. Moves: ${servergame.moves.length}.`); // prettier-ignore
 }
 
 /**
@@ -419,12 +425,16 @@ function freeGame(servergame: ServerGame): void {
 		broadcastMemberInGameStatus(data.identifier);
 	}
 
+	// Log the game into the database the instant it concludes.
+	// Not final yet, as cheat reports can still update the record.
+	logConcludedGame(servergame);
+
 	if (servergame.validateMoves) {
 		// Server validated every move — cheating is impossible. Lock in the result now.
 		finalizeGame(servergame);
 	} else {
-		// No server-side validation (e.g. large variant, or custom position).
-		// Give the opponent time to oppose the conclusion with a cheat report first.
+		// No server-side validation (e.g. large variant, or custom position). Give the opponent a
+		// cushion to overturn the conclusion with a cheat report before locking it in.
 		servergame.match.finalizeTimeoutID = setTimeout(() => {
 			finalizeGame(servergame);
 			evictIfBothLeft(servergame);
@@ -435,10 +445,67 @@ function freeGame(servergame: ServerGame): void {
 	evictIfBothLeft(servergame);
 }
 
-/** A player has lost on time: set the game conclusion. */
-function onPlayerLostOnTime(servergame: ServerGame): void {
-	const winner = typeutil.invertPlayer(servergame.whosTurn);
-	onGameConclusion(servergame, { victor: winner, condition: 'time' });
+/**
+ * Logs a concluded game into the permanent database (computing rating changes for rated games)
+ * and drops its live-game persistence row. Runs once, at conclusion, from {@link freeGame}.
+ * A non-validated game's result may still be overturned by a cheat report until it finalizes,
+ * in which case the logged record is updated in place.
+ */
+function logConcludedGame(servergame: ServerGame): void {
+	// Mostly deprecated:
+	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
+	executeSafely(
+		() => statlogger.logGame(servergame),
+		`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
+	);
+
+	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
+	// The ratings are calculated during the logging of the game into the database.
+	try {
+		const ratingdata = gamelogger.logGame(servergame);
+
+		if (ratingdata !== undefined) {
+			// Retain the rating results on the game so a client that resyncs after this (but
+			// before the game is memory-evicted) still gets the deltas via its `gamestate`.
+			servergame.ratingResults = buildRatingResults(ratingdata);
+			// Broadcast the deltas to everyone currently connected.
+			const ratingChanges = gameutility.getRatingChanges(servergame)!;
+			gameutility.broadcastToParticipants(servergame, 'gameratingchange', ratingChanges);
+			gameutility.broadcastToSpectators(servergame, 'gameratingchange', ratingChanges);
+		}
+	} catch {
+		// log failure already logged
+		// Notify both players
+		for (const { socket: ws } of Object.values(servergame.match.playerData)) {
+			if (!ws) continue;
+			sendSocketMessage(
+				ws,
+				'general',
+				'notifyerror',
+				"A server error occurred while logging this game. It won't be available in your game history.",
+			);
+		}
+	}
+
+	// The result now lives in the permanent tables — drop the live game row so a restart doesn't
+	// restore (and re-log) it. The in-memory game may still linger for the rematch handshake.
+	liveGameValues.onGameLogged(servergame);
+}
+
+/** Bundles each player's rating outcome (at-game rating + delta) from the rated game's results. */
+function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingResult> {
+	const ratingResults: PlayerGroup<PlayerRatingResult> = {};
+	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
+		ratingResults[Number(playerStr) as Player] = {
+			ratingAtGame: {
+				value: playerRating.elo_at_game,
+				confident: playerRating.rating_deviation_at_game <= UNCERTAIN_LEADERBOARD_RD,
+			},
+			change: playerRating.elo_change_from_game!,
+		};
+	}
+
+	return ratingResults;
 }
 
 /**
@@ -486,92 +553,35 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 }
 
 /**
- * Finalizes a concluded game: locks in its result permanently by logging it to the database
- * (computing rating changes). Afterward, cheat reports are not accepted. Idempotent.
- * Finalized !== evicted: the game may linger in memory for rematch handshake.
+ * Finalizes a concluded game: locks in its result permanently. Afterward, cheat reports are
+ * no longer accepted. Game is ALREADY logged into the db at conclusion. This only flips
+ * the flag, measures rating abuse, and tells clients the result can no longer change.
+ * Indempotent. Finalized !== evicted: the game may linger in memory for the rematch handshake.
  */
 function finalizeGame(servergame: ServerGame): void {
 	if (servergame.match.finalized) return; // Already finalized
 	servergame.match.finalized = true;
 
-	// Mostly deprecated:
-	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
-	executeSafely(
-		() => statlogger.logGame(servergame),
-		`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
-	);
-
-	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
-	// The ratings are calculated during the logging of the game into the database.
-	try {
-		const ratingdata = gamelogger.logGame(servergame);
-
-		if (ratingdata !== undefined) {
-			// Retain the rating results on the game so a client that resyncs after this (but
-			// before the game is memory-evicted) still gets the deltas via its `gamestate`.
-			servergame.ratingResults = buildRatingResults(ratingdata);
-			// Broadcast the deltas to everyone currently connected.
-			const ratingChanges = gameutility.getRatingChanges(servergame)!;
-			gameutility.broadcastToParticipants(servergame, 'gameratingchange', ratingChanges);
-			gameutility.broadcastToSpectators(servergame, 'gameratingchange', ratingChanges);
-		}
-	} catch {
-		// log failure already logged
-		// Notify both players
-		for (const { socket: ws } of Object.values(servergame.match.playerData)) {
-			if (!ws) continue;
-			sendSocketMessage(
-				ws,
-				'general',
-				'notifyerror',
-				"A server error occurred while logging this game. It won't be available in your game history.",
-			);
-		}
-	}
-
-	// The result now lives in the permanent tables — drop the live game row so a restart
-	// doesn't restore (and re-log) it. The in-memory game may still linger for the rematch.
-	liveGameValues.onGameFinalized(servergame);
-
-	// Monitor suspicion levels for all players who participated in the game
-	// Doesn't have to be in the same transaction as the game logging,
-	// as the rating abuse table's data does not reference other tables.
+	// Monitor suspicion levels for all players who participated in the game.
 	ratingabuse.measureRatingAbuseAfterGame(servergame);
 
 	// Tell any connected participants the result is now locked in, so their client knows it can
 	// never change — future reconnects fetch only rematch state (`subscriberematch`), not a full resync.
 	gameutility.broadcastToParticipants(servergame, 'finalized', undefined);
 
-	if (PRINT_GAMES) console.log(`Logged game ${servergame.match.id}.`);
-}
-
-/** Bundles each player's rating outcome (at-game rating + delta) from the rated game's results. */
-function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingResult> {
-	const ratingResults: PlayerGroup<PlayerRatingResult> = {};
-	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
-		ratingResults[Number(playerStr) as Player] = {
-			ratingAtGame: {
-				value: playerRating.elo_at_game,
-				confident: playerRating.rating_deviation_at_game <= UNCERTAIN_LEADERBOARD_RD,
-			},
-			change: playerRating.elo_change_from_game!,
-		};
-	}
-
-	return ratingResults;
+	if (PRINT_GAMES) console.log(`Finalized game ${servergame.match.id}.`);
 }
 
 /**
  * Evicts a concluded, lingering game from memory once both players have left. Finalizes the
- * result first (in case both left before it was finalized) — which also removes it from the
- * persistence database — then removes it from the active games list. Idempotent against a
- * double eviction.
+ * result first (in case both left before the finalize cushion elapsed), then removes it from
+ * the active games list. Idempotent against a double eviction.
  * @param servergame - The game to evict
  */
 function evictGame(servergame: ServerGame): void {
 	if (activeGames[servergame.match.id] === undefined) return; // Already evicted.
 
-	finalizeGame(servergame); // Finalizes the result (if both left before it was finalized) and removes the persisted row.
+	finalizeGame(servergame); // Lock in the result now if both players left before the finalize cushion elapsed.
 
 	gameutility.cancelFinalizeTimer(servergame.match);
 	delete activeGames[servergame.match.id];
@@ -642,33 +652,17 @@ function restoreLiveGames(): void {
 		// Add the game to the active games list
 		activeGames[servergame.match.id] = servergame;
 
-		// Start timers
-
-		// 1. Concluded games are always not-yet-finalized here (a finalized game's row is removed
-		//    when it's logged, so it's never restored). Resume the finalize deadline. They are NOT
-		//    registered in the active-players list — a concluded game no longer occupies its
-		//    players (they reconnect by id via 'subscribe' regardless).
-		if (gameutility.isGameOver(servergame)) {
-			if (pendingTimers.finalizeTimerMs !== undefined && pendingTimers.finalizeTimerMs > 0) {
-				servergame.match.finalizeTimeoutID = setTimeout(() => {
-					finalizeGame(servergame);
-					evictIfBothLeft(servergame);
-				}, pendingTimers.finalizeTimerMs);
-			} else {
-				// Deadline already elapsed (or none persisted): finalize now, evicting if both are gone.
-				finalizeGame(servergame);
-				evictIfBothLeft(servergame);
-			}
-			continue; // Skip the live-game timers below.
-		}
-
-		// Ongoing game: register its players in the active-players list (blocks them from
-		// joining a second game, and shows their lobby in-game banner).
+		// Only ongoing games are ever restored: a game's live row is dropped the instant it
+		// concludes (its result then lives permanently in the games table), so a concluded game
+		// is never persisted to restore. Register its players in the active-players list (blocks
+		// them from joining a second game, and shows their lobby in-game banner).
 		for (const data of Object.values(servergame.match.playerData)) {
 			addUserToActiveGames(data.identifier, servergame.match.id);
 		}
 
-		// 2. Auto time loss timer (for timed games)
+		// Start timers
+
+		// 1. Auto time loss timer (for timed games)
 		if (pendingTimers.autoTimeLossMs !== undefined) {
 			if (pendingTimers.autoTimeLossMs <= 0) {
 				// Clock already expired during downtime
@@ -681,7 +675,7 @@ function restoreLiveGames(): void {
 			);
 		}
 
-		// 3. Per-player disconnect state (claim windows).
+		// 2. Per-player disconnect state (claim windows).
 		// An already-elapsed window simply restores as already-claimable.
 		for (const [playerStr, timerState] of Object.entries(pendingTimers.disconnectTimers)) {
 			const player = Number(playerStr) as Player;
@@ -714,7 +708,7 @@ function restoreLiveGames(): void {
 			}
 		}
 
-		// 4. Both-disconnected timer. If both players ended up disconnected, revive the
+		// 3. Both-disconnected timer. If both players ended up disconnected, revive the
 		//    persisted deadline (fires immediately if elapsed), or start fresh if the
 		//    restart itself disconnected both (no deadline was persisted).
 		maybeStartBothDisconnectedTimer(servergame, pendingTimers.bothDisconnectedEndTime);

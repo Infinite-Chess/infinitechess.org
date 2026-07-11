@@ -159,6 +159,7 @@
 	flex-direction: column;
 	gap: 6px;
 	padding: 8px 12px;
+	flex: 0 0 auto;
 }
 
 /* Original seek's properties */

@@ -8,6 +8,7 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 interface AnalysisMoveNode {
 	id: number;
@@ -16,6 +17,12 @@ interface AnalysisMoveNode {
 	parent: AnalysisMoveNode | undefined;
 	children: AnalysisMoveNode[];
 	forceVariation?: boolean;
+	/**
+	 * The global game-conclusion at this node's position, if it terminates the game. Only a
+	 * line's front node is ever terminal, so this lets each branch restore its own conclusion
+	 * when reselected instead of inheriting whatever was last on the shared gamefile.
+	 */
+	gameConclusion?: GameConclusion;
 }
 
 let root: AnalysisMoveNode | undefined;
@@ -107,28 +114,42 @@ function syncAfterMovesChanged(gamefile: GameFile): void {
 	const activeMoveCount = activeLine.length - 1;
 	if (gamefile.moves.length < activeMoveCount) {
 		activeLine = activeLine.slice(0, gamefile.moves.length + 1);
-		return;
+	} else {
+		let parent = activeLine[activeLine.length - 1] ?? root;
+		for (let i = activeMoveCount; i < gamefile.moves.length; i++) {
+			const move = gamefile.moves[i]!;
+			let child = parent.children.find((candidate) => isSameMove(candidate.move, move));
+			if (!child) {
+				child = createNode(move, i, parent);
+				parent.children.push(child);
+			} else {
+				gamefile.moves[i] = child.move!;
+			}
+			activeLine.push(child);
+			parent = child;
+		}
 	}
 
-	let parent = activeLine[activeLine.length - 1] ?? root;
-	for (let i = activeMoveCount; i < gamefile.moves.length; i++) {
-		const move = gamefile.moves[i]!;
-		let child = parent.children.find((candidate) => isSameMove(candidate.move, move));
-		if (!child) {
-			child = createNode(move, i, parent);
-			parent.children.push(child);
-		} else {
-			gamefile.moves[i] = child.move!;
-		}
-		activeLine.push(child);
-		parent = child;
-	}
+	// Record the front's conclusion — where a freshly-played move (e.g. a new variation) first
+	// captures whether it ends the game, since no branch-switch does it for us.
+	storeActiveLineConclusion(gamefile.gameConclusion);
 }
 
 function setActiveLineToNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	const line = getLineForNode(node);
 	activeLine = line;
 	return line;
+}
+
+/** The stored game-conclusion of the active line's front (terminal) node, if the branch ends the game. */
+function getActiveLineConclusion(): GameConclusion | undefined {
+	return activeLine[activeLine.length - 1]?.gameConclusion;
+}
+
+/** Persists this branch's global game-conclusion onto its front node, so it survives switching branches. */
+function storeActiveLineConclusion(conclusion: GameConclusion | undefined): void {
+	const front = activeLine[activeLine.length - 1];
+	if (front) front.gameConclusion = conclusion;
 }
 
 function getLineForNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
@@ -227,6 +248,8 @@ export default {
 	syncAfterMovesChanged,
 	getLineForNode,
 	setActiveLineToNode,
+	getActiveLineConclusion,
+	storeActiveLineConclusion,
 	promoteAtFork,
 	makeMainLine,
 	forceVariation,

@@ -24,10 +24,13 @@ import tconfig from '../config/translationconfig.js';
 import { decodeGameId } from '../database/gamesManager.js';
 import { memberInfoEqPartial } from '../utility/memberInfoUtil.js';
 import { produceStaticGameState } from '../game/gamemanager/gamemanager.js';
-import { resolveDeadParticipantColor } from '../game/gamemanager/deadgamestate.js';
+import {
+	produceDeadStaticGameState,
+	resolveDeadParticipantColor,
+} from '../game/gamemanager/deadgamestate.js';
 
 /** Display-ready static game-meta fields, precomputed since Nunjucks can't call the shared utils. */
-interface GameMetaViewModel {
+export interface GameMetaViewModel {
 	/** Variant group icon id + display name (custom games fall back to a generic icon/name). */
 	variant: { iconId: string; name: string };
 	/** Speed category icon id + category, for the speed badge. */
@@ -72,7 +75,7 @@ interface GamePageState {
 /**
  * Resolves the render state for `/game/:id`, or `undefined`
  * if the id is malformed or names no existing game.
- * @throws If a database error occurs (from the underlying producers).
+ * @throws If a database error occurs.
  */
 export function getGamePageState(req: Request): GamePageState | undefined {
 	const id = decodeGameId(req.params['id']!);
@@ -109,6 +112,37 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 			timeCreated: state.timeCreated,
 		},
 		meta: buildGameMetaViewModel(state, ratingChanges, role, resignable, req),
+	};
+}
+
+/**
+ * Resolves the viewer-facing SSR state (participant role + meta) for a concluded game straight
+ * from the database, or `undefined` if no such game row exists. Unlike {@link getGamePageState}
+ * this ignores live games — the analysis page only ever loads a game from the DB, never a live one.
+ * @throws If a database error occurs.
+ */
+export function getDeadGameViewState(
+	req: Request,
+	id: number,
+):
+	| {
+			/** The viewer's color if they were a participant; undefined => not one (white POV). */
+			role?: Player;
+			meta: GameMetaViewModel;
+	  }
+	| undefined {
+	const dead = produceDeadStaticGameState(id);
+	if (dead === undefined) return undefined; // Game not in the database
+
+	// Resolve the viewer's color for board orientation; dead guests aren't identifiable.
+	const memberInfo = req.memberInfo!;
+	const role = memberInfo.signedIn
+		? resolveDeadParticipantColor(id, memberInfo.user_id)
+		: undefined;
+
+	return {
+		...(role !== undefined && { role }),
+		meta: buildGameMetaViewModel(dead.state, dead.ratingChanges, role, false, req),
 	};
 }
 

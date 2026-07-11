@@ -41,6 +41,31 @@
 	border-color: var(--c-border-2);
 }
 
+.analysis .play-group {
+	flex: 1 1 360px;
+	min-height: 260px;
+}
+
+.analysis .play-group:has(.player-bar:not(.hidden)) {
+	flex-basis: 430px;
+	min-height: 430px;
+}
+
+.analysis .match-panel {
+	height: 100%;
+	min-height: 0;
+}
+
+.analysis .match-panel > .player-bar {
+	flex: 0 0 auto;
+}
+
+.analysis .moves {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: hidden;
+}
+
 /* ============================
    Engine panel
    ============================ */
@@ -85,6 +110,7 @@
 }
 
 .analysis-ceval-panel {
+	position: relative;
 	order: 1;
 	border-bottom: 1px solid var(--c-border-muted);
 	background: color-mix(in srgb, var(--c-surface-2) 62%, transparent);
@@ -107,16 +133,14 @@
 	transition: width 0.18s ease;
 }
 
-/* Computing: a sheen that sweeps across the filled portion. Its width is a fraction of
-   the fill, so it always scales with the green bar — never spilling past it, never
-   too short. */
+/* Computing: a sheen that sweeps across the filled portion. */
 .engine-progress.computing .engine-progress-fill::after {
 	content: '';
 	position: absolute;
 	top: 0;
 	bottom: 0;
 	left: 0;
-	width: 45%;
+	width: max(70px, 45%);
 	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
 	animation: engine-progress-sheen 1.1s linear infinite;
 }
@@ -195,13 +219,68 @@
 }
 
 .analysis .moves-nav {
+	position: relative;
 	order: 3;
+	flex: 0 0 auto;
 	align-items: stretch;
-	background: color-mix(in srgb, var(--c-surface-2) 72%, transparent);
+	background: var(--c-surface-2);
 }
 
 .analysis .move-btn {
 	min-width: 0;
+}
+
+.analysis-actions {
+	position: relative;
+	flex: 1;
+	display: flex;
+	min-width: 0;
+}
+
+.analysis-actions-toggle[aria-expanded='true'] {
+	color: var(--c-text-emphasis);
+	background: var(--c-hover-overlay);
+}
+
+.analysis-menu {
+	position: absolute;
+	right: 2px;
+	bottom: calc(100% + 5px);
+	z-index: 20;
+	width: max-content;
+	overflow: hidden;
+	border: 1px solid var(--c-border);
+	border-radius: 4px;
+	background: var(--c-surface);
+	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+	color: var(--c-text);
+}
+
+.analysis-menu button {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	width: 100%;
+	padding: 8px 10px;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: 0.9em;
+	text-align: left;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.analysis-menu button:hover {
+	background: var(--c-hover-overlay);
+	color: var(--c-text-emphasis);
+}
+
+.analysis-menu svg {
+	width: 18px;
+	height: 18px;
+	flex: 0 0 auto;
 }
 
 /* Settings gear, active: tint only the icon green — no filled box behind it. */
@@ -229,8 +308,15 @@
 }
 
 .moves-engine-settings {
+	position: absolute;
+	top: var(--engine-settings-top, 48px);
+	left: 0;
+	right: 0;
+	z-index: 40;
 	border-bottom: 1px solid var(--c-border-muted);
-	background: color-mix(in srgb, var(--c-surface-2) 80%, transparent);
+	border-top: 1px solid var(--c-border-muted);
+	background: var(--c-surface);
+	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
 }
 
 .setting-row {
@@ -280,7 +366,10 @@
 .engine-lines {
 	display: flex;
 	flex-direction: column;
-	min-height: 0;
+	--engine-line-h: 26px;
+	/* Reserve --pv-rows (set by renderLines) rows so the panel height stays constant as the
+	   search collapses/expands lines — otherwise the flex-adjacent move list resizes & scroll-snaps. */
+	min-height: calc(var(--pv-rows, 0) * var(--engine-line-h));
 }
 
 .engine-lines:not(:empty) {
@@ -291,6 +380,7 @@
 	display: flex;
 	align-items: baseline;
 	gap: 8px;
+	height: var(--engine-line-h);
 	padding: 4px 8px;
 	font-size: 0.85em;
 	border-bottom: 1px solid color-mix(in srgb, var(--c-border-muted) 50%, transparent);
@@ -313,7 +403,6 @@
 	flex: 1 1 auto;
 	min-width: 0;
 	overflow: hidden;
-	text-overflow: ellipsis;
 	color: var(--c-text-muted);
 }
 
@@ -337,13 +426,24 @@
 	color: var(--c-text-muted);
 }
 
+.line-pager {
+	font-weight: 700;
+	color: var(--c-text-muted);
+}
+
+.line-pager:hover {
+	color: var(--c-text-emphasis);
+}
+
 /* ============================
    Move tree
    ============================ */
 
 .analysis .moves-table {
 	order: 2;
-	height: 150px;
+	flex: 1 1 auto;
+	height: auto;
+	min-height: 150px;
 	background:
 		linear-gradient(
 			180deg,
@@ -353,8 +453,11 @@
 		var(--c-surface);
 }
 
+.analysis .match-panel:has(> .player-bar:not(.hidden)) .moves-table {
+	min-height: 96px;
+}
+
 .analysis-move-tree {
-	padding: 3px 0;
 	font-size: 0.96em;
 }
 
@@ -425,18 +528,27 @@
 	border-top: 2px solid color-mix(in srgb, var(--c-text-muted) 28%, transparent);
 }
 
+/* A resumed segment of the same variation (after a nested sub-variation): keep the vertical
+   spine but drop the elbow tick, so it reads as the line continuing, not a new branch. */
+.variation-continuation .variation-rail::after {
+	display: none;
+}
+
 .variation-line {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
+	align-content: flex-start;
+	row-gap: 1px;
 	min-width: 0;
-	overflow: hidden;
+	padding: 1px 2px;
 	border-radius: 3px;
 	background: color-mix(in srgb, var(--c-text) 3%, transparent);
 }
 
 .variation-line .ply {
-	flex: 0 1 auto;
-	max-width: 46%;
+	flex: 0 0 auto;
+	max-width: 50%;
 	height: 24px;
 	padding: 0 5px;
 	font-size: 0.84em;
@@ -489,12 +601,8 @@
 }
 
 .analysis-context-menu button:hover {
-	background: color-mix(in srgb, var(--c-accent, #3b82f6) 22%, transparent);
+	background: var(--c-hover-overlay);
 	color: var(--c-text-emphasis);
-}
-
-.analysis-context-menu button.danger:hover {
-	background: color-mix(in srgb, var(--c-error, #e5534b) 28%, transparent);
 }
 
 /* ============================
@@ -503,7 +611,7 @@
 
 .eval-gauge {
 	position: relative;
-	flex: 0 0 12px;
+	flex: 0 0 15px;
 	background: #ddd;
 	overflow: hidden;
 }
@@ -522,13 +630,13 @@
 	position: absolute;
 	left: 0;
 	right: 0;
-	height: 1px;
+	height: 2px;
 	background: rgba(120, 120, 120, 0.4);
 }
 
 .gauge-zero {
-	height: 2px;
-	background: color-mix(in srgb, var(--c-accent, #d64f00) 85%, transparent);
+	height: 8px;
+	background: color-mix(in srgb, var(--c-accent, #d64f00) 80%, transparent);
 }
 
 /* Flipped board: white on top */
@@ -541,35 +649,40 @@
    ============================ */
 
 .icn-panel {
-	flex: 1 1 auto;
-	min-height: 180px;
-	display: flex;
-	flex-direction: column;
-}
-
-.icn-bar {
-	display: flex;
+	position: relative;
+	flex: 0 1 190px;
+	min-height: 82px;
+	max-height: 240px;
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	grid-template-rows: minmax(0, 1fr);
 	align-items: center;
-	gap: 8px;
-	padding: 4px 8px 4px 12px;
-	border-bottom: 1px solid var(--c-border-muted);
+	gap: 4px 10px;
+	padding: 6px 8px;
 }
 
 .icn-title {
-	flex: 1;
 	font-size: 0.85em;
 	font-weight: 600;
 	letter-spacing: 0.04em;
 	color: var(--c-text-muted);
 }
 
+.icn-text-wrap {
+	position: relative;
+	align-self: stretch;
+	min-height: 0;
+}
+
 .icn-textarea {
-	flex: 1 1 auto;
+	width: 100%;
+	height: 100%;
 	min-height: 0;
 	resize: none;
 	padding: 8px 12px;
 	background: var(--c-surface-2);
 	border: none;
+	border-radius: 4px;
 	color: var(--c-text-emphasis);
 	font-family: monospace;
 	font-size: 12px;
@@ -578,35 +691,52 @@
 }
 
 .icn-textarea:focus {
-	outline: none;
+	outline: 1px solid var(--c-accent, #3b82f6);
 }
 
-.icn-actions {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 6px 8px;
-	border-top: 1px solid var(--c-border-muted);
+.icn-copy-btn,
+.icn-import-btn {
+	position: absolute;
+	right: 6px;
+	top: 6px;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.12s ease;
 }
 
-.icn-error {
-	flex: 1 1 auto;
-	min-width: 0;
-	font-size: 0.78em;
-	color: var(--c-error, #e5534b);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+.icn-copy-btn {
+	width: 28px;
+	height: 28px;
+	padding: 4px;
+	border-radius: 4px;
+	background: color-mix(in srgb, var(--c-surface) 88%, transparent);
+	color: var(--c-text-emphasis);
 }
 
-.icn-actions .action-btn {
-	flex: 0 0 auto;
+.icn-text-wrap:hover .icn-copy-btn,
+.icn-copy-btn:focus-visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.icn-import-btn {
+	top: auto;
+	bottom: 6px;
 	padding: 5px 14px;
 	border-radius: 5px;
 	border: 1px solid var(--c-border);
 	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
 }
 
-.icn-actions .action-btn:hover {
+.icn-panel.text-selected .icn-import-btn,
+.icn-import-btn:focus-visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.icn-text-wrap .icn-import-btn:hover:not(:disabled) {
 	border-color: var(--c-border-2);
+	background:
+		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)),
+		linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
 }

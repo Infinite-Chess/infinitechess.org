@@ -93,8 +93,12 @@ declare global {
 
 	/** SSR→client data for the analysis page (/analysis/:id?), injected by analysis.njk. */
 	var analysisPageData: {
-		/** Base62 id of a game to auto-load, or null for a fresh board. */
-		gameId: string | null;
+		/** Numeric id of a game to auto-load, or null for a fresh board. */
+		gameId: number | null;
+		/** The viewer's color if they were a participant (auto-orients the board); undefined for non-participants. */
+		role?: Player;
+		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/hydrochess_wasm.js`), from the manifest. */
+		engineUrl: string;
 		/** Hashed URL of the analysis engine worker script (from the asset manifest). */
 		workerUrl: string;
 	};
