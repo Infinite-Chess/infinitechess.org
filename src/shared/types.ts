@@ -12,10 +12,10 @@ import winconutil from './chess/util/winconutil.js';
 import editorutil from './util/editorutil.js';
 import gameconfig from './util/gameconfig.js';
 import typeschemas from './chess/util/typeschemas.js';
+import { players } from './chess/util/typeutil.js';
 import variantregistry from './chess/variants/variantregistry.js';
 import { POSITION_STRING_THRESHOLD } from './chess/variants/servervalidation.js';
-
-import './chess/util/typeutil.js';
+import { engineDictionary, ValidEngine } from './chess/engines/engine.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
 
@@ -46,7 +46,7 @@ export const GameModeSchema = z.enum(['casual', 'rated']);
 /** The username container of an seek sent by the server. DIFFERENT FROM UsernameContainerProperties!!!! */
 export type ServerUsernameContainer = z.infer<typeof ServerUsernameContainerSchema>;
 export const ServerUsernameContainerSchema = z.strictObject({
-	type: z.enum(['player', 'guest']),
+	type: z.enum(['player', 'guest', 'engine']),
 	username: z.string(),
 	/** The rating of the user. Falls back to the INFINITY leaderboard. */
 	rating: RatingSchema.optional(),
@@ -345,3 +345,59 @@ export type OutSeek = z.infer<typeof OutSeekSchema>;
 export const OutSeekSchema = BaseSeekSchema.extend({
 	variant: OutSeekVariantSchema,
 });
+
+// Engine Game Schemas ---------------------------------------------------------------
+
+/** Hard cap on a synced engine-game moves string, in characters. */
+export const ENGINE_GAME_MOVES_STRING_CAP = 1_000_000;
+
+/** Client → server body for creating an engine (vs computer) game: `POST /api/engine-game`. */
+export type CreateEngineGameBody = z.infer<typeof CreateEngineGameBodySchema>;
+export const CreateEngineGameBodySchema = z.strictObject({
+	variant: SeekVariantSchema,
+	timeControl: TimeControlSchema,
+	/** The color the human plays. */
+	color: z.literal([players.WHITE, players.BLACK]),
+	engine: z.literal(Object.keys(engineDictionary) as ValidEngine[]),
+	/** The engine's strength level (validated against the engine's max server-side). */
+	strengthLevel: z.int().min(1),
+});
+
+/**
+ * Client → server body for syncing a live engine game's state after each move:
+ * `POST /api/engine-game/:id/progress`.
+ */
+export type EngineGameProgressBody = z.infer<typeof EngineGameProgressBodySchema>;
+export const EngineGameProgressBodySchema = z.strictObject({
+	/** Compact ICN move list with embedded clock stamps. */
+	moves: z.string().max(ENGINE_GAME_MOVES_STRING_CAP),
+	/** Ms remaining per color; absent for untimed games. */
+	clocks: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
+});
+
+/** Client → server body for concluding an engine game: `POST /api/engine-game/:id/conclude`. */
+export type ConcludeEngineGameBody = z.infer<typeof ConcludeEngineGameBodySchema>;
+export const ConcludeEngineGameBodySchema = EngineGameProgressBodySchema.extend({
+	gameConclusion: winconutil.gameConclusionSchema,
+});
+
+/**
+ * The resumable state of a LIVE engine game, served over HTTP (`GET /api/engine-game/:id`)
+ * to its owner. The static setup (variant/time control/engine) is SSR'd in `gamePageData`.
+ */
+export type EngineGameState = z.infer<typeof EngineGameStateSchema>;
+export const EngineGameStateSchema = z.strictObject({
+	/** A custom game's start position ICN; absent for preset games. */
+	position: z.string().optional(),
+	/** Compact ICN move list with embedded clock stamps. */
+	moves: z.string(),
+	/** Ms remaining per color; absent for untimed games. */
+	clocks: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
+});
+
+/** SSR→client channel info marking the game page's game as an engine game. */
+export interface EngineGamePageInfo {
+	engine: ValidEngine;
+	/** The engine's strength level for this game. */
+	strengthLevel: number;
+}

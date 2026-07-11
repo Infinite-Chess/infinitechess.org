@@ -20,7 +20,7 @@ import { listener_document } from '../../../chess/gamecore';
 interface EngineUIConfig {
 	youAreColor: Player;
 	timeControl: TimeControl;
-	strengthLevel: 1 | 2 | 3;
+	strengthLevel: number;
 	setDefaultWorldBorder: boolean;
 }
 
@@ -160,8 +160,8 @@ function readEngineUIConfig(): EngineUIConfig {
 		element_timecontrol.classList.add('invalid-input');
 	}
 
-	// Strength level
-	const strengthLevel = element_hard.checked ? 3 : element_medium.checked ? 2 : 1;
+	// Strength level — easy/medium/hard spread across the engine's 1-8 range.
+	const strengthLevel = element_hard.checked ? 8 : element_medium.checked ? 4 : 1;
 
 	// Set default world border
 	const setDefaultWorldBorder = element_yesborder.checked ? true : false;

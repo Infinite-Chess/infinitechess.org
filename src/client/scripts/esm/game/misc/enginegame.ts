@@ -18,7 +18,6 @@ import { GameBus } from '../GameBus.js';
 import gamesession from '../chess/gamesession.js';
 import movesequence from '../chess/movesequence.js';
 import gamecompressor from '../chess/gamecompressor.js';
-import checkmatepractice from '../chess/checkmatepractice.js';
 import enginelegalmovesdebug from './enginelegalmovesdebug.js';
 
 // Types ------------------------------------------------------------------------
@@ -32,6 +31,20 @@ interface EngineConfig {
 	multiPv?: number;
 }
 
+/**
+ * Hooks an interested module (checkmate practice) can register to observe engine-game
+ * events. Registered by the module itself, so this script never imports page-specific
+ * code (e.g. the practice page's GUI) onto other pages hosting engine games.
+ */
+interface EngineGameHooks {
+	/** Called when the human player has made a move. */
+	onHumanMove?: () => void;
+	/** Called when the engine has made a move. */
+	onEngineMove?: () => void;
+	/** Called when the engine game concludes. */
+	onGameConclude?: () => void;
+}
+
 // Variables --------------------------------------------------------------------
 
 /** Whether we are currently in an engine game. */
@@ -40,13 +53,15 @@ let engineColor: Player | undefined;
 let currentEngine: string | undefined; // name of the current engine used
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 let engineWorker: Worker | undefined;
+/** Observer hooks registered via {@link registerHooks}. */
+let hooks: EngineGameHooks = {};
 
 // Events -----------------------------------------------------------------------
 
 GameBus.addEventListener('user-move-played', () => onMovePlayed());
 GameBus.addEventListener('game-concluded', () => {
 	if (!inEngineGame) return;
-	checkmatepractice.onEngineGameConclude();
+	hooks.onGameConclude?.();
 });
 
 enginelegalmovesdebug.init({
@@ -65,6 +80,13 @@ function initEngineGame(options: {
 	youAreColor: Player;
 	currentEngine: string;
 	engineConfig: EngineConfig;
+	/** Hashed URL of the engine's worker script (from the asset manifest). Falls back to the legacy unhashed path. */
+	workerUrl?: string;
+	/**
+	 * Served engine-glue URL (`manifest['engine']`) for wasm-engine workers that load it at
+	 * runtime (hydrochess). Sent to the worker as an init message, with the thread count.
+	 */
+	engineUrl?: string;
 }): Promise<void> {
 	console.log(`Starting engine game with engine "${options.currentEngine}".`);
 
@@ -81,7 +103,8 @@ function initEngineGame(options: {
 			new Error("Cannot finish loading engine game because web workers aren't supported."),
 		);
 	}
-	engineWorker = new Worker(`../scripts/esm/game/chess/engines/${currentEngine}.js`, {
+	const workerUrl = options.workerUrl ?? `../scripts/esm/game/chess/engines/${currentEngine}.js`;
+	engineWorker = new Worker(workerUrl, {
 		type: 'module',
 	}); // module type allows the web worker to import methods and types from other scripts.
 
@@ -98,6 +121,13 @@ function initEngineGame(options: {
 		engineWorker!.onerror = (e: ErrorEvent): void => {
 			reject(new Error('Worker failed to load: ' + e.message));
 		};
+		// The hydrochess worker initializes its wasm (and Lazy SMP thread pool) on this
+		// message; legacy workers (checkmate practice) self-initialize and never get one.
+		if (options.engineUrl !== undefined)
+			engineWorker!.postMessage({
+				engineUrl: options.engineUrl,
+				threads: getEngineThreadCount(),
+			});
 	}).then((_result: any) => {
 		// After the promise resolves, we know the worker is ready
 		// Overwrite the onmessage listener to listen for move submissions
@@ -119,7 +149,7 @@ function onMovePlayed(): void {
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
 	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
-	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
+	hooks.onHumanMove?.(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 
 	// Request the engine to perform a best move calculation...
@@ -227,7 +257,7 @@ function makeEngineMove(tokenMove: unknown): void {
 			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResults.tagged);
 		}
 
-		checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
+		hooks.onEngineMove?.(); // inform the checkmatepractice script that the engine has made a move
 
 		return true; // Good to physically play next premove
 	});
@@ -254,11 +284,27 @@ function requestGeneratedMoves(gamefile: GameFile): void {
 		});
 }
 
+/**
+ * Lazy SMP search threads for the engine: the hardware thread count minus one
+ * (leaving the main thread breathing room), capped at 4. Threading requires
+ * cross-origin isolation (SharedArrayBuffer); without it the engine runs single-threaded.
+ */
+function getEngineThreadCount(): number {
+	if (!globalThis.crossOriginIsolated || typeof SharedArrayBuffer !== 'function') return 1;
+	return Math.min(4, Math.max(1, (navigator.hardwareConcurrency || 2) - 1));
+}
+
+/** Registers observer hooks for engine-game events (see {@link EngineGameHooks}). */
+function registerHooks(newHooks: EngineGameHooks): void {
+	hooks = newHooks;
+}
+
 // Export ---------------------------------------------------------------------------------
 
 export default {
 	initEngineGame,
 	onMovePlayed,
+	registerHooks,
 };
 
 export type { EngineConfig };

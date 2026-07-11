@@ -6,15 +6,20 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { ModalMode } from '../../components/gameSetupModalHandoff.js';
-import type { GameMode, TimeControl } from '../../../../../shared/types.js';
+import type { CreateEngineGameBody, GameMode, TimeControl } from '../../../../../shared/types.js';
 
+import uuid from '../../../../../shared/util/uuid.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
+import hydrochess_card from '../../../../../shared/chess/engines/hydrochess_card.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
+import { engineDictionary, ValidEngine } from '../../../../../shared/chess/engines/engine.js';
 
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
+import gamesound from '../../game/misc/gamesound.js';
 import timeControls from './timeControls.js';
 import variantSelector from './variantSelector.js';
+import { serverFetch } from '../../util/serverFetch.js';
 import modifierSelector from './modifierSelector.js';
 import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
 
@@ -32,11 +37,14 @@ const SUBMIT_LABELS: Record<ModalMode, string> = {
 	computer: t.index.lobby_buttons.play_computer,
 };
 
+/** The engine computer games are played against. */
+const COMPUTER_GAME_ENGINE: ValidEngine = 'hydrochess';
+
 // Elements ----------------------------------------------
 
 const element_modalOverlay = document.getElementById('modal-overlay')!;
 const element_modalClose = document.getElementById('modal-close')!;
-const element_modalSubmit = document.getElementById('modal-submit')!;
+const element_modalSubmit = document.getElementById('modal-submit') as HTMLButtonElement;
 const element_btnCreateOnline = document.getElementById('btn-create-game')!;
 const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')!;
 const element_btnPlayComputer = document.getElementById('btn-play-ai')!;
@@ -111,8 +119,7 @@ function initModal(): void {
 		if (currentMode === 'online') handleOnlineSeek();
 		else if (currentMode === 'friend')
 			toast.show('Friend challenge flow not implemented yet', { error: true });
-		else if (currentMode === 'computer')
-			toast.show('Computer game flow not implemented yet', { error: true });
+		else if (currentMode === 'computer') void handleComputerGame();
 		else console.error('Invalid modal mode:', currentMode);
 	});
 
@@ -168,6 +175,88 @@ function handleOnlineSeek(): void {
 	close();
 }
 
+/**
+ * Reads the computer game form state, asks the server to create the engine game,
+ * and hard-navigates to its game page — where the engine runs locally in wasm.
+ */
+async function handleComputerGame(): Promise<void> {
+	const variant = variantSelector.getInviteVariant();
+	if (variant === null) return; // Invalid selection (e.g. unparsable icn or illegal position)
+
+	if (!isVariantSupportedByEngine()) return; // Error toast already shown.
+
+	const time: TimeControl = timeControls.getTimeControl();
+	// The engine takes whichever color the player doesn't.
+	const color = (getSelectedColor() ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK)) as CreateEngineGameBody['color']; // prettier-ignore
+	const strengthLevel = getSelectedEngineStrength();
+
+	const body: CreateEngineGameBody = {
+		variant,
+		timeControl: time,
+		color,
+		engine: COMPUTER_GAME_ENGINE,
+		strengthLevel,
+	};
+
+	element_modalSubmit.disabled = true; // No double-submits while the request is in flight.
+	try {
+		const response = await serverFetch('/api/engine-game', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body),
+		});
+		const data: { id?: number; message?: string } = await response.json();
+		if (!response.ok || data.id === undefined)
+			throw new Error(data.message ?? `Failed to create the game (${response.status}).`);
+
+		// Plays the notify sound and awaits it so the hard-navigate doesn't cut it off.
+		const sound = await gamesound.playNotify(false);
+		if (sound) await sound.whenEnded;
+		window.location.assign(`/game/${uuid.base10ToBase62(data.id)}`);
+	} catch (e) {
+		toast.show(e instanceof Error ? e.message : 'Failed to create the game.', { error: true });
+		element_modalSubmit.disabled = false;
+	}
+}
+
+/**
+ * Whether the engine supports the selected variant/position,
+ * showing an error toast when it doesn't.
+ */
+function isVariantSupportedByEngine(): boolean {
+	const customOptions = variantSelector.getSelectedVariantOptions();
+
+	if (customOptions === null) {
+		// Preset selection: the engine plays a fixed set of variants.
+		const variant = variantSelector.getInviteVariant();
+		if (variant?.kind === 'preset' && !hydrochess_card.SUPPORTED_VARIANTS.has(variant.code)) {
+			toast.show("The engine doesn't support this variant yet.", { error: true });
+			return false;
+		}
+		return true;
+	}
+
+	// Custom position: check it the same way the game will load it — with the
+	// engine's default world border applied when the position lacks one.
+	const checkedOptions = { ...customOptions, gameRules: { ...customOptions.gameRules } };
+	hydrochess_card.setDefaultWorldBorder(
+		checkedOptions,
+		engineDictionary[COMPUTER_GAME_ENGINE].worldBorder,
+	);
+	const result = hydrochess_card.isPositionSupported(checkedOptions);
+	if (!result.supported) {
+		toast.show(`The engine doesn't support this position. ${result.reason}`, { error: true });
+		return false;
+	}
+	return true;
+}
+
+/** The selected engine strength level (the modal's Strength row mirrors the engine's 1-8 range). */
+function getSelectedEngineStrength(): number {
+	const levelBtn = document.querySelector<HTMLElement>('[data-level].active')!;
+	return Number(levelBtn.getAttribute('data-level')!);
+}
+
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
 function openModal(mode: ModalMode): void {
 	lobby.exitIdle();
@@ -177,6 +266,8 @@ function openModal(mode: ModalMode): void {
 
 	element_rowGameMode.classList.toggle('hidden', mode === 'computer');
 	element_rowStrength.classList.toggle('hidden', mode !== 'computer');
+	// Computer games can only be preset variants the engine supports.
+	variantSelector.setEngineOnlyVariants(mode === 'computer');
 
 	element_modalOverlay.classList.remove('hidden');
 

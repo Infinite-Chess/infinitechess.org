@@ -199,9 +199,10 @@ async function getSeekFromWebsocketMessageContents(
 
 /**
  * Parses an ICN seek's content and runs position legality checks.
+ * Also used by the engine-game creation endpoint for its custom positions.
  * @returns `null` if the ICN is legal, or an {@link IcnSeekErrorCode} describing the failure.
  */
-function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
+export function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 	let longFormat;
 	try {
 		longFormat = icnconverter.ShortToLong_Format(content);

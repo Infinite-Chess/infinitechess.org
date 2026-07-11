@@ -18,15 +18,18 @@
  * after. Rematch is a placeholder until the server supports it.
  */
 
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { RematchOfferInfo } from '../../../../../shared/types.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
 import gameslot from '../chess/gameslot.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
 import { GameBus } from '../GameBus.js';
+import gamesession from '../chess/gamesession.js';
 import { SocketBus } from '../../websocket/SocketBus.js';
 import socketmessages from '../../websocket/socketmessages.js';
 
@@ -200,6 +203,12 @@ function callback_OfferDraw(): void {
 
 /** Resigns the game. Server only accepts if the game is resignable (2+ plies). */
 function callback_Resign(): void {
+	if (gamesession.getGameType() === 'engine') {
+		// Engine games conclude locally; the sync module reports it to the server.
+		const engineColor = typeutil.invertPlayer(gamesession.getRole()!);
+		concludeEngineGameLocally({ victor: engineColor, condition: 'resignation' });
+		return;
+	}
 	socketmessages.send('game', 'resign');
 }
 
@@ -210,7 +219,19 @@ function callback_Resign(): void {
  * but the abort button hadn't yet swapped out for resign.
  */
 function callback_Abort(): void {
+	if (gamesession.getGameType() === 'engine') {
+		concludeEngineGameLocally({ condition: 'aborted' });
+		return;
+	}
 	socketmessages.send('game', 'abort');
+}
+
+/** Concludes the loaded engine game in place (there's no server game to message). */
+function concludeEngineGameLocally(conclusion: GameConclusion): void {
+	const gamefile = gameslot.getGamefile()!;
+	if (gamefile.gameConclusion) return; // Already over (e.g. the engine's move just concluded it).
+	gamefile.gameConclusion = conclusion;
+	gameslot.concludeGame();
 }
 
 /** Navigates to the post-game analysis board. */

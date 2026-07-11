@@ -16,6 +16,7 @@ import LocalStorage from '../../util/LocalStorage.js';
 import frametracker from '../../game/rendering/frametracker.js';
 import frameprofiler from '../../game/misc/frameprofiler.js';
 import deadgameloader from '../../game/misc/onlinegame/deadgameloader.js';
+import enginegameloader from './enginegameloader.js';
 
 import '../../game/gui/guisidebar.js';
 import '../../game/misc/onlinegame/onlinegamerouter.js';
@@ -31,7 +32,10 @@ function start(): void {
 
 	initListeners();
 
-	if (window.gamePageData.isLive) {
+	if (window.gamePageData.engineGame) {
+		// Live engine game: fetch its state over HTTP and run the engine locally — no socket opened.
+		void enginegameloader.loadEngineGame();
+	} else if (window.gamePageData.isLive) {
 		onlinegame.subscribeToGame(); // Naturally requests the full game state which bootstraps the game
 	} else {
 		// Dead (memory-evicted) game: fetch its state over HTTP and render it — no socket opened.

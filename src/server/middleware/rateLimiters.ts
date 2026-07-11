@@ -118,3 +118,17 @@ export const gameStateLimiter = rateLimit({
 	max: 30,
 	...default_options,
 });
+
+/** Engine game creation limiter. */
+export const engineGameCreateLimiter = rateLimit({
+	windowMs: 1000 * 60, // 1 minute
+	max: 10,
+	...default_options,
+});
+
+/** Engine game state-sync limiter. Fast games sync after every move (both colors'). */
+export const engineGameSyncLimiter = rateLimit({
+	windowMs: 1000 * 60, // 1 minute
+	max: 120,
+	...default_options,
+});

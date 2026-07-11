@@ -7,8 +7,15 @@
 {% endblock %}
 
 {% block head %}
-{# SSR→client channel: the numeric game id and a best-effort liveness hint (can be innacurate by the time they render). #}
-<script>window.gamePageData = {{ gamePageData | json | safe }};</script>
+{# SSR→client channel: the numeric game id and a best-effort liveness hint (can be innacurate by the time they render).
+   Engine games additionally get their engine's hashed worker-script URL and the content-versioned
+   engine-glue package location from the asset manifest. #}
+<script>window.gamePageData = {{ gamePageData | json | safe }};
+{%- if gamePageData.engineGame %}
+window.gamePageData.engineWorkerUrl = "{{ manifest['scripts/esm/game/chess/engines/' + gamePageData.engineGame.engine + '.ts'] }}";
+window.gamePageData.engineUrl = "{{ manifest['engine'] }}";
+{%- endif %}
+</script>
 {% endblock %}
 
 {% block body %}
@@ -197,11 +204,15 @@
 				<div class="game-actions unselectable">
 					{# Live-only actions (actions-live + the incoming draw-offer prompt) #}
 					{% if not meta.result and gamePageData.role is defined %}
-					{# Default live-game actions: offer draw + resign/abort. Visible during live play. #}
+					{# Default live-game actions: offer draw + resign/abort. Visible during live play.
+					   Engine games start it hidden too — the client reveals it once the game loads. #}
 					<div class="actions-live{{ '' if gamePageData.isLive else ' hidden' }}">
+						{# No draw offers against an engine — there's nobody to accept. #}
+						{% if not gamePageData.engineGame %}
 						<button class="action-btn tooltip-d" id="btn-offer-draw" data-tooltip="Offer draw"{% if not meta.resignable %} disabled{% endif %}>
 							<svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><text x="6" y="2" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">1</text><polygon points="15.375,2 17.875,2 7.875,22 5.375,22"/><text x="18" y="21.67" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="alphabetic">2</text></svg>
 						</button>
+						{% endif %}
 						{# Resign / Abort share one slot (mutually exclusive) #}
 						<button class="action-btn tooltip-d{{ '' if not meta.resignable else ' hidden'}}" id="btn-abort" data-tooltip="Abort">
 							<svg class="action-icon"><use href="#svg-x"/></svg>
@@ -211,6 +222,7 @@
 						</button>
 					</div>
 					{# Incoming draw offer #}
+					{% if not gamePageData.engineGame %}
 					<div class="actions-draw-offer hidden">
 						<span class="draw-offer-label">Accept draw offer?</span>
 						<div class="draw-offer-buttons">
@@ -220,6 +232,7 @@
 							<button class="action-btn" id="btn-reject-draw"><svg class="action-icon"><use href="#svg-x"/></svg></button>
 						</div>
 					</div>
+					{% endif %}
 					{% endif %}
 					{# Post-game actions: rematch + analysis. #}
 					<div class="actions-over{{ '' if meta.result else ' hidden' }}">
@@ -234,8 +247,9 @@
 				   is over (an opponent can't disconnect or be claimed against in a concluded game), so
 				   it won't be found on a game that loaded concluded. Starts `.hidden`: the client reveals/
 				   hides the block as the opponent drops/returns and writes the live countdown into
-				   `.disconnect-text`, then reveals `.disconnect-buttons` (also `.hidden`) on expiry. #}
-				{% if not meta.result %}
+				   `.disconnect-text`, then reveals `.disconnect-buttons` (also `.hidden`) on expiry.
+				   Omitted for engine games — the engine can't disconnect. #}
+				{% if not meta.result and not gamePageData.engineGame %}
 				<div class="disconnect-status hidden">
 					<span class="disconnect-text">Opponent disconnected. You can claim victory in 10 seconds.</span>
 					<div class="disconnect-buttons hidden">
@@ -265,8 +279,8 @@
 
 		</div>{# .play-group #}
 
-		{# Chat window — participant-only #}
-		{% if gamePageData.role is defined %}
+		{# Chat window — participant-only. Omitted for engine games (nobody to chat with). #}
+		{% if gamePageData.role is defined and not gamePageData.engineGame %}
 		<div class="chat panel">
 			{# The client toggles `.collapsed` on the .chat panel. #}
 			<div class="chat-bar">

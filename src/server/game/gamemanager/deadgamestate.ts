@@ -24,6 +24,7 @@ import { players } from '../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 
 import { getGameData } from '../../database/gamesManager.js';
+import { getEngineParticipant } from './enginegames.js';
 import { getPlayerGamesOfGame } from '../../database/playerGamesManager.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
@@ -63,7 +64,7 @@ export function produceDeadStaticGameState(
 	if (game === undefined) return undefined;
 	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS, 'elo_change_from_game']); // prettier-ignore
 
-	const state = assembleStaticGameState(game, playerRows);
+	const state = assembleStaticGameState(game_id, game, playerRows);
 
 	/** Per signed-in player rating delta; populated only for rated games. */
 	const ratingChanges: PlayerGroup<number> = {};
@@ -96,7 +97,7 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	}
 
 	const state: DeadGameState = {
-		...assembleStaticGameState(game, playerRows),
+		...assembleStaticGameState(game_id, game, playerRows),
 		icn: game.icn,
 	};
 
@@ -106,16 +107,24 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 }
 
 /**
- * Maps already-fetched DB rows into the {@link StaticGameState} base. Pure (no queries
- * beyond the per-player username lookup), so both readers below share one field mapping.
+ * Maps already-fetched DB rows into the {@link StaticGameState} base,
+ * so both readers above share one field mapping.
  */
 function assembleStaticGameState(
+	game_id: number,
 	game: Pick<GamesRecord, (typeof STATIC_GAME_COLUMNS)[number]>,
 	playerRows: Pick<PlayerGamesRecord, (typeof STATIC_PLAYER_COLUMNS)[number]>[],
 ): StaticGameState {
+	// An engine game's engine has no player_games row; its sidecar record names it.
+	const engineParticipant = getEngineParticipant(game_id);
+
 	/** Per-color username container; a color absent from `playerRows` -> guest. */
 	const playerContainers: PlayerGroup<ServerUsernameContainer> = {};
 	for (const color of [players.WHITE, players.BLACK]) {
+		if (engineParticipant?.color === color) {
+			playerContainers[color] = engineParticipant.container;
+			continue;
+		}
 		const row = playerRows.find((r) => r.player_number === color);
 		if (row === undefined) {
 			// No row -> this color was a guest.

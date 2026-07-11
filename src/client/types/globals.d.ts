@@ -1,9 +1,9 @@
 // src/client/types/globals.d.ts
 
 import type { Player } from '../../shared/chess/util/typeutil.js';
-import type { StaticGameSetup } from '../../shared/types.js';
 import type { TranslationsObject } from '../../types/translations.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
+import type { EngineGamePageInfo, StaticGameSetup } from '../../shared/types.js';
 
 /**
  * Legacy i18next-era client translations. Backs the global `translations` object
@@ -89,6 +89,12 @@ declare global {
 		isLive: boolean;
 		/** The viewer's color, SSR-resolved from their cookie identity. Undefined for spectators. */
 		role?: Player;
+		/** Present only for a live engine (vs computer) game — played locally against the wasm engine. */
+		engineGame?: EngineGamePageInfo;
+		/** Hashed URL of the engine's worker script (from the asset manifest). Present with {@link engineGame}. */
+		engineWorkerUrl?: string;
+		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/hydrochess_wasm.js`). Present with {@link engineGame}. */
+		engineUrl?: string;
 	} & StaticGameSetup;
 
 	/** SSR→client data for the analysis page (/analysis/:id?), injected by analysis.njk. */

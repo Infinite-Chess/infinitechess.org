@@ -113,6 +113,24 @@ const allLiveGamesColumns: string[] = [
 	'both_disconnected_end_time',
 ];
 
+/** All columns of the engine_games table. */
+const allEngineGamesColumns: string[] = [
+	'game_id',
+	'time_created',
+	'user_id',
+	'browser_id',
+	'player_color',
+	'engine',
+	'strength_level',
+	'variant',
+	'position',
+	'clock',
+	'moves',
+	'clock_white',
+	'clock_black',
+	'last_updated',
+];
+
 /** All columns of the live_player_games table. */
 const allLivePlayerGamesColumns: string[] = [
 	'game_id',
@@ -376,6 +394,29 @@ function generateTables(): void {
 		);
 	`);
 	db.run(`CREATE INDEX IF NOT EXISTS idx_live_player_games_game ON live_player_games (game_id);`);
+
+	// Engine Games table — one row per game against an engine, created at game start.
+	// The engine plays locally in the owner's browser; the server only records state.
+	// The row is KEPT after conclusion (moves blanked) as the permanent record of the
+	// engine participant + settings, complementing the games/player_games tables.
+	db.run(`
+		CREATE TABLE IF NOT EXISTS engine_games (
+			game_id        INTEGER PRIMARY KEY,
+			time_created   INTEGER NOT NULL,
+			user_id        INTEGER, -- The human owner, if signed in
+			browser_id     TEXT NOT NULL, -- The human owner's browser id
+			player_color   INTEGER NOT NULL, -- The human's color. 1 => White  2 => Black
+			engine         TEXT NOT NULL,
+			strength_level INTEGER NOT NULL,
+			variant        TEXT, -- preset variant code, or null for a custom-position game (see position)
+			position       TEXT, -- custom game's start position; null for preset games (complementary to variant)
+			clock          TEXT NOT NULL,
+			moves          TEXT NOT NULL DEFAULT '', -- Blanked once the game is logged to the games table
+			clock_white    INTEGER, -- ms remaining snapshots; null for untimed games
+			clock_black    INTEGER,
+			last_updated   INTEGER NOT NULL -- Epoch ms of the last state sync; drives the stale-game purge
+		);
+	`);
 }
 
 function initDatabase(): void {
@@ -649,6 +690,7 @@ export {
 	allRatingAbuseColumns,
 	allLiveGamesColumns,
 	allLivePlayerGamesColumns,
+	allEngineGamesColumns,
 	initDatabase,
 	generateTables,
 	clearAllTables,

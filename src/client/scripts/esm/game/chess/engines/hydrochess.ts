@@ -4,6 +4,12 @@
  * HydroChess Engine
  * A JavaScript wrapper for the WASM implementation of HydroChess
  *
+ * The engine glue is served UNBUNDLED at a content-versioned `/engine/<hash>/` path (see
+ * build/engine-wasm.ts) and loaded via a runtime dynamic import whose URL arrives in the
+ * init message — the same mechanism as the analysis worker. wasm-bindgen-rayon self-spawns
+ * its Lazy SMP threads by resolving the glue's own `import.meta.url`, which only works when
+ * the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
+ *
  * @author FirePlank
  */
 
@@ -11,18 +17,21 @@ import icnconverter, {
 	LongFormatIn,
 } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
-// @ts-ignore without this, the type check job fails
-import wasmUrl from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm_bg.wasm';
-// @ts-ignore without this, the type check job fails
-import init, * as wasmBindings from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm.js';
-
-const wasm = wasmBindings as typeof wasmBindings;
+/** The engine module's exports (default init + Engine + initThreadPool + …). */
+let wasm: any;
 let wasmInitialized = false;
-let wasmInitPromise: Promise<boolean> | null = null;
 
 interface EngineConfig {
 	engineTimeLimitPerMoveMillis?: number;
 	strengthLevel?: number;
+}
+
+/** The first message from the page: where to load the engine glue, and the Lazy SMP pool size. */
+interface EngineWorkerInitMessage {
+	/** Served engine-glue URL (from the asset manifest). */
+	engineUrl: string;
+	/** Lazy SMP search threads (1 = single-threaded). */
+	threads: number;
 }
 
 interface EngineWorkerMessage {
@@ -43,43 +52,44 @@ interface WasmBestMoveResult {
 	promotion?: string | null;
 }
 
-// Initializes the WASM module.
-// @returns Promise that resolves when the WASM module is initialized
-async function initWasm(): Promise<boolean> {
-	if (!wasmInitPromise) {
+/**
+ * Initializes the WASM module from the served glue, bringing up the
+ * Lazy SMP thread pool when supported, then posts 'readyok'.
+ */
+async function initWasm(msg: EngineWorkerInitMessage): Promise<void> {
+	try {
 		console.debug('[Engine] Initializing HydroChess WASM module');
-		wasmInitPromise = init({ module_or_path: wasmUrl })
-			.then(async () => {
-				console.debug('[Engine] HydroChess WASM module initialized');
-				wasmInitialized = true;
+		// Absolute, computed specifier so the bundler leaves this as a runtime import.
+		const glueUrl = new URL(msg.engineUrl, self.location.origin).href;
+		wasm = await import(glueUrl);
+		await wasm.default(); // Loads the sibling .wasm from the same /engine/<hash>/ dir.
 
-				postMessage('readyok');
-				return true;
-			})
-			.catch((err: unknown) => {
-				console.error('[Engine] Failed to initialize HydroChess WASM module', err);
-				wasmInitialized = false;
-				return false;
-			});
+		// A single-threaded engine build exports no initThreadPool; guard so it
+		// degrades gracefully to a 1-thread search instead of throwing.
+		if (msg.threads > 1 && typeof wasm.initThreadPool === 'function')
+			await wasm.initThreadPool(msg.threads);
+
+		wasmInitialized = true;
+		console.debug('[Engine] HydroChess WASM module initialized');
+		postMessage('readyok');
+	} catch (err: unknown) {
+		console.error('[Engine] Failed to initialize HydroChess WASM module', err);
 	}
-	return wasmInitPromise!;
 }
 
-// Initialize WASM when the module is loaded
-void initWasm();
-
 // Main entry point for the engine
-self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<void> {
+self.onmessage = async function (
+	e: MessageEvent<EngineWorkerInitMessage | EngineWorkerMessage>,
+): Promise<void> {
+	// The first message carries the engine-glue URL + thread count.
+	if ('engineUrl' in e.data) return initWasm(e.data);
+
 	const data = e.data;
 
-	// Ensure WASM is initialized before processing commands
 	if (!wasmInitialized) {
-		const initialized = await initWasm();
-		if (!initialized) {
-			console.error('[Engine] WASM module failed to initialize');
-			postMessage({ type: 'move', data: null });
-			return;
-		}
+		console.error('[Engine] Received a request before the WASM module was initialized');
+		postMessage({ type: 'move', data: null });
+		return;
 	}
 
 	try {

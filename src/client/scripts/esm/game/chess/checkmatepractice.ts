@@ -15,6 +15,7 @@ import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js'
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
+import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
 import {
 	players as p,
 	ext as e,
@@ -24,13 +25,13 @@ import {
 import docutil from '../../util/docutil.js';
 import gameslot from './gameslot.js';
 import selection from '../chess/selection.js';
+import enginegame from '../misc/enginegame.js';
 import gameloader from './gameloader.js';
 import gamesession from './gamesession.js';
 import guipractice from '../gui/guipractice.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
-import { engineDictionary } from './engines/engine.js';
 import { retryFetch, RetryFetchOptions } from '../../util/fetchRetrier.js';
 
 // Variables ----------------------------------------------------------------------------
@@ -70,6 +71,15 @@ let inCheckmatePractice: boolean = false;
 
 /** Whether the player is allowed to undo a move in the current position. */
 let undoingIsLegal: boolean = false;
+
+// Observe engine-game events (each hook no-ops outside checkmate practice).
+// Registered here rather than called by enginegame, so enginegame never
+// imports this practice-page module onto other pages hosting engine games.
+enginegame.registerHooks({
+	onHumanMove: registerHumanMove,
+	onEngineMove: registerEngineMove,
+	onGameConclude: onEngineGameConclude,
+});
 
 // Functions ----------------------------------------------------------------------------
 
@@ -429,7 +439,4 @@ export default {
 	onGameUnload,
 	updateCompletedCheckmates,
 	eraseCheckmatePracticeProgressFromLocalStorage,
-	onEngineGameConclude,
-	registerHumanMove,
-	registerEngineMove,
 };

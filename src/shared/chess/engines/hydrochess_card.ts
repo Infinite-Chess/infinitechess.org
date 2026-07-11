@@ -1,15 +1,11 @@
-// src/client/scripts/esm/game/chess/engines/enginecards/hydrochess_card.ts
+// src/shared/chess/engines/hydrochess_card.ts
 
-import type { VariantOptions } from '../../../../../../../shared/chess/logic/gamefile';
+import type { VariantOptions } from '../logic/gamefile.js';
 
-import bimath from '../../../../../../../shared/util/math/bimath';
-import bounds from '../../../../../../../shared/util/math/bounds';
-import coordutil from '../../../../../../../shared/chess/util/coordutil';
-import typeutil, {
-	RawType,
-	rawTypes as r,
-	players as p,
-} from '../../../../../../../shared/chess/util/typeutil';
+import bimath from '../../util/math/bimath.js';
+import bounds from '../../util/math/bounds.js';
+import coordutil from '../util/coordutil.js';
+import typeutil, { RawType, rawTypes as r, players as p } from '../util/typeutil.js';
 
 type SupportedResult = { supported: true } | { supported: false; reason: string };
 
@@ -156,6 +152,34 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	return { supported: true };
 }
 
+/**
+ * Sets a default world border on the position for an engine game, if it doesn't have one:
+ * the pieces' bounding box padded by `worldBorderDist`, capped so no edge exceeds the
+ * engine's safe coordinate range. MUTATES the variantOptions' gameRules.
+ */
+function setDefaultWorldBorder(variantOptions: VariantOptions, worldBorderDist: bigint): void {
+	if (variantOptions.gameRules.worldBorder !== undefined) return; // Respect an explicit border.
+
+	const allCoords = [...variantOptions.position.keys()].map((coordsKey) =>
+		coordutil.getCoordsFromKey(coordsKey),
+	);
+	if (allCoords.length === 0) return; // Empty position; leave unset (illegal position anyway).
+	const bb = bounds.getBoxFromCoordsList(allCoords);
+
+	// How far can we extend in each direction before hitting the engine's coordinate cap?
+	const availableHorz = bimath.min(bb.left + BORDER_CAP, BORDER_CAP - bb.right);
+	const availableVert = bimath.min(bb.bottom + BORDER_CAP, BORDER_CAP - bb.top);
+	const distHorz = bimath.min(worldBorderDist, availableHorz);
+	const distVert = bimath.min(worldBorderDist, availableVert);
+
+	variantOptions.gameRules.worldBorder = {
+		left: bb.left - distHorz,
+		right: bb.right + distHorz,
+		bottom: bb.bottom - distVert,
+		top: bb.top + distVert,
+	};
+}
+
 export default {
 	// Constants
 	I64_MAX,
@@ -163,4 +187,5 @@ export default {
 	SUPPORTED_VARIANTS,
 	// Functions
 	isPositionSupported,
+	setDefaultWorldBorder,
 };

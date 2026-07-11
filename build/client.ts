@@ -52,6 +52,7 @@ export const ESMEntryPoints = [
 
 	// Workers
 	'src/client/scripts/esm/views/analysis/hydrochessanalysis.worker.ts',
+	'src/client/scripts/esm/game/chess/engines/hydrochess.ts', // Gameplay engine worker (engine games on the game page)
 
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',

@@ -10,8 +10,7 @@ import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-
-import { engineDictionary } from '../../game/chess/engines/engine.js';
+import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
 
 const ENGINE_WORLD_BORDER_DISTANCE = engineDictionary.hydrochess.worldBorder;
 

@@ -22,14 +22,15 @@ import type { MetaData, MovePacket } from '../../../../../../shared/types.js';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 import type { ActivePosition, StorageType } from '../boardeditor';
 
-import bimath from '../../../../../../shared/util/math/bimath';
 import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
+import hydrochess_card from '../../../../../../shared/chess/engines/hydrochess_card';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
+import { engineDictionary } from '../../../../../../shared/chess/engines/engine';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
@@ -56,10 +57,8 @@ import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
 import validatorama from '../../../util/validatorama';
 import selectiontool from '../tools/selection/selectiontool';
-import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
 import guiboardcontrols from '../../gui/guiboardcontrols';
 import clientmetadatautil from '../../chess/clientmetadatautil';
-import { engineDictionary } from '../../chess/engines/engine';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
 // Constants ----------------------------------------------------------------------
@@ -212,38 +211,11 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 
 	// Set world border automatically, if wished
 	if (engineUIConfig.setDefaultWorldBorder) {
-		// Calculate minimum bounding box of all pieces
-		const bb = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.pieces)!; // Guaranteed defined since above we check if there's > 0 pieces
-
-		/*
-		 * Priority:
-		 * 1. Default distance
-		 * 2. Capped at engine's cap
-		 */
-
-		const worldBorderProperty = engineDictionary[currentEngine].worldBorder;
-		const cap = hydrochess_card.BORDER_CAP;
-
-		// How far can we extend in each direction before hitting ±limit?
-		const availableLeft = bb.left + cap;
-		const availableRight = cap - bb.right;
-		const availableBottom = bb.bottom + cap;
-		const availableTop = cap - bb.top;
-
-		// Calculate separate limiting distances for horizontal and vertical axes
-		const availableHorz = bimath.min(availableLeft, availableRight);
-		const availableVert = bimath.min(availableBottom, availableTop);
-
-		// Use the minimum between the default and the capped
-		const distHorz = bimath.min(worldBorderProperty, availableHorz);
-		const distVert = bimath.min(worldBorderProperty, availableVert);
-
-		variantOptions.gameRules.worldBorder = {
-			left: bb.left - distHorz,
-			right: bb.right + distHorz,
-			bottom: bb.bottom - distVert,
-			top: bb.top + distVert,
-		};
+		delete variantOptions.gameRules.worldBorder; // The user opted into the default — override any existing border.
+		hydrochess_card.setDefaultWorldBorder(
+			variantOptions,
+			engineDictionary[currentEngine].worldBorder,
+		);
 	}
 
 	// Does the engine support the position and settings?

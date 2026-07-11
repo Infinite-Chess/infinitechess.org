@@ -19,6 +19,7 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import hydrochess_card from '../../../../../shared/chess/engines/hydrochess_card.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { validatePosition } from '../../../../../shared/chess/variants/positionvalidation.js';
 
@@ -187,6 +188,36 @@ function closeVariantDropdown(): void {
 function openVariantList(group: VariantGroup): void {
 	element_variantGroupDropdown.classList.remove('open');
 	element_variantListPanelByGroup.get(group)!.classList.add('open');
+}
+
+/**
+ * Restricts the selector to engine-supported variants (the computer-game flow), or lifts
+ * the restriction. Hides unsupported preset variants — and any group left empty — rather
+ * than erroring on submit. Custom positions stay available; they're validated on submit.
+ * An unsupported current selection falls back to Classical.
+ */
+function setEngineOnlyVariants(engineOnly: boolean): void {
+	element_variantListPanels.forEach((panel) => {
+		let anySupported = false;
+		panel.querySelectorAll<HTMLElement>('.variant-item[data-code]').forEach((btn) => {
+			const code = btn.getAttribute('data-code')!;
+			const supported = hydrochess_card.SUPPORTED_VARIANTS.has(code);
+			btn.classList.toggle('hidden', engineOnly && !supported);
+			if (supported) anySupported = true;
+		});
+		const group = panel.getAttribute('data-group');
+		if (group === 'custom') return; // The custom panel hosts saves/ICN, never hidden.
+		document
+			.querySelector<HTMLElement>(`button[data-group="${group}"]`)
+			?.classList.toggle('hidden', engineOnly && !anySupported);
+	});
+
+	if (
+		engineOnly &&
+		selection.kind === 'preset' &&
+		!hydrochess_card.SUPPORTED_VARIANTS.has(selection.code)
+	)
+		selectVariant('Classical');
 }
 
 /** Opens the custom variant panel and refreshes saved positions. */
@@ -542,6 +573,15 @@ function handleSavePreview(
 }
 
 /**
+ * Returns the parsed VariantOptions of the current CUSTOM selection (saved position or
+ * ICN input), or null for preset selections / while the position is invalid or loading.
+ */
+function getSelectedVariantOptions(): VariantOptions | null {
+	if (selection.kind === 'preset') return null;
+	return icnResult?.isValid ? icnResult.options : null;
+}
+
+/**
  * Returns the current variant selection as an InviteVariant for the wire format,
  * or null if the selection cannot be used for an online seek (invalid ICN, local save).
  */
@@ -578,6 +618,8 @@ export default {
 	initVariantGroupDropdown,
 	initIcnValidation,
 	closeVariantDropdown,
+	setEngineOnlyVariants,
 	getInviteVariant,
+	getSelectedVariantOptions,
 	applyIcn,
 };

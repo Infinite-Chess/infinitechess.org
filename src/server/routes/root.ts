@@ -57,11 +57,15 @@ const variantGroups = variantregistry.getVariantGroupsWithVariants();
 page('^/$|/index(.html)?', (req: Request, res: Response) => res.render('index.njk', { variantGroups, splashText: getRandomSplashText(req) })); // prettier-ignore
 page('/about(.html)?', (_req: Request, res: Response) => res.render('about.njk'));
 page('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.njk'));
-page('/game/:id', (req: Request, res: Response) => {
-	const state = getGamePageState(req);
-	if (state === undefined) return send404(req, res); // Malformed or nonexistent id
-	res.render('game.njk', state);
-});
+page(
+	'/game/:id',
+	(req: Request, res: Response) => {
+		const state = getGamePageState(req);
+		if (state === undefined) return send404(req, res); // Malformed or nonexistent id
+		res.render('game.njk', state);
+	},
+	crossOriginIsolation, // Engine games run the multi-threaded engine (SharedArrayBuffer) locally.
+);
 page(
 	'/analysis(.html)?/:id?',
 	(req: Request, res: Response) => {

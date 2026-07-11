@@ -18,6 +18,7 @@ import membersRouter from './members.js';
 import registerRouter from './register.js';
 import passwordRouter from './password.js';
 import { getGameState } from '../api/GameAPI.js';
+import engineGameRouter from './engineGame.js';
 import editorSavesRouter from './editorSaves.js';
 import preferencesRouter from './preferences.js';
 import leaderboardsRouter from './leaderboards.js';
@@ -60,6 +61,7 @@ router.post('/verify/:token', verifyPendingRegistration);
 
 router.use('/', authRouter); // login + logout (both public)
 router.use('/editor-saves', editorSavesRouter);
+router.use('/engine-game', engineGameRouter);
 router.use('/news', newsRouter);
 router.use('/preferences', preferencesRouter);
 router.use('/checkmates-progress', practiceProgressRouter);

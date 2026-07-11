@@ -720,6 +720,7 @@ function restoreLiveGames(): void {
 export {
 	activeGames,
 	createGame,
+	issueUniqueGameId,
 	isMemberInSomeActiveGame,
 	unsubSocketParticipantFromGame,
 	unsubSocketSpectatorFromGame,
