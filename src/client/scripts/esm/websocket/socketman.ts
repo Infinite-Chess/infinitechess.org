@@ -41,19 +41,23 @@ let reconnectTimerId: number | undefined;
 /** Enables simulated websocket latency and prints all sent and received messages. */
 let DEBUG = false;
 
-// Initialization --------------------------------------------------------------
+// Listeners --------------------------------------------------------------
 
 SocketBus.addEventListener('connection-lost', () => {
 	noConnection = true;
 	console.error('No connection.');
 });
 
+// Close the socket ourselves on page-away so the server gets a prompt, voluntary
+// "1000". Left to teardown, browsers abandon the connection (1006, or no close frame)
+// — read as an involuntary disconnect, the server unnecessarily giving them a cushion window.
+window.addEventListener('pagehide', closeSocket);
+
 // Page navigation handling
-window.addEventListener('pageshow', function (event) {
-	if (event.persisted) {
-		console.log('Page was returned to using the back or forward button.');
-		resubAll();
-	}
+window.addEventListener('pageshow', (event) => {
+	if (!event.persisted) return;
+	console.log('Page was returned to using the back or forward button.');
+	resubAll();
 });
 
 // Debug -----------------------------------------------------------------------
@@ -169,13 +173,6 @@ function closeSocket(): void {
 	socket.close(1000, 'Connection closed by client');
 }
 
-// Page lifecycle --------------------------------------------------------------
-
-// Close the socket ourselves on page-away so the server gets a prompt, voluntary
-// "1000". Left to teardown, browsers abandon the connection (1006, or no close frame)
-// — read as an involuntary disconnect, the server unnecessarily giving them a cushion window.
-window.addEventListener('pagehide', closeSocket);
-
 // Resubscription --------------------------------------------------------------
 
 /**
@@ -183,7 +180,7 @@ window.addEventListener('pagehide', closeSocket);
  * Then socketmessages.send() lazily reopens the socket.
  */
 function resubAll(): void {
-	if (config.DEV_BUILD) console.log('Resubbing all..');
+	if (config.DEV_BUILD) console.error('Resubbing all..');
 	SocketBus.dispatch('reconnected');
 }
 
