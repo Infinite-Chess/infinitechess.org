@@ -368,8 +368,7 @@ function onGameConclusion(servergame: ServerGame, conclusion: GameConclusion): v
 	// as they may have had an in-flight move to reconcile against.
 	gameutility.sendGameStateToColor(servergame, servergame.whosTurn, false);
 
-	// All other players and spectators get the conclusion
-	// message and stopped clocks, as they can't desync.
+	// All other players and spectators get the conclusion message, as they can't desync.
 	const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
 	const opponentColor = typeutil.invertPlayer(servergame.whosTurn);
 	gameutility.sendMessageToColor(servergame.match, opponentColor, 'game', 'gameconclusion', conclusionMessage); // prettier-ignore
@@ -470,8 +469,7 @@ function logConcludedGame(servergame: ServerGame): void {
 			servergame.ratingResults = buildRatingResults(ratingdata);
 			// Broadcast the deltas to everyone currently connected.
 			const ratingChanges = gameutility.getRatingChanges(servergame)!;
-			gameutility.broadcastToParticipants(servergame, 'gameratingchange', ratingChanges);
-			gameutility.broadcastToSpectators(servergame, 'gameratingchange', ratingChanges);
+			gameutility.broadcastToEveryone(servergame, 'gameratingchange', ratingChanges);
 		}
 	} catch {
 		// log failure already logged
@@ -567,8 +565,7 @@ function finalizeGame(servergame: ServerGame): void {
 
 	// Tell any connected participants/spectators the result is now locked in, so their client knows it can
 	// never change — future reconnects fetch only rematch state (`subscriberematch`), not a full resync.
-	gameutility.broadcastToParticipants(servergame, 'finalized', undefined);
-	gameutility.broadcastToSpectators(servergame, 'finalized', undefined);
+	gameutility.broadcastToEveryone(servergame, 'finalized', undefined);
 
 	if (PRINT_GAMES) console.log(`Finalized game ${servergame.match.id}.`);
 }
