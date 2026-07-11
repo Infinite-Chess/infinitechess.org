@@ -44,7 +44,7 @@ let finalized: boolean = false;
 SocketBus.addEventListener('closed', () => {
 	if (!finalized) inSync = false;
 });
-SocketBus.addEventListener('reconnected', () => subscribeToGame());
+SocketBus.addEventListener('reconnect', () => subscribeToGame());
 
 // Getters ------------------------------------------------------------
 
