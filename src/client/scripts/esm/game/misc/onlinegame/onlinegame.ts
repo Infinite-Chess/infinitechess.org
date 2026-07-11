@@ -74,8 +74,8 @@ function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
 			timeControl,
 			variant: variant.kind === 'preset' ? variant.code : undefined,
 			dateTimestamp: timeCreated,
-			// Spectators (no role) view white's side.
-			viewWhitePerspective: ourRole === p.WHITE || ourRole === undefined,
+			// Black views from their side; white and spectators (no role) view white's side.
+			viewWhitePerspective: ourRole !== p.BLACK,
 			additional: {
 				moves: state.moves,
 				gameConclusion: state.gameConclusion,

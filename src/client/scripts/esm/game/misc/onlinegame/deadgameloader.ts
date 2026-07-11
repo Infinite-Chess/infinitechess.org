@@ -34,8 +34,8 @@ async function loadDeadGame(): Promise<void> {
  */
 async function fetchDeadState(): Promise<DeadGameState> {
 	const response = await fetch(`/api/game/${uuid.base10ToBase62(window.gamePageData.id)}`);
-	if (!response.ok) throw new Error(`Status ${response.status}`);
-	return (await response.json()) as DeadGameState;
+	if (!response.ok) throw new Error(`Game fetch failed (${response.status})`);
+	return await response.json();
 }
 
 /** Normalizes a `DeadGameState` into the live `gamestate` shape the loader consumes. */

@@ -49,11 +49,14 @@ function startGame(options: { variant: VariantCode; timeControl: TimeControl }):
  * THIS FUNCTION AND gameforulator.formulateGame()!!!!!!!!
  *
  * @param longformOut - The game in longformat (from parsing the icn).
- * @param viewWhitePerspective - Board orientation override (defaults to the current game's perspective).
+ * @param gameConclusion - The game's conclusion, if it ended.
+ * @param viewWhitePerspective - Board orientation override; defaults to retaining
+ * the current game's perspective, or white's if this is the initial load.
  */
 async function pasteGame(
 	longformOut: LongFormatOut,
 	gameConclusion?: GameConclusion,
+	viewWhitePerspective?: boolean,
 ): Promise<void> {
 	// Build the gamefile options from the longformat...
 
@@ -72,9 +75,10 @@ async function pasteGame(
 	// FUTURE: transfer the pasted move comments into the gamefile here too.
 	if (longformOut.moves) additional.moves = icnimport.movePacketsFromParsed(longformOut.moves);
 
-	// Retain the same perspective as the current loaded game, unless overridden (e.g. flip board).
-	// No game loaded yet (initial /analysis/:id load): default to white's perspective.
-	const vwp = gameslot.getGamefile() ? gameslot.areViewingWhite() : true;
+	// Explicit override (e.g. the loaded game's participant orientation) wins; otherwise retain
+	// the current game's perspective, defaulting to white's on the initial /analysis/:id load.
+	const vwp =
+		viewWhitePerspective ?? (gameslot.getGamefile() ? gameslot.areViewingWhite() : true);
 
 	if (gameslot.getGamefile()) gameslot.unloadGame();
 

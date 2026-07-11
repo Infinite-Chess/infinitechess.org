@@ -7,17 +7,20 @@
  */
 
 import type { Request } from 'express';
+import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { GameMetaViewModel } from './gamePageController.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import { decodeGameId } from '../database/gamesManager.js';
-import { getDeadGameMetaViewModel } from './gamePageController.js';
+import { getDeadGameViewState } from './gamePageController.js';
 
 /** The full render context for `analysis.njk`. */
 interface AnalysisPageState {
-	/** Base62 game id to auto-load client-side, or null for a fresh board. */
-	gameId: string | null;
+	/** Numeric id of a game to auto-load client-side, or null for a fresh board. */
+	gameId: number | null;
+	/** The viewer's color if they were a participant, so the board auto-orients to their side. */
+	role?: Player;
 	/** Variant dropdown contents, in display order. */
 	variantGroups: { name: string; variants: { code: string; name: string }[] }[];
 	/** Game metadata shown when analysis is opened for a saved/live game. */
@@ -30,8 +33,9 @@ interface AnalysisPageState {
  * @throws If a database error occurs (from the underlying producers).
  */
 export function getAnalysisPageState(req: Request): AnalysisPageState | undefined {
-	let gameId: string | null = null;
+	let gameId: number | null = null;
 	const idParam = req.params['id'];
+	let role: Player | undefined;
 	let meta: GameMetaViewModel | undefined;
 	if (idParam !== undefined) {
 		// A game_id was provided in the URL
@@ -39,9 +43,10 @@ export function getAnalysisPageState(req: Request): AnalysisPageState | undefine
 		if (id === undefined) return undefined; // Malformed id
 		// The analysis page loads games from the DB only, so 404 on anything not in it
 		// (unlike the game page, a still-live game not yet persisted doesn't count).
-		meta = getDeadGameMetaViewModel(req, id);
-		if (meta === undefined) return undefined; // Game not in the database
-		gameId = idParam;
+		const deadState = getDeadGameViewState(req, id);
+		if (deadState === undefined) return undefined; // Game not in the database
+		gameId = id;
+		({ role, meta } = deadState);
 	}
 
 	const variantGroups = variantregistry.getVariantGroupsWithVariants().map((g) => ({
@@ -54,6 +59,7 @@ export function getAnalysisPageState(req: Request): AnalysisPageState | undefine
 
 	return {
 		gameId,
+		...(role !== undefined && { role }),
 		variantGroups,
 		...(meta && { meta }),
 	};

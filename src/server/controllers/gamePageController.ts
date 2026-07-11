@@ -116,12 +116,21 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 }
 
 /**
- * Builds the {@link GameMetaViewModel} for a concluded game straight from the database,
- * or `undefined` if no such game row exists. Unlike {@link getGamePageState} this ignores
- * live games — the analysis page only ever loads a game from the DB, never a live one.
+ * Resolves the viewer-facing SSR state (participant role + meta) for a concluded game straight
+ * from the database, or `undefined` if no such game row exists. Unlike {@link getGamePageState}
+ * this ignores live games — the analysis page only ever loads a game from the DB, never a live one.
  * @throws If a database error occurs.
  */
-export function getDeadGameMetaViewModel(req: Request, id: number): GameMetaViewModel | undefined {
+export function getDeadGameViewState(
+	req: Request,
+	id: number,
+):
+	| {
+			/** The viewer's color if they were a participant; undefined => not one (white POV). */
+			role?: Player;
+			meta: GameMetaViewModel;
+	  }
+	| undefined {
 	const dead = produceDeadStaticGameState(id);
 	if (dead === undefined) return undefined; // Game not in the database
 
@@ -131,7 +140,10 @@ export function getDeadGameMetaViewModel(req: Request, id: number): GameMetaView
 		? resolveDeadParticipantColor(id, memberInfo.user_id)
 		: undefined;
 
-	return buildGameMetaViewModel(dead.state, dead.ratingChanges, role, false, req);
+	return {
+		...(role !== undefined && { role }),
+		meta: buildGameMetaViewModel(dead.state, dead.ratingChanges, role, false, req),
+	};
 }
 
 /** Derives the display-ready {@link GameMetaViewModel} from a {@link StaticGameState}. */

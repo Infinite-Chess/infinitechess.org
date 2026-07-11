@@ -14,7 +14,9 @@ import type { DeadGameState } from '../../../../../shared/types.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { EditorAutosaveState } from '../../game/editorstores/estoretypes.js';
 
+import uuid from '../../../../../shared/util/uuid.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../components/toast.js';
 import webgl from '../../game/rendering/webgl.js';
@@ -101,12 +103,15 @@ async function loadInitialGame(): Promise<void> {
 		// Load the game from the server
 		gamesession.setSessionGame({ type: 'analysis' }); // pasteGame requires an analysis session.
 		try {
-			const response = await fetch(`/api/game/${gameId}`);
-			if (!response.ok) throw Error(`Game fetch failed (${response.status})`);
+			const response = await fetch(`/api/game/${uuid.base10ToBase62(gameId)}`);
+			if (!response.ok) throw new Error(`Game fetch failed (${response.status})`);
 			const state: DeadGameState = await response.json();
 			const longformOut = icnconverter.ShortToLong_Format(state.icn);
 			syncVariantSelect(longformOut.metadata.Variant);
-			await analysisloader.pasteGame(longformOut, state.gameConclusion);
+			// Auto-orient the board to the side the viewer played from
+			// (black flips it; spectators/white keep white's perspective).
+			const viewWhitePerspective = window.analysisPageData.role !== p.BLACK;
+			await analysisloader.pasteGame(longformOut, state.gameConclusion, viewWhitePerspective);
 			syncClockDisplayToViewedMove(true);
 		} catch (e) {
 			// This can only be reached if the game was deleted from the DB between
