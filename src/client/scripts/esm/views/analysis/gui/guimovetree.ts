@@ -147,12 +147,8 @@ async function appendAnalysisMainlinePly(
 
 	// Begin a new mainline row. White always does; a black reply does too when its white
 	// move carries variations, splitting the pair so the reply sits below them.
-	const row = document.createElement('div');
-	row.classList.add('move-row', 'analysis-mainline-row');
-	const num = document.createElement('span');
-	num.classList.add('move-num');
-	num.textContent = node.ply % 2 === 0 ? String(node.ply / 2 + 1) : formatMoveIndex(node.ply);
-	row.append(num);
+	const numText = node.ply % 2 === 0 ? String(node.ply / 2 + 1) : formatMoveIndex(node.ply);
+	const row = guimoveslist.createMoveRow(numText, ['analysis-mainline-row']);
 	if (node.ply % 2 === 1) row.append(document.createElement('span')); // Empty white cell.
 	row.append(ply);
 	container.append(row);

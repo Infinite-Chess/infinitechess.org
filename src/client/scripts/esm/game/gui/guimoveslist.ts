@@ -280,12 +280,8 @@ async function appendPly(move: MoveFull, index: number): Promise<void> {
 	if (index % 2 === 0) {
 		// White ply — start a new row: number + this ply. Insert before the result
 		// banner so it always stays at the bottom of the table.
-		const row = document.createElement('div');
-		row.classList.add('move-row');
-		const num = document.createElement('span');
-		num.classList.add('move-num');
-		num.textContent = String(index / 2 + 1);
-		row.append(num, ply);
+		const row = createMoveRow(String(index / 2 + 1));
+		row.append(ply);
 		element_MovesTable.insertBefore(row, element_GameResult);
 	} else {
 		// Black ply — append to its (already-created) row.
@@ -323,6 +319,17 @@ async function buildPlyButton(move: MoveFull, classes: string[] = []): Promise<H
 
 	ply.append(silhouette, coord);
 	return ply;
+}
+
+/** Creates a `.move-row` whose leading cell is a `.move-num` showing `numText`. */
+function createMoveRow(numText: string, classes: string[] = []): HTMLElement {
+	const row = document.createElement('div');
+	row.classList.add('move-row', ...classes);
+	const num = document.createElement('span');
+	num.classList.add('move-num');
+	num.textContent = numText;
+	row.append(num);
+	return row;
 }
 
 /** Removes every rendered ply from the table (leaving the result banner), resetting the diff state. */
@@ -441,6 +448,7 @@ export default {
 	updateNavButtons,
 	enqueueRender,
 	buildPlyButton,
+	createMoveRow,
 	clearRenderedMoves,
 	centerPly,
 	zoomToPlyDestination,
