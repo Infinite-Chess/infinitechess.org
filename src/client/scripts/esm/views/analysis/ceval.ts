@@ -14,6 +14,7 @@ import type {
 	AnalysisResponse,
 } from './hydrochessanalysis.worker.js';
 
+import math from '../../../../../shared/util/math/math.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -227,7 +228,7 @@ function persistSettings(): void {
 /** Maps a white-POV centipawn score to a win probability in [-1, 1]. */
 function cpWinningChances(cp: number): number {
 	// Clamp to ensure mate always shows higher gauge than any non-mate eval
-	const clamped = Math.min(Math.max(-1000, cp), 1000);
+	const clamped = math.clamp(cp, -1200, 1200);
 	// Shallower curve (0.003) assumes players convert advantages less efficiently
 	return 2 / (1 + Math.exp(-0.003 * clamped)) - 1;
 }
