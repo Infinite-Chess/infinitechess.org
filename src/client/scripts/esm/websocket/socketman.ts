@@ -181,7 +181,7 @@ function closeSocket(): void {
  */
 function resubAll(): void {
 	if (config.DEV_BUILD) console.error('Resubbing all..');
-	SocketBus.dispatch('reconnected');
+	SocketBus.dispatch('reconnect');
 }
 
 // Exports --------------------------------------------------------------------
