@@ -180,7 +180,7 @@ function closeSocket(): void {
  * Then socketmessages.send() lazily reopens the socket.
  */
 function resubAll(): void {
-	if (config.DEV_BUILD) console.error('Resubbing all..');
+	if (config.DEV_BUILD) console.log('Resubbing all..');
 	SocketBus.dispatch('reconnect');
 }
 

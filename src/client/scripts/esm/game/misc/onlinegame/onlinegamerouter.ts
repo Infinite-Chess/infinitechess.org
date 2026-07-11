@@ -64,7 +64,7 @@ function receiveMessage(contents: GameMessage): void {
 			messageQueue.push(contents);
 		} else if (contents.action === 'gamestate') {
 			// Nothing loaded/loading yet: the first `gamestate` bootstraps the game.
-			onlinegame.loadGameFromState(contents.value, window.gamePageData.role);
+			onlinegame.loadGameFromState(contents.value, false, window.gamePageData.role);
 		} else {
 			console.error(`Received game message before receiving gamestate: ${JSON.stringify(contents)}`); // prettier-ignore
 		}
@@ -229,6 +229,7 @@ function handleGameConclusion(gamefile: GameFile, message: GameConclusionMessage
  */
 function handleUnsubbing(): void {
 	socketsubs.deleteSub('game');
+	onlinegame.onEvicted(); // Prevents a reconnect from trying to re-subscribe to the now-deleted game.
 	guigameactions.onUnsub();
 }
 
