@@ -68,7 +68,10 @@ function toggle(): void {
 	requestMovesForCurrentPosition();
 }
 
-/** Forces the overlay off, e.g. when the position goes outside the engine's safe world border. No-op if already off. */
+/**
+ * Forces the overlay off, e.g. when the position goes outside
+ * the engine's safe world border. No-op if already off.
+ */
 function disable(): void {
 	if (!enabled) return;
 	enabled = false;

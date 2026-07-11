@@ -8,6 +8,8 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
+import bimath from '../../../../../shared/util/math/bimath.js';
+
 import boardpos from '../../game/rendering/boardpos.js';
 import gameslot from '../../game/chess/gameslot.js';
 import boardtiles from '../../game/rendering/boardtiles.js';
@@ -17,7 +19,7 @@ import { createRenderable } from '../../webgl/Renderable.js';
 import analysisenginebounds from './analysisenginebounds.js';
 
 const BORDER_COLOR: Color = [1, 0.05, 0.05, 0.9];
-const HALF_SQUARE = bd.fromNumber(0.5);
+const HALF = bd.fromNumber(0.5);
 
 let enabled = false;
 
@@ -42,40 +44,16 @@ function render(): void {
 	const data: number[] = [];
 
 	if (visible.left <= left && left <= visible.right) {
-		addVerticalLine(
-			data,
-			left,
-			maxBigInt(bottom, visible.bottom),
-			minBigInt(top, visible.top),
-			true,
-		);
+		addVerticalLine(data, left, bimath.max(bottom, visible.bottom), bimath.min(top, visible.top), true); // prettier-ignore
 	}
 	if (visible.left <= right && right <= visible.right) {
-		addVerticalLine(
-			data,
-			right,
-			maxBigInt(bottom, visible.bottom),
-			minBigInt(top, visible.top),
-			false,
-		);
+		addVerticalLine(data, right, bimath.max(bottom, visible.bottom), bimath.min(top, visible.top), false); // prettier-ignore
 	}
 	if (visible.bottom <= bottom && bottom <= visible.top) {
-		addHorizontalLine(
-			data,
-			bottom,
-			maxBigInt(left, visible.left),
-			minBigInt(right, visible.right),
-			true,
-		);
+		addHorizontalLine(data, bottom, bimath.max(left, visible.left), bimath.min(right, visible.right), true); // prettier-ignore
 	}
 	if (visible.bottom <= top && top <= visible.top) {
-		addHorizontalLine(
-			data,
-			top,
-			maxBigInt(left, visible.left),
-			minBigInt(right, visible.right),
-			false,
-		);
+		addHorizontalLine(data, top, bimath.max(left, visible.left), bimath.min(right, visible.right), false); // prettier-ignore
 	}
 
 	if (data.length > 0) createRenderable(data, 2, 'LINES', 'color', true).render();
@@ -111,7 +89,7 @@ function addHorizontalLine(
 
 function edgeFromSquare(square: bigint, isMinEdge: boolean): BigDecimal {
 	const center = bd.fromBigInt(square);
-	return isMinEdge ? bd.subtract(center, HALF_SQUARE) : bd.add(center, HALF_SQUARE);
+	return isMinEdge ? bd.subtract(center, HALF) : bd.add(center, HALF);
 }
 
 function toWorld(coord: BigDecimal, axis: 0 | 1): number {
@@ -121,14 +99,6 @@ function toWorld(coord: BigDecimal, axis: 0 | 1): number {
 
 function pushLine(data: number[], x1: number, y1: number, x2: number, y2: number): void {
 	data.push(x1, y1, ...BORDER_COLOR, x2, y2, ...BORDER_COLOR);
-}
-
-function minBigInt(a: bigint, b: bigint): bigint {
-	return a < b ? a : b;
-}
-
-function maxBigInt(a: bigint, b: bigint): bigint {
-	return a > b ? a : b;
 }
 
 export default {

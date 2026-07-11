@@ -23,6 +23,7 @@
  * self-spawns its Lazy SMP threads by resolving the glue's own `import.meta.url`, which only works
  * when the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
  */
+
 /** The engine module's exports (default init + Engine + initThreadPool + stop_flag_ptr + …). */
 let wasm: any;
 
@@ -60,7 +61,11 @@ interface GoOptions {
 
 /** Messages accepted by this worker. */
 type AnalysisCommand =
-	/** `engineUrl` is the served glue path (from the manifest). `threads` > 0 spins up the Lazy SMP pool and posts the shared stop flag (the search worker); omit it for the idle legal-moves helper. */
+	/**
+	 * `engineUrl` is the served glue path (from the manifest). `threads` > 0 spins up
+	 * the Lazy SMP pool and posts the shared stop flag (the search worker); omit it for
+	 * the idle legal-moves helper.
+	 */
 	| { cmd: 'init'; hashMb: number; engineUrl: string; threads?: number }
 	| { cmd: 'position'; icn: string; newGame?: boolean; resetSearch?: boolean }
 	| { cmd: 'go'; opts: GoOptions }

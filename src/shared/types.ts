@@ -131,7 +131,10 @@ export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
 export const GameStateBaseSchema = z.strictObject({
 	/** The full move list (reconciled against on reconnect). */
 	moves: z.array(MovePacketSchema),
-	/** The live ticking clocks, so a fresh load / reconnect shows running time, not the base time. Absent for untimed games. */
+	/**
+	 * The live ticking clocks, so a fresh load / reconnect shows
+	 * running time, not the base time. Absent for untimed games.
+	 */
 	clockValues: ClockValuesSchema.optional(),
 	gameConclusion: winconutil.gameConclusionSchema.optional(),
 	/**
