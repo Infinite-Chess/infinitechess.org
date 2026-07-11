@@ -565,9 +565,10 @@ function finalizeGame(servergame: ServerGame): void {
 	// Monitor suspicion levels for all players who participated in the game.
 	ratingabuse.measureRatingAbuseAfterGame(servergame);
 
-	// Tell any connected participants the result is now locked in, so their client knows it can
+	// Tell any connected participants/spectators the result is now locked in, so their client knows it can
 	// never change — future reconnects fetch only rematch state (`subscriberematch`), not a full resync.
 	gameutility.broadcastToParticipants(servergame, 'finalized', undefined);
+	gameutility.broadcastToSpectators(servergame, 'finalized', undefined);
 
 	if (PRINT_GAMES) console.log(`Finalized game ${servergame.match.id}.`);
 }
