@@ -12,7 +12,7 @@ import type { GameMetaViewModel } from './gamePageController.js';
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import { decodeGameId } from '../database/gamesManager.js';
-import { getGamePageState } from './gamePageController.js';
+import { getDeadGameMetaViewModel } from './gamePageController.js';
 
 /** The full render context for `analysis.njk`. */
 interface AnalysisPageState {
@@ -25,8 +25,8 @@ interface AnalysisPageState {
 }
 
 /**
- * Resolves the render state for `/analysis/:id?`, or `undefined`
- * if an id was given but is malformed or names no existing game.
+ * Resolves the render state for `/analysis/:id?`, or `undefined` if an id was
+ * given but is malformed or names no game in the database (live-only games included).
  * @throws If a database error occurs (from the underlying producers).
  */
 export function getAnalysisPageState(req: Request): AnalysisPageState | undefined {
@@ -34,12 +34,14 @@ export function getAnalysisPageState(req: Request): AnalysisPageState | undefine
 	const idParam = req.params['id'];
 	let meta: GameMetaViewModel | undefined;
 	if (idParam !== undefined) {
+		// A game_id was provided in the URL
 		const id = decodeGameId(idParam);
 		if (id === undefined) return undefined; // Malformed id
-		const gamePageState = getGamePageState(req);
-		if (gamePageState === undefined) return undefined; // Game doesn't exist
+		// The analysis page loads games from the DB only, so 404 on anything not in it
+		// (unlike the game page, a still-live game not yet persisted doesn't count).
+		meta = getDeadGameMetaViewModel(req, id);
+		if (meta === undefined) return undefined; // Game not in the database
 		gameId = idParam;
-		meta = gamePageState.meta;
 	}
 
 	const variantGroups = variantregistry.getVariantGroupsWithVariants().map((g) => ({

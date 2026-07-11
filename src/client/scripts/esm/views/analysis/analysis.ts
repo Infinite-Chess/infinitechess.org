@@ -109,9 +109,12 @@ async function loadInitialGame(): Promise<void> {
 			await analysisloader.pasteGame(longformOut, state.gameConclusion);
 			syncClockDisplayToViewedMove(true);
 		} catch (e) {
+			// This can only be reached if the game was deleted from the DB between
+			// SSR'ing (otherwise we would have seen a 404 page) and the client fetch.
+			// Don't fall back to a fresh board — the SSR'd game info stays in the
+			// sidebar, so a blank board beside it be a lie.
 			console.error('Failed to load game for analysis:', e);
-			toast.show('Failed to load the game. Starting a fresh board.', { error: true });
-			loadVariant(getSelectedVariant());
+			toast.show('Failed to load game. Please refresh.', { error: true });
 		}
 	}
 }
