@@ -33,6 +33,7 @@ import gamesession from '../../game/chess/gamesession.js';
 import { GameBus } from '../../game/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import frametracker from '../../game/rendering/frametracker.js';
+import guigamereview from './gui/guigamereview.js';
 import frameprofiler from '../../game/misc/frameprofiler.js';
 import analysisloader from './analysisloader.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
@@ -76,6 +77,7 @@ function start(): void {
 	analysisworldborder.init();
 	enginepanel.init();
 	icnpanel.init();
+	guigamereview.init();
 
 	// The hidden "Custom position" placeholder is the select's first option;
 	// a fresh board should start on Classical instead.

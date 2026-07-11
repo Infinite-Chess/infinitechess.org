@@ -123,6 +123,9 @@
 				<span class="result-score">{{ meta.result.score if meta.result }}</span>
 				<span class="result-text">{{ meta.result.text if meta.result }}</span>
 			</div>
+
+			{# Filled when the game page launches `/analysis/:id?review=1`. #}
+			<div class="review-stats hidden" id="review-stats"></div>
 		</div>
 		{% else %}
 		<div class="analysis-setup panel unselectable">
@@ -248,6 +251,14 @@
 							<span class="result-text"></span>
 						</div>
 					</div>
+
+					{# ── Game review progress — graph replaces the ICN panel on completion ── #}
+					<div class="review-progress hidden" id="review-progress">
+						<div class="review-progress-bar">
+							<div class="review-progress-fill" id="review-progress-fill"></div>
+						</div>
+						<span class="review-progress-text" id="review-progress-text"></span>
+					</div>
 				</div>
 
 				<div class="player-bar{{ ' hidden' if not meta }}" id="player-bar-bottom">
@@ -260,14 +271,24 @@
 		</div>
 
 		{# ── ICN panel — import/export (the analysis page's replacement for chat) ── #}
-		<div class="icn-panel panel">
-			<span class="icn-title">ICN</span>
-			<div class="icn-text-wrap">
-				<textarea class="icn-textarea scrollbar-thin" id="icn-textarea" spellcheck="false" placeholder="Paste an ICN here (with or without moves) and press Import…"></textarea>
-				<button class="btn-bare icon-btn icn-copy-btn tooltip-d" id="btn-icn-copy" data-tooltip="Copy to clipboard">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-				</button>
-				<button class="action-btn icn-import-btn" id="btn-icn-import">Import</button>
+		<div class="review-graph panel hidden" id="review-graph">
+				<canvas id="review-graph-canvas"></canvas>
+				<div class="review-phase-markers" id="review-phase-markers"></div>
+				<div class="review-graph-tooltip hidden" id="review-graph-tooltip">
+					<strong id="review-graph-tooltip-move"></strong>
+					<span id="review-graph-tooltip-eval"></span>
+				</div>
+			</div>
+		<div class="icn-panel panel" id="analysis-secondary-panel">
+			<div class="icn-content" id="icn-content">
+				<span class="icn-title">ICN</span>
+				<div class="icn-text-wrap">
+					<textarea class="icn-textarea scrollbar-thin" id="icn-textarea" spellcheck="false" placeholder="Paste an ICN here (with or without moves) and press Import…"></textarea>
+					<button class="btn-bare icon-btn icn-copy-btn tooltip-d" id="btn-icn-copy" data-tooltip="Copy to clipboard">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+					</button>
+					<button class="action-btn icn-import-btn" id="btn-icn-import">Import</button>
+				</div>
 			</div>
 		</div>
 

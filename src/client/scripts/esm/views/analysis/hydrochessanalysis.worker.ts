@@ -64,13 +64,44 @@ type AnalysisCommand =
 	/**
 	 * `engineUrl` is the served glue path (from the manifest). `threads` > 0 spins up
 	 * the Lazy SMP pool and posts the shared stop flag (the search worker); omit it for
-	 * the idle legal-moves helper.
+	 * the idle legal-moves helper and game-review workers.
 	 */
 	| { cmd: 'init'; hashMb: number; engineUrl: string; threads?: number }
 	| { cmd: 'position'; icn: string; newGame?: boolean; resetSearch?: boolean }
 	| { cmd: 'go'; opts: GoOptions }
 	| { cmd: 'legalmoves'; requestId: number; icn: string }
+	/** One-shot position evaluation to a fixed depth, for the game review. */
+	| {
+			cmd: 'evaluate';
+			requestId: number;
+			icn: string;
+			maxDepth: number;
+			newChunk?: boolean;
+			warmup?: boolean;
+	  }
 	| { cmd: 'stop' };
+
+/**
+ * The result of a one-shot `evaluate` command. Score is from the side-to-move's
+ * perspective; both absent on a terminal position (no legal moves).
+ */
+interface EvaluateResult {
+	requestId: number;
+	/** Centipawns. Absent when mating or terminal. */
+	cp?: number;
+	/** Full moves to mate (negative = getting mated). */
+	mate?: number;
+	/** The engine's best line as compact move tokens ("x,y>x,y=Q"). Absent on terminal positions. */
+	pv?: string[];
+	/** 0 = terminal (checkmate/stalemate), 1 = forced move (not searched). */
+	legalMoveCount: number;
+	/** Whether the side to move is in check (distinguishes checkmate from stalemate when terminal). */
+	inCheck: boolean;
+	/** The depth actually searched (0 for terminal/forced positions). */
+	depth: number;
+	/** Echoed for an unreported TT-warming search. */
+	warmup?: boolean;
+}
 
 /** Messages posted back to the main thread. */
 type AnalysisResponse =
@@ -81,6 +112,7 @@ type AnalysisResponse =
 	| { type: 'sharedmem'; buffer: ArrayBufferLike; stopFlagPtr: number }
 	| { type: 'info'; requestId: number; info: AnalysisInfo }
 	| { type: 'legalmoves'; requestId: number; moves: string[] }
+	| ({ type: 'evaluated' } & EvaluateResult)
 	| {
 			type: 'done';
 			requestId: number;
@@ -90,11 +122,13 @@ type AnalysisResponse =
 	/** The search threw (likely a wasm panic, which poisons the module) — the main thread must respawn the worker. */
 	| { type: 'searcherror'; message: string };
 
-export type { AnalysisCommand, AnalysisResponse, AnalysisInfo, AnalysisLine, GoOptions };
+export type { AnalysisCommand, AnalysisResponse, AnalysisInfo, AnalysisLine, GoOptions, EvaluateResult }; // prettier-ignore
 
 // State ------------------------------------------------------------------------
 
 let engine: any;
+/** Persistent searcher for adjacent reverse-ordered Game Review positions. */
+let evaluationEngine: any;
 let wasmReady = false;
 
 /**
@@ -201,6 +235,64 @@ function postLegalMoves(requestId: number, icn: string): void {
 }
 
 /**
+ * Searches one game-review position. Dedicated review workers receive adjacent positions
+ * in reverse order and retain this persistent searcher's TT throughout a fishnet-style chunk.
+ * The first unreported search in each chunk warms a freshly-cleared hash.
+ */
+function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): void {
+	const result: EvaluateResult = {
+		requestId: msg.requestId,
+		legalMoveCount: 0,
+		inCheck: false,
+		depth: 0,
+		...(msg.warmup && { warmup: true }),
+	};
+
+	try {
+		if (msg.newChunk) {
+			wasm.reset_engine_state();
+			evaluationEngine?.free();
+			evaluationEngine = undefined;
+		}
+		if (!evaluationEngine) evaluationEngine = wasm.Engine.from_icn(msg.icn, {});
+		else evaluationEngine.set_position(msg.icn);
+
+		const legalMoves: { from: string; to: string }[] = evaluationEngine.get_legal_moves_js();
+		result.legalMoveCount = legalMoves.length;
+		result.inCheck = evaluationEngine.is_in_check();
+
+		if (legalMoves.length === 1) {
+			// Forced move: don't search; the review carries the eval over from its neighbors.
+			result.pv = [`${legalMoves[0]!.from}>${legalMoves[0]!.to}`];
+		} else if (legalMoves.length > 1) {
+			// The same search call the analysis loop uses — its summary carries the full PV.
+			const summary: AnalysisInfo | null = evaluationEngine.analyse(
+				{ multi_pv: 1, max_depth: msg.maxDepth, start_depth: 1, slice_ms: 0 },
+				() => {},
+			);
+			const line = summary?.lines[0];
+			if (line) {
+				if (line.cp !== undefined && line.cp !== null) result.cp = line.cp;
+				if (line.mate !== undefined && line.mate !== null) result.mate = line.mate;
+				result.depth = summary!.depth;
+				// Lila stores at most 12 PV plies in game-analysis advice.
+				result.pv = line.moves.slice(0, 12);
+			}
+		}
+	} catch (e) {
+		// Likely a wasm panic (poisoned module) — tell the page so it can respawn this worker.
+		console.error('[Analysis Engine] Evaluate crashed', e);
+		postMessage({
+			type: 'searcherror',
+			message: e instanceof Error ? e.message : String(e),
+		} satisfies AnalysisResponse);
+		return;
+	}
+
+	postMessage({ type: 'evaluated', ...result } satisfies AnalysisResponse);
+}
+
+/**
  * The ongoing analysis loop: each engine call runs unbounded ({@link SLICE_MS} = 0) toward the
  * target depth, streaming every completed depth, and returns on completion or when the page
  * writes the shared stop flag. The loop then yields so queued stop/position/go commands are
@@ -300,6 +392,8 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 				wasm.reset_engine_state();
 				engine?.free();
 				engine = undefined;
+				evaluationEngine?.free();
+				evaluationEngine = undefined;
 				appliedIcn = undefined;
 			}
 			break;
@@ -311,6 +405,9 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 			break;
 		case 'legalmoves':
 			postLegalMoves(msg.requestId, msg.icn);
+			break;
+		case 'evaluate':
+			postEvaluation(msg);
 			break;
 		case 'stop':
 			generation++;

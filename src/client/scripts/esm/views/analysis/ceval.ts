@@ -731,6 +731,51 @@ function reemitCurrent(): void {
 	emitNow();
 }
 
+/**
+ * Seeds the position cache with an externally-computed evaluation (the game review).
+ * Ignored when something at least as deep is already cached. Once seeded, the shown
+ * eval only changes when a manual search exceeds this depth — the same depth guards
+ * that protect any cached analysis ({@link receiveInfo}, {@link refreshAnalysis}).
+ */
+function seedPositionCache(seed: {
+	icn: string;
+	depth: number;
+	/** The move index (`gamefile.state.local.moveIndex`) at which this position is viewed. */
+	moveIndex: number;
+	/** The line's compact move tokens, from the seeded position. */
+	moves: string[];
+	/** Centipawns, white POV. Absent when mating. */
+	cp?: number;
+	/** Full moves to mate, white POV sign. */
+	mate?: number;
+}): void {
+	const cached = positionCache.get(seed.icn);
+	if (cached && cached.depth >= seed.depth) return;
+
+	const line: CevalLine = {
+		moves: seed.moves,
+		...(seed.cp !== undefined && { cp: seed.cp }),
+		...(seed.mate !== undefined && { mate: seed.mate }),
+		winningChances:
+			seed.mate !== undefined
+				? mateWinningChances(seed.mate)
+				: cpWinningChances(seed.cp ?? 0),
+	};
+	positionCache.set(seed.icn, {
+		depth: seed.depth,
+		seldepth: seed.depth,
+		nodes: 0,
+		nps: 0,
+		hashfull: 0,
+		lines: [line],
+		multiPv: 1,
+		targetDepth: seed.depth,
+		moveIndex: seed.moveIndex,
+		done: true,
+		terminal: false,
+	});
+}
+
 /** Requests the legal moves for {@link icn} from the idle helper worker (never blocked by the search). */
 function requestLegalMoves(requestId: number, icn: string): void {
 	if (blockedByEngineWorldBorder) return;
@@ -896,6 +941,7 @@ export default {
 	getLatestUpdate,
 	getStatus,
 	requestLegalMoves,
+	seedPositionCache,
 	onUpdate,
 	onStatus,
 	onLegalMoves,

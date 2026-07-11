@@ -10,15 +10,19 @@
  */
 
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { MoveReview } from '../gamereview.js';
 import type { AnalysisMoveNode } from '../movetree.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import premoves from '../../../game/chess/premoves.js';
+import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
 import animation from '../../../game/rendering/animation.js';
+import gamereview from '../gamereview.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import frametracker from '../../../game/rendering/frametracker.js';
@@ -91,7 +95,75 @@ async function createVariationPlyButton(
 	});
 	ply.addEventListener('contextmenu', (e) => openAnalysisContextMenu(e, node));
 
+	decoratePlyWithReview(ply, node.id);
+
 	return ply;
+}
+
+// Game review decoration -----------------------------------------------------------------------
+
+// Annotate a ply's element in place the moment its move classifies, so the list
+// colors gradually while the review runs (re-renders re-decorate via build).
+gamereview.onClassified((review) => {
+	const ply = guimoveslist.element_MovesTable.querySelector<HTMLElement>(
+		`.ply[data-node-id="${review.nodeId}"]`,
+	);
+	if (ply) decoratePlyWithReview(ply, review.nodeId);
+});
+moveevals.onLabel((nodeId) => {
+	const ply = guimoveslist.element_MovesTable.querySelector<HTMLElement>(
+		`.ply[data-node-id="${nodeId}"]`,
+	);
+	if (ply) decoratePlyWithReview(ply, nodeId);
+});
+
+/**
+ * Applies the move's review classification to its ply button: a `review-<key>` color
+ * class, a tooltip, and — for lapses (inaccuracy/mistake/blunder) — a visible glyph.
+ */
+function decoratePlyWithReview(ply: HTMLElement, nodeId: number): void {
+	const review = gamereview.getReviewForNode(nodeId);
+	if (review?.classification && !ply.classList.contains(`review-${review.classification}`)) {
+		const display = gamereview.CLASSIFICATION_DISPLAY[review.classification];
+		ply.classList.add(`review-${review.classification}`);
+
+		let label = display.label;
+		if (!review.isBestMove && review.bestMove) label += ` — best was ${review.bestMove}`;
+		ply.title = `${ply.title} · ${label}`;
+
+		if (
+			display.symbol &&
+			(review.classification === 'inaccuracy' ||
+				review.classification === 'mistake' ||
+				review.classification === 'blunder')
+		) {
+			// prettier-ignore
+			const glyph = document.createElement('span');
+			glyph.classList.add('review-glyph');
+			glyph.textContent = display.symbol;
+			ply.append(glyph);
+		}
+	}
+
+	const evalLabel = moveevals.get(nodeId);
+	if (evalLabel) {
+		let evalElement = ply.querySelector<HTMLElement>('.review-eval');
+		if (!evalElement) {
+			evalElement = document.createElement('span');
+			evalElement.classList.add('review-eval');
+			ply.append(evalElement);
+		}
+		evalElement.textContent = formatEvalLabel(evalLabel);
+		evalElement.title = `Evaluation at depth ${evalLabel.depth}`;
+	}
+}
+
+/** Formats a white-POV score like lichess's inline move eval. */
+function formatEvalLabel(label: { cp?: number; mate?: number }): string {
+	if (label.mate !== undefined)
+		return label.mate > 0 ? `#${label.mate}` : `#−${Math.abs(label.mate)}`;
+	const pawns = (label.cp ?? 0) / 100;
+	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`.replace('-', '−');
 }
 
 /** Formats a ply index as a move label — `3.` for a white move, `3...` for a black one. */
@@ -419,3 +491,75 @@ guimoveslist.registerRenderer({
 	onMovesChanged: () => movetree.syncAfterMovesChanged(gameslot.getGamefile()!),
 	onGameUnloaded: () => movetree.clear(),
 });
+
+// Exports ------------------------------------------------------------------------------------
+
+/** Navigates the board to the given move-tree node (the review graph's click-to-jump). */
+function navigateToNode(node: AnalysisMoveNode): void {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile || gamesession.isLoading()) return;
+	navigateToAnalysisNode(gamefile, node);
+}
+
+/**
+ * Adds the engine's best continuation as a variation before every reviewed blunder.
+ * Lila stores at most 12 PV plies; we use the same cap and also stop at the first
+ * illegal or terminal move. The viewer's current node is restored synchronously.
+ */
+function addBlunderVariations(): void {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile || gamesession.isLoading()) return;
+	const restoreNode = movetree.getCurrentNode(gamefile) ?? movetree.getRoot();
+
+	for (const review of gamereview.getReviews()) addBlunderVariationAtTree(review);
+
+	if (restoreNode) navigateToAnalysisNode(gamefile, restoreNode);
+	refresh();
+}
+
+/** Adds one newly-discovered blunder PV immediately while review is still running. */
+function addBlunderVariation(review: MoveReview): void {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile || gamesession.isLoading()) return;
+	const restoreNode = movetree.getCurrentNode(gamefile) ?? movetree.getRoot();
+	if (!addBlunderVariationAtTree(review)) return;
+	if (restoreNode) navigateToAnalysisNode(gamefile, restoreNode);
+	refresh();
+}
+
+function addBlunderVariationAtTree(review: MoveReview): boolean {
+	if (review.classification !== 'blunder' || !review.pv?.length) return false;
+	const parent = gamereview.getMainlineNodes()[review.ply]?.parent;
+	if (!parent) return false;
+	const pv = review.pv.slice(0, 12);
+	if (parent.children.some((child) => child.move?.token === pv[0])) return false;
+	addVariationAt(parent, pv);
+	return true;
+}
+
+/** Appends one legal PV line below `parent`, retaining the existing mainline. */
+function addVariationAt(parent: AnalysisMoveNode, tokens: string[]): void {
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh();
+	navigateToAnalysisNode(gamefile, parent);
+
+	// Align the logical front with the viewed parent while retaining the tree's old children.
+	movetree.beginBranchFromViewedPosition(gamefile);
+	const target = gamefile.state.local.moveIndex;
+	movesequence.viewFront(gamefile, mesh);
+	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
+
+	for (const token of tokens) {
+		const result = movevalidation.isTokenMoveLegal(gamefile, token);
+		if (!result.valid) break;
+		movesequence.makeMove(gamefile, mesh, result.tagged);
+		if (gamefile.gameConclusion) break;
+	}
+}
+
+/** Re-renders the whole move tree (e.g. to drop stale review decorations on a re-review). */
+function refresh(): void {
+	guimoveslist.enqueueRender(reconcileMoveTree);
+}
+
+export default { navigateToNode, addBlunderVariation, addBlunderVariations, refresh };

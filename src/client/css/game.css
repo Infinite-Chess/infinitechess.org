@@ -14,6 +14,7 @@
 
 .sidebar {
 	flex: 0 0 380px;
+	min-height: 0;
 	display: flex;
 	flex-direction: column;
 	gap: 15px;
