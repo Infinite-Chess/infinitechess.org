@@ -571,10 +571,13 @@ function playLine(tokens: string[], untilIndex: number): void {
 
 	const mesh = gameslot.getMesh();
 	if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile, mesh);
+	// Board moveIndex where the line's first token applies. Used for debugging.
+	const startMoveIndex = gamefile.state.local.moveIndex;
 	for (let i = 0; i <= untilIndex; i++) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, tokens[i]!);
 		if (!result.valid) {
-			console.warn(`Engine line move "${tokens[i]}" is not legal here: ${result.reason}`);
+			console.error(`Engine line move "${tokens[i]}" (token index ${i}) at moveIndex ${gamefile.state.local.moveIndex} is not legal to apply here: ${result.reason}.`); // prettier-ignore
+			console.error(`Full line (starting at moveIndex ${startMoveIndex}):`, tokens);
 			break;
 		}
 		// Animate only the final move of the sequence.
