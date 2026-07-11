@@ -39,6 +39,8 @@ import gamecompressor from '../../game/chess/gamecompressor.js';
 import analysisworldborder from './analysisworldborder.js';
 import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
 
+import './gui/guimovetree.js'; // Registers the analysis move-tree renderer with guimoveslist.
+
 // Elements ----------------------------------------------------------------------
 
 /** The analysis-page board canvas WebGL renders onto. */

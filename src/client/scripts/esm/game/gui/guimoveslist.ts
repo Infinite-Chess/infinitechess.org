@@ -6,6 +6,10 @@
  * and press-and-hold auto-repeat — the scrolling `.moves-table` of played
  * moves (rendering, click-to-navigate, current-ply highlight & auto-scroll),
  * and revealing the `.game-result` banner with the game's conclusion once it ends.
+ *
+ * This module knows only the flat list. The analysis page layers a move TREE on top by
+ * registering a {@link MovesListRenderer} (`views/analysis/gui/guimovetree.ts`); when one
+ * is present, rendering is delegated to it, reusing the primitives exported here.
  */
 
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
@@ -30,7 +34,35 @@ import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import { listener_document } from '../chess/gamecore.js';
 import { createRenderQueue } from '../../util/renderqueue.js';
-import movetree, { AnalysisMoveNode } from '../../views/analysis/movetree.js';
+
+// Renderer extension ------------------------------------------------------------------------
+
+/**
+ * An optional alternative renderer for the moves panel. The analysis page registers one to
+ * draw a move TREE (with variations) in place of the flat list. When present, this module
+ * delegates all rendering to it, driving it through the same serialized {@link enqueueRender}
+ * queue so tree and flat renders can never race.
+ */
+interface MovesListRenderer {
+	/** Rebuilds the panel for the current position — replaces the flat reconcile. */
+	reconcile(): Promise<void>;
+	/** Highlights & scrolls to the current position. The current-ply class is already cleared. */
+	updateCurrentPly(): void;
+	/** A fresh game loaded — seed derived state, before the following reconcile runs. */
+	onGameLoaded(): void;
+	/** The flat move list changed — sync derived state, before the following reconcile runs. */
+	onMovesChanged(): void;
+	/** The game unloaded — drop derived state. */
+	onGameUnloaded(): void;
+}
+
+/** The registered tree renderer, if any; when set, it takes over all moves-panel rendering. */
+let renderer: MovesListRenderer | undefined;
+
+/** Registers the alternative moves renderer (the analysis move tree). */
+function registerRenderer(r: MovesListRenderer): void {
+	renderer = r;
+}
 
 // Elements ----------------------------------------------------------------------------------
 
@@ -190,7 +222,6 @@ const renderedMoves: MoveFull[] = [];
  * appending a ply awaits an async silhouette fetch, so overlapping updates would race.
  */
 const enqueueRender = createRenderQueue('Moves table render error');
-let contextMenu: HTMLElement | undefined;
 
 /**
  * Brings the rendered plies in line with `gamefile.moves`: finds the first index that
@@ -198,10 +229,7 @@ let contextMenu: HTMLElement | undefined;
  * exactly one ply; a resync trims rewound moves and appends new ones — never a full rebuild.
  */
 async function reconcileMovesTable(): Promise<void> {
-	if (gamesession.getGameType() === 'analysis') {
-		await reconcileAnalysisMovesTable();
-		return;
-	}
+	if (renderer) return renderer.reconcile();
 
 	const moves = gameslot.getGamefile()!.moves;
 
@@ -234,26 +262,7 @@ async function reconcileMovesTable(): Promise<void> {
  * ```
  */
 async function appendPly(move: MoveFull, index: number): Promise<void> {
-	const shortform = icnconverter.getShortFormMoveFromMove(move, {
-		compact: false,
-		spaces: false,
-		comments: false,
-		abbrev: false, // The silhouette already conveys the piece.
-	});
-
-	const silhouette = await svgcache.getSilhouetteSVG(typeutil.getRawType(move.type));
-	silhouette.classList.add('move-piece');
-
-	const ply = document.createElement('button');
-	ply.className = 'ply';
-	ply.title = shortform;
-	const coord = document.createElement('span');
-	coord.className = 'move-coord';
-	coord.textContent =
-		shortform.length > MAX_VISIBLE_MOVE_CHARS
-			? shortform.slice(0, MAX_VISIBLE_MOVE_CHARS) + '…'
-			: shortform;
-	ply.append(silhouette, coord);
+	const ply = await buildPlyButton(move);
 	ply.addEventListener('click', () => {
 		// Drop focus so the next keypress (which controls the board) doesn't reveal the
 		// button's :focus-visible outline — the .current highlight already marks it.
@@ -272,9 +281,9 @@ async function appendPly(move: MoveFull, index: number): Promise<void> {
 		// White ply — start a new row: number + this ply. Insert before the result
 		// banner so it always stays at the bottom of the table.
 		const row = document.createElement('div');
-		row.className = 'move-row';
+		row.classList.add('move-row');
 		const num = document.createElement('span');
-		num.className = 'move-num';
+		num.classList.add('move-num');
 		num.textContent = String(index / 2 + 1);
 		row.append(num, ply);
 		element_MovesTable.insertBefore(row, element_GameResult);
@@ -284,337 +293,44 @@ async function appendPly(move: MoveFull, index: number): Promise<void> {
 	}
 }
 
-async function createVariationPlyButton(
-	node: AnalysisMoveNode,
-	showIndex: boolean,
-): Promise<HTMLButtonElement> {
-	const move = node.move!;
+/**
+ * Builds a `.ply` button — the piece silhouette plus the truncated coordinate text, with the
+ * full move always in the `title`. Shared by the flat list and the analysis tree: the `.ply`
+ * class is always set, `extraClasses` are added on top, and callers add any datasets and
+ * listeners themselves.
+ */
+async function buildPlyButton(move: MoveFull, classes: string[] = []): Promise<HTMLButtonElement> {
 	const shortform = icnconverter.getShortFormMoveFromMove(move, {
 		compact: false,
 		spaces: false,
 		comments: false,
-		abbrev: false,
+		abbrev: false, // The silhouette already conveys the piece.
 	});
 
 	const silhouette = await svgcache.getSilhouetteSVG(typeutil.getRawType(move.type));
 	silhouette.classList.add('move-piece');
 
 	const ply = document.createElement('button');
-	ply.className = 'ply analysis-ply';
+	ply.classList.add('ply', ...classes);
 	ply.title = shortform;
-	ply.dataset['nodeId'] = String(node.id);
-
-	if (showIndex) {
-		const index = document.createElement('span');
-		index.className = 'move-index';
-		index.textContent = formatMoveIndex(node.ply);
-		ply.append(index);
-	}
 
 	const coord = document.createElement('span');
-	coord.className = 'move-coord';
+	coord.classList.add('move-coord');
 	coord.textContent =
 		shortform.length > MAX_VISIBLE_MOVE_CHARS
 			? shortform.slice(0, MAX_VISIBLE_MOVE_CHARS) + '…'
 			: shortform;
+
 	ply.append(silhouette, coord);
-
-	ply.addEventListener('click', () => {
-		ply.blur();
-		if (gamesession.isLoading()) return;
-
-		const gamefile = gameslot.getGamefile()!;
-		const wasAlreadySelected = movetree.getCurrentNode(gamefile) === node;
-		navigateToAnalysisNode(gamefile, node);
-		if (wasAlreadySelected) zoomToPlyDestination(gamefile, node.ply);
-	});
-	ply.addEventListener('contextmenu', (e) => openAnalysisContextMenu(e, node));
-
 	return ply;
 }
 
-function formatMoveIndex(index: number): string {
-	const fullMove = Math.floor(index / 2) + 1;
-	return index % 2 === 0 ? `${fullMove}.` : `${fullMove}...`;
-}
-
-async function reconcileAnalysisMovesTable(): Promise<void> {
-	const gamefile = gameslot.getGamefile()!;
-	if (!movetree.isReady()) movetree.initFromGame(gamefile);
-	movetree.syncAfterMovesChanged(gamefile);
-
-	clearRenderedMoves();
-
-	const tree = document.createElement('div');
-	tree.className = 'analysis-move-tree';
-	const root = movetree.getRoot()!;
-
-	await appendAnalysisMainline(tree, root);
-
-	element_MovesTable.insertBefore(tree, element_GameResult);
-	updateCurrentPly();
-}
-
+/** Removes every rendered ply from the table (leaving the result banner), resetting the diff state. */
 function clearRenderedMoves(): void {
 	renderedMoves.length = 0;
 	for (const child of [...element_MovesTable.children]) {
 		if (child !== element_GameResult) child.remove();
 	}
-}
-
-async function appendAnalysisMainline(
-	container: HTMLElement,
-	from: AnalysisMoveNode,
-): Promise<void> {
-	let node = getMainlineChild(from);
-	// Whether the white move just placed has variations rendered beneath it — its black
-	// reply must then start a fresh row so the variations stay ordered below their branch move.
-	let whiteHadVariations = false;
-	let last = from;
-	while (node) {
-		// The variations that branch off as alternatives to THIS move; they render
-		// directly below the move so a variation never appears above the move it replaces.
-		const variations = getVariationChildren(node.parent!);
-		await appendAnalysisMainlinePly(container, node, node.ply % 2 === 1 && whiteHadVariations);
-		whiteHadVariations = node.ply % 2 === 0 && variations.length > 0;
-		await appendVariationGroup(container, variations, 1);
-		last = node;
-		node = getMainlineChild(node);
-	}
-
-	// The last node's own variation children — including any forced move that truncated the
-	// walk — branch from it with no move row above, so render them beneath it. (When the whole
-	// mainline is forced away, last is the root.)
-	await appendVariationGroup(container, getVariationChildren(last), 1);
-}
-
-async function appendAnalysisMainlinePly(
-	container: HTMLElement,
-	node: AnalysisMoveNode,
-	blackStartsNewRow: boolean,
-): Promise<void> {
-	const ply = await createVariationPlyButton(node, false);
-
-	if (node.ply % 2 === 1 && !blackStartsNewRow) {
-		// Black reply — join the current white move's row.
-		const rows = container.querySelectorAll('.analysis-mainline-row');
-		rows[rows.length - 1]?.append(ply);
-		return;
-	}
-
-	// Begin a new mainline row. White always does; a black reply does too when its white
-	// move carries variations, splitting the pair so the reply sits below them.
-	const row = document.createElement('div');
-	row.className = 'move-row analysis-mainline-row';
-	const num = document.createElement('span');
-	num.className = 'move-num';
-	num.textContent = node.ply % 2 === 0 ? String(node.ply / 2 + 1) : formatMoveIndex(node.ply);
-	row.append(num);
-	if (node.ply % 2 === 1) row.append(document.createElement('span')); // Empty white cell.
-	row.append(ply);
-	container.append(row);
-}
-
-async function appendVariationGroup(
-	container: HTMLElement,
-	children: AnalysisMoveNode[],
-	depth: number,
-): Promise<void> {
-	for (const child of children) await appendVariationLine(container, child, depth);
-}
-
-/**
- * Renders one variation branch as one or more `.variation-line` segments. Wherever a move
- * along the branch has its own alternatives, the line is split: the segment so far is
- * flushed, those alternatives nest below it at depth+1, then the branch resumes in a fresh
- * continuation segment — so a sub-variation appears directly below the move it replaces,
- * in reading order, instead of dumped after the whole line.
- */
-async function appendVariationLine(
-	container: HTMLElement,
-	head: AnalysisMoveNode,
-	depth: number,
-): Promise<void> {
-	let node: AnalysisMoveNode | undefined = head;
-	let segment = createVariationSegment(depth, false);
-	let showIndex = true;
-
-	while (node) {
-		segment.line.append(await createVariationPlyButton(node, showIndex || node.ply % 2 === 0));
-		showIndex = false;
-
-		// Alternatives to THIS move (its variation siblings). The head's are its fork-siblings,
-		// already rendered by the enclosing group, so they're skipped here.
-		const siblingAlts = node === head ? [] : getVariationChildren(node.parent!);
-		const next = getMainlineChild(node);
-		// When this move's continuation was forced into a variation it has no mainline child;
-		// its own variation children then branch from it with no row of their own above.
-		const forcedContinuation = next ? [] : getVariationChildren(node);
-		const alternatives = [...siblingAlts, ...forcedContinuation];
-
-		if (alternatives.length > 0) {
-			container.append(segment.variation); // Flush the segment ending at this move.
-			await appendVariationGroup(container, alternatives, depth + 1);
-			if (!next) return; // Nothing left to continue.
-			segment = createVariationSegment(depth, true);
-			showIndex = true;
-		}
-		node = next;
-	}
-	container.append(segment.variation);
-}
-
-/** Builds an empty `.analysis-variation` block (rail + line) at the given depth. */
-function createVariationSegment(
-	depth: number,
-	isContinuation: boolean,
-): { variation: HTMLElement; line: HTMLElement } {
-	const variation = document.createElement('div');
-	variation.className = 'analysis-variation';
-	if (isContinuation) variation.classList.add('variation-continuation');
-	variation.style.setProperty('--variation-depth', String(depth));
-
-	const rail = document.createElement('span');
-	rail.className = 'variation-rail';
-	const line = document.createElement('div');
-	line.className = 'variation-line';
-	variation.append(rail, line);
-
-	return { variation, line };
-}
-
-function getMainlineChild(node: AnalysisMoveNode): AnalysisMoveNode | undefined {
-	const child = node.children[0];
-	return child?.forceVariation ? undefined : child;
-}
-
-function getVariationChildren(node: AnalysisMoveNode): AnalysisMoveNode[] {
-	const first = node.children[0];
-	return first?.forceVariation ? node.children : node.children.slice(1);
-}
-
-function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
-	e.preventDefault();
-	e.stopPropagation();
-	closeAnalysisContextMenu();
-
-	const menu = document.createElement('div');
-	menu.className = 'analysis-context-menu';
-	const title = document.createElement('div');
-	title.className = 'analysis-context-title';
-	const moveIndex = formatMoveIndex(node.ply);
-	const moveText = icnconverter.getShortFormMoveFromMove(node.move!, {
-		compact: false,
-		spaces: false,
-		comments: false,
-		abbrev: false,
-	});
-	title.textContent = `${moveIndex} ${moveText}`;
-	menu.append(title);
-
-	const parent = node.parent;
-	const isMainline = movetree.isMainLine(node);
-	if (parent && parent.children[0] !== node)
-		menu.append(
-			createContextAction('Promote variation', () => {
-				movetree.promoteAtFork(node);
-				syncAnalysisTreeAfterAction(node);
-			}),
-		);
-	if (!isMainline)
-		menu.append(
-			createContextAction('Make main line', () => {
-				movetree.makeMainLine(node);
-				syncAnalysisTreeAfterAction(node);
-			}),
-		);
-	if (parent && parent.children[0] === node && !node.forceVariation)
-		menu.append(
-			createContextAction('Force variation', () => {
-				movetree.forceVariation(node);
-				syncAnalysisTreeAfterAction(node);
-			}),
-		);
-	if (parent)
-		menu.append(createContextAction('Delete from here', () => deleteAnalysisNode(node)));
-
-	document.body.append(menu);
-	contextMenu = menu;
-	positionContextMenu(menu, e);
-
-	setTimeout(() => {
-		document.addEventListener('click', closeAnalysisContextMenu, { once: true });
-		document.addEventListener('keydown', closeContextMenuOnEscape);
-	}, 0);
-}
-
-function createContextAction(label: string, onClick: () => void): HTMLButtonElement {
-	const button = document.createElement('button');
-	button.type = 'button';
-	button.textContent = label;
-	button.addEventListener('click', (e) => {
-		e.stopPropagation();
-		closeAnalysisContextMenu();
-		onClick();
-	});
-	return button;
-}
-
-function syncAnalysisTreeAfterAction(target: AnalysisMoveNode): void {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
-	navigateToAnalysisNode(gamefile, target);
-	enqueueRender(reconcileAnalysisMovesTable);
-}
-
-/**
- * Deletes `node` (and its subtree). If the currently-viewed position was inside that
- * subtree, we navigate back to the deletion point's parent — the latest still-valid
- * position — which rebuilds the board, legal moves, and engine analysis (arrows clear
- * and recompute) for it. If we were before/elsewhere, we stay put; only the flat move
- * list (its now-rerouted continuation) and the move tree are resynced.
- */
-function deleteAnalysisNode(node: AnalysisMoveNode): void {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
-
-	const current = movetree.getCurrentNode(gamefile);
-	const viewingDeleted = current !== undefined && movetree.isInSubtree(node, current);
-
-	const parent = movetree.deleteNode(node);
-	if (!parent) return; // Can't delete the root.
-
-	if (viewingDeleted) {
-		syncAnalysisTreeAfterAction(parent); // Fall back to the latest valid position.
-	} else {
-		// Stay on the current move; just resync the flat list to the (possibly rerouted)
-		// active line and re-render the tree. The viewed position — and its analysis — is
-		// unchanged, so we leave the engine and board where they are. The front may have
-		// changed though (e.g. the old front was deleted), so realign the global conclusion.
-		gamefile.moves = movetree.getMovesFromLine(movetree.getActiveLine());
-		gamefile.gameConclusion = movetree.getActiveLineConclusion();
-		updateNavButtons();
-		enqueueRender(reconcileAnalysisMovesTable);
-	}
-}
-
-function positionContextMenu(menu: HTMLElement, e: MouseEvent): void {
-	const margin = 4;
-	const width = menu.offsetWidth + margin;
-	const height = menu.offsetHeight + margin;
-	menu.style.left = `${Math.min(e.pageX, window.scrollX + window.innerWidth - width)}px`;
-	menu.style.top = `${Math.min(e.pageY, window.scrollY + window.innerHeight - height)}px`;
-}
-
-function closeAnalysisContextMenu(): void {
-	contextMenu?.remove();
-	contextMenu = undefined;
-	document.removeEventListener('click', closeAnalysisContextMenu);
-	document.removeEventListener('keydown', closeContextMenuOnEscape);
-}
-
-function closeContextMenuOnEscape(e: KeyboardEvent): void {
-	if (e.key === 'Escape') closeAnalysisContextMenu();
 }
 
 /** Removes all rendered plies from `index` onward, resetting a dangling black slot to empty. */
@@ -651,19 +367,9 @@ function getPlyElement(index: number): HTMLElement | undefined {
 function updateCurrentPly(): void {
 	element_MovesTable.querySelector('.ply.current')?.classList.remove('current');
 
-	const gamefile = gameslot.getGamefile()!;
-	if (gamesession.getGameType() === 'analysis') {
-		const node = movetree.getCurrentNode(gamefile);
-		const current = node
-			? element_MovesTable.querySelector<HTMLElement>(`.ply[data-node-id="${node.id}"]`)
-			: undefined;
-		if (current) {
-			current.classList.add('current');
-			centerPly(current);
-		}
-		return;
-	}
+	if (renderer) return renderer.updateCurrentPly();
 
+	const gamefile = gameslot.getGamefile()!;
 	const moveIndex = gamefile.state.local.moveIndex;
 
 	const current = getPlyElement(moveIndex);
@@ -710,61 +416,32 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 	animation.clearAnimations();
 }
 
-function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): void {
-	const mesh = gameslot.getMesh();
-	premoves.cancelPremoves(gamefile, mesh);
-
-	// gameConclusion is a global state that belongs to the active line's front. Snapshot the
-	// branch we're leaving before swapping lines, then restore the target branch's own conclusion
-	// once its line is active — otherwise a decisive line's conclusion would bleed onto branches
-	// that don't end the game.
-	movetree.storeActiveLineConclusion(gamefile.gameConclusion);
-
-	const newLine = movetree.getLineForNode(node);
-	const newMoves = movetree.getMovesFromLine(newLine);
-	const targetIndex = movetree.getNodeMoveIndex(node);
-
-	frametracker.onVisualChange();
-
-	// Rewind the board fully to the start along the CURRENT line first, so its state is
-	// a clean slate before we swap in the (possibly divergent) new line. This is all
-	// synchronous, so the intermediate positions never actually render — avoiding the
-	// fragile shared-prefix index math that could point outside the current move list.
-	if (gamefile.state.local.moveIndex >= 0) movesequence.viewStart(gamefile, mesh);
-
-	// Swap the flat move list to the chosen branch, then replay forward to the node.
-	movetree.setActiveLineToNode(node);
-	gamefile.moves = newMoves;
-	gamefile.gameConclusion = movetree.getActiveLineConclusion();
-
-	if (targetIndex >= 0) movesequence.viewIndex(gamefile, mesh, targetIndex);
-	else GameBus.dispatch('view-move'); // Root node — already at the start.
-
-	updateNavButtons();
-	selection.unselectPiece();
-	animation.clearAnimations();
-}
-
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the
 // gamefile bypass 'moves-changed'), reconcile on move-list changes & navigation, scroll
 // to the banner on conclusion. All queued so they apply in order despite async silhouette fetches.
 GameBus.addEventListener('game-loaded', () => {
-	if (gamesession.getGameType() === 'analysis') movetree.initFromGame(gameslot.getGamefile()!);
+	renderer?.onGameLoaded();
 	enqueueRender(reconcileMovesTable);
 });
 GameBus.addEventListener('moves-changed', () => {
-	if (gamesession.getGameType() === 'analysis') {
-		movetree.syncAfterMovesChanged(gameslot.getGamefile()!);
-	}
+	renderer?.onMovesChanged();
 	enqueueRender(reconcileMovesTable);
 });
 GameBus.addEventListener('view-move', () => enqueueRender(updateCurrentPly));
-GameBus.addEventListener('game-unloaded', () => movetree.clear());
+GameBus.addEventListener('game-unloaded', () => renderer?.onGameUnloaded());
 GameBus.addEventListener('game-concluded', () => enqueueRender(scrollMovesTableToBottom));
 
 // ===========================================================================
 
 export default {
+	registerRenderer,
+	element_MovesTable,
+	element_GameResult,
 	update,
 	updateNavButtons,
+	enqueueRender,
+	buildPlyButton,
+	clearRenderedMoves,
+	centerPly,
+	zoomToPlyDestination,
 };
