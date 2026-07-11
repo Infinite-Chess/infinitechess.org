@@ -544,7 +544,8 @@ function renderMovesSlice(
 		moveSpan.className = 'line-move';
 		moveSpan.textContent = line.moves[i]!;
 		moveSpan.title = 'Play the line up to this move';
-		moveSpan.addEventListener('click', () => playLine(line.moves, i));
+		// Use 'pointerdown', as with 'click' the line changing mid-click cancels the click.
+		moveSpan.addEventListener('pointerdown', () => playLine(line.moves, i));
 		container.append(moveSpan);
 		if (k < count - 1) container.append(' ');
 	}
