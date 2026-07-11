@@ -406,7 +406,7 @@ function consoleLogGameOver(servergame: ServerGame): void {
 			s: data.identifier.signedIn,
 		};
 	}
-	console.log(`Game ${servergame.match.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.gameConclusion)}. Moves: ${servergame.moves.length}.`); // prettier-ignore
+	console.log(`Game ${servergame.match.id} over & logged. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.gameConclusion)}. Moves: ${servergame.moves.length}.`); // prettier-ignore
 }
 
 /**
