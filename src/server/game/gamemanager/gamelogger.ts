@@ -11,6 +11,7 @@
 
 import type { MetaData } from '../../../shared/types.js';
 import type { RatingData } from './ratingcalculation.js';
+import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { MatchInfo, ServerGame } from './gameutility.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
@@ -21,6 +22,8 @@ import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
+import { updatePlayerGame } from '../../database/playerGamesManager.js';
+import { updateGame, deleteGame } from '../../database/gamesManager.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import {
 	computeRatingDataChanges,
@@ -404,6 +407,146 @@ function getPlayerMoveCountsInGame(servergame: ServerGame): PlayerGroup<number> 
 	return playerMoveCounts;
 }
 
+// Cheat-report overturn ---------------------------------------------------------------------
+
+/**
+ * Re-logs an already-logged game after a cheat report overturns its result to an abort.
+ * Rewrites the affected `games`/`player_games` cells — or deletes the whole record if the
+ * report popped the game down to zero moves (never stored) — and reverses the `player_stats`
+ * counters the original conclusion incremented. Runs as one atomic transaction.
+ *
+ * Leaderboards/ratings are never touched: only non-server-validated games can be reported,
+ * and those are never rated. Errors are logged (not thrown): the overturn already happened
+ * in memory and was broadcast, so a DB failure here can't be undone, only flagged.
+ *
+ * @param servergame - The game, already overturned in memory (last move popped, conclusion set to aborted).
+ * @param originalConclusion - The conclusion that was logged, needed to reverse the right `player_stats` counters.
+ * @param cheaterColor - The color whose now-popped move triggered the report; loses one from `moves_played`.
+ */
+function updateOverturnedGame(
+	servergame: ServerGame,
+	originalConclusion: GameConclusion,
+	cheaterColor: Player,
+): void {
+	const match = servergame.match;
+	const gameStillExists = servergame.moves.length > 0;
+
+	try {
+		const transaction = db.transaction(() => {
+			// --- Part 1: games + player_games cells (or full deletion) ---
+			if (gameStillExists) updateGameRecordForOverturn(servergame);
+			else deleteGame(match.id); // Zero-move games are never stored; cascades to player_games.
+
+			// --- Part 2: player_stats counters (kept separate from the record update above) ---
+			reversePlayerStatsForOverturn(
+				servergame,
+				originalConclusion,
+				cheaterColor,
+				gameStillExists,
+			);
+		});
+		transaction();
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		void logEventsAndPrint(
+			`Failed to update overturned game ${match.id} in the database after a cheat report. The permanent record may be inconsistent with the in-memory (aborted) result. Error: ${errorMessage}`,
+			'errLog',
+		);
+	}
+}
+
+/** Rewrites the `games` row and nulls each signed-in player's `player_games.score` for an overturned (aborted) game. */
+function updateGameRecordForOverturn(servergame: ServerGame): void {
+	const match = servergame.match;
+
+	// Regenerate the ICN from the now-popped move list and the aborted metadata.
+	const metadata = gameutility.buildMetadataOfGame(servergame); // Unrated (no ratingData).
+	const icn = getICNOfGame(servergame, metadata);
+
+	updateGame(match.id, {
+		result: metadata.Result!,
+		termination: servergame.gameConclusion!.condition,
+		move_count: servergame.moves.length,
+		icn,
+	});
+
+	// An aborted game has no per-player score.
+	for (const playerStr in match.playerData) {
+		const player = Number(playerStr) as Player;
+		if (!match.playerData[player]!.identifier.signedIn) continue; // Guests have no row.
+		updatePlayerGame(match.id, player, { score: null });
+	}
+}
+
+/**
+ * Reverses the `player_stats` counters the original log incremented, applying the aborted
+ * outcome instead — or fully un-counting the game if it no longer exists (popped to 0 moves).
+ * Exactly one move is ever popped, so only the cheater's `moves_played` changes.
+ */
+function reversePlayerStatsForOverturn(
+	servergame: ServerGame,
+	originalConclusion: GameConclusion,
+	cheaterColor: Player,
+	gameStillExists: boolean,
+): void {
+	const match = servergame.match;
+	const originalVictor = originalConclusion.victor; // undefined = aborted, null = draw, Player = decisive.
+	const ratedStr: 'rated' | 'casual' = match.rated ? 'rated' : 'casual';
+
+	for (const playerStr in match.playerData) {
+		const player = Number(playerStr) as Player;
+		const identifier = match.playerData[player]!.identifier;
+		if (!identifier.signedIn) continue; // Guests have no stats.
+		const user_id = identifier.user_id;
+
+		const originalOutcome: 'wins' | 'losses' | 'draws' | 'aborted' =
+			originalVictor === undefined
+				? 'aborted'
+				: originalVictor === player
+					? 'wins'
+					: originalVictor === null
+						? 'draws'
+						: 'losses';
+
+		const setClauses: string[] = [];
+
+		// The cheater's popped move no longer counts toward their moves played.
+		if (player === cheaterColor) setClauses.push('moves_played = moves_played - 1');
+
+		// Undo the decisive-result counters the original log incremented (aborted games incremented none of these).
+		if (originalOutcome !== 'aborted') {
+			setClauses.push(`game_count_${ratedStr} = game_count_${ratedStr} - 1`);
+			setClauses.push('game_count_public = game_count_public - 1');
+			setClauses.push(`game_count_${originalOutcome} = game_count_${originalOutcome} - 1`);
+			setClauses.push(`game_count_${originalOutcome}_${ratedStr} = game_count_${originalOutcome}_${ratedStr} - 1`); // prettier-ignore
+		}
+
+		if (gameStillExists) {
+			// The game remains, now aborted. game_count is unchanged (aborted games still count).
+			// Add the aborted counter, unless it was already aborted (no net change).
+			if (originalOutcome !== 'aborted')
+				setClauses.push('game_count_aborted = game_count_aborted + 1');
+		} else {
+			// The game is gone entirely — un-count it.
+			setClauses.push('game_count = game_count - 1');
+			if (originalOutcome === 'aborted')
+				setClauses.push('game_count_aborted = game_count_aborted - 1');
+		}
+
+		if (setClauses.length === 0) continue; // Nothing changed (aborted -> aborted, non-cheater).
+
+		const result = db.run(
+			`UPDATE player_stats SET ${setClauses.join(', ')} WHERE user_id = ?`,
+			[user_id],
+		);
+		if (result.changes === 0)
+			throw new Error(
+				`User ${user_id} not found in player_stats while reversing overturned game ${match.id}.`,
+			);
+	}
+}
+
 export default {
 	logGame,
+	updateOverturnedGame,
 };

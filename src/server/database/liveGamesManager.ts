@@ -36,11 +36,6 @@ export interface LiveGameData {
 	color_ticking: number | null;
 	clock_snapshot_time: number | null;
 	draw_offer_state: number | null;
-	conclusion_condition: string | null;
-	conclusion_victor: number | null;
-	time_ended: number | null;
-	/** Epoch ms deadline to finalize (lock in + log) a concluded game. NULL while ongoing. */
-	finalize_time: number | null;
 	/** 0 = false, 1 = true */
 	validate_moves: 0 | 1;
 	/** Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected. */
@@ -59,10 +54,8 @@ export function insertLiveGame(record: LiveGamesRecord): void {
 			INSERT INTO live_games (
 				game_id, time_created, variant, position, clock, rated, private,
 				moves, color_ticking, clock_snapshot_time,
-				draw_offer_state,
-				conclusion_condition, conclusion_victor, time_ended,
-				finalize_time, validate_moves, both_disconnected_end_time
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				draw_offer_state, validate_moves, both_disconnected_end_time
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 	dbCall(
 		() =>
@@ -78,10 +71,6 @@ export function insertLiveGame(record: LiveGamesRecord): void {
 				record.color_ticking,
 				record.clock_snapshot_time,
 				record.draw_offer_state,
-				record.conclusion_condition,
-				record.conclusion_victor,
-				record.time_ended,
-				record.finalize_time,
 				record.validate_moves,
 				record.both_disconnected_end_time,
 			]),

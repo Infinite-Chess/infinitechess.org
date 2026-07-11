@@ -63,10 +63,10 @@ import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './dr
 // Constants ------------------------------------------------------------------------------------
 
 /**
- * The cushion time, before the game is deleted, if one player
- * has disconnected and has not yet seen the game conclusion.
- * This gives them a little bit of time to reconnect and submit a cheat report,
- * which is only useful in variants where we're not doing server-side move validation.
+ * The cushion time, after a non-server-validated game concludes, before its result is locked in
+ * (finalized). This gives the opponent a little time to overturn the conclusion with a cheat
+ * report — which updates the already-logged database record. The game is logged to the permanent
+ * database the instant it concludes regardless; this only delays the finalized (locked) flag.
  */
 export const timeBeforeFinalizeMillis = 1000 * 8;
 
@@ -167,8 +167,9 @@ interface MatchInfo {
 	 */
 	freed: boolean;
 	/**
-	 * Whether the game is finalized: its result is permanent and locked in — logged to the
-	 * database, ratings applied, cheat reports no longer accepted, and it can never change.
+	 * Whether the game is finalized: its result is permanent and locked in — cheat reports no
+	 * longer accepted, and it can never change. The game is logged to the database at conclusion
+	 * (when it's freed), independent of this; finalizing just locks the already-logged result.
 	 * Finalized !== evicted: it may linger in memory to host rematch handshake.
 	 */
 	finalized: boolean;
@@ -180,9 +181,9 @@ interface MatchInfo {
 	rematchOffers: Set<Player>;
 
 	/**
-	 * The ID of the timer that finalizes (locks in + logs) the game's result after it ends.
-	 * Only used by games without server-side validation, to give a cushion for cheat reports
-	 * to overturn the result first. Can be cancelled if the game is finalized/evicted early.
+	 * The ID of the timer that finalizes (locks in) the game's result after it ends. Only used by
+	 * games without server-side validation, to give a cushion for cheat reports to overturn the
+	 * result first. Can be cancelled if the game is finalized/evicted early.
 	 */
 	finalizeTimeoutID?: NodeJS.Timeout;
 

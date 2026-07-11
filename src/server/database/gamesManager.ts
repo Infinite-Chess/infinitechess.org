@@ -131,6 +131,44 @@ export function getGameData<K extends GamesColumn>(
 }
 
 /**
+ * Updates specific columns of a logged game. Used when a cheat report overturns an
+ * already-logged game's conclusion (see gamelogger.updateOverturnedGame).
+ * @param game_id - The game to update.
+ * @param updates - Only the columns to change and their new values. `game_id` is not updatable.
+ * @throws If invalid arguments are provided, or if a database error occurs.
+ */
+export function updateGame(game_id: number, updates: Partial<GamesRecord>): void {
+	dbCall(() => {
+		const entries = Object.entries(updates);
+		if (entries.length === 0)
+			throw new Error(
+				`Empty updates provided when updating game ${game_id}! Received: ${jsutil.ensureJSONString(updates)}`,
+			);
+		if (!entries.every(([col]) => col !== 'game_id' && allGamesColumns.includes(col)))
+			throw new Error(
+				`Invalid columns provided when updating game ${game_id}! Received: ${jsutil.ensureJSONString(updates)}`,
+			);
+
+		const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
+		const values = entries.map(([, val]) => val);
+		db.run(`UPDATE games SET ${setClauses} WHERE game_id = ?`, [...values, game_id]);
+	}, `Error updating game ${game_id}`);
+}
+
+/**
+ * Deletes a game row (cascades to player_games). Used when a cheat report overturns a
+ * game down to zero moves — which is never stored, so the whole record is removed.
+ * @param game_id - The game to delete.
+ * @throws If a database error occurs.
+ */
+export function deleteGame(game_id: number): void {
+	dbCall(
+		() => db.run('DELETE FROM games WHERE game_id = ?', [game_id]),
+		`Error deleting game ${game_id}`,
+	);
+}
+
+/**
  * Fetches specified columns of multiple games from the games table based on list of game_ids.
  * @param game_id_list - A list of game_ids
  * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'rated']).

@@ -101,6 +101,37 @@ export function getPlayerGamesOfGame<K extends PlayerGamesColumn>(
 }
 
 /**
+ * Updates specific columns of a single player's row for a game. Used when a cheat report
+ * overturns an already-logged game (see gamelogger.updateOverturnedGame).
+ * @param game_id - The game the row belongs to.
+ * @param player_number - Which player's row to update.
+ * @param updates - Only the columns to change and their new values. Keys of the primary key are not updatable.
+ * @throws If invalid arguments are provided, or if a database error occurs.
+ */
+export function updatePlayerGame(
+	game_id: number,
+	player_number: Player,
+	updates: Partial<PlayerGamesRecord>,
+): void {
+	dbCall(() => {
+		const entries = Object.entries(updates);
+		if (entries.length === 0)
+			throw new Error(`Empty updates provided when updating player_games row (game ${game_id}, player ${player_number})! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
+		// prettier-ignore
+		if (!entries.every(([col]) => col !== 'user_id' && col !== 'game_id' && col !== 'player_number' && allPlayerGamesColumns.includes(col)))
+			throw new Error(`Invalid columns provided when updating player_games row (game ${game_id}, player ${player_number})! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
+
+		const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
+		const values = entries.map(([, val]) => val);
+		db.run(`UPDATE player_games SET ${setClauses} WHERE game_id = ? AND player_number = ?`, [
+			...values,
+			game_id,
+			player_number,
+		]);
+	}, `Error updating player_games row (game ${game_id}, player ${player_number})`);
+}
+
+/**
  * Retrieves the most recent N rated entries for a user on a specific leaderboard, returning only the specified columns from player_games.
  * Aborted games (where score is null) are skipped.
  * @param user_id - The ID of the user

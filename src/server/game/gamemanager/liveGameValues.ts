@@ -18,7 +18,6 @@ import type {
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 
-import { timeBeforeFinalizeMillis } from './gameutility.js';
 import { insertLiveGame, updateLiveGame, deleteLiveGame } from '../../database/liveGamesManager.js';
 import {
 	insertLivePlayerGame,
@@ -125,10 +124,6 @@ function onGameCreated(servergame: ServerGame): void {
 		color_ticking: null,
 		clock_snapshot_time: null,
 		draw_offer_state: null,
-		conclusion_condition: null,
-		conclusion_victor: null,
-		time_ended: null,
-		finalize_time: null,
 		validate_moves: servergame.validateMoves ? 1 : 0,
 		both_disconnected_end_time: null,
 	};
@@ -160,36 +155,6 @@ function onMoveSubmitted(servergame: ServerGame): void {
 
 	persist(() => {
 		updateLiveGame(servergame.match.id, gameUpdates);
-		persistCurrentClockTimes(servergame);
-	});
-}
-
-/**
- * Called when a game conclusion is set (checkmate, resignation, time loss, etc.).
- * Updates conclusion columns and sets the delete timer target.
- */
-function onGameConcluded(servergame: ServerGame): void {
-	const conclusion = servergame.gameConclusion!;
-
-	const gameUpdates: Partial<LiveGameData> = {
-		conclusion_condition: conclusion.condition,
-		conclusion_victor: conclusion.victor ?? null,
-		time_ended: servergame.match.timeEnded!,
-		finalize_time: servergame.match.timeEnded! + timeBeforeFinalizeMillis,
-		draw_offer_state: null, // Draw offers are closed on conclusion
-		both_disconnected_end_time: null, // Any pending both-disconnected timer is moot now.
-	};
-
-	// Stop clock state
-	if (!servergame.untimed) {
-		// Both color ticking and timeAtTurnStart are set to null on game end
-		gameUpdates.color_ticking = null;
-		gameUpdates.clock_snapshot_time = null;
-	}
-
-	persist(() => {
-		updateLiveGame(servergame.match.id, gameUpdates);
-		// Update time_remaining_ms for timed games (e.g., time loss sets loser to 0)
 		persistCurrentClockTimes(servergame);
 	});
 }
@@ -263,11 +228,11 @@ function onBothDisconnectedTimerChanged(servergame: ServerGame): void {
 }
 
 /**
- * Called when a game is finalized (its result locked in and logged permanently). Removes the row:
- * the result now lives in the permanent tables, so there's nothing left to restore across a restart.
- * The game may keep lingering in memory for the rematch handshake, but that state is never persisted.
+ * Called when a concluded game is logged to the permanent database. Removes the row: the result
+ * now lives in the permanent tables, so there's nothing left to restore across a restart. The game
+ * may keep lingering in memory for the rematch handshake, but that state is never persisted.
  */
-function onGameFinalized(servergame: ServerGame): void {
+function onGameLogged(servergame: ServerGame): void {
 	persist(() => deleteLiveGame(servergame.match.id));
 }
 
@@ -277,11 +242,10 @@ export default {
 	// Persistence Events
 	onGameCreated,
 	onMoveSubmitted,
-	onGameConcluded,
 	onDrawOfferExtended,
 	onDrawOfferDeclined,
 	onPlayerDisconnected,
 	onPlayerReconnected,
 	onBothDisconnectedTimerChanged,
-	onGameFinalized,
+	onGameLogged,
 };
