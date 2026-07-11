@@ -133,16 +133,14 @@
 	transition: width 0.18s ease;
 }
 
-/* Computing: a sheen that sweeps across the filled portion. Its width is a fraction of
-   the fill, so it always scales with the green bar — never spilling past it, never
-   too short. */
+/* Computing: a sheen that sweeps across the filled portion. */
 .engine-progress.computing .engine-progress-fill::after {
 	content: '';
 	position: absolute;
 	top: 0;
 	bottom: 0;
 	left: 0;
-	width: 45%;
+	width: max(70px, 45%);
 	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
 	animation: engine-progress-sheen 1.1s linear infinite;
 }
