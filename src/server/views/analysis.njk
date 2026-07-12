@@ -144,6 +144,10 @@
 		{# ── Engine panel — local evaluation ─────────────────────────────── #}
 		{# ── Match panel — moves list (player bars exist for guiclock.ts but stay hidden) ── #}
 		<div class="play-group">
+
+			{# Top side's captured surplus material. Managed by guimaterial.ts #}
+			<div class="material" id="material-top"></div>
+
 			<div class="match-panel panel">
 				<div class="player-bar{{ ' hidden' if not meta }}" id="player-bar-top">
 					{% if meta %}
@@ -257,6 +261,10 @@
 					<span class="clock{{ '' if meta and meta.timed else ' hidden' }}"></span>
 				</div>
 			</div>
+
+			{# Bottom side's captured surplus material #}
+			<div class="material" id="material-bottom"></div>
+
 		</div>
 
 		{# ── ICN panel — import/export (the analysis page's replacement for chat) ── #}

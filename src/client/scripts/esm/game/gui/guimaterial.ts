@@ -181,3 +181,10 @@ GameBus.addEventListener('game-loaded', () => {
 });
 // Rewinding/forwarding restores the board to the viewed move, so the live counts already reflect it.
 GameBus.addEventListener('view-move', () => enqueueRender(render));
+
+// Exports -------------------------------------------------------------------------------------
+
+export default {
+	/** Re-renders both bars — call after a view-flip so the two sides swap bars. */
+	refresh: (): void => enqueueRender(render),
+};

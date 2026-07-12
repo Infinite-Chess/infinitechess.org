@@ -27,6 +27,7 @@ import guiclock from '../../game/gui/guiclock.js';
 import icnpanel from './gui/guiicnpanel.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
+import guimaterial from '../../game/gui/guimaterial.js';
 import estoretypes from '../../game/editorstores/estoretypes.js';
 import enginepanel from './gui/guienginepanel.js';
 import gamesession from '../../game/chess/gamesession.js';
@@ -157,6 +158,7 @@ function flipBoard(): void {
 	document.getElementById('eval-gauge')!.classList.toggle('flipped', !gameslot.areViewingWhite());
 	swapPlayerBarNames();
 	syncClockDisplayToViewedMove(true);
+	guimaterial.refresh();
 }
 
 function exportCurrentPosition():
