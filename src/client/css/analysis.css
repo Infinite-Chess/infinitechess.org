@@ -1,11 +1,12 @@
 /* src/client/css/analysis.css */
 
 /* The analysis page (/analysis/:id?): layered on top of game.css — same sidebar +
-   board layout, plus the engine evaluation panel, the eval gauge beside the board,
-   the variant picker, and the ICN import/export panel that replaces chat. */
+   board layout. Extras, top to bottom: the variant picker, the local-engine
+   evaluation panel, the move tree, the actions menu, the eval gauge beside the
+   board, and the ICN import/export panel that replaces chat. */
 
 /* ============================
-   Analysis setup — variant + flip
+   Variant picker
    ============================ */
 
 .analysis-setup {
@@ -20,7 +21,6 @@
 	width: 22px;
 	height: 22px;
 	color: var(--c-text-muted);
-	flex: 0 0 auto;
 }
 
 .variant-select {
@@ -40,6 +40,10 @@
 	outline: none;
 	border-color: var(--c-border-2);
 }
+
+/* ============================
+   Play group / match panel layout
+   ============================ */
 
 .analysis .play-group {
 	flex: 1 1 360px;
@@ -70,53 +74,14 @@
    Engine panel
    ============================ */
 
-.engine-header {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 6px 8px;
-	background: color-mix(in srgb, var(--c-surface-2) 74%, transparent);
-}
-
-/* Big eval number (or #N / mate text) */
-.engine-eval {
-	min-width: 3em;
-	font-size: 1.35em;
-	font-weight: 700;
-	text-align: center;
-	color: var(--c-text-emphasis);
-	font-variant-numeric: tabular-nums;
-}
-
-.engine-title {
-	flex: 1 1 auto;
-	min-width: 0;
-	display: flex;
-	flex-direction: column;
-	gap: 1px;
-}
-
-.engine-name {
-	font-size: 0.9em;
-	font-weight: 600;
-	color: var(--c-text-emphasis);
-}
-
-.engine-stats {
-	font-size: 0.78em;
-	color: var(--c-text-muted);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.analysis-ceval-panel {
+.engine-panel {
 	position: relative;
 	order: 1;
 	border-bottom: 1px solid var(--c-border-muted);
 	background: color-mix(in srgb, var(--c-surface-2) 62%, transparent);
 }
 
+/* Depth progress bar */
 .engine-progress {
 	position: relative;
 	height: 3px;
@@ -156,13 +121,18 @@
 	}
 }
 
-.analysis-ceval-panel .icon-btn {
-	width: 26px;
-	height: 26px;
-	color: var(--c-text-muted);
+.engine-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 8px;
+	background: color-mix(in srgb, var(--c-surface-2) 74%, transparent);
 }
 
-/* On/off switch */
+/* ============================
+   Engine on/off switch
+   ============================ */
+
 .engine-switch {
 	position: relative;
 	flex: 0 0 auto;
@@ -210,69 +180,47 @@
 	background: var(--c-text-emphasis);
 }
 
-.analysis .moves-nav {
-	position: relative;
-	order: 3;
-	flex: 0 0 auto;
-	align-items: stretch;
-	background: var(--c-surface-2);
-}
+/* ============================
+   Engine eval + title
+   ============================ */
 
-.analysis .move-btn {
-	min-width: 0;
-}
-
-.analysis-actions {
-	position: relative;
-	flex: 1;
-	display: flex;
-	min-width: 0;
-}
-
-.analysis-actions-toggle[aria-expanded='true'] {
+/* Big eval number (or #N / mate text) */
+.engine-eval {
+	min-width: 3em;
+	font-size: 1.35em;
+	font-weight: 700;
+	text-align: center;
 	color: var(--c-text-emphasis);
-	background: var(--c-hover-overlay);
+	font-variant-numeric: tabular-nums;
 }
 
-.analysis-menu {
-	position: absolute;
-	right: 2px;
-	bottom: calc(100% + 5px);
-	z-index: 20;
-	width: max-content;
-	overflow: hidden;
-	border: 1px solid var(--c-border);
-	border-radius: 4px;
-	background: var(--c-surface);
-	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
-	color: var(--c-text);
-}
-
-.analysis-menu button {
+.engine-title {
+	flex: 1 1 auto;
+	min-width: 0;
 	display: flex;
-	align-items: center;
-	gap: 9px;
-	width: 100%;
-	padding: 8px 10px;
-	border: 0;
-	background: transparent;
-	color: inherit;
-	font: inherit;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.engine-name {
 	font-size: 0.9em;
-	text-align: left;
-	white-space: nowrap;
-	cursor: pointer;
-}
-
-.analysis-menu button:hover {
-	background: var(--c-hover-overlay);
+	font-weight: 600;
 	color: var(--c-text-emphasis);
 }
 
-.analysis-menu svg {
-	width: 18px;
-	height: 18px;
-	flex: 0 0 auto;
+.engine-stats {
+	font-size: 0.78em;
+	color: var(--c-text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Go-deeper + settings buttons */
+.engine-panel .icon-btn {
+	width: 26px;
+	height: 26px;
+	color: var(--c-text-muted);
 }
 
 .icon-btn svg.gear {
@@ -283,34 +231,29 @@
 	transform: scale(0.75) rotate(60deg);
 }
 
-.move-engine-switch {
-	align-self: center;
-	margin: 0 8px;
-}
+/* ============================
+   Engine settings drawer
+   ============================ */
 
-/* Settings drawer */
+/* Overlays the lines below the header. */
 .engine-settings {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding: 8px 12px;
-	border-top: 1px solid var(--c-border-muted);
-}
-
-.engine-settings.hidden {
-	display: none;
-}
-
-.moves-engine-settings {
 	position: absolute;
 	top: var(--engine-settings-top, 48px);
 	left: 0;
 	right: 0;
 	z-index: 40;
-	border-bottom: 1px solid var(--c-border-muted);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 8px 12px;
 	border-top: 1px solid var(--c-border-muted);
+	border-bottom: 1px solid var(--c-border-muted);
 	background: var(--c-surface);
 	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.engine-settings.hidden {
+	display: none;
 }
 
 .setting-row {
@@ -331,17 +274,6 @@
 	accent-color: var(--c-accent, #3b82f6);
 }
 
-.setting-row select {
-	flex: 1 1 auto;
-	padding: 4px 6px;
-	border-radius: 4px;
-	border: 1px solid var(--c-border-muted);
-	background: var(--c-surface-2);
-	color: var(--c-text-emphasis);
-	font: inherit;
-	font-size: 0.95em;
-}
-
 .setting-value {
 	flex: 0 0 2em;
 	text-align: right;
@@ -349,14 +281,10 @@
 	font-variant-numeric: tabular-nums;
 }
 
-.setting-note {
-	margin: 0;
-	font-size: 0.78em;
-	color: var(--c-text-muted);
-	font-style: italic;
-}
+/* ============================
+   Engine lines (MultiPV)
+   ============================ */
 
-/* MultiPV lines */
 .engine-lines {
 	display: flex;
 	flex-direction: column;
@@ -409,15 +337,6 @@
 .line-move:hover {
 	background: var(--c-hover-overlay, rgba(255, 255, 255, 0.08));
 	color: var(--c-text-emphasis);
-}
-
-.line-move.unplayable {
-	cursor: default;
-}
-
-.line-move.unplayable:hover {
-	background: none;
-	color: var(--c-text-muted);
 }
 
 .line-pager {
@@ -491,6 +410,10 @@
 	color: color-mix(in srgb, #fff 78%, transparent);
 }
 
+/* ============================
+   Move variations
+   ============================ */
+
 .analysis-variation {
 	position: relative;
 	display: grid;
@@ -558,17 +481,95 @@
 	color: #fff;
 }
 
-.analysis-context-menu {
+/* ============================
+   Move navigation — nav buttons + actions menu
+   ============================ */
+
+.analysis .moves-nav {
+	position: relative;
+	order: 3;
+	flex: 0 0 auto;
+	background: var(--c-surface-2);
+}
+
+.analysis .move-btn {
+	min-width: 0;
+}
+
+.analysis-actions {
+	position: relative;
+	flex: 1;
+	display: flex;
+	min-width: 0;
+}
+
+.analysis-actions-toggle[aria-expanded='true'] {
+	color: var(--c-text-emphasis);
+	background: var(--c-hover-overlay);
+}
+
+/* ============================
+   Popup menus — actions dropdown + move-tree context menu
+   ============================ */
+
+.popup-menu {
 	position: absolute;
-	z-index: 1000;
-	min-width: 170px;
 	overflow: hidden;
 	border: 1px solid var(--c-border);
 	border-radius: 4px;
 	background: var(--c-surface);
-	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
 	color: var(--c-text);
+}
+
+.popup-menu button {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	width: 100%;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.popup-menu button:hover {
+	background: var(--c-hover-overlay);
+	color: var(--c-text-emphasis);
+}
+
+.popup-menu svg {
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+}
+
+/* Actions dropdown — anchored above the actions toggle in the nav bar. */
+.analysis-menu {
+	right: 2px;
+	bottom: calc(100% + 5px);
+	z-index: 20;
+	width: max-content;
+}
+
+.analysis-menu button {
+	padding: 8px 10px;
+	font-size: 0.9em;
+}
+
+/* Move-tree right-click menu — positioned at the cursor. */
+.analysis-context-menu {
+	z-index: 1000;
+	min-width: 170px;
 	user-select: none;
+}
+
+.analysis-context-menu button {
+	padding: 7px 12px;
+	font-size: 0.86em;
 }
 
 .analysis-context-title {
@@ -579,24 +580,6 @@
 	font-size: 0.84em;
 	font-weight: 700;
 	text-align: center;
-}
-
-.analysis-context-menu button {
-	display: block;
-	width: 100%;
-	padding: 7px 12px;
-	border: 0;
-	background: transparent;
-	color: inherit;
-	font: inherit;
-	font-size: 0.86em;
-	text-align: left;
-	cursor: pointer;
-}
-
-.analysis-context-menu button:hover {
-	background: var(--c-hover-overlay);
-	color: var(--c-text-emphasis);
 }
 
 /* ============================

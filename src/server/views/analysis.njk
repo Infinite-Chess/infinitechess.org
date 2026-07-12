@@ -158,7 +158,7 @@
 
 				{# Moves list. Managed by guimoveslist.ts #}
 				<div class="moves unselectable">
-					<div class="analysis-ceval-panel">
+					<div class="engine-panel">
 						<div class="engine-progress" id="engine-progress">
 							<div class="engine-progress-fill" id="engine-progress-fill"></div>
 						</div>
@@ -175,11 +175,11 @@
 							<button class="btn-bare icon-btn tooltip-d hidden" id="btn-go-deeper" data-tooltip="Search to depth 64">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 							</button>
-							<button class="btn-bare icon-btn tooltip-d analysis-engine-btn" id="btn-engine-settings" data-tooltip="Engine settings">
+							<button class="btn-bare icon-btn tooltip-d" id="btn-engine-settings" data-tooltip="Engine settings">
 								<svg class="gear"><use href="#svg-gear"/></svg>
 							</button>
 						</div>
-						<div class="engine-settings moves-engine-settings hidden" id="engine-settings">
+						<div class="engine-settings hidden" id="engine-settings">
 							{# All sliders. multipv/threads/depth are direct-value; hash is an index
 							   slider (JS maps the index to the real MB value). #}
 							<div class="setting-row">
@@ -214,7 +214,7 @@
 							<button class="btn-bare move-btn analysis-actions-toggle" id="btn-analysis-actions" title="More actions" aria-haspopup="menu" aria-expanded="false">
 								<svg class="move-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
 							</button>
-							<div class="analysis-menu hidden" id="analysis-actions-menu" role="menu">
+							<div class="popup-menu analysis-menu hidden" id="analysis-actions-menu" role="menu">
 								<button type="button" id="btn-flip" role="menuitem">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 7 3 3 7"/><line x1="7" y1="3" x2="7" y2="15"/><polyline points="17 16 17 21 21 17"/><line x1="17" y1="21" x2="17" y2="9"/></svg>
 									<span>Flip board</span>
@@ -229,7 +229,7 @@
 								</button>
 							</div>
 							{# Continue-from-here choice menu #}
-							<div class="analysis-menu hidden" id="continue-choice-menu" role="menu">
+							<div class="popup-menu analysis-menu hidden" id="continue-choice-menu" role="menu">
 								<button type="button" id="continue-public-seek" role="menuitem">
 									<svg><use href="#svg-globe"/></svg>
 									<span>{{ tsIndex.lobby_buttons.create_online }}</span>
