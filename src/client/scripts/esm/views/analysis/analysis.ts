@@ -27,7 +27,6 @@ import guiclock from '../../game/gui/guiclock.js';
 import icnpanel from './gui/guiicnpanel.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
-import guimaterial from '../../game/gui/guimaterial.js';
 import estoretypes from '../../game/editorstores/estoretypes.js';
 import enginepanel from './gui/guienginepanel.js';
 import gamesession from '../../game/chess/gamesession.js';
@@ -40,7 +39,8 @@ import gamecompressor from '../../game/chess/gamecompressor.js';
 import analysisworldborder from './analysisworldborder.js';
 import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
 
-import './gui/guimovetree.js'; // Registers the analysis move-tree renderer with guimoveslist.
+import './gui/guimovetree.js';
+import '../../game/gui/guimaterial.js';
 
 // Elements ----------------------------------------------------------------------
 
@@ -151,14 +151,10 @@ function syncVariantSelect(variantMetadata: string | undefined): void {
 	element_VariantSelect.value = (byCode ?? byName)?.value ?? '';
 }
 
-/** Flips the board orientation in place — a pure view change; the game and engine analysis are untouched. */
+/** Flips the board orientation in place. */
 function flipBoard(): void {
 	if (gamesession.isLoading()) return;
 	gameslot.flipView();
-	document.getElementById('eval-gauge')!.classList.toggle('flipped', !gameslot.areViewingWhite());
-	swapPlayerBarNames();
-	syncClockDisplayToViewedMove(true);
-	guimaterial.refresh();
 }
 
 function exportCurrentPosition():
@@ -291,6 +287,11 @@ function syncClockDisplayToViewedMove(remapBars = false): void {
 	guiclock.showViewedMoveClockStamps(gamefile);
 }
 
+/** Orients the eval gauge to match the current board perspective. */
+function syncEvalGaugeOrientation(): void {
+	document.getElementById('eval-gauge')!.classList.toggle('flipped', !gameslot.areViewingWhite());
+}
+
 function initListeners(): void {
 	window.addEventListener('beforeunload', () => {
 		LocalStorage.eraseExpiredItems();
@@ -362,11 +363,12 @@ function initListeners(): void {
 		if (e.key === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey) flipBoard();
 	});
 
-	// Reflect the loaded game's orientation on the eval gauge.
-	GameBus.addEventListener('game-loaded', () => {
-		document
-			.getElementById('eval-gauge')!
-			.classList.toggle('flipped', !gameslot.areViewingWhite());
+	// Reflect the board orientation on the eval gauge, both on initial load and on every flip.
+	GameBus.addEventListener('game-loaded', syncEvalGaugeOrientation);
+	GameBus.addEventListener('board-flipped', () => {
+		syncEvalGaugeOrientation();
+		swapPlayerBarNames();
+		syncClockDisplayToViewedMove(true);
 	});
 	GameBus.addEventListener('view-move', () => syncClockDisplayToViewedMove());
 }

@@ -127,6 +127,7 @@ function areViewingWhite(): boolean {
 function flipView(): void {
 	viewColor = typeutil.invertPlayer(viewColor);
 	if (!perspective.getEnabled()) camera.setPerspectiveRotation(0, areViewingWhite() ? 0 : 180);
+	GameBus.dispatch('board-flipped');
 }
 
 /**
