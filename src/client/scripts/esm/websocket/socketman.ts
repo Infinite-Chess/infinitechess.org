@@ -48,14 +48,14 @@ SocketBus.addEventListener('connection-lost', () => {
 	console.error('No connection.');
 });
 
-// Close the socket ourselves on page-away so the server gets a prompt, voluntary
-// "1000". Left to teardown, browsers abandon the connection (1006, or no close frame)
-// — read as an involuntary disconnect, the server unnecessarily giving them a cushion window.
-window.addEventListener('pagehide', closeSocket);
+// Close the socket with a controlled code before the page is unloaded, so the server knows
+// to not give us a grace period for reconnection. CANNOT USE 'pagehide' because that doesn't
+// reliably fire the close event before we leave, but defers it for when we RETURN, causing reconnection issues.
+window.addEventListener('beforeunload', closeSocket);
 
 // Page navigation handling
 window.addEventListener('pageshow', (event) => {
-	if (!event.persisted) return;
+	if (!event.persisted) return; // Page loaded normally
 	console.log('Page was returned to using the back or forward button.');
 	resubAll();
 });
