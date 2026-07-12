@@ -27,7 +27,7 @@ import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
-import { isTypingTarget } from '../analysis.js';
+import { listener_document } from '../../../game/chess/gamecore.js';
 import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
 
 // Elements -------------------------------------------------------------------------
@@ -215,13 +215,12 @@ function initListeners(): void {
 		// onEngineUpdate → the stats text and progress bar both update right away.
 		ceval.goDeeper();
 	});
+}
 
-	// Keyboard shortcut: l = toggle local evaluation (ignored while typing).
-	document.addEventListener('keydown', (e) => {
-		if (isTypingTarget(e.target)) return;
-		if (e.key === 'l' && !e.ctrlKey && !e.metaKey && !e.altKey)
-			setEngineEnabled(!element_Toggle.checked);
-	});
+/** Polls this panel's keyboard shortcuts. Called once per frame by the page loop. */
+function updateShortcuts(): void {
+	// l = toggle local evaluation (the input listener already ignores keys while typing).
+	if (listener_document.isKeyDown('KeyL')) setEngineEnabled(!element_Toggle.checked);
 }
 
 function syncSettingsOverlayPosition(): void {
@@ -647,5 +646,6 @@ selection.setViewedPositionBrancher(branchFromViewedPosition);
 
 export default {
 	init,
+	updateShortcuts,
 	branchFromViewedPosition,
 };

@@ -23,10 +23,8 @@ const HALF = bd.fromNumber(0.5);
 
 let enabled = false;
 
-function init(): void {
-	GameBus.addEventListener('engine-debug', toggle);
-	GameBus.addEventListener('render-below-pieces', render);
-}
+GameBus.addEventListener('engine-debug', toggle);
+GameBus.addEventListener('render-below-pieces', render);
 
 function toggle(): void {
 	enabled = !enabled;
@@ -100,7 +98,3 @@ function toWorld(coord: BigDecimal, axis: 0 | 1): number {
 function pushLine(data: number[], x1: number, y1: number, x2: number, y2: number): void {
 	data.push(x1, y1, ...BORDER_COLOR, x2, y2, ...BORDER_COLOR);
 }
-
-export default {
-	init,
-};
