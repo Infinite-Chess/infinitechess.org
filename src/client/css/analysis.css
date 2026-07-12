@@ -74,7 +74,8 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 8px 10px;
+	padding: 6px 8px;
+	background: color-mix(in srgb, var(--c-surface-2) 74%, transparent);
 }
 
 /* Big eval number (or #N / mate text) */
@@ -153,15 +154,6 @@
 	to {
 		transform: translateX(320%);
 	}
-}
-
-.analysis-ceval-panel .engine-header {
-	padding: 6px 8px;
-	background: color-mix(in srgb, var(--c-surface-2) 74%, transparent);
-}
-
-.analysis-ceval-panel .engine-stats {
-	color: var(--c-text-muted);
 }
 
 .analysis-ceval-panel .icon-btn {
@@ -283,10 +275,12 @@
 	flex: 0 0 auto;
 }
 
-/* Settings gear, active: tint only the icon green — no filled box behind it. */
-.analysis-engine-btn.active {
-	color: var(--c-accent, #6aa331);
-	background: none;
+.icon-btn svg.gear {
+	transform: scale(0.75);
+}
+
+.icon-btn.active svg.gear {
+	transform: scale(0.75) rotate(60deg);
 }
 
 .move-engine-switch {
