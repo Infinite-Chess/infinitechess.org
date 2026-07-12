@@ -223,6 +223,11 @@
 	color: var(--c-text-muted);
 }
 
+#btn-go-deeper svg {
+	width: 90%;
+	height: 90%;
+}
+
 .icon-btn svg.gear {
 	transform: scale(0.75);
 }
