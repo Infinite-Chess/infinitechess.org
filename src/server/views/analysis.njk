@@ -4,6 +4,7 @@
 
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/game.css'] }}" />
+<link rel="stylesheet" href="{{ manifest['css/variantselector.css'] }}" />
 <link rel="stylesheet" href="{{ manifest['css/analysis.css'] }}" />
 {% endblock %}
 
@@ -22,7 +23,11 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 {% from "components/user.njk" import usernameEmbed %}
+{% from "components/variantselector.njk" import variantSelector %}
 {% set tsIndex = scriptT('index') %}
+
+{# Shared codes-and-labels translations (variants, groups, modifiers, selector labels) #}
+{% set s = scriptT('shared') %}
 
 <main class="game analysis">
 
@@ -128,25 +133,19 @@
 			<div class="review-stats hidden" id="review-stats"></div>
 		</div>
 		{% else %}
-		<div class="analysis-setup panel unselectable">
-			<svg class="meta-icon svg-pawn"><use href="#svg-pawn"/></svg>
-			<select id="variant-select" class="variant-select" title="Variant">
-				{# Placeholder shown when a custom/unrecognized position is imported #}
-				<option value="" hidden>Custom position</option>
-				{% for g in variantGroups %}
-				<optgroup label="{{ g.name }}">
-					{% for v in g.variants %}
-					<option value="{{ v.code }}">{{ v.name }}</option>
-					{% endfor %}
-				</optgroup>
-				{% endfor %}
-			</select>
+		{# Variant + modifiers picker #}
+		<div class="variant-setup panel">
+			{{ variantSelector(variantGroups, s) }}
 		</div>
 		{% endif %}
 
 		{# ── Engine panel — local evaluation ─────────────────────────────── #}
 		{# ── Match panel — moves list (player bars exist for guiclock.ts but stay hidden) ── #}
 		<div class="play-group">
+
+			{# Top side's captured surplus material. Managed by guimaterial.ts #}
+			<div class="material" id="material-top"></div>
+
 			<div class="match-panel panel">
 				<div class="player-bar{{ ' hidden' if not meta }}" id="player-bar-top">
 					{% if meta %}
@@ -157,7 +156,7 @@
 
 				{# Moves list. Managed by guimoveslist.ts #}
 				<div class="moves unselectable">
-					<div class="analysis-ceval-panel">
+					<div class="engine-panel">
 						<div class="engine-progress" id="engine-progress">
 							<div class="engine-progress-fill" id="engine-progress-fill"></div>
 						</div>
@@ -174,11 +173,11 @@
 							<button class="btn-bare icon-btn tooltip-d hidden" id="btn-go-deeper" data-tooltip="Search to depth 64">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 							</button>
-							<button class="btn-bare icon-btn tooltip-d analysis-engine-btn" id="btn-engine-settings" data-tooltip="Engine settings">
-								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+							<button class="btn-bare icon-btn tooltip-d" id="btn-engine-settings" data-tooltip="Engine settings">
+								<svg class="gear"><use href="#svg-gear"/></svg>
 							</button>
 						</div>
-						<div class="engine-settings moves-engine-settings hidden" id="engine-settings">
+						<div class="engine-settings hidden" id="engine-settings">
 							{# All sliders. multipv/threads/depth are direct-value; hash is an index
 							   slider (JS maps the index to the real MB value). #}
 							<div class="setting-row">
@@ -210,34 +209,38 @@
 						<button class="btn-bare move-btn" id="btn-move-next" title="Next move" disabled><svg class="move-icon"><use href="#svg-move-next"/></svg></button>
 						<button class="btn-bare move-btn" id="btn-move-last" title="Skip to latest" disabled><svg class="move-icon"><use href="#svg-move-last"/></svg></button>
 						<div class="analysis-actions">
-							<button class="btn-bare move-btn analysis-actions-toggle" id="btn-analysis-actions" title="Analysis actions" aria-haspopup="menu" aria-expanded="false">
+							<button class="btn-bare move-btn analysis-actions-toggle" id="btn-analysis-actions" title="More actions" aria-haspopup="menu" aria-expanded="false">
 								<svg class="move-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
 							</button>
-							<div class="analysis-menu hidden" id="analysis-actions-menu" role="menu">
-								<button type="button" id="btn-flip" role="menuitem">
+							<div class="popup-menu analysis-menu hidden" id="analysis-actions-menu">
+								<button type="button" id="btn-flip">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 7 3 3 7"/><line x1="7" y1="3" x2="7" y2="15"/><polyline points="17 16 17 21 21 17"/><line x1="17" y1="21" x2="17" y2="9"/></svg>
 									<span>Flip board</span>
 								</button>
-								<button type="button" id="btn-edit-current" role="menuitem">
+								<button type="button" id="btn-edit-current">
 									<svg><use href="#svg-pencil"/></svg>
 									<span>Board editor</span>
 								</button>
-								<button type="button" id="btn-continue-from-here" role="menuitem">
+								<button type="button" id="btn-export-icn">
+									<svg><use href="#svg-clipboard"/></svg>
+									<span>Export ICN</span>
+								</button>
+								<button type="button" id="btn-continue-from-here">
 									<svg><use href="#svg-pawn"/></svg>
 									<span>Continue from here</span>
 								</button>
 							</div>
 							{# Continue-from-here choice menu #}
-							<div class="analysis-menu hidden" id="continue-choice-menu" role="menu">
-								<button type="button" id="continue-public-seek" role="menuitem">
+							<div class="popup-menu analysis-menu hidden" id="continue-choice-menu">
+								<button type="button" id="continue-public-seek">
 									<svg><use href="#svg-globe"/></svg>
 									<span>{{ tsIndex.lobby_buttons.create_online }}</span>
 								</button>
-								<button type="button" id="continue-play-computer" role="menuitem">
+								<button type="button" id="continue-play-computer">
 									<svg><use href="#svg-engine"/></svg>
 									<span>{{ tsIndex.lobby_buttons.play_computer }}</span>
 								</button>
-								<button type="button" id="continue-challenge-friend" role="menuitem">
+								<button type="button" id="continue-challenge-friend">
 									<svg><use href="#svg-profile"/></svg>
 									<span>{{ tsIndex.lobby_buttons.challenge_friend }}</span>
 								</button>
@@ -268,17 +271,18 @@
 					<span class="clock{{ '' if meta and meta.timed else ' hidden' }}"></span>
 				</div>
 			</div>
+
+		{# ── Game Review graph ── #}
+		<div class="review-graph panel hidden" id="review-graph">
+			<canvas id="review-graph-canvas"></canvas>
+			<div class="review-phase-markers" id="review-phase-markers"></div>
+			<div class="review-graph-tooltip hidden" id="review-graph-tooltip">
+				<strong id="review-graph-tooltip-move"></strong>
+				<span id="review-graph-tooltip-eval"></span>
+			</div>
 		</div>
 
-		{# ── ICN panel — import/export (the analysis page's replacement for chat) ── #}
-		<div class="review-graph panel hidden" id="review-graph">
-				<canvas id="review-graph-canvas"></canvas>
-				<div class="review-phase-markers" id="review-phase-markers"></div>
-				<div class="review-graph-tooltip hidden" id="review-graph-tooltip">
-					<strong id="review-graph-tooltip-move"></strong>
-					<span id="review-graph-tooltip-eval"></span>
-				</div>
-			</div>
+		{# ── ICN import/export panel, separate from the review graph ── #}
 		<div class="icn-panel panel" id="analysis-secondary-panel">
 			<div class="icn-content" id="icn-content">
 				<span class="icn-title">ICN</span>
@@ -290,6 +294,10 @@
 					<button class="action-btn icn-import-btn" id="btn-icn-import">Import</button>
 				</div>
 			</div>
+		</div>
+
+			{# Bottom side's captured surplus material #}
+			<div class="material" id="material-bottom"></div>
 		</div>
 
 	</aside>

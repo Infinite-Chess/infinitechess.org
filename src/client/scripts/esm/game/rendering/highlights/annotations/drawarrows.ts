@@ -119,7 +119,7 @@ function update(arrows: Arrow[]): void {
 		if (!respectiveListener.isPointerHeld(pointerId!)) {
 			// Prevents accidentally drawing tiny arrows while zoomed out if we intend to draw square
 			if (!mouse.isMouseClicked(Mouse.RIGHT)) addDrawnArrow(arrows);
-			// else We drew a square highlight instead of an arrow
+			// else we drew a square highlight instead of an arrow
 			stopDrawing();
 		}
 	}
@@ -174,7 +174,6 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean; deletedArrow?: Arro
 		}
 	}
 
-	// Add the arrow
 	arrows.push(createArrow(drag_start!, drag_end));
 	return { changed: true };
 }

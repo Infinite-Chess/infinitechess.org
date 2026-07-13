@@ -31,6 +31,7 @@ import ceval from './ceval.js';
 import movetree from './movetree.js';
 import gameslot from '../../game/chess/gameslot.js';
 import moveevals from './moveevals.js';
+import IndexedDB from '../../util/IndexedDB.js';
 import { GameBus } from '../../game/GameBus.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 
@@ -105,6 +106,16 @@ interface ReviewListeners {
 	finished: () => void;
 }
 
+/** Persisted engine output. Classifications are deliberately recomputed on restore. */
+interface CachedGameReview {
+	schemaVersion: number;
+	gameFingerprint: string;
+	engineUrl: string;
+	workerUrl: string;
+	depth: number;
+	results: EvaluateResult[];
+}
+
 // Constants ----------------------------------------------------------------------
 
 /** Chess.com-style classification thresholds on win-probability loss [0,1]. */
@@ -136,6 +147,9 @@ const ACPL_CLAMP = 1000;
 const MAX_POSITION_ATTEMPTS = 2;
 /** Fishnet analyzes five reported positions plus one overlapping TT warmup per chunk. */
 const REAL_POSITIONS_PER_CHUNK = 5;
+/** Bump whenever review interpretation or the persisted result shape changes. */
+const REVIEW_CACHE_SCHEMA_VERSION = 1;
+const REVIEW_CACHE_KEY_PREFIX = 'infinitechess-game-review-';
 
 // State ----------------------------------------------------------------------------
 
@@ -165,6 +179,9 @@ let turnOrder: Player[] = [];
 /** Search depth for this review. */
 let reviewDepth = 0;
 let division: ReviewDivision = {};
+let gameFingerprint = '';
+/** Invalidates an IndexedDB read if the loaded game changes while it is pending. */
+let reviewRunId = 0;
 
 /** Per-position engine results, indexed 0 (start position) … N (final position). */
 let results: (EvaluateResult | undefined)[] = [];
@@ -304,6 +321,7 @@ function start(): void {
 	longformIn = gamecompressor.compressGamefile(gamefile);
 	delete longformIn.metadata.Result; // Irrelevant to the engine.
 	delete longformIn.metadata.Termination;
+	gameFingerprint = serializePosition(mainlineNodes.length);
 	division = {};
 	division = determineDivision(
 		longformIn.position,
@@ -325,8 +343,99 @@ function start(): void {
 	icnByPosition = new Array(totalPositions).fill(undefined);
 	status = 'running';
 
-	spawnWorkers(workerCount);
 	notifyProgress();
+	const runId = ++reviewRunId;
+	void restoreCachedReview(runId).then((restored) => {
+		if (restored || status !== 'running' || runId !== reviewRunId) return;
+		spawnWorkers(workerCount);
+	});
+}
+
+function reviewCacheKey(): string | undefined {
+	const gameId = window.analysisPageData.gameId;
+	return gameId === null ? undefined : `${REVIEW_CACHE_KEY_PREFIX}${gameId}`;
+}
+
+/** Restores a complete compatible review, returning false when the engine must run. */
+async function restoreCachedReview(runId: number): Promise<boolean> {
+	const key = reviewCacheKey();
+	if (!key) return false;
+
+	let cached: CachedGameReview | undefined;
+	try {
+		cached = await IndexedDB.loadItem<CachedGameReview>(key);
+	} catch (error) {
+		console.warn('[Game Review] Could not read the local review cache:', error);
+		return false;
+	}
+	if (status !== 'running' || runId !== reviewRunId) return true;
+	if (!isCompatibleCache(cached)) {
+		if (cached !== undefined) void IndexedDB.deleteItem(key).catch(() => undefined);
+		return false;
+	}
+
+	reviewDepth = cached.depth;
+	results = cached.results.map((result) => ({ ...result, pv: result.pv?.slice() }));
+	evaluatedCount = results.length;
+	for (let index = 0; index < results.length; index++) {
+		icnByPosition[index] = serializePosition(index);
+		cachePositionEvaluation(index, results[index]!);
+	}
+	classifyReadyMoves();
+	status = 'done';
+	notifyProgress();
+	for (const listener of listeners.finished) listener();
+	return true;
+}
+
+function isCompatibleCache(cached: CachedGameReview | undefined): cached is CachedGameReview {
+	if (
+		cached === undefined ||
+		cached.schemaVersion !== REVIEW_CACHE_SCHEMA_VERSION ||
+		cached.gameFingerprint !== gameFingerprint ||
+		cached.engineUrl !== window.analysisPageData.engineUrl ||
+		cached.workerUrl !== window.analysisPageData.workerUrl ||
+		!Number.isInteger(cached.depth) ||
+		cached.depth < reviewDepth ||
+		!Array.isArray(cached.results) ||
+		cached.results.length !== results.length
+	)
+		return false;
+
+	return cached.results.every((result, index) => isCachedEvaluation(result, index));
+}
+
+function isCachedEvaluation(value: unknown, index: number): value is EvaluateResult {
+	if (typeof value !== 'object' || value === null) return false;
+	const result = value as Partial<EvaluateResult>;
+	return (
+		result.requestId === index &&
+		Number.isInteger(result.legalMoveCount) &&
+		typeof result.inCheck === 'boolean' &&
+		Number.isInteger(result.depth) &&
+		(result.cp === undefined || typeof result.cp === 'number') &&
+		(result.mate === undefined || typeof result.mate === 'number') &&
+		(result.pv === undefined ||
+			(Array.isArray(result.pv) && result.pv.every((move) => typeof move === 'string')))
+	);
+}
+
+async function persistCompletedReview(): Promise<void> {
+	const key = reviewCacheKey();
+	if (!key || results.some((result) => result === undefined)) return;
+	const cached: CachedGameReview = {
+		schemaVersion: REVIEW_CACHE_SCHEMA_VERSION,
+		gameFingerprint,
+		engineUrl: window.analysisPageData.engineUrl,
+		workerUrl: window.analysisPageData.workerUrl,
+		depth: reviewDepth,
+		results: results as EvaluateResult[],
+	};
+	try {
+		await IndexedDB.saveItem(key, cached);
+	} catch (error) {
+		console.warn('[Game Review] Could not save the local review cache:', error);
+	}
 }
 
 // Game phases (ported from scalachess Divider) -------------------------------------------
@@ -687,9 +796,11 @@ function cancel(): void {
 /** Fully clears the review (new game loaded / page reset). */
 function reset(): void {
 	terminateWorkers();
+	reviewRunId++;
 	status = 'idle';
 	mainlineNodes = [];
 	longformIn = undefined;
+	gameFingerprint = '';
 	results = [];
 	effectiveWhiteCp = [];
 	chunkQueue = [];
@@ -809,15 +920,7 @@ function dispatchNext(worker: Worker): void {
 	workerAssignment.set(worker, work);
 	if (!work.warmup) positionAttempts.set(index, (positionAttempts.get(index) ?? 0) + 1);
 
-	longformIn!.moves = mainlineNodes.slice(0, index).map((node) => node.move!);
-	const icn = icnconverter.LongToShort_Format(longformIn!, {
-		compact: true,
-		skipPosition: false,
-		spaces: false,
-		comments: false,
-		make_new_lines: false,
-		move_numbers: false,
-	});
+	const icn = serializePosition(index);
 	icnByPosition[index] = icn;
 
 	worker.postMessage({
@@ -828,6 +931,19 @@ function dispatchNext(worker: Worker): void {
 		...(work.newChunk && { newChunk: true }),
 		...(work.warmup && { warmup: true }),
 	} satisfies AnalysisCommand);
+}
+
+/** Canonical ICN for the position after `index` mainline plies. */
+function serializePosition(index: number): string {
+	longformIn!.moves = mainlineNodes.slice(0, index).map((node) => node.move!);
+	return icnconverter.LongToShort_Format(longformIn!, {
+		compact: true,
+		skipPosition: false,
+		spaces: false,
+		comments: false,
+		make_new_lines: false,
+		move_numbers: false,
+	});
 }
 
 // Result processing --------------------------------------------------------------------------
@@ -1015,6 +1131,7 @@ function finishReview(): void {
 	status = 'done';
 	notifyProgress();
 	for (const listener of listeners.finished) listener();
+	void persistCompletedReview();
 }
 
 // Summaries ------------------------------------------------------------------------------------

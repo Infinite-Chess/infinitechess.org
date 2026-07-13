@@ -55,6 +55,11 @@
 	<symbol id="svg-engine" fill="none" viewBox="0 0 240 240">
 		<path d="M90 20v30m60-30v30M90 190v30m60-30v30m40-130h30m-30 50h30M20 90h30m-30 50h30m48 50h44c17 0 25 0 32-3a30 30 0 00 13-13c3-7 3-15 3-32V98c0-17 0-25-3-32a30 30 0 00-13-13c-7-3-15-3-32-3H98c-17 0-25 0-32 3a30 30 0 00-13 13C50 73 50 81 50 98v44c0 17 0 25 3 32 3 5 8 10 13 13 7 3 15 3 32 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"/>
 	</symbol>
+	{# Gear #}
+	<!-- Author: thewolfkit | License: CC Attribution License | Source: https://www.svgrepo.com/svg/491415/gear -->
+	<symbol id="svg-gear" fill="none" viewBox="0 0 240 240">
+		<path d="M128 4c10 0 20 8 21 18v4a30 30 0 00 40 22l4-2c10-3 21 0 26 10l8 13c5 9 3 20-4 26l-4 3a28 28 0 00 0 44l4 3c7 6 10 17 4 26l-8 13c-5 10-16 13-26 10l-4-2a30 30 0 00-40 22v4c-2 10-10 18-21 18h-16c-10 0-20-8-21-18v-4a30 30 0 00-40-22l-4 2c-10 3-21 0-26-10l-8-13a20 20 0 01 4-26l4-3a28 28 0 00 0-44l-4-3A20 20 0 01 13 70L20 56c5-10 16-13 26-10l4 2a30 30 0 00 40-22v-4c2-10 10-18 21-18h16ZM120 153a33 33 0 10 0-66 33 33 0 00 0 66Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/>
+	</symbol>
 	{# Todo: Does this fall under the Lichess license? #}
 	{# <symbol id="svg-swords" fill="none" viewBox="0 0 12 12">
 		<path d="m2.424 9.825 10-10m0 10-10-10M5.52 6.727a1.873 1.873 0 0 0-2.651 0 1.873 1.873 0 0 0 0 2.652m9.11 0a1.873 1.873 0 0 0 0-2.652 1.873 1.873 0 0 0-2.651 0" stroke="currentColor" stroke-width=".60000002" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" transform="translate(-1.424 1.176)"/>
@@ -201,17 +206,17 @@
 	<nav class="header-nav">
 		<div class="header-nav-item header-dropdown-parent">
 			<button class="header-nav-link">{{ t.nav.learn }}</button>
-			<div class="header-dropdown" role="menu">
-				<a class="header-dropdown-item" role="menuitem" href="/tutorial">{{ t.nav.learn_dropdown.tutorial }}</a>
-				<a class="header-dropdown-item" role="menuitem" href="/checkmatepractice">{{ t.nav.learn_dropdown.checkmate_practice }}</a>
+			<div class="header-dropdown">
+				<a class="header-dropdown-item" href="/tutorial">{{ t.nav.learn_dropdown.tutorial }}</a>
+				<a class="header-dropdown-item" href="/checkmatepractice">{{ t.nav.learn_dropdown.checkmate_practice }}</a>
 			</div>
 		</div>
 
 		<div class="header-nav-item header-dropdown-parent">
 			<button class="header-nav-link">{{ t.nav.tools }}</button>
-			<div class="header-dropdown" role="menu">
-				<a class="header-dropdown-item" role="menuitem" href="/analysis">{{ t.nav.tools_dropdown.analysis_board }}</a>
-				<a class="header-dropdown-item" role="menuitem" href="/editor">{{ t.nav.tools_dropdown.board_editor }}</a>
+			<div class="header-dropdown">
+				<a class="header-dropdown-item" href="/analysis">{{ t.nav.tools_dropdown.analysis_board }}</a>
+				<a class="header-dropdown-item" href="/editor">{{ t.nav.tools_dropdown.board_editor }}</a>
 			</div>
 		</div>
 
@@ -252,9 +257,7 @@
 		{% endif %}
 
 		<div id="settings" class="settings header-icon-btn header-icon-btn-tight">
-			<svg class="gear" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
-				<path d="M128 4c10 0 20 8 21 18v4a30 30 0 00 40 22l4-2c10-3 21 0 26 10l8 13c5 9 3 20-4 26l-4 3a28 28 0 00 0 44l4 3c7 6 10 17 4 26l-8 13c-5 10-16 13-26 10l-4-2a30 30 0 00-40 22v4c-2 10-10 18-21 18h-16c-10 0-20-8-21-18v-4a30 30 0 00-40-22l-4 2c-10 3-21 0-26-10l-8-13a20 20 0 01 4-26l4-3a28 28 0 00 0-44l-4-3A20 20 0 01 13 70L20 56c5-10 16-13 26-10l4 2a30 30 0 00 40-22v-4c2-10 10-18 21-18h16ZM120 153a33 33 0 10 0-66 33 33 0 00 0 66Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/>
-			</svg>
+			<svg class="gear"><use href="#svg-gear"/></svg>
 
 			<div class="settings-dropdown dropdown hidden">
 				<div id="language-settings-dropdown-item" class="settings-dropdown-item">

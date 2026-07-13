@@ -39,6 +39,8 @@ interface GameBusEvents {
 	 * (no game state change), or alongside 'physical-move' when an actual move changes it too.
 	 */
 	'view-move': void;
+	/** Dispatched when the board's view orientation is flipped (white ⇄ black perspective). */
+	'board-flipped': void;
 	/**
 	 * Dispatched when the board is about to be pinched. Tells any
 	 * single-pointer action using the given pointer (piece drag, annotation

@@ -41,9 +41,6 @@ function handleGameState(
 	message: GameStateMessage,
 ): void {
 	const claimedGameConclusion = message.gameConclusion;
-
-	// This needs to be BEFORE synchronizeMovesList(), otherwise it won't resend our move since it thinks we're not in sync
-	onlinegame.setInSync(true);
 	if (message.finalized) onlinegame.onFinalized();
 
 	/**

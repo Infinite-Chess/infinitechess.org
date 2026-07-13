@@ -8,15 +8,12 @@
  */
 
 import type { Mesh } from '../../../game/rendering/piecemodels.js';
-import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { EngineArrow } from '../enginearrows.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
-import coordutil, { CoordsKey } from '../../../../../../shared/chess/util/coordutil.js';
 
 import ceval from '../ceval.js';
 import toast from '../../../components/toast.js';
@@ -27,7 +24,7 @@ import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
-import { isTypingTarget } from '../analysis.js';
+import { listener_document } from '../../../game/chess/gamecore.js';
 import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
 
 // Elements -------------------------------------------------------------------------
@@ -215,13 +212,12 @@ function initListeners(): void {
 		// onEngineUpdate → the stats text and progress bar both update right away.
 		ceval.goDeeper();
 	});
+}
 
-	// Keyboard shortcut: l = toggle local evaluation (ignored while typing).
-	document.addEventListener('keydown', (e) => {
-		if (isTypingTarget(e.target)) return;
-		if (e.key === 'l' && !e.ctrlKey && !e.metaKey && !e.altKey)
-			setEngineEnabled(!element_Toggle.checked);
-	});
+/** Polls this panel's keyboard shortcuts. Called once per frame by the page loop. */
+function updateShortcuts(): void {
+	// l = toggle local evaluation (the input listener already ignores keys while typing).
+	if (listener_document.isKeyDown('KeyL')) setEngineEnabled(!element_Toggle.checked);
 }
 
 function syncSettingsOverlayPosition(): void {
@@ -309,7 +305,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	updateGauge(best?.winningChances ?? 0);
 	updateProgress(update);
 	renderLines(update.lines);
-	updateArrows(update);
+	enginearrows.update(update);
 }
 
 /** Formats a white-POV line eval for display, e.g. "+1.4", "-0.3", "#5", "#-3". */
@@ -544,7 +540,8 @@ function renderMovesSlice(
 		moveSpan.className = 'line-move';
 		moveSpan.textContent = line.moves[i]!;
 		moveSpan.title = 'Play the line up to this move';
-		moveSpan.addEventListener('click', () => playLine(line.moves, i));
+		// Use 'pointerdown', as with 'click' the line changing mid-click cancels the click.
+		moveSpan.addEventListener('pointerdown', () => playLine(line.moves, i));
 		container.append(moveSpan);
 		if (k < count - 1) container.append(' ');
 	}
@@ -570,10 +567,13 @@ function playLine(tokens: string[], untilIndex: number): void {
 
 	const mesh = gameslot.getMesh();
 	if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile, mesh);
+	// Board moveIndex where the line's first token applies. Used for debugging.
+	const startMoveIndex = gamefile.state.local.moveIndex;
 	for (let i = 0; i <= untilIndex; i++) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, tokens[i]!);
 		if (!result.valid) {
-			console.warn(`Engine line move "${tokens[i]}" is not legal here: ${result.reason}`);
+			console.error(`Engine line move "${tokens[i]}" (token index ${i}) at moveIndex ${gamefile.state.local.moveIndex} is not legal to apply here: ${result.reason}.`); // prettier-ignore
+			console.error(`Full line (starting at moveIndex ${startMoveIndex}):`, tokens);
 			break;
 		}
 		// Animate only the final move of the sequence.
@@ -599,40 +599,6 @@ function branchFromViewedPosition(gamefile: GameFile, mesh: Mesh | undefined): v
 	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
 }
 
-// Engine arrows -------------------------------------------------------------------------
-
-/** Points the board arrows at each line's first move (only for the viewed position). */
-function updateArrows(update: CevalUpdate): void {
-	const gamefile = gameslot.getGamefile();
-	// Stale analysis (user already navigated elsewhere): don't draw wrong-position arrows.
-	if (!gamefile || gamefile.state.local.moveIndex !== update.moveIndex)
-		return enginearrows.clearArrows();
-
-	const arrows: EngineArrow[] = [];
-	update.lines.forEach((line, rank) => {
-		const parsed = parseFirstMove(line);
-		if (parsed) arrows.push({ start: parsed.start, end: parsed.end, rank });
-	});
-	enginearrows.setArrows(arrows);
-}
-
-/** Parses a compact move token "x,y>x,y=Q" into start/end coords. */
-function parseFirstMove(line: CevalLine): { start: Coords; end: Coords } | undefined {
-	const token = line.moves[0];
-	if (!token) return undefined;
-	const [fromStr, toStr] = token.split('>');
-	if (!fromStr || !toStr) return undefined;
-	const endStr = toStr.split('=')[0]!;
-	try {
-		return {
-			start: coordutil.getCoordsFromKey(fromStr as CoordsKey),
-			end: coordutil.getCoordsFromKey(endStr as CoordsKey),
-		};
-	} catch {
-		return undefined;
-	}
-}
-
 // Registration ---------------------------------------------------------------
 
 // Tell selection.ts to branch from the viewed ply (instead of forwarding to the front)
@@ -643,5 +609,6 @@ selection.setViewedPositionBrancher(branchFromViewedPosition);
 
 export default {
 	init,
+	updateShortcuts,
 	branchFromViewedPosition,
 };

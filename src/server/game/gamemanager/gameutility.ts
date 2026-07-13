@@ -841,6 +841,12 @@ function broadcastToSpectators(servergame: ServerGame, action: string, value: an
 	}
 }
 
+/** Broadcasts a role-agnostic game-route message to every connected client of the game. */
+function broadcastToEveryone(servergame: ServerGame, action: string, value: any): void {
+	broadcastToParticipants(servergame, action, value);
+	broadcastToSpectators(servergame, action, value);
+}
+
 /**
  * Simplifies a game's move into the {@link MovePacket} sent over the wire: its
  * serialized token plus its clockStamp (the clock at that move, for rewind display).
@@ -909,6 +915,7 @@ export default {
 	getSocketRoleInGame,
 	sendMessageToColor,
 	broadcastToSpectators,
+	broadcastToEveryone,
 	simplifyMove,
 	broadcastToParticipants,
 	getRematchOfferInfo,

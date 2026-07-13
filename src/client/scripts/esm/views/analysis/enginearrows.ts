@@ -9,7 +9,11 @@
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { Arrow } from '../../game/rendering/highlights/annotations/annotations.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { CevalLine, CevalUpdate } from './ceval.js';
 
+import icnconverter, { MoveCoords } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+
+import gameslot from '../../game/chess/gameslot.js';
 import drawarrows from '../../game/rendering/highlights/annotations/drawarrows.js';
 import frametracker from '../../game/rendering/frametracker.js';
 import { createRenderable } from '../../webgl/Renderable.js';
@@ -27,11 +31,9 @@ interface EngineArrow {
 // Constants -----------------------------------------------------------------
 
 /** Best-line arrow color (blue, like lichess' engine arrows). */
-const BEST_COLOR: Color = [0.15, 0.48, 0.85, 0.85];
-/** Alternative-line arrow color (grey-blue). */
-const ALT_COLOR: Color = [0.35, 0.5, 0.65, 1];
-/** Opacity per rank for alternative lines (rank 1..4). */
-const ALT_OPACITY = [0.55, 0.42, 0.32, 0.25];
+const COLOR: Color = [1.0, 0, 0, 0.7];
+/** Each rank is this much more transparent than the previous. */
+const RANK_OPACITY_MULTIPLIER = 0.7;
 
 // State -----------------------------------------------------------------------
 
@@ -40,13 +42,35 @@ let arrows: { arrow: Arrow; rank: number }[] = [];
 
 // Functions ---------------------------------------------------------------------
 
-/** Replaces the displayed engine arrows. */
-function setArrows(engineArrows: EngineArrow[]): void {
-	arrows = engineArrows
-		// A same-square "move" can't be drawn as an arrow.
-		.filter((a) => a.start[0] !== a.end[0] || a.start[1] !== a.end[1])
-		.map((a) => ({ arrow: drawarrows.createArrow(a.start, a.end), rank: a.rank }));
+/** Points the board arrows at each line's first move (only for the viewed position). */
+function update(update: CevalUpdate): void {
+	const gamefile = gameslot.getGamefile();
+	// Stale analysis (user already navigated elsewhere): don't draw wrong-position arrows.
+	if (!gamefile || gamefile.state.local.moveIndex !== update.moveIndex) return clearArrows();
+
+	const engineArrows: EngineArrow[] = [];
+	update.lines.forEach((line, rank) => {
+		const parsed = parseFirstMove(line);
+		if (parsed) engineArrows.push({ start: parsed.startCoords, end: parsed.endCoords, rank });
+	});
+
+	arrows = engineArrows.map((a) => ({
+		arrow: drawarrows.createArrow(a.start, a.end),
+		rank: a.rank,
+	}));
 	frametracker.onVisualChange();
+}
+
+/** Parses a compact move token "x,y>x,y=Q" into start/end coords. */
+function parseFirstMove(line: CevalLine): MoveCoords | undefined {
+	const token = line.moves[0];
+	if (!token) return undefined;
+	try {
+		return icnconverter.parseTokenMove(token);
+	} catch (e) {
+		console.error('Failed to parse engine move token', token, e);
+		return undefined;
+	}
 }
 
 /** Clears all displayed engine arrows. */
@@ -64,10 +88,8 @@ function render(): void {
 	const data: number[] = [...arrows]
 		.sort((a, b) => b.rank - a.rank)
 		.flatMap(({ arrow, rank }) => {
-			const color: Color =
-				rank === 0
-					? BEST_COLOR
-					: [ALT_COLOR[0], ALT_COLOR[1], ALT_COLOR[2], ALT_OPACITY[Math.min(rank - 1, ALT_OPACITY.length - 1)]!]; // prettier-ignore
+			const color: Color = [...COLOR];
+			color[3] *= Math.pow(RANK_OPACITY_MULTIPLIER, rank);
 			return drawarrows.getDataArrow(arrow, color);
 		});
 
@@ -75,9 +97,7 @@ function render(): void {
 }
 
 export default {
-	setArrows,
+	update,
 	clearArrows,
 	render,
 };
-
-export type { EngineArrow };

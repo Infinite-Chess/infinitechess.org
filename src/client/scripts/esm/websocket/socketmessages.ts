@@ -167,6 +167,13 @@ function cancelHeartbeatTimer(): void {
 	}
 }
 
+/** Clears all timers and pending callbacks tied to the socket. Called when it's torn down. */
+function clearPendingState(): void {
+	cancelAllEchoTimers();
+	cancelHeartbeatTimer();
+	resetOnreplyFuncs();
+}
+
 /**
  * Called when no message has been received within the expected time frame.
  * Closes the socket.
@@ -262,10 +269,8 @@ async function send(
 export default {
 	send,
 	cancelTimerOfMessageID,
-	cancelAllEchoTimers,
+	clearPendingState,
 	executeOnreplyFunc,
-	resetOnreplyFuncs,
 	rescheduleHeartbeatTimer,
-	cancelHeartbeatTimer,
 	alsoPrintIncomingEchos,
 };

@@ -20,25 +20,40 @@ import frametracker from '../rendering/frametracker.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 
+/** A move request dispatched to the engine worker for a specific position. */
 interface DebugMoveRequest {
+	/** Unique id for correlating this request with its response. */
 	id: number;
+	/** Compact ICN position key, used as the cache key. */
 	key: string;
+	/** The game state to compute legal moves for. */
 	gamefile: GameFile;
+	/** Compact ICN of the position (same as `key`). */
 	positionIcn: string;
 }
 
+/** Callbacks provided by the engine consumer to wire the overlay into a specific engine worker. */
 interface EngineLegalMovesDebugOptions {
+	/** Returns true when the position is within the engine's safe world border. */
 	canRequest: () => boolean;
+	/** Sends `request` to the engine worker. */
 	requestMoves: (request: DebugMoveRequest) => void;
 }
 
+/** Whether the GameBus listeners have been registered. */
 let initialized = false;
+/** Whether the overlay is currently active. */
 let enabled = false;
+/** Monotonically increasing counter used to assign unique request ids. */
 let nextRequestId = 1;
+/** Engine hooks provided by the consumer via {@link init}. */
 let options: EngineLegalMovesDebugOptions | undefined;
 
+/** Legal move lists keyed by compact ICN position string. */
 const legalMovesByPosition = new Map<string, string[]>();
+/** Maps each in-flight request id to its position key. */
 const requestKeyById = new Map<number, string>();
+/** Ordered queue of in-flight request ids, used for FIFO response matching. */
 const pendingRequestIds: number[] = [];
 
 /** Wires up the overlay's engine hooks and (once) its GameBus listeners. */

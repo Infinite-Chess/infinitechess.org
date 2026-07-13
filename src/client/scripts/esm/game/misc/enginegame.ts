@@ -235,9 +235,7 @@ function makeEngineMove(tokenMove: unknown): void {
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 }
 
-/**
- * Requests engine-generated legal moves for the currently viewed position.
- */
+/** Requests engine-generated legal moves for the currently viewed position. */
 function requestGeneratedMoves(gamefile: GameFile): void {
 	// Compress the gamefile as a single position (not including future moves)
 	// This ensures the engine analyzes the currently viewed position

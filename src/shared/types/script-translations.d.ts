@@ -65,13 +65,6 @@ export interface ScriptTranslations {
 			cancel_seek: string;
 			accept_seek: string;
 		};
-		modal: {
-			variant_selector: {
-				saved_positions: string;
-				local_load_failed: string;
-				cloud_load_failed: string;
-			};
-		};
 	};
 	register: {
 		verification_failed: string;
@@ -136,6 +129,22 @@ export interface ScriptTranslations {
 		user_status: {
 			guest_indicator: string;
 			you_indicator: string;
+		};
+		variant_selector: {
+			label: string;
+			add_modifier: string;
+			edit: string;
+			custom_create_name: string;
+			custom_create_desc: string;
+			custom_from_icn_name: string;
+			custom_from_icn_desc: string;
+			icn_placeholder: string;
+			saved_positions: string;
+			local_load_failed: string;
+			cloud_load_failed: string;
+		};
+		modifiers_section: {
+			label: string;
 		};
 		variants: {
 			Classical: string;

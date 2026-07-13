@@ -37,6 +37,7 @@ export const ESMEntryPoints = [
 	'src/client/css/register-awaiting.css',
 	'src/client/css/game.css',
 	'src/client/css/analysis.css',
+	'src/client/css/variantselector.css',
 
 	// Scripts
 	'src/client/scripts/esm/components/header/header.ts',

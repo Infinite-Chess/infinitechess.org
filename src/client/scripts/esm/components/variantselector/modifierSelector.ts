@@ -1,7 +1,7 @@
-// src/client/scripts/esm/views/index/modifierSelector.ts
+// src/client/scripts/esm/components/variantselector/modifierSelector.ts
 
 /**
- * Manages game modifier selection in the game setup modal:
+ * Manages game modifier selection in the variant selector widget:
  * the modifier dropdown, selected modifiers display, and per-modifier settings (e.g. Slide Limit).
  */
 
@@ -12,7 +12,16 @@ import modutil from '../../../../../shared/util/modutil.js';
 import gameconfig from '../../../../../shared/util/gameconfig.js';
 
 import variantSelector from './variantSelector.js';
-import { syncRatedButton } from './gameSetupModal.js';
+
+// Types -------------------------------------------------
+
+/** Callbacks a host wires to react to the modifier selector's state. */
+interface ModifierSelectorConfig {
+	/** Fired on every modifier change, including live slider drags; hosts sync dependent UI. */
+	onChange?: () => void;
+	/** Fired only on committed changes (add/remove a modifier, or release the slider); hosts act on it. */
+	onCommit?: () => void;
+}
 
 // Constants ---------------------------------------------
 
@@ -31,12 +40,17 @@ const element_slideLimitDisplay = document.getElementById('slide-limit-display')
 
 // State -------------------------------------------------
 
+/** Host callbacks, populated by {@link initModifierSelector}. */
+let config: ModifierSelectorConfig = {};
+
 const selectedModifiers = new Set<ModifierCode>();
 
 // Functions ---------------------------------------------
 
 /** Wires all modifier selector interactions. */
-function initModifierSelector(): void {
+function initModifierSelector(hostConfig: ModifierSelectorConfig = {}): void {
+	config = hostConfig;
+
 	element_modifierAddBtn.addEventListener('click', (e) => {
 		e.stopPropagation();
 		variantSelector.closeVariantDropdown();
@@ -54,11 +68,14 @@ function initModifierSelector(): void {
 		item.addEventListener('click', () => selectModifier(code));
 	});
 
+	// input updates the live display (onChange); change (drag release) is a commit.
 	element_slideLimitSlider.addEventListener('input', () => {
 		const idx = parseInt(element_slideLimitSlider.value, 10);
 		const value = gameconfig.SLIDE_LIMIT_VALUES[idx]!;
 		element_slideLimitDisplay.textContent = String(value);
+		config.onChange?.();
 	});
+	element_slideLimitSlider.addEventListener('change', () => config.onCommit?.());
 
 	// Initialize slider display
 	const defaultIdx = gameconfig.SLIDE_LIMIT_VALUES.indexOf(SLIDE_LIMIT_DEFAULT);
@@ -85,7 +102,8 @@ function selectModifier(code: ModifierCode): void {
 	closeModifierDropdown();
 	refreshModifiersSection();
 	refreshModifierAddBtn();
-	syncRatedButton();
+	config.onChange?.();
+	config.onCommit?.();
 }
 
 /** Removes a modifier from the selection, reveals it in the dropdown, and refreshes the display. */
@@ -96,7 +114,8 @@ function deselectModifier(code: ModifierCode): void {
 		?.classList.remove('hidden');
 	refreshModifiersSection();
 	refreshModifierAddBtn();
-	syncRatedButton();
+	config.onChange?.();
+	config.onCommit?.();
 }
 
 /** Rebuilds the selected modifier chips and shows/hides modifier-specific sections. */
