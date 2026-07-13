@@ -758,7 +758,7 @@ function LongToShort_Format(
 
 	// =================================== Section 3: Moves ===================================
 
-	if (longformat.moves) {
+	if (longformat.moves && longformat.moves.length > 0) {
 		const move_options = {
 			compact: options.compact,
 			spaces: options.spaces,
