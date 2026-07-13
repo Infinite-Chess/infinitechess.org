@@ -10,12 +10,19 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
+/** A single position in the analysis tree: one move plus its continuations. */
 interface AnalysisMoveNode {
+	/** Unique, monotonically-assigned identifier for this node. */
 	id: number;
+	/** Half-move number (0-based); the root is -1. */
 	ply: number;
+	/** The move reaching this node, or `undefined` for the root. */
 	move: MoveFull | undefined;
+	/** The node this one branches from, or `undefined` for the root. */
 	parent: AnalysisMoveNode | undefined;
+	/** Continuations from this node; the first is the mainline, the rest variations. */
 	children: AnalysisMoveNode[];
+	/** When set, this node is treated as a variation even if it's its parent's first child. */
 	forceVariation?: boolean;
 	/**
 	 * The global game-conclusion at this node's position, if it terminates the game. Only a
@@ -25,8 +32,11 @@ interface AnalysisMoveNode {
 	gameConclusion?: GameConclusion;
 }
 
+/** Root of the tree (a placeholder node at ply -1), or `undefined` until built. */
 let root: AnalysisMoveNode | undefined;
+/** The currently-selected branch, root-first; its node at index `i` sits at `gamefile` moveIndex `i - 1`. */
 let activeLine: AnalysisMoveNode[] = [];
+/** Counter handing out the next node `id`; reset whenever the tree is rebuilt. */
 let nextNodeId = 1;
 
 function createNode(
