@@ -177,6 +177,9 @@ function initIcnValidation(): void {
 	// Blur/paste are "commit" points; live typing only updates validity (onChange), not a commit.
 	element_icnInput.addEventListener('blur', () => {
 		validateIcnInput(true);
+		// Skip the commit if the field still holds exactly the ICN already accepted — re-committing
+		// would reload the position, needlessly wiping any analysis branches made from it.
+		if (loaded.selection.kind === 'icn' && element_icnInput.value === loaded.icn) return;
 		config.onCommit?.();
 	});
 	element_icnInput.addEventListener('focus', () => {
