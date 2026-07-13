@@ -40,6 +40,8 @@ type DisplaySelection =
 
 /** Callbacks a host wires to react to the selector's state. */
 interface VariantSelectorConfig {
+	/** Whether to reject oversized positions. Provide `true` when the ICN is used in seek-creation. */
+	enforceSizeLimit: boolean;
 	/** Fires on every selection/validity change (live). Sync dependent UI (e.g. a submit button). */
 	onChange?: () => void;
 	/** Fires only when a selection is committed (a discrete pick, or an ICN blur/paste). */
@@ -73,8 +75,8 @@ const element_btnCustomFromICNName =
 
 // State ----------------------------------------------
 
-/** Host callbacks, populated by {@link initVariantGroupDropdown}. */
-let config: VariantSelectorConfig = {};
+/** Host config, populated by {@link initVariantGroupDropdown}. */
+let config: VariantSelectorConfig;
 
 /** The currently selected variant. */
 let selection: DisplaySelection = { kind: 'preset', code: 'Classical' };
@@ -100,7 +102,7 @@ const patch = init([attributesModule, classModule, eventListenersModule]);
 // Initialization ----------------------------------------------
 
 /** Wires the variant selector open/close and group navigation. */
-function initVariantGroupDropdown(hostConfig: VariantSelectorConfig = {}): void {
+function initVariantGroupDropdown(hostConfig: VariantSelectorConfig): void {
 	config = hostConfig;
 	applyVariantToSelector('Classical');
 
@@ -438,7 +440,7 @@ function setIcnResult(result: typeof icnResult): void {
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(variantOptions: VariantOptions): void {
 	const icnString = variantOptionsToICN(variantOptions);
-	const illegalReason = validatePosition(variantOptions, icnString);
+	const illegalReason = validatePosition(variantOptions, icnString, config.enforceSizeLimit);
 	if (illegalReason !== null) {
 		element_variantDisplay.classList.add('invalid');
 		element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
@@ -492,7 +494,7 @@ function validateIcnInput(revealErrors: boolean): void {
 		const icnVariantOptions = icnimport.variantOptionsFromLongFormat(longFormat, {
 			fullMove: 1,
 		});
-		const illegalReason = validatePosition(icnVariantOptions, value);
+		const illegalReason = validatePosition(icnVariantOptions, value, config.enforceSizeLimit);
 		if (illegalReason !== null) {
 			if (revealErrors) {
 				element_icnInputWrap.classList.add('invalid');

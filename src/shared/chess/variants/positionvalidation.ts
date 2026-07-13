@@ -68,11 +68,14 @@ export type PositionErrorCode =
  *
  * @param variantOptions - The position and game rules to validate.
  * @param icnString - The ICN string representation of the position, used to check its length.
+ * @param enforceSizeLimit - Whether to reject positions whose ICN exceeds the size threshold.
+ * Provide `true` when the icn is used in seek-creation.
  * @returns `null` if valid, or a {@link PositionErrorCode} describing the failure.
  */
 export function validatePosition(
 	variantOptions: VariantOptions,
 	icnString: string,
+	enforceSizeLimit: boolean,
 ): PositionErrorCode | null {
 	const { position, gameRules } = variantOptions;
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder);
@@ -94,8 +97,8 @@ export function validatePosition(
 		return 'incomplete_turn_order';
 	}
 
-	// --- Rule 3: ICN string length limit ---
-	if (icnString.length > POSITION_STRING_THRESHOLD) {
+	// --- Rule 3: ICN string length limit (seek-hardening only) ---
+	if (enforceSizeLimit && icnString.length > POSITION_STRING_THRESHOLD) {
 		return 'position_too_large';
 	}
 
