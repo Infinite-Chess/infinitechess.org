@@ -17,6 +17,7 @@ import type {
 
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
+import jsutil from '../../../../../shared/util/jsutil.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
@@ -594,7 +595,11 @@ function getCustomPosition():
 		return element_icnInput.value ? { kind: 'icn', icn: element_icnInput.value } : null;
 	}
 	// online / local saved position — the resolved options are loadable as-is (no moves).
-	return { kind: 'options', options: icnResult.options };
+	return {
+		kind: 'options',
+		// Deep-copy to avoid callers mutating original gameRules.slideLimit
+		options: jsutil.deepCopyObject(icnResult.options),
+	};
 }
 
 /**
