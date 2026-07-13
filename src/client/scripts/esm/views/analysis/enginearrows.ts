@@ -11,6 +11,7 @@ import type { Arrow } from '../../game/rendering/highlights/annotations/annotati
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { CevalLine, CevalUpdate } from './ceval.js';
 
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import icnconverter, { MoveCoords } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import gameslot from '../../game/chess/gameslot.js';
@@ -54,10 +55,13 @@ function update(update: CevalUpdate): void {
 		if (parsed) engineArrows.push({ start: parsed.startCoords, end: parsed.endCoords, rank });
 	});
 
-	arrows = engineArrows.map((a) => ({
-		arrow: drawarrows.createArrow(a.start, a.end),
-		rank: a.rank,
-	}));
+	arrows = engineArrows
+		// A same-square "move" can't be drawn as an arrow. In engines, A1>A1 is a default move.
+		.filter((a) => !coordutil.areCoordsEqual(a.start, a.end))
+		.map((a) => ({
+			arrow: drawarrows.createArrow(a.start, a.end),
+			rank: a.rank,
+		}));
 	frametracker.onVisualChange();
 }
 
