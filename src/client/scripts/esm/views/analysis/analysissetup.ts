@@ -10,6 +10,7 @@
  */
 
 import gamesession from '../../game/chess/gamesession.js';
+import { GameBus } from '../../game/GameBus.js';
 import analysisloader from './analysisloader.js';
 import variantSelector from '../../components/variantselector/variantSelector.js';
 import modifierSelector from '../../components/variantselector/modifierSelector.js';
@@ -20,6 +21,9 @@ function init(): void {
 	variantSelector.initVariantGroupDropdown({ enforceSizeLimit: false, onCommit: loadSelection });
 	variantSelector.initIcnValidation();
 	modifierSelector.initModifierSelector({ onCommit: loadSelection });
+	// A move on the board abandons any un-committed selection (e.g. an opened, empty From-ICN
+	// field), so snap the display back to the variant actually loaded on the board.
+	GameBus.addEventListener('physical-move', () => variantSelector.restoreAcceptedDisplay());
 }
 
 /** The active Slide Limit modifier as a bigint gamerule, or undefined if none is selected. */
@@ -51,6 +55,9 @@ function loadSelection(): void {
 			void analysisloader.pasteGame(custom.icn, undefined, undefined, slideLimit);
 		}
 	}
+
+	// Remember what's now loaded, so a later board move can revert the display to it.
+	variantSelector.snapshotAccepted();
 }
 
 export default { init };

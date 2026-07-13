@@ -7,9 +7,9 @@
  */
 
 import type { VNode } from 'snabbdom';
-import type { SeekVariant } from '../../../../../shared/types.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
+import type { SeekVariant, SeekModifier } from '../../../../../shared/types.js';
 import type {
 	VariantGroup,
 	VariantCode,
@@ -26,6 +26,7 @@ import { validatePosition } from '../../../../../shared/chess/variants/positionv
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
+import modifierSelector from './modifierSelector.js';
 import editorpositionsdb from '../../game/editorstores/esavestore.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
 
@@ -80,6 +81,19 @@ let config: VariantSelectorConfig;
 
 /** The currently selected variant. */
 let selection: DisplaySelection = { kind: 'preset', code: 'Classical' };
+/**
+ * The full state currently committed — what the display reverts to when
+ * {@link restoreAcceptedDisplay} is called to abandon an un-committed selection.
+ * Always valid since invalid selections are never committed.
+ */
+let loaded: {
+	selection: DisplaySelection;
+	/** The ICN a From-ICN position was loaded from; undefined for non-ICN selections. */
+	icn?: string;
+	/** The modifiers active at load, restored alongside the selection. */
+	modifiers: SeekModifier[];
+} = { selection: { kind: 'preset', code: 'Classical' }, icn: '', modifiers: [] };
+
 let customContentVNode: VNode | Element = element_customVariantContent;
 /** The last validated custom position (ICN input or saved position). null while loading or unset. */
 let icnResult: {
@@ -429,6 +443,41 @@ function applyCustomToSelector(name: string): void {
 	setSelectorDisplay(name, 'svg-wrench');
 }
 
+// Remembering Committed State ----------------------------------------------
+
+/** Records the current selection, ICN, and modifiers as accepted to remember. */
+function snapshotAccepted(): void {
+	loaded = {
+		selection,
+		icn: selection.kind === 'icn' ? element_icnInput.value : undefined,
+		modifiers: modifierSelector.getSeekModifiers(),
+	};
+}
+
+/**
+ * Reverts the display to the last accepted state. Hosts call this when the user
+ * performs an action signifying they're no longer interested in the uncommitted selection.
+ */
+function restoreAcceptedDisplay(): void {
+	selection = loaded.selection;
+	element_variantDisplay.classList.remove('invalid');
+	if (selection.kind === 'icn') {
+		// Restore the field to the ICN that was actually loaded (discarding any invalid edits),
+		// then re-validate to refresh validity and clear the error highlight.
+		element_variantCustomSection.classList.remove('hidden');
+		element_icnInput.value = loaded.icn!;
+		validateIcnInput(false);
+		applyCustomToSelector(element_btnCustomFromICNName.textContent!);
+	} else {
+		element_variantCustomSection.classList.add('hidden');
+		element_icnInputWrap.classList.remove('invalid');
+		element_icnErrorText.textContent = '';
+		if (selection.kind === 'preset') applyVariantToSelector(selection.code);
+		else applyCustomToSelector(selection.name);
+	}
+	modifierSelector.applyModifiers(loaded.modifiers);
+}
+
 // Validation ----------------------------------------------
 
 /** Sets icnResult and notifies the host of the change. */
@@ -632,4 +681,6 @@ export default {
 	getCustomPosition,
 	getInviteVariant,
 	applyIcn,
+	snapshotAccepted,
+	restoreAcceptedDisplay,
 };
