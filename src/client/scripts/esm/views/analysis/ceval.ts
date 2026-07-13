@@ -885,6 +885,8 @@ function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
 }
 
 export default {
+	maxThreads,
+	requestLegalMoves,
 	init,
 	isEnabled,
 	isBlockedByEngineWorldBorder,
@@ -893,8 +895,6 @@ export default {
 	updateSettings,
 	goDeeper,
 	getLatestUpdate,
-	getStatus,
-	requestLegalMoves,
 	onUpdate,
 	onStatus,
 	onLegalMoves,
@@ -902,7 +902,6 @@ export default {
 	MIN_DEPTH,
 	HASH_OPTIONS,
 	MAX_MULTI_PV,
-	maxThreads,
 };
 
 export type { CevalSettings, CevalLine, CevalUpdate, CevalStatus, CevalLegalMovesUpdate };

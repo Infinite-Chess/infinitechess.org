@@ -592,5 +592,4 @@ selection.setViewedPositionBrancher(branchFromViewedPosition);
 export default {
 	init,
 	updateShortcuts,
-	branchFromViewedPosition,
 };

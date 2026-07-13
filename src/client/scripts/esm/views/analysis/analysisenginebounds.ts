@@ -37,6 +37,5 @@ function findFirstPieceOutsideEngineWorld(gamefile: GameFile): Coords | undefine
 
 export default {
 	getEngineWorldBorder,
-	isCoordInsideEngineWorld,
 	findFirstPieceOutsideEngineWorld,
 };

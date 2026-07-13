@@ -172,8 +172,8 @@ async function pasteGame(
 }
 
 export default {
+	loadInitialGame,
 	loadVariant,
 	loadVariantOptions,
 	pasteGame,
-	loadInitialGame,
 };
