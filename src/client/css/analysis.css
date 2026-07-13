@@ -20,14 +20,11 @@
    Play group / match panel layout
    ============================ */
 
+/* Like the game page (flex: 0 0 auto) the group never shrinks below its content, so
+   short screens scroll the sidebar instead of clipping the panel — but grow: 1 lets the
+   moves list expand to fill spare sidebar space (capped by .match-panel max-height). */
 .analysis .play-group {
-	flex: 1 1 360px;
-	min-height: 260px;
-}
-
-.analysis .play-group:has(.player-bar:not(.hidden)) {
-	flex-basis: 430px;
-	min-height: 430px;
+	flex: 1 0 auto;
 }
 
 .analysis .match-panel {
