@@ -4,6 +4,7 @@
 
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/game.css'] }}" />
+<link rel="stylesheet" href="{{ manifest['css/variantselector.css'] }}" />
 <link rel="stylesheet" href="{{ manifest['css/analysis.css'] }}" />
 {% endblock %}
 
@@ -22,7 +23,11 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 {% from "components/user.njk" import usernameEmbed %}
+{% from "components/variantselector.njk" import variantSelector %}
 {% set tsIndex = scriptT('index') %}
+
+{# Shared codes-and-labels translations (variants, groups, modifiers, selector labels) #}
+{% set s = scriptT('shared') %}
 
 <main class="game analysis">
 
@@ -125,19 +130,9 @@
 			</div>
 		</div>
 		{% else %}
-		<div class="analysis-setup panel unselectable">
-			<svg class="meta-icon svg-pawn"><use href="#svg-pawn"/></svg>
-			<select id="variant-select" class="variant-select" title="Variant">
-				{# Placeholder shown when a custom/unrecognized position is imported #}
-				<option value="" hidden>Custom position</option>
-				{% for g in variantGroups %}
-				<optgroup label="{{ g.name }}">
-					{% for v in g.variants %}
-					<option value="{{ v.code }}">{{ v.name }}</option>
-					{% endfor %}
-				</optgroup>
-				{% endfor %}
-			</select>
+		{# Variant + modifiers picker #}
+		<div class="variant-setup panel">
+			{{ variantSelector(variantGroups, s) }}
 		</div>
 		{% endif %}
 
@@ -214,31 +209,35 @@
 							<button class="btn-bare move-btn analysis-actions-toggle" id="btn-analysis-actions" title="More actions" aria-haspopup="menu" aria-expanded="false">
 								<svg class="move-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
 							</button>
-							<div class="popup-menu analysis-menu hidden" id="analysis-actions-menu" role="menu">
-								<button type="button" id="btn-flip" role="menuitem">
+							<div class="popup-menu analysis-menu hidden" id="analysis-actions-menu">
+								<button type="button" id="btn-flip">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 7 3 3 7"/><line x1="7" y1="3" x2="7" y2="15"/><polyline points="17 16 17 21 21 17"/><line x1="17" y1="21" x2="17" y2="9"/></svg>
 									<span>Flip board</span>
 								</button>
-								<button type="button" id="btn-edit-current" role="menuitem">
+								<button type="button" id="btn-edit-current">
 									<svg><use href="#svg-pencil"/></svg>
 									<span>Board editor</span>
 								</button>
-								<button type="button" id="btn-continue-from-here" role="menuitem">
+								<button type="button" id="btn-export-icn">
+									<svg><use href="#svg-clipboard"/></svg>
+									<span>Export ICN</span>
+								</button>
+								<button type="button" id="btn-continue-from-here">
 									<svg><use href="#svg-pawn"/></svg>
 									<span>Continue from here</span>
 								</button>
 							</div>
 							{# Continue-from-here choice menu #}
-							<div class="popup-menu analysis-menu hidden" id="continue-choice-menu" role="menu">
-								<button type="button" id="continue-public-seek" role="menuitem">
+							<div class="popup-menu analysis-menu hidden" id="continue-choice-menu">
+								<button type="button" id="continue-public-seek">
 									<svg><use href="#svg-globe"/></svg>
 									<span>{{ tsIndex.lobby_buttons.create_online }}</span>
 								</button>
-								<button type="button" id="continue-play-computer" role="menuitem">
+								<button type="button" id="continue-play-computer">
 									<svg><use href="#svg-engine"/></svg>
 									<span>{{ tsIndex.lobby_buttons.play_computer }}</span>
 								</button>
-								<button type="button" id="continue-challenge-friend" role="menuitem">
+								<button type="button" id="continue-challenge-friend">
 									<svg><use href="#svg-profile"/></svg>
 									<span>{{ tsIndex.lobby_buttons.challenge_friend }}</span>
 								</button>
@@ -265,18 +264,6 @@
 			{# Bottom side's captured surplus material #}
 			<div class="material" id="material-bottom"></div>
 
-		</div>
-
-		{# ── ICN panel — import/export (the analysis page's replacement for chat) ── #}
-		<div class="icn-panel panel">
-			<span class="icn-title">ICN</span>
-			<div class="icn-text-wrap">
-				<textarea class="icn-textarea scrollbar-thin" id="icn-textarea" spellcheck="false" placeholder="Paste an ICN here (with or without moves) and press Import…"></textarea>
-				<button class="btn-bare icon-btn icn-copy-btn tooltip-d" id="btn-icn-copy" data-tooltip="Copy to clipboard">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-				</button>
-				<button class="action-btn icn-import-btn" id="btn-icn-import">Import</button>
-			</div>
 		</div>
 
 	</aside>

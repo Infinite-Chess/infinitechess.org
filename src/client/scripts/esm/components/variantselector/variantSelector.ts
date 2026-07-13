@@ -1,9 +1,9 @@
-// src/client/scripts/esm/views/index/variantSelector.ts
+// src/client/scripts/esm/components/variantselector/variantSelector.ts
 
 /**
- * This script manages the variant selector widget inside the game setup modal:
- * the group dropdown, per-group variant lists, custom saves panel (cloud + local),
- * and the ICN validation.
+ * The variant selector widget shared by the home page's game-options modal and the
+ * analysis board's setup panel: the group dropdown, per-group variant lists, custom
+ * saves panel (cloud + local), and the ICN validation.
  */
 
 import type { VNode } from 'snabbdom';
@@ -26,16 +26,24 @@ import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
 import editorpositionsdb from '../../game/editorstores/esavestore.js';
-import { syncRatedButton } from './gameSetupModal.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
 
 // Types -------------------------------------------------
 
+/** The current variant selection. */
 type DisplaySelection =
 	| { kind: 'preset'; code: VariantCode }
 	| { kind: 'online'; name: string }
 	| { kind: 'local'; name: string }
 	| { kind: 'icn' };
+
+/** Callbacks a host wires to react to the selector's state. */
+interface VariantSelectorConfig {
+	/** Fires on every selection/validity change (live). Sync dependent UI (e.g. a submit button). */
+	onChange?: () => void;
+	/** Fires only when a selection is committed (a discrete pick, or an ICN blur/paste). */
+	onCommit?: () => void;
+}
 
 /** The union of all possible group type dropdowns. */
 type GroupType = VariantGroup | 'custom';
@@ -61,11 +69,13 @@ const element_btnCustomCreate = document.getElementById('btn-custom-create')!;
 const element_btnCustomFromICN = document.getElementById('btn-custom-from-icn')!;
 const element_btnCustomFromICNName =
 	element_btnCustomFromICN.querySelector<HTMLElement>('.group-name')!;
-const element_modalSubmit = document.getElementById('modal-submit') as HTMLButtonElement;
 
 // State ----------------------------------------------
 
-/** The currently selected variant for the game options modal. */
+/** Host callbacks, populated by {@link initVariantGroupDropdown}. */
+let config: VariantSelectorConfig = {};
+
+/** The currently selected variant. */
 let selection: DisplaySelection = { kind: 'preset', code: 'Classical' };
 let customContentVNode: VNode | Element = element_customVariantContent;
 /** The last validated custom position (ICN input or saved position). null while loading or unset. */
@@ -89,7 +99,8 @@ const patch = init([attributesModule, classModule, eventListenersModule]);
 // Initialization ----------------------------------------------
 
 /** Wires the variant selector open/close and group navigation. */
-function initVariantGroupDropdown(): void {
+function initVariantGroupDropdown(hostConfig: VariantSelectorConfig = {}): void {
+	config = hostConfig;
 	applyVariantToSelector('Classical');
 
 	element_variantDisplay.addEventListener('click', (e) => {
@@ -146,18 +157,31 @@ function initVariantGroupDropdown(): void {
 
 /** Wires blur/focus/input/paste listeners to keep the ICN validation state in sync. */
 function initIcnValidation(): void {
-	element_icnInput.addEventListener('blur', () => validateIcnInput(true));
+	// Blur/paste are "commit" points; live typing only updates validity (onChange), not a commit.
+	element_icnInput.addEventListener('blur', () => {
+		validateIcnInput(true);
+		config.onCommit?.();
+	});
 	element_icnInput.addEventListener('focus', () => {
 		element_icnInputWrap.classList.remove('invalid');
 		element_icnErrorText.textContent = '';
 	});
-	// Validate live so the submit button enables the moment the position is valid,
-	// but suppress error display until blur so we don't nag as the user types.
+	// Validate live so validity updates the moment the position is valid, but suppress
+	// error display until blur so we don't nag as the user types. No commit while typing.
 	element_icnInput.addEventListener('input', () => validateIcnInput(false));
+	// Enter commits the ICN (blur runs validate + commit) rather than inserting a newline.
+	element_icnInput.addEventListener('keydown', (e) => {
+		if (e.key !== 'Enter' || e.shiftKey) return;
+		e.preventDefault();
+		element_icnInput.blur();
+	});
 	// Instantly reveal validity when a code is pasted, don't wait for blur.
 	element_icnInput.addEventListener('paste', () => {
 		// Pasted value isn't in the textarea until after the paste event, so defer by one tick.
-		setTimeout(() => validateIcnInput(true), 0);
+		setTimeout(() => {
+			validateIcnInput(true);
+			config.onCommit?.();
+		}, 0);
 	});
 }
 
@@ -272,7 +296,7 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`cloud-${s.name}`,
 			s.name,
-			() => selectCustomSave( 'online', s.name, cloudPreviewCache, ecloudstore.readCloud, t.index.modal.variant_selector.cloud_load_failed), // prettier-ignore
+			() => selectCustomSave( 'online', s.name, cloudPreviewCache, ecloudstore.readCloud, t.shared.variant_selector.cloud_load_failed), // prettier-ignore
 			(anchor) => handleSavePreview(anchor, s.name, cloudPreviewCache, ecloudstore.readCloud),
 		),
 	);
@@ -281,7 +305,7 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`local-${s.position_name}`,
 			s.position_name,
-			() => selectCustomSave('local', s.position_name, localPreviewCache, editorpositionsdb.readLocal, t.index.modal.variant_selector.local_load_failed), // prettier-ignore
+			() => selectCustomSave('local', s.position_name, localPreviewCache, editorpositionsdb.readLocal, t.shared.variant_selector.local_load_failed), // prettier-ignore
 			(anchor) => handleSavePreview(anchor, s.position_name,  localPreviewCache, editorpositionsdb.readLocal), // prettier-ignore
 		),
 	);
@@ -293,11 +317,7 @@ function createCustomContentVNode(
 		{},
 		saveRows.length > 0
 			? [
-					h(
-						'div.custom-saves-heading',
-						{},
-						t.index.modal.variant_selector.saved_positions,
-					),
+					h('div.custom-saves-heading', {}, t.shared.variant_selector.saved_positions),
 					...saveRows,
 				]
 			: [],
@@ -326,6 +346,7 @@ function applyIcn(icn: string): void {
 	element_variantCustomSection.classList.remove('hidden');
 	element_icnInput.value = icn;
 	validateIcnInput(true);
+	config.onCommit?.();
 }
 
 // Variant selection ----------------------------------------------
@@ -337,6 +358,7 @@ function selectVariant(code: VariantCode): void {
 	clearSavedPositionError();
 	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();
+	config.onCommit?.();
 }
 
 /**
@@ -363,6 +385,7 @@ function selectCustomSave(
 	const cached = cache.get(name);
 	if (cached !== undefined) {
 		validateSavedPosition(cached);
+		config.onCommit?.();
 		return;
 	}
 	read(name)
@@ -370,12 +393,14 @@ function selectCustomSave(
 			cache.set(name, s.variantOptions);
 			if (selection.kind !== kind || selection.name !== name) return;
 			validateSavedPosition(s.variantOptions);
+			config.onCommit?.();
 		})
 		.catch(() => {
 			if (selection.kind !== kind || selection.name !== name) return;
 			element_variantDisplay.classList.add('invalid');
 			element_icnErrorText.textContent = errorMsg;
 			setIcnResult(null);
+			config.onCommit?.();
 		});
 }
 
@@ -406,28 +431,15 @@ function applyCustomToSelector(name: string): void {
 
 // Validation ----------------------------------------------
 
-/**
- * Sets icnResult and syncs the modal submit button's disabled state.
- * The button is disabled whenever a non-preset selection has no valid resolved position.
- */
+/** Sets icnResult and notifies the host of the change. */
 function setIcnResult(result: typeof icnResult): void {
 	icnResult = result;
-	element_modalSubmit.disabled = selection.kind !== 'preset' && !icnResult?.isValid;
-	syncRatedButton();
+	config.onChange?.();
 }
 
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(variantOptions: VariantOptions): void {
-	const icnString = icnconverter.LongToShort_Format(
-		{
-			metadata: {},
-			position: variantOptions.position,
-			gameRules: variantOptions.gameRules,
-			fullMove: variantOptions.fullMove,
-			state_global: variantOptions.state_global,
-		},
-		{ compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false }, // prettier-ignore
-	);
+	const icnString = variantOptionsToICN(variantOptions);
 	const illegalReason = validatePosition(variantOptions, icnString);
 	if (illegalReason !== null) {
 		element_variantDisplay.classList.add('invalid');
@@ -436,6 +448,20 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 	} else {
 		setIcnResult({ options: variantOptions, isValid: true });
 	}
+}
+
+/** Serializes a custom position's VariantOptions to its canonical compact ICN string. */
+function variantOptionsToICN(options: VariantOptions): string {
+	return icnconverter.LongToShort_Format(
+		{
+			metadata: {},
+			position: options.position,
+			gameRules: options.gameRules,
+			fullMove: options.fullMove,
+			state_global: options.state_global,
+		},
+		{ compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false }, // prettier-ignore
+	);
 }
 
 /** Clears any saved-position error state from the variant display. */
@@ -447,9 +473,9 @@ function clearSavedPositionError(): void {
 
 /**
  * Validates the current ICN textarea value and stores the resolved VariantOptions,
- * syncing the submit button's enabled state.
+ * notifying the host of the validity change.
  * @param revealErrors - Whether to surface invalid styling/error text. False while typing
- * (validity still updates the submit button); true on blur/paste so errors show once done.
+ * (validity still updates); true on blur/paste so errors show once done.
  */
 function validateIcnInput(revealErrors: boolean): void {
 	const value = element_icnInput.value;
@@ -541,6 +567,36 @@ function handleSavePreview(
 		});
 }
 
+// Selection accessors ----------------------------------------------
+
+/** The current selection. */
+function getSelection(): DisplaySelection {
+	return selection;
+}
+
+/** Whether the current selection resolves to a legal, loadable position. */
+function isSelectionValid(): boolean {
+	return selection.kind === 'preset' || !!icnResult?.isValid;
+}
+
+/**
+ * The current custom (non-preset) selection resolved for loading onto a board, or null if the
+ * selection is a preset or not yet valid. A From-ICN selection returns its raw ICN string;
+ * saved positions resolve to their {@link VariantOptions}.
+ */
+function getCustomPosition():
+	| { kind: 'icn'; icn: string }
+	| { kind: 'options'; options: VariantOptions }
+	| null {
+	if (selection.kind === 'preset') return null;
+	if (!icnResult?.isValid) return null;
+	if (selection.kind === 'icn') {
+		return element_icnInput.value ? { kind: 'icn', icn: element_icnInput.value } : null;
+	}
+	// online / local saved position — the resolved options are loadable as-is (no moves).
+	return { kind: 'options', options: icnResult.options };
+}
+
 /**
  * Returns the current variant selection as an InviteVariant for the wire format,
  * or null if the selection cannot be used for an online seek (invalid ICN, local save).
@@ -548,28 +604,17 @@ function handleSavePreview(
 function getInviteVariant(): SeekVariant | null {
 	if (selection.kind === 'preset') {
 		return { kind: 'preset', code: selection.code };
-	} else if (selection.kind === 'online') {
-		if (!icnResult?.isValid) return null;
-		return { kind: 'cloudSave', name: selection.name };
-	} else if (selection.kind === 'local') {
-		if (!icnResult?.isValid) return null;
-		const position = icnconverter.LongToShort_Format(
-			{
-				metadata: {},
-				position: icnResult.options.position,
-				gameRules: icnResult.options.gameRules,
-				fullMove: icnResult.options.fullMove,
-				state_global: icnResult.options.state_global,
-			},
-			{ compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false }, // prettier-ignore
-		);
-		return { kind: 'custom', position };
-	} else if (selection.kind === 'icn') {
-		const position = element_icnInput.value;
-		if (!icnResult?.isValid || !position) return null;
-		return { kind: 'custom', position };
 	}
-	return null;
+	if (!icnResult?.isValid) return null;
+	if (selection.kind === 'online') {
+		return { kind: 'cloudSave', name: selection.name };
+	}
+	// local / icn — the custom wire format needs an ICN string. From-ICN sends the
+	// raw input; a local save serializes its resolved options to canonical ICN.
+	const position =
+		selection.kind === 'icn' ? element_icnInput.value : variantOptionsToICN(icnResult.options);
+	if (!position) return null;
+	return { kind: 'custom', position };
 }
 
 // Exports ----------------------------------------------
@@ -578,6 +623,9 @@ export default {
 	initVariantGroupDropdown,
 	initIcnValidation,
 	closeVariantDropdown,
+	getSelection,
+	isSelectionValid,
+	getCustomPosition,
 	getInviteVariant,
 	applyIcn,
 };

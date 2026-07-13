@@ -14,8 +14,8 @@ import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalid
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
 import timeControls from './timeControls.js';
-import variantSelector from './variantSelector.js';
-import modifierSelector from './modifierSelector.js';
+import variantSelector from '../../components/variantselector/variantSelector.js';
+import modifierSelector from '../../components/variantselector/modifierSelector.js';
 import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
 
 // Types ----------------------------------------------
@@ -36,7 +36,7 @@ const SUBMIT_LABELS: Record<ModalMode, string> = {
 
 const element_modalOverlay = document.getElementById('modal-overlay')!;
 const element_modalClose = document.getElementById('modal-close')!;
-const element_modalSubmit = document.getElementById('modal-submit')!;
+const element_modalSubmit = document.getElementById('modal-submit') as HTMLButtonElement;
 const element_btnCreateOnline = document.getElementById('btn-create-game')!;
 const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')!;
 const element_btnPlayComputer = document.getElementById('btn-play-ai')!;
@@ -120,9 +120,14 @@ function initModal(): void {
 	timeControls.initModalSliders();
 	timeControls.onTimeToggle();
 	timeControls.initPresets();
-	variantSelector.initVariantGroupDropdown();
+	variantSelector.initVariantGroupDropdown({
+		onChange: () => {
+			element_modalSubmit.disabled = !variantSelector.isSelectionValid();
+			syncRatedButton();
+		},
+	});
 	variantSelector.initIcnValidation();
-	modifierSelector.initModifierSelector();
+	modifierSelector.initModifierSelector({ onChange: syncRatedButton });
 	syncRatedButton();
 }
 

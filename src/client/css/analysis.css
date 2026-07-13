@@ -1,44 +1,19 @@
 /* src/client/css/analysis.css */
 
 /* The analysis page (/analysis/:id?): layered on top of game.css — same sidebar +
-   board layout. Extras, top to bottom: the variant picker, the local-engine
-   evaluation panel, the move tree, the actions menu, the eval gauge beside the
-   board, and the ICN import/export panel that replaces chat. */
+   board layout. Extras: the variant setup panel (shared widget, see
+   variantselector.css), the local-engine evaluation panel, the move tree, the actions
+   menu, and the eval gauge beside the board. */
 
 /* ============================
-   Variant picker
+   Variant setup panel
    ============================ */
 
-.analysis-setup {
+/* Wraps the shared variant selector widget in a sidebar card on the plain /analysis page. */
+.variant-setup {
 	flex: 0 0 auto;
-	display: flex;
-	align-items: center;
-	gap: 8px;
 	padding: 8px 10px;
-}
-
-.analysis-setup .meta-icon {
-	width: 22px;
-	height: 22px;
-	color: var(--c-text-muted);
-}
-
-.variant-select {
-	flex: 1 1 auto;
-	min-width: 0;
-	padding: 6px 8px;
-	border-radius: 5px;
-	border: 1px solid var(--c-border-muted);
-	background: var(--c-surface-2);
-	color: var(--c-text-emphasis);
-	font: inherit;
-	font-size: 0.92em;
-	cursor: pointer;
-}
-
-.variant-select:focus {
-	outline: none;
-	border-color: var(--c-border-2);
+	overflow: visible;
 }
 
 /* ============================
@@ -58,6 +33,7 @@
 .analysis .match-panel {
 	height: 100%;
 	min-height: 0;
+	max-height: 600px;
 }
 
 .analysis .match-panel > .player-bar {
@@ -624,101 +600,4 @@
 /* Flipped board: white on top */
 .eval-gauge.flipped {
 	transform: rotate(180deg);
-}
-
-/* ============================
-   ICN panel (replaces chat)
-   ============================ */
-
-.icn-panel {
-	position: relative;
-	flex: 0 1 190px;
-	min-height: 82px;
-	max-height: 240px;
-	display: grid;
-	grid-template-columns: auto minmax(0, 1fr);
-	grid-template-rows: minmax(0, 1fr);
-	align-items: center;
-	gap: 4px 10px;
-	padding: 6px 8px;
-}
-
-.icn-title {
-	font-size: 0.85em;
-	font-weight: 600;
-	letter-spacing: 0.04em;
-	color: var(--c-text-muted);
-}
-
-.icn-text-wrap {
-	position: relative;
-	align-self: stretch;
-	min-height: 0;
-}
-
-.icn-textarea {
-	width: 100%;
-	height: 100%;
-	min-height: 0;
-	resize: none;
-	padding: 8px 12px;
-	background: var(--c-surface-2);
-	border: none;
-	border-radius: 4px;
-	color: var(--c-text-emphasis);
-	font-family: monospace;
-	font-size: 12px;
-	line-height: 1.4;
-	word-break: break-all;
-}
-
-.icn-textarea:focus {
-	outline: 1px solid var(--c-accent, #3b82f6);
-}
-
-.icn-copy-btn,
-.icn-import-btn {
-	position: absolute;
-	right: 6px;
-	top: 6px;
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity 0.12s ease;
-}
-
-.icn-copy-btn {
-	width: 28px;
-	height: 28px;
-	padding: 4px;
-	border-radius: 4px;
-	background: color-mix(in srgb, var(--c-surface) 88%, transparent);
-	color: var(--c-text-emphasis);
-}
-
-.icn-text-wrap:hover .icn-copy-btn,
-.icn-copy-btn:focus-visible {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-.icn-import-btn {
-	top: auto;
-	bottom: 6px;
-	padding: 5px 14px;
-	border-radius: 5px;
-	border: 1px solid var(--c-border);
-	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
-}
-
-.icn-panel.text-selected .icn-import-btn,
-.icn-import-btn:focus-visible {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-.icn-text-wrap .icn-import-btn:hover:not(:disabled) {
-	border-color: var(--c-border-2);
-	background:
-		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)),
-		linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
 }

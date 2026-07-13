@@ -44,7 +44,7 @@ import miniimagerenderer from '../rendering/miniimagerenderer.js';
 // Types ---------------------------------------------------------------------
 
 /** Options for loading a game. */
-interface LoadOptions {
+export interface LoadOptions {
 	/** The time control of the game (e.g. `"600+5"`, or `"-"` for untimed). */
 	timeControl: TimeControl;
 	/** The variant code. Pass undefined for custom/unknown positions. */
@@ -116,10 +116,7 @@ function areInGame(): boolean {
 }
 
 function areViewingWhite(): boolean {
-	if (!loadedGamefile)
-		throw Error(
-			"Cannot ask if loaded game is from white's perspective when there isn't a loaded game.",
-		);
+	if (!loadedGamefile) throw Error("Cannot ask if loaded game is from white's perspective when there isn't a loaded game."); // prettier-ignore
 	return viewColor === p.WHITE;
 }
 

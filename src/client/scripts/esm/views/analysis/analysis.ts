@@ -33,14 +33,17 @@ function start(): void {
 
 	enginepanel.init();
 	analysisactions.init();
-	analysisloader.init();
+	// The variant setup panel only exists on the plain /analysis page (not /analysis/:id).
+	// Import it lazily so the variant-selector widget's DOM lookups never run without it.
+	if (document.getElementById('variant-selector')) {
+		void import('./analysissetup.js').then((m) => m.default.init());
+	}
 
 	void analysisloader.loadInitialGame();
 
 	// Poll each module's keyboard shortcuts every frame (via gamecore's document input listener).
 	gameloop.start(() => {
 		analysisview.updateShortcuts();
-		analysisactions.updateShortcuts();
 		enginepanel.updateShortcuts();
 	});
 }

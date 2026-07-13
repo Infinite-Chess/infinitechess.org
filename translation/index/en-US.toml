@@ -24,16 +24,6 @@ mode = "Mode"
 [modal]
 title = "Game options"
 
-[modal.variant_selector]
-label = "Variant"
-add_modifier = "Add a fun modifier"
-edit = "Edit position and gamerules"
-custom_create_name = "Create"
-custom_create_desc = "Go to the board editor."
-custom_from_icn_name = "From ICN"
-custom_from_icn_desc = "Paste an accessible ICN code."
-icn_placeholder = "Paste ICN text here"
-
 [modal.time_control]
 label = "Time control"
 timed = "Timed"
@@ -50,9 +40,6 @@ label = "Side"
 [modal.strength]
 label = "Strength"
 
-[modal.modifiers_section]
-label = "Modifiers:"
-
 # ──────────────────────────────────────────────────────────────────────────────
 # Strings shipped to the browser. JS reads these from `t.index.*`.
 # ──────────────────────────────────────────────────────────────────────────────
@@ -65,8 +52,3 @@ play_computer = "Play against computer"
 [script.lobby]
 cancel_seek = "Cancel seek"
 accept_seek = "Accept seek"
-
-[script.modal.variant_selector]
-saved_positions = "Saved positions"
-local_load_failed = "Failed to load local save."
-cloud_load_failed = "Failed to load cloud save."

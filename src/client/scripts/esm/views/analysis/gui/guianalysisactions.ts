@@ -1,11 +1,9 @@
 // src/client/scripts/esm/views/analysis/gui/guianalysisactions.ts
 
 /**
- * The analysis page's position-sharing UI, in two clearly separated sections:
- *   1. The "More actions" menu — flip board, open the position in the editor, and the
- *      "Continue from here" choices that hand the position off to the lobby.
- *   2. The ICN panel — a textarea mirroring the current game's ICN, with copy & import.
- * Both revolve around exporting the current position, so they share {@link ICN_FORMAT_OPTIONS}.
+ * The analysis page's "More actions" menu — flip board, open the position in the editor,
+ * the "Continue from here" choices that hand the position off to the lobby, and Export ICN
+ * (copies the current game's ICN to the clipboard).
  */
 
 import type { ModalMode } from '../../../components/gameSetupModalHandoff.js';
@@ -13,7 +11,6 @@ import type { EditorAutosaveState } from '../../../game/editorstores/estoretypes
 import type { GameFile, VariantOptions } from '../../../../../../shared/chess/logic/gamefile.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import variantregistry from '../../../../../../shared/chess/variants/variantregistry.js';
 
 import view from './guianalysisview.js';
 import toast from '../../../components/toast.js';
@@ -21,15 +18,13 @@ import gameslot from '../../../game/chess/gameslot.js';
 import IndexedDB from '../../../util/IndexedDB.js';
 import estoretypes from '../../../game/editorstores/estoretypes.js';
 import gamesession from '../../../game/chess/gamesession.js';
-import { GameBus } from '../../../game/GameBus.js';
-import analysisloader from '../analysisloader.js';
 import gamecompressor from '../../../game/chess/gamecompressor.js';
-import { listener_document } from '../../../game/chess/gamecore.js';
 import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
 
 /**
  * Compact single-line ICN formatting — the same form the engine worker consumes, so any
- * position or game exported through here round-trips cleanly back through the import field.
+ * position or game exported through here round-trips cleanly back through the variant
+ * selector's From-ICN import field.
  */
 const ICN_FORMAT_OPTIONS = {
 	skipPosition: false,
@@ -39,21 +34,6 @@ const ICN_FORMAT_OPTIONS = {
 	make_new_lines: false,
 	move_numbers: false,
 };
-
-/** Initializes both the "More actions" menu and the ICN panel. Called once by the page entry. */
-function init(): void {
-	initActions();
-	initIcnPanel();
-}
-
-/** Polls this file's keyboard shortcuts. Called once per frame by the page loop. */
-function updateShortcuts(): void {
-	// Escape closes any open menu (the input listener already ignores keys while typing).
-	if (listener_document.isKeyDown('Escape')) {
-		closeActionsMenu();
-		closeContinueFromHereChoice();
-	}
-}
 
 // The "More actions" menu ==========================================================
 
@@ -74,9 +54,10 @@ const element_ContinuePlayComputer = document.getElementById(
 const element_ContinueChallengeFriend = document.getElementById(
 	'continue-challenge-friend',
 ) as HTMLButtonElement;
+const element_ExportIcn = document.getElementById('btn-export-icn') as HTMLButtonElement;
 
-/** Wires the "More actions" menu and its buttons. */
-function initActions(): void {
+/** Wires the "More actions" menu and its buttons. Called once by the page entry. */
+function init(): void {
 	element_ActionsButton.addEventListener('click', (e) => {
 		e.stopPropagation();
 		toggleActionsMenu();
@@ -116,6 +97,36 @@ function initActions(): void {
 		'click',
 		() => void continueFromHereInLobby('friend'),
 	);
+	element_ExportIcn.addEventListener('click', () => {
+		closeActionsMenu();
+		void exportIcnToClipboard();
+	});
+}
+
+/** Copies the current game's ICN (position + moves up to the viewed ply) to the clipboard. */
+async function exportIcnToClipboard(): Promise<void> {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return;
+	try {
+		await navigator.clipboard.writeText(getGameICN(gamefile));
+		toast.show('Copied ICN to your clipboard!');
+	} catch (e) {
+		toast.show('Clipboard permission denied. This might be your browser.' + '\n' + e, { error: true }); // prettier-ignore
+	}
+}
+
+/**
+ * Serializes the game (position + move list) to canonical compact ICN. Moves are
+ * truncated to the currently-viewed ply, so the export mirrors the position on the
+ * board as you cycle through moves.
+ */
+function getGameICN(gamefile: GameFile): string {
+	const longformIn = gamecompressor.compressGamefile(gamefile);
+	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
+	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
+		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
+	}
+	return icnconverter.LongToShort_Format(longformIn, ICN_FORMAT_OPTIONS);
 }
 
 /** Exports the current position as ICN plus the variant options needed to reload it, or undefined if nothing's loaded. */
@@ -215,150 +226,4 @@ function syncActionsToggle(): void {
 	element_ActionsButton.setAttribute('aria-expanded', String(anyOpen));
 }
 
-// The ICN panel ====================================================================
-// The analysis equivalent of lichess' PGN/FEN box: a textarea mirroring the current
-// game's ICN (with or without the move list), plus copy-to-clipboard and import.
-
-const element_Textarea = document.getElementById('icn-textarea') as HTMLTextAreaElement;
-const element_Panel = document.querySelector('.icn-panel')!;
-const element_Copy = document.getElementById('btn-icn-copy') as HTMLButtonElement;
-const element_Import = document.getElementById('btn-icn-import') as HTMLButtonElement;
-const element_VariantSelect = document.getElementById('variant-select') as HTMLSelectElement | null;
-
-/** sessionStorage key an ICN import redirect (see {@link importFromTextarea}) stashes its text under. */
-const PENDING_IMPORT_KEY = 'analysis.pendingImport';
-
-/** Wires the ICN panel. */
-function initIcnPanel(): void {
-	// The textarea is freely editable — we never overwrite what the user types on
-	// their own. It's only rewritten from the game on a deliberate board action: a
-	// move made, a move cycled through (nav), or a game loaded. Validation happens
-	// only on Import.
-	GameBus.addEventListener('game-loaded', refresh);
-	GameBus.addEventListener('moves-changed', refresh);
-	GameBus.addEventListener('view-move', refresh);
-	GameBus.addEventListener('game-unloaded', () => {
-		element_Textarea.value = '';
-		updateSelectionState();
-	});
-
-	for (const event of [
-		'select',
-		'selectionchange',
-		'keyup',
-		'mouseup',
-		'pointermove',
-		'input',
-		'focus',
-	])
-		element_Textarea.addEventListener(event, updateSelectionState);
-	document.addEventListener('selectionchange', updateSelectionState);
-	element_Textarea.addEventListener('blur', () => setTimeout(updateSelectionState, 0));
-	element_Textarea.addEventListener('keydown', (e) => {
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			importFromTextarea();
-		}
-	});
-
-	element_Copy.addEventListener('click', async () => {
-		try {
-			await navigator.clipboard.writeText(element_Textarea.value);
-			toast.show('Copied game to clipboard!');
-		} catch (e) {
-			toast.show('Clipboard permission denied. This might be your browser.' + '\n' + e, { error: true }); // prettier-ignore
-		}
-	});
-
-	element_Import.addEventListener('mousedown', (e) => e.preventDefault());
-	element_Import.addEventListener('click', importFromTextarea);
-}
-
-function updateSelectionState(): void {
-	element_Panel.classList.toggle('text-selected', document.activeElement === element_Textarea);
-}
-
-/**
- * Serializes the game (position + move list) to canonical compact ICN. Moves are
- * truncated to the currently-viewed ply, so the box mirrors the position on the
- * board as you cycle through moves.
- */
-function getGameICN(gamefile: GameFile): string {
-	const longformIn = gamecompressor.compressGamefile(gamefile);
-	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
-	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
-		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
-	}
-	return icnconverter.LongToShort_Format(longformIn, ICN_FORMAT_OPTIONS);
-}
-
-/** Rewrites the textarea from the current game. Called only on move / game load. */
-function refresh(): void {
-	// Only the logical gamefile is needed — 'game-loaded' fires before graphics finish.
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
-
-	element_Textarea.value = getGameICN(gamefile);
-	updateSelectionState();
-}
-
-/** Parses the textarea's ICN and loads it as the current game. */
-function importFromTextarea(): void {
-	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
-	const text = element_Textarea.value.trim();
-	if (!text) return;
-
-	if (window.analysisPageData.gameId !== null) {
-		// A saved game's clocks/players/result banner no longer describe anything once
-		// you've replaced its position — those are baked in server-side per URL, not
-		// something this page can toggle off itself. Validate here (so a malformed ICN
-		// errors now, not after leaving the page), then hop to the plain analysis board
-		// (which renders none of that) and finish the import there.
-		try {
-			icnconverter.ShortToLong_Format(text);
-		} catch (e) {
-			console.error(e);
-			toast.show('Invalid ICN notation.', { error: true });
-			return;
-		}
-		sessionStorage.setItem(PENDING_IMPORT_KEY, text);
-		window.location.assign('/analysis');
-		return;
-	}
-
-	element_Textarea.blur();
-	importIcnText(text);
-}
-
-/** Parses an ICN and loads it as the current game, syncing the variant dropdown. Returns whether it was valid. */
-function importIcnText(text: string): boolean {
-	let longformOut;
-	try {
-		longformOut = icnconverter.ShortToLong_Format(text);
-	} catch (e) {
-		console.error(e);
-		toast.show('Invalid ICN notation.', { error: true });
-		return false;
-	}
-
-	// Point the variant dropdown at the imported variant (or the "Custom" placeholder).
-	const resolved = longformOut.metadata.Variant
-		? variantregistry.resolveVariantCode(longformOut.metadata.Variant)
-		: undefined;
-	if (element_VariantSelect) element_VariantSelect.value = resolved ?? '';
-
-	analysisloader.pasteGame(longformOut);
-	return true;
-}
-
-/**
- * Consumes (and clears) an ICN import stashed by {@link importFromTextarea}'s redirect off
- * a loaded game's page, or null if there isn't one. Called once on page load.
- */
-function takePendingImport(): string | null {
-	const text = sessionStorage.getItem(PENDING_IMPORT_KEY);
-	if (text !== null) sessionStorage.removeItem(PENDING_IMPORT_KEY);
-	return text;
-}
-
-export default { init, updateShortcuts, importIcnText, takePendingImport };
+export default { init };
