@@ -3,8 +3,8 @@
 /**
  * The analysis page's engine panel: the local-evaluation toggle, eval readout,
  * depth/nodes stats, settings drawer (MultiPV / threads / hash / search time),
- * the MultiPV line list (click a move to play the line), the eval gauge beside
- * the board, and the engine's best-move arrows drawn on the board.
+ * the MultiPV line list (click a move to play the line), and the eval gauge beside
+ * the board.
  */
 
 import type { Mesh } from '../../../game/rendering/piecemodels.js';
@@ -88,14 +88,14 @@ function init(): void {
 		enginelegalmovesdebug.receiveMoves(requestId, moves),
 	);
 
-	// Draw engine arrows on top of the pieces each frame.
-	GameBus.addEventListener('render-above-pieces', () => enginearrows.render());
-
 	// Restore the persisted on/off state once the first game finishes loading.
 	GameBus.addEventListener('game-loaded', () => {
 		const wanted = localStorage.getItem(ENABLED_STORAGE_KEY) !== 'false';
 		if (wanted && !ceval.isEnabled()) setEngineEnabled(true);
 	});
+
+	// Draw engine arrows on top of the pieces each frame.
+	GameBus.addEventListener('render-above-pieces', () => enginearrows.render());
 }
 
 function setEngineEnabled(value: boolean): void {
@@ -103,14 +103,7 @@ function setEngineEnabled(value: boolean): void {
 	localStorage.setItem(ENABLED_STORAGE_KEY, String(value));
 	ceval.setEnabled(value);
 	setGaugeVisible(value);
-	if (!value) {
-		resetLineWindowState();
-		enginearrows.clearArrows();
-		renderLines([]);
-		element_Eval.textContent = '-';
-		element_Stats.textContent = 'Local evaluation off';
-		updateProgress(undefined);
-	}
+	if (!value) clearPanelReadout('Local evaluation off');
 }
 
 /** Shows/hides the eval gauge. */
@@ -176,35 +169,17 @@ function initListeners(): void {
 
 	window.addEventListener('resize', syncSettingsOverlayPosition);
 
-	// 'input' updates the live label as the slider drags; 'change' commits to the engine on release.
-	element_MultiPv.addEventListener('input', () => {
-		element_MultiPvValue.textContent = element_MultiPv.value;
-	});
-	element_MultiPv.addEventListener('change', () => {
-		ceval.updateSettings({ multiPv: Number(element_MultiPv.value) });
-	});
-
-	element_Threads.addEventListener('input', () => {
-		element_ThreadsValue.textContent = element_Threads.value;
-	});
-	element_Threads.addEventListener('change', () => {
-		ceval.updateSettings({ threads: Number(element_Threads.value) });
-	});
-
-	const hashMbFor = (): number => ceval.HASH_OPTIONS[Number(element_Hash.value)]!;
-	element_Hash.addEventListener('input', () => {
-		element_HashValue.textContent = `${hashMbFor()} MB`;
-	});
-	element_Hash.addEventListener('change', () => {
-		ceval.updateSettings({ hashMb: hashMbFor() });
-	});
-
-	element_Depth.addEventListener('input', () => {
-		element_DepthValue.textContent = element_Depth.value;
-	});
-	element_Depth.addEventListener('change', () => {
-		ceval.updateSettings({ depth: Number(element_Depth.value) });
-	});
+	// The MultiPV/threads/depth sliders map their raw value straight to the setting; the
+	// Hash slider's value is an index into HASH_OPTIONS whose MB is the setting.
+	bindSettingSlider(element_MultiPv, element_MultiPvValue, String, (v) => ceval.updateSettings({ multiPv: v })); // prettier-ignore
+	bindSettingSlider(element_Threads, element_ThreadsValue, String, (v) => ceval.updateSettings({ threads: v })); // prettier-ignore
+	bindSettingSlider(element_Depth, element_DepthValue, String, (v) => ceval.updateSettings({ depth: v })); // prettier-ignore
+	bindSettingSlider(
+		element_Hash,
+		element_HashValue,
+		(v) => `${ceval.HASH_OPTIONS[v]!} MB`,
+		(v) => ceval.updateSettings({ hashMb: ceval.HASH_OPTIONS[v]! }),
+	);
 
 	element_GoDeeper.addEventListener('click', () => {
 		element_GoDeeper.classList.add('hidden');
@@ -212,6 +187,20 @@ function initListeners(): void {
 		// onEngineUpdate → the stats text and progress bar both update right away.
 		ceval.goDeeper();
 	});
+}
+
+/**
+ * Wires a settings slider: 'input' updates its live label as it drags, 'change' commits the
+ * value to the engine on release. `format` and `commit` both receive the slider's numeric value.
+ */
+function bindSettingSlider(
+	input: HTMLInputElement,
+	label: HTMLElement,
+	format: (value: number) => string,
+	commit: (value: number) => void,
+): void {
+	input.addEventListener('input', () => (label.textContent = format(Number(input.value))));
+	input.addEventListener('change', () => commit(Number(input.value)));
 }
 
 /** Polls this panel's keyboard shortcuts. Called once per frame by the page loop. */
@@ -226,6 +215,24 @@ function syncSettingsOverlayPosition(): void {
 
 // Engine output rendering ------------------------------------------------------------
 
+/**
+ * Resets the panel to a no-lines readout: clears the arrows and PV list (which also resets
+ * the per-line window state), hides "go deeper", and sets the eval/stats text. Optionally
+ * sets the gauge (left untouched when omitted) and drives the progress bar.
+ */
+function clearPanelReadout(
+	statsText: string,
+	opts: { evalText?: string; gauge?: number; progress?: CevalUpdate } = {},
+): void {
+	element_Eval.textContent = opts.evalText ?? '-';
+	element_Stats.textContent = statsText;
+	element_GoDeeper.classList.add('hidden');
+	enginearrows.clearArrows();
+	renderLines([]);
+	if (opts.gauge !== undefined) updateGauge(opts.gauge);
+	updateProgress(opts.progress);
+}
+
 function onEngineStatus(status: CevalStatus): void {
 	applyThreadsCap(); // Re-evaluate: the engine's threading capability arrives with its status.
 	if (status === 'loading') {
@@ -239,23 +246,9 @@ function onEngineStatus(status: CevalStatus): void {
 		toast.show('The analysis engine failed to load.', { error: true });
 	} else if (status === 'blocked') {
 		enginelegalmovesdebug.disable();
-		resetLineWindowState();
-		element_Eval.textContent = '-';
-		element_Stats.textContent = 'Outside world border';
-		element_GoDeeper.classList.add('hidden');
-		enginearrows.clearArrows();
-		renderLines([]);
-		updateGauge(0);
-		updateProgress(undefined);
+		clearPanelReadout('Outside world border', { gauge: 0 });
 	} else if (status === 'crashed') {
-		resetLineWindowState();
-		element_Eval.textContent = '-';
-		element_Stats.textContent = 'Analysis crashed';
-		element_GoDeeper.classList.add('hidden');
-		enginearrows.clearArrows();
-		renderLines([]);
-		updateGauge(0);
-		updateProgress(undefined);
+		clearPanelReadout('Analysis crashed', { gauge: 0 });
 		if (!crashToastShown) {
 			toast.show('The engine crashed analyzing this position. Please report this bug!', { error: true }); // prettier-ignore
 			crashToastShown = true;
@@ -268,13 +261,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 
 	if (!update) {
 		// Position changed; awaiting the first info of the new search.
-		resetLineWindowState();
-		element_Eval.textContent = '…';
-		element_Stats.textContent = 'Starting analysis';
-		element_GoDeeper.classList.add('hidden');
-		enginearrows.clearArrows();
-		renderLines([]);
-		updateProgress(undefined);
+		clearPanelReadout('Starting analysis', { evalText: '…' });
 		return;
 	}
 
@@ -284,12 +271,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	lineWindowStateMoveIndex = update.moveIndex;
 
 	if (update.terminal) {
-		element_Eval.textContent = '-';
-		element_Stats.textContent = 'Game Over';
-		enginearrows.clearArrows();
-		renderLines([]);
-		updateGauge(terminalGaugeChances());
-		updateProgress(update);
+		clearPanelReadout('Game Over', { gauge: terminalGaugeChances(), progress: update });
 		return;
 	}
 
