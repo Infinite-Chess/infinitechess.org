@@ -30,6 +30,16 @@
 	min-height: 430px;
 }
 
+/* Reserve the normal match-panel height as well as the fixed review graph. */
+.analysis .play-group:has(.review-graph) {
+	flex-basis: 640px;
+	min-height: 640px;
+}
+
+.analysis .sidebar {
+	overflow-y: auto;
+}
+
 .analysis .match-panel {
 	height: 100%;
 	min-height: 0;
@@ -601,116 +611,6 @@
 .eval-gauge.flipped {
 	transform: rotate(180deg);
 }
-/* ============================
-   ICN panel (replaces chat)
-   ============================ */
-
-.icn-panel {
-	position: relative;
-	flex: 0 1 190px;
-	min-height: 82px;
-	max-height: 240px;
-	padding: 6px 8px;
-}
-
-.icn-content {
-	width: 100%;
-	height: 100%;
-	display: grid;
-	grid-template-columns: auto minmax(0, 1fr);
-	grid-template-rows: minmax(0, 1fr);
-	align-items: center;
-	gap: 4px 10px;
-}
-
-.icn-content.hidden {
-	display: none;
-}
-
-.analysis .icn-panel {
-	flex: 0 0 190px;
-}
-
-.icn-title {
-	font-size: 0.85em;
-	font-weight: 600;
-	letter-spacing: 0.04em;
-	color: var(--c-text-muted);
-}
-
-.icn-text-wrap {
-	position: relative;
-	align-self: stretch;
-	min-height: 0;
-}
-
-.icn-textarea {
-	width: 100%;
-	height: 100%;
-	min-height: 0;
-	resize: none;
-	padding: 8px 12px;
-	background: var(--c-surface-2);
-	border: none;
-	border-radius: 4px;
-	color: var(--c-text-emphasis);
-	font-family: monospace;
-	font-size: 12px;
-	line-height: 1.4;
-	word-break: break-all;
-}
-
-.icn-textarea:focus {
-	outline: 1px solid var(--c-accent, #3b82f6);
-}
-
-.icn-copy-btn,
-.icn-import-btn {
-	position: absolute;
-	right: 6px;
-	top: 6px;
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity 0.12s ease;
-}
-
-.icn-copy-btn {
-	width: 28px;
-	height: 28px;
-	padding: 4px;
-	border-radius: 4px;
-	background: color-mix(in srgb, var(--c-surface) 88%, transparent);
-	color: var(--c-text-emphasis);
-}
-
-.icn-text-wrap:hover .icn-copy-btn,
-.icn-copy-btn:focus-visible {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-.icn-import-btn {
-	top: auto;
-	bottom: 6px;
-	padding: 5px 14px;
-	border-radius: 5px;
-	border: 1px solid var(--c-border);
-	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
-}
-
-.icn-panel.text-selected .icn-import-btn,
-.icn-import-btn:focus-visible {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-.icn-text-wrap .icn-import-btn:hover:not(:disabled) {
-	border-color: var(--c-border-2);
-	background:
-		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)),
-		linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
-}
-
 /* ─────────────────────────── Game review ─────────────────────────── */
 
 :root {

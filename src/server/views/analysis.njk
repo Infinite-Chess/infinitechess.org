@@ -273,28 +273,14 @@
 			</div>
 
 		{# ── Game Review graph ── #}
-		<div class="review-graph panel hidden" id="review-graph">
-			<canvas id="review-graph-canvas"></canvas>
-			<div class="review-phase-markers" id="review-phase-markers"></div>
-			<div class="review-graph-tooltip hidden" id="review-graph-tooltip">
-				<strong id="review-graph-tooltip-move"></strong>
-				<span id="review-graph-tooltip-eval"></span>
-			</div>
-		</div>
-
-		{# ── ICN import/export panel, separate from the review graph ── #}
-		<div class="icn-panel panel" id="analysis-secondary-panel">
-			<div class="icn-content" id="icn-content">
-				<span class="icn-title">ICN</span>
-				<div class="icn-text-wrap">
-					<textarea class="icn-textarea scrollbar-thin" id="icn-textarea" spellcheck="false" placeholder="Paste an ICN here (with or without moves) and press Import…"></textarea>
-					<button class="btn-bare icon-btn icn-copy-btn tooltip-d" id="btn-icn-copy" data-tooltip="Copy to clipboard">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-					</button>
-					<button class="action-btn icn-import-btn" id="btn-icn-import">Import</button>
+			<div class="review-graph panel hidden" id="review-graph">
+				<canvas id="review-graph-canvas"></canvas>
+				<div class="review-phase-markers" id="review-phase-markers"></div>
+				<div class="review-graph-tooltip hidden" id="review-graph-tooltip">
+					<strong id="review-graph-tooltip-move"></strong>
+					<span id="review-graph-tooltip-eval"></span>
 				</div>
 			</div>
-		</div>
 
 			{# Bottom side's captured surplus material #}
 			<div class="material" id="material-bottom"></div>
