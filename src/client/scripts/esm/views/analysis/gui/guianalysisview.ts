@@ -7,9 +7,9 @@
  */
 
 import gameslot from '../../../game/chess/gameslot.js';
+import guiclock from '../../../game/gui/guiclock.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
-import analysisloader from '../analysisloader.js';
 import { listener_document } from '../../../game/chess/gamecore.js';
 
 // Wire the orientation/view GameBus listeners.
@@ -19,9 +19,19 @@ GameBus.addEventListener('game-loaded', syncEvalGaugeOrientation);
 GameBus.addEventListener('board-flipped', () => {
 	syncEvalGaugeOrientation();
 	swapPlayerBarNames();
-	analysisloader.syncClockDisplayToViewedMove(true);
+	syncClockDisplayToViewedMove(true);
 });
-GameBus.addEventListener('view-move', () => analysisloader.syncClockDisplayToViewedMove());
+GameBus.addEventListener('view-move', () => syncClockDisplayToViewedMove());
+
+/**
+ * Syncs the clock display to the currently viewed move.
+ * @param remapBars - If true, also re-maps which bar each player's clock occupies.
+ */
+function syncClockDisplayToViewedMove(remapBars = false): void {
+	const gamefile = gameslot.getGamefile()!;
+	if (remapBars) guiclock.set(gamefile);
+	guiclock.showViewedMoveClockStamps(gamefile);
+}
 
 /** Polls this module's keyboard shortcuts. Called once per frame by the page loop. */
 function updateShortcuts(): void {
@@ -68,4 +78,4 @@ function insertPlayerBarNameNodes(bar: HTMLElement, nodes: Node[]): void {
 	nodes.forEach((node) => bar.insertBefore(node, clock));
 }
 
-export default { updateShortcuts, flipBoard };
+export default { syncClockDisplayToViewedMove, updateShortcuts, flipBoard };
