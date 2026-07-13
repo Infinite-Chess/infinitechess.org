@@ -85,8 +85,8 @@ export interface TextureInfo {
  * **Call this** when you update specific vertex data within the source Float32Array!
  * FAST. Prevents you having to create a whole new model!
  * For example, when a single piece in the mesh moves.
- * @param {number} changedIndicesStart - The index in the vertex data marking the first value changed.
- * @param {number} changedIndicesCount - The number of indices in the vertex data that were changed, beginning at {@link changedIndicesStart}.
+ * @param changedIndicesStart - The index in the vertex data marking the first value changed.
+ * @param changedIndicesCount - The number of indices in the vertex data that were changed, beginning at {@link changedIndicesStart}.
  */
 type UpdateBufferIndicesFunc = (_changedIndicesStart: number, _changedIndicesCount: number) => void;
 

@@ -1216,21 +1216,21 @@ function get_position_evaluation(
 
 /**
  * Performs a standard search with alpha-beta pruning through the game tree and updates globallyBestVariation and the like
- * @param {Array} piecelist
- * @param {Array} coordlist
- * @param {Number} depth
- * @param {Number} start_depth - does not get changed at all during recursion
- * @param {Boolean} black_to_move
- * @param {Boolean} followingPrincipal - whether the function is still following the (initial) principal variation
- * @param {Boolean} inTrapFleeMode - whether one should neglect all white candidate moves in deeper search beyond the first white node
- * @param {Boolean} inProtectedRiderFleeMode - whether one should neglect all white candidate moves by rider in deeper search and reward distance from him
- * @param {DoubleCoords[]} black_killer_list - list of black killer moves that is being maintained when white to move
- * @param {Number[]} white_killer_list - list white killer pieces that is being maintained when black to move
- * @param {Number} alpha
- * @param {Number} beta
- * @param {Number} alphaPlies - alpha beta for remaining plies in the game: tiebreak in case of early game over: the more plies the game lasts the better for black
- * @param {Number} betaPlies
- * @returns {Object} with properties "score", "move" and "termination_depth"
+ * @param piecelist
+ * @param coordlist
+ * @param depth
+ * @param start_depth - does not get changed at all during recursion
+ * @param black_to_move
+ * @param followingPrincipal - whether the function is still following the (initial) principal variation
+ * @param inTrapFleeMode - whether one should neglect all white candidate moves in deeper search beyond the first white node
+ * @param inProtectedRiderFleeMode - whether one should neglect all white candidate moves by rider in deeper search and reward distance from him
+ * @param black_killer_list - list of black killer moves that is being maintained when white to move
+ * @param white_killer_list - list white killer pieces that is being maintained when black to move
+ * @param alpha
+ * @param beta
+ * @param alphaPlies - alpha beta for remaining plies in the game: tiebreak in case of early game over: the more plies the game lasts the better for black
+ * @param betaPlies
+ * @returns with properties "score", "move" and "termination_depth"
  */
 function alphabeta(
 	piecelist: number[],
