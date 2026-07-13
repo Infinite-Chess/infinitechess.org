@@ -1,4 +1,4 @@
-// src/client/scripts/esm/views/icnvalidator.ts
+// src/client/scripts/esm/views/icnvalidator/icnvalidator.ts
 
 import * as z from 'zod';
 
@@ -219,7 +219,9 @@ async function validateGames(): Promise<void> {
 		}));
 
 		// Spawn Worker
-		const worker = new Worker('scripts/esm/workers/icnvalidator.worker.js', { type: 'module' });
+		const worker = new Worker('scripts/esm/icnvalidator/icnvalidator.worker.js', {
+			type: 'module',
+		});
 		activeWorkers.push(worker);
 
 		// Handle Worker Loading Errors (e.g., 404, script syntax error)
