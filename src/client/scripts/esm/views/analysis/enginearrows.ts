@@ -32,7 +32,7 @@ interface EngineArrow {
 // Constants -----------------------------------------------------------------
 
 /** Best-line arrow color (blue, like lichess' engine arrows). */
-const COLOR: Color = [1.0, 0, 0, 0.7];
+const COLOR: Color = [0.15, 0.48, 0.85, 0.85];
 /** Each rank is this much more transparent than the previous. */
 const RANK_OPACITY_MULTIPLIER = 0.7;
 
