@@ -52,7 +52,7 @@ let stage: GameStage | undefined = undefined;
 // Events -------------------------------------------------
 
 SocketBus.addEventListener('closed', () => {
-	if (stage === 'active') inSync = false;
+	if (stage !== 'evicted') inSync = false;
 });
 SocketBus.addEventListener('reconnect', () => {
 	if (stage !== 'evicted') subscribeToGame();
@@ -117,7 +117,6 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
  *   not a spectator or when the game is memory-evicted.
  */
 function initOnlineGame(initialStage: GameStage, participantState?: ParticipantState): void {
-	inSync = true;
 	stage = initialStage;
 
 	// If we are a participator, set the draw offers, disconnect timer, rematch state.

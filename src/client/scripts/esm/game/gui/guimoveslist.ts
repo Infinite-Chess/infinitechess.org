@@ -435,8 +435,8 @@ GameBus.addEventListener('moves-changed', () => {
 	enqueueRender(reconcileMovesTable);
 });
 GameBus.addEventListener('view-move', () => enqueueRender(updateCurrentPly));
-GameBus.addEventListener('game-unloaded', () => renderer?.onGameUnloaded());
 GameBus.addEventListener('game-concluded', () => enqueueRender(scrollMovesTableToBottom));
+GameBus.addEventListener('game-unloaded', () => renderer?.onGameUnloaded());
 
 // ===========================================================================
 

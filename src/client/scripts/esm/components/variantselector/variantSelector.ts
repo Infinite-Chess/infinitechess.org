@@ -179,10 +179,7 @@ function initIcnValidation(): void {
 	// Instantly reveal validity when a code is pasted, don't wait for blur.
 	element_icnInput.addEventListener('paste', () => {
 		// Pasted value isn't in the textarea until after the paste event, so defer by one tick.
-		setTimeout(() => {
-			validateIcnInput(true);
-			config.onCommit?.();
-		}, 0);
+		setTimeout(() => validateIcnInput(true), 0);
 	});
 }
 

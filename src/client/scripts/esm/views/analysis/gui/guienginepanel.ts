@@ -8,15 +8,12 @@
  */
 
 import type { Mesh } from '../../../game/rendering/piecemodels.js';
-import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { EngineArrow } from '../enginearrows.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
-import coordutil, { CoordsKey } from '../../../../../../shared/chess/util/coordutil.js';
 
 import ceval from '../ceval.js';
 import toast from '../../../components/toast.js';
@@ -308,7 +305,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	updateGauge(best?.winningChances ?? 0);
 	updateProgress(update);
 	renderLines(update.lines);
-	updateArrows(update);
+	enginearrows.update(update);
 }
 
 /** Formats a white-POV line eval for display, e.g. "+1.4", "-0.3", "#5", "#-3". */
@@ -600,40 +597,6 @@ function branchFromViewedPosition(gamefile: GameFile, mesh: Mesh | undefined): v
 	const target = gamefile.state.local.moveIndex;
 	movesequence.viewFront(gamefile, mesh);
 	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
-}
-
-// Engine arrows -------------------------------------------------------------------------
-
-/** Points the board arrows at each line's first move (only for the viewed position). */
-function updateArrows(update: CevalUpdate): void {
-	const gamefile = gameslot.getGamefile();
-	// Stale analysis (user already navigated elsewhere): don't draw wrong-position arrows.
-	if (!gamefile || gamefile.state.local.moveIndex !== update.moveIndex)
-		return enginearrows.clearArrows();
-
-	const arrows: EngineArrow[] = [];
-	update.lines.forEach((line, rank) => {
-		const parsed = parseFirstMove(line);
-		if (parsed) arrows.push({ start: parsed.start, end: parsed.end, rank });
-	});
-	enginearrows.setArrows(arrows);
-}
-
-/** Parses a compact move token "x,y>x,y=Q" into start/end coords. */
-function parseFirstMove(line: CevalLine): { start: Coords; end: Coords } | undefined {
-	const token = line.moves[0];
-	if (!token) return undefined;
-	const [fromStr, toStr] = token.split('>');
-	if (!fromStr || !toStr) return undefined;
-	const endStr = toStr.split('=')[0]!;
-	try {
-		return {
-			start: coordutil.getCoordsFromKey(fromStr as CoordsKey),
-			end: coordutil.getCoordsFromKey(endStr as CoordsKey),
-		};
-	} catch {
-		return undefined;
-	}
 }
 
 // Registration ---------------------------------------------------------------

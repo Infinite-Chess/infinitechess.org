@@ -432,8 +432,8 @@ function freeGame(servergame: ServerGame): void {
 		// Server validated every move — cheating is impossible. Lock in the result now.
 		finalizeGame(servergame);
 	} else {
-		// No server-side validation (e.g. large variant, or custom position). Give the opponent a
-		// cushion to overturn the conclusion with a cheat report before locking it in.
+		// No server-side validation (e.g. large variant, or custom position). Give the opponent
+		// a cushion to overturn the conclusion with a cheat report before locking it in.
 		servergame.match.finalizeTimeoutID = setTimeout(() => {
 			finalizeGame(servergame);
 			evictIfBothLeft(servergame);
@@ -458,7 +458,7 @@ function logConcludedGame(servergame: ServerGame): void {
 		`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
 	);
 
-	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
+	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings".
 	// The ratings are calculated during the logging of the game into the database.
 	try {
 		const ratingdata = gamelogger.logGame(servergame);
@@ -472,17 +472,13 @@ function logConcludedGame(servergame: ServerGame): void {
 			gameutility.broadcastToEveryone(servergame, 'gameratingchange', ratingChanges);
 		}
 	} catch {
-		// log failure already logged
-		// Notify both players
-		for (const { socket: ws } of Object.values(servergame.match.playerData)) {
-			if (!ws) continue;
-			sendSocketMessage(
-				ws,
-				'general',
-				'notifyerror',
-				"A server error occurred while logging this game. It won't be available in your game history.",
-			);
-		}
+		// Log failure already logged.
+		// Notify both players.
+		gameutility.broadcastToParticipants(
+			servergame,
+			'notifyerror',
+			"A server error occurred while logging this game. It won't be available in your game history.",
+		);
 	}
 
 	// The result now lives in the permanent tables — drop the live game row so a restart doesn't

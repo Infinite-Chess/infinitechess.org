@@ -127,6 +127,7 @@ function unloadLogicalAndRendering(): void {
 	gameslot.unloadGame();
 	boardpos.eraseMomentum();
 	Transition.terminate();
+	gamecore.getCanvas().classList.add('visibility-hidden');
 }
 
 function unloadGame(): void {

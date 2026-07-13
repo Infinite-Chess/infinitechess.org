@@ -34,7 +34,7 @@ const variantGroups = variantregistry.getVariantGroupsWithVariants();
 /**
  * Resolves the render state for `/analysis/:id?`, or `undefined` if an id was
  * given but is malformed or names no game in the database (live-only games included).
- * @throws If a database error occurs (from the underlying producers).
+ * @throws If a database error occurs.
  */
 export function getAnalysisPageState(req: Request): AnalysisPageState | undefined {
 	let gameId: number | null = null;
