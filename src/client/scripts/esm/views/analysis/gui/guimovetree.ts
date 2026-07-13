@@ -387,7 +387,7 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 
 	const newLine = movetree.getLineForNode(node);
 	const newMoves = movetree.getMovesFromLine(newLine);
-	const targetIndex = movetree.getNodeMoveIndex(node);
+	const targetIndex = node.ply;
 
 	frametracker.onVisualChange();
 

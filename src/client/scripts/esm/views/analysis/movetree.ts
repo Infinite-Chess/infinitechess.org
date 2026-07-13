@@ -43,6 +43,7 @@ function createNode(
 	};
 }
 
+/** (Re)builds the tree from scratch as a single trunk mirroring the flat `gamefile.moves`. */
 function initFromGame(gamefile: GameFile): void {
 	nextNodeId = 1;
 	root = createNode(undefined, -1, undefined);
@@ -98,15 +99,20 @@ function isMainLine(node: AnalysisMoveNode): boolean {
 	return true;
 }
 
-function getNodeMoveIndex(node: AnalysisMoveNode): number {
-	return getLineToNode(node).length - 2;
-}
-
+/**
+ * Truncates the active line to the viewed position, discarding its continuation so
+ * the next move played branches from here instead of matching the old mainline.
+ */
 function beginBranchFromViewedPosition(gamefile: GameFile): void {
 	if (!root) initFromGame(gamefile);
 	activeLine = activeLine.slice(0, gamefile.state.local.moveIndex + 2);
 }
 
+/**
+ * Reconciles the tree with `gamefile.moves` after it changed: trims the active line on an undo,
+ * or on new moves reuses a matching existing child (canonicalizing the flat move to it) or grafts
+ * a fresh node. Records the resulting front's game-conclusion.
+ */
 function syncAfterMovesChanged(gamefile: GameFile): void {
 	if (!root) initFromGame(gamefile);
 	if (!root) return;
@@ -152,6 +158,7 @@ function storeActiveLineConclusion(conclusion: GameConclusion | undefined): void
 	if (front) front.gameConclusion = conclusion;
 }
 
+/** The full active line for `node`: its path from root, extended forward along the mainline. */
 function getLineForNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	return extendWithMainline(getLineToNode(node));
 }
@@ -167,6 +174,7 @@ function getLineToNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	return line;
 }
 
+/** Appends the mainline continuation past `line`'s end (first child of each node, until a fork or leaf). */
 function extendWithMainline(line: AnalysisMoveNode[]): AnalysisMoveNode[] {
 	const extended = [...line];
 	let current = extended[extended.length - 1];
@@ -190,6 +198,7 @@ function promoteAtFork(node: AnalysisMoveNode): void {
 	node.forceVariation = false;
 }
 
+/** Promotes `node` to the mainline by promoting it and every ancestor at each fork up to the root. */
 function makeMainLine(node: AnalysisMoveNode): void {
 	let current: AnalysisMoveNode | undefined = node;
 	while (current?.parent) {
@@ -198,6 +207,7 @@ function makeMainLine(node: AnalysisMoveNode): void {
 	}
 }
 
+/** Demotes a mainline `node` to a variation, so its parent's next child becomes the mainline. */
 function forceVariation(node: AnalysisMoveNode): void {
 	if (!node.parent || node.parent.children[0] !== node) return;
 	node.forceVariation = true;
@@ -220,12 +230,6 @@ function getMovesFromLine(line: AnalysisMoveNode[]): MoveFull[] {
 	return line.slice(1).map((node) => node.move!);
 }
 
-function sharedPrefixLength(left: AnalysisMoveNode[], right: AnalysisMoveNode[]): number {
-	let i = 0;
-	while (left[i] && right[i] && left[i] === right[i]) i++;
-	return i;
-}
-
 function isSameMove(left: MoveFull | undefined, right: MoveFull): boolean {
 	return (
 		left !== undefined &&
@@ -243,7 +247,6 @@ export default {
 	getCurrentNode,
 	isInSubtree,
 	isMainLine,
-	getNodeMoveIndex,
 	beginBranchFromViewedPosition,
 	syncAfterMovesChanged,
 	getLineForNode,
@@ -255,7 +258,6 @@ export default {
 	forceVariation,
 	deleteNode,
 	getMovesFromLine,
-	sharedPrefixLength,
 };
 
 export type { AnalysisMoveNode };
