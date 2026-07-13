@@ -285,7 +285,7 @@ function castBigIntArrayToFloat32(instanceData: bigint[]): Float32Array {
  * uniform translations upon rendering, and reinits them on the gpu.
  * Faster than {@link regenAll}.
  */
-function shiftAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh): void {
+function shiftAll(ctx: RenderContext, mesh: Mesh): void {
 	console.log('Shifting all piece meshes.');
 
 	const newOffset = geometry.roundPointToNearestGridpoint(
@@ -295,13 +295,6 @@ function shiftAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh): void 
 
 	const diffXOffset = mesh.offset[0] - newOffset[0];
 	const diffYOffset = mesh.offset[1] - newOffset[1];
-
-	// const chebyshevDistance = vectors.chebyshevDistance(mesh.offset, newOffset);
-	// if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
-	// 	console.log(`REGENERATING the piece models instead of shifting them. They were shifted by ${chebyshevDistance} tiles!`);
-	// 	regenAll(boardsim, mesh);
-	// 	return;
-	// }
 
 	mesh.offset = newOffset;
 
@@ -417,14 +410,14 @@ function deletebufferdata(mesh: Mesh, piece: Piece): void {
  * Renders ever piece type mesh of the game, EXCLUDING voids,
  * translating and scaling them into position.
  */
-function renderAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh | undefined): void {
+function renderAll(ctx: RenderContext, mesh: Mesh | undefined): void {
 	if (!mesh) return; // Mesh hasn't been generated yet
 
 	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z, ctx.boardpos);
 
 	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
 	if (!ctx.boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(ctx, mesh.offset))
-		shiftAll(ctx, boardsim, mesh);
+		shiftAll(ctx, mesh);
 
 	// Test if the rotation has changed
 	const correctInverted = ctx.camera.getIsViewingBlackPerspective();

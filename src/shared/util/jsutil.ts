@@ -272,7 +272,7 @@ function estimateMemorySizeOf(obj: any): string {
  * allowing us to stringify special objects like BigInts, Maps and TypedArrays.
  * Use {@link parseReviver} to parse back.
  */
-function stringifyReplacer(key: string, value: any): any {
+function stringifyReplacer(_key: string, value: any): any {
 	// Stringify BigInts
 	if (typeof value === 'bigint')
 		return {
@@ -324,7 +324,7 @@ type FixedArrayConstructor = (typeof FixedArrayInfo)[keyof typeof FixedArrayInfo
  * A "reviver" for JSON.parse()'ing that will convert back from the custom stringified format to the original objects.
  * This allows us to parse back the special objects like Maps and TypedArrays that were stringified using {@link stringifyReplacer}.
  */
-function parseReviver(key: string, value: any): any {
+function parseReviver(_key: string, value: any): any {
 	if (typeof value === 'object' && value !== null) {
 		if (value.$$type === 'BigInt') return BigInt(value.value); // Convert string back to BigInt
 		if (value.$$type === 'Map') return new Map(value.value); // value.value should be an array of [key, value] pairs

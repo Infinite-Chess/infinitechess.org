@@ -294,7 +294,7 @@ function renderScene(): void {
 
 	// The rendering of the pieces needs to use the normal depth function, because the
 	// rendering of currently-animated pieces needs to be blocked by animations.
-	pieces.renderPiecesInGame(gameContext, gamefile, mesh);
+	pieces.renderPiecesInGame(gameContext, mesh);
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {

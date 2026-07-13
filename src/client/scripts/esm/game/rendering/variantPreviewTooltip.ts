@@ -291,7 +291,7 @@ function renderBoard(boardsim: BoardPreview, gameRules: GameRules): void {
 		boardutil.getPieceCountOfGame(boardsim.pieces) >
 			miniimagerenderer.pieceCountToDisableMiniImages
 	) {
-		piecemodels.renderAll(ctx, boardsim, mesh);
+		piecemodels.renderAll(ctx, mesh);
 	} else {
 		const instanceData = miniimagerenderer.buildInstanceData(ctx, boardsim);
 		miniimagerenderer.render(ctx, boardsim.existingTypes, instanceData, {}, false, PREVIEW_ENTITY_WIDTH_VPIXELS); // prettier-ignore
