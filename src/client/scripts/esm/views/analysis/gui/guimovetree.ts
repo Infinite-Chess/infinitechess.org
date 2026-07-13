@@ -410,7 +410,7 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	animation.clearAnimations();
 }
 
-// Registration -------------------------------------------------------------------------------
+// Registration ------------------------------------------------------------------
 
 guimoveslist.registerRenderer({
 	reconcile: reconcileMoveTree,
