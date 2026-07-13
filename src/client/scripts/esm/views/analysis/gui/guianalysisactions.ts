@@ -103,18 +103,6 @@ function init(): void {
 	});
 }
 
-/** Copies the current game's ICN (position + moves up to the viewed ply) to the clipboard. */
-async function exportIcnToClipboard(): Promise<void> {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
-	try {
-		await navigator.clipboard.writeText(getGameICN(gamefile));
-		toast.show('Copied ICN to your clipboard!');
-	} catch (e) {
-		toast.show('Clipboard permission denied. This might be your browser.' + '\n' + e, { error: true }); // prettier-ignore
-	}
-}
-
 /**
  * Serializes the game (position + move list) to canonical compact ICN. Moves are
  * truncated to the currently-viewed ply, so the export mirrors the position on the
@@ -162,7 +150,7 @@ function exportCurrentPosition():
 async function openCurrentPositionInEditor(): Promise<void> {
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 	const position = exportCurrentPosition();
-	if (!position) return toast.show('Could not export this position.', { error: true });
+	if (!position) return;
 
 	await IndexedDB.saveItem(estoretypes.EDITOR_AUTOSAVE_NAME, {
 		dirty: true,
@@ -173,11 +161,23 @@ async function openCurrentPositionInEditor(): Promise<void> {
 	window.location.assign('/editor');
 }
 
+/** Copies the current game's ICN (position + moves up to the viewed ply) to the clipboard. */
+async function exportIcnToClipboard(): Promise<void> {
+	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return;
+	try {
+		await navigator.clipboard.writeText(getGameICN(gamefile));
+		toast.show('Copied ICN to your clipboard!');
+	} catch (e) {
+		toast.show('Clipboard permission denied. This might be your browser.' + '\n' + e, { error: true }); // prettier-ignore
+	}
+}
+
 /** Opens the "Continue from here" sub-menu, provided the position can be exported. */
 function openContinueFromHereChoice(): void {
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
-	const position = exportCurrentPosition();
-	if (!position) return toast.show('Could not export this position.', { error: true });
+	if (!exportCurrentPosition()) return;
 
 	element_ContinueChoiceMenu.classList.remove('hidden');
 	syncActionsToggle();
@@ -191,7 +191,7 @@ function openContinueFromHereChoice(): void {
 async function continueFromHereInLobby(mode: ModalMode): Promise<void> {
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 	const position = exportCurrentPosition();
-	if (!position) return toast.show('Could not export this position.', { error: true });
+	if (!position) return;
 
 	await gameSetupModalHandoff.save({ icn: position.icn, mode });
 	window.location.assign('/');
