@@ -5,6 +5,8 @@
  * animation of games with a world border.
  */
 
+import type RenderContext from './RenderContext.js';
+
 import bounds, {
 	BoundingBox,
 	DoubleBoundingBox,
@@ -12,22 +14,22 @@ import bounds, {
 } from '../../../../../shared/util/math/bounds.js';
 
 import meshes from './meshes.js';
-import camera from './camera.js';
 import primitives from './primitives.js';
-import boardtiles from './boardtiles.js';
-import { createRenderable } from '../../webgl/Renderable.js';
 
 /**
  * Draws a square on screen containing the entire
  * playable area, just inside the world border.
  */
-function drawPlayableRegionMask(worldBorder: UnboundedRectangle | undefined): void {
+function drawPlayableRegionMask(
+	ctx: RenderContext,
+	worldBorder: UnboundedRectangle | undefined,
+): void {
 	// No border, and in perspective mode => This is the best mask we can get!
 	// This is crucial for making as if the board goes infinitely into the horizon.
 	// Otherwise without this the solid cover isn't visible.
-	if (!worldBorder && camera.isCameraRotated()) return boardtiles.renderSolidCover();
+	if (!worldBorder && ctx.camera.isCameraRotated()) return ctx.boardtiles.renderSolidCover();
 
-	const screenBox = camera.getRespectiveScreenBox();
+	const screenBox = ctx.camera.getRespectiveScreenBox();
 
 	let worldBox: DoubleBoundingBox;
 	if (worldBorder) {
@@ -40,7 +42,7 @@ function drawPlayableRegionMask(worldBorder: UnboundedRectangle | undefined): vo
 		};
 		const boundingBoxBD =
 			meshes.expandTileBoundingBoxToEncompassWholeSquare(worldBorderNotNull);
-		worldBox = meshes.applyWorldTransformationsToBoundingBox(boundingBoxBD);
+		worldBox = meshes.applyWorldTransformationsToBoundingBox(boundingBoxBD, ctx.boardpos);
 
 		// Cap the world box to the screen box.
 		// Fixes graphical glitches when the vertex data is beyond float32 range.
@@ -65,7 +67,7 @@ function drawPlayableRegionMask(worldBorder: UnboundedRectangle | undefined): vo
 	const { left, right, bottom, top } = worldBox;
 	const vertexData = primitives.Quad_Color(left, bottom, right, top, [0, 0, 0, 1]); // Color doesn't matter since it's a mask
 
-	createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
+	ctx.renderable.createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
 
 // Exports -------------------------------------

@@ -11,13 +11,14 @@
  * Grid space: 1 unit = width of 1 square
  */
 
+import type { Camera } from '../rendering/camera.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import camera from '../rendering/camera.js';
 import boardpos from '../rendering/boardpos.js';
-import boardtiles from '../rendering/boardtiles.js';
+import boardgeometry from '../rendering/boardgeometry.js';
 
 const HALF: BigDecimal = bd.fromNumber(0.5);
 
@@ -52,7 +53,7 @@ function convertWorldSpaceToCoords_Rounded(worldCoords: DoubleCoords): Coords {
 
 /** Returns the integer coordinate that contains the floating point coordinate provided. */
 function roundCoord(coord: BigDecimal): bigint {
-	const squareCenter = boardtiles.getSquareCenter();
+	const squareCenter = boardgeometry.getSquareCenter();
 	return bd.toBigInt(bd.floor(bd.add(coord, squareCenter)));
 }
 
@@ -67,7 +68,7 @@ function convertCoordToWorldSpace(
 	position: BDCoords = boardpos.getBoardPos(),
 	scale: BigDecimal = boardpos.getBoardScale(),
 ): DoubleCoords {
-	const squareCenter = boardtiles.getSquareCenter();
+	const squareCenter = boardgeometry.getSquareCenter();
 
 	const halfMinusSquareCenter = bd.subtract(HALF, squareCenter);
 
@@ -96,10 +97,13 @@ function convertCoordToWorldSpace_IgnoreSquareCenter(
 	return [getAxis(coords[0], position[0]), getAxis(coords[1], position[1])];
 }
 
-/** Converts a measurement of virtual screen pixels to world space units. Dependant on the current screen height. */
-function convertPixelsToWorldSpace_Virtual(value: number): number {
-	const screenHeight = camera.getScreenHeightWorld(false);
-	return (value / camera.getCanvasHeightVirtualPixels()) * screenHeight;
+/**
+ * Converts a measurement of virtual screen pixels to world space units. Dependant on the current screen height.
+ * @param cam - The camera to measure against. Defaults to the game camera.
+ */
+function convertPixelsToWorldSpace_Virtual(value: number, cam: Camera = camera): number {
+	const screenHeight = cam.getScreenHeightWorld(false);
+	return (value / cam.getCanvasHeightVirtualPixels()) * screenHeight;
 }
 
 /** Converts a measurement of world space units to virtual screen pixels. Dependant on the current screen height. */

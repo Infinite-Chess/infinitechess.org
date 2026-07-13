@@ -31,7 +31,6 @@ import gamesound from '../misc/gamesound.js';
 import highlights from '../rendering/highlights/highlights.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import dragarrows from '../rendering/dragging/dragarrows.js';
-import boardtiles from '../rendering/boardtiles.js';
 import Transition from '../rendering/transitions/Transition.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
 import Renderable from '../../webgl/Renderable.js';
@@ -43,8 +42,11 @@ import piecemodels from '../rendering/piecemodels.js';
 import screenshake from '../rendering/screenshake.js';
 import { GameBus } from '../GameBus.js';
 import coordinates from '../rendering/coordinates.js';
+import texturecache from '../../chess/rendering/texturecache.js';
 import frametracker from '../rendering/frametracker.js';
 import WaterRipples from '../rendering/WaterRipples.js';
+import boardgeometry from '../rendering/boardgeometry.js';
+import RenderContext from '../rendering/RenderContext.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import webgl, { gl } from '../rendering/webgl.js';
 import promotionlines from '../rendering/promotionlines.js';
@@ -70,6 +72,8 @@ let listener_document: InputListener;
 
 /** Manager of our Shaders */
 let programManager: ProgramManager;
+/** The interactive game's render context (gl, camera, boardpos, textures, tile renderer...). */
+let gameContext: RenderContext;
 /** Manager of Post Processing Effects */
 let pipeline: PostProcessingPipeline;
 /** Manager of Effect Zones */
@@ -86,9 +90,18 @@ let effectZoneManager: EffectZoneManager | undefined;
 function init(canvas: HTMLCanvasElement): void {
 	element_canvas = canvas;
 	programManager = new ProgramManager(gl);
+	const gameMasker = maskedDraw.init(gl, programManager);
 	Renderable.init(gl, programManager);
-	maskedDraw.init(programManager);
-	boardtiles.init();
+	gameContext = new RenderContext({
+		gl,
+		canvas,
+		programManager,
+		camera,
+		boardpos,
+		textures: texturecache,
+		maskedDraw: gameMasker,
+	});
+	gameContext.boardtiles.init();
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
 	effectZoneManager = new EffectZoneManager(gl, programManager);
@@ -151,7 +164,7 @@ function update(): void {
 	Transition.update();
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER transition.update() since that updates the board position
-	boardtiles.recalcVariables();
+	boardgeometry.recalcVariables();
 
 	// Update the effect zone manager (after board variables are recalculated).
 	effectZoneManager!.update(getFurthestTileVisible());
@@ -251,8 +264,8 @@ function renderScene(): void {
 
 	// Star Field Animation: Appears in border & voids
 	maskedDraw.execute(
-		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids
-		() => border.drawPlayableRegionMask(gamefile.gameRules.worldBorder), // EXCLUSION MASK is our playable region
+		() => piecemodels.renderVoids(gameContext, mesh), // INCLUSION MASK is our voids
+		() => border.drawPlayableRegionMask(gameContext, gamefile.gameRules.worldBorder), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
 		// () => colorFlowRenderer.render(frameprofiler.getDeltaTime()), // Replaces starfield with a gradient color flow
 		'or', // Intersection Mode: Draw in both the inclusion and inversion of exclusion regions.
@@ -260,8 +273,8 @@ function renderScene(): void {
 	// Board Tiles & Voids: Mask the playable region so the tiles
 	// don't render outside the world border or where voids should be
 	maskedDraw.execute(
-		() => border.drawPlayableRegionMask(gamefile.gameRules.worldBorder), // INCLUSION MASK containing playable region
-		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK (voids)
+		() => border.drawPlayableRegionMask(gameContext, gamefile.gameRules.worldBorder), // INCLUSION MASK containing playable region
+		() => piecemodels.renderVoids(gameContext, mesh), // EXCLUSION MASK (voids)
 		() => renderTilesAndPromoteLines(gamefile), // MAIN SCENE
 		'and', // Intersection Mode: Draw where the inclusion and inversion of exclusion regions intersect.
 	);
@@ -281,7 +294,7 @@ function renderScene(): void {
 
 	// The rendering of the pieces needs to use the normal depth function, because the
 	// rendering of currently-animated pieces needs to be blocked by animations.
-	pieces.renderPiecesInGame(gamefile, mesh);
+	pieces.renderPiecesInGame(gameContext, gamefile, mesh);
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
@@ -298,17 +311,17 @@ function renderScene(): void {
 
 /** Renders items that need to be able to be masked by the world border. */
 function renderTilesAndPromoteLines(gamefile: GameFile): void {
-	effectZoneManager!.renderBoard();
+	effectZoneManager!.renderBoard(gameContext.boardtiles);
 
 	// The start box determines how far out promotion lines are rendered.
 	// In editor mode, don't provide it, so the lines extend to the screen edges.
 	const startBox = gamefile.editor ? undefined : gamefile.startSnapshot.box;
-	promotionlines.render(gamefile.gameRules.promotion, startBox);
+	promotionlines.render(gameContext, gamefile.gameRules.promotion, startBox);
 }
 
 /** Returns the absolute value of the furthest tile from the origin on our screen. */
 function getFurthestTileVisible(): bigint {
-	const tileBox = boardtiles.gboundingBox(false);
+	const tileBox = boardgeometry.gboundingBox(false);
 	let furthest: bigint = 0n;
 	furthest = bimath.max(furthest, bimath.abs(tileBox.left));
 	furthest = bimath.max(furthest, bimath.abs(tileBox.right));
@@ -322,11 +335,17 @@ function getCanvas(): HTMLElement {
 	return element_canvas;
 }
 
+/** Returns the interactive game's render context. Must be called after {@link init}. */
+function getGameContext(): RenderContext {
+	return gameContext;
+}
+
 export default {
 	init,
 	update,
 	render,
 	getCanvas,
+	getGameContext,
 };
 
 export { listener_canvas, listener_document };

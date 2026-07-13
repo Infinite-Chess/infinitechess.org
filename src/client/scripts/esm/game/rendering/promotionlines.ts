@@ -6,18 +6,16 @@
 
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { Promotion } from '../../../../../shared/chess/util/gamerules.js';
+import type RenderContext from './RenderContext.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd from '@naviary/bigdecimal';
 
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-import camera from './camera.js';
 import meshes from './meshes.js';
-import boardpos from './boardpos.js';
-import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
-import { createRenderable } from '../../webgl/Renderable.js';
+import boardgeometry from './boardgeometry.js';
 
 // ===================================== Constants =====================================
 
@@ -30,23 +28,28 @@ const THICKNESS = 0.01;
 
 /**
  * Renders the promotion lines for the given promotion rules.
+ * @param ctx - The render context to draw into.
  * @param promotion - The promotion rules, if any.
  * @param startBox - The starting position bounding box. When undefined, lines extend to screen edges.
  */
-function render(promotion: Promotion | undefined, startBox?: BoundingBox): void {
+function render(
+	ctx: RenderContext,
+	promotion: Promotion | undefined,
+	startBox?: BoundingBox,
+): void {
 	if (promotion === undefined) return; // No promotion ranks in this game
 
 	// Generate the vertex data
 
-	const position = boardpos.getBoardPos();
-	const scale = boardpos.getBoardScaleAsNumber();
+	const position = ctx.boardpos.getBoardPos();
+	const scale = ctx.boardpos.getBoardScaleAsNumber();
 
 	let left: number;
 	let right: number;
 
 	if (startBox === undefined) {
 		// Lines extend to the edges of the screen
-		({ left, right } = camera.getRespectiveScreenBox());
+		({ left, right } = ctx.camera.getRespectiveScreenBox());
 	} else {
 		// Round the start position box away to encapsulate the entirety of all squares
 		const floatingBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(startBox);
@@ -54,7 +57,7 @@ function render(promotion: Promotion | undefined, startBox?: BoundingBox): void 
 		right = (bd.toNumber(bd.subtract(floatingBox.right, position[0])) + EXTRA_LENGTH) * scale;
 	}
 
-	const squareCenterNum = boardtiles.getSquareCenterAsNumber();
+	const squareCenterNum = boardgeometry.getSquareCenterAsNumber();
 	const color: Color = [0, 0, 0, 1];
 	const vertexData: number[] = [];
 
@@ -75,7 +78,7 @@ function render(promotion: Promotion | undefined, startBox?: BoundingBox): void 
 
 	// Create and Render the model
 
-	createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
+	ctx.renderable.createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
 
 // ===================================== Exports =====================================

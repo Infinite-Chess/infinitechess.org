@@ -28,10 +28,10 @@ import coordutil, {
 import space from '../../misc/space.js';
 import meshes from '../meshes.js';
 import boardpos from '../boardpos.js';
-import boardtiles from '../boardtiles.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../GameBus.js';
 import preferences from '../../../components/header/preferences.js';
+import boardgeometry from '../boardgeometry.js';
 import area, { Area } from '../area.js';
 
 // Types ---------------------------------------------------------------------------------
@@ -411,7 +411,7 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 	const startCoords = boardpos.getBoardPos();
 	const endCoords = thisArea.coords;
 
-	const currentBoardBoundingBox = boardtiles.gboundingBoxFloat(); // Tile/board space, NOT world-space
+	const currentBoardBoundingBox = boardgeometry.gboundingBoxFloat(); // Tile/board space, NOT world-space
 
 	// Will a teleport to this area be a zoom out or in?
 	const isAZoomOut = bd.compare(thisArea.scale, boardpos.getBoardScale()) < 0;
@@ -519,7 +519,7 @@ function undoTransition(): void {
 		const thisArea: Area = {
 			coords: previousTrans.destinationCoords,
 			scale: previousTrans.destinationScale,
-			boundingBox: boardtiles.getBoundingBoxOfBoard(
+			boundingBox: boardgeometry.getBoundingBoxOfBoard(
 				previousTrans.destinationCoords,
 				previousTrans.destinationScale,
 			),

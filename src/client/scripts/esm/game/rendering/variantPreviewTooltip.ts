@@ -29,20 +29,19 @@ import typeutil, {
 
 import area from '../../game/rendering/area.js';
 import webgl from '../../game/rendering/webgl.js';
-import camera from '../../game/rendering/camera.js';
 import meshes from '../../game/rendering/meshes.js';
 import border from '../../game/rendering/border.js';
-import boardpos from '../../game/rendering/boardpos.js';
 import svgcache from '../../chess/rendering/svgcache.js';
-import boardtiles from '../../game/rendering/boardtiles.js';
-import maskedDraw from '../../webgl/maskedDraw.js';
 import imagecache from '../../chess/rendering/imagecache.js';
-import Renderable from '../../webgl/Renderable.js';
 import piecemodels from '../../game/rendering/piecemodels.js';
-import texturecache from '../../chess/rendering/texturecache.js';
+import RenderContext from './RenderContext.js';
 import promotionlines from '../../game/rendering/promotionlines.js';
+import { createCamera } from '../../game/rendering/camera.js';
 import miniimagerenderer from '../../game/rendering/miniimagerenderer.js';
+import { createBoardPos } from '../../game/rendering/boardpos.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
+import { createMaskedDraw } from '../../webgl/maskedDraw.js';
+import { createTextureCache } from '../../chess/rendering/texturecache.js';
 
 // Constants ---------------------------------------------------------------
 
@@ -62,8 +61,12 @@ const EDGE_PAD = 8;
 
 // State -------------------------------------------------------------------
 
-/** Whether the WebGL context has been initialized on the preview canvas. */
-let glInitialized = false;
+/**
+ * The preview's own render context, built lazily on first show. It owns a separate
+ * WebGL context, camera, board position, textures, and masker so rendering the preview
+ * never disturbs the interactive game's render state.
+ */
+let previewCtx: RenderContext;
 /** Incremented on every show/hide; compared after async work to discard stale renders. */
 let showToken = 0;
 /** The anchor element of the currently visible tooltip, if any. */
@@ -125,23 +128,28 @@ element_rules.append(element_rulesBody);
 element_tooltip.append(element_name, element_rules, element_canvas);
 document.body.appendChild(element_tooltip);
 
-// State ----------------------------------------------------------------
-
-/** The WebGL context for the preview canvas. */
-let gl: WebGL2RenderingContext;
-
 // Functions ---------------------------------------------------------------
 
-/** Initializes the preview WebGL context once (idempotent). */
+/** Builds the preview's own render context once, on its own WebGL context (idempotent). */
 async function ensureGLReady(): Promise<void> {
-	if (glInitialized) return;
-	gl = webgl.init(element_canvas);
-	camera.init(gl, element_canvas);
-	const programManager = new ProgramManager(gl);
-	Renderable.init(gl, programManager);
-	maskedDraw.init(programManager);
-	await boardtiles.init();
-	glInitialized = true;
+	if (previewCtx) return;
+
+	const previewGl = webgl.createContext(element_canvas);
+	const previewCamera = createCamera(); // No hooks; inert toward game-loop globals.
+	previewCamera.init(previewGl, element_canvas);
+	const previewPM = new ProgramManager(previewGl);
+
+	previewCtx = new RenderContext({
+		gl: previewGl,
+		canvas: element_canvas,
+		programManager: previewPM,
+		camera: previewCamera,
+		boardpos: createBoardPos(previewCamera),
+		textures: createTextureCache(),
+		maskedDraw: createMaskedDraw(previewGl, previewPM),
+	});
+
+	await previewCtx.boardtiles.init();
 }
 
 /**
@@ -240,51 +248,53 @@ function positionTooltip(anchor: HTMLElement, placement: 'left' | 'below'): void
 	element_tooltip.style.top = `${Math.min(preferredTop, window.innerHeight - tooltipH - EDGE_PAD)}px`;
 
 	// Sync canvas dimensions to the potential new preview dimensions
-	camera.syncCanvasDimensions();
+	previewCtx.camera.syncCanvasDimensions();
 }
 
-/** Initializes WebGL once and loads any not-yet-cached images and textures for the board. */
+/** Builds the preview context once and loads any not-yet-cached images and textures for the board. */
 async function ensureReady(boardsim: BoardPreview): Promise<void> {
 	await ensureGLReady();
 	await imagecache.initImagesForGame(boardsim);
-	await texturecache.initTexturesForGame(gl, boardsim);
+	await previewCtx.textures.initTexturesForGame(previewCtx.gl, boardsim);
 }
 
-/** Renders the board to the preview canvas. */
+/** Renders the board to the preview canvas, using the preview's own render context. */
 function renderBoard(boardsim: BoardPreview, gameRules: GameRules): void {
+	const ctx = previewCtx;
+
 	const mesh: Mesh = { offset: [0n, 0n], inverted: false, types: {} };
-	piecemodels.regenAll(boardsim, mesh);
+	piecemodels.regenAll(ctx, boardsim, mesh);
 
 	const startBox = boardsim.startSnapshot.box;
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(startBox);
-	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
+	const centerArea = area.calculateFromUnpaddedBox(boxFloating, ctx.camera);
 
-	boardpos.setBoardPos(centerArea.coords);
-	boardpos.setBoardScale(centerArea.scale);
-	boardtiles.recalcVariables();
+	ctx.boardpos.setBoardPos(centerArea.coords);
+	ctx.boardpos.setBoardScale(centerArea.scale);
 
-	webgl.clearScreen();
+	ctx.clearScreen();
+	ctx.maskedDraw.onFrameStart();
 
 	// Render board and promotion lines
-	maskedDraw.execute(
-		() => border.drawPlayableRegionMask(gameRules.worldBorder), // INCLUSION MASK: playable region
-		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK: voids
+	ctx.maskedDraw.execute(
+		() => border.drawPlayableRegionMask(ctx, gameRules.worldBorder), // INCLUSION MASK: playable region
+		() => piecemodels.renderVoids(ctx, mesh), // EXCLUSION MASK: voids
 		() => {
-			boardtiles.render();
-			promotionlines.render(gameRules.promotion, startBox);
+			ctx.boardtiles.render();
+			promotionlines.render(ctx, gameRules.promotion, startBox);
 		},
 		'and',
 	);
 	// Render pieces
 	if (
-		!boardpos.areZoomedOut() ||
+		!ctx.boardpos.areZoomedOut() ||
 		boardutil.getPieceCountOfGame(boardsim.pieces) >
 			miniimagerenderer.pieceCountToDisableMiniImages
 	) {
-		piecemodels.renderAll(boardsim, mesh);
+		piecemodels.renderAll(ctx, boardsim, mesh);
 	} else {
-		const instanceData = miniimagerenderer.buildInstanceData(boardsim);
-		miniimagerenderer.render(boardsim.existingTypes, instanceData, {}, false, PREVIEW_ENTITY_WIDTH_VPIXELS); // prettier-ignore
+		const instanceData = miniimagerenderer.buildInstanceData(ctx, boardsim);
+		miniimagerenderer.render(ctx, boardsim.existingTypes, instanceData, {}, false, PREVIEW_ENTITY_WIDTH_VPIXELS); // prettier-ignore
 	}
 }
 

@@ -107,6 +107,31 @@ The render loop lives in `gamecore.ts`. The `renderScene()` function renders all
 
 Call your script's render method in the appropriate section.
 
+## Rendering Architecture: Render Contexts
+
+The game can draw two independent boards at the same time: the interactive game, and the small board inside the variant-preview hover tooltip ([`variantPreviewTooltip.ts`](../src/client/scripts/esm/game/rendering/variantPreviewTooltip.ts)). Each lives on its own `<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs, textures, buffers/VAOs) can **never** be shared across contexts.
+
+A [`RenderContext`](../src/client/scripts/esm/game/rendering/RenderContext.ts) bundles everything bound to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale), piece `textures`, stencil `maskedDraw`, tile renderer (`boardtiles`), and a `renderable` factory for creating models in that context. The interactive game builds one in `gamecore.init()`; the preview builds its own in `ensureGLReady()`. Shared drawing code is handed a `RenderContext` and draws for whichever board it's told, instead of reaching for a process-wide singleton.
+
+### Choosing a shape for a new render module
+
+When you add a rendering script, pick one of these based on what state it owns and who calls it:
+
+| Pattern                      | Use when                                                                                                                                                             | How                                                                                                                                                                                                  | Examples                                                                       |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **Factory** (+ game default) | The module owns context- or view-bound state: GPU objects (textures, programs) or the view (camera matrices, board position). Two boards genuinely need two copies.  | Export a `createX()` that builds one instance. Expose the interactive game's instance as the module default so existing `x.foo()` callers stay unchanged; the preview calls `createX()` for its own. | camera, boardpos, texturecache, maskedDraw, Renderable, boardtiles             |
+| **Thread `ctx`**             | Shared draw logic that BOTH boards run, needing the whole GPU bundle (gl + programs + textures + masker + tiles). Redundancy rules forbid giving the preview a copy. | Take `ctx: RenderContext` as the first parameter. This forces the game's callers (`renderScene`) to pass `gameContext`.                                                                              | piecemodels, border, promotionlines, miniimagerenderer                         |
+| **Sub-part w/ game default** | Shared helper that needs only ONE piece of context (just the camera, or just boardpos), not the whole bundle.                                                        | Take that piece as a parameter defaulting to the game singleton: `cam: Camera = camera`. Game callers omit it; the preview passes `ctx.camera`.                                                      | area, meshes                                                                   |
+| **Stay a singleton**         | Game-only rendering the preview never uses, OR pure math derived from the interactive game.                                                                          | Read the game's default exports directly. No `ctx` needed — there is only ever one caller.                                                                                                           | highlights, coordinates, starfield, arrows, selection, snapping, boardgeometry |
+| **Unchanged** (context-free) | Holds no context/view state at all — decoded bitmaps, SVGs, pure math. Already shareable across contexts.                                                            | Leave as-is.                                                                                                                                                                                         | imagecache, svgcache                                                           |
+
+Two wiring notes for the factory pattern:
+
+- Modules whose game instance needs no `gl` (camera, boardpos, texturecache) build it at module load: `export default createX(...)`.
+- Modules that need `gl`/`ProgramManager` (which exist only after WebGL boots) hold a `let gameInstance` set by a runtime `init()`, and their free exports delegate to it (maskedDraw, Renderable). This keeps game-only callers writing `maskedDraw.execute(...)` unchanged.
+
+Rule of thumb: **only make something a factory if two boards genuinely need two of it.** Otherwise leave it a singleton reading the game's context, or thread `ctx` if the preview must share the exact same drawing code.
+
 ## Conclusion
 
 Ultimately, always refer to how the existing code renders objects for inspiration for rendering your own!

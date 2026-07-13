@@ -1157,12 +1157,11 @@ function make_black_move(
 /**
  * Returns an evaluation score for a given position according to the evaluation dictionaries
  * TODO: cap distance function when white to move
- * @param {Array} piecelist
- * @param {Array} coordlist
- * @param {Boolean} black_to_move - false on white's turns, true on black's turns
- * @param {Boolean} inTrapFleeMode - whether black is in trap flee mode -> leads to lower scores, if true
- * @param {Boolean} inProtectedRiderFleeMode - whether black is in protected rider flee mode -> leads to higher scores, if true
- * @returns {Number}
+ * @param piecelist
+ * @param coordlist
+ * @param black_to_move - false on white's turns, true on black's turns
+ * @param inTrapFleeMode - whether black is in trap flee mode -> leads to lower scores, if true
+ * @param inProtectedRiderFleeMode - whether black is in protected rider flee mode -> leads to higher scores, if true
  */
 function get_position_evaluation(
 	piecelist: number[],

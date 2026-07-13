@@ -12,9 +12,9 @@ import bimath from '../../../../../shared/util/math/bimath.js';
 
 import boardpos from '../../game/rendering/boardpos.js';
 import gameslot from '../../game/chess/gameslot.js';
-import boardtiles from '../../game/rendering/boardtiles.js';
 import { GameBus } from '../../game/GameBus.js';
 import frametracker from '../../game/rendering/frametracker.js';
+import boardgeometry from '../../game/rendering/boardgeometry.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 import analysisenginebounds from './analysisenginebounds.js';
 
@@ -37,7 +37,7 @@ function render(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
-	const visible = boardtiles.gboundingBox(false);
+	const visible = boardgeometry.gboundingBox(false);
 	const { left, right, bottom, top } = analysisenginebounds.getEngineWorldBorder(gamefile);
 	const data: number[] = [];
 
