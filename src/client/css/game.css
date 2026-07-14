@@ -304,7 +304,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 6px 12px;
+	padding: 8px 12px;
 }
 
 /* The side whose turn it is gets its whole bar highlighted */
@@ -322,6 +322,7 @@
 	font-weight: 700;
 	color: var(--c-text-emphasis);
 	font-family: monospace;
+	line-height: 1;
 }
 
 /* ==============================
