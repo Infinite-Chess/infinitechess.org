@@ -1,22 +1,22 @@
-// src/client/scripts/esm/views/analysis/analysisborderdebug.ts
+// src/client/scripts/esm/views/analysis/rendering/analysisborderdebug.ts
 
 /**
  * DEBUG: Draws the HydroChess analysis-safe coordinate border on the board.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import bimath from '../../../../../shared/util/math/bimath.js';
+import bimath from '../../../../../../shared/util/math/bimath.js';
 
-import boardpos from '../../game/rendering/boardpos.js';
-import gameslot from '../../game/chess/gameslot.js';
-import { GameBus } from '../../game/GameBus.js';
-import frametracker from '../../game/rendering/frametracker.js';
-import boardgeometry from '../../game/rendering/boardgeometry.js';
-import { createRenderable } from '../../webgl/Renderable.js';
-import analysisenginebounds from './analysisenginebounds.js';
+import boardpos from '../../../game/rendering/boardpos.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import { GameBus } from '../../../game/GameBus.js';
+import frametracker from '../../../game/rendering/frametracker.js';
+import boardgeometry from '../../../game/rendering/boardgeometry.js';
+import { createRenderable } from '../../../webgl/Renderable.js';
+import analysisenginebounds from '../analysisenginebounds.js';
 
 const BORDER_COLOR: Color = [1, 0.05, 0.05, 0.9];
 const HALF = bd.fromNumber(0.5);

@@ -1,4 +1,4 @@
-// src/client/scripts/esm/views/analysis/enginearrows.ts
+// src/client/scripts/esm/views/analysis/rendering/enginearrows.ts
 
 /**
  * Renders the analysis engine's suggested moves as arrows on the board — the
@@ -6,18 +6,18 @@
  * fade out), like lichess' analysis arrows.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
-import type { Arrow } from '../../game/rendering/highlights/annotations/annotations.js';
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { CevalLine, CevalUpdate } from './ceval.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Arrow } from '../../../game/rendering/highlights/annotations/annotations.js';
+import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { CevalLine, CevalUpdate } from '.././ceval.js';
 
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import icnconverter, { MoveCoords } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import icnconverter, { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
-import gameslot from '../../game/chess/gameslot.js';
-import drawarrows from '../../game/rendering/highlights/annotations/drawarrows.js';
-import frametracker from '../../game/rendering/frametracker.js';
-import { createRenderable } from '../../webgl/Renderable.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import drawarrows from '../../../game/rendering/highlights/annotations/drawarrows.js';
+import frametracker from '../../../game/rendering/frametracker.js';
+import { createRenderable } from '../../../webgl/Renderable.js';
 
 // Types --------------------------------------------------------------------
 
