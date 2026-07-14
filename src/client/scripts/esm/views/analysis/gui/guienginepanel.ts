@@ -179,9 +179,12 @@ function initListeners(): void {
 	bindSettingSlider(element_Threads, element_ThreadsValue, String, (v) => ceval.updateSettings({ threads: v })); // prettier-ignore
 	bindSettingSlider(element_Depth, element_DepthValue, String, (v) => {
 		ceval.updateSettings({ depth: v });
-		// Reshape the progress bar's fill the moment the new target commits,
-		// rather than waiting for the engine to finish its next depth.
-		if (ceval.isEnabled()) updateProgress(ceval.getLatestUpdate(), v);
+		// Reshape the progress bar's fill and the "Depth XX/YY" header's target the moment the
+		// new target commits, rather than waiting for the engine to finish its next depth.
+		if (!ceval.isEnabled()) return;
+		const update = ceval.getLatestUpdate();
+		if (update) element_Stats.textContent = formatStats(update, v);
+		updateProgress(update, v);
 	});
 	bindSettingSlider(
 		element_Hash,
@@ -307,10 +310,16 @@ function formatEval(line: CevalLine): string {
 	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`;
 }
 
-function formatStats(update: CevalUpdate): string {
+/**
+ * Formats the depth and nps stats for display, e.g. "Depth 15/20 · 1.2 Mn/s".
+ * @param targetDepthOverride - Lets the depth slider update the "/YY" target
+ * before the engine re-emits with it.
+ */
+function formatStats(update: CevalUpdate, targetDepthOverride?: number): string {
 	// Guard against a stale target briefly lagging the reached depth (e.g. right after
 	// "go deeper") — never show something like "15/13".
-	const depth = `Depth ${update.depth}/${Math.max(update.targetDepth, update.depth)}`;
+	const target = targetDepthOverride ?? update.targetDepth;
+	const depth = `Depth ${update.depth}/${Math.max(target, update.depth)}`;
 	// Only show speed while actually searching (like lichess): once finished nps is 0.
 	const searching = !update.done && !update.terminal;
 	if (!searching || update.nps <= 0) return depth;
