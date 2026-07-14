@@ -334,15 +334,14 @@ function testIfPieceMoved(gamefile: GameFile, mesh: Mesh | undefined): void {
 }
 
 /**
- * Handles selecting a piece while viewing an earlier move.
+ * Handles selecting a piece while viewing an earlier move. In all non-analysis games,
+ * this forwards to the front instead and returns true, so the caller aborts the selection.
  *
  * In analysis, this branches from the viewed ply: the later moves are deleted so the
  * game truly sits at this position (with consistent turn/rights state), and selection
- * is allowed to proceed — so you can play a different continuation from here. Returns
- * false in that case.
+ * is allowed to proceed — so you can play a different continuation from here.
  *
- * In every other game type it forwards to the front instead and returns true, so the
- * caller aborts the selection.
+ * @returns Whether we actually forwarded to the front. If true, the caller should abort selection.
  */
 function viewFrontIfNotViewingLatestMove(gamefile: GameFile, mesh: Mesh | undefined): boolean {
 	// If we're viewing the latest move, nothing to do.

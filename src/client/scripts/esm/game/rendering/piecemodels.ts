@@ -7,6 +7,7 @@
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
 import vectors from '../../../../../shared/util/math/vectors.js';
@@ -18,18 +19,9 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 import meshes from './meshes.js';
-import { gl } from './webgl.js';
-import camera from './camera.js';
-import boardpos from './boardpos.js';
 import frametracker from './frametracker.js';
-import texturecache from '../../chess/rendering/texturecache.js';
 import instancedshapes from './instancedshapes.js';
-import {
-	AttributeInfoInstanced,
-	RenderableInstanced,
-	createRenderable_Instanced,
-	createRenderable_Instanced_GivenInfo,
-} from '../../webgl/Renderable.js';
+import { AttributeInfoInstanced, RenderableInstanced } from '../../webgl/Renderable.js';
 
 // Types --------------------------------------------------------------------------------------------
 
@@ -104,21 +96,21 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
  *
  * SLOWEST. Minimize calling.
  */
-function regenAll(boardsim: BoardPreview, mesh: Mesh | undefined): void {
+function regenAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh | undefined): void {
 	if (!mesh) return;
 	// console.log('Regenerating all piece type meshes.');
 
 	// Update the offset
-	mesh.offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
+	mesh.offset = geometry.roundPointToNearestGridpoint(ctx.boardpos.getBoardPos(), REGEN_RANGE);
 	// Calculate whether the textures should be inverted or not, based on whether we're viewing black's perspective.
-	mesh.inverted = camera.getIsViewingBlackPerspective();
+	mesh.inverted = ctx.camera.getIsViewingBlackPerspective();
 
 	// For each piece type in the game, generate its mesh
 	for (const type of boardsim.existingTypes) {
 		// [43] pawn(white)
 		if (typeutil.getRawType(type) === r.VOID)
-			mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
-		else mesh.types[type] = genTypeModel(boardsim, mesh, type); // Normal generation logic for all pieces with a texture
+			mesh.types[type] = genVoidModel(ctx, boardsim, mesh, type); // Custom mesh generation logic for voids
+		else mesh.types[type] = genTypeModel(ctx, boardsim, mesh, type); // Normal generation logic for all pieces with a texture
 	}
 
 	frametracker.onVisualChange();
@@ -133,12 +125,12 @@ function regenAll(boardsim: BoardPreview, mesh: Mesh | undefined): void {
  * Call externally after adding more undefined placeholders to a type list.
  * @param type - The type of piece to regen the model for (e.g. 'pawnsW')
  */
-function regenType(boardsim: BoardPreview, mesh: Mesh, type: number): void {
+function regenType(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh, type: number): void {
 	console.log(`Regenerating mesh of type ${type}.`);
 
 	if (typeutil.getRawType(type) === r.VOID)
-		mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
-	else mesh.types[type] = genTypeModel(boardsim, mesh, type); // Normal generation logic for all pieces with a texture
+		mesh.types[type] = genVoidModel(ctx, boardsim, mesh, type); // Custom mesh generation logic for voids
+	else mesh.types[type] = genTypeModel(ctx, boardsim, mesh, type); // Normal generation logic for all pieces with a texture
 
 	frametracker.onVisualChange();
 }
@@ -150,14 +142,19 @@ function regenType(boardsim: BoardPreview, mesh: Mesh, type: number): void {
  * SLOWEST. Minimize calling.
  * @param type - The type of piece of which to generate the model for (e.g. "pawnsW")
  */
-function genTypeModel(boardsim: BoardPreview, mesh: Mesh, type: number): MeshData {
+function genTypeModel(
+	ctx: RenderContext,
+	boardsim: BoardPreview,
+	mesh: Mesh,
+	type: number,
+): MeshData {
 	const vertexData = instancedshapes.getDataTexture(mesh.inverted);
 	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
 
-	const texture = texturecache.getTexture(type);
+	const texture = ctx.textures.getTexture(type);
 	return {
 		instanceData,
-		model: createRenderable_Instanced_GivenInfo(
+		model: ctx.renderable.createRenderable_Instanced_GivenInfo(
 			vertexData,
 			castInstanceDataToFloat32(instanceData),
 			ATTRIBUTE_INFO,
@@ -174,15 +171,20 @@ function genTypeModel(boardsim: BoardPreview, mesh: Mesh, type: number): MeshDat
  *
  * SLOWEST. Minimize calling.
  */
-function genVoidModel(boardsim: BoardPreview, mesh: Mesh, type: number): MeshData {
+function genVoidModel(
+	ctx: RenderContext,
+	boardsim: BoardPreview,
+	mesh: Mesh,
+	type: number,
+): MeshData {
 	// const voidColor = preferences.getTintColorOfType(type); // Black, from the pieceTheme
-	const voidColor = gl.getParameter(gl.COLOR_CLEAR_VALUE); // Same color as the sky / void space star field. DOESN'T EVEN MATTER SINCE IT'S A MASK!
+	const voidColor = ctx.gl.getParameter(ctx.gl.COLOR_CLEAR_VALUE); // Same color as the sky / void space star field. HAS NO AFFECT SINCE IT'S A MASK.
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(voidColor);
 	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
 
 	return {
 		instanceData,
-		model: createRenderable_Instanced(
+		model: ctx.renderable.createRenderable_Instanced(
 			vertexData,
 			castInstanceDataToFloat32(instanceData),
 			'TRIANGLES',
@@ -283,20 +285,16 @@ function castBigIntArrayToFloat32(instanceData: bigint[]): Float32Array {
  * uniform translations upon rendering, and reinits them on the gpu.
  * Faster than {@link regenAll}.
  */
-function shiftAll(boardsim: BoardPreview, mesh: Mesh): void {
+function shiftAll(ctx: RenderContext, mesh: Mesh): void {
 	console.log('Shifting all piece meshes.');
 
-	const newOffset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
+	const newOffset = geometry.roundPointToNearestGridpoint(
+		ctx.boardpos.getBoardPos(),
+		REGEN_RANGE,
+	);
 
 	const diffXOffset = mesh.offset[0] - newOffset[0];
 	const diffYOffset = mesh.offset[1] - newOffset[1];
-
-	// const chebyshevDistance = vectors.chebyshevDistance(mesh.offset, newOffset);
-	// if (chebyshevDistance > DISTANCE_AT_WHICH_MESH_GLITCHES) {
-	// 	console.log(`REGENERATING the piece models instead of shifting them. They were shifted by ${chebyshevDistance} tiles!`);
-	// 	regenAll(boardsim, mesh);
-	// 	return;
-	// }
 
 	mesh.offset = newOffset;
 
@@ -412,17 +410,17 @@ function deletebufferdata(mesh: Mesh, piece: Piece): void {
  * Renders ever piece type mesh of the game, EXCLUDING voids,
  * translating and scaling them into position.
  */
-function renderAll(boardsim: BoardPreview, mesh: Mesh | undefined): void {
+function renderAll(ctx: RenderContext, mesh: Mesh | undefined): void {
 	if (!mesh) return; // Mesh hasn't been generated yet
 
-	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z);
+	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z, ctx.boardpos);
 
 	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
-	if (!boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(mesh.offset))
-		shiftAll(boardsim, mesh);
+	if (!ctx.boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(ctx, mesh.offset))
+		shiftAll(ctx, mesh);
 
 	// Test if the rotation has changed
-	const correctInverted = camera.getIsViewingBlackPerspective();
+	const correctInverted = ctx.camera.getIsViewingBlackPerspective();
 	if (mesh.inverted !== correctInverted) rotateAll(mesh, correctInverted);
 
 	for (const [typeStr, meshData] of Object.entries(mesh.types)) {
@@ -433,10 +431,10 @@ function renderAll(boardsim: BoardPreview, mesh: Mesh | undefined): void {
 }
 
 /** Renders the voids mesh. */
-function renderVoids(mesh: Mesh | undefined): void {
+function renderVoids(ctx: RenderContext, mesh: Mesh | undefined): void {
 	if (!mesh) return; // Mesh hasn't been generated yet
 
-	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z);
+	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z, ctx.boardpos);
 
 	mesh.types[r.VOID]?.model.render(position, scale);
 }
@@ -445,9 +443,9 @@ function renderVoids(mesh: Mesh | undefined): void {
  * Tests if the board position is at least REGEN_RANGE-distance away from the current offset.
  * If so, each piece mesh data should be shifted to require less severe uniform translations when rendering.
  */
-function isOffsetOutOfRangeOfRegenRange(offset: Coords): boolean {
+function isOffsetOutOfRangeOfRegenRange(ctx: RenderContext, offset: Coords): boolean {
 	// offset: [x,y]
-	const boardPosRounded: Coords = bdcoords.coordsToBigInt(boardpos.getBoardPos());
+	const boardPosRounded: Coords = bdcoords.coordsToBigInt(ctx.boardpos.getBoardPos());
 	const chebyshevDist = vectors.chebyshevDistance(boardPosRounded, offset);
 	return chebyshevDist > REGEN_RANGE;
 }

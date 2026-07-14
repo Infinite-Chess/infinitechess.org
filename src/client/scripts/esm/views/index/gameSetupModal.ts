@@ -18,9 +18,9 @@ import lobby from './lobby.js';
 import toast from '../../components/toast.js';
 import gamesound from '../../game/misc/gamesound.js';
 import timeControls from './timeControls.js';
-import variantSelector from './variantSelector.js';
+import variantSelector from '../../components/variantselector/variantSelector.js';
+import modifierSelector from '../../components/variantselector/modifierSelector.js';
 import { serverFetch } from '../../util/serverFetch.js';
-import modifierSelector from './modifierSelector.js';
 import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
 
 // Types ----------------------------------------------
@@ -127,9 +127,15 @@ function initModal(): void {
 	timeControls.initModalSliders();
 	timeControls.onTimeToggle();
 	timeControls.initPresets();
-	variantSelector.initVariantGroupDropdown();
+	variantSelector.initVariantGroupDropdown({
+		enforceSizeLimit: true,
+		onChange: () => {
+			element_modalSubmit.disabled = !variantSelector.isSelectionValid();
+			syncRatedButton();
+		},
+	});
 	variantSelector.initIcnValidation();
-	modifierSelector.initModifierSelector();
+	modifierSelector.initModifierSelector({ onChange: syncRatedButton });
 	syncRatedButton();
 }
 

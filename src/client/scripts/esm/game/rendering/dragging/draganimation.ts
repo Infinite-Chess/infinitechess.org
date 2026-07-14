@@ -26,13 +26,13 @@ import selection from '../../chess/selection.js';
 import animation from '../animation.js';
 import { Mouse } from '../../input.js';
 import droparrows from './droparrows.js';
-import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
 import preferences from '../../../components/header/preferences.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../GameBus.js';
 import texturecache from '../../../chess/rendering/texturecache.js';
 import frametracker from '../frametracker.js';
+import boardgeometry from '../boardgeometry.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import instancedshapes from '../instancedshapes.js';
 import { listener_canvas } from '../../chess/gamecore.js';
@@ -319,7 +319,7 @@ function renderOutline(): void {
 	// 2. It is a touch screen, OR we are zoomed out enough.
 	if (
 		!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) &&
-		(forceRankFileOutline || pointerIsTouch || bd.toNumber(boardtiles.getTileWidthPixels()) < minSizeToDrawOutline)
+		(forceRankFileOutline || pointerIsTouch || bd.toNumber(boardgeometry.getTileWidthPixels()) < minSizeToDrawOutline)
 	) {
 		// Outline the entire rank and file
 		const screenBox = camera.getRespectiveScreenBox();

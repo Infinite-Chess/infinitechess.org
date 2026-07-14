@@ -44,9 +44,7 @@ function isInTimeout(): boolean {
 function onclose(event: CloseEvent): void {
 	if (config.DEV_BUILD) console.log('WebSocket connection closed:', event.code, event.reason);
 
-	socketmessages.cancelAllEchoTimers();
-	socketmessages.cancelHeartbeatTimer();
-	socketmessages.resetOnreplyFuncs();
+	socketmessages.clearPendingState();
 
 	const trimmedReason = event.reason.trim();
 	const involuntary = wsutil.wasSocketClosureInvoluntary(event.code, trimmedReason);

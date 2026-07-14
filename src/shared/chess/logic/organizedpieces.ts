@@ -381,7 +381,7 @@ function generatePositionFromPieces({ coords, types }: OrganizedPieces): Map<Coo
  * Generates an iterable of [coordsKey, pieceType] pairs from the given organized pieces.
  *
  * More efficient than {@link generatePositionFromPieces}, as this doesn't create an intermediate map.
- * @param {OrganizedPieces} o - The organized pieces object. Destructure the `coords` and `type` objects so the organized pieces can be garbage cleaned.
+ * @param o - The organized pieces object. Destructure the `coords` and `type` objects so the organized pieces can be garbage cleaned.
  * @returns The piece iterator, yielding [coordsKey, pieceType] pairs.
  */
 function* getPieceIterable({ coords, types }: OrganizedPieces): Iterable<[CoordsKey, number]> {
@@ -640,9 +640,9 @@ function getCFromKey(lineKey: LineKey): bigint {
  *
  * If the line is perfectly vertical, the axis will be flipped, so `X` in this
  * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
- * @param {Vec2} step - [dx,dy]
- * @param {Coords} coords - Coordinates that are on the line
- * @returns {number} The X in the line's key: `C|X`
+ * @param step - [dx,dy]
+ * @param coords - Coordinates that are on the line
+ * @returns The X in the line's key: `C|X`
  */
 function getXFromLine(step: Coords, coords: Coords): bigint {
 	// See these desmos graphs for inspiration for finding what line the coords are on:

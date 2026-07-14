@@ -22,7 +22,6 @@ import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
 import selection from '../../chess/selection.js';
-import socketsubs from '../../../websocket/socketsubs.js';
 import onlinegame from './onlinegame.js';
 import { GameBus } from '../../GameBus.js';
 import gamesession from '../../chess/gamesession.js';
@@ -37,12 +36,9 @@ GameBus.addEventListener('user-move-played', () => {
 
 // Functions -------------------------------------------------------------------
 
-/**
- * Called when selection.js moves a piece. This will send it to the server
- * if we're in an online game.
- */
+/** Called when selection.js moves a piece. This will send it to the server if we're in an online game. */
 function sendMove(): void {
-	if (!onlinegame.areInSync() || !socketsubs.areSubbedToSub('game')) return; // Skip
+	if (!onlinegame.areInSync()) return; // Skip, our move will be auto-submitted when we resync
 	// console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile()!;

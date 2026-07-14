@@ -19,7 +19,8 @@ interface SocketBusEvents {
 	'connection-lost': void;
 	/** RRT (Round Trip Time) ping value in milliseconds. */
 	ping: number;
-	reconnected: void;
+	/** Dispatched when application code should attempt to re-subscribe to what they need. */
+	reconnect: void;
 
 	// --- Incoming server messages ---
 	lobby: LobbyMessage;

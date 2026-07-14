@@ -9,6 +9,7 @@
 import type { Request } from 'express';
 import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { GameMetaViewModel } from './gamePageController.js';
+import type { VariantGroup, VariantCode } from '../../shared/chess/variants/variantregistry.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
@@ -21,16 +22,19 @@ interface AnalysisPageState {
 	gameId: number | null;
 	/** The viewer's color if they were a participant, so the board auto-orients to their side. */
 	role?: Player;
-	/** Variant dropdown contents, in display order. */
-	variantGroups: { name: string; variants: { code: string; name: string }[] }[];
+	/** Variant groups + their variants, in display order — feeds the shared variant selector macro. */
+	variantGroups: { group: VariantGroup; iconId: string; variants: VariantCode[] }[];
 	/** Game metadata shown when analysis is opened for a saved/live game. */
 	meta?: GameMetaViewModel;
 }
 
+/** Cache all variant groups and their variants. */
+const variantGroups = variantregistry.getVariantGroupsWithVariants();
+
 /**
  * Resolves the render state for `/analysis/:id?`, or `undefined` if an id was
  * given but is malformed or names no game in the database (live-only games included).
- * @throws If a database error occurs (from the underlying producers).
+ * @throws If a database error occurs.
  */
 export function getAnalysisPageState(req: Request): AnalysisPageState | undefined {
 	let gameId: number | null = null;
@@ -48,14 +52,6 @@ export function getAnalysisPageState(req: Request): AnalysisPageState | undefine
 		gameId = id;
 		({ role, meta } = deadState);
 	}
-
-	const variantGroups = variantregistry.getVariantGroupsWithVariants().map((g) => ({
-		name: req.t.shared.variant_groups[g.group].name,
-		variants: g.variants.map((code) => ({
-			code,
-			name: variantregistry.getVariantName(code, req.t.shared),
-		})),
-	}));
 
 	return {
 		gameId,

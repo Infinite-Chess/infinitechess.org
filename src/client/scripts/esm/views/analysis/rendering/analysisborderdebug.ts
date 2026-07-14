@@ -1,32 +1,30 @@
-// src/client/scripts/esm/views/analysis/analysisworldborder.ts
+// src/client/scripts/esm/views/analysis/rendering/analysisborderdebug.ts
 
 /**
- * Draws the HydroChess analysis-safe coordinate border on the analysis board.
+ * DEBUG: Draws the HydroChess analysis-safe coordinate border on the board.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import bimath from '../../../../../shared/util/math/bimath.js';
+import bimath from '../../../../../../shared/util/math/bimath.js';
 
-import boardpos from '../../game/rendering/boardpos.js';
-import gameslot from '../../game/chess/gameslot.js';
-import boardtiles from '../../game/rendering/boardtiles.js';
-import { GameBus } from '../../game/GameBus.js';
-import frametracker from '../../game/rendering/frametracker.js';
-import { createRenderable } from '../../webgl/Renderable.js';
-import analysisenginebounds from './analysisenginebounds.js';
+import boardpos from '../../../game/rendering/boardpos.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import { GameBus } from '../../../game/GameBus.js';
+import frametracker from '../../../game/rendering/frametracker.js';
+import boardgeometry from '../../../game/rendering/boardgeometry.js';
+import { createRenderable } from '../../../webgl/Renderable.js';
+import analysisenginebounds from '../analysisenginebounds.js';
 
 const BORDER_COLOR: Color = [1, 0.05, 0.05, 0.9];
 const HALF = bd.fromNumber(0.5);
 
 let enabled = false;
 
-function init(): void {
-	GameBus.addEventListener('engine-debug', toggle);
-	GameBus.addEventListener('render-below-pieces', render);
-}
+GameBus.addEventListener('engine-debug', toggle);
+GameBus.addEventListener('render-below-pieces', render);
 
 function toggle(): void {
 	enabled = !enabled;
@@ -39,8 +37,8 @@ function render(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
-	const visible = boardtiles.gboundingBox(false);
-	const { left, right, bottom, top } = analysisenginebounds.getEngineWorldBorder(gamefile);
+	const visible = boardgeometry.gboundingBox(false);
+	const { left, right, bottom, top } = analysisenginebounds.getEngineWorldBorder();
 	const data: number[] = [];
 
 	if (visible.left <= left && left <= visible.right) {
@@ -100,7 +98,3 @@ function toWorld(coord: BigDecimal, axis: 0 | 1): number {
 function pushLine(data: number[], x1: number, y1: number, x2: number, y2: number): void {
 	data.push(x1, y1, ...BORDER_COLOR, x2, y2, ...BORDER_COLOR);
 }
-
-export default {
-	init,
-};

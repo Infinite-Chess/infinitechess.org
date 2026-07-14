@@ -26,11 +26,11 @@ import space from '../misc/space.js';
 import camera from './camera.js';
 import arrows from './arrows/arrows.js';
 import boardpos from './boardpos.js';
-import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
 import perspective from './perspective.js';
 import preferences from '../../components/header/preferences.js';
 import textrenderer from './text/textrenderer.js';
+import boardgeometry from './boardgeometry.js';
 import arrowscalculator from './arrows/arrowscalculator.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 import { ATLAS_DESCENDER_FRACTION } from './text/glyphatlas.js';
@@ -136,7 +136,7 @@ function render(): void {
 	const sizeWorld = space.convertPixelsToWorldSpace_Virtual(labelSizePx);
 	const paddingWorld = space.convertPixelsToWorldSpace_Virtual(LABEL_PADDING_PX);
 	const screenBox = camera.getScreenBoundingBox(false);
-	const tileBox = boardtiles.gboundingBox(false);
+	const tileBox = boardgeometry.gboundingBox(false);
 	// Shrink the bounding box by 1 on each side to skip cut off edge tiles.
 	tileBox.left += 1n;
 	tileBox.right -= 1n;

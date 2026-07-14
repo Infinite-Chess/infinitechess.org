@@ -88,14 +88,10 @@ export function updateLiveGame(game_id: number, updates: Partial<LiveGameData>):
 	dbCall(() => {
 		// Validate the input structure...
 		if (typeof updates !== 'object' || updates === null || Object.keys(updates).length === 0)
-			throw new Error(
-				`Invalid or empty updates provided when updating live game ${game_id}! Received: ${jsutil.ensureJSONString(updates)}`,
-			);
+			throw new Error(`Invalid or empty updates provided when updating live game ${game_id}! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
 		const entries = Object.entries(updates);
 		if (!entries.every(([col]) => allLiveGamesColumns.includes(col)))
-			throw new Error(
-				`Invalid columns provided when updating live game ${game_id}! Received: ${jsutil.ensureJSONString(updates)}`,
-			);
+			throw new Error(`Invalid columns provided when updating live game ${game_id}! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
 
 		// Move on to the SQL query
 		const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');

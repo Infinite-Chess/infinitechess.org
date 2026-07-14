@@ -368,8 +368,7 @@ function onGameConclusion(servergame: ServerGame, conclusion: GameConclusion): v
 	// as they may have had an in-flight move to reconcile against.
 	gameutility.sendGameStateToColor(servergame, servergame.whosTurn, false);
 
-	// All other players and spectators get the conclusion
-	// message and stopped clocks, as they can't desync.
+	// All other players and spectators get the conclusion message, as they can't desync.
 	const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
 	const opponentColor = typeutil.invertPlayer(servergame.whosTurn);
 	gameutility.sendMessageToColor(servergame.match, opponentColor, 'game', 'gameconclusion', conclusionMessage); // prettier-ignore
@@ -433,8 +432,8 @@ function freeGame(servergame: ServerGame): void {
 		// Server validated every move — cheating is impossible. Lock in the result now.
 		finalizeGame(servergame);
 	} else {
-		// No server-side validation (e.g. large variant, or custom position). Give the opponent a
-		// cushion to overturn the conclusion with a cheat report before locking it in.
+		// No server-side validation (e.g. large variant, or custom position). Give the opponent
+		// a cushion to overturn the conclusion with a cheat report before locking it in.
 		servergame.match.finalizeTimeoutID = setTimeout(() => {
 			finalizeGame(servergame);
 			evictIfBothLeft(servergame);
@@ -459,7 +458,7 @@ function logConcludedGame(servergame: ServerGame): void {
 		`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
 	);
 
-	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
+	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings".
 	// The ratings are calculated during the logging of the game into the database.
 	try {
 		const ratingdata = gamelogger.logGame(servergame);
@@ -470,21 +469,16 @@ function logConcludedGame(servergame: ServerGame): void {
 			servergame.ratingResults = buildRatingResults(ratingdata);
 			// Broadcast the deltas to everyone currently connected.
 			const ratingChanges = gameutility.getRatingChanges(servergame)!;
-			gameutility.broadcastToParticipants(servergame, 'gameratingchange', ratingChanges);
-			gameutility.broadcastToSpectators(servergame, 'gameratingchange', ratingChanges);
+			gameutility.broadcastToEveryone(servergame, 'gameratingchange', ratingChanges);
 		}
 	} catch {
-		// log failure already logged
-		// Notify both players
-		for (const { socket: ws } of Object.values(servergame.match.playerData)) {
-			if (!ws) continue;
-			sendSocketMessage(
-				ws,
-				'general',
-				'notifyerror',
-				"A server error occurred while logging this game. It won't be available in your game history.",
-			);
-		}
+		// Log failure already logged.
+		// Notify both players.
+		gameutility.broadcastToParticipants(
+			servergame,
+			'notifyerror',
+			"A server error occurred while logging this game. It won't be available in your game history.",
+		);
 	}
 
 	// The result now lives in the permanent tables — drop the live game row so a restart doesn't
@@ -565,9 +559,9 @@ function finalizeGame(servergame: ServerGame): void {
 	// Monitor suspicion levels for all players who participated in the game.
 	ratingabuse.measureRatingAbuseAfterGame(servergame);
 
-	// Tell any connected participants the result is now locked in, so their client knows it can
+	// Tell any connected participants/spectators the result is now locked in, so their client knows it can
 	// never change — future reconnects fetch only rematch state (`subscriberematch`), not a full resync.
-	gameutility.broadcastToParticipants(servergame, 'finalized', undefined);
+	gameutility.broadcastToEveryone(servergame, 'finalized', undefined);
 
 	if (PRINT_GAMES) console.log(`Finalized game ${servergame.match.id}.`);
 }

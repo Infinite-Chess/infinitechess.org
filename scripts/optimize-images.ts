@@ -50,8 +50,8 @@ const supportedExtensions = ['.png', '.jpg', '.jpeg'];
 
 /**
  * Recursively finds all image files in a directory.
- * @param {string} dirPath The directory to search.
- * @returns {string[]} An array of full paths to image files.
+ * @param dirPath The directory to search.
+ * @returns An array of full paths to image files.
  */
 function getAllImagePaths(dirPath: string): string[] {
 	const allEntries = readdirSync(dirPath);

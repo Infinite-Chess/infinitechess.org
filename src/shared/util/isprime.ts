@@ -190,9 +190,9 @@ function montgomeryReduce(n: bigint, ctx: MontgomeryReductionContext): bigint {
 // /**
 //  * Converts the given number _out_ of Montgomery form, according to the given Montgomery reduction context.
 //  *
-//  * @param {bigint} n A number in Montgomery form
-//  * @param {MontgomeryReductionContext} ctx The Montgomery reduction context to reduce out of
-//  * @returns {bigint} The (no longer Montgomery-reduced) number whose Montgomery form was `n`
+//  * @param n A number in Montgomery form
+//  * @param ctx The Montgomery reduction context to reduce out of
+//  * @returns The (no longer Montgomery-reduced) number whose Montgomery form was `n`
 //  */
 // function invMontgomeryReduce(n, ctx) {
 //   return (n * ctx.rInv) % ctx.base
@@ -253,7 +253,7 @@ function montgomeryPow(n: bigint, exp: bigint, ctx: MontgomeryReductionContext):
 // class PrimalityResult {
 //   /**
 //    * Constructs a result object from the given options
-//    * @param {PrimalityResultOptions} options
+//    * @param options
 //    */
 //   constructor({ probablePrime }) {
 //     this.probablePrime = probablePrime

@@ -97,7 +97,7 @@ function set(basegame: GameFile): void {
 	const topPlayer = bottomPlayer === p.WHITE ? p.BLACK : p.WHITE;
 	element_timers = { [bottomPlayer]: bars.bottom, [topPlayer]: bars.top };
 
-	if (gamesession.getGameType() !== 'analysis') updateTempo(basegame); // Highlight whoever's turn it is, even in untimed games.
+	if (gamesession.getGameType() !== 'analysis') updateTempo(basegame); // Highlight whoever's turn it is.
 	if (basegame.untimed) return;
 	updateTextContent(basegame.clocks);
 }

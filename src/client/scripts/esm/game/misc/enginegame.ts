@@ -74,7 +74,7 @@ enginelegalmovesdebug.init({
 /**
  * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
  * This method launches an engine webworker for the current game.
- * @param {Object} options - An object that contains the properties `currentEngine` and `engineConfig`
+ * @param options - An object that contains the properties `currentEngine` and `engineConfig`
  */
 function initEngineGame(options: {
 	youAreColor: Player;
@@ -265,9 +265,7 @@ function makeEngineMove(tokenMove: unknown): void {
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 }
 
-/**
- * Requests engine-generated legal moves for the currently viewed position.
- */
+/** Requests engine-generated legal moves for the currently viewed position. */
 function requestGeneratedMoves(gamefile: GameFile): void {
 	// Compress the gamefile as a single position (not including future moves)
 	// This ensures the engine analyzes the currently viewed position

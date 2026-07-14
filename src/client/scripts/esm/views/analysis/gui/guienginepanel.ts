@@ -3,20 +3,17 @@
 /**
  * The analysis page's engine panel: the local-evaluation toggle, eval readout,
  * depth/nodes stats, settings drawer (MultiPV / threads / hash / search time),
- * the MultiPV line list (click a move to play the line), the eval gauge beside
- * the board, and the engine's best-move arrows drawn on the board.
+ * the MultiPV line list (click a move to play the line), and the eval gauge beside
+ * the board.
  */
 
 import type { Mesh } from '../../../game/rendering/piecemodels.js';
-import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { EngineArrow } from '../enginearrows.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
-import coordutil, { CoordsKey } from '../../../../../../shared/chess/util/coordutil.js';
 
 import ceval from '../ceval.js';
 import toast from '../../../components/toast.js';
@@ -25,9 +22,9 @@ import movetree from '../movetree.js';
 import selection from '../../../game/chess/selection.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
-import enginearrows from '../enginearrows.js';
+import enginearrows from '../rendering/enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
-import { isTypingTarget } from '../analysis.js';
+import { listener_document } from '../../../game/chess/gamecore.js';
 import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
 
 // Elements -------------------------------------------------------------------------
@@ -83,7 +80,6 @@ function init(): void {
 
 	initSettingsUI();
 	initListeners();
-	syncSettingsOverlayPosition();
 
 	ceval.onUpdate(onEngineUpdate);
 	ceval.onStatus(onEngineStatus);
@@ -91,14 +87,14 @@ function init(): void {
 		enginelegalmovesdebug.receiveMoves(requestId, moves),
 	);
 
-	// Draw engine arrows on top of the pieces each frame.
-	GameBus.addEventListener('render-above-pieces', () => enginearrows.render());
-
 	// Restore the persisted on/off state once the first game finishes loading.
 	GameBus.addEventListener('game-loaded', () => {
 		const wanted = localStorage.getItem(ENABLED_STORAGE_KEY) !== 'false';
 		if (wanted && !ceval.isEnabled()) setEngineEnabled(true);
 	});
+
+	// Draw engine arrows on top of the pieces each frame.
+	GameBus.addEventListener('render-above-pieces', () => enginearrows.render());
 }
 
 function setEngineEnabled(value: boolean): void {
@@ -106,14 +102,7 @@ function setEngineEnabled(value: boolean): void {
 	localStorage.setItem(ENABLED_STORAGE_KEY, String(value));
 	ceval.setEnabled(value);
 	setGaugeVisible(value);
-	if (!value) {
-		resetLineWindowState();
-		enginearrows.clearArrows();
-		renderLines([]);
-		element_Eval.textContent = '-';
-		element_Stats.textContent = 'Local evaluation off';
-		updateProgress(undefined);
-	}
+	if (!value) clearPanelReadout('Local evaluation off');
 }
 
 /** Shows/hides the eval gauge. */
@@ -173,41 +162,33 @@ function initListeners(): void {
 
 	element_SettingsBtn.addEventListener('click', () => {
 		const open = element_Settings.classList.toggle('hidden') === false;
-		if (open) syncSettingsOverlayPosition();
 		element_SettingsBtn.classList.toggle('active', open);
 	});
 
-	window.addEventListener('resize', syncSettingsOverlayPosition);
-
-	// 'input' updates the live label as the slider drags; 'change' commits to the engine on release.
-	element_MultiPv.addEventListener('input', () => {
-		element_MultiPvValue.textContent = element_MultiPv.value;
-	});
-	element_MultiPv.addEventListener('change', () => {
-		ceval.updateSettings({ multiPv: Number(element_MultiPv.value) });
+	// Close the settings drawer when clicking anywhere outside it or its toggle button.
+	document.addEventListener('pointerdown', (e) => {
+		if (element_Settings.classList.contains('hidden')) return;
+		if (!(e.target instanceof Node)) return;
+		if (element_SettingsBtn.contains(e.target) || element_Settings.contains(e.target)) return;
+		closeSettings();
 	});
 
-	element_Threads.addEventListener('input', () => {
-		element_ThreadsValue.textContent = element_Threads.value;
+	// The MultiPV/threads/depth sliders map their raw value straight to the setting; the
+	// Hash slider's value is an index into HASH_OPTIONS whose MB is the setting.
+	bindSettingSlider(element_MultiPv, element_MultiPvValue, String, (v) => ceval.updateSettings({ multiPv: v })); // prettier-ignore
+	bindSettingSlider(element_Threads, element_ThreadsValue, String, (v) => ceval.updateSettings({ threads: v })); // prettier-ignore
+	bindSettingSlider(element_Depth, element_DepthValue, String, (v) => {
+		ceval.updateSettings({ depth: v });
+		// Reshape the progress bar's fill the moment the new target commits,
+		// rather than waiting for the engine to finish its next depth.
+		if (ceval.isEnabled()) updateProgress(ceval.getLatestUpdate(), v);
 	});
-	element_Threads.addEventListener('change', () => {
-		ceval.updateSettings({ threads: Number(element_Threads.value) });
-	});
-
-	const hashMbFor = (): number => ceval.HASH_OPTIONS[Number(element_Hash.value)]!;
-	element_Hash.addEventListener('input', () => {
-		element_HashValue.textContent = `${hashMbFor()} MB`;
-	});
-	element_Hash.addEventListener('change', () => {
-		ceval.updateSettings({ hashMb: hashMbFor() });
-	});
-
-	element_Depth.addEventListener('input', () => {
-		element_DepthValue.textContent = element_Depth.value;
-	});
-	element_Depth.addEventListener('change', () => {
-		ceval.updateSettings({ depth: Number(element_Depth.value) });
-	});
+	bindSettingSlider(
+		element_Hash,
+		element_HashValue,
+		(v) => `${ceval.HASH_OPTIONS[v]!} MB`,
+		(v) => ceval.updateSettings({ hashMb: ceval.HASH_OPTIONS[v]! }),
+	);
 
 	element_GoDeeper.addEventListener('click', () => {
 		element_GoDeeper.classList.add('hidden');
@@ -215,20 +196,52 @@ function initListeners(): void {
 		// onEngineUpdate → the stats text and progress bar both update right away.
 		ceval.goDeeper();
 	});
-
-	// Keyboard shortcut: l = toggle local evaluation (ignored while typing).
-	document.addEventListener('keydown', (e) => {
-		if (isTypingTarget(e.target)) return;
-		if (e.key === 'l' && !e.ctrlKey && !e.metaKey && !e.altKey)
-			setEngineEnabled(!element_Toggle.checked);
-	});
 }
 
-function syncSettingsOverlayPosition(): void {
-	element_Settings.style.setProperty('--engine-settings-top', `${element_Lines.offsetTop}px`);
+/**
+ * Wires a settings slider: 'input' updates its live label as it drags, 'change' commits the
+ * value to the engine on release. `format` and `commit` both receive the slider's numeric value.
+ */
+function bindSettingSlider(
+	input: HTMLInputElement,
+	label: HTMLElement,
+	format: (value: number) => string,
+	commit: (value: number) => void,
+): void {
+	input.addEventListener('input', () => (label.textContent = format(Number(input.value))));
+	input.addEventListener('change', () => commit(Number(input.value)));
+}
+
+/** Polls this panel's keyboard shortcuts. Called once per frame by the page loop. */
+function updateShortcuts(): void {
+	// l = toggle local evaluation (the input listener already ignores keys while typing).
+	if (listener_document.isKeyDown('KeyL')) setEngineEnabled(!element_Toggle.checked);
+}
+
+function closeSettings(): void {
+	element_Settings.classList.add('hidden');
+	element_SettingsBtn.classList.remove('active');
 }
 
 // Engine output rendering ------------------------------------------------------------
+
+/**
+ * Resets the panel to a no-lines readout: clears the arrows and PV list (which also resets
+ * the per-line window state), hides "go deeper", and sets the eval/stats text. Optionally
+ * sets the gauge (left untouched when omitted) and drives the progress bar.
+ */
+function clearPanelReadout(
+	statsText: string,
+	opts: { evalText?: string; gauge?: number; progress?: CevalUpdate } = {},
+): void {
+	element_Eval.textContent = opts.evalText ?? '-';
+	element_Stats.textContent = statsText;
+	element_GoDeeper.classList.add('hidden');
+	enginearrows.clearArrows();
+	renderLines([]);
+	if (opts.gauge !== undefined) updateGauge(opts.gauge);
+	updateProgress(opts.progress);
+}
 
 function onEngineStatus(status: CevalStatus): void {
 	applyThreadsCap(); // Re-evaluate: the engine's threading capability arrives with its status.
@@ -243,23 +256,9 @@ function onEngineStatus(status: CevalStatus): void {
 		toast.show('The analysis engine failed to load.', { error: true });
 	} else if (status === 'blocked') {
 		enginelegalmovesdebug.disable();
-		resetLineWindowState();
-		element_Eval.textContent = '-';
-		element_Stats.textContent = 'Outside world border';
-		element_GoDeeper.classList.add('hidden');
-		enginearrows.clearArrows();
-		renderLines([]);
-		updateGauge(0);
-		updateProgress(undefined);
+		clearPanelReadout('Outside world border', { gauge: 0 });
 	} else if (status === 'crashed') {
-		resetLineWindowState();
-		element_Eval.textContent = '-';
-		element_Stats.textContent = 'Analysis crashed';
-		element_GoDeeper.classList.add('hidden');
-		enginearrows.clearArrows();
-		renderLines([]);
-		updateGauge(0);
-		updateProgress(undefined);
+		clearPanelReadout('Analysis crashed', { gauge: 0 });
 		if (!crashToastShown) {
 			toast.show('The engine crashed analyzing this position. Please report this bug!', { error: true }); // prettier-ignore
 			crashToastShown = true;
@@ -272,13 +271,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 
 	if (!update) {
 		// Position changed; awaiting the first info of the new search.
-		resetLineWindowState();
-		element_Eval.textContent = '…';
-		element_Stats.textContent = 'Starting analysis';
-		element_GoDeeper.classList.add('hidden');
-		enginearrows.clearArrows();
-		renderLines([]);
-		updateProgress(undefined);
+		clearPanelReadout('Starting analysis', { evalText: '…' });
 		return;
 	}
 
@@ -288,12 +281,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	lineWindowStateMoveIndex = update.moveIndex;
 
 	if (update.terminal) {
-		element_Eval.textContent = '-';
-		element_Stats.textContent = 'Game Over';
-		enginearrows.clearArrows();
-		renderLines([]);
-		updateGauge(terminalGaugeChances());
-		updateProgress(update);
+		clearPanelReadout('Game Over', { gauge: terminalGaugeChances(), progress: update });
 		return;
 	}
 
@@ -309,7 +297,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	updateGauge(best?.winningChances ?? 0);
 	updateProgress(update);
 	renderLines(update.lines);
-	updateArrows(update);
+	enginearrows.update(update);
 }
 
 /** Formats a white-POV line eval for display, e.g. "+1.4", "-0.3", "#5", "#-3". */
@@ -333,14 +321,19 @@ function formatStats(update: CevalUpdate): string {
 	return `${depth} · ${nps}`;
 }
 
-function updateProgress(update: CevalUpdate | undefined): void {
+/**
+ * Drives the progress bar's fill (depth / target).
+ * @param targetDepthOverride - Lets the depth slider reshape the bar
+ * to a just-committed target before the engine re-emits with it.
+ */
+function updateProgress(update: CevalUpdate | undefined, targetDepthOverride?: number): void {
 	const active = ceval.isEnabled() && !ceval.isBlockedByEngineWorldBorder();
 	const computing = active && (!update || (!update.done && !update.terminal));
-	const targetDepth = update?.targetDepth ?? ceval.getSettings().depth;
+	const targetDepth = targetDepthOverride ?? update?.targetDepth ?? ceval.getSettings().depth;
 	const progress = update ? Math.min(update.depth / Math.max(targetDepth, 1), 1) : 0;
 	// While computing, keep a small minimum so the animated bar is visible immediately
 	// (e.g. at depth 0 right after a move or on "go deeper"), not a zero-width sliver.
-	const width = computing ? Math.max(progress, 0.05) : progress;
+	const width = computing && update ? Math.max(progress, 0.05) : progress;
 	element_ProgressFill.style.width = `${Math.round(width * 100)}%`;
 	element_Progress.classList.toggle('computing', computing);
 }
@@ -544,7 +537,8 @@ function renderMovesSlice(
 		moveSpan.className = 'line-move';
 		moveSpan.textContent = line.moves[i]!;
 		moveSpan.title = 'Play the line up to this move';
-		moveSpan.addEventListener('click', () => playLine(line.moves, i));
+		// Use 'pointerdown', as with 'click' the line changing mid-click cancels the click.
+		moveSpan.addEventListener('pointerdown', () => playLine(line.moves, i));
 		container.append(moveSpan);
 		if (k < count - 1) container.append(' ');
 	}
@@ -570,10 +564,13 @@ function playLine(tokens: string[], untilIndex: number): void {
 
 	const mesh = gameslot.getMesh();
 	if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile, mesh);
+	// Board moveIndex where the line's first token applies. Used for debugging.
+	const startMoveIndex = gamefile.state.local.moveIndex;
 	for (let i = 0; i <= untilIndex; i++) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, tokens[i]!);
 		if (!result.valid) {
-			console.warn(`Engine line move "${tokens[i]}" is not legal here: ${result.reason}`);
+			console.error(`Engine line move "${tokens[i]}" (token index ${i}) at moveIndex ${gamefile.state.local.moveIndex} is not legal to apply here: ${result.reason}.`); // prettier-ignore
+			console.error(`Full line (starting at moveIndex ${startMoveIndex}):`, tokens);
 			break;
 		}
 		// Animate only the final move of the sequence.
@@ -599,40 +596,6 @@ function branchFromViewedPosition(gamefile: GameFile, mesh: Mesh | undefined): v
 	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
 }
 
-// Engine arrows -------------------------------------------------------------------------
-
-/** Points the board arrows at each line's first move (only for the viewed position). */
-function updateArrows(update: CevalUpdate): void {
-	const gamefile = gameslot.getGamefile();
-	// Stale analysis (user already navigated elsewhere): don't draw wrong-position arrows.
-	if (!gamefile || gamefile.state.local.moveIndex !== update.moveIndex)
-		return enginearrows.clearArrows();
-
-	const arrows: EngineArrow[] = [];
-	update.lines.forEach((line, rank) => {
-		const parsed = parseFirstMove(line);
-		if (parsed) arrows.push({ start: parsed.start, end: parsed.end, rank });
-	});
-	enginearrows.setArrows(arrows);
-}
-
-/** Parses a compact move token "x,y>x,y=Q" into start/end coords. */
-function parseFirstMove(line: CevalLine): { start: Coords; end: Coords } | undefined {
-	const token = line.moves[0];
-	if (!token) return undefined;
-	const [fromStr, toStr] = token.split('>');
-	if (!fromStr || !toStr) return undefined;
-	const endStr = toStr.split('=')[0]!;
-	try {
-		return {
-			start: coordutil.getCoordsFromKey(fromStr as CoordsKey),
-			end: coordutil.getCoordsFromKey(endStr as CoordsKey),
-		};
-	} catch {
-		return undefined;
-	}
-}
-
 // Registration ---------------------------------------------------------------
 
 // Tell selection.ts to branch from the viewed ply (instead of forwarding to the front)
@@ -643,5 +606,5 @@ selection.setViewedPositionBrancher(branchFromViewedPosition);
 
 export default {
 	init,
-	branchFromViewedPosition,
+	updateShortcuts,
 };

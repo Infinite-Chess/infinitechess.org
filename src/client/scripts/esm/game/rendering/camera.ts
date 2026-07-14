@@ -9,9 +9,15 @@
  * viewMatrix  is the camera location and rotation.
  * projMatrix  needed for perspective mode rendering (is even enabled in 2D view).
  * modelMatrix  is custom for each rendered object, translating it how desired.
+ *
+ * This is a FACTORY: {@link createCamera} builds one independent camera instance.
+ * The module default export is the interactive game's camera; the variant-preview
+ * tooltip creates its own separate instance so its rotation/zoom never collide with
+ * the game's.
  */
 
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -19,17 +25,121 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from './gl-matrix.js';
+import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
 import screenshake from './screenshake.js';
 import frametracker from './frametracker.js';
 import { createRenderable } from '../../webgl/Renderable.js';
-import primitives from './primitives.js';
-import type { Color } from '../../../../../shared/util/math/math.js';
 
 // Types --------------------------------------------------------------
 
 /** A 4x4 matrix, represented as a 16-element Float32Array */
 export type Mat4 = Float32Array;
+
+/** One independent camera instance, as returned by {@link createCamera}. */
+export interface Camera {
+	readonly DIST_TO_RENDER_BOARD: number;
+	getRotX(): number;
+	getRotZ(): number;
+	/**
+	 * Returns true if the camera is rotated in any way, meaning we're not looking
+	 * straight down at the board perfectly from white/black's perspective.
+	 */
+	isCameraRotated(): boolean;
+	/** True when rotZ is between 90 and 270, meaning we're viewing from black's side. */
+	getIsViewingBlackPerspective(): boolean;
+	/** Returns true if the camera X rotation is past the horizon (looking up or directly up). */
+	isLookingUp(): boolean;
+	/**
+	 * Renders (performs) whatever function is passed to it,
+	 * as if our camera was looking straight at the board from
+	 * white's perspective. ZERO perspective rotations!
+	 * Works both in 3D perspective mode and in 2D black's-perspective mode.
+	 */
+	renderWithoutPerspectiveRotations(_func: Function): void;
+	setPerspectiveRotation(_newRotX: number, _newRotZ: number): void;
+	getPosition(_ignoreDevmode?: boolean): Vec3;
+	getZFar(): number;
+	getCanvasWidthVirtualPixels(): number;
+	getCanvasHeightVirtualPixels(): number;
+	toggleDebug(): void;
+	getDebug(): boolean;
+	/**
+	 * Returns a copy of the current screen bounding box,
+	 * or the world-space coordinates of the edges of the canvas.
+	 * @param [debugMode] Whether developer mode is enabled. If omitted, the current debug status is used.
+	 * @param [pad] Whether to add a small padding to the box to account for screen shakes.
+	 * @returns The bounding box of the screen
+	 */
+	getScreenBoundingBox(_debugMode?: boolean, _pad?: boolean): DoubleBoundingBox;
+	/**
+	 * Returns the respective world-space bounding box containing the whole screen,
+	 * depending on whether we're in perspective mode or not.
+	 * Intended for knowing how far out to render items to the edge.
+	 *
+	 * In perspective, the range of visibility is much greater.
+	 *
+	 * Ignorant of debug mode.
+	 */
+	getRespectiveScreenBox(): DoubleBoundingBox;
+	/** Returns the world bounding box of the visible range when in perspective mode. */
+	getPerspectiveScreenBox(): DoubleBoundingBox;
+	/**
+	 * Returns the length from the bottom of the screen to the top, in tiles when at a zoom of 1.
+	 * This is the same as the height of {@link getScreenBoundingBox}.
+	 * @param [debugMode] Whether developer mode is enabled. If omitted, the current debug status is used.
+	 * @returns The height of the screen in squares
+	 */
+	getScreenHeightWorld(_debugMode?: boolean): number;
+	/**
+	 * Returns a copy of the current view matrix.
+	 * @returns The view matrix
+	 */
+	getViewMatrix(): Mat4;
+	/** Returns a copy of both the projMatrix and viewMatrix */
+	getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 };
+	init(_glContext: WebGL2RenderingContext, _canvasElement: HTMLCanvasElement): void;
+	/**
+	 * Wires the window/document listeners that keep the camera synced with the
+	 * interactive game. The preview instance intentionally never calls this, so it
+	 * doesn't react to window resizes or global FOV changes.
+	 */
+	wireGlobalListeners(): void;
+	setViewMatrix(_newMatrix: Mat4): void;
+	initViewMatrix(_ignoreRotations?: boolean): void;
+	onPositionChange(): void;
+	/**
+	 * Returns the scale at which 1 physical pixel on the screen equals 1 tile.
+	 */
+	getScaleWhenTilesInvisible(): BigDecimal;
+	/**
+	 * Returns the scale at which the game is considered *zoomed out*.
+	 * Each tile equals 1 virtual pixel on the screen.
+	 */
+	getScaleWhenZoomedOut(): BigDecimal;
+	getCanvas(): HTMLCanvasElement;
+	/** Resyncs the canvas's pixel buffer and GL viewport to its current CSS display size × DPR. */
+	resyncCanvasBuffer(): void;
+	/**
+	 * Reads the canvas's current CSS dimensions and syncs all
+	 * dependent state: pixel buffer, GL viewport, aspect ratio,
+	 * screen bounding box, projection matrix, and frame tracker.
+	 */
+	syncCanvasDimensions(): void;
+	/**
+	 * [DEBUG] Renders an outline of the viewing screen bounding box.
+	 * Will only be visible if camera debug mode is on.
+	 */
+	renderOutlineofScreenBox(): void;
+}
+
+/** Optional integration hooks a camera fires into. */
+interface CameraHooks {
+	/** Flags the render loop that a visual change occurred this frame. */
+	onVisualChange?: () => void;
+	/** Notifies app code that the canvas pixel buffer resized. */
+	onCanvasResize?: (_detail: { width: number; height: number }) => void;
+}
 
 // Constants -------------------------------------------------------------
 
@@ -47,471 +157,439 @@ const zNear = 1;
 /** Has to be at least {@link DIST_TO_RENDER_BOARD} * sqrt(2) */
 const zFar = DIST_TO_RENDER_BOARD * Math.SQRT2;
 
-// State ---------------------------------------------------------------
+// Factory -----------------------------------------------------------------------
 
-/** Field of view, in radians */
-let fieldOfView: number;
+/** Creates one independent camera instance with its own matrices, canvas, and rotation state. */
+function createCamera(hooks: CameraHooks = {}): Camera {
+	const onVisualChange = hooks.onVisualChange;
+	const onCanvasResize = hooks.onCanvasResize;
 
-/** If true, the camera is stationed farther back. */
-let DEBUG: boolean = false;
+	// State ---------------------------------------------------------------
 
-/** The webgl context. */
-let gl: WebGL2RenderingContext;
-/** The canvas document element that WebGL will render the game onto. Identical to {@link gl.canvas}. */
-let canvas: HTMLCanvasElement;
-let canvasWidthVirtualPixels: number;
-let canvasHeightVirtualPixels: number;
-let aspect: number; // Aspect ratio of the canvas width to height.
+	/** Field of view, in radians */
+	let fieldOfView: number;
 
-/**
- * The location in world-space of the edges of the screen.
- * SMALL NUMBERS. Not affected by position or scale (zoom).
- * So we don't need to use BigDecimals.
- */
-let screenBoundingBox: DoubleBoundingBox;
-/**
- * The location in world-space of the edges of the screen, when in developer mode.
- * SMALL NUMBERS. Not affected by position or scale (zoom).
- * So we don't need to use BigDecimals.
- */
-let screenBoundingBox_devMode: DoubleBoundingBox;
+	/** If true, the camera is stationed farther back. */
+	let DEBUG: boolean = false;
 
-/** Contains the matrix for transforming our camera to look like it's in perspective.
- * This ONLY needs to update on the gpu whenever the screen size changes. */
-let projMatrix: Mat4; // Same for every shader program
+	/** The webgl context. */
+	let gl: WebGL2RenderingContext;
+	/** The canvas document element that WebGL will render the game onto. Identical to {@link gl.canvas}. */
+	let canvas: HTMLCanvasElement;
+	let canvasWidthVirtualPixels: number;
+	let canvasHeightVirtualPixels: number;
+	let aspect: number; // Aspect ratio of the canvas width to height.
 
-/** Contains the camera's position and rotation, updated once per frame on the gpu.
- *
- * When compared to the world matrix, that uniform is updated with every draw call,
- * because it specifies the translation and rotation of the bound mesh. */
-let viewMatrix: Mat4;
+	/**
+	 * The location in world-space of the edges of the screen.
+	 * SMALL NUMBERS. Not affected by position or scale (zoom).
+	 * So we don't need to use BigDecimals.
+	 */
+	let screenBoundingBox: DoubleBoundingBox;
+	/**
+	 * The location in world-space of the edges of the screen, when in developer mode.
+	 * SMALL NUMBERS. Not affected by position or scale (zoom).
+	 * So we don't need to use BigDecimals.
+	 */
+	let screenBoundingBox_devMode: DoubleBoundingBox;
 
-/** Perspective camera rotation around the X axis. Positive looks down. Min -180, max 0. */
-let rotX = 0;
-/** Perspective camera rotation around the Z axis. Positive looks right. Range 0–360. */
-let rotZ = 0;
+	/** Contains the matrix for transforming our camera to look like it's in perspective.
+	 * This ONLY needs to update on the gpu whenever the screen size changes. */
+	let projMatrix: Mat4; // Same for every shader program
 
-// Functions -----------------------------------------------------------------------
+	/** Contains the camera's position and rotation, updated once per frame on the gpu.
+	 *
+	 * When compared to the world matrix, that uniform is updated with every draw call,
+	 * because it specifies the translation and rotation of the bound mesh. */
+	let viewMatrix: Mat4;
 
-/** Returns true if we have no perspective rotation */
-function haveZeroRotation(): boolean {
-	return rotX === 0 && rotZ === 0;
-}
+	/** Perspective camera rotation around the X axis. Positive looks down. Min -180, max 0. */
+	let rotX = 0;
+	/** Perspective camera rotation around the Z axis. Positive looks right. Range 0–360. */
+	let rotZ = 0;
 
-/** Makes sure we don't go upside-down. */
-function capRotations(): void {
-	if (rotX > 0) rotX = 0;
-	else if (rotX < -180) rotX = -180;
-	if (rotZ < 0) rotZ += 360;
-	else if (rotZ > 360) rotZ -= 360;
-}
+	// Functions -----------------------------------------------------------------------
 
-/** Applies perspective rotation to default camera viewMatrix. */
-function applyPerspectiveRotations(viewMat: Mat4): void {
-	if (haveZeroRotation()) return;
-
-	const cameraPos = getPosition(); // devMode-sensitive
-
-	// Shift the origin before rotating plane
-	mat4.translate(viewMat, viewMat, cameraPos);
-
-	if (rotX < 0) {
-		// Looking up somewhat
-		const rotXRad = rotX * (Math.PI / 180);
-		mat4.rotate(viewMat, viewMat, rotXRad, [1, 0, 0]);
+	/** Returns true if we have no perspective rotation */
+	function haveZeroRotation(): boolean {
+		return rotX === 0 && rotZ === 0;
 	}
-	// const rotYRad = rotY * (Math.PI / 180);
-	// mat4.rotate(viewMatrix, viewMatrix, rotYRad, [0,1,0])
-	const rotZRad = rotZ * (Math.PI / 180);
-	mat4.rotate(viewMat, viewMat, rotZRad, [0, 0, 1]);
 
-	// Shift the origin back where it was
-	const negativeCameraPos = [-cameraPos[0], -cameraPos[1], -cameraPos[2]];
-	mat4.translate(viewMat, viewMat, negativeCameraPos);
-}
-
-function getRotX(): number {
-	return rotX;
-}
-
-function getRotZ(): number {
-	return rotZ;
-}
-
-/**
- * Returns true if the camera is rotated in any way, meaning we're not looking
- * straight down at the board perfectly from white/black's perspective.
- */
-function isCameraRotated(): boolean {
-	return rotX !== 0 || !(rotZ === 0 || rotZ === 180);
-}
-
-/** True when rotZ is between 90 and 270, meaning we're viewing from black's side. */
-function getIsViewingBlackPerspective(): boolean {
-	return rotZ > 90 && rotZ < 270;
-}
-
-/** Returns true if the camera X rotation is past the horizon (looking up or directly up). */
-function isLookingUp(): boolean {
-	return rotX <= -90;
-}
-
-/**
- * Renders (performs) whatever function is passed to it,
- * as if our camera was looking straight at the board from
- * white's perspective. ZERO perspective rotations!
- * Works both in 3D perspective mode and in 2D black's-perspective mode.
- */
-function renderWithoutPerspectiveRotations(func: Function): void {
-	if (haveZeroRotation()) return func();
-
-	const perspectiveViewMatrixCopy = getViewMatrix();
-	initViewMatrix(true); // Init view while ignoring perspective rotations
-
-	func();
-
-	setViewMatrix(perspectiveViewMatrixCopy); // Re-put back the perspective rotation
-}
-
-function setPerspectiveRotation(newRotX: number, newRotZ: number): void {
-	rotX = newRotX;
-	rotZ = newRotZ;
-	capRotations();
-	onPositionChange(); // Calculate new viewMatrix
-}
-
-// Returns devMode-sensitive camera position.
-function getPosition(ignoreDevmode?: boolean): Vec3 {
-	return jsutil.deepCopyObject(!ignoreDevmode && DEBUG ? position_devMode : position);
-}
-
-function getZFar(): number {
-	return zFar;
-}
-
-function getCanvasWidthVirtualPixels(): number {
-	return canvasWidthVirtualPixels;
-}
-
-function getCanvasHeightVirtualPixels(): number {
-	return canvasHeightVirtualPixels;
-}
-
-function toggleDebug(): void {
-	DEBUG = !DEBUG;
-	frametracker.onVisualChange(); // Visual change, render the screen this frame
-	onPositionChange();
-	document.dispatchEvent(new CustomEvent('camera-debug-toggle'));
-
-	console.log(`Toggled camera debug: ${DEBUG}`);
-}
-
-function getDebug(): boolean {
-	return DEBUG;
-}
-
-/**
- * Returns a copy of the current screen bounding box,
- * or the world-space coordinates of the edges of the canvas.
- * @param [debugMode] Whether developer mode is enabled. If omitted, the current debug status is used.
- * @param [pad] Whether to add a small padding to the box to account for screen shakes.
- * @returns The bounding box of the screen
- */
-function getScreenBoundingBox(debugMode: boolean = DEBUG, pad: boolean = false): DoubleBoundingBox {
-	const box = jsutil.deepCopyObject(debugMode ? screenBoundingBox_devMode : screenBoundingBox);
-	if (pad) {
-		const width = box.right - box.left;
-		const height = box.top - box.bottom;
-		const longestSide = Math.max(width, height);
-		let PAD_AMOUNT = 0.04; // 4% of longest side
-		PAD_AMOUNT = Math.max(PAD_AMOUNT, (PAD_AMOUNT * width) / height); // Increase that if the screen is wider than taller
-		// Add a small padding to the box so that things right at the edge don't get cut off
-		const paddingAmountX = longestSide * PAD_AMOUNT;
-		const paddingAmountY = longestSide * PAD_AMOUNT;
-		box.left -= paddingAmountX;
-		box.right += paddingAmountX;
-		box.bottom -= paddingAmountY;
-		box.top += paddingAmountY;
+	/** Makes sure we don't go upside-down. */
+	function capRotations(): void {
+		if (rotX > 0) rotX = 0;
+		else if (rotX < -180) rotX = -180;
+		if (rotZ < 0) rotZ += 360;
+		else if (rotZ > 360) rotZ -= 360;
 	}
-	return box;
-}
 
-/**
- * Returns the respective world-space bounding box containing the whole screen,
- * depending on whether we're in perspective mode or not.
- * Intended for knowing how far out to render items to the edge.
- *
- * In perspective, the range of visibility is much greater.
- *
- * Ignorant of debug mode.
- */
-function getRespectiveScreenBox(): DoubleBoundingBox {
-	if (isCameraRotated()) return getPerspectiveScreenBox();
-	else return getScreenBoundingBox(false, true);
-}
+	/** Applies perspective rotation to default camera viewMatrix. */
+	function applyPerspectiveRotations(viewMat: Mat4): void {
+		if (haveZeroRotation()) return;
 
-/** Returns the world bounding box of the visible range when in perspective mode. */
-function getPerspectiveScreenBox(): DoubleBoundingBox {
+		const cameraPos = getPosition(); // devMode-sensitive
+
+		// Shift the origin before rotating plane
+		mat4.translate(viewMat, viewMat, cameraPos);
+
+		if (rotX < 0) {
+			// Looking up somewhat
+			const rotXRad = rotX * (Math.PI / 180);
+			mat4.rotate(viewMat, viewMat, rotXRad, [1, 0, 0]);
+		}
+		// const rotYRad = rotY * (Math.PI / 180);
+		// mat4.rotate(viewMatrix, viewMatrix, rotYRad, [0,1,0])
+		const rotZRad = rotZ * (Math.PI / 180);
+		mat4.rotate(viewMat, viewMat, rotZRad, [0, 0, 1]);
+
+		// Shift the origin back where it was
+		const negativeCameraPos = [-cameraPos[0], -cameraPos[1], -cameraPos[2]];
+		mat4.translate(viewMat, viewMat, negativeCameraPos);
+	}
+
+	function getRotX(): number {
+		return rotX;
+	}
+
+	function getRotZ(): number {
+		return rotZ;
+	}
+
+	function isCameraRotated(): boolean {
+		return rotX !== 0 || !(rotZ === 0 || rotZ === 180);
+	}
+
+	function getIsViewingBlackPerspective(): boolean {
+		return rotZ > 90 && rotZ < 270;
+	}
+
+	function isLookingUp(): boolean {
+		return rotX <= -90;
+	}
+
+	function renderWithoutPerspectiveRotations(func: Function): void {
+		if (haveZeroRotation()) return func();
+
+		const perspectiveViewMatrixCopy = getViewMatrix();
+		initViewMatrix(true); // Init view while ignoring perspective rotations
+
+		func();
+
+		setViewMatrix(perspectiveViewMatrixCopy); // Re-put back the perspective rotation
+	}
+
+	function setPerspectiveRotation(newRotX: number, newRotZ: number): void {
+		rotX = newRotX;
+		rotZ = newRotZ;
+		capRotations();
+		onPositionChange(); // Calculate new viewMatrix
+	}
+
+	// Returns devMode-sensitive camera position.
+	function getPosition(ignoreDevmode?: boolean): Vec3 {
+		return jsutil.deepCopyObject(!ignoreDevmode && DEBUG ? position_devMode : position);
+	}
+
+	function getZFar(): number {
+		return zFar;
+	}
+
+	function getCanvasWidthVirtualPixels(): number {
+		return canvasWidthVirtualPixels;
+	}
+
+	function getCanvasHeightVirtualPixels(): number {
+		return canvasHeightVirtualPixels;
+	}
+
+	function toggleDebug(): void {
+		DEBUG = !DEBUG;
+		onVisualChange?.(); // Visual change, render the screen this frame
+		onPositionChange();
+		document.dispatchEvent(new CustomEvent('camera-debug-toggle'));
+
+		console.log(`Toggled camera debug: ${DEBUG}`);
+	}
+
+	function getDebug(): boolean {
+		return DEBUG;
+	}
+
+	function getScreenBoundingBox(
+		debugMode: boolean = DEBUG,
+		pad: boolean = false,
+	): DoubleBoundingBox {
+		const box = jsutil.deepCopyObject(
+			debugMode ? screenBoundingBox_devMode : screenBoundingBox,
+		);
+		if (pad) {
+			const width = box.right - box.left;
+			const height = box.top - box.bottom;
+			const longestSide = Math.max(width, height);
+			let PAD_AMOUNT = 0.04; // 4% of longest side
+			PAD_AMOUNT = Math.max(PAD_AMOUNT, (PAD_AMOUNT * width) / height); // Increase that if the screen is wider than taller
+			// Add a small padding to the box so that things right at the edge don't get cut off
+			const paddingAmountX = longestSide * PAD_AMOUNT;
+			const paddingAmountY = longestSide * PAD_AMOUNT;
+			box.left -= paddingAmountX;
+			box.right += paddingAmountX;
+			box.bottom -= paddingAmountY;
+			box.top += paddingAmountY;
+		}
+		return box;
+	}
+
+	function getRespectiveScreenBox(): DoubleBoundingBox {
+		if (isCameraRotated()) return getPerspectiveScreenBox();
+		else return getScreenBoundingBox(false, true);
+	}
+
+	function getPerspectiveScreenBox(): DoubleBoundingBox {
+		return {
+			left: -DIST_TO_RENDER_BOARD,
+			right: DIST_TO_RENDER_BOARD,
+			bottom: -DIST_TO_RENDER_BOARD,
+			top: DIST_TO_RENDER_BOARD,
+		};
+	}
+
+	function getScreenHeightWorld(debugMode: boolean = DEBUG): number {
+		const boundingBox = getScreenBoundingBox(debugMode);
+		return boundingBox.top - boundingBox.bottom;
+	}
+
+	function getViewMatrix(): Mat4 {
+		return jsutil.deepCopyObject(viewMatrix);
+	}
+
+	function getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 } {
+		return {
+			projMatrix: jsutil.deepCopyObject(projMatrix),
+			viewMatrix: jsutil.deepCopyObject(viewMatrix),
+		};
+	}
+
+	// Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
+	function init(glContext: WebGL2RenderingContext, canvasElement: HTMLCanvasElement): void {
+		gl = glContext;
+		canvas = canvasElement;
+		initFOV();
+		initMatrixes();
+	}
+
+	function wireGlobalListeners(): void {
+		document.addEventListener('fov-change', () => onFOVChange());
+		window.addEventListener('resize', () => syncCanvasDimensions());
+	}
+
+	// Inits the matrix uniforms: viewMatrix (camera) & projMatrix
+	function initMatrixes(): void {
+		projMatrix = mat4.create(); // Same for every shader program
+
+		syncCanvasDimensions();
+		initPerspective(); // Initiates perspective, including the projection matrix
+
+		initViewMatrix(); // Camera
+
+		// World matrix only needs to be initiated when rendering objects
+	}
+
+	// Call this when window resized. Also updates the projection matrix.
+	function initPerspective(): void {
+		initProjMatrix();
+	}
+
+	function resyncCanvasBuffer(): void {
+		canvas.width = canvas.clientWidth * window.devicePixelRatio;
+		canvas.height = canvas.clientHeight * window.devicePixelRatio;
+		gl.viewport(0, 0, canvas.width, canvas.height);
+	}
+
+	function syncCanvasDimensions(): void {
+		const rect = canvas.getBoundingClientRect();
+		if (rect.width <= 0 || rect.height <= 0) {
+			// Prevent NaN's (from dividing by zero) from propogating the system.
+			// Can happen when the screen is resized so the last known preview tooltip position squishes the preview to nothing.
+			// console.warn(`Canvas has zero area dimensions.`);
+			return;
+		}
+
+		canvasWidthVirtualPixels = rect.width;
+		canvasHeightVirtualPixels = rect.height;
+
+		resyncCanvasBuffer();
+		recalcCanvasVariables(); // Recalculate canvas-dependant variables (aspect, screenBoundingBox)
+		initPerspective(); // Projection matrix must stay in sync with the updated aspect ratio
+
+		onVisualChange?.(); // Visual change, render the screen this frame
+
+		// Notify other application code of the new canvas dimensions
+		onCanvasResize?.({ width: canvas.width, height: canvas.height });
+	}
+
+	function recalcCanvasVariables(): void {
+		aspect =
+			(gl.canvas as HTMLCanvasElement).clientWidth /
+			(gl.canvas as HTMLCanvasElement).clientHeight;
+		initScreenBoundingBox();
+	}
+
+	// Set view matrix
+	function setViewMatrix(newMatrix: Mat4): void {
+		viewMatrix = newMatrix;
+	}
+
+	// Initiates the camera matrix. View matrix.
+	function initViewMatrix(ignoreRotations?: boolean): void {
+		const newViewMatrix: Mat4 = mat4.create();
+
+		const cameraPos = getPosition(); // devMode-sensitive
+
+		// Translates the view (camera) matrix to be looking at point..
+		//             Camera,     Position, Looking-at, Up-direction
+		mat4.lookAt(newViewMatrix, cameraPos, [0, 0, 0], [0, 1, 0]);
+
+		// Screen Shake Integration
+		const shakeMatrix = screenshake.getShakeMatrix();
+		// Apply to our view matrix to shake the camera
+		mat4.multiply(newViewMatrix, newViewMatrix, shakeMatrix);
+
+		if (!ignoreRotations) applyPerspectiveRotations(newViewMatrix);
+
+		viewMatrix = newViewMatrix;
+
+		// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
+		// because the combined transformMatrix is recalculated on every draw call.
+	}
+
+	/** Inits the projection matrix uniform and sends that over to the gpu for each of our shader programs. */
+	function initProjMatrix(): void {
+		mat4.perspective(projMatrix, fieldOfView, aspect, zNear, zFar);
+		// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
+		// because the combined transformMatrix is recalculated on every draw call.
+		onVisualChange?.();
+	}
+
+	// Return the world-space x & y positions of the screen edges. Not affected by scale or board position.
+	function initScreenBoundingBox(): void {
+		// Camera dist
+		let dist = position[2];
+		// const dist = 7;
+		const thetaY = fieldOfView / 2; // Radians
+
+		// Length of missing side:
+		// tan(theta) = x / dist
+		// x = tan(theta) * dist
+		let distToVertEdge = Math.tan(thetaY) * dist;
+		let distToHorzEdge = distToVertEdge * aspect;
+
+		screenBoundingBox = {
+			left: -distToHorzEdge,
+			right: distToHorzEdge,
+			bottom: -distToVertEdge,
+			top: distToVertEdge,
+		};
+
+		// Now init the developer-mode screen bounding box
+
+		dist = position_devMode[2];
+
+		distToVertEdge = Math.tan(thetaY) * dist;
+		distToHorzEdge = distToVertEdge * aspect;
+
+		screenBoundingBox_devMode = {
+			left: -distToHorzEdge,
+			right: distToHorzEdge,
+			bottom: -distToVertEdge,
+			top: distToVertEdge,
+		};
+	}
+
+	// Converts to radians
+	function initFOV(): void {
+		fieldOfView = (preferences.getPerspectiveFOV() * Math.PI) / 180;
+	}
+
+	function onFOVChange(): void {
+		// console.log("Detected field of view change custom event!");
+		initFOV();
+		initProjMatrix();
+		recalcCanvasVariables(); // The only thing inside here we don't actually need to change is the aspect variable, but it doesn't matter.
+	}
+
+	// Call both when camera moves or rotates
+	function onPositionChange(): void {
+		initViewMatrix();
+	}
+
+	function getScaleWhenTilesInvisible(): BigDecimal {
+		// We can cast this to a BigDecimal last because we know the resulting scale isn't arbitrarily small.
+		return bd.fromNumber((screenBoundingBox.right * 2) / canvas.width);
+	}
+
+	function getScaleWhenZoomedOut(): BigDecimal {
+		const WDPR_BD = bd.fromNumber(window.devicePixelRatio);
+		return bd.multiply(getScaleWhenTilesInvisible(), WDPR_BD);
+	}
+
+	function getCanvas(): HTMLCanvasElement {
+		return canvas;
+	}
+
+	function renderOutlineofScreenBox(): void {
+		if (!DEBUG || isCameraRotated()) return;
+
+		const { left, right, bottom, top } = getScreenBoundingBox(false);
+
+		// const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
+		const color: Color = [0, 0, 0, 0.5]; // Transparent Black
+		const data = primitives.Rect(left, bottom, right, top, color);
+
+		createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
+	}
+
 	return {
-		left: -DIST_TO_RENDER_BOARD,
-		right: DIST_TO_RENDER_BOARD,
-		bottom: -DIST_TO_RENDER_BOARD,
-		top: DIST_TO_RENDER_BOARD,
+		DIST_TO_RENDER_BOARD,
+		getRotX,
+		getRotZ,
+		isCameraRotated,
+		getIsViewingBlackPerspective,
+		isLookingUp,
+		renderWithoutPerspectiveRotations,
+		setPerspectiveRotation,
+		getPosition,
+		getZFar,
+		getCanvasWidthVirtualPixels,
+		getCanvasHeightVirtualPixels,
+		toggleDebug,
+		getDebug,
+		getScreenBoundingBox,
+		getRespectiveScreenBox,
+		getPerspectiveScreenBox,
+		getScreenHeightWorld,
+		getViewMatrix,
+		getProjAndViewMatrixes,
+		init,
+		wireGlobalListeners,
+		setViewMatrix,
+		initViewMatrix,
+		onPositionChange,
+		getScaleWhenTilesInvisible,
+		getScaleWhenZoomedOut,
+		getCanvas,
+		resyncCanvasBuffer,
+		syncCanvasDimensions,
+		renderOutlineofScreenBox,
 	};
 }
 
-/**
- * Returns the length from the bottom of the screen to the top, in tiles when at a zoom of 1.
- * This is the same as the height of {@link getScreenBoundingBox}.
- * @param [debugMode] Whether developer mode is enabled. If omitted, the current debug status is used.
- * @returns The height of the screen in squares
- */
-function getScreenHeightWorld(debugMode: boolean = DEBUG): number {
-	const boundingBox = getScreenBoundingBox(debugMode);
-	return boundingBox.top - boundingBox.bottom;
-}
+// The interactive game's camera instance. All existing `camera.foo()` call sites use this.
+const gameCamera = createCamera({
+	onVisualChange: () => frametracker.onVisualChange(),
+	onCanvasResize: (detail: { width: number; height: number }): void => {
+		document.dispatchEvent(new CustomEvent('canvas_resize', { detail }));
+	},
+});
 
-/**
- * Returns a copy of the current view matrix.
- * @returns The view matrix
- */
-function getViewMatrix(): Mat4 {
-	return jsutil.deepCopyObject(viewMatrix);
-}
-
-/**
- * Returns a copy of both the projMatrix and viewMatrix
- */
-function getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 } {
-	return {
-		projMatrix: jsutil.deepCopyObject(projMatrix),
-		viewMatrix: jsutil.deepCopyObject(viewMatrix),
-	};
-}
-
-// Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
-function init(glContext: WebGL2RenderingContext, canvasElement: HTMLCanvasElement): void {
-	gl = glContext;
-	canvas = canvasElement;
-	initFOV();
-	initMatrixes();
-	document.addEventListener('fov-change', () => onFOVChange());
-	window.addEventListener('resize', () => syncCanvasDimensions());
-}
-
-// Inits the matrix uniforms: viewMatrix (camera) & projMatrix
-function initMatrixes(): void {
-	projMatrix = mat4.create(); // Same for every shader program
-
-	syncCanvasDimensions();
-	initPerspective(); // Initiates perspective, including the projection matrix
-
-	initViewMatrix(); // Camera
-
-	// World matrix only needs to be initiated when rendering objects
-}
-
-// Call this when window resized. Also updates the projection matrix.
-function initPerspective(): void {
-	initProjMatrix();
-}
-
-/** Resyncs the canvas's pixel buffer and GL viewport to its current CSS display size × DPR. */
-function resyncCanvasBuffer(): void {
-	canvas.width = canvas.clientWidth * window.devicePixelRatio;
-	canvas.height = canvas.clientHeight * window.devicePixelRatio;
-	gl.viewport(0, 0, canvas.width, canvas.height);
-}
-
-/**
- * Reads the canvas's current CSS dimensions and syncs all
- * dependent state: pixel buffer, GL viewport, aspect ratio,
- * screen bounding box, projection matrix, and frame tracker.
- */
-function syncCanvasDimensions(): void {
-	const rect = canvas.getBoundingClientRect();
-	if (rect.width <= 0 || rect.height <= 0) {
-		// Prevent NaN's (from dividing by zero) from propogating the system.
-		// Can happen when the screen is resized so the last known preview tooltip position squishes the preview to nothing.
-		// console.warn(`Canvas has zero area dimensions.`);
-		return;
-	}
-
-	canvasWidthVirtualPixels = rect.width;
-	canvasHeightVirtualPixels = rect.height;
-
-	resyncCanvasBuffer();
-	recalcCanvasVariables(); // Recalculate canvas-dependant variables (aspect, screenBoundingBox)
-	initPerspective(); // Projection matrix must stay in sync with the updated aspect ratio
-
-	frametracker.onVisualChange(); // Visual change, render the screen this frame
-
-	// Dispatch event to notify other application code of the new canvas dimensions
-	const detail = { width: canvas.width, height: canvas.height };
-	document.dispatchEvent(new CustomEvent('canvas_resize', { detail }));
-}
-
-function recalcCanvasVariables(): void {
-	aspect =
-		(gl.canvas as HTMLCanvasElement).clientWidth /
-		(gl.canvas as HTMLCanvasElement).clientHeight;
-	initScreenBoundingBox();
-}
-
-// Set view matrix
-function setViewMatrix(newMatrix: Mat4): void {
-	viewMatrix = newMatrix;
-}
-
-// Initiates the camera matrix. View matrix.
-function initViewMatrix(ignoreRotations?: boolean): void {
-	const newViewMatrix: Mat4 = mat4.create();
-
-	const cameraPos = getPosition(); // devMode-sensitive
-
-	// Translates the view (camera) matrix to be looking at point..
-	//             Camera,     Position, Looking-at, Up-direction
-	mat4.lookAt(newViewMatrix, cameraPos, [0, 0, 0], [0, 1, 0]);
-
-	// Screen Shake Integration
-	const shakeMatrix = screenshake.getShakeMatrix();
-	// Apply to our view matrix to shake the camera
-	mat4.multiply(newViewMatrix, newViewMatrix, shakeMatrix);
-
-	if (!ignoreRotations) applyPerspectiveRotations(newViewMatrix);
-
-	viewMatrix = newViewMatrix;
-
-	// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
-	// because the combined transformMatrix is recalculated on every draw call.
-}
-
-/** Inits the projection matrix uniform and sends that over to the gpu for each of our shader programs. */
-function initProjMatrix(): void {
-	mat4.perspective(projMatrix, fieldOfView, aspect, zNear, zFar);
-	// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
-	// because the combined transformMatrix is recalculated on every draw call.
-	frametracker.onVisualChange();
-}
-
-// Return the world-space x & y positions of the screen edges. Not affected by scale or board position.
-function initScreenBoundingBox(): void {
-	// Camera dist
-	let dist = position[2];
-	// const dist = 7;
-	const thetaY = fieldOfView / 2; // Radians
-
-	// Length of missing side:
-	// tan(theta) = x / dist
-	// x = tan(theta) * dist
-	let distToVertEdge = Math.tan(thetaY) * dist;
-	let distToHorzEdge = distToVertEdge * aspect;
-
-	screenBoundingBox = {
-		left: -distToHorzEdge,
-		right: distToHorzEdge,
-		bottom: -distToVertEdge,
-		top: distToVertEdge,
-	};
-
-	// Now init the developer-mode screen bounding box
-
-	dist = position_devMode[2];
-
-	distToVertEdge = Math.tan(thetaY) * dist;
-	distToHorzEdge = distToVertEdge * aspect;
-
-	screenBoundingBox_devMode = {
-		left: -distToHorzEdge,
-		right: distToHorzEdge,
-		bottom: -distToVertEdge,
-		top: distToVertEdge,
-	};
-}
-
-// Converts to radians
-function initFOV(): void {
-	fieldOfView = (preferences.getPerspectiveFOV() * Math.PI) / 180;
-}
-
-function onFOVChange(): void {
-	// console.log("Detected field of view change custom event!");
-	initFOV();
-	initProjMatrix();
-	recalcCanvasVariables(); // The only thing inside here we don't actually need to change is the aspect variable, but it doesn't matter.
-}
-
-// Call both when camera moves or rotates
-function onPositionChange(): void {
-	initViewMatrix();
-}
-
-/**
- * Returns the scale at which 1 physical pixel on the screen equals 1 tile.
- */
-function getScaleWhenTilesInvisible(): BigDecimal {
-	// We can cast this to a BigDecimal last because we know the resulting scale isn't arbitrarily small.
-	return bd.fromNumber((screenBoundingBox.right * 2) / canvas.width);
-}
-
-/**
- * Returns the scale at which the game is considered *zoomed out*.
- * Each tile equals 1 virtual pixel on the screen.
- */
-function getScaleWhenZoomedOut(): BigDecimal {
-	const WDPR_BD = bd.fromNumber(window.devicePixelRatio);
-	return bd.multiply(getScaleWhenTilesInvisible(), WDPR_BD);
-}
-
-function getCanvas(): HTMLCanvasElement {
-	return canvas;
-}
-
-/**
- * [DEBUG] Renders an outline of the viewing screen bounding box.
- * Will only be visible if camera debug mode is on.
- */
-function renderOutlineofScreenBox(): void {
-	if (!DEBUG || isCameraRotated()) return;
-
-	const { left, right, bottom, top } = getScreenBoundingBox(false);
-
-	// const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
-	const color: Color = [0, 0, 0, 0.5]; // Transparent Black
-	const data = primitives.Rect(left, bottom, right, top, color);
-
-	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
-}
-
-export default {
-	DIST_TO_RENDER_BOARD,
-	getRotX,
-	getRotZ,
-	isCameraRotated,
-	getIsViewingBlackPerspective,
-	isLookingUp,
-	renderWithoutPerspectiveRotations,
-	setPerspectiveRotation,
-	getPosition,
-	getZFar,
-	getCanvasWidthVirtualPixels,
-	getCanvasHeightVirtualPixels,
-	toggleDebug,
-	getDebug,
-	getScreenBoundingBox,
-	getRespectiveScreenBox,
-	getPerspectiveScreenBox,
-	getScreenHeightWorld,
-	getViewMatrix,
-	getProjAndViewMatrixes,
-	init,
-	setViewMatrix,
-	initViewMatrix,
-	onPositionChange,
-	getScaleWhenTilesInvisible,
-	getScaleWhenZoomedOut,
-	getCanvas,
-	resyncCanvasBuffer,
-	syncCanvasDimensions,
-	renderOutlineofScreenBox,
-};
+export default gameCamera;
+export { createCamera };

@@ -215,10 +215,10 @@ window.gamePageData.engineUrl = "{{ manifest['engine'] }}";
 						{% endif %}
 						{# Resign / Abort share one slot (mutually exclusive) #}
 						<button class="action-btn tooltip-d{{ '' if not meta.resignable else ' hidden'}}" id="btn-abort" data-tooltip="Abort">
-							<svg class="action-icon"><use href="#svg-x"/></svg>
+							<svg class="action-icon" viewBox="0 0 24 24"><use href="#svg-x"/></svg>
 						</button>
 						<button class="action-btn tooltip-d{{ '' if meta.resignable else ' hidden'}}" id="btn-resign" data-tooltip="Resign">
-							<svg class="action-icon"><use href="#svg-flag"/></svg>
+							<svg class="action-icon" viewBox="0 0 24 24"><use href="#svg-flag"/></svg>
 						</button>
 					</div>
 					{# Incoming draw offer #}
