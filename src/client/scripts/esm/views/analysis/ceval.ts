@@ -459,6 +459,11 @@ function getViewedPositionIcn(gamefile: GameFile): string {
 	// Result/Termination are irrelevant to the engine
 	delete longformIn.metadata.Result;
 	delete longformIn.metadata.Termination;
+	// Always hand the engine an explicit world border. Without one it falls back to its own
+	// narrow internal default (1e15); the resolved border (the position's own, else ±i64-wiggle)
+	// lets it evaluate the full safe coordinate range. compressGamefile deep-copies gameRules,
+	// so this doesn't touch the live game.
+	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
 	return icnconverter.LongToShort_Format(longformIn, {
 		compact: true,
 		skipPosition: false,

@@ -38,7 +38,7 @@ function render(): void {
 	if (!gamefile) return;
 
 	const visible = boardgeometry.gboundingBox(false);
-	const { left, right, bottom, top } = analysisenginebounds.getEngineWorldBorder();
+	const { left, right, bottom, top } = analysisenginebounds.getEngineWorldBorder(gamefile);
 	const data: number[] = [];
 
 	if (visible.left <= left && left <= visible.right) {

@@ -7,23 +7,33 @@
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
-/** The default HydroChess internal world border when none is specified in ICN. */
-const ENGINE_WORLD_BORDER_DISTANCE = 1_000_000_000_000_000n; // 1e15
+import { engineDictionary } from '../../game/chess/engines/engine.js';
 
-/** Returns the inclusive bounding box of the gamefile's world HydroChess can always evaluate. */
-function getEngineWorldBorder(): BoundingBox {
-	// No explicit world border in ICN: HydroChess uses fixed absolute fallback bounds.
+/**
+ * Absolute fallback border distance for a side the position leaves unbounded — the largest
+ * coordinate HydroChess can safely evaluate (i64 minus a little wiggle room). Matches the
+ * distance engine games hand the engine, so analysis stays within the same safe range.
+ */
+const DEFAULT_BORDER_DISTANCE = engineDictionary.hydrochess.worldBorder;
+
+/**
+ * The world border HydroChess evaluates the position within: the position's own `worldBorder`
+ * gamerule where defined, falling back to ±{@link DEFAULT_BORDER_DISTANCE} on any unbounded side.
+ * (Unlike engine games, the fallback is absolute — not offset from the piece bounding box.)
+ */
+function getEngineWorldBorder(gamefile: GameFile): BoundingBox {
+	const wb = gamefile.gameRules.worldBorder;
 	return {
-		left: -ENGINE_WORLD_BORDER_DISTANCE,
-		right: ENGINE_WORLD_BORDER_DISTANCE,
-		bottom: -ENGINE_WORLD_BORDER_DISTANCE,
-		top: ENGINE_WORLD_BORDER_DISTANCE,
+		left: wb?.left ?? -DEFAULT_BORDER_DISTANCE,
+		right: wb?.right ?? DEFAULT_BORDER_DISTANCE,
+		bottom: wb?.bottom ?? -DEFAULT_BORDER_DISTANCE,
+		top: wb?.top ?? DEFAULT_BORDER_DISTANCE,
 	};
 }
 
 /** Returns whether all pieces in the gamefile are within the engine's safe evaluation bounds. */
 function areAllPiecesInBounds(gamefile: GameFile): boolean {
-	const engineBorder = getEngineWorldBorder();
+	const engineBorder = getEngineWorldBorder(gamefile);
 	for (const x of gamefile.pieces.XPositions) {
 		if (x < engineBorder.left || x > engineBorder.right) return false;
 	}

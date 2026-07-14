@@ -31,6 +31,7 @@ import ceval from './ceval.js';
 import movetree from './movetree.js';
 import gameslot from '../../game/chess/gameslot.js';
 import moveevals from './moveevals.js';
+import analysisenginebounds from './analysisenginebounds.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import { GameBus } from '../../game/GameBus.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
@@ -321,6 +322,9 @@ function start(): void {
 	longformIn = gamecompressor.compressGamefile(gamefile);
 	delete longformIn.metadata.Result; // Irrelevant to the engine.
 	delete longformIn.metadata.Termination;
+	// Always hand the engine an explicit world border (its own internal fallback is only 1e15),
+	// so every reviewed position is evaluated over the full safe coordinate range. Matches ceval.
+	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
 	gameFingerprint = serializePosition(mainlineNodes.length);
 	division = {};
 	division = determineDivision(
