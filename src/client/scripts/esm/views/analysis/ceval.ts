@@ -494,7 +494,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
-	if (analysisenginebounds.findFirstPieceOutsideEngineWorld(gamefile)) {
+	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) {
 		blockAnalysisForEngineWorldBorder();
 		return;
 	}

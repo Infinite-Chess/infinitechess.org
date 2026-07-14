@@ -1,7 +1,7 @@
-// src/client/scripts/esm/views/analysis/analysisworldborder.ts
+// src/client/scripts/esm/views/analysis/analysisborderdebug.ts
 
 /**
- * Draws the HydroChess analysis-safe coordinate border on the analysis board.
+ * DEBUG: Draws the HydroChess analysis-safe coordinate border on the board.
  */
 
 import type { Color } from '../../../../../shared/util/math/math.js';
@@ -38,7 +38,7 @@ function render(): void {
 	if (!gamefile) return;
 
 	const visible = boardgeometry.gboundingBox(false);
-	const { left, right, bottom, top } = analysisenginebounds.getEngineWorldBorder(gamefile);
+	const { left, right, bottom, top } = analysisenginebounds.getEngineWorldBorder();
 	const data: number[] = [];
 
 	if (visible.left <= left && left <= visible.right) {

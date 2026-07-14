@@ -1,41 +1,36 @@
 // src/client/scripts/esm/views/analysis/analysisenginebounds.ts
 
 /**
- * Analysis-only helpers for the coordinate range HydroChess can safely evaluate.
+ * Stores helpers for the HydroChess analysis-safe coordinate border.
  */
 
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
-import bounds from '../../../../../shared/util/math/bounds.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
+/** The default HydroChess internal world border when none is specified in ICN. */
+const ENGINE_WORLD_BORDER_DISTANCE = 1_000_000_000_000_000n; // 1e15
 
-import { engineDictionary } from '../../game/chess/engines/engine.js';
-
-const ENGINE_WORLD_BORDER_DISTANCE = engineDictionary.hydrochess.worldBorder;
-
-function getEngineWorldBorder(gamefile: GameFile): BoundingBox {
-	const box = gamefile.startSnapshot.box;
+/** Returns the inclusive bounding box of the gamefile's world HydroChess can always evaluate. */
+function getEngineWorldBorder(): BoundingBox {
+	// No explicit world border in ICN: HydroChess uses fixed absolute fallback bounds.
 	return {
-		left: box.left - ENGINE_WORLD_BORDER_DISTANCE,
-		right: box.right + ENGINE_WORLD_BORDER_DISTANCE,
-		bottom: box.bottom - ENGINE_WORLD_BORDER_DISTANCE,
-		top: box.top + ENGINE_WORLD_BORDER_DISTANCE,
+		left: -ENGINE_WORLD_BORDER_DISTANCE,
+		right: ENGINE_WORLD_BORDER_DISTANCE,
+		bottom: -ENGINE_WORLD_BORDER_DISTANCE,
+		top: ENGINE_WORLD_BORDER_DISTANCE,
 	};
 }
 
-function isCoordInsideEngineWorld(gamefile: GameFile, coords: Coords): boolean {
-	return bounds.boxContainsSquare(getEngineWorldBorder(gamefile), coords);
+/** Returns whether all pieces in the gamefile are within the engine's safe evaluation bounds. */
+function areAllPiecesInBounds(gamefile: GameFile): boolean {
+	const engineBorder = getEngineWorldBorder();
+	for (const x of gamefile.pieces.XPositions) {
+		if (x < engineBorder.left || x > engineBorder.right) return false;
+	}
+	for (const y of gamefile.pieces.YPositions) {
+		if (y < engineBorder.bottom || y > engineBorder.top) return false;
+	}
+	return true;
 }
 
-function findFirstPieceOutsideEngineWorld(gamefile: GameFile): Coords | undefined {
-	return boardutil
-		.getCoordsOfAllPieces(gamefile.pieces)
-		.find((coords) => !isCoordInsideEngineWorld(gamefile, coords));
-}
-
-export default {
-	getEngineWorldBorder,
-	findFirstPieceOutsideEngineWorld,
-};
+export default { getEngineWorldBorder, areAllPiecesInBounds };
