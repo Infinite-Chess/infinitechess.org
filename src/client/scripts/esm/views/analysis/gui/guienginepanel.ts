@@ -80,7 +80,6 @@ function init(): void {
 
 	initSettingsUI();
 	initListeners();
-	syncSettingsOverlayPosition();
 
 	ceval.onUpdate(onEngineUpdate);
 	ceval.onStatus(onEngineStatus);
@@ -163,17 +162,27 @@ function initListeners(): void {
 
 	element_SettingsBtn.addEventListener('click', () => {
 		const open = element_Settings.classList.toggle('hidden') === false;
-		if (open) syncSettingsOverlayPosition();
 		element_SettingsBtn.classList.toggle('active', open);
 	});
 
-	window.addEventListener('resize', syncSettingsOverlayPosition);
+	// Close the settings drawer when clicking anywhere outside it or its toggle button.
+	document.addEventListener('pointerdown', (e) => {
+		if (element_Settings.classList.contains('hidden')) return;
+		if (!(e.target instanceof Node)) return;
+		if (element_SettingsBtn.contains(e.target) || element_Settings.contains(e.target)) return;
+		closeSettings();
+	});
 
 	// The MultiPV/threads/depth sliders map their raw value straight to the setting; the
 	// Hash slider's value is an index into HASH_OPTIONS whose MB is the setting.
 	bindSettingSlider(element_MultiPv, element_MultiPvValue, String, (v) => ceval.updateSettings({ multiPv: v })); // prettier-ignore
 	bindSettingSlider(element_Threads, element_ThreadsValue, String, (v) => ceval.updateSettings({ threads: v })); // prettier-ignore
-	bindSettingSlider(element_Depth, element_DepthValue, String, (v) => ceval.updateSettings({ depth: v })); // prettier-ignore
+	bindSettingSlider(element_Depth, element_DepthValue, String, (v) => {
+		ceval.updateSettings({ depth: v });
+		// Reshape the progress bar's fill the moment the new target commits,
+		// rather than waiting for the engine to finish its next depth.
+		if (ceval.isEnabled()) updateProgress(ceval.getLatestUpdate(), v);
+	});
 	bindSettingSlider(
 		element_Hash,
 		element_HashValue,
@@ -209,8 +218,9 @@ function updateShortcuts(): void {
 	if (listener_document.isKeyDown('KeyL')) setEngineEnabled(!element_Toggle.checked);
 }
 
-function syncSettingsOverlayPosition(): void {
-	element_Settings.style.setProperty('--engine-settings-top', `${element_Lines.offsetTop}px`);
+function closeSettings(): void {
+	element_Settings.classList.add('hidden');
+	element_SettingsBtn.classList.remove('active');
 }
 
 // Engine output rendering ------------------------------------------------------------
@@ -311,14 +321,19 @@ function formatStats(update: CevalUpdate): string {
 	return `${depth} · ${nps}`;
 }
 
-function updateProgress(update: CevalUpdate | undefined): void {
+/**
+ * Drives the progress bar's fill (depth / target).
+ * @param targetDepthOverride - Lets the depth slider reshape the bar
+ * to a just-committed target before the engine re-emits with it.
+ */
+function updateProgress(update: CevalUpdate | undefined, targetDepthOverride?: number): void {
 	const active = ceval.isEnabled() && !ceval.isBlockedByEngineWorldBorder();
 	const computing = active && (!update || (!update.done && !update.terminal));
-	const targetDepth = update?.targetDepth ?? ceval.getSettings().depth;
+	const targetDepth = targetDepthOverride ?? update?.targetDepth ?? ceval.getSettings().depth;
 	const progress = update ? Math.min(update.depth / Math.max(targetDepth, 1), 1) : 0;
 	// While computing, keep a small minimum so the animated bar is visible immediately
 	// (e.g. at depth 0 right after a move or on "go deeper"), not a zero-width sliver.
-	const width = computing ? Math.max(progress, 0.05) : progress;
+	const width = computing && update ? Math.max(progress, 0.05) : progress;
 	element_ProgressFill.style.width = `${Math.round(width * 100)}%`;
 	element_Progress.classList.toggle('computing', computing);
 }

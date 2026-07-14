@@ -445,6 +445,7 @@ span.arrow-head-left {
 
 .switch {
 	position: relative;
+	cursor: pointer;
 }
 
 .switch input {
@@ -463,7 +464,7 @@ span.arrow-head-left {
 	content: '';
 	display: block;
 	border-radius: var(--switch-border-radius);
-	background-color: var(--c-surface);
+	background-color: #fff;
 	width: 50%;
 	height: 100%;
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
