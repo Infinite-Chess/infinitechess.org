@@ -119,7 +119,7 @@ function update(arrows: Arrow[]): void {
 		if (!respectiveListener.isPointerHeld(pointerId!)) {
 			// Prevents accidentally drawing tiny arrows while zoomed out if we intend to draw square
 			if (!mouse.isMouseClicked(Mouse.RIGHT)) addDrawnArrow(arrows);
-			// else We drew a square highlight instead of an arrow
+			// else we drew a square highlight instead of an arrow
 			stopDrawing();
 		}
 	}
@@ -174,25 +174,27 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean; deletedArrow?: Arro
 		}
 	}
 
-	// Precalculate other arrow properties
+	arrows.push(createArrow(drag_start!, drag_end));
+	return { changed: true };
+}
 
-	const vector: Coords = coordutil.subtractCoords(drag_end, drag_start!);
+/** Constructs an {@link Arrow} from start/end squares, precalculating its render properties. */
+function createArrow(start: Coords, end: Coords): Arrow {
+	const vector: Coords = coordutil.subtractCoords(end, start);
 	const difference: BDCoords = bdcoords.FromCoords(vector);
 	// Since the difference can be arbitrarily large, we need to normalize it
 	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
 	const normalizedVector: DoubleCoords = vectors.normalizeVectorBD(difference);
 	const normalizedVectorHypot: number = Math.hypot(...normalizedVector);
 
-	// Add the arrow
-	arrows.push({
-		start: drag_start!,
-		end: drag_end,
+	return {
+		start,
+		end,
 		vector,
 		difference,
 		xRatio: normalizedVector[0] / normalizedVectorHypot,
 		yRatio: normalizedVector[1] / normalizedVectorHypot,
-	});
-	return { changed: true };
+	};
 }
 
 // Rendering -----------------------------------------------------------------
@@ -425,4 +427,6 @@ export default {
 	update,
 	stopDrawing,
 	render,
+	createArrow,
+	getDataArrow,
 };

@@ -20,11 +20,12 @@ import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import arrows from '../rendering/arrows/arrows.js';
 import { gl } from '../rendering/webgl.js';
 import camera from '../rendering/camera.js';
+import gamecore from './gamecore.js';
 import guiclock from '../gui/guiclock.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import miniimage from '../rendering/miniimage.js';
@@ -34,6 +35,7 @@ import imagecache from '../../chess/rendering/imagecache.js';
 import piecemodels from '../rendering/piecemodels.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../GameBus.js';
+import perspective from '../rendering/perspective.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
@@ -43,7 +45,7 @@ import miniimagerenderer from '../rendering/miniimagerenderer.js';
 // Types ---------------------------------------------------------------------
 
 /** Options for loading a game. */
-interface LoadOptions {
+export interface LoadOptions {
 	/** The time control of the game (e.g. `"600+5"`, or `"-"` for untimed). */
 	timeControl: TimeControl;
 	/** The variant code. Pass undefined for custom/unknown positions. */
@@ -90,7 +92,7 @@ document.addEventListener('theme-change', () => {
 	imagecache.initImagesForGame(gamefile).then(() => {
 		// Regenerate piece textures with the new tinted images
 		texturecache.initTexturesForGame(gl, gamefile);
-		piecemodels.regenAll(gamefile, mesh!);
+		piecemodels.regenAll(gamecore.getGameContext(), gamefile, mesh!);
 	});
 	// Reinit the promotion UI
 	guipromotion.resetUI();
@@ -115,11 +117,15 @@ function areInGame(): boolean {
 }
 
 function areViewingWhite(): boolean {
-	if (!loadedGamefile)
-		throw Error(
-			"Cannot ask if loaded game is from white's perspective when there isn't a loaded game.",
-		);
+	if (!loadedGamefile) throw Error("Cannot ask if loaded game is from white's perspective when there isn't a loaded game."); // prettier-ignore
 	return viewColor === p.WHITE;
+}
+
+/** Flips the board orientation in place (white ⇄ black perspective). */
+function flipView(): void {
+	viewColor = typeutil.invertPlayer(viewColor);
+	if (!perspective.getEnabled()) camera.setPerspectiveRotation(0, areViewingWhite() ? 0 : 180);
+	GameBus.dispatch('board-flipped');
 }
 
 /**
@@ -205,7 +211,7 @@ async function loadGraphical(): Promise<void> {
 	};
 
 	// Generate the mesh of every piece type
-	piecemodels.regenAll(loadedGamefile!, mesh);
+	piecemodels.regenAll(gamecore.getGameContext(), loadedGamefile!, mesh);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
 	if (lastmove !== undefined)
@@ -238,6 +244,8 @@ function unloadGame(): void {
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
 
+	starfield.terminate();
+
 	GameBus.dispatch('game-unloaded');
 }
 
@@ -265,6 +273,7 @@ export default {
 	getMesh,
 	areInGame,
 	areViewingWhite,
+	flipView,
 	loadGamefile,
 	unloadGame,
 	concludeGame,

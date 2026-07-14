@@ -413,7 +413,7 @@ function getTintColorOfType(type: number): Color {
 
 // /**
 //  * Determines the theme based on the current date.
-//  * @returns {string} The theme for the current date ('halloween', 'christmas', or 'default').
+//  * @returns The theme for the current date ('halloween', 'christmas', or 'default').
 //  */
 // function getHollidayTheme() {
 // 	if (timeutil.isCurrentDateWithinRange(10, 25, 10, 31)) return 'halloween'; // Halloween week (October 25 to 31)

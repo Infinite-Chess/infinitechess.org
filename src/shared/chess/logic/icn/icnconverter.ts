@@ -249,8 +249,8 @@ const defaultFullMove = 1;
  *
  * Using this prevents catastrophic backtracking in regexes, as once a possessive group is matched,
  * those characters can never be released to see if the string can be matched in a different way.
- * @param {string} str - Regex pattern string to make possessive.
- * @returns {string} Pattern string with possessive simulation.
+ * @param str - Regex pattern string to make possessive.
+ * @returns Pattern string with possessive simulation.
  */
 const possessive = (() => {
 	let counter = 0;
@@ -758,7 +758,7 @@ function LongToShort_Format(
 
 	// =================================== Section 3: Moves ===================================
 
-	if (longformat.moves) {
+	if (longformat.moves && longformat.moves.length > 0) {
 		const move_options = {
 			compact: options.compact,
 			spaces: options.spaces,

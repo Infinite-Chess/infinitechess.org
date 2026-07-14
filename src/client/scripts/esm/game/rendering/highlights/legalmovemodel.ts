@@ -37,11 +37,11 @@ import space from '../../misc/space.js';
 import meshes from '../meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../boardpos.js';
-import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
 import preferences from '../../../components/header/preferences.js';
 import piecemodels from '../piecemodels.js';
 import perspective from '../perspective.js';
+import boardgeometry from '../boardgeometry.js';
 import legalmoveshapes from '../instancedshapes.js';
 import instancedshapes from '../instancedshapes.js';
 import {
@@ -189,7 +189,7 @@ function isViewRangeContainedInRenderRange(): boolean {
 	// The bounding box of what the camera currently sees on-screen.
 	const boundingBoxOfView: BoundingBoxBD = perspective.getEnabled()
 		? getBoundingBoxOfPerspectiveView()
-		: boardtiles.gboundingBoxFloat();
+		: boardgeometry.gboundingBoxFloat();
 
 	// In 2D mode, we also care about whether the
 	// camera box is significantly smaller than our render range.
@@ -234,7 +234,7 @@ function getDimensionsOfPerspectiveViewRange(): DoubleCoords {
 function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 	// New improved method of calculating render bounding box
 
-	const boundingBoxOfView = boardtiles.gboundingBox(false);
+	const boundingBoxOfView = boardgeometry.gboundingBox(false);
 	const width: number = Number(boundingBoxOfView.right - boundingBoxOfView.left) + 1; // Need to +1 since the board bounding box just includes the integer squares, not floating point edges.
 	const height: number = Number(boundingBoxOfView.top - boundingBoxOfView.bottom) + 1;
 

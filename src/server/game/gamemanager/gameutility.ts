@@ -63,10 +63,9 @@ import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './dr
 // Constants ------------------------------------------------------------------------------------
 
 /**
- * The cushion time, before the game is deleted, if one player
- * has disconnected and has not yet seen the game conclusion.
- * This gives them a little bit of time to reconnect and submit a cheat report,
- * which is only useful in variants where we're not doing server-side move validation.
+ * The cushion time, after a non-server-validated game concludes, before its result is locked in
+ * (finalized). This gives the opponent a little time to overturn the conclusion with a cheat report
+ * — which updates the already-logged database record. This only delays the finalized (locked) flag.
  */
 export const timeBeforeFinalizeMillis = 1000 * 8;
 
@@ -162,13 +161,14 @@ interface MatchInfo {
 	drawOfferState?: Player;
 
 	/**
-	 * Whether or not the game has concluded at all, which then
-	 * frees players to join a new game. Freed !== finalized.
+	 * Whether or not the game has concluded at all, which then frees players
+	 * to join a new game, and logs the game into the db. Freed !== finalized.
 	 */
 	freed: boolean;
 	/**
-	 * Whether the game is finalized: its result is permanent and locked in — logged to the
-	 * database, ratings applied, cheat reports no longer accepted, and it can never change.
+	 * Whether the game is finalized: its result is permanent and locked in — cheat reports no
+	 * longer accepted, and it can never change. The game is logged to the database at conclusion
+	 * (when it's freed), independent of this; finalizing just locks the already-logged result.
 	 * Finalized !== evicted: it may linger in memory to host rematch handshake.
 	 */
 	finalized: boolean;
@@ -180,9 +180,9 @@ interface MatchInfo {
 	rematchOffers: Set<Player>;
 
 	/**
-	 * The ID of the timer that finalizes (locks in + logs) the game's result after it ends.
-	 * Only used by games without server-side validation, to give a cushion for cheat reports
-	 * to overturn the result first. Can be cancelled if the game is finalized/evicted early.
+	 * The ID of the timer that finalizes (locks in) the game's result after it ends. Only used by
+	 * games without server-side validation, to give a cushion for cheat reports to overturn the
+	 * result first. Can be cancelled if the game is finalized/evicted early.
 	 */
 	finalizeTimeoutID?: NodeJS.Timeout;
 
@@ -590,6 +590,7 @@ function buildGameStateBase(servergame: ServerGame, forceSync = false): GameStat
 		finalized: servergame.match.finalized,
 		moves: servergame.moves.map((m) => simplifyMove(m)),
 	};
+	if (!servergame.untimed) base.clockValues = getGameClockValues(servergame);
 	if (servergame.gameConclusion !== undefined) base.gameConclusion = servergame.gameConclusion;
 	const ratingChanges = getRatingChanges(servergame);
 	if (ratingChanges) base.ratingChanges = ratingChanges;
@@ -840,6 +841,12 @@ function broadcastToSpectators(servergame: ServerGame, action: string, value: an
 	}
 }
 
+/** Broadcasts a role-agnostic game-route message to every connected client of the game. */
+function broadcastToEveryone(servergame: ServerGame, action: string, value: any): void {
+	broadcastToParticipants(servergame, action, value);
+	broadcastToSpectators(servergame, action, value);
+}
+
 /**
  * Simplifies a game's move into the {@link MovePacket} sent over the wire: its
  * serialized token plus its clockStamp (the clock at that move, for rewind display).
@@ -908,6 +915,7 @@ export default {
 	getSocketRoleInGame,
 	sendMessageToColor,
 	broadcastToSpectators,
+	broadcastToEveryone,
 	simplifyMove,
 	broadcastToParticipants,
 	getRematchOfferInfo,

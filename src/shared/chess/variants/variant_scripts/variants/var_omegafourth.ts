@@ -32,7 +32,7 @@ export function getGeneratorRules(): { pawnDoublePush: boolean; castleWith?: Raw
 
 /**
  * Generates the Omega^4 position example
- * @returns {Map<CoordsKey, number>} The position in Map format
+ * @returns The position in Map format
  */
 function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 	const dist = 500n; // Generate Omega^4 up to a distance of 50 tiles away

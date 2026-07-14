@@ -36,13 +36,13 @@ function assignOrRenewBrowserID(req: Request, res: Response, next: NextFunction)
 	if (!req.accepts('html')) return next(); // Not an HTML request (but a fetch), don't set the cookie
 
 	const cookies = req.cookies;
-	if (!cookies['browser-id']) giveBrowserID(req, res);
+	if (!cookies['browser-id']) giveBrowserID(res);
 	else refreshBrowserID(req, res);
 
 	next();
 }
 
-function giveBrowserID(req: Request, res: Response): void {
+function giveBrowserID(res: Response): void {
 	// Browser ids are the sole identity credential for signed-out users (guests
 	// in live games), so they should be unguessable. Use 'crypto' insteadof uuid.ts.
 	const id = crypto.randomBytes(16).toString('base64url');

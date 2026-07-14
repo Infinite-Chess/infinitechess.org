@@ -8,23 +8,20 @@
  * and determines which pending timers (auto time loss, disconnect,
  * delete) need to be reinstated.
  *
- * See dev-utils/live-game-persistence.md for the schema and restoration details.
+ * Only ongoing games are ever restored — a concluded game's row is
+ * dropped the instant it's logged — so it has no conclusion.
+ *
+ * See docs/systems/LIVE_GAME_PERSISTENCE.md for the schema and restoration details.
  */
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { ClockValues, TimeControl } from '../../../shared/types.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
-import type {
-	Condition,
-	DrawCondition,
-	WinCondition,
-} from '../../../shared/chess/util/winconutil.js';
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
@@ -50,8 +47,6 @@ interface RestoredGame {
 
 /** Timers that may need to be started for a restored game, based on its state at the time of server shutdown. */
 interface PendingTimers {
-	/** If defined, the log/lock-in timer should fire after this many ms. 0 means immediately. */
-	finalizeTimerMs?: number;
 	/** Per-player disconnect state to restore. */
 	disconnectTimers: PlayerGroup<DisconnectTimerState>;
 	/**
@@ -143,10 +138,7 @@ function restoreSingleGame(
 	// 2. Reconstruct clock values for timed games
 	const clockValues = reconstructClockValues(gameRow, playerRows);
 
-	// 3. Reconstruct game conclusion
-	const gameConclusion = reconstructConclusion(gameRow);
-
-	// 4. Create the game (also computes gameRules)
+	// 3. Create the game (also computes gameRules).
 	const variant: LoadedVariant = {
 		code: gameRow.variant as VariantCode,
 		mod: variantcache.getModule(gameRow.variant as VariantCode),
@@ -156,17 +148,17 @@ function restoreSingleGame(
 		gameRow.clock as TimeControl,
 		gameRow.time_created,
 		variant,
-		gameConclusion,
+		undefined,
 		clockValues,
 	);
 
 	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
 	// by clock.edit() inside initGame() via the clockValues we pass in.
 
-	// 8. Reconstruct MatchInfo
+	// 4. Reconstruct MatchInfo
 	const match = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
-	// 9. Parse & replay moves, conditionally constructing the board state
+	// 5. Parse & replay moves, conditionally constructing the board state
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 	const validateMoves = Boolean(gameRow.validate_moves);
 
@@ -178,7 +170,7 @@ function restoreSingleGame(
 		moves,
 	);
 
-	// 9. Compute pending timers
+	// 6. Compute pending timers
 	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame);
 
 	return { servergame, pendingTimers };
@@ -273,32 +265,6 @@ function reconstructClockValues(
 }
 
 /**
- * Reconstructs GameConclusion from stored values.
- */
-function reconstructConclusion(gameRow: LiveGamesRecord): GameConclusion | undefined {
-	if (gameRow.conclusion_condition === null) return undefined; // Game is ongoing still
-
-	const condition = gameRow.conclusion_condition as Condition;
-
-	if (gameRow.conclusion_victor !== null) {
-		// Decisive result — someone won
-		return {
-			condition: condition as WinCondition,
-			victor: gameRow.conclusion_victor as Player,
-		};
-	} else if (condition === 'aborted') {
-		// Aborted — victor is undefined
-		return { condition: 'aborted' };
-	} else {
-		// Draw — victor is null
-		return {
-			condition: condition as DrawCondition,
-			victor: null,
-		};
-	}
-}
-
-/**
  * Reconstructs the MatchInfo from stored values.
  */
 function reconstructMatchInfo(
@@ -327,14 +293,16 @@ function reconstructMatchInfo(
 		id: gameRow.game_id,
 		variant: gameRow.variant as VariantCode,
 		timeCreated: gameRow.time_created,
-		timeEnded: gameRow.time_ended ?? undefined,
+		timeEnded: undefined, // Only ongoing games are restored — none have ended.
 		rated: gameRow.rated === 1,
 		clock: gameRow.clock as TimeControl,
 		playerData,
 		drawOfferState:
 			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),
-		freed: gameRow.conclusion_condition !== null, // A game is freed if it has concluded
-		finalized: false, // A finalized game's row is removed when it's logged, so any restored game is not-yet-finalized.
+		// Only ongoing games are ever restored: a concluded game's row is dropped
+		// the instant it's logged, so a restored game is never freed nor finalized.
+		freed: false,
+		finalized: false,
 		rematchOffers: new Set(), // Ephemeral — rematch offers never survive a restart.
 	};
 }
@@ -360,11 +328,6 @@ function computePendingTimers(
 	const timers: PendingTimers = {
 		disconnectTimers: {},
 	};
-
-	// Finalize deadline for a concluded, not-yet-finalized game.
-	if (gameRow.finalize_time !== null) {
-		timers.finalizeTimerMs = Math.max(gameRow.finalize_time - now, 0);
-	}
 
 	// Auto time loss timer for timed, ongoing games
 	if (!servergame.untimed && gameRow.color_ticking !== null) {

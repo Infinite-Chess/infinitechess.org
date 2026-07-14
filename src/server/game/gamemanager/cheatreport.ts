@@ -13,6 +13,7 @@ import * as z from 'zod';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
+import gamelogger from './gamelogger.js';
 import gameutility from './gameutility.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import { applyConclusion, freeGame } from './gamemanager.js';
@@ -109,7 +110,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 		sendNotify(ws, 'server.javascript.ws-cheat_detected');
 	}
 
-	concludeReportedGame(servergame, { condition: 'aborted' });
+	concludeReportedGame(servergame, { condition: 'aborted' }, colorThatPlayedPerpetratingMove);
 }
 
 /**
@@ -117,8 +118,18 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
  * but not spectators, this is because illegal moves are not forwarded in the game. However, the
  * cheater and whosTurn may be desynced, so they need the full state.
  * Custom version of gamemanager.onGameConclusion
+ * @param cheaterColor - The color whose (now-popped) perpetrating move triggered the report.
  */
-function concludeReportedGame(servergame: ServerGame, conclusion: GameConclusion): void {
+function concludeReportedGame(
+	servergame: ServerGame,
+	conclusion: GameConclusion,
+	cheaterColor: Player,
+): void {
+	// If the game already concluded before this report, it was already logged
+	// to the permanent database — the overturn must update that record below.
+	const wasLogged = servergame.match.freed;
+	const originalConclusion = servergame.gameConclusion;
+
 	applyConclusion(servergame, conclusion);
 
 	// Send participants the full state
@@ -137,6 +148,9 @@ function concludeReportedGame(servergame: ServerGame, conclusion: GameConclusion
 	gameutility.broadcastToSpectators(servergame, 'gameconclusion', conclusionMessage);
 
 	freeGame(servergame);
+
+	// Update the already-logged game record to reflect the overturn (aborted, one fewer move...).
+	if (wasLogged) gamelogger.updateOverturnedGame(servergame, originalConclusion!, cheaterColor);
 }
 
 export { onReport, reportschem };

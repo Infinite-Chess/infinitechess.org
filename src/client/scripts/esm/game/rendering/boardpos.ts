@@ -3,8 +3,14 @@
 /**
  * This script stores the board position and scale,
  * and updates them according to their velocity.
+ *
+ * This is a FACTORY: {@link createBoardPos} builds one independent board-position
+ * instance tied to a specific camera. The module default export is the interactive
+ * game's; the variant-preview tooltip creates its own so its position/zoom never
+ * collide with the game's. All existing `boardpos.foo()` call sites use the game one.
  */
 
+import type { Camera } from './camera.js';
 import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -17,219 +23,255 @@ import camera from './camera.js';
 import deltatime from '../misc/deltatime.js';
 import frametracker from './frametracker.js';
 
-// BigDecimal Constants ---------------------------------------------------
+// Types -------------------------------------------------------------
+
+/** One independent board-position instance, as returned by {@link createBoardPos}. */
+export interface BoardPos {
+	getBoardPos(): BDCoords;
+	getBoardScale(): BigDecimal;
+	/**
+	 * Call when you are CONFIDENT we are zoomed in enough that our scale
+	 * can be represented as a javascript number without overflowing to
+	 * Infinity or underflowing to 0.
+	 *
+	 * Typically used for graphics calculations, as the arithmetic
+	 * is faster than using BigDecimals.
+	 */
+	getBoardScaleAsNumber(): number;
+	getPanVel(): DoubleCoords;
+	getScaleVel(): number;
+	setBoardPos(_newPos: BDCoords): void;
+	setBoardScale(_newScale: BigDecimal): void;
+	setPanVel(_newPanVel: DoubleCoords): void;
+	setScaleVel(_newScaleVel: number): void;
+	/** Erases all board pan & scale velocity. */
+	eraseMomentum(): void;
+	boardHasMomentum(): boolean;
+	/**
+	 * We are considered "zoomed out" if every tile is smaller than one virtual pixel.
+	 * If so, the game has very different behavior, such as:
+	 * * Legal moves highlights and Ray annotations rendering as highlight lines.
+	 * * Pieces rendering as mini-images.
+	 * * Annotations rendered at a fixed size on screen.
+	 */
+	areZoomedOut(): boolean;
+	/**
+	 * This is true when your device is physically incapable
+	 * of reprenting single tiles with a single of your monitor's pixels.
+	 * On retina displays you have to zoom out even more to reach this.
+	 */
+	isScaleSmallForInvisibleTiles(): boolean;
+	update(): void;
+	/**
+	 * Wires the interactive-game listeners. The preview instance never calls this,
+	 * so it doesn't erase momentum on the game's board transitions.
+	 */
+	wireGlobalListeners(): void;
+}
+
+// Constants --------------------------------------------------------------
+
+/** The furthest we can be zoomed IN. */
+const maximumScale = bd.fromBigInt(5n); // Default: 5.0
 
 const ZERO = bd.fromBigInt(0n);
 const ONE = bd.fromBigInt(1n);
 
-// Variables -------------------------------------------------------------
+// Factory ----------------------------------------------------------------
 
 /**
- * The position of the board in front of the camera.
- * The camera never moves, only the board beneath it.
- * A positon of [0,0] places the [0,0] square in the center of the screen.
+ * Creates one independent board-position instance.
+ * @param cam - The camera whose zoom thresholds this board position compares against.
+ * @param onVisualChange - Flags the render loop when the position/scale changes.
  */
-let boardPos: BDCoords = bdcoords.FromCoords([0n, 0n]); // Coordinates
-/** The current board panning velocity. */
-let panVel: DoubleCoords = [0, 0];
-/**
- * The current board scale (zoom).
- * Higher => zoomed IN
- * Lower => zoomed OUT
- */
-let boardScale: BigDecimal = bd.fromBigInt(1n); // Default: 1
-/** The current board scale (zoom) velocity. */
-let scaleVel: number = 0;
+function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
+	// Variables -------------------------------------------------------------
 
-/** The furthest we can be zoomed IN. */
-const maximumScale = bd.fromBigInt(5n); // Default: 5.0
-const limitToDampScale = 0.000_01; // We need to soft limit the scale so the game doesn't break
+	/**
+	 * The position of the board in front of the camera.
+	 * The camera never moves, only the board beneath it.
+	 * A positon of [0,0] places the [0,0] square in the center of the screen.
+	 */
+	let boardPos: BDCoords = bdcoords.FromCoords([0n, 0n]); // Coordinates
+	/** The current board panning velocity. */
+	let panVel: DoubleCoords = [0, 0];
+	/**
+	 * The current board scale (zoom).
+	 * Higher => zoomed IN
+	 * Lower => zoomed OUT
+	 */
+	let boardScale: BigDecimal = bd.fromBigInt(1n); // Default: 1
+	/** The current board scale (zoom) velocity. */
+	let scaleVel: number = 0;
 
-// Listeners -----------------------------------------------------
+	// Initialization ------------------------------------------------
 
-document.addEventListener('transition-start', eraseMomentum);
-
-// Getters -------------------------------------------------------
-
-function getBoardPos(): BDCoords {
-	return coordutil.copyBDCoords(boardPos);
-}
-
-function getBoardScale(): BigDecimal {
-	return bd.clone(boardScale);
-}
-
-/**
- * Call when you are CONFIDENT we are zoomed in enough that our scale
- * can be represented as a javascript number without overflowing to
- * Infinity or underflowing to 0.
- *
- * Typically used for graphics calculations, as the arithmetic
- * is faster than using BigDecimals.
- */
-function getBoardScaleAsNumber(): number {
-	return bd.toNumber(boardScale);
-}
-
-function getPanVel(): DoubleCoords {
-	return [...panVel]; // Copies
-}
-
-function getScaleVel(): number {
-	return scaleVel;
-}
-
-function glimitToDampScale(): number {
-	return limitToDampScale;
-}
-
-// Setters ----------------------------------------------------------------------------------------
-
-function setBoardPos(newPos: BDCoords): void {
-	// Enforce fixed point model. Catches bugs during development.
-	if (!bd.hasDefaultPrecision(newPos[0]))
-		throw Error(
-			`Cannot set board position X to [${newPos[0].divex}] ${bd.toApproximateString(newPos[0])}. Does not have default precision.`,
-		);
-	if (!bd.hasDefaultPrecision(newPos[1]))
-		throw Error(
-			`Cannot set board position Y to [${newPos[1].divex}] ${bd.toApproximateString(newPos[1])}. Does not have default precision.`,
-		);
-
-	// console.log(`New board position [${(boardPos[0].divex)},${boardPos[1].divex}]`, coordutil.stringifyBDCoords(boardPos));
-	boardPos = jsutil.deepCopyObject(newPos); // Copy
-	frametracker.onVisualChange();
-}
-
-function setBoardScale(newScale: BigDecimal): void {
-	if (bd.compare(newScale, ZERO) <= 0)
-		return console.error(`Cannot set scale to a negative: ${bd.toApproximateString(newScale)}`);
-	// console.error("New scale:", bd.toApproximateString(newScale));
-
-	// Cap the scale
-	if (bd.compare(newScale, maximumScale) > 0) {
-		newScale = maximumScale;
-		scaleVel = 0; // Cut the scale momentum immediately
+	function wireGlobalListeners(): void {
+		document.addEventListener('transition-start', eraseMomentum);
 	}
 
-	boardScale = newScale;
-	frametracker.onVisualChange();
+	// Getters -------------------------------------------------------
+
+	function getBoardPos(): BDCoords {
+		return coordutil.copyBDCoords(boardPos);
+	}
+
+	function getBoardScale(): BigDecimal {
+		return bd.clone(boardScale);
+	}
+
+	function getBoardScaleAsNumber(): number {
+		return bd.toNumber(boardScale);
+	}
+
+	function getPanVel(): DoubleCoords {
+		return [...panVel]; // Copies
+	}
+
+	function getScaleVel(): number {
+		return scaleVel;
+	}
+
+	// Setters ----------------------------------------------------------------------------------------
+
+	function setBoardPos(newPos: BDCoords): void {
+		// Enforce fixed point model. Catches bugs during development.
+		if (!bd.hasDefaultPrecision(newPos[0]))
+			throw Error(
+				`Cannot set board position X to [${newPos[0].divex}] ${bd.toApproximateString(newPos[0])}. Does not have default precision.`,
+			);
+		if (!bd.hasDefaultPrecision(newPos[1]))
+			throw Error(
+				`Cannot set board position Y to [${newPos[1].divex}] ${bd.toApproximateString(newPos[1])}. Does not have default precision.`,
+			);
+
+		// console.log(`New board position [${(boardPos[0].divex)},${boardPos[1].divex}]`, coordutil.stringifyBDCoords(boardPos));
+		boardPos = jsutil.deepCopyObject(newPos); // Copy
+		onVisualChange?.();
+	}
+
+	function setBoardScale(newScale: BigDecimal): void {
+		if (bd.compare(newScale, ZERO) <= 0)
+			return console.error(`Cannot set scale to a negative: ${bd.toApproximateString(newScale)}`); // prettier-ignore
+		// console.error("New scale:", bd.toApproximateString(newScale));
+
+		// Cap the scale
+		if (bd.compare(newScale, maximumScale) > 0) {
+			newScale = maximumScale;
+			scaleVel = 0; // Cut the scale momentum immediately
+		}
+
+		boardScale = newScale;
+		onVisualChange?.();
+	}
+
+	function setPanVel(newPanVel: DoubleCoords): void {
+		if (isNaN(newPanVel[0]) || isNaN(newPanVel[1]))
+			return console.error(`Cannot set panVel to ${newPanVel}!`);
+
+		// Can't enforce a cap, as otherwise we wouldn't
+		// be able to throw the board as fast as possible.
+
+		panVel = [...newPanVel];
+	}
+
+	function setScaleVel(newScaleVel: number): void {
+		if (isNaN(newScaleVel)) return console.error(`Cannot set scaleVel to ${newScaleVel}!`);
+		if (Math.abs(newScaleVel) >= 100) console.warn(`Very large scaleVel: (${newScaleVel})`);
+
+		scaleVel = newScaleVel;
+	}
+
+	// Other Utility --------------------------------------------------------
+
+	function eraseMomentum(): void {
+		panVel = [0, 0];
+		scaleVel = 0;
+	}
+
+	function boardHasMomentum(): boolean {
+		return panVel[0] !== 0 || panVel[1] !== 0;
+	}
+
+	function areZoomedOut(): boolean {
+		return bd.compare(boardScale, cam.getScaleWhenZoomedOut()) < 0;
+	}
+
+	function isScaleSmallForInvisibleTiles(): boolean {
+		return bd.compare(boardScale, cam.getScaleWhenTilesInvisible()) < 0;
+	}
+
+	// Updating -------------------------------------------------------------------
+
+	// Called from game.updateBoard()
+	function update(): void {
+		panBoard();
+		recalcScale();
+	}
+
+	/** Shifts the board position by its velocity. */
+	function panBoard(): void {
+		if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
+
+		const panVelBD: BDCoords = bdcoords.FromDoubleCoords(panVel);
+
+		// What the change would be if all frames were the exact same time length.
+		const baseXChange = bd.divide(panVelBD[0], boardScale);
+		const baseYChange = bd.divide(panVelBD[1], boardScale);
+
+		// Account for delta time
+		const deltaTimeBD: BigDecimal = bd.fromNumber(deltatime.get());
+		const actualXChange = bd.multiply(baseXChange, deltaTimeBD);
+		const actualYChange = bd.multiply(baseYChange, deltaTimeBD);
+
+		const newPos: BDCoords = [
+			bd.add(boardPos[0], actualXChange),
+			bd.add(boardPos[1], actualYChange),
+		];
+		setBoardPos(newPos);
+	}
+
+	/** Shifts the board scale by its scale velocity. */
+	function recalcScale(): void {
+		if (scaleVel === 0) return; // Exit if we're not zooming
+
+		const scaleVelBD: BigDecimal = bd.fromNumber(scaleVel);
+		const deltaTimeBD: BigDecimal = bd.fromNumber(deltatime.get());
+
+		let product = bd.multiply(scaleVelBD, deltaTimeBD); // scaleVel * deltaTime
+		product = bd.clamp(product, bd.fromNumber(-0.5), bd.fromNumber(0.5)); // Prevent extreme zoom changes from low lps
+		const factor2 = bd.add(product, ONE); // scaleVel * deltaTime + 1
+
+		const newScale = bd.multiplyFloating(boardScale, factor2); // boardScale * (scaleVel * deltaTime + 1)
+		setBoardScale(newScale);
+	}
+
+	return {
+		// Initialization
+		wireGlobalListeners,
+		// Getters
+		getBoardPos,
+		getBoardScale,
+		getBoardScaleAsNumber,
+		getPanVel,
+		getScaleVel,
+		// Setters
+		setBoardPos,
+		setBoardScale,
+		setPanVel,
+		setScaleVel,
+		// Other Utility
+		eraseMomentum,
+		boardHasMomentum,
+		areZoomedOut,
+		isScaleSmallForInvisibleTiles,
+		// Updating
+		update,
+	};
 }
 
-function setPanVel(newPanVel: DoubleCoords): void {
-	if (isNaN(newPanVel[0]) || isNaN(newPanVel[1]))
-		return console.error(`Cannot set panVel to ${newPanVel}!`);
+// The interactive game's board position. All existing `boardpos.foo()` call sites use this.
+const gameBoardPos = createBoardPos(camera, () => frametracker.onVisualChange());
 
-	// Can't enforce a cap, as otherwise we wouldn't
-	// be able to throw the board as fast as possible.
-
-	panVel = [...newPanVel];
-}
-
-function setScaleVel(newScaleVel: number): void {
-	if (isNaN(newScaleVel)) return console.error(`Cannot set scaleVel to ${newScaleVel}!`);
-	if (Math.abs(newScaleVel) >= 100) console.warn(`Very large scaleVel: (${newScaleVel})`);
-
-	scaleVel = newScaleVel;
-}
-
-// Other Utility --------------------------------------------------------
-
-/** Erases all board pan & scale velocity. */
-function eraseMomentum(): void {
-	panVel = [0, 0];
-	scaleVel = 0;
-}
-
-function boardHasMomentum(): boolean {
-	return panVel[0] !== 0 || panVel[1] !== 0;
-}
-
-/**
- * We are considered "zoomed out" if every tile is smaller than one virtual pixel.
- * If so, the game has very different behavior, such as:
- * * Legal moves highlights and Ray annotations rendering as highlight lines.
- * * Pieces rendering as mini-images.
- * * Annotations rendered at a fixed size on screen.
- */
-function areZoomedOut(): boolean {
-	return bd.compare(boardScale, camera.getScaleWhenZoomedOut()) < 0;
-}
-
-/**
- * This is true when your device is physically incapable
- * of reprenting single tiles with a single of your monitor's pixels.
- * On retina displays you have to zoom out even more to reach this.
- */
-function isScaleSmallForInvisibleTiles(): boolean {
-	return bd.compare(boardScale, camera.getScaleWhenTilesInvisible()) < 0;
-}
-
-// Updating -------------------------------------------------------------------
-
-// Called from game.updateBoard()
-function update(): void {
-	panBoard();
-	recalcScale();
-}
-
-/** Shifts the board position by its velocity. */
-function panBoard(): void {
-	if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
-
-	const panVelBD: BDCoords = bdcoords.FromDoubleCoords(panVel);
-
-	// What the change would be if all frames were the exact same time length.
-	const baseXChange = bd.divide(panVelBD[0], boardScale);
-	const baseYChange = bd.divide(panVelBD[1], boardScale);
-
-	// Account for delta time
-	const deltaTimeBD: BigDecimal = bd.fromNumber(deltatime.get());
-	const actualXChange = bd.multiply(baseXChange, deltaTimeBD);
-	const actualYChange = bd.multiply(baseYChange, deltaTimeBD);
-
-	const newPos: BDCoords = [
-		bd.add(boardPos[0], actualXChange),
-		bd.add(boardPos[1], actualYChange),
-	];
-	setBoardPos(newPos);
-}
-
-/** Shifts the board scale by its scale velocity. */
-function recalcScale(): void {
-	if (scaleVel === 0) return; // Exit if we're not zooming
-
-	const scaleVelBD: BigDecimal = bd.fromNumber(scaleVel);
-	const deltaTimeBD: BigDecimal = bd.fromNumber(deltatime.get());
-
-	let product = bd.multiply(scaleVelBD, deltaTimeBD); // scaleVel * deltaTime
-	product = bd.clamp(product, bd.fromNumber(-0.5), bd.fromNumber(0.5)); // Prevent extreme zoom changes from low lps
-	const factor2 = bd.add(product, ONE); // scaleVel * deltaTime + 1
-
-	const newScale = bd.multiplyFloating(boardScale, factor2); // boardScale * (scaleVel * deltaTime + 1)
-	setBoardScale(newScale);
-}
-
-// Exports -------------------------------------------------------------------
-
-export default {
-	// Getters
-	getBoardPos,
-	getBoardScale,
-	getBoardScaleAsNumber,
-	getPanVel,
-	getScaleVel,
-	glimitToDampScale,
-	// Setters
-	setBoardPos,
-	setBoardScale,
-	setPanVel,
-	setScaleVel,
-	// Other Utility
-	eraseMomentum,
-	boardHasMomentum,
-	areZoomedOut,
-	isScaleSmallForInvisibleTiles,
-	// Updating
-	update,
-};
+export default gameBoardPos;
+export { createBoardPos };

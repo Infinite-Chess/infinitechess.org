@@ -10,6 +10,7 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
 import area from '../rendering/area.js';
+import toast from '../../components/toast.js';
 import meshes from '../rendering/meshes.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
@@ -68,7 +69,7 @@ function isItOurTurn(): boolean {
 	}
 }
 
-/** True while the gamefile's graphical (images) or engine resources are still loading. */
+/** True while the gamefile's logical, graphical (images), or engine resources are still loading. */
 function isLoading(): boolean {
 	return loading;
 }
@@ -109,10 +110,10 @@ function centerView(): void {
 	boardpos.setBoardScale(centerArea.scale);
 }
 
-/** Logs a fatal error encountered while loading a game. */
+/** Displays an error toast saying the game failed to load. */
 function onCatchLoadingError(err: Error): void {
-	console.error(err);
-	// TODO: Implement user-facing error
+	console.error('Error loading game: ', err);
+	toast.show('An error occurred while loading the game. Please refresh.', { error: true });
 }
 
 /** Concludes the game if it loaded already over. Call after the logical gamefile is fully loaded. */
@@ -122,10 +123,11 @@ function concludeGameIfOver(): void {
 }
 
 function unloadLogicalAndRendering(): void {
-	gameslot.unloadGame();
 	perspective.disable();
+	gameslot.unloadGame();
 	boardpos.eraseMomentum();
 	Transition.terminate();
+	gamecore.getCanvas().classList.add('visibility-hidden');
 }
 
 function unloadGame(): void {

@@ -266,6 +266,8 @@ function applyPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	// console.error("Setting applied to true.");
 	applied = true;
 
+	if (premoves.length === 0) return;
+
 	GameBus.dispatch('physical-move');
 	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 }

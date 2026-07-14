@@ -44,14 +44,24 @@ interface Rule {
 
 const RULES: Rule[] = [
 	{
-		description: 'gameslot.ts is only for pages that load an interactive board.',
-		target: 'game/chess/gameslot.ts',
-		allowedEntries: ['views/game/game.ts', 'analysis', 'boardeditor'],
+		description: 'Game page code is private to the game page.',
+		target: 'views/game/',
+		allowedEntries: ['views/game/'],
+	},
+	{
+		description: 'Analysis page code is private to the analysis page.',
+		target: 'views/analysis/',
+		allowedEntries: ['views/analysis/'],
 	},
 	{
 		description: 'Board editor code is private to the board editor page.',
 		target: 'game/boardeditor/',
 		allowedEntries: ['editor'],
+	},
+	{
+		description: 'gameslot.ts is only for pages that load an interactive board.',
+		target: 'game/chess/gameslot.ts',
+		allowedEntries: ['views/game/game.ts', 'analysis', 'boardeditor'],
 	},
 ];
 

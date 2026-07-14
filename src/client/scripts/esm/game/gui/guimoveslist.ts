@@ -6,6 +6,10 @@
  * and press-and-hold auto-repeat — the scrolling `.moves-table` of played
  * moves (rendering, click-to-navigate, current-ply highlight & auto-scroll),
  * and revealing the `.game-result` banner with the game's conclusion once it ends.
+ *
+ * This module knows only the flat list. The analysis page layers a move TREE on top by
+ * registering a {@link MovesListRenderer} (`views/analysis/gui/guimovetree.ts`); when one
+ * is present, rendering is delegated to it, reusing the primitives exported here.
  */
 
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
@@ -30,6 +34,35 @@ import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import { listener_document } from '../chess/gamecore.js';
 import { createRenderQueue } from '../../util/renderqueue.js';
+
+// Renderer extension ------------------------------------------------------------------------
+
+/**
+ * An optional alternative renderer for the moves panel. The analysis page registers one to
+ * draw a move TREE (with variations) in place of the flat list. When present, this module
+ * delegates all rendering to it, driving it through the same serialized {@link enqueueRender}
+ * queue so tree and flat renders can never race.
+ */
+interface MovesListRenderer {
+	/** Rebuilds the panel for the current position — replaces the flat reconcile. */
+	reconcile(): Promise<void>;
+	/** Highlights & scrolls to the current position. The current-ply class is already cleared. */
+	updateCurrentPly(): void;
+	/** A fresh game loaded — seed derived state, before the following reconcile runs. */
+	onGameLoaded(): void;
+	/** The flat move list changed — sync derived state, before the following reconcile runs. */
+	onMovesChanged(): void;
+	/** The game unloaded — drop derived state. */
+	onGameUnloaded(): void;
+}
+
+/** The registered tree renderer, if any; when set, it takes over all moves-panel rendering. */
+let renderer: MovesListRenderer | undefined;
+
+/** Registers the alternative moves renderer (the analysis move tree). */
+function registerRenderer(r: MovesListRenderer): void {
+	renderer = r;
+}
 
 // Elements ----------------------------------------------------------------------------------
 
@@ -196,6 +229,8 @@ const enqueueRender = createRenderQueue('Moves table render error');
  * exactly one ply; a resync trims rewound moves and appends new ones — never a full rebuild.
  */
 async function reconcileMovesTable(): Promise<void> {
+	if (renderer) return renderer.reconcile();
+
 	const moves = gameslot.getGamefile()!.moves;
 
 	let i = 0;
@@ -227,26 +262,7 @@ async function reconcileMovesTable(): Promise<void> {
  * ```
  */
 async function appendPly(move: MoveFull, index: number): Promise<void> {
-	const shortform = icnconverter.getShortFormMoveFromMove(move, {
-		compact: false,
-		spaces: false,
-		comments: false,
-		abbrev: false, // The silhouette already conveys the piece.
-	});
-
-	const silhouette = await svgcache.getSilhouetteSVG(typeutil.getRawType(move.type));
-	silhouette.classList.add('move-piece');
-
-	const ply = document.createElement('button');
-	ply.className = 'ply';
-	ply.title = shortform;
-	const coord = document.createElement('span');
-	coord.className = 'move-coord';
-	coord.textContent =
-		shortform.length > MAX_VISIBLE_MOVE_CHARS
-			? shortform.slice(0, MAX_VISIBLE_MOVE_CHARS) + '…'
-			: shortform;
-	ply.append(silhouette, coord);
+	const ply = await buildPlyButton(move);
 	ply.addEventListener('click', () => {
 		// Drop focus so the next keypress (which controls the board) doesn't reveal the
 		// button's :focus-visible outline — the .current highlight already marks it.
@@ -264,16 +280,63 @@ async function appendPly(move: MoveFull, index: number): Promise<void> {
 	if (index % 2 === 0) {
 		// White ply — start a new row: number + this ply. Insert before the result
 		// banner so it always stays at the bottom of the table.
-		const row = document.createElement('div');
-		row.className = 'move-row';
-		const num = document.createElement('span');
-		num.className = 'move-num';
-		num.textContent = String(index / 2 + 1);
-		row.append(num, ply);
+		const row = createMoveRow(String(index / 2 + 1));
+		row.append(ply);
 		element_MovesTable.insertBefore(row, element_GameResult);
 	} else {
 		// Black ply — append to its (already-created) row.
 		getRow(Math.floor(index / 2))!.append(ply);
+	}
+}
+
+/**
+ * Builds a `.ply` button — the piece silhouette plus the truncated coordinate text, with the
+ * full move always in the `title`. Shared by the flat list and the analysis tree: the `.ply`
+ * class is always set, `extraClasses` are added on top, and callers add any datasets and
+ * listeners themselves.
+ */
+async function buildPlyButton(move: MoveFull, classes: string[] = []): Promise<HTMLButtonElement> {
+	const shortform = icnconverter.getShortFormMoveFromMove(move, {
+		compact: false,
+		spaces: false,
+		comments: false,
+		abbrev: false, // The silhouette already conveys the piece.
+	});
+
+	const silhouette = await svgcache.getSilhouetteSVG(typeutil.getRawType(move.type));
+	silhouette.classList.add('move-piece');
+
+	const ply = document.createElement('button');
+	ply.classList.add('ply', ...classes);
+	ply.title = shortform;
+
+	const coord = document.createElement('span');
+	coord.classList.add('move-coord');
+	coord.textContent =
+		shortform.length > MAX_VISIBLE_MOVE_CHARS
+			? shortform.slice(0, MAX_VISIBLE_MOVE_CHARS) + '…'
+			: shortform;
+
+	ply.append(silhouette, coord);
+	return ply;
+}
+
+/** Creates a `.move-row` whose leading cell is a `.move-num` showing `numText`. */
+function createMoveRow(numText: string, classes: string[] = []): HTMLElement {
+	const row = document.createElement('div');
+	row.classList.add('move-row', ...classes);
+	const num = document.createElement('span');
+	num.classList.add('move-num');
+	num.textContent = numText;
+	row.append(num);
+	return row;
+}
+
+/** Removes every rendered ply from the table (leaving the result banner), resetting the diff state. */
+function clearRenderedMoves(): void {
+	renderedMoves.length = 0;
+	for (const child of [...element_MovesTable.children]) {
+		if (child !== element_GameResult) child.remove();
 	}
 }
 
@@ -310,6 +373,8 @@ function getPlyElement(index: number): HTMLElement | undefined {
 /** Highlights the ply for the currently-viewed move and scrolls it into view. */
 function updateCurrentPly(): void {
 	element_MovesTable.querySelector('.ply.current')?.classList.remove('current');
+
+	if (renderer) return renderer.updateCurrentPly();
 
 	const gamefile = gameslot.getGamefile()!;
 	const moveIndex = gamefile.state.local.moveIndex;
@@ -361,14 +426,30 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the
 // gamefile bypass 'moves-changed'), reconcile on move-list changes & navigation, scroll
 // to the banner on conclusion. All queued so they apply in order despite async silhouette fetches.
-GameBus.addEventListener('game-loaded', () => enqueueRender(reconcileMovesTable));
-GameBus.addEventListener('moves-changed', () => enqueueRender(reconcileMovesTable));
+GameBus.addEventListener('game-loaded', () => {
+	renderer?.onGameLoaded();
+	enqueueRender(reconcileMovesTable);
+});
+GameBus.addEventListener('moves-changed', () => {
+	renderer?.onMovesChanged();
+	enqueueRender(reconcileMovesTable);
+});
 GameBus.addEventListener('view-move', () => enqueueRender(updateCurrentPly));
 GameBus.addEventListener('game-concluded', () => enqueueRender(scrollMovesTableToBottom));
+GameBus.addEventListener('game-unloaded', () => renderer?.onGameUnloaded());
 
 // ===========================================================================
 
 export default {
+	registerRenderer,
+	element_MovesTable,
+	element_GameResult,
 	update,
 	updateNavButtons,
+	enqueueRender,
+	buildPlyButton,
+	createMoveRow,
+	clearRenderedMoves,
+	centerPly,
+	zoomToPlyDestination,
 };

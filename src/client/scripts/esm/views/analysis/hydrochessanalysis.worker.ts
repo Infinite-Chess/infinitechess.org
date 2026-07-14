@@ -1,0 +1,334 @@
+// src/client/scripts/esm/views/analysis/hydrochessanalysis.worker.ts
+
+/**
+ * HydroChess Analysis Worker
+ *
+ * Persistent-session engine worker for the analysis board. Unlike the gameplay
+ * worker (hydrochess.ts) which answers one best-move request per message, this
+ * runs an ongoing MultiPV search of the current position and streams UCI-like
+ * info updates back to the main thread after every completed depth.
+ *
+ * Each search runs unbounded toward its target depth, blocking the worker thread.
+ * Responsiveness comes not from time-slicing but from the shared stop flag: the page
+ * writes it to abort the in-flight search, letting a queued position/settings/stop
+ * command be processed before the loop re-searches the new desired state.
+ *
+ * Multithreaded (Lazy SMP) build: `initThreadPool` spins up helper search threads, and
+ * the page can abort an in-flight search instantly by writing the shared stop flag (posted
+ * back as {@link AnalysisResponse} 'sharedmem') — so switching positions never discards the
+ * warm transposition table. Requires the page to be cross-origin isolated (SharedArrayBuffer).
+ */
+
+/**
+ * The engine glue is served UNBUNDLED at a content-versioned `/engine/<hash>/` path (see
+ * build/engine-wasm.ts) and loaded via a runtime dynamic import — NOT a static import. Its URL
+ * arrives in the 'init' message (the page reads it from the asset manifest). wasm-bindgen-rayon
+ * self-spawns its Lazy SMP threads by resolving the glue's own `import.meta.url`, which only works
+ * when the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
+ */
+
+/** The engine module's exports (default init + Engine + initThreadPool + stop_flag_ptr + …). */
+let wasm: any;
+
+// Protocol types --------------------------------------------------------------
+
+/** One PV of an info update. Moves are compact ICN tokens ("x,y>x,y=Q"). */
+interface AnalysisLine {
+	moves: string[];
+	/** Centipawns from the side-to-move's perspective. Absent when mating. */
+	cp?: number;
+	/** Full moves to mate from the side-to-move's perspective (negative = getting mated). */
+	mate?: number;
+}
+
+/** A streamed engine info update (one per completed depth). */
+interface AnalysisInfo {
+	depth: number;
+	seldepth: number;
+	nodes: number;
+	nps: number;
+	timeMs: number;
+	/** TT fill in permille (0-1000). */
+	hashfull: number;
+	lines: AnalysisLine[];
+}
+
+/** Search limits/settings for a `go` command. */
+interface GoOptions {
+	multiPv: number;
+	/** Target depth to analyze to, then stop. */
+	maxDepth: number;
+	/** Main-thread analysis request id. Echoed on all search responses. */
+	requestId: number;
+}
+
+/** Messages accepted by this worker. */
+type AnalysisCommand =
+	/**
+	 * `engineUrl` is the served glue path (from the manifest). `threads` > 0 spins up
+	 * the Lazy SMP pool and posts the shared stop flag (the search worker); omit it for
+	 * the idle legal-moves helper.
+	 */
+	| { cmd: 'init'; hashMb: number; engineUrl: string; threads?: number }
+	| { cmd: 'position'; icn: string; newGame?: boolean; resetSearch?: boolean }
+	| { cmd: 'go'; opts: GoOptions }
+	| { cmd: 'legalmoves'; requestId: number; icn: string }
+	| { cmd: 'stop' };
+
+/** Messages posted back to the main thread. */
+type AnalysisResponse =
+	/** `mt` is whether this engine build supports Lazy SMP (exports `initThreadPool`). */
+	| { type: 'ready'; mt: boolean }
+	| { type: 'initerror'; message: string }
+	/** The wasm shared memory + byte offset of the stop flag, for instant search abort from the page. */
+	| { type: 'sharedmem'; buffer: ArrayBufferLike; stopFlagPtr: number }
+	| { type: 'info'; requestId: number; info: AnalysisInfo }
+	| { type: 'legalmoves'; requestId: number; moves: string[] }
+	| {
+			type: 'done';
+			requestId: number;
+			reason: 'depth' | 'mate' | 'terminal';
+			info: AnalysisInfo;
+	  }
+	/** The search threw (likely a wasm panic, which poisons the module) — the main thread must respawn the worker. */
+	| { type: 'searcherror'; message: string };
+
+export type { AnalysisCommand, AnalysisResponse, AnalysisInfo, AnalysisLine, GoOptions };
+
+// State ------------------------------------------------------------------------
+
+let engine: any;
+let wasmReady = false;
+
+/**
+ * Wall-clock budget per engine call; 0 = unbounded (run to maxDepth in ONE call). The page
+ * aborts an in-flight call instantly via the shared stop flag, so slicing isn't needed.
+ */
+const SLICE_MS = 0;
+
+/** Bumped whenever the desired analysis (position/settings) changes; in-flight slice results with an older generation are dropped. */
+let generation = 0;
+/** Whether a search loop should currently be running. */
+let analysing = false;
+/** Whether the search loop *is* running (guards double-starts). */
+let loopRunning = false;
+
+let currentIcn: string | undefined;
+/** The ICN the engine was last given. */
+let appliedIcn: string | undefined;
+let goOptions: GoOptions = { multiPv: 1, maxDepth: 13, requestId: 0 };
+/**
+ * Deepest iterative-deepening depth completed for the CURRENT position (reset when the
+ * position changes). Each slice resumes at `reachedDepth + 1`, so the search keeps
+ * deepening across slices instead of re-walking from depth 1 every time.
+ */
+let reachedDepth = 0;
+
+// Init ---------------------------------------------------------------------------
+
+async function initialize(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promise<void> {
+	try {
+		// Absolute, computed specifier so the bundler leaves this as a runtime import.
+		const glueUrl = new URL(msg.engineUrl, self.location.origin).href;
+		wasm = await import(glueUrl);
+		const output = await wasm.default(); // Loads the sibling .wasm from the same /engine/<hash>/ dir.
+		wasm.set_hash_size(msg.hashMb);
+
+		// A single-threaded engine build exports no initThreadPool; guard so it degrades
+		// gracefully to a 1-thread search instead of throwing.
+		const engineIsMultithreaded = typeof wasm.initThreadPool === 'function';
+
+		if (msg.threads && msg.threads > 0) {
+			// Search worker: bring up the Lazy SMP pool BEFORE any search (analyse() calls into
+			// rayon), then hand the page the shared stop flag for instant, warm-hash position
+			// switches (the search polls the flag even single-threaded).
+			if (msg.threads > 1 && engineIsMultithreaded) await wasm.initThreadPool(msg.threads);
+			postMessage({
+				type: 'sharedmem',
+				buffer: output.memory.buffer,
+				stopFlagPtr: wasm.stop_flag_ptr(),
+			} satisfies AnalysisResponse);
+		}
+
+		wasmReady = true;
+		postMessage({ type: 'ready', mt: engineIsMultithreaded } satisfies AnalysisResponse);
+	} catch (e) {
+		console.error('[Analysis Engine] Failed to initialize wasm', e);
+		postMessage({
+			type: 'initerror',
+			message: e instanceof Error ? e.message : String(e),
+		} satisfies AnalysisResponse);
+	}
+}
+
+// Search loop ---------------------------------------------------------------------
+
+/** Yields one macrotask so queued messages (stop / position / go) are processed. */
+function yieldToMessageQueue(): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+/** Applies {@link currentIcn} to the engine if it isn't already. */
+function syncPosition(): void {
+	if (currentIcn === undefined || appliedIcn === currentIcn) return;
+	if (!engine) {
+		engine = wasm.Engine.from_icn(currentIcn, {});
+	} else {
+		engine.set_position(currentIcn);
+	}
+	appliedIcn = currentIcn;
+	reachedDepth = 0; // New position: iterative deepening restarts from depth 1.
+}
+
+/**
+ * Answers a one-shot `legalmoves` query: enumerates the legal moves for {@link icn}
+ * via a throwaway engine and posts them back as compact move tokens ("x,y>x,y").
+ * Independent of the ongoing search — used to drive the debug move overlay.
+ */
+function postLegalMoves(requestId: number, icn: string): void {
+	if (!wasmReady) {
+		postMessage({ type: 'legalmoves', requestId, moves: [] } satisfies AnalysisResponse);
+		return;
+	}
+
+	let legalMoveEngine: any;
+	try {
+		legalMoveEngine = wasm.Engine.from_icn(icn, {});
+		const legalMoves: { from: string; to: string; promotion?: string | null }[] =
+			legalMoveEngine.get_legal_moves_js();
+		const moves = legalMoves.map((move) => {
+			let token = `${move.from}>${move.to}`;
+			if (move.promotion) token += `=${move.promotion}`;
+			return token;
+		});
+		postMessage({ type: 'legalmoves', requestId, moves } satisfies AnalysisResponse);
+	} catch (e) {
+		// A wasm throw here would otherwise leak the engine and hang the main thread's request
+		// (no response ever posted). Reply empty so the debug overlay just shows nothing.
+		console.error('[Analysis Engine] Legal-move enumeration failed', e);
+		postMessage({ type: 'legalmoves', requestId, moves: [] } satisfies AnalysisResponse);
+	} finally {
+		legalMoveEngine?.free();
+	}
+}
+
+/**
+ * The ongoing analysis loop: each engine call runs unbounded ({@link SLICE_MS} = 0) toward the
+ * target depth, streaming every completed depth, and returns on completion or when the page
+ * writes the shared stop flag. The loop then yields so queued stop/position/go commands are
+ * honored before it finishes or re-searches the new desired position.
+ */
+async function runLoop(): Promise<void> {
+	if (loopRunning) return;
+	loopRunning = true;
+	try {
+		while (analysing) {
+			syncPosition();
+			const gen = generation;
+			const opts = goOptions;
+			const requestId = opts.requestId;
+
+			// One unbounded call: resume at the next depth and search toward the target,
+			// streaming each completed depth via the callback. It returns on completion or
+			// when the page writes the shared stop flag.
+			const startDepth = Math.min(reachedDepth + 1, opts.maxDepth);
+
+			const summary: AnalysisInfo | null = engine.analyse(
+				{
+					multi_pv: opts.multiPv,
+					max_depth: opts.maxDepth,
+					start_depth: startDepth,
+					slice_ms: SLICE_MS,
+				},
+				(info: AnalysisInfo) => {
+					postMessage({ type: 'info', requestId, info } satisfies AnalysisResponse);
+				},
+			);
+
+			// Let queued messages (stop / position / go) process before deciding
+			// anything from this slice's result.
+			await yieldToMessageQueue();
+
+			// Superseded (new position/settings/stop): just loop; the while-condition
+			// and syncPosition pick up the new desired state.
+			if (gen !== generation) continue;
+
+			if (summary) reachedDepth = Math.max(reachedDepth, summary.depth);
+
+			// Decide whether the analysis of this position is finished.
+			let reason: Extract<AnalysisResponse, { type: 'done' }>['reason'] | undefined;
+			if (!summary || summary.lines.length === 0) reason = 'terminal';
+			else if (summary.lines.every((line) => line.mate !== undefined && line.mate !== null))
+				reason = 'mate';
+			else if (reachedDepth >= opts.maxDepth) reason = 'depth';
+
+			if (reason !== undefined) {
+				analysing = false;
+				wasm.stop_analysis_helpers(); // Retire the Lazy SMP helpers; the position is finished.
+				postMessage({
+					type: 'done',
+					requestId,
+					reason,
+					info: summary ?? { depth: 0, seldepth: 0, nodes: 0, nps: 0, timeMs: 0, hashfull: 0, lines: [] }, // prettier-ignore
+				} satisfies AnalysisResponse);
+				break;
+			}
+		}
+	} catch (e) {
+		// A throw here is almost always a Rust/wasm panic, which leaves the wasm module
+		// in a poisoned state — every subsequent engine call would throw too. Tell the main
+		// thread so it can terminate & respawn this worker (fresh wasm) rather than hang
+		// forever waiting for an 'info'/'done' that will never come.
+		console.error('[Analysis Engine] Search loop crashed', e);
+		analysing = false;
+		postMessage({
+			type: 'searcherror',
+			message: e instanceof Error ? e.message : String(e),
+		} satisfies AnalysisResponse);
+	} finally {
+		loopRunning = false;
+	}
+}
+
+// Message handling -----------------------------------------------------------------
+
+self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
+	const msg = e.data;
+	switch (msg.cmd) {
+		case 'init':
+			void initialize(msg);
+			break;
+		case 'position':
+			currentIcn = msg.icn;
+			generation++;
+			if (msg.resetSearch) {
+				appliedIcn = undefined;
+				reachedDepth = 0;
+			}
+			if (msg.newGame && wasmReady) {
+				// Brand-new game: drop the persistent searcher & TT so stale entries
+				// from an unrelated position can't pollute the analysis.
+				wasm.reset_engine_state();
+				engine?.free();
+				engine = undefined;
+				appliedIcn = undefined;
+			}
+			break;
+		case 'go':
+			goOptions = msg.opts;
+			generation++;
+			analysing = true;
+			void runLoop();
+			break;
+		case 'legalmoves':
+			postLegalMoves(msg.requestId, msg.icn);
+			break;
+		case 'stop':
+			generation++;
+			analysing = false;
+			if (wasmReady) wasm.stop_analysis_helpers();
+			break;
+	}
+};
+
+export {};

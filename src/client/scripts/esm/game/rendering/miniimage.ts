@@ -25,15 +25,16 @@ import toast from '../../components/toast.js';
 import space from '../misc/space.js';
 import mouse from '../../util/mouse.js';
 import camera from './camera.js';
+import gamecore from '../chess/gamecore.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from './boardpos.js';
 import premoves from '../chess/premoves.js';
 import animation from './animation.js';
 import selection from '../chess/selection.js';
-import boardtiles from './boardtiles.js';
 import perspective from './perspective.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
+import boardgeometry from './boardgeometry.js';
 import miniimagerenderer from './miniimagerenderer.js';
 import snapping, { ENTITY_WIDTH_VPIXELS } from './highlights/snapping.js';
 
@@ -84,7 +85,7 @@ function forEachRenderablePiece(callback: (_coords: BDCoords, _type: number) => 
 	// Animated pieces
 	const maxDistB4Teleport = bd.divideFloating(
 		MAX_ANIM_DIST_VPIXELS,
-		boardtiles.getTileWidthPixels(),
+		boardgeometry.getTileWidthPixels(),
 	);
 	/** Pieces temporarily being hidden via transparent squares on their destination square. */
 	const activeHides: Set<CoordsKey> = new Set();
@@ -237,7 +238,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	// 1. Process all animations and add pieces relevant to the current move
 	const maxDistB4Teleport = bd.divideFloating(
 		MAX_ANIM_DIST_VPIXELS,
-		boardtiles.getTileWidthPixels(),
+		boardgeometry.getTileWidthPixels(),
 	);
 	/** Pieces temporarily being hidden via transparent squares on their destination square. */
 	const activeHides: Set<CoordsKey> = new Set();
@@ -332,6 +333,7 @@ function render(): void {
 	const { instanceData, instanceData_hovered } = getImageInstanceData();
 
 	miniimagerenderer.render(
+		gamecore.getGameContext(),
 		gamefile.existingTypes,
 		instanceData,
 		instanceData_hovered,

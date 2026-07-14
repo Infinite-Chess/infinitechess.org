@@ -17,6 +17,7 @@ import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import wincondition from '../../../../../shared/chess/logic/wincondition.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
+import gamecore from './gamecore.js';
 import gameslot from './gameslot.js';
 import guiclock from '../gui/guiclock.js';
 import { Mesh } from '../rendering/piecemodels.js';
@@ -67,8 +68,13 @@ function commitMove(
 	if (doGameOverChecks) {
 		wincondition.doGameOverChecks(gamefile);
 		// Only conclude the game if it's not an online game (in that scenario, server is boss)
-		if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'online')
+		if (
+			gamefileutility.isGameOver(gamefile) &&
+			gamesession.getGameType() !== 'online' &&
+			gamesession.getGameType() !== 'analysis'
+		) {
 			gameslot.concludeGame();
+		}
 	}
 
 	GameBus.dispatch('physical-move');
@@ -106,7 +112,8 @@ function makeMoveKeepingView(
 	);
 	// Appending the move may have reallocated the piece arrays; if so, rebuild the
 	// mesh (now back on the viewed position) to match. REQUIRED.
-	if (mesh && gamefile.pieces.newlyRegenerated) piecemodels.regenAll(gamefile, mesh);
+	if (mesh && gamefile.pieces.newlyRegenerated)
+		piecemodels.regenAll(gamecore.getGameContext(), gamefile, mesh);
 	return move;
 }
 
@@ -134,7 +141,8 @@ function makeMoveAndAnimate(
  * from the move's changes! For example, pawn deleted that promoted.
  */
 function runMeshChanges(boardsim: GameFile, mesh: Mesh, edit: Edit, forward: boolean): void {
-	if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(boardsim, mesh);
+	if (boardsim.pieces.newlyRegenerated)
+		piecemodels.regenAll(gamecore.getGameContext(), boardsim, mesh);
 	else boardchanges.runChanges(mesh, edit.changes, meshChanges, forward); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 }
@@ -159,13 +167,8 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 // Local Moving ----------------------------------------------------------------------------------------------------------
 
 /**
- * Apply the move to the board state and the mesh, whether forward or backward,
- * as if we were wanting to *view* the move, instead of making it.
- *
- * This does not change the game state, for example, whos turn it is,
- * what square enpassant is legal on, or the running count of checks given.
- *
- * But it does change the check state.
+ * Apply the move to the board state and the mesh, whether forward or
+ * backward, as if we were wanting to *view* the move, instead of making it.
  */
 function viewMove(
 	gamefile: GameFile,
@@ -173,7 +176,11 @@ function viewMove(
 	move: MoveFull,
 	forward = true,
 ): void {
-	movepiece.applyMove(gamefile, move, forward); // Apply the logical changes.
+	// In analysis mode, every ply is a real, editable position.
+	// Even viewing a move should apply global state and update turn.
+	const global = gamesession.getGameType() === 'analysis';
+	movepiece.applyMove(gamefile, move, forward, { global }); // Apply the logical changes.
+
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.

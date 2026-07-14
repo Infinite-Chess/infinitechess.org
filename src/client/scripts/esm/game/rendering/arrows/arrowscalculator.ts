@@ -46,9 +46,9 @@ import arrows from './arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../boardpos.js';
 import movehints from '../highlights/movehints.js';
-import boardtiles from '../boardtiles.js';
 import Transition from '../transitions/Transition.js';
 import perspective from '../perspective.js';
+import boardgeometry from '../boardgeometry.js';
 import { listener_canvas } from '../../chess/gamecore.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 
@@ -145,7 +145,7 @@ export function getBoundingBoxFloat(): BoundingBoxBD | undefined {
 
 /** Whether ANY arrow (piece or move hint) should be calculated and rendered this frame. */
 export function areZoomedInEnoughForArrows(): boolean {
-	return bd.compare(boardtiles.getTileWidthPixels(false), MIN_SQUARE_SIZE) >= 0;
+	return bd.compare(boardgeometry.getTileWidthPixels(false), MIN_SQUARE_SIZE) >= 0;
 }
 
 /**
@@ -197,11 +197,11 @@ export function calculateArrows(mode: 0 | 1 | 2 | 3): {
  */
 function updateBoundingBoxesOfVisibleScreen(): void {
 	boundingBoxFloat = perspective.getEnabled()
-		? boardtiles.generatePerspectiveBoundingBox(PERSPECTIVE_EDGE_DIST)
-		: boardtiles.gboundingBoxFloat();
+		? boardgeometry.generatePerspectiveBoundingBox(PERSPECTIVE_EDGE_DIST)
+		: boardgeometry.gboundingBoxFloat();
 
 	// If any part of the square is on screen, this box rounds outward to contain it.
-	boundingBoxInt = boardtiles.roundAwayBoundingBox(boundingBoxFloat);
+	boundingBoxInt = boardgeometry.roundAwayBoundingBox(boundingBoxFloat);
 
 	/**
 	 * Adds a little bit of padding to the bounding box, so that the arrows of the

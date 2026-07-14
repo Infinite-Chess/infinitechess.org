@@ -26,6 +26,7 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 
 import gameslot from '../chess/gameslot.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import { GameBus } from '../GameBus.js';
 import { SocketBus } from '../../websocket/SocketBus.js';
 import socketmessages from '../../websocket/socketmessages.js';
@@ -65,10 +66,7 @@ GameBus.addEventListener('moves-changed', () => {
 GameBus.addEventListener('game-concluded', () => refresh());
 // A lost connection disables the rematch button until we resync. A reconnect
 // restores its true state via setRematchState() (called after 'subscriberematch').
-SocketBus.addEventListener('connection-lost', () => {
-	connectionLost = true;
-	updateRematchButton();
-});
+SocketBus.addEventListener('connection-lost', () => updateRematchButton());
 
 // Block visibility ---------------------------------------------------------------------------
 
@@ -228,9 +226,6 @@ let opponentOfferedRematch = false;
 /** Whether our opponent is currently connected (button disabled while they're gone). */
 let opponentPresentPostGame = true;
 
-/** Whether our connection to the server has dropped (button disabled until we resync). */
-let connectionLost = false;
-
 /**
  * Repaints the rematch button: glows while the opponent has an offer out (and we haven't
  * yet responded), and is disabled once we've offered or while the opponent is away.
@@ -238,12 +233,10 @@ let connectionLost = false;
  */
 function updateRematchButton(): void {
 	if (!element_Rematch) return; // Absent (spectator, or game loaded dead).
-	element_Rematch.classList.toggle(
-		'rematch-offered',
-		opponentOfferedRematch && !weOfferedRematch,
-	);
+	element_Rematch.classList.toggle('rematch-offered', opponentOfferedRematch && !weOfferedRematch); // prettier-ignore
 	if (graceTimers.has(element_ActionsOver)) return; // Mid-appearance grace — leave disabled state to it.
-	element_Rematch.disabled = weOfferedRematch || !opponentPresentPostGame || connectionLost;
+	element_Rematch.disabled =
+		weOfferedRematch || !opponentPresentPostGame || !onlinegame.areInSync();
 }
 
 /**
@@ -255,7 +248,6 @@ function setRematchState(rematch: RematchOfferInfo): void {
 	weOfferedRematch = false;
 	opponentOfferedRematch = rematch.offered;
 	opponentPresentPostGame = rematch.present;
-	connectionLost = false; // We just heard from the server — connection is alive.
 	updateRematchButton();
 }
 

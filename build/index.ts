@@ -11,7 +11,7 @@
 import { setupEnv } from './env';
 import { buildClient } from './client';
 import { buildServer } from './server';
-import { setupEngineWasm } from './engine-wasm';
+import { downloadEngineWasm, copyEngineToDist } from './engine-wasm';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
@@ -27,9 +27,12 @@ if (USE_DEVELOPMENT_BUILD && process.env['NODE_ENV'] === 'production') {
 	);
 }
 
-// Ensure the HydroChess WASM engine is available
-// Must be awaited since client build has a .wasm dependency on it.
-await setupEngineWasm();
+// Ensure the HydroChess WASM engine pkg is present on disk.
+await downloadEngineWasm();
+// Copy the engine pkg into dist (served unbundled — the rayon worker self-spawns from the glue's
+// own URL, which bundling breaks). Must run before the client build so its content-hashed URL is
+// included in the manifest that build writes.
+copyEngineToDist();
 
 // Build both client and server scripts
 // Await all so the script doesn't finish and node terminate before esbuild is done.

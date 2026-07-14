@@ -136,7 +136,7 @@ type SpecialFunction = (
 function defaultBlockingFunction(
 	friendlyColor: Player,
 	blockingPiece: Piece,
-	coords: Coords,
+	_coords: Coords,
 	premove: boolean,
 ): 0 | 1 | 2 {
 	return legalmoves.testCaptureValidity(friendlyColor, blockingPiece.type, premove);

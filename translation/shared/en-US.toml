@@ -26,6 +26,23 @@ cookies_required = "Your browser does not support cookies. Unable to connect to 
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
 
+# Labels for the variant selector widget (game-options modal + analysis board setup).
+[variant_selector]
+label = "Variant"
+add_modifier = "Add a fun modifier"
+edit = "Edit position and gamerules"
+custom_create_name = "Create"
+custom_create_desc = "Go to the board editor."
+custom_from_icn_name = "From ICN"
+custom_from_icn_desc = "Paste an accessible ICN code."
+icn_placeholder = "Paste ICN text here"
+saved_positions = "Saved positions"
+local_load_failed = "Failed to load local save."
+cloud_load_failed = "Failed to load cloud save."
+
+[modifiers_section]
+label = "Modifiers:"
+
 [variants] # Display names for each variant.
 # Group "standard"
 Classical = "Classical"

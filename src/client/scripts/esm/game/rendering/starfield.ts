@@ -16,10 +16,10 @@ import docutil from '../../util/docutil.js';
 import gameslot from '../chess/gameslot.js';
 import deltatime from '../misc/deltatime.js';
 import primitives from './primitives.js';
-import boardtiles from './boardtiles.js';
 import preferences from '../../components/header/preferences.js';
 import perspective from './perspective.js';
 import frametracker from './frametracker.js';
+import boardgeometry from './boardgeometry.js';
 import {
 	AttributeInfoInstanced,
 	createRenderable_Instanced_GivenInfo,
@@ -313,7 +313,7 @@ function isStarfieldVisible(): boolean {
 
 	// Last check is whether our screen is entirely contained within the worldBorder box.
 	// If so, the starfield is NOT visible.
-	const screenBox = boardtiles.gboundingBox(false);
+	const screenBox = boardgeometry.gboundingBox(false);
 	return !bounds.boxContainsBox(gamefile.gameRules.worldBorder, screenBox);
 }
 
@@ -381,4 +381,5 @@ export default {
 	init,
 	update,
 	render,
+	terminate,
 };

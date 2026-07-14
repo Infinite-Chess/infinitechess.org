@@ -91,6 +91,18 @@ declare global {
 		role?: Player;
 	} & StaticGameSetup;
 
+	/** SSR→client data for the analysis page (/analysis/:id?), injected by analysis.njk. */
+	var analysisPageData: {
+		/** Numeric id of a game to auto-load, or null for a fresh board. */
+		gameId: number | null;
+		/** The viewer's color if they were a participant (auto-orients the board); undefined for non-participants. */
+		role?: Player;
+		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/hydrochess_wasm.js`), from the manifest. */
+		engineUrl: string;
+		/** Hashed URL of the analysis engine worker script (from the asset manifest). */
+		workerUrl: string;
+	};
+
 	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */
 	var turnstile: Turnstile;
 	/** Called by Turnstile's `api.js` (`?onload=…`) once ready; register.ts assigns it to render the widget. */

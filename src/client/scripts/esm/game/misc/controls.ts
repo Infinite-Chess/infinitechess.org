@@ -31,7 +31,7 @@ import guipromotion from '../gui/guipromotion.js';
 import guimoveslist from '../gui/guimoveslist.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import { listener_document, listener_canvas } from '../chess/gamecore.js';
+import gamecore, { listener_document, listener_canvas } from '../chess/gamecore.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -238,7 +238,7 @@ function deccelerateScaleVel(scaleVel: number): number {
 function testOutGameToggles(): void {
 	if (listener_document.isKeyDown('Backquote')) camera.toggleDebug();
 	if (listener_document.isKeyDown('Digit3')) socketman.toggleDebug(); // Adds simulated websocket latency with high ping
-	if (listener_document.isKeyDown('Digit5')) GameBus.dispatch('engine-debug'); // Render engine generated legal moves
+	if (listener_document.isKeyDown('Digit5')) GameBus.dispatch('engine-debug'); // Render engine generated legal moves & engine border
 }
 
 /** Debug toggles that are only for in a game. */
@@ -252,7 +252,7 @@ function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
 
 	if (listener_document.isKeyDown('Tab')) guiboardcontrols.callback_Arrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
-		piecemodels.regenAll(gamefile, mesh);
+		piecemodels.regenAll(gamecore.getGameContext(), gamefile, mesh);
 		console.log('Regenerated piece models.');
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();

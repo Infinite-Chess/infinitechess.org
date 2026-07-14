@@ -7,6 +7,7 @@
  */
 
 import type { Color } from '../../../../../shared/util/math/math.js';
+import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -15,14 +16,8 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import { players as p, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import space from '../misc/space.js';
-import webgl from './webgl.js';
-import texturecache from '../../chess/rendering/texturecache.js';
 import instancedshapes from './instancedshapes.js';
-import {
-	RenderableInstanced,
-	AttributeInfoInstanced,
-	createRenderable_Instanced_GivenInfo,
-} from '../../webgl/Renderable.js';
+import { RenderableInstanced, AttributeInfoInstanced } from '../../webgl/Renderable.js';
 
 // Constants ---------------------------------------------------------------
 
@@ -48,9 +43,13 @@ const attribInfo: AttributeInfoInstanced = {
 /**
  * Builds instance data (world-space positions per type) for all pieces in a
  * board preview. No animation, no hover — a flat pass over the piece list.
+ * @param ctx - The render context whose board position places the pieces.
  */
-function buildInstanceData(boardsim: BoardPreview): TypeGroup<number[]> {
+function buildInstanceData(ctx: RenderContext, boardsim: BoardPreview): TypeGroup<number[]> {
 	const instanceData: TypeGroup<number[]> = {};
+
+	const boardPos = ctx.boardpos.getBoardPos();
+	const boardScale = ctx.boardpos.getBoardScale();
 
 	boardsim.existingTypes.forEach((type: number) => {
 		if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
@@ -60,7 +59,7 @@ function buildInstanceData(boardsim: BoardPreview): TypeGroup<number[]> {
 		boardutil.iteratePiecesInTypeRange(boardsim.pieces, type, (idx) => {
 			const coords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
 			const coordsBD = bdcoords.FromCoords(coords);
-			const coordsWorld = space.convertCoordToWorldSpace(coordsBD);
+			const coordsWorld = space.convertCoordToWorldSpace(coordsBD, boardPos, boardScale);
 			instanceData[type]!.push(...coordsWorld);
 		});
 	});
@@ -70,6 +69,7 @@ function buildInstanceData(boardsim: BoardPreview): TypeGroup<number[]> {
 
 /**
  * Renders mini images from pre-built instance data.
+ * @param ctx - The render context to draw into.
  * @param existingTypes - All piece types present on the board (used for render sort order).
  * @param instanceData - World-space positions per type, rendered at normal opacity.
  * @param instanceData_hovered - World-space positions per type rendered at full opacity. May be sparse or empty.
@@ -77,6 +77,7 @@ function buildInstanceData(boardsim: BoardPreview): TypeGroup<number[]> {
  * @param entityWidthVPixels - The on-screen size of each mini image icon, in virtual pixels.
  */
 function render(
+	ctx: RenderContext,
 	existingTypes: number[],
 	instanceData: TypeGroup<number[]>,
 	instanceData_hovered: TypeGroup<number[]>,
@@ -94,8 +95,8 @@ function render(
 		const vertexData: number[] = instancedshapes.getDataColoredTexture(color, inverted);
 
 		const type = Number(typeStr);
-		const texture: WebGLTexture = texturecache.getTexture(type);
-		models[type] = createRenderable_Instanced_GivenInfo(
+		const texture: WebGLTexture = ctx.textures.getTexture(type);
+		models[type] = ctx.renderable.createRenderable_Instanced_GivenInfo(
 			vertexData,
 			new Float32Array(thisInstanceData),
 			attribInfo,
@@ -112,7 +113,7 @@ function render(
 				color_hovered,
 				inverted,
 			);
-			models_hovered[type] = createRenderable_Instanced_GivenInfo(
+			models_hovered[type] = ctx.renderable.createRenderable_Instanced_GivenInfo(
 				vertexData_hovered,
 				new Float32Array(hoveredData),
 				attribInfo,
@@ -131,9 +132,9 @@ function render(
 		.filter((t: number) => typeutil.getColorFromType(t) !== p.NEUTRAL)
 		.sort((a: number, b: number) => b - a);
 
-	const u_size = space.convertPixelsToWorldSpace_Virtual(entityWidthVPixels);
+	const u_size = space.convertPixelsToWorldSpace_Virtual(entityWidthVPixels, ctx.camera);
 
-	webgl.executeWithDepthFunc_ALWAYS(() => {
+	ctx.executeWithDepthFunc_ALWAYS(() => {
 		for (const neut of sortedNeutrals) {
 			models[neut]?.render(undefined, undefined, { u_size });
 			models_hovered[neut]?.render(undefined, undefined, { u_size });

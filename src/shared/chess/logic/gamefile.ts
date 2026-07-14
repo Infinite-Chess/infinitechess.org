@@ -96,6 +96,8 @@ export interface Additional {
 	moves?: MovePacket[];
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions;
+	/** Adds the `slideLimit` gamerule. */
+	slideLimit?: bigint;
 	/** The conclusion of the game, if loading an online game that has already ended. */
 	gameConclusion?: GameConclusion;
 	/** Any already existing clock values for the gamefile. */
@@ -206,6 +208,10 @@ async function initGameFile(
 		additional.clockValues,
 		additional.variantOptions,
 	);
+	// Slide Limit modifier override
+	if (additional.slideLimit !== undefined)
+		gameWithRules.gameRules.slideLimit = additional.slideLimit;
+
 	const boardsim = boardinit.initBoard(
 		gameWithRules.gameRules,
 		variant,

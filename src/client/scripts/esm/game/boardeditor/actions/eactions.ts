@@ -48,7 +48,6 @@ import icnconverter, {
 import toast from '../../../components/toast.js';
 import docutil from '../../../util/docutil';
 import gameslot from '../../chess/gameslot';
-import pastegame from '../../chess/pastegame';
 import gameloader from '../../chess/gameloader';
 import egamerules from '../egamerules';
 import gamesession from '../../chess/gamesession';
@@ -59,6 +58,7 @@ import validatorama from '../../../util/validatorama';
 import selectiontool from '../tools/selection/selectiontool';
 import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
 import guiboardcontrols from '../../gui/guiboardcontrols';
+import clientmetadatautil from '../../chess/clientmetadatautil';
 import { engineDictionary } from '../../chess/engines/engine';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
@@ -283,7 +283,7 @@ function getValidatedPosition(): VariantOptions | null {
 		{ metadata: {} as MetaData, ...variantOptions },
 		{ skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false },
 	); // prettier-ignore
-	const illegalReason = validatePosition(variantOptions, icnString);
+	const illegalReason = validatePosition(variantOptions, icnString, true);
 	if (illegalReason !== null) {
 		// The position is illegal
 		toast.show(t.shared.position_errors[illegalReason], { error: true });
@@ -367,7 +367,7 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
  */
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
-	const resolvedVariantCode = pastegame.resolveAndNormalizeVariantFromMetadata(
+	const resolvedVariantCode = clientmetadatautil.resolveAndNormalizeVariantFromMetadata(
 		longformOut.metadata,
 	);
 	const timestamp = metadatautil.resolveTimestampFromMetadata(

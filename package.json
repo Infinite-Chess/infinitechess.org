@@ -98,6 +98,7 @@
     "dev:server": "wait-on dist/server/server.js && nodemon",
     "dev:assets": "cpx \"src/**/*.{png,jpg,webp,avif,svg,ico,gif,mp3,wav,opus,glsl,md,woff2,woff,njk}\" dist --watch",
     "generate:types": "tsx scripts/generate-translation-types.ts && tsx scripts/generate-component-translation-types.ts",
+    "setup:engine": "tsx scripts/setup-engine.ts",
     "optimize-images": "tsx scripts/optimize-images.ts",
     "test": "vitest run",
     "test:watch": "vitest",

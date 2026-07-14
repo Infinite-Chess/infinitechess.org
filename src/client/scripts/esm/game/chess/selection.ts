@@ -56,6 +56,12 @@ import { listener_canvas } from './gamecore.js';
  */
 type MoveHandler = (gamefile: GameFile, mesh: Mesh | undefined, moveTagged: MoveTagged) => Edit;
 
+/**
+ * Branches the game from the currently-viewed ply so a new
+ * continuation can be played from it. The analysis page injects this.
+ */
+type ViewedPositionBrancher = (gamefile: GameFile, mesh: Mesh | undefined) => void;
+
 // Variables -----------------------------------------------------------------------------
 
 /** The currently selected piece, if there is one */
@@ -82,6 +88,8 @@ let promoteTo: number | undefined;
 
 /** The move logic override, if registered. The board editor may register one. */
 let moveHandler: MoveHandler | undefined;
+/** The "branch from viewed position" handler, if registered. The analysis page registers one. */
+let viewedPositionBrancher: ViewedPositionBrancher | undefined;
 
 // Events ----------------------------------------------------------------------------------------
 
@@ -146,6 +154,11 @@ function setEditorMoveHandler(handler: MoveHandler): void {
 	moveHandler = handler;
 }
 
+/** Registers the analysis-page's "branch from viewed position" handler. */
+function setViewedPositionBrancher(handler: ViewedPositionBrancher): void {
+	viewedPositionBrancher = handler;
+}
+
 // Updating ---------------------------------------------------------------------------------------------
 
 /** Tests if we have selected a piece, or moved the currently selected piece. */
@@ -161,7 +174,8 @@ function update(): void {
 		if (promoteTo) makePromotionMove(gamefile, mesh);
 		return;
 	}
-	if (boardpos.areZoomedOut() || gamefileutility.isGameOver(gamefile) || camera.isLookingUp()) {
+	if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'analysis') return; // Can't select pieces after game is over
+	if (boardpos.areZoomedOut() || camera.isLookingUp()) {
 		// We might be zoomed way out.
 		// If we are still dragging a piece, we still want to be able to drop it.
 		if (draganimation.areDraggingPiece() && draganimation.hasPointerReleased())
@@ -319,10 +333,26 @@ function testIfPieceMoved(gamefile: GameFile, mesh: Mesh | undefined): void {
 	mouse.claimMouseClick(mouseKeybind); // Claim the mouse click so that annotations does use it to Collapse annotations.
 }
 
-/** Forwards to the front of the game if we're viewing history, and returns true if we did. */
+/**
+ * Handles selecting a piece while viewing an earlier move. In all non-analysis games,
+ * this forwards to the front instead and returns true, so the caller aborts the selection.
+ *
+ * In analysis, this branches from the viewed ply: the later moves are deleted so the
+ * game truly sits at this position (with consistent turn/rights state), and selection
+ * is allowed to proceed — so you can play a different continuation from here.
+ *
+ * @returns Whether we actually forwarded to the front. If true, the caller should abort selection.
+ */
 function viewFrontIfNotViewingLatestMove(gamefile: GameFile, mesh: Mesh | undefined): boolean {
-	// If we're viewing history, return.
+	// If we're viewing the latest move, nothing to do.
 	if (moveutil.areWeViewingLatestMove(gamefile)) return false;
+
+	// Analysis branches from this ply (via the injected brancher) instead
+	// of forwarding, so a new continuation can be played from here.
+	if (viewedPositionBrancher) {
+		viewedPositionBrancher(gamefile, mesh);
+		return false; // State is now consistent at this ply; let the selection proceed.
+	}
 
 	movesequence.viewFront(gamefile, mesh);
 	// Also animate the last move
@@ -588,6 +618,7 @@ export default {
 	isAPieceSelected,
 	getPieceSelected,
 	setEditorMoveHandler,
+	setViewedPositionBrancher,
 	reselectPiece,
 	unselectPiece,
 	getLegalMovesOfSelectedPiece,

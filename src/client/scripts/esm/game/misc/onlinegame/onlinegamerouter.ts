@@ -63,8 +63,9 @@ function receiveMessage(contents: GameMessage): void {
 			// instant logical loading finishes, so no delta is lost or applied too early.
 			messageQueue.push(contents);
 		} else if (contents.action === 'gamestate') {
+			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
 			// Nothing loaded/loading yet: the first `gamestate` bootstraps the game.
-			onlinegame.loadGameFromState(contents.value, window.gamePageData.role);
+			onlinegame.loadGameFromState(contents.value, false, window.gamePageData.role);
 		} else {
 			console.error(`Received game message before receiving gamestate: ${JSON.stringify(contents)}`); // prettier-ignore
 		}
@@ -84,6 +85,7 @@ function routeMessage(contents: GameMessage): void {
 
 	switch (contents.action) {
 		case 'gamestate':
+			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
 			resyncer.handleGameState(gamefile, mesh, contents.value);
 			break;
 		case 'move':
@@ -117,6 +119,7 @@ function routeMessage(contents: GameMessage): void {
 			drawoffers.onOpponentDeclinedOffer();
 			break;
 		case 'rematchstate':
+			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
 			gameactions.setRematchState(contents.value);
 			break;
 		case 'rematchoffer':
@@ -229,6 +232,7 @@ function handleGameConclusion(gamefile: GameFile, message: GameConclusionMessage
  */
 function handleUnsubbing(): void {
 	socketsubs.deleteSub('game');
+	onlinegame.onEvicted(); // Prevents a reconnect from trying to re-subscribe to the now-deleted game.
 	guigameactions.onUnsub();
 }
 

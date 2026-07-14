@@ -41,19 +41,23 @@ let reconnectTimerId: number | undefined;
 /** Enables simulated websocket latency and prints all sent and received messages. */
 let DEBUG = false;
 
-// Initialization --------------------------------------------------------------
+// Listeners --------------------------------------------------------------
 
 SocketBus.addEventListener('connection-lost', () => {
 	noConnection = true;
 	console.error('No connection.');
 });
 
+// Close the socket with a controlled code before the page is unloaded, so the server knows
+// to not give us a grace period for reconnection. CANNOT USE 'pagehide' because that doesn't
+// reliably fire the close event before we leave, but defers it for when we RETURN, causing reconnection issues.
+window.addEventListener('beforeunload', closeSocket);
+
 // Page navigation handling
-window.addEventListener('pageshow', function (event) {
-	if (event.persisted) {
-		console.log('Page was returned to using the back or forward button.');
-		resubAll();
-	}
+window.addEventListener('pageshow', (event) => {
+	if (!event.persisted) return; // Page loaded normally
+	console.log('Page was returned to using the back or forward button.');
+	resubAll();
 });
 
 // Debug -----------------------------------------------------------------------
@@ -177,7 +181,7 @@ function closeSocket(): void {
  */
 function resubAll(): void {
 	if (config.DEV_BUILD) console.log('Resubbing all..');
-	SocketBus.dispatch('reconnected');
+	SocketBus.dispatch('reconnect');
 }
 
 // Exports --------------------------------------------------------------------

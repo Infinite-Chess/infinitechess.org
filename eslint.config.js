@@ -21,6 +21,7 @@ export default [
 			'no-unused-vars': [
 				'warn',
 				{
+					args: 'all', // Flag ALL unused params, not just those after the last used one
 					argsIgnorePattern: '^_',
 					varsIgnorePattern: '^_',
 					caughtErrorsIgnorePattern: '^_',
@@ -97,6 +98,7 @@ export default [
 			'@typescript-eslint/no-unused-vars': [
 				'warn',
 				{
+					args: 'all', // Flag ALL unused params, not just those after the last used one
 					argsIgnorePattern: '^_',
 					varsIgnorePattern: '^_',
 					caughtErrorsIgnorePattern: '^_',

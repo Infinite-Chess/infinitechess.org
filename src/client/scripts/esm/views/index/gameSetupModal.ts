@@ -5,6 +5,7 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { ModalMode } from '../../components/gameSetupModalHandoff.js';
 import type { GameMode, TimeControl } from '../../../../../shared/types.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
@@ -13,13 +14,11 @@ import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalid
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
 import timeControls from './timeControls.js';
-import variantSelector from './variantSelector.js';
-import modifierSelector from './modifierSelector.js';
+import variantSelector from '../../components/variantselector/variantSelector.js';
+import modifierSelector from '../../components/variantselector/modifierSelector.js';
+import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
 
 // Types ----------------------------------------------
-
-/** The active game creation flow: online seek, friend challenge, or computer game. */
-type ModalMode = 'online' | 'friend' | 'computer';
 
 /** The data-* attribute keys that each identify an exclusive-select toggle button group. */
 type ToggleGroupAttribute = 'data-time' | 'data-mode' | 'data-side' | 'data-level';
@@ -37,7 +36,7 @@ const SUBMIT_LABELS: Record<ModalMode, string> = {
 
 const element_modalOverlay = document.getElementById('modal-overlay')!;
 const element_modalClose = document.getElementById('modal-close')!;
-const element_modalSubmit = document.getElementById('modal-submit')!;
+const element_modalSubmit = document.getElementById('modal-submit') as HTMLButtonElement;
 const element_btnCreateOnline = document.getElementById('btn-create-game')!;
 const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')!;
 const element_btnPlayComputer = document.getElementById('btn-play-ai')!;
@@ -60,6 +59,7 @@ let currentMode: ModalMode;
 // Initialization ----------------------------------------------
 
 initModal();
+void consumePendingHandoff();
 
 // Functions ----------------------------------------------
 
@@ -120,9 +120,15 @@ function initModal(): void {
 	timeControls.initModalSliders();
 	timeControls.onTimeToggle();
 	timeControls.initPresets();
-	variantSelector.initVariantGroupDropdown();
+	variantSelector.initVariantGroupDropdown({
+		enforceSizeLimit: true,
+		onChange: () => {
+			element_modalSubmit.disabled = !variantSelector.isSelectionValid();
+			syncRatedButton();
+		},
+	});
 	variantSelector.initIcnValidation();
-	modifierSelector.initModifierSelector();
+	modifierSelector.initModifierSelector({ onChange: syncRatedButton });
 	syncRatedButton();
 }
 
@@ -188,6 +194,18 @@ function close(): void {
 	element_modalOverlay.classList.add('hidden');
 	variantSelector.closeVariantDropdown();
 	modifierSelector.closeModifierDropdown();
+}
+
+/**
+ * Auto-opens the modal pre-filled from a handoff another page (e.g. analysis
+ * "continue from here") stashed before navigating here. Any position errors
+ * surface via the modal's own validation.
+ */
+async function consumePendingHandoff(): Promise<void> {
+	const handoff = await gameSetupModalHandoff.take();
+	if (handoff === undefined) return;
+	openModal(handoff.mode);
+	variantSelector.applyIcn(handoff.icn);
 }
 
 export default { close };

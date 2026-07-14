@@ -109,10 +109,6 @@ const allLiveGamesColumns: string[] = [
 	'color_ticking',
 	'clock_snapshot_time',
 	'draw_offer_state',
-	'conclusion_condition',
-	'conclusion_victor',
-	'time_ended',
-	'finalize_time',
 	'validate_moves',
 	'both_disconnected_end_time',
 ];
@@ -359,10 +355,6 @@ function generateTables(): void {
 			color_ticking         INTEGER,
 			clock_snapshot_time   INTEGER,
 			draw_offer_state      INTEGER,
-			conclusion_condition  TEXT,
-			conclusion_victor     INTEGER,
-			time_ended            INTEGER,
-			finalize_time         INTEGER, -- Epoch ms deadline to finalize (lock in + log) a concluded game. NULL while ongoing.
 			validate_moves        BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1)),
 			both_disconnected_end_time INTEGER -- Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected.
 		);
@@ -398,7 +390,7 @@ function initDatabase(): void {
 	renameDisconnectResignTimeColumnIfNeeded();
 	renameDisconnectByChoiceColumnIfNeeded();
 	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
-	renameLiveGamesDeleteTimeColumnIfNeeded();
+	dropLiveGamesConclusionColumnsIfPresent();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
@@ -586,14 +578,23 @@ function addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded(): void {
 /**
  * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
  *
- * Renames `live_games.delete_time` to `finalize_time` — the column's meaning is now the deadline
- * to finalize (lock in + log) a concluded game, after which the game only lingers in memory
- * for the rematch handshake rather than being deleted. Fresh DBs get the new name directly.
+ * Concluded games are now logged to the permanent `games` table the instant they end, and their
+ * `live_games` row is dropped immediately — so only ongoing games are ever persisted/restored.
+ * The conclusion snapshot columns (`conclusion_condition`, `conclusion_victor`, `time_ended`) and
+ * the `delete_time` finalize deadline are therefore vestigial and need removing from old DBs.
+ * Fresh DBs never have them.
  */
-function renameLiveGamesDeleteTimeColumnIfNeeded(): void {
+function dropLiveGamesConclusionColumnsIfPresent(): void {
 	if (!db.columnExists('live_games', 'delete_time')) return; // Already migrated (or fresh DB).
-	db.run('ALTER TABLE live_games RENAME COLUMN delete_time TO finalize_time');
-	console.log('Temporary DB migration: renamed live_games.delete_time to finalize_time.');
+	for (const column of [
+		'conclusion_condition',
+		'conclusion_victor',
+		'time_ended',
+		'delete_time',
+	]) {
+		db.run(`ALTER TABLE live_games DROP COLUMN ${column}`);
+	}
+	console.log('Temporary DB migration: dropped live_games conclusion snapshot columns.');
 }
 
 /**

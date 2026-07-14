@@ -1,0 +1,493 @@
+/* src/client/css/analysis.css */
+
+/* The analysis page (/analysis/:id?): layered on top of game.css — same sidebar +
+   board layout. Extras: the variant setup panel (shared widget, see
+   variantselector.css), the local-engine evaluation panel, the move tree,
+   the actions menu, and the eval gauge beside the board. */
+
+/* ============================
+   Variant setup panel
+   ============================ */
+
+/* Wraps the shared variant selector widget in a sidebar panel on the plain /analysis page. */
+.variant-setup {
+	padding: 8px 10px;
+	overflow: visible;
+}
+
+/* ============================
+   Play group / match panel layout
+   ============================ */
+
+/* Like the game page (flex: 0 0 auto) the group never shrinks below its content, so
+   short screens scroll the sidebar instead of clipping the panel — but grow: 1 lets the
+   moves list expand to fill spare sidebar space (capped by .match-panel max-height). */
+.analysis .play-group {
+	flex: 1 0 auto;
+}
+
+.analysis .match-panel {
+	height: 100%;
+	max-height: 600px;
+}
+
+.analysis .moves {
+	flex: 1 1 auto;
+	overflow: hidden;
+}
+
+/* ============================
+   Engine panel
+   ============================ */
+
+.engine-panel {
+	position: relative;
+}
+
+/* Depth progress bar */
+.engine-progress {
+	height: 3px;
+	background: color-mix(in srgb, #000 18%, transparent);
+	container-type: inline-size; /* Let the sheen measure travel in cqw */
+}
+
+.engine-progress-fill {
+	position: relative;
+	width: 0;
+	height: 100%;
+	overflow: hidden;
+	background: var(--c-accent, #6aa331);
+	transition: width 0.18s ease;
+}
+
+/* Computing: a sheen that sweeps across the filled portion. */
+.engine-progress.computing .engine-progress-fill::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 35cqw;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+	animation: engine-progress-sheen 1.1s linear infinite;
+}
+
+@keyframes engine-progress-sheen {
+	from {
+		transform: translateX(calc(-1 * 35cqw));
+	}
+	to {
+		transform: translateX(100cqw);
+	}
+}
+
+.engine-header {
+	display: flex;
+	background: color-mix(in srgb, var(--c-surface-2) 74%, transparent);
+}
+
+/* Everything left of the gear button; Carries padding. */
+.engine-header-main {
+	flex: 1 1 auto;
+	min-width: 0; /* Allow shrinking below content width so long .engine-stats can't push the gear out */
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 4px 6px 8px;
+}
+
+/* ============================
+   Engine on/off switch
+   ============================ */
+
+.engine-switch {
+	width: 36px;
+	height: 20px;
+	flex-shrink: 0;
+}
+
+.engine-switch input:checked + span {
+	background-color: var(--c-accent);
+	border-color: var(--c-accent);
+}
+
+/* ============================
+   Engine eval + title
+   ============================ */
+
+/* Big eval number (or #N / mate text) */
+.engine-eval {
+	min-width: 3em;
+	font-size: 1.35em;
+	font-weight: 700;
+	text-align: center;
+	color: var(--c-text-emphasis);
+	font-variant-numeric: tabular-nums;
+}
+
+.engine-title {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.engine-name {
+	font-size: 0.9em;
+	font-weight: 600;
+	color: var(--c-text-emphasis);
+}
+
+.engine-stats {
+	font-size: 0.78em;
+	color: var(--c-text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* ============================
+   Go-deeper + settings buttons
+   ============================ */
+
+.engine-panel .icon-btn {
+	width: 26px;
+	height: 26px;
+	flex-shrink: 0;
+	color: var(--c-text-muted);
+}
+
+#btn-go-deeper:hover {
+	color: var(--c-text-emphasis);
+}
+
+#btn-go-deeper svg {
+	width: 90%;
+	height: 90%;
+}
+
+/* Gear sits flush against the header edges, unaffected by the header-main padding. */
+#btn-engine-settings {
+	flex: 0 0 auto;
+	width: auto;
+	height: auto;
+	padding: 0 8px;
+}
+
+#btn-engine-settings:hover,
+#btn-engine-settings.active {
+	color: var(--c-text-emphasis);
+	background: var(--c-hover-overlay);
+}
+
+#btn-engine-settings svg {
+	width: 26px;
+	height: 26px;
+	transform: scale(0.75);
+}
+
+#btn-engine-settings.active svg {
+	transform: scale(0.75) rotate(60deg);
+}
+
+/* ============================
+   Engine settings drawer
+   ============================ */
+
+.engine-settings {
+	position: absolute;
+	left: 0;
+	right: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 12px;
+	border-top: 1px solid var(--c-border-muted);
+	border-bottom: 1px solid var(--c-border-muted);
+	background: var(--c-surface);
+	box-shadow: 0 4px 5px rgba(0, 0, 0, 0.4);
+}
+
+.setting-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 0.85em;
+}
+
+.setting-row label {
+	flex: 0 0 auto; /* Hug the label text so each slider starts right after it, not at a shared column */
+}
+
+.setting-row .slider {
+	flex: 1 1 auto;
+}
+
+.setting-value {
+	flex: 0 0 auto;
+	color: var(--c-text-emphasis);
+}
+
+/* ============================
+   Engine lines (MultiPV)
+   ============================ */
+
+.engine-lines {
+	--engine-line-h: 26px;
+	/* Reserve --pv-rows (set by renderLines) rows so the panel height stays constant as the
+	   search collapses/expands lines — otherwise the flex-adjacent move list resizes & scroll-snaps.
+	   +2px for this element's own top/bottom borders (border-box min-height includes them). */
+	min-height: calc(var(--pv-rows, 0) * var(--engine-line-h) + 2px);
+	border-top: 1px solid var(--c-border);
+	border-bottom: 1px solid var(--c-border);
+}
+
+.engine-line {
+	display: flex;
+	gap: 4px;
+	height: var(--engine-line-h);
+	padding: 4px 8px;
+	font-size: 0.85em;
+	border-bottom: 1px solid var(--c-border-muted);
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.engine-line:last-child {
+	border-bottom: none;
+}
+
+.line-eval {
+	flex: 0 0 3em;
+	font-weight: 700;
+	color: var(--c-text-emphasis);
+}
+
+.line-moves {
+	flex: 1 1 auto;
+	min-width: 0;
+	color: var(--c-text-muted);
+}
+
+.line-move {
+	cursor: pointer;
+	padding: 1px 2px;
+	border-radius: 3px;
+}
+
+.line-move:hover {
+	background: var(--c-hover-overlay);
+	color: var(--c-text-emphasis);
+}
+
+.line-pager {
+	font-weight: 700;
+}
+
+/* ============================
+   Move tree
+   ============================ */
+
+.analysis .moves-table {
+	flex: 1 1 0;
+}
+
+/* ============================
+   Move variations
+   ============================ */
+
+.analysis-variation {
+	display: grid;
+	grid-template-columns: 14px minmax(0, 1fr);
+	margin: 1px 0 1px calc(10px + var(--variation-depth) * 14px);
+}
+
+.variation-rail {
+	position: relative;
+}
+
+.variation-rail::before {
+	content: '';
+	position: absolute;
+	top: -2px;
+	bottom: 0;
+	left: 6px;
+	border-left: 2px solid color-mix(in srgb, var(--c-text-muted) 28%, transparent);
+}
+
+.variation-rail::after {
+	content: '';
+	position: absolute;
+	top: 13px;
+	left: 8px;
+	width: 8px;
+	border-top: 2px solid color-mix(in srgb, var(--c-text-muted) 28%, transparent);
+}
+
+.variation-continuation .variation-rail::after {
+	display: none;
+}
+
+.variation-line {
+	display: flex;
+	flex-wrap: wrap;
+	min-width: 0;
+	background: color-mix(in srgb, var(--c-text-muted) 5%, transparent);
+}
+
+.variation-line .ply {
+	max-width: 50%;
+	height: 24px;
+	padding: 0 5px;
+	font-size: 0.84em;
+	color: var(--c-text-muted);
+}
+
+.variation-line .ply:hover {
+	color: var(--c-text-emphasis);
+}
+
+.variation-line .ply.current {
+	font-weight: normal;
+	color: #fff;
+}
+
+.move-index {
+	flex: 0 0 auto;
+	font-size: 0.86em;
+}
+
+/* ============================
+   Move navigation — nav buttons + actions menu
+   ============================ */
+
+.analysis .moves-nav {
+	position: relative;
+	background: var(--c-surface-2);
+	border: none;
+}
+
+.analysis-actions-toggle[aria-expanded='true'] {
+	color: var(--c-text-emphasis);
+	background: var(--c-hover-overlay);
+}
+
+/* ============================
+   Popup menus
+   ============================ */
+
+.analysis-context-menu,
+.analysis-menu {
+	position: absolute;
+	border: 1px solid var(--c-border);
+	border-radius: 4px;
+	background: var(--c-surface);
+	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+}
+
+.analysis-context-menu button,
+.analysis-menu button {
+	width: 100%;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.analysis-context-menu button:hover,
+.analysis-menu button:hover {
+	background: var(--c-hover-overlay);
+	color: var(--c-text-emphasis);
+}
+
+/* Move-tree right-click menu — built in JS, appended to <body>, positioned at the cursor. */
+.analysis-context-menu {
+	z-index: 1000;
+	min-width: 170px;
+	user-select: none;
+}
+
+.analysis-context-title {
+	padding: 7px 10px;
+	border-bottom: 1px solid var(--c-border-muted);
+	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+	color: var(--c-text-emphasis);
+	font-size: 0.84em;
+	font-weight: 700;
+	text-align: center;
+}
+
+.analysis-context-menu button {
+	display: block;
+	padding: 7px 12px;
+	font-size: 0.86em;
+	text-align: left;
+}
+
+/* Actions dropdown — anchored above the actions toggle in the nav bar. */
+.analysis-menu {
+	right: 2px;
+	bottom: calc(100% + 5px);
+}
+
+.analysis-menu button {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	padding: 8px 10px;
+	font-size: 0.9em;
+}
+
+.analysis-menu svg {
+	width: 18px;
+	height: 18px;
+}
+
+#btn-continue-from-here svg {
+	transform: scale(1.15);
+}
+
+/* ============================
+   Eval gauge
+   ============================ */
+
+.eval-gauge {
+	position: relative;
+	flex: 0 0 15px;
+	background: #ddd;
+}
+
+.gauge-black {
+	background: #333;
+	transition: height 0.4s ease;
+}
+
+.gauge-tick {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: rgba(120, 120, 120, 0.4);
+	transform: translateY(-50%);
+}
+
+.gauge-zero {
+	height: 8px;
+	background: color-mix(in srgb, var(--c-accent, #d64f00) 80%, transparent);
+}
+
+/* Flipped board: white on top */
+.eval-gauge.flipped {
+	transform: rotate(180deg);
+}
+
+/* ==============================
+   Utility classes
+   ============================== */
+
+/* Recommended for specificity, because `display` rules in here may overwrite the .hidden
+   class from global.css. Without this, the engine setting drawer is always visible. */
+.hidden {
+	display: none;
+}

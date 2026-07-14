@@ -305,9 +305,6 @@ function makeMove(boardsim: Board, move: MoveFull): void {
 
 	applyMove(boardsim, move, true, { global: true }); // Apply the logical board changes.
 
-	// This needs to be after the moveIndex is updated
-	updateTurn(boardsim);
-
 	// Now we can test for check, and modify the state of the boardsim if it is.
 	createCheckState(boardsim, move);
 	if (boardsim.state.local.inCheck) move.flags.check = true;
@@ -322,6 +319,9 @@ function makeMove(boardsim: Board, move: MoveFull): void {
  */
 function applyMove(boardsim: Board, move: MoveFull, forward = true, { global = false } = {}): void {
 	boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the boardsim moveIndex
+	// Updating whosTurn is essentially a global state change.
+	// Needs to be after moveIndex is updated.
+	if (global) boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex); // prettier-ignore
 
 	// Stops stupid missing piece errors
 	const indexToApply = boardsim.state.local.moveIndex + Number(!forward);
@@ -344,13 +344,6 @@ function applyMove(boardsim: Board, move: MoveFull, forward = true, { global = f
 function applyEdit(boardsim: Board, edit: Edit, forward: boolean, global: boolean): void {
 	state.applyMove(boardsim.state, edit.state, forward, { globalChange: global }); // Apply the State of the move
 	boardchanges.runChanges(boardsim, edit.changes, boardchanges.changeFuncs, forward); // Logical board changes
-}
-
-/**
- * Updates the `whosTurn` property of the boardsim, according to the move index we're on.
- */
-function updateTurn(boardsim: Board): void {
-	boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex);
 }
 
 /**
@@ -493,8 +486,6 @@ function rewindMove(boardsim: Board): void {
 
 	// Delete the move off the end of our moves list
 	boardsim.moves.pop();
-
-	updateTurn(boardsim);
 }
 
 // Dynamic -------------------------------------------------------------------------------------------------------
@@ -589,7 +580,6 @@ export default {
 	hasCastlingPartner,
 	makeMove,
 	generateAndMakeMove,
-	updateTurn,
 	goToMove,
 	runActionAtGameFront,
 	makeAllMovesInGame,

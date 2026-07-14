@@ -181,3 +181,4 @@ GameBus.addEventListener('game-loaded', () => {
 });
 // Rewinding/forwarding restores the board to the viewed move, so the live counts already reflect it.
 GameBus.addEventListener('view-move', () => enqueueRender(render));
+GameBus.addEventListener('board-flipped', () => enqueueRender(render));

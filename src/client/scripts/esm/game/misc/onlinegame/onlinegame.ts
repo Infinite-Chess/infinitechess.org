@@ -21,7 +21,12 @@ import socketmessages from '../../../websocket/socketmessages.js';
 
 import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 
-// Variables ------------------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------
+
+/** The various lifecycle stages of the server game. See {@link stage}. */
+type GameStage = 'active' | 'finalized' | 'evicted';
+
+// Variables ----------------------------------------------------------------
 
 /**
  * Whetherwe are in sync with the server game, and the game isn't finalized yet (excludes rematch state).
@@ -32,19 +37,26 @@ import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 let inSync: boolean = false;
 
 /**
- * Whether the game's result is finalized (locked in permanently on the server). Once true, nothing
- * but rematch-offer state can change, so a reconnect fetches only that (`subscriberematch`) rather than
- * re-subscribing. Set from the `finalized` flag on any game snapshot, or the `finalized` message.
- * Concluded non-server-validated games have a short window where the conclusion can be contested.
+ * The lifecycle stage of the server game, dictating what a (re)subscribe requests.
+ * Advances monotonically active -> finalized -> evicted:
+ * - `undefined`: no game loaded yet — the initial subscribe requests the full state to bootstrap.
+ * - `'active'`: game is live — a reconnect does a full `subscribe` to resync.
+ * - `'finalized'`: conclusion is locked in permanently; nothing but rematch-offer state can change,
+ *   so a reconnect fetches only that via `subscriberematch`. Set from the `finalized` flag on a game
+ *   snapshot, or the `finalized` message.
+ * - `'evicted'`: server deleted the game from memory (sent the `unsub` action, or the game was
+ *   fetched dead over HTTP); it is now dead, so a reconnect doesn't re-subscribe at all.
  */
-let finalized: boolean = false;
+let stage: GameStage | undefined = undefined;
 
 // Events -------------------------------------------------
 
 SocketBus.addEventListener('closed', () => {
-	if (!finalized) inSync = false;
+	if (stage !== 'evicted') inSync = false;
 });
-SocketBus.addEventListener('reconnected', () => subscribeToGame());
+SocketBus.addEventListener('reconnect', () => {
+	if (stage !== 'evicted') subscribeToGame();
+});
 
 // Getters ------------------------------------------------------------
 
@@ -61,9 +73,10 @@ function setInSync(value: boolean): void {
 /**
  * A fresh page load (not a reconnect, game live OR dead): Loads a game onto the
  * board from a fresh `gamestate` message and sets up the online-game session.
+ * @param dead - Whether the server has evicted it from memory. True if fetched over HTTP.
  * @param ourRole - The viewer's color, if they're a participant; undefined => spectator (white POV).
  */
-function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
+function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Player): void {
 	gamesession.setSessionGame({ type: 'online', role: ourRole });
 
 	// The static setup (variant/time control/creation time) is SSR'd
@@ -74,8 +87,8 @@ function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
 			timeControl,
 			variant: variant.kind === 'preset' ? variant.code : undefined,
 			dateTimestamp: timeCreated,
-			// Spectators (no role) view white's side.
-			viewWhitePerspective: ourRole === p.WHITE || ourRole === undefined,
+			// Black views from their side; white and spectators (no role) view white's side.
+			viewWhitePerspective: ourRole !== p.BLACK,
 			additional: {
 				moves: state.moves,
 				gameConclusion: state.gameConclusion,
@@ -84,7 +97,8 @@ function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
 		})
 		.then(({ graphical }) => {
 			// Logical loaded, return graphical promise
-			initOnlineGame(state.finalized, state.participantState);
+			const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
+			initOnlineGame(initialStage, state.participantState);
 
 			gamesession.concludeGameIfOver();
 			// A finalized rated game carries its deltas in the state.
@@ -98,13 +112,12 @@ function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
 
 /**
  * Initializes the online game session.
- * @param isFinalized - Whether the game's result is already finalized (locked in, db logged) on the server.
+ * @param initialStage - The game's starting lifecycle {@link stage}.
  * @param participantState - Only provide if we're a participant of an ongoing game,
  *   not a spectator or when the game is memory-evicted.
  */
-function initOnlineGame(isFinalized: boolean, participantState?: ParticipantState): void {
-	inSync = true;
-	finalized = isFinalized;
+function initOnlineGame(initialStage: GameStage, participantState?: ParticipantState): void {
+	stage = initialStage;
 
 	// If we are a participator, set the draw offers, disconnect timer, rematch state.
 	setParticipantState(participantState);
@@ -171,18 +184,27 @@ function subscribeToGame(): void {
 	const id = window.gamePageData.id;
 
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
-	if (!finalized) {
-		// Game either hasn't concluded yet, or the conclusion may still change (non-server-validated game)
-		socketmessages.send('game', 'subscribe', id);
-	} else {
+	if (stage === 'finalized') {
 		// The result is locked in — nothing but rematch offers can change, so we can't desync.
 		socketmessages.send('game', 'subscriberematch', id);
+	} else {
+		// No game loaded yet (initial subscribe), or it's live but
+		// not finalized (may still change) — request the full state.
+		socketmessages.send('game', 'subscribe', id);
 	}
 }
 
-/** Records the game's result as finalized. See {@link finalized}. */
+/** Records the game's stage as finalized. See {@link stage}. */
 function onFinalized(): void {
-	finalized = true;
+	if (stage === 'active') stage = 'finalized'; // Never regress a later 'evicted'
+}
+
+/**
+ * Records that the server has evicted the participants from the game.
+ * No further state updates are received, not even rematch state. See {@link stage}.
+ */
+function onEvicted(): void {
+	stage = 'evicted';
 }
 
 // Exports -------------------------------------------------------------------------
@@ -191,8 +213,8 @@ export default {
 	areInSync,
 	setInSync,
 	loadGameFromState,
-	initOnlineGame,
 	setParticipantState,
 	subscribeToGame,
 	onFinalized,
+	onEvicted,
 };
