@@ -10,6 +10,7 @@
 
 import webgl from './rendering/webgl.js';
 import camera from './rendering/camera.js';
+import boardpos from './rendering/boardpos.js';
 import gamecore from './chess/gamecore.js';
 import gameslot from './chess/gameslot.js';
 import IndexedDB from '../util/IndexedDB.js';
@@ -26,6 +27,8 @@ let onUpdate: (() => void) | undefined;
 function init(canvas: HTMLCanvasElement): void {
 	const gl = webgl.init(canvas); // Initiate the WebGL context. This is our web-based render engine.
 	camera.init(gl, canvas); // Initiates the camera/projection/model matrix uniforms.
+	camera.wireGlobalListeners(); // Keep the interactive camera synced to window resizes & FOV changes.
+	boardpos.wireGlobalListeners(); // Erase board momentum when the game starts a transition.
 	gamecore.init(canvas);
 
 	window.addEventListener('beforeunload', () => {
@@ -65,7 +68,7 @@ function render(): void {
 	// (the canvas stays visibility-hidden until then).
 	if (!gameslot.getGamefile() || gamesession.isLoading()) return;
 
-	webgl.clearScreen(); // Clear the color + depth buffers
+	gamecore.getGameContext().clearScreen(); // Clear the color + depth + stencil buffers
 	maskedDraw.onFrameStart(); // Reset stencil bit-pair index for this frame
 
 	gamecore.render();

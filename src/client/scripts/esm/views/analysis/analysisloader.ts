@@ -17,8 +17,8 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 import toast from '../../components/toast.js';
-import guiclock from '../../game/gui/guiclock.js';
 import gamesession from '../../game/chess/gamesession.js';
+import guianalysisview from './gui/guianalysisview.js';
 import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
 import gameslot, { LoadOptions } from '../../game/chess/gameslot.js';
 
@@ -41,7 +41,7 @@ async function loadInitialGame(): Promise<void> {
 			// (black flips it; spectators/white keep white's perspective).
 			const viewWhitePerspective = window.analysisPageData.role !== p.BLACK;
 			await pasteGame(state.icn, state.gameConclusion, viewWhitePerspective);
-			syncClockDisplayToViewedMove(true);
+			guianalysisview.syncClockDisplayToViewedMove(true);
 		} catch (e) {
 			// This can only be reached if the game was deleted from the DB between
 			// SSR'ing (otherwise we would have seen a 404 page) and the client fetch.
@@ -51,16 +51,6 @@ async function loadInitialGame(): Promise<void> {
 			toast.show('Failed to load game. Please refresh.', { error: true });
 		}
 	}
-}
-
-/**
- * Syncs the clock display to the currently viewed move.
- * @param remapBars - If true, also re-maps which bar each player's clock occupies.
- */
-function syncClockDisplayToViewedMove(remapBars = false): void {
-	const gamefile = gameslot.getGamefile()!;
-	if (remapBars) guiclock.set(gamefile);
-	guiclock.showViewedMoveClockStamps(gamefile);
 }
 
 /**
@@ -182,9 +172,8 @@ async function pasteGame(
 }
 
 export default {
+	loadInitialGame,
 	loadVariant,
 	loadVariantOptions,
 	pasteGame,
-	loadInitialGame,
-	syncClockDisplayToViewedMove,
 };

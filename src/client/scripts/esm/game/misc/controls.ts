@@ -31,7 +31,7 @@ import guipromotion from '../gui/guipromotion.js';
 import guimoveslist from '../gui/guimoveslist.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import { listener_document, listener_canvas } from '../chess/gamecore.js';
+import gamecore, { listener_document, listener_canvas } from '../chess/gamecore.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -252,7 +252,7 @@ function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
 
 	if (listener_document.isKeyDown('Tab')) guiboardcontrols.callback_Arrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
-		piecemodels.regenAll(gamefile, mesh);
+		piecemodels.regenAll(gamecore.getGameContext(), gamefile, mesh);
 		console.log('Regenerated piece models.');
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();

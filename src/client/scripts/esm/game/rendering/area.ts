@@ -7,6 +7,7 @@
  * {@link Transition} where to teleport to.
  */
 
+import type { Camera } from './camera.js';
 import type { BDCoords, Coords } from '../../../../../shared/chess/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -17,7 +18,7 @@ import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js
 import space from '../misc/space.js';
 import camera from './camera.js';
 import meshes from './meshes.js';
-import boardtiles from './boardtiles.js';
+import boardgeometry from './boardgeometry.js';
 
 /**
  * An area object, containing the information {@link Transition} needs
@@ -65,19 +66,20 @@ const iterationsToRecalcPadding: number = 10;
  * Returns a new bounding box, with added padding so the pieces
  * aren't too close to the edge or underneath the navigation bar.
  * @param box - The source bounding box, floating point edges.
+ * @param cam - The camera to fit the box within. Defaults to the game camera.
  * @returns The new bounding box
  */
-function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
+function applyPaddingToBox(box: BoundingBoxBD, cam: Camera = camera): BoundingBoxBD {
 	// { left, right, bottom, top }
 
 	const boxCopy: BoundingBoxBD = jsutil.deepCopyObject(box);
 
-	const canvasWidth = camera.getCanvasWidthVirtualPixels();
-	const canvasHeight = camera.getCanvasHeightVirtualPixels();
+	const canvasWidth = cam.getCanvasWidthVirtualPixels();
+	const canvasHeight = cam.getCanvasHeightVirtualPixels();
 
 	/** Start with a copy with zero padding. */
 	let paddedBox: BoundingBoxBD = jsutil.deepCopyObject(boxCopy);
-	let scaleBD: BigDecimal = calcScaleToMatchSides(paddedBox);
+	let scaleBD: BigDecimal = calcScaleToMatchSides(paddedBox, cam);
 
 	// Iterate until we have desired padding
 	for (let i = 0; i < iterationsToRecalcPadding; i++) {
@@ -85,7 +87,7 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
 		let paddingHorzPixels: number = canvasWidth * padding;
 		let paddingVertPixels: number = canvasHeight * padding;
 
-		if (bd.compare(scaleBD, camera.getScaleWhenZoomedOut()) < 0) {
+		if (bd.compare(scaleBD, cam.getScaleWhenZoomedOut()) < 0) {
 			// Zoomed-out area: constrain content to a fixed-size pixel region regardless of canvas
 			// size. Falls back to standard padding when the canvas is smaller than that region.
 			paddingHorzPixels = Math.max(
@@ -99,10 +101,10 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
 		}
 
 		const paddingHorzWorldBD = bd.fromNumber(
-			space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels),
+			space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels, cam),
 		);
 		const paddingVertWorldBD = bd.fromNumber(
-			space.convertPixelsToWorldSpace_Virtual(paddingVertPixels),
+			space.convertPixelsToWorldSpace_Virtual(paddingVertPixels, cam),
 		);
 		const paddingHorz: BigDecimal = bd.divide(paddingHorzWorldBD, scaleBD);
 		const paddingVert: BigDecimal = bd.divide(paddingVertWorldBD, scaleBD);
@@ -115,7 +117,7 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
 		};
 
 		// Prep for next iteration
-		scaleBD = calcScaleToMatchSides(paddedBox);
+		scaleBD = calcScaleToMatchSides(paddedBox, cam);
 	}
 
 	return paddedBox;
@@ -127,18 +129,18 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
  * @param box - The bounding box
  * @returns The area object
  */
-function calculateFromBox(box: BoundingBoxBD): Area {
+function calculateFromBox(box: BoundingBoxBD, cam: Camera = camera): Area {
 	// { left, right, bottom, top }
 	// The new boardPos is the middle point
 	const newBoardPos = bounds.calcCenterOfBoundingBox(box);
 
 	// What is the scale required to match the sides?
-	const newScale = calcScaleToMatchSides(box);
+	const newScale = calcScaleToMatchSides(box, cam);
 
 	// Now maximize the bounding box to fill entire screen when at position and scale, so that
 	// we don't have long thin slices of a bounding box that will fail the bounds.boxContainsSquare() function EVEN
 	// if the square is visible on screen!
-	const maximizedBox = boardtiles.getBoundingBoxOfBoard(newBoardPos, newScale, false);
+	const maximizedBox = boardgeometry.getBoundingBoxOfBoard(newBoardPos, newScale, false, cam);
 	// PROBLEM WITH this enabled is since it changes the size of the boundingBox, new coords are not centered.
 
 	return {
@@ -166,10 +168,10 @@ function getBoundingBoxHalfDimensions(boundingBox: BoundingBoxBD): {
  * @param boundingBox - The bounding box
  * @returns The scale (zoom) required
  */
-function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
+function calcScaleToMatchSides(boundingBox: BoundingBoxBD, cam: Camera = camera): BigDecimal {
 	const { xHalfLength, yHalfLength } = getBoundingBoxHalfDimensions(boundingBox);
 
-	const screenBoundingBox = camera.getScreenBoundingBox(false); // Get the screen bounding box without the navigation bars
+	const screenBoundingBox = cam.getScreenBoundingBox(false); // Get the screen bounding box without the navigation bars
 	const screenBoundingBoxBD: BoundingBoxBD =
 		bounds.castDoubleBoundingBoxToBigDecimal(screenBoundingBox);
 
@@ -186,7 +188,7 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
 	newScale = bd.min(newScale, capScale);
 
 	// Also cap the scale if squares would be too large visibly on screen
-	const tileWidthPixels = boardtiles.getTileWidthPixels(false, newScale);
+	const tileWidthPixels = boardgeometry.getTileWidthPixels(false, newScale, cam);
 	if (bd.compare(tileWidthPixels, AREA_MAX_SQUARE_VPIXELS) > 0) {
 		const scaleFactor = bd.divideFloating(AREA_MAX_SQUARE_VPIXELS, tileWidthPixels);
 		newScale = bd.multiplyFloating(newScale, scaleFactor);
@@ -199,25 +201,27 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
  * Calculates the area object that contains every coordinate in the provided list, *with padding added*,
  * and contains the optional {@link existingBox} bounding box.
  * @param coordsList - An array of coordinates, typically of the pieces.
+ * @param cam - The camera to fit the area within. Defaults to the game camera.
  * @returns The area object
  */
-function calculateFromCoordsList(coordsList: Coords[]): Area {
+function calculateFromCoordsList(coordsList: Coords[], cam: Camera = camera): Area {
 	if (coordsList.length === 0) throw Error('Cannot calculate area from an empty coords list.');
 
 	const box = bounds.getBoxFromCoordsList(coordsList); // Unpadded
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
 
-	return calculateFromUnpaddedBox(boxFloating);
+	return calculateFromUnpaddedBox(boxFloating, cam);
 }
 
 /**
  * Calulates the area object from the provided bounding box, *with padding added*.
  * @param box - A BoundingBox object.
+ * @param cam - The camera to fit the area within. Defaults to the game camera.
  * @returns The area object
  */
-function calculateFromUnpaddedBox(box: BoundingBoxBD): Area {
-	const paddedBox = applyPaddingToBox(box);
-	return calculateFromBox(paddedBox);
+function calculateFromUnpaddedBox(box: BoundingBoxBD, cam: Camera = camera): Area {
+	const paddedBox = applyPaddingToBox(box, cam);
+	return calculateFromBox(paddedBox, cam);
 }
 
 export default {

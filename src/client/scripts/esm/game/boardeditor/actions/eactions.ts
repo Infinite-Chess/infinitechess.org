@@ -283,7 +283,7 @@ function getValidatedPosition(): VariantOptions | null {
 		{ metadata: {} as MetaData, ...variantOptions },
 		{ skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false },
 	); // prettier-ignore
-	const illegalReason = validatePosition(variantOptions, icnString);
+	const illegalReason = validatePosition(variantOptions, icnString, true);
 	if (illegalReason !== null) {
 		// The position is illegal
 		toast.show(t.shared.position_errors[illegalReason], { error: true });

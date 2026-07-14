@@ -9,6 +9,7 @@
  */
 
 import type { Color } from '../../../../../shared/util/math/math.js';
+import type { BoardPos } from './boardpos.js';
 import type {
 	BoundingBox,
 	BoundingBoxBD,
@@ -28,8 +29,8 @@ import coordutil, {
 
 import camera from './camera.js';
 import boardpos from './boardpos.js';
-import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
+import boardgeometry from './boardgeometry.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -42,7 +43,7 @@ const ONE = bd.fromBigInt(1n);
  * @param coords - Must be within double bounds because it should only be for model vertice data.
  */
 function getCoordBoxModel(coords: DoubleCoords): DoubleBoundingBox {
-	const squareCenter = boardtiles.getSquareCenterAsNumber();
+	const squareCenter = boardgeometry.getSquareCenterAsNumber();
 	const left = coords[0] - squareCenter;
 	const bottom = coords[1] - squareCenter;
 	const right = left + 1;
@@ -57,7 +58,7 @@ function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
 	const boardPos = boardpos.getBoardPos();
 	const boardScale = boardpos.getBoardScaleAsNumber();
 
-	const squareCenterScaled = boardtiles.getSquareCenterAsNumber() * boardScale;
+	const squareCenterScaled = boardgeometry.getSquareCenterAsNumber() * boardScale;
 
 	const coordsBD = bdcoords.FromCoords(coords);
 
@@ -95,7 +96,7 @@ function expandTileBoundingBoxToEncompassWholeSquare(boundingBox: BoundingBox): 
  * {@link expandTileBoundingBoxToEncompassWholeSquare}, but use this if you already have a BigDecimal bounding box.
  */
 function expandTileBoundingBoxToEncompassWholeSquareBD(boundingBox: BoundingBoxBD): BoundingBoxBD {
-	const squareCenter = boardtiles.getSquareCenter();
+	const squareCenter = boardgeometry.getSquareCenter();
 	const inverseSquareCenter = bd.subtract(ONE, squareCenter);
 
 	const left = bd.subtract(boundingBox.left, squareCenter);
@@ -112,9 +113,12 @@ function expandTileBoundingBoxToEncompassWholeSquareBD(boundingBox: BoundingBoxB
  *
  * Since its floating, we don't bother to subtract squareCenter.
  */
-function applyWorldTransformationsToBoundingBox(boundingBox: BoundingBoxBD): DoubleBoundingBox {
-	const boardPos = boardpos.getBoardPos();
-	const boardScale = boardpos.getBoardScaleAsNumber();
+function applyWorldTransformationsToBoundingBox(
+	boundingBox: BoundingBoxBD,
+	bpos: BoardPos = boardpos,
+): DoubleBoundingBox {
+	const boardPos = bpos.getBoardPos();
+	const boardScale = bpos.getBoardScaleAsNumber();
 
 	const left: number = bd.toNumber(bd.subtract(boundingBox.left, boardPos[0])) * boardScale;
 	const right: number = bd.toNumber(bd.subtract(boundingBox.right, boardPos[0])) * boardScale;
@@ -215,10 +219,14 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 // Other Generic Rendering Methods -------------------------------------------------------
 
 /** Returns the position and uniform scale needed to render a board-space model. */
-function getBoardRenderTransform(offset: Coords, z: number = 0): { position: Vec3; scale: Vec3 } {
-	const boardPos = boardpos.getBoardPos();
+function getBoardRenderTransform(
+	offset: Coords,
+	z: number = 0,
+	bpos: BoardPos = boardpos,
+): { position: Vec3; scale: Vec3 } {
+	const boardPos = bpos.getBoardPos();
 	const position = getModelPosition(boardPos, offset, z);
-	const boardScale = boardpos.getBoardScaleAsNumber();
+	const boardScale = bpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 	return { position, scale };
 }

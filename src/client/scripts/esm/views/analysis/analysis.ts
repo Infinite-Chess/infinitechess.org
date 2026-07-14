@@ -8,15 +8,15 @@
  */
 
 import gameloop from '../../game/gameloop.js';
-import enginepanel from './gui/guienginepanel.js';
-import analysisview from './gui/guianalysisview.js';
-import guigamereview from './gui/guigamereview.js';
 import analysisloader from './analysisloader.js';
-import analysisactions from './gui/guianalysisactions.js';
+import guigamereview from './gui/guigamereview.js';
+import guienginepanel from './gui/guienginepanel.js';
+import guianalysisview from './gui/guianalysisview.js';
+import guianalysisactions from './gui/guianalysisactions.js';
 
 import './gui/guimovetree.js';
-import './analysisworldborder.js';
 import '../../game/gui/guimaterial.js';
+import './rendering/analysisborderdebug.js';
 
 /** The analysis-page board canvas WebGL renders onto. */
 const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
@@ -31,8 +31,8 @@ function start(): void {
 		btn.addEventListener('click', () => btn.blur());
 	});
 
-	enginepanel.init();
-	analysisactions.init();
+	guienginepanel.init();
+	guianalysisactions.init();
 	guigamereview.init();
 	// The variant setup panel only exists on the plain /analysis page (not /analysis/:id).
 	// Import it lazily so the variant-selector widget's DOM lookups never run without it.
@@ -44,8 +44,8 @@ function start(): void {
 
 	// Poll each module's keyboard shortcuts every frame (via gamecore's document input listener).
 	gameloop.start(() => {
-		analysisview.updateShortcuts();
-		enginepanel.updateShortcuts();
+		guianalysisview.updateShortcuts();
+		guienginepanel.updateShortcuts();
 	});
 }
 

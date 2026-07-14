@@ -123,7 +123,7 @@ let engineSupportsThreads = true;
 /** Most threads the user can pick: {@link THREAD_CAP} when threading is usable, else 1 (locked). */
 function maxThreads(): number {
 	if (!BROWSER_SUPPORTS_THREADS || !engineSupportsThreads) return 1;
-	return Math.min(THREAD_CAP, Math.max(1, navigator.hardwareConcurrency || 2));
+	return math.clamp(navigator.hardwareConcurrency || 2, 1, THREAD_CAP);
 }
 
 const DEFAULT_THREADS = maxThreads();
@@ -208,10 +208,10 @@ function loadSettings(): CevalSettings {
 		if (Number.isFinite(num)) loaded[key] = num;
 	}
 	// Sanitize against the allowed ranges.
-	loaded.multiPv = Math.min(Math.max(1, loaded.multiPv), MAX_MULTI_PV);
+	loaded.multiPv = math.clamp(loaded.multiPv, 1, MAX_MULTI_PV);
 	if (!HASH_OPTIONS.includes(loaded.hashMb)) loaded.hashMb = DEFAULT_SETTINGS.hashMb;
-	loaded.depth = Math.min(Math.max(MIN_DEPTH, Math.round(loaded.depth)), MAX_DEPTH);
-	loaded.threads = Math.min(Math.max(1, Math.round(loaded.threads)), maxThreads());
+	loaded.depth = math.clamp(Math.round(loaded.depth), MIN_DEPTH, MAX_DEPTH);
+	loaded.threads = math.clamp(Math.round(loaded.threads), 1, maxThreads());
 	return loaded;
 }
 
@@ -220,8 +220,6 @@ function persistSettings(): void {
 		localStorage.setItem(STORAGE_PREFIX + key, String(value));
 	}
 }
-
-// Capability queries ----------------------------------------------------------------
 
 // Winning chances (adjusted for infinitechess players) ------------------------------------
 
@@ -496,7 +494,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
-	if (analysisenginebounds.findFirstPieceOutsideEngineWorld(gamefile)) {
+	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) {
 		blockAnalysisForEngineWorldBorder();
 		return;
 	}
@@ -855,8 +853,9 @@ function getSettings(): CevalSettings {
 function updateSettings(partial: Partial<CevalSettings>): void {
 	const previous = settings;
 	settings = { ...settings, ...partial };
-	settings.multiPv = Math.min(Math.max(1, settings.multiPv), MAX_MULTI_PV);
-	settings.threads = Math.min(Math.max(1, settings.threads), maxThreads());
+	// The UI panel feeds valid values
+	settings.multiPv = math.clamp(settings.multiPv, 1, MAX_MULTI_PV);
+	settings.threads = math.clamp(settings.threads, 1, maxThreads());
 	persistSettings();
 
 	if (!enabled || !worker) return;
@@ -868,23 +867,24 @@ function updateSettings(partial: Partial<CevalSettings>): void {
 		// Reflect a MultiPV change on screen at once (trim/keep lines) before the engine
 		// re-runs, so it isn't stuck showing the old line count until the next update.
 		if (partial.multiPv !== undefined) reemitCurrent();
+		// Raising MultiPV restarts from depth 1 (warm TT kept); let those lower-depth rows
+		// repaint over the deeper cache so the new line appears at once, not on catch-up.
 		if (partial.multiPv !== undefined && settings.multiPv > previous.multiPv) {
-			restartWorkerForSearch();
-		} else {
-			// Same position, new search params: keep the current eval visible while the
-			// worker picks up the new target.
-			refreshAnalysis(true, { restartSearch: partial.multiPv !== undefined });
-			// Raising the depth after the search already finished must visibly resume: reflect
-			// the new target and "searching" state now (refreshAnalysis has re-issued the 'go'),
-			// so the stats/progress leave "done" instead of waiting on the first deeper info.
-			if (
-				partial.depth !== undefined &&
-				latestUpdate?.done &&
-				latestUpdate.depth < currentTargetDepth
-			) {
-				latestUpdate = { ...latestUpdate, targetDepth: currentTargetDepth, done: false };
-				emitNow();
-			}
+			allowDepthRegressionForCurrentSearch = true;
+		}
+		// Same position, new search params: keep the current eval visible while the
+		// worker picks up the new target.
+		refreshAnalysis(true, { restartSearch: partial.multiPv !== undefined });
+		// Raising the depth after the search already finished must visibly resume: reflect
+		// the new target and "searching" state now (refreshAnalysis has re-issued the 'go'),
+		// so the stats/progress leave "done" instead of waiting on the first deeper info.
+		if (
+			partial.depth !== undefined &&
+			latestUpdate?.done &&
+			latestUpdate.depth < currentTargetDepth
+		) {
+			latestUpdate = { ...latestUpdate, targetDepth: currentTargetDepth, done: false };
+			emitNow();
 		}
 	}
 }
@@ -931,6 +931,8 @@ function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
 }
 
 export default {
+	maxThreads,
+	requestLegalMoves,
 	init,
 	isEnabled,
 	isBlockedByEngineWorldBorder,
@@ -939,8 +941,6 @@ export default {
 	updateSettings,
 	goDeeper,
 	getLatestUpdate,
-	getStatus,
-	requestLegalMoves,
 	seedPositionCache,
 	onUpdate,
 	onStatus,
@@ -949,7 +949,6 @@ export default {
 	MIN_DEPTH,
 	HASH_OPTIONS,
 	MAX_MULTI_PV,
-	maxThreads,
 };
 
 export type { CevalSettings, CevalLine, CevalUpdate, CevalStatus, CevalLegalMovesUpdate };

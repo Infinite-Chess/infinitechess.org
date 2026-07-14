@@ -15,8 +15,8 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import space from '../../misc/space.js';
 import camera from '../camera.js';
 import boardpos from '../boardpos.js';
-import boardtiles from '../boardtiles.js';
 import perspective from '../perspective.js';
+import boardgeometry from '../boardgeometry.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 /**
@@ -48,7 +48,7 @@ interface Line {
 function getRenderRange(): BoundingBoxBD {
 	if (!perspective.getEnabled()) {
 		// 2D mode
-		return boardtiles.gboundingBoxFloat();
+		return boardgeometry.gboundingBoxFloat();
 	} else {
 		// Perspective mode
 

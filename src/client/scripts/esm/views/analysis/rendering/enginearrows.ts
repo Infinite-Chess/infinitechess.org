@@ -1,4 +1,4 @@
-// src/client/scripts/esm/views/analysis/enginearrows.ts
+// src/client/scripts/esm/views/analysis/rendering/enginearrows.ts
 
 /**
  * Renders the analysis engine's suggested moves as arrows on the board — the
@@ -6,17 +6,18 @@
  * fade out), like lichess' analysis arrows.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
-import type { Arrow } from '../../game/rendering/highlights/annotations/annotations.js';
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { CevalLine, CevalUpdate } from './ceval.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Arrow } from '../../../game/rendering/highlights/annotations/annotations.js';
+import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { CevalLine, CevalUpdate } from '.././ceval.js';
 
-import icnconverter, { MoveCoords } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import icnconverter, { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
-import gameslot from '../../game/chess/gameslot.js';
-import drawarrows from '../../game/rendering/highlights/annotations/drawarrows.js';
-import frametracker from '../../game/rendering/frametracker.js';
-import { createRenderable } from '../../webgl/Renderable.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import drawarrows from '../../../game/rendering/highlights/annotations/drawarrows.js';
+import frametracker from '../../../game/rendering/frametracker.js';
+import { createRenderable } from '../../../webgl/Renderable.js';
 
 // Types --------------------------------------------------------------------
 
@@ -31,7 +32,7 @@ interface EngineArrow {
 // Constants -----------------------------------------------------------------
 
 /** Best-line arrow color (blue, like lichess' engine arrows). */
-const COLOR: Color = [1.0, 0, 0, 0.7];
+const COLOR: Color = [0.15, 0.48, 0.85, 0.85];
 /** Each rank is this much more transparent than the previous. */
 const RANK_OPACITY_MULTIPLIER = 0.7;
 
@@ -54,10 +55,13 @@ function update(update: CevalUpdate): void {
 		if (parsed) engineArrows.push({ start: parsed.startCoords, end: parsed.endCoords, rank });
 	});
 
-	arrows = engineArrows.map((a) => ({
-		arrow: drawarrows.createArrow(a.start, a.end),
-		rank: a.rank,
-	}));
+	arrows = engineArrows
+		// A same-square "move" can't be drawn as an arrow. In engines, A1>A1 is a default move.
+		.filter((a) => !coordutil.areCoordsEqual(a.start, a.end))
+		.map((a) => ({
+			arrow: drawarrows.createArrow(a.start, a.end),
+			rank: a.rank,
+		}));
 	frametracker.onVisualChange();
 }
 

@@ -66,7 +66,7 @@ function createPracticeProgressCookie(res: Response, checkmates_beaten: string):
  * Deletes the checkmates_beaten progress cookie for the user.
  * Typically called when they log out.
  * Even though the cookie only lasts 10 seconds, this is still helpful
- * @param {Object} res - The Express response object.
+ * @param res - The Express response object.
  */
 function deletePracticeProgressCookie(res: Response): void {
 	res.clearCookie('checkmates_beaten', {

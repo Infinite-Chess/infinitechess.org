@@ -288,8 +288,8 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 
 /**
  * Returns the specified property of the provided theme.
- * @param {string} themeName - The name of the theme, e.g., "sandstone".
- * @param {string} property - The property to retrieve, e.g., "legalMovesHighlightColor_Friendly".
+ * @param themeName - The name of the theme, e.g., "sandstone".
+ * @param property - The property to retrieve, e.g., "legalMovesHighlightColor_Friendly".
  * @returns - The property of the theme or the default value.
  */
 function getPropertyOfTheme(themeName: string, property: keyof ThemeProperties): any {

@@ -5,13 +5,16 @@
  *
  * Persistent-session engine worker for the analysis board. Unlike the gameplay
  * worker (hydrochess.ts) which answers one best-move request per message, this
- * runs an ongoing time-sliced MultiPV search of the current position and streams
- * UCI-like info updates back to the main thread after every completed depth.
- * Between slices it yields to the message queue, so position/settings/stop
- * commands stay responsive even though each search slice blocks the thread.
+ * runs an ongoing MultiPV search of the current position and streams UCI-like
+ * info updates back to the main thread after every completed depth.
+ *
+ * Each search runs unbounded toward its target depth, blocking the worker thread.
+ * Responsiveness comes not from time-slicing but from the shared stop flag: the page
+ * writes it to abort the in-flight search, letting a queued position/settings/stop
+ * command be processed before the loop re-searches the new desired state.
  *
  * Multithreaded (Lazy SMP) build: `initThreadPool` spins up helper search threads, and
- * the page can abort an in-flight slice instantly by writing the shared stop flag (posted
+ * the page can abort an in-flight search instantly by writing the shared stop flag (posted
  * back as {@link AnalysisResponse} 'sharedmem') — so switching positions never discards the
  * warm transposition table. Requires the page to be cross-origin isolated (SharedArrayBuffer).
  */
@@ -222,16 +225,25 @@ function postLegalMoves(requestId: number, icn: string): void {
 		return;
 	}
 
-	const legalMoveEngine = wasm.Engine.from_icn(icn, {});
-	const legalMoves: { from: string; to: string; promotion?: string | null }[] =
-		legalMoveEngine.get_legal_moves_js();
-	const moves = legalMoves.map((move) => {
-		let token = `${move.from}>${move.to}`;
-		if (move.promotion) token += `=${move.promotion}`;
-		return token;
-	});
-	legalMoveEngine.free();
-	postMessage({ type: 'legalmoves', requestId, moves } satisfies AnalysisResponse);
+	let legalMoveEngine: any;
+	try {
+		legalMoveEngine = wasm.Engine.from_icn(icn, {});
+		const legalMoves: { from: string; to: string; promotion?: string | null }[] =
+			legalMoveEngine.get_legal_moves_js();
+		const moves = legalMoves.map((move) => {
+			let token = `${move.from}>${move.to}`;
+			if (move.promotion) token += `=${move.promotion}`;
+			return token;
+		});
+		postMessage({ type: 'legalmoves', requestId, moves } satisfies AnalysisResponse);
+	} catch (e) {
+		// A wasm throw here would otherwise leak the engine and hang the main thread's request
+		// (no response ever posted). Reply empty so the debug overlay just shows nothing.
+		console.error('[Analysis Engine] Legal-move enumeration failed', e);
+		postMessage({ type: 'legalmoves', requestId, moves: [] } satisfies AnalysisResponse);
+	} finally {
+		legalMoveEngine?.free();
+	}
 }
 
 /**
@@ -321,7 +333,6 @@ async function runLoop(): Promise<void> {
 					slice_ms: SLICE_MS,
 				},
 				(info: AnalysisInfo) => {
-					if (gen !== generation) return;
 					postMessage({ type: 'info', requestId, info } satisfies AnalysisResponse);
 				},
 			);

@@ -1,6 +1,7 @@
 // src/client/scripts/esm/game/rendering/effect_zone/EffectZoneManager.ts
 
-import boardtiles from '../boardtiles';
+import type { BoardTiles } from '../boardtiles';
+
 import ImageLoader from '../../../util/ImageLoader';
 import preferences from '../../../components/header/preferences';
 import frametracker from '../frametracker';
@@ -277,8 +278,9 @@ export class EffectZoneManager {
 
 	/**
 	 * Renders the board tiles with all active Zones effects applied.
+	 * @param boardtiles - The tile renderer of the game's render context.
 	 */
-	public renderBoard(): void {
+	public renderBoard(boardtiles: BoardTiles): void {
 		const fromZone = this.currentZone;
 		const toZone = this.transitionTargetZone || this.currentZone;
 

@@ -4,7 +4,6 @@
  * This script works with buffers. Creating them, assigning data, and modifying their indices.
  */
 
-import { gl } from '../game/rendering/webgl.js';
 import { TypedArray } from './Renderable.js';
 
 // Variables --------------------------------------------------------------------------------
@@ -38,6 +37,7 @@ const DRAW_HINT = 'STATIC_DRAW';
  * @param changedIndicesCount - The number of indices in the vertex data that were changed, beginning at {@link changedIndicesStart}.
  */
 function updateBufferIndices(
+	gl: WebGL2RenderingContext,
 	buffer: WebGLBuffer,
 	data: TypedArray,
 	changedIndicesStart: number,
@@ -69,7 +69,7 @@ function updateBufferIndices(
  * @param data - The vertex data to be copied into the buffer.
  * @returns The created WebGL buffer.
  */
-function createBufferFromData(data: TypedArray): WebGLBuffer {
+function createBufferFromData(gl: WebGL2RenderingContext, data: TypedArray): WebGLBuffer {
 	const buffer = gl.createBuffer()!; // Create an empty buffer for the model's vertex data.
 	gl.bindBuffer(gl.ARRAY_BUFFER, buffer); // Bind the buffer before we work with it. This is pretty much instantaneous no matter the buffer size.
 	// Copy our vertex data into the buffer.

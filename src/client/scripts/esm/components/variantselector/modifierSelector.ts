@@ -151,6 +151,29 @@ function hasVisibleModifierItems(): boolean {
 	);
 }
 
+/**
+ * Replaces the current selection with the given modifiers, syncing the dropdown,
+ * chips, and slider. Used to restore a snapshotted modifier state (no commit fired).
+ */
+function applyModifiers(modifiers: SeekModifier[]): void {
+	selectedModifiers.clear();
+	for (const modifier of modifiers) {
+		selectedModifiers.add(modifier.kind);
+		if (modifier.kind === 'slide-limit') {
+			const idx = gameconfig.SLIDE_LIMIT_VALUES.indexOf(modifier.value);
+			element_slideLimitSlider.value = String(idx);
+			element_slideLimitDisplay.textContent = String(modifier.value);
+		}
+	}
+	// Hide selected modifiers from the dropdown; reveal the rest.
+	element_modifierDropdown.querySelectorAll<HTMLElement>('[data-modifier]').forEach((item) => {
+		const code = item.getAttribute('data-modifier') as ModifierCode;
+		item.classList.toggle('hidden', selectedModifiers.has(code));
+	});
+	refreshModifiersSection();
+	refreshModifierAddBtn();
+}
+
 /** Returns the complete configuration for every currently selected modifier. */
 function getSeekModifiers(): SeekModifier[] {
 	const configs: SeekModifier[] = [];
@@ -168,4 +191,5 @@ export default {
 	initModifierSelector,
 	closeModifierDropdown,
 	getSeekModifiers,
+	applyModifiers,
 };

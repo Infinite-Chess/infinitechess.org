@@ -3,20 +3,26 @@
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 /**
- * This script stores our global WebGL rendering context,
- * and other utility methods.
+ * This script builds WebGL rendering contexts, and stores our
+ * interactive game's context, and contains other utility methods.
+ *
+ * {@link createContext} builds & configures a fresh WebGL2 context for any canvas.
+ * {@link init} creates the interactive game's context and stores it as the module {@link gl}
+ * export (used by game-only code). The variant-preview tooltip creates its own context via
+ * {@link createContext}. The stateless helpers below take an optional `glCtx` that defaults
+ * to the game context, so game-only callers stay unchanged while per-context code passes its own.
  */
 
-/** The WebGL rendering context. This is our web-based render engine. */
+/** The interactive game's WebGL rendering context. Initiated in {@link init}. */
 let gl: WebGL2RenderingContext; // The WebGL context. Is initiated in init()
 /** Whether {@link init} has run and {@link gl} is ready to use. */
 let initialized: boolean = false;
 
 /**
- * The color the screen should be cleared to every frame.
- * This can be changed to give the sky a different color.
+ * The default screen clear color, used to initialize a fresh context and as the
+ * fallback for {@link clearScreen}. Per-context sky colors live on each RenderContext.
  */
-let clearColor: Vec3 = [0.5, 0.5, 0.5]; // Grey
+const clearColor: Vec3 = [0.5, 0.5, 0.5]; // Grey
 
 /**
  * Specifies the condition under which a fragment passes the depth test,
@@ -47,17 +53,10 @@ const culling = false;
 const frontFaceVerticesAreClockwise = true;
 
 /**
- * Sets the color the screen will be cleared to every frame.
- *
- * This is useful for changing the sky color.
- * @param newClearColor - The new clear color: `[r,g,b]`
+ * Builds & configures a fresh WebGL2 rendering context for the given canvas.
+ * Does NOT touch module state — use {@link init} for the interactive game's context.
  */
-function setClearColor(newClearColor: Vec3): void {
-	clearColor = newClearColor;
-}
-
-/** Initiate the WebGL context. This is our web-based render engine. */
-function init(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
+function createContext(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
 	// Without `alpha: false` in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
 	const newContext = canvasElement.getContext('webgl2', {
 		alpha: false,
@@ -68,42 +67,37 @@ function init(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
 		// WebGL2 not supported
 		alert(translations.webgl_unsupported);
 		throw new Error('WebGL2 not supported by browser.');
-		// gl = canvasElement.getContext('webgl', { alpha: false });
 	}
-	// if (!gl) { // Init WebGL experimental
-	// 	console.log("Browser doesn't support WebGL-1, falling back on experiment-webgl.");
-	// 	gl = canvasElement.getContext('experimental-webgl', { alpha: false});
-	// }
-	// if (!gl) { // Experimental also failed to init
-	// 	alert(translations.webgl_unsupported);
-	// 	throw new Error("WebGL not supported.");
-	// }
 
-	gl = newContext;
-	initialized = true;
+	newContext.clearDepth(1.0); // Set the clear depth value
+	clearScreen(newContext);
 
-	gl.clearDepth(1.0); // Set the clear depth value
-	clearScreen();
+	newContext.enable(newContext.DEPTH_TEST);
+	newContext.depthFunc(newContext[defaultDepthFuncParam]);
 
-	gl.enable(gl.DEPTH_TEST);
-	gl.depthFunc(gl[defaultDepthFuncParam]);
-
-	gl.enable(gl.BLEND);
-	toggleNormalBlending();
+	newContext.enable(newContext.BLEND);
+	toggleNormalBlending(newContext);
 
 	if (culling) {
-		gl.enable(gl.CULL_FACE);
-		const dir = frontFaceVerticesAreClockwise ? gl.CW : gl.CCW;
-		gl.frontFace(dir); // Specifies what faces are considered front, depending on their vertices direction.
-		gl.cullFace(gl.BACK); // Skip rendering back faces. Alertnatively we could skip rendering FRONT faces.
+		newContext.enable(newContext.CULL_FACE);
+		const dir = frontFaceVerticesAreClockwise ? newContext.CW : newContext.CCW;
+		newContext.frontFace(dir); // Specifies what faces are considered front, depending on their vertices direction.
+		newContext.cullFace(newContext.BACK); // Skip rendering back faces. Alertnatively we could skip rendering FRONT faces.
 	}
 
-	gl.clearStencil(0); // Good practice, although 0 is the default
+	newContext.clearStencil(0); // Good practice, although 0 is the default
 
+	return newContext;
+}
+
+/** Initiates the interactive game's WebGL context, stored as the module {@link gl} export. */
+function init(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
+	gl = createContext(canvasElement);
+	initialized = true;
 	return gl;
 }
 
-/** Whether the WebGL context has been initialized via {@link init}. */
+/** Whether the game's WebGL context has been initialized via {@link init}. */
 function isInitialized(): boolean {
 	return initialized;
 }
@@ -111,20 +105,22 @@ function isInitialized(): boolean {
 /**
  * Clears color buffer and depth buffers.
  * Needs to be called every frame.
+ * @param glCtx - The context to clear. Defaults to the game context.
+ * @param color - The color to clear to. Defaults to the game clear color.
  */
-function clearScreen(): void {
-	gl.clearColor(...clearColor, 1.0);
-	gl.stencilMask(0xff); // Ensure all stencil bits are writable before clearing.
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+function clearScreen(glCtx: WebGL2RenderingContext, color: Vec3 = clearColor): void {
+	glCtx.clearColor(...color, 1.0);
+	glCtx.stencilMask(0xff); // Ensure all stencil bits are writable before clearing.
+	glCtx.clear(glCtx.COLOR_BUFFER_BIT | glCtx.DEPTH_BUFFER_BIT | glCtx.STENCIL_BUFFER_BIT);
 }
 
 /**
  * Toggles normal blending mode. Transparent objects will correctly have
  * their color shaded onto the color behind them.
  */
-function toggleNormalBlending(): void {
+function toggleNormalBlending(glCtx: WebGL2RenderingContext = gl): void {
 	// Non-premultiplied alpha blending mode. (Pre-multiplied would be gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	glCtx.blendFunc(glCtx.SRC_ALPHA, glCtx.ONE_MINUS_SRC_ALPHA);
 }
 
 /**
@@ -133,20 +129,22 @@ function toggleNormalBlending(): void {
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
  */
-function enableBlending_Inverse(): void {
-	gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.ZERO);
+function enableBlending_Inverse(glCtx: WebGL2RenderingContext = gl): void {
+	glCtx.blendFunc(glCtx.ONE_MINUS_DST_COLOR, glCtx.ZERO);
 }
 
 /**
  * Executes a function (typically a render function) while the depth function paramter
  * is `ALWAYS`. Objects will be rendered no matter if they are behind or on top of other objects.
  * This is useful for preventing tearing when objects are on the same z-level in perspective.
+ * @param func - The render function to run.
+ * @param glCtx - The context to affect. Defaults to the game context.
  */
-function executeWithDepthFunc_ALWAYS(func: Function): void {
+function executeWithDepthFunc_ALWAYS(func: Function, glCtx: WebGL2RenderingContext = gl): void {
 	// This prevents tearing when rendering in the same z-level and in perspective.
-	gl.depthFunc(gl.ALWAYS); // Temporary toggle the depth function to ALWAYS.
+	glCtx.depthFunc(glCtx.ALWAYS); // Temporary toggle the depth function to ALWAYS.
 	func();
-	gl.depthFunc(gl[defaultDepthFuncParam]); // Return to the original blending.
+	glCtx.depthFunc(glCtx[defaultDepthFuncParam]); // Return to the original blending.
 }
 
 /**
@@ -155,11 +153,13 @@ function executeWithDepthFunc_ALWAYS(func: Function): void {
  *
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
+ * @param func - The render function to run.
+ * @param glCtx - The context to affect. Defaults to the game context.
  */
-function executeWithInverseBlending(func: Function): void {
-	enableBlending_Inverse();
+function executeWithInverseBlending(func: Function, glCtx: WebGL2RenderingContext = gl): void {
+	enableBlending_Inverse(glCtx);
 	func();
-	toggleNormalBlending();
+	toggleNormalBlending(glCtx);
 }
 
 // /**
@@ -256,33 +256,14 @@ function executeWithInverseBlending(func: Function): void {
 // 	// }
 // }
 
-/**
- * Enables depth testing in WebGL.
- * This will ensure that objects closer to the camera are drawn in front of objects farther away.
- */
-function enableDepthTest(): void {
-	gl.enable(gl.DEPTH_TEST);
-}
-
-/**
- * Disables depth testing in WebGL.
- * This will ensure that all objects are drawn regardless of their distance from the camera.
- * More efficient that setting the depth test condition to gl.ALWAYS
- */
-function disableDepthTest(): void {
-	gl.disable(gl.DEPTH_TEST);
-}
-
 export default {
+	createContext,
 	init,
 	isInitialized,
 	clearScreen,
 	executeWithDepthFunc_ALWAYS,
 	executeWithInverseBlending,
-	setClearColor,
 	// queryWebGLContextInfo,
-	enableDepthTest,
-	disableDepthTest,
 };
 
 // TODO: Don't export this, but rather pass the gl returned from init() to all scripts that need it.

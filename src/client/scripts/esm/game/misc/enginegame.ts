@@ -59,7 +59,7 @@ enginelegalmovesdebug.init({
 /**
  * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
  * This method launches an engine webworker for the current game.
- * @param {Object} options - An object that contains the properties `currentEngine` and `engineConfig`
+ * @param options - An object that contains the properties `currentEngine` and `engineConfig`
  */
 function initEngineGame(options: {
 	youAreColor: Player;

@@ -1,15 +1,15 @@
-// src/client/scripts/esm/workers/icnvalidator.worker.ts
+// src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts
 
 /**
  * The web worker script for the ICN Validator Tool.
  */
 
-import type { GameConclusion } from '../../../../shared/chess/util/winconutil.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
-import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
-import metadatautil from '../../../../shared/chess/util/metadatautil.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 
-import gameformulator from '../game/chess/gameformulator.js';
+import gameformulator from '../../game/chess/gameformulator.js';
 
 // Define types
 interface WorkerMessage {

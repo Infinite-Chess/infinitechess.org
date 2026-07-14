@@ -53,9 +53,9 @@ type SupportedColumnTypes = string | number | boolean | null;
 
 /**
  * Executes a given SQL query with optional parameters and returns the result.
- * @param {string} query - The SQL query to be executed.
- * @param {Array} [params=[]] - An array of parameters to bind to the query.
- * @returns {object} - The result of the query execution.
+ * @param query - The SQL query to be executed.
+ * @param [params=[]] - An array of parameters to bind to the query.
+ * @returns - The result of the query execution.
  * @throws If a database error occurs.
  */
 function run(query: string, params: SupportedColumnTypes[] = []): Database.RunResult {

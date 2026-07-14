@@ -2,16 +2,15 @@
 
 /* The analysis page (/analysis/:id?): layered on top of game.css — same sidebar +
    board layout. Extras: the variant setup panel (shared widget, see
-   variantselector.css), the local-engine evaluation panel, the move tree, the actions
-   menu, and the eval gauge beside the board. */
+   variantselector.css), the local-engine evaluation panel, the move tree,
+   the actions menu, and the eval gauge beside the board. */
 
 /* ============================
    Variant setup panel
    ============================ */
 
-/* Wraps the shared variant selector widget in a sidebar card on the plain /analysis page. */
+/* Wraps the shared variant selector widget in a sidebar panel on the plain /analysis page. */
 .variant-setup {
-	flex: 0 0 auto;
 	padding: 8px 10px;
 	overflow: visible;
 }
@@ -20,14 +19,11 @@
    Play group / match panel layout
    ============================ */
 
+/* Like the game page (flex: 0 0 auto) the group never shrinks below its content, so
+   short screens scroll the sidebar instead of clipping the panel — but grow: 1 lets the
+   moves list expand to fill spare sidebar space (capped by .match-panel max-height). */
 .analysis .play-group {
-	flex: 1 1 360px;
-	min-height: 260px;
-}
-
-.analysis .play-group:has(.player-bar:not(.hidden)) {
-	flex-basis: 430px;
-	min-height: 430px;
+	flex: 1 0 auto;
 }
 
 /* Reserve the normal match-panel height as well as the fixed review graph. */
@@ -42,17 +38,11 @@
 
 .analysis .match-panel {
 	height: 100%;
-	min-height: 0;
 	max-height: 600px;
-}
-
-.analysis .match-panel > .player-bar {
-	flex: 0 0 auto;
 }
 
 .analysis .moves {
 	flex: 1 1 auto;
-	min-height: 0;
 	overflow: hidden;
 }
 
@@ -62,25 +52,20 @@
 
 .engine-panel {
 	position: relative;
-	order: 1;
-	border-bottom: 1px solid var(--c-border-muted);
-	background: color-mix(in srgb, var(--c-surface-2) 62%, transparent);
 }
 
 /* Depth progress bar */
 .engine-progress {
-	position: relative;
 	height: 3px;
-	overflow: hidden;
 	background: color-mix(in srgb, #000 18%, transparent);
+	container-type: inline-size; /* Let the sheen measure travel in cqw */
 }
 
 .engine-progress-fill {
 	position: relative;
-	display: block;
 	width: 0;
 	height: 100%;
-	overflow: hidden; /* Clip the shimmer to the filled (green) portion only. */
+	overflow: hidden;
 	background: var(--c-accent, #6aa331);
 	transition: width 0.18s ease;
 }
@@ -92,27 +77,33 @@
 	top: 0;
 	bottom: 0;
 	left: 0;
-	width: max(70px, 45%);
+	width: 35cqw;
 	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
 	animation: engine-progress-sheen 1.1s linear infinite;
 }
 
 @keyframes engine-progress-sheen {
 	from {
-		transform: translateX(-120%);
+		transform: translateX(calc(-1 * 35cqw));
 	}
-
 	to {
-		transform: translateX(320%);
+		transform: translateX(100cqw);
 	}
 }
 
 .engine-header {
 	display: flex;
+	background: color-mix(in srgb, var(--c-surface-2) 74%, transparent);
+}
+
+/* Everything left of the gear button; Carries padding. */
+.engine-header-main {
+	flex: 1 1 auto;
+	min-width: 0; /* Allow shrinking below content width so long .engine-stats can't push the gear out */
+	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 6px 8px;
-	background: color-mix(in srgb, var(--c-surface-2) 74%, transparent);
+	padding: 6px 4px 6px 8px;
 }
 
 /* ============================
@@ -120,50 +111,14 @@
    ============================ */
 
 .engine-switch {
-	position: relative;
-	flex: 0 0 auto;
-	width: 40px;
-	height: 22px;
-	cursor: pointer;
+	width: 36px;
+	height: 20px;
+	flex-shrink: 0;
 }
 
-.engine-switch input {
-	opacity: 0;
-	width: 0;
-	height: 0;
-}
-
-.engine-slider {
-	position: absolute;
-	inset: 0;
-	border-radius: 11px;
-	/* Off state: a light-gray track that clearly reads against the panel background. */
-	background: color-mix(in srgb, var(--c-text-muted) 55%, transparent);
-	border: 1px solid var(--c-border-muted);
-	transition: background 0.15s ease;
-}
-
-.engine-slider::before {
-	content: '';
-	position: absolute;
-	width: 16px;
-	height: 16px;
-	left: 2px;
-	top: 2px;
-	border-radius: 50%;
-	background: var(--c-text-muted);
-	transition:
-		transform 0.15s ease,
-		background 0.15s ease;
-}
-
-.engine-switch input:checked + .engine-slider {
-	background: color-mix(in srgb, var(--c-accent, #3b82f6) 45%, var(--c-surface-2));
-}
-
-.engine-switch input:checked + .engine-slider::before {
-	transform: translateX(18px);
-	background: var(--c-text-emphasis);
+.engine-switch input:checked + span {
+	background-color: var(--c-accent);
+	border-color: var(--c-accent);
 }
 
 /* ============================
@@ -202,11 +157,19 @@
 	text-overflow: ellipsis;
 }
 
-/* Go-deeper + settings buttons */
+/* ============================
+   Go-deeper + settings buttons
+   ============================ */
+
 .engine-panel .icon-btn {
 	width: 26px;
 	height: 26px;
+	flex-shrink: 0;
 	color: var(--c-text-muted);
+}
+
+#btn-go-deeper:hover {
+	color: var(--c-text-emphasis);
 }
 
 #btn-go-deeper svg {
@@ -214,11 +177,27 @@
 	height: 90%;
 }
 
-.icon-btn svg.gear {
+/* Gear sits flush against the header edges, unaffected by the header-main padding. */
+#btn-engine-settings {
+	flex: 0 0 auto;
+	width: auto;
+	height: auto;
+	padding: 0 8px;
+}
+
+#btn-engine-settings:hover,
+#btn-engine-settings.active {
+	color: var(--c-text-emphasis);
+	background: var(--c-hover-overlay);
+}
+
+#btn-engine-settings svg {
+	width: 26px;
+	height: 26px;
 	transform: scale(0.75);
 }
 
-.icon-btn.active svg.gear {
+#btn-engine-settings.active svg {
 	transform: scale(0.75) rotate(60deg);
 }
 
@@ -226,50 +205,38 @@
    Engine settings drawer
    ============================ */
 
-/* Overlays the lines below the header. */
 .engine-settings {
 	position: absolute;
-	top: var(--engine-settings-top, 48px);
 	left: 0;
 	right: 0;
-	z-index: 40;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	padding: 8px 12px;
+	gap: 12px;
+	padding: 12px;
 	border-top: 1px solid var(--c-border-muted);
 	border-bottom: 1px solid var(--c-border-muted);
 	background: var(--c-surface);
-	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
-}
-
-.engine-settings.hidden {
-	display: none;
+	box-shadow: 0 4px 5px rgba(0, 0, 0, 0.4);
 }
 
 .setting-row {
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: 12px;
 	font-size: 0.85em;
 }
 
 .setting-row label {
-	flex: 0 0 90px;
-	color: var(--c-text-muted);
+	flex: 0 0 auto; /* Hug the label text so each slider starts right after it, not at a shared column */
 }
 
-.setting-row input[type='range'] {
+.setting-row .slider {
 	flex: 1 1 auto;
-	min-width: 0;
-	accent-color: var(--c-accent, #3b82f6);
 }
 
 .setting-value {
-	flex: 0 0 2em;
-	text-align: right;
+	flex: 0 0 auto;
 	color: var(--c-text-emphasis);
-	font-variant-numeric: tabular-nums;
 }
 
 /* ============================
@@ -277,26 +244,22 @@
    ============================ */
 
 .engine-lines {
-	display: flex;
-	flex-direction: column;
 	--engine-line-h: 26px;
 	/* Reserve --pv-rows (set by renderLines) rows so the panel height stays constant as the
-	   search collapses/expands lines — otherwise the flex-adjacent move list resizes & scroll-snaps. */
-	min-height: calc(var(--pv-rows, 0) * var(--engine-line-h));
-}
-
-.engine-lines:not(:empty) {
-	border-top: 1px solid var(--c-border-muted);
+	   search collapses/expands lines — otherwise the flex-adjacent move list resizes & scroll-snaps.
+	   +2px for this element's own top/bottom borders (border-box min-height includes them). */
+	min-height: calc(var(--pv-rows, 0) * var(--engine-line-h) + 2px);
+	border-top: 1px solid var(--c-border);
+	border-bottom: 1px solid var(--c-border);
 }
 
 .engine-line {
 	display: flex;
-	align-items: baseline;
-	gap: 8px;
+	gap: 4px;
 	height: var(--engine-line-h);
 	padding: 4px 8px;
 	font-size: 0.85em;
-	border-bottom: 1px solid color-mix(in srgb, var(--c-border-muted) 50%, transparent);
+	border-bottom: 1px solid var(--c-border-muted);
 	white-space: nowrap;
 	overflow: hidden;
 }
@@ -309,13 +272,11 @@
 	flex: 0 0 3em;
 	font-weight: 700;
 	color: var(--c-text-emphasis);
-	font-variant-numeric: tabular-nums;
 }
 
 .line-moves {
 	flex: 1 1 auto;
 	min-width: 0;
-	overflow: hidden;
 	color: var(--c-text-muted);
 }
 
@@ -326,17 +287,12 @@
 }
 
 .line-move:hover {
-	background: var(--c-hover-overlay, rgba(255, 255, 255, 0.08));
+	background: var(--c-hover-overlay);
 	color: var(--c-text-emphasis);
 }
 
 .line-pager {
 	font-weight: 700;
-	color: var(--c-text-muted);
-}
-
-.line-pager:hover {
-	color: var(--c-text-emphasis);
 }
 
 /* ============================
@@ -344,61 +300,7 @@
    ============================ */
 
 .analysis .moves-table {
-	order: 2;
-	flex: 1 1 auto;
-	height: auto;
-	min-height: 150px;
-	background:
-		linear-gradient(
-			180deg,
-			color-mix(in srgb, var(--c-surface-2) 70%, transparent),
-			transparent 42px
-		),
-		var(--c-surface);
-}
-
-.analysis .match-panel:has(> .player-bar:not(.hidden)) .moves-table {
-	min-height: 96px;
-}
-
-.analysis-move-tree {
-	font-size: 0.96em;
-}
-
-.analysis-mainline-row:nth-child(odd) {
-	background: color-mix(in srgb, var(--c-text) 4%, transparent);
-}
-
-.analysis-mainline-row .ply {
-	border-radius: 3px;
-}
-
-.analysis-ply {
-	position: relative;
-	gap: 3px;
-}
-
-.analysis-ply.current {
-	background: color-mix(in srgb, var(--c-accent, #3b82f6) 72%, transparent);
-	color: #fff;
-	box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 18%, transparent);
-}
-
-.analysis-ply.current .move-piece {
-	color: #fff;
-}
-
-.move-index {
-	flex: 0 0 auto;
-	margin-right: 1px;
-	font-size: 0.86em;
-	font-weight: 700;
-	color: var(--c-text-muted);
-	font-variant-numeric: tabular-nums;
-}
-
-.analysis-ply.current .move-index {
-	color: color-mix(in srgb, #fff 78%, transparent);
+	flex: 1 1 0;
 }
 
 /* ============================
@@ -406,16 +308,13 @@
    ============================ */
 
 .analysis-variation {
-	position: relative;
 	display: grid;
 	grid-template-columns: 14px minmax(0, 1fr);
 	margin: 1px 0 1px calc(10px + var(--variation-depth) * 14px);
-	color: var(--c-text-muted);
 }
 
 .variation-rail {
 	position: relative;
-	min-height: 26px;
 }
 
 .variation-rail::before {
@@ -431,13 +330,11 @@
 	content: '';
 	position: absolute;
 	top: 13px;
-	left: 6px;
+	left: 8px;
 	width: 8px;
 	border-top: 2px solid color-mix(in srgb, var(--c-text-muted) 28%, transparent);
 }
 
-/* A resumed segment of the same variation (after a nested sub-variation): keep the vertical
-   spine but drop the elbow tick, so it reads as the line continuing, not a new branch. */
 .variation-continuation .variation-rail::after {
 	display: none;
 }
@@ -445,17 +342,11 @@
 .variation-line {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: center;
-	align-content: flex-start;
-	row-gap: 1px;
 	min-width: 0;
-	padding: 1px 2px;
-	border-radius: 3px;
-	background: color-mix(in srgb, var(--c-text) 3%, transparent);
+	background: color-mix(in srgb, var(--c-text-muted) 5%, transparent);
 }
 
 .variation-line .ply {
-	flex: 0 0 auto;
 	max-width: 50%;
 	height: 24px;
 	padding: 0 5px;
@@ -465,11 +356,16 @@
 
 .variation-line .ply:hover {
 	color: var(--c-text-emphasis);
-	background: color-mix(in srgb, var(--c-accent, #3b82f6) 14%, transparent);
 }
 
 .variation-line .ply.current {
+	font-weight: normal;
 	color: #fff;
+}
+
+.move-index {
+	flex: 0 0 auto;
+	font-size: 0.86em;
 }
 
 /* ============================
@@ -478,20 +374,8 @@
 
 .analysis .moves-nav {
 	position: relative;
-	order: 3;
-	flex: 0 0 auto;
 	background: var(--c-surface-2);
-}
-
-.analysis .move-btn {
-	min-width: 0;
-}
-
-.analysis-actions {
-	position: relative;
-	flex: 1;
-	display: flex;
-	min-width: 0;
+	border: none;
 }
 
 .analysis-actions-toggle[aria-expanded='true'] {
@@ -500,67 +384,38 @@
 }
 
 /* ============================
-   Popup menus — actions dropdown + move-tree context menu
+   Popup menus
    ============================ */
 
-.popup-menu {
+.analysis-context-menu,
+.analysis-menu {
 	position: absolute;
-	overflow: hidden;
 	border: 1px solid var(--c-border);
 	border-radius: 4px;
 	background: var(--c-surface);
 	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
-	color: var(--c-text);
 }
 
-.popup-menu button {
-	display: flex;
-	align-items: center;
-	gap: 9px;
+.analysis-context-menu button,
+.analysis-menu button {
 	width: 100%;
-	border: 0;
 	background: transparent;
 	color: inherit;
 	font: inherit;
-	text-align: left;
-	white-space: nowrap;
 	cursor: pointer;
 }
 
-.popup-menu button:hover {
+.analysis-context-menu button:hover,
+.analysis-menu button:hover {
 	background: var(--c-hover-overlay);
 	color: var(--c-text-emphasis);
 }
 
-.popup-menu svg {
-	flex: 0 0 auto;
-	width: 18px;
-	height: 18px;
-}
-
-/* Actions dropdown — anchored above the actions toggle in the nav bar. */
-.analysis-menu {
-	right: 2px;
-	bottom: calc(100% + 5px);
-	z-index: 20;
-	width: max-content;
-}
-
-.analysis-menu button {
-	padding: 8px 10px;
-	font-size: 0.9em;
-}
-
-/* Move-tree right-click menu — positioned at the cursor. */
+/* Move-tree right-click menu — built in JS, appended to <body>, positioned at the cursor. */
 .analysis-context-menu {
 	z-index: 1000;
 	min-width: 170px;
 	user-select: none;
-}
-
-.analysis-context-menu button {
-	padding: 7px 12px;
-	font-size: 0.86em;
 }
 
 .analysis-context-title {
@@ -573,6 +428,36 @@
 	text-align: center;
 }
 
+.analysis-context-menu button {
+	display: block;
+	padding: 7px 12px;
+	font-size: 0.86em;
+	text-align: left;
+}
+
+/* Actions dropdown — anchored above the actions toggle in the nav bar. */
+.analysis-menu {
+	right: 2px;
+	bottom: calc(100% + 5px);
+}
+
+.analysis-menu button {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	padding: 8px 10px;
+	font-size: 0.9em;
+}
+
+.analysis-menu svg {
+	width: 18px;
+	height: 18px;
+}
+
+#btn-continue-from-here svg {
+	transform: scale(1.15);
+}
+
 /* ============================
    Eval gauge
    ============================ */
@@ -581,15 +466,9 @@
 	position: relative;
 	flex: 0 0 15px;
 	background: #ddd;
-	overflow: hidden;
 }
 
 .gauge-black {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 50%;
 	background: #333;
 	transition: height 0.4s ease;
 }
@@ -600,6 +479,7 @@
 	right: 0;
 	height: 2px;
 	background: rgba(120, 120, 120, 0.4);
+	transform: translateY(-50%);
 }
 
 .gauge-zero {
@@ -611,6 +491,7 @@
 .eval-gauge.flipped {
 	transform: rotate(180deg);
 }
+
 /* ─────────────────────────── Game review ─────────────────────────── */
 
 :root {
@@ -841,4 +722,14 @@
 	font-weight: 500;
 	font-variant-numeric: tabular-nums;
 	color: var(--c-text-muted);
+}
+
+/* ==============================
+   Utility classes
+   ============================== */
+
+/* Recommended for specificity, because `display` rules in here may overwrite the .hidden
+   class from global.css. Without this, the engine setting drawer is always visible. */
+.hidden {
+	display: none;
 }

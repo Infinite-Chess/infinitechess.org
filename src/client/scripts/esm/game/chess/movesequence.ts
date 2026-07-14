@@ -17,6 +17,7 @@ import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import wincondition from '../../../../../shared/chess/logic/wincondition.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
+import gamecore from './gamecore.js';
 import gameslot from './gameslot.js';
 import guiclock from '../gui/guiclock.js';
 import { Mesh } from '../rendering/piecemodels.js';
@@ -111,7 +112,8 @@ function makeMoveKeepingView(
 	);
 	// Appending the move may have reallocated the piece arrays; if so, rebuild the
 	// mesh (now back on the viewed position) to match. REQUIRED.
-	if (mesh && gamefile.pieces.newlyRegenerated) piecemodels.regenAll(gamefile, mesh);
+	if (mesh && gamefile.pieces.newlyRegenerated)
+		piecemodels.regenAll(gamecore.getGameContext(), gamefile, mesh);
 	return move;
 }
 
@@ -139,7 +141,8 @@ function makeMoveAndAnimate(
  * from the move's changes! For example, pawn deleted that promoted.
  */
 function runMeshChanges(boardsim: GameFile, mesh: Mesh, edit: Edit, forward: boolean): void {
-	if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(boardsim, mesh);
+	if (boardsim.pieces.newlyRegenerated)
+		piecemodels.regenAll(gamecore.getGameContext(), boardsim, mesh);
 	else boardchanges.runChanges(mesh, edit.changes, meshChanges, forward); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 }

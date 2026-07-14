@@ -45,7 +45,6 @@ async function reconcileMoveTree(): Promise<void> {
 	guimoveslist.clearRenderedMoves();
 
 	const tree = document.createElement('div');
-	tree.classList.add('analysis-move-tree');
 	const root = movetree.getRoot()!;
 
 	await appendAnalysisMainline(tree, root);
@@ -60,10 +59,9 @@ function highlightCurrentNode(): void {
 	const node = movetree.getCurrentNode(gamefile);
 	const current = node
 		? guimoveslist.element_MovesTable.querySelector<HTMLElement>(`.ply[data-node-id="${node.id}"]`) : undefined; // prettier-ignore
-	if (current) {
-		current.classList.add('current');
-		guimoveslist.centerPly(current);
-	}
+	if (!current) return;
+	current.classList.add('current');
+	guimoveslist.centerPly(current);
 }
 
 /**
@@ -93,7 +91,10 @@ async function createVariationPlyButton(
 		navigateToAnalysisNode(gamefile, node);
 		if (wasAlreadySelected) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
 	});
-	ply.addEventListener('contextmenu', (e) => openAnalysisContextMenu(e, node));
+	ply.addEventListener('contextmenu', (e) => {
+		ply.blur(); // Drop the focus right-click gave it, else Escape later draws a focus-visible ring.
+		openAnalysisContextMenu(e, node);
+	});
 
 	decoratePlyWithReview(ply, node.id);
 
@@ -319,7 +320,7 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 	closeAnalysisContextMenu();
 
 	const menu = document.createElement('div');
-	menu.classList.add('popup-menu', 'analysis-context-menu');
+	menu.classList.add('analysis-context-menu');
 	const title = document.createElement('div');
 	title.classList.add('analysis-context-title');
 	const moveIndex = formatMoveIndex(node.ply);
@@ -362,10 +363,10 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 	contextMenu = menu;
 	positionContextMenu(menu, e);
 
-	setTimeout(() => {
-		document.addEventListener('click', closeAnalysisContextMenu, { once: true });
-		document.addEventListener('keydown', closeContextMenuOnEscape);
-	}, 0);
+	// Dismiss on any pointerdown outside the menu (same as the actions menu / settings drawer)
+	// or on Escape. A pointerdown inside is left for the button's own click to handle.
+	document.addEventListener('pointerdown', closeContextMenuOnOutsidePointer);
+	document.addEventListener('keydown', closeContextMenuOnEscape);
 }
 
 /** Builds one context-menu button that runs `onClick` then closes the menu. */
@@ -373,8 +374,7 @@ function createContextAction(label: string, onClick: () => void): HTMLButtonElem
 	const button = document.createElement('button');
 	button.type = 'button';
 	button.textContent = label;
-	button.addEventListener('click', (e) => {
-		e.stopPropagation();
+	button.addEventListener('click', () => {
 		closeAnalysisContextMenu();
 		onClick();
 	});
@@ -433,8 +433,14 @@ function positionContextMenu(menu: HTMLElement, e: MouseEvent): void {
 function closeAnalysisContextMenu(): void {
 	contextMenu?.remove();
 	contextMenu = undefined;
-	document.removeEventListener('click', closeAnalysisContextMenu);
+	document.removeEventListener('pointerdown', closeContextMenuOnOutsidePointer);
 	document.removeEventListener('keydown', closeContextMenuOnEscape);
+}
+
+/** Closes the menu on a pointerdown anywhere outside it (a press inside is left for the button's click). */
+function closeContextMenuOnOutsidePointer(e: PointerEvent): void {
+	if (e.target instanceof Node && contextMenu?.contains(e.target)) return;
+	closeAnalysisContextMenu();
 }
 
 function closeContextMenuOnEscape(e: KeyboardEvent): void {
@@ -459,7 +465,7 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 
 	const newLine = movetree.getLineForNode(node);
 	const newMoves = movetree.getMovesFromLine(newLine);
-	const targetIndex = movetree.getNodeMoveIndex(node);
+	const targetIndex = node.ply;
 
 	frametracker.onVisualChange();
 
@@ -482,7 +488,7 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	animation.clearAnimations();
 }
 
-// Registration -------------------------------------------------------------------------------
+// Registration ------------------------------------------------------------------
 
 guimoveslist.registerRenderer({
 	reconcile: reconcileMoveTree,

@@ -212,7 +212,7 @@ function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 		return 'icn_missing_position';
 	}
 	const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
-	return validatePosition(variantOptions, content);
+	return validatePosition(variantOptions, content, true);
 }
 
 /** Localizes a position/ICN error code for the websocket's `notify` channel. */

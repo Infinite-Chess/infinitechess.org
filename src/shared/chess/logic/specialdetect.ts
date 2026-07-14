@@ -366,7 +366,7 @@ function roses(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 	 * 1. Shortest path
 	 * 2. Path that curves towards the center of play
 	 * 3. Randomly pick one
-	 * @param {Coords} newCoord - The coordinate to append [x, y].
+	 * @param newCoord - The coordinate to append [x, y].
 	 */
 	function appendCoordToIndividuals(newCoord: CoordsTagged, path: Coords[]): void {
 		newCoord.path = jsutil.deepCopyObject(path);

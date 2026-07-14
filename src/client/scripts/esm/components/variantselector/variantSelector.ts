@@ -7,9 +7,9 @@
  */
 
 import type { VNode } from 'snabbdom';
-import type { SeekVariant } from '../../../../../shared/types.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
+import type { SeekVariant, SeekModifier } from '../../../../../shared/types.js';
 import type {
 	VariantGroup,
 	VariantCode,
@@ -26,6 +26,7 @@ import { validatePosition } from '../../../../../shared/chess/variants/positionv
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
+import modifierSelector from './modifierSelector.js';
 import editorpositionsdb from '../../game/editorstores/esavestore.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
 
@@ -40,6 +41,8 @@ type DisplaySelection =
 
 /** Callbacks a host wires to react to the selector's state. */
 interface VariantSelectorConfig {
+	/** Whether to reject oversized positions. Provide `true` when the ICN is used in seek-creation. */
+	enforceSizeLimit: boolean;
 	/** Fires on every selection/validity change (live). Sync dependent UI (e.g. a submit button). */
 	onChange?: () => void;
 	/** Fires only when a selection is committed (a discrete pick, or an ICN blur/paste). */
@@ -73,11 +76,24 @@ const element_btnCustomFromICNName =
 
 // State ----------------------------------------------
 
-/** Host callbacks, populated by {@link initVariantGroupDropdown}. */
-let config: VariantSelectorConfig = {};
+/** Host config, populated by {@link initVariantGroupDropdown}. */
+let config: VariantSelectorConfig;
 
 /** The currently selected variant. */
 let selection: DisplaySelection = { kind: 'preset', code: 'Classical' };
+/**
+ * The full state currently committed — what the display reverts to when
+ * {@link restoreAcceptedDisplay} is called to abandon an un-committed selection.
+ * Always valid since invalid selections are never committed.
+ */
+let loaded: {
+	selection: DisplaySelection;
+	/** The ICN a From-ICN position was loaded from; undefined for non-ICN selections. */
+	icn?: string;
+	/** The modifiers active at load, restored alongside the selection. */
+	modifiers: SeekModifier[];
+} = { selection: { kind: 'preset', code: 'Classical' }, icn: '', modifiers: [] };
+
 let customContentVNode: VNode | Element = element_customVariantContent;
 /** The last validated custom position (ICN input or saved position). null while loading or unset. */
 let icnResult: {
@@ -100,7 +116,7 @@ const patch = init([attributesModule, classModule, eventListenersModule]);
 // Initialization ----------------------------------------------
 
 /** Wires the variant selector open/close and group navigation. */
-function initVariantGroupDropdown(hostConfig: VariantSelectorConfig = {}): void {
+function initVariantGroupDropdown(hostConfig: VariantSelectorConfig): void {
 	config = hostConfig;
 	applyVariantToSelector('Classical');
 
@@ -161,6 +177,9 @@ function initIcnValidation(): void {
 	// Blur/paste are "commit" points; live typing only updates validity (onChange), not a commit.
 	element_icnInput.addEventListener('blur', () => {
 		validateIcnInput(true);
+		// Skip the commit if the field still holds exactly the ICN already accepted — re-committing
+		// would reload the position, needlessly wiping any analysis branches made from it.
+		if (loaded.selection.kind === 'icn' && element_icnInput.value === loaded.icn) return;
 		config.onCommit?.();
 	});
 	element_icnInput.addEventListener('focus', () => {
@@ -427,6 +446,41 @@ function applyCustomToSelector(name: string): void {
 	setSelectorDisplay(name, 'svg-wrench');
 }
 
+// Remembering Committed State ----------------------------------------------
+
+/** Records the current selection, ICN, and modifiers as accepted to remember. */
+function snapshotAccepted(): void {
+	loaded = {
+		selection,
+		icn: selection.kind === 'icn' ? element_icnInput.value : undefined,
+		modifiers: modifierSelector.getSeekModifiers(),
+	};
+}
+
+/**
+ * Reverts the display to the last accepted state. Hosts call this when the user
+ * performs an action signifying they're no longer interested in the uncommitted selection.
+ */
+function restoreAcceptedDisplay(): void {
+	selection = loaded.selection;
+	element_variantDisplay.classList.remove('invalid');
+	if (selection.kind === 'icn') {
+		// Restore the field to the ICN that was actually loaded (discarding any invalid edits),
+		// then re-validate to refresh validity and clear the error highlight.
+		element_variantCustomSection.classList.remove('hidden');
+		element_icnInput.value = loaded.icn!;
+		validateIcnInput(false);
+		applyCustomToSelector(element_btnCustomFromICNName.textContent!);
+	} else {
+		element_variantCustomSection.classList.add('hidden');
+		element_icnInputWrap.classList.remove('invalid');
+		element_icnErrorText.textContent = '';
+		if (selection.kind === 'preset') applyVariantToSelector(selection.code);
+		else applyCustomToSelector(selection.name);
+	}
+	modifierSelector.applyModifiers(loaded.modifiers);
+}
+
 // Validation ----------------------------------------------
 
 /** Sets icnResult and notifies the host of the change. */
@@ -438,7 +492,7 @@ function setIcnResult(result: typeof icnResult): void {
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(variantOptions: VariantOptions): void {
 	const icnString = variantOptionsToICN(variantOptions);
-	const illegalReason = validatePosition(variantOptions, icnString);
+	const illegalReason = validatePosition(variantOptions, icnString, config.enforceSizeLimit);
 	if (illegalReason !== null) {
 		element_variantDisplay.classList.add('invalid');
 		element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
@@ -492,7 +546,7 @@ function validateIcnInput(revealErrors: boolean): void {
 		const icnVariantOptions = icnimport.variantOptionsFromLongFormat(longFormat, {
 			fullMove: 1,
 		});
-		const illegalReason = validatePosition(icnVariantOptions, value);
+		const illegalReason = validatePosition(icnVariantOptions, value, config.enforceSizeLimit);
 		if (illegalReason !== null) {
 			if (revealErrors) {
 				element_icnInputWrap.classList.add('invalid');
@@ -630,4 +684,6 @@ export default {
 	getCustomPosition,
 	getInviteVariant,
 	applyIcn,
+	snapshotAccepted,
+	restoreAcceptedDisplay,
 };

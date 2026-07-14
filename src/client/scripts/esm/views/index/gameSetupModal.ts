@@ -121,6 +121,7 @@ function initModal(): void {
 	timeControls.onTimeToggle();
 	timeControls.initPresets();
 	variantSelector.initVariantGroupDropdown({
+		enforceSizeLimit: true,
 		onChange: () => {
 			element_modalSubmit.disabled = !variantSelector.isSelectionValid();
 			syncRatedButton();

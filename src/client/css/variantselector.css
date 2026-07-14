@@ -326,8 +326,7 @@
 }
 
 .modifiers-label {
-	font-size: 16px;
-	color: var(--c-text-emphasis);
+	font-size: 15px;
 	flex-shrink: 0;
 }
 
@@ -375,32 +374,13 @@
 .slide-limit-section {
 	display: flex;
 	align-items: center;
-	margin-top: 9px;
 	gap: 16px;
-	padding: 14px 20px;
-	background: var(--c-surface-2);
-	border: 1px solid var(--c-border);
+	padding: 7px 20px;
 	border-radius: 6px;
 }
 
 .slide-limit-section .slider {
 	flex: 1;
-}
-
-.slide-limit-section .slider::-webkit-slider-runnable-track {
-	background: var(--c-surface);
-}
-
-.slide-limit-section .slider::-webkit-slider-thumb {
-	background: var(--c-surface-2);
-}
-
-.slide-limit-section .slider::-moz-range-track {
-	background: var(--c-surface);
-}
-
-.slide-limit-section .slider::-moz-range-thumb {
-	background: var(--c-surface-2);
 }
 
 .slide-limit-name {
