@@ -286,7 +286,12 @@ function decoratePlyWithReview(ply: HTMLElement, nodeId: number): void {
 			const glyph = document.createElement('span');
 			glyph.classList.add('review-glyph');
 			glyph.textContent = display.symbol;
-			ply.append(glyph);
+			// Always land between the move coord and the eval label — an eval label can already
+			// be there (interactive analysis can label a ply before the review classifies it,
+			// while the review is still running), and a bare append would land after it.
+			const existingEval = ply.querySelector('.review-eval');
+			if (existingEval) ply.insertBefore(glyph, existingEval);
+			else ply.append(glyph);
 		}
 	}
 
