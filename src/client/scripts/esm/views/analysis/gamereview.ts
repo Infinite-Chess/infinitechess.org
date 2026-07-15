@@ -27,7 +27,6 @@ import movetree from './movetree.js';
 import gameslot from '../../game/chess/gameslot.js';
 import moveevals from './moveevals.js';
 import IndexedDB from '../../util/IndexedDB.js';
-import { GameBus } from '../../game/GameBus.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import reviewdivision from './reviewdivision.js';
 import analysisenginebounds from './analysisenginebounds.js';
