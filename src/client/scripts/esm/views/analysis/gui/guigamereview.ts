@@ -103,7 +103,7 @@ function startRequestedReview(attempt = 0): void {
 	gamereview.start();
 
 	buildStatsColumns();
-	element_Progress?.classList.remove('hidden');
+	if (gamereview.getStatus() === 'running') element_Progress?.classList.remove('hidden');
 	element_Graph?.classList.remove('hidden');
 	element_PhaseMarkers?.replaceChildren();
 	updateProgress();
