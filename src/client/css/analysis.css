@@ -3,7 +3,19 @@
 /* The analysis page (/analysis/:id?): layered on top of game.css — same sidebar +
    board layout. Extras: the variant setup panel (shared widget, see
    variantselector.css), the local-engine evaluation panel, the move tree,
-   the actions menu, and the eval gauge beside the board. */
+   the actions menu, the eval gauge beside the board, and the Game Review
+   overlays (per-player stats, move classifications, progress bar, eval graph). */
+
+/* ============================
+   Game Review — shared colors
+   ============================ */
+
+/* Consumed by the .review-stats panel and the .ply move classifications. */
+:root {
+	--review-inaccuracy: #d9a521;
+	--review-mistake: #e6912c;
+	--review-blunder: #ca3431;
+}
 
 /* ============================
    Variant setup panel
@@ -13,6 +25,86 @@
 .variant-setup {
 	padding: 8px 10px;
 	overflow: visible;
+}
+
+/* ============================
+   Game Review — player stats
+   ============================ */
+
+/* Two-column per-player stats (replace the participant rows once a review runs) */
+
+.review-stats {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 4px 12px;
+	margin-top: 8px;
+}
+
+.review-stats-col {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+
+.review-stats-col .meta-player {
+	margin-bottom: 2px;
+}
+
+.review-accuracy {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+}
+
+.review-accuracy-value {
+	font-size: 1.1em;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: var(--c-text-emphasis);
+}
+
+.review-stat-row {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	font-size: 0.8em;
+}
+
+.review-stat-action {
+	margin: -1px -4px;
+	padding: 1px 4px;
+	border-radius: 3px;
+	cursor: pointer;
+}
+
+.review-stat-action:hover,
+.review-stat-action:focus-visible {
+	background: var(--c-hover-overlay);
+	outline: none;
+}
+
+.review-stat-value {
+	min-width: 1.4em;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.review-stat-inaccuracy {
+	color: var(--review-inaccuracy);
+}
+
+.review-stat-mistake {
+	color: var(--review-mistake);
+}
+
+.review-stat-blunder {
+	color: var(--review-blunder);
+}
+
+.review-stat-label {
+	color: var(--c-text-muted);
 }
 
 /* ============================
@@ -369,6 +461,40 @@
 }
 
 /* ============================
+   Game Review — move classifications
+   ============================ */
+
+.ply.review-inaccuracy .move-coord,
+.ply.review-inaccuracy .review-glyph {
+	color: var(--review-inaccuracy);
+}
+
+.ply.review-mistake .move-coord,
+.ply.review-mistake .review-glyph {
+	color: var(--review-mistake);
+}
+
+.ply.review-blunder .move-coord,
+.ply.review-blunder .review-glyph {
+	color: var(--review-blunder);
+}
+
+.review-glyph {
+	margin-left: 2px;
+	font-size: 0.85em;
+	font-weight: 700;
+}
+
+.review-eval {
+	flex-shrink: 0;
+	margin-left: auto;
+	font-size: 0.75em;
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	color: var(--c-text-muted);
+}
+
+/* ============================
    Move navigation — nav buttons + actions menu
    ============================ */
 
@@ -459,124 +585,8 @@
 }
 
 /* ============================
-   Eval gauge
+   Game Review — progress bar
    ============================ */
-
-.eval-gauge {
-	position: relative;
-	flex: 0 0 15px;
-	background: #ddd;
-}
-
-.gauge-black {
-	background: #333;
-	transition: height 0.4s ease;
-}
-
-.gauge-tick {
-	position: absolute;
-	left: 0;
-	right: 0;
-	height: 2px;
-	background: rgba(120, 120, 120, 0.4);
-	transform: translateY(-50%);
-}
-
-.gauge-zero {
-	height: 8px;
-	background: color-mix(in srgb, var(--c-accent, #d64f00) 80%, transparent);
-}
-
-/* Flipped board: white on top */
-.eval-gauge.flipped {
-	transform: rotate(180deg);
-}
-
-/* ==============================================
-   Game Review
-   ============================================== */
-
-:root {
-	--review-inaccuracy: #d9a521;
-	--review-mistake: #e6912c;
-	--review-blunder: #ca3431;
-}
-
-/* Two-column per-player stats (replace the participant rows once a review runs) */
-
-.review-stats {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 4px 12px;
-	margin-top: 8px;
-}
-
-.review-stats-col {
-	display: flex;
-	flex-direction: column;
-	gap: 3px;
-	min-width: 0;
-}
-
-.review-stats-col .meta-player {
-	margin-bottom: 2px;
-}
-
-.review-accuracy {
-	display: flex;
-	align-items: baseline;
-	gap: 6px;
-}
-
-.review-accuracy-value {
-	font-size: 1.1em;
-	font-weight: 700;
-	font-variant-numeric: tabular-nums;
-	color: var(--c-text-emphasis);
-}
-
-.review-stat-row {
-	display: flex;
-	align-items: baseline;
-	gap: 6px;
-	font-size: 0.8em;
-}
-
-.review-stat-action {
-	margin: -1px -4px;
-	padding: 1px 4px;
-	border-radius: 3px;
-	cursor: pointer;
-}
-
-.review-stat-action:hover,
-.review-stat-action:focus-visible {
-	background: var(--c-hover-overlay);
-	outline: none;
-}
-
-.review-stat-value {
-	min-width: 1.4em;
-	font-weight: 600;
-	font-variant-numeric: tabular-nums;
-	text-align: right;
-}
-
-.review-stat-inaccuracy {
-	color: var(--review-inaccuracy);
-}
-
-.review-stat-mistake {
-	color: var(--review-mistake);
-}
-
-.review-stat-blunder {
-	color: var(--review-blunder);
-}
-
-.review-stat-label {
-	color: var(--c-text-muted);
-}
 
 /* Progress bar below the moves list (swapped for the eval graph on completion) */
 
@@ -622,7 +632,9 @@
 	color: var(--c-text-muted);
 }
 
-/* Eval graph — replaces the ICN panel below the bottom player. */
+/* ============================
+   Game Review — eval graph
+   ============================ */
 
 .review-graph {
 	position: relative;
@@ -694,36 +706,38 @@
 	color: var(--c-text-muted);
 }
 
-/* Move-list classification decorations */
+/* ============================
+   Eval gauge
+   ============================ */
 
-.ply.review-inaccuracy .move-coord,
-.ply.review-inaccuracy .review-glyph {
-	color: var(--review-inaccuracy);
+.eval-gauge {
+	position: relative;
+	flex: 0 0 15px;
+	background: #ddd;
 }
 
-.ply.review-mistake .move-coord,
-.ply.review-mistake .review-glyph {
-	color: var(--review-mistake);
+.gauge-black {
+	background: #333;
+	transition: height 0.4s ease;
 }
 
-.ply.review-blunder .move-coord,
-.ply.review-blunder .review-glyph {
-	color: var(--review-blunder);
+.gauge-tick {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: rgba(120, 120, 120, 0.4);
+	transform: translateY(-50%);
 }
 
-.review-glyph {
-	margin-left: 2px;
-	font-size: 0.85em;
-	font-weight: 700;
+.gauge-zero {
+	height: 8px;
+	background: color-mix(in srgb, var(--c-accent, #d64f00) 80%, transparent);
 }
 
-.review-eval {
-	flex-shrink: 0;
-	margin-left: auto;
-	font-size: 0.75em;
-	font-weight: 500;
-	font-variant-numeric: tabular-nums;
-	color: var(--c-text-muted);
+/* Flipped board: white on top */
+.eval-gauge.flipped {
+	transform: rotate(180deg);
 }
 
 /* ==============================
