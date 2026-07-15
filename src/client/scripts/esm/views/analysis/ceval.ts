@@ -156,7 +156,7 @@ let stopFlagPtr = 0;
 
 let enabled = false;
 let settings: CevalSettings = loadSettings();
-/** The engine's version (e.g. "2.0.0"), reported on 'ready'. Absent on a build predating engine_version(). */
+/** The engine's version (e.g. "2.0.0"), reported on 'ready'. Undefined only before the first 'ready'. */
 let engineVersion: string | undefined;
 
 /** The ICN of the position the worker is currently analyzing (undefined once the position is superseded but not yet re-analyzed). */

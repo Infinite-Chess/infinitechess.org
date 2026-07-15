@@ -110,10 +110,9 @@ interface EvaluateResult {
 type AnalysisResponse =
 	/**
 	 * `mt` is whether this engine build supports Lazy SMP (exports `initThreadPool`).
-	 * `version` is the engine's Cargo.toml version (e.g. "2.0.0"), absent on a build
-	 * predating `engine_version()`.
+	 * `version` is the engine's Cargo.toml version (e.g. "2.0.0").
 	 */
-	| { type: 'ready'; mt: boolean; version?: string }
+	| { type: 'ready'; mt: boolean; version: string }
 	| { type: 'initerror'; message: string }
 	/** The wasm shared memory + byte offset of the stop flag, for instant search abort from the page. */
 	| { type: 'sharedmem'; buffer: ArrayBufferLike; stopFlagPtr: number }
@@ -189,9 +188,11 @@ async function initialize(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promi
 		}
 
 		wasmReady = true;
-		// Guard like initThreadPool above: a build predating engine_version() exports no such function.
-		const version = typeof wasm.engine_version === 'function' ? wasm.engine_version() : undefined;
-		postMessage({ type: 'ready', mt: engineIsMultithreaded, version } satisfies AnalysisResponse);
+		postMessage({
+			type: 'ready',
+			mt: engineIsMultithreaded,
+			version: wasm.engine_version(),
+		} satisfies AnalysisResponse);
 	} catch (e) {
 		console.error('[Analysis Engine] Failed to initialize wasm', e);
 		postMessage({

@@ -25,7 +25,11 @@ import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../rendering/enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
 import { listener_document } from '../../../game/chess/gamecore.js';
+import { engineDictionary } from '../../../game/chess/engines/engine.js';
 import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
+
+/** The analysis board always runs the same engine; engineDictionary is its display name's single source of truth. */
+const ENGINE_DISPLAY_NAME = engineDictionary.hydrochess.displayName;
 
 // Elements -------------------------------------------------------------------------
 
@@ -158,10 +162,12 @@ function applyThreadsCap(): void {
 	}
 }
 
-/** Appends the engine's major.minor version to its display name once known (lila-style), e.g. "HydroChess 2.0". */
+/** Appends the engine's major.minor version to its display name once known (lila-style), e.g. "Engine 2.0". */
 function updateEngineNameDisplay(): void {
 	const version = ceval.getEngineVersion();
-	element_Name.textContent = version ? `HydroChess ${formatEngineVersionMajorMinor(version)}` : 'HydroChess'; // prettier-ignore
+	element_Name.textContent = version
+		? `${ENGINE_DISPLAY_NAME} ${formatEngineVersionMajorMinor(version)}`
+		: ENGINE_DISPLAY_NAME;
 }
 
 /** Drops the patch component of a semver string, e.g. "2.0.1" -> "2.0". */
