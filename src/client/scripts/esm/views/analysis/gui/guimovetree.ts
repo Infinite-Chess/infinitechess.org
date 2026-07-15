@@ -77,6 +77,9 @@ async function createVariationPlyButton(
 ): Promise<HTMLButtonElement> {
 	const ply = await guimoveslist.buildPlyButton(node.move!, ['analysis-ply']);
 	ply.dataset['nodeId'] = String(node.id);
+	// The inline eval label is only shown on the mainline (see decoratePlyWithReview) —
+	// stash this at build time since decoration later only has the node id, not the node.
+	if (movetree.isMainLine(node)) ply.dataset['mainline'] = '1';
 
 	if (showIndex) {
 		const index = document.createElement('span');
@@ -287,7 +290,9 @@ function decoratePlyWithReview(ply: HTMLElement, nodeId: number): void {
 		}
 	}
 
-	const evalLabel = moveevals.get(nodeId);
+	// Inline eval labels are mainline-only — a variation's evaluated position isn't part of
+	// the game's actual eval graph, and coordinate-notation lines are cramped enough already.
+	const evalLabel = ply.dataset['mainline'] ? moveevals.get(nodeId) : undefined;
 	if (evalLabel) {
 		let evalElement = ply.querySelector<HTMLElement>('.review-eval');
 		if (!evalElement) {
@@ -297,6 +302,8 @@ function decoratePlyWithReview(ply: HTMLElement, nodeId: number): void {
 		}
 		evalElement.textContent = formatEvalLabel(evalLabel);
 		evalElement.title = `Evaluation at depth ${evalLabel.depth}`;
+	} else {
+		ply.querySelector('.review-eval')?.remove();
 	}
 }
 
