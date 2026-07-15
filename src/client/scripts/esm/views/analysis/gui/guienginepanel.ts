@@ -30,6 +30,7 @@ import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
 // Elements -------------------------------------------------------------------------
 
 const element_Toggle = document.getElementById('engine-toggle') as HTMLInputElement;
+const element_Name = document.getElementById('engine-name')!;
 const element_Eval = document.getElementById('engine-eval')!;
 const element_Stats = document.getElementById('engine-stats')!;
 const element_GoDeeper = document.getElementById('btn-go-deeper') as HTMLButtonElement;
@@ -157,6 +158,18 @@ function applyThreadsCap(): void {
 	}
 }
 
+/** Appends the engine's major.minor version to its display name once known (lila-style), e.g. "HydroChess 2.0". */
+function updateEngineNameDisplay(): void {
+	const version = ceval.getEngineVersion();
+	element_Name.textContent = version ? `HydroChess ${formatEngineVersionMajorMinor(version)}` : 'HydroChess'; // prettier-ignore
+}
+
+/** Drops the patch component of a semver string, e.g. "2.0.1" -> "2.0". */
+function formatEngineVersionMajorMinor(version: string): string {
+	const [major, minor] = version.split('.');
+	return minor !== undefined ? `${major}.${minor}` : version;
+}
+
 function initListeners(): void {
 	element_Toggle.addEventListener('change', () => setEngineEnabled(element_Toggle.checked));
 
@@ -248,6 +261,7 @@ function clearPanelReadout(
 
 function onEngineStatus(status: CevalStatus): void {
 	applyThreadsCap(); // Re-evaluate: the engine's threading capability arrives with its status.
+	updateEngineNameDisplay(); // The engine's version also arrives with 'ready'.
 	if (status === 'loading') {
 		element_Stats.textContent = 'Loading engine…';
 		updateProgress(ceval.getLatestUpdate());

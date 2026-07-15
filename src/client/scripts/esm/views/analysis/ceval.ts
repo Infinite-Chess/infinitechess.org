@@ -156,6 +156,8 @@ let stopFlagPtr = 0;
 
 let enabled = false;
 let settings: CevalSettings = loadSettings();
+/** The engine's version (e.g. "2.0.0"), reported on 'ready'. Absent on a build predating engine_version(). */
+let engineVersion: string | undefined;
 
 /** The ICN of the position the worker is currently analyzing (undefined once the position is superseded but not yet re-analyzed). */
 let lastAnalyzedIcn: string | undefined;
@@ -416,6 +418,7 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 	switch (msg.type) {
 		case 'ready':
 			workerReady = true;
+			engineVersion = msg.version;
 			// A single-threaded engine build locks the thread setting to 1 (panel disables the slider).
 			if (!msg.mt && engineSupportsThreads) {
 				engineSupportsThreads = false;
@@ -931,6 +934,11 @@ function getStatus(): CevalStatus {
 	return 'computing';
 }
 
+/** The engine's version (e.g. "2.0.0"), once the worker has reported 'ready'. */
+function getEngineVersion(): string | undefined {
+	return engineVersion;
+}
+
 /** Subscribes to throttled engine updates. `undefined` means "eval cleared". */
 function onUpdate(listener: (update: CevalUpdate | undefined) => void): void {
 	updateListeners.add(listener);
@@ -959,6 +967,7 @@ export default {
 	updateSettings,
 	goDeeper,
 	getLatestUpdate,
+	getEngineVersion,
 	onUpdate,
 	onStatus,
 	onLegalMoves,
