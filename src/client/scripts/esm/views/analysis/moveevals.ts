@@ -27,8 +27,9 @@ ceval.onUpdate((update) => {
 	if (!update) return;
 	const line = update.lines[0];
 	if (!line) return;
+	if (update.moveIndex === -1) return; // The starting position has no move-list label.
 	const node = movetree.getActiveLine()[update.moveIndex + 1];
-	if (!node) return; // The starting position has no move-list label.
+	if (!node) return; // Stale update whose ply is no longer in the active line.
 	store(node.id, {
 		depth: update.depth,
 		...(line.cp !== undefined && { cp: line.cp }),
