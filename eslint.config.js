@@ -19,7 +19,7 @@ export default [
 			'no-undef': 'error', // Undefined variables not allowed
 			// Unused variables give a warning
 			'no-unused-vars': [
-				'warn',
+				'error',
 				{
 					args: 'all', // Flag ALL unused params, not just those after the last used one
 					argsIgnorePattern: '^_',
@@ -96,7 +96,7 @@ export default [
 			'no-unused-vars': 'off', // Default rule causes false positives on Enums
 			// Typescript-specific unused variable rule
 			'@typescript-eslint/no-unused-vars': [
-				'warn',
+				'error',
 				{
 					args: 'all', // Flag ALL unused params, not just those after the last used one
 					argsIgnorePattern: '^_',
