@@ -22,7 +22,7 @@ import typeutil, {
 // Types ------------------------------------------------------------------------
 
 /** Lila-style game-phase boundaries, expressed as position indices. */
-interface ReviewDivision {
+export interface ReviewDivision {
 	middle?: number;
 	end?: number;
 }
@@ -374,5 +374,3 @@ function applyMoveToPosition(position: Map<CoordsKey, number>, move: MoveFull): 
 }
 
 export default { determineDivision };
-
-export type { ReviewDivision };
