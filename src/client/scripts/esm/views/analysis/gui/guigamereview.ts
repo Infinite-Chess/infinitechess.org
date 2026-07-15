@@ -44,6 +44,13 @@ const statCells: { [player: number]: Partial<Record<StatKey, HTMLElement>> } = {
 
 type StatKey = 'accuracy' | 'inaccuracy' | 'mistake' | 'blunder' | 'acpl';
 
+/** Classifications treated as "lapses": clickable stat rows, and dotted on the eval graph. */
+const LAPSE_KEYS = ['inaccuracy', 'mistake', 'blunder'] as const satisfies readonly ClassificationKey[]; // prettier-ignore
+type LapseKey = (typeof LAPSE_KEYS)[number];
+function isLapseKey(key: string): key is LapseKey {
+	return (LAPSE_KEYS as readonly string[]).includes(key);
+}
+
 /** The rows each player's stats column shows, in order. */
 const STAT_ROWS: { key: StatKey; label: string }[] = [
 	{ key: 'inaccuracy', label: 'Inaccuracies' },
@@ -167,7 +174,7 @@ function buildStatsColumns(): void {
 		for (const row of STAT_ROWS) {
 			const line = document.createElement('div');
 			line.classList.add('review-stat-row');
-			if (row.key === 'inaccuracy' || row.key === 'mistake' || row.key === 'blunder') {
+			if (isLapseKey(row.key)) {
 				const classification = row.key;
 				line.classList.add('review-stat-action');
 				line.tabIndex = 0;
@@ -200,7 +207,7 @@ function buildStatsColumns(): void {
 }
 
 /** Cycles to the next matching lapse after the currently viewed ply, wrapping around. */
-function cycleToLapse(color: Player, classification: 'inaccuracy' | 'mistake' | 'blunder'): void {
+function cycleToLapse(color: Player, classification: LapseKey): void {
 	const matches = gamereview
 		.getReviews()
 		.filter((review) => review.color === color && review.classification === classification);
@@ -232,12 +239,9 @@ function updateStats(): void {
 
 /** Vertical cp range the graph displays; evals are clamped into it. */
 const GRAPH_CP_RANGE = 600;
-const GRAPH_MIN_HEIGHT = 150;
 const GRAPH_TOP_PADDING = 24;
 const GRAPH_BOTTOM_PADDING = 4;
 
-/** Lapse-dot colors, resolved from the CSS custom properties at draw time. */
-const LAPSE_KEYS: ClassificationKey[] = ['inaccuracy', 'mistake', 'blunder'];
 let hoveredPosition: number | undefined;
 
 function isGraphVisible(): boolean {
@@ -263,8 +267,8 @@ function drawGraph(): void {
 
 	const dpr = window.devicePixelRatio || 1;
 	const width = element_Graph.clientWidth;
-	const height = Math.max(GRAPH_MIN_HEIGHT, element_Graph.clientHeight);
-	if (width <= 0) return;
+	const height = element_Graph.clientHeight;
+	if (width <= 0 || height <= 0) return;
 	canvas.width = width * dpr;
 	canvas.height = height * dpr;
 	canvas.style.height = `${height}px`;
@@ -322,17 +326,20 @@ function drawGraph(): void {
 
 	renderPhaseMarkers(total);
 
-	// The eval line itself.
+	// The eval line itself, one disconnected subpath per contiguous segment.
 	ctx.strokeStyle = lineColor;
 	ctx.lineWidth = 1.5;
 	ctx.beginPath();
-	for (let i = 0; i < points.length; i++) {
-		const x = graphX(points[i]!.index, width, total);
-		const y = graphY(points[i]!.cp, height);
-		if (i === 0 || points[i]!.index !== points[i - 1]!.index + 1) ctx.moveTo(x, y);
-		else ctx.lineTo(x, y);
+	for (const segment of segments) {
+		segment.forEach((point, i) => {
+			const x = graphX(point.index, width, total);
+			const y = graphY(point.cp, height);
+			if (i === 0) ctx.moveTo(x, y);
+			else ctx.lineTo(x, y);
+		});
 	}
 	ctx.stroke();
+	// Isolated positions have no neighbor to draw a line to; mark them with a dot.
 	for (const segment of segments) {
 		if (segment.length !== 1) continue;
 		ctx.beginPath();
@@ -349,7 +356,7 @@ function drawGraph(): void {
 
 	// Lapse dots, at the position after the classified move.
 	for (const review of gamereview.getReviews()) {
-		if (!review.classification || !LAPSE_KEYS.includes(review.classification)) continue;
+		if (!review.classification || !isLapseKey(review.classification)) continue;
 		const cp = gamereview.getWhiteCpAt(review.ply + 1);
 		if (cp === undefined) continue;
 		ctx.beginPath();

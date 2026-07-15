@@ -31,10 +31,10 @@ import ceval from './ceval.js';
 import movetree from './movetree.js';
 import gameslot from '../../game/chess/gameslot.js';
 import moveevals from './moveevals.js';
-import analysisenginebounds from './analysisenginebounds.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import { GameBus } from '../../game/GameBus.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
+import analysisenginebounds from './analysisenginebounds.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -70,7 +70,6 @@ interface MoveReview {
 	isBestMove: boolean;
 }
 
-/** A move's displayed evaluation (of the position AFTER it), white POV. */
 /** One side's review summary, updated live as moves classify. */
 interface PlayerReviewSummary {
 	counts: Record<ClassificationKey, number>;
@@ -897,7 +896,7 @@ function handleWorkerFault(worker: Worker): void {
 	}
 
 	if (chunkQueue.length > 0) {
-		// The last worker died. If positions remain, try one fresh worker — repeated
+		// Positions still remain: replace the dead worker to keep the pool full — repeated
 		// faults burn through the per-position attempts, so this always terminates.
 		spawnWorker();
 	} else if (workers.length === 0 && evaluatedCount < results.length) failReview();
