@@ -79,9 +79,11 @@ function init(): void {
 	window.addEventListener('resize', () => {
 		if (isGraphVisible()) drawGraph();
 	});
-	// The eval line's color is read from the canvas's CSS `color` at draw time, so a theme
-	// flip needs an explicit redraw — nothing else touches the graph until the next interaction.
-	document.addEventListener('theme-change', () => {
+	// The eval line's color is read from the canvas's CSS `color` at draw time, so a light/dark
+	// switch needs an explicit redraw — nothing else touches the graph until the next interaction.
+	// 'theme-change' is the BOARD tile color event; the site-wide light/dark switch fires
+	// 'color-scheme-change' instead (see appearancedropdown.ts).
+	document.addEventListener('color-scheme-change', () => {
 		if (isGraphVisible()) drawGraph();
 	});
 	GameBus.addEventListener('view-move', () => {
