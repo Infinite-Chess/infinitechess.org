@@ -195,12 +195,12 @@ const listeners: { [K in keyof ReviewListeners]: Set<ReviewListeners[K]> } = {
 
 GameBus.addEventListener('game-unloaded', () => reset());
 
-// Win probability & accuracy (lichess formulas, ceval-consistent sigmoid) --------------
+// Win probability & accuracy (lichess formulas) ----------------------------------------
 
 /** Maps a mover-POV cp to a win probability [0,1]. */
 function cpToWinProb(cp: number): number {
-	const clamped = math.clamp(cp, -MATE_CP, MATE_CP);
-	return 0.5 + 0.5 * (2 / (1 + Math.exp(-0.003 * clamped)) - 1);
+	// Remap ceval's shared winning-chances sigmoid from [-1, 1] to a probability [0, 1].
+	return 0.5 + 0.5 * ceval.cpToWinningChances(cp, MATE_CP);
 }
 
 /** Lichess per-move accuracy% from the win probabilities before/after the move. */

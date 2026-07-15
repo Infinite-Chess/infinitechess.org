@@ -223,12 +223,21 @@ function persistSettings(): void {
 
 // Winning chances (adjusted for infinitechess players) ------------------------------------
 
-/** Maps a white-POV centipawn score to a win probability in [-1, 1]. */
-function cpWinningChances(cp: number): number {
-	// Clamp to ensure mate always shows higher gauge than any non-mate eval
-	const clamped = math.clamp(cp, -1200, 1200);
-	// Shallower curve (0.003) assumes players convert advantages less efficiently
+/**
+ * Maps a centipawn score to winning chances in [-1, 1], from that score's POV.
+ * Clamps to ±`clampCp` first, so a caller's mate sentinel can sit at the extreme.
+ */
+function cpToWinningChances(cp: number, clampCp: number): number {
+	const clamped = math.clamp(cp, -clampCp, clampCp);
+	// Shallow curve (0.003) assumes players convert
+	// advantages less efficiently than a perfect engine would.
 	return 2 / (1 + Math.exp(-0.003 * clamped)) - 1;
+}
+
+/** White-POV cp → winning chances for the eval gauge. */
+function cpWinningChances(cp: number): number {
+	// Clamp at ±1200 so a mate (±1) always shows a higher gauge than any non-mate eval.
+	return cpToWinningChances(cp, 1200);
 }
 
 /**
@@ -947,6 +956,7 @@ export default {
 	goDeeper,
 	getLatestUpdate,
 	seedPositionCache,
+	cpToWinningChances,
 	onUpdate,
 	onStatus,
 	onLegalMoves,
