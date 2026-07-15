@@ -429,5 +429,3 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 			break;
 	}
 };
-
-export {};

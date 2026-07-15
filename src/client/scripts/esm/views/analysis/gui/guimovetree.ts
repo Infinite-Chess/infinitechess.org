@@ -566,4 +566,9 @@ function refresh(): void {
 	guimoveslist.enqueueRender(reconcileMoveTree);
 }
 
-export default { navigateToNode, addBlunderVariation, addBlunderVariations, refresh };
+export default {
+	navigateToNode,
+	addBlunderVariations,
+	addBlunderVariation,
+	refresh,
+};

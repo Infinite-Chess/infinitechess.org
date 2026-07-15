@@ -10,7 +10,7 @@ import ceval from './ceval.js';
 import movetree from './movetree.js';
 import { GameBus } from '../../game/GameBus.js';
 
-interface MoveEvalLabel {
+export interface MoveEvalLabel {
 	cp?: number;
 	mate?: number;
 	depth: number;
@@ -66,4 +66,3 @@ function onLabel(listener: (nodeId: number) => void): void {
 }
 
 export default { store, get, clear, onLabel };
-export type { MoveEvalLabel };

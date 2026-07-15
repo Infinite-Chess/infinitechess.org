@@ -865,14 +865,14 @@ function onFinished(listener: ReviewListeners['finished']): void {
 
 export default {
 	CLASSIFICATION_DISPLAY,
+	canStart,
+	getStatus,
 	start,
 	cancel,
 	reset,
-	canStart,
-	getStatus,
 	getSummary,
-	getReviews,
 	getReviewForNode,
+	getReviews,
 	getMainlineNodes,
 	getDivision,
 	getWhiteCpAt,

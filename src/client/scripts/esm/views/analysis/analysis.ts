@@ -3,13 +3,13 @@
 /**
  * Client entry for the analysis page (/analysis/:id?).
  *
- * Runs the shared game core and wires the analysis-only loader, controls,
- * engine panel, and Game Review UI.
+ * Runs the shared game core and wires the analysis-only loader,
+ * controls, engine panel, and Game Review UI.
  */
 
 import gameloop from '../../game/gameloop.js';
-import analysisloader from './analysisloader.js';
 import guigamereview from './gui/guigamereview.js';
+import analysisloader from './analysisloader.js';
 import guienginepanel from './gui/guienginepanel.js';
 import guianalysisview from './gui/guianalysisview.js';
 import guianalysisactions from './gui/guianalysisactions.js';

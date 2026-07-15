@@ -948,6 +948,8 @@ function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
 
 export default {
 	maxThreads,
+	cpToWinningChances,
+	seedPositionCache,
 	requestLegalMoves,
 	init,
 	isEnabled,
@@ -957,8 +959,6 @@ export default {
 	updateSettings,
 	goDeeper,
 	getLatestUpdate,
-	seedPositionCache,
-	cpToWinningChances,
 	onUpdate,
 	onStatus,
 	onLegalMoves,
