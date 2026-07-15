@@ -83,10 +83,8 @@ function init(): void {
 	});
 	if (element_GraphCanvas) initGraphInteraction(element_GraphCanvas);
 
-	if (new URLSearchParams(window.location.search).get('review') === '1') {
-		GameBus.addEventListener('game-loaded', () => startRequestedReview(), {
-			once: true,
-		});
+	if (docutil.getQueryParam('review') === '1') {
+		GameBus.addEventListener('game-loaded', () => startRequestedReview(), { once: true });
 	}
 }
 
