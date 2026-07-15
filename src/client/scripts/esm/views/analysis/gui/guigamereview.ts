@@ -250,6 +250,8 @@ const GRAPH_BOTTOM_PADDING = 4;
 /** Vertical clearance the tooltip keeps from the graph's top/bottom edges when auto-positioning. */
 const TOOLTIP_TOP_MARGIN = 10;
 const TOOLTIP_BOTTOM_MARGIN = 6;
+const WHITE_FILL = 'rgba(255, 255, 255, 0.45)';
+const BLACK_FILL = 'rgba(0, 0, 0, 0.4)';
 
 let hoveredPosition: number | undefined;
 
@@ -275,6 +277,59 @@ function graphY(cp: number, height: number): number {
 	const normalized = math.clamp(cp, -GRAPH_CP_RANGE, GRAPH_CP_RANGE) / GRAPH_CP_RANGE;
 	const plotHeight = height - GRAPH_TOP_PADDING - GRAPH_BOTTOM_PADDING;
 	return GRAPH_TOP_PADDING + plotHeight / 2 - normalized * (plotHeight / 2 - 3);
+}
+
+/**
+ * Splits a contiguous run of points into above-zero / below-zero runs for the advantage
+ * fill, inserting the true zero-crossing (linearly interpolated between the two straddling
+ * points) as the shared boundary between adjacent runs — an exact-zero point counts as the
+ * end of whichever run it closes.
+ */
+function splitIntoSignRuns(
+	segment: { index: number; cp: number }[],
+): { side: 'pos' | 'neg'; points: { index: number; cp: number }[] }[] {
+	const runs: { side: 'pos' | 'neg'; points: { index: number; cp: number }[] }[] = [];
+	if (segment.length === 0) return runs;
+
+	let side: 'pos' | 'neg' = segment[0]!.cp >= 0 ? 'pos' : 'neg';
+	let current: { index: number; cp: number }[] = [segment[0]!];
+
+	for (let i = 1; i < segment.length; i++) {
+		const prev = segment[i - 1]!;
+		const point = segment[i]!;
+		const pointSide: 'pos' | 'neg' = point.cp >= 0 ? 'pos' : 'neg';
+
+		if (pointSide !== side) {
+			const t = prev.cp / (prev.cp - point.cp);
+			const crossingIndex = prev.index + t * (point.index - prev.index);
+			current.push({ index: crossingIndex, cp: 0 }); // Closes the run just ended.
+			runs.push({ side, points: current });
+			side = pointSide;
+			current = [{ index: crossingIndex, cp: 0 }]; // Opens the next run at the same x.
+		}
+		current.push(point);
+	}
+	runs.push({ side, points: current });
+	return runs;
+}
+
+/**
+ * Flattens sign-split runs back into one ordered vertex list for the eval line stroke —
+ * every run after the first repeats the crossing point that closed the previous run, so
+ * that shared boundary vertex is skipped to avoid drawing it twice.
+ */
+function flattenRunsToPolyline(
+	runs: { side: 'pos' | 'neg'; points: { index: number; cp: number }[] }[],
+): { index: number; cp: number }[] {
+	const polyline: { index: number; cp: number }[] = [];
+	for (const run of runs) {
+		for (const point of run.points) {
+			const last = polyline[polyline.length - 1];
+			if (last && last.index === point.index && last.cp === point.cp) continue;
+			polyline.push(point);
+		}
+	}
+	return polyline;
 }
 
 /** Draws the white-POV eval line, phase/current/hover lines, and lapse dots. */
@@ -308,23 +363,25 @@ function drawGraph(): void {
 		else last.push(point);
 	}
 
-	// Advantage fills: white above the zero line, black below.
+	// Computed once and shared by both the fills and the stroke below, so the two can never
+	// visually diverge — they're built from the exact same vertices, crossings included.
+	const segmentRuns = segments.map(splitIntoSignRuns);
+
+	// Advantage fills: white above the zero line, black below. Split at the true (linearly
+	// interpolated) zero-crossing between two points of opposite sign, not at either point's own
+	// x — otherwise one side's fill overshoots all the way to the next point's x instead of
+	// stopping where the eval line actually crosses zero (how lila's Chart.js area fill splits it).
 	if (points.length > 0) {
-		for (const [clampFn, fill] of [
-			[Math.max, 'rgba(255, 255, 255, 0.45)'],
-			[Math.min, 'rgba(0, 0, 0, 0.4)'],
-		] as const) {
-			ctx.fillStyle = fill;
-			for (const segment of segments) {
+		for (const runs of segmentRuns) {
+			for (const run of runs) {
+				if (run.points.length < 2) continue; // Can't fill a lone point.
+				ctx.fillStyle = run.side === 'pos' ? WHITE_FILL : BLACK_FILL;
 				ctx.beginPath();
-				ctx.moveTo(graphX(segment[0]!.index, width, total), graphY(0, height));
-				for (const point of segment)
-					ctx.lineTo(
-						graphX(point.index, width, total),
-						graphY(clampFn(0, point.cp), height),
-					);
+				ctx.moveTo(graphX(run.points[0]!.index, width, total), graphY(0, height));
+				for (const point of run.points)
+					ctx.lineTo(graphX(point.index, width, total), graphY(point.cp, height));
 				ctx.lineTo(
-					graphX(segment[segment.length - 1]!.index, width, total),
+					graphX(run.points[run.points.length - 1]!.index, width, total),
 					graphY(0, height),
 				);
 				ctx.closePath();
@@ -343,12 +400,15 @@ function drawGraph(): void {
 
 	renderPhaseMarkers(total);
 
-	// The eval line itself, one disconnected subpath per contiguous segment.
+	// The eval line itself, one disconnected subpath per contiguous segment — traced through
+	// the SAME run vertices as the fills (see segmentRuns above) so it exactly follows their
+	// boundary, including the zero-crossings, rather than being computed as a separate path
+	// that could drift a pixel or two off from what the fill actually drew.
 	ctx.strokeStyle = lineColor;
 	ctx.lineWidth = 1.5;
 	ctx.beginPath();
-	for (const segment of segments) {
-		segment.forEach((point, i) => {
+	for (const runs of segmentRuns) {
+		flattenRunsToPolyline(runs).forEach((point, i) => {
 			const x = graphX(point.index, width, total);
 			const y = graphY(point.cp, height);
 			if (i === 0) ctx.moveTo(x, y);
