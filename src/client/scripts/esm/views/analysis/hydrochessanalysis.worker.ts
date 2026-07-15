@@ -230,11 +230,7 @@ function postLegalMoves(requestId: number, icn: string): void {
 		legalMoveEngine = wasm.Engine.from_icn(icn, {});
 		const legalMoves: { from: string; to: string; promotion?: string | null }[] =
 			legalMoveEngine.get_legal_moves_js();
-		const moves = legalMoves.map((move) => {
-			let token = `${move.from}>${move.to}`;
-			if (move.promotion) token += `=${move.promotion}`;
-			return token;
-		});
+		const moves = legalMoves.map((m) => legalMoveToToken(m));
 		postMessage({ type: 'legalmoves', requestId, moves } satisfies AnalysisResponse);
 	} catch (e) {
 		// A wasm throw here would otherwise leak the engine and hang the main thread's request
@@ -269,13 +265,14 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 		if (!evaluationEngine) evaluationEngine = wasm.Engine.from_icn(msg.icn, {});
 		else evaluationEngine.set_position(msg.icn);
 
-		const legalMoves: { from: string; to: string }[] = evaluationEngine.get_legal_moves_js();
+		const legalMoves: { from: string; to: string; promotion?: string | null }[] =
+			evaluationEngine.get_legal_moves_js();
 		result.legalMoveCount = legalMoves.length;
 		result.inCheck = evaluationEngine.is_in_check();
 
 		if (legalMoves.length === 1) {
 			// Forced move: don't search; the review carries the eval over from its neighbors.
-			result.pv = [`${legalMoves[0]!.from}>${legalMoves[0]!.to}`];
+			result.pv = [legalMoveToToken(legalMoves[0]!)];
 		} else if (legalMoves.length > 1) {
 			// The same search call the analysis loop uses — its summary carries the full PV.
 			const summary: AnalysisInfo | null = evaluationEngine.analyse(
@@ -302,6 +299,11 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 	}
 
 	postMessage({ type: 'evaluated', ...result } satisfies AnalysisResponse);
+}
+
+/** Compact ICN token ("1,7>2,8=Q") for a legal move the engine returns. */
+function legalMoveToToken(move: { from: string; to: string; promotion?: string | null }): string {
+	return move.promotion ? `${move.from}>${move.to}=${move.promotion}` : `${move.from}>${move.to}`;
 }
 
 /**
