@@ -358,8 +358,11 @@ function formatStats(update: CevalUpdate, targetDepthOverride?: number): string 
  */
 function updateProgress(update: CevalUpdate | undefined, targetDepthOverride?: number): void {
 	const active = ceval.isEnabled() && !ceval.isBlockedByEngineWorldBorder();
-	const computing = active && (!update || (!update.done && !update.terminal));
 	const targetDepth = targetDepthOverride ?? update?.targetDepth ?? ceval.getSettings().depth;
+	// Reaching the target depth ALWAYS stops the animation, regardless of `done` — a bar shown
+	// fully filled must never keep pulsing, even if the engine's own completion flag lagged.
+	const reachedTarget = !!update && update.depth >= targetDepth;
+	const computing = active && (!update || (!update.done && !update.terminal && !reachedTarget));
 	const progress = update ? Math.min(update.depth / Math.max(targetDepth, 1), 1) : 0;
 	// While computing, keep a small minimum so the animated bar is visible immediately
 	// (e.g. at depth 0 right after a move or on "go deeper"), not a zero-width sliver.

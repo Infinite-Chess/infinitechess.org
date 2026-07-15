@@ -342,6 +342,7 @@ async function runLoop(): Promise<void> {
 					slice_ms: SLICE_MS,
 				},
 				(info: AnalysisInfo) => {
+					reachedDepth = Math.max(reachedDepth, info.depth);
 					postMessage({ type: 'info', requestId, info } satisfies AnalysisResponse);
 				},
 			);
