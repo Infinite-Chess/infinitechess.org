@@ -177,6 +177,7 @@ function buildStatsColumns(): void {
 			if (isLapseKey(row.key)) {
 				const classification = row.key;
 				line.classList.add('review-stat-action');
+				line.classList.add('unselectable');
 				line.tabIndex = 0;
 				line.role = 'button';
 				line.title = `Go to next ${row.label.toLowerCase()}`;

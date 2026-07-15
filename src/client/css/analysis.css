@@ -118,16 +118,6 @@
 	flex: 1 0 auto;
 }
 
-/* Reserve the normal match-panel height as well as the fixed review graph. */
-.analysis .play-group:has(.review-graph) {
-	flex-basis: 640px;
-	min-height: 640px;
-}
-
-.analysis .sidebar {
-	overflow-y: auto;
-}
-
 .analysis .match-panel {
 	height: 100%;
 	max-height: 600px;
