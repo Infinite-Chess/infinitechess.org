@@ -441,6 +441,34 @@ async function persistCompletedReview(): Promise<void> {
 	}
 }
 
+/** Cancels a running review, keeping any classifications already made. */
+function cancel(): void {
+	if (status !== 'running') return;
+	terminateWorkers();
+	status = 'idle';
+	notifyProgress();
+	for (const listener of listeners.finished) listener();
+}
+
+/** Fully clears the review (new game loaded / page reset). */
+function reset(): void {
+	terminateWorkers();
+	reviewRunId++;
+	status = 'idle';
+	mainlineNodes = [];
+	longformIn = undefined;
+	gameFingerprint = '';
+	results = [];
+	effectiveWhiteCp = [];
+	chunkQueue = [];
+	positionAttempts.clear();
+	evaluatedCount = 0;
+	classifiedMoves.clear();
+	reviews = [];
+	reviewsByNodeId.clear();
+	icnByPosition = [];
+}
+
 // Game phases (ported from scalachess Divider) -------------------------------------------
 
 /** Finds opening/middlegame/endgame boundaries from each replayed board position. */
@@ -785,34 +813,6 @@ function applyMoveToPosition(position: Map<CoordsKey, number>, move: MoveFull): 
 				break;
 		}
 	}
-}
-
-/** Cancels a running review, keeping any classifications already made. */
-function cancel(): void {
-	if (status !== 'running') return;
-	terminateWorkers();
-	status = 'idle';
-	notifyProgress();
-	for (const listener of listeners.finished) listener();
-}
-
-/** Fully clears the review (new game loaded / page reset). */
-function reset(): void {
-	terminateWorkers();
-	reviewRunId++;
-	status = 'idle';
-	mainlineNodes = [];
-	longformIn = undefined;
-	gameFingerprint = '';
-	results = [];
-	effectiveWhiteCp = [];
-	chunkQueue = [];
-	positionAttempts.clear();
-	evaluatedCount = 0;
-	classifiedMoves.clear();
-	reviews = [];
-	reviewsByNodeId.clear();
-	icnByPosition = [];
 }
 
 // Worker pool -----------------------------------------------------------------------------
