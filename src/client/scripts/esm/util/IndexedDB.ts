@@ -1,9 +1,12 @@
 // src/client/scripts/esm/util/IndexedDB.ts
 
 /**
- * This script handles reading, saving, and deleting browser IndexedDB data.
+ * Asynchronous browser IndexedDB storage, with optional expiry.
  *
- * IndexedDB provides persistent large-scale storage beyond localStorage's limitations.
+ * Reach for this over LocalStorage.ts only when entries can be large (~1MB+) — e.g.
+ * full infinite-chess board positions — or when many sizeable entries accumulate,
+ * since localStorage shares a ~5MB origin-wide quota. Otherwise prefer LocalStorage.ts
+ * for its synchronous API.
  */
 
 /** An entry in IndexedDB storage */

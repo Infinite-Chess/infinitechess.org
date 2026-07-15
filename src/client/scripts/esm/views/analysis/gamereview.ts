@@ -26,7 +26,7 @@ import ceval from './ceval.js';
 import movetree from './movetree.js';
 import gameslot from '../../game/chess/gameslot.js';
 import moveevals from './moveevals.js';
-import IndexedDB from '../../util/IndexedDB.js';
+import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import reviewdivision from './reviewdivision.js';
 import analysisenginebounds from './analysisenginebounds.js';
@@ -139,6 +139,8 @@ const REAL_POSITIONS_PER_CHUNK = 5;
 /** Bump whenever review interpretation or the persisted result shape changes. */
 const REVIEW_CACHE_SCHEMA_VERSION = 1;
 const REVIEW_CACHE_KEY_PREFIX = 'infinitechess-game-review-';
+/** How long a persisted review survives LocalStorage. */
+const REVIEW_CACHE_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 // State ----------------------------------------------------------------------------
 
@@ -169,8 +171,6 @@ let turnOrder: Player[] = [];
 let reviewDepth = 0;
 let division: ReviewDivision = {};
 let gameFingerprint = '';
-/** Invalidates an IndexedDB read if the loaded game changes while it is pending. */
-let reviewRunId = 0;
 
 /** Per-position engine results, indexed 0 (start position) … N (final position). */
 let results: (EvaluateResult | undefined)[] = [];
@@ -331,11 +331,8 @@ function start(): void {
 	status = 'running';
 
 	notifyProgress();
-	const runId = ++reviewRunId;
-	void restoreCachedReview(runId).then((restored) => {
-		if (restored || status !== 'running' || runId !== reviewRunId) return;
-		spawnWorkers(workerCount);
-	});
+	if (restoreCachedReview()) return;
+	spawnWorkers(workerCount);
 }
 
 function reviewCacheKey(): string | undefined {
@@ -343,21 +340,17 @@ function reviewCacheKey(): string | undefined {
 	return gameId === null ? undefined : `${REVIEW_CACHE_KEY_PREFIX}${gameId}`;
 }
 
-/** Restores a complete compatible review, returning false when the engine must run. */
-async function restoreCachedReview(runId: number): Promise<boolean> {
+/**
+ * Restores a complete compatible review, returning
+ * false when there's no review- the engine must run.
+ */
+function restoreCachedReview(): boolean {
 	const key = reviewCacheKey();
 	if (!key) return false;
 
-	let cached: CachedGameReview | undefined;
-	try {
-		cached = await IndexedDB.loadItem<CachedGameReview>(key);
-	} catch (error) {
-		console.warn('[Game Review] Could not read the local review cache:', error);
-		return false;
-	}
-	if (status !== 'running' || runId !== reviewRunId) return true;
+	const cached: CachedGameReview | undefined = LocalStorage.loadItem(key);
 	if (!isCompatibleCache(cached)) {
-		if (cached !== undefined) void IndexedDB.deleteItem(key).catch(() => undefined);
+		if (cached !== undefined) LocalStorage.deleteItem(key);
 		return false;
 	}
 
@@ -407,7 +400,7 @@ function isCachedEvaluation(value: unknown, index: number): value is EvaluateRes
 	);
 }
 
-async function persistCompletedReview(): Promise<void> {
+function persistCompletedReview(): void {
 	const key = reviewCacheKey();
 	if (!key || results.some((result) => result === undefined)) return;
 	const cached: CachedGameReview = {
@@ -419,7 +412,7 @@ async function persistCompletedReview(): Promise<void> {
 		results: results as EvaluateResult[],
 	};
 	try {
-		await IndexedDB.saveItem(key, cached);
+		LocalStorage.saveItem(key, cached, REVIEW_CACHE_EXPIRY_MILLIS);
 	} catch (error) {
 		console.warn('[Game Review] Could not save the local review cache:', error);
 	}
@@ -744,7 +737,7 @@ function finishReview(): void {
 	status = 'done';
 	notifyProgress();
 	for (const listener of listeners.finished) listener();
-	void persistCompletedReview();
+	persistCompletedReview();
 }
 
 // Summaries ------------------------------------------------------------------------------------

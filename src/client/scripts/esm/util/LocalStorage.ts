@@ -1,10 +1,13 @@
 // src/client/scripts/esm/util/LocalStorage.ts
 
 /**
- * This script handles reading, saving, and deleting expired
- * browser local storage data for us!
- * Without it, things we save NEVER expire or are deleted.
- * (unless the user clears their browser cache)
+ * Synchronous browser local storage, with automatic expiry so entries don't
+ * live forever (short of the user clearing their browser cache).
+ *
+ * Prefer this over IndexedDB.ts for its simpler synchronous API. Use it for small
+ * entries only: the whole origin shares a ~5MB localStorage quota, so anything that
+ * can grow past a few hundred KB per entry — or accumulate many sizeable entries —
+ * belongs in IndexedDB.ts instead (e.g. full infinite-chess board positions).
  */
 
 import jsutil from '../../../../shared/util/jsutil.js';
@@ -31,6 +34,7 @@ eraseExpiredItems();
  * @param key - The key-name to give this entry.
  * @param value - What to save
  * @param [expiryMillis] How long until this entry should be auto-deleted for being stale
+ * @throws A `QuotaExceededError` if the write exceeds the origin's ~5MB localStorage quota.
  */
 function saveItem(key: string, value: any, expiryMillis: number = defaultExpiryTimeMillis): void {
 	if (printSavesAndDeletes) console.log(`Saving key to local storage: ${key}`);
