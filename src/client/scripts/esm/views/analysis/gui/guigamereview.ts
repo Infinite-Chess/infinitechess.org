@@ -247,6 +247,14 @@ function isGraphVisible(): boolean {
 	return element_Graph !== null && !element_Graph.classList.contains('hidden');
 }
 
+/** Whether the currently viewed position is on the mainline (not inside a variation). */
+function isViewingMainline(): boolean {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return false;
+	const node = movetree.getCurrentNode(gamefile);
+	return node !== undefined && movetree.isMainLine(node);
+}
+
 /** The x pixel of position `index` (after `index` plies). */
 function graphX(index: number, width: number, totalPositions: number): number {
 	return (index / Math.max(1, totalPositions - 1)) * width;
@@ -364,7 +372,10 @@ function drawGraph(): void {
 		ctx.fill();
 	}
 
-	const selected = (gameslot.getGamefile()?.state.local.moveIndex ?? -1) + 1;
+	// A variation ply shares its parent's global moveIndex numbering with whatever mainline
+	// ply sits at that same depth, but it isn't a position the graph/review has any data for
+	// — only show the marker while actually viewing the mainline.
+	const selected = isViewingMainline() ? gameslot.getGamefile()!.state.local.moveIndex + 1 : -1;
 	drawPositionMarker(ctx, selected, width, height, total, 'rgba(160, 160, 160, 0.65)', 1);
 	if (hoveredPosition !== undefined) {
 		drawPositionMarker(ctx, hoveredPosition, width, height, total, lineColor, 1);
