@@ -65,4 +65,4 @@ function onLabel(listener: (nodeId: number) => void): void {
 	listeners.add(listener);
 }
 
-export default { store, get, clear, onLabel };
+export default { store, get, onLabel };

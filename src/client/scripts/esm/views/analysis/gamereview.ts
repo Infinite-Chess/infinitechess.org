@@ -191,10 +191,6 @@ const listeners: { [K in keyof ReviewListeners]: Set<ReviewListeners[K]> } = {
 	finished: new Set(),
 };
 
-// Events -----------------------------------------------------------------------------
-
-GameBus.addEventListener('game-unloaded', () => reset());
-
 // Win probability & accuracy (lichess formulas) ----------------------------------------
 
 /** Maps a mover-POV cp to a win probability [0,1]. */
@@ -428,34 +424,6 @@ async function persistCompletedReview(): Promise<void> {
 	} catch (error) {
 		console.warn('[Game Review] Could not save the local review cache:', error);
 	}
-}
-
-/** Cancels a running review, keeping any classifications already made. */
-function cancel(): void {
-	if (status !== 'running') return;
-	terminateWorkers();
-	status = 'idle';
-	notifyProgress();
-	for (const listener of listeners.finished) listener();
-}
-
-/** Fully clears the review (new game loaded / page reset). */
-function reset(): void {
-	terminateWorkers();
-	reviewRunId++;
-	status = 'idle';
-	mainlineNodes = [];
-	longformIn = undefined;
-	gameFingerprint = '';
-	results = [];
-	effectiveWhiteCp = [];
-	chunkQueue = [];
-	positionAttempts.clear();
-	evaluatedCount = 0;
-	classifiedMoves.clear();
-	reviews = [];
-	reviewsByNodeId.clear();
-	icnByPosition = [];
 }
 
 // Worker pool -----------------------------------------------------------------------------
@@ -868,8 +836,6 @@ export default {
 	canStart,
 	getStatus,
 	start,
-	cancel,
-	reset,
 	getSummary,
 	getReviewForNode,
 	getReviews,
