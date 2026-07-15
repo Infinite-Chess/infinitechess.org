@@ -19,6 +19,7 @@ import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
+import docutil from '../../../util/docutil.js';
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import gamereview from '../gamereview.js';
@@ -97,7 +98,6 @@ function startRequestedReview(attempt = 0): void {
 	}
 	if (!gamereview.canStart()) return;
 
-	guimovetree.refresh(); // Drop any stale decorations from a previous (cancelled) review.
 	gamereview.start();
 
 	buildStatsColumns();

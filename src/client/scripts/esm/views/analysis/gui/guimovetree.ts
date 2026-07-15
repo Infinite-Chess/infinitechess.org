@@ -570,5 +570,4 @@ export default {
 	navigateToNode,
 	addBlunderVariations,
 	addBlunderVariation,
-	refresh,
 };
