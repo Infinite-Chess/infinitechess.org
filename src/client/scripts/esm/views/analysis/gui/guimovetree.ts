@@ -10,15 +10,19 @@
  */
 
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { MoveReview } from '../gamereview.js';
 import type { AnalysisMoveNode } from '../movetree.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import premoves from '../../../game/chess/premoves.js';
+import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
 import animation from '../../../game/rendering/animation.js';
+import gamereview from '../gamereview.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import frametracker from '../../../game/rendering/frametracker.js';
@@ -26,6 +30,9 @@ import movesequence from '../../../game/chess/movesequence.js';
 import guimoveslist from '../../../game/gui/guimoveslist.js';
 
 // State ---------------------------------------------------------------------------------------
+
+/** Plies of the engine's best line shown as a variation beneath a reviewed blunder. */
+const BLUNDER_VARIATION_MAX_PLIES = 6;
 
 /** The open right-click context menu, if any. */
 let contextMenu: HTMLElement | undefined;
@@ -70,6 +77,9 @@ async function createVariationPlyButton(
 ): Promise<HTMLButtonElement> {
 	const ply = await guimoveslist.buildPlyButton(node.move!, ['analysis-ply']);
 	ply.dataset['nodeId'] = String(node.id);
+	// The inline eval label is only shown on the mainline (see decoratePlyWithReview) —
+	// stash this at build time since decoration later only has the node id, not the node.
+	if (movetree.isMainLine(node)) ply.dataset['mainline'] = '1';
 
 	if (showIndex) {
 		const index = document.createElement('span');
@@ -91,6 +101,8 @@ async function createVariationPlyButton(
 		ply.blur(); // Drop the focus right-click gave it, else Escape later draws a focus-visible ring.
 		openAnalysisContextMenu(e, node);
 	});
+
+	decoratePlyWithReview(ply, node.id);
 
 	return ply;
 }
@@ -234,6 +246,78 @@ function getMainlineChild(node: AnalysisMoveNode): AnalysisMoveNode | undefined 
 function getVariationChildren(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	const first = node.children[0];
 	return first?.forceVariation ? node.children : node.children.slice(1);
+}
+
+// Game review decoration -----------------------------------------------------------------------
+
+// Annotate a ply's element in place the moment its move classifies, so the list
+// colors gradually while the review runs (re-renders re-decorate via build).
+gamereview.onClassified((review) => decorateNodeById(review.nodeId));
+moveevals.onLabel(decorateNodeById);
+
+/** Re-decorates the rendered ply for `nodeId`, if it's currently in the tree. */
+function decorateNodeById(nodeId: number): void {
+	const ply = guimoveslist.element_MovesTable.querySelector<HTMLElement>(
+		`.ply[data-node-id="${nodeId}"]`,
+	);
+	if (ply) decoratePlyWithReview(ply, nodeId);
+}
+
+/**
+ * Applies the move's review classification to its ply button: a `review-<key>` color
+ * class, a tooltip, and — for lapses (inaccuracy/mistake/blunder) — a visible glyph.
+ */
+function decoratePlyWithReview(ply: HTMLElement, nodeId: number): void {
+	const review = gamereview.getReviewForNode(nodeId);
+	if (review?.classification && !ply.classList.contains(`review-${review.classification}`)) {
+		const display = gamereview.CLASSIFICATION_DISPLAY[review.classification];
+		ply.classList.add(`review-${review.classification}`);
+
+		let label = display.label;
+		if (!review.isBestMove && review.bestMove) label += ` — best was ${review.bestMove}`;
+		ply.title = `${ply.title} · ${label}`;
+
+		if (
+			display.symbol &&
+			(review.classification === 'inaccuracy' ||
+				review.classification === 'mistake' ||
+				review.classification === 'blunder')
+		) {
+			const glyph = document.createElement('span');
+			glyph.classList.add('review-glyph');
+			glyph.textContent = display.symbol;
+			// Always land between the move coord and the eval label — an eval label can already
+			// be there (interactive analysis can label a ply before the review classifies it,
+			// while the review is still running), and a bare append would land after it.
+			const existingEval = ply.querySelector('.review-eval');
+			if (existingEval) ply.insertBefore(glyph, existingEval);
+			else ply.append(glyph);
+		}
+	}
+
+	// Inline eval labels are mainline-only — a variation's evaluated position isn't part of
+	// the game's actual eval graph, and coordinate-notation lines are cramped enough already.
+	const evalLabel = ply.dataset['mainline'] ? moveevals.get(nodeId) : undefined;
+	if (evalLabel) {
+		let evalElement = ply.querySelector<HTMLElement>('.review-eval');
+		if (!evalElement) {
+			evalElement = document.createElement('span');
+			evalElement.classList.add('review-eval');
+			ply.append(evalElement);
+		}
+		evalElement.textContent = formatEvalLabel(evalLabel);
+		evalElement.title = `Evaluation at depth ${evalLabel.depth}`;
+	} else {
+		ply.querySelector('.review-eval')?.remove();
+	}
+}
+
+/** Formats a white-POV score like lichess's inline move eval. */
+function formatEvalLabel(label: { cp?: number; mate?: number }): string {
+	if (label.mate !== undefined)
+		return label.mate > 0 ? `#${label.mate}` : `#−${Math.abs(label.mate)}`;
+	const pawns = (label.cp ?? 0) / 100;
+	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`.replace('-', '−');
 }
 
 // Context menu -------------------------------------------------------------------------------
@@ -425,3 +509,90 @@ guimoveslist.registerRenderer({
 	onMovesChanged: () => movetree.syncAfterMovesChanged(gameslot.getGamefile()!),
 	onGameUnloaded: () => movetree.clear(),
 });
+
+// Game Review API -----------------------------------------------------------------------
+
+/**
+ * Navigates the board to the given move-tree node (the review graph's click-to-jump).
+ * Clicking an already-selected node zooms to its destination coordinate — the same
+ * behavior a ply button gives when clicked again (see createVariationPlyButton).
+ */
+function navigateToNode(node: AnalysisMoveNode): void {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile || gamesession.isLoading()) return;
+	const wasAlreadySelected = movetree.getCurrentNode(gamefile) === node;
+	navigateToAnalysisNode(gamefile, node);
+	// The root (starting position, ply -1) has no move/destination square to zoom to.
+	if (wasAlreadySelected && node.ply >= 0) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
+}
+
+/**
+ * Adds the engine's best continuation as a variation before every reviewed blunder.
+ * Capped at 6 plies (3 full moves) — enough to show why the move was better without
+ * spelling out a whole alternate game — and also stopped at the first illegal or
+ * terminal move. The viewer's current node is restored synchronously.
+ */
+function addBlunderVariations(): void {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile || gamesession.isLoading()) return;
+	const restoreNode = movetree.getCurrentNode(gamefile) ?? movetree.getRoot();
+
+	for (const review of gamereview.getReviews()) addBlunderVariationAtTree(review);
+
+	if (restoreNode) navigateToAnalysisNode(gamefile, restoreNode);
+	refresh();
+}
+
+/** Adds one newly-discovered blunder PV immediately while review is still running. */
+function addBlunderVariation(review: MoveReview): void {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile || gamesession.isLoading()) return;
+	const restoreNode = movetree.getCurrentNode(gamefile) ?? movetree.getRoot();
+	if (!addBlunderVariationAtTree(review)) return;
+	if (restoreNode) navigateToAnalysisNode(gamefile, restoreNode);
+	refresh();
+}
+
+function addBlunderVariationAtTree(review: MoveReview): boolean {
+	if (review.classification !== 'blunder' || !review.pv?.length) return false;
+	const parent = gamereview.getMainlineNodes()[review.ply]?.parent;
+	if (!parent) return false;
+	// 6 plies (3 full moves): our coordinate notation is wider than lila's SAN, so a
+	// 12-ply line would span ~4 rows instead of two. Enough to convey the better idea.
+	const pv = review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES);
+	if (parent.children.some((child) => child.move?.token === pv[0])) return false;
+	addVariationAt(parent, pv);
+	return true;
+}
+
+/** Appends one legal PV line below `parent`, retaining the existing mainline. */
+function addVariationAt(parent: AnalysisMoveNode, tokens: string[]): void {
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh();
+	navigateToAnalysisNode(gamefile, parent);
+
+	// Pop gamefile.moves down to the parent so the PV appends as a fresh branch (the tree
+	// keeps its old children). rewindMove only deletes from the front, so view front first.
+	movetree.beginBranchFromViewedPosition(gamefile);
+	const target = gamefile.state.local.moveIndex;
+	movesequence.viewFront(gamefile, mesh);
+	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
+
+	for (const token of tokens) {
+		const result = movevalidation.isTokenMoveLegal(gamefile, token);
+		if (!result.valid) break;
+		movesequence.makeMove(gamefile, mesh, result.tagged);
+		if (gamefile.gameConclusion) break;
+	}
+}
+
+/** Re-renders the whole move tree (e.g. to drop stale review decorations on a re-review). */
+function refresh(): void {
+	guimoveslist.enqueueRender(reconcileMoveTree);
+}
+
+export default {
+	navigateToNode,
+	addBlunderVariations,
+	addBlunderVariation,
+};

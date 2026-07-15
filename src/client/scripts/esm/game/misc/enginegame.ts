@@ -84,7 +84,7 @@ function initEngineGame(options: {
 	workerUrl?: string;
 	/**
 	 * Served engine-glue URL (`manifest['engine']`) for wasm-engine workers that load it at
-	 * runtime (hydrochess). Sent to the worker as an init message, with the thread count.
+	 * runtime (apeiron). Sent to the worker as an init message, with the thread count.
 	 */
 	engineUrl?: string;
 }): Promise<void> {
@@ -121,7 +121,7 @@ function initEngineGame(options: {
 		engineWorker!.onerror = (e: ErrorEvent): void => {
 			reject(new Error('Worker failed to load: ' + e.message));
 		};
-		// The hydrochess worker initializes its wasm (and Lazy SMP thread pool) on this
+		// The apeiron worker initializes its wasm (and Lazy SMP thread pool) on this
 		// message; legacy workers (checkmate practice) self-initialize and never get one.
 		if (options.engineUrl !== undefined)
 			engineWorker!.postMessage({

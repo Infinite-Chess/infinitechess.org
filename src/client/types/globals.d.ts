@@ -93,7 +93,7 @@ declare global {
 		engineGame?: EngineGamePageInfo;
 		/** Hashed URL of the engine's worker script (from the asset manifest). Present with {@link engineGame}. */
 		engineWorkerUrl?: string;
-		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/hydrochess_wasm.js`). Present with {@link engineGame}. */
+		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`). Present with {@link engineGame}. */
 		engineUrl?: string;
 	} & StaticGameSetup;
 
@@ -103,7 +103,7 @@ declare global {
 		gameId: number | null;
 		/** The viewer's color if they were a participant (auto-orients the board); undefined for non-participants. */
 		role?: Player;
-		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/hydrochess_wasm.js`), from the manifest. */
+		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`), from the manifest. */
 		engineUrl: string;
 		/** Hashed URL of the analysis engine worker script (from the asset manifest). */
 		workerUrl: string;

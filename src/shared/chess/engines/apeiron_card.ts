@@ -1,4 +1,4 @@
-// src/shared/chess/engines/hydrochess_card.ts
+// src/shared/chess/engines/apeiron_card.ts
 
 import type { VariantOptions } from '../logic/gamefile.js';
 

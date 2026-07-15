@@ -20,10 +20,11 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 import jsutil from '../../../../../shared/util/jsutil.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import hydrochess_card from '../../../../../shared/chess/engines/hydrochess_card.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { validatePosition } from '../../../../../shared/chess/variants/positionvalidation.js';
 
+import toast from '../toast.js';
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
@@ -103,6 +104,8 @@ let icnResult: {
 	/** Whether the position passes validatePosition() and is legal to play. */
 	isValid: boolean;
 } | null = null;
+/** Localized reason the current ICN is invalid, for the Enter-commit error toast; undefined when valid/empty. */
+let lastIcnError: string | undefined;
 
 // Custom position caching
 // Very low chance a position is edited in another tab when it is sitting in the cache.
@@ -176,13 +179,7 @@ function initVariantGroupDropdown(hostConfig: VariantSelectorConfig): void {
 /** Wires blur/focus/input/paste listeners to keep the ICN validation state in sync. */
 function initIcnValidation(): void {
 	// Blur/paste are "commit" points; live typing only updates validity (onChange), not a commit.
-	element_icnInput.addEventListener('blur', () => {
-		validateIcnInput(true);
-		// Skip the commit if the field still holds exactly the ICN already accepted — re-committing
-		// would reload the position, needlessly wiping any analysis branches made from it.
-		if (loaded.selection.kind === 'icn' && element_icnInput.value === loaded.icn) return;
-		config.onCommit?.();
-	});
+	element_icnInput.addEventListener('blur', () => commitIcnFromField(false));
 	element_icnInput.addEventListener('focus', () => {
 		element_icnInputWrap.classList.remove('invalid');
 		element_icnErrorText.textContent = '';
@@ -190,10 +187,12 @@ function initIcnValidation(): void {
 	// Validate live so validity updates the moment the position is valid, but suppress
 	// error display until blur so we don't nag as the user types. No commit while typing.
 	element_icnInput.addEventListener('input', () => validateIcnInput(false));
-	// Enter commits the ICN (blur runs validate + commit) rather than inserting a newline.
+	// Enter commits the ICN rather than inserting a newline. Unlike blur it forces a reload
+	// even when the field is unchanged — pressing Enter is an explicit "reload this position".
 	element_icnInput.addEventListener('keydown', (e) => {
 		if (e.key !== 'Enter' || e.shiftKey) return;
 		e.preventDefault();
+		commitIcnFromField(true);
 		element_icnInput.blur();
 	});
 	// Instantly reveal validity when a code is pasted, don't wait for blur.
@@ -201,6 +200,24 @@ function initIcnValidation(): void {
 		// Pasted value isn't in the textarea until after the paste event, so defer by one tick.
 		setTimeout(() => validateIcnInput(true), 0);
 	});
+}
+
+/**
+ * Validates the ICN field and asks the host to load it.
+ * @param force - True on Enter (an explicit commit), false on blur. Two differences:
+ *   - Enter always reloads, even an unchanged ICN; blur skips re-committing the ICN already
+ *     accepted, which would needlessly reload and wipe any analysis branches made from it.
+ *   - Enter surfaces an error toast for an invalid ICN; blur stays quiet (no nagging when the
+ *     user just clicks away). Neither reveals inline error styling — the toast is the feedback.
+ */
+function commitIcnFromField(force: boolean): void {
+	validateIcnInput(false);
+	if (element_icnInput.value !== '' && !icnResult?.isValid) {
+		if (force && lastIcnError) toast.show(lastIcnError, { error: true });
+		return;
+	}
+	if (!force && loaded.selection.kind === 'icn' && element_icnInput.value === loaded.icn) return;
+	config.onCommit?.();
 }
 
 // Dropdown navigation ----------------------------------------------
@@ -242,7 +259,7 @@ function setEngineOnlyVariants(engineOnly: boolean): void {
 		let anySupported = false;
 		panel.querySelectorAll<HTMLElement>('.variant-item[data-code]').forEach((btn) => {
 			const code = btn.getAttribute('data-code')!;
-			const supported = hydrochess_card.SUPPORTED_VARIANTS.has(code);
+			const supported = apeiron_card.SUPPORTED_VARIANTS.has(code);
 			btn.classList.toggle('hidden', engineOnly && !supported);
 			if (supported) anySupported = true;
 		});
@@ -256,7 +273,7 @@ function setEngineOnlyVariants(engineOnly: boolean): void {
 	if (
 		engineOnly &&
 		selection.kind === 'preset' &&
-		!hydrochess_card.SUPPORTED_VARIANTS.has(selection.code)
+		!apeiron_card.SUPPORTED_VARIANTS.has(selection.code)
 	)
 		selectVariant('Classical');
 }
@@ -565,6 +582,7 @@ function validateIcnInput(revealErrors: boolean): void {
 	if (value === '') {
 		element_icnInputWrap.classList.remove('invalid');
 		element_icnErrorText.textContent = '';
+		lastIcnError = undefined;
 		setIcnResult(null);
 		return;
 	}
@@ -579,16 +597,19 @@ function validateIcnInput(revealErrors: boolean): void {
 		});
 		const illegalReason = validatePosition(icnVariantOptions, value, config.enforceSizeLimit);
 		if (illegalReason !== null) {
+			lastIcnError = t.shared.position_errors[illegalReason];
 			if (revealErrors) {
 				element_icnInputWrap.classList.add('invalid');
-				element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
+				element_icnErrorText.textContent = lastIcnError;
 			}
 			setIcnResult({ options: icnVariantOptions, isValid: false });
 		} else {
+			lastIcnError = undefined;
 			element_icnErrorText.textContent = '';
 			setIcnResult({ options: icnVariantOptions, isValid: true });
 		}
 	} catch (e) {
+		lastIcnError = t.shared.position_errors.invalid_icn;
 		if (revealErrors) {
 			element_icnInputWrap.classList.add('invalid');
 			// Only log on reveal so we don't spam the console on every keystroke of an in-progress ICN.

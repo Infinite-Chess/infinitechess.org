@@ -26,7 +26,7 @@ import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
-import hydrochess_card from '../../../../../../shared/chess/engines/hydrochess_card';
+import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
@@ -202,7 +202,7 @@ function startLocalGame(): void {
 }
 
 function startEngineGame(engineUIConfig: EngineUIConfig): void {
-	const currentEngine = 'hydrochess';
+	const currentEngine = 'apeiron';
 
 	const variantOptions = getValidatedPosition();
 	if (variantOptions === null) return;
@@ -212,14 +212,14 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Set world border automatically, if wished
 	if (engineUIConfig.setDefaultWorldBorder) {
 		delete variantOptions.gameRules.worldBorder; // The user opted into the default — override any existing border.
-		hydrochess_card.setDefaultWorldBorder(
+		apeiron_card.setDefaultWorldBorder(
 			variantOptions,
 			engineDictionary[currentEngine].worldBorder,
 		);
 	}
 
 	// Does the engine support the position and settings?
-	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
+	const supported_result = apeiron_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
 		toast.show(`${translations.editor.position_not_supported} ${supported_result.reason}`, {
 			error: true,

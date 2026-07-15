@@ -24,12 +24,17 @@ import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../rendering/enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
+import { engineDictionary } from '../../../../../../shared/chess/engines/engine.js';
 import { listener_document } from '../../../game/chess/gamecore.js';
 import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
+
+/** The analysis board always runs the same engine; engineDictionary is its display name's single source of truth. */
+const ENGINE_DISPLAY_NAME = engineDictionary.apeiron.displayName;
 
 // Elements -------------------------------------------------------------------------
 
 const element_Toggle = document.getElementById('engine-toggle') as HTMLInputElement;
+const element_Name = document.getElementById('engine-name')!;
 const element_Eval = document.getElementById('engine-eval')!;
 const element_Stats = document.getElementById('engine-stats')!;
 const element_GoDeeper = document.getElementById('btn-go-deeper') as HTMLButtonElement;
@@ -157,6 +162,20 @@ function applyThreadsCap(): void {
 	}
 }
 
+/** Appends the engine's major.minor version to its display name once known (lila-style), e.g. "Engine 2.0". */
+function updateEngineNameDisplay(): void {
+	const version = ceval.getEngineVersion();
+	element_Name.textContent = version
+		? `${ENGINE_DISPLAY_NAME} ${formatEngineVersionMajorMinor(version)}`
+		: ENGINE_DISPLAY_NAME;
+}
+
+/** Drops the patch component of a semver string, e.g. "2.0.1" -> "2.0". */
+function formatEngineVersionMajorMinor(version: string): string {
+	const [major, minor] = version.split('.');
+	return minor !== undefined ? `${major}.${minor}` : version;
+}
+
 function initListeners(): void {
 	element_Toggle.addEventListener('change', () => setEngineEnabled(element_Toggle.checked));
 
@@ -179,9 +198,12 @@ function initListeners(): void {
 	bindSettingSlider(element_Threads, element_ThreadsValue, String, (v) => ceval.updateSettings({ threads: v })); // prettier-ignore
 	bindSettingSlider(element_Depth, element_DepthValue, String, (v) => {
 		ceval.updateSettings({ depth: v });
-		// Reshape the progress bar's fill the moment the new target commits,
-		// rather than waiting for the engine to finish its next depth.
-		if (ceval.isEnabled()) updateProgress(ceval.getLatestUpdate(), v);
+		// Reshape the progress bar's fill and the "Depth XX/YY" header's target the moment the
+		// new target commits, rather than waiting for the engine to finish its next depth.
+		if (!ceval.isEnabled()) return;
+		const update = ceval.getLatestUpdate();
+		if (update) element_Stats.textContent = formatStats(update, v);
+		updateProgress(update, v);
 	});
 	bindSettingSlider(
 		element_Hash,
@@ -245,6 +267,7 @@ function clearPanelReadout(
 
 function onEngineStatus(status: CevalStatus): void {
 	applyThreadsCap(); // Re-evaluate: the engine's threading capability arrives with its status.
+	updateEngineNameDisplay(); // The engine's version also arrives with 'ready'.
 	if (status === 'loading') {
 		element_Stats.textContent = 'Loading engine…';
 		updateProgress(ceval.getLatestUpdate());
@@ -307,10 +330,16 @@ function formatEval(line: CevalLine): string {
 	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`;
 }
 
-function formatStats(update: CevalUpdate): string {
+/**
+ * Formats the depth and nps stats for display, e.g. "Depth 15/20 · 1.2 Mn/s".
+ * @param targetDepthOverride - Lets the depth slider update the "/YY" target
+ * before the engine re-emits with it.
+ */
+function formatStats(update: CevalUpdate, targetDepthOverride?: number): string {
 	// Guard against a stale target briefly lagging the reached depth (e.g. right after
 	// "go deeper") — never show something like "15/13".
-	const depth = `Depth ${update.depth}/${Math.max(update.targetDepth, update.depth)}`;
+	const target = targetDepthOverride ?? update.targetDepth;
+	const depth = `Depth ${update.depth}/${Math.max(target, update.depth)}`;
 	// Only show speed while actually searching (like lichess): once finished nps is 0.
 	const searching = !update.done && !update.terminal;
 	if (!searching || update.nps <= 0) return depth;

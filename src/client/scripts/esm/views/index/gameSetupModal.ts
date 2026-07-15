@@ -10,7 +10,7 @@ import type { CreateEngineGameBody, GameMode, TimeControl } from '../../../../..
 
 import uuid from '../../../../../shared/util/uuid.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
-import hydrochess_card from '../../../../../shared/chess/engines/hydrochess_card.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
 import { engineDictionary, ValidEngine } from '../../../../../shared/chess/engines/engine.js';
 
@@ -38,7 +38,7 @@ const SUBMIT_LABELS: Record<ModalMode, string> = {
 };
 
 /** The engine computer games are played against. */
-const COMPUTER_GAME_ENGINE: ValidEngine = 'hydrochess';
+const COMPUTER_GAME_ENGINE: ValidEngine = 'apeiron';
 
 // Elements ----------------------------------------------
 
@@ -235,7 +235,7 @@ function isVariantSupportedByEngine(): boolean {
 	if (customOptions === null) {
 		// Preset selection: the engine plays a fixed set of variants.
 		const variant = variantSelector.getInviteVariant();
-		if (variant?.kind === 'preset' && !hydrochess_card.SUPPORTED_VARIANTS.has(variant.code)) {
+		if (variant?.kind === 'preset' && !apeiron_card.SUPPORTED_VARIANTS.has(variant.code)) {
 			toast.show("The engine doesn't support this variant yet.", { error: true });
 			return false;
 		}
@@ -245,11 +245,11 @@ function isVariantSupportedByEngine(): boolean {
 	// Custom position: check it the same way the game will load it — with the
 	// engine's default world border applied when the position lacks one.
 	const checkedOptions = { ...customOptions, gameRules: { ...customOptions.gameRules } };
-	hydrochess_card.setDefaultWorldBorder(
+	apeiron_card.setDefaultWorldBorder(
 		checkedOptions,
 		engineDictionary[COMPUTER_GAME_ENGINE].worldBorder,
 	);
-	const result = hydrochess_card.isPositionSupported(checkedOptions);
+	const result = apeiron_card.isPositionSupported(checkedOptions);
 	if (!result.supported) {
 		toast.show(`The engine doesn't support this position. ${result.reason}`, { error: true });
 		return false;

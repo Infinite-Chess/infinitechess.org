@@ -52,8 +52,8 @@ export const ESMEntryPoints = [
 	'src/client/scripts/esm/views/analysis/analysis.ts',
 
 	// Workers
-	'src/client/scripts/esm/views/analysis/hydrochessanalysis.worker.ts',
-	'src/client/scripts/esm/game/chess/engines/hydrochess.ts', // Gameplay engine worker (engine games on the game page)
+	'src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts',
+	'src/client/scripts/esm/game/chess/engines/apeiron.ts', // Gameplay engine worker (engine games on the game page)
 
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
@@ -66,7 +66,6 @@ export const ESMEntryPoints = [
 	// 'src/client/scripts/esm/views/admin.ts',
 	// 'src/client/scripts/esm/views/icnvalidator/icnvalidator.ts',
 	// 'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
-	// 'src/client/scripts/esm/game/chess/engines/hydrochess.ts',
 	// 'src/client/scripts/esm/workers/icnvalidator.worker.ts',
 ];
 

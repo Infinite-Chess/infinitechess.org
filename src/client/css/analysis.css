@@ -3,7 +3,19 @@
 /* The analysis page (/analysis/:id?): layered on top of game.css — same sidebar +
    board layout. Extras: the variant setup panel (shared widget, see
    variantselector.css), the local-engine evaluation panel, the move tree,
-   the actions menu, and the eval gauge beside the board. */
+   the actions menu, the eval gauge beside the board, and the Game Review
+   overlays (per-player stats, move classifications, progress bar, eval graph). */
+
+/* ============================
+   Game Review — shared colors
+   ============================ */
+
+/* Consumed by the .review-stats panel and the .ply move classifications. */
+:root {
+	--review-inaccuracy: #d9a521;
+	--review-mistake: #e6912c;
+	--review-blunder: #ca3431;
+}
 
 /* ============================
    Variant setup panel
@@ -13,6 +25,86 @@
 .variant-setup {
 	padding: 8px 10px;
 	overflow: visible;
+}
+
+/* ============================
+   Game Review — player stats
+   ============================ */
+
+/* Two-column per-player stats (replace the participant rows once a review runs) */
+
+.review-stats {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 4px 12px;
+	margin-top: 8px;
+}
+
+.review-stats-col {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+
+.review-stats-col .meta-player {
+	margin-bottom: 2px;
+}
+
+.review-accuracy {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+}
+
+.review-accuracy-value {
+	font-size: 1.1em;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: var(--c-text-emphasis);
+}
+
+.review-stat-row {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	font-size: 0.8em;
+}
+
+.review-stat-action {
+	margin: -1px -4px;
+	padding: 1px 4px;
+	border-radius: 3px;
+	cursor: pointer;
+}
+
+.review-stat-action:hover,
+.review-stat-action:focus-visible {
+	background: var(--c-hover-overlay);
+	outline: none;
+}
+
+.review-stat-value {
+	min-width: 1.4em;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.review-stat-inaccuracy {
+	color: var(--review-inaccuracy);
+}
+
+.review-stat-mistake {
+	color: var(--review-mistake);
+}
+
+.review-stat-blunder {
+	color: var(--review-blunder);
+}
+
+.review-stat-label {
+	color: var(--c-text-muted);
 }
 
 /* ============================
@@ -42,6 +134,10 @@
 
 .engine-panel {
 	position: relative;
+	/* Lift the panel's stacking context (incl. the absolutely-positioned settings drawer that
+	   drops down over the moves list) above the moves-table, whose variation rails are
+	   position:relative and would otherwise paint on top of the open drawer. */
+	z-index: 10;
 }
 
 /* Depth progress bar */
@@ -359,6 +455,40 @@
 }
 
 /* ============================
+   Game Review — move classifications
+   ============================ */
+
+.ply.review-inaccuracy .move-coord,
+.ply.review-inaccuracy .review-glyph {
+	color: var(--review-inaccuracy);
+}
+
+.ply.review-mistake .move-coord,
+.ply.review-mistake .review-glyph {
+	color: var(--review-mistake);
+}
+
+.ply.review-blunder .move-coord,
+.ply.review-blunder .review-glyph {
+	color: var(--review-blunder);
+}
+
+.review-glyph {
+	margin-left: 2px;
+	font-size: 0.85em;
+	font-weight: 700;
+}
+
+.review-eval {
+	flex-shrink: 0;
+	margin-left: auto;
+	font-size: 0.75em;
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	color: var(--c-text-muted);
+}
+
+/* ============================
    Move navigation — nav buttons + actions menu
    ============================ */
 
@@ -446,6 +576,129 @@
 
 #btn-continue-from-here svg {
 	transform: scale(1.15);
+}
+
+/* ============================
+   Game Review — progress bar
+   ============================ */
+
+/* Progress bar below the moves list (swapped for the eval graph on completion) */
+
+.analysis .review-progress {
+	order: 4;
+	padding: 5px 8px 6px;
+	border-top: 1px solid var(--c-border-muted);
+}
+
+.review-progress-bar {
+	position: relative;
+	height: 4px;
+	overflow: hidden;
+	border-radius: 2px;
+	background: color-mix(in srgb, #000 18%, transparent);
+}
+
+.review-progress-fill {
+	position: relative;
+	display: block;
+	width: 0;
+	height: 100%;
+	overflow: hidden; /* Clip the shimmer to the filled portion only. */
+	background: var(--c-accent, #6aa331);
+	transition: width 0.18s ease;
+}
+
+.review-progress-fill::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: max(70px, 45%);
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+	animation: engine-progress-sheen 1.1s linear infinite;
+}
+
+.review-progress-text {
+	display: block;
+	margin-top: 4px;
+	font-size: 0.72em;
+	color: var(--c-text-muted);
+}
+
+/* ============================
+   Game Review — eval graph
+   ============================ */
+
+.review-graph {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	flex: 0 0 150px;
+	height: 150px;
+	min-height: 150px;
+	line-height: 0;
+	overflow: visible;
+	/* Fully opaque — a translucent background let the moves list show through beneath the graph. */
+	background: var(--c-surface-2);
+}
+
+.review-graph canvas {
+	display: block;
+	width: 100%;
+	color: var(--c-text-emphasis); /* Read by the canvas code for the eval line. */
+}
+
+.review-phase-markers {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.review-phase-marker {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	border-left: 1px solid var(--c-border-2);
+}
+
+.review-phase-marker span {
+	position: absolute;
+	top: 4px;
+	left: 3px;
+	font-size: 10px;
+	line-height: 1;
+	color: var(--c-text-muted);
+	writing-mode: vertical-rl;
+}
+
+.review-graph-tooltip {
+	position: absolute;
+	/* top is set inline by JS — auto-positioned above/below the hovered point (guigamereview.ts). */
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	max-width: calc(100% - 12px);
+	padding: 6px 8px;
+	border: 1px solid var(--c-border-2);
+	border-radius: 5px;
+	background: color-mix(in srgb, var(--c-surface) 94%, transparent);
+	box-shadow: 0 2px 8px var(--c-shadow-elev);
+	color: var(--c-text-emphasis);
+	font-size: 0.78em;
+	line-height: 1.25;
+	pointer-events: none;
+}
+
+.review-graph-tooltip strong {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.review-graph-tooltip span {
+	color: var(--c-text-muted);
 }
 
 /* ============================

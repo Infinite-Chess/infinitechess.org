@@ -1,8 +1,8 @@
-// src/client/scripts/esm/game/chess/engines/hydrochess.ts
+// src/client/scripts/esm/game/chess/engines/apeiron.ts
 
 /**
- * HydroChess Engine
- * A JavaScript wrapper for the WASM implementation of HydroChess
+ * Apeiron Engine
+ * A JavaScript wrapper for the WASM implementation of Apeiron
  *
  * The engine glue is served UNBUNDLED at a content-versioned `/engine/<hash>/` path (see
  * build/engine-wasm.ts) and loaded via a runtime dynamic import whose URL arrives in the
@@ -58,7 +58,7 @@ interface WasmBestMoveResult {
  */
 async function initWasm(msg: EngineWorkerInitMessage): Promise<void> {
 	try {
-		console.debug('[Engine] Initializing HydroChess WASM module');
+		console.debug('[Engine] Initializing Apeiron WASM module');
 		// Absolute, computed specifier so the bundler leaves this as a runtime import.
 		const glueUrl = new URL(msg.engineUrl, self.location.origin).href;
 		wasm = await import(glueUrl);
@@ -70,10 +70,10 @@ async function initWasm(msg: EngineWorkerInitMessage): Promise<void> {
 			await wasm.initThreadPool(msg.threads);
 
 		wasmInitialized = true;
-		console.debug('[Engine] HydroChess WASM module initialized');
+		console.debug('[Engine] Apeiron WASM module initialized');
 		postMessage('readyok');
 	} catch (err: unknown) {
-		console.error('[Engine] Failed to initialize HydroChess WASM module', err);
+		console.error('[Engine] Failed to initialize Apeiron WASM module', err);
 	}
 }
 

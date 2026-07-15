@@ -27,7 +27,7 @@ if (USE_DEVELOPMENT_BUILD && process.env['NODE_ENV'] === 'production') {
 	);
 }
 
-// Ensure the HydroChess WASM engine pkg is present on disk.
+// Ensure the Apeiron WASM engine pkg is present on disk.
 await downloadEngineWasm();
 // Copy the engine pkg into dist (served unbundled — the rayon worker self-spawns from the glue's
 // own URL, which bundling breaks). Must run before the client build so its content-hashed URL is

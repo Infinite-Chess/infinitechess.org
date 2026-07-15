@@ -8,11 +8,7 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type {
-	AnalysisCommand,
-	AnalysisInfo,
-	AnalysisResponse,
-} from './hydrochessanalysis.worker.js';
+import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
@@ -156,6 +152,8 @@ let stopFlagPtr = 0;
 
 let enabled = false;
 let settings: CevalSettings = loadSettings();
+/** The engine's version (e.g. "2.0.0"), reported on 'ready'. Undefined only before the first 'ready'. */
+let engineVersion: string | undefined;
 
 /** The ICN of the position the worker is currently analyzing (undefined once the position is superseded but not yet re-analyzed). */
 let lastAnalyzedIcn: string | undefined;
@@ -172,7 +170,7 @@ let goDeeperActive = false;
 let currentTargetDepth = DEFAULT_SETTINGS.depth;
 /** Allows an intentional same-position restart (e.g. adding PV lines) to repaint lower-depth rows. */
 let allowDepthRegressionForCurrentSearch = false;
-/** The viewed position has a piece outside HydroChess's safe coordinate range. */
+/** The viewed position has a piece outside Apeiron's safe coordinate range. */
 let blockedByEngineWorldBorder = false;
 
 let latestUpdate: CevalUpdate | undefined;
@@ -223,12 +221,21 @@ function persistSettings(): void {
 
 // Winning chances (adjusted for infinitechess players) ------------------------------------
 
-/** Maps a white-POV centipawn score to a win probability in [-1, 1]. */
-function cpWinningChances(cp: number): number {
-	// Clamp to ensure mate always shows higher gauge than any non-mate eval
-	const clamped = math.clamp(cp, -1200, 1200);
-	// Shallower curve (0.003) assumes players convert advantages less efficiently
+/**
+ * Maps a centipawn score to winning chances in [-1, 1], from that score's POV.
+ * Clamps to ±`clampCp` first, so a caller's mate sentinel can sit at the extreme.
+ */
+function cpToWinningChances(cp: number, clampCp: number): number {
+	const clamped = math.clamp(cp, -clampCp, clampCp);
+	// Shallow curve (0.003) assumes players convert
+	// advantages less efficiently than a perfect engine would.
 	return 2 / (1 + Math.exp(-0.003 * clamped)) - 1;
+}
+
+/** White-POV cp → winning chances for the eval gauge. */
+function cpWinningChances(cp: number): number {
+	// Clamp at ±1200 so a mate (±1) always shows a higher gauge than any non-mate eval.
+	return cpToWinningChances(cp, 1200);
 }
 
 /**
@@ -237,6 +244,11 @@ function cpWinningChances(cp: number): number {
  */
 function mateWinningChances(mate: number): number {
 	return mate > 0 ? 1 : -1;
+}
+
+/** Winning chances for a line's eval — mate takes precedence over cp. */
+function lineWinningChances(cp: number | undefined, mate: number | undefined): number {
+	return mate !== undefined ? mateWinningChances(mate) : cpWinningChances(cp ?? 0);
 }
 
 // Worker lifecycle -----------------------------------------------------------------------
@@ -402,6 +414,7 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 	switch (msg.type) {
 		case 'ready':
 			workerReady = true;
+			engineVersion = msg.version;
 			// A single-threaded engine build locks the thread setting to 1 (panel disables the slider).
 			if (!msg.mt && engineSupportsThreads) {
 				engineSupportsThreads = false;
@@ -445,7 +458,7 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 /**
  * The compact ICN of the position under analysis, built with the same
  * `compressGamefile` + `LongToShort_Format` machinery the gameplay engine worker
- * (hydrochess.ts) uses. It carries the FULL move list (not just a single position)
+ * (apeiron.ts) uses. It carries the FULL move list (not just a single position)
  * so the engine replays the game and has the history it needs to detect threefold
  * repetition and the fifty-move rule. The moves are truncated to the ply currently
  * being viewed, so navigating back analyzes that earlier position with its own history.
@@ -459,6 +472,11 @@ function getViewedPositionIcn(gamefile: GameFile): string {
 	// Result/Termination are irrelevant to the engine
 	delete longformIn.metadata.Result;
 	delete longformIn.metadata.Termination;
+	// Always hand the engine an explicit world border. Without one it falls back to its own
+	// narrow internal default (1e15); the resolved border (the position's own, else ±i64-wiggle)
+	// lets it evaluate the full safe coordinate range. compressGamefile deep-copies gameRules,
+	// so this doesn't touch the live game.
+	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
 	return icnconverter.LongToShort_Format(longformIn, {
 		compact: true,
 		skipPosition: false,
@@ -658,7 +676,7 @@ function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, termi
 			moves: line.moves,
 			...(cp !== undefined && { cp }),
 			...(mate !== undefined && { mate }),
-			winningChances: mate !== undefined ? mateWinningChances(mate) : cpWinningChances(cp ?? 0), // prettier-ignore
+			winningChances: lineWinningChances(cp, mate),
 		};
 	});
 
@@ -727,6 +745,48 @@ function reemitCurrent(): void {
 		latestUpdate = { ...latestUpdate, lines: latestUpdate.lines.slice(0, settings.multiPv) };
 	}
 	emitNow();
+}
+
+/**
+ * Seeds the position cache with an externally-computed evaluation (the game review).
+ * Ignored when something at least as deep is already cached. Once seeded, the shown
+ * eval only changes when a manual search reaches this depth — the same depth guards
+ * that protect any cached analysis ({@link receiveInfo}, {@link refreshAnalysis}).
+ */
+function seedPositionCache(seed: {
+	icn: string;
+	depth: number;
+	/** The move index (`gamefile.state.local.moveIndex`) at which this position is viewed. */
+	moveIndex: number;
+	/** The line's compact move tokens, from the seeded position. */
+	moves: string[];
+	/** Centipawns, white POV. Absent when mating. */
+	cp?: number;
+	/** Full moves to mate, white POV sign. */
+	mate?: number;
+}): void {
+	const cached = positionCache.get(seed.icn);
+	if (cached && cached.depth >= seed.depth) return;
+
+	const line: CevalLine = {
+		moves: seed.moves,
+		...(seed.cp !== undefined && { cp: seed.cp }),
+		...(seed.mate !== undefined && { mate: seed.mate }),
+		winningChances: lineWinningChances(seed.cp, seed.mate),
+	};
+	positionCache.set(seed.icn, {
+		depth: seed.depth,
+		seldepth: seed.depth,
+		nodes: 0,
+		nps: 0,
+		hashfull: 0,
+		lines: [line],
+		multiPv: 1,
+		targetDepth: seed.depth,
+		moveIndex: seed.moveIndex,
+		done: true,
+		terminal: false,
+	});
 }
 
 /** Requests the legal moves for {@link icn} from the idle helper worker (never blocked by the search). */
@@ -870,6 +930,11 @@ function getStatus(): CevalStatus {
 	return 'computing';
 }
 
+/** The engine's version (e.g. "2.0.0"), once the worker has reported 'ready'. */
+function getEngineVersion(): string | undefined {
+	return engineVersion;
+}
+
 /** Subscribes to throttled engine updates. `undefined` means "eval cleared". */
 function onUpdate(listener: (update: CevalUpdate | undefined) => void): void {
 	updateListeners.add(listener);
@@ -887,6 +952,8 @@ function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
 
 export default {
 	maxThreads,
+	cpToWinningChances,
+	seedPositionCache,
 	requestLegalMoves,
 	init,
 	isEnabled,
@@ -896,6 +963,7 @@ export default {
 	updateSettings,
 	goDeeper,
 	getLatestUpdate,
+	getEngineVersion,
 	onUpdate,
 	onStatus,
 	onLegalMoves,
