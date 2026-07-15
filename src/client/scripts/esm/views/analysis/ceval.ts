@@ -248,6 +248,11 @@ function mateWinningChances(mate: number): number {
 	return mate > 0 ? 1 : -1;
 }
 
+/** Winning chances for a line's eval — mate takes precedence over cp. */
+function lineWinningChances(cp: number | undefined, mate: number | undefined): number {
+	return mate !== undefined ? mateWinningChances(mate) : cpWinningChances(cp ?? 0);
+}
+
 // Worker lifecycle -----------------------------------------------------------------------
 
 /** Wires an active worker's responses into the main message + crash handlers. */
@@ -672,7 +677,7 @@ function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, termi
 			moves: line.moves,
 			...(cp !== undefined && { cp }),
 			...(mate !== undefined && { mate }),
-			winningChances: mate !== undefined ? mateWinningChances(mate) : cpWinningChances(cp ?? 0), // prettier-ignore
+			winningChances: lineWinningChances(cp, mate),
 		};
 	});
 
@@ -746,7 +751,7 @@ function reemitCurrent(): void {
 /**
  * Seeds the position cache with an externally-computed evaluation (the game review).
  * Ignored when something at least as deep is already cached. Once seeded, the shown
- * eval only changes when a manual search exceeds this depth — the same depth guards
+ * eval only changes when a manual search reaches this depth — the same depth guards
  * that protect any cached analysis ({@link receiveInfo}, {@link refreshAnalysis}).
  */
 function seedPositionCache(seed: {
@@ -768,10 +773,7 @@ function seedPositionCache(seed: {
 		moves: seed.moves,
 		...(seed.cp !== undefined && { cp: seed.cp }),
 		...(seed.mate !== undefined && { mate: seed.mate }),
-		winningChances:
-			seed.mate !== undefined
-				? mateWinningChances(seed.mate)
-				: cpWinningChances(seed.cp ?? 0),
+		winningChances: lineWinningChances(seed.cp, seed.mate),
 	};
 	positionCache.set(seed.icn, {
 		depth: seed.depth,
