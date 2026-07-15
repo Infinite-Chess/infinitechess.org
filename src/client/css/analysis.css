@@ -674,7 +674,7 @@
 
 .review-graph-tooltip {
 	position: absolute;
-	top: 38px;
+	/* top is set inline by JS — auto-positioned above/below the hovered point (guigamereview.ts). */
 	z-index: 2;
 	display: flex;
 	flex-direction: column;

@@ -79,6 +79,11 @@ function init(): void {
 	window.addEventListener('resize', () => {
 		if (isGraphVisible()) drawGraph();
 	});
+	// The eval line's color is read from the canvas's CSS `color` at draw time, so a theme
+	// flip needs an explicit redraw — nothing else touches the graph until the next interaction.
+	document.addEventListener('theme-change', () => {
+		if (isGraphVisible()) drawGraph();
+	});
 	GameBus.addEventListener('view-move', () => {
 		if (isGraphVisible()) drawGraph();
 	});
@@ -240,6 +245,9 @@ function updateStats(): void {
 const GRAPH_CP_RANGE = 600;
 const GRAPH_TOP_PADDING = 24;
 const GRAPH_BOTTOM_PADDING = 4;
+/** Vertical clearance the tooltip keeps from the graph's top/bottom edges when auto-positioning. */
+const TOOLTIP_TOP_MARGIN = 10;
+const TOOLTIP_BOTTOM_MARGIN = 6;
 
 let hoveredPosition: number | undefined;
 
@@ -484,8 +492,18 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 
 	const rect = element_Graph.getBoundingClientRect();
 	const tooltipWidth = element_GraphTooltip.offsetWidth;
+	const tooltipHeight = element_GraphTooltip.offsetHeight;
 	const localX = event.clientX - rect.left;
 	element_GraphTooltip.style.left = `${math.clamp(localX - tooltipWidth / 2, 6, rect.width - tooltipWidth - 6)}px`;
+
+	// Auto-position vertically on whichever side of the hovered point has more room —
+	// so the tooltip never sits directly over the very data point it's describing.
+	const graphHeight = element_Graph.clientHeight;
+	const pointY = graphY(cp, graphHeight);
+	element_GraphTooltip.style.top =
+		pointY < graphHeight / 2
+			? `${Math.max(TOOLTIP_TOP_MARGIN, graphHeight - tooltipHeight - TOOLTIP_BOTTOM_MARGIN)}px` // Point is up top — tooltip goes near the bottom.
+			: `${TOOLTIP_TOP_MARGIN}px`; // Point is down low — tooltip goes near the top.
 }
 
 function formatAdvantage(cp: number): string {
