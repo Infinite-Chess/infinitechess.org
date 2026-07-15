@@ -1,10 +1,10 @@
-// src/client/scripts/esm/views/analysis/hydrochessanalysis.worker.ts
+// src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts
 
 /**
- * HydroChess Analysis Worker
+ * Apeiron Analysis Worker
  *
  * Persistent-session engine worker for the analysis board. Unlike the gameplay
- * worker (hydrochess.ts) which answers one best-move request per message, this
+ * worker (apeiron.ts) which answers one best-move request per message, this
  * runs an ongoing MultiPV search of the current position and streams UCI-like
  * info updates back to the main thread after every completed depth.
  *

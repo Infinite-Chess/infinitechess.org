@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/chess/engines/enginecards/hydrochess_card.ts
+// src/client/scripts/esm/game/chess/engines/enginecards/apeiron_card.ts
 
 import type { VariantOptions } from '../../../../../../../shared/chess/logic/gamefile';
 

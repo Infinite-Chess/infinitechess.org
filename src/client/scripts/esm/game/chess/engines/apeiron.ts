@@ -1,8 +1,8 @@
-// src/client/scripts/esm/game/chess/engines/hydrochess.ts
+// src/client/scripts/esm/game/chess/engines/apeiron.ts
 
 /**
- * HydroChess Engine
- * A JavaScript wrapper for the WASM implementation of HydroChess
+ * Apeiron Engine
+ * A JavaScript wrapper for the WASM implementation of Apeiron
  *
  * @author FirePlank
  */
@@ -12,9 +12,9 @@ import icnconverter, {
 } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
 // @ts-ignore without this, the type check job fails
-import wasmUrl from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm_bg.wasm';
+import wasmUrl from '../../../../../pkg/apeiron/pkg/apeiron_bg.wasm';
 // @ts-ignore without this, the type check job fails
-import init, * as wasmBindings from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm.js';
+import init, * as wasmBindings from '../../../../../pkg/apeiron/pkg/apeiron.js';
 
 const wasm = wasmBindings as typeof wasmBindings;
 let wasmInitialized = false;
@@ -47,17 +47,17 @@ interface WasmBestMoveResult {
 // @returns Promise that resolves when the WASM module is initialized
 async function initWasm(): Promise<boolean> {
 	if (!wasmInitPromise) {
-		console.debug('[Engine] Initializing HydroChess WASM module');
+		console.debug('[Engine] Initializing Apeiron WASM module');
 		wasmInitPromise = init({ module_or_path: wasmUrl })
 			.then(async () => {
-				console.debug('[Engine] HydroChess WASM module initialized');
+				console.debug('[Engine] Apeiron WASM module initialized');
 				wasmInitialized = true;
 
 				postMessage('readyok');
 				return true;
 			})
 			.catch((err: unknown) => {
-				console.error('[Engine] Failed to initialize HydroChess WASM module', err);
+				console.error('[Engine] Failed to initialize Apeiron WASM module', err);
 				wasmInitialized = false;
 				return false;
 			});

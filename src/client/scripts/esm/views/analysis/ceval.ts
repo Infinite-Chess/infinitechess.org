@@ -8,11 +8,7 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type {
-	AnalysisCommand,
-	AnalysisInfo,
-	AnalysisResponse,
-} from './hydrochessanalysis.worker.js';
+import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
@@ -174,7 +170,7 @@ let goDeeperActive = false;
 let currentTargetDepth = DEFAULT_SETTINGS.depth;
 /** Allows an intentional same-position restart (e.g. adding PV lines) to repaint lower-depth rows. */
 let allowDepthRegressionForCurrentSearch = false;
-/** The viewed position has a piece outside HydroChess's safe coordinate range. */
+/** The viewed position has a piece outside Apeiron's safe coordinate range. */
 let blockedByEngineWorldBorder = false;
 
 let latestUpdate: CevalUpdate | undefined;
@@ -462,7 +458,7 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 /**
  * The compact ICN of the position under analysis, built with the same
  * `compressGamefile` + `LongToShort_Format` machinery the gameplay engine worker
- * (hydrochess.ts) uses. It carries the FULL move list (not just a single position)
+ * (apeiron.ts) uses. It carries the FULL move list (not just a single position)
  * so the engine replays the game and has the history it needs to detect threefold
  * repetition and the fifty-move rule. The moves are truncated to the ply currently
  * being viewed, so navigating back analyzes that earlier position with its own history.

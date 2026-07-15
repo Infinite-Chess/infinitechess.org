@@ -1,7 +1,7 @@
 // src/client/scripts/esm/views/analysis/analysisenginebounds.ts
 
 /**
- * Stores helpers for the HydroChess analysis-safe coordinate border.
+ * Stores helpers for the Apeiron analysis-safe coordinate border.
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
@@ -11,13 +11,13 @@ import { engineDictionary } from '../../game/chess/engines/engine.js';
 
 /**
  * Absolute fallback border distance for a side the position leaves unbounded — the largest
- * coordinate HydroChess can safely evaluate (i64 minus a little wiggle room). Matches the
+ * coordinate Apeiron can safely evaluate (i64 minus a little wiggle room). Matches the
  * distance engine games hand the engine, so analysis stays within the same safe range.
  */
-const DEFAULT_BORDER_DISTANCE = engineDictionary.hydrochess.worldBorder;
+const DEFAULT_BORDER_DISTANCE = engineDictionary.apeiron.worldBorder;
 
 /**
- * The world border HydroChess evaluates the position within: the position's own `worldBorder`
+ * The world border Apeiron evaluates the position within: the position's own `worldBorder`
  * gamerule where defined, falling back to ±{@link DEFAULT_BORDER_DISTANCE} on any unbounded side.
  * (Unlike engine games, the fallback is absolute — not offset from the piece bounding box.)
  */

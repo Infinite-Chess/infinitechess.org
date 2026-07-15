@@ -55,8 +55,8 @@ import annotations from '../../rendering/highlights/annotations/annotations';
 import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
 import validatorama from '../../../util/validatorama';
+import apeiron_card from '../../chess/engines/enginecards/apeiron_card';
 import selectiontool from '../tools/selection/selectiontool';
-import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
 import guiboardcontrols from '../../gui/guiboardcontrols';
 import clientmetadatautil from '../../chess/clientmetadatautil';
 import { engineDictionary } from '../../chess/engines/engine';
@@ -203,7 +203,7 @@ function startLocalGame(): void {
 }
 
 function startEngineGame(engineUIConfig: EngineUIConfig): void {
-	const currentEngine = 'hydrochess';
+	const currentEngine = 'apeiron';
 
 	const variantOptions = getValidatedPosition();
 	if (variantOptions === null) return;
@@ -222,7 +222,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		 */
 
 		const worldBorderProperty = engineDictionary[currentEngine].worldBorder;
-		const cap = hydrochess_card.BORDER_CAP;
+		const cap = apeiron_card.BORDER_CAP;
 
 		// How far can we extend in each direction before hitting ±limit?
 		const availableLeft = bb.left + cap;
@@ -247,7 +247,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	}
 
 	// Does the engine support the position and settings?
-	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
+	const supported_result = apeiron_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
 		toast.show(`${translations.editor.position_not_supported} ${supported_result.reason}`, {
 			error: true,

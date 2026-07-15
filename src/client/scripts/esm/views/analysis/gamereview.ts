@@ -16,7 +16,7 @@ import type {
 	AnalysisCommand,
 	AnalysisResponse,
 	EvaluateResult,
-} from './hydrochessanalysis.worker.js';
+} from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';

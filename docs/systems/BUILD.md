@@ -105,8 +105,8 @@ splits by how each asset is invalidated:
   from the translation TOMLs. See [TRANSLATIONS.md](/docs/systems/TRANSLATIONS.md).
 - **[build/env.ts](/build/env.ts)**: auto-generates `.env` with random token secrets if
   absent; validates `NODE_ENV ∈ {development, production, test}`.
-- **[build/engine-wasm.ts](/build/engine-wasm.ts)**: downloads the latest HydroChess WASM
-  release from GitHub into `src/client/pkg/hydrochess/pkg/` (version-stamped). Network-failure
+- **[build/engine-wasm.ts](/build/engine-wasm.ts)**: downloads the latest Apeiron WASM
+  release from GitHub into `src/client/pkg/apeiron/pkg/` (version-stamped). Network-failure
   tolerant — falls back to the existing local copy.
 
 ## `npm run dev`

@@ -5,7 +5,7 @@
  * Add a new entry to engineDictionary when adding a new engine.
  */
 
-import hydrochess_card from './enginecards/hydrochess_card.js';
+import apeiron_card from './enginecards/apeiron_card.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -45,10 +45,10 @@ export const engineDictionary = {
 		displayName: 'Practice Bot',
 		maxStrengthLevel: 1,
 	},
-	hydrochess: {
-		worldBorder: hydrochess_card.I64_MAX - 2000n,
+	apeiron: {
+		worldBorder: apeiron_card.I64_MAX - 2000n,
 		defaultTimeLimitPerMoveMillis: 4000,
-		displayName: 'HydroChess',
+		displayName: 'Apeiron',
 		maxStrengthLevel: 3,
 	},
 } satisfies { [key: string]: Engine };

@@ -44,7 +44,7 @@ const reservedUsernames: ReadonlySet<string> = new Set([
 	'moderator', 'mod', 'staff', 'team', 'official',
 	'support', 'help', 'helpdesk', 'contact', 'info',
 	'security', 'abuse', 'billing', 'payments', 'noreply',
-	'hydro', 'hydrochess', 'engine', 'computer', 'bot',
+	'apeiron', 'engine', 'computer', 'bot',
 	'icn', 'ice', 'infinitechessengine', 'infinitechessorg',
 	'guest', 'anonymous', 'deleted',
 ]); // prettier-ignore

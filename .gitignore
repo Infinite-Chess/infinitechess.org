@@ -47,5 +47,5 @@ pnpm-lock.yaml
 specs
 .agent
 
-# HydroChess Engine build output
+# Apeiron Engine build output
 src/client/pkg/

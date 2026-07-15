@@ -24,12 +24,12 @@ import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../rendering/enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
-import { listener_document } from '../../../game/chess/gamecore.js';
 import { engineDictionary } from '../../../game/chess/engines/engine.js';
+import { listener_document } from '../../../game/chess/gamecore.js';
 import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
 
 /** The analysis board always runs the same engine; engineDictionary is its display name's single source of truth. */
-const ENGINE_DISPLAY_NAME = engineDictionary.hydrochess.displayName;
+const ENGINE_DISPLAY_NAME = engineDictionary.apeiron.displayName;
 
 // Elements -------------------------------------------------------------------------
 
