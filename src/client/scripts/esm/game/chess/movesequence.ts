@@ -48,13 +48,9 @@ function commitMove(
 
 	movepiece.makeMove(gamefile, move); // Logical changes
 
-	// GUI changes
-	guimoveslist.updateNavButtons();
-	// Forward chokepoint for the committed move list. MUST stay above the game-over checks: its reconcile
-	// has to enqueue before 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
-	GameBus.dispatch('moves-changed');
-
-	// Stamp the move with how much time the player had left after playing it.
+	// Stamp the move with how much time the player had left after playing it. MUST run before
+	// 'moves-changed' below: guiclock's turn-highlight reads clocks.colorTicking on that event,
+	// and clock.push() is what syncs colorTicking to the just-flipped whosTurn.
 	if (!gamefile.untimed && gamesession.getGameType() === 'engine') {
 		// Engine games: push the clocks locally and record the resulting stamp.
 		const stamp = clock.push(gamefile);
@@ -64,6 +60,12 @@ function commitMove(
 		// Online games: the server is boss of the clocks, so record the stamp it reported.
 		move.clockStamp = clockStamp;
 	}
+
+	// GUI changes
+	guimoveslist.updateNavButtons();
+	// Forward chokepoint for the committed move list. MUST stay above the game-over checks: its reconcile
+	// has to enqueue before 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
+	GameBus.dispatch('moves-changed');
 
 	if (doGameOverChecks) {
 		wincondition.doGameOverChecks(gamefile);
