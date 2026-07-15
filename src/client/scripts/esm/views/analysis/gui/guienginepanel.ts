@@ -81,6 +81,7 @@ function init(): void {
 	enginelegalmovesdebug.init({
 		canRequest: () => !ceval.isBlockedByEngineWorldBorder(),
 		requestMoves: ({ id, positionIcn }) => ceval.requestLegalMoves(id, positionIcn),
+		release: () => ceval.terminateLegalWorker(),
 	});
 
 	initSettingsUI();

@@ -299,7 +299,7 @@ function interruptSearch(): void {
 
 // Legal-moves helper worker --------------------------------------------------------------
 
-/** Warms the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
+/** Lazily spins up the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
 function ensureLegalWorker(): void {
 	if (legalWorker || !config) return;
 	const w = new Worker(config.workerUrl, { type: 'module' });
@@ -330,6 +330,7 @@ function ensureLegalWorker(): void {
 	} satisfies AnalysisCommand);
 }
 
+/** Frees the idle legal-moves helper worker. Call when the debug overlay is toggled off. */
 function terminateLegalWorker(): void {
 	legalWorker?.terminate();
 	legalWorker = undefined;
@@ -414,7 +415,7 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 	switch (msg.type) {
 		case 'ready':
 			workerReady = true;
-			engineVersion = msg.version;
+			engineVersion ??= msg.version; // Set once — a respawn (hash change, crash) reports the same version.
 			// A single-threaded engine build locks the thread setting to 1 (panel disables the slider).
 			if (!msg.mt && engineSupportsThreads) {
 				engineSupportsThreads = false;
@@ -424,7 +425,6 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 				}
 			}
 			refreshAnalysis(true); // Fresh wasm module, so this always restarts from depth 1.
-			ensureLegalWorker();
 			notifyStatus();
 			break;
 		case 'initerror':
@@ -816,6 +816,12 @@ function notifyStatus(override?: CevalStatus): void {
 function init(options: { workerUrl: string; engineUrl: string }): void {
 	config = options;
 
+	// Pre-warm the engine immediately, regardless of whether eval is enabled: its 'ready'
+	// reports the version (so the panel can show it right away) and its wasm module is loaded
+	// (so enabling eval later starts analyzing instantly instead of waiting on a cold load).
+	// refreshAnalysis() no-ops while `enabled` is false, so this doesn't start any searching.
+	spawnWorker();
+
 	// Keep the engine pointed at the viewed position. 'view-move' fires on every
 	// board position change, including physical moves. Coalesce them: an operation like
 	// branching (viewFront to the game's front, then rewinding back) fires several
@@ -824,7 +830,8 @@ function init(options: { workerUrl: string; engineUrl: string }): void {
 	GameBus.addEventListener('view-move', scheduleRefresh);
 	GameBus.addEventListener('game-loaded', () => {
 		nextPositionIsNewGame = true;
-		if (enabled && !worker) spawnWorker();
+		// Re-warm regardless of `enabled`: 'game-unloaded' tore the pre-warmed worker down.
+		if (!worker) spawnWorker();
 		refreshAnalysis(true);
 	});
 	GameBus.addEventListener('game-unloaded', () => {
@@ -844,8 +851,7 @@ function setEnabled(value: boolean): void {
 	if (enabled === value) return;
 	enabled = value;
 	if (enabled) {
-		if (!worker) spawnWorker();
-		else ensureLegalWorker(); // Reusing a warm worker: no 'ready' will fire, so warm the helper here.
+		if (!worker) spawnWorker(); // Only needed if the pre-warmed worker crashed/never spawned.
 		refreshAnalysis(true);
 		// Show the retained eval right away (refreshAnalysis only blanks it when the
 		// position changed while the engine was off) instead of a gap until the resume.
@@ -955,6 +961,7 @@ export default {
 	cpToWinningChances,
 	seedPositionCache,
 	requestLegalMoves,
+	terminateLegalWorker,
 	init,
 	isEnabled,
 	isBlockedByEngineWorldBorder,
