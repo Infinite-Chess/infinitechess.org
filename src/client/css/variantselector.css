@@ -90,7 +90,8 @@
 	top: calc(100% + 4px);
 	left: 0;
 	right: 0;
-	z-index: 1;
+	/* Above the analysis engine panel (z-index 10) so the open list overlays it, not vice versa. */
+	z-index: 20;
 	background: var(--c-surface);
 	border: 1px solid var(--c-border-2);
 	border-radius: 6px;

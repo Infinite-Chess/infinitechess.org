@@ -5,6 +5,9 @@
 
 .game {
 	display: flex;
+	/* Side bar on the right, board filling the left. row-reverse keeps the eval gauge
+	   (DOM: sidebar, gauge, canvas) flush against the board rather than detaching it. */
+	flex-direction: row-reverse;
 	height: calc(100dvh - var(--header-height));
 }
 

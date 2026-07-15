@@ -31,6 +31,9 @@ import guimoveslist from '../../../game/gui/guimoveslist.js';
 
 // State ---------------------------------------------------------------------------------------
 
+/** Plies of the engine's best line shown as a variation beneath a reviewed blunder. */
+const BLUNDER_VARIATION_MAX_PLIES = 6;
+
 /** The open right-click context menu, if any. */
 let contextMenu: HTMLElement | undefined;
 
@@ -506,8 +509,9 @@ function navigateToNode(node: AnalysisMoveNode): void {
 
 /**
  * Adds the engine's best continuation as a variation before every reviewed blunder.
- * Lila stores at most 12 PV plies; we use the same cap and also stop at the first
- * illegal or terminal move. The viewer's current node is restored synchronously.
+ * Capped at 6 plies (3 full moves) — enough to show why the move was better without
+ * spelling out a whole alternate game — and also stopped at the first illegal or
+ * terminal move. The viewer's current node is restored synchronously.
  */
 function addBlunderVariations(): void {
 	const gamefile = gameslot.getGamefile();
@@ -534,7 +538,9 @@ function addBlunderVariationAtTree(review: MoveReview): boolean {
 	if (review.classification !== 'blunder' || !review.pv?.length) return false;
 	const parent = gamereview.getMainlineNodes()[review.ply]?.parent;
 	if (!parent) return false;
-	const pv = review.pv.slice(0, 12);
+	// 6 plies (3 full moves): our coordinate notation is wider than lila's SAN, so a
+	// 12-ply line would span ~4 rows instead of two. Enough to convey the better idea.
+	const pv = review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES);
 	if (parent.children.some((child) => child.move?.token === pv[0])) return false;
 	addVariationAt(parent, pv);
 	return true;

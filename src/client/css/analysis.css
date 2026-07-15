@@ -134,6 +134,10 @@
 
 .engine-panel {
 	position: relative;
+	/* Lift the panel's stacking context (incl. the absolutely-positioned settings drawer that
+	   drops down over the moves list) above the moves-table, whose variation rails are
+	   position:relative and would otherwise paint on top of the open drawer. */
+	z-index: 10;
 }
 
 /* Depth progress bar */
@@ -635,7 +639,8 @@
 	min-height: 150px;
 	line-height: 0;
 	overflow: visible;
-	background: color-mix(in srgb, var(--c-surface-2) 62%, transparent);
+	/* Fully opaque — a translucent background let the moves list show through beneath the graph. */
+	background: var(--c-surface-2);
 }
 
 .review-graph canvas {
