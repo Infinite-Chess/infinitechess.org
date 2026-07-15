@@ -101,72 +101,6 @@ async function createVariationPlyButton(
 	return ply;
 }
 
-// Game review decoration -----------------------------------------------------------------------
-
-// Annotate a ply's element in place the moment its move classifies, so the list
-// colors gradually while the review runs (re-renders re-decorate via build).
-gamereview.onClassified((review) => {
-	const ply = guimoveslist.element_MovesTable.querySelector<HTMLElement>(
-		`.ply[data-node-id="${review.nodeId}"]`,
-	);
-	if (ply) decoratePlyWithReview(ply, review.nodeId);
-});
-moveevals.onLabel((nodeId) => {
-	const ply = guimoveslist.element_MovesTable.querySelector<HTMLElement>(
-		`.ply[data-node-id="${nodeId}"]`,
-	);
-	if (ply) decoratePlyWithReview(ply, nodeId);
-});
-
-/**
- * Applies the move's review classification to its ply button: a `review-<key>` color
- * class, a tooltip, and — for lapses (inaccuracy/mistake/blunder) — a visible glyph.
- */
-function decoratePlyWithReview(ply: HTMLElement, nodeId: number): void {
-	const review = gamereview.getReviewForNode(nodeId);
-	if (review?.classification && !ply.classList.contains(`review-${review.classification}`)) {
-		const display = gamereview.CLASSIFICATION_DISPLAY[review.classification];
-		ply.classList.add(`review-${review.classification}`);
-
-		let label = display.label;
-		if (!review.isBestMove && review.bestMove) label += ` — best was ${review.bestMove}`;
-		ply.title = `${ply.title} · ${label}`;
-
-		if (
-			display.symbol &&
-			(review.classification === 'inaccuracy' ||
-				review.classification === 'mistake' ||
-				review.classification === 'blunder')
-		) {
-			// prettier-ignore
-			const glyph = document.createElement('span');
-			glyph.classList.add('review-glyph');
-			glyph.textContent = display.symbol;
-			ply.append(glyph);
-		}
-	}
-
-	const evalLabel = moveevals.get(nodeId);
-	if (evalLabel) {
-		let evalElement = ply.querySelector<HTMLElement>('.review-eval');
-		if (!evalElement) {
-			evalElement = document.createElement('span');
-			evalElement.classList.add('review-eval');
-			ply.append(evalElement);
-		}
-		evalElement.textContent = formatEvalLabel(evalLabel);
-		evalElement.title = `Evaluation at depth ${evalLabel.depth}`;
-	}
-}
-
-/** Formats a white-POV score like lichess's inline move eval. */
-function formatEvalLabel(label: { cp?: number; mate?: number }): string {
-	if (label.mate !== undefined)
-		return label.mate > 0 ? `#${label.mate}` : `#−${Math.abs(label.mate)}`;
-	const pawns = (label.cp ?? 0) / 100;
-	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`.replace('-', '−');
-}
-
 /** Formats a ply index as a move label — `3.` for a white move, `3...` for a black one. */
 function formatMoveIndex(index: number): string {
 	const fullMove = Math.floor(index / 2) + 1;
@@ -306,6 +240,72 @@ function getMainlineChild(node: AnalysisMoveNode): AnalysisMoveNode | undefined 
 function getVariationChildren(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	const first = node.children[0];
 	return first?.forceVariation ? node.children : node.children.slice(1);
+}
+
+// Game review decoration -----------------------------------------------------------------------
+
+// Annotate a ply's element in place the moment its move classifies, so the list
+// colors gradually while the review runs (re-renders re-decorate via build).
+gamereview.onClassified((review) => {
+	const ply = guimoveslist.element_MovesTable.querySelector<HTMLElement>(
+		`.ply[data-node-id="${review.nodeId}"]`,
+	);
+	if (ply) decoratePlyWithReview(ply, review.nodeId);
+});
+moveevals.onLabel((nodeId) => {
+	const ply = guimoveslist.element_MovesTable.querySelector<HTMLElement>(
+		`.ply[data-node-id="${nodeId}"]`,
+	);
+	if (ply) decoratePlyWithReview(ply, nodeId);
+});
+
+/**
+ * Applies the move's review classification to its ply button: a `review-<key>` color
+ * class, a tooltip, and — for lapses (inaccuracy/mistake/blunder) — a visible glyph.
+ */
+function decoratePlyWithReview(ply: HTMLElement, nodeId: number): void {
+	const review = gamereview.getReviewForNode(nodeId);
+	if (review?.classification && !ply.classList.contains(`review-${review.classification}`)) {
+		const display = gamereview.CLASSIFICATION_DISPLAY[review.classification];
+		ply.classList.add(`review-${review.classification}`);
+
+		let label = display.label;
+		if (!review.isBestMove && review.bestMove) label += ` — best was ${review.bestMove}`;
+		ply.title = `${ply.title} · ${label}`;
+
+		if (
+			display.symbol &&
+			(review.classification === 'inaccuracy' ||
+				review.classification === 'mistake' ||
+				review.classification === 'blunder')
+		) {
+			// prettier-ignore
+			const glyph = document.createElement('span');
+			glyph.classList.add('review-glyph');
+			glyph.textContent = display.symbol;
+			ply.append(glyph);
+		}
+	}
+
+	const evalLabel = moveevals.get(nodeId);
+	if (evalLabel) {
+		let evalElement = ply.querySelector<HTMLElement>('.review-eval');
+		if (!evalElement) {
+			evalElement = document.createElement('span');
+			evalElement.classList.add('review-eval');
+			ply.append(evalElement);
+		}
+		evalElement.textContent = formatEvalLabel(evalLabel);
+		evalElement.title = `Evaluation at depth ${evalLabel.depth}`;
+	}
+}
+
+/** Formats a white-POV score like lichess's inline move eval. */
+function formatEvalLabel(label: { cp?: number; mate?: number }): string {
+	if (label.mate !== undefined)
+		return label.mate > 0 ? `#${label.mate}` : `#−${Math.abs(label.mate)}`;
+	const pawns = (label.cp ?? 0) / 100;
+	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`.replace('-', '−');
 }
 
 // Context menu -------------------------------------------------------------------------------
@@ -498,7 +498,7 @@ guimoveslist.registerRenderer({
 	onGameUnloaded: () => movetree.clear(),
 });
 
-// Exports ------------------------------------------------------------------------------------
+// Game Review API -----------------------------------------------------------------------
 
 /** Navigates the board to the given move-tree node (the review graph's click-to-jump). */
 function navigateToNode(node: AnalysisMoveNode): void {
