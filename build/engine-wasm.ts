@@ -193,7 +193,7 @@ export function copyEngineToDist(): void {
 		fs.cpSync(snippets, path.join(versionedDir, 'snippets'), { recursive: true });
 	}
 	engineWebBase = `/engine/${hash}`;
-	console.log(`${label} Copied engine pkg to dist/client/engine/${hash}.`);
+	console.log(`${label} Copied engine pkg to dist/client/engine/${hash}/`);
 }
 
 /**
