@@ -246,18 +246,16 @@ function getVariationChildren(node: AnalysisMoveNode): AnalysisMoveNode[] {
 
 // Annotate a ply's element in place the moment its move classifies, so the list
 // colors gradually while the review runs (re-renders re-decorate via build).
-gamereview.onClassified((review) => {
-	const ply = guimoveslist.element_MovesTable.querySelector<HTMLElement>(
-		`.ply[data-node-id="${review.nodeId}"]`,
-	);
-	if (ply) decoratePlyWithReview(ply, review.nodeId);
-});
-moveevals.onLabel((nodeId) => {
+gamereview.onClassified((review) => decorateNodeById(review.nodeId));
+moveevals.onLabel(decorateNodeById);
+
+/** Re-decorates the rendered ply for `nodeId`, if it's currently in the tree. */
+function decorateNodeById(nodeId: number): void {
 	const ply = guimoveslist.element_MovesTable.querySelector<HTMLElement>(
 		`.ply[data-node-id="${nodeId}"]`,
 	);
 	if (ply) decoratePlyWithReview(ply, nodeId);
-});
+}
 
 /**
  * Applies the move's review classification to its ply button: a `review-<key>` color
@@ -279,7 +277,6 @@ function decoratePlyWithReview(ply: HTMLElement, nodeId: number): void {
 				review.classification === 'mistake' ||
 				review.classification === 'blunder')
 		) {
-			// prettier-ignore
 			const glyph = document.createElement('span');
 			glyph.classList.add('review-glyph');
 			glyph.textContent = display.symbol;
@@ -549,7 +546,8 @@ function addVariationAt(parent: AnalysisMoveNode, tokens: string[]): void {
 	const mesh = gameslot.getMesh();
 	navigateToAnalysisNode(gamefile, parent);
 
-	// Align the logical front with the viewed parent while retaining the tree's old children.
+	// Pop gamefile.moves down to the parent so the PV appends as a fresh branch (the tree
+	// keeps its old children). rewindMove only deletes from the front, so view front first.
 	movetree.beginBranchFromViewedPosition(gamefile);
 	const target = gamefile.state.local.moveIndex;
 	movesequence.viewFront(gamefile, mesh);
