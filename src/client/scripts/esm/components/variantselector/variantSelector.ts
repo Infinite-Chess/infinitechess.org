@@ -174,12 +174,22 @@ function initVariantGroupDropdown(hostConfig: VariantSelectorConfig): void {
 
 /** Wires blur/focus/input/paste listeners to keep the ICN validation state in sync. */
 function initIcnValidation(): void {
+	/** Whether to ignore the "already loaded" check and force a commit on blur. */
+	let forceCommit = false;
+
 	// Blur/paste are "commit" points; live typing only updates validity (onChange), not a commit.
 	element_icnInput.addEventListener('blur', () => {
 		validateIcnInput(true);
+		const wasForceCommit = forceCommit;
+		forceCommit = false;
 		// Skip the commit if the field still holds exactly the ICN already accepted — re-committing
 		// would reload the position, needlessly wiping any analysis branches made from it.
-		if (loaded.selection.kind === 'icn' && element_icnInput.value === loaded.icn) return;
+		if (
+			!wasForceCommit &&
+			loaded.selection.kind === 'icn' &&
+			element_icnInput.value === loaded.icn
+		)
+			return;
 		config.onCommit?.();
 	});
 	element_icnInput.addEventListener('focus', () => {
@@ -193,6 +203,7 @@ function initIcnValidation(): void {
 	element_icnInput.addEventListener('keydown', (e) => {
 		if (e.key !== 'Enter' || e.shiftKey) return;
 		e.preventDefault();
+		forceCommit = true; // The enter key overrides the "already loaded" check
 		element_icnInput.blur();
 	});
 	// Instantly reveal validity when a code is pasted, don't wait for blur.
