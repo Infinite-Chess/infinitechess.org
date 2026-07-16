@@ -134,10 +134,6 @@
 
 .engine-panel {
 	position: relative;
-	/* Lift the panel's stacking context (incl. the absolutely-positioned settings drawer that
-	   drops down over the moves list) above the moves-table, whose variation rails are
-	   position:relative and would otherwise paint on top of the open drawer. */
-	z-index: 10;
 }
 
 /* Depth progress bar */
@@ -303,6 +299,7 @@
 	border-bottom: 1px solid var(--c-border-muted);
 	background: var(--c-surface);
 	box-shadow: 0 4px 5px rgba(0, 0, 0, 0.4);
+	z-index: 1;
 }
 
 .setting-row {
@@ -639,7 +636,6 @@
 	min-height: 150px;
 	line-height: 0;
 	overflow: visible;
-	/* Fully opaque — a translucent background let the moves list show through beneath the graph. */
 	background: var(--c-surface-2);
 }
 
@@ -674,7 +670,6 @@
 
 .review-graph-tooltip {
 	position: absolute;
-	/* top is set inline by JS — auto-positioned above/below the hovered point (guigamereview.ts). */
 	z-index: 2;
 	display: flex;
 	flex-direction: column;
