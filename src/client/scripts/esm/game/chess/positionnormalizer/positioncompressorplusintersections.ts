@@ -718,18 +718,7 @@ function stringifyBDCoords(coords: BDCoords): string {
  * @param index - The index of the piece in its sorted list.
  */
 function getVariableName(axis: Axis, index: number): VariableName {
-	const axisLetter =
-		axis === '1,0'
-			? 'x'
-			: axis === '0,1'
-				? 'y'
-				: axis === '1,1'
-					? 'u'
-					: axis === '1,-1'
-						? 'v'
-						: (() => {
-								throw Error('Unsupported axis.');
-							})();
+	const axisLetter = axis === '1,0' ? 'x' : axis === '0,1' ? 'y' : axis === '1,1' ? 'u' : axis === '1,-1' ? 'v' : (() => { throw Error('Unsupported axis.'); })(); // prettier-ignore
 	return `${axisLetter}-${index}`;
 }
 
