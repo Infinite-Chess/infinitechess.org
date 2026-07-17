@@ -245,13 +245,18 @@ function updateStats(): void {
 
 /** Vertical cp range the graph displays; evals are clamped into it. */
 const GRAPH_CP_RANGE = 600;
-const GRAPH_TOP_PADDING = 24;
-const GRAPH_BOTTOM_PADDING = 4;
+/**
+ * Symmetric top/bottom inset so the zero line sits at the exact vertical center (like lila).
+ * The phase labels overlap the plot's top rather than reserving a band that would offset zero.
+ */
+const GRAPH_VERTICAL_PADDING = 4;
 /** Vertical clearance the tooltip keeps from the graph's top/bottom edges when auto-positioning. */
 const TOOLTIP_TOP_MARGIN = 10;
 const TOOLTIP_BOTTOM_MARGIN = 6;
 const WHITE_FILL = 'rgba(255, 255, 255, 0.45)';
 const BLACK_FILL = 'rgba(0, 0, 0, 0.4)';
+/** Lila-style orange for the line marking the currently viewed position. */
+const CURRENT_POSITION_COLOR = '#d85000';
 
 let hoveredPosition: number | undefined;
 
@@ -275,8 +280,8 @@ function graphX(index: number, width: number, totalPositions: number): number {
 /** The y pixel of a white-POV cp. */
 function graphY(cp: number, height: number): number {
 	const normalized = math.clamp(cp, -GRAPH_CP_RANGE, GRAPH_CP_RANGE) / GRAPH_CP_RANGE;
-	const plotHeight = height - GRAPH_TOP_PADDING - GRAPH_BOTTOM_PADDING;
-	return GRAPH_TOP_PADDING + plotHeight / 2 - normalized * (plotHeight / 2 - 3);
+	const plotHeight = height - GRAPH_VERTICAL_PADDING * 2;
+	return GRAPH_VERTICAL_PADDING + plotHeight / 2 - normalized * (plotHeight / 2 - 3);
 }
 
 /**
@@ -446,9 +451,9 @@ function drawGraph(): void {
 	// ply sits at that same depth, but it isn't a position the graph/review has any data for
 	// — only show the marker while actually viewing the mainline.
 	const selected = isViewingMainline() ? gameslot.getGamefile()!.state.local.moveIndex + 1 : -1;
-	drawPositionMarker(ctx, selected, width, height, total, 'rgba(160, 160, 160, 0.65)', 1);
+	updateCurrentPhaseMarker(selected);
+	drawPositionMarker(ctx, selected, width, height, total, CURRENT_POSITION_COLOR, 1);
 	if (hoveredPosition !== undefined) {
-		drawPositionMarker(ctx, hoveredPosition, width, height, total, lineColor, 1);
 		const cp = gamereview.getWhiteCpAt(hoveredPosition);
 		if (cp !== undefined) {
 			ctx.beginPath();
@@ -457,6 +462,15 @@ function drawGraph(): void {
 			ctx.fill();
 		}
 	}
+}
+
+/** Hides a coincident phase line so it cannot double up with the current-position marker. */
+function updateCurrentPhaseMarker(selected: number): void {
+	element_PhaseMarkers
+		?.querySelectorAll<HTMLElement>('.review-phase-marker')
+		.forEach((marker) => {
+			marker.classList.toggle('current-position', Number(marker.dataset['ply']) === selected);
+		});
 }
 
 /** Lila-style opening/middlegame/endgame boundaries and vertical labels. */
@@ -470,6 +484,7 @@ function renderPhaseMarkers(total: number): void {
 	for (const line of lines) {
 		const marker = document.createElement('div');
 		marker.classList.add('review-phase-marker');
+		marker.dataset['ply'] = String(line.index);
 		marker.style.left = `${(line.index / Math.max(1, total - 1)) * 100}%`;
 		const label = document.createElement('span');
 		label.textContent = line.label;

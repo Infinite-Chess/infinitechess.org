@@ -658,14 +658,29 @@
 	border-left: 1px solid var(--c-border-2);
 }
 
+.review-phase-marker.current-position {
+	border-left-color: transparent;
+}
+
 .review-phase-marker span {
 	position: absolute;
 	top: 4px;
 	left: 3px;
 	font-size: 10px;
 	line-height: 1;
-	color: var(--c-text-muted);
 	writing-mode: vertical-rl;
+	/* Inverse-blend each glyph stroke against whatever's behind it, like the board crosshair, so it
+	   stays legible over both the light advantage fill and the dark background. The source is tuned
+	   per theme so that over the graph's own background (--c-surface-2) the blend resolves to the
+	   muted text tone (|bg - src| = --c-text-muted) — same subtle look as before, but inverting. */
+	color: var(--review-phase-label-src);
+	mix-blend-mode: difference;
+}
+[data-theme='dark'] .review-phase-marker span {
+	--review-phase-label-src: rgb(190, 190, 190); /* |55 - 190| = 135 = dark --c-text-muted */
+}
+[data-theme='light'] .review-phase-marker span {
+	--review-phase-label-src: rgb(135, 135, 135); /* |235 - 135| = 100 = light --c-text-muted */
 }
 
 .review-graph-tooltip {
