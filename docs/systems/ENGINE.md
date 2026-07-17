@@ -172,4 +172,4 @@ auto-reconnect). Engine download/extract time never touches users.
 | Worker: load glue, init threads                          | [src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts](/src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts) |
 | Worker lifecycle / eval driver                           | [src/client/scripts/esm/views/analysis/ceval.ts](/src/client/scripts/esm/views/analysis/ceval.ts)                                   |
 | Site deploy job                                          | [.github/workflows/deploy.yml](/.github/workflows/deploy.yml)                                                                       |
-| Engine build+release job                                 | `Infinite-Chess/apeiron` → `.github/workflows/build-wasm.yml` (separate repo)                                                       |
+| Engine build+release job                                 | `Infinite-Chess/apeiron` → `.github/workflows/build-wasm.yml` (separate adjacent repo)                                              |

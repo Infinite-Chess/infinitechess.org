@@ -1,4 +1,4 @@
-// src/client/scripts/esm/chess/logic/positionnormalizer/positioncompressor.ts
+// src/client/scripts/esm/game/chess/positionnormalizer/positioncompressorplusintersections.ts
 
 /**
  * This script contains an algorithm that can take an infinite chess position,
@@ -6,16 +6,27 @@
  * so that all pieces are within the bounds of standard javascript doubles.
  */
 
-import type { LineCoefficientsBD, Vec2, Vec2Key } from '../../../util/math/vectors.js';
+import type {
+	LineCoefficientsBD,
+	Vec2,
+	Vec2Key,
+} from '../../../../../../shared/util/math/vectors.js';
 
-import { solve, Model } from 'yalps'; // Linear Programming Solver!
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+import { solve, Model, Constraint } from 'yalps'; // Linear Programming Solver!
 
-import bimath from '../../../util/bigdecimal/bimath.js';
-import coordutil, { BDCoords, Coords, CoordsKey } from '../../util/coordutil.js';
-import typeutil, { players as p, rawTypes as r } from '../../util/typeutil.js';
-import vectors from '../../../util/math/vectors.js';
-import geometry from '../../../util/math/geometry.js';
-import bd, { BigDecimal } from '../../../util/bigdecimal/bigdecimal.js';
+import vectors from '../../../../../../shared/util/math/vectors.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import geometry from '../../../../../../shared/util/math/geometry.js';
+import typeutil, {
+	players as p,
+	rawTypes as r,
+} from '../../../../../../shared/chess/util/typeutil.js';
+import coordutil, {
+	BDCoords,
+	Coords,
+	CoordsKey,
+} from '../../../../../../shared/chess/util/coordutil.js';
 
 // ============================== Type Definitions ==============================
 
@@ -37,7 +48,7 @@ interface CompressionInfo {
  * Contains the information of where a piece started
  * before compressing the position, and where they ended up.
  */
-type PieceTransform = {
+export type PieceTransform = {
 	type: number;
 	/** The original coordinates of the piece in the uncompressed position. */
 	coords: BDCoords;
@@ -52,7 +63,7 @@ type PieceTransform = {
  * Contains information of what pieces are connected/linked/merged on what axis,
  * and how they have been transformed into the compressed position.
  */
-type AxisOrders = Record<Vec2Key, AxisOrder>;
+export type AxisOrders = Record<Vec2Key, AxisOrder>;
 
 /**
  * An ordering of the pieces on one axis (X/Y/pos-diag/neg-diag),
@@ -75,6 +86,7 @@ type AxisGroup = {
  * value that is unique to the axis line that piece is on.
  */
 type AxisDeterminer = (_coords: Coords) => bigint;
+type AxisDeterminerBD = (_coords: BDCoords) => BigDecimal;
 
 /** All orthogonal axes. */
 type OrthoAxis = '1,0' | '0,1';
@@ -98,8 +110,17 @@ type Column = {
 	/** The name of the variable */
 	variable: string;
 	/** The coefficient of the variable in the constraint equation. Usually 1 or -1.  */
-	coefficient: number; //
+	coefficient: number;
 };
+
+/**
+ * A {@link Model} with mutable, object-form constraints and variables,
+ * so the model can be built up incrementally by keyed assignment.
+ */
+interface MutableModel extends Model {
+	constraints: Record<string, Constraint>;
+	variables: Record<string, Record<string, number>>;
+}
 
 // ================================== Constants ==================================
 
@@ -114,8 +135,8 @@ type Column = {
  * Actually it actually might be smarter to always normalize positions so engines
  * have more floating point precision to work with.
  */
-const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
-// const UNSAFE_BOUND_BIGINT = 1000n;
+// const UNSAFE_BOUND_BIGINT = BigInt(Math.trunc(Number.MAX_SAFE_INTEGER * 0.1));
+// const UNSAFE_BOUND_BIGINT = 1000n; // Testing
 
 /**
  * How close pieces or groups have to be on on axis or diagonal to
@@ -161,7 +182,7 @@ const AXIS_DETERMINERS = {
 	'1,1': (coords: Coords): bigint => coords[1] - coords[0],
 	/** Negative Diagonal Axis */
 	'1,-1': (coords: Coords): bigint => coords[1] + coords[0],
-};
+} satisfies Record<Axis, AxisDeterminer>;
 
 const AXIS_DETERMINERS_BD = {
 	/** X Axis */
@@ -172,7 +193,7 @@ const AXIS_DETERMINERS_BD = {
 	'1,1': (coords: BDCoords): BigDecimal => bd.subtract(coords[1], coords[0]),
 	/** Negative Diagonal Axis */
 	'1,-1': (coords: BDCoords): BigDecimal => bd.add(coords[1], coords[0]),
-};
+} satisfies Record<Axis, AxisDeterminerBD>;
 
 /**
  * The piece type number reserved for intersection placeholder pieces.
@@ -214,7 +235,7 @@ function compressPosition(
 		const coords = coordutil.getCoordsFromKey(coordsKey);
 		pieces.push({
 			type,
-			coords: bd.FromCoords(coords),
+			coords: bdcoords.FromCoords(coords),
 			transformedCoords: [undefined, undefined], // Initially undefined
 		});
 	});
@@ -315,7 +336,7 @@ function compressPosition(
 
 	// Initiate the linear programming model for solving.
 
-	const model: Model = {
+	const model: MutableModel = {
 		direction: 'minimize',
 		objective: 'manhatten_norm', // The objective function to minimize
 		constraints: {
@@ -379,8 +400,8 @@ function compressPosition(
 	}
 
 	/** Helper for constructing {@link pieceToVarNames}. */
-	function populatePieceVarNames(axis: '0,1' | '1,0') {
-		OrderedPieces[axis].forEach((piece, index) => {
+	function populatePieceVarNames(axis: '0,1' | '1,0'): void {
+		OrderedPieces[axis]!.forEach((piece, index) => {
 			const varName = getVariableName(axis, index);
 			if (!pieceToVarNames.has(piece)) pieceToVarNames.set(piece, {});
 			pieceToVarNames.get(piece)![axis] = varName;
@@ -391,15 +412,15 @@ function compressPosition(
 	 * Helper for creating and adding the constraints between each
 	 * adjacent piece on one specific axis to the linear programming model.
 	 */
-	function createConstraintsForAxis(axis: Axis) {
+	function createConstraintsForAxis(axis: Axis): void {
 		const axisDeterminer = AXIS_DETERMINERS_BD[axis];
-		const sortedPieces = OrderedPieces[axis];
+		const sortedPieces = OrderedPieces[axis]!;
 
-		const firstPiece = sortedPieces[0];
+		const firstPiece = sortedPieces[0]!;
 		let firstPieceAxisValue = axisDeterminer(firstPiece.coords);
 
 		for (let i = 1; i < sortedPieces.length; i++) {
-			const secondPiece = sortedPieces[i];
+			const secondPiece = sortedPieces[i]!;
 			const secondPieceAxisValue = axisDeterminer(secondPiece.coords);
 
 			// Determine if the constraint is exact, or min
@@ -443,10 +464,10 @@ function compressPosition(
 				// The optimization function tries to minimize the furthest piece
 				// on the X/Y axes. This naturally tries to shrink the position.
 				const lastPiece = i === sortedPieces.length - 1;
-				if (lastPiece) model.variables[secondPieceVarName][model.objective!] = 1;
+				if (lastPiece) model.variables[secondPieceVarName]![model.objective!] = 1;
 			} else if (axis === '1,1' || axis === '1,-1') {
-				const firstPiece = sortedPieces[i - 1];
-				const secondPiece = sortedPieces[i];
+				const firstPiece = sortedPieces[i - 1]!;
+				const secondPiece = sortedPieces[i]!;
 
 				// Get the variable names for the piece's X and Y coordinates from the X & Y ordered lists.
 				const firstPieceVars = pieceToVarNames.get(firstPiece)!;
@@ -538,13 +559,13 @@ function compressPosition(
 		const pieceIndex = Number(pieceIndexStr);
 
 		if (axis === 'x') {
-			const sortedPieces = OrderedPieces['1,0'];
+			const sortedPieces = OrderedPieces['1,0']!;
 			const piece = sortedPieces[pieceIndex]!;
 			// Set its transformed X coord.
 			// piece.transformedCoords[0] = BigInt(value);
 			piece.transformedCoords[0] = bd.fromNumber(value);
 		} else if (axis === 'y') {
-			const sortedPieces = OrderedPieces['0,1'];
+			const sortedPieces = OrderedPieces['0,1']!;
 			const piece = sortedPieces[pieceIndex]!;
 			// Set its transformed Y coord.
 			// piece.transformedCoords[1] = BigInt(value);
@@ -555,7 +576,7 @@ function compressPosition(
 	// Calculate the new, transformed range, for each group on each axis.
 	// Needed for the moveexpander knows what group your move is targeting.
 	for (const axisKey in AllAxisOrders) {
-		const axisOrder = AllAxisOrders[axisKey as Vec2Key];
+		const axisOrder = AllAxisOrders[axisKey as Vec2Key]!;
 		const axisDeterminer = AXIS_DETERMINERS_BD[axisKey as Axis];
 
 		for (const group of axisOrder) {
@@ -590,13 +611,13 @@ function compressPosition(
 
 		// If the piece is an intersection, substitue a void for it, and round the coords to the nearest integer.
 		if (piece.type === INTERSECTION_TYPE) {
-			if (!bd.areCoordsIntegers(piece.transformedCoords as BDCoords)) continue; // Skip intersections that don't end up on integer coordinates.
+			if (!bdcoords.areCoordsIntegers(piece.transformedCoords as BDCoords)) continue; // Skip intersections that don't end up on integer coordinates.
 			piece.type = typeutil.buildType(r.VOID, p.NEUTRAL);
-		} else if (!bd.areCoordsIntegers(piece.transformedCoords as BDCoords))
+		} else if (!bdcoords.areCoordsIntegers(piece.transformedCoords as BDCoords))
 			throw Error('Piece did not end up on integer coordinates after compression.');
 
 		// Will round to the nearest integer, if it's an intersection.
-		const intCoords: Coords = bd.coordsToBigInt(piece.transformedCoords as BDCoords);
+		const intCoords: Coords = bdcoords.coordsToBigInt(piece.transformedCoords as BDCoords);
 
 		const transformedCoordsKey = coordutil.getKeyFromCoords(intCoords);
 		compressedPosition.set(transformedCoordsKey, piece.type);
@@ -616,7 +637,7 @@ function addIntersectionsToPieces(
 	diagonals: boolean,
 	hippogonals: boolean,
 	numIntersections: number,
-) {
+): void {
 	if (numIntersections <= 0) return; // No intersections to add
 
 	console.log('Piece count before adding intersections:', pieces.length);
@@ -629,7 +650,7 @@ function addIntersectionsToPieces(
 	const intersections: BDCoords[] = [];
 
 	for (let a = 0; a < pieces.length; a++) {
-		const pieceA = pieces[a];
+		const pieceA = pieces[a]!;
 
 		// Eminate lines in all directions from the piece coords
 		const pieceALines: LineCoefficientsBD[] = lineVectors.map((l) =>
@@ -637,7 +658,7 @@ function addIntersectionsToPieces(
 		);
 
 		for (let b = a + 1; b < pieces.length; b++) {
-			const pieceB = pieces[b];
+			const pieceB = pieces[b]!;
 
 			// Eminate lines in all directions from the piece coords
 			const pieceBLines: LineCoefficientsBD[] = lineVectors.map((l) =>
@@ -712,7 +733,7 @@ function getVariableName(axis: Axis, index: number): VariableName {
 	return `${axisLetter}-${index}`;
 }
 
-function getConstraintName(varName: VariableName) {
+function getConstraintName(varName: VariableName): string {
 	return `${varName}_constraint`;
 }
 
@@ -723,7 +744,7 @@ function getConstraintName(varName: VariableName) {
  * and updates the variable's columns its included in.
  */
 function addConstraintToModel(
-	model: Model,
+	model: MutableModel,
 	constraint_name: string,
 	columns: Column[],
 	type: 'equal' | 'min' | 'max',
@@ -736,7 +757,7 @@ function addConstraintToModel(
 		// Initialize first if not already
 		if (!model.variables[column.variable]) model.variables[column.variable] = {};
 		// Include the variable in the column of the constraint function
-		model.variables[column.variable][constraint_name] = column.coefficient;
+		model.variables[column.variable]![constraint_name] = column.coefficient;
 	}
 }
 
@@ -744,63 +765,61 @@ function addConstraintToModel(
 
 // ISN'T required for engines, but may be nice for visuals.
 // Commented-out for decreasing the script size.
-/**
- * Translates the entire transformed position so tht the White King
- * ends up on the same square it occupied in the original, uncompressed position.
- * This doesn't affect the solution or topology at all.
- * @param allPieces The list of all transformed pieces.
- * @param allAxisOrders The AxisOrders object containing all axis groups of the transformed position.
- */
-function RecenterTransformedPosition(allPieces: PieceTransform[], allAxisOrders: AxisOrders) {
-	// Define the type for a White King (you may need to import typeutil and players)
-	const whiteKingType = typeutil.buildType(r.KING, p.WHITE);
+// /**
+//  * Translates the entire transformed position so tht the White King
+//  * ends up on the same square it occupied in the original, uncompressed position.
+//  * This doesn't affect the solution or topology at all.
+//  * @param allPieces The list of all transformed pieces.
+//  * @param allAxisOrders The AxisOrders object containing all axis groups of the transformed position.
+//  */
+// function RecenterTransformedPosition(allPieces: PieceTransform[], allAxisOrders: AxisOrders): void {
+// 	// Define the type for a White King (you may need to import typeutil and players)
+// 	const whiteKingType = typeutil.buildType(r.KING, p.WHITE);
 
-	// 1. Find the White King in the list of pieces.
-	const whiteKing: PieceTransform | undefined = allPieces.find((p) => p.type === whiteKingType);
+// 	// 1. Find the White King in the list of pieces.
+// 	const whiteKing: PieceTransform | undefined = allPieces.find((p) => p.type === whiteKingType);
 
-	if (!whiteKing) {
-		console.warn('Could not find White King to normalize position. Skipping translation.');
-		return;
-	}
+// 	if (!whiteKing) {
+// 		console.warn('Could not find White King to normalize position. Skipping translation.');
+// 		return;
+// 	}
 
-	// 2. Calculate the required translation vector (dx, dy).
-	const transformedKingCoords = whiteKing.transformedCoords as Coords;
-	const translationVector: Coords = [
-		whiteKing.coords[0] - transformedKingCoords[0],
-		whiteKing.coords[1] - transformedKingCoords[1],
-	];
+// 	// 2. Calculate the required translation vector (dx, dy).
+// 	const transformedKingCoords = whiteKing.transformedCoords as BDCoords;
+// 	const translationVector: BDCoords = [
+// 		bd.subtract(whiteKing.coords[0], transformedKingCoords[0]),
+// 		bd.subtract(whiteKing.coords[1], transformedKingCoords[1]),
+// 	];
 
-	console.log(
-		`Normalizing position by translating all pieces by [${translationVector[0]}, ${translationVector[1]}] to match White King's original position.`,
-	);
+// 	console.log(
+// 		`Normalizing position by translating all pieces by [${bd.toExactString(translationVector[0])}, ${bd.toExactString(translationVector[1])}] to match White King's original position.`,
+// 	);
 
-	// 3. Apply the translation to every piece's transformed coordinates.
-	for (const piece of allPieces) {
-		piece.transformedCoords[0]! += translationVector[0];
-		piece.transformedCoords[1]! += translationVector[1];
-	}
+// 	// 3. Apply the translation to every piece's transformed coordinates.
+// 	for (const piece of allPieces) {
+// 		piece.transformedCoords[0] = bd.add(piece.transformedCoords[0]!, translationVector[0]);
+// 		piece.transformedCoords[1] = bd.add(piece.transformedCoords[1]!, translationVector[1]);
+// 	}
 
-	// 4. Apply the same translation to all axes' groups' transformedRange.
-	for (const axisKey in allAxisOrders) {
-		const axisOrder = allAxisOrders[axisKey as Vec2Key];
-		const axisDeterminer = AXIS_DETERMINERS[axisKey];
+// 	// 4. Apply the same translation to all axes' groups' transformedRange.
+// 	for (const axisKey in allAxisOrders) {
+// 		const axisOrder = allAxisOrders[axisKey as Vec2Key]!;
+// 		const axisDeterminer = AXIS_DETERMINERS_BD[axisKey as Axis];
 
-		// Calculate how the translationVector translates on this specific axis.
-		// This is equivalent to axisDeterminer([dx, dy]) - axisDeterminer([0, 0]).
-		const pushAmount = axisDeterminer(translationVector);
+// 		// Calculate how the translationVector translates on this specific axis.
+// 		// This is equivalent to axisDeterminer([dx, dy]) - axisDeterminer([0, 0]).
+// 		const pushAmount = axisDeterminer(translationVector);
 
-		for (const group of axisOrder) {
-			if (group.transformedRange) {
-				group.transformedRange[0] += pushAmount;
-				group.transformedRange[1] += pushAmount;
-			}
-		}
-	}
-}
+// 		for (const group of axisOrder) {
+// 			if (group.transformedRange) {
+// 				group.transformedRange[0] = bd.add(group.transformedRange[0], pushAmount);
+// 				group.transformedRange[1] = bd.add(group.transformedRange[1], pushAmount);
+// 			}
+// 		}
+// 	}
+// }
 
 // ========================================= EXPORTS =========================================
-
-export type { AxisOrders, PieceTransform };
 
 export default {
 	// Constants
