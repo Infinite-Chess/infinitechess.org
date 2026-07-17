@@ -485,6 +485,7 @@ function compressPosition(
 
 	console.timeEnd('Solved');
 
+	console.log(`Piece count: ${pieces.length}`);
 	console.log('Solution status:', solution.status);
 	// The score of the solution. This is the sum of the furthest piece's X and Y coordinates.
 	console.log('Result:', solution.result);
