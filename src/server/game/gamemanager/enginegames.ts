@@ -104,6 +104,7 @@ export function createEngineGame(
 		moves: '',
 		clock_white: startMillis,
 		clock_black: startMillis,
+		turn_start_time: null, // No clock ticks until ply 2.
 		last_updated: now,
 	});
 }
@@ -117,7 +118,7 @@ export function createEngineGame(
  */
 export function getLiveEngineGame(game_id: number): EngineGamesRecord | undefined {
 	// prettier-ignore
-	const row = getEngineGameData(game_id, ['game_id', 'time_created', 'user_id', 'browser_id', 'player_color', 'engine', 'strength_level', 'variant', 'position', 'clock', 'moves', 'clock_white', 'clock_black', 'last_updated']);
+	const row = getEngineGameData(game_id, ['game_id', 'time_created', 'user_id', 'browser_id', 'player_color', 'engine', 'strength_level', 'variant', 'position', 'clock', 'moves', 'clock_white', 'clock_black', 'turn_start_time', 'last_updated']);
 	if (row === undefined) return undefined;
 	if (isGameIdTaken(game_id)) return undefined; // Concluded — the dead-game path owns it now.
 	return row;
@@ -205,6 +206,7 @@ export function produceEngineGameResumeState(row: EngineGamesRecord): EngineGame
 	if (row.position !== null) state.position = row.position;
 	if (row.clock_white !== null && row.clock_black !== null)
 		state.clocks = { [p.WHITE]: row.clock_white, [p.BLACK]: row.clock_black };
+	if (row.turn_start_time !== null) state.turnStartTime = row.turn_start_time;
 	return state;
 }
 
@@ -219,6 +221,7 @@ export function recordEngineGameProgress(game_id: number, body: EngineGameProgre
 		moves: body.moves,
 		clock_white: body.clocks?.[p.WHITE] ?? null,
 		clock_black: body.clocks?.[p.BLACK] ?? null,
+		turn_start_time: body.turnStartTime ?? null,
 		last_updated: Date.now(),
 	});
 }
@@ -336,6 +339,7 @@ export function concludeEngineGame(row: EngineGamesRecord, body: ConcludeEngineG
 			moves: '',
 			clock_white: null,
 			clock_black: null,
+			turn_start_time: null,
 			last_updated: now,
 		});
 	});

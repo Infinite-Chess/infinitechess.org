@@ -128,6 +128,7 @@ const allEngineGamesColumns: string[] = [
 	'moves',
 	'clock_white',
 	'clock_black',
+	'turn_start_time',
 	'last_updated',
 ];
 
@@ -414,6 +415,7 @@ function generateTables(): void {
 			moves          TEXT NOT NULL DEFAULT '', -- Blanked once the game is logged to the games table
 			clock_white    INTEGER, -- ms remaining snapshots; null for untimed games
 			clock_black    INTEGER,
+			turn_start_time INTEGER, -- Epoch ms the ticking color's turn began; lets a mid-turn refresh deduct time elapsed while away
 			last_updated   INTEGER NOT NULL -- Epoch ms of the last state sync; drives the stale-game purge
 		);
 	`);
@@ -433,6 +435,7 @@ function initDatabase(): void {
 	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
 	dropLiveGamesConclusionColumnsIfPresent();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
+	addTurnStartTimeColumnToEngineGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
@@ -652,6 +655,19 @@ function addRatingDeviationColumnsToPlayerGamesIfNeeded(): void {
 	db.run('ALTER TABLE player_games ADD COLUMN rating_deviation_at_game REAL');
 	db.run('ALTER TABLE player_games ADD COLUMN rating_deviation_after_game REAL');
 	console.log('Temporary DB migration: added player_games rating_deviation columns.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Adds the nullable `turn_start_time` column to `engine_games` — the epoch ms the ticking
+ * color's turn began, so a mid-turn refresh can deduct the time elapsed while away instead
+ * of resetting the clock to the move's start. Fresh DBs get the column from `generateTables()`.
+ */
+function addTurnStartTimeColumnToEngineGamesIfNeeded(): void {
+	if (db.columnExists('engine_games', 'turn_start_time')) return; // Already present, nothing to do.
+	db.run('ALTER TABLE engine_games ADD COLUMN turn_start_time INTEGER');
+	console.log('Temporary DB migration: added engine_games.turn_start_time column.');
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */

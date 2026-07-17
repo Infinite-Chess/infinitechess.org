@@ -373,6 +373,8 @@ export const EngineGameProgressBodySchema = z.strictObject({
 	moves: z.string().max(ENGINE_GAME_MOVES_STRING_CAP),
 	/** Ms remaining per color; absent for untimed games. */
 	clocks: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
+	/** Epoch ms the ticking color's turn began; lets a mid-turn refresh deduct time elapsed while away. Absent when no clock is ticking. */
+	turnStartTime: z.number().optional(),
 });
 
 /** Client → server body for concluding an engine game: `POST /api/engine-game/:id/conclude`. */
@@ -393,6 +395,8 @@ export const EngineGameStateSchema = z.strictObject({
 	moves: z.string(),
 	/** Ms remaining per color; absent for untimed games. */
 	clocks: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
+	/** Epoch ms the ticking color's turn began; lets a mid-turn refresh deduct time elapsed while away. Absent when no clock is ticking. */
+	turnStartTime: z.number().optional(),
 });
 
 /** SSR→client channel info marking the game page's game as an engine game. */

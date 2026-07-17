@@ -39,6 +39,8 @@ export interface EngineGamesRecord {
 	/** Ms remaining snapshots; null for untimed games. */
 	clock_white: number | null;
 	clock_black: number | null;
+	/** Epoch ms the ticking color's turn began; lets a mid-turn refresh deduct time elapsed while away. Null when no clock is ticking. */
+	turn_start_time: number | null;
 	/** Epoch ms of the last state sync; drives the stale-game purge. */
 	last_updated: number;
 }
@@ -69,8 +71,8 @@ export function insertEngineGame(record: EngineGamesRecord): void {
 		INSERT INTO engine_games (
 			game_id, time_created, user_id, browser_id, player_color, engine,
 			strength_level, variant, position, clock, moves, clock_white,
-			clock_black, last_updated
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			clock_black, turn_start_time, last_updated
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 	dbCall(
 		() =>
@@ -88,6 +90,7 @@ export function insertEngineGame(record: EngineGamesRecord): void {
 				record.moves,
 				record.clock_white,
 				record.clock_black,
+				record.turn_start_time,
 				record.last_updated,
 			]),
 		`Error inserting engine game ${record.game_id}`,

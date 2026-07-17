@@ -7,8 +7,13 @@
  * and starts the server-record syncing.
  */
 
-import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { EngineGameState, MovePacket } from '../../../../../shared/types.js';
+import type {
+	Additional,
+	GameFile,
+	VariantOptions,
+} from '../../../../../shared/chess/logic/gamefile.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
@@ -86,6 +91,11 @@ function loadGameFromState(state: EngineGameState): void {
 			dateTimestamp: timeCreated,
 			viewWhitePerspective: role !== p.BLACK,
 			additional,
+			// Corrects the clock before the first paint (guiclock.set() reads it during the
+			// graphical load right after), so resuming mid-turn never flashes the stale value.
+			onLogicalLoaded: (gamefile) => {
+				if (!gamefile.gameConclusion) resumeClockTicking(gamefile, state, role!);
+			},
 		})
 		.then(async ({ graphical }) => {
 			// Logical loaded, return graphical promise
@@ -96,7 +106,6 @@ function loadGameFromState(state: EngineGameState): void {
 			gamesession.concludeGameIfOver();
 
 			if (!gamefile.gameConclusion) {
-				resumeClockTicking(state);
 				/** A promise that resolves when the engine script has been fetched. */
 				await enginegame.initEngineGame({
 					youAreColor: role!,
@@ -124,17 +133,26 @@ function loadGameFromState(state: EngineGameState): void {
 /**
  * Resumes the clock ticking for whoever's turn it is on a resumed timed game.
  * The load applied the synced values un-ticking (time didn't run while away).
+ *
+ * On the human's own turn we deduct the real time elapsed since their turn began
+ * (they're accountable for it, even while away). On the engine's turn we don't: it
+ * restarts its search from scratch on reload, so its clock resets to the move's start.
  */
-function resumeClockTicking(state: EngineGameState): void {
-	const gamefile = gameslot.getGamefile()!;
+function resumeClockTicking(gamefile: GameFile, state: EngineGameState, youAreColor: Player): void {
 	if (gamefile.untimed || !state.clocks) return;
 	if (!moveutil.isGameResignable(gamefile)) return; // Clocks only tick from ply 2 onward.
 
-	const remaining = gamefile.clocks.currentTime[gamefile.whosTurn]!;
+	const clocks = { ...gamefile.clocks.currentTime };
+	if (gamefile.whosTurn === youAreColor && state.turnStartTime !== undefined)
+		clocks[youAreColor] = Math.max(
+			0,
+			clocks[youAreColor]! - (Date.now() - state.turnStartTime),
+		);
+
 	clock.edit(gamefile.clocks, {
-		clocks: { ...gamefile.clocks.currentTime },
+		clocks,
 		colorTicking: gamefile.whosTurn,
-		timeColorTickingLosesAt: Date.now() + remaining,
+		timeColorTickingLosesAt: Date.now() + clocks[gamefile.whosTurn]!,
 	});
 }
 

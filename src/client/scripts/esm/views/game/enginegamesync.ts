@@ -60,6 +60,9 @@ function buildProgressBody(gamefile: GameFile): EngineGameProgressBody {
 			if (time !== undefined) clocks[color] = Math.max(0, Math.round(time));
 		}
 		body.clocks = clocks;
+		// The ticking turn's start epoch, so a mid-turn refresh can deduct time spent away.
+		if (gamefile.clocks.timeAtTurnStart !== undefined)
+			body.turnStartTime = gamefile.clocks.timeAtTurnStart;
 	}
 
 	return body;
