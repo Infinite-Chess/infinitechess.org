@@ -71,6 +71,7 @@
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "fake-indexeddb": "^6.2.5",
+    "fflate": "^0.8.3",
     "glob": "^11.0.0",
     "globals": "^15.15.0",
     "glsl-strip-comments": "^1.0.0",

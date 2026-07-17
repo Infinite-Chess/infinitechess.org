@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import * as z from 'zod';
+import { unzipSync } from 'fflate';
 
 import { logZodError } from '../src/server/utility/zodlogger';
 
@@ -131,32 +132,30 @@ export async function downloadEngineWasm(): Promise<void> {
 
 	console.log(`${label} New version detected (${remoteVersion}). Downloading release...`);
 
-	// Extract dynamic download URLs from the API response
-	const wasmAsset = releaseData.assets.find((a) => a.name === 'apeiron_bg.wasm');
-	const jsAsset = releaseData.assets.find((a) => a.name === 'apeiron.js');
-
-	if (!wasmAsset || !jsAsset) {
-		console.error(`${label} Release ${remoteVersion} is missing required asset files!!`);
+	// The engine ships as a single zip of its whole wasm-pack `pkg/` dir — a flat list of loose
+	// release assets can't carry the nested rayon `snippets/` tree that apeiron.js imports.
+	const zipAsset = releaseData.assets.find((a) => a.name === 'apeiron-wasm.zip');
+	if (!zipAsset) {
+		console.error(`${label} Release ${remoteVersion} is missing apeiron-wasm.zip!!`);
 		return;
 	}
 
 	try {
-		await fs.promises.mkdir(pkgDir, { recursive: true });
+		// Fetch fully into memory first, so a failed download leaves any existing local copy intact.
+		const response = await fetch(zipAsset.browser_download_url);
+		if (!response.ok) throw new Error(`Failed to download engine zip: ${response.statusText}`);
+		const zipBytes = new Uint8Array(await response.arrayBuffer());
+		const entries = unzipSync(zipBytes);
 
-		const downloadFile = async (url: string, dest: string): Promise<void> => {
-			const response = await fetch(url);
-			if (!response.ok) throw new Error(`Failed to download ${url}: ${response.statusText}`);
-			const buffer = Buffer.from(await response.arrayBuffer());
-			await fs.promises.writeFile(dest, buffer);
-			console.log(`${label} Downloaded ${path.basename(dest)}`);
-		};
+		// Replace pkg wholesale so no file from a prior version lingers. The version is re-stamped below.
+		await fs.promises.rm(pkgDir, { recursive: true, force: true });
+		for (const [entryPath, bytes] of Object.entries(entries)) {
+			if (entryPath.endsWith('/')) continue; // Skip dir entries; parents are made from file paths.
+			const dest = path.join(pkgDir, entryPath);
+			await fs.promises.mkdir(path.dirname(dest), { recursive: true });
+			await fs.promises.writeFile(dest, bytes);
+		}
 
-		await Promise.all([
-			downloadFile(wasmAsset.browser_download_url, wasmFile),
-			downloadFile(jsAsset.browser_download_url, jsFile),
-		]);
-
-		// Stamp the downloaded version
 		await fs.promises.writeFile(versionFile, remoteVersion);
 		engineVersion = parseEngineVersion(remoteVersion);
 
