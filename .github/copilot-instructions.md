@@ -32,7 +32,7 @@ When you finish making any new changes to scripts, always ensure these checks pa
 - **UI Changes:** When asked to make UI changes, please verify the changes look good via the integrated browser.
 - When determining which imports can safely be removed, the command `npm run lint --silent` automatically tells you what imports are unused.
 - **Rendering:** When asked to add new complex graphics or visuals to the game (webgl canvas), refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
-- **System docs:** `docs/systems/` holds a deep-dive doc per major system — read the relevant one before touching its code so you don't have to dig to learn it. Currently: the build/esbuild pipeline (`BUILD.md`), localization/TOML pipeline (`TRANSLATIONS.md`), account registration & verification (`REGISTRATION.md`), and the password-reset flow (`PASSWORD_RESET.md`).
+- **System docs:** `docs/systems/` holds a deep-dive doc per major system — read the relevant one before touching its code so you don't have to dig to learn it. Currently: the build/esbuild pipeline (`BUILD.md`), the engine build & deploy pipeline (`ENGINE.md`), localization/TOML pipeline (`TRANSLATIONS.md`), account registration & verification (`REGISTRATION.md`), and the password-reset flow (`PASSWORD_RESET.md`).
 
 ## VS Code Tool Notes
 
