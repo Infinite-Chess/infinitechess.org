@@ -38,31 +38,27 @@ async function convertSVGsToImages(svgElements: SVGElement[]): Promise<HTMLImage
  * @returns A promise that resolves with the created image element.
  */
 function svgToImage(svgElement: SVGElement): Promise<HTMLImageElement> {
-	const svgID = svgElement.id; // 'pawn-white'
+	return svgStringToImage(new XMLSerializer().serializeToString(svgElement), svgElement.id);
+}
 
-	// Serialize the SVG element back to a string
-	const svgString = new XMLSerializer().serializeToString(svgElement);
-
-	// Log the SVG string for debugging purposes
-	// console.log("SVG String: ", svgString);
-
-	// Create a new image element
+/**
+ * Converts a serialized SVG string to an Image element via a data URL.
+ * The image does NOT have a specified width or height.
+ * @param svgString - The SVG markup to convert into an image.
+ * @param [id] - Optional id to tag the image with, for finding it in the document later.
+ * @returns A promise that resolves with the created image element.
+ */
+function svgStringToImage(svgString: string, id: string = ''): Promise<HTMLImageElement> {
 	const img = new Image();
-
 	// Convert SVG string to a data URL using encodeURIComponent for better encoding
-	const svgData = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgString)}`;
-	img.src = svgData;
-	img.id = svgID; // Set its ID here so its easy to find it in the document later
+	img.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgString)}`;
+	img.id = id;
 
 	return new Promise((resolve, reject): void => {
-		img.onload = (): void => {
-			// Append the image to the document for debugging
-			// document.body.appendChild(img);
-			resolve(img);
-		};
+		img.onload = (): void => resolve(img);
 		img.onerror = (err): void => {
-			console.error(`Error loading image with ID "${svgID}"`, err);
-			reject(new Error(`Failed to load image with ID "${svgID}"`));
+			console.error(`Error loading image with ID "${id}"`, err);
+			reject(new Error(`Failed to load image with ID "${id}"`));
 		};
 	});
 }
@@ -76,14 +72,14 @@ function svgToImage(svgElement: SVGElement): Promise<HTMLImageElement> {
  * @param img - The image to normalize.
  * @returns A promise that resolves with the normalized image.
  */
-async function normalizeImagePixelData(img: HTMLImageElement): Promise<HTMLImageElement> {
-	/** The image width each piece type's image should be. */
-	const IMG_SIZE = 512; // High to retain as much resolution as possible during the drawing and re-serialization.
-
+async function normalizeImagePixelData(
+	img: HTMLImageElement,
+	size: number = 512, // High default to retain resolution during the drawing and re-serialization.
+): Promise<HTMLImageElement> {
 	// Proceed with canvas creation
 	const canvas = document.createElement('canvas');
-	canvas.width = IMG_SIZE;
-	canvas.height = IMG_SIZE;
+	canvas.width = size;
+	canvas.height = size;
 	const ctx = canvas.getContext('2d');
 	if (ctx === null) throw new Error('2D context null.');
 
@@ -109,5 +105,6 @@ async function normalizeImagePixelData(img: HTMLImageElement): Promise<HTMLImage
 export default {
 	convertSVGsToImages,
 	svgToImage,
+	svgStringToImage,
 	normalizeImagePixelData,
 };

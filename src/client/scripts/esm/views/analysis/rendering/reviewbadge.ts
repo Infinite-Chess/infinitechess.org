@@ -20,6 +20,8 @@ import boardpos from '../../../game/rendering/boardpos.js';
 import primitives from '../../../game/rendering/primitives.js';
 import frametracker from '../../../game/rendering/frametracker.js';
 import gameslot from '../../../game/chess/gameslot.js';
+import svgtoimageconverter from '../../../util/svgtoimageconverter.js';
+import TextureLoader from '../../../webgl/TextureLoader.js';
 import { gl } from '../../../game/rendering/webgl.js';
 import { GameBus } from '../../../game/GameBus.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
@@ -105,8 +107,15 @@ function render(): void {
 	const [centerX, centerY] = space.convertCoordToWorldSpace(
 		bdcoords.FromCoords(node.move.endCoords),
 	);
-	const badgeX = centerX + scale * OFFSET_X_FRACTION;
-	const badgeY = centerY + scale * OFFSET_Y_FRACTION;
+
+	// Black's perspective rotates the whole board 180°, so counter-rotate the badge to keep it at
+	// the viewer's top-right corner and upright: offset toward the opposite world corner, and sample
+	// the texture rotated 180° (swapped UVs).
+	const viewingWhite = gameslot.areViewingWhite();
+	const offsetSign = viewingWhite ? 1 : -1;
+	const badgeX = centerX + offsetSign * scale * OFFSET_X_FRACTION;
+	const badgeY = centerY + offsetSign * scale * OFFSET_Y_FRACTION;
+	const [u1, v1, u2, v2] = viewingWhite ? ([0, 0, 1, 1] as const) : ([1, 1, 0, 0] as const);
 
 	// The circle (100 viewBox units = 2·radius) occupies part of the padded viewBox; scale the
 	// whole quad so the circle lands at `radius`, keeping the shadow's overhang intact.
@@ -116,39 +125,44 @@ function render(): void {
 		badgeY - halfSize,
 		badgeX + halfSize,
 		badgeY + halfSize,
-		0,
-		0,
-		1,
-		1,
+		u1,
+		v1,
+		u2,
+		v2,
 		...TINT,
 	);
 	createRenderable(data, 2, 'TRIANGLES', 'colorTexture', true, texture).render();
 }
 
-/** Returns the cached badge texture, kicking off a one-time async rasterization on first use. */
+/** Returns the cached badge texture, kicking off a one-time async build on first use. */
 function getBadgeTexture(classification: BadgeKey): WebGLTexture | undefined {
 	const cached = textureCache[classification];
 	if (cached !== undefined) return cached ?? undefined;
 	if (loading.has(classification)) return undefined;
 	loading.add(classification);
-
-	const fill = getComputedStyle(document.documentElement)
-		.getPropertyValue(`--review-${classification}`)
-		.trim();
-	const svg = buildBadgeSvg(fill, GLYPH_PATHS[classification]);
-
-	const image = new Image();
-	image.onload = (): void => {
-		textureCache[classification] = rasterizeToTexture(image);
-		loading.delete(classification);
-		frametracker.onVisualChange(); // Draw it now that it's ready.
-	};
-	image.onerror = (): void => {
-		textureCache[classification] = null; // Give up; don't retry every frame.
-		loading.delete(classification);
-	};
-	image.src = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+	void buildBadgeTexture(classification);
 	return undefined;
+}
+
+/** Rasterizes one classification's badge SVG to a cached WebGL texture, then requests a redraw. */
+async function buildBadgeTexture(classification: BadgeKey): Promise<void> {
+	try {
+		const fill = getComputedStyle(document.documentElement)
+			.getPropertyValue(`--review-${classification}`)
+			.trim();
+		const svg = buildBadgeSvg(fill, GLYPH_PATHS[classification]);
+		const image = await svgtoimageconverter.svgStringToImage(svg);
+		// Normalize to a fixed power-of-two size (TextureLoader requires it, and it fixes Firefox's
+		// alpha double-multiply), then upload with mipmaps for clean minification while zoomed out.
+		const normalized = await svgtoimageconverter.normalizeImagePixelData(image, TEXTURE_SIZE);
+		textureCache[classification] = TextureLoader.loadTexture(gl, normalized, { mipmaps: true });
+		frametracker.onVisualChange(); // Draw it now that it's ready.
+	} catch (e) {
+		console.error(`Failed to build review badge texture for "${classification}"`, e);
+		textureCache[classification] = null; // Give up; don't retry every frame.
+	} finally {
+		loading.delete(classification);
+	}
 }
 
 /** Composes lila's badge SVG (circle + drop shadow + white glyph) for one classification. */
@@ -161,27 +175,4 @@ function buildBadgeSvg(fill: string, glyphPath: string): string {
 		`<path fill="#fff" d="${glyphPath}"/>` +
 		'</svg>'
 	);
-}
-
-/** Uploads a loaded badge image to a fresh WebGL texture. */
-function rasterizeToTexture(image: HTMLImageElement): WebGLTexture | null {
-	const canvas = document.createElement('canvas');
-	canvas.width = TEXTURE_SIZE;
-	canvas.height = TEXTURE_SIZE;
-	const ctx = canvas.getContext('2d');
-	if (!ctx) return null;
-	ctx.drawImage(image, 0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
-
-	const texture = gl.createTexture();
-	if (!texture) return null;
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-	gl.bindTexture(gl.TEXTURE_2D, texture);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
-	gl.generateMipmap(gl.TEXTURE_2D);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	gl.bindTexture(gl.TEXTURE_2D, null);
-	return texture;
 }
