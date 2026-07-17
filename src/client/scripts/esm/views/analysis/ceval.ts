@@ -152,8 +152,6 @@ let stopFlagPtr = 0;
 
 let enabled = false;
 let settings: CevalSettings = loadSettings();
-/** The engine's version (e.g. "2.0.0"), reported on 'ready'. Undefined only before the first 'ready'. */
-let engineVersion: string | undefined;
 
 /** The ICN of the position the worker is currently analyzing (undefined once the position is superseded but not yet re-analyzed). */
 let lastAnalyzedIcn: string | undefined;
@@ -415,7 +413,6 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 	switch (msg.type) {
 		case 'ready':
 			workerReady = true;
-			engineVersion ??= msg.version; // Set once — a respawn (hash change, crash) reports the same version.
 			// A single-threaded engine build locks the thread setting to 1 (panel disables the slider).
 			if (!msg.mt && engineSupportsThreads) {
 				engineSupportsThreads = false;
@@ -816,9 +813,8 @@ function notifyStatus(override?: CevalStatus): void {
 function init(options: { workerUrl: string; engineUrl: string }): void {
 	config = options;
 
-	// Pre-warm the engine immediately, regardless of whether eval is enabled: its 'ready'
-	// reports the version (so the panel can show it right away) and its wasm module is loaded
-	// (so enabling eval later starts analyzing instantly instead of waiting on a cold load).
+	// Pre-warm the engine immediately, regardless of whether eval is enabled, so its wasm module is
+	// loaded and enabling eval later starts analyzing instantly instead of waiting on a cold load.
 	// refreshAnalysis() no-ops while `enabled` is false, so this doesn't start any searching.
 	spawnWorker();
 
@@ -936,11 +932,6 @@ function getStatus(): CevalStatus {
 	return 'computing';
 }
 
-/** The engine's version (e.g. "2.0.0"), once the worker has reported 'ready'. */
-function getEngineVersion(): string | undefined {
-	return engineVersion;
-}
-
 /** Subscribes to throttled engine updates. `undefined` means "eval cleared". */
 function onUpdate(listener: (update: CevalUpdate | undefined) => void): void {
 	updateListeners.add(listener);
@@ -970,7 +961,6 @@ export default {
 	updateSettings,
 	goDeeper,
 	getLatestUpdate,
-	getEngineVersion,
 	onUpdate,
 	onStatus,
 	onLegalMoves,

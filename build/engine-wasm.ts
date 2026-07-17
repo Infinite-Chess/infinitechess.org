@@ -37,10 +37,15 @@ const releaseDataSchema = z.object({
 const ENGINE_DIST_DIR = path.join(process.cwd(), 'dist', 'client', 'engine');
 
 /**
- * Web path (no trailing slash) of the content-versioned engine
- * dir, e.g. "/engine/1a2b3c4d". Set by {@link copyEngineToDist}.
+ * Served URL of the content-versioned engine glue
+ * (e.g. "/engine/1a2b3c4d/apeiron.js"). Set by {@link copyEngineToDist}. */
+let engineGlueUrl: string | undefined;
+
+/**
+ * The engine's semver (e.g. "2.0.0"), `'dev'` for a local build, or an
+ * empty string when a release fetch fails. Set by {@link downloadEngineWasm}.
  */
-let engineWebBase: string | undefined;
+let engineVersion: string = '';
 
 /** Prefix for this script's console logs. */
 const label = '[apeiron]';
@@ -60,6 +65,7 @@ export async function downloadEngineWasm(): Promise<void> {
 	// local build of the engine, do not replace it with a downloaded release.
 	if (fs.existsSync(path.join(pkgDir, '.local-build'))) {
 		console.log(`${label} Local engine build detected — skipping release download.`);
+		engineVersion = 'dev'; // A local build carries no release tag to parse a version from.
 		return;
 	}
 
@@ -102,6 +108,7 @@ export async function downloadEngineWasm(): Promise<void> {
 		);
 		if (fs.existsSync(wasmFile)) {
 			console.log(`${label} Using existing local version.`);
+			engineVersion = parseEngineVersion(localVersion);
 			return;
 		}
 		// If we can't check and have no local copy, fail and inform the user.
@@ -118,6 +125,7 @@ export async function downloadEngineWasm(): Promise<void> {
 		fs.existsSync(jsFile)
 	) {
 		console.log(`${label} Engine is up-to-date (${localVersion}).`);
+		engineVersion = parseEngineVersion(remoteVersion);
 		return;
 	}
 
@@ -128,7 +136,7 @@ export async function downloadEngineWasm(): Promise<void> {
 	const jsAsset = releaseData.assets.find((a) => a.name === 'apeiron.js');
 
 	if (!wasmAsset || !jsAsset) {
-		console.error(`${label} Release ${remoteVersion} is missing required asset files.`);
+		console.error(`${label} Release ${remoteVersion} is missing required asset files!!`);
 		return;
 	}
 
@@ -150,6 +158,7 @@ export async function downloadEngineWasm(): Promise<void> {
 
 		// Stamp the downloaded version
 		await fs.promises.writeFile(versionFile, remoteVersion);
+		engineVersion = parseEngineVersion(remoteVersion);
 
 		console.log(`${label} Apeiron engine is ready (${remoteVersion}).`);
 	} catch (error) {
@@ -158,6 +167,14 @@ export async function downloadEngineWasm(): Promise<void> {
 			error instanceof Error ? error.message : String(error),
 		);
 	}
+}
+
+/**
+ * Parses the engine's semver from a release tag: drops the `v` prefix
+ * and any SemVer `+build.N` metadata, e.g. "v2.0.0+build.47" → "2.0.0".
+ */
+function parseEngineVersion(tag: string): string {
+	return tag.replace(/^v/, '').split('+')[0] || '';
 }
 
 /**
@@ -192,7 +209,7 @@ export function copyEngineToDist(): void {
 	if (fs.existsSync(snippets)) {
 		fs.cpSync(snippets, path.join(versionedDir, 'snippets'), { recursive: true });
 	}
-	engineWebBase = `/engine/${hash}`;
+	engineGlueUrl = `/engine/${hash}/apeiron.js`;
 	console.log(`${label} Copied engine pkg to dist/client/engine/${hash}/`);
 }
 
@@ -202,5 +219,14 @@ export function copyEngineToDist(): void {
  * the worker via the page's `analysisPageData` — the same channel as the hashed worker URL.
  */
 export function getEngineGlueUrl(): string | undefined {
-	return engineWebBase !== undefined ? `${engineWebBase}/apeiron.js` : undefined;
+	return engineGlueUrl;
+}
+
+/**
+ * The engine's version string, or an empty string if the release
+ * fetch failed  or {@link downloadEngineWasm} wasn't called first.
+ * Also folded into the manifest so the page can display it.
+ */
+export function getEngineVersion(): string | undefined {
+	return engineVersion;
 }

@@ -108,11 +108,8 @@ interface EvaluateResult {
 
 /** Messages posted back to the main thread. */
 type AnalysisResponse =
-	/**
-	 * `mt` is whether this engine build supports Lazy SMP (exports `initThreadPool`).
-	 * `version` is the engine's Cargo.toml version (e.g. "2.0.0").
-	 */
-	| { type: 'ready'; mt: boolean; version: string }
+	/** `mt` is whether this engine build supports Lazy SMP (exports `initThreadPool`). */
+	| { type: 'ready'; mt: boolean }
 	| { type: 'initerror'; message: string }
 	/** The wasm shared memory + byte offset of the stop flag, for instant search abort from the page. */
 	| { type: 'sharedmem'; buffer: ArrayBufferLike; stopFlagPtr: number }
@@ -191,7 +188,6 @@ async function initialize(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promi
 		postMessage({
 			type: 'ready',
 			mt: engineIsMultithreaded,
-			version: wasm.engine_version(),
 		} satisfies AnalysisResponse);
 	} catch (e) {
 		console.error('[Analysis Engine] Failed to initialize wasm', e);

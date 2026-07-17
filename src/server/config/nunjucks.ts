@@ -13,6 +13,7 @@ import nunjucks from 'nunjucks';
 import { fileURLToPath } from 'node:url';
 
 import { players as p } from '../../shared/chess/util/typeutil.js';
+import { getVersionedEngineName } from '../../shared/chess/engine.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -39,7 +40,7 @@ export function configureNunjucks(app: Application): void {
 	// names to their output paths, which are content-hashed.
 	if (!fs.existsSync(MANIFEST_PATH))
 		throw new Error('Manifest file not found. Did we build first?');
-	nunjucksEnv.addGlobal('manifest', JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')));
+	setManifestGlobals(nunjucksEnv, JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')));
 	nunjucksEnv.addGlobal('p', p); // Player-color constants, so templates reference WHITE/BLACK by name
 
 	// Serializes a value to JSON safe for inline <script> injection.
@@ -57,13 +58,22 @@ export function configureNunjucks(app: Application): void {
 	if (process.env['NODE_ENV'] !== 'production') {
 		fs.watch(MANIFEST_PATH, () => {
 			try {
-				nunjucksEnv.addGlobal(
-					'manifest',
-					JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')),
-				);
+				setManifestGlobals(nunjucksEnv, JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')));
 			} catch (_err) {
 				// File may be mid-write; the next 'change' event will pick it up.
 			}
 		});
 	}
+}
+
+/**
+ * Sets the manifest-derived template globals: the raw asset manifest, plus the
+ * analysis engine's display name with its build-stamped version (e.g. "Apeiron 2.1"),
+ */
+function setManifestGlobals(env: nunjucks.Environment, manifest: Record<string, string>): void {
+	env.addGlobal('manifest', manifest);
+	env.addGlobal(
+		'engineNameVersioned',
+		getVersionedEngineName('apeiron', manifest['engineVersion']!),
+	);
 }

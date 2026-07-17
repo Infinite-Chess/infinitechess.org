@@ -7,7 +7,7 @@
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
-import { engineDictionary } from '../../game/chess/engines/engine.js';
+import { engineDictionary } from '../../../../../shared/chess/engine.js';
 
 /**
  * Absolute fallback border distance for a side the position leaves unbounded — the largest

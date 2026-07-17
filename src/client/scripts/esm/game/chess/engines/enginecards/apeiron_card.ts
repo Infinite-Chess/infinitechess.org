@@ -5,6 +5,7 @@ import type { VariantOptions } from '../../../../../../../shared/chess/logic/gam
 import bimath from '../../../../../../../shared/util/math/bimath';
 import bounds from '../../../../../../../shared/util/math/bounds';
 import coordutil from '../../../../../../../shared/chess/util/coordutil';
+import { I64_MAX } from '../../../../../../../shared/chess/engine';
 import typeutil, {
 	RawType,
 	rawTypes as r,
@@ -14,9 +15,6 @@ import typeutil, {
 type SupportedResult = { supported: true } | { supported: false; reason: string };
 
 // Constants -------------------------------------------------------------
-
-/** Maximum signed 64-bit integer value (2^63 - 1). Used in Rust. */
-const I64_MAX = 2n ** 63n - 1n;
 
 /** The maximum world border distance the engine can handle. */
 const BORDER_CAP = I64_MAX - 1000n; // Small cushion
@@ -158,7 +156,6 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 
 export default {
 	// Constants
-	I64_MAX,
 	BORDER_CAP,
 	SUPPORTED_VARIANTS,
 	// Functions

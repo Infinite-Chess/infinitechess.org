@@ -414,7 +414,7 @@
 	position: absolute;
 	top: 13px;
 	left: 8px;
-	width: 8px;
+	width: 6px;
 	border-top: 2px solid color-mix(in srgb, var(--c-text-muted) 28%, transparent);
 }
 

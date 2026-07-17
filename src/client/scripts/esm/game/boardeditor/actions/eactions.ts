@@ -30,6 +30,7 @@ import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
+import { engineDictionary } from '../../../../../../shared/chess/engine';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
@@ -59,7 +60,6 @@ import apeiron_card from '../../chess/engines/enginecards/apeiron_card';
 import selectiontool from '../tools/selection/selectiontool';
 import guiboardcontrols from '../../gui/guiboardcontrols';
 import clientmetadatautil from '../../chess/clientmetadatautil';
-import { engineDictionary } from '../../chess/engines/engine';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
 // Constants ----------------------------------------------------------------------

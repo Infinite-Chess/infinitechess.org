@@ -24,17 +24,12 @@ import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../rendering/enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
-import { engineDictionary } from '../../../game/chess/engines/engine.js';
 import { listener_document } from '../../../game/chess/gamecore.js';
 import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
-
-/** The analysis board always runs the same engine; engineDictionary is its display name's single source of truth. */
-const ENGINE_DISPLAY_NAME = engineDictionary.apeiron.displayName;
 
 // Elements -------------------------------------------------------------------------
 
 const element_Toggle = document.getElementById('engine-toggle') as HTMLInputElement;
-const element_Name = document.getElementById('engine-name')!;
 const element_Eval = document.getElementById('engine-eval')!;
 const element_Stats = document.getElementById('engine-stats')!;
 const element_GoDeeper = document.getElementById('btn-go-deeper') as HTMLButtonElement;
@@ -163,20 +158,6 @@ function applyThreadsCap(): void {
 	}
 }
 
-/** Appends the engine's major.minor version to its display name once known (lila-style), e.g. "Engine 2.0". */
-function updateEngineNameDisplay(): void {
-	const version = ceval.getEngineVersion();
-	element_Name.textContent = version
-		? `${ENGINE_DISPLAY_NAME} ${formatEngineVersionMajorMinor(version)}`
-		: ENGINE_DISPLAY_NAME;
-}
-
-/** Drops the patch component of a semver string, e.g. "2.0.1" -> "2.0". */
-function formatEngineVersionMajorMinor(version: string): string {
-	const [major, minor] = version.split('.');
-	return minor !== undefined ? `${major}.${minor}` : version;
-}
-
 function initListeners(): void {
 	element_Toggle.addEventListener('change', () => setEngineEnabled(element_Toggle.checked));
 
@@ -268,7 +249,6 @@ function clearPanelReadout(
 
 function onEngineStatus(status: CevalStatus): void {
 	applyThreadsCap(); // Re-evaluate: the engine's threading capability arrives with its status.
-	updateEngineNameDisplay(); // The engine's version also arrives with 'ready'.
 	if (status === 'loading') {
 		element_Stats.textContent = 'Loading engine…';
 		updateProgress(ceval.getLatestUpdate());
@@ -277,7 +257,7 @@ function onEngineStatus(status: CevalStatus): void {
 		setGaugeVisible(false);
 		element_Stats.textContent = 'Engine failed to load';
 		updateProgress(undefined);
-		toast.show('The analysis engine failed to load.', { error: true });
+		toast.show('The engine failed to load.', { error: true });
 	} else if (status === 'blocked') {
 		enginelegalmovesdebug.disable();
 		clearPanelReadout('Outside world border', { gauge: 0 });
