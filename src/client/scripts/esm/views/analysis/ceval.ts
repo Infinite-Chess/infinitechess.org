@@ -8,6 +8,7 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { SimplifiedGameState } from '../../game/chess/gamecompressor.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
@@ -453,19 +454,33 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 // Position tracking --------------------------------------------------------------------
 
 /**
- * The compact ICN of the position under analysis, built with the same
- * `compressGamefile` + `LongToShort_Format` machinery the gameplay engine worker
- * (apeiron.ts) uses. It carries the FULL move list (not just a single position)
- * so the engine replays the game and has the history it needs to detect threefold
- * repetition and the fifty-move rule. The moves are truncated to the ply currently
- * being viewed, so navigating back analyzes that earlier position with its own history.
+ * The compact ICN of the position under analysis, carrying move history so the engine can
+ * detect threefold repetition and the fifty-move rule. Truncated to the viewed ply, and
+ * re-based to {@link analysisenginebounds.getSafeStartPly} if an earlier ply left the engine's
+ * safe coordinate range (unreplayable) — the fifty-move counter survives that cut, repetition
+ * detection across it doesn't.
  */
 function getViewedPositionIcn(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile);
 	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
-	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
-		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
-	}
+	const safeStartPly = analysisenginebounds.getSafeStartPly(gamefile);
+
+	// Re-base the start snapshot to safeStartPly (no-op at ply 0).
+	const snapshot = gamecompressor.GameToPosition(
+		{
+			position: longformIn.position!,
+			turnOrder: longformIn.gameRules.turnOrder,
+			fullMove: longformIn.fullMove,
+			state_global: longformIn.state_global,
+		} as SimplifiedGameState,
+		gamefile.moves,
+		safeStartPly,
+	);
+	longformIn.position = snapshot.position;
+	longformIn.fullMove = snapshot.fullMove;
+	longformIn.state_global = snapshot.state_global;
+	longformIn.moves = (longformIn.moves ?? []).slice(safeStartPly, viewedPlyCount);
+
 	// Result/Termination are irrelevant to the engine
 	delete longformIn.metadata.Result;
 	delete longformIn.metadata.Termination;

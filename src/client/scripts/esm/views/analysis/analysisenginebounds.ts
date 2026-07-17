@@ -7,6 +7,9 @@
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
+import jsutil from '../../../../../shared/util/jsutil.js';
+import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
+import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import { engineDictionary } from '../../../../../shared/chess/engine.js';
 
 /**
@@ -43,4 +46,31 @@ function areAllPiecesInBounds(gamefile: GameFile): boolean {
 	return true;
 }
 
-export default { getEngineWorldBorder, areAllPiecesInBounds };
+/** Whether every piece coordinate in `position` lies within `border` (inclusive). */
+function positionInBounds(position: Map<CoordsKey, number>, border: BoundingBox): boolean {
+	for (const key of position.keys()) {
+		const [x, y] = coordutil.getCoordsFromKey(key);
+		if (x < border.left || x > border.right || y < border.bottom || y > border.top) return false;
+	}
+	return true;
+}
+
+/**
+ * The earliest ply (0 = game start) from which every position up to the viewed one stays in the
+ * engine's safe (replayable) coordinate range. An out-of-range historical position would overflow
+ * i64 on replay, silently corrupting the engine's board/repetition state, so we skip past it.
+ */
+function getSafeStartPly(gamefile: GameFile): number {
+	const border = getEngineWorldBorder(gamefile);
+	const position = jsutil.deepCopyObject(gamefile.startSnapshot.position);
+	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
+
+	let lastOutOfBoundsPly = positionInBounds(position, border) ? -1 : 0;
+	for (let i = 0; i < viewedPlyCount; i++) {
+		boardchanges.runChanges_Position(position, gamefile.moves[i]!.changes);
+		if (!positionInBounds(position, border)) lastOutOfBoundsPly = i + 1;
+	}
+	return lastOutOfBoundsPly + 1;
+}
+
+export default { getEngineWorldBorder, areAllPiecesInBounds, getSafeStartPly };
