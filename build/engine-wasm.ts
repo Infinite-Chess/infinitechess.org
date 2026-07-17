@@ -21,7 +21,7 @@ const APEIRON_WASM_DIR = path.join(process.cwd(), 'src', 'client', 'pkg', 'apeir
 
 /** API URL to check the latest released version */
 const LATEST_RELEASE_API_URL =
-	'https://api.github.com/repos/Infinite-Chess/hydrochess/releases/latest';
+	'https://api.github.com/repos/Infinite-Chess/apeiron/releases/latest';
 
 /** Zod schema for validating GitHub release API response */
 const releaseDataSchema = z.object({
