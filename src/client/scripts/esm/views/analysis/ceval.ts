@@ -8,13 +8,13 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { SimplifiedGameState } from '../../game/chess/gamecompressor.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import { GlobalGameState } from '../../../../../shared/chess/logic/state.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import { GameBus } from '../../game/GameBus.js';
@@ -471,8 +471,8 @@ function getViewedPositionIcn(gamefile: GameFile): string {
 			position: longformIn.position!,
 			turnOrder: longformIn.gameRules.turnOrder,
 			fullMove: longformIn.fullMove,
-			state_global: longformIn.state_global,
-		} as SimplifiedGameState,
+			state_global: longformIn.state_global as GlobalGameState,
+		},
 		gamefile.moves,
 		safeStartPly,
 	);

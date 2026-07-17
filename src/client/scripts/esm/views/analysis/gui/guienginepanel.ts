@@ -260,7 +260,7 @@ function onEngineStatus(status: CevalStatus): void {
 		toast.show('The engine failed to load.', { error: true });
 	} else if (status === 'blocked') {
 		enginelegalmovesdebug.disable();
-		clearPanelReadout('Outside world border', { gauge: 0 });
+		clearPanelReadout('Out of bounds', { gauge: 0 });
 	} else if (status === 'crashed') {
 		clearPanelReadout('Analysis crashed', { gauge: 0 });
 		if (!crashToastShown) {

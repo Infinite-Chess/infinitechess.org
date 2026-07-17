@@ -82,8 +82,6 @@ function init(): void {
 	});
 	// The eval line's color is read from the canvas's CSS `color` at draw time, so a light/dark
 	// switch needs an explicit redraw — nothing else touches the graph until the next interaction.
-	// 'theme-change' is the BOARD tile color event; the site-wide light/dark switch fires
-	// 'color-scheme-change' instead (see appearancedropdown.ts).
 	document.addEventListener('color-scheme-change', () => {
 		if (isGraphVisible()) drawGraph();
 	});
