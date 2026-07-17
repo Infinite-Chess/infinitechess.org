@@ -1,6 +1,6 @@
 {
-  "watch": ["dist/server", "dist/shared"],
-  "ext": "js",
+  "watch": ["dist/server/.build-complete"],
+  "ext": "*",
   "exec": "node --enable-source-maps dist/server/server.js",
   "delay": "200"
 }

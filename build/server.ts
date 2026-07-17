@@ -3,7 +3,10 @@
 import { glob } from 'glob';
 import esbuild, { BuildOptions } from 'esbuild';
 
-import { getESBuildLogStatusLogger } from './plugins.js';
+import { getESBuildLogStatusLogger, getBuildCompleteSentinelPlugin } from './plugins.js';
+
+/** Rewritten after every successful server build; dev watchers gate on it (see plugins.ts). */
+export const SERVER_BUILD_COMPLETE_SENTINEL = 'dist/server/.build-complete';
 
 // ================================= CONSTANTS =================================
 
@@ -26,7 +29,10 @@ const esbuildOptions: BuildOptions = {
 	outdir: 'dist',
 	format: 'esm',
 	sourcemap: true, // Patches file paths from server console errors to the correct src/ file
-	plugins: [esbuildServerRebuildPlugin],
+	plugins: [
+		esbuildServerRebuildPlugin,
+		getBuildCompleteSentinelPlugin(SERVER_BUILD_COMPLETE_SENTINEL),
+	],
 };
 
 // ================================= BUILDING ===================================
