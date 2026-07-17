@@ -50,7 +50,8 @@ function areAllPiecesInBounds(gamefile: GameFile): boolean {
 function positionInBounds(position: Map<CoordsKey, number>, border: BoundingBox): boolean {
 	for (const key of position.keys()) {
 		const [x, y] = coordutil.getCoordsFromKey(key);
-		if (x < border.left || x > border.right || y < border.bottom || y > border.top) return false;
+		if (x < border.left || x > border.right || y < border.bottom || y > border.top)
+			return false;
 	}
 	return true;
 }
