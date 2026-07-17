@@ -26,6 +26,7 @@ import gamereview from '../gamereview.js';
 import guimovetree from './guimovetree.js';
 import { GameBus } from '../../../game/GameBus.js';
 import gamesession from '../../../game/chess/gamesession.js';
+import { cpWinningChances } from '../ceval.js';
 
 // Elements ---------------------------------------------------------------------------
 
@@ -243,8 +244,6 @@ function updateStats(): void {
 
 // Eval graph ------------------------------------------------------------------------------------
 
-/** Vertical cp range the graph displays; evals are clamped into it. */
-const GRAPH_CP_RANGE = 600;
 /**
  * Symmetric top/bottom inset so the zero line sits at the exact vertical center (like lila).
  * The phase labels overlap the plot's top rather than reserving a band that would offset zero.
@@ -279,7 +278,7 @@ function graphX(index: number, width: number, totalPositions: number): number {
 
 /** The y pixel of a white-POV cp. */
 function graphY(cp: number, height: number): number {
-	const normalized = math.clamp(cp, -GRAPH_CP_RANGE, GRAPH_CP_RANGE) / GRAPH_CP_RANGE;
+	const normalized = cpWinningChances(cp);
 	const plotHeight = height - GRAPH_VERTICAL_PADDING * 2;
 	return GRAPH_VERTICAL_PADDING + plotHeight / 2 - normalized * (plotHeight / 2 - 3);
 }
