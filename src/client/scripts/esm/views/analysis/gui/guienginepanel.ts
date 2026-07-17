@@ -582,7 +582,7 @@ function playLine(tokens: string[], untilIndex: number): void {
 	for (let i = 0; i <= untilIndex; i++) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, tokens[i]!);
 		if (!result.valid) {
-			console.error(`Engine line move "${tokens[i]}" (token index ${i}) at moveIndex ${gamefile.state.local.moveIndex} is not legal to apply here: ${result.reason}.`); // prettier-ignore
+			console.error(`Engine line move "${tokens[i]}" (token index ${i}) at moveIndex ${gamefile.state.local.moveIndex} is not legal to apply here: ${result.reason}`); // prettier-ignore
 			console.error(`Full line (starting at moveIndex ${startMoveIndex}):`, tokens);
 			break;
 		}
