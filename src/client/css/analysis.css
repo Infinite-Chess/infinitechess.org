@@ -11,10 +11,17 @@
    ============================ */
 
 /* Consumed by the .review-stats panel and the .ply move classifications. */
-:root {
-	--review-inaccuracy: #d9a521;
-	--review-mistake: #e6912c;
-	--review-blunder: #ca3431;
+:root,
+[data-theme='dark'] {
+	--review-inaccuracy: hsl(202 78% 62%);
+	--review-mistake: hsl(41 100% 45%);
+	--review-blunder: hsl(0 69% 60%);
+}
+
+[data-theme='light'] {
+	--review-inaccuracy: hsl(202 78% 40%);
+	--review-mistake: hsl(41 100% 35%);
+	--review-blunder: hsl(0 68% 50%);
 }
 
 /* ============================

@@ -73,10 +73,13 @@ const TINT: Color = [1, 1, 1, 1];
 const textureCache: Partial<Record<BadgeKey, WebGLTexture | null>> = {};
 /** Classifications whose texture is currently loading, to avoid duplicate builds. */
 const loading = new Set<BadgeKey>();
+/** Increments when a theme change invalidates any in-flight texture builds. */
+let textureCacheVersion = 0;
 
 // Init ------------------------------------------------------------------------------
 
 GameBus.addEventListener('render-above-pieces', render);
+document.addEventListener('color-scheme-change', clearBadgeTextures);
 
 // The engine classifies moves asynchronously; if it lands on the move the user is
 // currently viewing, force a redraw so the badge doesn't wait for an unrelated one.
@@ -144,8 +147,20 @@ function getBadgeTexture(classification: BadgeKey): WebGLTexture | undefined {
 	return undefined;
 }
 
+/** Drops theme-colored textures so they rebuild from the current review palette. */
+function clearBadgeTextures(): void {
+	textureCacheVersion++;
+	for (const classification of BADGED_CLASSIFICATIONS) {
+		const texture = textureCache[classification];
+		if (texture) gl.deleteTexture(texture);
+		delete textureCache[classification];
+	}
+	frametracker.onVisualChange();
+}
+
 /** Rasterizes one classification's badge SVG to a cached WebGL texture, then requests a redraw. */
 async function buildBadgeTexture(classification: BadgeKey): Promise<void> {
+	const cacheVersion = textureCacheVersion;
 	try {
 		const fill = getComputedStyle(document.documentElement)
 			.getPropertyValue(`--review-${classification}`)
@@ -155,13 +170,18 @@ async function buildBadgeTexture(classification: BadgeKey): Promise<void> {
 		// Normalize to a fixed power-of-two size (TextureLoader requires it, and it fixes Firefox's
 		// alpha double-multiply), then upload with mipmaps for clean minification while zoomed out.
 		const normalized = await svgtoimageconverter.normalizeImagePixelData(image, TEXTURE_SIZE);
-		textureCache[classification] = TextureLoader.loadTexture(gl, normalized, { mipmaps: true });
-		frametracker.onVisualChange(); // Draw it now that it's ready.
+		const texture = TextureLoader.loadTexture(gl, normalized, { mipmaps: true });
+		if (cacheVersion !== textureCacheVersion) gl.deleteTexture(texture);
+		else {
+			textureCache[classification] = texture;
+			frametracker.onVisualChange(); // Draw it now that it's ready.
+		}
 	} catch (e) {
 		console.error(`Failed to build review badge texture for "${classification}"`, e);
-		textureCache[classification] = null; // Give up; don't retry every frame.
+		if (cacheVersion === textureCacheVersion) textureCache[classification] = null; // Give up; don't retry every frame.
 	} finally {
 		loading.delete(classification);
+		if (cacheVersion !== textureCacheVersion) frametracker.onVisualChange();
 	}
 }
 
