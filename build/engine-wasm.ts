@@ -149,12 +149,15 @@ export async function downloadEngineWasm(): Promise<void> {
 
 		// Replace pkg wholesale so no file from a prior version lingers. The version is re-stamped below.
 		await fs.promises.rm(pkgDir, { recursive: true, force: true });
-		for (const [entryPath, bytes] of Object.entries(entries)) {
-			if (entryPath.endsWith('/')) continue; // Skip dir entries; parents are made from file paths.
-			const dest = path.join(pkgDir, entryPath);
-			await fs.promises.mkdir(path.dirname(dest), { recursive: true });
-			await fs.promises.writeFile(dest, bytes);
-		}
+		await Promise.all(
+			Object.entries(entries).map(async ([entryPath, bytes]) => {
+				console.log(`${label} Extracting ${entryPath}...`);
+				if (entryPath.endsWith('/')) return; // Skip dir entries; parents are made from file paths.
+				const dest = path.join(pkgDir, entryPath);
+				await fs.promises.mkdir(path.dirname(dest), { recursive: true });
+				await fs.promises.writeFile(dest, bytes);
+			}),
+		);
 
 		await fs.promises.writeFile(versionFile, remoteVersion);
 		engineVersion = parseEngineVersion(remoteVersion);
