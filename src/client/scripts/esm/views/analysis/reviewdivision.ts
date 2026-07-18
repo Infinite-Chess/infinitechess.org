@@ -14,6 +14,7 @@ import type { Player, PlayerGroup, RawType } from '../../../../../shared/chess/u
 
 import math from '../../../../../shared/util/math/math.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import typeutil, {
 	players as p,
 	rawTypes as r,
@@ -82,7 +83,7 @@ function determineDivision(
 			(metrics.combatRemaining <= 0.43 || metrics.piecesRemaining <= 0.35)
 		)
 			end = index;
-		if (index < moves.length) applyMoveToPosition(position, moves[index]!);
+		if (index < moves.length) boardchanges.runChanges_Position(position, moves[index]!.changes);
 	}
 
 	return { ...(middle !== undefined && { middle }), ...(end !== undefined && { end }) };
@@ -329,25 +330,6 @@ function phaseMetrics(
 		combatRemaining: profile.initialCombat > 0 ? combat / profile.initialCombat : 1,
 		piecesRemaining: currentPieces / profile.initialPieces,
 	};
-}
-
-function applyMoveToPosition(position: Map<CoordsKey, number>, move: MoveFull): void {
-	for (const change of move.changes) {
-		const start = coordutil.getKeyFromCoords(change.piece.coords);
-		switch (change.action) {
-			case 'capture':
-			case 'delete':
-				position.delete(start);
-				break;
-			case 'add':
-				position.set(start, change.piece.type);
-				break;
-			case 'move':
-				position.delete(start);
-				position.set(coordutil.getKeyFromCoords(change.endCoords), change.piece.type);
-				break;
-		}
-	}
 }
 
 export default { determineDivision };
