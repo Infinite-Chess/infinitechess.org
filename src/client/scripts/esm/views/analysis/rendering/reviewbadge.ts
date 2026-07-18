@@ -7,8 +7,9 @@
  *
  * The glyphs are lila's own hand-authored SVG paths (see `lila/ui/lib/src/game/glyphs.ts`),
  * rasterized once per classification to a WebGL texture: a colored circle with lila's
- * `feDropShadow` and a bold white glyph. Circle fills come from our `--review-*` vars so
- * the board stays consistent with the move list, stats panel, and eval graph.
+ * `feDropShadow` and a bold white glyph. Circle fills come from our `--review-*` vars — always
+ * the dark-theme values, since the board tiles the badges sit on don't change with the page's
+ * light/dark theme.
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
@@ -16,16 +17,16 @@ import type { Color } from '../../../../../../shared/util/math/math.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 import space from '../../../game/misc/space.js';
-import boardpos from '../../../game/rendering/boardpos.js';
-import primitives from '../../../game/rendering/primitives.js';
-import frametracker from '../../../game/rendering/frametracker.js';
-import gameslot from '../../../game/chess/gameslot.js';
-import svgtoimageconverter from '../../../util/svgtoimageconverter.js';
-import TextureLoader from '../../../webgl/TextureLoader.js';
 import { gl } from '../../../game/rendering/webgl.js';
-import { GameBus } from '../../../game/GameBus.js';
-import { createRenderable } from '../../../webgl/Renderable.js';
+import boardpos from '../../../game/rendering/boardpos.js';
+import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
+import primitives from '../../../game/rendering/primitives.js';
+import { GameBus } from '../../../game/GameBus.js';
+import frametracker from '../../../game/rendering/frametracker.js';
+import TextureLoader from '../../../webgl/TextureLoader.js';
+import svgtoimageconverter from '../../../util/svgtoimageconverter.js';
+import { createRenderable } from '../../../webgl/Renderable.js';
 import gamereview, { ClassificationKey } from '../gamereview.js';
 
 // Constants -----------------------------------------------------------------
@@ -73,13 +74,10 @@ const TINT: Color = [1, 1, 1, 1];
 const textureCache: Partial<Record<BadgeKey, WebGLTexture | null>> = {};
 /** Classifications whose texture is currently loading, to avoid duplicate builds. */
 const loading = new Set<BadgeKey>();
-/** Increments when a theme change invalidates any in-flight texture builds. */
-let textureCacheVersion = 0;
 
 // Init ------------------------------------------------------------------------------
 
 GameBus.addEventListener('render-above-pieces', render);
-document.addEventListener('color-scheme-change', clearBadgeTextures);
 
 // The engine classifies moves asynchronously; if it lands on the move the user is
 // currently viewing, force a redraw so the badge doesn't wait for an unrelated one.
@@ -147,42 +145,39 @@ function getBadgeTexture(classification: BadgeKey): WebGLTexture | undefined {
 	return undefined;
 }
 
-/** Drops theme-colored textures so they rebuild from the current review palette. */
-function clearBadgeTextures(): void {
-	textureCacheVersion++;
-	for (const classification of BADGED_CLASSIFICATIONS) {
-		const texture = textureCache[classification];
-		if (texture) gl.deleteTexture(texture);
-		delete textureCache[classification];
-	}
-	frametracker.onVisualChange();
-}
-
 /** Rasterizes one classification's badge SVG to a cached WebGL texture, then requests a redraw. */
 async function buildBadgeTexture(classification: BadgeKey): Promise<void> {
-	const cacheVersion = textureCacheVersion;
 	try {
-		const fill = getComputedStyle(document.documentElement)
-			.getPropertyValue(`--review-${classification}`)
-			.trim();
+		const fill = getDarkThemeReviewColor(classification);
 		const svg = buildBadgeSvg(fill, GLYPH_PATHS[classification]);
 		const image = await svgtoimageconverter.svgStringToImage(svg);
 		// Normalize to a fixed power-of-two size (TextureLoader requires it, and it fixes Firefox's
 		// alpha double-multiply), then upload with mipmaps for clean minification while zoomed out.
 		const normalized = await svgtoimageconverter.normalizeImagePixelData(image, TEXTURE_SIZE);
-		const texture = TextureLoader.loadTexture(gl, normalized, { mipmaps: true });
-		if (cacheVersion !== textureCacheVersion) gl.deleteTexture(texture);
-		else {
-			textureCache[classification] = texture;
-			frametracker.onVisualChange(); // Draw it now that it's ready.
-		}
+		textureCache[classification] = TextureLoader.loadTexture(gl, normalized, { mipmaps: true });
+		frametracker.onVisualChange(); // Draw it now that it's ready.
 	} catch (e) {
 		console.error(`Failed to build review badge texture for "${classification}"`, e);
-		if (cacheVersion === textureCacheVersion) textureCache[classification] = null; // Give up; don't retry every frame.
+		textureCache[classification] = null; // Give up; don't retry every frame.
 	} finally {
 		loading.delete(classification);
-		if (cacheVersion !== textureCacheVersion) frametracker.onVisualChange();
 	}
+}
+
+/**
+ * Resolves a classification's `--review-*` fill, always the dark-theme value regardless of the
+ * page's active theme, via a throwaway `data-theme='dark'` probe — so CSS stays the single source
+ * of truth. The board tiles behind the badge don't change with the light/dark theme, so its color
+ * shouldn't either.
+ */
+function getDarkThemeReviewColor(classification: BadgeKey): string {
+	const probe = document.createElement('div');
+	probe.setAttribute('data-theme', 'dark');
+	probe.style.display = 'none';
+	document.body.appendChild(probe);
+	const fill = getComputedStyle(probe).getPropertyValue(`--review-${classification}`).trim();
+	probe.remove();
+	return fill;
 }
 
 /** Composes lila's badge SVG (circle + drop shadow + white glyph) for one classification. */
