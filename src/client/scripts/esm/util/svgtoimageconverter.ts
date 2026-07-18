@@ -48,11 +48,11 @@ function svgToImage(svgElement: SVGElement): Promise<HTMLImageElement> {
  * @param [id] - Optional id to tag the image with, for finding it in the document later.
  * @returns A promise that resolves with the created image element.
  */
-function svgStringToImage(svgString: string, id: string = ''): Promise<HTMLImageElement> {
+function svgStringToImage(svgString: string, id?: string): Promise<HTMLImageElement> {
 	const img = new Image();
 	// Convert SVG string to a data URL using encodeURIComponent for better encoding
 	img.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgString)}`;
-	img.id = id;
+	if (id) img.id = id;
 
 	return new Promise((resolve, reject): void => {
 		img.onload = (): void => resolve(img);
@@ -66,15 +66,13 @@ function svgStringToImage(svgString: string, id: string = ''): Promise<HTMLImage
 /**
  * Normalizes the pixel data of an image by drawing it onto a canvas and re-serializing it.
  * This used for patching a Firefox bug where it unintentionally darkens the image by double-multiplying the RGB channels by the alpha channel.
- *
- * We don't have to do this for the spritesheet images, because the spritesheet generator ALREADY
- * draws the images onto a large canvas and re-serializes them.
  * @param img - The image to normalize.
+ * @param size - The width and height to use for the canvas. Keep high enough to retain original resolution.
  * @returns A promise that resolves with the normalized image.
  */
 async function normalizeImagePixelData(
 	img: HTMLImageElement,
-	size: number = 512, // High default to retain resolution during the drawing and re-serialization.
+	size: number,
 ): Promise<HTMLImageElement> {
 	// Proceed with canvas creation
 	const canvas = document.createElement('canvas');
