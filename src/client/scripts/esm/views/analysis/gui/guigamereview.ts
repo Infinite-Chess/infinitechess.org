@@ -553,7 +553,7 @@ function initGraphInteraction(canvas: HTMLCanvasElement): void {
 
 function showGraphTooltip(event: MouseEvent, index: number): void {
 	const cp = gamereview.getWhiteCpAt(index);
-	const outOfBounds = cp === undefined && gamereview.isPositionOutOfBounds(index);
+	const outOfBounds = cp === undefined && !gamereview.positionIsEvaluable(index);
 	// A gap that isn't out of bounds is a position still being evaluated — nothing to show yet.
 	if (cp === undefined && !outOfBounds) return element_GraphTooltip.classList.add('hidden');
 

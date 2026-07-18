@@ -859,11 +859,6 @@ function getWhiteCpAt(index: number): number | undefined {
 	return effectiveWhiteCp[index];
 }
 
-/** Whether position `index` has a piece outside the engine's safe range (so it's left unevaluated). */
-function isPositionOutOfBounds(index: number): boolean {
-	return !positionIsEvaluable(index);
-}
-
 // Subscriptions ---------------------------------------------------------------------------------
 
 function notifyProgress(): void {
@@ -891,7 +886,7 @@ export default {
 	getMainlineNodes,
 	getDivision,
 	getWhiteCpAt,
-	isPositionOutOfBounds,
+	positionIsEvaluable,
 	onProgress,
 	onClassified,
 	onFinished,
