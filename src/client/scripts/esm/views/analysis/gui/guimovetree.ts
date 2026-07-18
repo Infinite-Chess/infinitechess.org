@@ -540,6 +540,11 @@ function addBlunderVariationAtTree(review: MoveReview): boolean {
 	if (review.classification !== 'blunder' || !review.pv?.length) return false;
 	const parent = gamereview.getMainlineNodes()[review.ply]?.parent;
 	if (!parent) return false;
+	// The review holds references to the mainline nodes captured at its start. Deleting a
+	// mainline move mid-review orphans that node's subtree, so a later blunder may branch off
+	// a node no longer attached to the tree — skip it rather than navigate a broken line.
+	const root = movetree.getRoot();
+	if (!root || !movetree.isInSubtree(root, parent)) return false;
 	// 6 plies (3 full moves): our coordinate notation is wider than lila's SAN, so a
 	// 12-ply line would span ~4 rows instead of two. Enough to convey the better idea.
 	const pv = review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES);
