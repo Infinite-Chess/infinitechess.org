@@ -15,9 +15,9 @@ import guianalysisview from './gui/guianalysisview.js';
 import guianalysisactions from './gui/guianalysisactions.js';
 
 import './gui/guimovetree.js';
+import './rendering/reviewbadge.js';
 import '../../game/gui/guimaterial.js';
 import './rendering/analysisborderdebug.js';
-import './rendering/reviewbadge.js';
 
 /** The analysis-page board canvas WebGL renders onto. */
 const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
@@ -26,10 +26,16 @@ const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
 function start(): void {
 	gameloop.init(canvas);
 
-	// Prevent clicking buttons from focusing them, so keyboard controls don't interact with them.
+	// Keep the buttons out of the keyboard tab order entirely.
 	document.querySelectorAll<HTMLElement>('.btn-bare, .action-btn').forEach((btn) => {
 		btn.setAttribute('tabindex', '-1');
-		btn.addEventListener('click', () => btn.blur());
+	});
+	// Prevent clicking these controls from focusing them, so keyboard controls don't interact
+	// with them (e.g. the stat actions would otherwise capture Space as a repeated click). The
+	// stat actions are created dynamically, hence a delegated listener. Tab + Space still works.
+	document.addEventListener('mousedown', (e) => {
+		if ((e.target as HTMLElement).closest('.btn-bare, .action-btn, .review-stat-action'))
+			e.preventDefault();
 	});
 
 	guienginepanel.init();
