@@ -42,7 +42,10 @@ analysis and other pages serves the new engine at its new hashed URL; panel show
 
 Lives in `Infinite-Chess/apeiron`, **not** in this repo — but a local clone sits adjacent to this
 repo (sibling directory `../Infinite-Chess-apeiron`), we can read and edit it directly. Triggers on
-push to the fork's `main` (i.e. after we pull upstream) or manual `workflow_dispatch`. Steps:
+push to the fork's `main` (i.e. after we pull upstream) or manual `workflow_dispatch`. Upstream's own
+workflows — notably its auto-release that bumps the Cargo semver on an Elo threshold — are
+**disabled** on the fork, so a push runs only this workflow and never mutates the crate version
+(it's authored solely upstream). Steps:
 
 1. **Checkout** + install `wasm-pack`. (Rust toolchain is the runner default, pinned by the crate's
    `rust-toolchain.toml`.)
