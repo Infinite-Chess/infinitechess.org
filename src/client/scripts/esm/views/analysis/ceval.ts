@@ -232,7 +232,7 @@ function cpToWinningChances(cp: number, clampCp: number): number {
 }
 
 /** White-POV cp → winning chances for the eval gauge. */
-export function cpWinningChances(cp: number): number {
+function cpWinningChances(cp: number): number {
 	// Clamp at ±1200 so a mate (±1) always shows a higher gauge than any non-mate eval.
 	return cpToWinningChances(cp, 1200);
 }
@@ -965,6 +965,7 @@ function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
 export default {
 	maxThreads,
 	cpToWinningChances,
+	cpWinningChances,
 	seedPositionCache,
 	requestLegalMoves,
 	terminateLegalWorker,

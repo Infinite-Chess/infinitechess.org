@@ -19,6 +19,7 @@ import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
+import ceval from '../ceval.js';
 import docutil from '../../../util/docutil.js';
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
@@ -26,7 +27,6 @@ import gamereview from '../gamereview.js';
 import guimovetree from './guimovetree.js';
 import { GameBus } from '../../../game/GameBus.js';
 import gamesession from '../../../game/chess/gamesession.js';
-import { cpWinningChances } from '../ceval.js';
 
 // Elements ---------------------------------------------------------------------------
 
@@ -276,7 +276,7 @@ function graphX(index: number, width: number, totalPositions: number): number {
 
 /** The y pixel of a white-POV cp. */
 function graphY(cp: number, height: number): number {
-	const normalized = cpWinningChances(cp);
+	const normalized = ceval.cpWinningChances(cp);
 	const plotHeight = height - GRAPH_VERTICAL_PADDING * 2;
 	return GRAPH_VERTICAL_PADDING + plotHeight / 2 - normalized * (plotHeight / 2 - 3);
 }
