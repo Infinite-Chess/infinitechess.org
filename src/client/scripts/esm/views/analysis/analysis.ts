@@ -26,17 +26,13 @@ const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
 function start(): void {
 	gameloop.init(canvas);
 
-	// Keep the buttons out of the keyboard tab order entirely.
-	document.querySelectorAll<HTMLElement>('.btn-bare, .action-btn').forEach((btn) => {
-		btn.setAttribute('tabindex', '-1');
-	});
-	// Prevent clicking these controls from focusing them, so keyboard controls don't interact
-	// with them (e.g. the stat actions would otherwise capture Space as a repeated click). The
-	// stat actions are created dynamically, hence a delegated listener. Tab + Space still works.
-	document.addEventListener('mousedown', (e) => {
-		if ((e.target as HTMLElement).closest('.btn-bare, .action-btn, .review-stat-action'))
-			e.preventDefault();
-	});
+	// Prevent clicking buttons from focusing them, so keyboard controls don't interact with them.
+	document
+		.querySelectorAll<HTMLElement>('.btn-bare, .action-btn, .review-stat-action')
+		.forEach((btn) => {
+			btn.setAttribute('tabindex', '-1');
+			btn.addEventListener('click', () => btn.blur());
+		});
 
 	guienginepanel.init();
 	guianalysisactions.init();
