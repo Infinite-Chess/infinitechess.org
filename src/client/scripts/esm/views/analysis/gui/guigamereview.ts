@@ -53,14 +53,6 @@ function isLapseKey(key: string): key is LapseKey {
 	return (LAPSE_KEYS as readonly string[]).includes(key);
 }
 
-/** The rows each player's stats column shows, in order. */
-const STAT_ROWS: { key: StatKey; label: string }[] = [
-	{ key: 'inaccuracy', label: 'Inaccuracies' },
-	{ key: 'mistake', label: 'Mistakes' },
-	{ key: 'blunder', label: 'Blunders' },
-	{ key: 'acpl', label: 'Avg. cp loss' },
-];
-
 // Initialization -----------------------------------------------------------------------
 
 /** Wires the game review UI and honors `/analysis/:id?review=1`. */
@@ -106,7 +98,7 @@ function startRequestedReview(attempt = 0): void {
 
 	gamereview.start();
 
-	buildStatsColumns();
+	revealStats();
 	if (gamereview.getStatus() === 'running') element_Progress.classList.remove('hidden');
 	element_Graph.classList.remove('hidden');
 	element_PhaseMarkers.replaceChildren();
@@ -140,11 +132,11 @@ function onReviewFinished(): void {
 // Stats columns ------------------------------------------------------------------------------
 
 /**
- * Swaps the meta panel's participant rows + result banner for the two-column
- * per-player stats. The existing `.meta-player` rows (side dot + username embed)
- * move in as the column headers, so nothing is duplicated.
+ * Reveals the SSR'd two-column per-player stats, replacing the meta panel's participant
+ * rows + result banner. The existing `.meta-player` rows (side dot + username embed) move
+ * in as the column headers, so nothing is duplicated.
  */
-function buildStatsColumns(): void {
+function revealStats(): void {
 	if (!element_Stats.classList.contains('hidden')) return;
 
 	const metaPlayers = document.querySelector('.game-meta .meta-players');
@@ -155,55 +147,30 @@ function buildStatsColumns(): void {
 		[0, p.WHITE],
 		[1, p.BLACK],
 	] as const) {
-		const col = document.createElement('div');
-		col.classList.add('review-stats-col');
+		const col = element_Stats.querySelector(`.review-stats-col[data-player="${color}"]`)!;
 
-		// The player row becomes the column header.
+		// The player row becomes the column header, above the SSR'd accuracy + stat rows.
 		const header = playerRows[column];
-		if (header) col.append(header);
+		if (header) col.prepend(header);
 
-		const accuracy = document.createElement('div');
-		accuracy.classList.add('review-accuracy');
-		const accuracyValue = document.createElement('span');
-		accuracyValue.classList.add('review-accuracy-value');
-		accuracyValue.textContent = '—';
-		const accuracyLabel = document.createElement('span');
-		accuracyLabel.classList.add('review-stat-label');
-		accuracyLabel.textContent = 'Accuracy';
-		accuracy.append(accuracyValue, accuracyLabel);
-		col.append(accuracy);
+		statCells[color] = {
+			accuracy: col.querySelector<HTMLElement>('.review-accuracy-value')!,
+			inaccuracy: col.querySelector<HTMLElement>('.review-stat-inaccuracy')!,
+			mistake: col.querySelector<HTMLElement>('.review-stat-mistake')!,
+			blunder: col.querySelector<HTMLElement>('.review-stat-blunder')!,
+			acpl: col.querySelector<HTMLElement>('.review-stat-acpl')!,
+		};
 
-		statCells[color] = { accuracy: accuracyValue };
-
-		for (const row of STAT_ROWS) {
-			const line = document.createElement('div');
-			line.classList.add('review-stat-row');
-			if (isLapseKey(row.key)) {
-				const classification = row.key;
-				line.classList.add('review-stat-action');
-				line.classList.add('unselectable');
-				line.tabIndex = 0;
-				line.role = 'button';
-				line.title = `Go to next ${row.label.toLowerCase()}`;
-				line.addEventListener('click', () => cycleToLapse(color, classification));
-				line.addEventListener('keydown', (event) => {
-					if (event.key !== 'Enter' && event.key !== ' ') return;
-					event.preventDefault();
-					cycleToLapse(color, classification);
-				});
-			}
-			const value = document.createElement('span');
-			value.classList.add('review-stat-value', `review-stat-${row.key}`);
-			value.textContent = '0';
-			const label = document.createElement('span');
-			label.classList.add('review-stat-label');
-			label.textContent = row.label;
-			line.append(value, label);
-			col.append(line);
-			statCells[color]![row.key] = value;
-		}
-
-		element_Stats.append(col);
+		// Wire the clickable lapse rows.
+		col.querySelectorAll<HTMLElement>('.review-stat-action').forEach((line) => {
+			const classification = line.dataset['classification'] as LapseKey;
+			line.addEventListener('click', () => cycleToLapse(color, classification));
+			line.addEventListener('keydown', (event) => {
+				if (event.key !== 'Enter' && event.key !== ' ') return;
+				event.preventDefault();
+				cycleToLapse(color, classification);
+			});
+		});
 	}
 
 	metaPlayers?.classList.add('hidden');

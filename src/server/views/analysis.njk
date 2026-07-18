@@ -129,8 +129,31 @@
 				<span class="result-text">{{ meta.result.text if meta.result }}</span>
 			</div>
 
-			{# Filled when the game page launches `/analysis/:id?review=1`. #}
-			<div class="review-stats hidden" id="review-stats"></div>
+			{# Per-player review stats. Hidden until `/analysis/:id?review=1` runs, when
+			   guigamereview.ts moves the .meta-player rows in as column headers (replacing
+			   the participant list + result banner above) and reveals it. #}
+			{% set reviewStatRows = [
+				{ key: 'inaccuracy', label: 'Inaccuracies', lapse: true },
+				{ key: 'mistake', label: 'Mistakes', lapse: true },
+				{ key: 'blunder', label: 'Blunders', lapse: true },
+				{ key: 'acpl', label: 'Avg. cp loss', lapse: false }
+			] %}
+			<div class="review-stats hidden" id="review-stats">
+				{% for color in [p.WHITE, p.BLACK] %}
+				<div class="review-stats-col" data-player="{{ color }}">
+					<div class="review-accuracy">
+						<span class="review-accuracy-value">&mdash;</span>
+						<span class="review-stat-label">Accuracy</span>
+					</div>
+					{% for row in reviewStatRows %}
+					<div class="review-stat-row{{ ' review-stat-action unselectable' if row.lapse }}"{% if row.lapse %} tabindex="0" role="button" title="Go to next {{ row.label | lower }}" data-classification="{{ row.key }}"{% endif %}>
+						<span class="review-stat-value review-stat-{{ row.key }}">0</span>
+						<span class="review-stat-label">{{ row.label }}</span>
+					</div>
+					{% endfor %}
+				</div>
+				{% endfor %}
+			</div>
 		</div>
 		{% else %}
 		{# Variant + modifiers picker #}
