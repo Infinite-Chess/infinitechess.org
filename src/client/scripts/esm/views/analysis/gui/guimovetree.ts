@@ -526,23 +526,6 @@ function navigateToNode(node: AnalysisMoveNode): void {
 	if (wasAlreadySelected && node.ply >= 0) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
 }
 
-/**
- * Adds the engine's best continuation as a variation before every reviewed blunder.
- * Capped at 6 plies (3 full moves) — enough to show why the move was better without
- * spelling out a whole alternate game — and also stopped at the first illegal or
- * terminal move. The viewer's current node is restored synchronously.
- */
-function addBlunderVariations(): void {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile || gamesession.isLoading()) return;
-	const restoreNode = movetree.getCurrentNode(gamefile) ?? movetree.getRoot();
-
-	for (const review of gamereview.getReviews()) addBlunderVariationAtTree(review);
-
-	if (restoreNode) navigateToAnalysisNode(gamefile, restoreNode);
-	refresh();
-}
-
 /** Adds one newly-discovered blunder PV immediately while review is still running. */
 function addBlunderVariation(review: MoveReview): void {
 	const gamefile = gameslot.getGamefile();
@@ -593,6 +576,5 @@ function refresh(): void {
 
 export default {
 	navigateToNode,
-	addBlunderVariations,
 	addBlunderVariation,
 };
