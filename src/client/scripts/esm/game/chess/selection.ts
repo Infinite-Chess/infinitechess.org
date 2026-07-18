@@ -337,9 +337,8 @@ function testIfPieceMoved(gamefile: GameFile, mesh: Mesh | undefined): void {
  * Handles selecting a piece while viewing an earlier move. In all non-analysis games,
  * this forwards to the front instead and returns true, so the caller aborts the selection.
  *
- * In analysis, this branches from the viewed ply: the later moves are deleted so the
- * game truly sits at this position (with consistent turn/rights state), and selection
- * is allowed to proceed — so you can play a different continuation from here.
+ * In analysis, selection is simply allowed to proceed at the viewed ply (which already has
+ * consistent turn/rights/piece state) — nothing in the move list is disturbed.
  *
  * @returns Whether we actually forwarded to the front. If true, the caller should abort selection.
  */
@@ -347,12 +346,8 @@ function viewFrontIfNotViewingLatestMove(gamefile: GameFile, mesh: Mesh | undefi
 	// If we're viewing the latest move, nothing to do.
 	if (moveutil.areWeViewingLatestMove(gamefile)) return false;
 
-	// Analysis branches from this ply (via the injected brancher) instead
-	// of forwarding, so a new continuation can be played from here.
-	if (viewedPositionBrancher) {
-		viewedPositionBrancher(gamefile, mesh);
-		return false; // State is now consistent at this ply; let the selection proceed.
-	}
+	// Analysis allows piece selection instead of forcing forward to front.
+	if (viewedPositionBrancher) return false;
 
 	movesequence.viewFront(gamefile, mesh);
 	// Also animate the last move
@@ -541,6 +536,12 @@ function moveGamefilePiece(gamefile: GameFile, mesh: Mesh | undefined, coords: C
 	// Check if the move is a pawn promotion
 	if (coords.promoteTrigger && gamesession.getGameType() !== 'editor')
 		return onPromoteTrigger(coords);
+
+	// In analysis, committing a move while viewing an earlier ply branches the
+	// game from here first: the later moves are deleted so this ply becomes the
+	// true front, then the new move appends as a fresh continuation.
+	if (viewedPositionBrancher && !moveutil.areWeViewingLatestMove(gamefile))
+		viewedPositionBrancher(gamefile, mesh);
 
 	const strippedCoords: Coords = moveutil.stripSpecialMoveTagsFromCoords(coords);
 	const moveTagged: MoveTagged = {
