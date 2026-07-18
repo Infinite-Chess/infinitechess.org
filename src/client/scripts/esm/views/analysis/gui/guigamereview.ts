@@ -139,9 +139,9 @@ function onReviewFinished(): void {
 function revealStats(): void {
 	if (!element_Stats.classList.contains('hidden')) return;
 
-	const metaPlayers = document.querySelector('.game-meta .meta-players');
-	const resultBanner = document.querySelector('.game-meta .result-banner');
-	const playerRows = [...(metaPlayers?.querySelectorAll('.meta-player') ?? [])];
+	const metaPlayers = document.querySelector('.game-meta .meta-players')!;
+	const resultBanner = document.querySelector('.game-meta .result-banner')!;
+	const playerRows = [...metaPlayers.querySelectorAll('.meta-player')];
 
 	for (const [column, color] of [
 		[0, p.WHITE],
@@ -173,8 +173,8 @@ function revealStats(): void {
 		});
 	}
 
-	metaPlayers?.classList.add('hidden');
-	resultBanner?.classList.add('hidden');
+	metaPlayers.classList.add('hidden');
+	resultBanner.classList.add('hidden');
 	element_Stats.classList.remove('hidden');
 }
 
