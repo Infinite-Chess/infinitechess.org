@@ -114,14 +114,7 @@ function getHomeRanks(position: Map<CoordsKey, number>): { white?: bigint; black
  */
 function homeRank(position: Map<CoordsKey, number>, color: Player): bigint | undefined {
 	// Selects which extreme y wins ties and the pieceless fallback
-	const bias =
-		color === p.WHITE
-			? 1n
-			: color === p.BLACK
-				? -1n
-				: (() => {
-						throw new Error(`Invalid color: ${color}`);
-					})();
+	const bias = color === p.WHITE ? 1n : color === p.BLACK ? -1n : (() => { throw new Error(`Invalid color: ${color}`) })(); // prettier-ignore
 	const counts = new Map<bigint, number>(); // rank -> non-pawn count
 	let fallback: bigint | undefined;
 	let best: bigint | undefined;
