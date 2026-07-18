@@ -466,6 +466,12 @@ function closeContextMenuOnEscape(e: KeyboardEvent): void {
  * its position, restoring that branch's own conclusion.
  */
 function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): void {
+	// A node detached from the tree has no valid line to navigate — bail rather than corrupt
+	// the flat move list. Happens when a game review holds mainline nodes captured at its start
+	// and the user deletes a mainline move (e.g. clicking the eval graph or a lapse stat after).
+	const root = movetree.getRoot();
+	if (!root || !movetree.isInSubtree(root, node)) return;
+
 	const mesh = gameslot.getMesh();
 	premoves.cancelPremoves(gamefile, mesh);
 
