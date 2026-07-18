@@ -13,11 +13,9 @@ import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type {
-	AnalysisCommand,
-	AnalysisResponse,
-	EvaluateResult,
-} from './apeironanalysis.worker.js';
+import type { AnalysisCommand, AnalysisResponse } from './apeironanalysis.worker.js';
+
+import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
@@ -57,7 +55,7 @@ export interface MoveReview {
 	classification?: ClassificationKey;
 	/** Win-probability loss [0,1] from the mover's perspective. */
 	wpLoss: number;
-	/** Lichess-style per-move accuracy percentage [0,100]. */
+	/** Per-move accuracy percentage [0,100]. */
 	accuracy: number;
 	/** The engine's best move token ("x,y>x,y"); absent for forced/unevaluated moves. */
 	bestMove?: string;
@@ -109,7 +107,7 @@ interface CachedGameReview {
 
 // Constants ----------------------------------------------------------------------
 
-/** Chess.com-style classification thresholds on win-probability loss [0,1]. */
+/** Classification thresholds on win-probability loss [0,1]. */
 const THRESHOLDS: { max: number; key: ClassificationKey }[] = [
 	{ max: 0.001, key: 'best' },
 	{ max: 0.02, key: 'excellent' },
@@ -138,7 +136,11 @@ const ACPL_CLAMP = 1000;
 const MAX_POSITION_ATTEMPTS = 2;
 /** Fishnet analyzes five reported positions plus one overlapping TT warmup per chunk. */
 const REAL_POSITIONS_PER_CHUNK = 5;
-/** Bump whenever review interpretation or the persisted result shape changes. */
+/**
+ * Force-invalidates all persisted reviews. Bump when the stored shape changes in a way
+ * zod can't reject (same shape, new meaning), NOT for interpretation changes — the cache
+ * holds only raw engine results, and classifications are recomputed on restore.
+ */
 const REVIEW_CACHE_SCHEMA_VERSION = 2;
 const REVIEW_CACHE_KEY_PREFIX = 'infinitechess-game-review-';
 /** How long a persisted review survives LocalStorage. */
@@ -154,15 +156,53 @@ const ICN_OPTIONS = {
 	move_numbers: false,
 } as const;
 
-// State ----------------------------------------------------------------------------
-
-let status: ReviewStatus = 'idle';
-let workers: Worker[] = [];
 interface ReviewWorkItem {
 	index: number;
 	warmup?: true;
 	newChunk?: true;
 }
+
+// Schemas ----------------------------------------------------------------------------
+
+/** The result of a one-shot `evaluate` command (see {@link EvaluateResultSchema}). */
+export type EvaluateResult = z.infer<typeof EvaluateResultSchema>;
+/**
+ * The result of a one-shot `evaluate` command, and the source of truth for the
+ * {@link EvaluateResult} type. Score is from the side-to-move's perspective; both
+ * absent on a terminal position (no legal moves).
+ */
+const EvaluateResultSchema = z.object({
+	requestId: z.int(),
+	/** Centipawns. Absent when mating or terminal. */
+	cp: z.number().optional(),
+	/** Full moves to mate (negative = getting mated). */
+	mate: z.number().optional(),
+	/** The engine's best line as compact move tokens ("x,y>x,y=Q"). Absent on terminal positions. */
+	pv: z.array(z.string()).optional(),
+	/** 0 = terminal (checkmate/stalemate), 1 = forced move (not searched). */
+	legalMoveCount: z.int(),
+	/** Whether the side to move is in check (distinguishes checkmate from stalemate when terminal). */
+	inCheck: z.boolean(),
+	/** The depth actually searched (0 for terminal/forced positions). */
+	depth: z.int(),
+	/** Echoed for an unreported TT-warming search. */
+	warmup: z.boolean().optional(),
+});
+
+/** Validates a persisted review's shape (see {@link CachedGameReview}). */
+const CachedGameReviewSchema = z.object({
+	schemaVersion: z.literal(REVIEW_CACHE_SCHEMA_VERSION),
+	gameFingerprint: z.string(),
+	engineUrl: z.string(),
+	workerUrl: z.string(),
+	depth: z.int(),
+	results: z.array(EvaluateResultSchema),
+});
+
+// State ----------------------------------------------------------------------------
+
+let status: ReviewStatus = 'idle';
+let workers: Worker[] = [];
 
 /** The work item each worker is currently evaluating (undefined = idle). */
 const workerAssignment = new Map<Worker, ReviewWorkItem>();
@@ -257,7 +297,7 @@ function pickReviewDepth(plies: number, workerCount: number): number {
 /** Engine workers to spawn: one per hardware thread minus one, leaving the UI responsive. */
 function pickWorkerCount(totalChunks: number): number {
 	const hw = Math.max(1, (navigator.hardwareConcurrency || 4) - 1);
-	return Math.max(1, Math.min(hw, totalChunks));
+	return math.clamp(hw, 1, totalChunks);
 }
 
 /**
@@ -365,9 +405,10 @@ function restoreCachedReview(): boolean {
 	const key = reviewCacheKey();
 	if (!key) return false;
 
-	const cached: CachedGameReview | undefined = LocalStorage.loadItem(key);
-	if (!isCompatibleCache(cached)) {
-		if (cached !== undefined) LocalStorage.deleteItem(key);
+	const raw: unknown = LocalStorage.loadItem(key);
+	const cached = parseCompatibleCache(raw);
+	if (!cached) {
+		if (raw !== undefined) LocalStorage.deleteItem(key);
 		return false;
 	}
 
@@ -385,36 +426,27 @@ function restoreCachedReview(): boolean {
 	return true;
 }
 
-function isCompatibleCache(cached: CachedGameReview | undefined): cached is CachedGameReview {
+/**
+ * Validates a persisted review and confirms it's compatible with the current game
+ * and engine — same fingerprint/URLs, deep enough, matching position count, and
+ * each result indexed by its position. Returns undefined when unusable.
+ */
+function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
+	const parsed = CachedGameReviewSchema.safeParse(raw);
+	if (!parsed.success) return undefined;
+	const cached = parsed.data;
+
 	if (
-		cached === undefined ||
-		cached.schemaVersion !== REVIEW_CACHE_SCHEMA_VERSION ||
 		cached.gameFingerprint !== gameFingerprint ||
 		cached.engineUrl !== window.analysisPageData.engineUrl ||
 		cached.workerUrl !== window.analysisPageData.workerUrl ||
-		!Number.isInteger(cached.depth) ||
 		cached.depth < reviewDepth ||
-		!Array.isArray(cached.results) ||
-		cached.results.length !== results.length
+		cached.results.length !== results.length ||
+		cached.results.some((result, index) => result.requestId !== index)
 	)
-		return false;
+		return undefined;
 
-	return cached.results.every((result, index) => isCachedEvaluation(result, index));
-}
-
-function isCachedEvaluation(value: unknown, index: number): value is EvaluateResult {
-	if (typeof value !== 'object' || value === null) return false;
-	const result = value as Partial<EvaluateResult>;
-	return (
-		result.requestId === index &&
-		Number.isInteger(result.legalMoveCount) &&
-		typeof result.inCheck === 'boolean' &&
-		Number.isInteger(result.depth) &&
-		(result.cp === undefined || typeof result.cp === 'number') &&
-		(result.mate === undefined || typeof result.mate === 'number') &&
-		(result.pv === undefined ||
-			(Array.isArray(result.pv) && result.pv.every((move) => typeof move === 'string')))
-	);
+	return cached;
 }
 
 function persistCompletedReview(): void {
@@ -873,17 +905,23 @@ function onFinished(listener: ReviewListeners['finished']): void {
 }
 
 export default {
+	// Constants
 	CLASSIFICATION_DISPLAY,
+	// Lifecycle
 	canStart,
 	getStatus,
 	start,
+	// Worker pool
+	positionIsEvaluable,
+	// Summaries
 	getSummary,
+	// Queries for the renderers
 	getReviewForNode,
 	getReviews,
 	getMainlineNodes,
 	getDivision,
 	getWhiteCpAt,
-	positionIsEvaluable,
+	// Subscriptions
 	onProgress,
 	onClassified,
 	onFinished,

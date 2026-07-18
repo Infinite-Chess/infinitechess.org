@@ -12,8 +12,6 @@
  * light/dark theme.
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
-
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 import space from '../../../game/misc/space.js';
