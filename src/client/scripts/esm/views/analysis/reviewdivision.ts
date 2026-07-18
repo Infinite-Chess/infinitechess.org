@@ -99,16 +99,46 @@ function determineDivision(
 	return { ...(middle !== undefined && { middle }), ...(end !== undefined && { end }) };
 }
 
+/** Calculates the variants home ranks. */
 function getHomeRanks(position: Map<CoordsKey, number>): { white?: bigint; black?: bigint } {
-	let white: bigint | undefined;
-	let black: bigint | undefined;
+	return {
+		white: homeRank(position, p.WHITE),
+		black: homeRank(position, p.BLACK),
+	};
+}
+
+/**
+ * Calculates the player's home rank: the y-rank holding the most non-pawn pieces.
+ * Ties, and armies with no non-pawn pieces, resolve to the highest rank for white
+ * and the lowest rank for black.
+ */
+function homeRank(position: Map<CoordsKey, number>, color: Player): bigint | undefined {
+	// Selects which extreme y wins ties and the pieceless fallback
+	const bias =
+		color === p.WHITE
+			? 1n
+			: color === p.BLACK
+				? -1n
+				: (() => {
+						throw new Error(`Invalid color: ${color}`);
+					})();
+	const counts = new Map<bigint, number>(); // rank -> non-pawn count
+	let fallback: bigint | undefined;
+	let best: bigint | undefined;
+	let bestCount = 0;
 	for (const [key, type] of position) {
-		const color = typeutil.getColorFromType(type);
+		if (typeutil.getColorFromType(type) !== color) continue;
 		const y = coordutil.getCoordsFromKey(key)[1];
-		if (color === p.WHITE && (white === undefined || y < white)) white = y;
-		if (color === p.BLACK && (black === undefined || y > black)) black = y;
+		if (fallback === undefined || bias * (y - fallback) > 0n) fallback = y;
+		if (typeutil.getRawType(type) === r.PAWN) continue;
+		const count = (counts.get(y) ?? 0) + 1;
+		counts.set(y, count);
+		if (count > bestCount || (count === bestCount && bias * (y - best!) > 0n)) {
+			best = y;
+			bestCount = count;
+		}
 	}
-	return { white, black };
+	return best ?? fallback;
 }
 
 /** Non-pawn, non-royal material for the two chess players. */
