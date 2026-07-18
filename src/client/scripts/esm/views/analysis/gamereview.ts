@@ -144,6 +144,16 @@ const REVIEW_CACHE_KEY_PREFIX = 'infinitechess-game-review-';
 /** How long a persisted review survives LocalStorage. */
 const REVIEW_CACHE_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 365; // 1 year
 
+/** ICN serialization options — compact, position-only, no move numbers (matches ceval). */
+const ICN_OPTIONS = {
+	compact: true,
+	skipPosition: false,
+	spaces: false,
+	comments: false,
+	make_new_lines: false,
+	move_numbers: false,
+} as const;
+
 // State ----------------------------------------------------------------------------
 
 let status: ReviewStatus = 'idle';
@@ -563,16 +573,6 @@ function dispatchNext(worker: Worker): void {
 		return;
 	}
 }
-
-/** ICN serialization options — compact, position-only, no move numbers (matches ceval). */
-const ICN_OPTIONS = {
-	compact: true,
-	skipPosition: false,
-	spaces: false,
-	comments: false,
-	make_new_lines: false,
-	move_numbers: false,
-} as const;
 
 /** Canonical ICN for the position after `index` mainline plies. */
 function serializePosition(index: number): string {
