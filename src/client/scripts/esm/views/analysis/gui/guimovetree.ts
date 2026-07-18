@@ -551,8 +551,6 @@ function addBlunderVariationAtTree(review: MoveReview): boolean {
 	// a node no longer attached to the tree — skip it rather than navigate a broken line.
 	const root = movetree.getRoot();
 	if (!root || !movetree.isInSubtree(root, parent)) return false;
-	// 6 plies (3 full moves): our coordinate notation is wider than lila's SAN, so a
-	// 12-ply line would span ~4 rows instead of two. Enough to convey the better idea.
 	const pv = review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES);
 	if (parent.children.some((child) => child.move?.token === pv[0])) return false;
 	addVariationAt(parent, pv);
