@@ -334,6 +334,19 @@ function flattenRunsToPolyline(
 	return polyline;
 }
 
+/** Fills a small dot at a graph point (current `ctx.fillStyle`). */
+function drawGraphDot(
+	ctx: CanvasRenderingContext2D,
+	point: { index: number; cp: number },
+	width: number,
+	height: number,
+	total: number,
+): void {
+	ctx.beginPath();
+	ctx.arc(graphX(point.index, width, total), graphY(point.cp, height), 2, 0, Math.PI * 2);
+	ctx.fill();
+}
+
 /** Draws the white-POV eval line, phase/current/hover lines, and lapse dots. */
 function drawGraph(): void {
 	const canvas = element_GraphCanvas;
@@ -407,6 +420,9 @@ function drawGraph(): void {
 	// that could drift a pixel or two off from what the fill actually drew.
 	ctx.strokeStyle = lineColor;
 	ctx.lineWidth = 1.5;
+	// Round joins: the default miter join projects a sharp peak/valley's outer corner well past
+	// the actual vertex, so the stroke visibly spiked beyond the lapse dot drawn there.
+	ctx.lineJoin = 'round';
 	ctx.beginPath();
 	for (const runs of segmentRuns) {
 		flattenRunsToPolyline(runs).forEach((point, i) => {
@@ -417,19 +433,15 @@ function drawGraph(): void {
 		});
 	}
 	ctx.stroke();
-	// Isolated positions have no neighbor to draw a line to; mark them with a dot.
+	// Dot the endpoints on either side of every gap — where the eval line disconnects because a
+	// stretch of positions had out-of-bounds pieces we couldn't evaluate — so the break reads as
+	// intentional. Also dots isolated points (no neighbor, so no line was drawn for them at all).
+	ctx.fillStyle = lineColor;
 	for (const segment of segments) {
-		if (segment.length !== 1) continue;
-		ctx.beginPath();
-		ctx.arc(
-			graphX(segment[0]!.index, width, total),
-			graphY(segment[0]!.cp, height),
-			2,
-			0,
-			Math.PI * 2,
-		);
-		ctx.fillStyle = lineColor;
-		ctx.fill();
+		const first = segment[0]!;
+		const last = segment[segment.length - 1]!;
+		if (first.index > 0 || segment.length === 1) drawGraphDot(ctx, first, width, height, total);
+		if (last.index < total - 1) drawGraphDot(ctx, last, width, height, total);
 	}
 
 	// Lapse dots, at the position after the classified move.
@@ -541,7 +553,9 @@ function initGraphInteraction(canvas: HTMLCanvasElement): void {
 
 function showGraphTooltip(event: MouseEvent, index: number): void {
 	const cp = gamereview.getWhiteCpAt(index);
-	if (cp === undefined) return element_GraphTooltip.classList.add('hidden');
+	const outOfBounds = cp === undefined && gamereview.isPositionOutOfBounds(index);
+	// A gap that isn't out of bounds is a position still being evaluated — nothing to show yet.
+	if (cp === undefined && !outOfBounds) return element_GraphTooltip.classList.add('hidden');
 
 	const node = index > 0 ? gamereview.getMainlineNodes()[index - 1] : undefined;
 	const moveNumber = index > 0 ? Math.floor((index - 1) / 2) + 1 : 0;
@@ -554,12 +568,17 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 				abbrev: true,
 			})
 		: 'Starting position';
-	const review = node ? gamereview.getReviewForNode(node.id) : undefined;
-	const classification = review?.classification
-		? ` · ${gamereview.CLASSIFICATION_DISPLAY[review.classification].label}`
-		: '';
 	element_GraphTooltipMove.textContent = `${prefix}${move}`;
-	element_GraphTooltipEval.textContent = `Advantage: ${formatAdvantage(cp)}${classification}`;
+
+	if (outOfBounds) {
+		element_GraphTooltipEval.textContent = 'Out of bounds — not evaluated';
+	} else {
+		const review = node ? gamereview.getReviewForNode(node.id) : undefined;
+		const classification = review?.classification
+			? ` · ${gamereview.CLASSIFICATION_DISPLAY[review.classification].label}`
+			: '';
+		element_GraphTooltipEval.textContent = `Advantage: ${formatAdvantage(cp!)}${classification}`;
+	}
 	element_GraphTooltip.classList.remove('hidden');
 
 	const rect = element_Graph.getBoundingClientRect();
@@ -568,10 +587,11 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 	const localX = event.clientX - rect.left;
 	element_GraphTooltip.style.left = `${math.clamp(localX - tooltipWidth / 2, 6, rect.width - tooltipWidth - 6)}px`;
 
-	// Auto-position vertically on whichever side of the hovered point has more room —
-	// so the tooltip never sits directly over the very data point it's describing.
+	// Auto-position vertically on whichever side of the hovered point has more room — so the
+	// tooltip never sits over the point it describes. An out-of-bounds gap has no point; treat it
+	// as centered, which sends the tooltip to the top.
 	const graphHeight = element_Graph.clientHeight;
-	const pointY = graphY(cp, graphHeight);
+	const pointY = cp !== undefined ? graphY(cp, graphHeight) : graphHeight / 2;
 	element_GraphTooltip.style.top =
 		pointY < graphHeight / 2
 			? `${Math.max(TOOLTIP_TOP_MARGIN, graphHeight - tooltipHeight - TOOLTIP_BOTTOM_MARGIN)}px` // Point is up top — tooltip goes near the bottom.

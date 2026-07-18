@@ -14,7 +14,6 @@ import math from '../../../../../shared/util/math/math.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
-import { GlobalGameState } from '../../../../../shared/chess/logic/state.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import { GameBus } from '../../game/GameBus.js';
@@ -466,20 +465,7 @@ function getViewedPositionIcn(gamefile: GameFile): string {
 	const safeStartPly = analysisenginebounds.getSafeStartPly(gamefile);
 
 	// Re-base the start snapshot to safeStartPly (no-op at ply 0).
-	const snapshot = gamecompressor.GameToPosition(
-		{
-			position: longformIn.position!,
-			turnOrder: longformIn.gameRules.turnOrder,
-			fullMove: longformIn.fullMove,
-			state_global: longformIn.state_global as GlobalGameState,
-		},
-		gamefile.moves,
-		safeStartPly,
-	);
-	longformIn.position = snapshot.position;
-	longformIn.fullMove = snapshot.fullMove;
-	longformIn.state_global = snapshot.state_global;
-	longformIn.moves = (longformIn.moves ?? []).slice(safeStartPly, viewedPlyCount);
+	gamecompressor.rebaseToPly(longformIn, gamefile.moves, safeStartPly, viewedPlyCount);
 
 	// Result/Termination are irrelevant to the engine
 	delete longformIn.metadata.Result;

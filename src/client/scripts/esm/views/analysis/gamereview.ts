@@ -9,6 +9,7 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
@@ -19,6 +20,7 @@ import type {
 } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import icnconverter, { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -137,7 +139,7 @@ const MAX_POSITION_ATTEMPTS = 2;
 /** Fishnet analyzes five reported positions plus one overlapping TT warmup per chunk. */
 const REAL_POSITIONS_PER_CHUNK = 5;
 /** Bump whenever review interpretation or the persisted result shape changes. */
-const REVIEW_CACHE_SCHEMA_VERSION = 1;
+const REVIEW_CACHE_SCHEMA_VERSION = 2;
 const REVIEW_CACHE_KEY_PREFIX = 'infinitechess-game-review-';
 /** How long a persisted review survives LocalStorage. */
 const REVIEW_CACHE_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 365; // 1 year
@@ -163,6 +165,10 @@ const positionAttempts = new Map<number, number>();
 
 /** The mainline nodes captured when the review started (moves[i] = nodes[i].move). */
 let mainlineNodes: AnalysisMoveNode[] = [];
+/** The mainline moves (nodes' moves), captured at review start for out-of-bounds history re-basing. */
+let mainlineMoves: MoveFull[] = [];
+/** Safe start ply per position index (analysisenginebounds.getSafeStartPlies); 0 = full history. */
+let safeStartByIndex: number[] = [];
 /** The game serialized once at review start; `.moves` is re-sliced per position. */
 let longformIn: LongFormatIn | undefined;
 /** Turn order captured at review start, for mover resolution. */
@@ -300,7 +306,11 @@ function start(): void {
 	const gamefile: GameFile = gameslot.getGamefile()!;
 
 	mainlineNodes = captureMainline();
+	mainlineMoves = mainlineNodes.map((node) => node.move!);
 	turnOrder = [...gamefile.gameRules.turnOrder];
+	// Per position, the ply to restart the encoded game from when earlier history left the engine's
+	// safe coordinate range (unreplayable). Precomputed in one pass; 0 = full history (common case).
+	safeStartByIndex = analysisenginebounds.getSafeStartPlies(gamefile, mainlineMoves);
 
 	// Serialize the game once; each position re-slices the move list.
 	longformIn = gamecompressor.compressGamefile(gamefile);
@@ -512,44 +522,82 @@ function failReview(): void {
 	for (const listener of listeners.finished) listener();
 }
 
+/** Whether position `index` is itself within the engine's safe coordinate range (evaluable). */
+function positionIsEvaluable(index: number): boolean {
+	// safeStartByIndex[index] > index exactly when ply `index` is the latest out-of-bounds position.
+	return (safeStartByIndex[index] ?? 0) <= index;
+}
+
 /** Hands the worker the next queued position, building its ICN on demand. */
 function dispatchNext(worker: Worker): void {
-	let localChunk = workerChunk.get(worker);
-	if (!localChunk || localChunk.length === 0) {
-		localChunk = chunkQueue.shift();
-		if (!localChunk) return;
-		workerChunk.set(worker, localChunk);
+	for (;;) {
+		let localChunk = workerChunk.get(worker);
+		if (!localChunk || localChunk.length === 0) {
+			localChunk = chunkQueue.shift();
+			if (!localChunk) return;
+			workerChunk.set(worker, localChunk);
+		}
+		const work = localChunk.shift()!;
+		const index = work.index;
+
+		// A position with a piece outside the engine's safe coordinate range can't be evaluated
+		// (its coords overflow i64). Skip it — record an empty eval for real positions so it's
+		// treated like a failed one: its eval carries over and moves crossing it stay unclassified.
+		if (!positionIsEvaluable(index)) {
+			if (!work.warmup) receiveEvaluation({ requestId: index, legalMoveCount: 2, inCheck: false, depth: 0 }); // prettier-ignore
+			if (status !== 'running') return; // receiveEvaluation may have finished the review.
+			continue; // Pull the next work item for this worker.
+		}
+
+		workerAssignment.set(worker, work);
+		if (!work.warmup) positionAttempts.set(index, (positionAttempts.get(index) ?? 0) + 1);
+
+		const icn = serializePosition(index);
+		icnByPosition[index] = icn;
+
+		worker.postMessage({
+			cmd: 'evaluate',
+			requestId: index, // The position index doubles as the request id.
+			icn,
+			maxDepth: reviewDepth,
+			...(work.newChunk && { newChunk: true }),
+			...(work.warmup && { warmup: true }),
+		} satisfies AnalysisCommand);
+		return;
 	}
-	const work = localChunk.shift()!;
-	const index = work.index;
-
-	workerAssignment.set(worker, work);
-	if (!work.warmup) positionAttempts.set(index, (positionAttempts.get(index) ?? 0) + 1);
-
-	const icn = serializePosition(index);
-	icnByPosition[index] = icn;
-
-	worker.postMessage({
-		cmd: 'evaluate',
-		requestId: index, // The position index doubles as the request id.
-		icn,
-		maxDepth: reviewDepth,
-		...(work.newChunk && { newChunk: true }),
-		...(work.warmup && { warmup: true }),
-	} satisfies AnalysisCommand);
 }
+
+/** ICN serialization options — compact, position-only, no move numbers (matches ceval). */
+const ICN_OPTIONS = {
+	compact: true,
+	skipPosition: false,
+	spaces: false,
+	comments: false,
+	make_new_lines: false,
+	move_numbers: false,
+} as const;
 
 /** Canonical ICN for the position after `index` mainline plies. */
 function serializePosition(index: number): string {
 	longformIn!.moves = mainlineNodes.slice(0, index).map((node) => node.move!);
-	return icnconverter.LongToShort_Format(longformIn!, {
-		compact: true,
-		skipPosition: false,
-		spaces: false,
-		comments: false,
-		make_new_lines: false,
-		move_numbers: false,
-	});
+
+	// Clamp to `index`: an out-of-bounds position's safe start is index+1 (unrepresentable). It's
+	// never dispatched to a worker (dispatchNext skips it), but fingerprint/cache callers still ask
+	// for its ICN — clamping keeps GameToPosition within the move list instead of overrunning it.
+	const safeStart = Math.min(safeStartByIndex[index] ?? 0, index);
+	if (safeStart === 0) return icnconverter.LongToShort_Format(longformIn!, ICN_OPTIONS); // Common path.
+
+	// Earlier history left the engine's safe coordinate range: re-base past it (see
+	// analysisenginebounds.getSafeStartPlies). Rare, so we copy onto a fresh longform rather than
+	// mutate the shared base — the position/state GameToPosition rewrites must not leak across calls.
+	const rebased: LongFormatIn = {
+		...longformIn!,
+		gameRules: { ...longformIn!.gameRules, turnOrder: [...longformIn!.gameRules.turnOrder] },
+		position: jsutil.deepCopyObject(longformIn!.position!),
+		state_global: jsutil.deepCopyObject(longformIn!.state_global),
+	};
+	gamecompressor.rebaseToPly(rebased, mainlineMoves, safeStart, index);
+	return icnconverter.LongToShort_Format(rebased, ICN_OPTIONS);
 }
 
 // Result processing --------------------------------------------------------------------------
@@ -667,6 +715,10 @@ function classifyReadyMoves(): void {
 /** The position's white-POV effective cp; forced/terminal/unevaluated positions derive it. */
 function resolveWhiteCp(index: number): number | undefined {
 	if (effectiveWhiteCp[index] !== undefined) return effectiveWhiteCp[index];
+	// Out-of-bounds positions are never evaluated: leave their cp undefined so the eval graph
+	// breaks into a disconnected segment here, rather than carrying a neighbor's eval across a
+	// region we couldn't analyze. Their moves stay unclassified regardless (see classifyMove).
+	if (!positionIsEvaluable(index)) return undefined;
 	const result = results[index];
 	if (!result) return undefined;
 	const mover = moverAtPly(index);
@@ -807,6 +859,11 @@ function getWhiteCpAt(index: number): number | undefined {
 	return effectiveWhiteCp[index];
 }
 
+/** Whether position `index` has a piece outside the engine's safe range (so it's left unevaluated). */
+function isPositionOutOfBounds(index: number): boolean {
+	return !positionIsEvaluable(index);
+}
+
 // Subscriptions ---------------------------------------------------------------------------------
 
 function notifyProgress(): void {
@@ -834,6 +891,7 @@ export default {
 	getMainlineNodes,
 	getDivision,
 	getWhiteCpAt,
+	isPositionOutOfBounds,
 	onProgress,
 	onClassified,
 	onFinished,

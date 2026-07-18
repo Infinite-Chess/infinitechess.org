@@ -91,6 +91,38 @@ function compressGamefile(
 	return long_format_in;
 }
 
+/**
+ * Re-bases a compressed game to begin at ply `startPly` instead of ply 0: advances the position
+ * snapshot to that ply (carrying its halfmove clock, castling rights, en passant, turn, and
+ * fullmove) and keeps only moves [startPly, endPly). MUTATES `longform` in place; a no-op at ply 0.
+ *
+ * Used to drop history the engine can't replay — positions whose coords left the safe i64 range.
+ * The fifty-move counter survives (it rides in the snapshot's state); only repetition detection
+ * across the cut is lost. `snapshotMoves` is the full move list the snapshot is advanced through.
+ */
+function rebaseToPly(
+	longform: LongFormatIn,
+	snapshotMoves: MoveFull[],
+	startPly: number,
+	endPly: number,
+): void {
+	// The LongFormatIn fields are the same objects a SimplifiedGameState holds, just typed looser.
+	const snapshot = GameToPosition(
+		{
+			position: longform.position!,
+			turnOrder: longform.gameRules.turnOrder,
+			fullMove: longform.fullMove,
+			state_global: longform.state_global,
+		} as SimplifiedGameState,
+		snapshotMoves,
+		startPly,
+	);
+	longform.position = snapshot.position;
+	longform.fullMove = snapshot.fullMove;
+	longform.state_global = snapshot.state_global;
+	longform.moves = (longform.moves ?? []).slice(startPly, endPly);
+}
+
 function convertMovesToICNConverterInMove(moves: MoveFull[]): MovePreprint[] {
 	const mappedMoves = moves.map((move: MoveFull) => {
 		const movePreprint: MovePreprint = {
@@ -159,6 +191,7 @@ function GameToPosition(
 
 export default {
 	compressGamefile,
+	rebaseToPly,
 	GameToPosition,
 };
 
