@@ -320,10 +320,7 @@ function start(): void {
 	// so every reviewed position is evaluated over the full safe coordinate range. Matches ceval.
 	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
 	gameFingerprint = serializePosition(mainlineNodes.length);
-	division = reviewdivision.determineDivision(
-		longformIn.position,
-		mainlineNodes.map((node) => node.move!),
-	);
+	division = reviewdivision.determineDivision(longformIn.position, mainlineMoves);
 
 	const totalPositions = mainlineNodes.length + 1;
 	chunkQueue = buildReverseChunks(totalPositions);
@@ -525,7 +522,7 @@ function failReview(): void {
 /** Whether position `index` is itself within the engine's safe coordinate range (evaluable). */
 function positionIsEvaluable(index: number): boolean {
 	// safeStartByIndex[index] > index exactly when ply `index` is the latest out-of-bounds position.
-	return (safeStartByIndex[index] ?? 0) <= index;
+	return safeStartByIndex[index]! <= index;
 }
 
 /** Hands the worker the next queued position, building its ICN on demand. */
@@ -579,12 +576,12 @@ const ICN_OPTIONS = {
 
 /** Canonical ICN for the position after `index` mainline plies. */
 function serializePosition(index: number): string {
-	longformIn!.moves = mainlineNodes.slice(0, index).map((node) => node.move!);
+	longformIn!.moves = mainlineMoves.slice(0, index);
 
 	// Clamp to `index`: an out-of-bounds position's safe start is index+1 (unrepresentable). It's
 	// never dispatched to a worker (dispatchNext skips it), but fingerprint/cache callers still ask
 	// for its ICN — clamping keeps GameToPosition within the move list instead of overrunning it.
-	const safeStart = Math.min(safeStartByIndex[index] ?? 0, index);
+	const safeStart = Math.min(safeStartByIndex[index]!, index);
 	if (safeStart === 0) return icnconverter.LongToShort_Format(longformIn!, ICN_OPTIONS); // Common path.
 
 	// Earlier history left the engine's safe coordinate range: re-base past it (see
