@@ -151,7 +151,6 @@ export async function downloadEngineWasm(): Promise<void> {
 		await fs.promises.rm(pkgDir, { recursive: true, force: true });
 		await Promise.all(
 			Object.entries(entries).map(async ([entryPath, bytes]) => {
-				console.log(`${label} Extracting ${entryPath}...`);
 				if (entryPath.endsWith('/')) return; // Skip dir entries; parents are made from file paths.
 				const dest = path.join(pkgDir, entryPath);
 				await fs.promises.mkdir(path.dirname(dest), { recursive: true });
