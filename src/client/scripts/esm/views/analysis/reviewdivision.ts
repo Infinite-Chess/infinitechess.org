@@ -61,6 +61,7 @@ function determineDivision(
 	if (!initial?.size) return {};
 	const position = new Map(initial);
 	const homeRanks = getHomeRanks(position);
+	const initialBackrank = backrankCounts(position, homeRanks);
 	const profile = buildPhaseProfile(initial);
 	if (!profile) return {};
 	const initialMixedness = mixedness(position, homeRanks);
@@ -77,7 +78,7 @@ function determineDivision(
 				metrics.captureRatio >= 0.04 ||
 				metrics.development >= 0.38);
 		const setupDispersed =
-			backrankSparse(position, homeRanks) &&
+			backrankSparse(position, homeRanks, initialBackrank) &&
 			metrics.development >= 0.18 &&
 			mixednessGain >= Math.max(30, profile.initialPieces * 0.75);
 		const engaged =
@@ -150,11 +151,11 @@ function majorsAndMinors(position: Map<CoordsKey, number>): number {
 	return count;
 }
 
-/** Sparse original home ranks indicate enough development to leave the opening. */
-function backrankSparse(
+/** Counts each player's pieces currently sitting on their home rank. */
+function backrankCounts(
 	position: Map<CoordsKey, number>,
 	home: { white?: bigint; black?: bigint },
-): boolean {
+): { white: number; black: number } {
 	let white = 0;
 	let black = 0;
 	for (const [key, type] of position) {
@@ -163,7 +164,20 @@ function backrankSparse(
 		if (color === p.WHITE && y === home.white) white++;
 		if (color === p.BLACK && y === home.black) black++;
 	}
-	return (home.white !== undefined && white < 4) || (home.black !== undefined && black < 4);
+	return { white, black };
+}
+
+/**
+ * Sparse original home ranks indicate enough development to leave the opening:
+ * true once over half of either player's starting home-rank pieces have left it.
+ */
+function backrankSparse(
+	position: Map<CoordsKey, number>,
+	home: { white?: bigint; black?: bigint },
+	initial: { white: number; black: number },
+): boolean {
+	const current = backrankCounts(position, home);
+	return current.white < initial.white / 2 || current.black < initial.black / 2;
 }
 
 /**
