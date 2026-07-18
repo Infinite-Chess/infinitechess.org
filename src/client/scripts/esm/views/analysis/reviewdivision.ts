@@ -27,25 +27,15 @@ export interface ReviewDivision {
 	end?: number;
 }
 
-type Point = readonly [number, number];
-
 interface ProfilePiece {
 	key: CoordsKey;
 	type: number;
-	coords: Point;
 	raw: RawType;
 }
 
-interface PhaseSideProfile {
-	anchor: Point;
-	forward: Point;
-	boardSpan: number;
-	developmentSquares: Map<CoordsKey, number>;
-	initialPenetration: number;
-}
-
 interface PhaseProfile {
-	sides: PlayerGroup<PhaseSideProfile>;
+	/** Each player's officer starting squares (key → type), for detecting development. */
+	sides: PlayerGroup<Map<CoordsKey, number>>;
 	initialPieces: number;
 	initialCombat: number;
 	minimumMiddlePly: number;
@@ -74,9 +64,7 @@ function determineDivision(
 		const mixednessGain = Math.max(0, mixedness(position, homeRanks) - initialMixedness);
 		const developed =
 			metrics.development >= 0.24 &&
-			(metrics.penetrationGain >= 0.06 ||
-				metrics.captureRatio >= 0.04 ||
-				metrics.development >= 0.38);
+			(metrics.captureRatio >= 0.04 || metrics.development >= 0.38);
 		const setupDispersed =
 			backrankSparse(position, homeRanks, initialBackrank) &&
 			metrics.development >= 0.18 &&
@@ -262,33 +250,18 @@ function mixednessScore(y: number, white: number, black: number): number {
 	}
 }
 
-/** Builds thresholds and movement axes from the actual starting armies. */
+/** Builds phase thresholds and each army's development squares from the starting position. */
 function buildPhaseProfile(initial: Map<CoordsKey, number>): PhaseProfile | undefined {
 	const pieces = {
 		[p.WHITE]: collectPlayerPieces(initial, p.WHITE),
 		[p.BLACK]: collectPlayerPieces(initial, p.BLACK),
-	};
+	} satisfies PlayerGroup<ProfilePiece[]>;
 	if (pieces[p.WHITE].length === 0 || pieces[p.BLACK].length === 0) return undefined;
 
-	const centers = {
-		[p.WHITE]: preferredAnchor(pieces[p.WHITE]),
-		[p.BLACK]: preferredAnchor(pieces[p.BLACK]),
-	};
-	const sides: PlayerGroup<PhaseSideProfile> = {};
+	const sides: PlayerGroup<Map<CoordsKey, number>> = {};
 	for (const color of [p.WHITE, p.BLACK]) {
-		const opponent = color === p.WHITE ? p.BLACK : p.WHITE;
-		const dx = centers[opponent][0] - centers[color][0];
-		const dy = centers[opponent][1] - centers[color][1];
-		const span = Math.max(1, Math.hypot(dx, dy));
-		const forward: Point = [dx / span, dy / span];
 		const candidates = developmentCandidates(pieces[color]);
-		sides[color] = {
-			anchor: centers[color],
-			forward,
-			boardSpan: span,
-			developmentSquares: new Map(candidates.map(({ key, type }) => [key, type])),
-			initialPenetration: penetration(pieces[color], centers[color], forward, span),
-		};
+		sides[color] = new Map(candidates.map(({ key, type }) => [key, type]));
 	}
 
 	const initialPieces = pieces[p.WHITE].length + pieces[p.BLACK].length;
@@ -306,26 +279,9 @@ function collectPlayerPieces(position: Map<CoordsKey, number>, color: Player): P
 	const pieces: ProfilePiece[] = [];
 	for (const [key, type] of position) {
 		if (typeutil.getColorFromType(type) !== color) continue;
-		const [x, y] = coordutil.getCoordsFromKey(key);
-		pieces.push({ key, type, coords: [Number(x), Number(y)], raw: typeutil.getRawType(type) });
+		pieces.push({ key, type, raw: typeutil.getRawType(type) });
 	}
 	return pieces;
-}
-
-/** Royal center when present; army centroid for kingless and multi-royal setups. */
-function preferredAnchor(pieces: ProfilePiece[]): Point {
-	const royals = pieces.filter((piece) => typeutil.royals.includes(piece.raw));
-	return centroid(royals.length > 0 ? royals : pieces);
-}
-
-function centroid(pieces: ProfilePiece[]): Point {
-	let x = 0;
-	let y = 0;
-	for (const piece of pieces) {
-		x += piece.coords[0];
-		y += piece.coords[1];
-	}
-	return [x / pieces.length, y / pieces.length];
 }
 
 /** Pawn-only/horde armies fall back to all non-royal starting pieces. */
@@ -337,23 +293,11 @@ function developmentCandidates(pieces: ProfilePiece[]): ProfilePiece[] {
 	return pieces.filter((piece) => !typeutil.royals.includes(piece.raw));
 }
 
-function penetration(pieces: ProfilePiece[], anchor: Point, forward: Point, span: number): number {
-	if (pieces.length === 0) return 0;
-	let advanced = 0;
-	for (const piece of pieces) {
-		const dx = piece.coords[0] - anchor[0];
-		const dy = piece.coords[1] - anchor[1];
-		if ((dx * forward[0] + dy * forward[1]) / span >= 0.28) advanced++;
-	}
-	return advanced / pieces.length;
-}
-
 function phaseMetrics(
 	position: Map<CoordsKey, number>,
 	profile: PhaseProfile,
 ): {
 	development: number;
-	penetrationGain: number;
 	captureRatio: number;
 	captureTrigger: number;
 	combatLoss: number;
@@ -361,28 +305,24 @@ function phaseMetrics(
 	piecesRemaining: number;
 } {
 	let currentPieces = 0;
+	for (const type of position.values()) {
+		const color = typeutil.getColorFromType(type);
+		if (color === p.WHITE || color === p.BLACK) currentPieces++;
+	}
+
 	let developed = 0;
 	let developmentTotal = 0;
-	let penetrationGain = 0;
 	for (const color of [p.WHITE, p.BLACK]) {
-		const pieces = collectPlayerPieces(position, color);
-		const side = profile.sides[color]!;
-		currentPieces += pieces.length;
-		for (const [key, type] of side.developmentSquares) {
+		for (const [key, type] of profile.sides[color]!) {
 			developmentTotal++;
 			if (position.get(key) !== type) developed++;
 		}
-		penetrationGain += Math.max(
-			0,
-			penetration(pieces, side.anchor, side.forward, side.boardSpan) -
-				side.initialPenetration,
-		);
 	}
+
 	const combat = majorsAndMinors(position);
 	const captureRatio = 1 - currentPieces / profile.initialPieces;
 	return {
 		development: developmentTotal > 0 ? developed / developmentTotal : 0,
-		penetrationGain: penetrationGain / 2,
 		captureRatio,
 		captureTrigger: Math.max(0.08, 4 / profile.initialPieces),
 		combatLoss: profile.initialCombat > 0 ? 1 - combat / profile.initialCombat : 0,
