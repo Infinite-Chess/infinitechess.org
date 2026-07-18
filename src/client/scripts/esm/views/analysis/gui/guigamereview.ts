@@ -30,16 +30,16 @@ import { cpWinningChances } from '../ceval.js';
 
 // Elements ---------------------------------------------------------------------------
 
-const element_Stats = document.getElementById('review-stats');
-const element_Progress = document.getElementById('review-progress');
-const element_ProgressFill = document.getElementById('review-progress-fill');
-const element_ProgressText = document.getElementById('review-progress-text');
-const element_Graph = document.getElementById('review-graph');
-const element_GraphCanvas = document.getElementById('review-graph-canvas') as HTMLCanvasElement | null; // prettier-ignore
-const element_GraphTooltip = document.getElementById('review-graph-tooltip');
-const element_GraphTooltipMove = document.getElementById('review-graph-tooltip-move');
-const element_GraphTooltipEval = document.getElementById('review-graph-tooltip-eval');
-const element_PhaseMarkers = document.getElementById('review-phase-markers');
+const element_Stats = document.getElementById('review-stats')!;
+const element_Progress = document.getElementById('review-progress')!;
+const element_ProgressFill = document.getElementById('review-progress-fill')!;
+const element_ProgressText = document.getElementById('review-progress-text')!;
+const element_Graph = document.getElementById('review-graph')!;
+const element_GraphCanvas = document.getElementById('review-graph-canvas') as HTMLCanvasElement; // prettier-ignore
+const element_GraphTooltip = document.getElementById('review-graph-tooltip')!;
+const element_GraphTooltipMove = document.getElementById('review-graph-tooltip-move')!;
+const element_GraphTooltipEval = document.getElementById('review-graph-tooltip-eval')!;
+const element_PhaseMarkers = document.getElementById('review-phase-markers')!;
 
 /** The stat value cells per player, rebuilt when the stats columns are created. */
 const statCells: { [player: number]: Partial<Record<StatKey, HTMLElement>> } = {};
@@ -88,7 +88,7 @@ function init(): void {
 	GameBus.addEventListener('view-move', () => {
 		if (isGraphVisible()) drawGraph();
 	});
-	if (element_GraphCanvas) initGraphInteraction(element_GraphCanvas);
+	initGraphInteraction(element_GraphCanvas);
 
 	if (docutil.getQueryParam('review') === '1') {
 		GameBus.addEventListener('game-loaded', () => startRequestedReview(), { once: true });
@@ -107,9 +107,9 @@ function startRequestedReview(attempt = 0): void {
 	gamereview.start();
 
 	buildStatsColumns();
-	if (gamereview.getStatus() === 'running') element_Progress?.classList.remove('hidden');
-	element_Graph?.classList.remove('hidden');
-	element_PhaseMarkers?.replaceChildren();
+	if (gamereview.getStatus() === 'running') element_Progress.classList.remove('hidden');
+	element_Graph.classList.remove('hidden');
+	element_PhaseMarkers.replaceChildren();
 	updateProgress();
 	updateStats();
 	drawGraph();
@@ -118,16 +118,16 @@ function startRequestedReview(attempt = 0): void {
 // Progress --------------------------------------------------------------------------------
 
 function updateProgress(): void {
-	if (!element_Progress || element_Progress.classList.contains('hidden')) return;
+	if (element_Progress.classList.contains('hidden')) return;
 	const { evaluated, total, depth } = gamereview.getSummary();
 	const pct = total > 0 ? (evaluated / total) * 100 : 0;
-	element_ProgressFill!.style.width = `${pct}%`;
-	element_ProgressText!.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total} · depth ${depth}`;
+	element_ProgressFill.style.width = `${pct}%`;
+	element_ProgressText.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total} · depth ${depth}`;
 }
 
 function onReviewFinished(): void {
 	const status = gamereview.getStatus();
-	element_Progress?.classList.add('hidden');
+	element_Progress.classList.add('hidden');
 
 	if (status === 'done') {
 		drawGraph();
@@ -145,7 +145,7 @@ function onReviewFinished(): void {
  * move in as the column headers, so nothing is duplicated.
  */
 function buildStatsColumns(): void {
-	if (!element_Stats || !element_Stats.classList.contains('hidden')) return;
+	if (!element_Stats.classList.contains('hidden')) return;
 
 	const metaPlayers = document.querySelector('.game-meta .meta-players');
 	const resultBanner = document.querySelector('.game-meta .result-banner');
@@ -225,7 +225,7 @@ function cycleToLapse(color: Player, classification: LapseKey): void {
 
 /** Repaints both players' stat values from the review's current standing. */
 function updateStats(): void {
-	if (!element_Stats || element_Stats.classList.contains('hidden')) return;
+	if (element_Stats.classList.contains('hidden')) return;
 	const { summaries } = gamereview.getSummary();
 
 	for (const color of [p.WHITE, p.BLACK]) {
@@ -258,7 +258,7 @@ const CURRENT_POSITION_COLOR = '#d85000';
 let hoveredPosition: number | undefined;
 
 function isGraphVisible(): boolean {
-	return element_Graph !== null && !element_Graph.classList.contains('hidden');
+	return !element_Graph.classList.contains('hidden');
 }
 
 /** Whether the currently viewed position is on the mainline (not inside a variation). */
@@ -337,7 +337,6 @@ function flattenRunsToPolyline(
 /** Draws the white-POV eval line, phase/current/hover lines, and lapse dots. */
 function drawGraph(): void {
 	const canvas = element_GraphCanvas;
-	if (!canvas || !element_Graph) return;
 
 	const dpr = window.devicePixelRatio || 1;
 	const width = element_Graph.clientWidth;
@@ -472,7 +471,7 @@ function updateCurrentPhaseMarker(selected: number): void {
 
 /** Lila-style opening/middlegame/endgame boundaries and vertical labels. */
 function renderPhaseMarkers(total: number): void {
-	if (!element_PhaseMarkers || element_PhaseMarkers.childElementCount > 0) return;
+	if (element_PhaseMarkers.childElementCount > 0) return;
 	const { middle, end } = gamereview.getDivision();
 	const lines: { index: number; label: string }[] = [{ index: 0, label: 'Opening' }];
 	if (middle !== undefined) lines.push({ index: middle, label: 'Middlegame' });
@@ -535,13 +534,12 @@ function initGraphInteraction(canvas: HTMLCanvasElement): void {
 	});
 	canvas.addEventListener('mouseleave', () => {
 		hoveredPosition = undefined;
-		element_GraphTooltip?.classList.add('hidden');
+		element_GraphTooltip.classList.add('hidden');
 		drawGraph();
 	});
 }
 
 function showGraphTooltip(event: MouseEvent, index: number): void {
-	if (!element_Graph || !element_GraphTooltip || !element_GraphTooltipMove || !element_GraphTooltipEval) return; // prettier-ignore
 	const cp = gamereview.getWhiteCpAt(index);
 	if (cp === undefined) return element_GraphTooltip.classList.add('hidden');
 
