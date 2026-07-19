@@ -94,12 +94,7 @@ async function createVariationPlyButton(
 
 	ply.addEventListener('click', () => {
 		ply.blur();
-		if (gamesession.isLoading()) return;
-
-		const gamefile = gameslot.getGamefile()!;
-		const wasAlreadySelected = movetree.getCurrentNode(gamefile) === node;
-		navigateToAnalysisNode(gamefile, node);
-		if (wasAlreadySelected) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
+		navigateToNode(node);
 	});
 	ply.addEventListener('contextmenu', (e) => {
 		ply.blur(); // Drop the focus right-click gave it, else Escape later draws a focus-visible ring.
