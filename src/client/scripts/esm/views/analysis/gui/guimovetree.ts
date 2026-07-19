@@ -537,34 +537,21 @@ function navigateToNode(node: AnalysisMoveNode): void {
 function addBlunderVariation(review: MoveReview): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile || gamesession.isLoading()) return;
-	const restoreNode = movetree.getCurrentNode(gamefile) ?? movetree.getRoot();
-	if (!addBlunderVariationAtTree(review)) return;
-	if (restoreNode) navigateToAnalysisNode(gamefile, restoreNode);
-	refresh();
-}
-
-function addBlunderVariationAtTree(review: MoveReview): boolean {
-	if (review.classification !== 'blunder' || !review.pv?.length) return false;
+	if (review.classification !== 'blunder' || !review.pv?.length) return;
 	const parent = gamereview.getMainlineNodes()[review.ply]?.parent;
-	if (!parent) return false;
+	if (!parent) return;
 	// The review holds references to the mainline nodes captured at its start. Deleting a
 	// mainline move mid-review orphans that node's subtree, so a later blunder may branch off
 	// a node no longer attached to the tree — skip it rather than navigate a broken line.
 	const root = movetree.getRoot();
-	if (!root || !movetree.isInSubtree(root, parent)) return false;
+	if (!root || !movetree.isInSubtree(root, parent)) return;
 	const pv = review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES);
-	if (parent.children.some((child) => child.move?.token === pv[0])) return false;
-	addVariationAt(parent, pv);
-	return true;
-}
+	if (parent.children.some((child) => child.move?.token === pv[0])) return;
 
-/**
- * Appends one legal PV line below `parent`, retaining the existing mainline.
- * Does not fire 'moves-changed' event. Caller is expected to navigate back to original node.
- */
-function addVariationAt(parent: AnalysisMoveNode, tokens: string[]): void {
-	const gamefile = gameslot.getGamefile()!;
+	const restoreNode = movetree.getCurrentNode(gamefile) ?? root;
 	const mesh = gameslot.getMesh();
+
+	// Append the legal PV line below `parent`, retaining the existing mainline.
 	navigateToAnalysisNode(gamefile, parent);
 
 	// Pop gamefile.moves down to the parent so the PV appends as a fresh branch (the tree
@@ -577,12 +564,15 @@ function addVariationAt(parent: AnalysisMoveNode, tokens: string[]): void {
 	gamefile.moves.length = target + 1;
 	gamefile.gameConclusion = undefined;
 
-	for (const token of tokens) {
+	for (const token of pv) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, token);
 		if (!result.valid) break;
 		movesequence.makeMove(gamefile, mesh, result.tagged);
 		if (gamefile.gameConclusion) break;
 	}
+
+	navigateToAnalysisNode(gamefile, restoreNode);
+	refresh();
 }
 
 /** Re-renders the whole move tree (e.g. to drop stale review decorations on a re-review). */
