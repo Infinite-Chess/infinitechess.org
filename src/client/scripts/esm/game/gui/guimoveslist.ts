@@ -442,6 +442,11 @@ GameBus.addEventListener('game-loaded', () => {
 GameBus.addEventListener('moves-changed', () => {
 	renderer?.onMovesChanged();
 	enqueueRender(reconcileMovesTable);
+	updateNavButtons();
+});
+GameBus.addEventListener('view-move', () => {
+	enqueueRender(updateCurrentPly);
+	updateNavButtons();
 });
 GameBus.addEventListener('view-move', () => enqueueRender(updateCurrentPly));
 GameBus.addEventListener('game-concluded', () => enqueueRender(scrollMovesTableToBottom));
@@ -454,7 +459,6 @@ export default {
 	element_MovesTable,
 	element_GameResult,
 	update,
-	updateNavButtons,
 	enqueueRender,
 	buildPlyButton,
 	createMoveRow,

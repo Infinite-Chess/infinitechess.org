@@ -27,7 +27,6 @@ import piecemodels from '../rendering/piecemodels.js';
 import { GameBus } from '../GameBus.js';
 import gamesession from './gamesession.js';
 import frametracker from '../rendering/frametracker.js';
-import guimoveslist from '../gui/guimoveslist.js';
 import { animateMove, meshChanges } from './graphicalchanges.js';
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -48,8 +47,6 @@ function commitMove(
 
 	movepiece.makeMove(gamefile, move); // Logical changes
 
-	// GUI changes
-	guimoveslist.updateNavButtons();
 	// Forward chokepoint for the committed move list. MUST stay above the game-over checks: its reconcile
 	// has to enqueue before 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
 	GameBus.dispatch('moves-changed');
@@ -158,7 +155,6 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	// Un-conclude the game if it was concluded
 	if (gamefileutility.isGameOver(gamefile)) gamefile.gameConclusion = undefined;
-	guimoveslist.updateNavButtons();
 	GameBus.dispatch('moves-changed'); // Backward chokepoint for the committed move list (mirrors makeMove).
 
 	premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
@@ -196,7 +192,6 @@ function viewIndex(gamefile: GameFile, mesh: Mesh | undefined, index: number): v
 	movepiece.goToMove(gamefile, index, (move: MoveFull) =>
 		viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex),
 	);
-	guimoveslist.updateNavButtons();
 }
 
 /** Makes the game view the start of the game, before the first move. */
@@ -232,7 +227,6 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	animateMove(move.changes, forward); // Animate
-	guimoveslist.updateNavButtons();
 }
 
 // --------------------------------------------------------------------------------------------------------------------------

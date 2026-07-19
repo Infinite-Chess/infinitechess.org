@@ -431,8 +431,7 @@ function deleteAnalysisNode(node: AnalysisMoveNode): void {
 		// changed though (e.g. the old front was deleted), so realign the global conclusion.
 		gamefile.moves = movetree.getMovesFromLine(movetree.getActiveLine());
 		gamefile.gameConclusion = movetree.getActiveLineConclusion();
-		guimoveslist.updateNavButtons();
-		guimoveslist.enqueueRender(reconcileMoveTree);
+		GameBus.dispatch('moves-changed');
 	}
 }
 
@@ -505,7 +504,6 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	if (targetIndex >= 0) movesequence.viewIndex(gamefile, mesh, targetIndex);
 	else GameBus.dispatch('view-move'); // Root node — already at the start.
 
-	guimoveslist.updateNavButtons();
 	selection.unselectPiece();
 	animation.clearAnimations();
 }
