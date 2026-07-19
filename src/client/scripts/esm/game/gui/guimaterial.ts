@@ -119,40 +119,47 @@ function computeSurplus(): MaterialSurplus {
 
 /** Rebuilds both bars from the material surplus at the currently-viewed move. */
 async function render(): Promise<void> {
-	element_MaterialTop.replaceChildren();
-	element_MaterialBottom.replaceChildren();
-	if (!balanced) return;
+	if (!balanced) {
+		element_MaterialTop.replaceChildren();
+		element_MaterialBottom.replaceChildren();
+		return;
+	}
 
 	const { white, black, pointLead } = computeSurplus();
 
 	// Map each side to its bar by perspective: bottom = our POV (or white for spectators).
 	const bottomPlayer: Player = gameslot.areViewingWhite() ? p.WHITE : p.BLACK;
+	const topPlayer: Player = typeutil.invertPlayer(bottomPlayer);
 	const surplusOf = (player: Player): Map<RawType, number> =>
 		player === p.WHITE ? white : black;
 	const leadOf = (player: Player): number => (player === p.WHITE ? pointLead : -pointLead);
 
-	const topPlayer: Player = bottomPlayer === p.WHITE ? p.BLACK : p.WHITE;
-	await fillBar(element_MaterialBottom, surplusOf(bottomPlayer), leadOf(bottomPlayer));
-	await fillBar(element_MaterialTop, surplusOf(topPlayer), leadOf(topPlayer));
+	// Build both bars' children up front, touching no DOM, so overlapping renders can't interleave.
+	const [bottom, top] = await Promise.all([
+		buildBarChildren(surplusOf(bottomPlayer), leadOf(bottomPlayer)),
+		buildBarChildren(surplusOf(topPlayer), leadOf(topPlayer)),
+	]);
+
+	// Atomic commit: each replaceChildren is one synchronous swap, so the latest render wins cleanly.
+	element_MaterialBottom.replaceChildren(...bottom);
+	element_MaterialTop.replaceChildren(...top);
 }
 
 /**
- * Populates one bar: a silhouette per surplus piece (higher-value types first),
+ * Builds one bar's children: a silhouette per surplus piece (higher-value types first),
  * then a `+X` lead span if this side is the one net ahead.
  */
-async function fillBar(
-	bar: HTMLElement,
-	surplus: Map<RawType, number>,
-	lead: number,
-): Promise<void> {
+async function buildBarChildren(surplus: Map<RawType, number>, lead: number): Promise<Element[]> {
 	const rawsByValueDesc = [...surplus.keys()].sort(
 		(a, b) => (RAW_PIECE_VALUES[b] ?? 0) - (RAW_PIECE_VALUES[a] ?? 0),
 	);
+
+	const children: Element[] = [];
 	for (const raw of rawsByValueDesc) {
 		for (let i = 0; i < surplus.get(raw)!; i++) {
 			const silhouette = await svgcache.getSilhouetteSVG(raw);
 			silhouette.classList.add('material-piece');
-			bar.appendChild(silhouette);
+			children.push(silhouette);
 		}
 	}
 
@@ -160,8 +167,10 @@ async function fillBar(
 		const span = document.createElement('span');
 		span.className = 'material-lead';
 		span.textContent = `+${lead}`;
-		bar.appendChild(span);
+		children.push(span);
 	}
+
+	return children;
 }
 
 // Events --------------------------------------------------------------------------------------
