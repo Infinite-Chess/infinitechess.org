@@ -558,7 +558,10 @@ function addBlunderVariationAtTree(review: MoveReview): boolean {
 	return true;
 }
 
-/** Appends one legal PV line below `parent`, retaining the existing mainline. */
+/**
+ * Appends one legal PV line below `parent`, retaining the existing mainline.
+ * Does not fire 'moves-changed' event. Caller is expected to navigate back to original node.
+ */
 function addVariationAt(parent: AnalysisMoveNode, tokens: string[]): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
@@ -567,9 +570,12 @@ function addVariationAt(parent: AnalysisMoveNode, tokens: string[]): void {
 	// Pop gamefile.moves down to the parent so the PV appends as a fresh branch (the tree
 	// keeps its old children). rewindMove only deletes from the front, so view front first.
 	movetree.beginBranchFromViewedPosition(gamefile);
+
 	const target = gamefile.state.local.moveIndex;
-	movesequence.viewFront(gamefile, mesh);
-	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
+	movesequence.viewIndex(gamefile, mesh, target);
+	// Slice all moves off the gamefile after target.
+	gamefile.moves.length = target + 1;
+	gamefile.gameConclusion = undefined;
 
 	for (const token of tokens) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, token);
