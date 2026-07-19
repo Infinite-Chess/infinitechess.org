@@ -62,7 +62,11 @@ function highlightCurrentNode(): void {
 	const node = movetree.getCurrentNode(gamefile);
 	const current = node
 		? guimoveslist.element_MovesTable.querySelector<HTMLElement>(`.ply[data-node-id="${node.id}"]`) : undefined; // prettier-ignore
-	if (!current) return;
+	if (!current) {
+		// The root (start-of-game position) has no rendered ply button; scroll to the top.
+		if (gamefile.state.local.moveIndex === -1) guimoveslist.scrollMovesTableToTop();
+		return;
+	}
 	current.classList.add('current');
 	guimoveslist.centerPly(current);
 }

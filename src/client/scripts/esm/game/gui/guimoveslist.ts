@@ -380,7 +380,11 @@ function updateCurrentPly(): void {
 	const moveIndex = gamefile.state.local.moveIndex;
 
 	const current = getPlyElement(moveIndex);
-	if (!current) return;
+	if (!current) {
+		// The start-of-game position (moveIndex -1) has no associated ply; scroll to the top.
+		if (moveIndex === -1) scrollMovesTableToTop();
+		return;
+	}
 	current.classList.add('current');
 
 	// On the final move with the result banner shown, scroll all the way down so the
@@ -402,6 +406,11 @@ function centerPly(ply: HTMLElement): void {
 /** Scrolls the table as far down as possible (used when the result banner appears). */
 function scrollMovesTableToBottom(): void {
 	element_MovesTable.scrollTop = element_MovesTable.scrollHeight;
+}
+
+/** Scrolls the table to the top (used at the start-of-game position, which has no ply). */
+function scrollMovesTableToTop(): void {
+	element_MovesTable.scrollTop = 0;
 }
 
 /** Starts a zoom transition to the move's destination square. */
@@ -451,5 +460,6 @@ export default {
 	createMoveRow,
 	clearRenderedMoves,
 	centerPly,
+	scrollMovesTableToTop,
 	zoomToPlyDestination,
 };
