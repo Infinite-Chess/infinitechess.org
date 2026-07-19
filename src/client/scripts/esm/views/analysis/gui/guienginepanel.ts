@@ -74,7 +74,7 @@ function init(): void {
 		workerUrl: window.analysisPageData.workerUrl,
 	});
 	enginelegalmovesdebug.init({
-		canRequest: () => !ceval.isBlockedByEngineWorldBorder(),
+		canRequest: () => !ceval.isBlocked(),
 		requestMoves: ({ id, positionIcn }) => ceval.requestLegalMoves(id, positionIcn),
 		release: () => ceval.terminateLegalWorker(),
 	});
@@ -102,14 +102,26 @@ function setEngineEnabled(value: boolean): void {
 	element_Toggle.checked = value;
 	localStorage.setItem(ENABLED_STORAGE_KEY, String(value));
 	ceval.setEnabled(value);
-	setGaugeVisible(value);
-	if (!value) clearPanelReadout('Local evaluation off');
+	// Only hide here; showing happens in onEngineUpdate, synchronized with the value it displays —
+	// showing it eagerly on enable would flash an uninitialized (0%, all-white) bar for a frame.
+	if (!value) {
+		setGaugeVisible(false);
+		clearPanelReadout('Local evaluation off');
+	}
 }
 
-/** Shows/hides the eval gauge. */
-function setGaugeVisible(visible: boolean): void {
+/**
+ * Shows/hides the eval gauge.
+ * @param notifyResize - Dispatches a synthetic 'resize' so the board canvas (whose available width
+ * changes with the gauge) doesn't look stretched. Skip it for the frequent, often-oscillating
+ * blocked/unblocked toggle (e.g. a piece wandering in and out of bounds) — that resize's canvas
+ * clear-then-redraw is what causes the board to visibly flash black; a supported/unsupported
+ * transition should only ever affect the gauge itself, not repaint the board.
+ */
+function setGaugeVisible(visible: boolean, notifyResize = true): void {
 	const wasHidden = element_Gauge.classList.contains('hidden');
 	element_Gauge.classList.toggle('hidden', !visible);
+	if (!notifyResize) return;
 	// Toggling its visibility affects the canvas's width,
 	// emit a 'resize' event so it doesn't get stretched.
 	if (wasHidden === visible) window.dispatchEvent(new Event('resize'));
@@ -260,7 +272,10 @@ function onEngineStatus(status: CevalStatus): void {
 		toast.show('The engine failed to load.', { error: true });
 	} else if (status === 'blocked') {
 		enginelegalmovesdebug.disable();
-		clearPanelReadout('Out of bounds', { gauge: 0 });
+		// No resize: this can oscillate rapidly (e.g. a piece wandering in/out of bounds) — only
+		// the gauge itself should visibly change, not trigger a board canvas clear-then-redraw.
+		setGaugeVisible(false, false);
+		clearPanelReadout(ceval.getBlockReason() ?? 'Out of bounds');
 	} else if (status === 'crashed') {
 		clearPanelReadout('Analysis crashed', { gauge: 0 });
 		if (!crashToastShown) {
@@ -285,6 +300,10 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	lineWindowStateMoveIndex = update.moveIndex;
 
 	if (update.terminal) {
+		// Show alongside the value that's about to be set — never visible with a stale/uninitialized
+		// height (a prior 'blocked'/'failed' status may have hidden it while showing nothing at all).
+		// No resize: see setGaugeVisible's blocked/unblocked oscillation note.
+		setGaugeVisible(true, false);
 		clearPanelReadout('Game Over', { gauge: terminalGaugeChances(), progress: update });
 		return;
 	}
@@ -298,6 +317,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	const canDeepen = update.done && update.depth < ceval.MAX_DEPTH && hasNonTerminalLine;
 	element_GoDeeper.classList.toggle('hidden', !canDeepen);
 
+	setGaugeVisible(true, false); // No resize: see setGaugeVisible's blocked/unblocked oscillation note.
 	updateGauge(best?.winningChances ?? 0);
 	updateProgress(update);
 	renderLines(update.lines);
@@ -337,7 +357,7 @@ function formatStats(update: CevalUpdate, targetDepthOverride?: number): string 
  * to a just-committed target before the engine re-emits with it.
  */
 function updateProgress(update: CevalUpdate | undefined, targetDepthOverride?: number): void {
-	const active = ceval.isEnabled() && !ceval.isBlockedByEngineWorldBorder();
+	const active = ceval.isEnabled() && !ceval.isBlocked();
 	const targetDepth = targetDepthOverride ?? update?.targetDepth ?? ceval.getSettings().depth;
 	// Reaching the target depth ALWAYS stops the animation, regardless of `done` — a bar shown
 	// fully filled must never keep pulsing, even if the engine's own completion flag lagged.

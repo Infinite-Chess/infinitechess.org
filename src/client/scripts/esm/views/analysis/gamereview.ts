@@ -30,6 +30,7 @@ import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import reviewdivision from './reviewdivision.js';
 import analysisenginebounds from './analysisenginebounds.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -341,9 +342,12 @@ function captureMainline(): AnalysisMoveNode[] {
 
 // Lifecycle ------------------------------------------------------------------------------
 
-/** Whether a review can start: a loaded game with at least one mainline move. */
+/** Whether a review can start: an idle, engine-supported game with at least one mainline move. */
 function canStart(): boolean {
-	return status === 'idle' && gameslot.getGamefile() !== undefined && captureMainline().length > 0; // prettier-ignore
+	if (status !== 'idle') return false;
+	const gamefile = gameslot.getGamefile();
+	if (gamefile === undefined || captureMainline().length === 0) return false;
+	return apeiron_card.isGameReviewSupported(gamefile).supported;
 }
 
 function getStatus(): ReviewStatus {

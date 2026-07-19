@@ -23,6 +23,7 @@ import type { RematchOfferInfo } from '../../../../../shared/types.js';
 import uuid from '../../../../../shared/util/uuid.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 
 import gameslot from '../chess/gameslot.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
@@ -79,9 +80,13 @@ function refresh(): void {
 	const gamefile = gameslot.getGamefile();
 
 	if (gamefile && gamefileutility.isGameOver(gamefile)) {
-		// Hide both analysis actions if zero moves were played (nothing to analyze).
+		// Hide both analysis actions if zero moves were played (nothing to analyze). Game Review is
+		// hidden too when the engine can't handle this variant/position (4D/5D, too many pieces, …).
 		element_Analysis.classList.toggle('hidden', gamefile.moves.length === 0);
-		element_GameReview.classList.toggle('hidden', gamefile.moves.length === 0);
+		element_GameReview.classList.toggle(
+			'hidden',
+			gamefile.moves.length === 0 || !apeiron_card.isGameReviewSupported(gamefile).supported,
+		);
 		showOnly(element_ActionsOver);
 	}
 	// Live game: an incoming draw offer trumps the default live actions.

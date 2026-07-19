@@ -19,6 +19,7 @@ import gameslot from '../../game/chess/gameslot.js';
 import { GameBus } from '../../game/GameBus.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import analysisenginebounds from './analysisenginebounds.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -168,8 +169,11 @@ let goDeeperActive = false;
 let currentTargetDepth = DEFAULT_SETTINGS.depth;
 /** Allows an intentional same-position restart (e.g. adding PV lines) to repaint lower-depth rows. */
 let allowDepthRegressionForCurrentSearch = false;
-/** The viewed position has a piece outside Apeiron's safe coordinate range. */
-let blockedByEngineWorldBorder = false;
+/**
+ * Why the engine won't analyze the viewed position (piece out of Apeiron's safe coordinate range,
+ * an unsupported variant/position, etc.) — a user-facing message, or undefined when analyzable.
+ */
+let blockReason: string | undefined;
 
 let latestUpdate: CevalUpdate | undefined;
 let throttleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -374,7 +378,7 @@ function resetEngineSession(): void {
 	goDeeperActive = false;
 	currentTargetDepth = settings.depth;
 	allowDepthRegressionForCurrentSearch = false;
-	blockedByEngineWorldBorder = false;
+	blockReason = undefined;
 	lastCrashIcn = undefined;
 	lastCrashCount = 0;
 	crashedIcn = undefined;
@@ -510,13 +514,21 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
+	// The engine can't handle some positions at all (4D/5D variants, too many pieces, unsupported
+	// pieces/win conditions) — block outright. Bounds are separate: an out-of-range VIEWED position
+	// blocks too, but out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
+	const support = apeiron_card.isAnalysisSupported(gamefile);
+	if (!support.supported) {
+		blockAnalysis(support.reason);
+		return;
+	}
 	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) {
-		blockAnalysisForEngineWorldBorder();
+		blockAnalysis('Out of bounds');
 		return;
 	}
 
-	if (blockedByEngineWorldBorder) {
-		blockedByEngineWorldBorder = false;
+	if (blockReason !== undefined) {
+		blockReason = undefined;
 		lastAnalyzedIcn = undefined;
 	}
 
@@ -607,10 +619,11 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	notifyStatus();
 }
 
-function blockAnalysisForEngineWorldBorder(): void {
+/** Stops the engine and marks the viewed position un-analyzable, with a user-facing `reason`. */
+function blockAnalysis(reason: string): void {
 	interruptSearch();
 	send({ cmd: 'stop' });
-	blockedByEngineWorldBorder = true;
+	blockReason = reason;
 	goDeeperActive = false;
 	analyzed = undefined;
 	activeRequestId++;
@@ -789,7 +802,7 @@ function seedPositionCache(seed: {
 
 /** Requests the legal moves for {@link icn} from the idle helper worker (never blocked by the search). */
 function requestLegalMoves(requestId: number, icn: string): void {
-	if (blockedByEngineWorldBorder) return;
+	if (blockReason !== undefined) return;
 	ensureLegalWorker();
 	if (!legalReady || !legalWorker) {
 		queuedLegalMovesRequests.push({ requestId, icn });
@@ -840,8 +853,14 @@ function isEnabled(): boolean {
 	return enabled;
 }
 
-function isBlockedByEngineWorldBorder(): boolean {
-	return blockedByEngineWorldBorder;
+/** Whether the engine is refusing to analyze the viewed position for any reason. */
+function isBlocked(): boolean {
+	return blockReason !== undefined;
+}
+
+/** The user-facing reason the engine won't analyze the viewed position, or undefined when it will. */
+function getBlockReason(): string | undefined {
+	return blockReason;
 }
 
 function setEnabled(value: boolean): void {
@@ -927,7 +946,7 @@ function getLatestUpdate(): CevalUpdate | undefined {
 function getStatus(): CevalStatus {
 	if (!enabled) return 'off';
 	if (onCrashedPosition) return 'crashed';
-	if (blockedByEngineWorldBorder) return 'blocked';
+	if (blockReason !== undefined) return 'blocked';
 	if (!worker || !workerReady) return 'loading';
 	if (latestUpdate?.done) return 'idle';
 	return 'computing';
@@ -957,7 +976,8 @@ export default {
 	terminateLegalWorker,
 	init,
 	isEnabled,
-	isBlockedByEngineWorldBorder,
+	isBlocked,
+	getBlockReason,
 	setEnabled,
 	getSettings,
 	updateSettings,

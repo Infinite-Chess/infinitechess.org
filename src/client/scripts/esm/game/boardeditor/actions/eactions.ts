@@ -56,7 +56,7 @@ import annotations from '../../rendering/highlights/annotations/annotations';
 import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
 import validatorama from '../../../util/validatorama';
-import apeiron_card from '../../chess/engines/enginecards/apeiron_card';
+import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card';
 import selectiontool from '../tools/selection/selectiontool';
 import guiboardcontrols from '../../gui/guiboardcontrols';
 import clientmetadatautil from '../../chess/clientmetadatautil';
