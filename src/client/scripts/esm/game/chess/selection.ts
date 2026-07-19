@@ -60,7 +60,7 @@ type MoveHandler = (gamefile: GameFile, mesh: Mesh | undefined, moveTagged: Move
  * Branches the game from the currently-viewed ply so a new
  * continuation can be played from it. The analysis page injects this.
  */
-type ViewedPositionBrancher = (gamefile: GameFile, mesh: Mesh | undefined) => void;
+type ViewedPositionBrancher = (gamefile: GameFile) => void;
 
 // Variables -----------------------------------------------------------------------------
 
@@ -541,7 +541,7 @@ function moveGamefilePiece(gamefile: GameFile, mesh: Mesh | undefined, coords: C
 	// game from here first: the later moves are deleted so this ply becomes the
 	// true front, then the new move appends as a fresh continuation.
 	if (viewedPositionBrancher && !moveutil.areWeViewingLatestMove(gamefile))
-		viewedPositionBrancher(gamefile, mesh);
+		viewedPositionBrancher(gamefile);
 
 	const strippedCoords: Coords = moveutil.stripSpecialMoveTagsFromCoords(coords);
 	const moveTagged: MoveTagged = {

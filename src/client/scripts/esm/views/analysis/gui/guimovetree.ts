@@ -494,15 +494,14 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	// a clean slate before we swap in the (possibly divergent) new line. This is all
 	// synchronous, so the intermediate positions never actually render — avoiding the
 	// fragile shared-prefix index math that could point outside the current move list.
-	if (gamefile.state.local.moveIndex >= 0) movesequence.viewStart(gamefile, mesh);
+	movesequence.viewStart(gamefile, mesh);
 
 	// Swap the flat move list to the chosen branch, then replay forward to the node.
 	movetree.setActiveLineToNode(node);
 	gamefile.moves = newMoves;
 	gamefile.gameConclusion = movetree.getActiveLineConclusion();
 
-	if (targetIndex >= 0) movesequence.viewIndex(gamefile, mesh, targetIndex);
-	else GameBus.dispatch('view-move'); // Root node — already at the start.
+	movesequence.viewIndex(gamefile, mesh, targetIndex);
 
 	selection.unselectPiece();
 	animation.clearAnimations();

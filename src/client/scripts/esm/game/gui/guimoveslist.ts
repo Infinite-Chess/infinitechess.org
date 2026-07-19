@@ -448,7 +448,6 @@ GameBus.addEventListener('view-move', () => {
 	enqueueRender(updateCurrentPly);
 	updateNavButtons();
 });
-GameBus.addEventListener('view-move', () => enqueueRender(updateCurrentPly));
 GameBus.addEventListener('game-concluded', () => enqueueRender(scrollMovesTableToBottom));
 GameBus.addEventListener('game-unloaded', () => renderer?.onGameUnloaded());
 

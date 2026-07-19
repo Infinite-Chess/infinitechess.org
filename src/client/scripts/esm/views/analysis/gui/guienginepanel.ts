@@ -7,7 +7,6 @@
  * the board.
  */
 
-import type { Mesh } from '../../../game/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
@@ -20,6 +19,7 @@ import toast from '../../../components/toast.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
 import selection from '../../../game/chess/selection.js';
+import animation from '../../../game/rendering/animation.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../rendering/enginearrows.js';
@@ -576,7 +576,7 @@ function playLine(tokens: string[], untilIndex: number): void {
 	if (!gamefile || gamesession.isLoading()) return;
 
 	const mesh = gameslot.getMesh();
-	if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile, mesh);
+	if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile);
 	// Board moveIndex where the line's first token applies. Used for debugging.
 	const startMoveIndex = gamefile.state.local.moveIndex;
 	for (let i = 0; i <= untilIndex; i++) {
@@ -602,11 +602,15 @@ function playLine(tokens: string[], untilIndex: number): void {
  * sits at that position — board, turn, and global state all consistent — so a new move
  * can be played from it.
  */
-function branchFromViewedPosition(gamefile: GameFile, mesh: Mesh | undefined): void {
+function branchFromViewedPosition(gamefile: GameFile): void {
 	movetree.beginBranchFromViewedPosition(gamefile);
-	const target = gamefile.state.local.moveIndex;
-	movesequence.viewFront(gamefile, mesh);
-	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
+	// Slice all moves off the gamefile after the current ply.
+	gamefile.moves.length = gamefile.state.local.moveIndex + 1;
+	// Has a chance of being wrong. We would otherwise have to perform game-over
+	// checks again. We don't store gameConclusion as a global state change per move.
+	gamefile.gameConclusion = undefined;
+	GameBus.dispatch('moves-changed');
+	animation.clearAnimations();
 }
 
 // Registration ---------------------------------------------------------------
