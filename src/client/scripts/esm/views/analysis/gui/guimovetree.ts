@@ -397,7 +397,7 @@ function syncAnalysisTreeAfterAction(target: AnalysisMoveNode): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 	navigateToAnalysisNode(gamefile, target);
-	guimoveslist.enqueueRender(reconcileMoveTree);
+	reconcileMoveTree();
 }
 
 /**
@@ -572,7 +572,7 @@ function addBlunderVariation(review: MoveReview): void {
 
 /** Re-renders the whole move tree (e.g. to drop stale review decorations on a re-review). */
 function refresh(): void {
-	guimoveslist.enqueueRender(reconcileMoveTree);
+	reconcileMoveTree();
 }
 
 export default {

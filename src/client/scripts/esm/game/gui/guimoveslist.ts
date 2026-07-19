@@ -33,15 +33,13 @@ import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import { listener_document } from '../chess/gamecore.js';
-import { createRenderQueue } from '../../util/renderqueue.js';
 
 // Renderer extension ------------------------------------------------------------------------
 
 /**
  * An optional alternative renderer for the moves panel. The analysis page registers one to
  * draw a move TREE (with variations) in place of the flat list. When present, this module
- * delegates all rendering to it, driving it through the same serialized {@link enqueueRender}
- * queue so tree and flat renders can never race.
+ * delegates all rendering to it.
  */
 interface MovesListRenderer {
 	/** Rebuilds the panel for the current position — replaces the flat reconcile. */
@@ -216,12 +214,6 @@ const MAX_VISIBLE_MOVE_CHARS = 50;
  * of truth for diffing — premoves never enter `gamefile.moves`, so they're naturally excluded.
  */
 const renderedMoves: MoveFull[] = [];
-
-/**
- * Serializes all moves-table DOM mutations & scrolls into dispatch order. Required because
- * appending a ply awaits an async silhouette fetch, so overlapping updates would race.
- */
-const enqueueRender = createRenderQueue('Moves table render error');
 
 /**
  * Brings the rendered plies in line with `gamefile.moves`: finds the first index that
@@ -434,21 +426,21 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the
 // gamefile bypass 'moves-changed'), reconcile on move-list changes & navigation, scroll
-// to the banner on conclusion. All queued so they apply in order despite async silhouette fetches.
+// to the banner on conclusion.
 GameBus.addEventListener('game-loaded', () => {
 	renderer?.onGameLoaded();
-	enqueueRender(reconcileMovesTable);
+	reconcileMovesTable();
 });
 GameBus.addEventListener('moves-changed', () => {
 	renderer?.onMovesChanged();
-	enqueueRender(reconcileMovesTable);
+	reconcileMovesTable();
 	updateNavButtons();
 });
 GameBus.addEventListener('view-move', () => {
-	enqueueRender(updateCurrentPly);
+	updateCurrentPly();
 	updateNavButtons();
 });
-GameBus.addEventListener('game-concluded', () => enqueueRender(scrollMovesTableToBottom));
+GameBus.addEventListener('game-concluded', () => scrollMovesTableToBottom());
 GameBus.addEventListener('game-unloaded', () => renderer?.onGameUnloaded());
 
 // ===========================================================================
@@ -458,7 +450,6 @@ export default {
 	element_MovesTable,
 	element_GameResult,
 	update,
-	enqueueRender,
 	buildPlyButton,
 	createMoveRow,
 	clearRenderedMoves,

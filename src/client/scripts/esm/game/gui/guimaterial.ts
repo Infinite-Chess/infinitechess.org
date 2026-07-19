@@ -22,7 +22,6 @@ import typeutil, { rawTypes, players as p } from '../../../../../shared/chess/ut
 import gameslot from '../chess/gameslot.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import { GameBus } from '../GameBus.js';
-import { createRenderQueue } from '../../util/renderqueue.js';
 
 // Point values --------------------------------------------------------------------------------
 
@@ -67,12 +66,6 @@ const element_MaterialBottom = document.getElementById('material-bottom')!;
  * Computed on `game-loaded`.
  */
 let balanced = false;
-
-/**
- * Serializes bar-render operations, preserving order across the async silhouette fetches each
- * render awaits — overlapping `view-move` updates would otherwise interleave and race.
- */
-const enqueueRender = createRenderQueue('Material bar render error');
 
 // Balance detection ---------------------------------------------------------------------------
 
@@ -177,8 +170,8 @@ async function fillBar(
 GameBus.addEventListener('game-loaded', () => {
 	const gamefile = gameslot.getGamefile()!;
 	balanced = isStartPositionBalanced(gamefile.startSnapshot.position);
-	enqueueRender(render);
+	render();
 });
 // Rewinding/forwarding restores the board to the viewed move, so the live counts already reflect it.
-GameBus.addEventListener('view-move', () => enqueueRender(render));
-GameBus.addEventListener('board-flipped', () => enqueueRender(render));
+GameBus.addEventListener('view-move', () => render());
+GameBus.addEventListener('board-flipped', () => render());
