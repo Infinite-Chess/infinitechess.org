@@ -112,7 +112,8 @@ function checkPieceCount(nonNeutralCount: number): SupportedResult {
 /** Every piece type present must be one the engine can move. */
 function checkPieceTypes(rawTypes: Iterable<RawType>): SupportedResult {
 	for (const rawType of rawTypes) {
-		if (!SUPPORTED_PIECES.has(rawType)) return { supported: false, reason: `Unsupported piece` };
+		if (!SUPPORTED_PIECES.has(rawType))
+			return { supported: false, reason: `Unsupported piece` };
 	}
 	return { supported: true };
 }
@@ -141,7 +142,12 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	const allCoords = [...variantOptions.position.keys()].map((key) =>
 		coordutil.getCoordsFromKey(key),
 	);
-	if (!bounds.boxContainsBox(variantOptions.gameRules.worldBorder, bounds.getBoxFromCoordsList(allCoords))) // prettier-ignore
+	if (
+		!bounds.boxContainsBox(
+			variantOptions.gameRules.worldBorder,
+			bounds.getBoxFromCoordsList(allCoords),
+		)
+	)
 		return { supported: false, reason: `Out of bounds` };
 
 	const promotions = checkPromotions(variantOptions.gameRules);
@@ -166,7 +172,10 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
  * analysis engine handles out-of-range coordinates itself (blocking/re-basing).
  */
 function checkGameRules(gamefile: GameFile): SupportedResult {
-	if (gamefile.variant !== undefined && variantregistry.getVariantGroup(gamefile.variant.code) === '4D') // prettier-ignore
+	if (
+		gamefile.variant !== undefined &&
+		variantregistry.getVariantGroup(gamefile.variant.code) === '4D'
+	)
 		return { supported: false, reason: `Unsupported variant` };
 	const winConditions = checkWinConditions(gamefile.gameRules);
 	if (!winConditions.supported) return winConditions;
