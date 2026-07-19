@@ -128,7 +128,7 @@ function render(): void {
 		u2,
 		v2,
 	);
-	createRenderable(data, 2, 'TRIANGLES', 'texture', true, texture).render();
+	createRenderable(data, 2, 'TRIANGLES', 'texture', false, texture).render();
 }
 
 /** Returns the cached badge texture, kicking off a one-time async build on first use. */
