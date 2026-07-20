@@ -240,6 +240,29 @@ function getMovesFromLine(line: AnalysisMoveNode[]): MoveFull[] {
 	return line.slice(1).map((node) => node.move!);
 }
 
+/** The flat move list from the root up to (and including) `node`. */
+function getMovesToNode(node: AnalysisMoveNode): MoveFull[] {
+	return getMovesFromLine(getLineToNode(node));
+}
+
+/**
+ * Grafts `moves` as a fresh variation branch beneath `parent`, recording the branch's
+ * game-conclusion on its front node. Purely a tree edit — the active line is left untouched.
+ */
+function appendVariation(
+	parent: AnalysisMoveNode,
+	moves: MoveFull[],
+	conclusion: GameConclusion | undefined,
+): void {
+	let node = parent;
+	for (const move of moves) {
+		const child = createNode(move, node.ply + 1, node);
+		node.children.push(child);
+		node = child;
+	}
+	node.gameConclusion = conclusion;
+}
+
 function isSameMove(left: MoveFull | undefined, right: MoveFull): boolean {
 	return (
 		left !== undefined &&
@@ -268,6 +291,8 @@ export default {
 	forceVariation,
 	deleteNode,
 	getMovesFromLine,
+	getMovesToNode,
+	appendVariation,
 };
 
 export type { AnalysisMoveNode };
