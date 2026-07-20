@@ -12,7 +12,7 @@
  */
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
-import type { ClassificationKey } from '../gamereview.js';
+import type { ClassificationKey, MoveReview } from '../gamereview.js';
 
 import math from '../../../../../../shared/util/math/math.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -46,6 +46,9 @@ const statCells: { [player: number]: Partial<Record<StatKey, HTMLElement>> } = {
 
 type StatKey = 'accuracy' | 'inaccuracy' | 'mistake' | 'blunder' | 'acpl';
 
+/** Plies of the engine's best line grafted as a variation beneath a reviewed blunder. */
+const BLUNDER_VARIATION_MAX_PLIES = 6;
+
 /** Classifications treated as "lapses": clickable stat rows, and dotted on the eval graph. */
 const LAPSE_KEYS = ['inaccuracy', 'mistake', 'blunder'] as const satisfies readonly ClassificationKey[]; // prettier-ignore
 type LapseKey = (typeof LAPSE_KEYS)[number];
@@ -64,7 +67,7 @@ function init(): void {
 	});
 	gamereview.onClassified((review) => {
 		updateStats();
-		if (review.classification === 'blunder') guimovetree.addBlunderVariation(review);
+		if (review.classification === 'blunder') addBlunderVariation(review);
 		if (isGraphVisible()) drawGraph();
 	});
 	gamereview.onFinished(onReviewFinished);
@@ -105,6 +108,13 @@ function startRequestedReview(attempt = 0): void {
 	updateProgress();
 	updateStats();
 	drawGraph();
+}
+
+/** Grafts the engine's best line beneath a classified blunder as a variation. */
+function addBlunderVariation(review: MoveReview): void {
+	if (!review.pv?.length) return;
+	const parent = gamereview.getMainlineNodes()[review.ply]?.parent;
+	if (parent) guimovetree.addVariation(parent, review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES));
 }
 
 // Progress --------------------------------------------------------------------------------

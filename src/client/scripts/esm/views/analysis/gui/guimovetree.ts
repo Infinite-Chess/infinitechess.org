@@ -11,7 +11,6 @@
 
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
-import type { MoveReview } from '../gamereview.js';
 import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
 import type { AnalysisMoveNode } from '../movetree.js';
 
@@ -36,9 +35,6 @@ import movesequence from '../../../game/chess/movesequence.js';
 import guimoveslist from '../../../game/gui/guimoveslist.js';
 
 // State ---------------------------------------------------------------------------------------
-
-/** Plies of the engine's best line shown as a variation beneath a reviewed blunder. */
-const BLUNDER_VARIATION_MAX_PLIES = 6;
 
 /** The open right-click context menu, if any. */
 let contextMenu: HTMLElement | undefined;
@@ -535,25 +531,21 @@ function navigateToNode(node: AnalysisMoveNode): void {
 }
 
 /**
- * Grafts one newly-discovered blunder PV onto the tree as a variation beneath its parent.
- * Purely logical — the game review never changes the viewed move, so this makes no mesh
- * changes, and the move list is repainted just once per synchronous batch (scheduleReconcile).
+ * Grafts a legal line of move tokens onto the tree as a variation beneath `parent`.
+ * Purely logical — the viewed move never changes, so this makes no mesh changes, and the
+ * move list is repainted just once per synchronous batch (scheduleReconcile).
  */
-function addBlunderVariation(review: MoveReview): void {
+function addVariation(parent: AnalysisMoveNode, tokens: string[]): void {
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile || gamesession.isLoading()) return;
-	if (review.classification !== 'blunder' || !review.pv?.length) return;
-	const parent = gamereview.getMainlineNodes()[review.ply]?.parent;
-	if (!parent) return;
-	// The review holds references to the mainline nodes captured at its start. Deleting a
-	// mainline move mid-review orphans that node's subtree, so a later blunder may branch off
-	// a node no longer attached to the tree — skip it rather than graft onto a detached node.
+	if (!gamefile || gamesession.isLoading() || tokens.length === 0) return;
+	// A caller may hold a node captured earlier (e.g. a game review's mainline nodes). Deleting a
+	// move can orphan that node's subtree, so `parent` may no longer be attached to the tree —
+	// skip it rather than graft onto a detached node.
 	const root = movetree.getRoot();
 	if (!root || !movetree.isInSubtree(root, parent)) return;
-	const pv = review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES);
-	if (parent.children.some((child) => child.move?.token === pv[0])) return;
+	if (parent.children.some((child) => child.move?.token === tokens[0])) return;
 
-	const { moves, conclusion } = generateVariationMoves(gamefile, parent, pv);
+	const { moves, conclusion } = generateVariationMoves(gamefile, parent, tokens);
 	if (moves.length === 0) return;
 	movetree.appendVariation(parent, moves, conclusion);
 
@@ -632,5 +624,5 @@ function scheduleReconcile(): void {
 
 export default {
 	navigateToNode,
-	addBlunderVariation,
+	addVariation,
 };
