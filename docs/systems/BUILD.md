@@ -113,7 +113,10 @@ splits by how each asset is invalidated:
 
 `clean` then `concurrently` runs four watchers: `dev:build` (esbuild `--dev` watch),
 `dev:tsc` (`tsc -b --watch --noEmit`, type errors only — separate from esbuild), `dev:assets`
-(cpx `--watch`), and `dev:server` (`wait-on dist/server/server.js` then `nodemon`).
+(cpx `--watch`), and `dev:server` (`wait-on dist/server/server.js dist/manifest.json` then
+`nodemon`). It waits on **both** files because the client and server are independent parallel
+builds: `server.js` alone can appear before the manifest, and the server hard-throws at startup
+if the manifest is missing (see [nunjucks.ts](/src/server/config/nunjucks.ts)).
 
 ## Adding a new page — checklist
 
