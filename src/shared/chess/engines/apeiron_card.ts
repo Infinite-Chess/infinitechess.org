@@ -2,19 +2,20 @@
 
 /**
  * The Apeiron engine's support rules: what positions/variants it can actually handle.
- * Shared because both game creation (board editor / engine games) and the analysis page
+ * Shared because both game creation (engine games) and the analysis page
  * (local eval + Game Review) must agree on when the engine may run.
  */
 
-import type { GameFile, VariantOptions } from '../logic/gamefile';
 import type { GameRules } from '../util/gamerules';
+import type { VariantCode } from '../variants/variantregistry';
+import type { GameruleWinCondition } from '../util/winconutil';
+import type { GameFile, VariantOptions } from '../logic/gamefile';
 
 import bimath from '../../util/math/bimath';
 import bounds from '../../util/math/bounds';
 import boardutil from '../util/boardutil';
 import coordutil from '../util/coordutil';
 import { I64_MAX } from '../engine';
-import variantregistry from '../variants/variantregistry';
 import typeutil, { RawType, rawTypes as r, players as p } from '../util/typeutil';
 
 type SupportedResult = { supported: true } | { supported: false; reason: string };
@@ -27,7 +28,7 @@ const BORDER_CAP = I64_MAX - 1000n; // Small cushion
 /** Max non-neutral pieces the engine handles before it bogs down (excludes voids/obstacles). */
 const MAX_PIECES = 1000;
 
-const SUPPORTED_VARIANTS = new Set([
+const SUPPORTED_VARIANTS: Set<VariantCode> = new Set([
 	'Classical',
 	'Confined_Classical',
 	'Classical_Plus',
@@ -41,7 +42,6 @@ const SUPPORTED_VARIANTS = new Set([
 	'Standarch',
 	'Space_Classic',
 	'Space',
-	'Abundance',
 	'Pawn_Horde',
 	'Knightline',
 	'Obstocean',
@@ -50,7 +50,7 @@ const SUPPORTED_VARIANTS = new Set([
 ]);
 
 /** Win conditions the engine understands; anything else may crash it. */
-const SUPPORTED_WIN_CONDITIONS = ['checkmate', 'royalcapture', 'allroyalscaptured', 'allpiecescaptured']; // prettier-ignore
+const SUPPORTED_WIN_CONDITIONS: GameruleWinCondition[] = ['checkmate', 'royalcapture', 'allroyalscaptured', 'allpiecescaptured']; // prettier-ignore
 
 /** Piece types the engine can move. Neutrals (void/obstacle) are inert blockers, so allowed. */
 const SUPPORTED_PIECES: Set<RawType> = new Set([
@@ -63,7 +63,6 @@ const SUPPORTED_PIECES: Set<RawType> = new Set([
 	r.KNIGHTRIDER,
 	r.AMAZON,
 	r.QUEEN,
-	// rawTypes.ROYALQUEEN, // Not extensively tested
 	r.HAWK,
 	r.CHANCELLOR,
 	r.ARCHBISHOP,
@@ -82,10 +81,11 @@ const SUPPORTED_PIECES: Set<RawType> = new Set([
 
 // Reason strings are shown in the engine panel's single-line, ellipsis-truncated stats readout.
 // Keep each around "Unsupported variant" in length (~20 chars, give or take) — no dynamic names.
+// TODO: Localize these
 
 /** Only checkmate-family win conditions are understood. */
 function checkWinConditions(gameRules: GameRules): SupportedResult {
-	const used: string[] = Object.values(gameRules.winConditions).flat();
+	const used: GameruleWinCondition[] = Object.values(gameRules.winConditions).flat();
 	for (const winCondition of used) {
 		if (!SUPPORTED_WIN_CONDITIONS.includes(winCondition))
 			return { supported: false, reason: `Unsupported win rule` };
@@ -109,6 +109,15 @@ function checkPieceCount(nonNeutralCount: number): SupportedResult {
 	return { supported: true };
 }
 
+/** Non-neutral piece count of a position map, short-circuiting once it exceeds the cap. */
+function checkPositionPieceCount(types: Iterable<number>): SupportedResult {
+	let count = 0;
+	for (const type of types) {
+		if (typeutil.getColorFromType(type) !== p.NEUTRAL && ++count > MAX_PIECES) break;
+	}
+	return checkPieceCount(count);
+}
+
 /** Every piece type present must be one the engine can move. */
 function checkPieceTypes(rawTypes: Iterable<RawType>): SupportedResult {
 	for (const rawType of rawTypes) {
@@ -121,12 +130,12 @@ function checkPieceTypes(rawTypes: Iterable<RawType>): SupportedResult {
 // Entry points ----------------------------------------------------------
 
 /**
- * Whether the engine can PLAY the given position (board editor / engine games). Requires a bounded
- * board within the engine's safe coordinate range — engine games always run inside a world border.
+ * Whether the engine can PLAY the given position (engine games). Requires a bounded board
+ * within the engine's safe coordinate range — engine games always run inside a world border.
  */
 function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
-	const winConditions = checkWinConditions(variantOptions.gameRules);
-	if (!winConditions.supported) return winConditions;
+	const winConsResult = checkWinConditions(variantOptions.gameRules);
+	if (!winConsResult.supported) return winConsResult;
 
 	// World border larger than i64, or absent, is unsupported.
 	if (
@@ -138,47 +147,44 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		return { supported: false, reason: `Border too large` };
 	}
 
-	// All pieces must sit inside that world border.
-	const allCoords = [...variantOptions.position.keys()].map((key) =>
-		coordutil.getCoordsFromKey(key),
-	);
-	if (
-		!bounds.boxContainsBox(
-			variantOptions.gameRules.worldBorder,
-			bounds.getBoxFromCoordsList(allCoords),
-		)
-	)
-		return { supported: false, reason: `Out of bounds` };
+	// Piece count can't be too high
+	const pieceCountResult = checkPositionPieceCount(variantOptions.position.values());
+	if (!pieceCountResult.supported) return pieceCountResult;
 
-	const promotions = checkPromotions(variantOptions.gameRules);
-	if (!promotions.supported) return promotions;
-
-	let nonNeutralCount = 0;
-	for (const type of variantOptions.position.values()) {
-		if (typeutil.getColorFromType(type) !== p.NEUTRAL) nonNeutralCount++;
+	// All pieces must sit inside the world border.
+	for (const coordsKey of variantOptions.position.keys()) {
+		const coords = coordutil.getCoordsFromKey(coordsKey);
+		if (!bounds.boxContainsSquare(variantOptions.gameRules.worldBorder, coords))
+			return { supported: false, reason: `Out of bounds` };
 	}
-	const pieceCount = checkPieceCount(nonNeutralCount);
-	if (!pieceCount.supported) return pieceCount;
 
-	return checkPieceTypes(
-		[...variantOptions.position.values()].map((type) => typeutil.getRawType(type)),
-	);
+	const promotionsResult = checkPromotions(variantOptions.gameRules);
+	if (!promotionsResult.supported) return promotionsResult;
+
+	const allRawTypes = new Set<RawType>();
+	for (const type of variantOptions.position.values()) {
+		allRawTypes.add(typeutil.getRawType(type));
+	}
+	// Promotion can introduce a piece type absent from the starting position.
+	for (const rawType of variantOptions.gameRules.promotion?.pieces ?? []) {
+		allRawTypes.add(rawType);
+	}
+	return checkPieceTypes(allRawTypes);
 }
 
 /**
  * Game-level support that's independent of any single position's piece set: the variant's movement
- * rules (4D/5D are ones the engine can't replay), win conditions, and promotion lines. Unlike
+ * rules (4D ones the engine can't replay), win conditions, and promotion lines. Unlike
  * {@link isPositionSupported} these apply to a loaded game and require no bounded board — the
  * analysis engine handles out-of-range coordinates itself (blocking/re-basing).
  */
 function checkGameRules(gamefile: GameFile): SupportedResult {
-	if (
-		gamefile.variant !== undefined &&
-		variantregistry.getVariantGroup(gamefile.variant.code) === '4D'
-	)
+	if (gamefile.variant !== undefined && !SUPPORTED_VARIANTS.has(gamefile.variant.code))
 		return { supported: false, reason: `Unsupported variant` };
-	const winConditions = checkWinConditions(gamefile.gameRules);
-	if (!winConditions.supported) return winConditions;
+
+	const winConsResult = checkWinConditions(gamefile.gameRules);
+	if (!winConsResult.supported) return winConsResult;
+
 	return checkPromotions(gamefile.gameRules);
 }
 
@@ -189,17 +195,20 @@ function checkGameRules(gamefile: GameFile): SupportedResult {
  * a game for something at another ply. Out-of-bounds is handled separately by the caller.
  */
 function isAnalysisSupported(gamefile: GameFile): SupportedResult {
-	const gameRules = checkGameRules(gamefile);
-	if (!gameRules.supported) return gameRules;
+	const gameRulesResult = checkGameRules(gamefile);
+	if (!gameRulesResult.supported) return gameRulesResult;
 
-	const pieceCount = checkPieceCount(
+	const pieceCountResult = checkPieceCount(
 		boardutil.getPieceCountOfGame(gamefile.pieces, { ignoreColors: new Set([p.NEUTRAL]) }),
 	);
-	if (!pieceCount.supported) return pieceCount;
+	if (!pieceCountResult.supported) return pieceCountResult;
 
-	return checkPieceTypes(
-		[...gamefile.pieces.typeRanges.keys()].map((type) => typeutil.getRawType(type)),
-	);
+	const allRawTypes = new Set<RawType>();
+	for (const idx of gamefile.pieces.coords.values()) {
+		const type = gamefile.pieces.types[idx]!;
+		allRawTypes.add(typeutil.getRawType(type));
+	}
+	return checkPieceTypes(allRawTypes);
 }
 
 /**
@@ -210,23 +219,21 @@ function isAnalysisSupported(gamefile: GameFile): SupportedResult {
  * in range), which is why this deliberately performs no world-border check.
  */
 function isGameReviewSupported(gamefile: GameFile): SupportedResult {
-	const gameRules = checkGameRules(gamefile);
-	if (!gameRules.supported) return gameRules;
+	const gameRulesResult = checkGameRules(gamefile);
+	if (!gameRulesResult.supported) return gameRulesResult;
 
-	let nonNeutralCount = 0;
-	const rawTypes = new Set<RawType>();
-	for (const type of gamefile.startSnapshot.position.values()) {
-		if (typeutil.getColorFromType(type) !== p.NEUTRAL) nonNeutralCount++;
-		rawTypes.add(typeutil.getRawType(type));
-	}
-	const pieceCount = checkPieceCount(nonNeutralCount);
-	if (!pieceCount.supported) return pieceCount;
+	// Quickly check if the current position's piece count is already too
+	// high, before counting every single piece in the start position.
+	const currentPieceCount = boardutil.getPieceCountOfGame(gamefile.pieces, {
+		ignoreColors: new Set([p.NEUTRAL]),
+	});
+	if (currentPieceCount > MAX_PIECES) return { supported: false, reason: `Too many pieces` };
 
-	// A promotion can introduce a piece type absent from the starting position.
-	for (const move of gamefile.moves) {
-		if (move.promotion !== undefined) rawTypes.add(typeutil.getRawType(move.promotion));
-	}
-	return checkPieceTypes(rawTypes);
+	// Now we have set a realistic upper bound
+	const pieceCountResult = checkPositionPieceCount(gamefile.startSnapshot.position.values());
+	if (!pieceCountResult.supported) return pieceCountResult;
+
+	return checkPieceTypes(gamefile.existingRawTypes);
 }
 
 export default {
