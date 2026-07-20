@@ -13,13 +13,13 @@ import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeirona
 import math from '../../../../../shared/util/math/math.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import { GameBus } from '../../game/GameBus.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import analysisenginebounds from './analysisenginebounds.js';
-import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -517,9 +517,9 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	// The engine can't handle some positions at all (4D/5D variants, too many pieces, unsupported
 	// pieces/win conditions) — block outright. Bounds are separate: an out-of-range VIEWED position
 	// blocks too, but out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
-	const support = apeiron_card.isAnalysisSupported(gamefile);
-	if (!support.supported) {
-		blockAnalysis(support.reason);
+	const result = apeiron_card.isAnalysisSupported(gamefile);
+	if (!result.supported) {
+		blockAnalysis(result.reason);
 		return;
 	}
 	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) {
