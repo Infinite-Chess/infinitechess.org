@@ -110,18 +110,10 @@ function setEngineEnabled(value: boolean): void {
 	}
 }
 
-/**
- * Shows/hides the eval gauge.
- * @param notifyResize - Dispatches a synthetic 'resize' so the board canvas (whose available width
- * changes with the gauge) doesn't look stretched. Skip it for the frequent, often-oscillating
- * blocked/unblocked toggle (e.g. a piece wandering in and out of bounds) — that resize's canvas
- * clear-then-redraw is what causes the board to visibly flash black; a supported/unsupported
- * transition should only ever affect the gauge itself, not repaint the board.
- */
-function setGaugeVisible(visible: boolean, notifyResize = true): void {
+/** Shows/hides the eval gauge. */
+function setGaugeVisible(visible: boolean): void {
 	const wasHidden = element_Gauge.classList.contains('hidden');
 	element_Gauge.classList.toggle('hidden', !visible);
-	if (!notifyResize) return;
 	// Toggling its visibility affects the canvas's width,
 	// emit a 'resize' event so it doesn't get stretched.
 	if (wasHidden === visible) window.dispatchEvent(new Event('resize'));
@@ -272,9 +264,7 @@ function onEngineStatus(status: CevalStatus): void {
 		toast.show('The engine failed to load.', { error: true });
 	} else if (status === 'blocked') {
 		enginelegalmovesdebug.disable();
-		// No resize: this can oscillate rapidly (e.g. a piece wandering in/out of bounds) — only
-		// the gauge itself should visibly change, not trigger a board canvas clear-then-redraw.
-		setGaugeVisible(false, false);
+		setGaugeVisible(false);
 		clearPanelReadout(ceval.getBlockReason() ?? 'Out of bounds');
 	} else if (status === 'crashed') {
 		clearPanelReadout('Analysis crashed', { gauge: 0 });
@@ -300,10 +290,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	lineWindowStateMoveIndex = update.moveIndex;
 
 	if (update.terminal) {
-		// Show alongside the value that's about to be set — never visible with a stale/uninitialized
-		// height (a prior 'blocked'/'failed' status may have hidden it while showing nothing at all).
-		// No resize: see setGaugeVisible's blocked/unblocked oscillation note.
-		setGaugeVisible(true, false);
+		setGaugeVisible(true);
 		clearPanelReadout('Game Over', { gauge: terminalGaugeChances(), progress: update });
 		return;
 	}
@@ -317,7 +304,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	const canDeepen = update.done && update.depth < ceval.MAX_DEPTH && hasNonTerminalLine;
 	element_GoDeeper.classList.toggle('hidden', !canDeepen);
 
-	setGaugeVisible(true, false); // No resize: see setGaugeVisible's blocked/unblocked oscillation note.
+	setGaugeVisible(true);
 	updateGauge(best?.winningChances ?? 0);
 	updateProgress(update);
 	renderLines(update.lines);
