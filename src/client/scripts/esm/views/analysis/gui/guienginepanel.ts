@@ -603,11 +603,12 @@ function playLine(tokens: string[], untilIndex: number): void {
 }
 
 /**
- * Branches the analysis game from the currently-viewed ply: truncates the move tree's
- * active line, fast-forwards the logical front to align with the board, then rewinds
- * move-by-move (deleting each) back to the viewed index. Afterward the gamefile genuinely
- * sits at that position — board, turn, and global state all consistent — so a new move
- * can be played from it.
+ * Truncates the analysis game to the currently-viewed ply so a new move can branch from it:
+ * trims the move tree's active line and slices the flat move list to the viewed index, leaving
+ * the gamefile genuinely at that position (board, turn, and global state all consistent).
+ *
+ * Deliberately does NOT dispatch 'moves-changed'. This is only ever a prelude to a move commit,
+ * whose own dispatch reconciles the final state. Don't trigger the move list to re-render twice over.
  */
 function branchFromViewedPosition(gamefile: GameFile): void {
 	movetree.beginBranchFromViewedPosition(gamefile);
@@ -616,7 +617,6 @@ function branchFromViewedPosition(gamefile: GameFile): void {
 	// Has a chance of being wrong. We would otherwise have to perform game-over
 	// checks again. We don't store gameConclusion as a global state change per move.
 	gamefile.gameConclusion = undefined;
-	GameBus.dispatch('moves-changed');
 	animation.clearAnimations();
 }
 

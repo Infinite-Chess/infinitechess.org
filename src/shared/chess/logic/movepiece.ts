@@ -13,7 +13,6 @@ import type { Change } from './boardchanges.js';
 import type { MoveState } from './state.js';
 import type { MoveCoords } from './icn/icnconverter.js';
 import type { MovePacket } from '../../types.js';
-import type { GameConclusion } from '../util/winconutil.js';
 import type { MoveSpecialTags, SpecialTags } from '../util/moveutil.js';
 
 import state from './state.js';
@@ -543,10 +542,25 @@ function runActionAtGameFront<T>(boardsim: Board, action: () => T): T {
 // Move Wrappers ----------------------------------------------------------------------------------------------------
 
 /**
- * Wraps a function in a simulated move.
- * The callback may be used to obtain whatever
- * property of the boardsim we want after the move is made.
- * The move is automatically rewound when it's done.
+ * Simulates a move's board changes WITHOUT appending it to the move history, runs the callback,
+ * then reverts. Unlike {@link simulateMoveWrapper} it never touches `moves` or `moveIndex`, so it
+ * works at ANY ply — use it to observe board-state-only properties (e.g. check). It cannot observe
+ * history-dependent properties (e.g. game conclusion).
+ * @returns Whatever is returned by the callback
+ */
+function simulateEditWrapper<R>(boardsim: Board, moveTagged: MoveTagged, callback: () => R): R {
+	const move = generateMove(boardsim, moveTagged);
+	applyEdit(boardsim, move, true); // Apply the move's board & state changes (no history mutation)
+	const info = callback();
+	applyEdit(boardsim, move, false); // Revert
+	return info;
+}
+
+/**
+ * Wraps a callback in a simulated move, appending it to the move history for the duration.
+ * Because it mutates `moves`/`moveIndex`, it ONLY works at the front of the game. Use it when
+ * the callback reads move history (e.g. game conclusion); for board-state-only observations at
+ * any ply, use {@link simulateEditWrapper}.
  * @returns Whatever is returned by the callback
  */
 function simulateMoveWrapper<R>(boardsim: Board, moveTagged: MoveTagged, callback: () => R): R {
@@ -555,19 +569,6 @@ function simulateMoveWrapper<R>(boardsim: Board, moveTagged: MoveTagged, callbac
 	const info = callback();
 	rewindMove(boardsim);
 	return info;
-}
-
-/**
- * Simulates a move to get the gameConclusion
- * @returns the gameConclusion
- */
-function getSimulatedConclusion(
-	boardsim: Board,
-	moveTagged: MoveTagged,
-): GameConclusion | undefined {
-	return simulateMoveWrapper(boardsim, moveTagged, () =>
-		wincondition.getGameConclusion(boardsim),
-	);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -585,6 +586,6 @@ export default {
 	applyMove,
 	applyEdit,
 	rewindMove,
+	simulateEditWrapper,
 	simulateMoveWrapper,
-	getSimulatedConclusion,
 };

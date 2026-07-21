@@ -565,7 +565,7 @@ function getSimulatedCheck(
 	moveTagged: MoveTagged,
 	colorToTestInCheck: Player,
 ): ReturnType<typeof checkdetection.detectCheck> {
-	return movepiece.simulateMoveWrapper(boardsim, moveTagged, () =>
+	return movepiece.simulateEditWrapper(boardsim, moveTagged, () =>
 		checkdetection.detectCheck(boardsim, colorToTestInCheck),
 	);
 }

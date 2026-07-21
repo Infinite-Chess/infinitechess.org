@@ -11,7 +11,6 @@ import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves
 import type { RenderableInstanced } from '../../../webgl/Renderable.js';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
@@ -70,15 +69,6 @@ GameBus.addEventListener('physical-move', () => {
  * legal moves cached.
  */
 function update(): void {
-	const gamefile = gameslot.getGamefile()!;
-
-	// Do not render line highlights upon arrow hover, when game is rewinded,
-	// since calculating their legal moves means overwriting game's move history.
-	if (!moveutil.areWeViewingLatestMove(gamefile)) {
-		hoveredArrowsLegalMoves.length = 0;
-		return;
-	}
-
 	const hoveredArrows = arrows.getHoveredArrows();
 
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
