@@ -432,6 +432,7 @@ function restoreCachedReview(): boolean {
  * the game itself is already guaranteed to match. Returns undefined when unusable.
  */
 function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
+	if (raw === undefined) return undefined;
 	const parsed = CachedGameReviewSchema.safeParse(raw);
 	if (!parsed.success) {
 		console.warn('[Game Review] Could not parse the local review cache:', parsed.error);
