@@ -29,7 +29,6 @@ import gameslot from '../../../game/chess/gameslot.js';
 import gamereview from '../gamereview.js';
 import guimovetree from './guimovetree.js';
 import { GameBus } from '../../../game/GameBus.js';
-import gamesession from '../../../game/chess/gamesession.js';
 
 // Elements ---------------------------------------------------------------------------
 
