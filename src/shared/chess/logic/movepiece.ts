@@ -122,7 +122,7 @@ function generateMove(boardsim: Board, moveTagged: MoveTagged): MoveFull {
 		type: piece.type,
 		changes: [],
 		generateIndex: boardsim.state.local.moveIndex + 1,
-		state: { local: [], global: [] },
+		state: [],
 		token: icnconverter.getCompactMoveFromDraft(moveTagged),
 		flags: {
 			// These will be set later, but we need a default value
@@ -303,7 +303,7 @@ function queueIncrementMoveRuleStateChange(boardsim: Board, move: MoveFull): voi
 function makeMove(boardsim: Board, move: MoveFull): void {
 	boardsim.moves.push(move);
 
-	applyMove(boardsim, move, true, { global: true }); // Apply the logical board changes.
+	applyMove(boardsim, move, true, { updateTurn: true }); // Apply the logical board changes.
 
 	// Now we can test for check, and modify the state of the boardsim if it is.
 	createCheckState(boardsim, move);
@@ -315,13 +315,19 @@ function makeMove(boardsim: Board, move: MoveFull): void {
  * Applies a move's board changes to the boardsim, and updates moveIndex.
  * No graphical changes.
  * @param forward - Whether the move's board changes should be applied forward or backward.
- * @param [options.global] - If true, we will also apply this move's global state changes to the boardsim
+ * @param [options.updateTurn] - If true, re-derives `whosTurn` for the resulting ply. Pass true when
+ * making/rewinding a real move, or when the viewed ply is itself a playable position (analysis).
+ * Otherwise `whosTurn` stays pinned to the front, as online/engine turn detection requires.
  */
-function applyMove(boardsim: Board, move: MoveFull, forward = true, { global = false } = {}): void {
+function applyMove(
+	boardsim: Board,
+	move: MoveFull,
+	forward = true,
+	{ updateTurn = false } = {},
+): void {
 	boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the boardsim moveIndex
-	// Updating whosTurn is essentially a global state change.
 	// Needs to be after moveIndex is updated.
-	if (global) boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex); // prettier-ignore
+	if (updateTurn) boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex); // prettier-ignore
 
 	// Stops stupid missing piece errors
 	const indexToApply = boardsim.state.local.moveIndex + Number(!forward);
@@ -330,19 +336,17 @@ function applyMove(boardsim: Board, move: MoveFull, forward = true, { global = f
 			`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`,
 		);
 
-	applyEdit(boardsim, move, forward, global); // Apply the board changes
+	applyEdit(boardsim, move, forward); // Apply the board changes
 }
 
 /**
- * Applies a edits board changes to the boardsim.
- * If we're applying a board editor's move's edits, then global should be true.
+ * Applies an edit's state and board changes to the boardsim.
  * @param boardsim - The boardsim to apply the edit to.
  * @param edit - The edit to apply, which contains the changes and state of the move.
- * @param global - If true, we will also apply this move's global state changes to the boardsim. Should be true if the edit is from a board editor move.
  * @param forward - Whether the move's board changes should be applied forward or backward.
  */
-function applyEdit(boardsim: Board, edit: Edit, forward: boolean, global: boolean): void {
-	state.applyMove(boardsim.state, edit.state, forward, { globalChange: global }); // Apply the State of the move
+function applyEdit(boardsim: Board, edit: Edit, forward: boolean): void {
+	state.applyMove(boardsim.state, edit.state, forward); // Apply the State of the move
 	boardchanges.runChanges(boardsim, edit.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
 
@@ -482,7 +486,7 @@ function rewindMove(boardsim: Board): void {
 	// console.error("Rewinding move");
 	const move = moveutil.getMoveFromIndex(boardsim.moves, boardsim.state.local.moveIndex);
 
-	applyMove(boardsim, move, false, { global: true });
+	applyMove(boardsim, move, false, { updateTurn: true });
 
 	// Delete the move off the end of our moves list
 	boardsim.moves.pop();

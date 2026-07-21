@@ -171,10 +171,11 @@ function viewMove(
 	move: MoveFull,
 	forward = true,
 ): void {
-	// In analysis mode, every ply is a real, editable position.
-	// Even viewing a move should apply global state and update turn.
-	const global = gamesession.getGameType() === 'analysis';
-	movepiece.applyMove(gamefile, move, forward, { global }); // Apply the logical changes.
+	// In analysis mode, every ply is a real, editable position you can branch from,
+	// so viewing a move must also advance whose turn it is. Elsewhere, whosTurn stays
+	// pinned to the front for online/engine turn detection.
+	const updateTurn = gamesession.getGameType() === 'analysis';
+	movepiece.applyMove(gamefile, move, forward, { updateTurn }); // Apply the logical changes.
 
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.

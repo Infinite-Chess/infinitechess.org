@@ -172,9 +172,8 @@ function GameToPosition(
 	for (let i = 0; i < halfmoves; i++) {
 		const move = moves[i]!;
 
-		// Apply the move's state changes.
-		// state.applyMove(longform, move.state, true, { globalChange: true }); // Apply the State of the move
-		state.applyGlobalStateChanges(longform.state_global, move.state.global, true);
+		// Apply the move's state changes (only the global ones land on a bare position).
+		state.applyGlobalStateChanges(longform.state_global, move.state, true);
 		// Next apply the logical (piece) changes.
 		boardchanges.runChanges_Position(longform.position, move.changes);
 

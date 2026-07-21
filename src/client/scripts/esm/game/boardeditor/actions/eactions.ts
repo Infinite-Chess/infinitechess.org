@@ -27,6 +27,7 @@ import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
+import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
@@ -56,7 +57,6 @@ import annotations from '../../rendering/highlights/annotations/annotations';
 import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
 import validatorama from '../../../util/validatorama';
-import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card';
 import selectiontool from '../tools/selection/selectiontool';
 import guiboardcontrols from '../../gui/guiboardcontrols';
 import clientmetadatautil from '../../chess/clientmetadatautil';
@@ -417,7 +417,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	const thisGamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	const pieces = thisGamefile.pieces;
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	const edit: Edit = { changes: [], state: [] };
 
 	// Remove all current pieces from position
 	queueRemovalOfAllPieces(thisGamefile, edit, pieces);

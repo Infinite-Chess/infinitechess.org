@@ -92,7 +92,7 @@ function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = 
 	selection.unselectPiece();
 
 	// Run logical changes
-	movepiece.applyEdit(gamefile, edit, forward, true);
+	movepiece.applyEdit(gamefile, edit, forward);
 	GameBus.dispatch('physical-move');
 	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
@@ -125,12 +125,7 @@ function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = 
 
 /** Appends the given edit to the history stack, discarding any future (redo) edits. */
 function addEditToHistory(edit: Edit): void {
-	if (
-		edit.changes.length === 0 &&
-		edit.state.local.length === 0 &&
-		edit.state.global.length === 0
-	)
-		return;
+	if (edit.changes.length === 0 && edit.state.length === 0) return;
 	edits!.length = indexOfThisEdit!; // Truncate any "redo" edits, that timeline is being erased.
 	const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 	const editWithRules: EditWithRules = {

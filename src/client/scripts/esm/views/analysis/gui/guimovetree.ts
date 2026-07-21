@@ -603,7 +603,7 @@ function generateVariationMoves(
 function applyToIndex(gamefile: GameFile, index: number): void {
 	const forward = index >= gamefile.state.local.moveIndex;
 	movepiece.goToMove(gamefile, index, (move) =>
-		movepiece.applyMove(gamefile, move, forward, { global: true }),
+		movepiece.applyMove(gamefile, move, forward, { updateTurn: true }),
 	);
 }
 

@@ -42,7 +42,7 @@ GameBus.addEventListener('game-unloaded', () => {
 	// Erase the model so it doesn't carry over to next loaded game
 	model = undefined;
 });
-GameBus.addEventListener('physical-move', () => {
+GameBus.addEventListener('view-move', () => {
 	regenModel();
 });
 
