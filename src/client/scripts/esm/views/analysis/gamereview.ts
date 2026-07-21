@@ -99,7 +99,6 @@ interface ReviewListeners {
 /** Persisted engine output. Classifications are deliberately recomputed on restore. */
 interface CachedGameReview {
 	schemaVersion: number;
-	gameFingerprint: string;
 	engineUrl: string;
 	workerUrl: string;
 	depth: number;
@@ -193,7 +192,6 @@ const EvaluateResultSchema = z.object({
 /** Validates a persisted review's shape (see {@link CachedGameReview}). */
 const CachedGameReviewSchema = z.object({
 	schemaVersion: z.literal(REVIEW_CACHE_SCHEMA_VERSION),
-	gameFingerprint: z.string(),
 	engineUrl: z.string(),
 	workerUrl: z.string(),
 	depth: z.int(),
@@ -227,7 +225,6 @@ let turnOrder: Player[] = [];
 /** Search depth for this review. */
 let reviewDepth = 0;
 let division: ReviewDivision = {};
-let gameFingerprint = '';
 
 /** Per-position engine results, indexed 0 (start position) … N (final position). */
 let results: (EvaluateResult | undefined)[] = [];
@@ -373,7 +370,6 @@ function start(): void {
 	// Always hand the engine an explicit world border (its own internal fallback is only 1e15),
 	// so every reviewed position is evaluated over the full safe coordinate range. Matches ceval.
 	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
-	gameFingerprint = serializePosition(mainlineNodes.length);
 	division = reviewdivision.determineDivision(longformIn.position, mainlineMoves);
 
 	const totalPositions = mainlineNodes.length + 1;
@@ -431,9 +427,9 @@ function restoreCachedReview(): boolean {
 }
 
 /**
- * Validates a persisted review and confirms it's compatible with the current game
- * and engine — same fingerprint/URLs, deep enough, matching position count, and
- * each result indexed by its position. Returns undefined when unusable.
+ * Validates a persisted review and confirms it's compatible with the current engine —
+ * same engine/worker URLs and deep enough. The cache key is the immutable DB game id, so
+ * the game itself is already guaranteed to match. Returns undefined when unusable.
  */
 function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 	const parsed = CachedGameReviewSchema.safeParse(raw);
@@ -444,12 +440,9 @@ function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 	const cached = parsed.data;
 
 	if (
-		cached.gameFingerprint !== gameFingerprint ||
 		cached.engineUrl !== window.analysisPageData.engineUrl ||
 		cached.workerUrl !== window.analysisPageData.workerUrl ||
-		cached.depth < reviewDepth ||
-		cached.results.length !== results.length ||
-		cached.results.some((result, index) => result.requestId !== index)
+		cached.depth < reviewDepth
 	) {
 		console.warn('[Game Review] Local review cache is incompatible with the current game or engine.'); // prettier-ignore
 		return undefined;
@@ -463,7 +456,6 @@ function persistCompletedReview(): void {
 	if (!key || results.some((result) => result === undefined)) return;
 	const cached: CachedGameReview = {
 		schemaVersion: REVIEW_CACHE_SCHEMA_VERSION,
-		gameFingerprint,
 		engineUrl: window.analysisPageData.engineUrl,
 		workerUrl: window.analysisPageData.workerUrl,
 		depth: reviewDepth,
@@ -620,7 +612,7 @@ function serializePosition(index: number): string {
 	longformIn!.moves = mainlineMoves.slice(0, index);
 
 	// Clamp to `index`: an out-of-bounds position's safe start is index+1 (unrepresentable). It's
-	// never dispatched to a worker (dispatchNext skips it), but fingerprint/cache callers still ask
+	// never dispatched to a worker (dispatchNext skips it), but cache callers still ask
 	// for its ICN — clamping keeps GameToPosition within the move list instead of overrunning it.
 	const safeStart = Math.min(safeStartByIndex[index]!, index);
 	if (safeStart === 0) return icnconverter.LongToShort_Format(longformIn!, ICN_OPTIONS); // Common path.
