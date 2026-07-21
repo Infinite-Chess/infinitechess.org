@@ -52,12 +52,10 @@ const hoveredArrowsLegalMoves: ArrowLegalMoves[] = [];
 
 // Events ----------------------------------------------------------------------------------------------
 
-GameBus.addEventListener('physical-move', () => {
-	// Whenever a move is made in the game, the color of the legal move highlights
-	// of the hovered arrows often changes.
-	// Erase the list so they can be regenerated next frame with the correct color.
-	reset();
-});
+// Whenever viewing a different move in the game, the color of the legal
+// move highlights of the hovered arrows changes depending on whosTurn.
+// Erase the list so they can be regenerated next frame with the correct color.
+GameBus.addEventListener('view-move', () => reset());
 
 // Functions -------------------------------------------------------------------------------------------
 
