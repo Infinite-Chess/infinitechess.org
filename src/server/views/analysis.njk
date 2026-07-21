@@ -129,7 +129,7 @@
 				<span class="result-text">{{ meta.result.text if meta.result }}</span>
 			</div>
 
-			{# Per-player review stats. Hidden until `/analysis/:id?review=1` runs, when
+			{# Per-player review stats. Hidden until a Game Review is opened, when
 			   guigamereview.ts moves the .meta-player rows in as column headers (replacing
 			   the participant list + result banner above) and reveals it. #}
 			{% set reviewStatRows = [
@@ -299,6 +299,13 @@
 
 			{# Bottom side's captured surplus material #}
 			<div class="material" id="material-bottom"></div>
+
+			{# Game Review start button — only for a real game (never custom positions),
+			revealed by guigamereview.ts once loaded if the engine supports reviewing it;
+			clicking swaps it for the graph below. #}
+			{% if meta %}
+			<button class="btn-primary hidden" id="btn-game-review">Game Review</button>
+			{% endif %}
 
 			{# Game Review graph #}
 			<div class="review-graph panel hidden" id="review-graph">

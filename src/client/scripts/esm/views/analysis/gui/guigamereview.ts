@@ -3,6 +3,9 @@
 /**
  * Game review UI for the analysis page. Owns:
  *
+ * * the Game Review button (real games only), which starts the review and swaps
+ *   itself out for the stats + eval graph; if the played mainline has been edited
+ *   it reloads the pristine game and auto-opens the review there;
  * * the two-column per-player stats (accuracy, lapses, acpl) that replace the
  *   participant rows + result banner there, filling in live as the review runs;
  * * the progress bar below the moves list, swapped for the clickable eval graph
@@ -30,6 +33,7 @@ import gamesession from '../../../game/chess/gamesession.js';
 
 // Elements ---------------------------------------------------------------------------
 
+const element_GameReviewBtn = document.getElementById('btn-game-review'); // Absent on bare /analysis page.
 const element_Stats = document.getElementById('review-stats')!;
 const element_Progress = document.getElementById('review-progress')!;
 const element_ProgressFill = document.getElementById('review-progress-fill')!;
@@ -56,9 +60,12 @@ function isLapseKey(key: string): key is LapseKey {
 	return (LAPSE_KEYS as readonly string[]).includes(key);
 }
 
+/** The played game's mainline, snapshotted at load (bar-delimited move tokens) for edit detection. */
+let playedMainline = '';
+
 // Initialization -----------------------------------------------------------------------
 
-/** Wires the game review UI and honors `/analysis/:id?review=1`. */
+/** Wires the game review UI, including the Game Review button click. */
 function init(): void {
 	gamereview.onProgress(() => {
 		updateProgress();
@@ -85,22 +92,51 @@ function init(): void {
 	});
 	initGraphInteraction(element_GraphCanvas);
 
-	if (docutil.getQueryParam('review') === '1') {
-		GameBus.addEventListener('game-loaded', () => startRequestedReview(), { once: true });
+	element_GameReviewBtn?.addEventListener('click', onGameReviewClicked);
+}
+
+/**
+ * Runs once the initial game has fully loaded: snapshots the played mainline (for later edit
+ * detection), reveals the Game Review button for a reviewable game, and honors a `?review=1`
+ * auto-open (set only by the reset-reload below).
+ */
+function onInitialGameLoaded(): void {
+	playedMainline = currentMainline();
+	if (gamereview.canStart()) element_GameReviewBtn!.classList.remove('hidden');
+	if (docutil.getQueryParam('review') === '1') openReview();
+}
+
+/** Returns the current mainline as bar-joined move tokens, for cheap comparison. */
+function currentMainline(): string {
+	const root = movetree.getRoot();
+	if (!root) return '';
+	const moves = movetree.getMovesFromLine(movetree.getLineForNode(root));
+	return icnconverter.getShortFormMovesFromMoves(moves, { compact: true, spaces: false, comments: false, abbrev: false, move_numbers: false }); // prettier-ignore
+}
+
+/**
+ * Handles a Game Review button click. Normally opens the review in place. If the played game's
+ * mainline has been edited, instead reloads the pristine game and auto-opens the review there
+ * (`?review=1`). That reset is destructive to added lines, so confirm first.
+ */
+function onGameReviewClicked(): void {
+	if (currentMainline() === playedMainline) {
+		// Main line preserved, no need to confirm: start review.
+		openReview();
+	} else {
+		// Main line diverged: confirm destructive reload.
+		const proceed = confirm("Starting a Game Review will discard the lines you've added and review the game as it was played. Continue?"); // prettier-ignore
+		if (proceed) window.location.assign(`${window.location.pathname}?review=1`);
 	}
 }
 
-function startRequestedReview(attempt = 0): void {
-	// `game-loaded` is logical; wait for the graphical load to finish before replacing
-	// sidebar DOM or generating variations. Give up silently if the page load failed.
-	if (gamesession.isLoading()) {
-		if (attempt < 200) setTimeout(() => startRequestedReview(attempt + 1), 50);
-		return;
-	}
+/** Starts the review and swaps the Game Review button out for the live stats + eval graph. */
+function openReview(): void {
 	if (!gamereview.canStart()) return;
 
 	gamereview.start();
 
+	element_GameReviewBtn!.classList.add('hidden');
 	revealStats();
 	if (gamereview.getStatus() === 'running') element_Progress.classList.remove('hidden');
 	element_Graph.classList.remove('hidden');
@@ -579,4 +615,4 @@ function formatAdvantage(cp: number): string {
 	return `${cp > 0 ? '+' : ''}${(cp / 100).toFixed(1)}`.replace('-', '−');
 }
 
-export default { init };
+export default { init, onInitialGameLoaded };

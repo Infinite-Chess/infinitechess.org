@@ -29,7 +29,7 @@ async function loadInitialGame(): Promise<void> {
 	if (gameId === null) {
 		// No game ID in the URL -> start a fresh board. The variant setup panel drives
 		// subsequent loads (see analysissetup.ts).
-		loadVariant('Classical');
+		await loadVariant('Classical');
 	} else {
 		// Load the game from the server
 		gamesession.setSessionGame({ type: 'analysis' }); // pasteGame requires an analysis session.
@@ -72,11 +72,11 @@ function runLoad(loadOptions: LoadOptions): Promise<void> {
  * Loads a fresh board of the given variant, replacing the current game.
  * @param slideLimit - Optional Slide Limit modifier override (see the variant setup panel).
  */
-function loadVariant(variant: VariantCode, slideLimit?: bigint): void {
+function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
 	if (gameslot.getGamefile()) gamesession.unloadGame();
 
 	gamesession.setSessionGame({ type: 'analysis' });
-	void runLoad({
+	return runLoad({
 		timeControl: '-',
 		variant,
 		dateTimestamp: Date.now(),

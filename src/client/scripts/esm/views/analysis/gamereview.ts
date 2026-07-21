@@ -339,9 +339,13 @@ function captureMainline(): AnalysisMoveNode[] {
 
 // Lifecycle ------------------------------------------------------------------------------
 
-/** Whether a review can start: an idle, engine-supported game with at least one mainline move. */
+/**
+ * Whether a review can start: an idle, engine-supported real game
+ * (a loaded /analysis/:id game) with at least one mainline move.
+ */
 function canStart(): boolean {
 	if (status !== 'idle') return false;
+	if (window.analysisPageData.gameId === null) return false;
 	const gamefile = gameslot.getGamefile();
 	if (gamefile === undefined || captureMainline().length === 0) return false;
 	return apeiron_card.isGameReviewSupported(gamefile).supported;
