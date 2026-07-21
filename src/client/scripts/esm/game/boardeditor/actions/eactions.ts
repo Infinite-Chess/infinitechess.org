@@ -30,7 +30,7 @@ import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
-import { engineDictionary } from '../../../../../../shared/chess/engines/engine';
+import { engineDictionary } from '../../../../../../shared/chess/engine';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
@@ -389,7 +389,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	const thisGamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	const pieces = thisGamefile.pieces;
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	const edit: Edit = { changes: [], state: [] };
 
 	// Remove all current pieces from position
 	queueRemovalOfAllPieces(thisGamefile, edit, pieces);

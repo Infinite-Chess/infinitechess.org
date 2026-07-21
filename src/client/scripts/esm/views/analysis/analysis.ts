@@ -15,9 +15,9 @@ import guianalysisview from './gui/guianalysisview.js';
 import guianalysisactions from './gui/guianalysisactions.js';
 
 import './gui/guimovetree.js';
+import './rendering/reviewbadge.js';
 import '../../game/gui/guimaterial.js';
 import './rendering/analysisborderdebug.js';
-import './rendering/reviewbadge.js';
 
 /** The analysis-page board canvas WebGL renders onto. */
 const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
@@ -27,10 +27,12 @@ function start(): void {
 	gameloop.init(canvas);
 
 	// Prevent clicking buttons from focusing them, so keyboard controls don't interact with them.
-	document.querySelectorAll<HTMLElement>('.btn-bare, .action-btn').forEach((btn) => {
-		btn.setAttribute('tabindex', '-1');
-		btn.addEventListener('click', () => btn.blur());
-	});
+	document
+		.querySelectorAll<HTMLElement>('.btn-bare, .action-btn, .review-stat-action')
+		.forEach((btn) => {
+			btn.setAttribute('tabindex', '-1');
+			btn.addEventListener('click', () => btn.blur());
+		});
 
 	guienginepanel.init();
 	guianalysisactions.init();
@@ -41,7 +43,9 @@ function start(): void {
 		void import('./analysissetup.js').then((m) => m.default.init());
 	}
 
-	void analysisloader.loadInitialGame();
+	// Once gamefile is fully loaded, let the Game Review UI reveal its button
+	// (real games only) and honor a `?review=1` auto-open.
+	void analysisloader.loadInitialGame().then(() => guigamereview.onInitialGameLoaded());
 
 	// Poll each module's keyboard shortcuts every frame (via gamecore's document input listener).
 	gameloop.start(() => {

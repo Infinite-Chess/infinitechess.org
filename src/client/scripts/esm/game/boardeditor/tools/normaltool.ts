@@ -31,7 +31,7 @@ import movesequence from '../../chess/movesequence';
 function makeMoveEdit(gamefile: GameFile, mesh: Mesh | undefined, moveCoords: MoveCoords): Edit {
 	const edit = generateMoveEdit(gamefile, moveCoords);
 
-	movepiece.applyEdit(gamefile, edit, true, true); // forward & global are always true
+	movepiece.applyEdit(gamefile, edit, true); // forward is always true
 	GameBus.dispatch('physical-move');
 	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
@@ -57,7 +57,7 @@ function generateMoveEdit(boardsim: Board, moveCoords: MoveCoords): Edit {
 	// Initialize the state, and change list, as empty for now.
 	const edit: Edit = {
 		changes: [],
-		state: { local: [], global: [] },
+		state: [],
 	};
 
 	movepiece.calcMovesChanges(boardsim, piece, moveCoords, edit); // Move piece regularly (no specials)

@@ -21,7 +21,7 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
-import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
+import { engineDictionary } from '../../../../../shared/chess/engine.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';

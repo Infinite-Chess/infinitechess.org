@@ -27,6 +27,8 @@
  * when the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
  */
 
+import type { EvaluateResult } from './gamereview.js';
+
 /** The engine module's exports (default init + Engine + initThreadPool + stop_flag_ptr + …). */
 let wasm: any;
 
@@ -84,35 +86,10 @@ type AnalysisCommand =
 	  }
 	| { cmd: 'stop' };
 
-/**
- * The result of a one-shot `evaluate` command. Score is from the side-to-move's
- * perspective; both absent on a terminal position (no legal moves).
- */
-interface EvaluateResult {
-	requestId: number;
-	/** Centipawns. Absent when mating or terminal. */
-	cp?: number;
-	/** Full moves to mate (negative = getting mated). */
-	mate?: number;
-	/** The engine's best line as compact move tokens ("x,y>x,y=Q"). Absent on terminal positions. */
-	pv?: string[];
-	/** 0 = terminal (checkmate/stalemate), 1 = forced move (not searched). */
-	legalMoveCount: number;
-	/** Whether the side to move is in check (distinguishes checkmate from stalemate when terminal). */
-	inCheck: boolean;
-	/** The depth actually searched (0 for terminal/forced positions). */
-	depth: number;
-	/** Echoed for an unreported TT-warming search. */
-	warmup?: boolean;
-}
-
 /** Messages posted back to the main thread. */
 type AnalysisResponse =
-	/**
-	 * `mt` is whether this engine build supports Lazy SMP (exports `initThreadPool`).
-	 * `version` is the engine's Cargo.toml version (e.g. "2.0.0").
-	 */
-	| { type: 'ready'; mt: boolean; version: string }
+	/** `mt` is whether this engine build supports Lazy SMP (exports `initThreadPool`). */
+	| { type: 'ready'; mt: boolean }
 	| { type: 'initerror'; message: string }
 	/** The wasm shared memory + byte offset of the stop flag, for instant search abort from the page. */
 	| { type: 'sharedmem'; buffer: ArrayBufferLike; stopFlagPtr: number }
@@ -128,7 +105,7 @@ type AnalysisResponse =
 	/** The search threw (likely a wasm panic, which poisons the module) — the main thread must respawn the worker. */
 	| { type: 'searcherror'; message: string };
 
-export type { AnalysisCommand, AnalysisResponse, AnalysisInfo, AnalysisLine, GoOptions, EvaluateResult }; // prettier-ignore
+export type { AnalysisCommand, AnalysisResponse, AnalysisInfo, AnalysisLine, GoOptions }; // prettier-ignore
 
 // State ------------------------------------------------------------------------
 
@@ -191,7 +168,6 @@ async function initialize(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promi
 		postMessage({
 			type: 'ready',
 			mt: engineIsMultithreaded,
-			version: wasm.engine_version(),
 		} satisfies AnalysisResponse);
 	} catch (e) {
 		console.error('[Analysis Engine] Failed to initialize wasm', e);
@@ -342,6 +318,7 @@ async function runLoop(): Promise<void> {
 					slice_ms: SLICE_MS,
 				},
 				(info: AnalysisInfo) => {
+					reachedDepth = Math.max(reachedDepth, info.depth);
 					postMessage({ type: 'info', requestId, info } satisfies AnalysisResponse);
 				},
 			);

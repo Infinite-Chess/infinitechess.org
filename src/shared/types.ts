@@ -15,7 +15,7 @@ import typeschemas from './chess/util/typeschemas.js';
 import { players } from './chess/util/typeutil.js';
 import variantregistry from './chess/variants/variantregistry.js';
 import { POSITION_STRING_THRESHOLD } from './chess/variants/servervalidation.js';
-import { engineDictionary, ValidEngine } from './chess/engines/engine.js';
+import { engineDictionary, ValidEngine } from './chess/engine.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
 

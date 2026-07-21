@@ -53,7 +53,7 @@ function detectRepetitionDraw(boardsim: Board): GameConclusion | undefined {
 		// 'capture' move changes are handled lower down, they are one-way too.
 		if (typeutil.getRawType(move.type) === r.PAWN) break; // Pawn pushes reset the repetition alg because we know they can't move back to their previous position.
 		if (
-			move.state.global.some(
+			move.state.some(
 				(stateChange: StateChange) =>
 					stateChange.type === 'specialrights' && stateChange.future === false,
 			)
@@ -81,7 +81,7 @@ function detectRepetitionDraw(boardsim: Board): GameConclusion | undefined {
 		}
 
 		// Next, iterate through all enpassant state changes and add fluxes for them
-		move.state.global.forEach((state: StateChange) => {
+		move.state.forEach((state: StateChange) => {
 			if (state.type !== 'enpassant') return false; // Filter out non-enpassant states
 			/**
 			 * If we reverse applied this enpassant state,

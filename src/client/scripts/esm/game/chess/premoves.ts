@@ -136,7 +136,7 @@ function applyPremove(
 	forward: boolean,
 ): void {
 	// console.log(`Applying premove ${forward ? 'FORWARD' : 'BACKWARD'}:`, premove);
-	movepiece.applyEdit(gamefile, premove, forward, true); // forward & global are true
+	movepiece.applyEdit(gamefile, premove, forward);
 	if (mesh) movesequence.runMeshChanges(gamefile, mesh, premove, forward);
 }
 
@@ -153,7 +153,7 @@ function generatePremove(gamefile: GameFile, moveTagged: MoveTagged): Premove {
 		...moveTagged,
 		type: piece.type,
 		changes: [],
-		state: { local: [], global: [] },
+		state: [],
 	};
 
 	const rawType = typeutil.getRawType(piece.type);

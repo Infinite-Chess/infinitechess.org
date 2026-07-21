@@ -1,8 +1,6 @@
-
-
+// src/client/scripts/esm/game/chess/positionnormalizer/unusedpositionnormalizermethods.ts
 
 // ======================================== ORTHOGONAL SOLVER ========================================
-
 
 // /**
 //  * On either the X or Y axis groups, initially sets each's transformedRange,
@@ -30,11 +28,7 @@
 // 	}
 // }
 
-
 // ======================================== HELPERS ========================================
-
-
-
 
 // /**
 //  * Calculates the amount a piece should be pushed to align with another piece.
@@ -78,10 +72,10 @@
 // 	// The gap is the space between the end of the current group and the start of the next,
 // 	// minus the required padding. This is the amount of space that a push can "collapse".
 // 	const gap = nextGroup.transformedRange![0] - currentGroup.transformedRange![1] - MIN_ARBITRARY_DISTANCE;
-	
+
 // 	// The gap should never be negative in a valid state, but if it is, there's no collapsible space.
 // 	if (gap < 0n) throw Error("Overlapping groups!"); // Safety check
-	
+
 // 	return gap;
 // }
 
@@ -113,7 +107,7 @@
 // 		// The gap is the space between the end of the current group and the start of the next, subtract the padding.
 // 		const gap = nextGroup.transformedRange![0] - MIN_ARBITRARY_DISTANCE - currentGroup.transformedRange![1];
 // 		if (gap < 0n) throw Error("Gap is < 0!"); // Protection in case this bug ever happens.
-		
+
 // 		totalGap += gap;
 // 	}
 
@@ -123,11 +117,11 @@
 // VERSION THAT PUSHES ALL GROUPS AFTERWARD EQUALLY, WITHOUT ABSORBING GAPS
 // /**
 //  * Pushes all groups on a given orthogonal axis from a starting index onwards by a specific amount.
-//  * @param axisToPush 
-//  * @param axisOrder 
+//  * @param axisToPush
+//  * @param axisOrder
 //  * @param startingGroupIndex - This group and all following groups will be pushed by the same amount.
-//  * @param pushAmount 
-//  * @param coordIndex 
+//  * @param pushAmount
+//  * @param coordIndex
 //  */
 // function ripplePush(axisToPush: '1,0' | '0,1', AllAxisOrders: AxisOrders, startingGroupIndex: number, pushAmount: bigint) {
 // 	if (pushAmount <= 0n) throw Error(`Ripple push amount must be positive, got ${pushAmount}.`);
@@ -173,7 +167,7 @@
 
 // 	// Perform the mandatory push on the piece's group and contionally, subsequent groups.
 // 	// If subsequent groups can fill a gap in this axis, they will. They just don't like to overlap.
-	
+
 // 	// We know this push is REQUIRED because it is the ONLY action that will satisfy
 // 	// the constraint between piece A and piece B!
 
@@ -219,7 +213,6 @@
 // 	}
 // }
 
-
 // /**
 //  * Takes a push amount and returns the level of error it has (absolute value).
 //  */
@@ -254,8 +247,8 @@
 //  * Calculates the topology of the board on a specific diagonal axis.
 //  * This is used for comparing against after doing some pushes
 //  * to detect if we've starting infinite repeating.
-//  * @param axis 
-//  * @param AllAxisOrders 
+//  * @param axis
+//  * @param AllAxisOrders
 //  */
 // function calculateBoardTopology(pieces: PieceTransform[], axisDeterminer: AxisDeterminer): bigint[] {
 

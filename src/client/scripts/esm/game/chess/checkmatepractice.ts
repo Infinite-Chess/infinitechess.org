@@ -15,7 +15,7 @@ import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js'
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
-import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
+import { engineDictionary } from '../../../../../shared/chess/engine.js';
 import {
 	players as p,
 	ext as e,

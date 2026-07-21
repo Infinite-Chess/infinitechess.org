@@ -54,7 +54,6 @@ const element_RejectDraw = document.getElementById('btn-reject-draw') as HTMLBut
 // a participant (not spectator) of an unevicted (live, in-memory) game.
 const element_Rematch = document.getElementById('btn-rematch') as HTMLButtonElement | null;
 const element_Analysis = document.getElementById('btn-analysis') as HTMLButtonElement;
-const element_GameReview = document.getElementById('btn-game-review') as HTMLButtonElement;
 
 // Events ------------------------------------------------------------------------------------
 
@@ -82,9 +81,8 @@ function refresh(): void {
 	const gamefile = gameslot.getGamefile();
 
 	if (gamefile && gamefileutility.isGameOver(gamefile)) {
-		// Hide both analysis actions if zero moves were played (nothing to analyze).
+		// Hide the Analysis action if zero moves were played (nothing to analyze).
 		element_Analysis.classList.toggle('hidden', gamefile.moves.length === 0);
-		element_GameReview.classList.toggle('hidden', gamefile.moves.length === 0);
 		showOnly(element_ActionsOver);
 	}
 	// Live game: an incoming draw offer trumps the default live actions.
@@ -133,9 +131,7 @@ if (element_ActionsDrawOffer && element_AcceptDraw && element_RejectDraw)
 	graceButtons.set(element_ActionsDrawOffer, [element_AcceptDraw, element_RejectDraw]);
 graceButtons.set(
 	element_ActionsOver,
-	element_Rematch
-		? [element_Rematch, element_Analysis, element_GameReview]
-		: [element_Analysis, element_GameReview],
+	element_Rematch ? [element_Rematch, element_Analysis] : [element_Analysis],
 );
 
 /** Blocks mid-grace, mapped to their pending re-enable timer. */
@@ -241,11 +237,6 @@ function callback_Analysis(): void {
 	window.location.assign(`/analysis/${uuid.base10ToBase62(window.gamePageData.id)}`);
 }
 
-/** Opens the analysis page and starts a full-game computer review after load. */
-function callback_GameReview(): void {
-	window.location.assign(`/analysis/${uuid.base10ToBase62(window.gamePageData.id)}?review=1`);
-}
-
 // Rematch ------------------------------------------------------------------------------------
 
 /** Whether WE have extended a rematch offer this game (button disabled, waiting on opponent). */
@@ -331,7 +322,6 @@ function initListeners(): void {
 
 	element_Rematch?.addEventListener('click', callback_Rematch);
 	element_Analysis.addEventListener('click', callback_Analysis);
-	element_GameReview.addEventListener('click', callback_GameReview);
 }
 
 initListeners();

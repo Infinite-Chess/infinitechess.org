@@ -27,7 +27,6 @@ import piecemodels from '../rendering/piecemodels.js';
 import { GameBus } from '../GameBus.js';
 import gamesession from './gamesession.js';
 import frametracker from '../rendering/frametracker.js';
-import guimoveslist from '../gui/guimoveslist.js';
 import { animateMove, meshChanges } from './graphicalchanges.js';
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -61,8 +60,6 @@ function commitMove(
 		move.clockStamp = clockStamp;
 	}
 
-	// GUI changes
-	guimoveslist.updateNavButtons();
 	// Forward chokepoint for the committed move list. MUST stay above the game-over checks: its reconcile
 	// has to enqueue before 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
 	GameBus.dispatch('moves-changed');
@@ -158,9 +155,7 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	movepiece.rewindMove(gamefile); // Logical changes
 	if (mesh) boardchanges.runChanges(mesh, lastMove.changes, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
-	// Un-conclude the game if it was concluded
-	if (gamefileutility.isGameOver(gamefile)) gamefile.gameConclusion = undefined;
-	guimoveslist.updateNavButtons();
+	gamefile.gameConclusion = undefined; // Un-conclude the game if it was concluded
 	GameBus.dispatch('moves-changed'); // Backward chokepoint for the committed move list (mirrors makeMove).
 
 	premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
@@ -178,10 +173,11 @@ function viewMove(
 	move: MoveFull,
 	forward = true,
 ): void {
-	// In analysis mode, every ply is a real, editable position.
-	// Even viewing a move should apply global state and update turn.
-	const global = gamesession.getGameType() === 'analysis';
-	movepiece.applyMove(gamefile, move, forward, { global }); // Apply the logical changes.
+	// In analysis mode, every ply is a real, editable position you can branch from,
+	// so viewing a move must also advance whose turn it is. Elsewhere, whosTurn stays
+	// pinned to the front for online/engine turn detection.
+	const updateTurn = gamesession.getGameType() === 'analysis';
+	movepiece.applyMove(gamefile, move, forward, updateTurn); // Apply the logical changes.
 
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
@@ -198,7 +194,6 @@ function viewIndex(gamefile: GameFile, mesh: Mesh | undefined, index: number): v
 	movepiece.goToMove(gamefile, index, (move: MoveFull) =>
 		viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex),
 	);
-	guimoveslist.updateNavButtons();
 }
 
 /** Makes the game view the start of the game, before the first move. */
@@ -234,7 +229,6 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	animateMove(move.changes, forward); // Animate
-	guimoveslist.updateNavButtons();
 }
 
 // --------------------------------------------------------------------------------------------------------------------------

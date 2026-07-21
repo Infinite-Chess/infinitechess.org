@@ -11,7 +11,6 @@ import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves
 import type { RenderableInstanced } from '../../../webgl/Renderable.js';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
@@ -53,12 +52,10 @@ const hoveredArrowsLegalMoves: ArrowLegalMoves[] = [];
 
 // Events ----------------------------------------------------------------------------------------------
 
-GameBus.addEventListener('physical-move', () => {
-	// Whenever a move is made in the game, the color of the legal move highlights
-	// of the hovered arrows often changes.
-	// Erase the list so they can be regenerated next frame with the correct color.
-	reset();
-});
+// Whenever viewing a different move in the game, the color of the legal
+// move highlights of the hovered arrows changes depending on whosTurn.
+// Erase the list so they can be regenerated next frame with the correct color.
+GameBus.addEventListener('view-move', () => reset());
 
 // Functions -------------------------------------------------------------------------------------------
 
@@ -70,15 +67,6 @@ GameBus.addEventListener('physical-move', () => {
  * legal moves cached.
  */
 function update(): void {
-	const gamefile = gameslot.getGamefile()!;
-
-	// Do not render line highlights upon arrow hover, when game is rewinded,
-	// since calculating their legal moves means overwriting game's move history.
-	if (!moveutil.areWeViewingLatestMove(gamefile)) {
-		hoveredArrowsLegalMoves.length = 0;
-		return;
-	}
-
 	const hoveredArrows = arrows.getHoveredArrows();
 
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being

@@ -9,16 +9,17 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type {
-	AnalysisCommand,
-	AnalysisResponse,
-	EvaluateResult,
-} from './apeironanalysis.worker.js';
+import type { AnalysisCommand, AnalysisResponse } from './apeironanalysis.worker.js';
+
+import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import icnconverter, { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -55,7 +56,7 @@ export interface MoveReview {
 	classification?: ClassificationKey;
 	/** Win-probability loss [0,1] from the mover's perspective. */
 	wpLoss: number;
-	/** Lichess-style per-move accuracy percentage [0,100]. */
+	/** Per-move accuracy percentage [0,100]. */
 	accuracy: number;
 	/** The engine's best move token ("x,y>x,y"); absent for forced/unevaluated moves. */
 	bestMove?: string;
@@ -98,7 +99,6 @@ interface ReviewListeners {
 /** Persisted engine output. Classifications are deliberately recomputed on restore. */
 interface CachedGameReview {
 	schemaVersion: number;
-	gameFingerprint: string;
 	engineUrl: string;
 	workerUrl: string;
 	depth: number;
@@ -107,7 +107,7 @@ interface CachedGameReview {
 
 // Constants ----------------------------------------------------------------------
 
-/** Chess.com-style classification thresholds on win-probability loss [0,1]. */
+/** Classification thresholds on win-probability loss [0,1]. */
 const THRESHOLDS: { max: number; key: ClassificationKey }[] = [
 	{ max: 0.001, key: 'best' },
 	{ max: 0.02, key: 'excellent' },
@@ -136,21 +136,72 @@ const ACPL_CLAMP = 1000;
 const MAX_POSITION_ATTEMPTS = 2;
 /** Fishnet analyzes five reported positions plus one overlapping TT warmup per chunk. */
 const REAL_POSITIONS_PER_CHUNK = 5;
-/** Bump whenever review interpretation or the persisted result shape changes. */
-const REVIEW_CACHE_SCHEMA_VERSION = 1;
-const REVIEW_CACHE_KEY_PREFIX = 'infinitechess-game-review-';
+/**
+ * Force-invalidates all persisted reviews. Bump when the stored shape changes in a way
+ * zod can't reject (same shape, new meaning), NOT for interpretation changes — the cache
+ * holds only raw engine results, and classifications are recomputed on restore.
+ */
+const REVIEW_CACHE_SCHEMA_VERSION = 2;
+const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
 /** How long a persisted review survives LocalStorage. */
 const REVIEW_CACHE_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 365; // 1 year
 
-// State ----------------------------------------------------------------------------
+/** ICN serialization options — compact, position-only, no move numbers (matches ceval). */
+const ICN_OPTIONS = {
+	compact: true,
+	skipPosition: false,
+	spaces: false,
+	comments: false,
+	make_new_lines: false,
+	move_numbers: false,
+} as const;
 
-let status: ReviewStatus = 'idle';
-let workers: Worker[] = [];
 interface ReviewWorkItem {
 	index: number;
 	warmup?: true;
 	newChunk?: true;
 }
+
+// Schemas ----------------------------------------------------------------------------
+
+/** The result of a one-shot `evaluate` command (see {@link EvaluateResultSchema}). */
+export type EvaluateResult = z.infer<typeof EvaluateResultSchema>;
+/**
+ * The result of a one-shot `evaluate` command, and the source of truth for the
+ * {@link EvaluateResult} type. Score is from the side-to-move's perspective; both
+ * absent on a terminal position (no legal moves).
+ */
+const EvaluateResultSchema = z.object({
+	requestId: z.int(),
+	/** Centipawns. Absent when mating or terminal. */
+	cp: z.number().optional(),
+	/** Full moves to mate (negative = getting mated). */
+	mate: z.number().optional(),
+	/** The engine's best line as compact move tokens ("x,y>x,y=Q"). Absent on terminal positions. */
+	pv: z.array(z.string()).optional(),
+	/** 0 = terminal (checkmate/stalemate), 1 = forced move (not searched). */
+	legalMoveCount: z.int(),
+	/** Whether the side to move is in check (distinguishes checkmate from stalemate when terminal). */
+	inCheck: z.boolean(),
+	/** The depth actually searched (0 for terminal/forced positions). */
+	depth: z.int(),
+	/** Echoed for an unreported TT-warming search. */
+	warmup: z.boolean().optional(),
+});
+
+/** Validates a persisted review's shape (see {@link CachedGameReview}). */
+const CachedGameReviewSchema = z.object({
+	schemaVersion: z.literal(REVIEW_CACHE_SCHEMA_VERSION),
+	engineUrl: z.string(),
+	workerUrl: z.string(),
+	depth: z.int(),
+	results: z.array(EvaluateResultSchema),
+});
+
+// State ----------------------------------------------------------------------------
+
+let status: ReviewStatus = 'idle';
+let workers: Worker[] = [];
 
 /** The work item each worker is currently evaluating (undefined = idle). */
 const workerAssignment = new Map<Worker, ReviewWorkItem>();
@@ -163,6 +214,10 @@ const positionAttempts = new Map<number, number>();
 
 /** The mainline nodes captured when the review started (moves[i] = nodes[i].move). */
 let mainlineNodes: AnalysisMoveNode[] = [];
+/** The mainline moves (nodes' moves), captured at review start for out-of-bounds history re-basing. */
+let mainlineMoves: MoveFull[] = [];
+/** Safe start ply per position index (analysisenginebounds.getSafeStartPlies); 0 = full history. */
+let safeStartByIndex: number[] = [];
 /** The game serialized once at review start; `.moves` is re-sliced per position. */
 let longformIn: LongFormatIn | undefined;
 /** Turn order captured at review start, for mover resolution. */
@@ -170,7 +225,6 @@ let turnOrder: Player[] = [];
 /** Search depth for this review. */
 let reviewDepth = 0;
 let division: ReviewDivision = {};
-let gameFingerprint = '';
 
 /** Per-position engine results, indexed 0 (start position) … N (final position). */
 let results: (EvaluateResult | undefined)[] = [];
@@ -241,7 +295,7 @@ function pickReviewDepth(plies: number, workerCount: number): number {
 /** Engine workers to spawn: one per hardware thread minus one, leaving the UI responsive. */
 function pickWorkerCount(totalChunks: number): number {
 	const hw = Math.max(1, (navigator.hardwareConcurrency || 4) - 1);
-	return Math.max(1, Math.min(hw, totalChunks));
+	return math.clamp(hw, 1, totalChunks);
 }
 
 /**
@@ -285,9 +339,16 @@ function captureMainline(): AnalysisMoveNode[] {
 
 // Lifecycle ------------------------------------------------------------------------------
 
-/** Whether a review can start: a loaded game with at least one mainline move. */
+/**
+ * Whether a review can start: an idle, engine-supported real game
+ * (a loaded /analysis/:id game) with at least one mainline move.
+ */
 function canStart(): boolean {
-	return status === 'idle' && gameslot.getGamefile() !== undefined && captureMainline().length > 0; // prettier-ignore
+	if (status !== 'idle') return false;
+	if (window.analysisPageData.gameId === null) return false;
+	const gamefile = gameslot.getGamefile();
+	if (gamefile === undefined || captureMainline().length === 0) return false;
+	return apeiron_card.isGameReviewSupported(gamefile).supported;
 }
 
 function getStatus(): ReviewStatus {
@@ -300,7 +361,11 @@ function start(): void {
 	const gamefile: GameFile = gameslot.getGamefile()!;
 
 	mainlineNodes = captureMainline();
+	mainlineMoves = mainlineNodes.map((node) => node.move!);
 	turnOrder = [...gamefile.gameRules.turnOrder];
+	// Per position, the ply to restart the encoded game from when earlier history left the engine's
+	// safe coordinate range (unreplayable). Precomputed in one pass; 0 = full history (common case).
+	safeStartByIndex = analysisenginebounds.getSafeStartPlies(gamefile, mainlineMoves);
 
 	// Serialize the game once; each position re-slices the move list.
 	longformIn = gamecompressor.compressGamefile(gamefile);
@@ -309,11 +374,7 @@ function start(): void {
 	// Always hand the engine an explicit world border (its own internal fallback is only 1e15),
 	// so every reviewed position is evaluated over the full safe coordinate range. Matches ceval.
 	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
-	gameFingerprint = serializePosition(mainlineNodes.length);
-	division = reviewdivision.determineDivision(
-		longformIn.position,
-		mainlineNodes.map((node) => node.move!),
-	);
+	division = reviewdivision.determineDivision(longformIn.position, mainlineMoves);
 
 	const totalPositions = mainlineNodes.length + 1;
 	chunkQueue = buildReverseChunks(totalPositions);
@@ -348,9 +409,10 @@ function restoreCachedReview(): boolean {
 	const key = reviewCacheKey();
 	if (!key) return false;
 
-	const cached: CachedGameReview | undefined = LocalStorage.loadItem(key);
-	if (!isCompatibleCache(cached)) {
-		if (cached !== undefined) LocalStorage.deleteItem(key);
+	const raw: unknown = LocalStorage.loadItem(key);
+	const cached = parseCompatibleCache(raw);
+	if (!cached) {
+		if (raw !== undefined) LocalStorage.deleteItem(key);
 		return false;
 	}
 
@@ -368,36 +430,30 @@ function restoreCachedReview(): boolean {
 	return true;
 }
 
-function isCompatibleCache(cached: CachedGameReview | undefined): cached is CachedGameReview {
+/**
+ * Validates a persisted review and confirms it's compatible with the current engine —
+ * same engine/worker URLs and deep enough. The cache key is the immutable DB game id, so
+ * the game itself is already guaranteed to match. Returns undefined when unusable.
+ */
+function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
+	if (raw === undefined) return undefined;
+	const parsed = CachedGameReviewSchema.safeParse(raw);
+	if (!parsed.success) {
+		console.warn('[Game Review] Could not parse the local review cache:', parsed.error);
+		return undefined;
+	}
+	const cached = parsed.data;
+
 	if (
-		cached === undefined ||
-		cached.schemaVersion !== REVIEW_CACHE_SCHEMA_VERSION ||
-		cached.gameFingerprint !== gameFingerprint ||
 		cached.engineUrl !== window.analysisPageData.engineUrl ||
 		cached.workerUrl !== window.analysisPageData.workerUrl ||
-		!Number.isInteger(cached.depth) ||
-		cached.depth < reviewDepth ||
-		!Array.isArray(cached.results) ||
-		cached.results.length !== results.length
-	)
-		return false;
+		cached.depth < reviewDepth
+	) {
+		console.warn('[Game Review] Local review cache is incompatible with the current game or engine.'); // prettier-ignore
+		return undefined;
+	}
 
-	return cached.results.every((result, index) => isCachedEvaluation(result, index));
-}
-
-function isCachedEvaluation(value: unknown, index: number): value is EvaluateResult {
-	if (typeof value !== 'object' || value === null) return false;
-	const result = value as Partial<EvaluateResult>;
-	return (
-		result.requestId === index &&
-		Number.isInteger(result.legalMoveCount) &&
-		typeof result.inCheck === 'boolean' &&
-		Number.isInteger(result.depth) &&
-		(result.cp === undefined || typeof result.cp === 'number') &&
-		(result.mate === undefined || typeof result.mate === 'number') &&
-		(result.pv === undefined ||
-			(Array.isArray(result.pv) && result.pv.every((move) => typeof move === 'string')))
-	);
+	return cached;
 }
 
 function persistCompletedReview(): void {
@@ -405,7 +461,6 @@ function persistCompletedReview(): void {
 	if (!key || results.some((result) => result === undefined)) return;
 	const cached: CachedGameReview = {
 		schemaVersion: REVIEW_CACHE_SCHEMA_VERSION,
-		gameFingerprint,
 		engineUrl: window.analysisPageData.engineUrl,
 		workerUrl: window.analysisPageData.workerUrl,
 		depth: reviewDepth,
@@ -512,44 +567,72 @@ function failReview(): void {
 	for (const listener of listeners.finished) listener();
 }
 
+/** Whether position `index` is itself within the engine's safe coordinate range (evaluable). */
+function positionIsEvaluable(index: number): boolean {
+	// safeStartByIndex[index] > index exactly when ply `index` is the latest out-of-bounds position.
+	return safeStartByIndex[index]! <= index;
+}
+
 /** Hands the worker the next queued position, building its ICN on demand. */
 function dispatchNext(worker: Worker): void {
-	let localChunk = workerChunk.get(worker);
-	if (!localChunk || localChunk.length === 0) {
-		localChunk = chunkQueue.shift();
-		if (!localChunk) return;
-		workerChunk.set(worker, localChunk);
+	for (;;) {
+		let localChunk = workerChunk.get(worker);
+		if (!localChunk || localChunk.length === 0) {
+			localChunk = chunkQueue.shift();
+			if (!localChunk) return;
+			workerChunk.set(worker, localChunk);
+		}
+		const work = localChunk.shift()!;
+		const index = work.index;
+
+		// A position with a piece outside the engine's safe coordinate range can't be evaluated
+		// (its coords overflow i64). Skip it — record an empty eval for real positions so it's
+		// treated like a failed one: its eval carries over and moves crossing it stay unclassified.
+		if (!positionIsEvaluable(index)) {
+			if (!work.warmup) receiveEvaluation({ requestId: index, legalMoveCount: 2, inCheck: false, depth: 0 }); // prettier-ignore
+			if (status !== 'running') return; // receiveEvaluation may have finished the review.
+			continue; // Pull the next work item for this worker.
+		}
+
+		workerAssignment.set(worker, work);
+		if (!work.warmup) positionAttempts.set(index, (positionAttempts.get(index) ?? 0) + 1);
+
+		const icn = serializePosition(index);
+		icnByPosition[index] = icn;
+
+		worker.postMessage({
+			cmd: 'evaluate',
+			requestId: index, // The position index doubles as the request id.
+			icn,
+			maxDepth: reviewDepth,
+			...(work.newChunk && { newChunk: true }),
+			...(work.warmup && { warmup: true }),
+		} satisfies AnalysisCommand);
+		return;
 	}
-	const work = localChunk.shift()!;
-	const index = work.index;
-
-	workerAssignment.set(worker, work);
-	if (!work.warmup) positionAttempts.set(index, (positionAttempts.get(index) ?? 0) + 1);
-
-	const icn = serializePosition(index);
-	icnByPosition[index] = icn;
-
-	worker.postMessage({
-		cmd: 'evaluate',
-		requestId: index, // The position index doubles as the request id.
-		icn,
-		maxDepth: reviewDepth,
-		...(work.newChunk && { newChunk: true }),
-		...(work.warmup && { warmup: true }),
-	} satisfies AnalysisCommand);
 }
 
 /** Canonical ICN for the position after `index` mainline plies. */
 function serializePosition(index: number): string {
-	longformIn!.moves = mainlineNodes.slice(0, index).map((node) => node.move!);
-	return icnconverter.LongToShort_Format(longformIn!, {
-		compact: true,
-		skipPosition: false,
-		spaces: false,
-		comments: false,
-		make_new_lines: false,
-		move_numbers: false,
-	});
+	longformIn!.moves = mainlineMoves.slice(0, index);
+
+	// Clamp to `index`: an out-of-bounds position's safe start is index+1 (unrepresentable). It's
+	// never dispatched to a worker (dispatchNext skips it), but cache callers still ask
+	// for its ICN — clamping keeps GameToPosition within the move list instead of overrunning it.
+	const safeStart = Math.min(safeStartByIndex[index]!, index);
+	if (safeStart === 0) return icnconverter.LongToShort_Format(longformIn!, ICN_OPTIONS); // Common path.
+
+	// Earlier history left the engine's safe coordinate range: re-base past it (see
+	// analysisenginebounds.getSafeStartPlies). Rare, so we copy onto a fresh longform rather than
+	// mutate the shared base — the position/state GameToPosition rewrites must not leak across calls.
+	const rebased: LongFormatIn = {
+		...longformIn!,
+		gameRules: { ...longformIn!.gameRules, turnOrder: [...longformIn!.gameRules.turnOrder] },
+		position: jsutil.deepCopyObject(longformIn!.position!),
+		state_global: jsutil.deepCopyObject(longformIn!.state_global),
+	};
+	gamecompressor.rebaseToPly(rebased, mainlineMoves, safeStart, index);
+	return icnconverter.LongToShort_Format(rebased, ICN_OPTIONS);
 }
 
 // Result processing --------------------------------------------------------------------------
@@ -667,6 +750,10 @@ function classifyReadyMoves(): void {
 /** The position's white-POV effective cp; forced/terminal/unevaluated positions derive it. */
 function resolveWhiteCp(index: number): number | undefined {
 	if (effectiveWhiteCp[index] !== undefined) return effectiveWhiteCp[index];
+	// Out-of-bounds positions are never evaluated: leave their cp undefined so the eval graph
+	// breaks into a disconnected segment here, rather than carrying a neighbor's eval across a
+	// region we couldn't analyze. Their moves stay unclassified regardless (see classifyMove).
+	if (!positionIsEvaluable(index)) return undefined;
 	const result = results[index];
 	if (!result) return undefined;
 	const mover = moverAtPly(index);
@@ -824,16 +911,23 @@ function onFinished(listener: ReviewListeners['finished']): void {
 }
 
 export default {
+	// Constants
 	CLASSIFICATION_DISPLAY,
+	// Lifecycle
 	canStart,
 	getStatus,
 	start,
+	// Worker pool
+	positionIsEvaluable,
+	// Summaries
 	getSummary,
+	// Queries for the renderers
 	getReviewForNode,
 	getReviews,
 	getMainlineNodes,
 	getDivision,
 	getWhiteCpAt,
+	// Subscriptions
 	onProgress,
 	onClassified,
 	onFinished,

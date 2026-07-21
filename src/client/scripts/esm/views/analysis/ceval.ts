@@ -13,6 +13,7 @@ import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeirona
 import math from '../../../../../shared/util/math/math.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
@@ -152,8 +153,6 @@ let stopFlagPtr = 0;
 
 let enabled = false;
 let settings: CevalSettings = loadSettings();
-/** The engine's version (e.g. "2.0.0"), reported on 'ready'. Undefined only before the first 'ready'. */
-let engineVersion: string | undefined;
 
 /** The ICN of the position the worker is currently analyzing (undefined once the position is superseded but not yet re-analyzed). */
 let lastAnalyzedIcn: string | undefined;
@@ -170,8 +169,11 @@ let goDeeperActive = false;
 let currentTargetDepth = DEFAULT_SETTINGS.depth;
 /** Allows an intentional same-position restart (e.g. adding PV lines) to repaint lower-depth rows. */
 let allowDepthRegressionForCurrentSearch = false;
-/** The viewed position has a piece outside Apeiron's safe coordinate range. */
-let blockedByEngineWorldBorder = false;
+/**
+ * Why the engine won't analyze the viewed position (piece out of Apeiron's safe coordinate range,
+ * an unsupported variant/position, etc.) — a user-facing message, or undefined when analyzable.
+ */
+let blockReason: string | undefined;
 
 let latestUpdate: CevalUpdate | undefined;
 let throttleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -299,7 +301,7 @@ function interruptSearch(): void {
 
 // Legal-moves helper worker --------------------------------------------------------------
 
-/** Warms the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
+/** Lazily spins up the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
 function ensureLegalWorker(): void {
 	if (legalWorker || !config) return;
 	const w = new Worker(config.workerUrl, { type: 'module' });
@@ -330,6 +332,7 @@ function ensureLegalWorker(): void {
 	} satisfies AnalysisCommand);
 }
 
+/** Frees the idle legal-moves helper worker. Call when the debug overlay is toggled off. */
 function terminateLegalWorker(): void {
 	legalWorker?.terminate();
 	legalWorker = undefined;
@@ -375,7 +378,7 @@ function resetEngineSession(): void {
 	goDeeperActive = false;
 	currentTargetDepth = settings.depth;
 	allowDepthRegressionForCurrentSearch = false;
-	blockedByEngineWorldBorder = false;
+	blockReason = undefined;
 	lastCrashIcn = undefined;
 	lastCrashCount = 0;
 	crashedIcn = undefined;
@@ -414,7 +417,6 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 	switch (msg.type) {
 		case 'ready':
 			workerReady = true;
-			engineVersion = msg.version;
 			// A single-threaded engine build locks the thread setting to 1 (panel disables the slider).
 			if (!msg.mt && engineSupportsThreads) {
 				engineSupportsThreads = false;
@@ -424,7 +426,6 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 				}
 			}
 			refreshAnalysis(true); // Fresh wasm module, so this always restarts from depth 1.
-			ensureLegalWorker();
 			notifyStatus();
 			break;
 		case 'initerror':
@@ -456,19 +457,20 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 // Position tracking --------------------------------------------------------------------
 
 /**
- * The compact ICN of the position under analysis, built with the same
- * `compressGamefile` + `LongToShort_Format` machinery the gameplay engine worker
- * (apeiron.ts) uses. It carries the FULL move list (not just a single position)
- * so the engine replays the game and has the history it needs to detect threefold
- * repetition and the fifty-move rule. The moves are truncated to the ply currently
- * being viewed, so navigating back analyzes that earlier position with its own history.
+ * The compact ICN of the position under analysis, carrying move history so the engine can
+ * detect threefold repetition and the fifty-move rule. Truncated to the viewed ply, and
+ * re-based to {@link analysisenginebounds.getSafeStartPly} if an earlier ply left the engine's
+ * safe coordinate range (unreplayable) — the fifty-move counter survives that cut, repetition
+ * detection across it doesn't.
  */
 function getViewedPositionIcn(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile);
 	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
-	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
-		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
-	}
+	const safeStartPly = analysisenginebounds.getSafeStartPly(gamefile);
+
+	// Re-base the start snapshot to safeStartPly (no-op at ply 0).
+	gamecompressor.rebaseToPly(longformIn, gamefile.moves, safeStartPly, viewedPlyCount);
+
 	// Result/Termination are irrelevant to the engine
 	delete longformIn.metadata.Result;
 	delete longformIn.metadata.Termination;
@@ -512,13 +514,21 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
+	// The engine can't handle some positions at all (4D/5D variants, too many pieces, unsupported
+	// pieces/win conditions) — block outright. Bounds are separate: an out-of-range VIEWED position
+	// blocks too, but out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
+	const result = apeiron_card.isAnalysisSupported(gamefile);
+	if (!result.supported) {
+		blockAnalysis(result.reason);
+		return;
+	}
 	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) {
-		blockAnalysisForEngineWorldBorder();
+		blockAnalysis('Out of bounds');
 		return;
 	}
 
-	if (blockedByEngineWorldBorder) {
-		blockedByEngineWorldBorder = false;
+	if (blockReason !== undefined) {
+		blockReason = undefined;
 		lastAnalyzedIcn = undefined;
 	}
 
@@ -609,10 +619,11 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	notifyStatus();
 }
 
-function blockAnalysisForEngineWorldBorder(): void {
+/** Stops the engine and marks the viewed position un-analyzable, with a user-facing `reason`. */
+function blockAnalysis(reason: string): void {
 	interruptSearch();
 	send({ cmd: 'stop' });
-	blockedByEngineWorldBorder = true;
+	blockReason = reason;
 	goDeeperActive = false;
 	analyzed = undefined;
 	activeRequestId++;
@@ -791,7 +802,7 @@ function seedPositionCache(seed: {
 
 /** Requests the legal moves for {@link icn} from the idle helper worker (never blocked by the search). */
 function requestLegalMoves(requestId: number, icn: string): void {
-	if (blockedByEngineWorldBorder) return;
+	if (blockReason !== undefined) return;
 	ensureLegalWorker();
 	if (!legalReady || !legalWorker) {
 		queuedLegalMovesRequests.push({ requestId, icn });
@@ -816,6 +827,11 @@ function notifyStatus(override?: CevalStatus): void {
 function init(options: { workerUrl: string; engineUrl: string }): void {
 	config = options;
 
+	// Pre-warm the engine immediately, regardless of whether eval is enabled, so its wasm module is
+	// loaded and enabling eval later starts analyzing instantly instead of waiting on a cold load.
+	// refreshAnalysis() no-ops while `enabled` is false, so this doesn't start any searching.
+	spawnWorker();
+
 	// Keep the engine pointed at the viewed position. 'view-move' fires on every
 	// board position change, including physical moves. Coalesce them: an operation like
 	// branching (viewFront to the game's front, then rewinding back) fires several
@@ -824,7 +840,8 @@ function init(options: { workerUrl: string; engineUrl: string }): void {
 	GameBus.addEventListener('view-move', scheduleRefresh);
 	GameBus.addEventListener('game-loaded', () => {
 		nextPositionIsNewGame = true;
-		if (enabled && !worker) spawnWorker();
+		// Re-warm regardless of `enabled`: 'game-unloaded' tore the pre-warmed worker down.
+		if (!worker) spawnWorker();
 		refreshAnalysis(true);
 	});
 	GameBus.addEventListener('game-unloaded', () => {
@@ -836,16 +853,21 @@ function isEnabled(): boolean {
 	return enabled;
 }
 
-function isBlockedByEngineWorldBorder(): boolean {
-	return blockedByEngineWorldBorder;
+/** Whether the engine is refusing to analyze the viewed position for any reason. */
+function isBlocked(): boolean {
+	return blockReason !== undefined;
+}
+
+/** The user-facing reason the engine won't analyze the viewed position, or undefined when it will. */
+function getBlockReason(): string | undefined {
+	return blockReason;
 }
 
 function setEnabled(value: boolean): void {
 	if (enabled === value) return;
 	enabled = value;
 	if (enabled) {
-		if (!worker) spawnWorker();
-		else ensureLegalWorker(); // Reusing a warm worker: no 'ready' will fire, so warm the helper here.
+		if (!worker) spawnWorker(); // Only needed if the pre-warmed worker crashed/never spawned.
 		refreshAnalysis(true);
 		// Show the retained eval right away (refreshAnalysis only blanks it when the
 		// position changed while the engine was off) instead of a gap until the resume.
@@ -924,15 +946,10 @@ function getLatestUpdate(): CevalUpdate | undefined {
 function getStatus(): CevalStatus {
 	if (!enabled) return 'off';
 	if (onCrashedPosition) return 'crashed';
-	if (blockedByEngineWorldBorder) return 'blocked';
+	if (blockReason !== undefined) return 'blocked';
 	if (!worker || !workerReady) return 'loading';
 	if (latestUpdate?.done) return 'idle';
 	return 'computing';
-}
-
-/** The engine's version (e.g. "2.0.0"), once the worker has reported 'ready'. */
-function getEngineVersion(): string | undefined {
-	return engineVersion;
 }
 
 /** Subscribes to throttled engine updates. `undefined` means "eval cleared". */
@@ -953,17 +970,19 @@ function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
 export default {
 	maxThreads,
 	cpToWinningChances,
+	cpWinningChances,
 	seedPositionCache,
 	requestLegalMoves,
+	terminateLegalWorker,
 	init,
 	isEnabled,
-	isBlockedByEngineWorldBorder,
+	isBlocked,
+	getBlockReason,
 	setEnabled,
 	getSettings,
 	updateSettings,
 	goDeeper,
 	getLatestUpdate,
-	getEngineVersion,
 	onUpdate,
 	onStatus,
 	onLegalMoves,

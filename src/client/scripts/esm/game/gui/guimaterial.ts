@@ -22,7 +22,6 @@ import typeutil, { rawTypes, players as p } from '../../../../../shared/chess/ut
 import gameslot from '../chess/gameslot.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import { GameBus } from '../GameBus.js';
-import { createRenderQueue } from '../../util/renderqueue.js';
 
 // Point values --------------------------------------------------------------------------------
 
@@ -67,12 +66,6 @@ const element_MaterialBottom = document.getElementById('material-bottom')!;
  * Computed on `game-loaded`.
  */
 let balanced = false;
-
-/**
- * Serializes bar-render operations, preserving order across the async silhouette fetches each
- * render awaits — overlapping `view-move` updates would otherwise interleave and race.
- */
-const enqueueRender = createRenderQueue('Material bar render error');
 
 // Balance detection ---------------------------------------------------------------------------
 
@@ -126,40 +119,47 @@ function computeSurplus(): MaterialSurplus {
 
 /** Rebuilds both bars from the material surplus at the currently-viewed move. */
 async function render(): Promise<void> {
-	element_MaterialTop.replaceChildren();
-	element_MaterialBottom.replaceChildren();
-	if (!balanced) return;
+	if (!balanced) {
+		element_MaterialTop.replaceChildren();
+		element_MaterialBottom.replaceChildren();
+		return;
+	}
 
 	const { white, black, pointLead } = computeSurplus();
 
 	// Map each side to its bar by perspective: bottom = our POV (or white for spectators).
 	const bottomPlayer: Player = gameslot.areViewingWhite() ? p.WHITE : p.BLACK;
+	const topPlayer: Player = typeutil.invertPlayer(bottomPlayer);
 	const surplusOf = (player: Player): Map<RawType, number> =>
 		player === p.WHITE ? white : black;
 	const leadOf = (player: Player): number => (player === p.WHITE ? pointLead : -pointLead);
 
-	const topPlayer: Player = bottomPlayer === p.WHITE ? p.BLACK : p.WHITE;
-	await fillBar(element_MaterialBottom, surplusOf(bottomPlayer), leadOf(bottomPlayer));
-	await fillBar(element_MaterialTop, surplusOf(topPlayer), leadOf(topPlayer));
+	// Build both bars' children up front, touching no DOM, so overlapping renders can't interleave.
+	const [bottom, top] = await Promise.all([
+		buildBarChildren(surplusOf(bottomPlayer), leadOf(bottomPlayer)),
+		buildBarChildren(surplusOf(topPlayer), leadOf(topPlayer)),
+	]);
+
+	// Atomic commit: each replaceChildren is one synchronous swap, so the latest render wins cleanly.
+	element_MaterialBottom.replaceChildren(...bottom);
+	element_MaterialTop.replaceChildren(...top);
 }
 
 /**
- * Populates one bar: a silhouette per surplus piece (higher-value types first),
+ * Builds one bar's children: a silhouette per surplus piece (higher-value types first),
  * then a `+X` lead span if this side is the one net ahead.
  */
-async function fillBar(
-	bar: HTMLElement,
-	surplus: Map<RawType, number>,
-	lead: number,
-): Promise<void> {
+async function buildBarChildren(surplus: Map<RawType, number>, lead: number): Promise<Element[]> {
 	const rawsByValueDesc = [...surplus.keys()].sort(
 		(a, b) => (RAW_PIECE_VALUES[b] ?? 0) - (RAW_PIECE_VALUES[a] ?? 0),
 	);
+
+	const children: Element[] = [];
 	for (const raw of rawsByValueDesc) {
 		for (let i = 0; i < surplus.get(raw)!; i++) {
 			const silhouette = await svgcache.getSilhouetteSVG(raw);
 			silhouette.classList.add('material-piece');
-			bar.appendChild(silhouette);
+			children.push(silhouette);
 		}
 	}
 
@@ -167,8 +167,10 @@ async function fillBar(
 		const span = document.createElement('span');
 		span.className = 'material-lead';
 		span.textContent = `+${lead}`;
-		bar.appendChild(span);
+		children.push(span);
 	}
+
+	return children;
 }
 
 // Events --------------------------------------------------------------------------------------
@@ -177,8 +179,11 @@ async function fillBar(
 GameBus.addEventListener('game-loaded', () => {
 	const gamefile = gameslot.getGamefile()!;
 	balanced = isStartPositionBalanced(gamefile.startSnapshot.position);
-	enqueueRender(render);
+	// Unbalanced games never show material differences, so hide the bars to reclaim their space.
+	element_MaterialTop.classList.toggle('hidden', !balanced);
+	element_MaterialBottom.classList.toggle('hidden', !balanced);
+	render();
 });
 // Rewinding/forwarding restores the board to the viewed move, so the live counts already reflect it.
-GameBus.addEventListener('view-move', () => enqueueRender(render));
-GameBus.addEventListener('board-flipped', () => enqueueRender(render));
+GameBus.addEventListener('view-move', () => render());
+GameBus.addEventListener('board-flipped', () => render());

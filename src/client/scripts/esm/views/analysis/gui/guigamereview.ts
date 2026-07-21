@@ -3,6 +3,9 @@
 /**
  * Game review UI for the analysis page. Owns:
  *
+ * * the Game Review button (real games only), which starts the review and swaps
+ *   itself out for the stats + eval graph; if the played mainline has been edited
+ *   it reloads the pristine game and auto-opens the review there;
  * * the two-column per-player stats (accuracy, lapses, acpl) that replace the
  *   participant rows + result banner there, filling in live as the review runs;
  * * the progress bar below the moves list, swapped for the clickable eval graph
@@ -12,38 +15,42 @@
  */
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
-import type { ClassificationKey } from '../gamereview.js';
+import type { ClassificationKey, MoveReview } from '../gamereview.js';
 
 import math from '../../../../../../shared/util/math/math.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
+import ceval from '../ceval.js';
 import docutil from '../../../util/docutil.js';
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import gamereview from '../gamereview.js';
 import guimovetree from './guimovetree.js';
 import { GameBus } from '../../../game/GameBus.js';
-import gamesession from '../../../game/chess/gamesession.js';
 
 // Elements ---------------------------------------------------------------------------
 
-const element_Stats = document.getElementById('review-stats');
-const element_Progress = document.getElementById('review-progress');
-const element_ProgressFill = document.getElementById('review-progress-fill');
-const element_ProgressText = document.getElementById('review-progress-text');
-const element_Graph = document.getElementById('review-graph');
-const element_GraphCanvas = document.getElementById('review-graph-canvas') as HTMLCanvasElement | null; // prettier-ignore
-const element_GraphTooltip = document.getElementById('review-graph-tooltip');
-const element_GraphTooltipMove = document.getElementById('review-graph-tooltip-move');
-const element_GraphTooltipEval = document.getElementById('review-graph-tooltip-eval');
-const element_PhaseMarkers = document.getElementById('review-phase-markers');
+const element_GameReviewBtn = document.getElementById('btn-game-review'); // Absent on bare /analysis page.
+const element_Stats = document.getElementById('review-stats')!;
+const element_Progress = document.getElementById('review-progress')!;
+const element_ProgressFill = document.getElementById('review-progress-fill')!;
+const element_ProgressText = document.getElementById('review-progress-text')!;
+const element_Graph = document.getElementById('review-graph')!;
+const element_GraphCanvas = document.getElementById('review-graph-canvas') as HTMLCanvasElement; // prettier-ignore
+const element_GraphTooltip = document.getElementById('review-graph-tooltip')!;
+const element_GraphTooltipMove = document.getElementById('review-graph-tooltip-move')!;
+const element_GraphTooltipEval = document.getElementById('review-graph-tooltip-eval')!;
+const element_PhaseMarkers = document.getElementById('review-phase-markers')!;
 
 /** The stat value cells per player, rebuilt when the stats columns are created. */
 const statCells: { [player: number]: Partial<Record<StatKey, HTMLElement>> } = {};
 
 type StatKey = 'accuracy' | 'inaccuracy' | 'mistake' | 'blunder' | 'acpl';
+
+/** Plies of the engine's best line grafted as a variation beneath a reviewed blunder. */
+const BLUNDER_VARIATION_MAX_PLIES = 6;
 
 /** Classifications treated as "lapses": clickable stat rows, and dotted on the eval graph. */
 const LAPSE_KEYS = ['inaccuracy', 'mistake', 'blunder'] as const satisfies readonly ClassificationKey[]; // prettier-ignore
@@ -52,17 +59,12 @@ function isLapseKey(key: string): key is LapseKey {
 	return (LAPSE_KEYS as readonly string[]).includes(key);
 }
 
-/** The rows each player's stats column shows, in order. */
-const STAT_ROWS: { key: StatKey; label: string }[] = [
-	{ key: 'inaccuracy', label: 'Inaccuracies' },
-	{ key: 'mistake', label: 'Mistakes' },
-	{ key: 'blunder', label: 'Blunders' },
-	{ key: 'acpl', label: 'Avg. cp loss' },
-];
+/** The played game's mainline, snapshotted at load (bar-delimited move tokens) for edit detection. */
+let playedMainline = '';
 
 // Initialization -----------------------------------------------------------------------
 
-/** Wires the game review UI and honors `/analysis/:id?review=1`. */
+/** Wires the game review UI, including the Game Review button click. */
 function init(): void {
 	gamereview.onProgress(() => {
 		updateProgress();
@@ -71,7 +73,7 @@ function init(): void {
 	});
 	gamereview.onClassified((review) => {
 		updateStats();
-		if (review.classification === 'blunder') guimovetree.addBlunderVariation(review);
+		if (review.classification === 'blunder') addBlunderVariation(review);
 		if (isGraphVisible()) drawGraph();
 	});
 	gamereview.onFinished(onReviewFinished);
@@ -81,54 +83,88 @@ function init(): void {
 	});
 	// The eval line's color is read from the canvas's CSS `color` at draw time, so a light/dark
 	// switch needs an explicit redraw — nothing else touches the graph until the next interaction.
-	// 'theme-change' is the BOARD tile color event; the site-wide light/dark switch fires
-	// 'color-scheme-change' instead (see appearancedropdown.ts).
 	document.addEventListener('color-scheme-change', () => {
 		if (isGraphVisible()) drawGraph();
 	});
 	GameBus.addEventListener('view-move', () => {
 		if (isGraphVisible()) drawGraph();
 	});
-	if (element_GraphCanvas) initGraphInteraction(element_GraphCanvas);
+	initGraphInteraction(element_GraphCanvas);
 
-	if (docutil.getQueryParam('review') === '1') {
-		GameBus.addEventListener('game-loaded', () => startRequestedReview(), { once: true });
+	element_GameReviewBtn?.addEventListener('click', onGameReviewClicked);
+}
+
+/**
+ * Runs once the initial game has fully loaded: snapshots the played mainline (for later edit
+ * detection), reveals the Game Review button for a reviewable game, and honors a `?review=1`
+ * auto-open (set only by the reset-reload below).
+ */
+function onInitialGameLoaded(): void {
+	playedMainline = currentMainline();
+	if (gamereview.canStart()) element_GameReviewBtn!.classList.remove('hidden');
+	if (docutil.getQueryParam('review') === '1') openReview();
+}
+
+/** Returns the current mainline as bar-joined move tokens, for cheap comparison. */
+function currentMainline(): string {
+	const root = movetree.getRoot();
+	if (!root) return '';
+	const moves = movetree.getMovesFromLine(movetree.getLineForNode(root));
+	return icnconverter.getShortFormMovesFromMoves(moves, { compact: true, spaces: false, comments: false, abbrev: false, move_numbers: false }); // prettier-ignore
+}
+
+/**
+ * Handles a Game Review button click. Normally opens the review in place. If the played game's
+ * mainline has been edited, instead reloads the pristine game and auto-opens the review there
+ * (`?review=1`). That reset is destructive to added lines, so confirm first.
+ */
+function onGameReviewClicked(): void {
+	if (currentMainline() === playedMainline) {
+		// Main line preserved, no need to confirm: start review.
+		openReview();
+	} else {
+		// Main line diverged: confirm destructive reload.
+		const proceed = confirm("Starting a Game Review will discard the lines you've added and review the game as it was played. Continue?"); // prettier-ignore
+		if (proceed) window.location.assign(`${window.location.pathname}?review=1`);
 	}
 }
 
-function startRequestedReview(attempt = 0): void {
-	// `game-loaded` is logical; wait for the graphical load to finish before replacing
-	// sidebar DOM or generating variations. Give up silently if the page load failed.
-	if (gamesession.isLoading()) {
-		if (attempt < 200) setTimeout(() => startRequestedReview(attempt + 1), 50);
-		return;
-	}
+/** Starts the review and swaps the Game Review button out for the live stats + eval graph. */
+function openReview(): void {
 	if (!gamereview.canStart()) return;
 
 	gamereview.start();
 
-	buildStatsColumns();
-	if (gamereview.getStatus() === 'running') element_Progress?.classList.remove('hidden');
-	element_Graph?.classList.remove('hidden');
-	element_PhaseMarkers?.replaceChildren();
+	element_GameReviewBtn!.classList.add('hidden');
+	revealStats();
+	if (gamereview.getStatus() === 'running') element_Progress.classList.remove('hidden');
+	element_Graph.classList.remove('hidden');
+	element_PhaseMarkers.replaceChildren();
 	updateProgress();
 	updateStats();
 	drawGraph();
 }
 
+/** Grafts the engine's best line beneath a classified blunder as a variation. */
+function addBlunderVariation(review: MoveReview): void {
+	if (!review.pv?.length) return;
+	const parent = gamereview.getMainlineNodes()[review.ply]?.parent;
+	if (parent) guimovetree.addVariation(parent, review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES));
+}
+
 // Progress --------------------------------------------------------------------------------
 
 function updateProgress(): void {
-	if (!element_Progress || element_Progress.classList.contains('hidden')) return;
+	if (element_Progress.classList.contains('hidden')) return;
 	const { evaluated, total, depth } = gamereview.getSummary();
 	const pct = total > 0 ? (evaluated / total) * 100 : 0;
-	element_ProgressFill!.style.width = `${pct}%`;
-	element_ProgressText!.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total} · depth ${depth}`;
+	element_ProgressFill.style.width = `${pct}%`;
+	element_ProgressText.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total} · depth ${depth}`;
 }
 
 function onReviewFinished(): void {
 	const status = gamereview.getStatus();
-	element_Progress?.classList.add('hidden');
+	element_Progress.classList.add('hidden');
 
 	if (status === 'done') {
 		drawGraph();
@@ -141,74 +177,49 @@ function onReviewFinished(): void {
 // Stats columns ------------------------------------------------------------------------------
 
 /**
- * Swaps the meta panel's participant rows + result banner for the two-column
- * per-player stats. The existing `.meta-player` rows (side dot + username embed)
- * move in as the column headers, so nothing is duplicated.
+ * Reveals the SSR'd two-column per-player stats, replacing the meta panel's participant
+ * rows + result banner. The existing `.meta-player` rows (side dot + username embed) move
+ * in as the column headers, so nothing is duplicated.
  */
-function buildStatsColumns(): void {
-	if (!element_Stats || !element_Stats.classList.contains('hidden')) return;
+function revealStats(): void {
+	if (!element_Stats.classList.contains('hidden')) return;
 
-	const metaPlayers = document.querySelector('.game-meta .meta-players');
-	const resultBanner = document.querySelector('.game-meta .result-banner');
-	const playerRows = [...(metaPlayers?.querySelectorAll('.meta-player') ?? [])];
+	const gameMeta = document.querySelector('.game-meta')!;
+	const metaPlayers = document.querySelector('.game-meta .meta-players')!;
+	const playerRows = [...metaPlayers.querySelectorAll('.meta-player')];
 
 	for (const [column, color] of [
 		[0, p.WHITE],
 		[1, p.BLACK],
 	] as const) {
-		const col = document.createElement('div');
-		col.classList.add('review-stats-col');
+		const col = element_Stats.querySelector(`.review-stats-col[data-player="${color}"]`)!;
 
-		// The player row becomes the column header.
+		// The player row becomes the column header, above the SSR'd accuracy + stat rows.
 		const header = playerRows[column];
-		if (header) col.append(header);
+		if (header) col.prepend(header);
 
-		const accuracy = document.createElement('div');
-		accuracy.classList.add('review-accuracy');
-		const accuracyValue = document.createElement('span');
-		accuracyValue.classList.add('review-accuracy-value');
-		accuracyValue.textContent = '—';
-		const accuracyLabel = document.createElement('span');
-		accuracyLabel.classList.add('review-stat-label');
-		accuracyLabel.textContent = 'Accuracy';
-		accuracy.append(accuracyValue, accuracyLabel);
-		col.append(accuracy);
+		statCells[color] = {
+			accuracy: col.querySelector<HTMLElement>('.review-accuracy-value')!,
+			inaccuracy: col.querySelector<HTMLElement>('.review-stat-value.inaccuracy')!,
+			mistake: col.querySelector<HTMLElement>('.review-stat-value.mistake')!,
+			blunder: col.querySelector<HTMLElement>('.review-stat-value.blunder')!,
+			acpl: col.querySelector<HTMLElement>('.review-stat-value.acpl')!,
+		};
 
-		statCells[color] = { accuracy: accuracyValue };
-
-		for (const row of STAT_ROWS) {
-			const line = document.createElement('div');
-			line.classList.add('review-stat-row');
-			if (isLapseKey(row.key)) {
-				const classification = row.key;
-				line.classList.add('review-stat-action');
-				line.classList.add('unselectable');
-				line.tabIndex = 0;
-				line.role = 'button';
-				line.title = `Go to next ${row.label.toLowerCase()}`;
-				line.addEventListener('click', () => cycleToLapse(color, classification));
-				line.addEventListener('keydown', (event) => {
-					if (event.key !== 'Enter' && event.key !== ' ') return;
-					event.preventDefault();
-					cycleToLapse(color, classification);
-				});
-			}
-			const value = document.createElement('span');
-			value.classList.add('review-stat-value', `review-stat-${row.key}`);
-			value.textContent = '0';
-			const label = document.createElement('span');
-			label.classList.add('review-stat-label');
-			label.textContent = row.label;
-			line.append(value, label);
-			col.append(line);
-			statCells[color]![row.key] = value;
-		}
-
-		element_Stats.append(col);
+		// Wire the clickable lapse rows.
+		col.querySelectorAll<HTMLElement>('.review-stat-action').forEach((line) => {
+			const classification = line.dataset['classification'] as LapseKey;
+			line.addEventListener('click', () => cycleToLapse(color, classification));
+			line.addEventListener('keydown', (event) => {
+				if (event.key !== 'Enter' && event.key !== ' ') return;
+				event.preventDefault();
+				cycleToLapse(color, classification);
+			});
+		});
 	}
 
-	metaPlayers?.classList.add('hidden');
-	resultBanner?.classList.add('hidden');
+	gameMeta.classList.add('review');
+	metaPlayers.classList.add('hidden');
 	element_Stats.classList.remove('hidden');
 }
 
@@ -226,7 +237,7 @@ function cycleToLapse(color: Player, classification: LapseKey): void {
 
 /** Repaints both players' stat values from the review's current standing. */
 function updateStats(): void {
-	if (!element_Stats || element_Stats.classList.contains('hidden')) return;
+	if (element_Stats.classList.contains('hidden')) return;
 	const { summaries } = gamereview.getSummary();
 
 	for (const color of [p.WHITE, p.BLACK]) {
@@ -243,20 +254,23 @@ function updateStats(): void {
 
 // Eval graph ------------------------------------------------------------------------------------
 
-/** Vertical cp range the graph displays; evals are clamped into it. */
-const GRAPH_CP_RANGE = 600;
-const GRAPH_TOP_PADDING = 24;
-const GRAPH_BOTTOM_PADDING = 4;
+/**
+ * Symmetric top/bottom inset so the zero line sits at the exact vertical center (like lila).
+ * The phase labels overlap the plot's top rather than reserving a band that would offset zero.
+ */
+const GRAPH_VERTICAL_PADDING = 4;
 /** Vertical clearance the tooltip keeps from the graph's top/bottom edges when auto-positioning. */
 const TOOLTIP_TOP_MARGIN = 10;
 const TOOLTIP_BOTTOM_MARGIN = 6;
 const WHITE_FILL = 'rgba(255, 255, 255, 0.45)';
-const BLACK_FILL = 'rgba(0, 0, 0, 0.4)';
+const BLACK_FILL = 'rgba(0, 0, 0, 0.5)';
+/** Lila-style orange for the line marking the currently viewed position. */
+const CURRENT_POSITION_COLOR = '#d85000';
 
 let hoveredPosition: number | undefined;
 
 function isGraphVisible(): boolean {
-	return element_Graph !== null && !element_Graph.classList.contains('hidden');
+	return !element_Graph.classList.contains('hidden');
 }
 
 /** Whether the currently viewed position is on the mainline (not inside a variation). */
@@ -274,9 +288,9 @@ function graphX(index: number, width: number, totalPositions: number): number {
 
 /** The y pixel of a white-POV cp. */
 function graphY(cp: number, height: number): number {
-	const normalized = math.clamp(cp, -GRAPH_CP_RANGE, GRAPH_CP_RANGE) / GRAPH_CP_RANGE;
-	const plotHeight = height - GRAPH_TOP_PADDING - GRAPH_BOTTOM_PADDING;
-	return GRAPH_TOP_PADDING + plotHeight / 2 - normalized * (plotHeight / 2 - 3);
+	const normalized = ceval.cpWinningChances(cp);
+	const plotHeight = height - GRAPH_VERTICAL_PADDING * 2;
+	return GRAPH_VERTICAL_PADDING + plotHeight / 2 - normalized * (plotHeight / 2 - 3);
 }
 
 /**
@@ -332,10 +346,22 @@ function flattenRunsToPolyline(
 	return polyline;
 }
 
+/** Fills a small dot at a graph point (current `ctx.fillStyle`). */
+function drawGraphDot(
+	ctx: CanvasRenderingContext2D,
+	point: { index: number; cp: number },
+	width: number,
+	height: number,
+	total: number,
+): void {
+	ctx.beginPath();
+	ctx.arc(graphX(point.index, width, total), graphY(point.cp, height), 2, 0, Math.PI * 2);
+	ctx.fill();
+}
+
 /** Draws the white-POV eval line, phase/current/hover lines, and lapse dots. */
 function drawGraph(): void {
 	const canvas = element_GraphCanvas;
-	if (!canvas || !element_Graph) return;
 
 	const dpr = window.devicePixelRatio || 1;
 	const width = element_Graph.clientWidth;
@@ -406,6 +432,9 @@ function drawGraph(): void {
 	// that could drift a pixel or two off from what the fill actually drew.
 	ctx.strokeStyle = lineColor;
 	ctx.lineWidth = 1.5;
+	// Round joins: the default miter join projects a sharp peak/valley's outer corner well past
+	// the actual vertex, so the stroke visibly spiked beyond the lapse dot drawn there.
+	ctx.lineJoin = 'round';
 	ctx.beginPath();
 	for (const runs of segmentRuns) {
 		flattenRunsToPolyline(runs).forEach((point, i) => {
@@ -416,19 +445,15 @@ function drawGraph(): void {
 		});
 	}
 	ctx.stroke();
-	// Isolated positions have no neighbor to draw a line to; mark them with a dot.
+	// Dot the endpoints on either side of every gap — where the eval line disconnects because a
+	// stretch of positions had out-of-bounds pieces we couldn't evaluate — so the break reads as
+	// intentional. Also dots isolated points (no neighbor, so no line was drawn for them at all).
+	ctx.fillStyle = lineColor;
 	for (const segment of segments) {
-		if (segment.length !== 1) continue;
-		ctx.beginPath();
-		ctx.arc(
-			graphX(segment[0]!.index, width, total),
-			graphY(segment[0]!.cp, height),
-			2,
-			0,
-			Math.PI * 2,
-		);
-		ctx.fillStyle = lineColor;
-		ctx.fill();
+		const first = segment[0]!;
+		const last = segment[segment.length - 1]!;
+		if (first.index > 0 || segment.length === 1) drawGraphDot(ctx, first, width, height, total);
+		if (last.index < total - 1) drawGraphDot(ctx, last, width, height, total);
 	}
 
 	// Lapse dots, at the position after the classified move.
@@ -446,9 +471,9 @@ function drawGraph(): void {
 	// ply sits at that same depth, but it isn't a position the graph/review has any data for
 	// — only show the marker while actually viewing the mainline.
 	const selected = isViewingMainline() ? gameslot.getGamefile()!.state.local.moveIndex + 1 : -1;
-	drawPositionMarker(ctx, selected, width, height, total, 'rgba(160, 160, 160, 0.65)', 1);
+	updateCurrentPhaseMarker(selected);
+	drawPositionMarker(ctx, selected, width, height, total, CURRENT_POSITION_COLOR, 1);
 	if (hoveredPosition !== undefined) {
-		drawPositionMarker(ctx, hoveredPosition, width, height, total, lineColor, 1);
 		const cp = gamereview.getWhiteCpAt(hoveredPosition);
 		if (cp !== undefined) {
 			ctx.beginPath();
@@ -459,9 +484,18 @@ function drawGraph(): void {
 	}
 }
 
+/** Hides a coincident phase line so it cannot double up with the current-position marker. */
+function updateCurrentPhaseMarker(selected: number): void {
+	element_PhaseMarkers
+		?.querySelectorAll<HTMLElement>('.review-phase-marker')
+		.forEach((marker) => {
+			marker.classList.toggle('current-position', Number(marker.dataset['ply']) === selected);
+		});
+}
+
 /** Lila-style opening/middlegame/endgame boundaries and vertical labels. */
 function renderPhaseMarkers(total: number): void {
-	if (!element_PhaseMarkers || element_PhaseMarkers.childElementCount > 0) return;
+	if (element_PhaseMarkers.childElementCount > 0) return;
 	const { middle, end } = gamereview.getDivision();
 	const lines: { index: number; label: string }[] = [{ index: 0, label: 'Opening' }];
 	if (middle !== undefined) lines.push({ index: middle, label: 'Middlegame' });
@@ -470,6 +504,7 @@ function renderPhaseMarkers(total: number): void {
 	for (const line of lines) {
 		const marker = document.createElement('div');
 		marker.classList.add('review-phase-marker');
+		marker.dataset['ply'] = String(line.index);
 		marker.style.left = `${(line.index / Math.max(1, total - 1)) * 100}%`;
 		const label = document.createElement('span');
 		label.textContent = line.label;
@@ -523,15 +558,16 @@ function initGraphInteraction(canvas: HTMLCanvasElement): void {
 	});
 	canvas.addEventListener('mouseleave', () => {
 		hoveredPosition = undefined;
-		element_GraphTooltip?.classList.add('hidden');
+		element_GraphTooltip.classList.add('hidden');
 		drawGraph();
 	});
 }
 
 function showGraphTooltip(event: MouseEvent, index: number): void {
-	if (!element_Graph || !element_GraphTooltip || !element_GraphTooltipMove || !element_GraphTooltipEval) return; // prettier-ignore
 	const cp = gamereview.getWhiteCpAt(index);
-	if (cp === undefined) return element_GraphTooltip.classList.add('hidden');
+	const outOfBounds = cp === undefined && !gamereview.positionIsEvaluable(index);
+	// A gap that isn't out of bounds is a position still being evaluated — nothing to show yet.
+	if (cp === undefined && !outOfBounds) return element_GraphTooltip.classList.add('hidden');
 
 	const node = index > 0 ? gamereview.getMainlineNodes()[index - 1] : undefined;
 	const moveNumber = index > 0 ? Math.floor((index - 1) / 2) + 1 : 0;
@@ -544,12 +580,17 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 				abbrev: true,
 			})
 		: 'Starting position';
-	const review = node ? gamereview.getReviewForNode(node.id) : undefined;
-	const classification = review?.classification
-		? ` · ${gamereview.CLASSIFICATION_DISPLAY[review.classification].label}`
-		: '';
 	element_GraphTooltipMove.textContent = `${prefix}${move}`;
-	element_GraphTooltipEval.textContent = `Advantage: ${formatAdvantage(cp)}${classification}`;
+
+	if (outOfBounds) {
+		element_GraphTooltipEval.textContent = 'Out of bounds — not evaluated';
+	} else {
+		const review = node ? gamereview.getReviewForNode(node.id) : undefined;
+		const classification = review?.classification
+			? ` · ${gamereview.CLASSIFICATION_DISPLAY[review.classification].label}`
+			: '';
+		element_GraphTooltipEval.textContent = `Advantage: ${formatAdvantage(cp!)}${classification}`;
+	}
 	element_GraphTooltip.classList.remove('hidden');
 
 	const rect = element_Graph.getBoundingClientRect();
@@ -558,10 +599,11 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 	const localX = event.clientX - rect.left;
 	element_GraphTooltip.style.left = `${math.clamp(localX - tooltipWidth / 2, 6, rect.width - tooltipWidth - 6)}px`;
 
-	// Auto-position vertically on whichever side of the hovered point has more room —
-	// so the tooltip never sits directly over the very data point it's describing.
+	// Auto-position vertically on whichever side of the hovered point has more room — so the
+	// tooltip never sits over the point it describes. An out-of-bounds gap has no point; treat it
+	// as centered, which sends the tooltip to the top.
 	const graphHeight = element_Graph.clientHeight;
-	const pointY = graphY(cp, graphHeight);
+	const pointY = cp !== undefined ? graphY(cp, graphHeight) : graphHeight / 2;
 	element_GraphTooltip.style.top =
 		pointY < graphHeight / 2
 			? `${Math.max(TOOLTIP_TOP_MARGIN, graphHeight - tooltipHeight - TOOLTIP_BOTTOM_MARGIN)}px` // Point is up top — tooltip goes near the bottom.
@@ -572,4 +614,4 @@ function formatAdvantage(cp: number): string {
 	return `${cp > 0 ? '+' : ''}${(cp / 100).toFixed(1)}`.replace('-', '−');
 }
 
-export default { init };
+export default { init, onInitialGameLoaded };

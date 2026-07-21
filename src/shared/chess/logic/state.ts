@@ -18,7 +18,11 @@ interface GameState {
 	global: GlobalGameState;
 }
 
-/** State of a specific move your are VIEWING. */
+/**
+ * Ephemeral, derived state of the currently-viewed ply: the view cursor plus check info
+ * computed from the position for legal-move calc. Never serialized (there is no `state_local`
+ * counterpart to {@link GlobalGameState}'s `state_global`) — it's rebuilt as you view.
+ */
 interface LocalGameState {
 	/** Index of the move we're currently viewing in the moves list. -1 means we're looking at the very beginning of the game. */
 	moveIndex: number;
@@ -35,15 +39,16 @@ interface LocalGameState {
 }
 
 /**
- * State of a game that DOESN'T change depending on what move your VIEWING,
- * but DO change when new moves are made, or rewound (deleted).
- *
- * They represent the state of the game at the FRONT.
+ * Persistent, authoritative board-rules state at the currently-viewed ply: special rights,
+ * en passant, and the move rule. This is the serialized `state_global` bundle carried through
+ * ICN, the start snapshot, seeks, and variant options. Kept separate from {@link LocalGameState}
+ * for that persistence boundary, NOT because it's front-only — like local state, it's applied
+ * on every ply viewed, so it always reflects the position on screen.
  */
 interface GlobalGameState {
 	/** An object containing the information if each individual piece has its special move rights. */
 	specialRights: Set<CoordsKey>;
-	/** If enpassant is allowed at the front of the game, this defines the coordinates. */
+	/** If enpassant is allowed at the currently-viewed ply, this defines the coordinates. */
 	enpassant?: EnPassant;
 	/** The number of half-moves played since the last capture or pawn push. */
 	moveRuleState?: number;
@@ -53,28 +58,14 @@ interface GlobalGameState {
 type inCheck = false | Coords[];
 
 /**
+ * The ordered list of state changes a move makes to the board, applied whenever the
+ * move is played forward or rewound — whether making, rewinding, or merely viewing it.
  *
- * Local statechanges are unique to the move you're viewing, and are always applied. Those include:
- *
- * check, checks
- *
- * Global statechanges are a property of the game as a whole, not unique to the move,
- * and are not applied when VIEWING a move.
- * However, they are applied only when we make a new move, or rewind a simulated one. Those include:
- *
- * enpassant, specialrights, moverulestate
+ * Each {@link StateChange}'s `type` determines which gamefile property it targets:
+ * `check`/`checks` land on {@link LocalGameState}, while `enpassant`/`specialrights`/
+ * `moverulestate` land on {@link GlobalGameState}.
  */
-
-/**
- * Contains the statechanges for the turn before and after a move is made
- *
- * Local state change examples: (check, checks)
- * Global state change examples: (enpassant, specialrights, moverule state, running check counter)
- */
-interface MoveState {
-	local: Array<StateChange>;
-	global: Array<StateChange>;
-}
+type MoveState = Array<StateChange>;
 
 /**
  * A state change, local or global, that contains enough information to set the gamefile's
@@ -156,9 +147,9 @@ function createCheckState(
 	gamestate: GameState,
 ): void {
 	const newStateChange: StateChange = { type: 'check', current, future };
-	move.state.local.push(newStateChange); // Check is a local state
+	move.state.push(newStateChange);
 	// Check states are immediately applied to the gamefile
-	applyLocalState(gamestate.local, newStateChange, true);
+	applyState(gamestate, newStateChange, true);
 }
 
 /** Creates a checks local StateChange, adding it to the Move and immediately applying it to the gamefile. */
@@ -169,9 +160,9 @@ function createChecksState(
 	gamestate: GameState,
 ): void {
 	const newStateChange: StateChange = { type: 'checks', current, future };
-	move.state.local.push(newStateChange); // Checks is a local state
+	move.state.push(newStateChange);
 	// Checks states are immediately applied to the gamefile
-	applyLocalState(gamestate.local, newStateChange, true);
+	applyState(gamestate, newStateChange, true);
 }
 
 // Creating Global State Changes --------------------------------------------------------------------
@@ -182,9 +173,9 @@ function createEnPassantState(move: Edit, current?: EnPassant, future?: EnPassan
 	const newStateChange: StateChange = { type: 'enpassant', current, future };
 	// Check to make sure there isn't already an enpassant state change,
 	// If so, we need to overwrite that one's future value, instead of queueing a new one.
-	const preExistingEnPassantState = move.state.global.find((state) => state.type === 'enpassant');
+	const preExistingEnPassantState = move.state.find((state) => state.type === 'enpassant');
 	if (preExistingEnPassantState !== undefined) preExistingEnPassantState.future = future;
-	else move.state.global.push(newStateChange); // EnPassant is a global state
+	else move.state.push(newStateChange);
 }
 
 /**
@@ -201,79 +192,56 @@ function createSpecialRightsState(
 	future: boolean,
 ): void {
 	const newStateChange: StateChange = { type: 'specialrights', current, future, coordsKey };
-	move.state.global.push(newStateChange); // Special Rights is a global state
+	move.state.push(newStateChange);
 }
 
 /** Creates a moverule global StateChange, queueing it by adding it to the Move. */
 function createMoveRuleState(move: Edit, current: number, future: number): void {
 	if (current === future) return; // If the current and future values are identical, we can skip queueing this state.
 	const newStateChange: StateChange = { type: 'moverulestate', current, future };
-	move.state.global.push(newStateChange); // Special Rights is a global state
+	move.state.push(newStateChange);
 }
 
 // Applying State Changes ----------------------------------------------------------------------------
 
 /**
- * Applies all the StateChanges of a Move, in order, to the gamefile,
- * whether forward or backward, local or global.
+ * Applies all the StateChanges of a Move, in order, to the gamefile, whether forward
+ * or backward. Both "local" & "global" state changes are always applied, since global
+ * state now tracks the viewed ply just like local state.
  */
-function applyMove(
-	gamestate: GameState,
-	moveState: MoveState,
-	/** Whether we're playing this move forward or backward. */
-	forward: boolean,
-	/**
-	 * Specify `globalChange` as true if you are making a physical move in the game,
-	 * or rewinding a simulated move.
-	 * All other situations, such as rewinding and forwarding the game, should only
-	 * be local, so `globalChange` should be false.
-	 */
-	{ globalChange = false } = {},
-): void {
-	applyLocalStateChanges(gamestate.local, moveState.local, forward);
-	if (globalChange) applyGlobalStateChanges(gamestate.global, moveState.global, forward);
+function applyMove(gamestate: GameState, moveState: MoveState, forward: boolean): void {
+	for (const state of moveState) applyState(gamestate, state, forward);
 }
 
-function applyLocalStateChanges(
-	gamestate: LocalGameState,
-	changes: Array<StateChange>,
-	forward: boolean,
-): void {
-	for (const state of changes) {
-		applyLocalState(gamestate, state, forward);
-	}
-}
-
+/**
+ * Applies ONLY the global state changes of a move to a bare {@link GlobalGameState},
+ * ignoring any local (check/checks) changes. Used by {@link gamecompressor.GameToPosition},
+ * which builds a single position and has no local state to track.
+ */
 function applyGlobalStateChanges(
 	gamestate: GlobalGameState,
-	changes: Array<StateChange>,
+	changes: MoveState,
 	forward: boolean,
 ): void {
-	/** The reason we don't include the whole gamefile is so that {@link gamecompressor.GameToPosition} can also use applyMove(). */
-	for (const state of changes) {
-		applyGlobalState(gamestate, state, forward);
-	}
+	for (const state of changes) applyGlobalState(gamestate, state, forward);
 }
 
-/** Applies a move's local state change to the gamefile, forward or backward. */
-function applyLocalState(gamestate: LocalGameState, state: StateChange, forward: boolean): void {
-	const noNewValue = (forward ? state.future : state.current) === undefined;
+/** Applies any single state change to the gamefile, routing it to local or global by type. */
+function applyState(gamestate: GameState, state: StateChange, forward: boolean): void {
 	switch (state.type) {
 		case 'check':
-			gamestate.inCheck = forward ? state.future : state.current;
+			gamestate.local.inCheck = forward ? state.future : state.current;
 			break;
 		case 'checks':
-			if (noNewValue) gamestate.checks = [];
-			else gamestate.checks = forward ? state.future : state.current;
+			gamestate.local.checks = (forward ? state.future : state.current) ?? [];
 			break;
 		default:
-			throw new Error(`State ${state.type} is not a local state change.`);
+			applyGlobalState(gamestate.global, state, forward);
 	}
 }
 
-/** Applies a move's global state change to the gamefile, forward or backward. */
+/** Applies a single global state change to a {@link GlobalGameState}. Local changes are ignored. */
 function applyGlobalState(gamestate: GlobalGameState, state: StateChange, forward: boolean): void {
-	const noNewValue = (forward ? state.future : state.current) === undefined;
 	switch (state.type) {
 		case 'specialrights':
 			if (!(forward ? state.future : state.current))
@@ -281,14 +249,13 @@ function applyGlobalState(gamestate: GlobalGameState, state: StateChange, forwar
 			else gamestate.specialRights.add(state.coordsKey);
 			break;
 		case 'enpassant':
-			if (noNewValue) delete gamestate.enpassant;
+			if ((forward ? state.future : state.current) === undefined) delete gamestate.enpassant;
 			else gamestate.enpassant = forward ? state.future : state.current;
 			break;
 		case 'moverulestate':
 			gamestate.moveRuleState = forward ? state.future : state.current;
 			break;
-		default:
-			throw new Error(`State ${state.type} is not a global state change.`);
+		// check/checks are local-only; ignored here.
 	}
 }
 

@@ -11,8 +11,8 @@ import stripComments from 'glsl-strip-comments';
 import { transform, browserslistToTargets } from 'lightningcss';
 import esbuild, { BuildOptions, Metafile, Plugin, PluginBuild } from 'esbuild';
 
-import { getEngineGlueUrl } from './engine-wasm.js';
 import { getESBuildLogStatusLogger } from './plugins.js';
+import { getEngineGlueUrl, getEngineVersion } from './engine-wasm.js';
 
 // ================================= CONSTANTS =================================
 
@@ -173,6 +173,8 @@ function writeManifest(metafile: Metafile): void {
 	// hashes it separately, so fold its URL in here so templates resolve it like any other asset.
 	const engineGlueUrl = getEngineGlueUrl();
 	if (engineGlueUrl !== undefined) manifest['engine'] = engineGlueUrl;
+	const engineVersion = getEngineVersion();
+	if (engineVersion !== undefined) manifest['engineVersion'] = engineVersion;
 
 	fs.writeFileSync('./dist/manifest.json', JSON.stringify(manifest, null, 2));
 }

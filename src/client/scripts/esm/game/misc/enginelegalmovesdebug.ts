@@ -38,6 +38,12 @@ interface EngineLegalMovesDebugOptions {
 	canRequest: () => boolean;
 	/** Sends `request` to the engine worker. */
 	requestMoves: (request: DebugMoveRequest) => void;
+	/**
+	 * Frees whatever dedicated resource `requestMoves` lazily spun up (e.g. ceval's idle
+	 * helper worker), since the overlay is off and won't be requesting again until re-enabled.
+	 * Omit if the consumer has no separate resource to free (e.g. a single always-on worker).
+	 */
+	release?: () => void;
 }
 
 /** Whether the GameBus listeners have been registered. */
@@ -93,6 +99,7 @@ function disable(): void {
 	console.log('Toggled engine debug: false');
 	requestKeyById.clear();
 	pendingRequestIds.length = 0;
+	options?.release?.();
 	frametracker.onVisualChange();
 }
 

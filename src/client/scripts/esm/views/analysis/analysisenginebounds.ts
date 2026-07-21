@@ -5,9 +5,13 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
-import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
+import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
+import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import { engineDictionary } from '../../../../../shared/chess/engine.js';
 
 /**
  * Absolute fallback border distance for a side the position leaves unbounded — the largest
@@ -43,4 +47,40 @@ function areAllPiecesInBounds(gamefile: GameFile): boolean {
 	return true;
 }
 
-export default { getEngineWorldBorder, areAllPiecesInBounds };
+/** Whether every piece coordinate in `position` lies within `border` (inclusive). */
+function positionInBounds(position: Map<CoordsKey, number>, border: BoundingBox): boolean {
+	for (const key of position.keys()) {
+		const [x, y] = coordutil.getCoordsFromKey(key);
+		if (x < border.left || x > border.right || y < border.bottom || y > border.top)
+			return false;
+	}
+	return true;
+}
+
+/**
+ * For each ply 0…moves.length, the earliest ply from which every position up to it stays in the
+ * engine's safe (replayable) coordinate range; index `i` is the safe start for the position after
+ * `i` plies. An out-of-range historical position would overflow i64 on replay, silently corrupting
+ * the engine's board/repetition state, so analysis skips past it. One forward pass over the history.
+ */
+function getSafeStartPlies(gamefile: GameFile, moves: MoveFull[]): number[] {
+	const border = getEngineWorldBorder(gamefile);
+	const position = jsutil.deepCopyObject(gamefile.startSnapshot.position);
+	const safeStarts: number[] = new Array(moves.length + 1);
+
+	let lastOutOfBoundsPly = positionInBounds(position, border) ? -1 : 0;
+	safeStarts[0] = lastOutOfBoundsPly + 1;
+	for (let i = 0; i < moves.length; i++) {
+		boardchanges.runChanges_Position(position, moves[i]!.changes);
+		if (!positionInBounds(position, border)) lastOutOfBoundsPly = i + 1;
+		safeStarts[i + 1] = lastOutOfBoundsPly + 1;
+	}
+	return safeStarts;
+}
+
+/** The safe start ply for the currently viewed position (see {@link getSafeStartPlies}). */
+function getSafeStartPly(gamefile: GameFile): number {
+	return getSafeStartPlies(gamefile, gamefile.moves)[gamefile.state.local.moveIndex + 1]!;
+}
+
+export default { getEngineWorldBorder, areAllPiecesInBounds, getSafeStartPly, getSafeStartPlies };

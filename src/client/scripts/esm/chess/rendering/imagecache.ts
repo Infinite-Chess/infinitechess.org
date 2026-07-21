@@ -68,7 +68,7 @@ async function initImagesForGame(boardsim: BoardPreview): Promise<void> {
 
 			// Start normalization process for each image
 			const promise = svgtoimageconverter
-				.normalizeImagePixelData(img)
+				.normalizeImagePixelData(img, 512) // High size to retain resolution during the drawing and re-serialization.
 				.then((normalizedImg) => {
 					cachedImages[Number(img.id)] = normalizedImg;
 					// Optional: Log successful caching of a specific type

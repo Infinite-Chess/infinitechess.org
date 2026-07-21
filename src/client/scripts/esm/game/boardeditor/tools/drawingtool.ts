@@ -84,7 +84,7 @@ function resetState(): void {
 
 function beginEdit(): void {
 	drawing = true;
-	thisEdit = { changes: [], state: { local: [], global: [] } };
+	thisEdit = { changes: [], state: [] };
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 }
@@ -135,7 +135,7 @@ function update(currentTool: Tool): void {
 		return;
 
 	const pieceHovered = boardutil.getPieceFromCoords(gamefile.pieces, mouseCoords);
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	const edit: Edit = { changes: [], state: [] };
 
 	switch (currentTool) {
 		case 'placer': {
@@ -162,16 +162,10 @@ function update(currentTool: Tool): void {
 			throw Error('Tried to draw with a non-drawing tool.');
 	}
 
-	if (
-		edit.changes.length === 0 &&
-		edit.state.local.length === 0 &&
-		edit.state.global.length === 0
-	)
-		return;
+	if (edit.changes.length === 0 && edit.state.length === 0) return;
 	edithistory.runEdit(gamefile, mesh, edit, true);
 	thisEdit.changes.push(...edit.changes);
-	thisEdit.state.local.push(...edit.state.local);
-	thisEdit.state.global.push(...edit.state.global);
+	thisEdit.state.push(...edit.state);
 }
 
 /** Queues a specialrights state addition/deletion on the specified piece. */

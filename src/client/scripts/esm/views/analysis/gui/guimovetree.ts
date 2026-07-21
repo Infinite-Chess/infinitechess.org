@@ -10,29 +10,31 @@
  */
 
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { MoveReview } from '../gamereview.js';
+import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
 import type { AnalysisMoveNode } from '../movetree.js';
 
+import movepiece from '../../../../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import wincondition from '../../../../../../shared/chess/logic/wincondition.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
+import gamecore from '../../../game/chess/gamecore.js';
 import premoves from '../../../game/chess/premoves.js';
 import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
 import animation from '../../../game/rendering/animation.js';
 import gamereview from '../gamereview.js';
 import gamesession from '../../../game/chess/gamesession.js';
+import piecemodels from '../../../game/rendering/piecemodels.js';
 import { GameBus } from '../../../game/GameBus.js';
 import frametracker from '../../../game/rendering/frametracker.js';
 import movesequence from '../../../game/chess/movesequence.js';
 import guimoveslist from '../../../game/gui/guimoveslist.js';
 
 // State ---------------------------------------------------------------------------------------
-
-/** Plies of the engine's best line shown as a variation beneath a reviewed blunder. */
-const BLUNDER_VARIATION_MAX_PLIES = 6;
 
 /** The open right-click context menu, if any. */
 let contextMenu: HTMLElement | undefined;
@@ -45,13 +47,17 @@ async function reconcileMoveTree(): Promise<void> {
 	if (!movetree.isReady()) movetree.initFromGame(gamefile);
 	movetree.syncAfterMovesChanged(gamefile);
 
-	guimoveslist.clearRenderedMoves();
-
 	const tree = document.createElement('div');
 	const root = movetree.getRoot()!;
 
+	// Build the whole tree into a detached div first, touching no DOM, so
+	// two overlapping renders can't interleave their nodes into the table.
 	await appendAnalysisMainline(tree, root);
 
+	// Atomic commit: clear the old render and insert the new one with no await between them,
+	// so if renders do overlap the latest simply replaces the previous instead of both landing
+	// and the entire table having two copies of each move.
+	guimoveslist.clearRenderedMoves();
 	guimoveslist.element_MovesTable.insertBefore(tree, guimoveslist.element_GameResult);
 	highlightCurrentNode();
 }
@@ -62,7 +68,11 @@ function highlightCurrentNode(): void {
 	const node = movetree.getCurrentNode(gamefile);
 	const current = node
 		? guimoveslist.element_MovesTable.querySelector<HTMLElement>(`.ply[data-node-id="${node.id}"]`) : undefined; // prettier-ignore
-	if (!current) return;
+	if (!current) {
+		// The root (start-of-game position) has no rendered ply button; scroll to the top.
+		if (gamefile.state.local.moveIndex === -1) guimoveslist.scrollMovesTableToTop();
+		return;
+	}
 	current.classList.add('current');
 	guimoveslist.centerPly(current);
 }
@@ -90,12 +100,7 @@ async function createVariationPlyButton(
 
 	ply.addEventListener('click', () => {
 		ply.blur();
-		if (gamesession.isLoading()) return;
-
-		const gamefile = gameslot.getGamefile()!;
-		const wasAlreadySelected = movetree.getCurrentNode(gamefile) === node;
-		navigateToAnalysisNode(gamefile, node);
-		if (wasAlreadySelected) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
+		navigateToNode(node);
 	});
 	ply.addEventListener('contextmenu', (e) => {
 		ply.blur(); // Drop the focus right-click gave it, else Escape later draws a focus-visible ring.
@@ -398,7 +403,7 @@ function syncAnalysisTreeAfterAction(target: AnalysisMoveNode): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 	navigateToAnalysisNode(gamefile, target);
-	guimoveslist.enqueueRender(reconcileMoveTree);
+	reconcileMoveTree();
 }
 
 /**
@@ -427,8 +432,7 @@ function deleteAnalysisNode(node: AnalysisMoveNode): void {
 		// changed though (e.g. the old front was deleted), so realign the global conclusion.
 		gamefile.moves = movetree.getMovesFromLine(movetree.getActiveLine());
 		gamefile.gameConclusion = movetree.getActiveLineConclusion();
-		guimoveslist.updateNavButtons();
-		guimoveslist.enqueueRender(reconcileMoveTree);
+		GameBus.dispatch('moves-changed');
 	}
 }
 
@@ -466,6 +470,12 @@ function closeContextMenuOnEscape(e: KeyboardEvent): void {
  * its position, restoring that branch's own conclusion.
  */
 function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): void {
+	// A node detached from the tree has no valid line to navigate — bail rather than corrupt
+	// the flat move list. Happens when a game review holds mainline nodes captured at its start
+	// and the user deletes a mainline move (e.g. clicking the eval graph or a lapse stat after).
+	const root = movetree.getRoot();
+	if (!root || !movetree.isInSubtree(root, node)) return;
+
 	const mesh = gameslot.getMesh();
 	premoves.cancelPremoves(gamefile, mesh);
 
@@ -485,17 +495,15 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	// a clean slate before we swap in the (possibly divergent) new line. This is all
 	// synchronous, so the intermediate positions never actually render — avoiding the
 	// fragile shared-prefix index math that could point outside the current move list.
-	if (gamefile.state.local.moveIndex >= 0) movesequence.viewStart(gamefile, mesh);
+	movesequence.viewStart(gamefile, mesh);
 
 	// Swap the flat move list to the chosen branch, then replay forward to the node.
 	movetree.setActiveLineToNode(node);
 	gamefile.moves = newMoves;
 	gamefile.gameConclusion = movetree.getActiveLineConclusion();
 
-	if (targetIndex >= 0) movesequence.viewIndex(gamefile, mesh, targetIndex);
-	else GameBus.dispatch('view-move'); // Root node — already at the start.
+	movesequence.viewIndex(gamefile, mesh, targetIndex);
 
-	guimoveslist.updateNavButtons();
 	selection.unselectPiece();
 	animation.clearAnimations();
 }
@@ -527,72 +535,98 @@ function navigateToNode(node: AnalysisMoveNode): void {
 }
 
 /**
- * Adds the engine's best continuation as a variation before every reviewed blunder.
- * Capped at 6 plies (3 full moves) — enough to show why the move was better without
- * spelling out a whole alternate game — and also stopped at the first illegal or
- * terminal move. The viewer's current node is restored synchronously.
+ * Grafts a legal line of move tokens onto the tree as a variation beneath `parent`.
+ * Purely logical — the viewed move never changes, so this makes no mesh changes, and the
+ * move list is repainted just once per synchronous batch (scheduleReconcile).
  */
-function addBlunderVariations(): void {
+function addVariation(parent: AnalysisMoveNode, tokens: string[]): void {
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile || gamesession.isLoading()) return;
-	const restoreNode = movetree.getCurrentNode(gamefile) ?? movetree.getRoot();
+	if (!gamefile || gamesession.isLoading() || tokens.length === 0) return;
+	// A caller may hold a node captured earlier (e.g. a game review's mainline nodes). Deleting a
+	// move can orphan that node's subtree, so `parent` may no longer be attached to the tree —
+	// skip it rather than graft onto a detached node.
+	const root = movetree.getRoot();
+	if (!root || !movetree.isInSubtree(root, parent)) return;
+	if (parent.children.some((child) => child.move?.token === tokens[0])) return;
 
-	for (const review of gamereview.getReviews()) addBlunderVariationAtTree(review);
+	const { moves, conclusion } = generateVariationMoves(gamefile, parent, tokens);
+	if (moves.length === 0) return;
+	movetree.appendVariation(parent, moves, conclusion);
 
-	if (restoreNode) navigateToAnalysisNode(gamefile, restoreNode);
-	refresh();
+	scheduleReconcile();
 }
 
-/** Adds one newly-discovered blunder PV immediately while review is still running. */
-function addBlunderVariation(review: MoveReview): void {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile || gamesession.isLoading()) return;
-	const restoreNode = movetree.getCurrentNode(gamefile) ?? movetree.getRoot();
-	if (!addBlunderVariationAtTree(review)) return;
-	if (restoreNode) navigateToAnalysisNode(gamefile, restoreNode);
-	refresh();
-}
+/**
+ * Generates a legal PV as a fresh sequence of MoveFull objects branching from `parent`, entirely
+ * on the logical board — no mesh updates, no move-list events. The board and its active move list
+ * are left exactly as they were: fully rewound to the start first (so the swapped-in line never
+ * unapplies a move it doesn't contain), replayed to the parent to generate the branch, then
+ * restored to the viewed move.
+ */
+function generateVariationMoves(
+	gamefile: GameFile,
+	parent: AnalysisMoveNode,
+	pv: string[],
+): { moves: MoveFull[]; conclusion: GameConclusion | undefined } {
+	const restoreMoves = gamefile.moves;
+	const restoreIndex = gamefile.state.local.moveIndex;
+	const restoreConclusion = gamefile.gameConclusion;
 
-function addBlunderVariationAtTree(review: MoveReview): boolean {
-	if (review.classification !== 'blunder' || !review.pv?.length) return false;
-	const parent = gamereview.getMainlineNodes()[review.ply]?.parent;
-	if (!parent) return false;
-	// 6 plies (3 full moves): our coordinate notation is wider than lila's SAN, so a
-	// 12-ply line would span ~4 rows instead of two. Enough to convey the better idea.
-	const pv = review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES);
-	if (parent.children.some((child) => child.move?.token === pv[0])) return false;
-	addVariationAt(parent, pv);
-	return true;
-}
+	// Position the logical board at the parent along a throwaway copy of its line.
+	applyToIndex(gamefile, -1);
+	gamefile.moves = movetree.getMovesToNode(parent);
+	applyToIndex(gamefile, parent.ply);
 
-/** Appends one legal PV line below `parent`, retaining the existing mainline. */
-function addVariationAt(parent: AnalysisMoveNode, tokens: string[]): void {
-	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh();
-	navigateToAnalysisNode(gamefile, parent);
-
-	// Pop gamefile.moves down to the parent so the PV appends as a fresh branch (the tree
-	// keeps its old children). rewindMove only deletes from the front, so view front first.
-	movetree.beginBranchFromViewedPosition(gamefile);
-	const target = gamefile.state.local.moveIndex;
-	movesequence.viewFront(gamefile, mesh);
-	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
-
-	for (const token of tokens) {
+	const moves: MoveFull[] = [];
+	let conclusion: GameConclusion | undefined;
+	for (const token of pv) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, token);
 		if (!result.valid) break;
-		movesequence.makeMove(gamefile, mesh, result.tagged);
-		if (gamefile.gameConclusion) break;
+		moves.push(movepiece.generateAndMakeMove(gamefile, result.tagged));
+		conclusion = wincondition.getGameConclusion(gamefile);
+		if (conclusion) break; // The line ends the game — stop extending it.
 	}
+
+	// Restore the viewed position and its move list exactly as they were.
+	applyToIndex(gamefile, -1);
+	gamefile.moves = restoreMoves;
+	applyToIndex(gamefile, restoreIndex);
+	gamefile.gameConclusion = restoreConclusion;
+
+	// A PV promotion can reallocate the piece arrays; the mesh — which we deliberately never touch
+	// — must then be rebuilt once so its buffers match, otherwise later navigation renders stale
+	// pieces. Same position, so it's not a visual change; the only mesh work a review ever does.
+	const mesh = gameslot.getMesh();
+	if (mesh && gamefile.pieces.newlyRegenerated)
+		piecemodels.regenAll(gamecore.getGameContext(), gamefile, mesh);
+
+	return { moves, conclusion };
 }
 
-/** Re-renders the whole move tree (e.g. to drop stale review decorations on a re-review). */
-function refresh(): void {
-	guimoveslist.enqueueRender(reconcileMoveTree);
+/** Logically steps the board to `index` — no mesh, no events (analysis moves are always global). */
+function applyToIndex(gamefile: GameFile, index: number): void {
+	const forward = index >= gamefile.state.local.moveIndex;
+	movepiece.goToMove(gamefile, index, (move) =>
+		movepiece.applyMove(gamefile, move, forward, true),
+	);
+}
+
+/**
+ * Coalesces move-tree repaints: many variations grafted in one synchronous pass (restoring a
+ * cached review) collapse to a single repaint, while variations arriving across separate turns
+ * (a live review) each repaint as they land.
+ */
+let reconcilePending = false;
+function scheduleReconcile(): void {
+	if (reconcilePending) return;
+	reconcilePending = true;
+	queueMicrotask(() => {
+		reconcilePending = false;
+		reconcileMoveTree();
+	});
 }
 
 export default {
 	navigateToNode,
-	addBlunderVariations,
-	addBlunderVariation,
+	addVariation,
 };

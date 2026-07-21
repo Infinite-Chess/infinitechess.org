@@ -15,7 +15,7 @@ import type { AuthSeekVariant } from '../../shared/types.js';
 import type { EngineGamesRecord } from '../database/engineGamesManager.js';
 
 import clockutil from '../../shared/chess/util/clockutil.js';
-import { engineDictionary } from '../../shared/chess/engines/engine.js';
+import { engineDictionary } from '../../shared/chess/engine.js';
 import { POSITION_STRING_THRESHOLD } from '../../shared/chess/variants/servervalidation.js';
 import compression, { CompressionMode } from '../../shared/util/compression.js';
 import {

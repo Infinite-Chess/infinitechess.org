@@ -12,7 +12,7 @@ import uuid from '../../../../../shared/util/uuid.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
-import { engineDictionary, ValidEngine } from '../../../../../shared/chess/engines/engine.js';
+import { engineDictionary, ValidEngine } from '../../../../../shared/chess/engine.js';
 
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';

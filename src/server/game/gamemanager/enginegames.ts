@@ -40,7 +40,7 @@ import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import typeutil, { players as p } from '../../../shared/chess/util/typeutil.js';
 import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
-import { getFormattedEngineName, ValidEngine } from '../../../shared/chess/engines/engine.js';
+import { getFormattedEngineName, ValidEngine } from '../../../shared/chess/engine.js';
 import {
 	VariantLeaderboards,
 	Leaderboards,

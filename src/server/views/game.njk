@@ -234,13 +234,12 @@ window.gamePageData.engineUrl = "{{ manifest['engine'] }}";
 					</div>
 					{% endif %}
 					{% endif %}
-					{# Post-game actions: rematch, analysis board, and full computer review. #}
+					{# Post-game actions: rematch and analysis board. #}
 					<div class="actions-over{{ '' if meta.result else ' hidden' }}">
 						{% if gamePageData.isLive and gamePageData.role is defined %}
 						<button class="action-btn" id="btn-rematch">Rematch</button>
 						{% endif %}
 						<button class="action-btn" id="btn-analysis">Analysis</button>
-						<button class="action-btn" id="btn-game-review">Game Review</button>
 					</div>
 				</div>
 

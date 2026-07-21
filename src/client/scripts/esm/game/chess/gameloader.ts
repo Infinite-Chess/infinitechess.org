@@ -20,7 +20,7 @@ import type { MovePacket, TimeControl } from '../../../../../shared/types.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
-import { engineDictionary, ValidEngine } from '../../../../../shared/chess/engines/engine.js';
+import { engineDictionary, ValidEngine } from '../../../../../shared/chess/engine.js';
 
 import gameslot from './gameslot.js';
 import enginegame from '../misc/enginegame.js';
