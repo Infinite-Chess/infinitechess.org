@@ -175,7 +175,7 @@ function viewMove(
 	// so viewing a move must also advance whose turn it is. Elsewhere, whosTurn stays
 	// pinned to the front for online/engine turn detection.
 	const updateTurn = gamesession.getGameType() === 'analysis';
-	movepiece.applyMove(gamefile, move, forward, { updateTurn }); // Apply the logical changes.
+	movepiece.applyMove(gamefile, move, forward, updateTurn); // Apply the logical changes.
 
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.

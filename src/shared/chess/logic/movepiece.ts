@@ -303,7 +303,7 @@ function queueIncrementMoveRuleStateChange(boardsim: Board, move: MoveFull): voi
 function makeMove(boardsim: Board, move: MoveFull): void {
 	boardsim.moves.push(move);
 
-	applyMove(boardsim, move, true, { updateTurn: true }); // Apply the logical board changes.
+	applyMove(boardsim, move, true, true); // Apply the logical board changes.
 
 	// Now we can test for check, and modify the state of the boardsim if it is.
 	createCheckState(boardsim, move);
@@ -319,12 +319,7 @@ function makeMove(boardsim: Board, move: MoveFull): void {
  * making/rewinding a real move, or when the viewed ply is itself a playable position (analysis).
  * Otherwise `whosTurn` stays pinned to the front, as online/engine turn detection requires.
  */
-function applyMove(
-	boardsim: Board,
-	move: MoveFull,
-	forward = true,
-	{ updateTurn = false } = {},
-): void {
+function applyMove(boardsim: Board, move: MoveFull, forward: boolean, updateTurn: boolean): void {
 	boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the boardsim moveIndex
 	// Needs to be after moveIndex is updated.
 	if (updateTurn) boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex); // prettier-ignore
@@ -486,7 +481,7 @@ function rewindMove(boardsim: Board): void {
 	// console.error("Rewinding move");
 	const move = moveutil.getMoveFromIndex(boardsim.moves, boardsim.state.local.moveIndex);
 
-	applyMove(boardsim, move, false, { updateTurn: true });
+	applyMove(boardsim, move, false, true);
 
 	// Delete the move off the end of our moves list
 	boardsim.moves.pop();
@@ -534,13 +529,13 @@ function runActionAtGameFront<T>(boardsim: Board, action: () => T): T {
 	const originalMoveIndex = boardsim.state.local.moveIndex;
 
 	// Fast Forward to the latest move (graphical updates skipped since we will return afterwards)
-	goToMove(boardsim, boardsim.moves.length - 1, (move) => applyMove(boardsim, move, true));
+	goToMove(boardsim, boardsim.moves.length - 1, (move) => applyMove(boardsim, move, true, false));
 
 	// Run the specific logic (move validation, conclusion check, etc)
 	const result = action();
 
 	// Rewind to original state
-	goToMove(boardsim, originalMoveIndex, (move) => applyMove(boardsim, move, false));
+	goToMove(boardsim, originalMoveIndex, (move) => applyMove(boardsim, move, false, false));
 
 	return result;
 }
