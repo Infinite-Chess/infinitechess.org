@@ -8,15 +8,12 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type {
-	AnalysisCommand,
-	AnalysisInfo,
-	AnalysisResponse,
-} from './hydrochessanalysis.worker.js';
+import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
@@ -172,8 +169,11 @@ let goDeeperActive = false;
 let currentTargetDepth = DEFAULT_SETTINGS.depth;
 /** Allows an intentional same-position restart (e.g. adding PV lines) to repaint lower-depth rows. */
 let allowDepthRegressionForCurrentSearch = false;
-/** The viewed position has a piece outside HydroChess's safe coordinate range. */
-let blockedByEngineWorldBorder = false;
+/**
+ * Why the engine won't analyze the viewed position (piece out of Apeiron's safe coordinate range,
+ * an unsupported variant/position, etc.) — a user-facing message, or undefined when analyzable.
+ */
+let blockReason: string | undefined;
 
 let latestUpdate: CevalUpdate | undefined;
 let throttleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -223,12 +223,21 @@ function persistSettings(): void {
 
 // Winning chances (adjusted for infinitechess players) ------------------------------------
 
-/** Maps a white-POV centipawn score to a win probability in [-1, 1]. */
-function cpWinningChances(cp: number): number {
-	// Clamp to ensure mate always shows higher gauge than any non-mate eval
-	const clamped = math.clamp(cp, -1200, 1200);
-	// Shallower curve (0.003) assumes players convert advantages less efficiently
+/**
+ * Maps a centipawn score to winning chances in [-1, 1], from that score's POV.
+ * Clamps to ±`clampCp` first, so a caller's mate sentinel can sit at the extreme.
+ */
+function cpToWinningChances(cp: number, clampCp: number): number {
+	const clamped = math.clamp(cp, -clampCp, clampCp);
+	// Shallow curve (0.003) assumes players convert
+	// advantages less efficiently than a perfect engine would.
 	return 2 / (1 + Math.exp(-0.003 * clamped)) - 1;
+}
+
+/** White-POV cp → winning chances for the eval gauge. */
+function cpWinningChances(cp: number): number {
+	// Clamp at ±1200 so a mate (±1) always shows a higher gauge than any non-mate eval.
+	return cpToWinningChances(cp, 1200);
 }
 
 /**
@@ -237,6 +246,11 @@ function cpWinningChances(cp: number): number {
  */
 function mateWinningChances(mate: number): number {
 	return mate > 0 ? 1 : -1;
+}
+
+/** Winning chances for a line's eval — mate takes precedence over cp. */
+function lineWinningChances(cp: number | undefined, mate: number | undefined): number {
+	return mate !== undefined ? mateWinningChances(mate) : cpWinningChances(cp ?? 0);
 }
 
 // Worker lifecycle -----------------------------------------------------------------------
@@ -287,7 +301,7 @@ function interruptSearch(): void {
 
 // Legal-moves helper worker --------------------------------------------------------------
 
-/** Warms the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
+/** Lazily spins up the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
 function ensureLegalWorker(): void {
 	if (legalWorker || !config) return;
 	const w = new Worker(config.workerUrl, { type: 'module' });
@@ -318,6 +332,7 @@ function ensureLegalWorker(): void {
 	} satisfies AnalysisCommand);
 }
 
+/** Frees the idle legal-moves helper worker. Call when the debug overlay is toggled off. */
 function terminateLegalWorker(): void {
 	legalWorker?.terminate();
 	legalWorker = undefined;
@@ -363,7 +378,7 @@ function resetEngineSession(): void {
 	goDeeperActive = false;
 	currentTargetDepth = settings.depth;
 	allowDepthRegressionForCurrentSearch = false;
-	blockedByEngineWorldBorder = false;
+	blockReason = undefined;
 	lastCrashIcn = undefined;
 	lastCrashCount = 0;
 	crashedIcn = undefined;
@@ -411,7 +426,6 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 				}
 			}
 			refreshAnalysis(true); // Fresh wasm module, so this always restarts from depth 1.
-			ensureLegalWorker();
 			notifyStatus();
 			break;
 		case 'initerror':
@@ -443,22 +457,28 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 // Position tracking --------------------------------------------------------------------
 
 /**
- * The compact ICN of the position under analysis, built with the same
- * `compressGamefile` + `LongToShort_Format` machinery the gameplay engine worker
- * (hydrochess.ts) uses. It carries the FULL move list (not just a single position)
- * so the engine replays the game and has the history it needs to detect threefold
- * repetition and the fifty-move rule. The moves are truncated to the ply currently
- * being viewed, so navigating back analyzes that earlier position with its own history.
+ * The compact ICN of the position under analysis, carrying move history so the engine can
+ * detect threefold repetition and the fifty-move rule. Truncated to the viewed ply, and
+ * re-based to {@link analysisenginebounds.getSafeStartPly} if an earlier ply left the engine's
+ * safe coordinate range (unreplayable) — the fifty-move counter survives that cut, repetition
+ * detection across it doesn't.
  */
 function getViewedPositionIcn(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile);
 	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
-	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
-		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
-	}
+	const safeStartPly = analysisenginebounds.getSafeStartPly(gamefile);
+
+	// Re-base the start snapshot to safeStartPly (no-op at ply 0).
+	gamecompressor.rebaseToPly(longformIn, gamefile.moves, safeStartPly, viewedPlyCount);
+
 	// Result/Termination are irrelevant to the engine
 	delete longformIn.metadata.Result;
 	delete longformIn.metadata.Termination;
+	// Always hand the engine an explicit world border. Without one it falls back to its own
+	// narrow internal default (1e15); the resolved border (the position's own, else ±i64-wiggle)
+	// lets it evaluate the full safe coordinate range. compressGamefile deep-copies gameRules,
+	// so this doesn't touch the live game.
+	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
 	return icnconverter.LongToShort_Format(longformIn, {
 		compact: true,
 		skipPosition: false,
@@ -494,13 +514,21 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
+	// The engine can't handle some positions at all (4D/5D variants, too many pieces, unsupported
+	// pieces/win conditions) — block outright. Bounds are separate: an out-of-range VIEWED position
+	// blocks too, but out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
+	const result = apeiron_card.isAnalysisSupported(gamefile);
+	if (!result.supported) {
+		blockAnalysis(result.reason);
+		return;
+	}
 	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) {
-		blockAnalysisForEngineWorldBorder();
+		blockAnalysis('Out of bounds');
 		return;
 	}
 
-	if (blockedByEngineWorldBorder) {
-		blockedByEngineWorldBorder = false;
+	if (blockReason !== undefined) {
+		blockReason = undefined;
 		lastAnalyzedIcn = undefined;
 	}
 
@@ -591,10 +619,11 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	notifyStatus();
 }
 
-function blockAnalysisForEngineWorldBorder(): void {
+/** Stops the engine and marks the viewed position un-analyzable, with a user-facing `reason`. */
+function blockAnalysis(reason: string): void {
 	interruptSearch();
 	send({ cmd: 'stop' });
-	blockedByEngineWorldBorder = true;
+	blockReason = reason;
 	goDeeperActive = false;
 	analyzed = undefined;
 	activeRequestId++;
@@ -658,7 +687,7 @@ function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, termi
 			moves: line.moves,
 			...(cp !== undefined && { cp }),
 			...(mate !== undefined && { mate }),
-			winningChances: mate !== undefined ? mateWinningChances(mate) : cpWinningChances(cp ?? 0), // prettier-ignore
+			winningChances: lineWinningChances(cp, mate),
 		};
 	});
 
@@ -729,9 +758,51 @@ function reemitCurrent(): void {
 	emitNow();
 }
 
+/**
+ * Seeds the position cache with an externally-computed evaluation (the game review).
+ * Ignored when something at least as deep is already cached. Once seeded, the shown
+ * eval only changes when a manual search reaches this depth — the same depth guards
+ * that protect any cached analysis ({@link receiveInfo}, {@link refreshAnalysis}).
+ */
+function seedPositionCache(seed: {
+	icn: string;
+	depth: number;
+	/** The move index (`gamefile.state.local.moveIndex`) at which this position is viewed. */
+	moveIndex: number;
+	/** The line's compact move tokens, from the seeded position. */
+	moves: string[];
+	/** Centipawns, white POV. Absent when mating. */
+	cp?: number;
+	/** Full moves to mate, white POV sign. */
+	mate?: number;
+}): void {
+	const cached = positionCache.get(seed.icn);
+	if (cached && cached.depth >= seed.depth) return;
+
+	const line: CevalLine = {
+		moves: seed.moves,
+		...(seed.cp !== undefined && { cp: seed.cp }),
+		...(seed.mate !== undefined && { mate: seed.mate }),
+		winningChances: lineWinningChances(seed.cp, seed.mate),
+	};
+	positionCache.set(seed.icn, {
+		depth: seed.depth,
+		seldepth: seed.depth,
+		nodes: 0,
+		nps: 0,
+		hashfull: 0,
+		lines: [line],
+		multiPv: 1,
+		targetDepth: seed.depth,
+		moveIndex: seed.moveIndex,
+		done: true,
+		terminal: false,
+	});
+}
+
 /** Requests the legal moves for {@link icn} from the idle helper worker (never blocked by the search). */
 function requestLegalMoves(requestId: number, icn: string): void {
-	if (blockedByEngineWorldBorder) return;
+	if (blockReason !== undefined) return;
 	ensureLegalWorker();
 	if (!legalReady || !legalWorker) {
 		queuedLegalMovesRequests.push({ requestId, icn });
@@ -756,6 +827,11 @@ function notifyStatus(override?: CevalStatus): void {
 function init(options: { workerUrl: string; engineUrl: string }): void {
 	config = options;
 
+	// Pre-warm the engine immediately, regardless of whether eval is enabled, so its wasm module is
+	// loaded and enabling eval later starts analyzing instantly instead of waiting on a cold load.
+	// refreshAnalysis() no-ops while `enabled` is false, so this doesn't start any searching.
+	spawnWorker();
+
 	// Keep the engine pointed at the viewed position. 'view-move' fires on every
 	// board position change, including physical moves. Coalesce them: an operation like
 	// branching (viewFront to the game's front, then rewinding back) fires several
@@ -764,7 +840,8 @@ function init(options: { workerUrl: string; engineUrl: string }): void {
 	GameBus.addEventListener('view-move', scheduleRefresh);
 	GameBus.addEventListener('game-loaded', () => {
 		nextPositionIsNewGame = true;
-		if (enabled && !worker) spawnWorker();
+		// Re-warm regardless of `enabled`: 'game-unloaded' tore the pre-warmed worker down.
+		if (!worker) spawnWorker();
 		refreshAnalysis(true);
 	});
 	GameBus.addEventListener('game-unloaded', () => {
@@ -776,16 +853,21 @@ function isEnabled(): boolean {
 	return enabled;
 }
 
-function isBlockedByEngineWorldBorder(): boolean {
-	return blockedByEngineWorldBorder;
+/** Whether the engine is refusing to analyze the viewed position for any reason. */
+function isBlocked(): boolean {
+	return blockReason !== undefined;
+}
+
+/** The user-facing reason the engine won't analyze the viewed position, or undefined when it will. */
+function getBlockReason(): string | undefined {
+	return blockReason;
 }
 
 function setEnabled(value: boolean): void {
 	if (enabled === value) return;
 	enabled = value;
 	if (enabled) {
-		if (!worker) spawnWorker();
-		else ensureLegalWorker(); // Reusing a warm worker: no 'ready' will fire, so warm the helper here.
+		if (!worker) spawnWorker(); // Only needed if the pre-warmed worker crashed/never spawned.
 		refreshAnalysis(true);
 		// Show the retained eval right away (refreshAnalysis only blanks it when the
 		// position changed while the engine was off) instead of a gap until the resume.
@@ -864,7 +946,7 @@ function getLatestUpdate(): CevalUpdate | undefined {
 function getStatus(): CevalStatus {
 	if (!enabled) return 'off';
 	if (onCrashedPosition) return 'crashed';
-	if (blockedByEngineWorldBorder) return 'blocked';
+	if (blockReason !== undefined) return 'blocked';
 	if (!worker || !workerReady) return 'loading';
 	if (latestUpdate?.done) return 'idle';
 	return 'computing';
@@ -887,10 +969,15 @@ function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
 
 export default {
 	maxThreads,
+	cpToWinningChances,
+	cpWinningChances,
+	seedPositionCache,
 	requestLegalMoves,
+	terminateLegalWorker,
 	init,
 	isEnabled,
-	isBlockedByEngineWorldBorder,
+	isBlocked,
+	getBlockReason,
 	setEnabled,
 	getSettings,
 	updateSettings,

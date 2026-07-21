@@ -78,7 +78,7 @@ function refresh(): void {
 	const gamefile = gameslot.getGamefile();
 
 	if (gamefile && gamefileutility.isGameOver(gamefile)) {
-		// Hide Analysis button if zero moves were played (nothing to analyze).
+		// Hide the Analysis action if zero moves were played (nothing to analyze).
 		element_Analysis.classList.toggle('hidden', gamefile.moves.length === 0);
 		showOnly(element_ActionsOver);
 	}

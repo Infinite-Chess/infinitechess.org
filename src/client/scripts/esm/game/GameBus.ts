@@ -27,7 +27,10 @@ interface GameBusEvents {
 	'user-move-played': void;
 	/** Dispatched when our opponent's move is applied to the board in an online game (live or during a resync). */
 	'opponent-move-played': void;
-	/** Dispatched when a physical move is made on the board by any player, even our own premoves, or making a board editor edit. */
+	/**
+	 * Dispatched when a physical move is made on the board by any player, even our own premoves, or making a board editor edit.
+	 * The 'view-move' event is always dispatched alongside this, but 'physical-move' is only dispatched for actual physical moves, not view changes.
+	 */
 	'physical-move': void;
 	/**
 	 * Dispatched when the committed move list changes — a real move was made, or

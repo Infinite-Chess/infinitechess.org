@@ -127,7 +127,7 @@ function Fill(
 	/** A +1/-1 multiplier to allow us to use one comparison symbol, ">", for both positive and negative directions. */
 	const direction = isPositiveDirection ? 1n : -1n;
 
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	const edit: Edit = { changes: [], state: [] };
 
 	// First, delete all pieces in the fill box.
 	removeAllPieces(gamefile, edit, piecesInPasteBox);
@@ -178,7 +178,7 @@ function Fill(
 /** Deletes the given selection box. */
 function Delete(gamefile: GameFile, mesh: Mesh, box: BoundingBox): void {
 	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	const edit: Edit = { changes: [], state: [] };
 	removeAllPieces(gamefile, edit, piecesInSelection);
 	applyEdit(gamefile, mesh, edit);
 }
@@ -234,7 +234,7 @@ function Paste(gamefile: GameFile, mesh: Mesh, targetBox: BoundingBox): void {
 	const targetBoxCoords: Coords = [targetBox.left, targetBox.top];
 	const translation: Coords = coordutil.subtractCoords(targetBoxCoords, clipboardCoords);
 
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	const edit: Edit = { changes: [], state: [] };
 
 	// First, delete all pieces in the actual paste box.
 	const piecesInPasteBox: Piece[] = getPiecesInBox(gamefile, actualPasteBox);
@@ -465,7 +465,7 @@ function Transform(
 		? bounds.boxContainsBox(gamefile.gameRules.worldBorder, destinationBox)
 		: true;
 
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	const edit: Edit = { changes: [], state: [] };
 
 	// Clear the destination area of any pieces not part of the original selection
 	for (const piece of piecesInDestination) {
@@ -519,7 +519,7 @@ function removeAllPieces(gamefile: GameFile, edit: Edit, pieces: Piece[]): void 
 
 /** Applies the provided edit and adds it to the history. */
 function applyEdit(gamefile: GameFile, mesh: Mesh, edit: Edit): void {
-	if (edit.changes.length === 0 && edit.state.global.length === 0) return; // No changes made => don't need to apply
+	if (edit.changes.length === 0 && edit.state.length === 0) return; // No changes made => don't need to apply
 
 	// Apply the collective edit and add it to the history
 	edithistory.runEdit(gamefile, mesh, edit, true);

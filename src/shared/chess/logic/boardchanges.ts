@@ -352,16 +352,14 @@ function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]
 				position.set(coordutil.getKeyFromCoords(change.endCoords), change.piece.type);
 				break;
 			case 'capture':
+			case 'delete':
 				position.delete(startCoordsKey);
 				break;
 			case 'add':
 				position.set(startCoordsKey, change.piece.type);
 				break;
-			case 'delete':
-				position.delete(startCoordsKey);
-				break;
 			default:
-				// @ts-ignore
+				// @ts-expect-error
 				throw Error(`Unknown change action: ${change.action}`);
 		}
 	}

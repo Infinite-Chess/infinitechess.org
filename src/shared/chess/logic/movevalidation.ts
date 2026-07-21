@@ -6,6 +6,7 @@ import type { GameConclusion } from '../util/winconutil.js';
 import jsutil from '../../util/jsutil.js';
 import winconutil from '../util/winconutil.js';
 import legalmoves from './legalmoves.js';
+import wincondition from './wincondition.js';
 import checkresolver from './checkresolver.js';
 import specialdetect from './specialdetect.js';
 import boardutil, { Piece } from '../util/boardutil.js';
@@ -228,7 +229,9 @@ function validateConclusion(
 	}
 
 	const moveTaggedCopy = jsutil.deepCopyObject(moveTagged);
-	const simulatedConclusion = movepiece.getSimulatedConclusion(boardsim, moveTaggedCopy);
+	const simulatedConclusion = movepiece.simulateMoveWrapper(boardsim, moveTaggedCopy, () =>
+		wincondition.getGameConclusion(boardsim),
+	);
 
 	if (
 		simulatedConclusion?.condition !== claimedGameConclusion?.condition ||

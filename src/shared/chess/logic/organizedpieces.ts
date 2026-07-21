@@ -44,8 +44,8 @@ export interface OrganizedPiecesBase {
 	/** Contains start and end indices for where each type of piece begins and ends in the types array. */
 	typeRanges: TypeRanges;
 	/**
-	 * Pieces organized by coordinate
-	 * 'x,y' => idx
+	 * Pieces organized by coordinate ('x,y' => idx).
+	 * This contains no undefined placeholders.
 	 */
 	coords: Map<CoordsKey, number>;
 	/**

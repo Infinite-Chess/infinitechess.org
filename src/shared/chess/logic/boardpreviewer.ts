@@ -29,9 +29,15 @@ import variantpreviewer from '../variants/variantpreviewer.js';
  * specialVicinity, moves).
  */
 export type BoardPreview = {
-	/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
+	/**
+	 * An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']`,
+	 * including pieces that may join via promotion or the board editor.
+	 */
 	existingTypes: number[];
-	/** An array of all RAW piece types that are in this game. */
+	/**
+	 * An array of all RAW piece types that are in this game,
+	 * including pieces that may join via promotion or the board editor.
+	 */
 	existingRawTypes: RawType[];
 
 	pieces: OrganizedPiecesBase;

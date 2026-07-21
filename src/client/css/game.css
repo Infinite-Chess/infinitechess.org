@@ -5,6 +5,8 @@
 
 .game {
 	display: flex;
+	/* One-liner for wapping the side bar to the right edge. */
+	flex-direction: row-reverse;
 	height: calc(100dvh - var(--header-height));
 }
 

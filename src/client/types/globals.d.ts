@@ -97,7 +97,7 @@ declare global {
 		gameId: number | null;
 		/** The viewer's color if they were a participant (auto-orients the board); undefined for non-participants. */
 		role?: Player;
-		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/hydrochess_wasm.js`), from the manifest. */
+		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`), from the manifest. */
 		engineUrl: string;
 		/** Hashed URL of the analysis engine worker script (from the asset manifest). */
 		workerUrl: string;

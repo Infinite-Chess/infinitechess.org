@@ -1,11 +1,9 @@
-// src/client/scripts/esm/game/chess/engines/engine.ts
+// src/shared/chess/engine.ts
 
 /*
  * This module contains the centralized data structure for all engines.
  * Add a new entry to engineDictionary when adding a new engine.
  */
-
-import hydrochess_card from './enginecards/hydrochess_card.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -33,6 +31,9 @@ export type ValidEngine = keyof typeof engineDictionary;
 
 // Constants --------------------------------------------------------------------
 
+/** Maximum signed 64-bit integer value (2^63 - 1). Used in Rust. */
+export const I64_MAX = 2n ** 63n - 1n;
+
 /**
  * Centralized data structure for all engine properties.
  * Add a new entry here when adding a new engine.
@@ -45,10 +46,10 @@ export const engineDictionary = {
 		displayName: 'Practice Bot',
 		maxStrengthLevel: 1,
 	},
-	hydrochess: {
-		worldBorder: hydrochess_card.I64_MAX - 2000n,
+	apeiron: {
+		worldBorder: I64_MAX - 2000n,
 		defaultTimeLimitPerMoveMillis: 4000,
-		displayName: 'HydroChess',
+		displayName: 'Apeiron',
 		maxStrengthLevel: 3,
 	},
 } satisfies { [key: string]: Engine };
@@ -65,4 +66,21 @@ export function getFormattedEngineName(engineName: ValidEngine, strengthLevel?: 
 	return strengthLevel !== undefined && strengthLevel !== maxLevel
 		? `${name} (Level ${strengthLevel})`
 		: name;
+}
+
+/**
+ * Appends an engine's major.minor version to its display name (lila-style),
+ * e.g. "Apeiron 2.1" — or just the bare name when the version is empty
+ * (e.g. an engine-release fetch failed at build time).
+ */
+export function getVersionedEngineName(engineName: ValidEngine, version: string): string {
+	const name = engineDictionary[engineName].displayName;
+	return version ? `${name} ${formatEngineVersionMajorMinor(version)}` : name;
+}
+
+/** Trims a semver to major.minor, dropping a zero minor too, e.g. "2.0.1" -> "2", "2.1.0" -> "2.1". */
+function formatEngineVersionMajorMinor(version: string): string {
+	const [major, minor] = version.split('.');
+	if (major === undefined || minor === undefined || minor === '0') return major ?? version;
+	return `${major}.${minor}`;
 }

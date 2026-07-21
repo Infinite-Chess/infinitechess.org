@@ -70,7 +70,7 @@ function Quad_Texture(left: number, bottom: number, right: number, top: number, 
 	];
 }
 
-/** [TRIANGLES] Generates vertex, texture coordinate, and color data for a tinted textured 2D quad. */
+/** [TRIANGLES] Generates vertex, texture coordinate, and color data for a colored textured 2D quad. */
 // prettier-ignore
 function Quad_ColorTexture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
@@ -85,7 +85,7 @@ function Quad_ColorTexture(left: number, bottom: number, right: number, top: num
 	];
 }
 
-/** [TRIANGLES] Generates vertex, texture coordinate, and color data for a tinted textured 3D quad. */
+/** [TRIANGLES] Generates vertex, texture coordinate, and color data for a colored textured 3D quad. */
 // prettier-ignore
 function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: number, z: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [

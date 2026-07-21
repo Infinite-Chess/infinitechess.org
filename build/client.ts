@@ -11,8 +11,8 @@ import stripComments from 'glsl-strip-comments';
 import { transform, browserslistToTargets } from 'lightningcss';
 import esbuild, { BuildOptions, Metafile, Plugin, PluginBuild } from 'esbuild';
 
-import { getEngineGlueUrl } from './engine-wasm.js';
 import { getESBuildLogStatusLogger } from './plugins.js';
+import { getEngineGlueUrl, getEngineVersion } from './engine-wasm.js';
 
 // ================================= CONSTANTS =================================
 
@@ -52,7 +52,7 @@ export const ESMEntryPoints = [
 	'src/client/scripts/esm/views/analysis/analysis.ts',
 
 	// Workers
-	'src/client/scripts/esm/views/analysis/hydrochessanalysis.worker.ts',
+	'src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts',
 
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
@@ -65,7 +65,7 @@ export const ESMEntryPoints = [
 	// 'src/client/scripts/esm/views/admin.ts',
 	// 'src/client/scripts/esm/views/icnvalidator/icnvalidator.ts',
 	// 'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
-	// 'src/client/scripts/esm/game/chess/engines/hydrochess.ts',
+	// 'src/client/scripts/esm/game/chess/engines/apeiron.ts',
 	// 'src/client/scripts/esm/workers/icnvalidator.worker.ts',
 ];
 
@@ -173,6 +173,8 @@ function writeManifest(metafile: Metafile): void {
 	// hashes it separately, so fold its URL in here so templates resolve it like any other asset.
 	const engineGlueUrl = getEngineGlueUrl();
 	if (engineGlueUrl !== undefined) manifest['engine'] = engineGlueUrl;
+	const engineVersion = getEngineVersion();
+	if (engineVersion !== undefined) manifest['engineVersion'] = engineVersion;
 
 	fs.writeFileSync('./dist/manifest.json', JSON.stringify(manifest, null, 2));
 }

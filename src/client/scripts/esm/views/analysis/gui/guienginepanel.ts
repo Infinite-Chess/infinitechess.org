@@ -7,7 +7,6 @@
  * the board.
  */
 
-import type { Mesh } from '../../../game/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
@@ -20,6 +19,7 @@ import toast from '../../../components/toast.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
 import selection from '../../../game/chess/selection.js';
+import animation from '../../../game/rendering/animation.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../rendering/enginearrows.js';
@@ -74,8 +74,9 @@ function init(): void {
 		workerUrl: window.analysisPageData.workerUrl,
 	});
 	enginelegalmovesdebug.init({
-		canRequest: () => !ceval.isBlockedByEngineWorldBorder(),
+		canRequest: () => !ceval.isBlocked(),
 		requestMoves: ({ id, positionIcn }) => ceval.requestLegalMoves(id, positionIcn),
+		release: () => ceval.terminateLegalWorker(),
 	});
 
 	initSettingsUI();
@@ -101,8 +102,12 @@ function setEngineEnabled(value: boolean): void {
 	element_Toggle.checked = value;
 	localStorage.setItem(ENABLED_STORAGE_KEY, String(value));
 	ceval.setEnabled(value);
-	setGaugeVisible(value);
-	if (!value) clearPanelReadout('Local evaluation off');
+	// Only hide here; showing happens in onEngineUpdate, synchronized with the value it displays —
+	// showing it eagerly on enable would flash an uninitialized (0%, all-white) bar for a frame.
+	if (!value) {
+		setGaugeVisible(false);
+		clearPanelReadout('Local evaluation off');
+	}
 }
 
 /** Shows/hides the eval gauge. */
@@ -179,9 +184,12 @@ function initListeners(): void {
 	bindSettingSlider(element_Threads, element_ThreadsValue, String, (v) => ceval.updateSettings({ threads: v })); // prettier-ignore
 	bindSettingSlider(element_Depth, element_DepthValue, String, (v) => {
 		ceval.updateSettings({ depth: v });
-		// Reshape the progress bar's fill the moment the new target commits,
-		// rather than waiting for the engine to finish its next depth.
-		if (ceval.isEnabled()) updateProgress(ceval.getLatestUpdate(), v);
+		// Reshape the progress bar's fill and the "Depth XX/YY" header's target the moment the
+		// new target commits, rather than waiting for the engine to finish its next depth.
+		if (!ceval.isEnabled()) return;
+		const update = ceval.getLatestUpdate();
+		if (update) element_Stats.textContent = formatStats(update, v);
+		updateProgress(update, v);
 	});
 	bindSettingSlider(
 		element_Hash,
@@ -253,10 +261,11 @@ function onEngineStatus(status: CevalStatus): void {
 		setGaugeVisible(false);
 		element_Stats.textContent = 'Engine failed to load';
 		updateProgress(undefined);
-		toast.show('The analysis engine failed to load.', { error: true });
+		toast.show('The engine failed to load.', { error: true });
 	} else if (status === 'blocked') {
 		enginelegalmovesdebug.disable();
-		clearPanelReadout('Outside world border', { gauge: 0 });
+		setGaugeVisible(false);
+		clearPanelReadout(ceval.getBlockReason() ?? 'Out of bounds');
 	} else if (status === 'crashed') {
 		clearPanelReadout('Analysis crashed', { gauge: 0 });
 		if (!crashToastShown) {
@@ -281,6 +290,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	lineWindowStateMoveIndex = update.moveIndex;
 
 	if (update.terminal) {
+		setGaugeVisible(true);
 		clearPanelReadout('Game Over', { gauge: terminalGaugeChances(), progress: update });
 		return;
 	}
@@ -294,6 +304,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	const canDeepen = update.done && update.depth < ceval.MAX_DEPTH && hasNonTerminalLine;
 	element_GoDeeper.classList.toggle('hidden', !canDeepen);
 
+	setGaugeVisible(true);
 	updateGauge(best?.winningChances ?? 0);
 	updateProgress(update);
 	renderLines(update.lines);
@@ -307,10 +318,16 @@ function formatEval(line: CevalLine): string {
 	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`;
 }
 
-function formatStats(update: CevalUpdate): string {
+/**
+ * Formats the depth and nps stats for display, e.g. "Depth 15/20 · 1.2 Mn/s".
+ * @param targetDepthOverride - Lets the depth slider update the "/YY" target
+ * before the engine re-emits with it.
+ */
+function formatStats(update: CevalUpdate, targetDepthOverride?: number): string {
 	// Guard against a stale target briefly lagging the reached depth (e.g. right after
 	// "go deeper") — never show something like "15/13".
-	const depth = `Depth ${update.depth}/${Math.max(update.targetDepth, update.depth)}`;
+	const target = targetDepthOverride ?? update.targetDepth;
+	const depth = `Depth ${update.depth}/${Math.max(target, update.depth)}`;
 	// Only show speed while actually searching (like lichess): once finished nps is 0.
 	const searching = !update.done && !update.terminal;
 	if (!searching || update.nps <= 0) return depth;
@@ -327,9 +344,12 @@ function formatStats(update: CevalUpdate): string {
  * to a just-committed target before the engine re-emits with it.
  */
 function updateProgress(update: CevalUpdate | undefined, targetDepthOverride?: number): void {
-	const active = ceval.isEnabled() && !ceval.isBlockedByEngineWorldBorder();
-	const computing = active && (!update || (!update.done && !update.terminal));
+	const active = ceval.isEnabled() && !ceval.isBlocked();
 	const targetDepth = targetDepthOverride ?? update?.targetDepth ?? ceval.getSettings().depth;
+	// Reaching the target depth ALWAYS stops the animation, regardless of `done` — a bar shown
+	// fully filled must never keep pulsing, even if the engine's own completion flag lagged.
+	const reachedTarget = !!update && update.depth >= targetDepth;
+	const computing = active && (!update || (!update.done && !update.terminal && !reachedTarget));
 	const progress = update ? Math.min(update.depth / Math.max(targetDepth, 1), 1) : 0;
 	// While computing, keep a small minimum so the animated bar is visible immediately
 	// (e.g. at depth 0 right after a move or on "go deeper"), not a zero-width sliver.
@@ -563,13 +583,13 @@ function playLine(tokens: string[], untilIndex: number): void {
 	if (!gamefile || gamesession.isLoading()) return;
 
 	const mesh = gameslot.getMesh();
-	if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile, mesh);
+	if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile);
 	// Board moveIndex where the line's first token applies. Used for debugging.
 	const startMoveIndex = gamefile.state.local.moveIndex;
 	for (let i = 0; i <= untilIndex; i++) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, tokens[i]!);
 		if (!result.valid) {
-			console.error(`Engine line move "${tokens[i]}" (token index ${i}) at moveIndex ${gamefile.state.local.moveIndex} is not legal to apply here: ${result.reason}.`); // prettier-ignore
+			console.error(`Engine line move "${tokens[i]}" (token index ${i}) at moveIndex ${gamefile.state.local.moveIndex} is not legal to apply here: ${result.reason}`); // prettier-ignore
 			console.error(`Full line (starting at moveIndex ${startMoveIndex}):`, tokens);
 			break;
 		}
@@ -583,17 +603,21 @@ function playLine(tokens: string[], untilIndex: number): void {
 }
 
 /**
- * Branches the analysis game from the currently-viewed ply: truncates the move tree's
- * active line, fast-forwards the logical front to align with the board, then rewinds
- * move-by-move (deleting each) back to the viewed index. Afterward the gamefile genuinely
- * sits at that position — board, turn, and global state all consistent — so a new move
- * can be played from it.
+ * Truncates the analysis game to the currently-viewed ply so a new move can branch from it:
+ * trims the move tree's active line and slices the flat move list to the viewed index, leaving
+ * the gamefile genuinely at that position (board, turn, and global state all consistent).
+ *
+ * Deliberately does NOT dispatch 'moves-changed'. This is only ever a prelude to a move commit,
+ * whose own dispatch reconciles the final state. Don't trigger the move list to re-render twice over.
  */
-function branchFromViewedPosition(gamefile: GameFile, mesh: Mesh | undefined): void {
+function branchFromViewedPosition(gamefile: GameFile): void {
 	movetree.beginBranchFromViewedPosition(gamefile);
-	const target = gamefile.state.local.moveIndex;
-	movesequence.viewFront(gamefile, mesh);
-	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
+	// Slice all moves off the gamefile after the current ply.
+	gamefile.moves.length = gamefile.state.local.moveIndex + 1;
+	// Has a chance of being wrong. We would otherwise have to perform game-over
+	// checks again. We don't store gameConclusion as a global state change per move.
+	gamefile.gameConclusion = undefined;
+	animation.clearAnimations();
 }
 
 // Registration ---------------------------------------------------------------

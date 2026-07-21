@@ -3,7 +3,26 @@
 /* The analysis page (/analysis/:id?): layered on top of game.css — same sidebar +
    board layout. Extras: the variant setup panel (shared widget, see
    variantselector.css), the local-engine evaluation panel, the move tree,
-   the actions menu, and the eval gauge beside the board. */
+   the actions menu, the eval gauge beside the board, and the Game Review
+   overlays (per-player stats, move classifications, progress bar, eval graph). */
+
+/* ============================
+   Game Review — shared colors
+   ============================ */
+
+/* Consumed by the .review-stats panel and the .ply move classifications. */
+:root,
+[data-theme='dark'] {
+	--review-inaccuracy: hsl(202 78% 62%);
+	--review-mistake: hsl(41 100% 45%);
+	--review-blunder: hsl(0 69% 60%);
+}
+
+[data-theme='light'] {
+	--review-inaccuracy: hsl(202 78% 40%);
+	--review-mistake: hsl(41 100% 40%);
+	--review-blunder: hsl(0 68% 50%);
+}
 
 /* ============================
    Variant setup panel
@@ -13,6 +32,85 @@
 .variant-setup {
 	padding: 8px 10px;
 	overflow: visible;
+}
+
+/* ============================
+   Game Review — player stats
+   ============================ */
+
+.game-meta.review .result-banner {
+	padding: 6px 0;
+	border-bottom: 1px solid var(--c-border-muted);
+}
+
+/* Two-column per-player stats (replace the participant rows once a review runs) */
+
+.review-stats {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 4px 12px;
+}
+
+.review-stats-col {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+
+.review-stats-col .meta-player {
+	margin-bottom: 2px;
+	font-size: 14px;
+}
+
+.review-accuracy {
+	display: flex;
+	gap: 6px;
+	font-size: 0.95em;
+}
+
+.review-accuracy-value {
+	font-weight: 700;
+	color: var(--c-text-emphasis);
+}
+
+.review-stat-row {
+	display: flex;
+	gap: 6px;
+	font-size: 0.8em;
+}
+
+.review-stat-action {
+	margin: -1px -4px;
+	padding: 1px 4px;
+	border-radius: 3px;
+	cursor: pointer;
+}
+
+.review-stat-action:hover {
+	background: var(--c-hover-overlay);
+}
+
+.review-stat-label {
+	color: var(--c-text-muted);
+}
+
+.review-stat-value {
+	min-width: 1.4em;
+	font-weight: 600;
+	text-align: right;
+}
+
+.review-stat-value.inaccuracy {
+	color: var(--review-inaccuracy);
+}
+
+.review-stat-value.mistake {
+	color: var(--review-mistake);
+}
+
+.review-stat-value.blunder {
+	color: var(--review-blunder);
 }
 
 /* ============================
@@ -207,6 +305,7 @@
 	border-bottom: 1px solid var(--c-border-muted);
 	background: var(--c-surface);
 	box-shadow: 0 4px 5px rgba(0, 0, 0, 0.4);
+	z-index: 1;
 }
 
 .setting-row {
@@ -321,7 +420,7 @@
 	position: absolute;
 	top: 13px;
 	left: 8px;
-	width: 8px;
+	width: 6px;
 	border-top: 2px solid color-mix(in srgb, var(--c-text-muted) 28%, transparent);
 }
 
@@ -356,6 +455,39 @@
 .move-index {
 	flex: 0 0 auto;
 	font-size: 0.86em;
+}
+
+/* ============================
+   Game Review — move classifications
+   ============================ */
+
+.ply.review-inaccuracy .move-coord,
+.ply.review-inaccuracy .review-glyph {
+	color: var(--review-inaccuracy);
+}
+
+.ply.review-mistake .move-coord,
+.ply.review-mistake .review-glyph {
+	color: var(--review-mistake);
+}
+
+.ply.review-blunder .move-coord,
+.ply.review-blunder .review-glyph {
+	color: var(--review-blunder);
+}
+
+.review-glyph {
+	margin-left: 2px;
+	font-size: 0.85em;
+	font-weight: 700;
+}
+
+.review-eval {
+	flex-shrink: 0;
+	margin-left: auto;
+	font-size: 0.75em;
+	font-weight: 300;
+	color: var(--c-text-muted);
 }
 
 /* ============================
@@ -446,6 +578,127 @@
 
 #btn-continue-from-here svg {
 	transform: scale(1.15);
+}
+
+/* ============================
+   Game Review — progress bar
+   ============================ */
+
+/* Progress bar below the moves list (swapped for the eval graph on completion) */
+
+.analysis .review-progress {
+	padding: 5px 8px 6px;
+}
+
+.review-progress-bar {
+	position: relative;
+	height: 4px;
+	overflow: hidden;
+	border-radius: 2px;
+	background: color-mix(in srgb, #000 18%, transparent);
+	container-type: inline-size; /* Let the sheen measure travel in cqw */
+}
+
+.review-progress-fill {
+	position: relative;
+	height: 100%;
+	overflow: hidden; /* Clip the shimmer to the filled portion only. */
+	background: var(--c-accent, #6aa331);
+	transition: width 0.18s ease;
+}
+
+.review-progress-fill::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 35cqw;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+	animation: engine-progress-sheen 1.1s linear infinite;
+}
+
+.review-progress-text {
+	display: block;
+	margin-top: 4px;
+	font-size: 0.72em;
+	color: var(--c-text-muted);
+}
+
+/* ============================
+   Game Review — eval graph
+   ============================ */
+
+.review-graph {
+	position: relative;
+	min-height: 150px;
+	background: var(--c-surface-2);
+}
+
+.review-graph canvas {
+	color: var(--c-text-emphasis); /* Read by the canvas code for the eval line. */
+}
+
+.review-phase-markers {
+	pointer-events: none;
+}
+
+.review-phase-marker {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	border-left: 1px solid var(--c-border-2);
+}
+
+.review-phase-marker.current-position {
+	border-left-color: transparent;
+}
+
+.review-phase-marker span {
+	position: absolute;
+	top: 4px;
+	left: 3px;
+	font-size: 10px;
+	line-height: 1;
+	writing-mode: vertical-rl;
+	color: var(--review-phase-label-src);
+	/* Inverse-blend each glyph stroke against whatever graph fill is behind it. */
+	mix-blend-mode: difference;
+}
+/* Tune the source per theme */
+[data-theme='dark'] .review-phase-marker span {
+	--review-phase-label-src: rgb(190, 190, 190);
+}
+[data-theme='light'] .review-phase-marker span {
+	--review-phase-label-src: rgb(135, 135, 135);
+}
+
+.review-graph-tooltip {
+	position: absolute;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	max-width: min(calc(100% - 12px), 220px);
+	padding: 6px 8px;
+	border: 1px solid var(--c-border-2);
+	border-radius: 5px;
+	background: var(--c-surface);
+	box-shadow: 0 2px 8px var(--c-shadow-elev);
+	color: var(--c-text-emphasis);
+	font-size: 0.78em;
+	line-height: 1.25;
+	pointer-events: none;
+}
+
+.review-graph-tooltip .move {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.review-graph-tooltip .eval {
+	color: var(--c-text-muted);
 }
 
 /* ============================

@@ -105,15 +105,18 @@ splits by how each asset is invalidated:
   from the translation TOMLs. See [TRANSLATIONS.md](/docs/systems/TRANSLATIONS.md).
 - **[build/env.ts](/build/env.ts)**: auto-generates `.env` with random token secrets if
   absent; validates `NODE_ENV ∈ {development, production, test}`.
-- **[build/engine-wasm.ts](/build/engine-wasm.ts)**: downloads the latest HydroChess WASM
-  release from GitHub into `src/client/pkg/hydrochess/pkg/` (version-stamped). Network-failure
+- **[build/engine-wasm.ts](/build/engine-wasm.ts)**: downloads the latest Apeiron WASM
+  release from GitHub into `src/client/pkg/apeiron/pkg/` (version-stamped). Network-failure
   tolerant — falls back to the existing local copy.
 
 ## `npm run dev`
 
 `clean` then `concurrently` runs four watchers: `dev:build` (esbuild `--dev` watch),
 `dev:tsc` (`tsc -b --watch --noEmit`, type errors only — separate from esbuild), `dev:assets`
-(cpx `--watch`), and `dev:server` (`wait-on dist/server/server.js` then `nodemon`).
+(cpx `--watch`), and `dev:server` (`wait-on dist/server/server.js dist/manifest.json` then
+`nodemon`). It waits on **both** files because the client and server are independent parallel
+builds: `server.js` alone can appear before the manifest, and the server hard-throws at startup
+if the manifest is missing (see [nunjucks.ts](/src/server/config/nunjucks.ts)).
 
 ## Adding a new page — checklist
 

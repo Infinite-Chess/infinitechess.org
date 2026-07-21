@@ -27,9 +27,11 @@ import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
+import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
+import { engineDictionary } from '../../../../../../shared/chess/engine';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
@@ -56,10 +58,8 @@ import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
 import validatorama from '../../../util/validatorama';
 import selectiontool from '../tools/selection/selectiontool';
-import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
 import guiboardcontrols from '../../gui/guiboardcontrols';
 import clientmetadatautil from '../../chess/clientmetadatautil';
-import { engineDictionary } from '../../chess/engines/engine';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
 // Constants ----------------------------------------------------------------------
@@ -203,7 +203,7 @@ function startLocalGame(): void {
 }
 
 function startEngineGame(engineUIConfig: EngineUIConfig): void {
-	const currentEngine = 'hydrochess';
+	const currentEngine = 'apeiron';
 
 	const variantOptions = getValidatedPosition();
 	if (variantOptions === null) return;
@@ -222,7 +222,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		 */
 
 		const worldBorderProperty = engineDictionary[currentEngine].worldBorder;
-		const cap = hydrochess_card.BORDER_CAP;
+		const cap = apeiron_card.BORDER_CAP;
 
 		// How far can we extend in each direction before hitting ±limit?
 		const availableLeft = bb.left + cap;
@@ -247,7 +247,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	}
 
 	// Does the engine support the position and settings?
-	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
+	const supported_result = apeiron_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
 		toast.show(`${translations.editor.position_not_supported} ${supported_result.reason}`, {
 			error: true,
@@ -417,7 +417,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	const thisGamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	const pieces = thisGamefile.pieces;
-	const edit: Edit = { changes: [], state: { local: [], global: [] } };
+	const edit: Edit = { changes: [], state: [] };
 
 	// Remove all current pieces from position
 	queueRemovalOfAllPieces(thisGamefile, edit, pieces);

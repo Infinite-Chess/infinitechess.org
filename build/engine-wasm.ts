@@ -1,26 +1,27 @@
 // build/engine-wasm.ts
 
 /**
- * HydroChess WASM Engine Setup Script
+ * Apeiron WASM Engine Setup Script
  *
- * This ensures that the HydroChess WASM engine is available.
+ * This ensures that the Apeiron WASM engine is available.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import * as z from 'zod';
+import { unzipSync } from 'fflate';
 
 import { logZodError } from '../src/server/utility/zodlogger';
 
 // Constants -------------------------------------------------------------------
 
-/** Absolute path to the HydroChess WASM engine pkg directory */
-const HYDROCHESS_WASM_DIR = path.join(process.cwd(), 'src', 'client', 'pkg', 'hydrochess');
+/** Absolute path to the Apeiron WASM engine pkg directory */
+const APEIRON_WASM_DIR = path.join(process.cwd(), 'src', 'client', 'pkg', 'apeiron');
 
 /** API URL to check the latest released version */
 const LATEST_RELEASE_API_URL =
-	'https://api.github.com/repos/Infinite-Chess/hydrochess/releases/latest';
+	'https://api.github.com/repos/Infinite-Chess/apeiron/releases/latest';
 
 /** Zod schema for validating GitHub release API response */
 const releaseDataSchema = z.object({
@@ -37,34 +38,40 @@ const releaseDataSchema = z.object({
 const ENGINE_DIST_DIR = path.join(process.cwd(), 'dist', 'client', 'engine');
 
 /**
- * Web path (no trailing slash) of the content-versioned engine
- * dir, e.g. "/engine/1a2b3c4d". Set by {@link copyEngineToDist}.
+ * Served URL of the content-versioned engine glue
+ * (e.g. "/engine/1a2b3c4d/apeiron.js"). Set by {@link copyEngineToDist}. */
+let engineGlueUrl: string | undefined;
+
+/**
+ * The engine's semver (e.g. "2.0.0"), `'dev'` for a local build, or an
+ * empty string when a release fetch fails. Set by {@link downloadEngineWasm}.
  */
-let engineWebBase: string | undefined;
+let engineVersion: string = '';
 
 /** Prefix for this script's console logs. */
-const label = '[hydrochess]';
+const label = '[apeiron]';
 
 // Functions -------------------------------------------------------------------
 
 /**
- * Ensures the HydroChess WASM engine is available and up-to-date.
+ * Ensures the Apeiron WASM engine is available and up-to-date.
  * Automatically downloads the pre-built WASM if there is a new release.
  */
 export async function downloadEngineWasm(): Promise<void> {
-	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
-	const wasmFile = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
-	const jsFile = path.join(pkgDir, 'hydrochess_wasm.js');
+	const pkgDir = path.join(APEIRON_WASM_DIR, 'pkg');
+	const wasmFile = path.join(pkgDir, 'apeiron_bg.wasm');
+	const jsFile = path.join(pkgDir, 'apeiron.js');
 
 	// Dev-opt-in: A manually created `pkg/.local-build` file means there's a
 	// local build of the engine, do not replace it with a downloaded release.
 	if (fs.existsSync(path.join(pkgDir, '.local-build'))) {
 		console.log(`${label} Local engine build detected — skipping release download.`);
+		engineVersion = 'dev'; // A local build carries no release tag to parse a version from.
 		return;
 	}
 
 	// Note: If you are manually rebuilding the engine binaries on a separate
-	// vscode window with the hydrochess repo open, and have setup a symlink
+	// vscode window with the apeiron repo open, and have setup a symlink
 	// for this submodule to point to that project, then this file will be innacurate.
 	// But it works because the local build process thinks we're already on the latest version.
 	const versionFile = path.join(pkgDir, '.engine-version');
@@ -102,6 +109,7 @@ export async function downloadEngineWasm(): Promise<void> {
 		);
 		if (fs.existsSync(wasmFile)) {
 			console.log(`${label} Using existing local version.`);
+			engineVersion = parseEngineVersion(localVersion);
 			return;
 		}
 		// If we can't check and have no local copy, fail and inform the user.
@@ -118,46 +126,56 @@ export async function downloadEngineWasm(): Promise<void> {
 		fs.existsSync(jsFile)
 	) {
 		console.log(`${label} Engine is up-to-date (${localVersion}).`);
+		engineVersion = parseEngineVersion(remoteVersion);
 		return;
 	}
 
 	console.log(`${label} New version detected (${remoteVersion}). Downloading release...`);
 
-	// Extract dynamic download URLs from the API response
-	const wasmAsset = releaseData.assets.find((a) => a.name === 'hydrochess_wasm_bg.wasm');
-	const jsAsset = releaseData.assets.find((a) => a.name === 'hydrochess_wasm.js');
-
-	if (!wasmAsset || !jsAsset) {
-		console.error(`${label} Release ${remoteVersion} is missing required asset files.`);
+	// The engine ships as a single zip of its whole wasm-pack `pkg/` dir — a flat list of loose
+	// release assets can't carry the nested rayon `snippets/` tree that apeiron.js imports.
+	const zipAsset = releaseData.assets.find((a) => a.name === 'apeiron-wasm.zip');
+	if (!zipAsset) {
+		console.error(`${label} Release ${remoteVersion} is missing apeiron-wasm.zip!!`);
 		return;
 	}
 
 	try {
-		await fs.promises.mkdir(pkgDir, { recursive: true });
+		// Fetch fully into memory first, so a failed download leaves any existing local copy intact.
+		const response = await fetch(zipAsset.browser_download_url);
+		if (!response.ok) throw new Error(`Failed to download engine zip: ${response.statusText}`);
+		const zipBytes = new Uint8Array(await response.arrayBuffer());
+		const entries = unzipSync(zipBytes);
 
-		const downloadFile = async (url: string, dest: string): Promise<void> => {
-			const response = await fetch(url);
-			if (!response.ok) throw new Error(`Failed to download ${url}: ${response.statusText}`);
-			const buffer = Buffer.from(await response.arrayBuffer());
-			await fs.promises.writeFile(dest, buffer);
-			console.log(`${label} Downloaded ${path.basename(dest)}`);
-		};
+		// Replace pkg wholesale so no file from a prior version lingers. The version is re-stamped below.
+		await fs.promises.rm(pkgDir, { recursive: true, force: true });
+		await Promise.all(
+			Object.entries(entries).map(async ([entryPath, bytes]) => {
+				if (entryPath.endsWith('/')) return; // Skip dir entries; parents are made from file paths.
+				const dest = path.join(pkgDir, entryPath);
+				await fs.promises.mkdir(path.dirname(dest), { recursive: true });
+				await fs.promises.writeFile(dest, bytes);
+			}),
+		);
 
-		await Promise.all([
-			downloadFile(wasmAsset.browser_download_url, wasmFile),
-			downloadFile(jsAsset.browser_download_url, jsFile),
-		]);
-
-		// Stamp the downloaded version
 		await fs.promises.writeFile(versionFile, remoteVersion);
+		engineVersion = parseEngineVersion(remoteVersion);
 
-		console.log(`${label} Hydrochess engine is ready (${remoteVersion}).`);
+		console.log(`${label} Apeiron engine is ready (${remoteVersion}).`);
 	} catch (error) {
 		console.error(
 			`${label} Automatic download failed:`,
 			error instanceof Error ? error.message : String(error),
 		);
 	}
+}
+
+/**
+ * Parses the engine's semver from a release tag: drops the `v` prefix
+ * and any SemVer `+build.N` metadata, e.g. "v2.0.0+build.47" → "2.0.0".
+ */
+function parseEngineVersion(tag: string): string {
+	return tag.replace(/^v/, '').split('+')[0] || '';
 }
 
 /**
@@ -168,9 +186,9 @@ export async function downloadEngineWasm(): Promise<void> {
  * build so the hashed URL lands in the manifest.
  */
 export function copyEngineToDist(): void {
-	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
-	const glueSrc = path.join(pkgDir, 'hydrochess_wasm.js');
-	const wasmSrc = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
+	const pkgDir = path.join(APEIRON_WASM_DIR, 'pkg');
+	const glueSrc = path.join(pkgDir, 'apeiron.js');
+	const wasmSrc = path.join(pkgDir, 'apeiron_bg.wasm');
 	if (!fs.existsSync(glueSrc)) {
 		console.warn(`${label} Engine pkg not found; skipping dist/engine copy.`);
 		return;
@@ -185,15 +203,15 @@ export function copyEngineToDist(): void {
 	const versionedDir = path.join(ENGINE_DIST_DIR, hash);
 
 	fs.mkdirSync(versionedDir, { recursive: true });
-	for (const file of ['hydrochess_wasm.js', 'hydrochess_wasm_bg.wasm']) {
+	for (const file of ['apeiron.js', 'apeiron_bg.wasm']) {
 		fs.copyFileSync(path.join(pkgDir, file), path.join(versionedDir, file));
 	}
 	const snippets = path.join(pkgDir, 'snippets');
 	if (fs.existsSync(snippets)) {
 		fs.cpSync(snippets, path.join(versionedDir, 'snippets'), { recursive: true });
 	}
-	engineWebBase = `/engine/${hash}`;
-	console.log(`${label} Copied engine pkg to dist/client/engine/${hash}.`);
+	engineGlueUrl = `/engine/${hash}/apeiron.js`;
+	console.log(`${label} Copied engine pkg to dist/client/engine/${hash}/`);
 }
 
 /**
@@ -202,5 +220,14 @@ export function copyEngineToDist(): void {
  * the worker via the page's `analysisPageData` — the same channel as the hashed worker URL.
  */
 export function getEngineGlueUrl(): string | undefined {
-	return engineWebBase !== undefined ? `${engineWebBase}/hydrochess_wasm.js` : undefined;
+	return engineGlueUrl;
+}
+
+/**
+ * The engine's version string, or an empty string if the release
+ * fetch failed  or {@link downloadEngineWasm} wasn't called first.
+ * Also folded into the manifest so the page can display it.
+ */
+export function getEngineVersion(): string | undefined {
+	return engineVersion;
 }

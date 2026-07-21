@@ -33,15 +33,13 @@ import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import { listener_document } from '../chess/gamecore.js';
-import { createRenderQueue } from '../../util/renderqueue.js';
 
 // Renderer extension ------------------------------------------------------------------------
 
 /**
  * An optional alternative renderer for the moves panel. The analysis page registers one to
  * draw a move TREE (with variations) in place of the flat list. When present, this module
- * delegates all rendering to it, driving it through the same serialized {@link enqueueRender}
- * queue so tree and flat renders can never race.
+ * delegates all rendering to it.
  */
 interface MovesListRenderer {
 	/** Rebuilds the panel for the current position — replaces the flat reconcile. */
@@ -218,12 +216,6 @@ const MAX_VISIBLE_MOVE_CHARS = 50;
 const renderedMoves: MoveFull[] = [];
 
 /**
- * Serializes all moves-table DOM mutations & scrolls into dispatch order. Required because
- * appending a ply awaits an async silhouette fetch, so overlapping updates would race.
- */
-const enqueueRender = createRenderQueue('Moves table render error');
-
-/**
  * Brings the rendered plies in line with `gamefile.moves`: finds the first index that
  * diverges (by reference), drops that tail, then appends what's missing. A normal move appends
  * exactly one ply; a resync trims rewound moves and appends new ones — never a full rebuild.
@@ -380,7 +372,11 @@ function updateCurrentPly(): void {
 	const moveIndex = gamefile.state.local.moveIndex;
 
 	const current = getPlyElement(moveIndex);
-	if (!current) return;
+	if (!current) {
+		// The start-of-game position (moveIndex -1) has no associated ply; scroll to the top.
+		if (moveIndex === -1) scrollMovesTableToTop();
+		return;
+	}
 	current.classList.add('current');
 
 	// On the final move with the result banner shown, scroll all the way down so the
@@ -404,6 +400,11 @@ function scrollMovesTableToBottom(): void {
 	element_MovesTable.scrollTop = element_MovesTable.scrollHeight;
 }
 
+/** Scrolls the table to the top (used at the start-of-game position, which has no ply). */
+function scrollMovesTableToTop(): void {
+	element_MovesTable.scrollTop = 0;
+}
+
 /** Starts a zoom transition to the move's destination square. */
 function zoomToPlyDestination(gamefile: GameFile, index: number): void {
 	const move = gamefile.moves[index]!;
@@ -425,17 +426,21 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the
 // gamefile bypass 'moves-changed'), reconcile on move-list changes & navigation, scroll
-// to the banner on conclusion. All queued so they apply in order despite async silhouette fetches.
+// to the banner on conclusion.
 GameBus.addEventListener('game-loaded', () => {
 	renderer?.onGameLoaded();
-	enqueueRender(reconcileMovesTable);
+	reconcileMovesTable();
 });
 GameBus.addEventListener('moves-changed', () => {
 	renderer?.onMovesChanged();
-	enqueueRender(reconcileMovesTable);
+	reconcileMovesTable();
+	updateNavButtons();
 });
-GameBus.addEventListener('view-move', () => enqueueRender(updateCurrentPly));
-GameBus.addEventListener('game-concluded', () => enqueueRender(scrollMovesTableToBottom));
+GameBus.addEventListener('view-move', () => {
+	updateCurrentPly();
+	updateNavButtons();
+});
+GameBus.addEventListener('game-concluded', () => scrollMovesTableToBottom());
 GameBus.addEventListener('game-unloaded', () => renderer?.onGameUnloaded());
 
 // ===========================================================================
@@ -445,11 +450,10 @@ export default {
 	element_MovesTable,
 	element_GameResult,
 	update,
-	updateNavButtons,
-	enqueueRender,
 	buildPlyButton,
 	createMoveRow,
 	clearRenderedMoves,
 	centerPly,
+	scrollMovesTableToTop,
 	zoomToPlyDestination,
 };

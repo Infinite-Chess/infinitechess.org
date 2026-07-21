@@ -13,7 +13,6 @@ import type { Change } from './boardchanges.js';
 import type { MoveState } from './state.js';
 import type { MoveCoords } from './icn/icnconverter.js';
 import type { MovePacket } from '../../types.js';
-import type { GameConclusion } from '../util/winconutil.js';
 import type { MoveSpecialTags, SpecialTags } from '../util/moveutil.js';
 
 import state from './state.js';
@@ -122,7 +121,7 @@ function generateMove(boardsim: Board, moveTagged: MoveTagged): MoveFull {
 		type: piece.type,
 		changes: [],
 		generateIndex: boardsim.state.local.moveIndex + 1,
-		state: { local: [], global: [] },
+		state: [],
 		token: icnconverter.getCompactMoveFromDraft(moveTagged),
 		flags: {
 			// These will be set later, but we need a default value
@@ -303,7 +302,7 @@ function queueIncrementMoveRuleStateChange(boardsim: Board, move: MoveFull): voi
 function makeMove(boardsim: Board, move: MoveFull): void {
 	boardsim.moves.push(move);
 
-	applyMove(boardsim, move, true, { global: true }); // Apply the logical board changes.
+	applyMove(boardsim, move, true, true); // Apply the logical board changes.
 
 	// Now we can test for check, and modify the state of the boardsim if it is.
 	createCheckState(boardsim, move);
@@ -315,13 +314,14 @@ function makeMove(boardsim: Board, move: MoveFull): void {
  * Applies a move's board changes to the boardsim, and updates moveIndex.
  * No graphical changes.
  * @param forward - Whether the move's board changes should be applied forward or backward.
- * @param [options.global] - If true, we will also apply this move's global state changes to the boardsim
+ * @param [options.updateTurn] - If true, re-derives `whosTurn` for the resulting ply. Pass true when
+ * making/rewinding a real move, or when the viewed ply is itself a playable position (analysis).
+ * Otherwise `whosTurn` stays pinned to the front, as online/engine turn detection requires.
  */
-function applyMove(boardsim: Board, move: MoveFull, forward = true, { global = false } = {}): void {
+function applyMove(boardsim: Board, move: MoveFull, forward: boolean, updateTurn: boolean): void {
 	boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the boardsim moveIndex
-	// Updating whosTurn is essentially a global state change.
 	// Needs to be after moveIndex is updated.
-	if (global) boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex); // prettier-ignore
+	if (updateTurn) boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex); // prettier-ignore
 
 	// Stops stupid missing piece errors
 	const indexToApply = boardsim.state.local.moveIndex + Number(!forward);
@@ -330,19 +330,17 @@ function applyMove(boardsim: Board, move: MoveFull, forward = true, { global = f
 			`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`,
 		);
 
-	applyEdit(boardsim, move, forward, global); // Apply the board changes
+	applyEdit(boardsim, move, forward); // Apply the board changes
 }
 
 /**
- * Applies a edits board changes to the boardsim.
- * If we're applying a board editor's move's edits, then global should be true.
+ * Applies an edit's state and board changes to the boardsim.
  * @param boardsim - The boardsim to apply the edit to.
  * @param edit - The edit to apply, which contains the changes and state of the move.
- * @param global - If true, we will also apply this move's global state changes to the boardsim. Should be true if the edit is from a board editor move.
  * @param forward - Whether the move's board changes should be applied forward or backward.
  */
-function applyEdit(boardsim: Board, edit: Edit, forward: boolean, global: boolean): void {
-	state.applyMove(boardsim.state, edit.state, forward, { globalChange: global }); // Apply the State of the move
+function applyEdit(boardsim: Board, edit: Edit, forward: boolean): void {
+	state.applyMove(boardsim.state, edit.state, forward); // Apply the State of the move
 	boardchanges.runChanges(boardsim, edit.changes, boardchanges.changeFuncs, forward); // Logical board changes
 }
 
@@ -482,7 +480,7 @@ function rewindMove(boardsim: Board): void {
 	// console.error("Rewinding move");
 	const move = moveutil.getMoveFromIndex(boardsim.moves, boardsim.state.local.moveIndex);
 
-	applyMove(boardsim, move, false, { global: true });
+	applyMove(boardsim, move, false, true);
 
 	// Delete the move off the end of our moves list
 	boardsim.moves.pop();
@@ -530,13 +528,13 @@ function runActionAtGameFront<T>(boardsim: Board, action: () => T): T {
 	const originalMoveIndex = boardsim.state.local.moveIndex;
 
 	// Fast Forward to the latest move (graphical updates skipped since we will return afterwards)
-	goToMove(boardsim, boardsim.moves.length - 1, (move) => applyMove(boardsim, move, true));
+	goToMove(boardsim, boardsim.moves.length - 1, (move) => applyMove(boardsim, move, true, false));
 
 	// Run the specific logic (move validation, conclusion check, etc)
 	const result = action();
 
 	// Rewind to original state
-	goToMove(boardsim, originalMoveIndex, (move) => applyMove(boardsim, move, false));
+	goToMove(boardsim, originalMoveIndex, (move) => applyMove(boardsim, move, false, false));
 
 	return result;
 }
@@ -544,10 +542,25 @@ function runActionAtGameFront<T>(boardsim: Board, action: () => T): T {
 // Move Wrappers ----------------------------------------------------------------------------------------------------
 
 /**
- * Wraps a function in a simulated move.
- * The callback may be used to obtain whatever
- * property of the boardsim we want after the move is made.
- * The move is automatically rewound when it's done.
+ * Simulates a move's board changes WITHOUT appending it to the move history, runs the callback,
+ * then reverts. Unlike {@link simulateMoveWrapper} it never touches `moves` or `moveIndex`, so it
+ * works at ANY ply — use it to observe board-state-only properties (e.g. check). It cannot observe
+ * history-dependent properties (e.g. game conclusion).
+ * @returns Whatever is returned by the callback
+ */
+function simulateEditWrapper<R>(boardsim: Board, moveTagged: MoveTagged, callback: () => R): R {
+	const move = generateMove(boardsim, moveTagged);
+	applyEdit(boardsim, move, true); // Apply the move's board & state changes (no history mutation)
+	const info = callback();
+	applyEdit(boardsim, move, false); // Revert
+	return info;
+}
+
+/**
+ * Wraps a callback in a simulated move, appending it to the move history for the duration.
+ * Because it mutates `moves`/`moveIndex`, it ONLY works at the front of the game. Use it when
+ * the callback reads move history (e.g. game conclusion); for board-state-only observations at
+ * any ply, use {@link simulateEditWrapper}.
  * @returns Whatever is returned by the callback
  */
 function simulateMoveWrapper<R>(boardsim: Board, moveTagged: MoveTagged, callback: () => R): R {
@@ -556,19 +569,6 @@ function simulateMoveWrapper<R>(boardsim: Board, moveTagged: MoveTagged, callbac
 	const info = callback();
 	rewindMove(boardsim);
 	return info;
-}
-
-/**
- * Simulates a move to get the gameConclusion
- * @returns the gameConclusion
- */
-function getSimulatedConclusion(
-	boardsim: Board,
-	moveTagged: MoveTagged,
-): GameConclusion | undefined {
-	return simulateMoveWrapper(boardsim, moveTagged, () =>
-		wincondition.getGameConclusion(boardsim),
-	);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -586,6 +586,6 @@ export default {
 	applyMove,
 	applyEdit,
 	rewindMove,
+	simulateEditWrapper,
 	simulateMoveWrapper,
-	getSimulatedConclusion,
 };
