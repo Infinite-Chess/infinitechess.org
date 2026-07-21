@@ -184,8 +184,8 @@ function onReviewFinished(): void {
 function revealStats(): void {
 	if (!element_Stats.classList.contains('hidden')) return;
 
+	const gameMeta = document.querySelector('.game-meta')!;
 	const metaPlayers = document.querySelector('.game-meta .meta-players')!;
-	const resultBanner = document.querySelector('.game-meta .result-banner')!;
 	const playerRows = [...metaPlayers.querySelectorAll('.meta-player')];
 
 	for (const [column, color] of [
@@ -200,10 +200,10 @@ function revealStats(): void {
 
 		statCells[color] = {
 			accuracy: col.querySelector<HTMLElement>('.review-accuracy-value')!,
-			inaccuracy: col.querySelector<HTMLElement>('.review-stat-inaccuracy')!,
-			mistake: col.querySelector<HTMLElement>('.review-stat-mistake')!,
-			blunder: col.querySelector<HTMLElement>('.review-stat-blunder')!,
-			acpl: col.querySelector<HTMLElement>('.review-stat-acpl')!,
+			inaccuracy: col.querySelector<HTMLElement>('.review-stat-value.inaccuracy')!,
+			mistake: col.querySelector<HTMLElement>('.review-stat-value.mistake')!,
+			blunder: col.querySelector<HTMLElement>('.review-stat-value.blunder')!,
+			acpl: col.querySelector<HTMLElement>('.review-stat-value.acpl')!,
 		};
 
 		// Wire the clickable lapse rows.
@@ -218,8 +218,8 @@ function revealStats(): void {
 		});
 	}
 
+	gameMeta.classList.add('review');
 	metaPlayers.classList.add('hidden');
-	resultBanner.classList.add('hidden');
 	element_Stats.classList.remove('hidden');
 }
 
@@ -263,7 +263,7 @@ const GRAPH_VERTICAL_PADDING = 4;
 const TOOLTIP_TOP_MARGIN = 10;
 const TOOLTIP_BOTTOM_MARGIN = 6;
 const WHITE_FILL = 'rgba(255, 255, 255, 0.45)';
-const BLACK_FILL = 'rgba(0, 0, 0, 0.4)';
+const BLACK_FILL = 'rgba(0, 0, 0, 0.5)';
 /** Lila-style orange for the line marking the currently viewed position. */
 const CURRENT_POSITION_COLOR = '#d85000';
 

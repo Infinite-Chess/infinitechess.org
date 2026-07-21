@@ -93,7 +93,6 @@
 			</div>
 		</div>
 
-		{# ── Analysis setup: variant picker + flip board ─────────────────── #}
 		{% if meta %}
 		<div class="game-meta panel">
 			<div class="meta-info">
@@ -147,7 +146,7 @@
 					</div>
 					{% for row in reviewStatRows %}
 					<div class="review-stat-row{{ ' review-stat-action unselectable' if row.lapse }}"{% if row.lapse %} tabindex="0" role="button" title="Go to next {{ row.label | lower }}" data-classification="{{ row.key }}"{% endif %}>
-						<span class="review-stat-value review-stat-{{ row.key }}">0</span>
+						<span class="review-stat-value {{ row.key }}">0</span>
 						<span class="review-stat-label">{{ row.label }}</span>
 					</div>
 					{% endfor %}
@@ -162,8 +161,7 @@
 		</div>
 		{% endif %}
 
-		{# ── Engine panel — local evaluation ─────────────────────────────── #}
-		{# ── Match panel — moves list (player bars exist for guiclock.ts but stay hidden) ── #}
+		{# Material bars + match panel #}
 		<div class="play-group">
 
 			{# Top side's captured surplus material. Managed by guimaterial.ts #}
@@ -301,8 +299,7 @@
 			<div class="material" id="material-bottom"></div>
 
 			{# Game Review start button — only for a real game (never custom positions),
-			revealed by guigamereview.ts once loaded if the engine supports reviewing it;
-			clicking swaps it for the graph below. #}
+			revealed by guigamereview.ts once loaded; clicking swaps it for the graph below. #}
 			{% if meta %}
 			<button class="btn-primary hidden" id="btn-game-review">Game Review</button>
 			{% endif %}
@@ -312,15 +309,15 @@
 				<canvas id="review-graph-canvas"></canvas>
 				<div class="review-phase-markers" id="review-phase-markers"></div>
 				<div class="review-graph-tooltip hidden" id="review-graph-tooltip">
-					<strong id="review-graph-tooltip-move"></strong>
-					<span id="review-graph-tooltip-eval"></span>
+					<strong class="move" id="review-graph-tooltip-move"></strong>
+					<span class="eval" id="review-graph-tooltip-eval"></span>
 				</div>
 			</div>
 		</div>
 
 	</aside>
 
-	{# ── Eval gauge — vertical win-probability bar beside the board ─────── #}
+	{# Eval gauge #}
 	<div class="eval-gauge hidden" id="eval-gauge">
 		<div class="gauge-black" id="gauge-black"></div>
 		{# Ticks every 12.5%; the 50% one is the emphasized zero line. #}

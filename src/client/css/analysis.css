@@ -38,13 +38,17 @@
    Game Review — player stats
    ============================ */
 
+.game-meta.review .result-banner {
+	padding: 6px 0;
+	border-bottom: 1px solid var(--c-border-muted);
+}
+
 /* Two-column per-player stats (replace the participant rows once a review runs) */
 
 .review-stats {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 4px 12px;
-	margin-top: 8px;
 }
 
 .review-stats-col {
@@ -56,24 +60,22 @@
 
 .review-stats-col .meta-player {
 	margin-bottom: 2px;
+	font-size: 14px;
 }
 
 .review-accuracy {
 	display: flex;
-	align-items: baseline;
 	gap: 6px;
+	font-size: 0.95em;
 }
 
 .review-accuracy-value {
-	font-size: 1.1em;
 	font-weight: 700;
-	font-variant-numeric: tabular-nums;
 	color: var(--c-text-emphasis);
 }
 
 .review-stat-row {
 	display: flex;
-	align-items: baseline;
 	gap: 6px;
 	font-size: 0.8em;
 }
@@ -85,33 +87,30 @@
 	cursor: pointer;
 }
 
-.review-stat-action:hover,
-.review-stat-action:focus-visible {
+.review-stat-action:hover {
 	background: var(--c-hover-overlay);
-	outline: none;
+}
+
+.review-stat-label {
+	color: var(--c-text-muted);
 }
 
 .review-stat-value {
 	min-width: 1.4em;
 	font-weight: 600;
-	font-variant-numeric: tabular-nums;
 	text-align: right;
 }
 
-.review-stat-inaccuracy {
+.review-stat-value.inaccuracy {
 	color: var(--review-inaccuracy);
 }
 
-.review-stat-mistake {
+.review-stat-value.mistake {
 	color: var(--review-mistake);
 }
 
-.review-stat-blunder {
+.review-stat-value.blunder {
 	color: var(--review-blunder);
-}
-
-.review-stat-label {
-	color: var(--c-text-muted);
 }
 
 /* ============================
@@ -487,8 +486,7 @@
 	flex-shrink: 0;
 	margin-left: auto;
 	font-size: 0.75em;
-	font-weight: 500;
-	font-variant-numeric: tabular-nums;
+	font-weight: 300;
 	color: var(--c-text-muted);
 }
 
@@ -589,9 +587,7 @@
 /* Progress bar below the moves list (swapped for the eval graph on completion) */
 
 .analysis .review-progress {
-	order: 4;
 	padding: 5px 8px 6px;
-	border-top: 1px solid var(--c-border-muted);
 }
 
 .review-progress-bar {
@@ -600,12 +596,11 @@
 	overflow: hidden;
 	border-radius: 2px;
 	background: color-mix(in srgb, #000 18%, transparent);
+	container-type: inline-size; /* Let the sheen measure travel in cqw */
 }
 
 .review-progress-fill {
 	position: relative;
-	display: block;
-	width: 0;
 	height: 100%;
 	overflow: hidden; /* Clip the shimmer to the filled portion only. */
 	background: var(--c-accent, #6aa331);
@@ -618,7 +613,7 @@
 	top: 0;
 	bottom: 0;
 	left: 0;
-	width: max(70px, 45%);
+	width: 35cqw;
 	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
 	animation: engine-progress-sheen 1.1s linear infinite;
 }
@@ -636,25 +631,15 @@
 
 .review-graph {
 	position: relative;
-	z-index: 1;
-	width: 100%;
-	flex: 0 0 150px;
-	height: 150px;
 	min-height: 150px;
-	line-height: 0;
-	overflow: visible;
 	background: var(--c-surface-2);
 }
 
 .review-graph canvas {
-	display: block;
-	width: 100%;
 	color: var(--c-text-emphasis); /* Read by the canvas code for the eval line. */
 }
 
 .review-phase-markers {
-	position: absolute;
-	inset: 0;
 	pointer-events: none;
 }
 
@@ -690,7 +675,7 @@
 
 .review-graph-tooltip {
 	position: absolute;
-	z-index: 2;
+	z-index: 1;
 	display: flex;
 	flex-direction: column;
 	gap: 3px;
@@ -698,7 +683,7 @@
 	padding: 6px 8px;
 	border: 1px solid var(--c-border-2);
 	border-radius: 5px;
-	background: color-mix(in srgb, var(--c-surface) 94%, transparent);
+	background: var(--c-surface);
 	box-shadow: 0 2px 8px var(--c-shadow-elev);
 	color: var(--c-text-emphasis);
 	font-size: 0.78em;
@@ -706,13 +691,13 @@
 	pointer-events: none;
 }
 
-.review-graph-tooltip strong {
+.review-graph-tooltip .move {
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
 
-.review-graph-tooltip span {
+.review-graph-tooltip .eval {
 	color: var(--c-text-muted);
 }
 
