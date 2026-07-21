@@ -19,6 +19,7 @@ import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import icnconverter, { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -30,7 +31,6 @@ import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import reviewdivision from './reviewdivision.js';
 import analysisenginebounds from './analysisenginebounds.js';
-import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -437,7 +437,10 @@ function restoreCachedReview(): boolean {
  */
 function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 	const parsed = CachedGameReviewSchema.safeParse(raw);
-	if (!parsed.success) return undefined;
+	if (!parsed.success) {
+		console.warn('[Game Review] Could not parse the local review cache:', parsed.error);
+		return undefined;
+	}
 	const cached = parsed.data;
 
 	if (
@@ -447,8 +450,10 @@ function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 		cached.depth < reviewDepth ||
 		cached.results.length !== results.length ||
 		cached.results.some((result, index) => result.requestId !== index)
-	)
+	) {
+		console.warn('[Game Review] Local review cache is incompatible with the current game or engine.'); // prettier-ignore
 		return undefined;
+	}
 
 	return cached;
 }
