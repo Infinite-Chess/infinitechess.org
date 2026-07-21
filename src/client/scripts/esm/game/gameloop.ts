@@ -31,6 +31,11 @@ function init(canvas: HTMLCanvasElement): void {
 	boardpos.wireGlobalListeners(); // Erase board momentum when the game starts a transition.
 	gamecore.init(canvas);
 
+	// Repaint synchronously the instant the canvas buffer resizes. Assigning canvas.width/height
+	// wipes the drawing buffer to black; drawing now before the browser composites means that
+	// black is never shown for a single frame.
+	document.addEventListener('canvas_resize', () => render());
+
 	window.addEventListener('beforeunload', () => {
 		LocalStorage.eraseExpiredItems();
 		IndexedDB.eraseExpiredItems();
