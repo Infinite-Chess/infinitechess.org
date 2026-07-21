@@ -142,7 +142,7 @@ const REAL_POSITIONS_PER_CHUNK = 5;
  * holds only raw engine results, and classifications are recomputed on restore.
  */
 const REVIEW_CACHE_SCHEMA_VERSION = 2;
-const REVIEW_CACHE_KEY_PREFIX = 'infinitechess-game-review-';
+const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
 /** How long a persisted review survives LocalStorage. */
 const REVIEW_CACHE_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 365; // 1 year
 
