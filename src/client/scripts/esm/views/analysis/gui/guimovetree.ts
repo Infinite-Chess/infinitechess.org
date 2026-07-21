@@ -47,13 +47,17 @@ async function reconcileMoveTree(): Promise<void> {
 	if (!movetree.isReady()) movetree.initFromGame(gamefile);
 	movetree.syncAfterMovesChanged(gamefile);
 
-	guimoveslist.clearRenderedMoves();
-
 	const tree = document.createElement('div');
 	const root = movetree.getRoot()!;
 
+	// Build the whole tree into a detached div first, touching no DOM, so
+	// two overlapping renders can't interleave their nodes into the table.
 	await appendAnalysisMainline(tree, root);
 
+	// Atomic commit: clear the old render and insert the new one with no await between them,
+	// so if renders do overlap the latest simply replaces the previous instead of both landing
+	// and the entire table having two copies of each move.
+	guimoveslist.clearRenderedMoves();
 	guimoveslist.element_MovesTable.insertBefore(tree, guimoveslist.element_GameResult);
 	highlightCurrentNode();
 }
