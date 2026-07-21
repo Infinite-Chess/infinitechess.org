@@ -179,6 +179,9 @@ async function buildBarChildren(surplus: Map<RawType, number>, lead: number): Pr
 GameBus.addEventListener('game-loaded', () => {
 	const gamefile = gameslot.getGamefile()!;
 	balanced = isStartPositionBalanced(gamefile.startSnapshot.position);
+	// Unbalanced games never show material differences, so hide the bars to reclaim their space.
+	element_MaterialTop.classList.toggle('hidden', !balanced);
+	element_MaterialBottom.classList.toggle('hidden', !balanced);
 	render();
 });
 // Rewinding/forwarding restores the board to the viewed move, so the live counts already reflect it.
