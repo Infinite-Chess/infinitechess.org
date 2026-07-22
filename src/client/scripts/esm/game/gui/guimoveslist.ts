@@ -45,8 +45,10 @@ import { listener_document } from '../chess/gamecore.js';
 interface MovesListRenderer {
 	/** Rebuilds the panel for the current position — replaces the flat reconcile. */
 	reconcile(): void;
-	/** Highlights & scrolls to the current position. The current-ply class is already cleared. */
+	/** Highlights the current position (the current-ply class is already cleared). */
 	updateCurrentPly(): void;
+	/** Scrolls the current position into view. */
+	scrollToCurrentPly(): void;
 	/** A fresh game loaded — seed derived state, before the following reconcile runs. */
 	onGameLoaded(): void;
 	/** The flat move list changed — sync derived state, before the following reconcile runs. */
@@ -106,6 +108,7 @@ function rewind(): void {
 	frametracker.onVisualChange();
 	movesequence.navigateMove(gamefile, mesh, false);
 	selection.unselectPiece();
+	scrollToCurrentPly();
 }
 
 /** Forwards the game by 1 move. Cancels any premoves first. */
@@ -117,6 +120,7 @@ function forward(): void {
 
 	if (!moveutil.isIncrementingLegal(gamefile)) return;
 	movesequence.navigateMove(gamefile, mesh, true);
+	scrollToCurrentPly();
 }
 
 /** Jumps to the start of the game (before the first move), unselecting any piece. */
@@ -132,6 +136,7 @@ function jumpToStart(): void {
 	movesequence.viewStart(gamefile, mesh);
 	selection.unselectPiece();
 	animation.clearAnimations();
+	scrollToCurrentPly();
 }
 
 /** Jumps to the latest move, unselecting any piece. */
@@ -146,6 +151,7 @@ function jumpToEnd(): void {
 	frametracker.onVisualChange();
 	movesequence.viewFront(gamefile, mesh, false);
 	selection.unselectPiece();
+	scrollToCurrentPly();
 }
 
 /** Throttled rewind, for the hold-to-repeat previous button. */
@@ -239,6 +245,7 @@ function reconcileMovesTable(): void {
 	}
 
 	updateCurrentPly();
+	scrollToCurrentPly();
 }
 
 /**
@@ -364,11 +371,20 @@ function getPlyElement(index: number): HTMLElement | undefined {
 	return row?.children[index % 2 === 0 ? 1 : 2] as HTMLElement | undefined;
 }
 
-/** Highlights the ply for the currently-viewed move and scrolls it into view. */
+/** Highlights the ply for the currently-viewed move. */
 function updateCurrentPly(): void {
 	element_MovesTable.querySelector('.ply.current')?.classList.remove('current');
 
 	if (renderer) return renderer.updateCurrentPly();
+
+	// The start-of-game position (moveIndex -1) has no associated ply.
+	const moveIndex = gameslot.getGamefile()!.state.local.moveIndex;
+	getPlyElement(moveIndex)?.classList.add('current');
+}
+
+/** Scrolls the table to follow the currently-viewed ply. */
+function scrollToCurrentPly(): void {
+	if (renderer) return renderer.scrollToCurrentPly();
 
 	const gamefile = gameslot.getGamefile()!;
 	const moveIndex = gamefile.state.local.moveIndex;
@@ -379,7 +395,6 @@ function updateCurrentPly(): void {
 		if (moveIndex === -1) scrollMovesTableToTop();
 		return;
 	}
-	current.classList.add('current');
 
 	// On the final move with the result banner shown, scroll all the way down so the
 	// banner (which sits just below it) stays visible; otherwise center the ply.
@@ -423,6 +438,7 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 	frametracker.onVisualChange();
 	movesequence.viewIndex(gamefile, mesh, index, true); // Dispatches 'view-move' → re-highlights the current ply.
 	selection.unselectPiece();
+	scrollToCurrentPly();
 }
 
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the

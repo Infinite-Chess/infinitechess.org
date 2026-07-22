@@ -92,24 +92,33 @@ function reconcileMoveTree(): void {
 	const root = movetree.getRoot()!;
 	treeVNode = patch(treeVNode, h('div#analysis-move-tree', buildMainline(root)));
 	highlightCurrentNode();
+	scrollToCurrentNode();
 }
 
-/** Highlights the ply for the currently-viewed node and scrolls it into view. */
+/** The ply element for the currently-viewed node, or undefined (the root has none). */
+function getCurrentNodePly(): HTMLElement | undefined {
+	const node = movetree.getCurrentNode(gameslot.getGamefile()!);
+	if (!node) return undefined;
+	return guimoveslist.element_MovesTable.querySelector<HTMLElement>(`.ply[data-node-id="${node.id}"]`) ?? undefined; // prettier-ignore
+}
+
+/** Highlights the ply for the currently-viewed node. Does NOT scroll — see {@link scrollToCurrentNode}. */
 function highlightCurrentNode(): void {
 	// Clear any stale highlight: a snabbdom patch reuses unchanged plies, so the previous
 	// current-ply class survives the rebuild and must be dropped before re-marking.
 	guimoveslist.element_MovesTable.querySelector('.ply.current')?.classList.remove('current');
+	getCurrentNodePly()?.classList.add('current');
+}
 
-	const gamefile = gameslot.getGamefile()!;
-	const node = movetree.getCurrentNode(gamefile);
-	const current = node
-		? guimoveslist.element_MovesTable.querySelector<HTMLElement>(`.ply[data-node-id="${node.id}"]`) : undefined; // prettier-ignore
+/** Scrolls the currently-viewed node's ply into view — for navigation that should follow it. */
+function scrollToCurrentNode(): void {
+	const current = getCurrentNodePly();
 	if (!current) {
 		// The root (start-of-game position) has no rendered ply button; scroll to the top.
-		if (gamefile.state.local.moveIndex === -1) guimoveslist.scrollMovesTableToTop();
+		if (gameslot.getGamefile()!.state.local.moveIndex === -1)
+			guimoveslist.scrollMovesTableToTop();
 		return;
 	}
-	current.classList.add('current');
 	guimoveslist.centerPly(current);
 }
 
@@ -557,6 +566,7 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 guimoveslist.registerRenderer({
 	reconcile: reconcileMoveTree,
 	updateCurrentPly: highlightCurrentNode,
+	scrollToCurrentPly: scrollToCurrentNode,
 	onGameLoaded: () => movetree.initFromGame(gameslot.getGamefile()!),
 	onMovesChanged: () => movetree.syncAfterMovesChanged(gameslot.getGamefile()!),
 	onGameUnloaded: () => movetree.clear(),
