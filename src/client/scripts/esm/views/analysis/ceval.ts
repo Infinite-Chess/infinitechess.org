@@ -11,6 +11,7 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
@@ -18,6 +19,7 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import { GameBus } from '../../game/GameBus.js';
+import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import analysisenginebounds from './analysisenginebounds.js';
 
@@ -125,7 +127,9 @@ function maxThreads(): number {
 
 const DEFAULT_THREADS = maxThreads();
 
-const STORAGE_PREFIX = 'ceval.';
+const STORAGE_KEY = 'ceval';
+/** How long persisted settings live in local storage; refreshed on every save. */
+const STORAGE_EXPIRY_MILLIS = timeutil.getTotalMilliseconds({ years: 1 });
 const DEFAULT_SETTINGS: CevalSettings = {
 	multiPv: 1,
 	hashMb: 16,
@@ -209,13 +213,10 @@ const queuedLegalMovesRequests: { requestId: number; icn: string }[] = [];
 // Settings persistence ----------------------------------------------------------------
 
 function loadSettings(): CevalSettings {
-	const loaded = { ...DEFAULT_SETTINGS };
-	for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof CevalSettings)[]) {
-		const raw = localStorage.getItem(STORAGE_PREFIX + key);
-		if (raw === null) continue;
-		const num = Number(raw);
-		if (Number.isFinite(num)) loaded[key] = num;
-	}
+	const loaded: CevalSettings = {
+		...DEFAULT_SETTINGS,
+		...(LocalStorage.loadItem(STORAGE_KEY) ?? {}),
+	};
 	// Sanitize against the allowed ranges.
 	loaded.multiPv = math.clamp(loaded.multiPv, 1, MAX_MULTI_PV);
 	if (!HASH_OPTIONS.includes(loaded.hashMb)) loaded.hashMb = DEFAULT_SETTINGS.hashMb;
@@ -225,9 +226,7 @@ function loadSettings(): CevalSettings {
 }
 
 function persistSettings(): void {
-	for (const [key, value] of Object.entries(settings)) {
-		localStorage.setItem(STORAGE_PREFIX + key, String(value));
-	}
+	LocalStorage.saveItem(STORAGE_KEY, settings, STORAGE_EXPIRY_MILLIS);
 }
 
 // Winning chances (adjusted for infinitechess players) ------------------------------------
