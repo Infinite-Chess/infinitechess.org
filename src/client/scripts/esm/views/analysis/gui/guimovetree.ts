@@ -581,7 +581,13 @@ function generateVariationMoves(
 	let conclusion: GameConclusion | undefined;
 	for (const token of pv) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, token);
-		if (!result.valid) break;
+		if (!result.valid) {
+			console.warn(
+				`Analysis: illegal move "${token}" when adding variation, stopping at ply ${parent.ply + moves.length + 1}`,
+			);
+			console.warn('Entire pv:', pv);
+			break;
+		}
 		moves.push(movepiece.generateAndMakeMove(gamefile, result.tagged));
 		conclusion = wincondition.getGameConclusion(gamefile);
 		if (conclusion) break; // The line ends the game — stop extending it.
