@@ -252,7 +252,16 @@ async function getSilhouetteSVG(rawType: RawType): Promise<SVGElement> {
 	const type = typeutil.buildType(rawType, players.BLACK);
 	const locations = getNeededSVGLocations([type]);
 	if (locations.size > 0) await fetchMissingTypes(locations);
+	return getCachedSilhouetteSVG(rawType);
+}
 
+/**
+ * Synchronous variant of {@link getSilhouetteSVG}: clones the silhouette straight from cache.
+ * Call only when you're sure the type has already been fetched and cached.
+ * @param rawType - The raw piece type (without color extension).
+ * @throws If the piece hasn't been fetched yet.
+ */
+function getCachedSilhouetteSVG(rawType: RawType): SVGElement {
 	const baseId = typeutil.getRawTypeStr(rawType);
 	const colorExts = getSVGColorPriority(players.BLACK);
 	let source: SVGElement | undefined;
@@ -263,7 +272,7 @@ async function getSilhouetteSVG(rawType: RawType): Promise<SVGElement> {
 			break;
 		}
 	}
-	if (source === undefined) throw new Error(`No SVG found for raw piece type ${rawType}`);
+	if (source === undefined) throw new Error(`No cached SVG found for raw piece type ${rawType}`);
 
 	const clone = source.cloneNode(true) as SVGElement;
 	clone.removeAttribute('id');
@@ -299,5 +308,6 @@ function showCache(): void {
 export default {
 	getSVGElements,
 	getSilhouetteSVG,
+	getCachedSilhouetteSVG,
 	showCache,
 };
