@@ -58,7 +58,12 @@ async function createEngineGameWs(ws: CustomWebSocket, body: CreateEngineGameBod
 				(stats.latest !== null && now - stats.latest < CREATE_COOLDOWN_MILLIS) ||
 				stats.count >= CREATE_DAILY_CAP
 			) {
-				return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.rate_limiting.generic);
+				return sendSocketMessage(
+					ws,
+					'general',
+					'notify',
+					ws.t.responses.rate_limiting.generic,
+				);
 			}
 		}
 

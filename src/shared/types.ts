@@ -381,7 +381,9 @@ export const EngineGameProgressBodySchema = z.strictObject({
 	moves: z
 		.string()
 		.max(ENGINE_GAME_MOVES_STRING_CAP)
-		.refine((m) => countEngineGamePlies(m) <= ENGINE_GAME_MAX_PLIES, { error: 'Too many moves.' }),
+		.refine((m) => countEngineGamePlies(m) <= ENGINE_GAME_MAX_PLIES, {
+			error: 'Too many moves.',
+		}),
 	/** Ms remaining per color; absent for untimed games. */
 	clocks: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
 	/** Epoch ms the ticking color's turn began; lets a mid-turn refresh deduct time elapsed while away. Absent when no clock is ticking. */

@@ -15,10 +15,7 @@
 import type { Request, Response } from 'express';
 import type { EngineGamesRecord } from '../database/engineGamesManager.js';
 
-import {
-	ConcludeEngineGameBodySchema,
-	EngineGameProgressBodySchema,
-} from '../../shared/types.js';
+import { ConcludeEngineGameBodySchema, EngineGameProgressBodySchema } from '../../shared/types.js';
 
 import { logZodError } from '../utility/zodlogger.js';
 import { decodeGameId } from '../database/gamesManager.js';
