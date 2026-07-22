@@ -100,6 +100,14 @@ function isInSubtree(subtreeRoot: AnalysisMoveNode, node: AnalysisMoveNode): boo
 	return false;
 }
 
+/** The ply of the deepest node that is `a`, `b`, or a shared ancestor of both (their branch fork). */
+function getCommonAncestorPly(a: AnalysisMoveNode, b: AnalysisMoveNode): number {
+	const bChain = new Set<AnalysisMoveNode>();
+	for (let n: AnalysisMoveNode | undefined = b; n; n = n.parent) bChain.add(n);
+	for (let n: AnalysisMoveNode | undefined = a; n; n = n.parent) if (bChain.has(n)) return n.ply;
+	return -1; // The root is always shared, so this is unreachable.
+}
+
 function isMainLine(node: AnalysisMoveNode): boolean {
 	let current: AnalysisMoveNode | undefined = node;
 	while (current?.parent) {
@@ -279,6 +287,7 @@ export default {
 	getActiveLine,
 	getCurrentNode,
 	isInSubtree,
+	getCommonAncestorPly,
 	isMainLine,
 	beginBranchFromViewedPosition,
 	syncAfterMovesChanged,

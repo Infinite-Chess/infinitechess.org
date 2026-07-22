@@ -29,7 +29,6 @@ import premoves from '../../../game/chess/premoves.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
 import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
-import animation from '../../../game/rendering/animation.js';
 import gamereview from '../gamereview.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import piecemodels from '../../../game/rendering/piecemodels.js';
@@ -521,27 +520,36 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	// that don't end the game.
 	movetree.storeActiveLineConclusion(gamefile.gameConclusion);
 
-	const newLine = movetree.getLineForNode(node);
-	const newMoves = movetree.getMovesFromLine(newLine);
 	const targetIndex = node.ply;
-
 	frametracker.onVisualChange();
 
-	// Rewind the board fully to the start along the CURRENT line first, so its state is
-	// a clean slate before we swap in the (possibly divergent) new line. This is all
-	// synchronous, so the intermediate positions never actually render — avoiding the
-	// fragile shared-prefix index math that could point outside the current move list.
-	movesequence.viewStart(gamefile, mesh);
+	// A line is a unique root→front path, so the active line already IS the target's line exactly
+	// when they share a front node — only then is this an in-branch move needing no swap. (Sharing
+	// the prefix before the current branch's fork isn't enough — that still needs the swap.)
+	const targetLine = movetree.getLineForNode(node);
+	const activeLine = movetree.getActiveLine();
+	const sameBranch = activeLine[activeLine.length - 1] === targetLine[targetLine.length - 1];
 
-	// Swap the flat move list to the chosen branch, then replay forward to the node.
-	movetree.setActiveLineToNode(node);
-	gamefile.moves = newMoves;
-	gamefile.gameConclusion = movetree.getActiveLineConclusion();
+	if (sameBranch) {
+		// In-branch: go straight there; viewIndex animates the final ply.
+		movesequence.viewIndex(gamefile, mesh, targetIndex, true);
+	} else {
+		// Cross-branch: rewind along the current line only to the shared fork ply, swap in the target
+		// branch, then replay forward. The final transition animates — the forward leg, or the rewind
+		// itself when the target IS the fork (a pure rewind).
+		const currentNode = movetree.getCurrentNode(gamefile)!;
+		const forkPly = movetree.getCommonAncestorPly(currentNode, node);
+		const willForward = targetIndex > forkPly;
+		movesequence.viewIndex(gamefile, mesh, forkPly, !willForward);
 
-	movesequence.viewIndex(gamefile, mesh, targetIndex);
+		movetree.setActiveLineToNode(node);
+		gamefile.moves = movetree.getMovesFromLine(targetLine);
+		gamefile.gameConclusion = movetree.getActiveLineConclusion();
+
+		movesequence.viewIndex(gamefile, mesh, targetIndex, true); // No-op when the target is the fork itself
+	}
 
 	selection.unselectPiece();
-	animation.clearAnimations();
 }
 
 // Registration ------------------------------------------------------------------
