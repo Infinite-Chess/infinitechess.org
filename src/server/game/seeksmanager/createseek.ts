@@ -4,7 +4,7 @@
  * This script handles seek creation, making sure that the seeks have valid properties.
  */
 
-import type { Rating } from '../../../shared/types.js';
+import type { Rating, SeekVariant, AuthSeekVariant } from '../../../shared/types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
@@ -141,48 +141,8 @@ async function getSeekFromWebsocketMessageContents(
 
 	const player = buildServerUsernameContainer(owner, rating);
 
-	// Resolve cloudSave seeks to plain ICN
-	let variant = messageContents.variant;
-	if (variant.kind === 'cloudSave') {
-		// cloudSave seeks require the user to be signed in (cloud saves belong to an account).
-		if (!owner.signedIn) {
-			sendSocketMessage(
-				ws,
-				'general',
-				'notifyerror',
-				ws.t.responses.seeks.cloud_requires_sign_in,
-			);
-			return;
-		}
-		const record = getSavedPositionICN(variant.name, owner.user_id);
-		if (record === undefined) {
-			return sendSocketMessage(
-				ws,
-				'general',
-				'notifyerror',
-				ws.t.responses.seeks.cloud_not_found,
-			);
-		}
-		// Skip decompression if the compressed payload is already too large to be a legal seek.
-		if (record.icn.length > POSITION_STRING_THRESHOLD) {
-			const message = localizePositionError('position_too_large', ws);
-			return sendSocketMessage(ws, 'general', 'notify', message);
-		}
-		const position = await compression.decompressString(
-			record.icn,
-			record.compression as CompressionMode,
-		);
-		variant = { kind: 'custom', position };
-	}
-
-	// Validate the resolved ICN's position is legal
-	if (variant.kind === 'custom') {
-		const illegalReason = validateIcnSeekContent(variant.position);
-		if (illegalReason !== null) {
-			const message = localizePositionError(illegalReason, ws);
-			return sendSocketMessage(ws, 'general', 'notify', message);
-		}
-	}
+	const variant = await resolveAndValidateVariant(ws, messageContents.variant);
+	if (variant === null) return; // Invalid variant; error already sent to the client.
 
 	return {
 		id,
@@ -195,6 +155,57 @@ async function getSeekFromWebsocketMessageContents(
 		modifiers: messageContents.modifiers,
 		tag: messageContents.tag,
 	};
+}
+
+/**
+ * Resolves a seek/engine-game variant to a legal {@link AuthSeekVariant}: expands a cloudSave
+ * to its stored ICN and validates a custom position's legality. Sends the client an error and
+ * returns `null` on any failure. Shared by seek creation and engine-game creation.
+ * @throws If a database error occurs.
+ */
+export async function resolveAndValidateVariant(
+	ws: CustomWebSocket,
+	variant: SeekVariant,
+): Promise<AuthSeekVariant | null> {
+	const owner = ws.metadata.memberInfo;
+
+	// Resolve cloudSave variants to plain ICN.
+	let resolved: AuthSeekVariant;
+	if (variant.kind === 'cloudSave') {
+		// cloudSave variants require the user to be signed in (cloud saves belong to an account).
+		if (!owner.signedIn) {
+			sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.seeks.cloud_requires_sign_in); // prettier-ignore
+			return null;
+		}
+		const record = getSavedPositionICN(variant.name, owner.user_id);
+		if (record === undefined) {
+			sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.seeks.cloud_not_found);
+			return null;
+		}
+		// Skip decompression if the compressed payload is already too large to be legal.
+		if (record.icn.length > POSITION_STRING_THRESHOLD) {
+			sendSocketMessage(ws, 'general', 'notify', localizePositionError('position_too_large', ws)); // prettier-ignore
+			return null;
+		}
+		const position = await compression.decompressString(
+			record.icn,
+			record.compression as CompressionMode,
+		);
+		resolved = { kind: 'custom', position };
+	} else {
+		resolved = variant;
+	}
+
+	// Validate the resolved ICN's position is legal.
+	if (resolved.kind === 'custom') {
+		const illegalReason = validateIcnSeekContent(resolved.position);
+		if (illegalReason !== null) {
+			sendSocketMessage(ws, 'general', 'notify', localizePositionError(illegalReason, ws));
+			return null;
+		}
+	}
+
+	return resolved;
 }
 
 /**

@@ -348,8 +348,16 @@ export const OutSeekSchema = BaseSeekSchema.extend({
 
 // Engine Game Schemas ---------------------------------------------------------------
 
-/** Hard cap on a synced engine-game moves string, in characters. */
+/** Hard cap on a synced engine-game moves string, in characters (pathological-payload backstop). */
 export const ENGINE_GAME_MOVES_STRING_CAP = 1_000_000;
+
+/** Hard cap on the number of plies in an engine game — the real anti-bloat limit. */
+export const ENGINE_GAME_MAX_PLIES = 2_000;
+
+/** Ply count of a `|`-delimited engine-game moves string (synced moves carry only [%clk] comments). */
+export function countEngineGamePlies(moves: string): number {
+	return moves === '' ? 0 : moves.split('|').length;
+}
 
 /** Client → server body for creating an engine (vs computer) game: `POST /api/engine-game`. */
 export type CreateEngineGameBody = z.infer<typeof CreateEngineGameBodySchema>;
@@ -370,7 +378,10 @@ export const CreateEngineGameBodySchema = z.strictObject({
 export type EngineGameProgressBody = z.infer<typeof EngineGameProgressBodySchema>;
 export const EngineGameProgressBodySchema = z.strictObject({
 	/** Compact ICN move list with embedded clock stamps. */
-	moves: z.string().max(ENGINE_GAME_MOVES_STRING_CAP),
+	moves: z
+		.string()
+		.max(ENGINE_GAME_MOVES_STRING_CAP)
+		.refine((m) => countEngineGamePlies(m) <= ENGINE_GAME_MAX_PLIES, { error: 'Too many moves.' }),
 	/** Ms remaining per color; absent for untimed games. */
 	clocks: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
 	/** Epoch ms the ticking color's turn began; lets a mid-turn refresh deduct time elapsed while away. Absent when no clock is ticking. */

@@ -20,6 +20,7 @@ import type {
 
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
+import compression, { CompressionMode } from '../../../shared/util/compression.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 
@@ -83,8 +84,8 @@ export function produceDeadStaticGameState(
  * @returns The state, or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */
-export function produceDeadGameState(game_id: number): DeadGameState | undefined {
-	const game = getGameData(game_id, ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination', 'icn']); // prettier-ignore
+export async function produceDeadGameState(game_id: number): Promise<DeadGameState | undefined> {
+	const game = getGameData(game_id, ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination', 'icn', 'compression']); // prettier-ignore
 	if (game === undefined) return undefined;
 
 	const playerRows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id', 'elo_at_game', 'clock_at_end_millis', 'rating_deviation_at_game']); // prettier-ignore
@@ -98,7 +99,7 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 
 	const state: DeadGameState = {
 		...assembleStaticGameState(game_id, game, playerRows),
-		icn: game.icn,
+		icn: await compression.decompressString(game.icn, game.compression as CompressionMode),
 	};
 
 	if (Object.keys(finalClocks).length > 0) state.finalClocks = finalClocks;

@@ -147,6 +147,30 @@ export function deleteEngineGame(game_id: number): void {
 }
 
 /**
+ * Returns how many engine games the given owner created since `sinceMillis`, plus the latest
+ * such creation time — used to throttle (cooldown) and cap (daily) engine-game creation.
+ * Signed-in owners match on `user_id`; guests on `browser_id`.
+ * @throws If a database error occurs.
+ */
+export function getEngineGameCreationStats(
+	owner: { user_id: number | null; browser_id: string },
+	sinceMillis: number,
+): { count: number; latest: number | null } {
+	const identityClause = owner.user_id !== null ? 'user_id = ?' : 'user_id IS NULL AND browser_id = ?'; // prettier-ignore
+	const identityValue = owner.user_id !== null ? owner.user_id : owner.browser_id;
+	const query = `
+		SELECT COUNT(*) AS count, MAX(time_created) AS latest
+		FROM engine_games
+		WHERE time_created >= ? AND ${identityClause}
+	`;
+	const row = dbCall(
+		() => db.get<{ count: number; latest: number | null }>(query, [sinceMillis, identityValue]),
+		'Error counting engine game creations',
+	);
+	return { count: row?.count ?? 0, latest: row?.latest ?? null };
+}
+
+/**
  * Deletes engine games that were never concluded (no games-table row) and haven't
  * been touched since the cutoff — abandoned mid-game and never resumed.
  * Concluded games' rows are kept forever (they name the engine participant).

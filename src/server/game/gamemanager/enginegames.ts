@@ -31,6 +31,8 @@ import type {
 
 import uuid from '../../../shared/util/uuid.js';
 import timeutil from '../../../shared/util/timeutil.js';
+import compression from '../../../shared/util/compression.js';
+import { countEngineGamePlies } from '../../../shared/types.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
@@ -132,8 +134,7 @@ export function isEngineGameOwner(row: EngineGamesRecord, memberInfo: MemberInfo
 
 /** The number of moves currently synced for the game. */
 function getMoveCount(row: EngineGamesRecord): number {
-	// Sync'd moves carry only [%clk] comments, so '|' only ever delimits moves.
-	return row.moves === '' ? 0 : row.moves.split('|').length;
+	return countEngineGamePlies(row.moves);
 }
 
 /** The engine participant's username container. */
@@ -234,7 +235,10 @@ export function recordEngineGameProgress(game_id: number, body: EngineGameProgre
  * @throws If the conclusion is impossible for an engine game, the moves/position fail to
  * parse, or a database error occurs (rolled back).
  */
-export function concludeEngineGame(row: EngineGamesRecord, body: ConcludeEngineGameBody): boolean {
+export async function concludeEngineGame(
+	row: EngineGamesRecord,
+	body: ConcludeEngineGameBody,
+): Promise<boolean> {
 	if (IMPOSSIBLE_ENGINE_CONDITIONS.includes(body.gameConclusion.condition))
 		throw Error(`Impossible engine game conclusion: ${body.gameConclusion.condition}`);
 
@@ -289,6 +293,9 @@ export function concludeEngineGame(row: EngineGamesRecord, body: ConcludeEngineG
 		},
 	);
 
+	// Compress the ICN before the (synchronous) transaction — engine games are the DB's bloat vector.
+	const compressed = await compression.compressString(icn);
+
 	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(row.clock as TimeControl); // prettier-ignore
 	const humanColor = row.player_color as Player;
 	const humanClock = body.clocks?.[humanColor];
@@ -298,8 +305,8 @@ export function concludeEngineGame(row: EngineGamesRecord, body: ConcludeEngineG
 			`INSERT INTO games (
 				game_id, date, base_time_seconds, increment_seconds, variant, rated,
 				leaderboard_id, private, result, termination, move_count,
-				time_duration_millis, icn
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				time_duration_millis, icn, compression
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			[
 				row.game_id,
 				timeutil.timestampToSqlite(row.time_created),
@@ -313,7 +320,8 @@ export function concludeEngineGame(row: EngineGamesRecord, body: ConcludeEngineG
 				condition, // Raw code; the dead-game reader feeds it back as gameConclusion.condition.
 				moves.length,
 				now - row.time_created,
-				icn,
+				compressed.data,
+				compressed.compression,
 			],
 		);
 

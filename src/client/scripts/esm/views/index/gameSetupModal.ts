@@ -8,7 +8,6 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { ModalMode } from '../../components/gameSetupModalHandoff.js';
 import type { CreateEngineGameBody, GameMode, TimeControl } from '../../../../../shared/types.js';
 
-import uuid from '../../../../../shared/util/uuid.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
@@ -16,11 +15,9 @@ import { engineDictionary, ValidEngine } from '../../../../../shared/chess/engin
 
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
-import gamesound from '../../game/misc/gamesound.js';
 import timeControls from './timeControls.js';
 import variantSelector from '../../components/variantselector/variantSelector.js';
 import modifierSelector from '../../components/variantselector/modifierSelector.js';
-import { serverFetch } from '../../util/serverFetch.js';
 import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
 
 // Types ----------------------------------------------
@@ -119,7 +116,7 @@ function initModal(): void {
 		if (currentMode === 'online') handleOnlineSeek();
 		else if (currentMode === 'friend')
 			toast.show('Friend challenge flow not implemented yet', { error: true });
-		else if (currentMode === 'computer') void handleComputerGame();
+		else if (currentMode === 'computer') handleComputerGame();
 		else console.error('Invalid modal mode:', currentMode);
 	});
 
@@ -182,10 +179,11 @@ function handleOnlineSeek(): void {
 }
 
 /**
- * Reads the computer game form state, asks the server to create the engine game,
- * and hard-navigates to its game page — where the engine runs locally in wasm.
+ * Reads the computer game form state and asks the server (over the websocket) to create the
+ * engine game. On success the server pushes back the id and we hard-navigate to its game page —
+ * where the engine runs locally in wasm; on failure it pushes an error toast.
  */
-async function handleComputerGame(): Promise<void> {
+function handleComputerGame(): void {
 	const variant = variantSelector.getInviteVariant();
 	if (variant === null) return; // Invalid selection (e.g. unparsable icn or illegal position)
 
@@ -196,33 +194,14 @@ async function handleComputerGame(): Promise<void> {
 	const color = (getSelectedColor() ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK)) as CreateEngineGameBody['color']; // prettier-ignore
 	const strengthLevel = getSelectedEngineStrength();
 
-	const body: CreateEngineGameBody = {
+	lobby.createEngineGame({
 		variant,
 		timeControl: time,
 		color,
 		engine: COMPUTER_GAME_ENGINE,
 		strengthLevel,
-	};
-
-	element_modalSubmit.disabled = true; // No double-submits while the request is in flight.
-	try {
-		const response = await serverFetch('/api/engine-game', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(body),
-		});
-		const data: { id?: number; message?: string } = await response.json();
-		if (!response.ok || data.id === undefined)
-			throw new Error(data.message ?? `Failed to create the game (${response.status}).`);
-
-		// Plays the notify sound and awaits it so the hard-navigate doesn't cut it off.
-		const sound = await gamesound.playNotify(false);
-		if (sound) await sound.whenEnded;
-		window.location.assign(`/game/${uuid.base10ToBase62(data.id)}`);
-	} catch (e) {
-		toast.show(e instanceof Error ? e.message : 'Failed to create the game.', { error: true });
-		element_modalSubmit.disabled = false;
-	}
+	});
+	close();
 }
 
 /**

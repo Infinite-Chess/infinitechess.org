@@ -10,13 +10,12 @@ import express from 'express';
 
 import EngineGameAPI from '../api/EngineGameAPI.js';
 import { resolveAuth } from '../middleware/resolveAuth.js';
-import { engineGameCreateLimiter, engineGameSyncLimiter, gameStateLimiter } from '../middleware/rateLimiters.js'; // prettier-ignore
+import { engineGameSyncLimiter, gameStateLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
 router.use(resolveAuth);
 
-router.post('/', engineGameCreateLimiter, EngineGameAPI.postCreateEngineGame);
 router.get('/:id', gameStateLimiter, EngineGameAPI.getEngineGameState);
 router.post('/:id/progress', engineGameSyncLimiter, EngineGameAPI.postEngineGameProgress);
 router.post('/:id/conclude', engineGameSyncLimiter, EngineGameAPI.postEngineGameConclusion);

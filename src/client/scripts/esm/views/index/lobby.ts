@@ -16,6 +16,7 @@ import type {
 	SeekVariant,
 	GameMode,
 	SeekModifier,
+	CreateEngineGameBody,
 } from '../../../../../shared/types.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
@@ -272,6 +273,22 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 function createSeek(options: CreateSeekOptions): void {
 	const tag = generateTag();
 	socketmessages.send('lobby', 'createseek', { ...options, tag }, true);
+}
+
+/**
+ * Asks the server to create an engine (vs computer) game over the websocket — an open
+ * socket is required, gating bots. Navigation happens on the server's `enginegame` push.
+ */
+function createEngineGame(body: CreateEngineGameBody): void {
+	socketmessages.send('lobby', 'createengine', body, true);
+}
+
+/** Called on the server's `enginegame` push: plays the notify sound then navigates to the new game. */
+async function onEngineGameCreated(id: number): Promise<void> {
+	// Await the sound so the hard-navigate doesn't cut it off (mirrors onInGame).
+	const sound = await gamesound.playNotify(false);
+	if (sound) await sound.whenEnded;
+	window.location.assign(`/game/${uuid.base10ToBase62(id)}`);
 }
 
 /** Sends a cancelseek message for our current seek. */
@@ -534,6 +551,8 @@ export default {
 	onInGame,
 	onOutGame,
 	createSeek,
+	createEngineGame,
+	onEngineGameCreated,
 	subscribe,
 	exitIdle,
 };
