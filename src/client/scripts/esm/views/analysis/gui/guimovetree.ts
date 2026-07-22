@@ -579,13 +579,14 @@ guimoveslist.registerRenderer({
  * Clicking an already-selected node zooms to its destination coordinate — the same
  * behavior a ply button gives when clicked again (see createVariationPlyButton).
  */
-function navigateToNode(node: AnalysisMoveNode): void {
+function navigateToNode(node: AnalysisMoveNode, scrollIntoView = false): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile || gamesession.isLoading()) return;
 	const wasAlreadySelected = movetree.getCurrentNode(gamefile) === node;
 	navigateToAnalysisNode(gamefile, node);
 	// The root (starting position, ply -1) has no move/destination square to zoom to.
 	if (wasAlreadySelected && node.ply >= 0) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
+	if (scrollIntoView) scrollToCurrentNode();
 }
 
 /**

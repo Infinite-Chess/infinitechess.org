@@ -232,7 +232,7 @@ function cycleToLapse(color: Player, classification: LapseKey): void {
 	const currentPly = gameslot.getGamefile()?.state.local.moveIndex ?? -1;
 	const target = matches.find((review) => review.ply > currentPly) ?? matches[0]!;
 	const node = gamereview.getMainlineNodes()[target.ply];
-	if (node) guimovetree.navigateToNode(node);
+	if (node) guimovetree.navigateToNode(node, true);
 }
 
 /** Repaints both players' stat values from the review's current standing. */
@@ -547,7 +547,7 @@ function initGraphInteraction(canvas: HTMLCanvasElement): void {
 	canvas.addEventListener('click', (e) => {
 		const index = indexAt(e);
 		const node = index === 0 ? movetree.getRoot() : gamereview.getMainlineNodes()[index - 1];
-		if (node) guimovetree.navigateToNode(node);
+		if (node) guimovetree.navigateToNode(node, true);
 	});
 
 	canvas.addEventListener('mousemove', (e) => {
