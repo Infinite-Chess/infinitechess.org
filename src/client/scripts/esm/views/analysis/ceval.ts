@@ -138,18 +138,19 @@ const DEFAULT_SETTINGS: CevalSettings = {
 /** Set once by {@link init} with the page-provided worker + engine-glue URLs. */
 let config: { engineUrl: string; workerUrl: string } | undefined;
 
-/** The persistent search worker. Kept alive across position switches so its transposition table stays warm. */
-let worker: Worker | undefined;
-let workerReady = false;
-/** An idle helper worker that only answers legal-moves queries, so they never queue behind the search. */
-let legalWorker: Worker | undefined;
-let legalReady = false;
 /**
- * View over the search worker's shared wasm memory + the byte offset of its stop flag. Writing
- * a 1 there aborts the in-flight search within a node batch — instant position switch, warm hash.
+ * The persistent search worker, kept alive across position switches so its transposition table
+ * stays warm. `ready` flips true on the worker's 'ready' message. `stop` is a view over the
+ * worker's shared wasm memory + the byte offset of its stop flag (arrives via a separate
+ * 'sharedmem' message); writing a 1 there aborts the in-flight search within a node batch —
+ * instant position switch, warm hash.
  */
-let stopFlags: Uint8Array | undefined;
-let stopFlagPtr = 0;
+let search:
+	| { worker: Worker; ready: boolean; stop?: { flags: Uint8Array; ptr: number } }
+	| undefined;
+
+/** An idle helper worker that only answers legal-moves queries, so they never queue behind the search. */
+let legal: { worker: Worker; ready: boolean } | undefined;
 
 let enabled = false;
 let settings: CevalSettings = loadSettings();
@@ -176,18 +177,26 @@ let allowDepthRegressionForCurrentSearch = false;
 let blockReason: string | undefined;
 
 let latestUpdate: CevalUpdate | undefined;
-let throttleTimer: ReturnType<typeof setTimeout> | undefined;
-/** When the last update was emitted (drives the leading-edge throttle in {@link scheduleEmit}). */
-let lastEmitMs = 0;
-/** Whether a coalesced 'view-move' refresh is already scheduled for this microtask. */
-let refreshQueued = false;
-/** The ICN of the position the most recent crash happened on, and how many times it's crashed. */
-let lastCrashIcn: string | undefined;
-let lastCrashCount = 0;
-/** A position (ICN) that has crashed the engine too many times — we stop feeding it to the worker entirely. */
-let crashedIcn: string | undefined;
-/** Whether the currently-viewed position is the crashed one (drives the 'crashed' status). */
-let onCrashedPosition = false;
+
+/** Timing machinery for streaming engine output to the UI: the emit throttle + the view-move refresh coalescer. */
+const scheduler: {
+	/** Trailing-edge throttle timer for {@link emitNow}. */
+	timer: ReturnType<typeof setTimeout> | undefined;
+	/** When the last update was emitted (drives the leading-edge throttle in {@link scheduleEmit}). */
+	lastEmitMs: number;
+	/** Whether a coalesced 'view-move' refresh is already scheduled for this microtask. */
+	refreshQueued: boolean;
+} = { timer: undefined, lastEmitMs: 0, refreshQueued: false };
+
+/** Per-position crash tracking. Once a position (by ICN) crashes too many times, we stop feeding it in. */
+let crash: {
+	/** The ICN of the most recent crash position and how many times it's crashed consecutively. */
+	last?: { icn: string | undefined; count: number };
+	/** A position that has crashed the engine too many times — never re-fed to the worker. */
+	deadIcn?: string;
+	/** Whether the currently-viewed position is {@link crash.deadIcn} (drives the 'crashed' status). */
+	onDeadPosition: boolean;
+} = { onDeadPosition: false };
 
 /** Per-page-session cache of every viewed position's deepest local analysis. */
 const positionCache = new Map<string, CevalUpdate>();
@@ -272,11 +281,11 @@ function spawnWorker(): void {
 	if (!config) throw Error('ceval.init() must be called before enabling analysis.');
 	terminateWorker();
 
-	workerReady = false;
+	const w = new Worker(config.workerUrl, { type: 'module' });
+	search = { worker: w, ready: false };
 	notifyStatus();
 
-	worker = new Worker(config.workerUrl, { type: 'module' });
-	attachActiveWorkerHandlers(worker);
+	attachActiveWorkerHandlers(w);
 	send({
 		cmd: 'init',
 		hashMb: settings.hashMb,
@@ -286,31 +295,30 @@ function spawnWorker(): void {
 }
 
 function terminateWorker(): void {
-	worker?.terminate();
-	worker = undefined;
-	workerReady = false;
-	stopFlags = undefined; // Points into the terminated worker's memory; the respawn posts a fresh one.
+	search?.worker.terminate();
+	// The stop-flag view points into the terminated worker's memory; the respawn posts a fresh one.
+	search = undefined;
 	// Keep lastAnalyzedIcn: a respawn (e.g. hash change) re-sends the same position
 	// via a forced refresh, so the on-screen eval shouldn't blank.
 }
 
 /** Aborts the search worker's in-flight slice instantly (the search polls this shared flag every node batch). */
 function interruptSearch(): void {
-	if (stopFlags) stopFlags[stopFlagPtr] = 1;
+	if (search?.stop) search.stop.flags[search.stop.ptr] = 1;
 }
 
 // Legal-moves helper worker --------------------------------------------------------------
 
 /** Lazily spins up the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
 function ensureLegalWorker(): void {
-	if (legalWorker || !config) return;
+	if (legal || !config) return;
 	const w = new Worker(config.workerUrl, { type: 'module' });
-	legalReady = false;
+	legal = { worker: w, ready: false };
 	w.onmessage = (e: MessageEvent<AnalysisResponse>) => {
-		if (legalWorker !== w) return; // Superseded; ignore late messages.
+		if (!legal || legal.worker !== w) return; // Superseded; ignore late messages.
 		switch (e.data.type) {
 			case 'ready':
-				legalReady = true;
+				legal.ready = true;
 				flushQueuedLegalMovesRequests();
 				break;
 			case 'initerror':
@@ -322,9 +330,8 @@ function ensureLegalWorker(): void {
 		}
 	};
 	w.onerror = () => {
-		if (legalWorker === w) terminateLegalWorker();
+		if (legal?.worker === w) terminateLegalWorker();
 	};
-	legalWorker = w;
 	w.postMessage({
 		cmd: 'init',
 		hashMb: settings.hashMb,
@@ -334,9 +341,8 @@ function ensureLegalWorker(): void {
 
 /** Frees the idle legal-moves helper worker. Call when the debug overlay is toggled off. */
 function terminateLegalWorker(): void {
-	legalWorker?.terminate();
-	legalWorker = undefined;
-	legalReady = false;
+	legal?.worker.terminate();
+	legal = undefined;
 }
 
 // Fault recovery -------------------------------------------------------------------------
@@ -349,19 +355,17 @@ function terminateLegalWorker(): void {
  */
 function recoverFromEngineFault(): void {
 	const icn = analyzed?.icn ?? lastAnalyzedIcn;
-	if (icn !== undefined && icn === lastCrashIcn) lastCrashCount++;
-	else {
-		lastCrashIcn = icn;
-		lastCrashCount = 1;
-	}
+	if (crash.last && icn !== undefined && crash.last.icn === icn) crash.last.count++;
+	else crash.last = { icn, count: 1 };
+	const count = crash.last.count;
 
-	if (lastCrashCount >= CRASHES_BEFORE_GIVING_UP) {
+	if (count >= CRASHES_BEFORE_GIVING_UP) {
 		console.error(
 			'[ceval] Analysis engine crashed repeatedly on this position; giving up on it.',
 		);
-		crashedIcn = icn;
+		crash.deadIcn = icn;
 	} else {
-		console.warn(`[ceval] Analysis worker crashed; restarting (crash ${lastCrashCount}).`);
+		console.warn(`[ceval] Analysis worker crashed; restarting (crash ${count}).`);
 	}
 	restartWorkerForSearch(); // A fresh worker either retries (under the limit) or stays warm for OTHER positions.
 }
@@ -379,10 +383,7 @@ function resetEngineSession(): void {
 	currentTargetDepth = settings.depth;
 	allowDepthRegressionForCurrentSearch = false;
 	blockReason = undefined;
-	lastCrashIcn = undefined;
-	lastCrashCount = 0;
-	crashedIcn = undefined;
-	onCrashedPosition = false;
+	crash = { onDeadPosition: false };
 	positionCache.clear();
 	queuedLegalMovesRequests.length = 0;
 	emitNow();
@@ -390,14 +391,14 @@ function resetEngineSession(): void {
 }
 
 function send(command: AnalysisCommand): void {
-	worker?.postMessage(command);
+	search?.worker.postMessage(command);
 }
 
 /** Sends any legal-move requests that were queued while the helper worker was still spinning up. */
 function flushQueuedLegalMovesRequests(): void {
-	if (!legalReady || !legalWorker) return;
+	if (!legal || !legal.ready) return;
 	for (const request of queuedLegalMovesRequests.splice(0)) {
-		legalWorker.postMessage({
+		legal.worker.postMessage({
 			cmd: 'legalmoves',
 			requestId: request.requestId,
 			icn: request.icn,
@@ -416,7 +417,7 @@ function handleWorkerFailure(): void {
 function handleWorkerMessage(msg: AnalysisResponse): void {
 	switch (msg.type) {
 		case 'ready':
-			workerReady = true;
+			if (search) search.ready = true;
 			// A single-threaded engine build locks the thread setting to 1 (panel disables the slider).
 			if (!msg.mt && engineSupportsThreads) {
 				engineSupportsThreads = false;
@@ -432,8 +433,7 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 			handleWorkerFailure();
 			break;
 		case 'sharedmem':
-			stopFlags = new Uint8Array(msg.buffer);
-			stopFlagPtr = msg.stopFlagPtr;
+			if (search) search.stop = { flags: new Uint8Array(msg.buffer), ptr: msg.stopFlagPtr };
 			break;
 		case 'info':
 			// NOTE: deliberately does NOT reset the crash counter — a crash can arrive after
@@ -491,10 +491,10 @@ function getViewedPositionIcn(gamefile: GameFile): string {
 
 /** Coalesces a burst of synchronous 'view-move' events into one refresh of the final position. */
 function scheduleRefresh(): void {
-	if (refreshQueued) return;
-	refreshQueued = true;
+	if (scheduler.refreshQueued) return;
+	scheduler.refreshQueued = true;
 	queueMicrotask(() => {
-		refreshQueued = false;
+		scheduler.refreshQueued = false;
 		refreshAnalysis();
 	});
 }
@@ -532,13 +532,13 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		lastAnalyzedIcn = undefined;
 	}
 
-	if (!worker || !workerReady) return;
+	if (!search?.ready) return;
 
 	const icn = getViewedPositionIcn(gamefile);
 
 	// This position crashed the engine twice — never send it again (that just re-crashes the worker).
-	onCrashedPosition = icn === crashedIcn;
-	if (onCrashedPosition) {
+	crash.onDeadPosition = icn === crash.deadIcn;
+	if (crash.onDeadPosition) {
 		interruptSearch();
 		latestUpdate = undefined;
 		lastAnalyzedIcn = icn;
@@ -731,17 +731,17 @@ function shouldReplaceCachedUpdate(cached: CevalUpdate | undefined, update: Ceva
  * are heavily throttled — still display progress), else trail with a timer.
  */
 function scheduleEmit(): void {
-	const elapsed = Date.now() - lastEmitMs;
+	const elapsed = Date.now() - scheduler.lastEmitMs;
 	if (elapsed >= THROTTLE_MS) return emitNow();
-	if (throttleTimer === undefined) throttleTimer = setTimeout(emitNow, THROTTLE_MS - elapsed);
+	if (scheduler.timer === undefined) scheduler.timer = setTimeout(emitNow, THROTTLE_MS - elapsed);
 }
 
 function emitNow(): void {
-	if (throttleTimer !== undefined) {
-		clearTimeout(throttleTimer);
-		throttleTimer = undefined;
+	if (scheduler.timer !== undefined) {
+		clearTimeout(scheduler.timer);
+		scheduler.timer = undefined;
 	}
-	lastEmitMs = Date.now();
+	scheduler.lastEmitMs = Date.now();
 	for (const listener of updateListeners) listener(latestUpdate);
 }
 
@@ -804,11 +804,11 @@ function seedPositionCache(seed: {
 function requestLegalMoves(requestId: number, icn: string): void {
 	if (blockReason !== undefined) return;
 	ensureLegalWorker();
-	if (!legalReady || !legalWorker) {
+	if (!legal || !legal.ready) {
 		queuedLegalMovesRequests.push({ requestId, icn });
 		return;
 	}
-	legalWorker.postMessage({ cmd: 'legalmoves', requestId, icn } satisfies AnalysisCommand);
+	legal.worker.postMessage({ cmd: 'legalmoves', requestId, icn } satisfies AnalysisCommand);
 }
 
 /** Fans a legal-moves response from the worker out to all subscribers. */
@@ -841,7 +841,7 @@ function init(options: { workerUrl: string; engineUrl: string }): void {
 	GameBus.addEventListener('game-loaded', () => {
 		nextPositionIsNewGame = true;
 		// Re-warm regardless of `enabled`: 'game-unloaded' tore the pre-warmed worker down.
-		if (!worker) spawnWorker();
+		if (!search) spawnWorker();
 		refreshAnalysis(true);
 	});
 	GameBus.addEventListener('game-unloaded', () => {
@@ -867,7 +867,7 @@ function setEnabled(value: boolean): void {
 	if (enabled === value) return;
 	enabled = value;
 	if (enabled) {
-		if (!worker) spawnWorker(); // Only needed if the pre-warmed worker crashed/never spawned.
+		if (!search) spawnWorker(); // Only needed if the pre-warmed worker crashed/never spawned.
 		refreshAnalysis(true);
 		// Show the retained eval right away (refreshAnalysis only blanks it when the
 		// position changed while the engine was off) instead of a gap until the resume.
@@ -895,7 +895,7 @@ function updateSettings(partial: Partial<CevalSettings>): void {
 	settings.threads = math.clamp(settings.threads, 1, maxThreads());
 	persistSettings();
 
-	if (!enabled || !worker) return;
+	if (!enabled || !search) return;
 	// Changing the target depth clears "go deeper" so the new depth setting takes over.
 	if (partial.depth !== undefined) goDeeperActive = false;
 	if (settings.hashMb !== previous.hashMb || settings.threads !== previous.threads) {
@@ -945,9 +945,9 @@ function getLatestUpdate(): CevalUpdate | undefined {
 
 function getStatus(): CevalStatus {
 	if (!enabled) return 'off';
-	if (onCrashedPosition) return 'crashed';
+	if (crash.onDeadPosition) return 'crashed';
 	if (blockReason !== undefined) return 'blocked';
-	if (!worker || !workerReady) return 'loading';
+	if (!search?.ready) return 'loading';
 	if (latestUpdate?.done) return 'idle';
 	return 'computing';
 }
