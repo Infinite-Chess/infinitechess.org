@@ -144,9 +144,8 @@ function jumpToEnd(): void {
 	if (!moveutil.isIncrementingLegal(gamefile)) return;
 
 	frametracker.onVisualChange();
-	movesequence.viewFront(gamefile, mesh);
+	movesequence.viewFront(gamefile, mesh, false);
 	selection.unselectPiece();
-	animation.clearAnimations();
 }
 
 /** Throttled rewind, for the hold-to-repeat previous button. */
@@ -422,9 +421,8 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 	premoves.cancelPremoves(gamefile, mesh);
 
 	frametracker.onVisualChange();
-	movesequence.viewIndex(gamefile, mesh, index); // Dispatches 'view-move' → re-highlights the current ply.
+	movesequence.viewIndex(gamefile, mesh, index, true); // Dispatches 'view-move' → re-highlights the current ply.
 	selection.unselectPiece();
-	animation.clearAnimations();
 }
 
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the

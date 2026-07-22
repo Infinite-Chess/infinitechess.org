@@ -116,7 +116,7 @@ function synchronizeMovesList(
 	}
 
 	const originalMoveIndex = gamefile.state.local.moveIndex;
-	movesequence.viewFront(gamefile, mesh);
+	movesequence.viewFront(gamefile, mesh, false);
 	let aChangeWasMade = false;
 
 	/** The index of the lastest move in the game we agree with the server on. -1 = starting position. */
@@ -190,7 +190,7 @@ function synchronizeMovesList(
 
 	if (opponentPlayedIllegalMove) return { opponentPlayedIllegalMove: true };
 
-	if (!aChangeWasMade) movesequence.viewIndex(gamefile, mesh, originalMoveIndex);
+	if (!aChangeWasMade) movesequence.viewIndex(gamefile, mesh, originalMoveIndex, false);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
 	return { opponentPlayedIllegalMove: false }; // No cheating detected

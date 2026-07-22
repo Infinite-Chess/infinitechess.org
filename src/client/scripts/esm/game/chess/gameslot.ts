@@ -39,7 +39,6 @@ import perspective from '../rendering/perspective.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import { animateMove } from './graphicalchanges.js';
 import miniimagerenderer from '../rendering/miniimagerenderer.js';
 
 // Types ---------------------------------------------------------------------
@@ -218,11 +217,7 @@ async function loadGraphical(): Promise<void> {
 		animateLastMoveTimeoutID = setTimeout(() => {
 			// A small delay to animate the most recently played move.
 			if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the latest move
-			// Re-fetch the current last move rather than animating the one captured above, which
-			// may be stale if a move was applied during loading.
-			const latestMove = moveutil.getLastMove(loadedGamefile!.moves)!;
-			movesequence.viewFront(loadedGamefile!, mesh!); // Ensure we are viewing the front, regardless where they navigated
-			animateMove(latestMove.changes, true);
+			movesequence.viewFront(loadedGamefile!, mesh!, true); // Ensure we are viewing the front, regardless where they navigated
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
 
 	// Init the star field void animation
