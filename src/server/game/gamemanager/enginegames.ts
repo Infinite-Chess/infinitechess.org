@@ -31,8 +31,6 @@ import type {
 
 import uuid from '../../../shared/util/uuid.js';
 import timeutil from '../../../shared/util/timeutil.js';
-import compression from '../../../shared/util/compression.js';
-import { countEngineGamePlies } from '../../../shared/types.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
@@ -40,6 +38,7 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
+import { countEngineGamePlies } from '../../../shared/types.js';
 import typeutil, { players as p } from '../../../shared/chess/util/typeutil.js';
 import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import { getFormattedEngineName, ValidEngine } from '../../../shared/chess/engine.js';
@@ -235,10 +234,7 @@ export function recordEngineGameProgress(game_id: number, body: EngineGameProgre
  * @throws If the conclusion is impossible for an engine game, the moves/position fail to
  * parse, or a database error occurs (rolled back).
  */
-export async function concludeEngineGame(
-	row: EngineGamesRecord,
-	body: ConcludeEngineGameBody,
-): Promise<boolean> {
+export function concludeEngineGame(row: EngineGamesRecord, body: ConcludeEngineGameBody): boolean {
 	if (IMPOSSIBLE_ENGINE_CONDITIONS.includes(body.gameConclusion.condition))
 		throw Error(`Impossible engine game conclusion: ${body.gameConclusion.condition}`);
 
@@ -293,9 +289,6 @@ export async function concludeEngineGame(
 		},
 	);
 
-	// Compress the ICN before the (synchronous) transaction — engine games are the DB's bloat vector.
-	const compressed = await compression.compressString(icn);
-
 	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(row.clock as TimeControl); // prettier-ignore
 	const humanColor = row.player_color as Player;
 	const humanClock = body.clocks?.[humanColor];
@@ -305,8 +298,8 @@ export async function concludeEngineGame(
 			`INSERT INTO games (
 				game_id, date, base_time_seconds, increment_seconds, variant, rated,
 				leaderboard_id, private, result, termination, move_count,
-				time_duration_millis, icn, compression
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				time_duration_millis, icn
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			[
 				row.game_id,
 				timeutil.timestampToSqlite(row.time_created),
@@ -320,8 +313,7 @@ export async function concludeEngineGame(
 				condition, // Raw code; the dead-game reader feeds it back as gameConclusion.condition.
 				moves.length,
 				now - row.time_created,
-				compressed.data,
-				compressed.compression,
+				icn,
 			],
 		);
 

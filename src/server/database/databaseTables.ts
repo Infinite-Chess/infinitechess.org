@@ -86,7 +86,6 @@ const allGamesColumns: string[] = [
 	'move_count',
 	'time_duration_millis',
 	'icn',
-	'compression',
 ];
 
 /** All columns of the rating_abuse table. Each of these would be valid to retrieve from any member and/or leaderboard. */
@@ -231,8 +230,7 @@ function generateTables(): void {
 			termination TEXT NOT NULL,
 			move_count INTEGER NOT NULL,
 			time_duration_millis INTEGER, -- Number of milliseconds that the game lasted in total on the server. Null if info is missing.
-			icn TEXT NOT NULL, -- Also includes clock timestamps after each move. Possibly compressed (see compression column).
-			compression TEXT NOT NULL DEFAULT 'none' -- The icn column's compression mode: none or deflate-raw.
+			icn TEXT NOT NULL -- Also includes clock timestamps after each move
 
 			-- Add a CHECK constraint to ensure consistency:
 			-- EITHER both are NULL (untimed) OR both are NOT NULL and >= 0 (timed)
@@ -438,7 +436,6 @@ function initDatabase(): void {
 	dropLiveGamesConclusionColumnsIfPresent();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
 	addTurnStartTimeColumnToEngineGamesIfNeeded();
-	addCompressionColumnToGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
@@ -671,18 +668,6 @@ function addTurnStartTimeColumnToEngineGamesIfNeeded(): void {
 	if (db.columnExists('engine_games', 'turn_start_time')) return; // Already present, nothing to do.
 	db.run('ALTER TABLE engine_games ADD COLUMN turn_start_time INTEGER');
 	console.log('Temporary DB migration: added engine_games.turn_start_time column.');
-}
-
-/**
- * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
- *
- * Adds the `compression` column to `games` — the icn column's compression mode. Existing rows
- * default to 'none' (their icn was stored uncompressed). Fresh DBs get it from generateTables().
- */
-function addCompressionColumnToGamesIfNeeded(): void {
-	if (db.columnExists('games', 'compression')) return; // Already present, nothing to do.
-	db.run(`ALTER TABLE games ADD COLUMN compression TEXT NOT NULL DEFAULT 'none'`);
-	console.log('Temporary DB migration: added games.compression column.');
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */

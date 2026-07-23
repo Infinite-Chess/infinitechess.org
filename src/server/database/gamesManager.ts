@@ -36,11 +36,8 @@ export interface GamesRecord {
 	/**
 	 * Contains the moves list and clock timestamps,
 	 * and if the variant is null (custom), the position as well.
-	 * Possibly compressed — see {@link compression}.
 	 */
 	icn: string;
-	/** The `icn` column's compression mode ('none' | 'deflate-raw'). */
-	compression: string;
 }
 
 type GamesColumn = keyof GamesRecord;

@@ -94,7 +94,7 @@ function postEngineGameProgress(req: Request, res: Response): void {
 }
 
 /** `POST /api/engine-game/:id/conclude` — logs the finished game to the permanent tables. */
-async function postEngineGameConclusion(req: Request, res: Response): Promise<void> {
+function postEngineGameConclusion(req: Request, res: Response): void {
 	try {
 		const row = resolveOwnedLiveEngineGame(req, res);
 		if (row === undefined) return;
@@ -107,7 +107,7 @@ async function postEngineGameConclusion(req: Request, res: Response): Promise<vo
 			return;
 		}
 
-		const logged = await concludeEngineGame(row, parseResult.data);
+		const logged = concludeEngineGame(row, parseResult.data);
 		res.json({ logged });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
