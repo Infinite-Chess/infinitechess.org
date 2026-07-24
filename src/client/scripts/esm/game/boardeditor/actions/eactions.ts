@@ -28,6 +28,7 @@ import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card';
+import variantcache from '../../../../../../shared/chess/variants/variantcache';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
@@ -392,7 +393,9 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 				return move;
 			}),
 		};
-		const loadedGamefile = await gamefile.initGameFile(
+		if (resolvedVariantCode !== undefined)
+			await variantcache.ensureVariantLoaded(resolvedVariantCode);
+		const loadedGamefile = gamefile.initGameFile(
 			longformOut.metadata.TimeControl ?? '-',
 			timestamp,
 			resolvedVariantCode,

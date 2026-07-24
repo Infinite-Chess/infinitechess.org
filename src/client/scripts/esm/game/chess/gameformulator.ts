@@ -13,6 +13,7 @@ import type {
 
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
+import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
 /**
@@ -52,6 +53,7 @@ async function formulateGame(longformIn: LongFormatIn, validateMoves?: true): Pr
 	);
 	const resolvedVariant = variantregistry.resolveVariantCode(longformIn.metadata.Variant);
 
+	if (resolvedVariant !== undefined) await variantcache.ensureVariantLoaded(resolvedVariant);
 	return gamefile.initGameFile(
 		longformIn.metadata.TimeControl ?? '-',
 		resolvedTimestamp,

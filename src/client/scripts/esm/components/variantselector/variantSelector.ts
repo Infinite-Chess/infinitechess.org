@@ -19,9 +19,13 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
-import { validatePosition } from '../../../../../shared/chess/variants/positionvalidation.js';
+import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import {
+	PositionErrorCode,
+	validateMoves,
+	validatePosition,
+} from '../../../../../shared/chess/variants/positionvalidation.js';
 
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
@@ -548,40 +552,53 @@ function validateIcnInput(revealErrors: boolean): void {
 		setIcnResult(null);
 		return;
 	}
+
+	let longFormat: LongFormatOut;
 	try {
-		const longFormat = icnconverter.ShortToLong_Format(value);
-		element_icnInputWrap.classList.remove('invalid');
-		// Only accept positions explicitly defined in the ICN. Variant metadata is ignored here so
-		// users can't smuggle in massive preset positions (e.g. Omega^2) via a tiny metadata-only string.
-		// For now, games can only start from a fullMove of 1.
-		const icnVariantOptions = icnimport.variantOptionsFromLongFormat(longFormat, {
-			fullMove: 1,
-		});
-		const illegalReason = validatePosition(icnVariantOptions, value, config.enforceSizeLimit);
-		if (illegalReason !== null) {
-			if (revealErrors) {
-				element_icnInputWrap.classList.add('invalid');
-				element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
-			}
-			setIcnResult({ options: icnVariantOptions, isValid: false });
-		} else {
-			element_icnErrorText.textContent = '';
-			setIcnResult({ options: icnVariantOptions, isValid: true });
-		}
+		longFormat = icnconverter.ShortToLong_Format(value);
 	} catch (e) {
+		// The icn itself was in an invalid format
 		if (revealErrors) {
 			element_icnInputWrap.classList.add('invalid');
 			// Only log on reveal so we don't spam the console on every keystroke of an in-progress ICN.
 			console.error('Illegal position:', e instanceof Error ? e.message : e);
 		}
 		setIcnResult(null);
+		return;
+	}
+
+	// Atleast the ICN is valid syntax, now let's check position, gamerules, and moves...
+
+	// Only accept positions explicitly defined in the ICN. Variant metadata is ignored here so
+	// users can't smuggle in massive preset positions (e.g. Omega^2) via a tiny metadata-only string.
+	const icnVariantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
+	const movePackets = longFormat.moves ? icnimport.movePacketsFromParsed(longFormat.moves) : [];
+	let illegalReason: PositionErrorCode | 'moves_invalid' | null = validatePosition(
+		icnVariantOptions,
+		value,
+		config.enforceSizeLimit,
+	);
+	if (illegalReason === null)
+		illegalReason = validateMoves(icnVariantOptions, movePackets, revealErrors);
+
+	if (illegalReason === null) {
+		// Valid starting position, gamerules, & moves
+		element_icnErrorText.textContent = '';
+		setIcnResult({ options: icnVariantOptions, isValid: true });
+	} else {
+		// Invalid starting position, gamerules, or moves
+		if (revealErrors) {
+			element_icnInputWrap.classList.add('invalid');
+			element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
+		}
+		setIcnResult({ options: icnVariantOptions, isValid: false });
 	}
 }
 
 // Preview tooltips ----------------------------------------------
 
 /** Shows the preview tooltip for the currently selected variant in the display button. */
-async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
+function handleDisplayPreviewHover(anchor: HTMLElement): void {
 	if (selection.kind === 'preset') {
 		variantPreviewTooltip.showForVariantCode(anchor, selection.code, 'left');
 	} else if (selection.kind === 'online') {

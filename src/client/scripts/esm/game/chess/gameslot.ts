@@ -20,6 +20,7 @@ import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
+import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import arrows from '../rendering/arrows/arrows.js';
@@ -157,7 +158,9 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 
 /** Loads all of the logical components of a game */
 async function loadLogical(loadOptions: LoadOptions): Promise<void> {
-	loadedGamefile = await gamefile.initGameFile(
+	if (loadOptions.variant !== undefined)
+		await variantcache.ensureVariantLoaded(loadOptions.variant);
+	loadedGamefile = gamefile.initGameFile(
 		loadOptions.timeControl,
 		loadOptions.dateTimestamp,
 		loadOptions.variant,

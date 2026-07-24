@@ -184,21 +184,23 @@ function loadGameWithBoard(
 
 /**
  * Initiates both the base game and board of the GameFile at the same time.
- * **Asynchronous** because variant modules must be loaded. Used on just the client.
- * @param validateMoves - During game construction, throws an error if any move played is illegal.
+ * REQUIRES THE VARIANT MODULE TO BE PRELOADED via {@link variantcache.ensureVariantLoaded}
+ * if a variant is specified. Used on just the client.
+ * @param validateMoves - During game construction, throws an error if any move played is illegal,
+ *   such as no piece on the start coords, or promotion to a piece with no space in the piece lists
+ *   for (not a promotion piece).
  */
-async function initGameFile(
+function initGameFile(
 	timeControl: TimeControl,
 	dateTimestamp: number,
 	variantCode: VariantCode | undefined,
 	additional: Additional = {},
 	validateMoves?: true,
-): Promise<GameFile> {
-	let variant: LoadedVariant | undefined;
-	if (variantCode !== undefined) {
-		await variantcache.ensureVariantLoaded(variantCode);
-		variant = { code: variantCode, mod: variantcache.getModule(variantCode), dateTimestamp };
-	}
+): GameFile {
+	const variant: LoadedVariant | undefined =
+		variantCode !== undefined
+			? { code: variantCode, mod: variantcache.getModule(variantCode), dateTimestamp }
+			: undefined;
 
 	const gameWithRules = initGame(
 		timeControl,

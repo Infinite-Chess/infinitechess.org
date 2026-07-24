@@ -451,9 +451,7 @@ function calculateMoveFromPacket(boardsim: Board, movePacket: MovePacket): MoveF
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveTagged.startCoords);
 	if (!piece) {
 		// No piece on start coordinates, can't calculate Move, because it's illegal
-		throw Error(
-			`Failed to calculate Move from shortmove because there's no piece on the start coords: ${movePacket.token}`,
-		);
+		throw Error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${movePacket.token}`); // prettier-ignore
 	}
 
 	const moveset = legalmoves.getPieceMoveset(boardsim, piece.type);
