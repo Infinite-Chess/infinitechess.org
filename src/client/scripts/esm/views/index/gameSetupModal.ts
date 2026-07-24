@@ -134,7 +134,7 @@ function initModal(): void {
 
 /** Reads current seek options and disables the Rated button if a rated game is not permitted. */
 export function syncRatedButton(): void {
-	const variant = variantSelector.getInviteVariant();
+	const variant = variantSelector.getSeekVariant();
 	const time: TimeControl = timeControls.getTimeControl();
 	const color = getSelectedColor();
 	const modifiers = modifierSelector.getSeekModifiers();
@@ -159,7 +159,7 @@ function getSelectedColor(): Player | null {
 
 /** Reads the online seek form state and sends a createseek request via the lobby. */
 function handleOnlineSeek(): void {
-	const variant = variantSelector.getInviteVariant();
+	const variant = variantSelector.getSeekVariant();
 	if (variant === null) return; // Invalid selection (e.g. unparsable icn or illegal position)
 
 	const time: TimeControl = timeControls.getTimeControl();

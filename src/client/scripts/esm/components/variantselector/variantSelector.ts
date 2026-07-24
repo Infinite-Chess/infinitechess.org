@@ -7,8 +7,8 @@
  */
 
 import type { VNode } from 'snabbdom';
-import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
+import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { SeekVariant, SeekModifier } from '../../../../../shared/types.js';
 import type {
 	VariantGroup,
@@ -30,6 +30,7 @@ import {
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
+import gamecompressor from '../../game/chess/gamecompressor.js';
 import modifierSelector from './modifierSelector.js';
 import editorpositionsdb from '../../game/editorstores/esavestore.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
@@ -55,6 +56,19 @@ interface VariantSelectorConfig {
 
 /** The union of all possible group type dropdowns. */
 type GroupType = VariantGroup | 'custom';
+
+/**
+ * The last validated custom position. A From-ICN result caches the products of its one
+ * validation pass — the parse, and (when the whole ICN is legal) the gamefile that validating
+ * the moves already built — so the seek flatten and preview don't rebuild them. Saved
+ * positions are stored as options at rest, so there's no ICN to derive them from.
+ *
+ * `isValid` is whether the position is legal to play.
+ */
+type IcnResult =
+	| { kind: 'saved'; isValid: boolean; options: VariantOptions }
+	| { kind: 'icn'; isValid: false; longFormat: LongFormatOut }
+	| { kind: 'icn'; isValid: true; longFormat: LongFormatOut; gamefile: GameFile };
 
 // Elements ----------------------------------------------
 
@@ -99,13 +113,12 @@ let loaded: {
 } = { selection: { kind: 'preset', code: 'Classical' }, icn: '', modifiers: [] };
 
 let customContentVNode: VNode | Element = element_customVariantContent;
-/** The last validated custom position (ICN input or saved position). null while loading or unset. */
-let icnResult: {
-	/** The variantOptions for the custom position. */
-	options: VariantOptions;
-	/** Whether the position passes validatePosition() and is legal to play. */
-	isValid: boolean;
-} | null = null;
+/**
+ * The last validated custom position (ICN input or saved position). Null while
+ * loading or unset, and for an ICN that didn't parse or whose moves are illegal.
+ * If defined, we can always display the variant preview tooltip.
+ */
+let icnResult: IcnResult | null = null;
 
 // Custom position caching
 // Very low chance a position is edited in another tab when it is sitting in the cache.
@@ -499,7 +512,7 @@ function restoreAcceptedDisplay(): void {
 // Validation ----------------------------------------------
 
 /** Sets icnResult and notifies the host of the change. */
-function setIcnResult(result: typeof icnResult): void {
+function setIcnResult(result: IcnResult | null): void {
 	icnResult = result;
 	config.onChange?.();
 }
@@ -511,9 +524,9 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 	if (illegalReason !== null) {
 		element_variantDisplay.classList.add('invalid');
 		element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
-		setIcnResult({ options: variantOptions, isValid: false });
+		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
 	} else {
-		setIcnResult({ options: variantOptions, isValid: true });
+		setIcnResult({ kind: 'saved', options: variantOptions, isValid: true });
 	}
 }
 
@@ -538,9 +551,19 @@ function clearSavedPositionError(): void {
 	element_icnErrorText.textContent = '';
 }
 
+/** Surfaces why the ICN input is illegal, on its wrap and error text. */
+function revealIcnError(reason: PositionErrorCode | 'moves_invalid'): void {
+	element_icnInputWrap.classList.add('invalid');
+	element_icnErrorText.textContent = t.shared.position_errors[reason];
+}
+
 /**
- * Validates the current ICN textarea value and stores the resolved VariantOptions,
+ * Validates the current ICN textarea value and caches what validating it produced,
  * notifying the host of the validity change.
+ *
+ * Only the raw ICN's length is checked against the seek size limit; in almost
+ * all cases the flattened ICN is smaller.
+ *
  * @param revealErrors - Whether to surface invalid styling/error text. False while typing
  * (validity still updates); true on blur/paste so errors show once done.
  */
@@ -572,28 +595,31 @@ function validateIcnInput(revealErrors: boolean): void {
 	// Only accept positions explicitly defined in the ICN. Variant metadata is ignored here so
 	// users can't smuggle in massive preset positions (e.g. Omega^2) via a tiny metadata-only string.
 	const icnVariantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
-	const movePackets = longFormat.moves ? icnimport.movePacketsFromParsed(longFormat.moves) : [];
-	let illegalReason: PositionErrorCode | 'moves_invalid' | null = validatePosition(
+	const illegalReason: PositionErrorCode | null = validatePosition(
 		icnVariantOptions,
 		value,
 		config.enforceSizeLimit,
 	);
 	if (illegalReason === null) {
+		// Valid starting position and gamerules. Now check the moves,.
+		const movePackets = longFormat.moves
+			? icnimport.movePacketsFromParsed(longFormat.moves)
+			: [];
 		const constructed = tryConstructGame(icnVariantOptions, movePackets, revealErrors);
-		if (constructed === 'moves_invalid') illegalReason = constructed;
-	}
-
-	if (illegalReason === null) {
-		// Valid starting position, gamerules, & moves
-		element_icnErrorText.textContent = '';
-		setIcnResult({ options: icnVariantOptions, isValid: true });
-	} else {
-		// Invalid starting position, gamerules, or moves
-		if (revealErrors) {
-			element_icnInputWrap.classList.add('invalid');
-			element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
+		if (constructed !== 'moves_invalid') {
+			// Valid starting position, gamerules, & moves. Keep the gamefile validating the
+			// moves just built — the seek flatten and the preview are derived from it.
+			element_icnErrorText.textContent = '';
+			setIcnResult({ kind: 'icn', isValid: true, longFormat, gamefile: constructed });
+		} else {
+			// Moves are illegal.
+			if (revealErrors) revealIcnError(constructed);
+			setIcnResult(null);
 		}
-		setIcnResult({ options: icnVariantOptions, isValid: false });
+	} else {
+		// Invalid starting position or gamerules.
+		if (revealErrors) revealIcnError(illegalReason);
+		setIcnResult({ kind: 'icn', isValid: false, longFormat });
 	}
 }
 
@@ -609,12 +635,15 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 		handleSavePreview(anchor, selection.name, localPreviewCache, editorpositionsdb.readLocal);
 	} else if (selection.kind === 'icn') {
 		validateIcnInput(true);
-		if (icnResult !== null)
-			variantPreviewTooltip.showForPosition(
-				anchor,
-				t.shared.variant_groups.custom.display_label,
-				icnResult.options,
-			);
+		if (icnResult?.kind !== 'icn') return;
+		const options = icnResult.isValid
+			? gamecompressor.gamefileToPositionOptions(icnResult.gamefile)
+			: icnimport.variantOptionsFromLongFormat(icnResult.longFormat, { fullMove: 1 });
+		variantPreviewTooltip.showForPosition(
+			anchor,
+			t.shared.variant_groups.custom.display_label,
+			options,
+		);
 	}
 }
 
@@ -672,7 +701,7 @@ function getCustomPosition():
 	| null {
 	if (selection.kind === 'preset') return null;
 	if (!icnResult?.isValid) return null;
-	if (selection.kind === 'icn') {
+	if (icnResult.kind === 'icn') {
 		return element_icnInput.value ? { kind: 'icn', icn: element_icnInput.value } : null;
 	}
 	// online / local saved position — the resolved options are loadable as-is (no moves).
@@ -684,10 +713,10 @@ function getCustomPosition():
 }
 
 /**
- * Returns the current variant selection as an InviteVariant for the wire format,
+ * Returns the current variant selection as a SeekVariant for the wire format,
  * or null if the selection cannot be used for an online seek (invalid ICN, local save).
  */
-function getInviteVariant(): SeekVariant | null {
+function getSeekVariant(): SeekVariant | null {
 	if (selection.kind === 'preset') {
 		return { kind: 'preset', code: selection.code };
 	}
@@ -695,10 +724,14 @@ function getInviteVariant(): SeekVariant | null {
 	if (selection.kind === 'online') {
 		return { kind: 'cloudSave', name: selection.name };
 	}
-	// local / icn — the custom wire format needs an ICN string. From-ICN sends the
-	// raw input; a local save serializes its resolved options to canonical ICN.
-	const position =
-		selection.kind === 'icn' ? element_icnInput.value : variantOptionsToICN(icnResult.options);
+	// local / icn — the custom wire format needs an ICN string. A From-ICN selection sends the
+	// position its moves lead to, since a seek's ICN may not contain moves; a local save's
+	// resolved options are already move-free.
+	const options =
+		icnResult.kind === 'icn'
+			? gamecompressor.gamefileToPositionOptions(icnResult.gamefile)
+			: icnResult.options;
+	const position = variantOptionsToICN(options);
 	if (!position) return null;
 	return { kind: 'custom', position };
 }
@@ -712,7 +745,7 @@ export default {
 	getSelection,
 	isSelectionValid,
 	getCustomPosition,
-	getInviteVariant,
+	getSeekVariant,
 	applyIcn,
 	snapshotAccepted,
 	restoreAcceptedDisplay,

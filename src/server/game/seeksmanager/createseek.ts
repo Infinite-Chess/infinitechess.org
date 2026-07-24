@@ -49,7 +49,11 @@ import {
 // Types -------------------------------------------------------------------------------
 
 /** Codes returned by {@link validateIcnSeekContent}; superset of {@link PositionErrorCode}. */
-type IcnSeekErrorCode = PositionErrorCode | 'invalid_icn' | 'icn_missing_position';
+type IcnSeekErrorCode =
+	| PositionErrorCode
+	| 'invalid_icn'
+	| 'icn_missing_position'
+	| 'icn_contains_moves';
 
 // Schemas ---------------------------------------------------------------------------
 
@@ -211,6 +215,8 @@ function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined) {
 		return 'icn_missing_position';
 	}
+	// A behaving client should always flatten their moves into a single position before seeking.
+	if (longFormat.moves && longFormat.moves.length > 0) return 'icn_contains_moves';
 	const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
 	return validatePosition(variantOptions, content, true);
 }

@@ -126,6 +126,7 @@ description = "All pieces have a maximum distance they can slide in one move."
 [position_errors]
 invalid_icn = "Invalid ICN."
 icn_missing_position = "ICN must include a position."
+icn_contains_moves = "ICN must not contain moves."
 # Display labels for codes returned by validatePosition()
 mixed_player_modes = "Cannot mix 2-player and 4-player."
 incomplete_turn_order = "All players need a turn."

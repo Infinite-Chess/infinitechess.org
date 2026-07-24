@@ -228,6 +228,7 @@ export interface ScriptTranslations {
 		position_errors: {
 			invalid_icn: string;
 			icn_missing_position: string;
+			icn_contains_moves: string;
 			mixed_player_modes: string;
 			incomplete_turn_order: string;
 			position_too_large: string;

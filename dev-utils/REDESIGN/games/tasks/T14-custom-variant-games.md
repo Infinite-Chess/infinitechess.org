@@ -71,5 +71,3 @@ positions is the consumer (T9/T10), not part of this task.
   just prepared the columns.
 
 When this task is complete, delete this doc and the corresponding section in OVERVIEW.md.
-
-Oh another thing the server should always reject positions if the have moves at the end (the client should already be converting the position after all the moves are applied into a single position before sending the create seek request).
