@@ -6,12 +6,10 @@
  */
 
 import type { RawType } from '../util/typeutil.js';
-import type { MovePacket } from '../../types.js';
+import type { VariantOptions } from '../logic/gamefile.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
-import type { GameFile, VariantOptions } from '../logic/gamefile.js';
 
 import moveutil from '../util/moveutil.js';
-import gamefile from '../logic/gamefile.js';
 import gamerules from '../util/gamerules.js';
 import boardinit from '../logic/boardinit.js';
 import winconutil from '../util/winconutil.js';
@@ -172,30 +170,4 @@ export function validatePosition(
 	}
 
 	return null; // Position is valid.
-}
-
-/**
- * Constructs the gamefile of a position and its moves list sourced from an ICN, validating
- * in the process that no move will crash the game from either a missing piece on the start
- * square, or promoting to a piece that space wasn't allocated for in the piece lists (not
- * in promotion pieces).
- * @param revealErrors - Whether the caller surfaces invalid moves to the user. Affects
- *   whether we console error here the internal error on invalid moves.
- * @returns The constructed gamefile, or `'moves_invalid'` if construction crashed.
- */
-export function tryConstructGame(
-	options: VariantOptions,
-	moves: MovePacket[],
-	revealErrors: boolean,
-): GameFile | 'moves_invalid' {
-	try {
-		return gamefile.initGameFile('-', Date.now(), undefined, {
-			variantOptions: options,
-			moves,
-		});
-	} catch (e: unknown) {
-		if (revealErrors)
-			console.error("Pasted ICN's moves are invalid:", e instanceof Error ? e.message : e);
-		return 'moves_invalid';
-	}
 }

@@ -1,68 +1,147 @@
 // src/client/scripts/esm/game/chess/gameformulator.ts
 
 /**
- * This script takes an ICN, or a compressed abridged gamefile, and constructs a full gamefile from them.
+ * The single path from a parsed ICN (longformat) to a constructed gamefile, shared by
+ * the analysis paste, the ICN validator tool, and the variant selector's validation gate.
  */
 
-import type { MovePacket } from '../../../../../shared/types.js';
-import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { MovePacket, TimeControl } from '../../../../../shared/types.js';
+import type { Additional, GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js'; // prettier-ignore
 import type {
-	MovePreprint,
-	LongFormatIn,
+	LongFormatOut,
+	PresetAnnotes,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
+import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
+// Types ----------------------------------------------------------------------------
+
+/** Everything a gamefile is constructed from. */
+export interface GameConstructionOptions {
+	/** The time control of the game (e.g. `"600+5"`, or `"-"` for untimed). */
+	timeControl: TimeControl;
+	/** The variant code. Pass undefined for custom/unknown positions. */
+	variant: VariantCode | undefined;
+	/** The game's start timestamp in milliseconds since epoch. */
+	dateTimestamp: number;
+	/** Preset ray overrides for the variant's rays. */
+	presetAnnotes?: PresetAnnotes;
+	additional?: Additional;
+}
+
+// Functions ------------------------------------------------------------------------
+
 /**
- * Formulates a whole gamefile from a smaller simpler abridged one.
- * @param longformIn - The return value of gamecompressor.compressGamefile()
- * @param validateMoves - Optional flag to validate move legality during formulation, throwing an error if any move is illegal.
+ * Resolves a parsed ICN into everything its gamefile is constructed from: the variant
+ * (preloaded), the timestamps, and the position + moves as gamefile options.
+ *
+ * Consumers each resolve from the longformat rather than sharing one derived set of
+ * options, since the options are mutated during construction, and consumers disagree
+ * on them (the validation gate normalizes `fullMove`, a real load preserves it).
  */
-async function formulateGame(longformIn: LongFormatIn, validateMoves?: true): Promise<GameFile> {
-	if (longformIn.position === undefined || longformIn.state_global.specialRights === undefined) {
+async function resolveConstructionOptions(
+	longFormat: LongFormatOut,
+	overrides?: { gameConclusion?: GameConclusion; slideLimit?: bigint },
+): Promise<GameConstructionOptions> {
+	const variant = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
+	if (longFormat.position === undefined && variant === undefined)
 		throw Error(
-			'Invalid longformIn when formulating game: Missing position or special rights.',
+			'Cannot construct a game from a longformat specifying neither a position nor a known variant.',
 		);
-	}
 
-	/** String array of the moves in their most compact notation (e.g. "4,7>4,8Q") */
-	const moves: MovePacket[] =
-		longformIn.moves?.map((m: MovePreprint) => {
-			const move: MovePacket = { token: m.token };
-			if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
-			return move;
-		}) ?? [];
+	// initGameFile requires the variant module preloaded.
+	if (variant !== undefined) await variantcache.ensureVariantLoaded(variant);
+	const { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant); // prettier-ignore
 
-	const variantOptions: VariantOptions = {
-		fullMove: longformIn.fullMove,
-		gameRules: longformIn.gameRules,
-		position: longformIn.position!,
-		state_global: {
-			specialRights: longformIn.state_global.specialRights,
-			enpassant: longformIn.state_global.enpassant,
-			moveRuleState: longformIn.state_global.moveRuleState,
-		},
+	const additional: Additional = {
+		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat, {
+			position,
+			specialRights,
+		}),
+		...(overrides?.gameConclusion !== undefined && {
+			gameConclusion: overrides.gameConclusion,
+		}),
+		...(overrides?.slideLimit !== undefined && { slideLimit: overrides.slideLimit }),
 	};
+	// FUTURE: transfer the pasted move comments into the gamefile here too.
+	if (longFormat.moves) additional.moves = icnimport.movePacketsFromParsed(longFormat.moves);
 
-	const resolvedTimestamp = metadatautil.resolveTimestampFromMetadata(
-		longformIn.metadata.UTCDate,
-		longformIn.metadata.UTCTime,
-	);
-	const resolvedVariant = variantregistry.resolveVariantCode(longformIn.metadata.Variant);
+	return {
+		timeControl: longFormat.metadata.TimeControl ?? '-',
+		variant,
+		dateTimestamp: metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime), // prettier-ignore
+		presetAnnotes: longFormat.presetAnnotes,
+		additional,
+	};
+}
 
-	if (resolvedVariant !== undefined) await variantcache.ensureVariantLoaded(resolvedVariant);
+/**
+ * Builds the gamefile from already-resolved construction options.
+ * REQUIRES the variant module preloaded, which {@link resolveConstructionOptions} does.
+ * @param validateMoves - Throws an IllegalMoveError if any move played is illegal.
+ */
+function constructGame(options: GameConstructionOptions, validateMoves?: true): GameFile {
 	return gamefile.initGameFile(
-		longformIn.metadata.TimeControl ?? '-',
-		resolvedTimestamp,
-		resolvedVariant,
-		{ variantOptions, moves },
+		options.timeControl,
+		options.dateTimestamp,
+		options.variant,
+		options.additional,
 		validateMoves,
 	);
 }
 
+/**
+ * Constructs the gamefile a parsed ICN describes. Requires the position to be spelled out
+ * in the ICN — it is never sourced from the Variant metadata, so a tiny metadata-only
+ * string can't stand in for a massive preset position.
+ * @param validateMoves - Throws an IllegalMoveError if any move played is illegal.
+ * Any other throw means the game couldn't be constructed at all.
+ */
+async function formulateGame(longFormat: LongFormatOut, validateMoves?: true): Promise<GameFile> {
+	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined)
+		throw Error(
+			'Invalid longformat when formulating game: Missing position or special rights.',
+		);
+	const constructionOptions = await resolveConstructionOptions(longFormat);
+	return constructGame(constructionOptions, validateMoves);
+}
+
+/**
+ * Constructs the gamefile of an explicit position and its moves list, validating in the
+ * process that no move will crash the game from either a missing piece on the start square,
+ * or promoting to a piece that space wasn't allocated for in the piece lists (not in
+ * promotion pieces). Synchronous, since resolving no variant means nothing to fetch.
+ * @param revealErrors - Whether the caller surfaces invalid moves to the user. Affects
+ *   whether we console error here the internal error on invalid moves.
+ * @returns The constructed gamefile, or `'moves_invalid'` if construction crashed.
+ */
+function tryConstructGame(
+	variantOptions: VariantOptions,
+	moves: MovePacket[],
+	revealErrors: boolean,
+): GameFile | 'moves_invalid' {
+	try {
+		return constructGame({
+			timeControl: '-',
+			variant: undefined,
+			dateTimestamp: Date.now(),
+			additional: { variantOptions, moves },
+		});
+	} catch (e: unknown) {
+		if (revealErrors)
+			console.error("Pasted ICN's moves are invalid:", e instanceof Error ? e.message : e);
+		return 'moves_invalid';
+	}
+}
+
 export default {
+	resolveConstructionOptions,
 	formulateGame,
+	tryConstructGame,
 };

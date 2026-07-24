@@ -11,14 +11,13 @@ import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icncon
 import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
-import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 import toast from '../../components/toast.js';
 import gamesession from '../../game/chess/gamesession.js';
+import gameformulator from '../../game/chess/gameformulator.js';
 import guianalysisview from './gui/guianalysisview.js';
 import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
 import gameslot, { LoadOptions } from '../../game/chess/gameslot.js';
@@ -120,9 +119,6 @@ function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint)
  * Loads a game from the provided ICN longformat, replacing the current one.
  * Requires an active 'analysis' session.
  *
- * TODO: REMOVE A LOT OF THE REDUNDANT LOGIC BETWEEN
- * THIS FUNCTION AND gameforulator.formulateGame()!!!!!!!!
- *
  * @param longFormat - The game as a parsed ICN. Mutated during construction (gamerules), so
  * callers holding onto it must pass a copy.
  * @param gameConclusion - The game's conclusion, if it ended.
@@ -136,23 +132,13 @@ async function pasteGame(
 	viewWhitePerspective?: boolean,
 	slideLimit?: bigint,
 ): Promise<void> {
-	// Build the gamefile options from the longformat...
-
-	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
-	const variant = clientmetadatautil.resolveAndNormalizeVariantFromMetadata(longFormat.metadata);
-	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
-	const { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant); // prettier-ignore
-
-	const additional: Additional = {
-		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat, {
-			position,
-			specialRights,
-		}),
+	// Normalize the ICN's Variant metadata to the English display name (or drop it if
+	// unrecognized), so the game we go on to display carries canonical metadata.
+	clientmetadatautil.resolveAndNormalizeVariantFromMetadata(longFormat.metadata);
+	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
 		gameConclusion,
-		...(slideLimit !== undefined && { slideLimit }),
-	};
-	// FUTURE: transfer the pasted move comments into the gamefile here too.
-	if (longFormat.moves) additional.moves = icnimport.movePacketsFromParsed(longFormat.moves);
+		slideLimit,
+	});
 
 	// Explicit override (e.g. the loaded game's participant orientation) wins; otherwise retain
 	// the current game's perspective, defaulting to white's on the initial /analysis/:id load.
@@ -163,14 +149,7 @@ async function pasteGame(
 	gamesession.markLoading();
 
 	// Returned so callers can await the load (the gamefile only exists once it resolves).
-	return runLoad({
-		timeControl: longFormat.metadata.TimeControl ?? '-',
-		variant,
-		dateTimestamp,
-		viewWhitePerspective: vwp,
-		presetAnnotes: longFormat.presetAnnotes,
-		additional,
-	});
+	return runLoad({ ...constructionOptions, viewWhitePerspective: vwp });
 }
 
 export default {

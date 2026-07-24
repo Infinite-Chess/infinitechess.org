@@ -9,10 +9,9 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { TimeControl } from '../../../../../shared/types.js';
-import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { GameConstructionOptions } from './gameformulator.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
@@ -45,18 +44,9 @@ import miniimagerenderer from '../rendering/miniimagerenderer.js';
 // Types ---------------------------------------------------------------------
 
 /** Options for loading a game. */
-export interface LoadOptions {
-	/** The time control of the game (e.g. `"600+5"`, or `"-"` for untimed). */
-	timeControl: TimeControl;
-	/** The variant code. Pass undefined for custom/unknown positions. */
-	variant: VariantCode | undefined;
-	/** The game's start timestamp in milliseconds since epoch. */
-	dateTimestamp: number;
+export interface LoadOptions extends GameConstructionOptions {
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
 	viewWhitePerspective: boolean;
-	/** Preset ray overrides for the variant's rays. */
-	presetAnnotes?: PresetAnnotes;
-	additional?: Additional;
 }
 
 // Variables ---------------------------------------------------------------
