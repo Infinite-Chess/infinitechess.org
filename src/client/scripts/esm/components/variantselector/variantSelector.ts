@@ -23,7 +23,6 @@ import variantregistry from '../../../../../shared/chess/variants/variantregistr
 import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import {
 	PositionErrorCode,
-	tryConstructGame,
 	validatePosition,
 } from '../../../../../shared/chess/variants/positionvalidation.js';
 
@@ -31,6 +30,7 @@ import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
+import gameformulator from '../../game/chess/gameformulator.js';
 import modifierSelector from './modifierSelector.js';
 import editorpositionsdb from '../../game/editorstores/esavestore.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
@@ -605,7 +605,11 @@ function validateIcnInput(revealErrors: boolean): void {
 		const movePackets = longFormat.moves
 			? icnimport.movePacketsFromParsed(longFormat.moves)
 			: [];
-		const constructed = tryConstructGame(icnVariantOptions, movePackets, revealErrors);
+		const constructed = gameformulator.tryConstructGame(
+			icnVariantOptions,
+			movePackets,
+			revealErrors,
+		);
 		if (constructed !== 'moves_invalid') {
 			// Valid starting position, gamerules, & moves. Keep the gamefile validating the
 			// moves just built — the seek flatten and the preview are derived from it.
