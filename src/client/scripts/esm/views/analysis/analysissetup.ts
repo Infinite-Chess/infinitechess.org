@@ -48,11 +48,11 @@ function loadSelection(): void {
 		const custom = variantSelector.getCustomPosition();
 		if (custom === null) return;
 		if (custom.kind === 'options') {
-			// Saved position — load the resolved options directly (no ICN round-trip).
+			// Saved position — its options are already resolved; load them directly.
 			void analysisloader.loadVariantOptions(custom.options, slideLimit);
 		} else {
-			// From-ICN
-			void analysisloader.pasteGame(custom.icn, undefined, undefined, slideLimit);
+			// From-ICN — load the parsed position the validation gate already produced.
+			void analysisloader.pasteGame(custom.longFormat, undefined, undefined, slideLimit);
 		}
 	}
 

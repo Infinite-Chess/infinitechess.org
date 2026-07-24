@@ -692,24 +692,24 @@ function isSelectionValid(): boolean {
 
 /**
  * The current custom (non-preset) selection resolved for loading onto a board, or null if the
- * selection is a preset or not yet valid. A From-ICN selection returns its raw ICN string;
- * saved positions resolve to their {@link VariantOptions}.
+ * selection is a preset or not yet valid. A From-ICN selection returns the parse validation
+ * already produced, so loading doesn't have to redo it; saved positions resolve to their
+ * {@link VariantOptions}.
+ *
+ * Both are deep-copied, since loading mutates them (e.g. gameRules.slideLimit)
+ * and the cached originals outlive the load.
  */
 function getCustomPosition():
-	| { kind: 'icn'; icn: string }
+	| { kind: 'longFormat'; longFormat: LongFormatOut }
 	| { kind: 'options'; options: VariantOptions }
 	| null {
 	if (selection.kind === 'preset') return null;
 	if (!icnResult?.isValid) return null;
 	if (icnResult.kind === 'icn') {
-		return element_icnInput.value ? { kind: 'icn', icn: element_icnInput.value } : null;
+		return { kind: 'longFormat', longFormat: jsutil.deepCopyObject(icnResult.longFormat) };
 	}
 	// online / local saved position — the resolved options are loadable as-is (no moves).
-	return {
-		kind: 'options',
-		// Deep-copy to avoid callers mutating original gameRules.slideLimit
-		options: jsutil.deepCopyObject(icnResult.options),
-	};
+	return { kind: 'options', options: jsutil.deepCopyObject(icnResult.options) };
 }
 
 /**
