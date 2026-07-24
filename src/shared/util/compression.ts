@@ -24,25 +24,6 @@ const DEBUG_COMPRESSION = false;
 
 // Helpers ---------------------------------------------------------------------
 
-/** Reads all chunks from a ReadableStream into a single Uint8Array. */
-async function readAllChunks(readable: ReadableStream<Uint8Array>): Promise<Uint8Array> {
-	const chunks: Uint8Array[] = [];
-	const reader = readable.getReader();
-	while (true) {
-		const { done, value } = await reader.read();
-		if (done) break;
-		chunks.push(value);
-	}
-	const totalLength = chunks.reduce((sum, c) => sum + c.length, 0);
-	const combined = new Uint8Array(totalLength);
-	let offset = 0;
-	for (const chunk of chunks) {
-		combined.set(chunk, offset);
-		offset += chunk.length;
-	}
-	return combined;
-}
-
 /** Base64-encodes a Uint8Array in fixed-size chunks to avoid stack overflow on large payloads. */
 function uint8ArrayToBase64(bytes: Uint8Array): string {
 	let binary = '';
@@ -59,19 +40,9 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
  * @throws If `DecompressionStream` is unavailable or decompression fails.
  */
 async function decompressStringBase64(compressedBase64: string): Promise<string> {
-	const binary = atob(compressedBase64);
-	const bytes = new Uint8Array(binary.length);
-	for (let i = 0; i < binary.length; i++) {
-		bytes[i] = binary.charCodeAt(i);
-	}
-
-	const stream = new DecompressionStream('deflate-raw');
-	const writer = stream.writable.getWriter();
-	writer.write(bytes);
-	writer.close();
-
-	const decompressed = await readAllChunks(stream.readable);
-	return new TextDecoder().decode(decompressed);
+	const bytes = Uint8Array.from(atob(compressedBase64), (c) => c.charCodeAt(0));
+	const stream = new Response(bytes).body!.pipeThrough(new DecompressionStream('deflate-raw'));
+	return await new Response(stream).text();
 }
 
 // API ---------------------------------------------------------------------
@@ -103,12 +74,10 @@ async function compressString(
 
 	try {
 		const encoded = new TextEncoder().encode(str);
-		const stream = new CompressionStream('deflate-raw');
-		const writer = stream.writable.getWriter();
-		writer.write(encoded);
-		writer.close();
-
-		const compressed = await readAllChunks(stream.readable);
+		const stream = new Response(encoded).body!.pipeThrough(
+			new CompressionStream('deflate-raw'),
+		);
+		const compressed = new Uint8Array(await new Response(stream).arrayBuffer());
 		const base64 = uint8ArrayToBase64(compressed);
 
 		if (DEBUG_COMPRESSION) {
