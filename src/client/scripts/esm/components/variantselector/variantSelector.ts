@@ -23,7 +23,7 @@ import variantregistry from '../../../../../shared/chess/variants/variantregistr
 import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import {
 	PositionErrorCode,
-	validateMoves,
+	tryConstructGame,
 	validatePosition,
 } from '../../../../../shared/chess/variants/positionvalidation.js';
 
@@ -578,8 +578,10 @@ function validateIcnInput(revealErrors: boolean): void {
 		value,
 		config.enforceSizeLimit,
 	);
-	if (illegalReason === null)
-		illegalReason = validateMoves(icnVariantOptions, movePackets, revealErrors);
+	if (illegalReason === null) {
+		const constructed = tryConstructGame(icnVariantOptions, movePackets, revealErrors);
+		if (constructed === 'moves_invalid') illegalReason = constructed;
+	}
 
 	if (illegalReason === null) {
 		// Valid starting position, gamerules, & moves

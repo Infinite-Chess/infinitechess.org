@@ -59,9 +59,9 @@ import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
 import validatorama from '../../../util/validatorama';
 import selectiontool from '../tools/selection/selectiontool';
+import gamecompressor from '../../chess/gamecompressor';
 import guiboardcontrols from '../../gui/guiboardcontrols';
 import clientmetadatautil from '../../chess/clientmetadatautil';
-import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
 // Constants ----------------------------------------------------------------------
 
@@ -401,14 +401,8 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 			resolvedVariantCode,
 			additional,
 		);
-		const gamestate: SimplifiedGameState = {
-			position,
-			state_global: variantOptions.state_global,
-			fullMove: longformOut.fullMove,
-			turnOrder: longformOut.gameRules.turnOrder,
-		};
 		const new_gamestate = gamecompressor.GameToPosition(
-			gamestate,
+			variantOptions,
 			loadedGamefile.moves,
 			loadedGamefile.moves.length,
 		);
