@@ -135,7 +135,7 @@ async function pasteGame(
 	// Normalize the ICN's Variant metadata to the English display name (or drop it if
 	// unrecognized), so the game we go on to display carries canonical metadata.
 	clientmetadatautil.resolveAndNormalizeVariantFromMetadata(longFormat.metadata);
-	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
+	const constructionOptions = gameformulator.resolveConstructionOptions(longFormat, {
 		gameConclusion,
 		slideLimit,
 	});

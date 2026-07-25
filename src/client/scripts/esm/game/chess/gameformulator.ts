@@ -38,26 +38,23 @@ export interface GameConstructionOptions {
 // Functions ------------------------------------------------------------------------
 
 /**
- * Resolves a parsed ICN into everything its gamefile is constructed from: the variant
- * (preloaded), the timestamps, and the position + moves as gamefile options.
- *
- * Consumers each resolve from the longformat rather than sharing one derived set of
- * options, since the options are mutated during construction, and consumers disagree
- * on them (the validation gate normalizes `fullMove`, a real load preserves it).
+ * Resolves a parsed ICN into everything its gamefile is constructed from:
+ * the variant, the timestamps, and the position + moves as gamefile options.
+ * *
+ * REQUIRES the variant module preloaded only if the ICN omits a position (then the position
+ * is read off the variant); callers own this.
  */
-async function resolveConstructionOptions(
+function resolveConstructionOptions(
 	longFormat: LongFormatOut,
 	overrides?: { gameConclusion?: GameConclusion; slideLimit?: bigint },
-): Promise<GameConstructionOptions> {
+): GameConstructionOptions {
 	const variant = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
 	if (longFormat.position === undefined && variant === undefined)
 		throw Error(
 			'Cannot construct a game from a longformat specifying neither a position nor a known variant.',
 		);
 
-	// initGameFile requires the variant module preloaded.
-	if (variant !== undefined) await variantcache.ensureVariantLoaded(variant);
-	const { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant); // prettier-ignore
+	const { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant); // prettier-ignore
 
 	const additional: Additional = {
 		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat, {
@@ -83,7 +80,7 @@ async function resolveConstructionOptions(
 
 /**
  * Builds the gamefile from already-resolved construction options.
- * REQUIRES the variant module preloaded, which {@link resolveConstructionOptions} does.
+ * REQUIRES the variant module preloaded whenever `options.variant` is defined.
  * @param validateMoves - Throws an IllegalMoveError if any move played is illegal.
  */
 function constructGame(options: GameConstructionOptions, validateMoves?: true): GameFile {
@@ -108,7 +105,9 @@ async function formulateGame(longFormat: LongFormatOut, validateMoves?: true): P
 		throw Error(
 			'Invalid longformat when formulating game: Missing position or special rights.',
 		);
-	const constructionOptions = await resolveConstructionOptions(longFormat);
+	const constructionOptions = resolveConstructionOptions(longFormat);
+	if (constructionOptions.variant !== undefined)
+		await variantcache.ensureVariantLoaded(constructionOptions.variant);
 	return constructGame(constructionOptions, validateMoves);
 }
 

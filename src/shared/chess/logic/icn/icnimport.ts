@@ -18,16 +18,17 @@ import variantpreviewer from '../../variants/variantpreviewer.js';
 
 /**
  * Resolves the starting position and specialRights from a parsed ICN long format.
- * Uses the explicit position if present, otherwise loads it from the variant.
+ * Uses the explicit position if present, otherwise reads it from the variant.
  * @param variantCode - The pre-resolved variant code (avoids re-resolving from metadata).
+ *   If defined, REQUIRES the variant module preloaded when the ICN omits a position.
  */
-async function getPositionAndSpecialRightsFromLongFormat(
+function getPositionAndSpecialRightsFromLongFormat(
 	longFormat: LongFormatOut,
 	variantCode: VariantCode | undefined,
-): Promise<{
+): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
-}> {
+} {
 	if (longFormat.position && longFormat.state_global.specialRights) {
 		return {
 			position: longFormat.position,
@@ -36,7 +37,6 @@ async function getPositionAndSpecialRightsFromLongFormat(
 	} else if (variantCode !== undefined) {
 		// No position specified in the ICN, extract from the variant
 		const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
-		await variantcache.ensureVariantLoaded(variantCode);
 		const mod = variantcache.getModule(variantCode);
 		const variant: LoadedVariant = { code: variantCode, mod, dateTimestamp };
 		return variantpreviewer.getStartingPositionOfVariant(variant);

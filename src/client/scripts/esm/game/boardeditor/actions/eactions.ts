@@ -376,7 +376,11 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		longformOut.metadata.UTCTime,
 	);
 
-	let { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, resolvedVariantCode); // prettier-ignore
+	// Preload the variant module up front: getPositionAndSpecialRights reads the position
+	// off it when the ICN omits one, and initGameFile below requires it too.
+	if (resolvedVariantCode !== undefined)
+		await variantcache.ensureVariantLoaded(resolvedVariantCode);
+	let { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, resolvedVariantCode); // prettier-ignore
 	let stateGlobal = longformOut.state_global;
 
 	// If longformat contains moves, then we construct a GameFile object and use it to fast forward to the final position
@@ -393,8 +397,6 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 				return move;
 			}),
 		};
-		if (resolvedVariantCode !== undefined)
-			await variantcache.ensureVariantLoaded(resolvedVariantCode);
 		const loadedGamefile = gamefile.initGameFile(
 			longformOut.metadata.TimeControl ?? '-',
 			timestamp,
