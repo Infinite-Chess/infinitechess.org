@@ -38,73 +38,14 @@ export interface GameConstructionOptions {
 // Functions ------------------------------------------------------------------------
 
 /**
- * Resolves a parsed ICN into everything its gamefile is constructed from:
- * the variant, the timestamps, and the position + moves as gamefile options.
- * *
- * REQUIRES the variant module preloaded only if the ICN omits a position (then the position
- * is read off the variant); callers own this.
- */
-function resolveConstructionOptions(
-	longFormat: LongFormatOut,
-	overrides?: { gameConclusion?: GameConclusion; slideLimit?: bigint },
-): GameConstructionOptions {
-	const variant = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
-	if (longFormat.position === undefined && variant === undefined)
-		throw Error(
-			'Cannot construct a game from a longformat specifying neither a position nor a known variant.',
-		);
-
-	const { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant); // prettier-ignore
-
-	const additional: Additional = {
-		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat, {
-			position,
-			specialRights,
-		}),
-		...(overrides?.gameConclusion !== undefined && {
-			gameConclusion: overrides.gameConclusion,
-		}),
-		...(overrides?.slideLimit !== undefined && { slideLimit: overrides.slideLimit }),
-	};
-	// FUTURE: transfer the pasted move comments into the gamefile here too.
-	if (longFormat.moves) additional.moves = icnimport.movePacketsFromParsed(longFormat.moves);
-
-	return {
-		timeControl: longFormat.metadata.TimeControl ?? '-',
-		variant,
-		dateTimestamp: metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime), // prettier-ignore
-		presetAnnotes: longFormat.presetAnnotes,
-		additional,
-	};
-}
-
-/**
- * Builds the gamefile from already-resolved construction options.
- * REQUIRES the variant module preloaded whenever `options.variant` is defined.
+ * Constructs the gamefile a parsed ICN describes. Requires the position to be
+ * spelled out in the ICN — it is not sourced from the Variant metadata here.
  * @param validateMoves - Throws an IllegalMoveError if any move played is illegal.
- */
-function constructGame(options: GameConstructionOptions, validateMoves?: true): GameFile {
-	return gamefile.initGameFile(
-		options.timeControl,
-		options.dateTimestamp,
-		options.variant,
-		options.additional,
-		validateMoves,
-	);
-}
-
-/**
- * Constructs the gamefile a parsed ICN describes. Requires the position to be spelled out
- * in the ICN — it is never sourced from the Variant metadata, so a tiny metadata-only
- * string can't stand in for a massive preset position.
- * @param validateMoves - Throws an IllegalMoveError if any move played is illegal.
- * Any other throw means the game couldn't be constructed at all.
+ * @throws Any other error if the game couldn't be constructed at all.
  */
 async function formulateGame(longFormat: LongFormatOut, validateMoves?: true): Promise<GameFile> {
 	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined)
-		throw Error(
-			'Invalid longformat when formulating game: Missing position or special rights.',
-		);
+		throw Error('Invalid longformat when formulating game: Missing position or special rights.'); // prettier-ignore
 	const constructionOptions = resolveConstructionOptions(longFormat);
 	if (constructionOptions.variant !== undefined)
 		await variantcache.ensureVariantLoaded(constructionOptions.variant);
@@ -115,10 +56,10 @@ async function formulateGame(longFormat: LongFormatOut, validateMoves?: true): P
  * Constructs the gamefile of an explicit position and its moves list, validating in the
  * process that no move will crash the game from either a missing piece on the start square,
  * or promoting to a piece that space wasn't allocated for in the piece lists (not in
- * promotion pieces). Synchronous, since resolving no variant means nothing to fetch.
+ * promotion pieces).
  * @param revealErrors - Whether the caller surfaces invalid moves to the user. Affects
  *   whether we console error here the internal error on invalid moves.
- * @returns The constructed gamefile, or `'moves_invalid'` if construction crashed.
+ * @returns The constructed gamefile, or `'moves_invalid'` if construction threw.
  */
 function tryConstructGame(
 	variantOptions: VariantOptions,
@@ -137,6 +78,58 @@ function tryConstructGame(
 			console.error("Pasted ICN's moves are invalid:", e instanceof Error ? e.message : e);
 		return 'moves_invalid';
 	}
+}
+
+/**
+ * Resolves a parsed ICN into everything its gamefile is constructed from:
+ * the variant, the timestamps, and the position + moves as gamefile options.
+ *
+ * REQUIRES the variant module preloaded only if the ICN omits a position (then the position
+ * is read off the variant); callers own this.
+ */
+function resolveConstructionOptions(
+	longFormat: LongFormatOut,
+	overrides?: { gameConclusion?: GameConclusion; slideLimit?: bigint },
+): GameConstructionOptions {
+	const variant = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
+	if (longFormat.position === undefined && variant === undefined)
+		throw Error('Cannot construct a game from a longformat specifying neither a position nor a known variant.'); // prettier-ignore
+
+	const { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant); // prettier-ignore
+
+	const additional: Additional = {
+		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat, {
+			position,
+			specialRights,
+		}),
+		...(overrides?.gameConclusion !== undefined && { gameConclusion: overrides.gameConclusion }), // prettier-ignore
+		...(overrides?.slideLimit !== undefined && { slideLimit: overrides.slideLimit }),
+	};
+	// FUTURE: transfer the pasted move comments into the gamefile here, too.
+	if (longFormat.moves) additional.moves = icnimport.movePacketsFromParsed(longFormat.moves);
+
+	return {
+		timeControl: longFormat.metadata.TimeControl ?? '-',
+		variant,
+		dateTimestamp: metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime), // prettier-ignore
+		presetAnnotes: longFormat.presetAnnotes,
+		additional,
+	};
+}
+
+/**
+ * Builds the gamefile from already-resolved construction options.
+ * REQUIRES the variant module preloaded whenever `options.variant` is defined.
+ * @param validateMoves - If true, we'll throws an IllegalMoveError if any move played is illegal.
+ */
+function constructGame(options: GameConstructionOptions, validateMoves?: true): GameFile {
+	return gamefile.initGameFile(
+		options.timeControl,
+		options.dateTimestamp,
+		options.variant,
+		options.additional,
+		validateMoves,
+	);
 }
 
 export default {
