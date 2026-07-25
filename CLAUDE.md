@@ -4,13 +4,14 @@ When you finish making any new changes to scripts, always ensure these checks pa
 
 ## Key Guidelines
 
-1. Follow industry standards and best code practices of today.
-2. Maintain existing code structure, organization, and consistency.
-3. Never re-exported types from inside scripts, always reference the source. Never use the Omit or Exclude utility types. Instead, have one type extend the other.
-4. Avoid redundancy like the plague for maximum maintainability, scalability, and bug-avoidance. After implementing a change, always ask if there now exists redundancy with it or the rest of the code.
-5. Never patch symptoms only, always fix the root cause.
-6. All jsdoc and comments must be high signal, concise, and tight, not containing bloat information callers don't need.
-7. Unit/integration tests are not required for new features.
+1. Get straight to the point in ALL of your responses, skip regurgitating your train of thought or justifications for changes. Spend the tokens instead to think more thoroughly so that your response can be accurate and direct.
+2. Follow industry standards and best code practices of today.
+3. Maintain existing code structure, organization, and consistency.
+4. Never re-exported types from inside scripts, always reference the source. Never use the Omit or Exclude utility types. Instead, have one type extend the other.
+5. Avoid redundancy like the plague for maximum maintainability, scalability, and bug-avoidance. After implementing a change, always ask if there now exists redundancy with it or the rest of the code.
+6. Never patch symptoms only, always fix the root cause.
+7. All jsdoc and comments must be high signal, concise, and tight, not containing bloat information callers don't need.
+8. Unit/integration tests are not required for new features.
 
 ## Project Architecture
 
