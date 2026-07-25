@@ -58,17 +58,14 @@ interface VariantSelectorConfig {
 type GroupType = VariantGroup | 'custom';
 
 /**
- * The last validated custom position. A From-ICN result caches the products of its one
- * validation pass — the parse, and (when the whole ICN is legal) the gamefile that validating
- * the moves already built — so the seek flatten and preview don't rebuild them. Saved
- * positions are stored as options at rest, so there's no ICN to derive them from.
- *
- * `isValid` is whether the position is legal to play.
+ * The last validated custom position. A From-ICN result caches its parse and moves-applied
+ * gamefile so the seek flatten and preview don't rebuild them; the gamefile is kept even when
+ * `isValid` is false (position illegal to play) so the preview still renders the true position
+ * the moves lead to. Saved positions store options at rest, with no ICN to derive them from.
  */
 type IcnResult =
 	| { kind: 'saved'; isValid: boolean; options: VariantOptions }
-	| { kind: 'icn'; isValid: false; longFormat: LongFormatOut }
-	| { kind: 'icn'; isValid: true; longFormat: LongFormatOut; gamefile: GameFile };
+	| { kind: 'icn'; isValid: boolean; longFormat: LongFormatOut; gamefile: GameFile };
 
 // Elements ----------------------------------------------
 
@@ -115,7 +112,7 @@ let loaded: {
 let customContentVNode: VNode | Element = element_customVariantContent;
 /**
  * The last validated custom position (ICN input or saved position). Null while
- * loading or unset, and for an ICN that didn't parse or whose moves are illegal.
+ * loading or unset, and for an ICN that didn't parse or whose construction crashed.
  * If defined, we can always display the variant preview tooltip.
  */
 let icnResult: IcnResult | null = null;
@@ -600,30 +597,25 @@ function validateIcnInput(revealErrors: boolean): void {
 		value,
 		config.enforceSizeLimit,
 	);
+
+	// Build the gamefile regardless of play-legality, so the preview always reflects the moves —
+	// a play-illegal position (e.g. king capturable) still previews faithfully once they're applied.
+	const movePackets = longFormat.moves ? icnimport.movePacketsFromParsed(longFormat.moves) : [];
+	const constructed = gameformulator.tryConstructGame(icnVariantOptions, movePackets, revealErrors); // prettier-ignore
+	if (constructed === 'moves_invalid') {
+		// Construction crashed — the position can't be previewed or played.
+		if (revealErrors) revealIcnError(illegalReason ?? 'moves_invalid');
+		setIcnResult(null);
+		return;
+	}
+
+	// The moves-applied gamefile is available; the position is playable only if it was also legal.
 	if (illegalReason === null) {
-		// Valid starting position and gamerules. Now check the moves,.
-		const movePackets = longFormat.moves
-			? icnimport.movePacketsFromParsed(longFormat.moves)
-			: [];
-		const constructed = gameformulator.tryConstructGame(
-			icnVariantOptions,
-			movePackets,
-			revealErrors,
-		);
-		if (constructed !== 'moves_invalid') {
-			// Valid starting position, gamerules, & moves. Keep the gamefile validating the
-			// moves just built — the seek flatten and the preview are derived from it.
-			element_icnErrorText.textContent = '';
-			setIcnResult({ kind: 'icn', isValid: true, longFormat, gamefile: constructed });
-		} else {
-			// Moves are illegal.
-			if (revealErrors) revealIcnError(constructed);
-			setIcnResult(null);
-		}
+		element_icnErrorText.textContent = '';
+		setIcnResult({ kind: 'icn', isValid: true, longFormat, gamefile: constructed });
 	} else {
-		// Invalid starting position or gamerules.
 		if (revealErrors) revealIcnError(illegalReason);
-		setIcnResult({ kind: 'icn', isValid: false, longFormat });
+		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
 	}
 }
 
@@ -639,10 +631,8 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 		handleSavePreview(anchor, selection.name, localPreviewCache, editorpositionsdb.readLocal);
 	} else if (selection.kind === 'icn') {
 		validateIcnInput(true);
-		if (icnResult?.kind !== 'icn') return;
-		const options = icnResult.isValid
-			? gamecompressor.gamefileToPositionOptions(icnResult.gamefile)
-			: icnimport.variantOptionsFromLongFormat(icnResult.longFormat, { fullMove: 1 });
+		if (icnResult?.kind !== 'icn') return; // Construction failed — show nothing rather than a lie of a starting position.
+		const options = gamecompressor.gamefileToPositionOptions(icnResult.gamefile);
 		variantPreviewTooltip.showForPosition(
 			anchor,
 			t.shared.variant_groups.custom.display_label,
