@@ -516,8 +516,7 @@ function setIcnResult(result: IcnResult | null): void {
 
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(variantOptions: VariantOptions): void {
-	const icnString = variantOptionsToICN(variantOptions);
-	const illegalReason = validatePosition(variantOptions, icnString, config.enforceSizeLimit);
+	const illegalReason = validateOptions(variantOptions);
 	if (illegalReason !== null) {
 		element_variantDisplay.classList.add('invalid');
 		element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
@@ -541,6 +540,12 @@ function variantOptionsToICN(options: VariantOptions): string {
 	);
 }
 
+/** Serializes variant options to their canonical ICN and validates that flattened position (size + legality). */
+function validateOptions(options: VariantOptions): PositionErrorCode | null {
+	const icnString = variantOptionsToICN(options);
+	return validatePosition(options, icnString, config.enforceSizeLimit);
+}
+
 /** Clears any saved-position error state from the variant display. */
 function clearSavedPositionError(): void {
 	setIcnResult(null);
@@ -557,9 +562,6 @@ function revealIcnError(reason: PositionErrorCode | 'moves_invalid'): void {
 /**
  * Validates the current ICN textarea value and caches what validating it produced,
  * notifying the host of the validity change.
- *
- * Only the raw ICN's length is checked against the seek size limit; in almost
- * all cases the flattened ICN is smaller.
  *
  * @param revealErrors - Whether to surface invalid styling/error text. False while typing
  * (validity still updates); true on blur/paste so errors show once done.
@@ -592,11 +594,6 @@ function validateIcnInput(revealErrors: boolean): void {
 	// Only accept positions explicitly defined in the ICN. Variant metadata is ignored here so
 	// users can't smuggle in massive preset positions (e.g. Omega^2) via a tiny metadata-only string.
 	const icnVariantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
-	const illegalReason: PositionErrorCode | null = validatePosition(
-		icnVariantOptions,
-		value,
-		config.enforceSizeLimit,
-	);
 
 	// Build the gamefile regardless of play-legality, so the preview always reflects the moves —
 	// a play-illegal position (e.g. king capturable) still previews faithfully once they're applied.
@@ -604,10 +601,15 @@ function validateIcnInput(revealErrors: boolean): void {
 	const constructed = gameformulator.tryConstructGame(icnVariantOptions, movePackets, revealErrors); // prettier-ignore
 	if (constructed === 'moves_invalid') {
 		// Construction crashed — the position can't be previewed or played.
-		if (revealErrors) revealIcnError(illegalReason ?? 'moves_invalid');
+		if (revealErrors) revealIcnError('moves_invalid');
 		setIcnResult(null);
 		return;
 	}
+
+	// Validate the flattened position the moves lead to — the exact
+	// position a seek plays from and the server re-validates.
+	const finalOptions = gamecompressor.gamefileToPositionOptions(constructed);
+	const illegalReason = validateOptions(finalOptions);
 
 	// The moves-applied gamefile is available; the position is playable only if it was also legal.
 	if (illegalReason === null) {
