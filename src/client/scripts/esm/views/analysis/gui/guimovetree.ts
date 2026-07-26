@@ -568,6 +568,9 @@ guimoveslist.registerRenderer({
 	scrollToCurrentPly: scrollToCurrentNode,
 	onGameLoaded: () => movetree.initFromGame(gameslot.getGamefile()!),
 	onMovesChanged: () => movetree.syncAfterMovesChanged(gameslot.getGamefile()!),
+	// Navigation only re-highlights — no scroll. The tree follows the viewed node solely on a
+	// structural reconcile or an explicit graph jump, so clicking a ply never yanks the panel.
+	onViewMove: highlightCurrentNode,
 	onGameUnloaded: () => movetree.clear(),
 });
 

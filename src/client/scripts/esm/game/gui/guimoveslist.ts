@@ -53,6 +53,8 @@ interface MovesListRenderer {
 	onGameLoaded(): void;
 	/** The flat move list changed — sync derived state, before the following reconcile runs. */
 	onMovesChanged(): void;
+	/** The viewed ply changed via navigation — follow it. Whether that scrolls is the renderer's call. */
+	onViewMove(): void;
 	/** The game unloaded — drop derived state. */
 	onGameUnloaded(): void;
 }
@@ -435,7 +437,7 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the gamefile
 // bypass 'moves-changed'), reconcile the plies on move-list changes, follow the viewed ply's
-// highlight & scroll on navigation, scroll to the banner on conclusion.
+// highlight on navigation, scroll to the banner on conclusion.
 GameBus.addEventListener('game-loaded', () => {
 	renderer?.onGameLoaded();
 	reconcileMovesTable();
@@ -448,11 +450,14 @@ GameBus.addEventListener('moves-changed', () => {
 	reconcileMovesTable();
 	updateNavButtons();
 });
-// The viewed position owns the highlight & scroll: appending a move while reviewing history
-// dispatches 'moves-changed' but NOT 'view-move', so the reviewed ply stays put.
+// Only 'view-move' moves the highlight/scroll — so a move appended while reviewing history
+// (which fires 'moves-changed' alone) leaves the reviewed ply put. The renderer picks how to follow.
 GameBus.addEventListener('view-move', () => {
-	updateCurrentPly();
-	scrollToCurrentPly();
+	if (renderer) renderer.onViewMove();
+	else {
+		updateCurrentPly();
+		scrollToCurrentPly();
+	}
 	updateNavButtons();
 });
 GameBus.addEventListener('game-concluded', () => scrollMovesTableToBottom());
