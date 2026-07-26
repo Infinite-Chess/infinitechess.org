@@ -17,7 +17,6 @@ This project is open source! If you have skills in HTML, CSS, JavaScript, TypeSc
 | **[Contributing Guide](./docs/GUIDELINES.md)**                           | PR requirements and guidelines            |
 | **[Issues](https://github.com/Infinite-Chess/infinitechess.org/issues)** | Inquire available tasks                   |
 | **[Translation Guide](./docs/TRANSLATING.md)**                           | Translate the website to another language |
-| **[Graphics Guide](./docs/GRAPHICS.md)**                                 | Learn how the game renders graphics       |
 
 ## Roadmap
 

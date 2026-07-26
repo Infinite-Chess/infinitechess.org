@@ -1,7 +1,5 @@
 # Graphics Rendering Guide
 
-[← Back to Navigation Guide](./NAVIGATING.md) | [Contributing Guide](./GUIDELINES.md)
-
 This guide explains how graphics rendering works on the board, and how to add new visuals. An infinite board provides a few unique considerations to the rendering system than typical 2D games.
 
 All visuals are rendered with raw WebGL for maximum control. No external libraries are used, like for example Three.js.
