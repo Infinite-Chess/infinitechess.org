@@ -108,7 +108,6 @@ function rewind(): void {
 	frametracker.onVisualChange();
 	movesequence.navigateMove(gamefile, mesh, false);
 	selection.unselectPiece();
-	scrollToCurrentPly();
 }
 
 /** Forwards the game by 1 move. Cancels any premoves first. */
@@ -120,7 +119,6 @@ function forward(): void {
 
 	if (!moveutil.isIncrementingLegal(gamefile)) return;
 	movesequence.navigateMove(gamefile, mesh, true);
-	scrollToCurrentPly();
 }
 
 /** Jumps to the start of the game (before the first move), unselecting any piece. */
@@ -136,7 +134,6 @@ function jumpToStart(): void {
 	movesequence.viewStart(gamefile, mesh);
 	selection.unselectPiece();
 	animation.clearAnimations();
-	scrollToCurrentPly();
 }
 
 /** Jumps to the latest move, unselecting any piece. */
@@ -151,7 +148,6 @@ function jumpToEnd(): void {
 	frametracker.onVisualChange();
 	movesequence.viewFront(gamefile, mesh, false);
 	selection.unselectPiece();
-	scrollToCurrentPly();
 }
 
 /** Throttled rewind, for the hold-to-repeat previous button. */
@@ -243,9 +239,6 @@ function reconcileMovesTable(): void {
 		appendPly(moves[i]!, i);
 		renderedMoves.push(moves[i]!);
 	}
-
-	updateCurrentPly();
-	scrollToCurrentPly();
 }
 
 /**
@@ -436,25 +429,30 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 	premoves.cancelPremoves(gamefile, mesh);
 
 	frametracker.onVisualChange();
-	movesequence.viewIndex(gamefile, mesh, index, true); // Dispatches 'view-move' → re-highlights the current ply.
+	movesequence.viewIndex(gamefile, mesh, index, true); // Dispatches 'view-move' → re-highlights & scrolls to the current ply.
 	selection.unselectPiece();
-	scrollToCurrentPly();
 }
 
-// Keep the table in sync: fill it from the freshly-loaded game (moves baked into the
-// gamefile bypass 'moves-changed'), reconcile on move-list changes & navigation, scroll
-// to the banner on conclusion.
+// Keep the table in sync: fill it from the freshly-loaded game (moves baked into the gamefile
+// bypass 'moves-changed'), reconcile the plies on move-list changes, follow the viewed ply's
+// highlight & scroll on navigation, scroll to the banner on conclusion.
 GameBus.addEventListener('game-loaded', () => {
 	renderer?.onGameLoaded();
 	reconcileMovesTable();
+	// A fresh load dispatches no 'view-move', so seed the highlight & scroll here.
+	updateCurrentPly();
+	scrollToCurrentPly();
 });
 GameBus.addEventListener('moves-changed', () => {
 	renderer?.onMovesChanged();
 	reconcileMovesTable();
 	updateNavButtons();
 });
+// The viewed position owns the highlight & scroll: appending a move while reviewing history
+// dispatches 'moves-changed' but NOT 'view-move', so the reviewed ply stays put.
 GameBus.addEventListener('view-move', () => {
 	updateCurrentPly();
+	scrollToCurrentPly();
 	updateNavButtons();
 });
 GameBus.addEventListener('game-concluded', () => scrollMovesTableToBottom());

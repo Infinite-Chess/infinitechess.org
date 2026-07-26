@@ -29,7 +29,8 @@ interface GameBusEvents {
 	'opponent-move-played': void;
 	/**
 	 * Dispatched when a physical move is made on the board by any player, even our own premoves, or making a board editor edit.
-	 * The 'view-move' event is always dispatched alongside this, but 'physical-move' is only dispatched for actual physical moves, not view changes.
+	 * Does NOT gaurantee the viewed position changed, as we may be viewing earlier moves
+	 * when we receive our opponent's move. For that, listen to 'view-move' instead.
 	 */
 	'physical-move': void;
 	/**
