@@ -9,10 +9,13 @@
  * analysis page, so no move-tree code reaches the game page.
  */
 
+import type { VNode } from 'snabbdom';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
 import type { AnalysisMoveNode } from '../movetree.js';
+
+import { attributesModule, h, init } from 'snabbdom';
 
 import movepiece from '../../../../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -23,9 +26,9 @@ import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import gamecore from '../../../game/chess/gamecore.js';
 import premoves from '../../../game/chess/premoves.js';
+import svgcache from '../../../chess/rendering/svgcache.js';
 import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
-import animation from '../../../game/rendering/animation.js';
 import gamereview from '../gamereview.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import piecemodels from '../../../game/rendering/piecemodels.js';
@@ -39,77 +42,124 @@ import guimoveslist from '../../../game/gui/guimoveslist.js';
 /** The open right-click context menu, if any. */
 let contextMenu: HTMLElement | undefined;
 
+/** Maps each rendered ply's node id back to its node, for the delegated click/right-click handlers. */
+const idToNode = new Map<number, AnalysisMoveNode>();
+
 // Rendering ----------------------------------------------------------------------------------
 
-/** Rebuilds the whole tree from the move tree's current state. */
-async function reconcileMoveTree(): Promise<void> {
+const patch = init([attributesModule]);
+
+/**
+ * The persistent host snabbdom patches into, sitting just above the result banner so the banner
+ * stays at the bottom of the table. Its id lets the first patch adopt it in place (keeping our
+ * delegated listeners) instead of replacing it.
+ */
+const element_tree = document.createElement('div');
+element_tree.id = 'analysis-move-tree';
+guimoveslist.element_MovesTable.insertBefore(element_tree, guimoveslist.element_GameResult);
+let treeVNode: VNode | Element = element_tree;
+
+// Delegated once on the host: every ply carries its node id, so clicks/right-clicks resolve the
+// node from `idToNode` rather than each ply binding its own listeners (rebuilt on every patch).
+element_tree.addEventListener('click', (e) =>
+	withPlyNode(e, (node, ply) => {
+		ply.blur();
+		navigateToNode(node);
+	}),
+);
+element_tree.addEventListener('contextmenu', (e) =>
+	withPlyNode(e, (node, ply) => {
+		ply.blur(); // Drop the focus right-click gave it, else Escape later draws a focus-visible ring.
+		openAnalysisContextMenu(e, node);
+	}),
+);
+
+/** Resolves the ply (and its node) an event landed on, running `fn` when one is found. */
+function withPlyNode(e: Event, fn: (node: AnalysisMoveNode, ply: HTMLElement) => void): void {
+	const ply = (e.target as HTMLElement).closest<HTMLElement>('.ply[data-node-id]');
+	if (!ply) return;
+	const node = idToNode.get(Number(ply.dataset['nodeId']));
+	if (node) fn(node, ply);
+}
+
+/** Rebuilds the tree vtree from the move tree's current state and patches in only what changed. */
+function reconcileMoveTree(): void {
 	const gamefile = gameslot.getGamefile()!;
 	if (!movetree.isReady()) movetree.initFromGame(gamefile);
 	movetree.syncAfterMovesChanged(gamefile);
 
-	const tree = document.createElement('div');
+	idToNode.clear();
 	const root = movetree.getRoot()!;
-
-	// Build the whole tree into a detached div first, touching no DOM, so
-	// two overlapping renders can't interleave their nodes into the table.
-	await appendAnalysisMainline(tree, root);
-
-	// Atomic commit: clear the old render and insert the new one with no await between them,
-	// so if renders do overlap the latest simply replaces the previous instead of both landing
-	// and the entire table having two copies of each move.
-	guimoveslist.clearRenderedMoves();
-	guimoveslist.element_MovesTable.insertBefore(tree, guimoveslist.element_GameResult);
+	treeVNode = patch(treeVNode, h('div#analysis-move-tree', buildMainline(root)));
 	highlightCurrentNode();
+	scrollToCurrentNode();
 }
 
-/** Highlights the ply for the currently-viewed node and scrolls it into view. */
+/** The ply element for the currently-viewed node, or undefined (the root has none). */
+function getCurrentNodePly(): HTMLElement | undefined {
+	const node = movetree.getCurrentNode(gameslot.getGamefile()!);
+	if (!node) return undefined;
+	return guimoveslist.element_MovesTable.querySelector<HTMLElement>(`.ply[data-node-id="${node.id}"]`) ?? undefined; // prettier-ignore
+}
+
+/** Highlights the ply for the currently-viewed node. Does NOT scroll — see {@link scrollToCurrentNode}. */
 function highlightCurrentNode(): void {
-	const gamefile = gameslot.getGamefile()!;
-	const node = movetree.getCurrentNode(gamefile);
-	const current = node
-		? guimoveslist.element_MovesTable.querySelector<HTMLElement>(`.ply[data-node-id="${node.id}"]`) : undefined; // prettier-ignore
+	// Clear any stale highlight: a snabbdom patch reuses unchanged plies, so the previous
+	// current-ply class survives the rebuild and must be dropped before re-marking.
+	guimoveslist.element_MovesTable.querySelector('.ply.current')?.classList.remove('current');
+	getCurrentNodePly()?.classList.add('current');
+}
+
+/** Scrolls the currently-viewed node's ply into view — for navigation that should follow it. */
+function scrollToCurrentNode(): void {
+	const current = getCurrentNodePly();
 	if (!current) {
 		// The root (start-of-game position) has no rendered ply button; scroll to the top.
-		if (gamefile.state.local.moveIndex === -1) guimoveslist.scrollMovesTableToTop();
+		if (gameslot.getGamefile()!.state.local.moveIndex === -1)
+			guimoveslist.scrollMovesTableToTop();
 		return;
 	}
-	current.classList.add('current');
 	guimoveslist.centerPly(current);
 }
 
 /**
- * Builds a tree `.ply` button for `node`: its node id, an
- * optional move-index label, and click/right-click handlers.
+ * Builds a tree `.ply` vnode for `node`, keyed by its node id so promote/demote/delete reorder
+ * the existing button instead of rebuilding it. The silhouette (cloned from cache) is added once
+ * in the `insert` hook — never on reuse — while review decoration re-derives on `update` too,
+ * so a ply that changes mainline status (its `data-mainline`) refreshes its inline eval label.
  */
-async function createVariationPlyButton(
-	node: AnalysisMoveNode,
-	showIndex: boolean,
-): Promise<HTMLButtonElement> {
-	const ply = await guimoveslist.buildPlyButton(node.move!, ['analysis-ply']);
-	ply.dataset['nodeId'] = String(node.id);
+function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean): VNode {
+	idToNode.set(node.id, node);
+	const { title, coord, rawType } = guimoveslist.getPlyDisplay(node.move!);
+
+	const children: VNode[] = [];
+	if (showIndex) children.push(h('span.move-index', formatMoveIndex(node.ply)));
+	children.push(h('span.move-coord', coord));
+
+	const attrs: Record<string, string> = { title, 'data-node-id': String(node.id) };
 	// The inline eval label is only shown on the mainline (see decoratePlyWithReview) —
-	// stash this at build time since decoration later only has the node id, not the node.
-	if (movetree.isMainLine(node)) ply.dataset['mainline'] = '1';
+	// stash this so decoration, which later only has the node id, can tell them apart.
+	if (movetree.isMainLine(node)) attrs['data-mainline'] = '1';
 
-	if (showIndex) {
-		const index = document.createElement('span');
-		index.classList.add('move-index');
-		index.textContent = formatMoveIndex(node.ply);
-		ply.insertBefore(index, ply.firstChild); // Before the silhouette.
-	}
-
-	ply.addEventListener('click', () => {
-		ply.blur();
-		navigateToNode(node);
-	});
-	ply.addEventListener('contextmenu', (e) => {
-		ply.blur(); // Drop the focus right-click gave it, else Escape later draws a focus-visible ring.
-		openAnalysisContextMenu(e, node);
-	});
-
-	decoratePlyWithReview(ply, node.id);
-
-	return ply;
+	return h(
+		'button.ply.analysis-ply',
+		{
+			key: node.id,
+			attrs,
+			hook: {
+				insert: (vnode) => {
+					const ply = vnode.elm as HTMLElement;
+					const silhouette = svgcache.getCachedSilhouetteSVG(rawType);
+					silhouette.classList.add('move-piece');
+					ply.insertBefore(silhouette, ply.querySelector('.move-coord')); // Before the coord text.
+					decoratePlyWithReview(ply, node.id);
+				},
+				update: (_oldVnode, vnode) =>
+					decoratePlyWithReview(vnode.elm as HTMLElement, node.id),
+			},
+		},
+		children,
+	);
 }
 
 /** Formats a ply index as a move label — `3.` for a white move, `3...` for a black one. */
@@ -119,13 +169,19 @@ function formatMoveIndex(index: number): string {
 }
 
 /**
- * Walks the mainline from `from`, rendering each
- * move's row and the variations branching beneath it.
+ * Walks the mainline from `from`, building each move's row vnode and the
+ * variation branches beneath it, in top-to-bottom reading order.
  */
-async function appendAnalysisMainline(
-	container: HTMLElement,
-	from: AnalysisMoveNode,
-): Promise<void> {
+function buildMainline(from: AnalysisMoveNode): VNode[] {
+	const out: VNode[] = [];
+	// The open mainline row's children, or null between rows. A white ply's black reply joins
+	// this same row unless variations split the pair, so the row stays open across iterations.
+	let rowChildren: VNode[] | null = null;
+	const flushRow = (): void => {
+		if (rowChildren) out.push(h('div.move-row.analysis-mainline-row', rowChildren));
+		rowChildren = null;
+	};
+
 	let node = getMainlineChild(from);
 	// Whether the white move just placed has variations rendered beneath it — its black
 	// reply must then start a fresh row so the variations stay ordered below their branch move.
@@ -135,70 +191,64 @@ async function appendAnalysisMainline(
 		// The variations that branch off as alternatives to THIS move; they render
 		// directly below the move so a variation never appears above the move it replaces.
 		const variations = getVariationChildren(node.parent!);
-		await appendAnalysisMainlinePly(container, node, node.ply % 2 === 1 && whiteHadVariations);
+		const ply = buildPlyVNode(node, false);
+
+		if (node.ply % 2 === 1 && !whiteHadVariations) {
+			// Black reply — join the open white move's row.
+			rowChildren!.push(ply);
+		} else {
+			// Begin a new mainline row. White always does; a black reply does too when its white
+			// move carried variations, splitting the pair so the reply sits below them.
+			flushRow();
+			const numText =
+				node.ply % 2 === 0 ? String(node.ply / 2 + 1) : formatMoveIndex(node.ply);
+			rowChildren = [h('span.move-num', numText)];
+			if (node.ply % 2 === 1) rowChildren.push(h('span')); // Empty white cell.
+			rowChildren.push(ply);
+		}
+
+		// Variations render directly below this move, so close its row before them.
+		if (variations.length > 0) {
+			flushRow();
+			out.push(...buildVariationGroup(variations, 1));
+		}
 		whiteHadVariations = node.ply % 2 === 0 && variations.length > 0;
-		await appendVariationGroup(container, variations, 1);
 		last = node;
 		node = getMainlineChild(node);
 	}
+	flushRow();
 
 	// The last node's own variation children — including any forced move that truncated the
 	// walk — branch from it with no move row above, so render them beneath it. (When the whole
 	// mainline is forced away, last is the root.)
-	await appendVariationGroup(container, getVariationChildren(last), 1);
+	out.push(...buildVariationGroup(getVariationChildren(last), 1));
+	return out;
 }
 
-/** Renders one mainline ply, either joining the current white move's row or starting a new one. */
-async function appendAnalysisMainlinePly(
-	container: HTMLElement,
-	node: AnalysisMoveNode,
-	blackStartsNewRow: boolean,
-): Promise<void> {
-	const ply = await createVariationPlyButton(node, false);
-
-	if (node.ply % 2 === 1 && !blackStartsNewRow) {
-		// Black reply — join the current white move's row.
-		const rows = container.querySelectorAll('.analysis-mainline-row');
-		rows[rows.length - 1]?.append(ply);
-		return;
-	}
-
-	// Begin a new mainline row. White always does; a black reply does too when its white
-	// move carries variations, splitting the pair so the reply sits below them.
-	const numText = node.ply % 2 === 0 ? String(node.ply / 2 + 1) : formatMoveIndex(node.ply);
-	const row = guimoveslist.createMoveRow(numText, ['analysis-mainline-row']);
-	if (node.ply % 2 === 1) row.append(document.createElement('span')); // Empty white cell.
-	row.append(ply);
-	container.append(row);
-}
-
-/** Renders each of `children` as its own variation branch at the given depth. */
-async function appendVariationGroup(
-	container: HTMLElement,
-	children: AnalysisMoveNode[],
-	depth: number,
-): Promise<void> {
-	for (const child of children) await appendVariationLine(container, child, depth);
+/** Builds each of `children` as its own variation branch at the given depth. */
+function buildVariationGroup(children: AnalysisMoveNode[], depth: number): VNode[] {
+	return children.flatMap((child) => buildVariationLine(child, depth));
 }
 
 /**
- * Renders one variation branch as one or more `.variation-line` segments. Wherever a move
+ * Builds one variation branch as one or more `.variation-line` segments. Wherever a move
  * along the branch has its own alternatives, the line is split: the segment so far is
  * flushed, those alternatives nest below it at depth+1, then the branch resumes in a fresh
  * continuation segment — so a sub-variation appears directly below the move it replaces,
  * in reading order, instead of dumped after the whole line.
  */
-async function appendVariationLine(
-	container: HTMLElement,
-	head: AnalysisMoveNode,
-	depth: number,
-): Promise<void> {
+function buildVariationLine(head: AnalysisMoveNode, depth: number): VNode[] {
+	const out: VNode[] = [];
 	let node: AnalysisMoveNode | undefined = head;
-	let segment = createVariationSegment(depth, false);
+	let lineChildren: VNode[] = [];
+	let isContinuation = false;
 	let showIndex = true;
+	const flushSegment = (): void => {
+		out.push(buildVariationSegment(depth, isContinuation, lineChildren));
+	};
 
 	while (node) {
-		segment.line.append(await createVariationPlyButton(node, showIndex || node.ply % 2 === 0));
+		lineChildren.push(buildPlyVNode(node, showIndex || node.ply % 2 === 0));
 		showIndex = false;
 
 		// Alternatives to THIS move (its variation siblings). The head's are its fork-siblings,
@@ -211,34 +261,28 @@ async function appendVariationLine(
 		const alternatives = [...siblingAlts, ...forcedContinuation];
 
 		if (alternatives.length > 0) {
-			container.append(segment.variation); // Flush the segment ending at this move.
-			await appendVariationGroup(container, alternatives, depth + 1);
-			if (!next) return; // Nothing left to continue.
-			segment = createVariationSegment(depth, true);
+			flushSegment(); // Flush the segment ending at this move.
+			out.push(...buildVariationGroup(alternatives, depth + 1));
+			if (!next) return out; // Nothing left to continue.
+			lineChildren = [];
+			isContinuation = true;
 			showIndex = true;
 		}
 		node = next;
 	}
-	container.append(segment.variation);
+	flushSegment();
+	return out;
 }
 
-/** Builds an empty `.analysis-variation` block (rail + line) at the given depth. */
-function createVariationSegment(
-	depth: number,
-	isContinuation: boolean,
-): { variation: HTMLElement; line: HTMLElement } {
-	const variation = document.createElement('div');
-	variation.classList.add('analysis-variation');
-	if (isContinuation) variation.classList.add('variation-continuation');
-	variation.style.setProperty('--variation-depth', String(depth));
-
-	const rail = document.createElement('span');
-	rail.classList.add('variation-rail');
-	const line = document.createElement('div');
-	line.classList.add('variation-line');
-	variation.append(rail, line);
-
-	return { variation, line };
+/** Builds an `.analysis-variation` block (rail + line) at the given depth around its plies. */
+function buildVariationSegment(depth: number, isContinuation: boolean, line: VNode[]): VNode {
+	const sel = isContinuation
+		? 'div.analysis-variation.variation-continuation'
+		: 'div.analysis-variation';
+	return h(sel, { attrs: { style: `--variation-depth: ${depth}` } }, [
+		h('span.variation-rail'),
+		h('div.variation-line', line),
+	]);
 }
 
 /** The node's mainline continuation, or undefined when its first child is forced into a variation. */
@@ -485,27 +529,36 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	// that don't end the game.
 	movetree.storeActiveLineConclusion(gamefile.gameConclusion);
 
-	const newLine = movetree.getLineForNode(node);
-	const newMoves = movetree.getMovesFromLine(newLine);
 	const targetIndex = node.ply;
-
 	frametracker.onVisualChange();
 
-	// Rewind the board fully to the start along the CURRENT line first, so its state is
-	// a clean slate before we swap in the (possibly divergent) new line. This is all
-	// synchronous, so the intermediate positions never actually render — avoiding the
-	// fragile shared-prefix index math that could point outside the current move list.
-	movesequence.viewStart(gamefile, mesh);
+	// A line is a unique root→front path, so the active line already IS the target's line exactly
+	// when they share a front node — only then is this an in-branch move needing no swap. (Sharing
+	// the prefix before the current branch's fork isn't enough — that still needs the swap.)
+	const targetLine = movetree.getLineForNode(node);
+	const activeLine = movetree.getActiveLine();
+	const sameBranch = activeLine[activeLine.length - 1] === targetLine[targetLine.length - 1];
 
-	// Swap the flat move list to the chosen branch, then replay forward to the node.
-	movetree.setActiveLineToNode(node);
-	gamefile.moves = newMoves;
-	gamefile.gameConclusion = movetree.getActiveLineConclusion();
+	if (sameBranch) {
+		// In-branch: go straight there; viewIndex animates the final ply.
+		movesequence.viewIndex(gamefile, mesh, targetIndex, true);
+	} else {
+		// Cross-branch: rewind along the current line only to the shared fork ply, swap in the target
+		// branch, then replay forward. The final transition animates — the forward leg, or the rewind
+		// itself when the target IS the fork (a pure rewind).
+		const currentNode = movetree.getCurrentNode(gamefile)!;
+		const forkPly = movetree.getCommonAncestorPly(currentNode, node);
+		const willForward = targetIndex > forkPly;
+		movesequence.viewIndex(gamefile, mesh, forkPly, !willForward);
 
-	movesequence.viewIndex(gamefile, mesh, targetIndex);
+		movetree.setActiveLineToNode(node);
+		gamefile.moves = movetree.getMovesFromLine(targetLine);
+		gamefile.gameConclusion = movetree.getActiveLineConclusion();
+
+		movesequence.viewIndex(gamefile, mesh, targetIndex, true); // No-op when the target is the fork itself
+	}
 
 	selection.unselectPiece();
-	animation.clearAnimations();
 }
 
 // Registration ------------------------------------------------------------------
@@ -513,6 +566,7 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 guimoveslist.registerRenderer({
 	reconcile: reconcileMoveTree,
 	updateCurrentPly: highlightCurrentNode,
+	scrollToCurrentPly: scrollToCurrentNode,
 	onGameLoaded: () => movetree.initFromGame(gameslot.getGamefile()!),
 	onMovesChanged: () => movetree.syncAfterMovesChanged(gameslot.getGamefile()!),
 	onGameUnloaded: () => movetree.clear(),
@@ -525,13 +579,14 @@ guimoveslist.registerRenderer({
  * Clicking an already-selected node zooms to its destination coordinate — the same
  * behavior a ply button gives when clicked again (see createVariationPlyButton).
  */
-function navigateToNode(node: AnalysisMoveNode): void {
+function navigateToNode(node: AnalysisMoveNode, scrollIntoView = false): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile || gamesession.isLoading()) return;
 	const wasAlreadySelected = movetree.getCurrentNode(gamefile) === node;
 	navigateToAnalysisNode(gamefile, node);
 	// The root (starting position, ply -1) has no move/destination square to zoom to.
 	if (wasAlreadySelected && node.ply >= 0) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
+	if (scrollIntoView) scrollToCurrentNode();
 }
 
 /**
@@ -581,7 +636,13 @@ function generateVariationMoves(
 	let conclusion: GameConclusion | undefined;
 	for (const token of pv) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, token);
-		if (!result.valid) break;
+		if (!result.valid) {
+			console.warn(
+				`Analysis: illegal move "${token}" when adding variation, stopping at ply ${parent.ply + moves.length + 1}`,
+			);
+			console.warn('Entire pv:', pv);
+			break;
+		}
 		moves.push(movepiece.generateAndMakeMove(gamefile, result.tagged));
 		conclusion = wincondition.getGameConclusion(gamefile);
 		if (conclusion) break; // The line ends the game — stop extending it.

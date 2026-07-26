@@ -138,7 +138,7 @@ function initModal(): void {
 
 /** Reads current seek options and disables the Rated button if a rated game is not permitted. */
 export function syncRatedButton(): void {
-	const variant = variantSelector.getInviteVariant();
+	const variant = variantSelector.getSeekVariant();
 	const time: TimeControl = timeControls.getTimeControl();
 	const color = getSelectedColor();
 	const modifiers = modifierSelector.getSeekModifiers();
@@ -163,7 +163,7 @@ function getSelectedColor(): Player | null {
 
 /** Reads the online seek form state and sends a createseek request via the lobby. */
 function handleOnlineSeek(): void {
-	const variant = variantSelector.getInviteVariant();
+	const variant = variantSelector.getSeekVariant();
 	if (variant === null) return; // Invalid selection (e.g. unparsable icn or illegal position)
 
 	const time: TimeControl = timeControls.getTimeControl();
@@ -184,7 +184,7 @@ function handleOnlineSeek(): void {
  * where the engine runs locally in wasm; on failure it pushes an error toast.
  */
 function handleComputerGame(): void {
-	const variant = variantSelector.getInviteVariant();
+	const variant = variantSelector.getSeekVariant();
 	if (variant === null) return; // Invalid selection (e.g. unparsable icn or illegal position)
 
 	if (!isVariantSupportedByEngine()) return; // Error toast already shown.
@@ -213,7 +213,7 @@ function isVariantSupportedByEngine(): boolean {
 
 	if (customOptions === null) {
 		// Preset selection: the engine plays a fixed set of variants.
-		const variant = variantSelector.getInviteVariant();
+		const variant = variantSelector.getSeekVariant();
 		if (variant?.kind === 'preset' && !apeiron_card.SUPPORTED_VARIANTS.has(variant.code)) {
 			toast.show("The engine doesn't support this variant yet.", { error: true });
 			return false;

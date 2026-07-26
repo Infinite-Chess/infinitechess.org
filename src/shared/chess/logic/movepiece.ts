@@ -90,6 +90,12 @@ export interface MoveFull extends Edit, MoveTagged, MoveRecord {
 	comment?: string;
 }
 
+/**
+ * Thrown by {@link makeAllMovesInGame} when a move fails legality validation.
+ * Lets callers tell an illegal move apart from a game that couldn't be constructed at all.
+ */
+export class IllegalMoveError extends Error {}
+
 // Move Generating --------------------------------------------------------------------------------------------------
 
 /**
@@ -382,7 +388,7 @@ function createCheckState(boardsim: Board, move: MoveFull): void {
  * **THROWS AN ERROR** if any move during the process is in an invalid format.
  * @param boardsim - The boardsim
  * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
- * @param validateMoves - If true, throws an error if any move is illegal.
+ * @param validateMoves - If true, throws an {@link IllegalMoveError} if any move is illegal.
  */
 function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?: boolean): void {
 	if (boardsim.moves.length > 0)
@@ -395,7 +401,7 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 		if (validateMoves) {
 			const validationResult = movevalidation.isTokenMoveLegal(boardsim, shortmove.token);
 			if (!validationResult.valid) {
-				throw Error(
+				throw new IllegalMoveError(
 					`Move ${i + 1} is illegal: ${shortmove.token}. Reason: ${validationResult.reason}`,
 				);
 			}
@@ -410,7 +416,7 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 		if (validateMoves && !isLastIteration) {
 			const conclusion = wincondition.getGameConclusion(boardsim);
 			if (conclusion)
-				throw new Error(
+				throw new IllegalMoveError(
 					`Moves cannot come after game ends. Move ${i + 1} should have concluded game by ${JSON.stringify(conclusion)}.`,
 				);
 		}
@@ -451,9 +457,7 @@ function calculateMoveFromPacket(boardsim: Board, movePacket: MovePacket): MoveF
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveTagged.startCoords);
 	if (!piece) {
 		// No piece on start coordinates, can't calculate Move, because it's illegal
-		throw Error(
-			`Failed to calculate Move from shortmove because there's no piece on the start coords: ${movePacket.token}`,
-		);
+		throw Error(`Failed to calculate Move from shortmove because there's no piece on the start coords: ${movePacket.token}`); // prettier-ignore
 	}
 
 	const moveset = legalmoves.getPieceMoveset(boardsim, piece.type);
@@ -490,9 +494,8 @@ function rewindMove(boardsim: Board): void {
 
 /**
  * Iterates to a certain move index, performing a callback function on each move.
- * The callback should be a move application function, either {@link applyMove}, or movesequence.viewMove(),
- * depending on if each move should make graphical changes or not. Both methods make logical board changes.
- * @param callback - Either {@link applyMove}, or movesequence.viewMove()
+ * @param callback - A move-application function run per ply, e.g. {@link applyMove} for
+ * logical-only changes, or {@link movesequence.viewMove} that also makes graphical (mesh) changes.
  */
 function goToMove(boardsim: Board, index: number, callback: (_move: MoveFull) => void): void {
 	if (index === boardsim.state.local.moveIndex) return;

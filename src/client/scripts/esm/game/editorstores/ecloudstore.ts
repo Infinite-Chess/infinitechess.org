@@ -19,25 +19,13 @@ import editorSavesAPI from './editorSavesAPI';
 // Error classes --------------------------------------------------------------
 
 /** Thrown by {@link saveCloudState} when the compressed ICN exceeds the cloud size limit. */
-export class PositionTooLargeError extends Error {
-	constructor() {
-		super('Position ICN is too large for cloud storage');
-	}
-}
+export class PositionTooLargeError extends Error {}
 
 /** Thrown by {@link saveCloudState} when the position cannot be serialised to ICN. */
-export class ICNConversionError extends Error {
-	constructor(cause: unknown) {
-		super(cause instanceof Error ? cause.message : String(cause));
-	}
-}
+export class ICNConversionError extends Error {}
 
 /** Thrown by {@link parseCloudPosition} when the ICN string cannot be parsed. */
-export class ICNParseError extends Error {
-	constructor() {
-		super('Position ICN is corrupted or unreadable');
-	}
-}
+export class ICNParseError extends Error {}
 
 /** Thrown by {@link parseCloudPosition} when the compressed ICN cannot be decompressed. */
 export class ICNDecompressionError extends Error {
@@ -120,7 +108,7 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<CloudSa
 		});
 	} catch (err) {
 		console.error('Failed to convert position to ICN:', err);
-		throw new ICNConversionError(err);
+		throw new ICNConversionError();
 	}
 
 	const { data: compressedICN, compression: compressionMode } =

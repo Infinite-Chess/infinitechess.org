@@ -4,8 +4,8 @@
  * This script handles seek creation, making sure that the seeks have valid properties.
  */
 
-import type { Rating, SeekVariant, AuthSeekVariant } from '../../../shared/types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Rating, SeekVariant, AuthSeekVariant } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
@@ -49,7 +49,11 @@ import {
 // Types -------------------------------------------------------------------------------
 
 /** Codes returned by {@link validateIcnSeekContent}; superset of {@link PositionErrorCode}. */
-type IcnSeekErrorCode = PositionErrorCode | 'invalid_icn' | 'icn_missing_position';
+type IcnSeekErrorCode =
+	| PositionErrorCode
+	| 'invalid_icn'
+	| 'icn_missing_position'
+	| 'icn_contains_moves';
 
 // Schemas ---------------------------------------------------------------------------
 
@@ -223,6 +227,8 @@ export function validateIcnSeekContent(content: string): IcnSeekErrorCode | null
 	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined) {
 		return 'icn_missing_position';
 	}
+	// A behaving client should always flatten their moves into a single position before seeking.
+	if (longFormat.moves && longFormat.moves.length > 0) return 'icn_contains_moves';
 	const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
 	return validatePosition(variantOptions, content, true);
 }

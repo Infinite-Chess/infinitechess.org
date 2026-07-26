@@ -27,6 +27,7 @@ import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card';
+import variantcache from '../../../../../../shared/chess/variants/variantcache';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
@@ -57,9 +58,9 @@ import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
 import validatorama from '../../../util/validatorama';
 import selectiontool from '../tools/selection/selectiontool';
+import gamecompressor from '../../chess/gamecompressor';
 import guiboardcontrols from '../../gui/guiboardcontrols';
 import clientmetadatautil from '../../chess/clientmetadatautil';
-import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
 // Constants ----------------------------------------------------------------------
 
@@ -347,7 +348,11 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		longformOut.metadata.UTCTime,
 	);
 
-	let { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, resolvedVariantCode); // prettier-ignore
+	// Preload the variant module up front: getPositionAndSpecialRights reads the position
+	// off it when the ICN omits one, and initGameFile below requires it too.
+	if (resolvedVariantCode !== undefined)
+		await variantcache.ensureVariantLoaded(resolvedVariantCode);
+	let { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, resolvedVariantCode); // prettier-ignore
 	let stateGlobal = longformOut.state_global;
 
 	// If longformat contains moves, then we construct a GameFile object and use it to fast forward to the final position
@@ -364,20 +369,14 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 				return move;
 			}),
 		};
-		const loadedGamefile = await gamefile.initGameFile(
+		const loadedGamefile = gamefile.initGameFile(
 			longformOut.metadata.TimeControl ?? '-',
 			timestamp,
 			resolvedVariantCode,
 			additional,
 		);
-		const gamestate: SimplifiedGameState = {
-			position,
-			state_global: variantOptions.state_global,
-			fullMove: longformOut.fullMove,
-			turnOrder: longformOut.gameRules.turnOrder,
-		};
 		const new_gamestate = gamecompressor.GameToPosition(
-			gamestate,
+			variantOptions,
 			loadedGamefile.moves,
 			loadedGamefile.moves.length,
 		);

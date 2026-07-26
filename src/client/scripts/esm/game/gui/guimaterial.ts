@@ -118,7 +118,7 @@ function computeSurplus(): MaterialSurplus {
 }
 
 /** Rebuilds both bars from the material surplus at the currently-viewed move. */
-async function render(): Promise<void> {
+function render(): void {
 	if (!balanced) {
 		element_MaterialTop.replaceChildren();
 		element_MaterialBottom.replaceChildren();
@@ -134,13 +134,8 @@ async function render(): Promise<void> {
 		player === p.WHITE ? white : black;
 	const leadOf = (player: Player): number => (player === p.WHITE ? pointLead : -pointLead);
 
-	// Build both bars' children up front, touching no DOM, so overlapping renders can't interleave.
-	const [bottom, top] = await Promise.all([
-		buildBarChildren(surplusOf(bottomPlayer), leadOf(bottomPlayer)),
-		buildBarChildren(surplusOf(topPlayer), leadOf(topPlayer)),
-	]);
-
-	// Atomic commit: each replaceChildren is one synchronous swap, so the latest render wins cleanly.
+	const bottom = buildBarChildren(surplusOf(bottomPlayer), leadOf(bottomPlayer));
+	const top = buildBarChildren(surplusOf(topPlayer), leadOf(topPlayer));
 	element_MaterialBottom.replaceChildren(...bottom);
 	element_MaterialTop.replaceChildren(...top);
 }
@@ -149,7 +144,7 @@ async function render(): Promise<void> {
  * Builds one bar's children: a silhouette per surplus piece (higher-value types first),
  * then a `+X` lead span if this side is the one net ahead.
  */
-async function buildBarChildren(surplus: Map<RawType, number>, lead: number): Promise<Element[]> {
+function buildBarChildren(surplus: Map<RawType, number>, lead: number): Element[] {
 	const rawsByValueDesc = [...surplus.keys()].sort(
 		(a, b) => (RAW_PIECE_VALUES[b] ?? 0) - (RAW_PIECE_VALUES[a] ?? 0),
 	);
@@ -157,7 +152,7 @@ async function buildBarChildren(surplus: Map<RawType, number>, lead: number): Pr
 	const children: Element[] = [];
 	for (const raw of rawsByValueDesc) {
 		for (let i = 0; i < surplus.get(raw)!; i++) {
-			const silhouette = await svgcache.getSilhouetteSVG(raw);
+			const silhouette = svgcache.getCachedSilhouetteSVG(raw);
 			silhouette.classList.add('material-piece');
 			children.push(silhouette);
 		}

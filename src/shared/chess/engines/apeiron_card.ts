@@ -28,54 +28,13 @@ const BORDER_CAP = I64_MAX - 1000n; // Small cushion
 /** Max non-neutral pieces the engine handles before it bogs down (excludes voids/obstacles). */
 const MAX_PIECES = 1000;
 
-const SUPPORTED_VARIANTS: Set<VariantCode> = new Set([
-	'Classical',
-	'Confined_Classical',
-	'Classical_Plus',
-	'Core',
-	'CoaIP',
-	'CoaIP_HO',
-	'CoaIP_RO',
-	'CoaIP_NO',
-	'Palace',
-	'Pawndard',
-	'Standarch',
-	'Space_Classic',
-	'Space',
-	'Pawn_Horde',
-	'Knightline',
-	'Obstocean',
-	'Chess',
-	'Omega',
-]);
+const SUPPORTED_VARIANTS: Set<VariantCode> = new Set(['Classical', 'Confined_Classical', 'Classical_Plus', 'Core', 'CoaIP', 'CoaIP_HO', 'CoaIP_RO', 'CoaIP_NO', 'Palace', 'Pawndard', 'Standarch', 'Space_Classic', 'Space', 'Pawn_Horde', 'Knightline', 'Obstocean', 'Chess', 'Omega']); // prettier-ignore
 
 /** Win conditions the engine understands; anything else may crash it. */
 const SUPPORTED_WIN_CONDITIONS: GameruleWinCondition[] = ['checkmate', 'royalcapture', 'allroyalscaptured', 'allpiecescaptured']; // prettier-ignore
 
 /** Piece types the engine can move. Neutrals (void/obstacle) are inert blockers, so allowed. */
-const SUPPORTED_PIECES: Set<RawType> = new Set([
-	r.VOID,
-	r.OBSTACLE,
-	r.KING,
-	r.GIRAFFE,
-	r.CAMEL,
-	r.ZEBRA,
-	r.KNIGHTRIDER,
-	r.AMAZON,
-	r.QUEEN,
-	r.HAWK,
-	r.CHANCELLOR,
-	r.ARCHBISHOP,
-	r.CENTAUR,
-	r.ROYALCENTAUR,
-	r.ROSE,
-	r.KNIGHT,
-	r.GUARD,
-	r.HUYGEN,
-	r.ROOK,
-	r.BISHOP,
-	r.PAWN,
-]);
+const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GIRAFFE, r.CAMEL, r.ZEBRA, r.KNIGHTRIDER, r.AMAZON, r.QUEEN, r.HAWK, r.CHANCELLOR, r.ARCHBISHOP, r.CENTAUR, r.ROYALCENTAUR, r.ROSE, r.KNIGHT, r.GUARD, r.HUYGEN, r.ROOK, r.BISHOP, r.PAWN]); // prettier-ignore
 
 // Individual rule checks (shared by both entry points) --------------------
 

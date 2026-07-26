@@ -349,10 +349,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: GameFile, mesh: Mesh | undefi
 	// Analysis allows piece selection instead of forcing forward to front.
 	if (viewedPositionBrancher) return false;
 
-	movesequence.viewFront(gamefile, mesh);
-	// Also animate the last move
-	const lastMove = moveutil.getLastMove(gamefile.moves)!;
-	animateMove(lastMove.changes);
+	movesequence.viewFront(gamefile, mesh, true);
 	return true;
 }
 

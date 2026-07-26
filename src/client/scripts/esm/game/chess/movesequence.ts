@@ -164,8 +164,8 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 // Local Moving ----------------------------------------------------------------------------------------------------------
 
 /**
- * Apply the move to the board state and the mesh, whether forward or
- * backward, as if we were wanting to *view* the move, instead of making it.
+ * Applies a move's logical + mesh changes to *view* it (instead of making it),
+ * forward or backward. Callers are responsible for dispatching the `view-move` event.
  */
 function viewMove(
 	gamefile: GameFile,
@@ -183,29 +183,46 @@ function viewMove(
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	}
-	GameBus.dispatch('view-move');
 }
 
 /**
  * Makes the game view a set move index
  * @param index the move index to goto
+ * @param animateFinal - Whether to animate the LAST move applied to reach the index (the
+ *   rest are applied instantly). The animation runs in whichever direction we're navigating.
  */
-function viewIndex(gamefile: GameFile, mesh: Mesh | undefined, index: number): void {
-	movepiece.goToMove(gamefile, index, (move: MoveFull) =>
-		viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex),
-	);
+function viewIndex(
+	gamefile: GameFile,
+	mesh: Mesh | undefined,
+	index: number,
+	animateFinal: boolean,
+): void {
+	const forward = index >= gamefile.state.local.moveIndex;
+	let lastMove: MoveFull | undefined;
+	movepiece.goToMove(gamefile, index, (move: MoveFull) => {
+		viewMove(gamefile, mesh, move, forward);
+		lastMove = move;
+	});
+
+	if (lastMove) {
+		// Dispatch ONCE for the whole navigation, not per-ply. Listeners only care about the final resting position.
+		GameBus.dispatch('view-move');
+		// Only clear any previous animations if we viewed a different index.
+		animation.clearAnimations();
+		if (animateFinal && mesh) animateMove(lastMove.changes, forward);
+	}
 }
 
 /** Makes the game view the start of the game, before the first move. */
 function viewStart(gamefile: GameFile, mesh: Mesh | undefined): void {
 	/** Call {@link viewIndex} with the index before the first move */
-	viewIndex(gamefile, mesh, -1);
+	viewIndex(gamefile, mesh, -1, false);
 }
 
 /** Makes the game view the last move. */
-function viewFront(gamefile: GameFile, mesh: Mesh | undefined): void {
+function viewFront(gamefile: GameFile, mesh: Mesh | undefined, animateLast: boolean): void {
 	/** Call {@link viewIndex} with the index of the last move in the game */
-	viewIndex(gamefile, mesh, gamefile.moves.length - 1);
+	viewIndex(gamefile, mesh, gamefile.moves.length - 1, animateLast);
 }
 
 /**
@@ -228,6 +245,7 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 		throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
 
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
+	GameBus.dispatch('view-move');
 	animateMove(move.changes, forward); // Animate
 }
 
@@ -239,7 +257,6 @@ export default {
 	makeMoveAndAnimate,
 	runMeshChanges,
 	rewindMove,
-	viewMove,
 	viewIndex,
 	viewStart,
 	viewFront,

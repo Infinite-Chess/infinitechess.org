@@ -4,10 +4,13 @@
  * The web worker script for the ICN Validator Tool.
  */
 
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
+import { IllegalMoveError } from '../../../../../shared/chess/logic/movepiece.js';
 
 import gameformulator from '../../game/chess/gameformulator.js';
 
@@ -52,7 +55,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 		const { index, icn: gameICN } = item;
 		try {
 			// Stage 1: Convert ICN to long format
-			let longFormat: any;
+			let longFormat: LongFormatOut;
 			try {
 				longFormat = icnconverter.ShortToLong_Format(gameICN);
 			} catch (error) {
@@ -69,48 +72,34 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 			}
 
 			// Extract metadata
-			const variant = longFormat.metadata?.Variant || 'Unknown';
-			const termination = longFormat.metadata?.Termination;
-			const result = longFormat.metadata?.Result;
+			const variant = longFormat.metadata.Variant || 'Unknown';
+			const termination = longFormat.metadata.Termination;
+			const result = longFormat.metadata.Result;
 
-			// Stage 2: Formulate (No validation)
-			let game: any;
+			// Stage 2: Formulate & validate the moves. An IllegalMoveError means the game
+			// built fine but a move was illegal; anything else means it wouldn't build.
+			let game: GameFile;
 			try {
-				game = await gameformulator.formulateGame(longFormat);
+				game = await gameformulator.formulateGame(longFormat, true);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
-				localResults.formulatorErrors++;
+				const illegalMove = error instanceof IllegalMoveError;
+				if (illegalMove) localResults.illegalMoveErrors++;
+				else localResults.formulatorErrors++;
 				localResults.errors.push({
 					gameIndex: index,
-					phase: 'formulator',
+					phase: illegalMove ? 'illegal-move' : 'formulator',
 					error: message,
 					variant: variant,
 					icn: gameICN,
 				});
-				incrementVariantError(variant, 'formulator');
+				incrementVariantError(variant, illegalMove ? 'illegal' : 'formulator');
 				continue;
 			}
 
-			// Stage 3: Validate Moves
+			// Stage 3: Termination Check
 			try {
-				await gameformulator.formulateGame(longFormat, true);
-			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
-				localResults.illegalMoveErrors++;
-				localResults.errors.push({
-					gameIndex: index,
-					phase: 'illegal-move',
-					error: message,
-					variant: variant,
-					icn: gameICN,
-				});
-				incrementVariantError(variant, 'illegal');
-				continue;
-			}
-
-			// Stage 4: Termination Check
-			try {
-				validateTermination(termination, result, game.basegame.gameConclusion);
+				validateTermination(termination, result, game.gameConclusion);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				localResults.terminationMismatchErrors++;
@@ -121,7 +110,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 					variant: variant,
 					termination: termination,
 					result: result,
-					gameConclusion: game.basegame.gameConclusion,
+					gameConclusion: game.gameConclusion,
 					icn: gameICN,
 				});
 				incrementVariantError(variant, 'termination');

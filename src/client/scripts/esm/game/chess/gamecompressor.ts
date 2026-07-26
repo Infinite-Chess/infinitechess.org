@@ -6,10 +6,8 @@
  */
 
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
-import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
-import type { EnPassant } from '../../../../../shared/chess/logic/state.js';
-import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
+import type { GlobalGameState } from '../../../../../shared/chess/logic/state.js';
+import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import state from '../../../../../shared/chess/logic/state.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
@@ -23,25 +21,15 @@ import {
 import clientmetadatautil from './clientmetadatautil.js';
 
 /**
- * This is the bare minimum gamefile you need to keep track of STATE,
- * or, properties of a gamefile that may change from making moves,
- * and you don't record the moves list so second-handedly keep track
- * of states like whosTurn and fullMove number.
- *
- * This is used in {@link GameToPosition} when converting a gamefile to a single position.
+ * Snapshots a gamefile's starting state, deep copied, ready for
+ * {@link GameToPosition} to apply moves to.
  */
-interface SimplifiedGameState {
-	// The pieces
-	position: Map<CoordsKey, number>;
-	// The turnOrder rotating essentially keeps track of whos turn it is in the position.
-	turnOrder: GameRules['turnOrder'];
-	// The fullMove number increments with every turn cycle
-	fullMove: number;
-	// For state.ts, the 3 global game states
-	state_global: {
-		specialRights: Set<CoordsKey>;
-		enpassant?: EnPassant;
-		moveRuleState?: number;
+function buildStartState(gamefile: GameFile): VariantOptions {
+	return {
+		position: jsutil.deepCopyObject(gamefile.startSnapshot.position),
+		gameRules: jsutil.deepCopyObject(gamefile.gameRules),
+		fullMove: gamefile.startSnapshot.fullMove,
+		state_global: jsutil.deepCopyObject(gamefile.startSnapshot.state_global),
 	};
 }
 
@@ -61,23 +49,18 @@ function compressGamefile(
 	 * We need to calculate the game state so that, if desired,
 	 * we can convert the gamefile to a single position.
 	 */
-	const gameRulesCopy = jsutil.deepCopyObject(gamefile.gameRules);
-	let gamestate: SimplifiedGameState = {
-		position: jsutil.deepCopyObject(gamefile.startSnapshot.position),
-		turnOrder: gameRulesCopy.turnOrder,
-		fullMove: gamefile.startSnapshot.fullMove,
-		state_global: jsutil.deepCopyObject(gamefile.startSnapshot.state_global),
-	};
+	const startState: VariantOptions = buildStartState(gamefile);
 
 	// Modify the state if we're applying moves to match a single position
-	if (copySinglePosition)
-		gamestate = GameToPosition(gamestate, gamefile.moves, gamefile.state.local.moveIndex + 1); // Convert -1 based to 0 based
+	const gamestate: VariantOptions = copySinglePosition
+		? GameToPosition(startState, gamefile.moves, gamefile.state.local.moveIndex + 1) // Convert -1 based to 0 based
+		: startState;
 
 	// Start constructing the abridged gamefile
 	const long_format_in: LongFormatIn = {
 		metadata: clientmetadatautil.buildMetaDataFromGamefile(gamefile),
 		position: gamestate.position,
-		gameRules: gameRulesCopy,
+		gameRules: gamestate.gameRules,
 		fullMove: gamestate.fullMove,
 		state_global: gamestate.state_global,
 		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(gamefile.moves),
@@ -106,14 +89,15 @@ function rebaseToPly(
 	startPly: number,
 	endPly: number,
 ): void {
-	// The LongFormatIn fields are the same objects a SimplifiedGameState holds, just typed looser.
+	// The LongFormatIn fields are the same objects a VariantOptions holds, just typed looser.
+	// Only longforms from compressGamefile are re-based, so the position & specialRights are present.
 	const snapshot = GameToPosition(
 		{
 			position: longform.position!,
-			turnOrder: longform.gameRules.turnOrder,
+			gameRules: longform.gameRules,
 			fullMove: longform.fullMove,
-			state_global: longform.state_global,
-		} as SimplifiedGameState,
+			state_global: longform.state_global as GlobalGameState,
+		},
 		snapshotMoves,
 		startPly,
 	);
@@ -145,27 +129,30 @@ function convertMovesToICNConverterInMove(moves: MoveFull[]): MovePreprint[] {
 // Converting a Game to Single Position ---------------------------------------------------------------------------------
 
 /**
- * Takes a simple game state and applies the desired moves to it, modifying it.
- * @param longform
+ * Takes a game state and applies the desired moves to it, modifying it.
+ * The rotating turnOrder keeps track of whos turn it is in the resulting position.
+ * @param gamestate
  * @param moves - The moves of the original gamefile to apply to the state
  * @param [halfmoves] - Number of halfmoves from starting position to apply to the state (Infinity: final position of game)
  */
 function GameToPosition(
-	longform: SimplifiedGameState,
+	gamestate: VariantOptions,
 	moves: MoveFull[],
 	halfmoves: number = 0,
-): SimplifiedGameState {
+): VariantOptions {
 	if (halfmoves === Infinity) halfmoves = moves.length; // If we want the final position, set halfmoves to the length of the moves array
 	if (moves.length < halfmoves)
 		throw Error(
 			`Cannot convert game to position. Moves length (${moves.length}) is less than desired halfmoves (${halfmoves}).`,
 		);
-	if (halfmoves === 0) return longform; // No changes needed
+	if (halfmoves === 0) return gamestate; // No changes needed
 
-	// console.log('Before converting gamestate to single position:', jsutil.deepCopyObject(longform));
+	// console.log('Before converting gamestate to single position:', jsutil.deepCopyObject(gamestate));
+
+	const turnOrder = gamestate.gameRules.turnOrder;
 
 	// First update the fullMove number. Increment one for each full turn cycle applied to the state.
-	longform.fullMove += Math.floor(halfmoves / longform.turnOrder.length);
+	gamestate.fullMove += Math.floor(halfmoves / turnOrder.length);
 
 	// Iterate through each move, progressively applying their game state changes,
 	// until we reach the desired halfmove.
@@ -173,17 +160,27 @@ function GameToPosition(
 		const move = moves[i]!;
 
 		// Apply the move's state changes (only the global ones land on a bare position).
-		state.applyGlobalStateChanges(longform.state_global, move.state, true);
+		state.applyGlobalStateChanges(gamestate.state_global, move.state, true);
 		// Next apply the logical (piece) changes.
-		boardchanges.runChanges_Position(longform.position, move.changes);
+		boardchanges.runChanges_Position(gamestate.position, move.changes);
 
 		// Rotate the turn order, moving the first player to the back
-		longform.turnOrder.push(longform.turnOrder.shift()!);
+		turnOrder.push(turnOrder.shift()!);
 	}
 
-	// console.log('After converting gamestate to single position:', jsutil.deepCopyObject(longform));
+	// console.log('After converting gamestate to single position:', jsutil.deepCopyObject(gamestate));
 
-	return longform;
+	return gamestate;
+}
+
+/**
+ * Flattens a gamefile's entire move list into the {@link VariantOptions} of the resulting
+ * position, as though a new game were started from it. Regardless of the currently viewed
+ * ply. Carries no metadata, and no moves.
+ */
+function gamefileToPositionOptions(gamefile: GameFile): VariantOptions {
+	const startState = buildStartState(gamefile);
+	return GameToPosition(startState, gamefile.moves, Infinity);
 }
 
 // Exports --------------------------------------------------------------------------------------------------------------
@@ -192,6 +189,5 @@ export default {
 	compressGamefile,
 	rebaseToPly,
 	GameToPosition,
+	gamefileToPositionOptions,
 };
-
-export type { SimplifiedGameState };

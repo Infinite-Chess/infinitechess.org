@@ -390,6 +390,7 @@
 
 .analysis .moves-table {
 	flex: 1 1 0;
+	scroll-behavior: smooth;
 }
 
 /* ============================

@@ -411,7 +411,7 @@ function undoMove(): void {
 		setUndoingIsLegal(false);
 
 		// go to latest move before undoing moves
-		movesequence.viewFront(gamefile, mesh);
+		movesequence.viewFront(gamefile, mesh, false);
 
 		// If it's their turn, only rewind one move.
 		if (gamesession.isItOurTurn() && gamefile.moves.length > 1)

@@ -1,6 +1,6 @@
 # Pull Request Requirements and Guidelines
 
-[← Back to Navigation Guide](./NAVIGATING.md) | [Setup Guide](./SETUP.md) | [Graphics Guide](./GRAPHICS.md)
+[← Back to Navigation Guide](./NAVIGATING.md) | [Setup Guide](./SETUP.md)
 
 ### All pull requests should only add **one** feature, fix **one** bug, or perform **one** refactoring.
 

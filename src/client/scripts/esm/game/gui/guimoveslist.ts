@@ -12,6 +12,7 @@
  * is present, rendering is delegated to it, reusing the primitives exported here.
  */
 
+import type { RawType } from '../../../../../shared/chess/util/typeutil.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
@@ -43,9 +44,11 @@ import { listener_document } from '../chess/gamecore.js';
  */
 interface MovesListRenderer {
 	/** Rebuilds the panel for the current position — replaces the flat reconcile. */
-	reconcile(): Promise<void>;
-	/** Highlights & scrolls to the current position. The current-ply class is already cleared. */
+	reconcile(): void;
+	/** Highlights the current position (the current-ply class is already cleared). */
 	updateCurrentPly(): void;
+	/** Scrolls the current position into view. */
+	scrollToCurrentPly(): void;
 	/** A fresh game loaded — seed derived state, before the following reconcile runs. */
 	onGameLoaded(): void;
 	/** The flat move list changed — sync derived state, before the following reconcile runs. */
@@ -105,6 +108,7 @@ function rewind(): void {
 	frametracker.onVisualChange();
 	movesequence.navigateMove(gamefile, mesh, false);
 	selection.unselectPiece();
+	scrollToCurrentPly();
 }
 
 /** Forwards the game by 1 move. Cancels any premoves first. */
@@ -116,6 +120,7 @@ function forward(): void {
 
 	if (!moveutil.isIncrementingLegal(gamefile)) return;
 	movesequence.navigateMove(gamefile, mesh, true);
+	scrollToCurrentPly();
 }
 
 /** Jumps to the start of the game (before the first move), unselecting any piece. */
@@ -131,6 +136,7 @@ function jumpToStart(): void {
 	movesequence.viewStart(gamefile, mesh);
 	selection.unselectPiece();
 	animation.clearAnimations();
+	scrollToCurrentPly();
 }
 
 /** Jumps to the latest move, unselecting any piece. */
@@ -143,9 +149,9 @@ function jumpToEnd(): void {
 	if (!moveutil.isIncrementingLegal(gamefile)) return;
 
 	frametracker.onVisualChange();
-	movesequence.viewFront(gamefile, mesh);
+	movesequence.viewFront(gamefile, mesh, false);
 	selection.unselectPiece();
-	animation.clearAnimations();
+	scrollToCurrentPly();
 }
 
 /** Throttled rewind, for the hold-to-repeat previous button. */
@@ -220,7 +226,7 @@ const renderedMoves: MoveFull[] = [];
  * diverges (by reference), drops that tail, then appends what's missing. A normal move appends
  * exactly one ply; a resync trims rewound moves and appends new ones — never a full rebuild.
  */
-async function reconcileMovesTable(): Promise<void> {
+function reconcileMovesTable(): void {
 	if (renderer) return renderer.reconcile();
 
 	const moves = gameslot.getGamefile()!.moves;
@@ -234,11 +240,12 @@ async function reconcileMovesTable(): Promise<void> {
 	}
 
 	for (; i < moves.length; i++) {
-		await appendPly(moves[i]!, i);
+		appendPly(moves[i]!, i);
 		renderedMoves.push(moves[i]!);
 	}
 
 	updateCurrentPly();
+	scrollToCurrentPly();
 }
 
 /**
@@ -253,8 +260,8 @@ async function reconcileMovesTable(): Promise<void> {
  * </div>
  * ```
  */
-async function appendPly(move: MoveFull, index: number): Promise<void> {
-	const ply = await buildPlyButton(move);
+function appendPly(move: MoveFull, index: number): void {
+	const ply = buildPlyButton(move);
 	ply.addEventListener('click', () => {
 		// Drop focus so the next keypress (which controls the board) doesn't reveal the
 		// button's :focus-visible outline — the .current highlight already marks it.
@@ -282,34 +289,44 @@ async function appendPly(move: MoveFull, index: number): Promise<void> {
 }
 
 /**
- * Builds a `.ply` button — the piece silhouette plus the truncated coordinate text, with the
- * full move always in the `title`. Shared by the flat list and the analysis tree: the `.ply`
- * class is always set, `extraClasses` are added on top, and callers add any datasets and
- * listeners themselves.
+ * The display bits of a ply shared by the flat list and the analysis tree: the full move as its
+ * `title`, the raw piece type for the silhouette, the truncated coordinate text. Centralizes
+ * the shortform + truncation so both the real-DOM and vnode ply builders stay in sync.
  */
-async function buildPlyButton(move: MoveFull, classes: string[] = []): Promise<HTMLButtonElement> {
+function getPlyDisplay(move: MoveFull): { title: string; coord: string; rawType: RawType } {
 	const shortform = icnconverter.getShortFormMoveFromMove(move, {
 		compact: false,
 		spaces: false,
 		comments: false,
 		abbrev: false, // The silhouette already conveys the piece.
 	});
+	const coord =
+		shortform.length > MAX_VISIBLE_MOVE_CHARS
+			? shortform.slice(0, MAX_VISIBLE_MOVE_CHARS) + '…'
+			: shortform;
+	return { title: shortform, coord, rawType: typeutil.getRawType(move.type) };
+}
 
-	const silhouette = await svgcache.getSilhouetteSVG(typeutil.getRawType(move.type));
+/**
+ * Builds a `.ply` button — the piece silhouette plus the truncated coordinate text, with the
+ * full move always in the `title`. The `.ply` class is always set, `classes` are added on top,
+ * and callers add any datasets and listeners themselves.
+ */
+function buildPlyButton(move: MoveFull, classes: string[] = []): HTMLButtonElement {
+	const { title, coord, rawType } = getPlyDisplay(move);
+
+	const silhouette = svgcache.getCachedSilhouetteSVG(rawType);
 	silhouette.classList.add('move-piece');
 
 	const ply = document.createElement('button');
 	ply.classList.add('ply', ...classes);
-	ply.title = shortform;
+	ply.title = title;
 
-	const coord = document.createElement('span');
-	coord.classList.add('move-coord');
-	coord.textContent =
-		shortform.length > MAX_VISIBLE_MOVE_CHARS
-			? shortform.slice(0, MAX_VISIBLE_MOVE_CHARS) + '…'
-			: shortform;
+	const coordEl = document.createElement('span');
+	coordEl.classList.add('move-coord');
+	coordEl.textContent = coord;
 
-	ply.append(silhouette, coord);
+	ply.append(silhouette, coordEl);
 	return ply;
 }
 
@@ -322,14 +339,6 @@ function createMoveRow(numText: string, classes: string[] = []): HTMLElement {
 	num.textContent = numText;
 	row.append(num);
 	return row;
-}
-
-/** Removes every rendered ply from the table (leaving the result banner), resetting the diff state. */
-function clearRenderedMoves(): void {
-	renderedMoves.length = 0;
-	for (const child of [...element_MovesTable.children]) {
-		if (child !== element_GameResult) child.remove();
-	}
 }
 
 /** Removes all rendered plies from `index` onward, resetting a dangling black slot to empty. */
@@ -362,11 +371,20 @@ function getPlyElement(index: number): HTMLElement | undefined {
 	return row?.children[index % 2 === 0 ? 1 : 2] as HTMLElement | undefined;
 }
 
-/** Highlights the ply for the currently-viewed move and scrolls it into view. */
+/** Highlights the ply for the currently-viewed move. */
 function updateCurrentPly(): void {
 	element_MovesTable.querySelector('.ply.current')?.classList.remove('current');
 
 	if (renderer) return renderer.updateCurrentPly();
+
+	// The start-of-game position (moveIndex -1) has no associated ply.
+	const moveIndex = gameslot.getGamefile()!.state.local.moveIndex;
+	getPlyElement(moveIndex)?.classList.add('current');
+}
+
+/** Scrolls the table to follow the currently-viewed ply. */
+function scrollToCurrentPly(): void {
+	if (renderer) return renderer.scrollToCurrentPly();
 
 	const gamefile = gameslot.getGamefile()!;
 	const moveIndex = gamefile.state.local.moveIndex;
@@ -377,7 +395,6 @@ function updateCurrentPly(): void {
 		if (moveIndex === -1) scrollMovesTableToTop();
 		return;
 	}
-	current.classList.add('current');
 
 	// On the final move with the result banner shown, scroll all the way down so the
 	// banner (which sits just below it) stays visible; otherwise center the ply.
@@ -419,9 +436,9 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 	premoves.cancelPremoves(gamefile, mesh);
 
 	frametracker.onVisualChange();
-	movesequence.viewIndex(gamefile, mesh, index); // Dispatches 'view-move' → re-highlights the current ply.
+	movesequence.viewIndex(gamefile, mesh, index, true); // Dispatches 'view-move' → re-highlights the current ply.
 	selection.unselectPiece();
-	animation.clearAnimations();
+	scrollToCurrentPly();
 }
 
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the
@@ -450,9 +467,7 @@ export default {
 	element_MovesTable,
 	element_GameResult,
 	update,
-	buildPlyButton,
-	createMoveRow,
-	clearRenderedMoves,
+	getPlyDisplay,
 	centerPly,
 	scrollMovesTableToTop,
 	zoomToPlyDestination,

@@ -1,7 +1,7 @@
 // src/client/scripts/esm/game/chess/gamecompressor.unit.test.ts
 
-import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { SimplifiedGameState } from './gamecompressor.js';
+import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
+import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import { describe, it, expect } from 'vitest';
 
@@ -54,9 +54,9 @@ describe('gamecompressor', () => {
 
 	describe('GameToPosition', () => {
 		it('should return the same state if halfmoves is 0', () => {
-			const initialState: SimplifiedGameState = {
+			const initialState: VariantOptions = {
 				position: new Map(),
-				turnOrder: [p.WHITE, p.BLACK],
+				gameRules: { turnOrder: [p.WHITE, p.BLACK] } as GameRules,
 				fullMove: 1,
 				state_global: {
 					specialRights: new Set(),

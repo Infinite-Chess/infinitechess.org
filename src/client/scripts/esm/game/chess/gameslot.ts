@@ -9,10 +9,9 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { TimeControl } from '../../../../../shared/types.js';
-import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { GameConstructionOptions } from './gameformulator.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
@@ -20,6 +19,7 @@ import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
+import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import arrows from '../rendering/arrows/arrows.js';
@@ -39,24 +39,14 @@ import perspective from '../rendering/perspective.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import { animateMove } from './graphicalchanges.js';
 import miniimagerenderer from '../rendering/miniimagerenderer.js';
 
 // Types ---------------------------------------------------------------------
 
 /** Options for loading a game. */
-export interface LoadOptions {
-	/** The time control of the game (e.g. `"600+5"`, or `"-"` for untimed). */
-	timeControl: TimeControl;
-	/** The variant code. Pass undefined for custom/unknown positions. */
-	variant: VariantCode | undefined;
-	/** The game's start timestamp in milliseconds since epoch. */
-	dateTimestamp: number;
+export interface LoadOptions extends GameConstructionOptions {
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
 	viewWhitePerspective: boolean;
-	/** Preset ray overrides for the variant's rays. */
-	presetAnnotes?: PresetAnnotes;
-	additional?: Additional;
 	/**
 	 * Called with the loaded gamefile right after the LOGICAL load finishes, before any
 	 * graphical stuff (including the clock display) reads it. Lets a caller correct
@@ -168,7 +158,9 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 
 /** Loads all of the logical components of a game */
 async function loadLogical(loadOptions: LoadOptions): Promise<void> {
-	loadedGamefile = await gamefile.initGameFile(
+	if (loadOptions.variant !== undefined)
+		await variantcache.ensureVariantLoaded(loadOptions.variant);
+	loadedGamefile = gamefile.initGameFile(
 		loadOptions.timeControl,
 		loadOptions.dateTimestamp,
 		loadOptions.variant,
@@ -228,11 +220,7 @@ async function loadGraphical(): Promise<void> {
 		animateLastMoveTimeoutID = setTimeout(() => {
 			// A small delay to animate the most recently played move.
 			if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the latest move
-			// Re-fetch the current last move rather than animating the one captured above, which
-			// may be stale if a move was applied during loading.
-			const latestMove = moveutil.getLastMove(loadedGamefile!.moves)!;
-			movesequence.viewFront(loadedGamefile!, mesh!); // Ensure we are viewing the front, regardless where they navigated
-			animateMove(latestMove.changes, true);
+			movesequence.viewFront(loadedGamefile!, mesh!, true); // Ensure we are viewing the front, regardless where they navigated
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
 
 	// Init the star field void animation
