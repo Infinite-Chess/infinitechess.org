@@ -97,7 +97,7 @@ function set(basegame: GameFile): void {
 	const topPlayer = bottomPlayer === p.WHITE ? p.BLACK : p.WHITE;
 	element_timers = { [bottomPlayer]: bars.bottom, [topPlayer]: bars.top };
 
-	if (gamesession.getGameType() !== 'analysis') updateTempo(basegame); // Highlight whoever's turn it is.
+	updateTempo(basegame); // Highlight whoever's turn it is.
 	if (basegame.untimed) return;
 	updateTextContent(basegame.clocks);
 }
@@ -138,14 +138,22 @@ function showViewedMoveClockStamps(basegame: GameFile): void {
 	updateTextContent({ startTime: basegame.clocks.startTime, currentTime });
 }
 
+/**
+ * The player the tempo highlight reflects: whoever is currently on the move, or if in analysis,
+ * the front of the active line (independent of the viewed ply, which `whosTurn` tracks there).
+ */
+function getTempoPlayer(basegame: GameFile): Player {
+	if (gamesession.getGameType() !== 'analysis')
+		return basegame.clocks?.colorTicking ?? basegame.whosTurn;
+	else return moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1);
+}
+
 /** Highlights the bar of the player whose turn it is via `.tempo`. */
 function updateTempo(basegame: GameFile): void {
+	const tempoPlayer = getTempoPlayer(basegame);
 	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
 		const player = Number(playerStr) as Player;
-		clockElements.bar.classList.toggle(
-			'tempo',
-			player === (basegame.clocks?.colorTicking ?? basegame.whosTurn),
-		);
+		clockElements.bar.classList.toggle('tempo', player === tempoPlayer);
 	}
 }
 
@@ -193,4 +201,5 @@ export default {
 	push,
 	update,
 	showViewedMoveClockStamps,
+	updateTempo,
 };

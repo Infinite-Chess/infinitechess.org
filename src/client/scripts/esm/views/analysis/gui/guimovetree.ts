@@ -25,6 +25,7 @@ import movevalidation from '../../../../../../shared/chess/logic/movevalidation.
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import gamecore from '../../../game/chess/gamecore.js';
+import guiclock from '../../../game/gui/guiclock.js';
 import premoves from '../../../game/chess/premoves.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
 import moveevals from '../moveevals.js';
@@ -556,6 +557,9 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 
 		movesequence.viewIndex(gamefile, mesh, targetIndex, true); // No-op when the target is the fork itself
 	}
+
+	// Re-highlight whoever's turn it is at the new branch's front.
+	guiclock.updateTempo(gamefile);
 
 	selection.unselectPiece();
 }
