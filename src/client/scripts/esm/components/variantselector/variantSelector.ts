@@ -206,7 +206,7 @@ function initIcnValidation(): void {
 			return;
 		config.onCommit?.();
 	});
-	element_icnInput.addEventListener('focus', clearIcnError);
+	element_icnInput.addEventListener('focus', () => clearError(element_icnInputWrap));
 	// Validate live so validity updates the moment the position is valid, but suppress
 	// error display until blur so we don't nag as the user types. No commit while typing.
 	element_icnInput.addEventListener('input', () => validateIcnInput(false));
@@ -416,8 +416,7 @@ function selectCustomSave(
 		})
 		.catch(() => {
 			if (selection.kind !== kind || selection.name !== name) return;
-			element_variantDisplay.classList.add('invalid');
-			element_icnErrorText.textContent = errorMsg;
+			showError(element_variantDisplay, errorMsg);
 			setIcnResult(null);
 			config.onCommit?.();
 		});
@@ -447,7 +446,7 @@ function applyIcn(icn: string): void {
 function hideCustomSection(): void {
 	element_variantCustomSection.classList.add('hidden');
 	element_icnInput.value = '';
-	clearIcnError();
+	clearError(element_icnInputWrap);
 }
 
 // Selector display ----------------------------------------------
@@ -520,8 +519,7 @@ function setIcnResult(result: IcnResult | null): void {
 function validateSavedPosition(variantOptions: VariantOptions): void {
 	const illegalReason = validateOptions(variantOptions);
 	if (illegalReason !== null) {
-		element_variantDisplay.classList.add('invalid');
-		element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
+		showError(element_variantDisplay, t.shared.position_errors[illegalReason]);
 		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
 	} else {
 		setIcnResult({ kind: 'saved', options: variantOptions, isValid: true });
@@ -551,28 +549,27 @@ function validateOptions(options: VariantOptions): PositionErrorCode | null {
 /** Clears any saved-position error state from the variant display. */
 function clearSavedPositionError(): void {
 	setIcnResult(null);
-	element_variantDisplay.classList.remove('invalid');
-	element_icnErrorText.textContent = '';
+	clearError(element_variantDisplay);
 }
 
 /**
- * Outlines the ICN input as invalid and sets its error text below.
- * A null message outlines the field without a message — used for invalid ICN syntax.
+ * Outlines an element as invalid and sets the shared error text below it.
+ * A null message outlines the element without a message — used for invalid ICN syntax.
  */
-function showIcnError(message: string | null): void {
-	element_icnInputWrap.classList.add('invalid');
+function showError(outline: HTMLElement, message: string | null): void {
+	outline.classList.add('invalid');
 	element_icnErrorText.textContent = message ?? '';
 }
 
-/** Clears the ICN input's invalid outline and error text together. */
-function clearIcnError(): void {
-	element_icnInputWrap.classList.remove('invalid');
+/** Clears an element's invalid outline and the shared error text together. */
+function clearError(outline: HTMLElement): void {
+	outline.classList.remove('invalid');
 	element_icnErrorText.textContent = '';
 }
 
 /** Surfaces why the ICN input is illegal, on its wrap and error text. */
 function revealIcnError(reason: PositionErrorCode | 'moves_invalid'): void {
-	showIcnError(t.shared.position_errors[reason]);
+	showError(element_icnInputWrap, t.shared.position_errors[reason]);
 }
 
 /**
@@ -585,7 +582,7 @@ function revealIcnError(reason: PositionErrorCode | 'moves_invalid'): void {
 function validateIcnInput(revealErrors: boolean): void {
 	const value = element_icnInput.value;
 	if (value === '') {
-		clearIcnError();
+		clearError(element_icnInputWrap);
 		setIcnResult(null);
 		return;
 	}
@@ -596,7 +593,7 @@ function validateIcnInput(revealErrors: boolean): void {
 	} catch (e) {
 		// The icn itself was in an invalid format
 		if (revealErrors) {
-			showIcnError(null); // Outline the field without a message
+			showError(element_icnInputWrap, null); // Outline the field without a message
 			// Only log on reveal so we don't spam the console on every keystroke of an in-progress ICN.
 			console.error('Illegal position:', e instanceof Error ? e.message : e);
 		}
@@ -628,7 +625,7 @@ function validateIcnInput(revealErrors: boolean): void {
 
 	// The moves-applied gamefile is available; the position is playable only if it was also legal.
 	if (illegalReason === null) {
-		clearIcnError();
+		clearError(element_icnInputWrap);
 		setIcnResult({ kind: 'icn', isValid: true, longFormat, gamefile: constructed });
 	} else {
 		if (revealErrors) revealIcnError(illegalReason);
