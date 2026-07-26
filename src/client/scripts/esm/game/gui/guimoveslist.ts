@@ -53,8 +53,6 @@ interface MovesListRenderer {
 	onGameLoaded(): void;
 	/** The flat move list changed — sync derived state, before the following reconcile runs. */
 	onMovesChanged(): void;
-	/** The viewed ply changed via navigation — follow it. Whether that scrolls is the renderer's call. */
-	onViewMove(): void;
 	/** The game unloaded — drop derived state. */
 	onGameUnloaded(): void;
 }
@@ -110,6 +108,7 @@ function rewind(): void {
 	frametracker.onVisualChange();
 	movesequence.navigateMove(gamefile, mesh, false);
 	selection.unselectPiece();
+	scrollToCurrentPly();
 }
 
 /** Forwards the game by 1 move. Cancels any premoves first. */
@@ -121,6 +120,7 @@ function forward(): void {
 
 	if (!moveutil.isIncrementingLegal(gamefile)) return;
 	movesequence.navigateMove(gamefile, mesh, true);
+	scrollToCurrentPly();
 }
 
 /** Jumps to the start of the game (before the first move), unselecting any piece. */
@@ -135,6 +135,7 @@ function jumpToStart(): void {
 	frametracker.onVisualChange();
 	movesequence.viewStart(gamefile, mesh);
 	selection.unselectPiece();
+	scrollToCurrentPly();
 	animation.clearAnimations();
 }
 
@@ -148,7 +149,7 @@ function jumpToEnd(): void {
 	if (!moveutil.isIncrementingLegal(gamefile)) return;
 
 	frametracker.onVisualChange();
-	movesequence.viewFront(gamefile, mesh, false);
+	movesequence.viewFront(gamefile, mesh, false); // Dispatches 'view-front' → scrolls to the front.
 	selection.unselectPiece();
 }
 
@@ -431,8 +432,9 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 	premoves.cancelPremoves(gamefile, mesh);
 
 	frametracker.onVisualChange();
-	movesequence.viewIndex(gamefile, mesh, index, true); // Dispatches 'view-move' → re-highlights & scrolls to the current ply.
+	movesequence.viewIndex(gamefile, mesh, index, true); // Dispatches 'view-move' → re-highlights the current ply.
 	selection.unselectPiece();
+	scrollToCurrentPly(); // Clicking a ply in the flat list centers it, matching the nav controls.
 }
 
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the gamefile
@@ -450,16 +452,12 @@ GameBus.addEventListener('moves-changed', () => {
 	reconcileMovesTable();
 	updateNavButtons();
 });
-// Only 'view-move' moves the highlight/scroll — so a move appended while reviewing history
-// (which fires 'moves-changed' alone) leaves the reviewed ply put. The renderer picks how to follow.
+// 'view-move' only moves the HIGHLIGHT; scrolling to follow is each navigation source's own call.
 GameBus.addEventListener('view-move', () => {
-	if (renderer) renderer.onViewMove();
-	else {
-		updateCurrentPly();
-		scrollToCurrentPly();
-	}
+	updateCurrentPly();
 	updateNavButtons();
 });
+GameBus.addEventListener('view-front', () => scrollToCurrentPly());
 GameBus.addEventListener('game-concluded', () => scrollMovesTableToBottom());
 GameBus.addEventListener('game-unloaded', () => renderer?.onGameUnloaded());
 

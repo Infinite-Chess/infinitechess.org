@@ -43,6 +43,11 @@ interface GameBusEvents {
 	 * (no game state change), or alongside 'physical-move' when an actual move changes it too.
 	 */
 	'view-move': void;
+	/**
+	 * The viewed position became the FRONT (jumped there, or
+	 * a move made/taken back) — scroll moves list to follow.
+	 */
+	'view-front': void;
 	/** Dispatched when the board's view orientation is flipped (white ⇄ black perspective). */
 	'board-flipped': void;
 	/**
