@@ -139,6 +139,7 @@ consecutive_turns_with_checkmate = "Players cannot have consecutive turns when u
 too_many_royals_for_checkmate = "Too many royals for using checkmate."
 king_capture_on_turn_1 = "King capture possible on turn 1."
 moves_invalid = "One or more moves are invalid."
+game_over = "The game is already over."
 
 [game_result] # Sentences shown when a game ends (the result banner).
 # {color} is filled in from [sides] above; {label} from [conditions] below.

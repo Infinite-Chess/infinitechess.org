@@ -77,7 +77,6 @@ function commitMove(
 	}
 
 	GameBus.dispatch('physical-move');
-	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
 	return move;
 }
@@ -91,6 +90,8 @@ function makeMove(
 ): MoveFull {
 	const move = commitMove(gamefile, moveTagged, options);
 	if (mesh) runMeshChanges(gamefile, mesh, move, true);
+	GameBus.dispatch('view-move'); // Committing a move at the front also advances the viewed position.
+	GameBus.dispatch('view-front'); // ...to the new front, so the moves panel follows it.
 	return move;
 }
 
@@ -157,6 +158,8 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	gamefile.gameConclusion = undefined; // Un-conclude the game if it was concluded
 	GameBus.dispatch('moves-changed'); // Backward chokepoint for the committed move list (mirrors makeMove).
+	GameBus.dispatch('view-move'); // Deleting the front move also moves the viewed position back to it.
+	GameBus.dispatch('view-front'); // ...which is the new front, so the moves panel follows it.
 
 	premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 }
@@ -223,6 +226,8 @@ function viewStart(gamefile: GameFile, mesh: Mesh | undefined): void {
 function viewFront(gamefile: GameFile, mesh: Mesh | undefined, animateLast: boolean): void {
 	/** Call {@link viewIndex} with the index of the last move in the game */
 	viewIndex(gamefile, mesh, gamefile.moves.length - 1, animateLast);
+	// Announce the jump-to-front so the moves panel scrolls to follow it.
+	GameBus.dispatch('view-front');
 }
 
 /**

@@ -240,6 +240,7 @@ export interface ScriptTranslations {
 			too_many_royals_for_checkmate: string;
 			king_capture_on_turn_1: string;
 			moves_invalid: string;
+			game_over: string;
 		};
 		game_result: {
 			color_wins_by: string;

@@ -797,6 +797,10 @@ function seedPositionCache(seed: {
 		done: true,
 		terminal: false,
 	});
+
+	// If a live search is on this exact position, its shallower packets would now be dropped by
+	// receiveInfo's depth guard (freezing the readout); re-run to take the cache-hit fast path.
+	if (seed.icn === lastAnalyzedIcn) refreshAnalysis(true);
 }
 
 /** Requests the legal moves for {@link icn} from the idle helper worker (never blocked by the search). */

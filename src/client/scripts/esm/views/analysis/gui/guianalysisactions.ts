@@ -110,6 +110,7 @@ function init(): void {
  */
 function getGameICN(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile);
+	longformIn.metadata = {}; // Strip metadata from the exported ICN.
 	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
 	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
 		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
@@ -142,6 +143,7 @@ function exportCurrentPosition():
 		},
 	};
 
+	position.metadata = {}; // Strip metadata from the exported ICN.
 	const icn = icnconverter.LongToShort_Format(position, ICN_FORMAT_OPTIONS);
 	return { icn, pieceCount: position.position.size, variantOptions };
 }

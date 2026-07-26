@@ -18,6 +18,7 @@ import maskedDraw from '../webgl/maskedDraw.js';
 import gamesession from './chess/gamesession.js';
 import LocalStorage from '../util/LocalStorage.js';
 import frametracker from './rendering/frametracker.js';
+import boardgeometry from './rendering/boardgeometry.js';
 import frameprofiler from './misc/frameprofiler.js';
 
 /** Optional per-frame page logic, run each frame after the game core updates. */
@@ -34,7 +35,13 @@ function init(canvas: HTMLCanvasElement): void {
 	// Repaint synchronously the instant the canvas buffer resizes. Assigning canvas.width/height
 	// wipes the drawing buffer to black; drawing now before the browser composites means that
 	// black is never shown for a single frame.
-	document.addEventListener('canvas_resize', () => render());
+	document.addEventListener('canvas_resize', () => {
+		// A resize changes the board's on-screen bounding box, so recalculate the geometry
+		// before repainting — otherwise we'd draw with the stale box, or an undefined one on
+		// the first frame, since the normal loop only recalculates it inside gamecore.update().
+		boardgeometry.recalcVariables();
+		render();
+	});
 
 	window.addEventListener('beforeunload', () => {
 		LocalStorage.eraseExpiredItems();

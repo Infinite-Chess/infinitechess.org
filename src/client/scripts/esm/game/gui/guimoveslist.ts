@@ -135,8 +135,8 @@ function jumpToStart(): void {
 	frametracker.onVisualChange();
 	movesequence.viewStart(gamefile, mesh);
 	selection.unselectPiece();
-	animation.clearAnimations();
 	scrollToCurrentPly();
+	animation.clearAnimations();
 }
 
 /** Jumps to the latest move, unselecting any piece. */
@@ -149,9 +149,8 @@ function jumpToEnd(): void {
 	if (!moveutil.isIncrementingLegal(gamefile)) return;
 
 	frametracker.onVisualChange();
-	movesequence.viewFront(gamefile, mesh, false);
+	movesequence.viewFront(gamefile, mesh, false); // Dispatches 'view-front' → scrolls to the front.
 	selection.unselectPiece();
-	scrollToCurrentPly();
 }
 
 /** Throttled rewind, for the hold-to-repeat previous button. */
@@ -243,9 +242,6 @@ function reconcileMovesTable(): void {
 		appendPly(moves[i]!, i);
 		renderedMoves.push(moves[i]!);
 	}
-
-	updateCurrentPly();
-	scrollToCurrentPly();
 }
 
 /**
@@ -438,25 +434,30 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 	frametracker.onVisualChange();
 	movesequence.viewIndex(gamefile, mesh, index, true); // Dispatches 'view-move' → re-highlights the current ply.
 	selection.unselectPiece();
-	scrollToCurrentPly();
+	scrollToCurrentPly(); // Clicking a ply in the flat list centers it, matching the nav controls.
 }
 
-// Keep the table in sync: fill it from the freshly-loaded game (moves baked into the
-// gamefile bypass 'moves-changed'), reconcile on move-list changes & navigation, scroll
-// to the banner on conclusion.
+// Keep the table in sync: fill it from the freshly-loaded game (moves baked into the gamefile
+// bypass 'moves-changed'), reconcile the plies on move-list changes, follow the viewed ply's
+// highlight on navigation, scroll to the banner on conclusion.
 GameBus.addEventListener('game-loaded', () => {
 	renderer?.onGameLoaded();
 	reconcileMovesTable();
+	// A fresh load dispatches no 'view-move', so seed the highlight & scroll here.
+	updateCurrentPly();
+	scrollToCurrentPly();
 });
 GameBus.addEventListener('moves-changed', () => {
 	renderer?.onMovesChanged();
 	reconcileMovesTable();
 	updateNavButtons();
 });
+// 'view-move' only moves the HIGHLIGHT; scrolling to follow is each navigation source's own call.
 GameBus.addEventListener('view-move', () => {
 	updateCurrentPly();
 	updateNavButtons();
 });
+GameBus.addEventListener('view-front', () => scrollToCurrentPly());
 GameBus.addEventListener('game-concluded', () => scrollMovesTableToBottom());
 GameBus.addEventListener('game-unloaded', () => renderer?.onGameUnloaded());
 

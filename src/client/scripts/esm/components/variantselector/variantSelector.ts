@@ -20,6 +20,7 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 import jsutil from '../../../../../shared/util/jsutil.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import {
@@ -47,8 +48,11 @@ type DisplaySelection =
 
 /** Callbacks a host wires to react to the selector's state. */
 interface VariantSelectorConfig {
-	/** Whether to reject oversized positions. Provide `true` when the ICN is used in seek-creation. */
-	enforceSizeLimit: boolean;
+	/**
+	 * Whether this selector creates seeks (lobby), vs. loading positions for analysis. Gates all
+	 * seek-only hardening: rejecting oversized positions and positions that are already game-over.
+	 */
+	isSeekContext: boolean;
 	/** Fires on every selection/validity change (live). Sync dependent UI (e.g. a submit button). */
 	onChange?: () => void;
 	/** Fires only when a selection is committed (a discrete pick, or an ICN blur/paste). */
@@ -555,9 +559,17 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 	if (illegalReason !== null) {
 		showError(element_variantDisplay, t.shared.position_errors[illegalReason]);
 		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
-	} else {
-		setIcnResult({ kind: 'saved', options: variantOptions, isValid: true });
+		return;
 	}
+	// Legal position; in a seek context, reject it if it's already game-over. Construct a
+	// transient gamefile (no moves) purely to read its computed conclusion, then discard it.
+	const constructed = gameformulator.tryConstructGame(variantOptions, [], false);
+	if (constructed !== 'moves_invalid' && isSeekBlockingGameOver(constructed)) {
+		showError(element_variantDisplay, t.shared.position_errors.game_over);
+		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
+		return;
+	}
+	setIcnResult({ kind: 'saved', options: variantOptions, isValid: true });
 }
 
 /** Serializes a custom position's VariantOptions to its canonical compact ICN string. */
@@ -577,7 +589,15 @@ function variantOptionsToICN(options: VariantOptions): string {
 /** Serializes variant options to their canonical ICN and validates that flattened position (size + legality). */
 function validateOptions(options: VariantOptions): PositionErrorCode | null {
 	const icnString = variantOptionsToICN(options);
-	return validatePosition(options, icnString, config.enforceSizeLimit);
+	return validatePosition(options, icnString, config.isSeekContext);
+}
+
+/**
+ * Whether an otherwise-legal position cannot be seeked because it's already game-over.
+ * Seek-context only: analysis loads finished games fine. Preview still renders either way.
+ */
+function isSeekBlockingGameOver(gamefile: GameFile): boolean {
+	return config.isSeekContext && gamefileutility.isGameOver(gamefile);
 }
 
 /** Clears any saved-position error state from the variant display. */
@@ -592,6 +612,8 @@ function clearSavedPositionError(): void {
  */
 function showError(outline: HTMLElement, message: string | null): void {
 	outline.classList.add('invalid');
+	// Warn if the translation key was missing, but don't throw.
+	if (message === undefined) console.warn('Variant selector error text has no translation.');
 	element_icnErrorText.textContent = message ?? '';
 }
 
@@ -602,7 +624,7 @@ function clearError(outline: HTMLElement): void {
 }
 
 /** Surfaces why the ICN input is illegal, on its wrap and error text. */
-function revealIcnError(reason: PositionErrorCode | 'moves_invalid'): void {
+function revealIcnError(reason: PositionErrorCode | 'moves_invalid' | 'game_over'): void {
 	showError(element_icnInputWrap, t.shared.position_errors[reason]);
 }
 
@@ -658,13 +680,20 @@ function validateIcnInput(revealErrors: boolean): void {
 	const illegalReason = validateOptions(finalOptions);
 
 	// The moves-applied gamefile is available; the position is playable only if it was also legal.
-	if (illegalReason === null) {
-		clearError(element_icnInputWrap);
-		setIcnResult({ kind: 'icn', isValid: true, longFormat, gamefile: constructed });
-	} else {
+	if (illegalReason !== null) {
 		if (revealErrors) revealIcnError(illegalReason);
 		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
+		return;
 	}
+	// In a seek context, an already-over game can't be seeked, but the preview still renders it.
+	if (isSeekBlockingGameOver(constructed)) {
+		if (revealErrors) revealIcnError('game_over');
+		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
+		return;
+	}
+	// Position is legal and playable.
+	clearError(element_icnInputWrap);
+	setIcnResult({ kind: 'icn', isValid: true, longFormat, gamefile: constructed });
 }
 
 // Preview tooltips ----------------------------------------------

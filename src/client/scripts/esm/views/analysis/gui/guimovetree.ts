@@ -25,6 +25,7 @@ import movevalidation from '../../../../../../shared/chess/logic/movevalidation.
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import gamecore from '../../../game/chess/gamecore.js';
+import guiclock from '../../../game/gui/guiclock.js';
 import premoves from '../../../game/chess/premoves.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
 import moveevals from '../moveevals.js';
@@ -454,8 +455,8 @@ function syncAnalysisTreeAfterAction(target: AnalysisMoveNode): void {
  * Deletes `node` (and its subtree). If the currently-viewed position was inside that
  * subtree, we navigate back to the deletion point's parent — the latest still-valid
  * position — which rebuilds the board, legal moves, and engine analysis (arrows clear
- * and recompute) for it. If we were before/elsewhere, we stay put; only the flat move
- * list (its now-rerouted continuation) and the move tree are resynced.
+ * and recompute) for it. If we were before/elsewhere, we stay put. Either way the flat
+ * move list (its now-shortened active line) and the move tree are resynced.
  */
 function deleteAnalysisNode(node: AnalysisMoveNode): void {
 	const gamefile = gameslot.getGamefile();
@@ -467,17 +468,16 @@ function deleteAnalysisNode(node: AnalysisMoveNode): void {
 	const parent = movetree.deleteNode(node);
 	if (!parent) return; // Can't delete the root.
 
-	if (viewingDeleted) {
-		syncAnalysisTreeAfterAction(parent); // Fall back to the latest valid position.
-	} else {
-		// Stay on the current move; just resync the flat list to the (possibly rerouted)
-		// active line and re-render the tree. The viewed position — and its analysis — is
-		// unchanged, so we leave the engine and board where they are. The front may have
-		// changed though (e.g. the old front was deleted), so realign the global conclusion.
-		gamefile.moves = movetree.getMovesFromLine(movetree.getActiveLine());
-		gamefile.gameConclusion = movetree.getActiveLineConclusion();
-		GameBus.dispatch('moves-changed');
-	}
+	// Fall back to the latest valid position first, while the flat list is still full —
+	// navigation rewinds the board along it, so it must run before we truncate below.
+	if (viewingDeleted) navigateToAnalysisNode(gamefile, parent);
+
+	// Resync the flat list to the shortened active line — navigation's in-branch path leaves
+	// gamefile.moves untouched, so reconcile would otherwise re-graft the deleted moves.
+	gamefile.moves = movetree.getMovesFromLine(movetree.getActiveLine());
+	// Realign the conclusion too, since the front may have changed.
+	gamefile.gameConclusion = movetree.getActiveLineConclusion();
+	GameBus.dispatch('moves-changed');
 }
 
 /** Places the menu at the cursor, clamped to stay within the viewport. */
@@ -557,6 +557,9 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 
 		movesequence.viewIndex(gamefile, mesh, targetIndex, true); // No-op when the target is the fork itself
 	}
+
+	// Re-highlight whoever's turn it is at the new branch's front.
+	guiclock.updateTempo(gamefile);
 
 	selection.unselectPiece();
 }
