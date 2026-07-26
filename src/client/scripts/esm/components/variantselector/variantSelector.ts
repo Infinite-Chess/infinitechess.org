@@ -613,6 +613,7 @@ function validateIcnInput(revealErrors: boolean): void {
 
 	// The moves-applied gamefile is available; the position is playable only if it was also legal.
 	if (illegalReason === null) {
+		element_icnInputWrap.classList.remove('invalid');
 		element_icnErrorText.textContent = '';
 		setIcnResult({ kind: 'icn', isValid: true, longFormat, gamefile: constructed });
 	} else {
