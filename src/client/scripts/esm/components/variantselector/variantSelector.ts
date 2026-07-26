@@ -425,9 +425,8 @@ function selectCustomSave(
 /** Shows the ICN input section and updates the selector to the From-ICN button's display name. */
 function openFromICN(): void {
 	selection = { kind: 'icn' };
-	applyCustomToSelector(element_btnCustomFromICNName.textContent!);
 	clearSavedPositionError();
-	element_variantCustomSection.classList.remove('hidden');
+	showCustomSection();
 	closeVariantDropdown();
 	element_icnInput.focus();
 }
@@ -435,11 +434,16 @@ function openFromICN(): void {
 /** Programmatically selects Custom From-ICN, fills the input with the given ICN, and validates it. */
 function applyIcn(icn: string): void {
 	selection = { kind: 'icn' };
-	applyCustomToSelector(element_btnCustomFromICNName.textContent!);
-	element_variantCustomSection.classList.remove('hidden');
+	showCustomSection();
 	element_icnInput.value = icn;
 	validateIcnInput(true);
 	config.onCommit?.();
+}
+
+/** Reveals the ICN input section and labels the selector with the From-ICN button's name. */
+function showCustomSection(): void {
+	element_variantCustomSection.classList.remove('hidden');
+	applyCustomToSelector(element_btnCustomFromICNName.textContent!);
 }
 
 /** Hides the ICN input section, clearing its field and error so re-opening From-ICN starts fresh. */
@@ -495,10 +499,9 @@ function restoreAcceptedDisplay(): void {
 	if (selection.kind === 'icn') {
 		// Restore the field to the ICN that was actually loaded (discarding any invalid edits),
 		// then re-validate to refresh validity and clear the error highlight.
-		element_variantCustomSection.classList.remove('hidden');
+		showCustomSection();
 		element_icnInput.value = loaded.icn!;
 		validateIcnInput(false);
-		applyCustomToSelector(element_btnCustomFromICNName.textContent!);
 	} else {
 		hideCustomSection();
 		if (selection.kind === 'preset') applyVariantToSelector(selection.code);
