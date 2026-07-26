@@ -46,9 +46,7 @@ export interface GameConstructionOptions {
 async function formulateGame(longFormat: LongFormatOut, validateMoves?: true): Promise<GameFile> {
 	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined)
 		throw Error('Invalid longformat when formulating game: Missing position or special rights.'); // prettier-ignore
-	const constructionOptions = resolveConstructionOptions(longFormat);
-	if (constructionOptions.variant !== undefined)
-		await variantcache.ensureVariantLoaded(constructionOptions.variant);
+	const constructionOptions = await resolveConstructionOptions(longFormat);
 	return constructGame(constructionOptions, validateMoves);
 }
 
@@ -84,16 +82,17 @@ function tryConstructGame(
  * Resolves a parsed ICN into everything its gamefile is constructed from:
  * the variant, the timestamps, and the position + moves as gamefile options.
  *
- * REQUIRES the variant module preloaded only if the ICN omits a position (then the position
- * is read off the variant); callers own this.
+ * Loads the resolved variant module first, since the position is read off it whenever
+ * the ICN omits an explicit one (e.g. server-stored games carrying only Variant + moves).
  */
-function resolveConstructionOptions(
+async function resolveConstructionOptions(
 	longFormat: LongFormatOut,
 	overrides?: { gameConclusion?: GameConclusion; slideLimit?: bigint },
-): GameConstructionOptions {
+): Promise<GameConstructionOptions> {
 	const variant = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
 	if (longFormat.position === undefined && variant === undefined)
 		throw Error('Cannot construct a game from a longformat specifying neither a position nor a known variant.'); // prettier-ignore
+	if (variant !== undefined) await variantcache.ensureVariantLoaded(variant);
 
 	const { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant); // prettier-ignore
 
