@@ -368,26 +368,6 @@ function goToEditor(): void {
 	window.location.assign('/editor');
 }
 
-/** Shows the ICN input section and updates the selector to the From-ICN button's display name. */
-function openFromICN(): void {
-	selection = { kind: 'icn' };
-	applyCustomToSelector(element_btnCustomFromICNName.textContent!);
-	clearSavedPositionError();
-	element_variantCustomSection.classList.remove('hidden');
-	closeVariantDropdown();
-	element_icnInput.focus();
-}
-
-/** Programmatically selects Custom From-ICN, fills the input with the given ICN, and validates it. */
-function applyIcn(icn: string): void {
-	selection = { kind: 'icn' };
-	applyCustomToSelector(element_btnCustomFromICNName.textContent!);
-	element_variantCustomSection.classList.remove('hidden');
-	element_icnInput.value = icn;
-	validateIcnInput(true);
-	config.onCommit?.();
-}
-
 // Variant selection ----------------------------------------------
 
 /** Updates the selected variant state and selector button, then closes all panels. */
@@ -441,6 +421,26 @@ function selectCustomSave(
 			setIcnResult(null);
 			config.onCommit?.();
 		});
+}
+
+/** Shows the ICN input section and updates the selector to the From-ICN button's display name. */
+function openFromICN(): void {
+	selection = { kind: 'icn' };
+	applyCustomToSelector(element_btnCustomFromICNName.textContent!);
+	clearSavedPositionError();
+	element_variantCustomSection.classList.remove('hidden');
+	closeVariantDropdown();
+	element_icnInput.focus();
+}
+
+/** Programmatically selects Custom From-ICN, fills the input with the given ICN, and validates it. */
+function applyIcn(icn: string): void {
+	selection = { kind: 'icn' };
+	applyCustomToSelector(element_btnCustomFromICNName.textContent!);
+	element_variantCustomSection.classList.remove('hidden');
+	element_icnInput.value = icn;
+	validateIcnInput(true);
+	config.onCommit?.();
 }
 
 // Selector display ----------------------------------------------
