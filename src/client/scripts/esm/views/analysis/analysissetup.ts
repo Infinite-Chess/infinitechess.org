@@ -18,7 +18,7 @@ import modifierSelector from '../../components/variantselector/modifierSelector.
 /** Wires the widget's commit callbacks to load the selection onto the board. */
 function init(): void {
 	// Allow analyzing positions of any size.
-	variantSelector.initVariantGroupDropdown({ enforceSizeLimit: false, onCommit: loadSelection });
+	variantSelector.initVariantGroupDropdown({ isSeekContext: false, onCommit: loadSelection });
 	variantSelector.initIcnValidation();
 	modifierSelector.initModifierSelector({ onCommit: loadSelection });
 	// A move on the board abandons any un-committed selection (e.g. an opened, empty From-ICN
