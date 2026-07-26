@@ -494,9 +494,8 @@ function rewindMove(boardsim: Board): void {
 
 /**
  * Iterates to a certain move index, performing a callback function on each move.
- * The callback should be a move application function, either {@link applyMove}, or movesequence.viewMove(),
- * depending on if each move should make graphical changes or not. Both methods make logical board changes.
- * @param callback - Either {@link applyMove}, or movesequence.viewMove()
+ * @param callback - A move-application function run per ply, e.g. {@link applyMove} for
+ * logical-only changes, or {@link movesequence.viewMove} that also makes graphical (mesh) changes.
  */
 function goToMove(boardsim: Board, index: number, callback: (_move: MoveFull) => void): void {
 	if (index === boardsim.state.local.moveIndex) return;

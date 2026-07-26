@@ -162,8 +162,8 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 // Local Moving ----------------------------------------------------------------------------------------------------------
 
 /**
- * Apply the move to the board state and the mesh, whether forward or
- * backward, as if we were wanting to *view* the move, instead of making it.
+ * Applies a move's logical + mesh changes to *view* it (instead of making it),
+ * forward or backward. Callers are responsible for dispatching the `view-move` event.
  */
 function viewMove(
 	gamefile: GameFile,
@@ -181,7 +181,6 @@ function viewMove(
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	}
-	GameBus.dispatch('view-move');
 }
 
 /**
@@ -202,8 +201,14 @@ function viewIndex(
 		viewMove(gamefile, mesh, move, forward);
 		lastMove = move;
 	});
-	if (index !== gamefile.state.local.moveIndex) animation.clearAnimations(); // Only clear any previous animations if we viewed a different index
-	if (animateFinal && mesh && lastMove) animateMove(lastMove.changes, forward);
+
+	if (lastMove) {
+		// Dispatch ONCE for the whole navigation, not per-ply. Listeners only care about the final resting position.
+		GameBus.dispatch('view-move');
+		// Only clear any previous animations if we viewed a different index.
+		animation.clearAnimations();
+		if (animateFinal && mesh) animateMove(lastMove.changes, forward);
+	}
 }
 
 /** Makes the game view the start of the game, before the first move. */
@@ -238,6 +243,7 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 		throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
 
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
+	GameBus.dispatch('view-move');
 	animateMove(move.changes, forward); // Animate
 }
 
@@ -249,7 +255,6 @@ export default {
 	makeMoveAndAnimate,
 	runMeshChanges,
 	rewindMove,
-	viewMove,
 	viewIndex,
 	viewStart,
 	viewFront,
