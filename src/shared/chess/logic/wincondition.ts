@@ -134,33 +134,27 @@ function detectKoth(boardsim: Board): GameConclusion | undefined {
 	if (!gamefileutility.isOpponentUsingWinCondition(boardsim, boardsim.whosTurn, 'koth'))
 		return undefined; // Not using this gamerule
 
-	// Was the last move a king move?
+	// With a last move, KOTH can only be newly reached by a king move — early exit otherwise.
+	// With no last move (a flattened position), evaluate the current position directly.
 	const lastMove = moveutil.getLastMove(boardsim.moves);
-	if (!lastMove) return undefined;
-	if (typeutil.getRawType(lastMove.type) !== r.KING) return undefined;
+	if (lastMove && typeutil.getRawType(lastMove.type) !== r.KING) return undefined;
 
-	let kingInCenter = false;
-	for (const thisCenterSquare of kothCenterSquares) {
-		const typeAtSquare: number | undefined = boardutil.getTypeFromCoords(
-			boardsim.pieces,
-			thisCenterSquare,
-		);
-		if (typeAtSquare === undefined) continue;
-		if (typeutil.getRawType(typeAtSquare) === r.KING) {
-			kingInCenter = true;
-			break;
-		}
-	}
+	// The color that moved last (the last player in the turn order when flattened) wins if
+	// one of its kings sits on a center square.
+	const colorThatMovedLast: Player = moveutil.getColorThatPlayedMoveIndex(
+		boardsim,
+		boardsim.moves.length - 1,
+	);
 
-	if (kingInCenter) {
-		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			boardsim,
-			boardsim.moves.length - 1,
-		);
-		return { victor: colorThatWon, condition: 'koth' };
-	}
+	const kingInCenter = kothCenterSquares.some((square) => {
+		const typeAtSquare = boardutil.getTypeFromCoords(boardsim.pieces, square);
+		if (typeAtSquare === undefined) return false;
+		const [rawType, color] = typeutil.splitType(typeAtSquare);
+		return color === colorThatMovedLast && rawType === r.KING;
+	});
 
-	return undefined;
+	if (kingInCenter) return { victor: colorThatMovedLast, condition: 'koth' };
+	else return undefined;
 }
 
 /**
