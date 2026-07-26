@@ -375,7 +375,7 @@ function selectVariant(code: VariantCode): void {
 	selection = { kind: 'preset', code };
 	applyVariantToSelector(code);
 	clearSavedPositionError();
-	element_variantCustomSection.classList.add('hidden');
+	hideCustomSection();
 	closeVariantDropdown();
 	config.onCommit?.();
 }
@@ -398,7 +398,7 @@ function selectCustomSave(
 	selection = kind === 'online' ? { kind: 'online', name } : { kind: 'local', name };
 	applyCustomToSelector(name);
 	clearSavedPositionError();
-	element_variantCustomSection.classList.add('hidden');
+	hideCustomSection();
 	closeVariantDropdown();
 
 	const cached = cache.get(name);
@@ -441,6 +441,13 @@ function applyIcn(icn: string): void {
 	element_icnInput.value = icn;
 	validateIcnInput(true);
 	config.onCommit?.();
+}
+
+/** Hides the ICN input section, clearing its field and error so re-opening From-ICN starts fresh. */
+function hideCustomSection(): void {
+	element_variantCustomSection.classList.add('hidden');
+	element_icnInput.value = '';
+	clearIcnError();
 }
 
 // Selector display ----------------------------------------------
@@ -494,8 +501,7 @@ function restoreAcceptedDisplay(): void {
 		validateIcnInput(false);
 		applyCustomToSelector(element_btnCustomFromICNName.textContent!);
 	} else {
-		element_variantCustomSection.classList.add('hidden');
-		clearIcnError();
+		hideCustomSection();
 		if (selection.kind === 'preset') applyVariantToSelector(selection.code);
 		else applyCustomToSelector(selection.name);
 	}
