@@ -4,26 +4,26 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
-import type { GameStateMessage, ParticipantState } from '../../../../../../shared/types.js';
 import type { Additional, VariantOptions } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { GameStateMessage, ParticipantState } from '../../../../../../shared/types.js';
 
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
-import { engineDictionary } from '../../../../../../shared/chess/engine.js';
 import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import { engineDictionary } from '../../../../../../shared/chess/engine.js';
+import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import drawoffers from './drawoffers.js';
+import enginegame from '../enginegame.js';
 import gameactions from '../../gui/guigameactions.js';
 import gamesession from '../../chess/gamesession.js';
 import guigamemeta from '../../gui/guigamemeta.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import socketmessages from '../../../websocket/socketmessages.js';
-import enginegame from '../enginegame.js';
 
 import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 
@@ -125,17 +125,21 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 				const { engineWorkerUrl, engineUrl } = window.gamePageData;
 				if (!engineWorkerUrl || !engineUrl)
 					throw new Error('Engine assets are missing from the game page.');
-				await enginegame.initEngineGame({
-					youAreColor: ourRole,
-					currentEngine: engineGame.engine,
-					engineConfig: {
-						engineTimeLimitPerMoveMillis:
-							engineDictionary[engineGame.engine].defaultTimeLimitPerMoveMillis,
-						strengthLevel: engineGame.strengthLevel,
-					},
-					workerUrl: engineWorkerUrl,
-					engineUrl,
-				});
+				void enginegame
+					.initEngineGame({
+						youAreColor: ourRole,
+						currentEngine: engineGame.engine,
+						engineConfig: {
+							engineTimeLimitPerMoveMillis:
+								engineDictionary[engineGame.engine].defaultTimeLimitPerMoveMillis,
+							strengthLevel: engineGame.strengthLevel,
+						},
+						workerUrl: engineWorkerUrl,
+						engineUrl,
+					})
+					.catch((error: Error) =>
+						console.error('Failed to initialize engine game:', error),
+					);
 			}
 
 			return graphical;
