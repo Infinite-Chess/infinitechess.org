@@ -288,7 +288,7 @@ function deletePiece(boardsim: Board, change: Change): void {
 	organizedpieces.removePieceFromSpace(idx, pieces);
 	jsutil.addElementToOrganizedArray(typedata.undefineds, idx);
 
-	// Set the undefined piece's coordinates to [0,0] to keep things tidy.
+	// Undefineds hold [0,0] (see the OrganizedPieces coords invariant).
 	pieces.XPositions[idx] = 0n;
 	pieces.YPositions[idx] = 0n;
 	// Don't need to delete its type because every spot in a type range is expected to have the same type.

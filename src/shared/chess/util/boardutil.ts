@@ -184,9 +184,7 @@ function getBoundingBoxOfAllPieces(o: OrganizedPieces): BoundingBox | undefined 
 		// This can happen in practice checkmate 1K3NR-1k.
 		// Only console warn if there is a large number of pieces
 		if (o.coords.size > 1_000_000)
-			console.warn(
-				'Falling back to slower O(n) bounding box calculation for all pieces. Either no vertical or horizontal slide found.',
-			);
+			console.warn('Falling back to slower O(n) bounding box calculation for all pieces. Either no vertical or horizontal slide found.'); // prettier-ignore
 		// Fallback to O(n) algorithm, we don't have the advantage of organized lines to optimize this.
 		const allCoords = getCoordsOfAllPieces(o);
 		return bounds.getBoxFromCoordsList(allCoords);
@@ -215,9 +213,7 @@ function getBoundingBoxOfAllPieces(o: OrganizedPieces): BoundingBox | undefined 
 	}
 
 	if (left === undefined || right === undefined || bottom === undefined || top === undefined)
-		throw new Error(
-			'Failed to calculate bounding box of all pieces. Lines of slide direction was empty (failure of organizedpieces)',
-		);
+		throw new Error('Failed to calculate bounding box of all pieces. Lines of slide direction was empty (failure of organizedpieces)'); // prettier-ignore
 
 	return { left, right, bottom, top };
 }

@@ -9,9 +9,11 @@ import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import bounds from '../../../../../shared/util/math/bounds.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
-import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import { engineDictionary } from '../../../../../shared/chess/engine.js';
+import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 /**
  * Absolute fallback border distance for a side the position leaves unbounded — the largest
@@ -37,14 +39,9 @@ function getEngineWorldBorder(gamefile: GameFile): BoundingBox {
 
 /** Returns whether all pieces in the gamefile are within the engine's safe evaluation bounds. */
 function areAllPiecesInBounds(gamefile: GameFile): boolean {
-	const engineBorder = getEngineWorldBorder(gamefile);
-	for (const x of gamefile.pieces.XPositions) {
-		if (x < engineBorder.left || x > engineBorder.right) return false;
-	}
-	for (const y of gamefile.pieces.YPositions) {
-		if (y < engineBorder.bottom || y > engineBorder.top) return false;
-	}
-	return true;
+	const piecesBox = boardutil.getBoundingBoxOfAllPieces(gamefile.pieces);
+	if (piecesBox === undefined) return true; // No pieces
+	return bounds.boxContainsBox(getEngineWorldBorder(gamefile), piecesBox);
 }
 
 /** Whether every piece coordinate in `position` lies within `border` (inclusive). */
