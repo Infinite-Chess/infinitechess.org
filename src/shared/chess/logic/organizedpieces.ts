@@ -31,9 +31,13 @@ import typeutil, { ext, players as p, rawTypes, neutralRawTypes } from '../util/
  * those require moveset information to construct, so they're added later.
  */
 export interface OrganizedPiecesBase {
-	/** The X position of all pieces. Undefined pieces are set to 0. */
+	/**
+	 * The X position of all pieces. Undefineds are set to 0 — a placeholder, not a real
+	 * location, so never scan these arrays without skipping undefineds (via {@link coords}
+	 * or the type ranges' `undefineds`).
+	 */
 	XPositions: bigint[];
-	/** The Y position of all pieces. Undefined pieces are set to 0. */
+	/** The Y position of all pieces. Undefineds are set to 0 — see {@link XPositions}. */
 	YPositions: bigint[];
 	/**
 	 * The type of all pieces. Undefined pieces retain the type of the type range they are in.
@@ -179,8 +183,8 @@ function processInitialPosition(
 	// console.log(`Total slots needed: ${totalSlotsNeeded}`);
 
 	// This way we save on RAM since we don't have to construct normal arrays first and transfer the data after.
-	const XPositions = new Array<bigint>(totalSlotsNeeded);
-	const YPositions = new Array<bigint>(totalSlotsNeeded);
+	const XPositions = new Array<bigint>(totalSlotsNeeded).fill(0n);
+	const YPositions = new Array<bigint>(totalSlotsNeeded).fill(0n);
 	const types = new Uint8Array(totalSlotsNeeded);
 
 	// Fill the lists and construct the type ranges and coords!
@@ -210,7 +214,7 @@ function processInitialPosition(
 		// Create the undefineds list
 		const undefineds: number[] = [];
 		for (let i = 0; i < listExtrasByType[type]!; i++) {
-			// The XPositions and YPositions are initialized to 0, so we don't need to set them here.
+			// The XPositions and YPositions are pre-filled with 0, so we don't need to set them here.
 			types[pointer] = Number(type); // The undefined is still in the same type range, though, so we do need to set this.
 			undefineds.push(pointer);
 			pointer++;
@@ -292,8 +296,8 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotion?: Promot
 	const newSize = oldSize + totalAdditionalSlots;
 
 	// 2. Allocate new, larger arrays
-	const newXPositions = new Array<bigint>(newSize);
-	const newYPositions = new Array<bigint>(newSize);
+	const newXPositions = new Array<bigint>(newSize).fill(0n);
+	const newYPositions = new Array<bigint>(newSize).fill(0n);
 	const newTypes = new Uint8Array(newSize);
 
 	// Keep track of original types before overwriting o.types
