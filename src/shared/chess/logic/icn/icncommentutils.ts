@@ -115,8 +115,9 @@ function extractCommandsFromComment(commentString: string): ExtractedCommentData
 /**
  * Takes a time in milliseconds and creates a CommandObject containing
  * the 'clk' command name and the time formatted as H:MM:SS.D.
- * The input milliseconds are rounded UP to the nearest 100ms boundary
- * before conversion.
+ * The input milliseconds are rounded DOWN to the nearest 100ms boundary,
+ * matching how live clocks are displayed, so replays show the exact
+ * value the player saw.
  */
 function createClkCommandObject(timeMillis: number): CommandObject {
 	let formattedValue: string;
@@ -132,17 +133,17 @@ function createClkCommandObject(timeMillis: number): CommandObject {
 	if (timeMillis <= 0) {
 		formattedValue = '0:00:00.0';
 	} else {
-		// Round the total milliseconds UP to the nearest 100ms boundary.
-		const roundedUpMillis = Math.ceil(timeMillis / 100) * 100;
+		// Truncate the total milliseconds DOWN to the nearest 100ms boundary.
+		const roundedDownMillis = Math.floor(timeMillis / 100) * 100;
 
-		// Calculate H:MM:SS.D based on the rounded-up value.
-		const totalSecondsRounded = Math.floor(roundedUpMillis / 1000);
+		// Calculate H:MM:SS.D based on the truncated value.
+		const totalSecondsRounded = Math.floor(roundedDownMillis / 1000);
 		const hours = Math.floor(totalSecondsRounded / 3600);
 		const minutes = Math.floor((totalSecondsRounded % 3600) / 60);
 		const seconds = totalSecondsRounded % 60;
 
-		// Calculate tenths based on the rounded-up milliseconds.
-		const tenths = (roundedUpMillis % 1000) / 100;
+		// Calculate tenths based on the truncated milliseconds.
+		const tenths = (roundedDownMillis % 1000) / 100;
 
 		// Convert minutes and seconds to strings and pad with leading zeros if needed.
 		const paddedMinutes = minutes.toString().padStart(2, '0');
