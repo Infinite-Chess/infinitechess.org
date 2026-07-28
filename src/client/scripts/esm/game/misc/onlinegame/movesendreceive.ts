@@ -33,6 +33,9 @@ import socketmessages from '../../../websocket/socketmessages.js';
 GameBus.addEventListener('user-move-played', () => {
 	sendMove();
 });
+GameBus.addEventListener('engine-move-played', () => {
+	sendMove();
+});
 
 // Functions -------------------------------------------------------------------
 
@@ -136,6 +139,7 @@ function checkAndReportIllegalOpponentMove(
 	console.log(`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`); // prettier-ignore
 
 	if (gamesession.getRole() === undefined) return; // Spectators never report
+	if (window.gamePageData.engineGame) return;
 	if (isGameInstantlyDeleted(gamefile.variant)) return; // Server-validated game
 
 	reportOpponentsMove(moveValidationResult.reason);

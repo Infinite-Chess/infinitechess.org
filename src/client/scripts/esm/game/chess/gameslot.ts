@@ -47,12 +47,6 @@ import miniimagerenderer from '../rendering/miniimagerenderer.js';
 export interface LoadOptions extends GameConstructionOptions {
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
 	viewWhitePerspective: boolean;
-	/**
-	 * Called with the loaded gamefile right after the LOGICAL load finishes, before any
-	 * graphical stuff (including the clock display) reads it. Lets a caller correct
-	 * clock/whosTurn-dependant state before the first paint, avoiding a stale-value flash.
-	 */
-	onLogicalLoaded?: (gamefile: GameFile) => void;
 }
 
 // Variables ---------------------------------------------------------------
@@ -143,10 +137,6 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 
 	return loadLogical(loadOptions).then(() => {
 		// console.log('LOGICAL loaded.');
-
-		// Before any graphical stuff (e.g. the clock display) reads the gamefile, let the
-		// caller correct clock/whosTurn-dependant state, so the first paint is already right.
-		loadOptions.onLogicalLoaded?.(loadedGamefile!);
 
 		// This is where we used to play the game start sound, but now we
 		// play it in lobby.ts before the hard navigation to the game page.

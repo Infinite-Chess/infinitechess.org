@@ -29,6 +29,7 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('offerrematch') }),
 	z.strictObject({ action: z.literal('subscribe'), value: z.number().int().nonnegative() }),
 	z.strictObject({ action: z.literal('resign') }),
+	z.strictObject({ action: z.literal('engineresign') }),
 	z.strictObject({ action: z.literal('claimvictory') }),
 	z.strictObject({ action: z.literal('claimdraw') }),
 	z.strictObject({ action: z.literal('report'), value: reportschem }),
@@ -78,6 +79,12 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage): void {
 			break;
 		case 'resign':
 			resignGame(servergame, color);
+			break;
+		case 'engineresign':
+			if (!gameutility.isEngineGame(servergame)) break;
+			if (gameutility.isGameResignable(servergame))
+				resignGame(servergame, servergame.match.engineParticipant!.color);
+			else abortGame(servergame);
 			break;
 		case 'claimvictory':
 			claimVictory(servergame, color);

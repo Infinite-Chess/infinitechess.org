@@ -35,6 +35,7 @@ type ReportMessage = z.infer<typeof reportschem>;
  * @param messageContents - The contents of the socket report message
  */
 function onReport(servergame: ServerGame, ourRole: Player, messageContents: ReportMessage): void {
+	if (gameutility.isEngineGame(servergame)) return;
 	// { reason, opponentsMoveNumber }
 	console.log('Received cheat report! - Check hackLog.txt for more details.');
 

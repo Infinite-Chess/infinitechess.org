@@ -58,8 +58,9 @@ function initBoard(
 	editor: boolean = false,
 	/** Only has an effect if the `worldBorder` gamerule is not present. */
 	worldBorderDist?: bigint,
+	worldBorderCap?: bigint,
 ): Board {
-	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, variantOptions, editor, worldBorderDist); // prettier-ignore
+	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, variantOptions, editor, worldBorderDist, worldBorderCap); // prettier-ignore
 
 	// Calculate movesets
 	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, gameRules.slideLimit);

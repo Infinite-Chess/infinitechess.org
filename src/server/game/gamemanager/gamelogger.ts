@@ -12,10 +12,12 @@
 import type { MetaData } from '../../../shared/types.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
+import type { GlobalGameState } from '../../../shared/chess/logic/state.js';
 import type { MatchInfo, ServerGame } from './gameutility.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
+import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
@@ -24,6 +26,7 @@ import db from '../../database/database.js';
 import gameutility from './gameutility.js';
 import { updatePlayerGame } from '../../database/playerGamesManager.js';
 import { updateGame, deleteGame } from '../../database/gamesManager.js';
+import { insertEngineGame } from '../../database/engineGamesManager.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import {
 	computeRatingDataChanges,
@@ -113,7 +116,8 @@ function updateLeaderboardsInTransaction(
 ): RatingData | undefined {
 	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
-	const leaderboard_id = VariantLeaderboards[match.variant]!; // Will always be defined if the game is rated.
+	if (match.variant === null) throw new Error('A custom game cannot be rated.');
+	const leaderboard_id = VariantLeaderboards[match.variant]!;
 
 	// 1. Build initial rating data by reading from the DB.
 	let ratingdata: RatingData = {};
@@ -210,7 +214,7 @@ function addGameRecordsInTransaction(
 		increment_seconds,
 		match.variant,
 		match.rated ? 1 : 0,
-		VariantLeaderboards[match.variant] ?? null,
+		match.variant === null ? null : (VariantLeaderboards[match.variant] ?? null),
 		0, // All matches are considered public for now, even "Challenge a friend" games.
 		metadata.Result!,
 		termination,
@@ -250,6 +254,25 @@ function addGameRecordsInTransaction(
 			ratingData?.[player]?.rating_deviation_at_game ?? null,
 			ratingData?.[player]?.rating_deviation_after_game ?? null,
 		]);
+	}
+	if (match.engineParticipant) {
+		const engine = match.engineParticipant;
+		insertEngineGame({
+			game_id,
+			player_number: engine.color,
+			score:
+				victor === undefined
+					? null
+					: victor === engine.color
+						? 1
+						: victor === null
+							? 0.5
+							: 0,
+			clock_at_end_millis: ending_clocks?.[engine.color] ?? null,
+			engine: engine.engine,
+			engine_version: engine.version,
+			strength_level: engine.strengthLevel,
+		});
 	}
 }
 
@@ -342,28 +365,36 @@ function getOutcomeForPlayer(victor: Player | null | undefined, player: Player):
 function getICNOfGame(servergame: ServerGame, metadata: MetaData): string {
 	// Get ICN of game
 	let ICN: string;
-	const fullMove = servergame.validateMoves ? servergame.startSnapshot.fullMove : 1;
-	const moveRuleState = servergame.validateMoves
-		? servergame.startSnapshot.state_global.moveRuleState
-		: servergame.gameRules.moveRule !== undefined
-			? 0
-			: undefined;
-	const enpassant = servergame.validateMoves
-		? servergame.startSnapshot.state_global.enpassant
-		: undefined;
+	let fullMove = servergame.validateMoves ? servergame.startSnapshot.fullMove : 1;
+	let position;
+	let state_global: Partial<GlobalGameState> = {
+		moveRuleState: servergame.validateMoves
+			? servergame.startSnapshot.state_global.moveRuleState
+			: servergame.gameRules.moveRule !== undefined
+				? 0
+				: undefined,
+		enpassant: servergame.validateMoves
+			? servergame.startSnapshot.state_global.enpassant
+			: undefined,
+	};
+	if (servergame.match.position) {
+		const longFormat = icnconverter.ShortToLong_Format(servergame.match.position);
+		const options = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
+		fullMove = options.fullMove;
+		position = options.position;
+		state_global = options.state_global;
+	}
 	try {
 		ICN = icnconverter.LongToShort_Format(
 			{
 				...servergame,
 				metadata,
 				fullMove,
-				state_global: {
-					moveRuleState,
-					enpassant,
-				},
+				position,
+				state_global,
 			},
 			{
-				skipPosition: true,
+				skipPosition: servergame.match.position === undefined,
 				compact: true,
 				spaces: false,
 				comments: true,

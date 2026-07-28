@@ -7,6 +7,7 @@
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -25,14 +26,14 @@ import {
 import docutil from '../../util/docutil.js';
 import gameslot from './gameslot.js';
 import selection from '../chess/selection.js';
-import enginegame from '../misc/enginegame.js';
-import gameloader from './gameloader.js';
 import gamesession from './gamesession.js';
+import enginegame from '../misc/enginegame.js';
 import guipractice from '../gui/guipractice.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
 import { retryFetch, RetryFetchOptions } from '../../util/fetchRetrier.js';
+import { GameBus } from '../GameBus.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -72,14 +73,9 @@ let inCheckmatePractice: boolean = false;
 /** Whether the player is allowed to undo a move in the current position. */
 let undoingIsLegal: boolean = false;
 
-// Observe engine-game events (each hook no-ops outside checkmate practice).
-// Registered here rather than called by enginegame, so enginegame never
-// imports this practice-page module onto other pages hosting engine games.
-enginegame.registerHooks({
-	onHumanMove: registerHumanMove,
-	onEngineMove: registerEngineMove,
-	onGameConclude: onEngineGameConclude,
-});
+GameBus.addEventListener('user-move-played', registerHumanMove);
+GameBus.addEventListener('engine-move-played', registerEngineMove);
+GameBus.addEventListener('game-concluded', onEngineGameConclude);
 
 // Functions ----------------------------------------------------------------------------
 
@@ -126,7 +122,42 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		showGameControlButtons: true as true,
 	};
 
-	gameloader.startEngineGame(options);
+	startEngineGame(options);
+}
+
+function startEngineGame(options: {
+	timeControl: '-';
+	variantOptions: VariantOptions;
+	youAreColor: Player;
+	currentEngine: 'engineCheckmatePractice';
+	engineConfig: {
+		checkmateSelectedID: string;
+		engineTimeLimitPerMoveMillis: number;
+	};
+}): void {
+	gamesession.setSessionGame({ type: 'engine', role: options.youAreColor });
+	gameslot
+		.loadGamefile({
+			timeControl: options.timeControl,
+			variant: undefined,
+			dateTimestamp: Date.now(),
+			viewWhitePerspective: options.youAreColor === p.WHITE,
+			additional: {
+				variantOptions: options.variantOptions,
+				worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
+			},
+		})
+		.then(async ({ graphical }) => {
+			gamesession.concludeGameIfOver();
+			await enginegame.initEngineGame({
+				...options,
+				workerUrl: window.checkmatePracticePageData.workerUrl,
+				engineUrl: window.checkmatePracticePageData.engineUrl,
+			});
+			return graphical;
+		})
+		.then(() => gamesession.markLoadingDone())
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 
 function onGameUnload(): void {

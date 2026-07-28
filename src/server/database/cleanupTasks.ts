@@ -9,13 +9,9 @@ import db from './database.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { refreshTokenGracePeriodMillis } from '../controllers/authenticationTokens/tokenSigner.js';
 import { deleteExpiredPendingRegistrations } from './pendingRegistrationManager.js';
-import { deleteStaleUnconcludedEngineGames } from './engineGamesManager.js';
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 // const CLEANUP_INTERVAL_MS = 1000 * 20; // 20 seconds for dev testing
-
-/** How long an unconcluded (abandoned mid-game) engine game is kept resumable. */
-const ENGINE_GAME_RETENTION_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 function startPeriodicDatabaseCleanupTasks(): void {
 	performCleanupTasks(); // Run immediately to clean up now.
@@ -27,7 +23,6 @@ function performCleanupTasks(): void {
 	deleteExpiredPasswordResetTokens();
 	cleanUpExpiredRefreshTokens();
 	deleteExpiredPendingRegistrations();
-	deleteStaleEngineGames();
 }
 
 // ========================================================
@@ -98,19 +93,6 @@ function cleanUpExpiredRefreshTokens(): void {
 	} catch (error) {
 		const errorMessage =
 			'Failed to delete expired refresh tokens: ' +
-			(error instanceof Error ? error.message : String(error));
-		logEventsAndPrint(errorMessage, 'errLog');
-	}
-}
-
-/** Deletes engine games abandoned mid-game and untouched past the retention window. */
-function deleteStaleEngineGames(): void {
-	try {
-		const deleted = deleteStaleUnconcludedEngineGames(Date.now() - ENGINE_GAME_RETENTION_MS);
-		if (deleted > 0) console.log(`Cleanup: Deleted ${deleted} stale engine games.`);
-	} catch (error) {
-		const errorMessage =
-			'Failed to delete stale engine games: ' +
 			(error instanceof Error ? error.message : String(error));
 		logEventsAndPrint(errorMessage, 'errLog');
 	}

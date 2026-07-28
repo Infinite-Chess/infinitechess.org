@@ -117,13 +117,6 @@
 	cursor: pointer;
 }
 
-/* The flex display above outranks the equal-specificity .hidden utility, so restore
-   hiding for the engine-only variant filter (see variantSelector.setEngineOnlyVariants). */
-.variant-group-item.hidden,
-.variant-item.hidden {
-	display: none;
-}
-
 .variant-group-item,
 .variant-item {
 	border-top: 1px solid var(--c-border-muted);
@@ -392,4 +385,9 @@
 
 .slide-limit-name {
 	font-size: 15px;
+}
+
+/* Keep this last so component display rules cannot override hidden state. */
+.hidden {
+	display: none;
 }

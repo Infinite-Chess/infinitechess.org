@@ -8,7 +8,6 @@ import uuid from '../../shared/util/uuid.js';
 import jsutil from '../../shared/util/jsutil.js';
 
 import db, { dbCall } from './database.js';
-import { isEngineGameIdTaken } from './engineGamesManager.js';
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 
 // Types ----------------------------------------------------------------------------------------------
@@ -63,7 +62,7 @@ export function decodeGameId(idStr: string): number | undefined {
 }
 
 /**
- * Generates a game_id **UNIQUE** to all other game ids in the games AND engine_games tables.
+ * Generates a game_id unique to all other game ids in the games table.
  * @returns - A unique game_id.
  * @throws If a database error occurs.
  */
@@ -71,7 +70,7 @@ export function genUniqueGameID(): number {
 	let id: number;
 	do {
 		id = generateRandomGameId();
-	} while (isGameIdTaken(id) || isEngineGameIdTaken(id));
+	} while (isGameIdTaken(id));
 	return id;
 }
 

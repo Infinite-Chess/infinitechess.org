@@ -79,7 +79,7 @@ function logGame(servergame: ServerGame): void {
 	// What is the current day?
 	const day = timeutil.getCurrentDay(); // 'yyyy-mm-dd'
 	// What variant was played?
-	const variant = servergame.match.variant;
+	const variant = servergame.match.variant ?? 'Custom';
 
 	// Now record the number of moves played
 

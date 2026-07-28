@@ -16,6 +16,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Game, LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { ValidEngine } from '../../../shared/chess/engine.js';
 import type {
 	AuthSeekVariant,
 	ClockValues,
@@ -42,6 +43,7 @@ import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
+import { getFormattedEngineName } from '../../../shared/chess/engine.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
@@ -136,8 +138,10 @@ interface MatchInfo {
 	/** The match's unique ID. This is also the same ID the game will have when logged to the database. */
 	id: number;
 
-	/** The variant code of the game being played. */
-	variant: VariantCode;
+	/** The preset variant code, or null for a custom-position game. */
+	variant: VariantCode | null;
+	/** The custom starting-position ICN. */
+	position?: string;
 
 	/** The time this match was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	timeCreated: number;
@@ -152,6 +156,13 @@ interface MatchInfo {
 	clock: TimeControl;
 	/** The data held for each player */
 	playerData: PlayerGroup<PlayerData>;
+	/** Present only for games against an engine. Its moves arrive over the human's socket. */
+	engineParticipant?: {
+		color: Player;
+		engine: ValidEngine;
+		version: string;
+		strengthLevel: number;
+	};
 
 	/** The ID of the timeout which will auto-lose the player
 	 * whos turn it currently is when they run out of time. */
@@ -240,6 +251,7 @@ interface GameSetup {
 	variant: AuthSeekVariant;
 	time: TimeControl;
 	rated: boolean;
+	engineParticipant?: MatchInfo['engineParticipant'];
 }
 
 // Functions --------------------------------------------------------------------------------------
@@ -264,13 +276,12 @@ function initMatch(
 		};
 	}
 
-	if (setup.variant.kind !== 'preset')
-		throw new Error('Custom variant game starting is not yet implemented.');
-
 	return {
 		id,
-		variant: setup.variant.code,
+		variant: setup.variant.kind === 'preset' ? setup.variant.code : null,
+		...(setup.variant.kind === 'custom' && { position: setup.variant.position }),
 		playerData,
+		engineParticipant: setup.engineParticipant,
 		timeCreated: Date.now(),
 		rated: setup.rated,
 		clock: setup.time,
@@ -289,10 +300,11 @@ function initServerGame(
 	gameWithRules: Game & { gameRules: GameRules },
 	match: MatchInfo,
 	validateMoves: boolean,
-	variant: LoadedVariant,
+	variant: LoadedVariant | undefined,
 	moves: MoveRecord[] = [],
 ): ServerGame {
 	if (validateMoves) {
+		if (variant === undefined) throw new Error('Validated games require a preset variant.');
 		const boardsim = boardinit.initBoard(gameWithRules.gameRules, variant);
 		if (moves.length > 0) movepiece.makeAllMovesInGame(boardsim, moves);
 		return { ...gameWithRules, match, ...boardsim, spectators: new Set(), validateMoves: true };
@@ -430,10 +442,13 @@ function detachSpectatorFromGame(servergame: ServerGame, ws: CustomWebSocket): v
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
-	variant: VariantCode,
+	variant: VariantCode | null,
 ): PlayerGroup<Rating> {
 	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
-	const leaderboardId = VariantLeaderboards[variant] ?? Leaderboards.INFINITY;
+	const leaderboardId =
+		variant === null
+			? Leaderboards.INFINITY
+			: (VariantLeaderboards[variant] ?? Leaderboards.INFINITY);
 
 	const ratingData: PlayerGroup<Rating> = {};
 	for (const [color, { identifier }] of Object.entries(players)) {
@@ -469,6 +484,13 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 		const color = Number(p) as Player;
 		players[color] = buildServerUsernameContainer(data.identifier, ratings[color]);
 	}
+	if (match.engineParticipant) {
+		const { color, engine, strengthLevel } = match.engineParticipant;
+		players[color] = {
+			type: 'engine',
+			username: getFormattedEngineName(engine, strengthLevel),
+		};
+	}
 
 	const state: StaticGameState = {
 		...buildStaticGameSetup(servergame),
@@ -486,8 +508,8 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 	const match = servergame.match;
 	return {
-		// initMatch rejects non-preset seeks, so a live game's variant is always a preset code right now.
-		variant: { kind: 'preset', code: match.variant },
+		variant:
+			match.variant === null ? { kind: 'custom' } : { kind: 'preset', code: match.variant },
 		timeControl: match.clock,
 		timeCreated: match.timeCreated,
 	};
@@ -518,30 +540,39 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 		Object.assign(ratings, getRatingDataForGamePlayers(match.playerData, match.variant));
 	}
 
-	const white = match.playerData[p.WHITE]!.identifier;
-	const black = match.playerData[p.BLACK]!.identifier;
 	const scriptT = getScriptTranslations('shared', tconfig.DEFAULT_LANGUAGE); // Game metadata should only ever be in English
 	const variantEnglishName = variantregistry.getVariantName(match.variant, scriptT);
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(match.timeCreated);
+	const getPlayerName = (color: Player): string => {
+		if (match.engineParticipant?.color === color)
+			return getFormattedEngineName(
+				match.engineParticipant.engine,
+				match.engineParticipant.strengthLevel,
+			);
+		const identity = match.playerData[color]!.identifier;
+		return identity.signedIn ? identity.username : metadatautil.GUEST_NAME_ICN_METADATA;
+	};
 
 	const metadata: MetaData = {
-		Event: `${match.rated ? 'Rated' : 'Casual'} ${variantEnglishName} infinite chess game`,
+		Event: `${match.rated ? 'Rated' : 'Casual'} ${variantEnglishName} infinite chess game${match.engineParticipant ? ' against an engine' : ''}`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		Variant: variantEnglishName,
-		White: white.signedIn ? white.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
-		Black: black.signedIn ? black.username : metadatautil.GUEST_NAME_ICN_METADATA,
+		White: getPlayerName(p.WHITE),
+		Black: getPlayerName(p.BLACK),
 		TimeControl: match.clock,
 		UTCDate,
 		UTCTime,
 	};
+	if (match.variant !== null) metadata.Variant = variantEnglishName;
 
 	// ID + display elo, present only for signed-in players.
-	if (white.signedIn) {
+	const white = match.playerData[p.WHITE]?.identifier;
+	const black = match.playerData[p.BLACK]?.identifier;
+	if (white?.signedIn) {
 		metadata.WhiteID = uuid.base10ToBase62(white.user_id);
 		if (ratings[p.WHITE]) metadata.WhiteElo = metadatautil.getFormattedElo(ratings[p.WHITE]!);
 	}
-	if (black.signedIn) {
+	if (black?.signedIn) {
 		metadata.BlackID = uuid.base10ToBase62(black.user_id);
 		if (ratings[p.BLACK]) metadata.BlackElo = metadatautil.getFormattedElo(ratings[p.BLACK]!);
 	}
@@ -640,7 +671,7 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
 	const opponentRole = typeutil.invertPlayer(role);
 	const now = Date.now();
 	const match = servergame.match;
-	const opponentData = match.playerData[opponentRole]!;
+	const opponentData = match.playerData[opponentRole];
 
 	const participantState: ParticipantState = {
 		drawOffer: {
@@ -652,7 +683,7 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
 	// Include other relevant stuff if defined...
 
 	// If their opponent has disconnected and the claim window is set, send them that info too.
-	if (opponentData.disconnect.timeOpponentMayClaim !== undefined) {
+	if (opponentData?.disconnect.timeOpponentMayClaim !== undefined) {
 		participantState.disconnect = {
 			millisUntilClaimable: opponentData.disconnect.timeOpponentMayClaim - now,
 			voluntary: opponentData.disconnect.voluntary,
@@ -672,7 +703,7 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
  * offer (glow) and whether they're connected (button enabled). Undefined while the game is live.
  */
 function getRematchOfferInfo(servergame: ServerGame, role: Player): RematchOfferInfo | undefined {
-	if (!isGameOver(servergame)) return undefined;
+	if (!isGameOver(servergame) || isEngineGame(servergame)) return undefined;
 	const opponentRole = typeutil.invertPlayer(role);
 	const opponentData = servergame.match.playerData[opponentRole]!;
 	return {
@@ -714,7 +745,7 @@ function sendMessageToColor(
 	action: string,
 	value?: any,
 ): void {
-	const ws = match.playerData[role]!.socket;
+	const ws = match.playerData[role]?.socket;
 	if (!ws) return; // They are not connected, can't send message
 	if (sub === 'general') {
 		if (action === 'notify') return sendNotify(ws, value); // The value needs translating
@@ -772,6 +803,10 @@ function isGameOver(basegame: Game): boolean {
 	return basegame.gameConclusion !== undefined;
 }
 
+function isEngineGame(servergame: ServerGame): boolean {
+	return servergame.match.engineParticipant !== undefined;
+}
+
 /**
  * Returns true if the provided color's opponent has been told they can claim
  * victory/draw against them (i.e. the claim-window timestamp is set, whether or
@@ -809,6 +844,7 @@ function getGameClockValues(servergame: ServerGame & { untimed: false }): ClockV
 function updateClockValues(servergame: ServerGame & { untimed: false }): undefined {
 	const now = Date.now();
 	if (!isGameResignable(servergame) || isGameOver(servergame)) return;
+	if (servergame.clocks.colorTicking === undefined) return;
 	if (servergame.clocks.timeAtTurnStart === undefined)
 		throw new Error('cannot update clock values when timeAtTurnStart is not defined!');
 
@@ -922,6 +958,7 @@ export default {
 	printGame,
 	getSimplifiedGameString,
 	isGameOver,
+	isEngineGame,
 	isClaimWindowSetForColor,
 	isColorDisconnected,
 	getGameClockValues,

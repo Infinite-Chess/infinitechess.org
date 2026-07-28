@@ -10,7 +10,6 @@
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Edit, MoveFull, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
-import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
@@ -19,7 +18,6 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 
 import gamecore from './gamecore.js';
 import gameslot from './gameslot.js';
-import guiclock from '../gui/guiclock.js';
 import { Mesh } from '../rendering/piecemodels.js';
 import premoves from './premoves.js';
 import animation from '../rendering/animation.js';
@@ -47,15 +45,7 @@ function commitMove(
 
 	movepiece.makeMove(gamefile, move); // Logical changes
 
-	// Stamp the move with how much time the player had left after playing it. MUST run before
-	// 'moves-changed' below: guiclock's turn-highlight reads clocks.colorTicking on that event,
-	// and clock.push() is what syncs colorTicking to the just-flipped whosTurn.
-	if (!gamefile.untimed && gamesession.getGameType() === 'engine') {
-		// Engine games: push the clocks locally and record the resulting stamp.
-		const stamp = clock.push(gamefile);
-		guiclock.push(gamefile.clocks!);
-		if (stamp !== undefined) move.clockStamp = stamp;
-	} else if (clockStamp !== undefined) {
+	if (clockStamp !== undefined) {
 		// Online games: the server is boss of the clocks, so record the stamp it reported.
 		move.clockStamp = clockStamp;
 	}

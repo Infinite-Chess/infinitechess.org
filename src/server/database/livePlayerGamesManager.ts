@@ -99,16 +99,13 @@ export function updateLivePlayerGame(
 	}, `Error updating live player game (game_id=${game_id}, player=${player_number})`);
 }
 
-/**
- * Retrieves all player rows for a given live game. Used on server startup.
- * @param game_id - The game ID.
- * @returns An array of live_player_games records for this game.
- * @throws If a database error occurs.
- */
-export function getLivePlayerGamesForGame(game_id: number): LivePlayerGamesRecord[] {
-	const query = `SELECT * FROM live_player_games WHERE game_id = ? ORDER BY player_number`;
+/** Retrieves every live human participant for startup restoration. */
+export function getAllLivePlayerGames(): LivePlayerGamesRecord[] {
 	return dbCall(
-		() => db.all<LivePlayerGamesRecord>(query, [game_id]),
-		`Error retrieving live player games for game ${game_id}`,
+		() =>
+			db.all<LivePlayerGamesRecord>(
+				'SELECT * FROM live_player_games ORDER BY game_id, player_number',
+			),
+		'Error retrieving all live player games',
 	);
 }

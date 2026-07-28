@@ -16,7 +16,6 @@
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit';
-import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
 import type { EditorSaveState } from '../../editorstores/estoretypes';
 import type { MetaData, MovePacket } from '../../../../../../shared/types.js';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
@@ -26,12 +25,10 @@ import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
-import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card';
 import variantcache from '../../../../../../shared/chess/variants/variantcache';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
-import { engineDictionary } from '../../../../../../shared/chess/engine';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
@@ -61,6 +58,7 @@ import selectiontool from '../tools/selection/selectiontool';
 import gamecompressor from '../../chess/gamecompressor';
 import guiboardcontrols from '../../gui/guiboardcontrols';
 import clientmetadatautil from '../../chess/clientmetadatautil';
+import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
 
 // Constants ----------------------------------------------------------------------
 
@@ -202,46 +200,25 @@ function startLocalGame(): void {
 	});
 }
 
-function startEngineGame(engineUIConfig: EngineUIConfig): void {
-	const currentEngine = 'apeiron';
-
+async function startEngineGame(): Promise<void> {
 	const variantOptions = getValidatedPosition();
 	if (variantOptions === null) return;
-
-	// Determine whether it's not supported...
-
-	// Set world border automatically, if wished
-	if (engineUIConfig.setDefaultWorldBorder) {
-		delete variantOptions.gameRules.worldBorder; // The user opted into the default — override any existing border.
-		apeiron_card.setDefaultWorldBorder(
-			variantOptions,
-			engineDictionary[currentEngine].worldBorder,
-		);
-	}
-
-	// Does the engine support the position and settings?
-	const supported_result = apeiron_card.isPositionSupported(variantOptions);
-	if (!supported_result.supported) {
-		toast.show(`${translations.editor.position_not_supported} ${supported_result.reason}`, {
-			error: true,
-		});
-		return;
-	}
-
-	gamesession.unloadGame();
-	gameloader.startCustomEngineGame({
-		timeControl: engineUIConfig.timeControl,
-		additional: {
-			variantOptions,
+	const icn = icnconverter.LongToShort_Format(
+		{ metadata: {} as MetaData, ...variantOptions },
+		{
+			skipPosition: false,
+			compact: true,
+			spaces: false,
+			comments: false,
+			make_new_lines: false,
+			move_numbers: false,
 		},
-		youAreColor: engineUIConfig.youAreColor,
-		currentEngine,
-		engineConfig: {
-			engineTimeLimitPerMoveMillis:
-				engineDictionary[currentEngine].defaultTimeLimitPerMoveMillis,
-			strengthLevel: engineUIConfig.strengthLevel,
-		},
+	);
+	await gameSetupModalHandoff.save({
+		icn,
+		mode: 'computer',
 	});
+	window.location.assign('/');
 }
 
 // Helpers ----------------------------------------------------------------

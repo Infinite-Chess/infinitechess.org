@@ -17,6 +17,7 @@ import type { GameState, GlobalGameState } from './state.js';
 import type { Snapshot, VariantOptions, LoadedVariant } from './gamefile.js';
 
 import jsutil from '../../util/jsutil.js';
+import bimath from '../../util/math/bimath.js';
 import organizedpieces from './organizedpieces.js';
 import variantpreviewer from '../variants/variantpreviewer.js';
 
@@ -66,6 +67,8 @@ function initBoardPreview(
 	editor: boolean = false,
 	/** Only has an effect if the `worldBorder` gamerule is not present. */
 	worldBorderDist?: bigint,
+	/** Clamps each generated world-border edge to this absolute coordinate. */
+	worldBorderCap?: bigint,
 ): BoardPreview {
 	if (
 		variantOptions?.gameRules.moveRule !== undefined &&
@@ -121,12 +124,19 @@ function initBoardPreview(
 
 	if (gameRules.worldBorder === undefined && worldBorderProperty !== undefined) {
 		// No override for exact world border dimensions provided, calculate it using the provided distance.
-		gameRules.worldBorder = {
+		const generatedBorder = {
 			left: startingPositionBox.left - worldBorderProperty,
 			right: startingPositionBox.right + worldBorderProperty,
 			bottom: startingPositionBox.bottom - worldBorderProperty,
 			top: startingPositionBox.top + worldBorderProperty,
 		};
+		if (worldBorderCap !== undefined) {
+			generatedBorder.left = bimath.max(generatedBorder.left, -worldBorderCap);
+			generatedBorder.right = bimath.min(generatedBorder.right, worldBorderCap);
+			generatedBorder.bottom = bimath.max(generatedBorder.bottom, -worldBorderCap);
+			generatedBorder.top = bimath.min(generatedBorder.top, worldBorderCap);
+		}
+		gameRules.worldBorder = generatedBorder;
 	}
 
 	const startSnapshot: Snapshot = {

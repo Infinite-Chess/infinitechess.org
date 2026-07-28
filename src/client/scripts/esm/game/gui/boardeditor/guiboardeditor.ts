@@ -21,7 +21,6 @@ import stransformations from '../../boardeditor/tools/selection/stransformations
 import guiresetposition from './actions/guiresetposition.js';
 import guiclearposition from './actions/guiclearposition.js';
 import guistartlocalgame from './actions/guistartlocalgame.js';
-import guistartenginegame from './actions/guistartenginegame.js';
 import guiloadpositionsavelist from './actions/loadposition/guiloadpositionsavelist.js';
 
 // Elements ---------------------------------------------------------------
@@ -139,7 +138,6 @@ function closeAllFloatingWindows(resetPositioning: boolean): void {
 	guiloadposition.close(resetPositioning);
 	guigamerules.close(resetPositioning);
 	guistartlocalgame.close(resetPositioning);
-	guistartenginegame.close(resetPositioning);
 }
 
 // Callbacks ---------------------------------------------------------------
@@ -242,9 +240,8 @@ function callback_Action(e: Event): void {
 			return;
 		}
 		case 'start-engine-game': {
-			const wasOpen = guistartenginegame.isOpen();
 			closeAllFloatingWindows(false);
-			if (!wasOpen) guistartenginegame.open();
+			void eactions.startEngineGame();
 			return;
 		}
 		// Selection (buttons that are always active)

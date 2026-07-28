@@ -805,67 +805,6 @@
                         </div>
                     </div>
 
-                    <!-- Start engine game UI for Board Editor -->
-                    <div id="engine-game-UI" class="center narrow scrolling floating-window hidden">
-                        <div id="engine-game-UI-header" class="window-header">
-                            <span><%=t('play.editor.start_engine_game')%></span>
-                            <button id="close-engine-game-UI" class="close-floating-window">&times;</button>
-                        </div>
-
-                        <hr class="divider">
-
-
-                        <div class="flwindow-section">
-                            <label><%=t('play.editor.play_as')%></label>
-                            <div class="toggle-group">
-                                <input type="radio" id="engine-game-white" name="human-player" value="white" checked>
-                                <label for="engine-game-white"><%=t('play.editor.white')%></label>
-                                <input type="radio" id="engine-game-black" name="human-player" value="black">
-                                <label for="engine-game-black"><%=t('play.editor.black')%></label>
-                            </div>
-                        </div>
-
-                        <div class="flwindow-section">
-                            <label><%=t('play.editor.time_control')%></label>
-                            <input type="text" id="engine-game-timecontrol" placeholder="e.g. 600+6">
-                        </div>
-
-                        <div class="flwindow-section">
-                            <label><%=t('play.editor.engine_difficulty')%></label>
-                            <div class="toggle-group">
-                                <input type="radio" id="engine-game-easy" name="engine-strength" value="easy" checked>
-                                <label for="engine-game-easy"><%=t('play.editor.easy')%></label>
-                                <input type="radio" id="engine-game-medium" name="engine-strength" value="medium" checked>
-                                <label for="engine-game-medium"><%=t('play.editor.medium')%></label>
-                                <input type="radio" id="engine-game-hard" name="engine-strength" value="hard" checked>
-                                <label for="engine-game-hard"><%=t('play.editor.hard')%></label>
-                            </div>
-                        </div>
-
-                        <div class="flwindow-section">
-                            <label><%=t('play.editor.use_default_border')%></label>
-                            <div class="toggle-group">
-                                <input type="radio" id="engine-game-border-no" name="world-border" value="no" checked>
-                                <label for="engine-game-border-no"><%=t('play.editor.no')%></label>
-                                <input type="radio" id="engine-game-border-yes" name="world-border" value="yes">
-                                <label for="engine-game-border-yes"><%=t('play.editor.yes')%></label>
-                            </div>
-                        </div>
-
-                        <hr class="divider">
-
-                        <div class="flwindow-section">
-                            <label>
-                                <%=t('play.editor.start_engine_game_message')%>
-                            </label>
-                        </div>
-
-                        <div class="unselectable confirmation-buttons">
-                            <button id="start-engine-game-no" class="btn btn-secondary"><%=t('play.editor.no')%></button>
-                            <button id="start-engine-game-yes" class="btn btn-primary"><%=t('play.editor.yes')%></button>
-                        </div>
-                    </div>
-
                     <!-- Pause UI -->
                     <div id="pauseUI" class="pauseUI hidden">
                         <p class="paused"><%=t('play.pause.title')%></p>

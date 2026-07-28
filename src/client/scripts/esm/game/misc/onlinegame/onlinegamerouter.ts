@@ -169,7 +169,7 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 
 	// Ping is round-trip time (RTT), So divided by two to get the approximate
 	// time that has elapsed since the server sent us the correct clock values
-	const halfPing = pingManager.getHalfPing();
+	const halfPing = Math.round(pingManager.getHalfPing());
 	if (halfPing > 2500)
 		console.error(
 			'Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!',
@@ -180,7 +180,10 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 		throw Error(
 			`Invalid color "${clockValues.colorTicking}" to modify clock value to account for ping.`,
 		);
-	clockValues.clocks[clockValues.colorTicking]! -= halfPing;
+	clockValues.clocks[clockValues.colorTicking] = Math.max(
+		0,
+		Math.round(clockValues.clocks[clockValues.colorTicking]! - halfPing),
+	);
 
 	// Flag what time the player who's clock is ticking will lose on time.
 	// Do this because while while the gamefile is being constructed, the time left may become innacurate.
@@ -202,10 +205,10 @@ function flushQueue(): void {
 function handleUpdatedClock(gamefile: GameFile, clockValues: ClockValues): void {
 	movesendreceive.applyClockValues(gamefile, clockValues);
 
-	// 'clock' only arrives right after WE move, so the last move is ours, and our now-frozen
-	// time (untouched by ping, which only adjusts the opponent's ticking clock) is its stamp.
-	// The opponent gets this stamp on their 'move' message; we must derive it since we don't.
-	const ourColor = gamesession.getRole()!;
+	// Participants also use this as their latest move's clock stamp.
+	// Spectators only apply the clock state.
+	const ourColor = gamesession.getRole();
+	if (ourColor === undefined) return;
 	const ourMove = moveutil.getLastMove(gamefile.moves)!;
 	ourMove.clockStamp = clockValues.clocks[ourColor]!;
 }

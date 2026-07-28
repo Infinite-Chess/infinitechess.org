@@ -5,7 +5,6 @@
  */
 
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
@@ -314,11 +313,7 @@ function isStarfieldVisible(): boolean {
 
 	// Last check is whether our screen is entirely contained within the worldBorder box.
 	// If so, the starfield is NOT visible.
-	// The screen box is undefined until the board geometry is first computed — on the opening
-	// frame of a world-bordered game (every engine game has a border, so they always reach here)
-	// starfield.update can run first. Treat it as not-yet-visible; it self-corrects next frame.
-	const screenBox = boardgeometry.gboundingBox(false) as BoundingBox | undefined;
-	if (screenBox === undefined) return false;
+	const screenBox = boardgeometry.gboundingBox(false);
 	return !bounds.boxContainsBox(gamefile.gameRules.worldBorder, screenBox);
 }
 

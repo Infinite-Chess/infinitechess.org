@@ -3,9 +3,9 @@
 /**
  * This script keeps the live-state of the active games in the database up to date.
  * It computes the column values to be persisted for each state-change event,
- * then updates the live_games and live_player_games tables accordingly.
+ * then updates the live game and participant tables accordingly.
  *
- * See dev-utils/live-game-persistence.md for the schema and event matrix.
+ * See docs/systems/LIVE_GAME_PERSISTENCE.md for the schema and event matrix.
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
@@ -23,6 +23,10 @@ import {
 	insertLivePlayerGame,
 	updateLivePlayerGame,
 } from '../../database/livePlayerGamesManager.js';
+import {
+	insertLiveEngineGame,
+	updateLiveEngineGame,
+} from '../../database/liveEngineGamesManager.js';
 
 // Value Computation ----------------------------------------------------------------------------------
 
@@ -66,6 +70,11 @@ function persistCurrentClockTimes(servergame: ServerGame): void {
 			time_remaining_ms: servergame.clocks.currentTime[player] ?? null,
 		});
 	}
+	const engine = servergame.match.engineParticipant;
+	if (engine)
+		updateLiveEngineGame(servergame.match.id, engine.color, {
+			time_remaining_ms: servergame.clocks.currentTime[engine.color] ?? null,
+		});
 }
 
 /**
@@ -116,7 +125,7 @@ function onGameCreated(servergame: ServerGame): void {
 		game_id: match.id,
 		time_created: match.timeCreated,
 		variant: match.variant,
-		position: null, // Custom games (which would set this) aren't yet startable; preset games have no custom position.
+		position: match.position ?? null,
 		clock: match.clock,
 		rated: match.rated ? 1 : 0,
 		private: 0, // All games are public for now, even "Challenge a friend" games.
@@ -136,6 +145,19 @@ function onGameCreated(servergame: ServerGame): void {
 	persist(() => {
 		insertLiveGame(record);
 		for (const playerRecord of playerRecords) insertLivePlayerGame(playerRecord);
+		if (match.engineParticipant) {
+			const engine = match.engineParticipant;
+			insertLiveEngineGame({
+				game_id: match.id,
+				player_number: engine.color,
+				time_remaining_ms: servergame.untimed
+					? null
+					: (servergame.clocks.currentTime[engine.color] ?? null),
+				engine: engine.engine,
+				engine_version: engine.version,
+				strength_level: engine.strengthLevel,
+			});
+		}
 	});
 }
 
@@ -227,6 +249,18 @@ function onBothDisconnectedTimerChanged(servergame: ServerGame): void {
 	);
 }
 
+/** Persists a paused or resumed engine turn. */
+function onEngineClockChanged(servergame: ServerGame): void {
+	if (servergame.untimed) return;
+	persist(() => {
+		updateLiveGame(servergame.match.id, {
+			color_ticking: servergame.clocks.colorTicking ?? null,
+			clock_snapshot_time: servergame.clocks.timeAtTurnStart ?? null,
+		});
+		persistCurrentClockTimes(servergame);
+	});
+}
+
 /**
  * Called when a concluded game is logged to the permanent database. Removes the row: the result
  * now lives in the permanent tables, so there's nothing left to restore across a restart. The game
@@ -247,5 +281,6 @@ export default {
 	onPlayerDisconnected,
 	onPlayerReconnected,
 	onBothDisconnectedTimerChanged,
+	onEngineClockChanged,
 	onGameLogged,
 };

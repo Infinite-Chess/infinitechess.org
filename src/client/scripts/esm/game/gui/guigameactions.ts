@@ -227,7 +227,6 @@ function callback_Abort(): void {
 /** Concludes the loaded engine game in place (there's no server game to message). */
 function concludeEngineGameLocally(conclusion: GameConclusion): void {
 	const gamefile = gameslot.getGamefile()!;
-	if (gamefile.gameConclusion) return; // Already over (e.g. the engine's move just concluded it).
 	gamefile.gameConclusion = conclusion;
 	gameslot.concludeGame();
 }

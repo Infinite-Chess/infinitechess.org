@@ -106,6 +106,8 @@ export interface Additional {
 	editor?: boolean;
 	/** If present, the resulting gamefile will have a world border this distance away from the starting position's bounding box. */
 	worldBorderDist?: bigint;
+	/** Maximum absolute edge of a world border generated from {@link worldBorderDist}. */
+	worldBorderCap?: bigint;
 	/** Exact dimensions of the world border. OVERRIDES {@link worldBorderDist} if both are specified. */
 	worldBorder?: BoundingBox;
 }
@@ -220,6 +222,7 @@ function initGameFile(
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,
+		additional.worldBorderCap,
 	);
 	return loadGameWithBoard(gameWithRules, boardsim, additional.moves, validateMoves);
 }

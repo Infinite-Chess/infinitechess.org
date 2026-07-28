@@ -4,12 +4,12 @@
  * This script manages the game setup invite/seek creation modal.
  */
 
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { ModalMode } from '../../components/gameSetupModalHandoff.js';
-import type { CreateEngineGameBody, GameMode, TimeControl } from '../../../../../shared/types.js';
+import type { GameMode, TimeControl } from '../../../../../shared/types.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
+import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
 import { engineDictionary, ValidEngine } from '../../../../../shared/chess/engine.js';
 
@@ -152,7 +152,7 @@ export function syncRatedButton(): void {
 }
 
 /** Returns the color the player has selected, or null for random. */
-function getSelectedColor(): Player | null {
+function getSelectedColor(): typeof players.WHITE | typeof players.BLACK | null {
 	const sideBtn = document.querySelector<HTMLElement>('[data-side].active')!;
 	const sideVal = sideBtn.getAttribute('data-side')!;
 	if (sideVal === 'random') return null;
@@ -190,14 +190,12 @@ function handleComputerGame(): void {
 	if (!isVariantSupportedByEngine()) return; // Error toast already shown.
 
 	const time: TimeControl = timeControls.getTimeControl();
-	// The engine takes whichever color the player doesn't.
-	const color = (getSelectedColor() ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK)) as CreateEngineGameBody['color']; // prettier-ignore
 	const strengthLevel = getSelectedEngineStrength();
 
 	lobby.createEngineGame({
 		variant,
 		timeControl: time,
-		color,
+		color: getSelectedColor(),
 		engine: COMPUTER_GAME_ENGINE,
 		strengthLevel,
 	});
@@ -210,23 +208,16 @@ function handleComputerGame(): void {
  */
 function isVariantSupportedByEngine(): boolean {
 	const customOptions = variantSelector.getSelectedVariantOptions();
+	if (customOptions === null) return true;
 
-	if (customOptions === null) {
-		// Preset selection: the engine plays a fixed set of variants.
-		const variant = variantSelector.getSeekVariant();
-		if (variant?.kind === 'preset' && !apeiron_card.SUPPORTED_VARIANTS.has(variant.code)) {
-			toast.show("The engine doesn't support this variant yet.", { error: true });
-			return false;
-		}
-		return true;
-	}
-
-	// Custom position: check it the same way the game will load it — with the
-	// engine's default world border applied when the position lacks one.
 	const checkedOptions = { ...customOptions, gameRules: { ...customOptions.gameRules } };
-	apeiron_card.setDefaultWorldBorder(
+	boardpreviewer.initBoardPreview(
+		checkedOptions.gameRules,
+		undefined,
 		checkedOptions,
+		false,
 		engineDictionary[COMPUTER_GAME_ENGINE].worldBorder,
+		apeiron_card.BORDER_CAP,
 	);
 	const result = apeiron_card.isPositionSupported(checkedOptions);
 	if (!result.supported) {
@@ -251,7 +242,7 @@ function openModal(mode: ModalMode): void {
 
 	element_rowGameMode.classList.toggle('hidden', mode === 'computer');
 	element_rowStrength.classList.toggle('hidden', mode !== 'computer');
-	// Computer games can only be preset variants the engine supports.
+	// Computer games allow supported presets and validated custom positions.
 	variantSelector.setEngineOnlyVariants(mode === 'computer');
 
 	element_modalOverlay.classList.remove('hidden');

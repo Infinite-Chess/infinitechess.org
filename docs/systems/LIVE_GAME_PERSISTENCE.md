@@ -1,15 +1,17 @@
 # Live Game Persistence
 
-Active games are persisted to the database so they survive server restarts instead of being aborted. This document describes the two-table schema, what each column stores, and the event matrix that drives every DB write.
+Active games are persisted to the database so they survive server restarts instead of being aborted. This document describes the three-table schema, what each column stores, and the event matrix that drives every DB write.
 
 ---
 
-## Database Schema: Two Tables
+## Database Schema: Three Tables
 
 Following the pattern of `games` + `player_games` for ended games, live state is split across two tables to support an arbitrary number of players per game:
 
 - **`live_games`** — One row per active game. Contains game-level state.
-- **`live_player_games`** — One row per player per active game. Contains per-player state.
+- **`live_player_games`** — One row per human player per active game. Contains identity and disconnect state.
+
+- **`live_engine_games`** — One row per engine participant per active game. Contains engine settings and clock state.
 
 ### Table 1: `live_games`
 
@@ -65,7 +67,7 @@ Per-player `last_draw_offer_ply` lives in `live_player_games`.
 
 ### Table 2: `live_player_games`
 
-One row per player per live game.
+One row per human player per live game.
 
 | Column                        | Type             | Notes                                                                                                                                       |
 | ----------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -89,12 +91,28 @@ After restoring per-player disconnect state, if **both** players are disconnecte
 
 ---
 
+### Table 3: `live_engine_games`
+
+One row per engine participant per live game. Engines have no identity or disconnect state, so they are stored separately from human players.
+
+| Column              | Type             | Notes                                                        |
+| ------------------- | ---------------- | ------------------------------------------------------------ |
+| `game_id`           | INTEGER NOT NULL | FK to `live_games.game_id` with cascading deletion.          |
+| `player_number`     | INTEGER NOT NULL | The engine's color.                                          |
+| `time_remaining_ms` | INTEGER          | Milliseconds remaining at time of snapshot. NULL if untimed. |
+| `engine`            | TEXT NOT NULL    | Engine identifier.                                           |
+| `engine_version`    | TEXT NOT NULL    | Version from the build manifest at game creation.            |
+| `strength_level`    | INTEGER NOT NULL | Selected engine strength.                                    |
+
+---
+
 ## Event Matrix: When Each Column Is Written
 
 | Event                                                       | `live_games` Columns Updated                                                     | `live_player_games` Columns Updated                                                                 |
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **Game created**                                            | INSERT full row (all Group 1 columns, defaults for the rest)                     | INSERT one row per player (identity, defaults)                                                      |
-| **Move submitted**                                          | `moves`, `color_ticking`, `clock_snapshot_time`, `validate_moves`                | `time_remaining_ms` (both players)                                                                  |
+| **Game created**                                            | INSERT full row (all Group 1 columns, defaults for the rest)                     | INSERT human rows into `live_player_games` and any engine row into `live_engine_games`              |
+| **Move submitted**                                          | `moves`, `color_ticking`, `clock_snapshot_time`, `validate_moves`                | `time_remaining_ms` for every participant                                                           |
+| **Engine turn paused/resumed**                              | `color_ticking`, `clock_snapshot_time`                                           | `time_remaining_ms` for every participant                                                           |
 | **Draw offer extended**                                     | `draw_offer_state`                                                               | `last_draw_offer_ply` (offering player)                                                             |
 | **Draw offer declined**                                     | `draw_offer_state` → NULL                                                        | —                                                                                                   |
 | **Draw accepted**                                           | DELETE row (game logged to permanent tables) — cascades to `live_player_games`   | (cascades)                                                                                          |
@@ -112,6 +130,6 @@ After restoring per-player disconnect state, if **both** players are disconnecte
 ### Game conclusion & the rematch window
 
 The moment a game concludes it is **logged to the permanent `games`/`player_games` tables**, and its `live_games` row (plus
-cascaded `live_player_games` rows) is **deleted**. The game **lingers in memory** to host the rematch handshake and cheat-report
+cascaded participant rows) is **deleted**. The game **lingers in memory** to host the rematch handshake and cheat-report
 window until both players leave, at which point it is evicted from memory. Rematch offers, the `finalized` flag, and post-game
 reconnection cushions are all ephemeral (never persisted).

@@ -4,7 +4,7 @@
  * Apeiron Analysis Worker
  *
  * Persistent-session engine worker for the analysis board. Unlike the gameplay
- * worker (apeiron.ts) which answers one best-move request per message, this
+ * worker (apeiron.worker.ts), which answers one best-move request per message, this
  * runs an ongoing MultiPV search of the current position and streams UCI-like
  * info updates back to the main thread after every completed depth.
  *
@@ -28,9 +28,37 @@
  */
 
 import type { EvaluateResult } from './gamereview.js';
+import type { EngineWasmModule } from '../../game/chess/engines/enginewasm.js';
 
-/** The engine module's exports (default init + Engine + initThreadPool + stop_flag_ptr + …). */
-let wasm: any;
+import { loadEngineWasm } from '../../game/chess/engines/enginewasm.js';
+
+interface AnalysisWasmEngine {
+	set_position: (icn: string) => void;
+	get_legal_moves_js: () => { from: string; to: string; promotion?: string | null }[];
+	is_in_check: () => boolean;
+	analyse: (
+		options: {
+			multi_pv: number;
+			max_depth: number;
+			start_depth: number;
+			slice_ms: number;
+		},
+		onInfo: (info: AnalysisInfo) => void,
+	) => AnalysisInfo | null;
+	free: () => void;
+}
+
+interface AnalysisWasmModule extends EngineWasmModule {
+	Engine: {
+		from_icn: (icn: string, config: Record<string, never>) => AnalysisWasmEngine;
+	};
+	set_hash_size: (hashMb: number) => void;
+	stop_flag_ptr: () => number;
+	stop_analysis_helpers: () => void;
+	reset_engine_state: () => void;
+}
+
+let wasm: AnalysisWasmModule;
 
 // Protocol types --------------------------------------------------------------
 
@@ -109,9 +137,9 @@ export type { AnalysisCommand, AnalysisResponse, AnalysisInfo, AnalysisLine, GoO
 
 // State ------------------------------------------------------------------------
 
-let engine: any;
+let engine: AnalysisWasmEngine | undefined;
 /** Persistent searcher for adjacent reverse-ordered Game Review positions. */
-let evaluationEngine: any;
+let evaluationEngine: AnalysisWasmEngine | undefined;
 let wasmReady = false;
 
 /**
@@ -142,21 +170,18 @@ let reachedDepth = 0;
 
 async function initialize(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promise<void> {
 	try {
-		// Absolute, computed specifier so the bundler leaves this as a runtime import.
-		const glueUrl = new URL(msg.engineUrl, self.location.origin).href;
-		wasm = await import(glueUrl);
-		const output = await wasm.default(); // Loads the sibling .wasm from the same /engine/<hash>/ dir.
-		wasm.set_hash_size(msg.hashMb);
-
-		// A single-threaded engine build exports no initThreadPool; guard so it degrades
-		// gracefully to a 1-thread search instead of throwing.
-		const engineIsMultithreaded = typeof wasm.initThreadPool === 'function';
+		const loaded = await loadEngineWasm<AnalysisWasmModule>(
+			msg.engineUrl,
+			msg.threads ?? 1,
+			(module) => module.set_hash_size(msg.hashMb),
+		);
+		wasm = loaded.wasm;
+		const { output, multithreaded: engineIsMultithreaded } = loaded;
 
 		if (msg.threads && msg.threads > 0) {
 			// Search worker: bring up the Lazy SMP pool BEFORE any search (analyse() calls into
 			// rayon), then hand the page the shared stop flag for instant, warm-hash position
 			// switches (the search polls the flag even single-threaded).
-			if (msg.threads > 1 && engineIsMultithreaded) await wasm.initThreadPool(msg.threads);
 			postMessage({
 				type: 'sharedmem',
 				buffer: output.memory.buffer,
@@ -208,7 +233,7 @@ function postLegalMoves(requestId: number, icn: string): void {
 		return;
 	}
 
-	let legalMoveEngine: any;
+	let legalMoveEngine: AnalysisWasmEngine | undefined;
 	try {
 		legalMoveEngine = wasm.Engine.from_icn(icn, {});
 		const legalMoves: { from: string; to: string; promotion?: string | null }[] =
@@ -310,7 +335,7 @@ async function runLoop(): Promise<void> {
 			// when the page writes the shared stop flag.
 			const startDepth = Math.min(reachedDepth + 1, opts.maxDepth);
 
-			const summary: AnalysisInfo | null = engine.analyse(
+			const summary: AnalysisInfo | null = engine!.analyse(
 				{
 					multi_pv: opts.multiPv,
 					max_depth: opts.maxDepth,

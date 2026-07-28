@@ -18,7 +18,9 @@ import { GameBus } from '../GameBus.js';
 import gamesession from '../chess/gamesession.js';
 import movesequence from '../chess/movesequence.js';
 import gamecompressor from '../chess/gamecompressor.js';
+import { maxEngineThreads } from '../chess/engines/enginewasm.js';
 import enginelegalmovesdebug from './enginelegalmovesdebug.js';
+import socketmessages from '../../websocket/socketmessages.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -31,20 +33,6 @@ interface EngineConfig {
 	multiPv?: number;
 }
 
-/**
- * Hooks an interested module (checkmate practice) can register to observe engine-game
- * events. Registered by the module itself, so this script never imports page-specific
- * code (e.g. the practice page's GUI) onto other pages hosting engine games.
- */
-interface EngineGameHooks {
-	/** Called when the human player has made a move. */
-	onHumanMove?: () => void;
-	/** Called when the engine has made a move. */
-	onEngineMove?: () => void;
-	/** Called when the engine game concludes. */
-	onGameConclude?: () => void;
-}
-
 // Variables --------------------------------------------------------------------
 
 /** Whether we are currently in an engine game. */
@@ -53,16 +41,13 @@ let engineColor: Player | undefined;
 let currentEngine: string | undefined; // name of the current engine used
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 let engineWorker: Worker | undefined;
-/** Observer hooks registered via {@link registerHooks}. */
-let hooks: EngineGameHooks = {};
+let rejectEngineLoad: ((reason: Error) => void) | undefined;
 
 // Events -----------------------------------------------------------------------
 
 GameBus.addEventListener('user-move-played', () => onMovePlayed());
-GameBus.addEventListener('game-concluded', () => {
-	if (!inEngineGame) return;
-	hooks.onGameConclude?.();
-});
+GameBus.addEventListener('game-concluded', () => terminate());
+GameBus.addEventListener('game-unloaded', () => terminate());
 
 enginelegalmovesdebug.init({
 	canRequest: () => inEngineGame && engineWorker !== undefined,
@@ -77,63 +62,71 @@ enginelegalmovesdebug.init({
  * @param options - An object that contains the properties `currentEngine` and `engineConfig`
  */
 function initEngineGame(options: {
-	youAreColor: Player;
+	/** Omit for spectators, who only use this worker for the legal-moves overlay. */
+	youAreColor?: Player;
 	currentEngine: string;
 	engineConfig: EngineConfig;
-	/** Hashed URL of the engine's worker script (from the asset manifest). Falls back to the legacy unhashed path. */
-	workerUrl?: string;
+	/** Hashed URL of the engine's worker script. */
+	workerUrl: string;
 	/**
 	 * Served engine-glue URL (`manifest['engine']`) for wasm-engine workers that load it at
 	 * runtime (apeiron). Sent to the worker as an init message, with the thread count.
 	 */
-	engineUrl?: string;
+	engineUrl: string;
 }): Promise<void> {
 	console.log(`Starting engine game with engine "${options.currentEngine}".`);
 
 	inEngineGame = true;
-	engineColor = typeutil.invertPlayer(options.youAreColor);
+	engineColor =
+		options.youAreColor === undefined ? undefined : typeutil.invertPlayer(options.youAreColor);
 	currentEngine = options.currentEngine;
 	engineConfig = options.engineConfig;
 
 	// Initialize the engine as a webworker
 	if (!window.Worker) {
 		alert("Your browser doesn't support web workers. Cannot play against an engine.");
-		// Reject the promise returned by this function
-		return Promise.reject(
-			new Error("Cannot finish loading engine game because web workers aren't supported."),
+		const error = new Error(
+			"Cannot finish loading engine game because web workers aren't supported.",
 		);
+		resignFailedEngine();
+		return Promise.reject(error);
 	}
-	const workerUrl = options.workerUrl ?? `../scripts/esm/game/chess/engines/${currentEngine}.js`;
-	engineWorker = new Worker(workerUrl, {
+	engineWorker = new Worker(options.workerUrl, {
 		type: 'module',
 	}); // module type allows the web worker to import methods and types from other scripts.
 
 	// Return a promise that resolves when the ENGINE WORKER has finished fetching/loading.
 	return new Promise<void>((resolve, reject): void => {
+		rejectEngineLoad = reject;
 		// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
 		// We have to manually send this message at the top of our engines.
 		engineWorker!.onmessage = (e: MessageEvent): void => {
 			if (e.data === 'readyok') {
+				rejectEngineLoad = undefined;
 				resolve(); // Engine is ready!
-				onMovePlayed(); // Without this, the engine won't start calculating moves if it's first to move.
+				if (options.youAreColor !== undefined) onMovePlayed();
+			} else if (e.data?.type === 'initerror') {
+				const message = String(e.data.message ?? 'Unknown initialization error.');
+				resignFailedEngine();
+				terminate(new Error(`Engine failed to initialize: ${message}`));
 			}
 		};
 		engineWorker!.onerror = (e: ErrorEvent): void => {
-			reject(new Error('Worker failed to load: ' + e.message));
+			resignFailedEngine();
+			terminate(new Error('Worker failed to load: ' + e.message));
 		};
-		// The apeiron worker initializes its wasm (and Lazy SMP thread pool) on this
-		// message; legacy workers (checkmate practice) self-initialize and never get one.
-		if (options.engineUrl !== undefined)
+		if (options.currentEngine === 'apeiron')
 			engineWorker!.postMessage({
 				engineUrl: options.engineUrl,
 				threads: getEngineThreadCount(),
 			});
-	}).then((_result: any) => {
+	}).then(() => {
 		// After the promise resolves, we know the worker is ready
+		if (!engineWorker) throw new Error('Engine stopped before initialization completed.');
 		// Overwrite the onmessage listener to listen for move submissions
-		engineWorker!.onmessage = (e: MessageEvent): void => handleEngineMessage(e.data);
+		engineWorker.onmessage = (e: MessageEvent): void => handleEngineMessage(e.data);
 		// Remove the error handler (no longer needed after worker is ready)
-		engineWorker!.onerror = null;
+		engineWorker.onerror = null;
 		// Ensures if the debug mode was on before starting an engine game,
 		// the engine generated legal moves are rendered as soon as the engine is ready.
 		enginelegalmovesdebug.requestMovesForCurrentPosition();
@@ -149,8 +142,6 @@ function onMovePlayed(): void {
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
 	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
-	hooks.onHumanMove?.(); // inform the checkmatepractice script that the human player has made a move
-	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 
 	// Request the engine to perform a best move calculation...
 
@@ -182,6 +173,7 @@ function onMovePlayed(): void {
 		binc,
 	} : undefined;
 
+	if (gamefile.gameConclusion) return;
 	if (engineWorker)
 		engineWorker.postMessage({
 			stringGamefile,
@@ -198,6 +190,16 @@ function onMovePlayed(): void {
 
 function handleEngineMessage(data: any): void {
 	// console.log('Received message from engine worker:', data);
+
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) {
+		console.error('Received an engine reply after the game unloaded:', data);
+		return;
+	}
+	if (gamefile.gameConclusion) {
+		console.error('Received an engine reply after the game concluded:', data);
+		return;
+	}
 
 	if (typeof data !== 'object' || data === null) {
 		console.error('Received invalid message from engine worker:', data);
@@ -227,14 +229,21 @@ function makeEngineMove(tokenMove: unknown): void {
 
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
+	if (gamefile.gameConclusion) {
+		console.error('Attempted to apply an engine move after the game concluded:', tokenMove);
+		return;
+	}
 
 	if (tokenMove === null) {
 		// Null can mean the engine didn't return a best move (perhaps it didn't
 		// find any legal moves, or thought it was checkmate), or an error occurred.
 		// In this case, resign for the engine.
 		console.log(`Engine returned a null move. Resigning the game...`);
-		gamefile.gameConclusion = { condition: 'resignation', victor: gamesession.getRole()! };
-		gameslot.concludeGame();
+		if (gamesession.getGameType() === 'online') resignFailedEngine();
+		else {
+			gamefile.gameConclusion = { condition: 'resignation', victor: gamesession.getRole()! };
+			gameslot.concludeGame();
+		}
 		return;
 	}
 
@@ -246,6 +255,7 @@ function makeEngineMove(tokenMove: unknown): void {
 				`Engine submitted an illegal move. Please report this bug! Move "${tokenMove}" is illegal for reason: ${moveValidationResults.reason}`,
 				{ error: true, durationMultiplier: 100 },
 			);
+			resignFailedEngine();
 			return false; // Don't physically play next premove
 		}
 
@@ -257,12 +267,17 @@ function makeEngineMove(tokenMove: unknown): void {
 			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResults.tagged);
 		}
 
-		hooks.onEngineMove?.(); // inform the checkmatepractice script that the engine has made a move
+		GameBus.dispatch('engine-move-played');
 
 		return true; // Good to physically play next premove
 	});
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
+}
+
+function resignFailedEngine(): void {
+	if (gamesession.getGameType() === 'online')
+		socketmessages.send('game', 'engineresign', undefined, true);
 }
 
 /** Requests engine-generated legal moves for the currently viewed position. */
@@ -288,13 +303,19 @@ function requestGeneratedMoves(gamefile: GameFile): void {
  * cross-origin isolation (SharedArrayBuffer); without it the engine runs single-threaded.
  */
 function getEngineThreadCount(): number {
-	if (!globalThis.crossOriginIsolated || typeof SharedArrayBuffer !== 'function') return 1;
-	return Math.min(4, Math.max(1, (navigator.hardwareConcurrency || 2) - 1));
+	return maxEngineThreads(4, 1);
 }
 
-/** Registers observer hooks for engine-game events (see {@link EngineGameHooks}). */
-function registerHooks(newHooks: EngineGameHooks): void {
-	hooks = newHooks;
+/** Stops the active engine worker and clears its session state. */
+function terminate(loadError: Error = new Error('Engine game ended during initialization.')): void {
+	engineWorker?.terminate();
+	engineWorker = undefined;
+	engineColor = undefined;
+	currentEngine = undefined;
+	engineConfig = undefined;
+	inEngineGame = false;
+	rejectEngineLoad?.(loadError);
+	rejectEngineLoad = undefined;
 }
 
 // Export ---------------------------------------------------------------------------------
@@ -302,7 +323,6 @@ function registerHooks(newHooks: EngineGameHooks): void {
 export default {
 	initEngineGame,
 	onMovePlayed,
-	registerHooks,
 };
 
 export type { EngineConfig };

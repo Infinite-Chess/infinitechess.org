@@ -27,6 +27,8 @@ interface GameBusEvents {
 	'user-move-played': void;
 	/** Dispatched when our opponent's move is applied to the board in an online game (live or during a resync). */
 	'opponent-move-played': void;
+	/** Dispatched after the local engine applies its move. */
+	'engine-move-played': void;
 	/**
 	 * Dispatched when a physical move is made on the board by any player, even our own premoves, or making a board editor edit.
 	 * Does NOT gaurantee the viewed position changed, as we may be viewing earlier moves

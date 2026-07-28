@@ -13,8 +13,13 @@ import type { GameSetup, PlayerRatingResult, ServerGame } from './gameutility.js
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
+import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
-import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
+import gamefile, {
+	type LoadedVariant,
+	type VariantOptions,
+} from '../../../shared/chess/logic/gamefile.js';
 import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
 import statlogger from '../statlogger.js';
@@ -81,25 +86,31 @@ function createGame(
 	setup: GameSetup,
 	assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }>,
 ): number {
-	if (setup.variant.kind !== 'preset') {
-		const errText = 'Custom variant game starting is not yet implemented.';
-		console.error(errText);
-		throw new Error(errText);
-	}
-
-	const variantCode = setup.variant.code;
-
 	// Joining a new game counts as leaving any concluded game still lingering for a rematch.
 	for (const { identifier } of Object.values(assignments)) forceLeaveLingeringGame(identifier);
 
 	const gameID = issueUniqueGameId();
 	const dateTimestamp = Date.now();
-	const variant: LoadedVariant = {
-		code: variantCode,
-		mod: variantcache.getModule(variantCode),
+	let variant: LoadedVariant | undefined;
+	let variantOptions: VariantOptions | undefined;
+	if (setup.variant.kind === 'preset') {
+		variant = {
+			code: setup.variant.code,
+			mod: variantcache.getModule(setup.variant.code),
+			dateTimestamp,
+		};
+	} else {
+		const longFormat = icnconverter.ShortToLong_Format(setup.variant.position);
+		variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
+	}
+	const gameWithRules = gamefile.initGame(
+		setup.time,
 		dateTimestamp,
-	};
-	const gameWithRules = gamefile.initGame(setup.time, dateTimestamp, variant);
+		variant,
+		undefined,
+		undefined,
+		variantOptions,
+	);
 	const match = gameutility.initMatch(setup, gameID, assignments);
 	const validateMoves = doesVariantSupportServerValidation(variant);
 
@@ -203,6 +214,11 @@ function unsubSocketParticipantFromGame(ws: CustomWebSocket, involuntary: boolea
 
 	if (!gameutility.isGameOver(servergame)) {
 		// Game is ongoing: inform the opponent they disconnected.
+		if (
+			gameutility.isEngineGame(servergame) &&
+			servergame.whosTurn === servergame.match.engineParticipant!.color
+		)
+			freezeEngineClock(servergame);
 
 		if (involuntary) {
 			// Internet interruption. Give them 5 seconds before opening the opponent's claim window.
@@ -334,19 +350,67 @@ function pushGameClock(servergame: ServerGame): number | undefined {
 
 	const data = clock.push(servergame);
 
-	// Reset the timer that will auto terminate the game when one player loses on time.
-	if (!gameutility.isGameOver(servergame) && gameutility.isGameResignable(servergame)) {
-		// Cancel previous auto loss timer if it exists
-		clearTimeout(servergame.match.autoTimeLossTimeoutID);
-		// Set the next one
-		const timeUntilLoseOnTime = Math.max(servergame.clocks.timeRemainAtTurnStart!, 0);
-		servergame.match.autoTimeLossTimeoutID = setTimeout(
-			() => onPlayerLostOnTime(servergame),
-			timeUntilLoseOnTime,
-		);
-	}
+	armAutoTimeLoss(servergame);
 
 	return data;
+}
+
+function armAutoTimeLoss(servergame: ServerGame): void {
+	if (
+		servergame.untimed ||
+		gameutility.isGameOver(servergame) ||
+		!gameutility.isGameResignable(servergame) ||
+		servergame.clocks.colorTicking === undefined
+	)
+		return;
+	clearTimeout(servergame.match.autoTimeLossTimeoutID);
+	servergame.match.autoTimeLossTimeoutID = setTimeout(
+		() => onPlayerLostOnTime(servergame),
+		Math.max(servergame.clocks.timeRemainAtTurnStart, 0),
+	);
+}
+
+function freezeEngineClock(servergame: ServerGame): void {
+	if (servergame.untimed || servergame.clocks.colorTicking === undefined) return;
+	const engineColor = servergame.match.engineParticipant!.color;
+	servergame.clocks.currentTime[engineColor] = servergame.clocks.timeRemainAtTurnStart;
+	clock.endGame(servergame);
+	clearTimeout(servergame.match.autoTimeLossTimeoutID);
+	liveGameValues.onEngineClockChanged(servergame);
+	gameutility.broadcastToSpectators(
+		servergame,
+		'clock',
+		gameutility.getGameClockValues(servergame),
+	);
+}
+
+function resumeEngineClock(servergame: ServerGame): void {
+	const engine = servergame.match.engineParticipant;
+	if (
+		engine === undefined ||
+		servergame.untimed ||
+		servergame.whosTurn !== engine.color ||
+		!gameutility.isGameResignable(servergame)
+	)
+		return;
+	const remaining =
+		servergame.clocks.colorTicking === engine.color
+			? servergame.clocks.timeRemainAtTurnStart
+			: servergame.clocks.currentTime[engine.color]!;
+	if (servergame.clocks.colorTicking !== undefined) clock.endGame(servergame);
+	servergame.clocks.currentTime[engine.color] = remaining;
+	clock.edit(servergame.clocks, {
+		clocks: { ...servergame.clocks.currentTime },
+		colorTicking: engine.color,
+		timeColorTickingLosesAt: Date.now() + remaining,
+	});
+	armAutoTimeLoss(servergame);
+	liveGameValues.onEngineClockChanged(servergame);
+	gameutility.broadcastToSpectators(
+		servergame,
+		'clock',
+		gameutility.getGameClockValues(servergame),
+	);
 }
 
 /** A player has lost on time: set the game conclusion. */
@@ -473,12 +537,11 @@ function logConcludedGame(servergame: ServerGame): void {
 		}
 	} catch {
 		// Log failure already logged.
-		// Notify both players.
-		gameutility.broadcastToParticipants(
-			servergame,
-			'notifyerror',
-			"A server error occurred while logging this game. It won't be available in your game history.",
-		);
+		const message =
+			"A server error occurred while logging this game. It won't be available in your game history.";
+		for (const data of Object.values(servergame.match.playerData)) {
+			if (data.socket) sendSocketMessage(data.socket, 'general', 'notifyerror', message);
+		}
 	}
 
 	// The result now lives in the permanent tables — drop the live game row so a restart doesn't
@@ -540,7 +603,13 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 	if (gameutility.isGameOver(servergame)) return;
 
 	if (gameutility.isGameResignable(servergame)) {
-		onGameConclusion(servergame, { victor: null, condition: 'abandonment' });
+		const engine = servergame.match.engineParticipant;
+		onGameConclusion(
+			servergame,
+			engine
+				? { victor: engine.color, condition: 'disconnect' }
+				: { victor: null, condition: 'abandonment' },
+		);
 	} else {
 		onGameConclusion(servergame, { condition: 'aborted' });
 	}
@@ -557,7 +626,7 @@ function finalizeGame(servergame: ServerGame): void {
 	servergame.match.finalized = true;
 
 	// Monitor suspicion levels for all players who participated in the game.
-	ratingabuse.measureRatingAbuseAfterGame(servergame);
+	if (!gameutility.isEngineGame(servergame)) ratingabuse.measureRatingAbuseAfterGame(servergame);
 
 	// Tell any connected participants/spectators the result is now locked in, so their client knows it can
 	// never change — future reconnects fetch only rematch state (`subscriberematch`), not a full resync.
@@ -714,7 +783,6 @@ function restoreLiveGames(): void {
 export {
 	activeGames,
 	createGame,
-	issueUniqueGameId,
 	isMemberInSomeActiveGame,
 	unsubSocketParticipantFromGame,
 	unsubSocketSpectatorFromGame,
@@ -724,6 +792,7 @@ export {
 	freeGame,
 	evictGame,
 	pushGameClock,
+	resumeEngineClock,
 	getGameByID,
 	produceStaticGameState,
 	// Shutdown Preparation & Startup Restoration

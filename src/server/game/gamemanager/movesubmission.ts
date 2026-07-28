@@ -72,14 +72,15 @@ function submitMove(
 		return;
 	}
 
-	// Their subscription info should tell us what game they're in, including the color they are.
-	const role = ws.metadata.subscriptions.game.color;
+	// The owner submits both colors in engine games; move numbers still catch desync.
+	const engineParticipant = servergame.match.engineParticipant;
+	const role = engineParticipant ? servergame.whosTurn : ws.metadata.subscriptions.game.color;
 
 	// If the game is already over, don't accept it.
 	if (gameutility.isGameOver(servergame)) return;
 
 	// Make sure it's their turn
-	if (servergame.whosTurn !== role) {
+	if (!engineParticipant && servergame.whosTurn !== role) {
 		// Can occasionally happen if they in rapid succession reconnect ('subscribe') and
 		// submit a move, then when they receive 'gamestate' their client re-submits their move.
 		// Discard this submission and push them the current state just in case they're desynced.
@@ -129,7 +130,7 @@ function submitMove(
 	// console.log("New move list:")
 	// console.log(game.moves);
 
-	declineDraw(servergame, role); // Auto-decline any open draw offer on move submissions
+	if (!engineParticipant) declineDraw(servergame, role);
 
 	// Persist the move and updated game state to the database.
 	liveGameValues.onMoveSubmitted(servergame);
@@ -159,12 +160,13 @@ function broadcastMove(
 		// then send the submitter the conclusion message.
 		applyConclusion(servergame, servergame.gameConclusion);
 		const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
-		gameutility.sendMessageToColor(servergame.match, role, 'game', 'gameconclusion', conclusionMessage); // prettier-ignore
+		sendSocketMessage(ws, 'game', 'gameconclusion', conclusionMessage);
 	}
 
 	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
 	const moveMessage = buildMoveMessage(servergame, moveRecord);
-	gameutility.sendMessageToColor(servergame.match, typeutil.invertPlayer(role), 'game', 'move', moveMessage); // prettier-ignore
+	if (!gameutility.isEngineGame(servergame))
+		gameutility.sendMessageToColor(servergame.match, typeutil.invertPlayer(role), 'game', 'move', moveMessage); // prettier-ignore
 	gameutility.broadcastToSpectators(servergame, 'move', moveMessage);
 
 	// Free, finalize, and evict the game if it's concluded.

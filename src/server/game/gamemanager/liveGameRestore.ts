@@ -3,8 +3,8 @@
 /**
  * This script restores live games from the database on server startup.
  *
- * It reads all rows from live_games and live_player_games, reconstructs
- * the full ServerGame objects (clocks, boardsim, player identities),
+ * It reads all live game and participant rows, reconstructs the full
+ * ServerGame objects (clocks, boardsim, player identities),
  * and determines which pending timers (auto time loss, disconnect,
  * delete) need to be reinstated.
  *
@@ -20,17 +20,24 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
+import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
 import type { ClockValues, TimeControl } from '../../../shared/types.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
+import type { ValidEngine } from '../../../shared/chess/engine.js';
 
+import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
-import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
+import gamefile, {
+	type LoadedVariant,
+	type VariantOptions,
+} from '../../../shared/chess/logic/gamefile.js';
 
 import gameutility from './gameutility.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
-import { getLivePlayerGamesForGame } from '../../database/livePlayerGamesManager.js';
+import { getAllLivePlayerGames } from '../../database/livePlayerGamesManager.js';
+import { getAllLiveEngineGames } from '../../database/liveEngineGamesManager.js';
 import { getAllLiveGames, deleteLiveGame } from '../../database/liveGamesManager.js';
 
 // Types -----------------------------------------------------------------------------------------
@@ -85,8 +92,12 @@ interface DisconnectTimerState {
  */
 function restoreAllLiveGames(): RestoredGame[] {
 	let liveGameRows: LiveGamesRecord[];
+	let playerRowsByGame: Map<number, LivePlayerGamesRecord[]>;
+	let engineRowsByGame: Map<number, LiveEngineGamesRecord[]>;
 	try {
 		liveGameRows = getAllLiveGames();
+		playerRowsByGame = groupRowsByGame(getAllLivePlayerGames());
+		engineRowsByGame = groupRowsByGame(getAllLiveEngineGames());
 	} catch {
 		// Already logged
 		return [];
@@ -99,17 +110,18 @@ function restoreAllLiveGames(): RestoredGame[] {
 
 	for (const gameRow of liveGameRows) {
 		try {
-			const playerRows = getLivePlayerGamesForGame(gameRow.game_id);
-			if (playerRows.length !== 2) {
+			const playerRows = playerRowsByGame.get(gameRow.game_id) ?? [];
+			const engineRows = engineRowsByGame.get(gameRow.game_id) ?? [];
+			if (playerRows.length + engineRows.length !== 2 || engineRows.length > 1) {
 				logEventsAndPrint(
-					`Live game ${gameRow.game_id} has ${playerRows.length} player rows, expected 2. Skipping restoration of this game.`,
+					`Live game ${gameRow.game_id} has invalid participant rows. Skipping restoration.`,
 					'errLog',
 				);
 				deleteLiveGame(gameRow.game_id);
 				continue;
 			}
 
-			const result = restoreSingleGame(gameRow, playerRows);
+			const result = restoreSingleGame(gameRow, playerRows, engineRows[0]);
 			restored.push(result);
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : String(error);
@@ -131,32 +143,42 @@ function restoreAllLiveGames(): RestoredGame[] {
 function restoreSingleGame(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
+	engineRow: LiveEngineGamesRecord | undefined,
 ): RestoredGame {
 	// 1. Reconstruct AuthMemberInfo for each player
 	const playerIdentities = reconstructPlayerIdentities(playerRows);
 
 	// 2. Reconstruct clock values for timed games
-	const clockValues = reconstructClockValues(gameRow, playerRows);
+	const clockValues = reconstructClockValues(gameRow, playerRows, engineRow);
 
 	// 3. Create the game (also computes gameRules).
-	const variant: LoadedVariant = {
-		code: gameRow.variant as VariantCode,
-		mod: variantcache.getModule(gameRow.variant as VariantCode),
-		dateTimestamp: gameRow.time_created,
-	};
+	let variant: LoadedVariant | undefined;
+	let variantOptions: VariantOptions | undefined;
+	if (gameRow.variant !== null) {
+		variant = {
+			code: gameRow.variant as VariantCode,
+			mod: variantcache.getModule(gameRow.variant as VariantCode),
+			dateTimestamp: gameRow.time_created,
+		};
+	} else {
+		if (gameRow.position === null) throw new Error('Custom live game is missing its position.');
+		const longFormat = icnconverter.ShortToLong_Format(gameRow.position);
+		variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
+	}
 	const gameWithRules = gamefile.initGame(
 		gameRow.clock as TimeControl,
 		gameRow.time_created,
 		variant,
 		undefined,
 		clockValues,
+		variantOptions,
 	);
 
 	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
 	// by clock.edit() inside initGame() via the clockValues we pass in.
 
 	// 4. Reconstruct MatchInfo
-	const match = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
+	const match = reconstructMatchInfo(gameRow, playerRows, playerIdentities, engineRow);
 
 	// 5. Parse & replay moves, conditionally constructing the board state
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
@@ -239,6 +261,7 @@ function reconstructPlayerIdentities(
 function reconstructClockValues(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
+	engineRow: LiveEngineGamesRecord | undefined,
 ): ClockValues | undefined {
 	// Untimed games don't have clock values
 	if (gameRow.clock === '-') return undefined;
@@ -249,9 +272,12 @@ function reconstructClockValues(
 			clocks[row.player_number as Player] = row.time_remaining_ms;
 		}
 	}
+	if (engineRow?.time_remaining_ms !== null && engineRow?.time_remaining_ms !== undefined)
+		clocks[engineRow.player_number as Player] = engineRow.time_remaining_ms;
 
-	const colorTicking =
+	let colorTicking =
 		gameRow.color_ticking === null ? undefined : (gameRow.color_ticking as Player);
+	if (colorTicking === engineRow?.player_number) colorTicking = undefined;
 	const timeColorTickingLosesAt =
 		colorTicking !== undefined
 			? gameRow.clock_snapshot_time! + clocks[colorTicking]!
@@ -271,6 +297,7 @@ function reconstructMatchInfo(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
 	playerIdentities: PlayerGroup<AuthMemberInfo>,
+	engineRow: LiveEngineGamesRecord | undefined,
 ): MatchInfo {
 	const playerData: PlayerGroup<PlayerData> = {};
 
@@ -291,12 +318,21 @@ function reconstructMatchInfo(
 
 	return {
 		id: gameRow.game_id,
-		variant: gameRow.variant as VariantCode,
+		variant: gameRow.variant as VariantCode | null,
+		position: gameRow.position ?? undefined,
 		timeCreated: gameRow.time_created,
 		timeEnded: undefined, // Only ongoing games are restored — none have ended.
 		rated: gameRow.rated === 1,
 		clock: gameRow.clock as TimeControl,
 		playerData,
+		engineParticipant: engineRow
+			? {
+					color: engineRow.player_number as Player,
+					engine: engineRow.engine as ValidEngine,
+					version: engineRow.engine_version,
+					strengthLevel: engineRow.strength_level,
+				}
+			: undefined,
 		drawOfferState:
 			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),
 		// Only ongoing games are ever restored: a concluded game's row is dropped
@@ -330,8 +366,8 @@ function computePendingTimers(
 	};
 
 	// Auto time loss timer for timed, ongoing games
-	if (!servergame.untimed && gameRow.color_ticking !== null) {
-		const tickingTime = servergame.clocks.currentTime[gameRow.color_ticking as Player]!;
+	if (!servergame.untimed && servergame.clocks.colorTicking !== undefined) {
+		const tickingTime = servergame.clocks.currentTime[servergame.clocks.colorTicking]!;
 		timers.autoTimeLossMs = Math.max(tickingTime, 0);
 	}
 
@@ -372,6 +408,16 @@ function computePendingTimers(
 	}
 
 	return timers;
+}
+
+function groupRowsByGame<T extends { game_id: number }>(rows: T[]): Map<number, T[]> {
+	const grouped = new Map<number, T[]>();
+	for (const row of rows) {
+		const gameRows = grouped.get(row.game_id) ?? [];
+		gameRows.push(row);
+		grouped.set(row.game_id, gameRows);
+	}
+	return grouped;
 }
 
 // Exports --------------------------------------------------------------------------------------------

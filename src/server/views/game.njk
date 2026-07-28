@@ -7,15 +7,8 @@
 {% endblock %}
 
 {% block head %}
-{# SSR→client channel: the numeric game id and a best-effort liveness hint (can be innacurate by the time they render).
-   Engine games additionally get their engine's hashed worker-script URL and the content-versioned
-   engine-glue package location from the asset manifest. #}
-<script>window.gamePageData = {{ gamePageData | json | safe }};
-{%- if gamePageData.engineGame %}
-window.gamePageData.engineWorkerUrl = "{{ manifest['scripts/esm/game/chess/engines/' + gamePageData.engineGame.engine + '.ts'] }}";
-window.gamePageData.engineUrl = "{{ manifest['engine'] }}";
-{%- endif %}
-</script>
+{# SSR→client game setup and participant state. #}
+<script>window.gamePageData = {{ gamePageData | json | safe }};</script>
 {% endblock %}
 
 {% block body %}
@@ -236,7 +229,7 @@ window.gamePageData.engineUrl = "{{ manifest['engine'] }}";
 					{% endif %}
 					{# Post-game actions: rematch and analysis board. #}
 					<div class="actions-over{{ '' if meta.result else ' hidden' }}">
-						{% if gamePageData.isLive and gamePageData.role is defined %}
+						{% if gamePageData.isLive and gamePageData.role is defined and not gamePageData.engineGame %}
 						<button class="action-btn" id="btn-rematch">Rematch</button>
 						{% endif %}
 						<button class="action-btn" id="btn-analysis">Analysis</button>

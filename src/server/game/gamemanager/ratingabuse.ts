@@ -147,6 +147,7 @@ function measureRatingAbuseAfterGame(servergame: ServerGame): void {
 	if (servergame.gameConclusion!.victor === undefined) return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
+	if (servergame.match.variant === null) return;
 	const leaderboard_id = VariantLeaderboards[servergame.match.variant];
 	if (leaderboard_id === undefined) return;
 

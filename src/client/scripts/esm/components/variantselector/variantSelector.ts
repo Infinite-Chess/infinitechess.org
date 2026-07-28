@@ -79,6 +79,13 @@ const element_variantSelector = document.getElementById('variant-selector')!;
 const element_variantDisplay = document.getElementById('variant-display')!;
 const element_variantGroupDropdown = document.getElementById('variant-dropdown')!;
 const element_variantListPanels = document.querySelectorAll<HTMLElement>('.variant-list-panel');
+const element_variantGroupButtons = document.querySelectorAll<HTMLElement>('button[data-group]');
+const element_variantGroupButtonByGroup = new Map<GroupType, HTMLElement>(
+	[...element_variantGroupButtons].map((button) => [
+		button.getAttribute('data-group') as GroupType,
+		button,
+	]),
+);
 /** Variant-list panels indexed by `data-group` for O(1) lookup. */
 const element_variantListPanelByGroup = new Map<GroupType, HTMLElement>(
 	[...element_variantListPanels].map((p) => [p.getAttribute('data-group') as GroupType, p]),
@@ -159,7 +166,7 @@ function initVariantGroupDropdown(hostConfig: VariantSelectorConfig): void {
 	variantPreviewTooltip.attachAnchor(element_displayPreviewAnchor, handleDisplayPreviewHover);
 
 	// Wire up group buttons
-	document.querySelectorAll<HTMLElement>('button[data-group]').forEach((item) => {
+	element_variantGroupButtons.forEach((item) => {
 		item.addEventListener('click', () => {
 			const group = item.getAttribute('data-group') as GroupType;
 			if (group === 'custom') openCustomVariantList();
@@ -265,6 +272,9 @@ function openVariantList(group: VariantGroup): void {
  */
 function setEngineOnlyVariants(engineOnly: boolean): void {
 	element_variantListPanels.forEach((panel) => {
+		const group = panel.getAttribute('data-group') as GroupType;
+		if (group === 'custom') return;
+
 		let anySupported = false;
 		panel.querySelectorAll<HTMLElement>('.variant-item[data-code]').forEach((btn) => {
 			const code = btn.getAttribute('data-code') as VariantCode;
@@ -272,10 +282,8 @@ function setEngineOnlyVariants(engineOnly: boolean): void {
 			btn.classList.toggle('hidden', engineOnly && !supported);
 			if (supported) anySupported = true;
 		});
-		const group = panel.getAttribute('data-group');
-		if (group === 'custom') return; // The custom panel hosts saves/ICN, never hidden.
-		document
-			.querySelector<HTMLElement>(`button[data-group="${group}"]`)
+		element_variantGroupButtonByGroup
+			.get(group)
 			?.classList.toggle('hidden', engineOnly && !anySupported);
 	});
 

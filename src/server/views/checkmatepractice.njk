@@ -2,6 +2,13 @@
 
 {% set pageName = "Checkmate Practice" %}
 
+{% block head %}
+<script>window.checkmatePracticePageData = {
+	workerUrl: "{{ manifest['scripts/esm/game/chess/engines/engineCheckmatePractice.worker.ts'] }}",
+	engineUrl: "{{ manifest['engine'] }}"
+};</script>
+{% endblock %}
+
 {% block body %}
 {% include "components/header/header.njk" %}
 <main></main>

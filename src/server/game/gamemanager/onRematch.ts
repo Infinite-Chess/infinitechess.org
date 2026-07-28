@@ -28,6 +28,7 @@ import { getIDOfGamePlayerIsIn } from './activeplayers.js';
  * @param ourRole - The color the socket is playing as.
  */
 function offerRematch(servergame: ServerGame, ourRole: Player): void {
+	if (gameutility.isEngineGame(servergame)) return;
 	if (!gameutility.isGameOver(servergame))
 		return console.error('Client offered a rematch when the game is not over. Ignoring.');
 
@@ -78,7 +79,10 @@ function createRematchGame(oldGame: ServerGame): void {
 	socketsToNavigate.push(...oldGame.spectators);
 
 	const setup: GameSetup = {
-		variant: { kind: 'preset', code: oldMatch.variant },
+		variant:
+			oldMatch.variant === null
+				? { kind: 'custom', position: oldMatch.position! }
+				: { kind: 'preset', code: oldMatch.variant },
 		time: oldMatch.clock,
 		rated: oldMatch.rated,
 	};

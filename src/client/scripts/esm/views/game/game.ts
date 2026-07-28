@@ -7,7 +7,6 @@
 import gameloop from '../../game/gameloop.js';
 import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
 import deadgameloader from '../../game/misc/onlinegame/deadgameloader.js';
-import enginegameloader from './enginegameloader.js';
 
 import '../../game/gui/guigamemeta.js';
 import '../../game/gui/guimaterial.js';
@@ -29,10 +28,7 @@ function start(): void {
 		btn.addEventListener('click', () => btn.blur());
 	});
 
-	if (window.gamePageData.engineGame) {
-		// Live engine game: fetch its state over HTTP and run the engine locally — no socket opened.
-		void enginegameloader.loadEngineGame();
-	} else if (window.gamePageData.isLive) {
+	if (window.gamePageData.isLive) {
 		onlinegame.subscribeToGame(); // Naturally requests the full game state which bootstraps the game
 	} else {
 		// Dead (memory-evicted) game: fetch its state over HTTP and render it — no socket opened.

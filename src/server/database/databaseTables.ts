@@ -116,20 +116,22 @@ const allLiveGamesColumns: string[] = [
 /** All columns of the engine_games table. */
 const allEngineGamesColumns: string[] = [
 	'game_id',
-	'time_created',
-	'user_id',
-	'browser_id',
-	'player_color',
+	'player_number',
+	'score',
+	'clock_at_end_millis',
 	'engine',
+	'engine_version',
 	'strength_level',
-	'variant',
-	'position',
-	'clock',
-	'moves',
-	'clock_white',
-	'clock_black',
-	'turn_start_time',
-	'last_updated',
+];
+
+/** All columns of the live_engine_games table. */
+const allLiveEngineGamesColumns: string[] = [
+	'game_id',
+	'player_number',
+	'time_remaining_ms',
+	'engine',
+	'engine_version',
+	'strength_level',
 ];
 
 /** All columns of the live_player_games table. */
@@ -396,32 +398,41 @@ function generateTables(): void {
 	`);
 	db.run(`CREATE INDEX IF NOT EXISTS idx_live_player_games_game ON live_player_games (game_id);`);
 
-	// Engine Games table — one row per game against an engine, created at game start.
-	// The engine plays locally in the owner's browser; the server only records state.
-	// The row is KEPT after conclusion (moves blanked) as the permanent record of the
-	// engine participant + settings, complementing the games/player_games tables.
+	createEngineGamesTable();
+
+	// Engines have no disconnect state, so live participants use a separate table.
 	db.run(`
-		CREATE TABLE IF NOT EXISTS engine_games (
-			game_id        INTEGER PRIMARY KEY,
-			time_created   INTEGER NOT NULL,
-			user_id        INTEGER, -- The human owner, if signed in
-			browser_id     TEXT NOT NULL, -- The human owner's browser id
-			player_color   INTEGER NOT NULL, -- The human's color. 1 => White  2 => Black
-			engine         TEXT NOT NULL,
-			strength_level INTEGER NOT NULL,
-			variant        TEXT, -- preset variant code, or null for a custom-position game (see position)
-			position       TEXT, -- custom game's start position; null for preset games (complementary to variant)
-			clock          TEXT NOT NULL,
-			moves          TEXT NOT NULL DEFAULT '', -- Blanked once the game is logged to the games table
-			clock_white    INTEGER, -- ms remaining snapshots; null for untimed games
-			clock_black    INTEGER,
-			turn_start_time INTEGER, -- Epoch ms the ticking color's turn began; lets a mid-turn refresh deduct time elapsed while away
-			last_updated   INTEGER NOT NULL -- Epoch ms of the last state sync; drives the stale-game purge
+		CREATE TABLE IF NOT EXISTS live_engine_games (
+			game_id           INTEGER NOT NULL REFERENCES live_games(game_id) ON DELETE CASCADE,
+			player_number     INTEGER NOT NULL,
+			time_remaining_ms INTEGER,
+			engine            TEXT NOT NULL,
+			engine_version    TEXT NOT NULL,
+			strength_level    INTEGER NOT NULL,
+			PRIMARY KEY (game_id, player_number)
 		);
 	`);
+	db.run(`CREATE INDEX IF NOT EXISTS idx_live_engine_games_game ON live_engine_games (game_id);`);
+}
+
+function createEngineGamesTable(): void {
+	db.run(`
+		CREATE TABLE IF NOT EXISTS engine_games (
+			game_id             INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
+			player_number       INTEGER NOT NULL,
+			score               REAL,
+			clock_at_end_millis INTEGER,
+			engine              TEXT NOT NULL,
+			engine_version      TEXT NOT NULL,
+			strength_level      INTEGER NOT NULL,
+			PRIMARY KEY (game_id, player_number)
+		);
+	`);
+	db.run(`CREATE INDEX IF NOT EXISTS idx_engine_games_game ON engine_games (game_id);`);
 }
 
 function initDatabase(): void {
+	migrateLegacyEngineGamesTableIfNeeded();
 	generateTables();
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
 	dropLegacyLivePlayerGamesEloColumnIfPresent();
@@ -435,10 +446,52 @@ function initDatabase(): void {
 	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
 	dropLiveGamesConclusionColumnsIfPresent();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
-	addTurnStartTimeColumnToEngineGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
+}
+
+/** Rebuilds the pre-live-pipeline engine table while preserving concluded-game participants. */
+function migrateLegacyEngineGamesTableIfNeeded(): void {
+	if (
+		!db.columnExists('engine_games', 'game_id') ||
+		db.columnExists('engine_games', 'player_number')
+	)
+		return;
+
+	const migrate = db.transaction(() => {
+		db.run('ALTER TABLE engine_games RENAME TO legacy_engine_games');
+		createEngineGamesTable();
+		db.run(`
+			INSERT INTO engine_games (
+				game_id, player_number, score, clock_at_end_millis,
+				engine, engine_version, strength_level
+			)
+			SELECT
+				legacy.game_id,
+				CASE legacy.player_color WHEN 1 THEN 2 ELSE 1 END,
+				CASE games.result
+					WHEN '1-0' THEN CASE legacy.player_color WHEN 2 THEN 1.0 ELSE 0.0 END
+					WHEN '0-1' THEN CASE legacy.player_color WHEN 1 THEN 1.0 ELSE 0.0 END
+					WHEN '1/2-1/2' THEN 0.5
+					ELSE NULL
+				END,
+				CASE legacy.player_color
+					WHEN 1 THEN legacy.clock_black
+					WHEN 2 THEN legacy.clock_white
+					ELSE NULL
+				END,
+				legacy.engine,
+				'legacy',
+				legacy.strength_level
+			FROM legacy_engine_games AS legacy
+			INNER JOIN games ON games.game_id = legacy.game_id
+			WHERE legacy.player_color IN (1, 2)
+		`);
+		db.run('DROP TABLE legacy_engine_games');
+	});
+	migrate();
+	console.log('Temporary DB migration: rebuilt legacy engine_games table.');
 }
 
 /**
@@ -657,19 +710,6 @@ function addRatingDeviationColumnsToPlayerGamesIfNeeded(): void {
 	console.log('Temporary DB migration: added player_games rating_deviation columns.');
 }
 
-/**
- * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
- *
- * Adds the nullable `turn_start_time` column to `engine_games` — the epoch ms the ticking
- * color's turn began, so a mid-turn refresh can deduct the time elapsed while away instead
- * of resetting the clock to the move's start. Fresh DBs get the column from `generateTables()`.
- */
-function addTurnStartTimeColumnToEngineGamesIfNeeded(): void {
-	if (db.columnExists('engine_games', 'turn_start_time')) return; // Already present, nothing to do.
-	db.run('ALTER TABLE engine_games ADD COLUMN turn_start_time INTEGER');
-	console.log('Temporary DB migration: added engine_games.turn_start_time column.');
-}
-
 /** Wipes all data from all tables. ONLY call in a test environment! */
 function clearAllTables(): void {
 	if (process.env['NODE_ENV'] !== 'test') {
@@ -707,6 +747,7 @@ export {
 	allLiveGamesColumns,
 	allLivePlayerGamesColumns,
 	allEngineGamesColumns,
+	allLiveEngineGamesColumns,
 	initDatabase,
 	generateTables,
 	clearAllTables,

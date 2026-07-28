@@ -8,6 +8,7 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import { maxEngineThreads } from '../../game/chess/engines/enginewasm.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
@@ -98,31 +99,14 @@ const CRASHES_BEFORE_GIVING_UP = 2;
 /** Hard cap on Lazy SMP threads: the engine's analysis path uses at most 4. */
 const THREAD_CAP = 4;
 
-/**
- * Whether this browser can run WebAssembly threads: needs cross-origin isolation (COOP+COEP)
- * for a shared-memory SharedArrayBuffer. Same feature detection Stockfish/lichess use.
- */
-const BROWSER_SUPPORTS_THREADS: boolean = (() => {
-	try {
-		// crossOriginIsolated gates SharedArrayBuffer in every modern browser.
-		if (!globalThis.crossOriginIsolated) return false;
-		if (typeof SharedArrayBuffer !== 'function' || typeof Atomics !== 'object') return false;
-		if (typeof WebAssembly !== 'object') return false;
-		const mem = new WebAssembly.Memory({ shared: true, initial: 1, maximum: 2 });
-		return mem.buffer instanceof SharedArrayBuffer;
-	} catch {
-		return false;
-	}
-})();
-
 /** Whether the served engine build supports Lazy SMP (a single-threaded build exports no
  * `initThreadPool`). The worker reports it on load; assume true until then. */
 let engineSupportsThreads = true;
 
 /** Most threads the user can pick: {@link THREAD_CAP} when threading is usable, else 1 (locked). */
 function maxThreads(): number {
-	if (!BROWSER_SUPPORTS_THREADS || !engineSupportsThreads) return 1;
-	return math.clamp(navigator.hardwareConcurrency || 2, 1, THREAD_CAP);
+	if (!engineSupportsThreads) return 1;
+	return maxEngineThreads(THREAD_CAP);
 }
 
 const DEFAULT_THREADS = maxThreads();

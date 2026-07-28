@@ -5,9 +5,14 @@
  */
 
 import type { GameStateMessage, ParticipantState } from '../../../../../../shared/types.js';
+import type { Additional, VariantOptions } from '../../../../../../shared/chess/logic/gamefile.js';
 
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
+import { engineDictionary } from '../../../../../../shared/chess/engine.js';
+import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card.js';
 
 import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
@@ -18,6 +23,7 @@ import guigamemeta from '../../gui/guigamemeta.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import socketmessages from '../../../websocket/socketmessages.js';
+import enginegame from '../enginegame.js';
 
 import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 
@@ -80,7 +86,22 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 	gamesession.setSessionGame({ type: 'online', role: ourRole });
 
 	// The static setup (variant/time control/creation time) is SSR'd
-	const { variant, timeControl, timeCreated } = window.gamePageData;
+	const { variant, timeControl, timeCreated, engineGame } = window.gamePageData;
+	let variantOptions: VariantOptions | undefined;
+	if (variant.kind === 'custom') {
+		const longFormat = icnconverter.ShortToLong_Format(window.gamePageData.position!);
+		variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
+	}
+	const additional: Additional = {
+		moves: state.moves,
+		gameConclusion: state.gameConclusion,
+		clockValues: state.clockValues,
+		variantOptions,
+	};
+	if (engineGame) {
+		additional.worldBorderDist = engineDictionary[engineGame.engine].worldBorder;
+		additional.worldBorderCap = apeiron_card.BORDER_CAP;
+	}
 
 	gameslot
 		.loadGamefile({
@@ -89,13 +110,9 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 			dateTimestamp: timeCreated,
 			// Black views from their side; white and spectators (no role) view white's side.
 			viewWhitePerspective: ourRole !== p.BLACK,
-			additional: {
-				moves: state.moves,
-				gameConclusion: state.gameConclusion,
-				clockValues: state.clockValues,
-			},
+			additional,
 		})
-		.then(({ graphical }) => {
+		.then(async ({ graphical }) => {
 			// Logical loaded, return graphical promise
 			const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
 			initOnlineGame(initialStage, state.participantState);
@@ -103,6 +120,23 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 			gamesession.concludeGameIfOver();
 			// A finalized rated game carries its deltas in the state.
 			if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
+
+			if (engineGame && !state.gameConclusion) {
+				const { engineWorkerUrl, engineUrl } = window.gamePageData;
+				if (!engineWorkerUrl || !engineUrl)
+					throw new Error('Engine assets are missing from the game page.');
+				await enginegame.initEngineGame({
+					youAreColor: ourRole,
+					currentEngine: engineGame.engine,
+					engineConfig: {
+						engineTimeLimitPerMoveMillis:
+							engineDictionary[engineGame.engine].defaultTimeLimitPerMoveMillis,
+						strengthLevel: engineGame.strengthLevel,
+					},
+					workerUrl: engineWorkerUrl,
+					engineUrl,
+				});
+			}
 
 			return graphical;
 		})

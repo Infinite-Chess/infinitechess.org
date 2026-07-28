@@ -76,8 +76,10 @@ Because filenames are content-hashed, templates can't hardcode them. The flow:
 2. `dist/manifest.json` maps **logical name → hashed web path**, e.g.
    `"scripts/esm/views/login.ts"` → `"/scripts/esm/views/login-ABCD1234.js"` and
    `"css/login.css"` → `"/css/login-XXXX.css"`. (Keys strip `src/client/`; only true entry
-   points are included — shared chunks are skipped.)
-3. [src/server/config/nunjucks.ts](/src/server/config/nunjucks.ts) loads it as the Nunjucks
+   points are included — shared chunks are skipped.) It also carries the engine package URL
+   and build version under `engine` and `engineVersion`.
+3. [src/server/config/manifest.ts](/src/server/config/manifest.ts) loads and caches it;
+   [src/server/config/nunjucks.ts](/src/server/config/nunjucks.ts) exposes it as the Nunjucks
    global `manifest`. Templates reference assets via `{{ manifest['css/login.css'] }}` /
    `{{ manifest['scripts/esm/views/login.ts'] }}`. **The lookup key is the logical name, not the
    hashed one.**

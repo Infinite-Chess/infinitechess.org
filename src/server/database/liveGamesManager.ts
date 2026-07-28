@@ -102,7 +102,7 @@ export function updateLiveGame(game_id: number, updates: Partial<LiveGameData>):
 }
 
 /**
- * Deletes a live game row (cascades to live_player_games).
+ * Deletes a live game row and its live participant rows.
  * @param game_id - The game to delete.
  * @throws If a database error occurs.
  */

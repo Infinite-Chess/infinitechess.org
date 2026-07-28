@@ -68,6 +68,7 @@ const element_lobbyViewerCount = document.getElementById('lobby-viewer-count')!;
 const elements_disabledWhileInGame = [
 	document.getElementById('btn-create-game')!,
 	document.getElementById('btn-challenge-friend')!,
+	document.getElementById('btn-play-ai')!,
 ];
 let tbodyVNode: VNode | Element = element_lobbyTbody;
 

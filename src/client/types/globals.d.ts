@@ -3,7 +3,7 @@
 import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { TranslationsObject } from '../../types/translations.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
-import type { EngineGamePageInfo, StaticGameSetup } from '../../shared/types.js';
+import type { GamePageData } from '../../shared/types.js';
 
 /**
  * Legacy i18next-era client translations. Backs the global `translations` object
@@ -82,20 +82,7 @@ declare global {
 	 * SSR→client data for the game page (/game/:id), injected by game.njk.
 	 * Includes all static information about a game.
 	 */
-	var gamePageData: {
-		/** The numeric game id, decoded from the base62 URL segment. */
-		id: number;
-		/** Best-effort liveness hint at SSR time; may be stale by render, so the client re-confirms. */
-		isLive: boolean;
-		/** The viewer's color, SSR-resolved from their cookie identity. Undefined for spectators. */
-		role?: Player;
-		/** Present only for a live engine (vs computer) game — played locally against the wasm engine. */
-		engineGame?: EngineGamePageInfo;
-		/** Hashed URL of the engine's worker script (from the asset manifest). Present with {@link engineGame}. */
-		engineWorkerUrl?: string;
-		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`). Present with {@link engineGame}. */
-		engineUrl?: string;
-	} & StaticGameSetup;
+	var gamePageData: GamePageData;
 
 	/** SSR→client data for the analysis page (/analysis/:id?), injected by analysis.njk. */
 	var analysisPageData: {
@@ -107,6 +94,12 @@ declare global {
 		engineUrl: string;
 		/** Hashed URL of the analysis engine worker script (from the asset manifest). */
 		workerUrl: string;
+	};
+
+	/** Engine assets for the checkmate-practice page. */
+	var checkmatePracticePageData: {
+		workerUrl: string;
+		engineUrl: string;
 	};
 
 	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */

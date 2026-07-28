@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/chess/engines/apeiron.ts
+// src/client/scripts/esm/game/chess/engines/apeiron.worker.ts
 
 /**
  * Apeiron Engine
@@ -16,10 +16,23 @@
 import icnconverter, {
 	LongFormatIn,
 } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { EngineWasmModule } from './enginewasm.js';
 
-/** The engine module's exports (default init + Engine + initThreadPool + …). */
-let wasm: any;
-let wasmInitialized = false;
+import { loadEngineWasm } from './enginewasm.js';
+
+interface GameplayEngine {
+	get_legal_moves_js: () => WasmBestMoveResult[];
+	get_best_move_with_time: (timeLimit: number, useBook: boolean) => WasmBestMoveResult | null;
+	free: () => void;
+}
+
+interface GameplayWasmModule extends EngineWasmModule {
+	Engine: {
+		from_icn: (icn: string, config: Record<string, number>) => GameplayEngine;
+	};
+}
+
+let wasm: GameplayWasmModule;
 
 interface EngineConfig {
 	engineTimeLimitPerMoveMillis?: number;
@@ -59,21 +72,17 @@ interface WasmBestMoveResult {
 async function initWasm(msg: EngineWorkerInitMessage): Promise<void> {
 	try {
 		console.debug('[Engine] Initializing Apeiron WASM module');
-		// Absolute, computed specifier so the bundler leaves this as a runtime import.
-		const glueUrl = new URL(msg.engineUrl, self.location.origin).href;
-		wasm = await import(glueUrl);
-		await wasm.default(); // Loads the sibling .wasm from the same /engine/<hash>/ dir.
+		({ wasm } = await loadEngineWasm<GameplayWasmModule>(msg.engineUrl, msg.threads));
 
-		// A single-threaded engine build exports no initThreadPool; guard so it
-		// degrades gracefully to a 1-thread search instead of throwing.
-		if (msg.threads > 1 && typeof wasm.initThreadPool === 'function')
-			await wasm.initThreadPool(msg.threads);
-
-		wasmInitialized = true;
 		console.debug('[Engine] Apeiron WASM module initialized');
 		postMessage('readyok');
 	} catch (err: unknown) {
 		console.error('[Engine] Failed to initialize Apeiron WASM module', err);
+		postMessage({
+			type: 'initerror',
+			message: err instanceof Error ? err.message : String(err),
+		});
+		self.close();
 	}
 }
 
@@ -85,12 +94,6 @@ self.onmessage = async function (
 	if ('engineUrl' in e.data) return initWasm(e.data);
 
 	const data = e.data;
-
-	if (!wasmInitialized) {
-		console.error('[Engine] Received a request before the WASM module was initialized');
-		postMessage({ type: 'move', data: null });
-		return;
-	}
 
 	try {
 		const engineColor = data.youAreColor;
@@ -108,13 +111,13 @@ self.onmessage = async function (
 		// Initialize engine configuration
 		const engineConfig = {
 			strength_level: data.engineConfig?.strengthLevel ?? 3,
-			wtime: data.wtime ?? 0,
-			btime: data.btime ?? 0,
-			winc: data.winc ?? 0,
-			binc: data.binc ?? 0,
+			wtime: toClockMillis(data.wtime),
+			btime: toClockMillis(data.btime),
+			winc: toClockMillis(data.winc),
+			binc: toClockMillis(data.binc),
 		};
 
-		let engine;
+		let engine: GameplayEngine;
 		try {
 			engine = wasm.Engine.from_icn(icnString, engineConfig);
 		} catch (e) {
@@ -158,6 +161,10 @@ self.onmessage = async function (
 		postMessage({ type: 'move', data: null });
 	}
 };
+
+function toClockMillis(value: number | undefined): number {
+	return value === undefined || !Number.isFinite(value) ? 0 : Math.max(0, Math.round(value));
+}
 
 function mapRustPromotionToSiteAbbr(
 	promotion: string | null | undefined,
