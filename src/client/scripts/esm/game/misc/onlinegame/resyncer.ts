@@ -85,6 +85,22 @@ function synchronizeMovesList(
 	forceSync: boolean,
 ): { opponentPlayedIllegalMove: boolean } {
 	// console.log("Resyncing...");
+	const latestMatchingMoveIndex = findLastestMatchingMoveIndex(gamefile.moves, moves);
+
+	if (
+		!forceSync &&
+		!claimedGameConclusion &&
+		window.gamePageData.engineGame !== undefined &&
+		latestMatchingMoveIndex === moves.length - 1 &&
+		gamefile.moves.length > moves.length
+	) {
+		console.log(
+			`Resubmitting ${gamefile.moves.length - moves.length} engine-game moves after resyncing.`,
+		);
+		movesendreceive.resubmitMovesFrom(gamefile, moves.length);
+		movesendreceive.syncEngineClocks(gamefile);
+		return { opponentPlayedIllegalMove: false };
+	}
 
 	// Early exit case. If we have played exactly 1 more move than the server,
 	// and the rest of the moves list matches, don't modify our moves,
@@ -118,9 +134,6 @@ function synchronizeMovesList(
 	const originalMoveIndex = gamefile.state.local.moveIndex;
 	movesequence.viewFront(gamefile, mesh, false);
 	let aChangeWasMade = false;
-
-	/** The index of the lastest move in the game we agree with the server on. -1 = starting position. */
-	const latestMatchingMoveIndex = findLastestMatchingMoveIndex(gamefile.moves, moves);
 
 	// Rewind moves until we reach the first move we agree with the server on.
 	// Catches our move if we moved RIGHT after the game ended but we haven't seen the conclusion.

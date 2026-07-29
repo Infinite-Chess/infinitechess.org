@@ -6,12 +6,13 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import { ClockValuesSchema } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
 import gameutility from './gameutility.js';
 import { offerRematch } from './onRematch.js';
-import { getGameBySocket, resumeEngineClock } from './gamemanager.js';
+import { getGameBySocket, resumeEngineClock, syncEngineClocks } from './gamemanager.js';
 import { onSubscribeToGame } from './onSubscribe.js';
 import { onSubscribeToRematch } from './onSubscribeRematch.js';
 import { abortGame, resignGame } from './abortresigngame.js';
@@ -19,6 +20,7 @@ import { onReport, reportschem } from './cheatreport.js';
 import { claimVictory, claimDraw } from './claimdisconnect.js';
 import { submitMove, submitmoveschem } from './movesubmission.js';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('abort') }),
@@ -31,6 +33,7 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('resign') }),
 	z.strictObject({ action: z.literal('engineresign') }),
 	z.strictObject({ action: z.literal('engineready') }),
+	z.strictObject({ action: z.literal('syncclocks'), value: ClockValuesSchema }),
 	z.strictObject({ action: z.literal('claimvictory') }),
 	z.strictObject({ action: z.literal('claimdraw') }),
 	z.strictObject({ action: z.literal('report'), value: reportschem }),
@@ -89,6 +92,13 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage): void {
 			break;
 		case 'engineready':
 			if (gameutility.isEngineGame(servergame)) resumeEngineClock(servergame);
+			break;
+		case 'syncclocks':
+			if (!servergame.untimed && syncEngineClocks(servergame, contents.value.clocks)) {
+				const clockValues = gameutility.getGameClockValues(servergame);
+				sendSocketMessage(ws, 'game', 'clock', clockValues);
+				gameutility.broadcastToSpectators(servergame, 'clock', clockValues);
+			}
 			break;
 		case 'claimvictory':
 			claimVictory(servergame, color);

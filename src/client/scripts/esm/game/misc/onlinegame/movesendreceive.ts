@@ -7,8 +7,8 @@
 
 import type { Mesh } from '../../rendering/piecemodels.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { MoveValidationResult } from '../../../../../../shared/chess/logic/movevalidation.js';
+import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { ClockValues, OpponentsMoveMessage } from '../../../../../../shared/types.js';
 
 import clock from '../../../../../../shared/chess/logic/clock.js';
@@ -27,6 +27,7 @@ import { GameBus } from '../../GameBus.js';
 import gamesession from '../../chess/gamesession.js';
 import movesequence from '../../chess/movesequence.js';
 import socketmessages from '../../../websocket/socketmessages.js';
+import socketman from '../../../websocket/socketman.js';
 
 // Events ---------------------------------------------------------------------
 
@@ -41,17 +42,45 @@ GameBus.addEventListener('engine-move-played', () => {
 
 /** Called when selection.js moves a piece. This will send it to the server if we're in an online game. */
 function sendMove(): void {
-	if (!onlinegame.areInSync()) return; // Skip, our move will be auto-submitted when we resync
-	// console.log("Sending our move..");
-
 	const gamefile = gameslot.getGamefile()!;
-	const lastMove = moveutil.getLastMove(gamefile.moves)!;
-	const moveToken = lastMove.token; // "x,y>x,yN"
+	if (window.gamePageData.engineGame !== undefined && !gamefile.untimed) {
+		clock.push(gamefile);
+		guiclock.edit(gamefile);
+	}
+	if (!onlinegame.areInSync() || socketman.getSocket()?.readyState !== WebSocket.OPEN) {
+		return;
+	}
+	// console.log("Sending our move..");
+	sendMoveAtIndex(gamefile, gamefile.moves.length - 1);
+}
+
+/** Re-submits every local engine-game move the server has not yet received. */
+function resubmitMovesFrom(gamefile: GameFile, startMoveIndex: number): void {
+	for (let moveIndex = startMoveIndex; moveIndex < gamefile.moves.length; moveIndex++) {
+		sendMoveAtIndex(gamefile, moveIndex);
+	}
+}
+
+/** Sends the clock state retained by this still-open page after replaying offline moves. */
+function syncEngineClocks(gamefile: GameFile): void {
+	if (gamefile.untimed) return;
+	const values = clock.createEdit(gamefile.clocks);
+	values.clocks = { ...values.clocks };
+	if (values.colorTicking !== undefined)
+		values.clocks[values.colorTicking] = clock.getColorTickingTrueTimeRemaining(
+			gamefile.clocks,
+		)!;
+	socketmessages.send('game', 'syncclocks', values, true);
+}
+
+function sendMoveAtIndex(gamefile: GameFile, moveIndex: number): void {
+	const move = gamefile.moves[moveIndex]!;
 
 	const data = {
-		move: moveToken,
-		moveNumber: gamefile.moves.length,
-		gameConclusion: gamefile.gameConclusion,
+		move: move.token,
+		moveNumber: moveIndex + 1,
+		gameConclusion:
+			moveIndex === gamefile.moves.length - 1 ? gamefile.gameConclusion : undefined,
 	};
 
 	socketmessages.send('game', 'submitmove', data, true);
@@ -171,6 +200,8 @@ function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefin
 
 export default {
 	sendMove,
+	resubmitMovesFrom,
+	syncEngineClocks,
 	handleMove,
 	checkAndReportIllegalOpponentMove,
 	applyClockValues,

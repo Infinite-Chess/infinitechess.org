@@ -16,11 +16,11 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
+import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 import gamefile, {
 	type LoadedVariant,
 	type VariantOptions,
 } from '../../../shared/chess/logic/gamefile.js';
-import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
 import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
@@ -406,11 +406,39 @@ function resumeEngineClock(servergame: ServerGame): void {
 	});
 	armAutoTimeLoss(servergame);
 	liveGameValues.onEngineClockChanged(servergame);
-	gameutility.broadcastToSpectators(
-		servergame,
-		'clock',
-		gameutility.getGameClockValues(servergame),
-	);
+	const clockValues = gameutility.getGameClockValues(servergame);
+	gameutility.broadcastToParticipants(servergame, 'clock', clockValues);
+	gameutility.broadcastToSpectators(servergame, 'clock', clockValues);
+}
+
+/** Accepts the retained clock state from a reconnecting engine-game page. */
+function syncEngineClocks(servergame: ServerGame, clientClocks: PlayerGroup<number>): boolean {
+	if (servergame.untimed || !gameutility.isEngineGame(servergame)) return false;
+	for (const player of servergame.gameRules.turnOrder) {
+		const clientTime = clientClocks[player];
+		if (clientTime === undefined || clientTime < 0) return false;
+		const movesPlayed = servergame.moves.filter(
+			(_, moveIndex) =>
+				gameutility.getColorThatPlayedMoveIndex(servergame, moveIndex) === player,
+		).length;
+		const maximum =
+			servergame.clocks.startTime.millis +
+			movesPlayed * servergame.clocks.startTime.increment;
+		if (clientTime > maximum + 1_000) return false;
+	}
+	clearTimeout(servergame.match.autoTimeLossTimeoutID);
+	servergame.clocks.currentTime = { ...servergame.clocks.currentTime, ...clientClocks };
+	if (gameutility.isGameResignable(servergame)) {
+		clock.edit(servergame.clocks, {
+			clocks: { ...servergame.clocks.currentTime },
+			colorTicking: servergame.whosTurn,
+			timeColorTickingLosesAt:
+				Date.now() + servergame.clocks.currentTime[servergame.whosTurn]!,
+		});
+		armAutoTimeLoss(servergame);
+	}
+	liveGameValues.onEngineClockChanged(servergame);
+	return true;
 }
 
 /** A player has lost on time: set the game conclusion. */
@@ -792,6 +820,7 @@ export {
 	freeGame,
 	evictGame,
 	pushGameClock,
+	syncEngineClocks,
 	resumeEngineClock,
 	getGameByID,
 	produceStaticGameState,
