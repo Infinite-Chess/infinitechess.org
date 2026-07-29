@@ -11,7 +11,7 @@ import * as z from 'zod';
 
 import gameutility from './gameutility.js';
 import { offerRematch } from './onRematch.js';
-import { getGameBySocket } from './gamemanager.js';
+import { getGameBySocket, resumeEngineClock } from './gamemanager.js';
 import { onSubscribeToGame } from './onSubscribe.js';
 import { onSubscribeToRematch } from './onSubscribeRematch.js';
 import { abortGame, resignGame } from './abortresigngame.js';
@@ -30,6 +30,7 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('subscribe'), value: z.number().int().nonnegative() }),
 	z.strictObject({ action: z.literal('resign') }),
 	z.strictObject({ action: z.literal('engineresign') }),
+	z.strictObject({ action: z.literal('engineready') }),
 	z.strictObject({ action: z.literal('claimvictory') }),
 	z.strictObject({ action: z.literal('claimdraw') }),
 	z.strictObject({ action: z.literal('report'), value: reportschem }),
@@ -85,6 +86,9 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage): void {
 			if (gameutility.isGameResignable(servergame))
 				resignGame(servergame, servergame.match.engineParticipant!.color);
 			else abortGame(servergame);
+			break;
+		case 'engineready':
+			if (gameutility.isEngineGame(servergame)) resumeEngineClock(servergame);
 			break;
 		case 'claimvictory':
 			claimVictory(servergame, color);

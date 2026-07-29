@@ -19,6 +19,7 @@ import timeControls from './timeControls.js';
 import variantSelector from '../../components/variantselector/variantSelector.js';
 import modifierSelector from '../../components/variantselector/modifierSelector.js';
 import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
+import preferences from '../../components/header/preferences.js';
 
 // Types ----------------------------------------------
 
@@ -92,6 +93,8 @@ function initToggleGroups(): void {
 					groupButton.classList.remove('active'),
 				);
 				btn.classList.add('active');
+				if (attr === 'data-level')
+					preferences.setComputerEngineStrength(Number(btn.getAttribute('data-level')));
 				callback?.();
 			});
 		});
@@ -121,6 +124,7 @@ function initModal(): void {
 	});
 
 	initToggleGroups();
+	setSelectedEngineStrength(preferences.getComputerEngineStrength());
 	timeControls.initModalSliders();
 	timeControls.onTimeToggle();
 	timeControls.initPresets();
@@ -231,6 +235,12 @@ function isVariantSupportedByEngine(): boolean {
 function getSelectedEngineStrength(): number {
 	const levelBtn = document.querySelector<HTMLElement>('[data-level].active')!;
 	return Number(levelBtn.getAttribute('data-level')!);
+}
+
+function setSelectedEngineStrength(level: number): void {
+	element_buttonsByToggleGroup['data-level'].forEach((btn) => {
+		btn.classList.toggle('active', Number(btn.getAttribute('data-level')) === level);
+	});
 }
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */

@@ -104,7 +104,6 @@ function initEngineGame(options: {
 			if (e.data === 'readyok') {
 				rejectEngineLoad = undefined;
 				resolve(); // Engine is ready!
-				if (options.youAreColor !== undefined) onMovePlayed();
 			} else if (e.data?.type === 'initerror') {
 				const message = String(e.data.message ?? 'Unknown initialization error.');
 				resignFailedEngine();
@@ -127,6 +126,10 @@ function initEngineGame(options: {
 		engineWorker.onmessage = (e: MessageEvent): void => handleEngineMessage(e.data);
 		// Remove the error handler (no longer needed after worker is ready)
 		engineWorker.onerror = null;
+		if (options.youAreColor !== undefined) {
+			socketmessages.send('game', 'engineready', undefined, true);
+			onMovePlayed();
+		}
 		// Ensures if the debug mode was on before starting an engine game,
 		// the engine generated legal moves are rendered as soon as the engine is ready.
 		enginelegalmovesdebug.requestMovesForCurrentPosition();

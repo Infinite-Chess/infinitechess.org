@@ -27,6 +27,7 @@ const clientSidePrefs: string[] = [
 	'advanced_effects_enabled',
 	'master_volume',
 	'ambience_enabled',
+	'computer_engine_strength',
 ];
 interface ClientSidePreferences {
 	perspective_sensitivity: number;
@@ -40,6 +41,7 @@ interface ClientSidePreferences {
 	/** Master volume level from 0 (silent) to 1 (full volume) */
 	master_volume: number;
 	ambience_enabled: boolean;
+	computer_engine_strength: number;
 	[key: string]: any;
 }
 
@@ -73,6 +75,7 @@ const default_starfield_enabled: boolean = true;
 const default_advanced_effects_enabled: boolean = true;
 const default_master_volume: number = 1;
 const default_ambience_enabled: boolean = true;
+const default_computer_engine_strength: number = 8;
 
 /**
  * Whether a change was made to the preferences since the last time we sent them over to the server.
@@ -102,6 +105,7 @@ function loadPreferences(): void {
 		advanced_effects_enabled: default_advanced_effects_enabled,
 		master_volume: default_master_volume,
 		ambience_enabled: default_ambience_enabled,
+		computer_engine_strength: default_computer_engine_strength,
 	};
 
 	preferences = browserStoragePrefs;
@@ -337,6 +341,17 @@ function setAmbienceEnabled(ambience_enabled: boolean): void {
 	document.dispatchEvent(new CustomEvent('ambience-toggle', { detail: ambience_enabled }));
 }
 
+function getComputerEngineStrength(): number {
+	return preferences.computer_engine_strength ?? default_computer_engine_strength;
+}
+
+function setComputerEngineStrength(value: number): void {
+	if (!Number.isInteger(value) || value < 1 || value > 8)
+		throw new Error('Computer engine strength must be an integer from 1 to 8.');
+	preferences.computer_engine_strength = value;
+	savePreferences();
+}
+
 // Getters for our current theme properties --------------------------------------------------------
 
 function getColorOfLightTiles(): Color {
@@ -570,6 +585,8 @@ export default {
 	setMasterVolume,
 	getAmbienceEnabled,
 	setAmbienceEnabled,
+	getComputerEngineStrength,
+	setComputerEngineStrength,
 	sendPrefsToServer,
 	getColorOfLightTiles,
 	getColorOfDarkTiles,
