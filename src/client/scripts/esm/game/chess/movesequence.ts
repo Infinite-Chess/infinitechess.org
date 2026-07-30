@@ -47,10 +47,6 @@ function commitMove(
 
 	movepiece.makeMove(gamefile, move); // Logical changes
 
-	// Forward chokepoint for the committed move list. MUST stay above the game-over checks: its reconcile
-	// has to enqueue before 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
-	GameBus.dispatch('moves-changed');
-
 	// Stamp the move with how much time the player had left after playing it.
 	if (!gamefile.untimed && gamesession.getGameType() === 'engine') {
 		// Engine games: push the clocks locally and record the resulting stamp.
@@ -62,16 +58,23 @@ function commitMove(
 		move.clockStamp = clockStamp;
 	}
 
-	if (doGameOverChecks) {
-		wincondition.doGameOverChecks(gamefile);
+	// Must run ABOVE 'moves-changed': the checks flag a checkmating move as mate, and the
+	// move list renders each ply's notation (# vs +) once, from the flags it sees then.
+	if (doGameOverChecks) wincondition.doGameOverChecks(gamefile);
+
+	// Forward chokepoint for the committed move list.
+	GameBus.dispatch('moves-changed');
+
+	// Must stay BELOW 'moves-changed': the reconcile it triggers has to enqueue before
+	// 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
+	if (
+		doGameOverChecks &&
+		gamefileutility.isGameOver(gamefile) &&
 		// Only conclude the game if it's not an online game (in that scenario, server is boss)
-		if (
-			gamefileutility.isGameOver(gamefile) &&
-			gamesession.getGameType() !== 'online' &&
-			gamesession.getGameType() !== 'analysis'
-		) {
-			gameslot.concludeGame();
-		}
+		gamesession.getGameType() !== 'online' &&
+		gamesession.getGameType() !== 'analysis'
+	) {
+		gameslot.concludeGame();
 	}
 
 	GameBus.dispatch('physical-move');
