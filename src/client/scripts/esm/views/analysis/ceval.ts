@@ -8,7 +8,7 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import { maxEngineThreads } from '../../game/chess/engines/enginewasm.js';
+import { maxEngineThreads, THREAD_CAP } from '../../game/chess/engines/enginewasm.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
@@ -96,9 +96,6 @@ const MAX_MULTI_PV = 5;
 const THROTTLE_MS = 60;
 /** Crashes on the same position before we give up on it (2 = retry once, then flag it un-analyzable). */
 const CRASHES_BEFORE_GIVING_UP = 2;
-/** Hard cap on Lazy SMP threads: the engine's analysis path uses at most 4. */
-const THREAD_CAP = 4;
-
 /** Whether the served engine build supports Lazy SMP (a single-threaded build exports no
  * `initThreadPool`). The worker reports it on load; assume true until then. */
 let engineSupportsThreads = true;

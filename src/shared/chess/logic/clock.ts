@@ -33,7 +33,7 @@ export type ClockData = {
 		minutes: number;
 		/** The number of miliseconds both sides started with.  */
 		millis: number;
-		/** The increment used, in milliseconds. */
+		/** The increment used, in seconds. */
 		increment: number;
 	};
 } & (

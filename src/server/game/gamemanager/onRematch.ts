@@ -79,10 +79,7 @@ function createRematchGame(oldGame: ServerGame): void {
 	socketsToNavigate.push(...oldGame.spectators);
 
 	const setup: GameSetup = {
-		variant:
-			oldMatch.variant === null
-				? { kind: 'custom', position: oldMatch.position! }
-				: { kind: 'preset', code: oldMatch.variant },
+		variant: { kind: 'preset', code: oldMatch.variant },
 		time: oldMatch.clock,
 		rated: oldMatch.rated,
 	};

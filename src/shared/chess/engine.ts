@@ -24,6 +24,8 @@ export interface Engine {
 	displayName: string;
 	/** The maximum strength level supported by this engine. */
 	maxStrengthLevel: number;
+	/** Whether the worker loads separately served wasm glue at runtime. */
+	loadsWasmGlueAtRuntime: boolean;
 }
 
 /** Union of all valid engine names, derived from the keys of engineDictionary. */
@@ -33,6 +35,9 @@ export type ValidEngine = keyof typeof engineDictionary;
 
 /** Maximum signed 64-bit integer value (2^63 - 1). Used in Rust. */
 export const I64_MAX = 2n ** 63n - 1n;
+
+/** The engine used for online computer games. */
+export const ONLINE_ENGINE: ValidEngine = 'apeiron';
 
 /**
  * Centralized data structure for all engine properties.
@@ -45,12 +50,14 @@ export const engineDictionary = {
 		defaultTimeLimitPerMoveMillis: 500,
 		displayName: 'Practice Bot',
 		maxStrengthLevel: 1,
+		loadsWasmGlueAtRuntime: false,
 	},
 	apeiron: {
 		worldBorder: I64_MAX - 2000n,
 		defaultTimeLimitPerMoveMillis: 4000,
 		displayName: 'Apeiron',
 		maxStrengthLevel: 8,
+		loadsWasmGlueAtRuntime: true,
 	},
 } satisfies { [key: string]: Engine };
 

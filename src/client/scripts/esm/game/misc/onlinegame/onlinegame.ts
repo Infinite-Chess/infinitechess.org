@@ -4,11 +4,9 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
-import type { Additional, VariantOptions } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Additional } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { GameStateMessage, ParticipantState } from '../../../../../../shared/types.js';
 
-import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { engineDictionary } from '../../../../../../shared/chess/engine.js';
@@ -18,6 +16,7 @@ import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import drawoffers from './drawoffers.js';
 import enginegame from '../enginegame.js';
+import toast from '../../../components/toast.js';
 import gameactions from '../../gui/guigameactions.js';
 import gamesession from '../../chess/gamesession.js';
 import guigamemeta from '../../gui/guigamemeta.js';
@@ -87,16 +86,10 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 
 	// The static setup (variant/time control/creation time) is SSR'd
 	const { variant, timeControl, timeCreated, engineGame } = window.gamePageData;
-	let variantOptions: VariantOptions | undefined;
-	if (variant.kind === 'custom') {
-		const longFormat = icnconverter.ShortToLong_Format(window.gamePageData.position!);
-		variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
-	}
 	const additional: Additional = {
 		moves: state.moves,
 		gameConclusion: state.gameConclusion,
 		clockValues: state.clockValues,
-		variantOptions,
 	};
 	if (engineGame) {
 		additional.worldBorderDist = engineDictionary[engineGame.engine].worldBorder;
@@ -121,7 +114,7 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 			// A finalized rated game carries its deltas in the state.
 			if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
 
-			if (engineGame && !state.gameConclusion) {
+			if (engineGame && ourRole !== undefined && !state.gameConclusion) {
 				const { engineWorkerUrl, engineUrl } = window.gamePageData;
 				if (!engineWorkerUrl || !engineUrl)
 					throw new Error('Engine assets are missing from the game page.');
@@ -137,9 +130,10 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 						workerUrl: engineWorkerUrl,
 						engineUrl,
 					})
-					.catch((error: Error) =>
-						console.error('Failed to initialize engine game:', error),
-					);
+					.catch((error: Error) => {
+						console.error('Failed to initialize engine game:', error);
+						toast.show('The engine failed to load and resigned the game.', { error: true });
+					});
 			}
 
 			return graphical;

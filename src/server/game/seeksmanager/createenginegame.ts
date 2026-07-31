@@ -5,8 +5,7 @@
 import type { CreateEngineGameBody } from '../../../shared/types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-import clockutil from '../../../shared/chess/util/clockutil.js';
-import { engineDictionary } from '../../../shared/chess/engine.js';
+import { engineDictionary, ONLINE_ENGINE } from '../../../shared/chess/engine.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
 
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -28,8 +27,7 @@ async function createEngineGameWs(ws: CustomWebSocket, body: CreateEngineGameBod
 
 	const memberInfo = ws.metadata.memberInfo;
 	// These are unreachable via the client (it validates first), so a hand-crafted message.
-	if (!clockutil.isTimedControlValid(body.timeControl)) return;
-	if (body.strengthLevel > engineDictionary[body.engine].maxStrengthLevel) return;
+	if (body.strengthLevel > engineDictionary[ONLINE_ENGINE].maxStrengthLevel) return;
 
 	try {
 		const variant = await resolveAndValidateVariant(ws, body.variant);
@@ -46,7 +44,7 @@ async function createEngineGameWs(ws: CustomWebSocket, body: CreateEngineGameBod
 				rated: false,
 				engineParticipant: {
 					color: engineColor,
-					engine: body.engine,
+					engine: ONLINE_ENGINE,
 					version: getEngineVersion(),
 					strengthLevel: body.strengthLevel,
 				},

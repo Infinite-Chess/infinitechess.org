@@ -1,3 +1,5 @@
+// src/server/database/engineGamesManager.ts
+
 /**
  * Manages permanent engine participants. One row mirrors one player_games participant.
  */

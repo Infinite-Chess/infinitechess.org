@@ -5,7 +5,6 @@ import type { GameMessage } from '../../../websocket/socketschemas.js';
 import type { ClockValues, GameConclusionMessage } from '../../../../../../shared/types.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import toast from '../../../components/toast.js';
 import resyncer from './resyncer.js';
@@ -169,7 +168,7 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 
 	// Ping is round-trip time (RTT), So divided by two to get the approximate
 	// time that has elapsed since the server sent us the correct clock values
-	const halfPing = Math.round(pingManager.getHalfPing());
+	const halfPing = pingManager.getHalfPing();
 	if (halfPing > 2500)
 		console.error(
 			'Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!',
@@ -182,7 +181,7 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 		);
 	clockValues.clocks[clockValues.colorTicking] = Math.max(
 		0,
-		Math.round(clockValues.clocks[clockValues.colorTicking]! - halfPing),
+		clockValues.clocks[clockValues.colorTicking]! - halfPing,
 	);
 
 	// Flag what time the player who's clock is ticking will lose on time.
@@ -204,13 +203,6 @@ function flushQueue(): void {
  */
 function handleUpdatedClock(gamefile: GameFile, clockValues: ClockValues): void {
 	movesendreceive.applyClockValues(gamefile, clockValues);
-
-	// Participants also use this as their latest move's clock stamp.
-	// Spectators only apply the clock state.
-	const ourColor = gamesession.getRole();
-	if (ourColor === undefined) return;
-	const ourMove = moveutil.getLastMove(gamefile.moves)!;
-	ourMove.clockStamp = clockValues.clocks[ourColor]!;
 }
 
 /**

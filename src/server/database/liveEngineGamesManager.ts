@@ -1,3 +1,5 @@
+// src/server/database/liveEngineGamesManager.ts
+
 /**
  * Manages live engine participants. They omit disconnect state because engines never disconnect.
  */
@@ -7,16 +9,17 @@ import jsutil from '../../shared/util/jsutil.js';
 import db, { dbCall } from './database.js';
 import { allLiveEngineGamesColumns } from './databaseTables.js';
 
-export interface LiveEngineGamesRecord {
-	game_id: number;
-	player_number: number;
+interface LiveEngineGameData {
 	time_remaining_ms: number | null;
 	engine: string;
 	engine_version: string;
 	strength_level: number;
 }
 
-type LiveEngineGameData = Omit<LiveEngineGamesRecord, 'game_id' | 'player_number'>;
+export interface LiveEngineGamesRecord extends LiveEngineGameData {
+	game_id: number;
+	player_number: number;
+}
 
 export function insertLiveEngineGame(record: LiveEngineGamesRecord): void {
 	const query = `

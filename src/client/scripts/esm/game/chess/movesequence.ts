@@ -50,8 +50,9 @@ function commitMove(
 		move.clockStamp = clockStamp;
 	}
 
-	// Forward chokepoint for the committed move list. MUST stay above the game-over checks: its reconcile
-	// has to enqueue before 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
+	// Forward chokepoint for the committed move list. MUST stay after the clock stamp assignment so
+	// clock listeners see the new move's stamp, and above game-over checks so the final ply is present
+	// before 'game-concluded' scrolls. This also prevents PvP clock display from lagging by one ply.
 	GameBus.dispatch('moves-changed');
 
 	if (doGameOverChecks) {

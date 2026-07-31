@@ -396,7 +396,6 @@ function generateTables(): void {
 			PRIMARY KEY (game_id, player_number)
 		);
 	`);
-	db.run(`CREATE INDEX IF NOT EXISTS idx_live_player_games_game ON live_player_games (game_id);`);
 
 	createEngineGamesTable();
 
@@ -412,7 +411,6 @@ function generateTables(): void {
 			PRIMARY KEY (game_id, player_number)
 		);
 	`);
-	db.run(`CREATE INDEX IF NOT EXISTS idx_live_engine_games_game ON live_engine_games (game_id);`);
 }
 
 function createEngineGamesTable(): void {
@@ -428,11 +426,9 @@ function createEngineGamesTable(): void {
 			PRIMARY KEY (game_id, player_number)
 		);
 	`);
-	db.run(`CREATE INDEX IF NOT EXISTS idx_engine_games_game ON engine_games (game_id);`);
 }
 
 function initDatabase(): void {
-	migrateLegacyEngineGamesTableIfNeeded();
 	generateTables();
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
 	dropLegacyLivePlayerGamesEloColumnIfPresent();
@@ -449,49 +445,6 @@ function initDatabase(): void {
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
-}
-
-/** Rebuilds the pre-live-pipeline engine table while preserving concluded-game participants. */
-function migrateLegacyEngineGamesTableIfNeeded(): void {
-	if (
-		!db.columnExists('engine_games', 'game_id') ||
-		db.columnExists('engine_games', 'player_number')
-	)
-		return;
-
-	const migrate = db.transaction(() => {
-		db.run('ALTER TABLE engine_games RENAME TO legacy_engine_games');
-		createEngineGamesTable();
-		db.run(`
-			INSERT INTO engine_games (
-				game_id, player_number, score, clock_at_end_millis,
-				engine, engine_version, strength_level
-			)
-			SELECT
-				legacy.game_id,
-				CASE legacy.player_color WHEN 1 THEN 2 ELSE 1 END,
-				CASE games.result
-					WHEN '1-0' THEN CASE legacy.player_color WHEN 2 THEN 1.0 ELSE 0.0 END
-					WHEN '0-1' THEN CASE legacy.player_color WHEN 1 THEN 1.0 ELSE 0.0 END
-					WHEN '1/2-1/2' THEN 0.5
-					ELSE NULL
-				END,
-				CASE legacy.player_color
-					WHEN 1 THEN legacy.clock_black
-					WHEN 2 THEN legacy.clock_white
-					ELSE NULL
-				END,
-				legacy.engine,
-				'legacy',
-				legacy.strength_level
-			FROM legacy_engine_games AS legacy
-			INNER JOIN games ON games.game_id = legacy.game_id
-			WHERE legacy.player_color IN (1, 2)
-		`);
-		db.run('DROP TABLE legacy_engine_games');
-	});
-	migrate();
-	console.log('Temporary DB migration: rebuilt legacy engine_games table.');
 }
 
 /**

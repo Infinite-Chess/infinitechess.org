@@ -138,10 +138,8 @@ interface MatchInfo {
 	/** The match's unique ID. This is also the same ID the game will have when logged to the database. */
 	id: number;
 
-	/** The preset variant code, or null for a custom-position game. */
-	variant: VariantCode | null;
-	/** The custom starting-position ICN. */
-	position?: string;
+	/** The variant code of the game being played. */
+	variant: VariantCode;
 
 	/** The time this match was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	timeCreated: number;
@@ -276,10 +274,12 @@ function initMatch(
 		};
 	}
 
+	if (setup.variant.kind !== 'preset')
+		throw new Error('Custom variant game starting is not yet implemented.');
+
 	return {
 		id,
-		variant: setup.variant.kind === 'preset' ? setup.variant.code : null,
-		...(setup.variant.kind === 'custom' && { position: setup.variant.position }),
+		variant: setup.variant.code,
 		playerData,
 		engineParticipant: setup.engineParticipant,
 		timeCreated: Date.now(),
@@ -300,11 +300,10 @@ function initServerGame(
 	gameWithRules: Game & { gameRules: GameRules },
 	match: MatchInfo,
 	validateMoves: boolean,
-	variant: LoadedVariant | undefined,
+	variant: LoadedVariant,
 	moves: MoveRecord[] = [],
 ): ServerGame {
 	if (validateMoves) {
-		if (variant === undefined) throw new Error('Validated games require a preset variant.');
 		const boardsim = boardinit.initBoard(gameWithRules.gameRules, variant);
 		if (moves.length > 0) movepiece.makeAllMovesInGame(boardsim, moves);
 		return { ...gameWithRules, match, ...boardsim, spectators: new Set(), validateMoves: true };
@@ -442,13 +441,10 @@ function detachSpectatorFromGame(servergame: ServerGame, ws: CustomWebSocket): v
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
-	variant: VariantCode | null,
+	variant: VariantCode,
 ): PlayerGroup<Rating> {
 	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
-	const leaderboardId =
-		variant === null
-			? Leaderboards.INFINITY
-			: (VariantLeaderboards[variant] ?? Leaderboards.INFINITY);
+	const leaderboardId = VariantLeaderboards[variant] ?? Leaderboards.INFINITY;
 
 	const ratingData: PlayerGroup<Rating> = {};
 	for (const [color, { identifier }] of Object.entries(players)) {
@@ -508,8 +504,8 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 	const match = servergame.match;
 	return {
-		variant:
-			match.variant === null ? { kind: 'custom' } : { kind: 'preset', code: match.variant },
+		// initMatch rejects non-preset seeks, so a live game's variant is always a preset code right now.
+		variant: { kind: 'preset', code: match.variant },
 		timeControl: match.clock,
 		timeCreated: match.timeCreated,
 	};
@@ -559,12 +555,11 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 		Round: '-',
 		White: getPlayerName(p.WHITE),
 		Black: getPlayerName(p.BLACK),
+		Variant: variantEnglishName,
 		TimeControl: match.clock,
 		UTCDate,
 		UTCTime,
 	};
-	if (match.variant !== null) metadata.Variant = variantEnglishName;
-
 	// ID + display elo, present only for signed-in players.
 	const white = match.playerData[p.WHITE]?.identifier;
 	const black = match.playerData[p.BLACK]?.identifier;
@@ -862,12 +857,15 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): undefin
 	return;
 }
 
-/** Broadcasts a game-route message to every connected participant of the game. */
-function broadcastToParticipants(servergame: ServerGame, action: string, value: any): void {
-	for (const data of Object.values(servergame.match.playerData)) {
-		if (data.socket === undefined) continue; // Not connected, can't send message
-		sendSocketMessage(data.socket, 'game', action, value);
-	}
+/** Broadcasts a message to every connected participant of the game. */
+function broadcastToParticipants(
+	servergame: ServerGame,
+	sub: string,
+	action: string,
+	value?: any,
+): void {
+	for (const color of Object.keys(servergame.match.playerData))
+		sendMessageToColor(servergame.match, Number(color) as Player, sub, action, value);
 }
 
 /** Broadcasts a role-agnostic game-route message to every spectator of the game. */
@@ -879,7 +877,7 @@ function broadcastToSpectators(servergame: ServerGame, action: string, value: an
 
 /** Broadcasts a role-agnostic game-route message to every connected client of the game. */
 function broadcastToEveryone(servergame: ServerGame, action: string, value: any): void {
-	broadcastToParticipants(servergame, action, value);
+	broadcastToParticipants(servergame, 'game', action, value);
 	broadcastToSpectators(servergame, action, value);
 }
 

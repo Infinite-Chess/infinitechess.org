@@ -1,3 +1,7 @@
+// src/client/scripts/esm/game/chess/engines/enginewasm.ts
+
+/** Loads an engine's wasm glue and shared-memory thread pool. */
+
 interface EngineWasmInitOutput {
 	memory: WebAssembly.Memory;
 }
@@ -6,6 +10,9 @@ interface EngineWasmModule {
 	default: () => Promise<EngineWasmInitOutput>;
 	initThreadPool?: (threads: number) => Promise<void>;
 }
+
+/** Hard cap on Lazy SMP threads used by engine features. */
+const THREAD_CAP = 4;
 
 const BROWSER_SUPPORTS_THREADS: boolean = (() => {
 	try {
@@ -40,5 +47,5 @@ async function loadEngineWasm<T extends EngineWasmModule>(
 	return { wasm, output, multithreaded };
 }
 
-export { BROWSER_SUPPORTS_THREADS, maxEngineThreads, loadEngineWasm };
+export { BROWSER_SUPPORTS_THREADS, THREAD_CAP, maxEngineThreads, loadEngineWasm };
 export type { EngineWasmModule };

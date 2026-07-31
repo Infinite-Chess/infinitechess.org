@@ -11,7 +11,8 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
-import { engineDictionary, ValidEngine } from '../../../../../shared/chess/engine.js';
+import { engineDictionary, ONLINE_ENGINE } from '../../../../../shared/chess/engine.js';
+import { interpolate } from '../../../../../shared/util/interpolate.js';
 
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
@@ -19,7 +20,6 @@ import timeControls from './timeControls.js';
 import variantSelector from '../../components/variantselector/variantSelector.js';
 import modifierSelector from '../../components/variantselector/modifierSelector.js';
 import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
-import preferences from '../../components/header/preferences.js';
 
 // Types ----------------------------------------------
 
@@ -34,9 +34,6 @@ const SUBMIT_LABELS: Record<ModalMode, string> = {
 	friend: t.index.lobby_buttons.challenge_friend,
 	computer: t.index.lobby_buttons.play_computer,
 };
-
-/** The engine computer games are played against. */
-const COMPUTER_GAME_ENGINE: ValidEngine = 'apeiron';
 
 // Elements ----------------------------------------------
 
@@ -93,8 +90,6 @@ function initToggleGroups(): void {
 					groupButton.classList.remove('active'),
 				);
 				btn.classList.add('active');
-				if (attr === 'data-level')
-					preferences.setComputerEngineStrength(Number(btn.getAttribute('data-level')));
 				callback?.();
 			});
 		});
@@ -124,7 +119,6 @@ function initModal(): void {
 	});
 
 	initToggleGroups();
-	setSelectedEngineStrength(preferences.getComputerEngineStrength());
 	timeControls.initModalSliders();
 	timeControls.onTimeToggle();
 	timeControls.initPresets();
@@ -200,7 +194,6 @@ function handleComputerGame(): void {
 		variant,
 		timeControl: time,
 		color: getSelectedColor(),
-		engine: COMPUTER_GAME_ENGINE,
 		strengthLevel,
 	});
 	close();
@@ -220,12 +213,14 @@ function isVariantSupportedByEngine(): boolean {
 		undefined,
 		checkedOptions,
 		false,
-		engineDictionary[COMPUTER_GAME_ENGINE].worldBorder,
+		engineDictionary[ONLINE_ENGINE].worldBorder,
 		apeiron_card.BORDER_CAP,
 	);
 	const result = apeiron_card.isPositionSupported(checkedOptions);
 	if (!result.supported) {
-		toast.show(`The engine doesn't support this position. ${result.reason}`, { error: true });
+		toast.show(interpolate(t.index.engine.position_unsupported, { reason: result.reason }), {
+			error: true,
+		});
 		return false;
 	}
 	return true;
@@ -235,12 +230,6 @@ function isVariantSupportedByEngine(): boolean {
 function getSelectedEngineStrength(): number {
 	const levelBtn = document.querySelector<HTMLElement>('[data-level].active')!;
 	return Number(levelBtn.getAttribute('data-level')!);
-}
-
-function setSelectedEngineStrength(level: number): void {
-	element_buttonsByToggleGroup['data-level'].forEach((btn) => {
-		btn.classList.toggle('active', Number(btn.getAttribute('data-level')) === level);
-	});
 }
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */

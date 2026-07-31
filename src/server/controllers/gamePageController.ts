@@ -26,7 +26,6 @@ import { decodeGameId } from '../database/gamesManager.js';
 import { memberInfoEqPartial } from '../utility/memberInfoUtil.js';
 import { produceStaticGameState } from '../game/gamemanager/gamemanager.js';
 import {
-	getDeadEngineGameInfo,
 	produceDeadStaticGameState,
 	resolveDeadParticipantColor,
 } from '../game/gamemanager/deadgamestate.js';
@@ -93,7 +92,7 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 				engine: game.match.engineParticipant.engine,
 				strengthLevel: game.match.engineParticipant.strengthLevel,
 			}
-		: getDeadEngineGameInfo(id);
+		: resolved.engineGame;
 
 	// Resolve the viewer's color (board orientation + role); undefined => spectator (white POV).
 	let role: Player | undefined;
@@ -132,7 +131,6 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 			engineGame,
 			engineWorkerUrl,
 			engineUrl,
-			position: game?.match.position,
 			variant: state.variant,
 			timeControl: state.timeControl,
 			timeCreated: state.timeCreated,

@@ -4,11 +4,13 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { ValidEngine } from '../../../../../shared/chess/engine.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import { engineDictionary } from '../../../../../shared/chess/engine.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
@@ -18,9 +20,10 @@ import { GameBus } from '../GameBus.js';
 import gamesession from '../chess/gamesession.js';
 import movesequence from '../chess/movesequence.js';
 import gamecompressor from '../chess/gamecompressor.js';
-import { maxEngineThreads } from '../chess/engines/enginewasm.js';
+import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';
 import enginelegalmovesdebug from './enginelegalmovesdebug.js';
 import socketmessages from '../../websocket/socketmessages.js';
+import { SocketBus } from '../../websocket/SocketBus.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -38,16 +41,21 @@ interface EngineConfig {
 /** Whether we are currently in an engine game. */
 let inEngineGame: boolean = false;
 let engineColor: Player | undefined;
-let currentEngine: string | undefined; // name of the current engine used
+let currentEngine: ValidEngine | undefined; // name of the current engine used
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 let engineWorker: Worker | undefined;
 let rejectEngineLoad: ((reason: Error) => void) | undefined;
+let engineReady: boolean = false;
+let serverNeedsReady: boolean = false;
 
 // Events -----------------------------------------------------------------------
 
 GameBus.addEventListener('user-move-played', () => onMovePlayed());
 GameBus.addEventListener('game-concluded', () => terminate());
 GameBus.addEventListener('game-unloaded', () => terminate());
+SocketBus.addEventListener('closed', () => {
+	if (inEngineGame) serverNeedsReady = true;
+});
 
 enginelegalmovesdebug.init({
 	canRequest: () => inEngineGame && engineWorker !== undefined,
@@ -62,9 +70,8 @@ enginelegalmovesdebug.init({
  * @param options - An object that contains the properties `currentEngine` and `engineConfig`
  */
 function initEngineGame(options: {
-	/** Omit for spectators, who only use this worker for the legal-moves overlay. */
-	youAreColor?: Player;
-	currentEngine: string;
+	youAreColor: Player;
+	currentEngine: ValidEngine;
 	engineConfig: EngineConfig;
 	/** Hashed URL of the engine's worker script. */
 	workerUrl: string;
@@ -77,14 +84,14 @@ function initEngineGame(options: {
 	console.log(`Starting engine game with engine "${options.currentEngine}".`);
 
 	inEngineGame = true;
-	engineColor =
-		options.youAreColor === undefined ? undefined : typeutil.invertPlayer(options.youAreColor);
+	engineColor = typeutil.invertPlayer(options.youAreColor);
 	currentEngine = options.currentEngine;
 	engineConfig = options.engineConfig;
+	engineReady = false;
+	serverNeedsReady = true;
 
 	// Initialize the engine as a webworker
 	if (!window.Worker) {
-		alert("Your browser doesn't support web workers. Cannot play against an engine.");
 		const error = new Error(
 			"Cannot finish loading engine game because web workers aren't supported.",
 		);
@@ -114,7 +121,7 @@ function initEngineGame(options: {
 			resignFailedEngine();
 			terminate(new Error('Worker failed to load: ' + e.message));
 		};
-		if (options.currentEngine === 'apeiron')
+		if (engineDictionary[options.currentEngine].loadsWasmGlueAtRuntime)
 			engineWorker!.postMessage({
 				engineUrl: options.engineUrl,
 				threads: getEngineThreadCount(),
@@ -126,14 +133,25 @@ function initEngineGame(options: {
 		engineWorker.onmessage = (e: MessageEvent): void => handleEngineMessage(e.data);
 		// Remove the error handler (no longer needed after worker is ready)
 		engineWorker.onerror = null;
-		if (options.youAreColor !== undefined) {
-			socketmessages.send('game', 'engineready', undefined, true);
-			onMovePlayed();
-		}
+		engineReady = true;
+		notifyServerEngineReady();
+		onMovePlayed();
 		// Ensures if the debug mode was on before starting an engine game,
 		// the engine generated legal moves are rendered as soon as the engine is ready.
 		enginelegalmovesdebug.requestMovesForCurrentPosition();
 	});
+}
+
+/** Resumes a frozen server clock once this page's worker is ready. */
+function notifyServerEngineReady(): void {
+	if (
+		!serverNeedsReady ||
+		!engineReady ||
+		gamesession.getGameType() !== 'online'
+	)
+		return;
+	socketmessages.send('game', 'engineready', undefined, true);
+	serverNeedsReady = false;
 }
 
 /**
@@ -306,7 +324,7 @@ function requestGeneratedMoves(gamefile: GameFile): void {
  * cross-origin isolation (SharedArrayBuffer); without it the engine runs single-threaded.
  */
 function getEngineThreadCount(): number {
-	return maxEngineThreads(4, 1);
+	return maxEngineThreads(THREAD_CAP, 1);
 }
 
 /** Stops the active engine worker and clears its session state. */
@@ -317,6 +335,8 @@ function terminate(loadError: Error = new Error('Engine game ended during initia
 	currentEngine = undefined;
 	engineConfig = undefined;
 	inEngineGame = false;
+	engineReady = false;
+	serverNeedsReady = false;
 	rejectEngineLoad?.(loadError);
 	rejectEngineLoad = undefined;
 }
@@ -326,6 +346,7 @@ function terminate(loadError: Error = new Error('Engine game ended during initia
 export default {
 	initEngineGame,
 	onMovePlayed,
+	notifyServerEngineReady,
 };
 
 export type { EngineConfig };

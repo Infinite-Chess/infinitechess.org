@@ -61,7 +61,13 @@ export function resolveDeadParticipantColor(game_id: number, user_id: number): P
  */
 export function produceDeadStaticGameState(
 	game_id: number,
-): { state: StaticGameState; ratingChanges?: PlayerGroup<number> } | undefined {
+):
+	| {
+			state: StaticGameState;
+			engineGame?: EngineGamePageInfo;
+			ratingChanges?: PlayerGroup<number>;
+	  }
+	| undefined {
 	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS]);
 	if (game === undefined) return undefined;
 	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS, 'elo_change_from_game']); // prettier-ignore
@@ -76,7 +82,16 @@ export function produceDeadStaticGameState(
 			ratingChanges[row.player_number] = row.elo_change_from_game;
 	}
 
-	return Object.keys(ratingChanges).length > 0 ? { state, ratingChanges } : { state };
+	return {
+		state,
+		...(engineParticipant && {
+			engineGame: {
+				engine: engineParticipant.engine,
+				strengthLevel: engineParticipant.strengthLevel,
+			},
+		}),
+		...(Object.keys(ratingChanges).length > 0 && { ratingChanges }),
+	};
 }
 
 /**
@@ -110,15 +125,6 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	if (Object.keys(finalClocks).length > 0) state.finalClocks = finalClocks;
 
 	return state;
-}
-
-export function getDeadEngineGameInfo(game_id: number): EngineGamePageInfo | undefined {
-	const row = getEngineGamesForGame(game_id, ['engine', 'strength_level'])[0];
-	if (!row) return undefined;
-	return {
-		engine: row.engine as ValidEngine,
-		strengthLevel: row.strength_level,
-	};
 }
 
 /**
@@ -183,6 +189,8 @@ function assembleStaticGameState(
 function getEngineParticipant(game_id: number):
 	| {
 			color: Player;
+			engine: ValidEngine;
+			strengthLevel: number;
 			container: ServerUsernameContainer;
 			clockAtEnd: number | null;
 	  }
@@ -196,6 +204,8 @@ function getEngineParticipant(game_id: number):
 	if (!row) return undefined;
 	return {
 		color: row.player_number as Player,
+		engine: row.engine as ValidEngine,
+		strengthLevel: row.strength_level,
 		container: {
 			type: 'engine',
 			username: getFormattedEngineName(row.engine as ValidEngine, row.strength_level),

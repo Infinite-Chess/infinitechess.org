@@ -25,13 +25,9 @@ import type { ClockValues, TimeControl } from '../../../shared/types.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
 import type { ValidEngine } from '../../../shared/chess/engine.js';
 
-import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
-import gamefile, {
-	type LoadedVariant,
-	type VariantOptions,
-} from '../../../shared/chess/logic/gamefile.js';
+import gamefile, { type LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 
 import gameutility from './gameutility.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -152,26 +148,17 @@ function restoreSingleGame(
 	const clockValues = reconstructClockValues(gameRow, playerRows, engineRow);
 
 	// 3. Create the game (also computes gameRules).
-	let variant: LoadedVariant | undefined;
-	let variantOptions: VariantOptions | undefined;
-	if (gameRow.variant !== null) {
-		variant = {
-			code: gameRow.variant as VariantCode,
-			mod: variantcache.getModule(gameRow.variant as VariantCode),
-			dateTimestamp: gameRow.time_created,
-		};
-	} else {
-		if (gameRow.position === null) throw new Error('Custom live game is missing its position.');
-		const longFormat = icnconverter.ShortToLong_Format(gameRow.position);
-		variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
-	}
+	const variant: LoadedVariant = {
+		code: gameRow.variant as VariantCode,
+		mod: variantcache.getModule(gameRow.variant as VariantCode),
+		dateTimestamp: gameRow.time_created,
+	};
 	const gameWithRules = gamefile.initGame(
 		gameRow.clock as TimeControl,
 		gameRow.time_created,
 		variant,
 		undefined,
 		clockValues,
-		variantOptions,
 	);
 
 	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
@@ -318,8 +305,7 @@ function reconstructMatchInfo(
 
 	return {
 		id: gameRow.game_id,
-		variant: gameRow.variant as VariantCode | null,
-		position: gameRow.position ?? undefined,
+		variant: gameRow.variant as VariantCode,
 		timeCreated: gameRow.time_created,
 		timeEnded: undefined, // Only ongoing games are restored — none have ended.
 		rated: gameRow.rated === 1,

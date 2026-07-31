@@ -13,11 +13,12 @@ import editorutil from './util/editorutil.js';
 import gameconfig from './util/gameconfig.js';
 import typeschemas from './chess/util/typeschemas.js';
 import type { Player } from './chess/util/typeutil.js';
+import clockutil from './chess/util/clockutil.js';
 
 import { players } from './chess/util/typeutil.js';
 import variantregistry from './chess/variants/variantregistry.js';
 import { POSITION_STRING_THRESHOLD } from './chess/variants/servervalidation.js';
-import { engineDictionary, ValidEngine } from './chess/engine.js';
+import type { ValidEngine } from './chess/engine.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
 
@@ -352,15 +353,18 @@ export const OutSeekSchema = BaseSeekSchema.extend({
 
 /** Client → server websocket payload for creating an engine game. */
 export type CreateEngineGameBody = z.infer<typeof CreateEngineGameBodySchema>;
-export const CreateEngineGameBodySchema = z.strictObject({
-	variant: SeekVariantSchema,
-	timeControl: TimeControlSchema,
-	/** The color the human plays, or null for random. */
-	color: z.literal([players.WHITE, players.BLACK, null]),
-	engine: z.literal(Object.keys(engineDictionary) as ValidEngine[]),
-	/** The engine's strength level (validated against the engine's max server-side). */
-	strengthLevel: z.int().min(1),
-});
+export const CreateEngineGameBodySchema = z
+	.strictObject({
+		variant: SeekVariantSchema,
+		timeControl: TimeControlSchema,
+		/** The color the human plays, or null for random. */
+		color: z.literal([players.WHITE, players.BLACK, null]),
+		/** The engine's strength level (validated against the engine's max server-side). */
+		strengthLevel: z.int().min(1),
+	})
+	.refine((body) => clockutil.isTimedControlValid(body.timeControl), {
+		error: 'Invalid clock value.',
+	});
 
 /** SSR→client channel info marking the game page's game as an engine game. */
 export interface EngineGamePageInfo {
@@ -374,8 +378,6 @@ export interface GamePageData extends StaticGameSetup {
 	id: number;
 	isLive: boolean;
 	role?: Player;
-	/** Custom starting-position ICN for a live game. */
-	position?: string;
 	engineGame?: EngineGamePageInfo;
 	engineWorkerUrl?: string;
 	engineUrl?: string;

@@ -163,7 +163,7 @@ self.onmessage = async function (
 };
 
 function toClockMillis(value: number | undefined): number {
-	return value === undefined || !Number.isFinite(value) ? 0 : Math.max(0, Math.round(value));
+	return value === undefined ? 0 : Math.max(0, Math.round(value));
 }
 
 function mapRustPromotionToSiteAbbr(
