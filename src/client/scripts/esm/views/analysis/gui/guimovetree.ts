@@ -96,16 +96,6 @@ function reconcileMoveTree(): void {
 	scrollToCurrentNode();
 }
 
-/**
- * Empties the rendered tree on unload. Node ids restart per game, so surviving plies would be
- * reused by the next game's patch — keeping decoration snabbdom never applied and can't remove.
- */
-function clearMoveTree(): void {
-	movetree.clear();
-	idToNode.clear();
-	treeVNode = patch(treeVNode, h('div#analysis-move-tree', []));
-}
-
 /** The ply element for the currently-viewed node, or undefined (the root has none). */
 function getCurrentNodePly(): HTMLElement | undefined {
 	const node = movetree.getCurrentNode(gameslot.getGamefile()!);
@@ -582,7 +572,7 @@ guimoveslist.registerRenderer({
 	scrollToCurrentPly: scrollToCurrentNode,
 	onGameLoaded: () => movetree.initFromGame(gameslot.getGamefile()!),
 	onMovesChanged: () => movetree.syncAfterMovesChanged(gameslot.getGamefile()!),
-	onGameUnloaded: clearMoveTree,
+	onGameUnloaded: () => movetree.clear(),
 });
 
 // Game Review API -----------------------------------------------------------------------

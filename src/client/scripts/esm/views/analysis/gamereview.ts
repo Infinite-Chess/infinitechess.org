@@ -27,7 +27,6 @@ import ceval from './ceval.js';
 import movetree from './movetree.js';
 import gameslot from '../../game/chess/gameslot.js';
 import moveevals from './moveevals.js';
-import { GameBus } from '../../game/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import reviewdivision from './reviewdivision.js';
@@ -341,32 +340,16 @@ function captureMainline(): AnalysisMoveNode[] {
 // Lifecycle ------------------------------------------------------------------------------
 
 /**
- * Whether a review can start: an idle, engine-supported
- * game with at least one mainline move.
+ * Whether a review can start: an idle, engine-supported real game
+ * (a loaded /analysis/:id game) with at least one mainline move.
  */
 function canStart(): boolean {
 	if (status !== 'idle') return false;
+	if (window.analysisPageData.gameId === null) return false;
 	const gamefile = gameslot.getGamefile();
 	if (gamefile === undefined || captureMainline().length === 0) return false;
 	return apeiron_card.isGameReviewSupported(gamefile).supported;
 }
-
-/**
- * Discards the review on game unload, returning the controller to idle so the next game
- * can be reviewed afresh. Move-tree node ids restart at 1 per game, so the node-keyed
- * reviews MUST be dropped or they'd resurface as another game's glyphs.
- */
-GameBus.addEventListener('game-unloaded', () => {
-	terminateWorkers();
-	status = 'idle';
-	mainlineNodes = [];
-	reviews = [];
-	reviewsByNodeId.clear();
-	results = [];
-	effectiveWhiteCp = [];
-	evaluatedCount = 0;
-	division = {};
-});
 
 function getStatus(): ReviewStatus {
 	return status;

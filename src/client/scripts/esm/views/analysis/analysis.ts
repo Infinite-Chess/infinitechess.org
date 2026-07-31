@@ -43,8 +43,9 @@ function start(): void {
 		void import('./analysissetup.js').then((m) => m.default.init());
 	}
 
-	// The Game Review UI picks this up off 'graphical-loaded', as it does every later load.
-	void analysisloader.loadInitialGame();
+	// Once gamefile is fully loaded, let the Game Review UI reveal its button
+	// (real games only) and honor a `?review=1` auto-open.
+	void analysisloader.loadInitialGame().then(() => guigamereview.onInitialGameLoaded());
 
 	// Poll each module's keyboard shortcuts every frame (via gamecore's document input listener).
 	gameloop.start(() => {

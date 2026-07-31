@@ -17,7 +17,6 @@ import boardpos from '../rendering/boardpos.js';
 import gamecore from './gamecore.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
-import { GameBus } from '../GameBus.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -99,7 +98,6 @@ function markLoadingDone(): void {
 	loading = false;
 	gamecore.getCanvas().classList.remove('visibility-hidden'); // Show the canvas now that the game is fully loaded.
 	centerView();
-	GameBus.dispatch('graphical-loaded');
 }
 
 /** Sets the camera to the recentered position. */
