@@ -22,6 +22,29 @@ import guianalysisview from './gui/guianalysisview.js';
 import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
 import gameslot, { LoadOptions } from '../../game/chess/gameslot.js';
 
+/**
+ * The participants of the last game pasted from ICN. The gamefile itself doesn't retain them
+ * (construction drops everything but the position, rules, and moves), so they're kept here for
+ * the Game Review's stat columns. Cleared by the load paths that carry no participants.
+ */
+let pastedPlayers: { White?: string; Black?: string } = {};
+
+function getPastedPlayers(): { White?: string; Black?: string } {
+	return pastedPlayers;
+}
+
+/**
+ * Replays the load that produced the current game. Each load path records itself here with the
+ * arguments it was given, so the pristine game can be restored without asking whoever chose it
+ * (the variant setup panel, the URL) to derive it a second time.
+ */
+let replayLastLoad: (() => Promise<void>) | undefined;
+
+/** Reloads the pristine game, discarding whatever was edited onto it. Resolves once fully loaded. */
+function reloadPristine(): Promise<void> {
+	return replayLastLoad?.() ?? Promise.resolve();
+}
+
 /** Loads the game named by the URL, falling back to a fresh Classical board. */
 async function loadInitialGame(): Promise<void> {
 	const gameId = window.analysisPageData.gameId;
@@ -73,6 +96,8 @@ function runLoad(loadOptions: LoadOptions): Promise<void> {
  * @param slideLimit - Optional Slide Limit modifier override (see the variant setup panel).
  */
 function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
+	pastedPlayers = {};
+	replayLastLoad = () => loadVariant(variant, slideLimit);
 	if (gameslot.getGamefile()) gamesession.unloadGame();
 
 	gamesession.setSessionGame({ type: 'analysis' });
@@ -94,6 +119,8 @@ function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
  * @param slideLimit - Optional Slide Limit modifier override (see the variant setup panel).
  */
 function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint): Promise<void> {
+	pastedPlayers = {};
+	replayLastLoad = () => loadVariantOptions(variantOptions, slideLimit);
 	const additional: Additional = {
 		variantOptions,
 		...(slideLimit !== undefined && { slideLimit }),
@@ -118,8 +145,7 @@ function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint)
  * Loads a game from the provided ICN longformat, replacing the current one.
  * Requires an active 'analysis' session.
  *
- * @param longFormat - The game as a parsed ICN. Mutated during construction (gamerules), so
- * callers holding onto it must pass a copy.
+ * @param longFormat - The game as a parsed ICN.
  * @param gameConclusion - The game's conclusion, if it ended.
  * @param viewWhitePerspective - Board orientation override; defaults to retaining
  * the current game's perspective, or white's if this is the initial load.
@@ -134,6 +160,9 @@ async function pasteGame(
 	// Normalize the ICN's Variant metadata to the English display name (or drop it if
 	// unrecognized), so the game we go on to display carries canonical metadata.
 	clientmetadatautil.resolveAndNormalizeVariantFromMetadata(longFormat.metadata);
+	const { White, Black } = longFormat.metadata;
+	pastedPlayers = { White, Black };
+	replayLastLoad = () => pasteGame(longFormat, gameConclusion, viewWhitePerspective, slideLimit);
 	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
 		gameConclusion,
 		slideLimit,
@@ -156,4 +185,6 @@ export default {
 	loadVariant,
 	loadVariantOptions,
 	pasteGame,
+	getPastedPlayers,
+	reloadPristine,
 };
