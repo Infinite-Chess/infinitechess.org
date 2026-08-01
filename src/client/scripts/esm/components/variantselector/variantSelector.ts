@@ -18,6 +18,7 @@ import type {
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import variantreader from '../../../../../shared/chess/variants/variantreader.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -48,7 +49,7 @@ type DisplaySelection =
 interface VariantSelectorConfig {
 	/**
 	 * Whether this selector creates seeks (lobby), vs. loading positions for analysis. Gates all
-	 * seek-only hardening: rejecting oversized positions and positions that are already game-over.
+	 * seek-only hardening: rejecting oversized positions, 4D movement, and already game-over ones.
 	 */
 	isSeekContext: boolean;
 	/** Fires on every selection/validity change (live). Sync dependent UI (e.g. a submit button). */
@@ -571,6 +572,18 @@ function validateOptions(options: VariantOptions): PositionErrorCode | null {
 	);
 }
 
+/**
+ * Why a legal position still can't be seeked, or null if it can (or we're not seeking).
+ * A seek carries only a position + gamerules, so a variant with custom piece movement (4D)
+ * would silently revert to default movement; and a finished game has nothing left to play.
+ */
+function getSeekRejection(constructed: GameFile): 'no_4d_movement' | 'game_over' | null {
+	if (!config.isSeekContext) return null;
+	if (variantreader.hasCustomMovement(constructed.variant?.mod)) return 'no_4d_movement';
+	if (gamefileutility.isGameOver(constructed)) return 'game_over';
+	return null;
+}
+
 /** Clears any saved-position error state from the variant display. */
 function clearSavedPositionError(): void {
 	setIcnResult(null);
@@ -595,7 +608,9 @@ function clearError(outline: HTMLElement): void {
 }
 
 /** Surfaces why the ICN input is illegal, on its wrap and error text. */
-function revealIcnError(reason: PositionErrorCode | 'moves_invalid' | 'game_over'): void {
+function revealIcnError(
+	reason: PositionErrorCode | 'moves_invalid' | 'no_4d_movement' | 'game_over',
+): void {
 	showError(element_icnInputWrap, t.shared.position_errors[reason]);
 }
 
@@ -648,17 +663,11 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	// Validate the flattened position the moves lead to — the exact
 	// position a seek plays from and the server re-validates.
 	const finalOptions = gamecompressor.gamefileToPositionOptions(constructed);
-	const illegalReason = validateOptions(finalOptions);
+	const rejection = validateOptions(finalOptions) ?? getSeekRejection(constructed);
 
-	// The moves-applied gamefile is available; the position is playable only if it was also legal.
-	if (illegalReason !== null) {
-		if (revealErrors) revealIcnError(illegalReason);
-		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
-		return;
-	}
-	// In a seek context, an already-over game can't be seeked, but the preview still renders it.
-	if (config.isSeekContext && gamefileutility.isGameOver(constructed)) {
-		if (revealErrors) revealIcnError('game_over');
+	// The moves-applied gamefile is kept either way, so a rejected position still previews.
+	if (rejection !== null) {
+		if (revealErrors) revealIcnError(rejection);
 		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
 		return;
 	}

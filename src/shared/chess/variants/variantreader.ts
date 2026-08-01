@@ -98,10 +98,25 @@ function getSpecialVicinityOfVariant(mod: VariantModule | undefined): SpecialVic
 	return defaultSpecialVicinityByPiece;
 }
 
+/**
+ * Whether the variant overrides how pieces move. These overrides live solely in the
+ * variant module, so an ICN with no Variant metadata silently reverts to default movement.
+ * @param mod - The loaded variant module, or `undefined` for pasted games with no variant.
+ */
+function hasCustomMovement(mod: VariantModule | undefined): boolean {
+	if (mod === undefined) return false;
+	return (
+		mod.genMovesetModifications !== undefined ||
+		mod.getSpecialMoves !== undefined ||
+		mod.getSpecialVicinity !== undefined
+	);
+}
+
 // Exports ------------------------------------------------------------------
 
 export default {
 	getMovesetsOfVariant,
 	getSpecialMovesOfVariant,
 	getSpecialVicinityOfVariant,
+	hasCustomMovement,
 };
