@@ -16,7 +16,7 @@
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
-import type { ClassificationKey, MoveReview } from '../gamereview.js';
+import type { LapseKey, MoveReview } from '../gamereview.js';
 
 import math from '../../../../../../shared/util/math/math.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -52,13 +52,6 @@ type StatKey = 'accuracy' | 'inaccuracy' | 'mistake' | 'blunder' | 'acpl';
 
 /** Plies of the engine's best line grafted as a variation beneath a reviewed blunder. */
 const BLUNDER_VARIATION_MAX_PLIES = 6;
-
-/** Classifications treated as "lapses": clickable stat rows, and dotted on the eval graph. */
-const LAPSE_KEYS = ['inaccuracy', 'mistake', 'blunder'] as const satisfies readonly ClassificationKey[]; // prettier-ignore
-type LapseKey = (typeof LAPSE_KEYS)[number];
-function isLapseKey(key: string): key is LapseKey {
-	return (LAPSE_KEYS as readonly string[]).includes(key);
-}
 
 /** The loaded game's mainline, snapshotted at load (bar-delimited move tokens) for edit detection. */
 let pristineMainline = '';
@@ -527,7 +520,7 @@ function drawGraph(): void {
 
 	// Lapse dots, at the position after the classified move.
 	for (const review of gamereview.getReviews()) {
-		if (!review.classification || !isLapseKey(review.classification)) continue;
+		if (!review.classification || !gamereview.isLapseKey(review.classification)) continue;
 		const cp = gamereview.getWhiteCpAt(review.ply + 1);
 		if (cp === undefined) continue;
 		ctx.beginPath();

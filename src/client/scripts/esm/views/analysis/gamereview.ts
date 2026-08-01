@@ -129,6 +129,15 @@ const CLASSIFICATION_DISPLAY: Record<ClassificationKey, { label: string; symbol:
 	forced: { label: 'Forced', symbol: '⇒' },
 };
 
+/** The classifications counted as "lapses" — the mistakes a review calls out. */
+const LAPSE_KEYS = ['inaccuracy', 'mistake', 'blunder'] as const satisfies readonly ClassificationKey[]; // prettier-ignore
+export type LapseKey = (typeof LAPSE_KEYS)[number];
+
+/** Whether a classification is a lapse: glyphed in the move list, clickable in the stats, dotted on the graph. */
+function isLapseKey(key: string): key is LapseKey {
+	return (LAPSE_KEYS as readonly string[]).includes(key);
+}
+
 /** Effective cp a forced mate maps to for win-probability purposes (mate-in-1 equivalent). */
 const MATE_CP = 1800;
 /** Cp values are clamped to this for average-centipawn-loss, mirroring lichess. */
@@ -944,6 +953,7 @@ function onFinished(listener: ReviewListeners['finished']): void {
 export default {
 	// Constants
 	CLASSIFICATION_DISPLAY,
+	isLapseKey,
 	// Lifecycle
 	canStart,
 	getStatus,
