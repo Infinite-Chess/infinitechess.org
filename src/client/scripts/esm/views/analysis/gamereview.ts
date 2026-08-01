@@ -10,6 +10,7 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
+import type { MoveEvalLabel } from './moveevals.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
@@ -708,7 +709,7 @@ function cachePositionEvaluation(index: number, result: EvaluateResult): void {
 
 	const mover = moverAtPly(index);
 	const sign = mover === p.WHITE ? 1 : -1;
-	let label: import('./moveevals.js').MoveEvalLabel | undefined;
+	let label: MoveEvalLabel | undefined;
 	if (result.legalMoveCount === 0) {
 		label = result.inCheck
 			? { mate: mover === p.WHITE ? -1 : 1, depth: result.depth }
@@ -740,7 +741,7 @@ function cacheForcedPositionEvaluation(index: number): void {
 	const result = results[index];
 	const icn = icnByPosition[index];
 	if (!result || result.legalMoveCount !== 1 || !icn) return;
-	const label: import('./moveevals.js').MoveEvalLabel = {
+	const label: MoveEvalLabel = {
 		cp: effectiveWhiteCp[index]!,
 		depth: reviewDepth,
 	};
