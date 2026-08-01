@@ -83,6 +83,37 @@ const element_ResultText = element_GameResult.querySelector('.result-text')!;
 const minimumNavIntervalMillis = 20;
 let lastNav = 0;
 
+// Events ------------------------------------------------------------------------------------
+
+// Keep the table in sync: fill it from the freshly-loaded game (moves baked into the gamefile
+// bypass 'moves-changed'), reconcile the plies on move-list changes, follow the viewed ply's
+// highlight on navigation, scroll to the banner on conclusion. Must be 'graphical-loaded' —
+// see the SVG cache note in reconcileMovesTable().
+GameBus.addEventListener('graphical-loaded', () => {
+	renderer?.onGraphicalLoaded();
+	reconcileMovesTable();
+	// A fresh load dispatches no 'view-move', so seed everything it would have maintained.
+	updateCurrentPly();
+	updateNavButtons();
+	scrollToCurrentPly();
+});
+GameBus.addEventListener('moves-changed', () => {
+	renderer?.onMovesChanged();
+	reconcileMovesTable();
+	updateNavButtons();
+});
+// 'view-move' only moves the HIGHLIGHT; scrolling to follow is each navigation source's own call.
+GameBus.addEventListener('view-move', () => {
+	updateCurrentPly();
+	updateNavButtons();
+});
+GameBus.addEventListener('view-front', () => scrollToCurrentPly());
+GameBus.addEventListener('game-concluded', () => {
+	showGameResult();
+	scrollMovesTableToBottom();
+});
+GameBus.addEventListener('game-unloaded', () => clearMovesTable());
+
 // =============================== Move Navigation ===============================
 
 function isOkayToNavigate(): boolean {
@@ -448,35 +479,6 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 	selection.unselectPiece();
 	scrollToCurrentPly(); // Clicking a ply in the flat list centers it, matching the nav controls.
 }
-
-// Keep the table in sync: fill it from the freshly-loaded game (moves baked into the gamefile
-// bypass 'moves-changed'), reconcile the plies on move-list changes, follow the viewed ply's
-// highlight on navigation, scroll to the banner on conclusion. Must be 'graphical-loaded' —
-// see the SVG cache note in reconcileMovesTable().
-GameBus.addEventListener('graphical-loaded', () => {
-	renderer?.onGraphicalLoaded();
-	reconcileMovesTable();
-	// A fresh load dispatches no 'view-move', so seed everything it would have maintained.
-	updateCurrentPly();
-	updateNavButtons();
-	scrollToCurrentPly();
-});
-GameBus.addEventListener('moves-changed', () => {
-	renderer?.onMovesChanged();
-	reconcileMovesTable();
-	updateNavButtons();
-});
-// 'view-move' only moves the HIGHLIGHT; scrolling to follow is each navigation source's own call.
-GameBus.addEventListener('view-move', () => {
-	updateCurrentPly();
-	updateNavButtons();
-});
-GameBus.addEventListener('view-front', () => scrollToCurrentPly());
-GameBus.addEventListener('game-concluded', () => {
-	showGameResult();
-	scrollMovesTableToBottom();
-});
-GameBus.addEventListener('game-unloaded', () => clearMovesTable());
 
 // ===========================================================================
 
