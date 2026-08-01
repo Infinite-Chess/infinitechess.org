@@ -6,6 +6,7 @@
  * (copies the current game's ICN to the clipboard).
  */
 
+import type { MetaData } from '../../../../../../shared/types.js';
 import type { ModalMode } from '../../../components/gameSetupModalHandoff.js';
 import type { EditorAutosaveState } from '../../../game/editorstores/estoretypes.js';
 import type { GameFile, VariantOptions } from '../../../../../../shared/chess/logic/gamefile.js';
@@ -110,7 +111,7 @@ function init(): void {
  */
 function getGameICN(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile);
-	longformIn.metadata = {}; // Strip metadata from the exported ICN.
+	longformIn.metadata = trimMetadata(longformIn.metadata);
 	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
 	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
 		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
@@ -143,7 +144,7 @@ function exportCurrentPosition():
 		},
 	};
 
-	position.metadata = {}; // Strip metadata from the exported ICN.
+	position.metadata = trimMetadata(position.metadata);
 	const icn = icnconverter.LongToShort_Format(position, ICN_FORMAT_OPTIONS);
 	return { icn, pieceCount: position.position.size, variantOptions };
 }
@@ -226,6 +227,19 @@ function syncActionsToggle(): void {
 		!element_ContinueChoiceMenu.classList.contains('hidden');
 	element_ActionsButton.classList.toggle('active', anyOpen);
 	element_ActionsButton.setAttribute('aria-expanded', String(anyOpen));
+}
+
+/**
+ * Trims the metadata down to what an exported ICN can't be reloaded 100% accurately without:
+ * Variant selects movesets, UTCDate/UTCTime pin which revision of that variant applies.
+ * Everything else (player names, elo, result, ...) is bloat in an exported position.
+ */
+function trimMetadata(metadata: MetaData): MetaData {
+	return {
+		Variant: metadata.Variant,
+		UTCDate: metadata.UTCDate,
+		UTCTime: metadata.UTCTime,
+	};
 }
 
 export default { init };
