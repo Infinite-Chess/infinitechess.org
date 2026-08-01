@@ -59,7 +59,7 @@ export type PositionErrorCode =
  * Checks (in order):
  * 1. White/black and colored (4-player) players in the turn order are mutually exclusive.
  * 2. Mode completeness: 2-player needs both white+black; 4-player needs all 4 colored players.
- * 3. ICN string length is not too large.
+ * 3. ICN string length is not too large (only when an icn is provided).
  * 4. Every non-neutral piece's color is in the turn order.
  *    In 2-player mode, no neutral gargoyle pieces are allowed.
  * 5. Every player in the turn order has at least one piece and, if required, a royal piece.
@@ -67,15 +67,13 @@ export type PositionErrorCode =
  *    is not too high; and king capture is not possible on turn 1.
  *
  * @param variantOptions - The position and game rules to validate.
- * @param icnString - The ICN string representation of the position, used to check its length.
- * @param enforceSizeLimit - Whether to reject positions whose ICN exceeds the size threshold.
- * Provide `true` when the icn is used in seek-creation.
+ * @param icnString - The position's ICN, used solely to check its length. Provide it in
+ * seek-creation contexts; pass `undefined` elsewhere to skip the size check.
  * @returns `null` if valid, or a {@link PositionErrorCode} describing the failure.
  */
 export function validatePosition(
 	variantOptions: VariantOptions,
-	icnString: string,
-	enforceSizeLimit: boolean,
+	icnString: string | undefined,
 ): PositionErrorCode | null {
 	const { position, gameRules } = variantOptions;
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder);
@@ -98,7 +96,7 @@ export function validatePosition(
 	}
 
 	// --- Rule 3: ICN string length limit (seek-hardening only) ---
-	if (enforceSizeLimit && icnString.length > POSITION_STRING_THRESHOLD) {
+	if (icnString !== undefined && icnString.length > POSITION_STRING_THRESHOLD) {
 		return 'position_too_large';
 	}
 

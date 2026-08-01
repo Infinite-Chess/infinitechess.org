@@ -562,10 +562,13 @@ function variantOptionsToICN(options: VariantOptions): string {
 	);
 }
 
-/** Serializes variant options to their canonical ICN and validates that flattened position (size + legality). */
+/** Validates a flattened position's legality, plus its ICN size in a seek context. */
 function validateOptions(options: VariantOptions): PositionErrorCode | null {
-	const icnString = variantOptionsToICN(options);
-	return validatePosition(options, icnString, config.isSeekContext);
+	// Serialize only for seeks — that's the sole consumer of the ICN here.
+	return validatePosition(
+		options,
+		config.isSeekContext ? variantOptionsToICN(options) : undefined,
+	);
 }
 
 /** Clears any saved-position error state from the variant display. */

@@ -218,7 +218,7 @@ function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 	// A behaving client should always flatten their moves into a single position before seeking.
 	if (longFormat.moves && longFormat.moves.length > 0) return 'icn_contains_moves';
 	const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
-	return validatePosition(variantOptions, content, true);
+	return validatePosition(variantOptions, content);
 }
 
 /** Localizes a position/ICN error code for the websocket's `notify` channel. */
