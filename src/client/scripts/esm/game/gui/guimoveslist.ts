@@ -21,6 +21,7 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameresultutil from '../../../../../shared/chess/util/gameresultutil.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
 import gameslot from '../chess/gameslot.js';
 import premoves from '../chess/premoves.js';
@@ -82,10 +83,6 @@ const element_ResultText = element_GameResult.querySelector('.result-text')!;
 /** Navigation can never be spammed faster than this, capping the hold-to-repeat rate. */
 const minimumNavIntervalMillis = 20;
 let lastNav = 0;
-
-// Events ------------------------------------------------------------------------------------
-
-GameBus.addEventListener('game-concluded', () => showGameResult());
 
 // =============================== Move Navigation ===============================
 
@@ -251,9 +248,10 @@ function reconcileMovesTable(): void {
 
 /** Empties the panel on unload: the result banner, and the rendered plies. */
 function clearMovesTable(): void {
+	element_GameResult.classList.add('hidden'); // Shared with the renderer — it hosts no banner of its own.
+
 	if (renderer) return renderer.onGameUnloaded();
 
-	element_GameResult.classList.add('hidden');
 	removeRowsFrom(0);
 	renderedMoves.length = 0;
 }
@@ -458,6 +456,9 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 GameBus.addEventListener('graphical-loaded', () => {
 	renderer?.onGraphicalLoaded();
 	reconcileMovesTable();
+	// A game that loaded already-over concluded before the plies existed; reveal its banner now,
+	// with them. Before scrollToCurrentPly(), which scrolls past the banner when it's visible.
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) showGameResult();
 	// A fresh load dispatches no 'view-move', so seed everything it would have maintained.
 	updateCurrentPly();
 	updateNavButtons();
@@ -474,7 +475,13 @@ GameBus.addEventListener('view-move', () => {
 	updateNavButtons();
 });
 GameBus.addEventListener('view-front', () => scrollToCurrentPly());
-GameBus.addEventListener('game-concluded', () => scrollMovesTableToBottom());
+// A LIVE conclusion. One during a load is skipped — the plies it sits beneath don't exist yet,
+// so the 'graphical-loaded' listener above reveals the banner alongside them instead.
+GameBus.addEventListener('game-concluded', () => {
+	if (gamesession.isLoading()) return;
+	showGameResult();
+	scrollMovesTableToBottom();
+});
 GameBus.addEventListener('game-unloaded', () => clearMovesTable());
 
 // ===========================================================================
