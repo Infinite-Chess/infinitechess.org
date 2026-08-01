@@ -110,7 +110,11 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 			gamesession.markLoadingDone();
 			gamesession.concludeGameIfOver();
 		})
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
+		.catch((err: Error) => {
+			// The gamestate arrived but never became a game — we don't hold it after all.
+			inSync = false;
+			gamesession.onCatchLoadingError(err);
+		});
 }
 
 /**
