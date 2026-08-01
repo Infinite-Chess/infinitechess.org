@@ -24,6 +24,9 @@ function init(): void {
 	// A move on the board abandons any un-committed selection (e.g. an opened, empty From-ICN
 	// field), so snap the display back to the variant actually loaded on the board.
 	GameBus.addEventListener('physical-move', () => variantSelector.restoreAcceptedDisplay());
+	// Every load ends here, whoever started it — the initial one included. Deferred out of the
+	// dispatch, since draining unloads the gamefile the other listeners are still reading.
+	GameBus.addEventListener('graphical-loaded', () => queueMicrotask(drainOwedLoad));
 }
 
 /** The active Slide Limit modifier as a bigint gamerule, or undefined if none is selected. */
@@ -49,28 +52,23 @@ function loadSelection(): void {
 	const slideLimit = getSelectedSlideLimit();
 	const selection = variantSelector.getSelection();
 
-	let load: Promise<void>;
 	if (selection.kind === 'preset') {
-		load = analysisloader.loadVariant(selection.code, slideLimit);
+		void analysisloader.loadVariant(selection.code, slideLimit);
 	} else {
 		// Custom (saved position or ICN) — only load once it resolves to a legal position.
 		const custom = variantSelector.getCustomPosition();
 		if (custom === null) return;
 		if (custom.kind === 'options') {
 			// Saved position — its options are already resolved; load them directly.
-			load = analysisloader.loadVariantOptions(custom.options, slideLimit);
+			void analysisloader.loadVariantOptions(custom.options, slideLimit);
 		} else {
 			// From-ICN — load the parsed position the validation gate already produced.
-			load = analysisloader.pasteGame(custom.longFormat, undefined, undefined, slideLimit);
+			void analysisloader.pasteGame(custom.longFormat, undefined, undefined, slideLimit);
 		}
 	}
 
 	// Remember what's now loaded, so a later board move can revert the display to it.
 	variantSelector.snapshotAccepted();
-
-	// Settles even if the load errored, so an owed load is never stranded. Deliberately not
-	// the 'graphical-loaded' event, whose listeners run mid-dispatch against this very gamefile.
-	void load.then(drainOwedLoad);
 }
 
 /** Runs the load refused during the one that just finished, re-reading the selection fresh. */
