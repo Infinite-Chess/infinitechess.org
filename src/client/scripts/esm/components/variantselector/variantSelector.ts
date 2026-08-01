@@ -606,9 +606,11 @@ function revealIcnError(reason: PositionErrorCode | 'moves_invalid' | 'game_over
  */
 async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	const value = element_icnInput.value;
+	// Nothing is resolved until this settles. Held results describe the previous value, and
+	// awaiting a variant module makes that window long enough to act on — so retire them now.
+	setIcnResult(null);
 	if (value === '') {
 		clearError(element_icnInputWrap);
-		setIcnResult(null);
 		return;
 	}
 
