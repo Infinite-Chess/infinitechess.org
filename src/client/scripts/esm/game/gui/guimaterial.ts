@@ -185,6 +185,9 @@ GameBus.addEventListener('graphical-loaded', () => {
 	element_MaterialBottom.classList.toggle('hidden', !balanced);
 	render();
 });
+// A discarded load leaves no gamefile to compute a surplus from, so drop the flag that
+// would otherwise let render() reach for one until the next game recomputes it.
+GameBus.addEventListener('game-unloaded', () => (balanced = false));
 // Rewinding/forwarding restores the board to the viewed move, so the live counts already reflect it.
 GameBus.addEventListener('view-move', () => render());
 GameBus.addEventListener('board-flipped', () => render());
