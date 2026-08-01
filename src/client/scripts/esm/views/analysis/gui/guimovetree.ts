@@ -92,8 +92,6 @@ function reconcileMoveTree(): void {
 	idToNode.clear();
 	const root = movetree.getRoot()!;
 	treeVNode = patch(treeVNode, h('div#analysis-move-tree', buildMainline(root)));
-	highlightCurrentNode();
-	scrollToCurrentNode();
 }
 
 /**
@@ -453,12 +451,14 @@ function createContextAction(label: string, onClick: () => void): HTMLButtonElem
 	return button;
 }
 
-/** After a tree edit, navigates to `target` and re-renders the tree. */
+/** After a tree edit, navigates to `target`, re-renders the tree, and follows the target. */
 function syncAnalysisTreeAfterAction(target: AnalysisMoveNode): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 	navigateToAnalysisNode(gamefile, target);
 	reconcileMoveTree();
+	highlightCurrentNode();
+	scrollToCurrentNode();
 }
 
 /**
@@ -487,7 +487,9 @@ function deleteAnalysisNode(node: AnalysisMoveNode): void {
 	gamefile.moves = movetree.getMovesFromLine(movetree.getActiveLine());
 	// Realign the conclusion too, since the front may have changed.
 	gamefile.gameConclusion = movetree.getActiveLineConclusion();
-	GameBus.dispatch('moves-changed');
+	GameBus.dispatch('moves-changed'); // Synchronously rebuilds the tree, dropping the highlight.
+	highlightCurrentNode();
+	if (viewingDeleted) scrollToCurrentNode(); // Only then did we navigate.
 }
 
 /** Places the menu at the cursor, clamped to stay within the viewport. */
@@ -688,7 +690,8 @@ function applyToIndex(gamefile: GameFile, index: number): void {
 /**
  * Coalesces move-tree repaints: many variations grafted in one synchronous pass (restoring a
  * cached review) collapse to a single repaint, while variations arriving across separate turns
- * (a live review) each repaint as they land.
+ * (a live review) each repaint as they land. Deliberately does NOT scroll — the viewed position
+ * never changes, so a grafted variation must not yank a panel the user is scrolling.
  */
 let reconcilePending = false;
 function scheduleReconcile(): void {
@@ -697,6 +700,7 @@ function scheduleReconcile(): void {
 	queueMicrotask(() => {
 		reconcilePending = false;
 		reconcileMoveTree();
+		highlightCurrentNode();
 	});
 }
 
