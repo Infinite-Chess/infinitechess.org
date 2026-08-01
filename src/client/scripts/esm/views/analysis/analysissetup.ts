@@ -24,9 +24,10 @@ function init(): void {
 	// A move on the board abandons any un-committed selection (e.g. an opened, empty From-ICN
 	// field), so snap the display back to the variant actually loaded on the board.
 	GameBus.addEventListener('physical-move', () => variantSelector.restoreAcceptedDisplay());
-	// Every load ends here, whoever started it — the initial one included. Deferred out of the
-	// dispatch, since draining unloads the gamefile the other listeners are still reading.
-	GameBus.addEventListener('graphical-loaded', () => queueMicrotask(drainOwedLoad));
+	// Fires for every load, whoever started it (the initial one included) and whether it
+	// finished or failed — matching the isLoading() check the owed load is waiting on.
+	// Deferred out of the dispatch, since draining unloads the game its listeners are reading.
+	GameBus.addEventListener('load-ended', () => queueMicrotask(drainOwedLoad));
 }
 
 /** The active Slide Limit modifier as a bigint gamerule, or undefined if none is selected. */

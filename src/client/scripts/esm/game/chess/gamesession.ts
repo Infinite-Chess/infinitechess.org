@@ -100,6 +100,7 @@ function markLoadingDone(): void {
 	gamecore.getCanvas().classList.remove('visibility-hidden'); // Show the canvas now that the game is fully loaded.
 	centerView();
 	GameBus.dispatch('graphical-loaded');
+	GameBus.dispatch('load-ended');
 }
 
 /** Sets the camera to the recentered position. */
@@ -121,6 +122,8 @@ function onCatchLoadingError(err: Error): void {
 	// rather than wedging everything gated on isLoading() until a refresh.
 	if (gameslot.getGamefile()) unloadGame();
 	loading = false;
+	// After the teardown, so anything resuming on this starts from a clean session.
+	GameBus.dispatch('load-ended');
 }
 
 /**
