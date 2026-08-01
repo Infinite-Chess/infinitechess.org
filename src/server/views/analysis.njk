@@ -29,6 +29,42 @@
 {# Shared codes-and-labels translations (variants, groups, modifiers, selector labels) #}
 {% set s = scriptT('shared') %}
 
+{# Per-player review stats. Hidden until a Game Review is opened, when guigamereview.ts
+   reveals it. On /analysis/:id it lives inside the meta panel, which donates its
+   .meta-player rows as the column headers; the bare /analysis page has no meta panel, so
+   it stands alone and SSRs its own headers instead (`standalone`). #}
+{% macro reviewStats(standalone) %}
+{% set reviewStatRows = [
+	{ key: 'inaccuracy', label: 'Inaccuracies', lapse: true },
+	{ key: 'mistake', label: 'Mistakes', lapse: true },
+	{ key: 'blunder', label: 'Blunders', lapse: true },
+	{ key: 'acpl', label: 'Avg. cp loss', lapse: false }
+] %}
+<div class="review-stats hidden{{ ' panel' if standalone }}" id="review-stats">
+	{% for color in [p.WHITE, p.BLACK] %}
+	<div class="review-stats-col" data-player="{{ color }}">
+		{% if standalone %}
+		<div class="meta-player">
+			<span class="side-dot{{ ' black' if color == p.BLACK }}" title="{{ 'White' if color == p.WHITE else 'Black' }}"></span>
+			{# Named by guigamereview.ts at review time, off the pasted ICN's metadata. #}
+			<span class="review-player-name"></span>
+		</div>
+		{% endif %}
+		<div class="review-accuracy">
+			<span class="review-accuracy-value">&mdash;</span>
+			<span class="review-stat-label">Accuracy</span>
+		</div>
+		{% for row in reviewStatRows %}
+		<div class="review-stat-row{{ ' review-stat-action unselectable' if row.lapse }}"{% if row.lapse %} tabindex="0" role="button" title="Go to next {{ row.label | lower }}" data-classification="{{ row.key }}"{% endif %}>
+			<span class="review-stat-value {{ row.key }}">0</span>
+			<span class="review-stat-label">{{ row.label }}</span>
+		</div>
+		{% endfor %}
+	</div>
+	{% endfor %}
+</div>
+{% endmacro %}
+
 <main class="game analysis">
 
 	{# ── Left side bar ─────────────────────────────────────────────────── #}
@@ -128,37 +164,14 @@
 				<span class="result-text">{{ meta.result.text if meta.result }}</span>
 			</div>
 
-			{# Per-player review stats. Hidden until a Game Review is opened, when
-			   guigamereview.ts moves the .meta-player rows in as column headers (replacing
-			   the participant list + result banner above) and reveals it. #}
-			{% set reviewStatRows = [
-				{ key: 'inaccuracy', label: 'Inaccuracies', lapse: true },
-				{ key: 'mistake', label: 'Mistakes', lapse: true },
-				{ key: 'blunder', label: 'Blunders', lapse: true },
-				{ key: 'acpl', label: 'Avg. cp loss', lapse: false }
-			] %}
-			<div class="review-stats hidden" id="review-stats">
-				{% for color in [p.WHITE, p.BLACK] %}
-				<div class="review-stats-col" data-player="{{ color }}">
-					<div class="review-accuracy">
-						<span class="review-accuracy-value">&mdash;</span>
-						<span class="review-stat-label">Accuracy</span>
-					</div>
-					{% for row in reviewStatRows %}
-					<div class="review-stat-row{{ ' review-stat-action unselectable' if row.lapse }}"{% if row.lapse %} tabindex="0" role="button" title="Go to next {{ row.label | lower }}" data-classification="{{ row.key }}"{% endif %}>
-						<span class="review-stat-value {{ row.key }}">0</span>
-						<span class="review-stat-label">{{ row.label }}</span>
-					</div>
-					{% endfor %}
-				</div>
-				{% endfor %}
-			</div>
+			{{ reviewStats(false) }}
 		</div>
 		{% else %}
 		{# Variant + modifiers picker #}
 		<div class="variant-setup panel">
 			{{ variantSelector(variantGroups, s) }}
 		</div>
+		{{ reviewStats(true) }}
 		{% endif %}
 
 		{# Material bars + match panel #}
@@ -298,11 +311,10 @@
 			{# Bottom side's captured surplus material #}
 			<div class="material" id="material-bottom"></div>
 
-			{# Game Review start button — only for a real game (never custom positions),
-			revealed by guigamereview.ts once loaded; clicking swaps it for the graph below. #}
-			{% if meta %}
+			{# Game Review start button. Hidden on first paint — only the client can tell whether
+			a game is reviewable, and revealing it up front would flicker it away again on the
+			ones that aren't. guigamereview.ts decides on every load. #}
 			<button class="btn-primary hidden" id="btn-game-review">Game Review</button>
-			{% endif %}
 
 			{# Game Review graph #}
 			<div class="review-graph panel hidden" id="review-graph">

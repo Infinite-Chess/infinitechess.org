@@ -3,9 +3,9 @@
 /**
  * Game review UI for the analysis page. Owns:
  *
- * * the Game Review button (real games only), which starts the review and swaps
- *   itself out for the stats + eval graph; if the played mainline has been edited
- *   it reloads the pristine game and auto-opens the review there;
+ * * the Game Review button, which starts the review and swaps itself out for the
+ *   stats + eval graph; if the pristine mainline has been edited it reloads the
+ *   pristine game and auto-opens the review there;
  * * the two-column per-player stats (accuracy, lapses, acpl) that replace the
  *   participant rows + result banner there, filling in live as the review runs;
  * * the progress bar below the moves list, swapped for the clickable eval graph
@@ -15,6 +15,7 @@
  */
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
+import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { ClassificationKey, MoveReview } from '../gamereview.js';
 
 import math from '../../../../../../shared/util/math/math.js';
@@ -23,16 +24,16 @@ import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
 import ceval from '../ceval.js';
-import docutil from '../../../util/docutil.js';
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import gamereview from '../gamereview.js';
 import guimovetree from './guimovetree.js';
 import { GameBus } from '../../../game/GameBus.js';
+import analysisloader from '../analysisloader.js';
 
 // Elements ---------------------------------------------------------------------------
 
-const element_GameReviewBtn = document.getElementById('btn-game-review'); // Absent on bare /analysis page.
+const element_GameReviewBtn = document.getElementById('btn-game-review')!;
 const element_Stats = document.getElementById('review-stats')!;
 const element_Progress = document.getElementById('review-progress')!;
 const element_ProgressFill = document.getElementById('review-progress-fill')!;
@@ -59,8 +60,8 @@ function isLapseKey(key: string): key is LapseKey {
 	return (LAPSE_KEYS as readonly string[]).includes(key);
 }
 
-/** The played game's mainline, snapshotted at load (bar-delimited move tokens) for edit detection. */
-let playedMainline = '';
+/** The loaded game's mainline, snapshotted at load (bar-delimited move tokens) for edit detection. */
+let pristineMainline = '';
 
 // Initialization -----------------------------------------------------------------------
 
@@ -90,42 +91,87 @@ function init(): void {
 		if (isGraphVisible()) drawGraph();
 	});
 	initGraphInteraction(element_GraphCanvas);
+	wireStats();
 
-	element_GameReviewBtn?.addEventListener('click', onGameReviewClicked);
+	element_GameReviewBtn.addEventListener('click', onGameReviewClicked);
+	GameBus.addEventListener('game-unloaded', closeReview);
+	GameBus.addEventListener('game-loaded', snapshotPristineMainline);
+	// Deliberately later than the snapshot: the moves list is already interactive during the
+	// graphical load, and a review started then silently loses its blunder variations (see
+	// guimovetree.addVariation), so the button mustn't be offered until the load is over.
+	GameBus.addEventListener('graphical-loaded', revealButtonIfReviewable);
+}
+
+/** Records the game's mainline as loaded, for later edit detection. */
+function snapshotPristineMainline(): void {
+	pristineMainline = mainlineTokens(gameslot.getGamefile()!.moves);
+}
+
+function revealButtonIfReviewable(): void {
+	// An empty pristine mainline means the game arrived with no moves — a preset variant or an
+	// editor position on the bare /analysis page. Moves played by hand onto one aren't a game
+	// to review, so the button stays hidden until an ICN with moves is pasted.
+	const reviewable = pristineMainline !== '' && gamereview.canStart();
+	element_GameReviewBtn.classList.toggle('hidden', !reviewable);
 }
 
 /**
- * Runs once the initial game has fully loaded: snapshots the played mainline (for later edit
- * detection), reveals the Game Review button for a reviewable game, and honors a `?review=1`
- * auto-open (set only by the reset-reload below).
+ * Closes the outgoing game's review UI, so nothing of it can outlive the
+ * game it describes. gamereview discards its own state on the same event.
  */
-function onInitialGameLoaded(): void {
-	playedMainline = currentMainline();
-	if (gamereview.canStart()) element_GameReviewBtn!.classList.remove('hidden');
-	if (docutil.getQueryParam('review') === '1') openReview();
+function closeReview(): void {
+	// Hidden here as well as on load: a load is async, and until the next one lands the button
+	// would otherwise still offer a review of the game that just went away.
+	element_GameReviewBtn.classList.add('hidden');
+	pristineMainline = '';
+
+	element_Stats.classList.add('hidden');
+	element_Progress.classList.add('hidden');
+	element_Graph.classList.add('hidden');
+	element_PhaseMarkers.replaceChildren();
+	hoveredPosition = undefined; // Else a phantom hover dot draws on the next review's first frame.
+	element_GraphTooltip.classList.add('hidden');
+	// Blanked, not reset to the fallback — the next game's participants aren't known yet.
+	setPlayerName(p.WHITE, '');
+	setPlayerName(p.BLACK, '');
+
+	// Hand the borrowed participant rows back to the meta panel (see revealStats).
+	const metaPlayers = document.querySelector('.meta-players');
+	if (!metaPlayers) return;
+	metaPlayers.append(...element_Stats.querySelectorAll('.meta-player'));
+	metaPlayers.classList.remove('hidden');
+	document.querySelector('.game-meta')!.classList.remove('review');
+}
+
+/** Serializes a move list to bar-joined tokens, for cheap comparison. */
+function mainlineTokens(moves: MoveFull[]): string {
+	return icnconverter.getShortFormMovesFromMoves(moves, { compact: true, spaces: false, comments: false, abbrev: false, move_numbers: false }); // prettier-ignore
 }
 
 /** Returns the current mainline as bar-joined move tokens, for cheap comparison. */
 function currentMainline(): string {
 	const root = movetree.getRoot();
 	if (!root) return '';
-	const moves = movetree.getMovesFromLine(movetree.getLineForNode(root));
-	return icnconverter.getShortFormMovesFromMoves(moves, { compact: true, spaces: false, comments: false, abbrev: false, move_numbers: false }); // prettier-ignore
+	return mainlineTokens(movetree.getMovesFromLine(movetree.getLineForNode(root)));
 }
 
 /**
- * Handles a Game Review button click. Normally opens the review in place. If the played game's
- * mainline has been edited, instead reloads the pristine game and auto-opens the review there
- * (`?review=1`). That reset is destructive to added lines, so confirm first.
+ * Handles a Game Review button click. Normally opens the review in place. If the mainline has
+ * been edited, instead reloads the pristine game and auto-opens the review once it lands. That
+ * reload is destructive to added lines, so confirm first.
  */
 function onGameReviewClicked(): void {
-	if (currentMainline() === playedMainline) {
+	if (currentMainline() === pristineMainline) {
 		// Main line preserved, no need to confirm: start review.
 		openReview();
 	} else {
 		// Main line diverged: confirm destructive reload.
 		const proceed = confirm("Starting a Game Review will discard the lines you've added and review the game as it was played. Continue?"); // prettier-ignore
-		if (proceed) window.location.assign(`${window.location.pathname}?review=1`);
+		if (!proceed) return;
+		// Hidden immediately: the reload only marks the session as loading after an await, so
+		// until then the button would still be clickable and could start a second concurrent load.
+		element_GameReviewBtn.classList.add('hidden');
+		void analysisloader.reloadPristine().then(openReview); // Reload in place
 	}
 }
 
@@ -135,7 +181,7 @@ function openReview(): void {
 
 	gamereview.start();
 
-	element_GameReviewBtn!.classList.add('hidden');
+	element_GameReviewBtn.classList.add('hidden');
 	revealStats();
 	if (gamereview.getStatus() === 'running') element_Progress.classList.remove('hidden');
 	element_Graph.classList.remove('hidden');
@@ -176,27 +222,18 @@ function onReviewFinished(): void {
 
 // Stats columns ------------------------------------------------------------------------------
 
-/**
- * Reveals the SSR'd two-column per-player stats, replacing the meta panel's participant
- * rows + result banner. The existing `.meta-player` rows (side dot + username embed) move
- * in as the column headers, so nothing is duplicated.
- */
-function revealStats(): void {
-	if (!element_Stats.classList.contains('hidden')) return;
+/** Writes a column header's name. No-op on /analysis/:id, whose headers are real participant rows. */
+function setPlayerName(color: Player, name: string): void {
+	const element = element_Stats.querySelector(
+		`.review-stats-col[data-player="${color}"] .review-player-name`,
+	);
+	if (element) element.textContent = name;
+}
 
-	const gameMeta = document.querySelector('.game-meta')!;
-	const metaPlayers = document.querySelector('.game-meta .meta-players')!;
-	const playerRows = [...metaPlayers.querySelectorAll('.meta-player')];
-
-	for (const [column, color] of [
-		[0, p.WHITE],
-		[1, p.BLACK],
-	] as const) {
+/** Caches the SSR'd stat cells and wires the clickable lapse rows. The markup is static, so once. */
+function wireStats(): void {
+	for (const color of [p.WHITE, p.BLACK]) {
 		const col = element_Stats.querySelector(`.review-stats-col[data-player="${color}"]`)!;
-
-		// The player row becomes the column header, above the SSR'd accuracy + stat rows.
-		const header = playerRows[column];
-		if (header) col.prepend(header);
 
 		statCells[color] = {
 			accuracy: col.querySelector<HTMLElement>('.review-accuracy-value')!,
@@ -206,7 +243,6 @@ function revealStats(): void {
 			acpl: col.querySelector<HTMLElement>('.review-stat-value.acpl')!,
 		};
 
-		// Wire the clickable lapse rows.
 		col.querySelectorAll<HTMLElement>('.review-stat-action').forEach((line) => {
 			const classification = line.dataset['classification'] as LapseKey;
 			line.addEventListener('click', () => cycleToLapse(color, classification));
@@ -217,9 +253,42 @@ function revealStats(): void {
 			});
 		});
 	}
+}
 
-	gameMeta.classList.add('review');
-	metaPlayers.classList.add('hidden');
+/**
+ * Reveals the SSR'd two-column per-player stats. On /analysis/:id they replace the meta panel's
+ * participant rows + result banner, borrowing the `.meta-player` rows (side dot + username embed)
+ * as the column headers so nothing is duplicated. The bare /analysis page has no meta panel — its
+ * columns keep the headers they were SSR'd with.
+ */
+function revealStats(): void {
+	if (!element_Stats.classList.contains('hidden')) return;
+
+	const metaPlayers = document.querySelector('.meta-players');
+	if (metaPlayers) {
+		const playerRows = [...metaPlayers.querySelectorAll('.meta-player')];
+		for (const [column, color] of [
+			[0, p.WHITE],
+			[1, p.BLACK],
+		] as const) {
+			// The player row becomes the column header, above the SSR'd accuracy + stat rows.
+			const header = playerRows[column];
+			if (header)
+				element_Stats
+					.querySelector(`.review-stats-col[data-player="${color}"]`)!
+					.prepend(header);
+		}
+		metaPlayers.classList.add('hidden');
+		document.querySelector('.game-meta')!.classList.add('review');
+	} else {
+		// No meta panel to donate rows — name the SSR'd headers off the pasted ICN, which
+		// carries participants only if it declared them.
+		const { White, Black } = analysisloader.getPastedPlayers();
+		const guest = t.shared.user_status.guest_indicator;
+		setPlayerName(p.WHITE, White || guest);
+		setPlayerName(p.BLACK, Black || guest);
+	}
+
 	element_Stats.classList.remove('hidden');
 }
 
@@ -614,4 +683,4 @@ function formatAdvantage(cp: number): string {
 	return `${cp > 0 ? '+' : ''}${(cp / 100).toFixed(1)}`.replace('-', '−');
 }
 
-export default { init, onInitialGameLoaded };
+export default { init };

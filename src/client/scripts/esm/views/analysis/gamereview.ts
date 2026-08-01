@@ -27,6 +27,7 @@ import ceval from './ceval.js';
 import movetree from './movetree.js';
 import gameslot from '../../game/chess/gameslot.js';
 import moveevals from './moveevals.js';
+import { GameBus } from '../../game/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import reviewdivision from './reviewdivision.js';
@@ -244,6 +245,15 @@ const listeners: { [K in keyof ReviewListeners]: Set<ReviewListeners[K]> } = {
 	finished: new Set(),
 };
 
+// Events ----------------------------------------------------------------------------
+
+/**
+ * Discards the review on game unload, so the next game can be reviewed afresh. Move-tree node
+ * ids restart at 1 per game, so the node-keyed reviews MUST be dropped or they'd resurface as
+ * another game's glyphs. It also releases the serialized game, which is the module's largest hold.
+ */
+GameBus.addEventListener('game-unloaded', resetState);
+
 // Win probability & accuracy (lichess formulas) ----------------------------------------
 
 /** Maps a mover-POV cp to a win probability [0,1]. */
@@ -340,12 +350,11 @@ function captureMainline(): AnalysisMoveNode[] {
 // Lifecycle ------------------------------------------------------------------------------
 
 /**
- * Whether a review can start: an idle, engine-supported real game
- * (a loaded /analysis/:id game) with at least one mainline move.
+ * Whether a review can start: an idle, engine-supported
+ * game with at least one mainline move.
  */
 function canStart(): boolean {
 	if (status !== 'idle') return false;
-	if (window.analysisPageData.gameId === null) return false;
 	const gamefile = gameslot.getGamefile();
 	if (gamefile === undefined || captureMainline().length === 0) return false;
 	return apeiron_card.isGameReviewSupported(gamefile).supported;
@@ -353,6 +362,32 @@ function canStart(): boolean {
 
 function getStatus(): ReviewStatus {
 	return status;
+}
+
+/**
+ * Clears all review state, returning the controller to idle. The only route back to 'idle'
+ * (which {@link canStart} requires), so {@link start} never inherits leftovers — it only sizes
+ * its own arrays. `listeners` is exempt: registered once at init, they outlive every game.
+ */
+function resetState(): void {
+	terminateWorkers();
+	status = 'idle';
+	chunkQueue = [];
+	positionAttempts.clear();
+	mainlineNodes = [];
+	mainlineMoves = [];
+	safeStartByIndex = [];
+	longformIn = undefined;
+	turnOrder = [];
+	reviewDepth = 0;
+	division = {};
+	results = [];
+	effectiveWhiteCp = [];
+	evaluatedCount = 0;
+	classifiedMoves.clear();
+	reviews = [];
+	reviewsByNodeId.clear();
+	icnByPosition = [];
 }
 
 /** Starts reviewing the loaded game's mainline. No-op unless idle with moves to review. */
@@ -383,11 +418,7 @@ function start(): void {
 
 	results = new Array(totalPositions).fill(undefined);
 	effectiveWhiteCp = new Array(totalPositions).fill(undefined);
-	positionAttempts.clear();
-	evaluatedCount = 0;
-	classifiedMoves.clear();
 	reviews = new Array(mainlineNodes.length).fill(undefined);
-	reviewsByNodeId.clear();
 	icnByPosition = new Array(totalPositions).fill(undefined);
 	status = 'running';
 

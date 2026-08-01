@@ -12,6 +12,7 @@ import type { VariantCode } from '../../variants/variantregistry.js';
 import type { LongFormatOut, MoveParsed } from './icnconverter.js';
 import type { LoadedVariant, VariantOptions } from '../gamefile.js';
 
+import jsutil from '../../../util/jsutil.js';
 import metadatautil from '../../util/metadatautil.js';
 import variantcache from '../../variants/variantcache.js';
 import variantpreviewer from '../../variants/variantpreviewer.js';
@@ -63,7 +64,8 @@ function variantOptionsFromLongFormat(
 		overrides?.specialRights ?? longFormat.state_global.specialRights ?? new Set();
 	return {
 		position,
-		gameRules: longFormat.gameRules,
+		// Copied — construction writes to it (slideLimit, worldBorder, winConditions).
+		gameRules: jsutil.deepCopyObject(longFormat.gameRules),
 		state_global: { ...longFormat.state_global, specialRights },
 		fullMove: overrides?.fullMove ?? longFormat.fullMove,
 	};
