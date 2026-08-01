@@ -6,8 +6,8 @@
  */
 
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
+import type { TimeControl } from '../../../../../shared/types.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
-import type { MovePacket, TimeControl } from '../../../../../shared/types.js';
 import type { Additional, GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js'; // prettier-ignore
 import type {
 	LongFormatOut,
@@ -38,43 +38,52 @@ export interface GameConstructionOptions {
 // Functions ------------------------------------------------------------------------
 
 /**
- * Constructs the gamefile a parsed ICN describes. Requires the position to be
- * spelled out in the ICN — it is not sourced from the Variant metadata here.
+ * Constructs the gamefile a parsed ICN describes, sourcing the position
+ * from the Variant metadata whenever the ICN omits an explicit one.
  * @param validateMoves - Throws an IllegalMoveError if any move played is illegal.
  * @throws Any other error if the game couldn't be constructed at all.
  */
 async function formulateGame(longFormat: LongFormatOut, validateMoves?: true): Promise<GameFile> {
-	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined)
-		throw Error('Invalid longformat when formulating game: Missing position or special rights.'); // prettier-ignore
 	const constructionOptions = await resolveConstructionOptions(longFormat);
 	return constructGame(constructionOptions, validateMoves);
 }
 
 /**
- * Constructs the gamefile of an explicit position and its moves list, validating in the
- * process that no move will crash the game from either a missing piece on the start square,
- * or promoting to a piece that space wasn't allocated for in the piece lists (not in
- * promotion pieces).
- * @param revealErrors - Whether the caller surfaces invalid moves to the user. Affects
- *   whether we console error here the internal error on invalid moves.
+ * {@link formulateGame}, reporting construction failure instead of throwing. Failure is nearly always
+ * a move that would crash the game — a missing piece on its start square, or promoting to a piece no
+ * space was allocated for. An illegal-but-buildable position still returns a gamefile.
+ * @param revealErrors - Whether the caller surfaces the failure to the user. Affects
+ *   whether we console error here the internal error.
  * @returns The constructed gamefile, or `'moves_invalid'` if construction threw.
  */
-function tryConstructGame(
-	variantOptions: VariantOptions,
-	moves: MovePacket[],
+async function tryFormulateGame(
+	longFormat: LongFormatOut,
 	revealErrors: boolean,
-): GameFile | 'moves_invalid' {
+): Promise<GameFile | 'moves_invalid'> {
+	try {
+		return await formulateGame(longFormat);
+	} catch (e: unknown) {
+		if (revealErrors)
+			console.error("Pasted ICN's moves are invalid:", e instanceof Error ? e.message : e);
+		return 'moves_invalid';
+	}
+}
+
+/**
+ * Constructs the gamefile of a moveless position, purely so callers can read its
+ * computed conclusion.
+ * @returns The constructed gamefile, or `null` if the position couldn't be built.
+ */
+function tryConstructPosition(variantOptions: VariantOptions): GameFile | null {
 	try {
 		return constructGame({
 			timeControl: '-',
 			variant: undefined,
 			dateTimestamp: Date.now(),
-			additional: { variantOptions, moves },
+			additional: { variantOptions },
 		});
-	} catch (e: unknown) {
-		if (revealErrors)
-			console.error("Pasted ICN's moves are invalid:", e instanceof Error ? e.message : e);
-		return 'moves_invalid';
+	} catch {
+		return null;
 	}
 }
 
@@ -84,14 +93,13 @@ function tryConstructGame(
  *
  * Loads the resolved variant module first, since the position is read off it whenever
  * the ICN omits an explicit one (e.g. server-stored games carrying only Variant + moves).
+ * An ICN with neither resolves to an empty position, left for position validation to reject.
  */
 async function resolveConstructionOptions(
 	longFormat: LongFormatOut,
 	overrides?: { gameConclusion?: GameConclusion; slideLimit?: bigint },
 ): Promise<GameConstructionOptions> {
 	const variant = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
-	if (longFormat.position === undefined && variant === undefined)
-		throw Error('Cannot construct a game from a longformat specifying neither a position nor a known variant.'); // prettier-ignore
 	if (variant !== undefined) await variantcache.ensureVariantLoaded(variant);
 
 	const { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant); // prettier-ignore
@@ -132,7 +140,8 @@ function constructGame(options: GameConstructionOptions, validateMoves?: true): 
 }
 
 export default {
-	resolveConstructionOptions,
 	formulateGame,
-	tryConstructGame,
+	tryFormulateGame,
+	tryConstructPosition,
+	resolveConstructionOptions,
 };

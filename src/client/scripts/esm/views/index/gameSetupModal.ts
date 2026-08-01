@@ -205,7 +205,7 @@ async function consumePendingHandoff(): Promise<void> {
 	const handoff = await gameSetupModalHandoff.take();
 	if (handoff === undefined) return;
 	openModal(handoff.mode);
-	variantSelector.applyIcn(handoff.icn);
+	await variantSelector.applyIcn(handoff.icn);
 }
 
 export default { close };
