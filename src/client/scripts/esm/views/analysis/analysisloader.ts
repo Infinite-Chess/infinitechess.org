@@ -68,6 +68,8 @@ async function loadInitialGame(): Promise<void> {
 			const viewWhitePerspective = window.analysisPageData.role !== p.BLACK;
 			const longFormat = icnconverter.ShortToLong_Format(state.icn);
 			await pasteGame(longFormat, state.gameConclusion, viewWhitePerspective);
+			// Only the reviewed game gets a result banner. Deliberately NOT done for the other load paths.
+			gamesession.concludeGameIfOver();
 			guianalysisview.syncClockDisplayToViewedMove(true);
 		} catch (e) {
 			// This can only be reached if the game was deleted from the DB between
@@ -82,16 +84,12 @@ async function loadInitialGame(): Promise<void> {
 
 /**
  * Runs a loadGamefile call through the analysis loading lifecycle
- * (conclude an already-over game → mark graphical done → surface load errors).
+ * (mark graphical done → surface load errors).
  */
 function runLoad(loadOptions: LoadOptions): Promise<void> {
 	return gameslot
 		.loadGamefile(loadOptions)
-		.then(({ graphical }) => {
-			// Logical loaded, return graphical promise
-			gamesession.concludeGameIfOver();
-			return graphical;
-		})
+		.then(({ graphical }) => graphical) // Also await the graphical load
 		.then(() => gamesession.markLoadingDone()) // Graphical loaded
 		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }

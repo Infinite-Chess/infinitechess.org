@@ -73,14 +73,17 @@ async function startEngineGame(options: {
 		})
 		.then(async ({ graphical }) => {
 			// Logical loaded, return graphical promise
-			gamesession.concludeGameIfOver();
 
 			/** A promise that resolves when the engine script has been fetched. */
 			await enginegame.initEngineGame(options);
 
 			return graphical;
 		})
-		.then(() => gamesession.markLoadingDone()) // Both the engine and graphical promises have resolved
+		.then(() => {
+			// Both the engine and graphical promises have resolved
+			gamesession.markLoadingDone();
+			gamesession.concludeGameIfOver();
+		})
 		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 
@@ -138,12 +141,12 @@ async function startCustomLocalGame(options: {
 			variant: undefined, // Not specified for custom position
 			viewWhitePerspective,
 		})
-		.then(({ graphical }) => {
-			// Logical loaded, return graphical promise
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => {
+			// Graphical loaded
+			gamesession.markLoadingDone();
 			gamesession.concludeGameIfOver();
-			return graphical;
 		})
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
 		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 
@@ -180,14 +183,17 @@ async function startCustomEngineGame(options: {
 		})
 		.then(async ({ graphical }) => {
 			// Logical loaded, return graphical promise
-			gamesession.concludeGameIfOver();
 
 			/** A promise that resolves when the engine script has been fetched. */
 			await enginegame.initEngineGame(options);
 
 			return graphical;
 		})
-		.then(() => gamesession.markLoadingDone()) // Both the engine and graphical promises have resolved
+		.then(() => {
+			// Both the engine and graphical promises have resolved
+			gamesession.markLoadingDone();
+			gamesession.concludeGameIfOver();
+		})
 		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 

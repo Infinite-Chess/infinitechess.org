@@ -100,13 +100,16 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 			const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
 			initOnlineGame(initialStage, state.participantState);
 
-			gamesession.concludeGameIfOver();
 			// A finalized rated game carries its deltas in the state.
 			if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
 
 			return graphical;
 		})
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
+		.then(() => {
+			// Graphical loaded
+			gamesession.markLoadingDone();
+			gamesession.concludeGameIfOver();
+		})
 		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 

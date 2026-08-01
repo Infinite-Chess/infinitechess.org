@@ -118,7 +118,10 @@ function onCatchLoadingError(err: Error): void {
 	toast.show('An error occurred while loading the game. Please refresh.', { error: true });
 }
 
-/** Concludes the game if it loaded already over. Call after the logical gamefile is fully loaded. */
+/**
+ * Concludes the game if it loaded already over. Call AFTER {@link markLoadingDone}: the moves
+ * list only paints its plies on 'graphical-loaded', and the result banner sits beneath them.
+ */
 function concludeGameIfOver(): void {
 	// Suppresses the game-over sound — the game concluded before this load, not live in front of us.
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame(false);

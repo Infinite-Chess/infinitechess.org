@@ -8,6 +8,7 @@ import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
@@ -139,13 +140,15 @@ function showViewedMoveClockStamps(basegame: GameFile): void {
 }
 
 /**
- * The player the tempo highlight reflects: whoever is currently on the move, or if in analysis,
- * the front of the active line (independent of the viewed ply, which `whosTurn` tracks there).
+ * The player the tempo highlight reflects: whoever is on the move, or undefined once the game
+ * is over. Analysis is exempt from both — there it's the front of the active line (independent
+ * of the viewed ply, which `whosTurn` tracks), however that line ended.
  */
-function getTempoPlayer(basegame: GameFile): Player {
-	if (gamesession.getGameType() !== 'analysis')
-		return basegame.clocks?.colorTicking ?? basegame.whosTurn;
-	else return moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1);
+function getTempoPlayer(basegame: GameFile): Player | undefined {
+	if (gamesession.getGameType() === 'analysis')
+		return moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1);
+	if (gamefileutility.isGameOver(basegame)) return undefined;
+	return basegame.clocks?.colorTicking ?? basegame.whosTurn;
 }
 
 /** Highlights the bar of the player whose turn it is via `.tempo`. */
