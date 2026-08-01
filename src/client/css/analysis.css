@@ -69,10 +69,10 @@
 	font-size: 14px;
 }
 
-/* The standalone header's name stands in for a username embed, so it matches its color
-   (game.css: .meta-player .username-embed .username). */
+/* The standalone header's name stands in for a username embed, so it matches its weight
+   (global.css: .username-embed .username). Its color already matches by inheritance. */
 .review-player-name {
-	color: var(--c-text);
+	font-weight: bold;
 }
 
 .review-accuracy {
