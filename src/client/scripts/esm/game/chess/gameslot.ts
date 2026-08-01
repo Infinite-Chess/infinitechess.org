@@ -193,8 +193,8 @@ async function loadGraphical(): Promise<void> {
 	if (!moveutil.areWeViewingLatestMove(loadedGamefile!))
 		throw new Error("Don't let the user navigate away from front before loadGraphical() rewinds the last move to reanimate it."); // prettier-ignore
 	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
-	// Rewind one move. Intentionally don't call movesequence.viewMove() here and manually dispatch a
-	// 'view-move' event so the move tree doesn't highlight the 2nd to last move for a brief moment on refresh.
+	// Rewind one move. Deliberately not movesequence.viewMove(), which would dispatch 'view-move'
+	// and drag every listener back a ply for the split second before the reanimation.
 	if (lastmove !== undefined) movepiece.applyMove(loadedGamefile!, lastmove, false, false);
 
 	// Initialize the mesh empty

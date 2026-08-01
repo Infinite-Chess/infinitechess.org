@@ -49,8 +49,8 @@ interface MovesListRenderer {
 	updateCurrentPly(): void;
 	/** Scrolls the current position into view. */
 	scrollToCurrentPly(): void;
-	/** A fresh game loaded — seed derived state, before the following reconcile runs. */
-	onGameLoaded(): void;
+	/** A fresh game finished loading — seed derived state, before the following reconcile runs. */
+	onGraphicalLoaded(): void;
 	/** The flat move list changed — sync derived state, before the following reconcile runs. */
 	onMovesChanged(): void;
 	/** The game unloaded — drop derived state. */
@@ -226,6 +226,11 @@ const renderedMoves: MoveFull[] = [];
  * exactly one ply; a resync trims rewound moves and appends new ones — never a full rebuild.
  */
 function reconcileMovesTable(): void {
+	// A ply's silhouette is cloned straight from the SVG cache, which only the graphical load
+	// populates for non-classical pieces. The 'graphical-loaded' rebuild below repaints from
+	// scratch, so anything skipped here (a move arriving mid-load) lands then.
+	if (gamesession.isLoading()) return;
+
 	if (renderer) return renderer.reconcile();
 
 	const moves = gameslot.getGamefile()!.moves;
@@ -242,6 +247,15 @@ function reconcileMovesTable(): void {
 		appendPly(moves[i]!, i);
 		renderedMoves.push(moves[i]!);
 	}
+}
+
+/** Empties the panel on unload: the result banner, and the rendered plies. */
+function clearMovesTable(): void {
+	if (renderer) return renderer.onGameUnloaded();
+
+	element_GameResult.classList.add('hidden');
+	removeRowsFrom(0);
+	renderedMoves.length = 0;
 }
 
 /**
@@ -439,12 +453,14 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the gamefile
 // bypass 'moves-changed'), reconcile the plies on move-list changes, follow the viewed ply's
-// highlight on navigation, scroll to the banner on conclusion.
-GameBus.addEventListener('game-loaded', () => {
-	renderer?.onGameLoaded();
+// highlight on navigation, scroll to the banner on conclusion. Must be 'graphical-loaded' —
+// see the SVG cache note in reconcileMovesTable().
+GameBus.addEventListener('graphical-loaded', () => {
+	renderer?.onGraphicalLoaded();
 	reconcileMovesTable();
-	// A fresh load dispatches no 'view-move', so seed the highlight & scroll here.
+	// A fresh load dispatches no 'view-move', so seed everything it would have maintained.
 	updateCurrentPly();
+	updateNavButtons();
 	scrollToCurrentPly();
 });
 GameBus.addEventListener('moves-changed', () => {
@@ -459,7 +475,7 @@ GameBus.addEventListener('view-move', () => {
 });
 GameBus.addEventListener('view-front', () => scrollToCurrentPly());
 GameBus.addEventListener('game-concluded', () => scrollMovesTableToBottom());
-GameBus.addEventListener('game-unloaded', () => renderer?.onGameUnloaded());
+GameBus.addEventListener('game-unloaded', () => clearMovesTable());
 
 // ===========================================================================
 

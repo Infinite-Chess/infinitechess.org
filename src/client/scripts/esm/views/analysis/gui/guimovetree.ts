@@ -580,7 +580,7 @@ guimoveslist.registerRenderer({
 	reconcile: reconcileMoveTree,
 	updateCurrentPly: highlightCurrentNode,
 	scrollToCurrentPly: scrollToCurrentNode,
-	onGameLoaded: () => movetree.initFromGame(gameslot.getGamefile()!),
+	onGraphicalLoaded: () => movetree.initFromGame(gameslot.getGamefile()!),
 	onMovesChanged: () => movetree.syncAfterMovesChanged(gameslot.getGamefile()!),
 	onGameUnloaded: clearMoveTree,
 });
