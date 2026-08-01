@@ -216,18 +216,17 @@ function initIcnValidation(): void {
 	element_icnInput.addEventListener('focus', () => clearError(element_icnInputWrap));
 	// Validate live so validity updates the moment the position is valid, but suppress
 	// error display until blur so we don't nag as the user types. No commit while typing.
-	element_icnInput.addEventListener('input', () => void validateIcnInput(false));
+	element_icnInput.addEventListener('input', (e) => {
+		// A paste is a finished code, so reveal its errors instantly rather than waiting for blur.
+		const pasted = (e as InputEvent).inputType === 'insertFromPaste';
+		void validateIcnInput(pasted);
+	});
 	// Enter commits the ICN (blur runs validate + commit) rather than inserting a newline.
 	element_icnInput.addEventListener('keydown', (e) => {
 		if (e.key !== 'Enter' || e.shiftKey) return;
 		e.preventDefault();
 		forceCommit = true; // The enter key overrides the "already loaded" check
 		element_icnInput.blur();
-	});
-	// Instantly reveal validity when a code is pasted, don't wait for blur.
-	element_icnInput.addEventListener('paste', () => {
-		// Pasted value isn't in the textarea until after the paste event, so defer by one tick.
-		setTimeout(() => void validateIcnInput(true), 0);
 	});
 }
 
