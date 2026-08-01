@@ -153,11 +153,14 @@ function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean, isMainline: b
 	const review = gamereview.getReviewForNode(node.id);
 	if (review?.classification) {
 		const display = gamereview.CLASSIFICATION_DISPLAY[review.classification];
-		classes[`review-${review.classification}`] = true;
 		tooltip += ` · ${display.label}`;
 		if (!review.isBestMove && review.bestMove) tooltip += ` — best was ${review.bestMove}`;
-		if (gamereview.isLapseKey(review.classification))
+		// Only lapses are marked visually — coloring the good tiers too would tint most
+		// of the list, and every classification is named in the tooltip regardless.
+		if (gamereview.isLapseKey(review.classification)) {
+			classes[`review-${review.classification}`] = true;
 			children.push(h('span.review-glyph', display.symbol));
+		}
 	}
 
 	// Inline eval labels are mainline-only — a variation's evaluated position isn't part of
