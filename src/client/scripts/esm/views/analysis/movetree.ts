@@ -156,12 +156,9 @@ function syncAfterMovesChanged(gamefile: GameFile): void {
 			parent = child;
 		}
 
-		// Rejoining an existing branch restores the rest of it, so the branch stays navigable
-		// instead of dead-ending at the move just played. Returns early deliberately: the global
-		// conclusion describes the played move's position, NOT the restored front's, so storing it
-		// there would corrupt that node. We adopt the front's own conclusion instead. Nothing is
-		// lost — a node with a continuation is non-terminal, and a rejoined leaf already holds the
-		// conclusion recorded for that identical position when it was created.
+		// Rejoining an existing branch restores the rest of it, so it stays navigable instead of
+		// dead-ending at the move just played. Returns early on purpose: the global conclusion
+		// describes the played move's position, not this front's, so we adopt the front's instead.
 		if (rejoinedExistingBranch) {
 			activeLine = extendWithMainline(activeLine);
 			gamefile.moves = getMovesFromLine(activeLine);
