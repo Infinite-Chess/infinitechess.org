@@ -147,6 +147,11 @@ const ACPL_CLAMP = 1000;
 const MAX_POSITION_ATTEMPTS = 2;
 /** Fishnet analyzes five reported positions plus one overlapping TT warmup per chunk. */
 const REAL_POSITIONS_PER_CHUNK = 5;
+
+/** Depth of a review whose chunks all run in one parallel round. */
+const MAX_REVIEW_DEPTH = 15;
+/** Depth floor, however many rounds a review takes. */
+const MIN_REVIEW_DEPTH = 9;
 /**
  * Force-invalidates all persisted reviews. Bump when the stored shape changes in a way
  * zod can't reject (same shape, new meaning), NOT for interpretation changes — the cache
@@ -292,24 +297,13 @@ function gameAccuracy(accuracies: number[]): number {
 // Depth heuristic ---------------------------------------------------------------------
 
 /**
- * Per-position search depth: shorter games are analyzed deeper, and positions
- * with many pieces (huge variants) shallower — total review time stays bounded.
+ * Per-position search depth. Each doubling of the chunk-rounds a worker must run serially
+ * costs one ply, since a ply roughly doubles a search — so total review time stays bounded
+ * regardless of game length or core count.
  */
-function pickReviewDepth(plies: number, workerCount: number): number {
-	let depth: number;
-	if (plies <= 30) depth = 15;
-	else if (plies <= 60) depth = 14;
-	else if (plies <= 100) depth = 13;
-	else if (plies <= 160) depth = 12;
-	else depth = 11;
-
-	// Few cores mean positions are mostly searched serially, so reduce the per-position
-	// budget sharply. Larger pools recover the deeper short-game targets above.
-	if (workerCount <= 2) depth = Math.min(depth, 11);
-	else if (workerCount <= 4) depth = Math.min(depth, 13);
-	else if (workerCount <= 6) depth = Math.min(depth, 14);
-
-	return Math.max(9, depth);
+function pickReviewDepth(totalChunks: number, workerCount: number): number {
+	const rounds = Math.ceil(totalChunks / workerCount); // >= 1: pickWorkerCount caps workers at chunks.
+	return Math.max(MIN_REVIEW_DEPTH, MAX_REVIEW_DEPTH - Math.ceil(Math.log2(rounds)));
 }
 
 /** Engine workers to spawn: one per hardware thread minus one, leaving the UI responsive. */
@@ -424,7 +418,7 @@ function start(): void {
 	const totalPositions = mainlineNodes.length + 1;
 	chunkQueue = buildReverseChunks(totalPositions);
 	const workerCount = pickWorkerCount(chunkQueue.length);
-	reviewDepth = pickReviewDepth(mainlineNodes.length, workerCount);
+	reviewDepth = pickReviewDepth(chunkQueue.length, workerCount);
 
 	results = new Array(totalPositions).fill(undefined);
 	effectiveWhiteCp = new Array(totalPositions).fill(undefined);
