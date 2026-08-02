@@ -23,6 +23,7 @@ import arrows from '../../../rendering/arrows/arrows';
 import meshes from '../../../rendering/meshes';
 import gameslot from '../../../chess/gameslot';
 import { Mouse } from '../../../input';
+import { GameBus } from '../../../GameBus';
 import etoolmanager from '../etoolmanager';
 import stoolgraphics from './stoolgraphics';
 import stransformations from './stransformations';
@@ -46,6 +47,12 @@ let startPoint: Coords | undefined;
  * NOT when we are currently MAKING a selection.
  */
 let endPoint: Coords | undefined;
+
+// Events -------------------------------------------------------
+
+// A selection outlives no game: every consumer of one (copy/cut/paste, the Delete shortcut)
+// reads the gamefile it was made against, and a discarded load leaves none behind.
+GameBus.addEventListener('game-unloaded', () => resetState());
 
 // Methods -------------------------------------------
 

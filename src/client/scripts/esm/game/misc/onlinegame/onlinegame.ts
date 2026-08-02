@@ -12,11 +12,11 @@ import gamefileutility from '../../../../../../shared/chess/util/gamefileutility
 import { engineDictionary } from '../../../../../../shared/chess/engine.js';
 import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
+import toast from '../../../components/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import drawoffers from './drawoffers.js';
 import enginegame from '../enginegame.js';
-import toast from '../../../components/toast.js';
 import gameactions from '../../gui/guigameactions.js';
 import gamesession from '../../chess/gamesession.js';
 import guigamemeta from '../../gui/guigamemeta.js';
@@ -110,7 +110,6 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 			const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
 			initOnlineGame(initialStage, state.participantState);
 
-			gamesession.concludeGameIfOver();
 			// A finalized rated game carries its deltas in the state.
 			if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
 
@@ -132,14 +131,24 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 					})
 					.catch((error: Error) => {
 						console.error('Failed to initialize engine game:', error);
-						toast.show('The engine failed to load and resigned the game.', { error: true });
+						toast.show('The engine failed to load and resigned the game.', {
+							error: true,
+						});
 					});
 			}
 
 			return graphical;
 		})
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
+		.then(() => {
+			// Graphical loaded
+			gamesession.markLoadingDone();
+			gamesession.concludeGameIfOver();
+		})
+		.catch((err: Error) => {
+			// The gamestate arrived but never became a game — we don't hold it after all.
+			inSync = false;
+			gamesession.onCatchLoadingError(err);
+		});
 }
 
 /**
@@ -216,12 +225,12 @@ function subscribeToGame(): void {
 	const id = window.gamePageData.id;
 
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
-	if (stage === 'finalized') {
+	if (stage === 'finalized' && gameslot.getGamefile()) {
 		// The result is locked in — nothing but rematch offers can change, so we can't desync.
 		socketmessages.send('game', 'subscriberematch', id);
 	} else {
-		// No game loaded yet (initial subscribe), or it's live but
-		// not finalized (may still change) — request the full state.
+		// No game loaded yet (initial subscribe), a load that failed and left us with none,
+		// or it's live but not finalized (may still change) — request the full state.
 		socketmessages.send('game', 'subscribe', id);
 	}
 }

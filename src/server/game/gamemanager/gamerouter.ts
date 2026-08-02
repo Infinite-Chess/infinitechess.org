@@ -9,15 +9,17 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
+import moveutil from '../../../shared/chess/util/moveutil.js';
+
 import gameutility from './gameutility.js';
 import { offerRematch } from './onRematch.js';
-import { getGameBySocket, resumeEngineClock } from './gamemanager.js';
 import { onSubscribeToGame } from './onSubscribe.js';
 import { onSubscribeToRematch } from './onSubscribeRematch.js';
 import { abortGame, resignGame } from './abortresigngame.js';
 import { onReport, reportschem } from './cheatreport.js';
 import { claimVictory, claimDraw } from './claimdisconnect.js';
 import { submitMove, submitmoveschem } from './movesubmission.js';
+import { getGameBySocket, resumeEngineClock } from './gamemanager.js';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
 
 const GameSchema = z.discriminatedUnion('action', [
@@ -83,7 +85,7 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage): void {
 			break;
 		case 'engineresign':
 			if (!gameutility.isEngineGame(servergame)) break;
-			if (gameutility.isGameResignable(servergame))
+			if (moveutil.isGameResignable(servergame))
 				resignGame(servergame, servergame.match.engineParticipant!.color);
 			else abortGame(servergame);
 			break;

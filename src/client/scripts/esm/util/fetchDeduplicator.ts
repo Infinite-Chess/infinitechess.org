@@ -36,20 +36,23 @@ export function fetchWithDeduplication(url: string, options?: RequestOptions): P
 	const { origin, pathname, search } = new URL(fullURL);
 	const requestKey = `${origin}${pathname}${search}`;
 
-	if (inProgressRequests[requestKey]) {
+	let request = inProgressRequests[requestKey];
+	if (request !== undefined) {
 		console.log(`Request already in progress for: ${url}. Skipping this request.`);
-		return inProgressRequests[requestKey];
+	} else {
+		request = serverFetch(url, options)
+			.then((response: Response) => {
+				delete inProgressRequests[requestKey];
+				return response;
+			})
+			.catch((error: unknown) => {
+				delete inProgressRequests[requestKey];
+				throw error;
+			});
+		inProgressRequests[requestKey] = request;
 	}
 
-	inProgressRequests[requestKey] = serverFetch(url, options)
-		.then((response: Response) => {
-			delete inProgressRequests[requestKey];
-			return response;
-		})
-		.catch((error: unknown) => {
-			delete inProgressRequests[requestKey];
-			throw error;
-		});
-
-	return inProgressRequests[requestKey];
+	// A body may only be read once, so callers sharing a request can't share its response. Each
+	// gets its own clone, leaving the retained response itself forever unread and thus clonable.
+	return request.then((response) => response.clone());
 }

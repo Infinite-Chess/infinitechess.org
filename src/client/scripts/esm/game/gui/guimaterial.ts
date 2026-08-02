@@ -21,6 +21,7 @@ import typeutil, { rawTypes, players as p } from '../../../../../shared/chess/ut
 
 import gameslot from '../chess/gameslot.js';
 import svgcache from '../../chess/rendering/svgcache.js';
+import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../GameBus.js';
 
 // Point values --------------------------------------------------------------------------------
@@ -63,9 +64,28 @@ const element_MaterialBottom = document.getElementById('material-bottom')!;
 /**
  * Whether the loaded game's starting position is balanced (all sides start with an equal count
  * of every piece type, and only white & black are present). Material bars are disabled otherwise
- * Computed on `game-loaded`.
+ * Computed on `graphical-loaded`.
  */
 let balanced = false;
+
+// Events --------------------------------------------------------------------------------------
+
+// Recompute `balance` from the freshly-loaded start position, then render the current material.
+// Must be 'graphical-loaded' — see the SVG cache note in render().
+GameBus.addEventListener('graphical-loaded', () => {
+	const gamefile = gameslot.getGamefile()!;
+	balanced = isStartPositionBalanced(gamefile.startSnapshot.position);
+	// Unbalanced games never show material differences, so hide the bars to reclaim their space.
+	element_MaterialTop.classList.toggle('hidden', !balanced);
+	element_MaterialBottom.classList.toggle('hidden', !balanced);
+	render();
+});
+// A discarded load leaves no gamefile to compute a surplus from, so drop the flag that
+// would otherwise let render() reach for one until the next game recomputes it.
+GameBus.addEventListener('game-unloaded', () => (balanced = false));
+// Rewinding/forwarding restores the board to the viewed move, so the live counts already reflect it.
+GameBus.addEventListener('view-move', () => render());
+GameBus.addEventListener('board-flipped', () => render());
 
 // Balance detection ---------------------------------------------------------------------------
 
@@ -119,6 +139,10 @@ function computeSurplus(): MaterialSurplus {
 
 /** Rebuilds both bars from the material surplus at the currently-viewed move. */
 function render(): void {
+	// Surplus silhouettes are cloned straight from the SVG cache, which only the graphical load
+	// populates for non-classical pieces. The 'graphical-loaded' listener rebuilds both bars.
+	if (gamesession.isLoading()) return;
+
 	if (!balanced) {
 		element_MaterialTop.replaceChildren();
 		element_MaterialBottom.replaceChildren();
@@ -167,18 +191,3 @@ function buildBarChildren(surplus: Map<RawType, number>, lead: number): Element[
 
 	return children;
 }
-
-// Events --------------------------------------------------------------------------------------
-
-// Recompute `balance` from the freshly-loaded start position, then render the current material.
-GameBus.addEventListener('game-loaded', () => {
-	const gamefile = gameslot.getGamefile()!;
-	balanced = isStartPositionBalanced(gamefile.startSnapshot.position);
-	// Unbalanced games never show material differences, so hide the bars to reclaim their space.
-	element_MaterialTop.classList.toggle('hidden', !balanced);
-	element_MaterialBottom.classList.toggle('hidden', !balanced);
-	render();
-});
-// Rewinding/forwarding restores the board to the viewed move, so the live counts already reflect it.
-GameBus.addEventListener('view-move', () => render());
-GameBus.addEventListener('board-flipped', () => render());

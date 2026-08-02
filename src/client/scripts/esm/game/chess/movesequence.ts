@@ -50,21 +50,24 @@ function commitMove(
 		move.clockStamp = clockStamp;
 	}
 
-	// Forward chokepoint for the committed move list. MUST stay after the clock stamp assignment so
-	// clock listeners see the new move's stamp, and above game-over checks so the final ply is present
-	// before 'game-concluded' scrolls. This also prevents PvP clock display from lagging by one ply.
+	// Must run ABOVE 'moves-changed': the checks flag a checkmating move as mate, and the
+	// move list renders each ply's notation (# vs +) once, from the flags it sees then.
+	if (doGameOverChecks) wincondition.doGameOverChecks(gamefile);
+
+	// Forward chokepoint for the committed move list. MUST stay after the clock stamp assignment
+	// so clock listeners see the new move's stamp, else PvP clock display lags by one ply.
 	GameBus.dispatch('moves-changed');
 
-	if (doGameOverChecks) {
-		wincondition.doGameOverChecks(gamefile);
+	// Must stay BELOW 'moves-changed': the reconcile it triggers has to enqueue before
+	// 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
+	if (
+		doGameOverChecks &&
+		gamefileutility.isGameOver(gamefile) &&
 		// Only conclude the game if it's not an online game (in that scenario, server is boss)
-		if (
-			gamefileutility.isGameOver(gamefile) &&
-			gamesession.getGameType() !== 'online' &&
-			gamesession.getGameType() !== 'analysis'
-		) {
-			gameslot.concludeGame();
-		}
+		gamesession.getGameType() !== 'online' &&
+		gamesession.getGameType() !== 'analysis'
+	) {
+		gameslot.concludeGame();
 	}
 
 	GameBus.dispatch('physical-move');

@@ -11,10 +11,10 @@
  * but also prepares and opens the UI elements for that type of game.
  */
 
+import type { MovePacket } from '../../../../../shared/types.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MovePacket } from '../../../../../shared/types.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
@@ -79,12 +79,12 @@ async function startCustomLocalGame(options: {
 			variant: undefined, // Not specified for custom position
 			viewWhitePerspective,
 		})
-		.then(({ graphical }) => {
-			// Logical loaded, return graphical promise
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => {
+			// Graphical loaded
+			gamesession.markLoadingDone();
 			gamesession.concludeGameIfOver();
-			return graphical;
 		})
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
 		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 

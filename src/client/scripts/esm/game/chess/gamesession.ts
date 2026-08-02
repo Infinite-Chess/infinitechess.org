@@ -17,6 +17,7 @@ import boardpos from '../rendering/boardpos.js';
 import gamecore from './gamecore.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
+import { GameBus } from '../GameBus.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -98,6 +99,8 @@ function markLoadingDone(): void {
 	loading = false;
 	gamecore.getCanvas().classList.remove('visibility-hidden'); // Show the canvas now that the game is fully loaded.
 	centerView();
+	GameBus.dispatch('graphical-loaded');
+	GameBus.dispatch('load-ended');
 }
 
 /** Sets the camera to the recentered position. */
@@ -110,13 +113,23 @@ function centerView(): void {
 	boardpos.setBoardScale(centerArea.scale);
 }
 
-/** Displays an error toast saying the game failed to load. */
+/** Displays an error toast saying the game failed to load, and discards the failed load. */
 function onCatchLoadingError(err: Error): void {
 	console.error('Error loading game: ', err);
 	toast.show('An error occurred while loading the game. Please refresh.', { error: true });
+	// Discard the half-built game — loadLogical may have completed, leaving a gamefile the
+	// graphical half never gave a mesh. Clearing the flag lets a later load replace it,
+	// rather than wedging everything gated on isLoading() until a refresh.
+	if (gameslot.getGamefile()) unloadGame();
+	loading = false;
+	// After the teardown, so anything resuming on this starts from a clean session.
+	GameBus.dispatch('load-ended');
 }
 
-/** Concludes the game if it loaded already over. Call after the logical gamefile is fully loaded. */
+/**
+ * Concludes the game if it loaded already over. Call AFTER {@link markLoadingDone}: the moves
+ * list only paints its plies on 'graphical-loaded', and the result banner sits beneath them.
+ */
 function concludeGameIfOver(): void {
 	// Suppresses the game-over sound — the game concluded before this load, not live in front of us.
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame(false);

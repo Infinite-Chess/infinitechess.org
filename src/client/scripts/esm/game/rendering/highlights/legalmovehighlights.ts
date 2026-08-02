@@ -23,6 +23,7 @@ import { GameBus } from '../../GameBus.js';
 import frametracker from '../frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import legalmoveshapes from '../instancedshapes.js';
+import specialrighthighlights from './specialrighthighlights.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
@@ -107,6 +108,7 @@ function render(): void {
 function regenerateAll(): void {
 	regenSelectedPieceLegalMovesHighlightsModel();
 	arrowlegalmovehighlights.regenModelsOfHoveredPieces();
+	specialrighthighlights.regenModel();
 }
 
 // Regenerates the model for all highlighted legal moves.

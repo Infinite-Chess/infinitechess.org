@@ -172,7 +172,7 @@ function flagLastMoveAsMate(boardsim: Board): void {
 /**
  * Returns whether the game is resignable (at least 2 moves have been played).
  * If not, then the game is considered abortable.
- * @param game - The minimum properties needed from the gamefile to check if the game is resignable. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
+ * @param game - Any real game holding a move list (a gamefile, or the server's game). Never a fabricated one.
  */
 function isGameResignable(game: { moves: MoveRecord[] }): boolean {
 	return game.moves.length > 1;

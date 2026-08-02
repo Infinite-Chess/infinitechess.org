@@ -7,6 +7,7 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
 
+import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
@@ -33,7 +34,7 @@ function abortGame(servergame: ServerGame): void {
 		console.log(
 			`Player tried to abort game ${servergame.match.id} when there's been exactly 2 moves played! Aborting game anyways...`,
 		);
-	} else if (gameutility.isGameResignable(servergame)) {
+	} else if (moveutil.isGameResignable(servergame)) {
 		// Return if player tries to abort when he does not have the right
 		console.error(
 			`Player tried to abort game ${servergame.match.id} when there's been at least 3 moves played!`,
@@ -59,7 +60,7 @@ function resignGame(servergame: ServerGame, ourRole: Player): void {
 			`Player resign to resign game ${servergame.match.id} when the game is already over!`,
 		);
 		return;
-	} else if (!gameutility.isGameResignable(servergame)) {
+	} else if (!moveutil.isGameResignable(servergame)) {
 		// Return if player tries to resign when he does not have the right
 		console.error(
 			`Player tried to resign game ${servergame.match.id} when there's less than 2 moves played! Ignoring..`,

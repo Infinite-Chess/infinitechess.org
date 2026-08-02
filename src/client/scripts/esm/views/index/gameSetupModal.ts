@@ -10,9 +10,9 @@ import type { GameMode, TimeControl } from '../../../../../shared/types.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
+import { interpolate } from '../../../../../shared/util/interpolate.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
 import { engineDictionary, ONLINE_ENGINE } from '../../../../../shared/chess/engine.js';
-import { interpolate } from '../../../../../shared/util/interpolate.js';
 
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
@@ -265,7 +265,7 @@ async function consumePendingHandoff(): Promise<void> {
 	const handoff = await gameSetupModalHandoff.take();
 	if (handoff === undefined) return;
 	openModal(handoff.mode);
-	variantSelector.applyIcn(handoff.icn);
+	await variantSelector.applyIcn(handoff.icn);
 }
 
 export default { close };

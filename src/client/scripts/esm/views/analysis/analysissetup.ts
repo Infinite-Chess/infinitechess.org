@@ -24,6 +24,10 @@ function init(): void {
 	// A move on the board abandons any un-committed selection (e.g. an opened, empty From-ICN
 	// field), so snap the display back to the variant actually loaded on the board.
 	GameBus.addEventListener('physical-move', () => variantSelector.restoreAcceptedDisplay());
+	// Fires for every load, whoever started it (the initial one included) and whether it
+	// finished or failed — matching the isLoading() check the owed load is waiting on.
+	// Deferred out of the dispatch, since draining unloads the game its listeners are reading.
+	GameBus.addEventListener('load-ended', () => queueMicrotask(drainOwedLoad));
 }
 
 /** The active Slide Limit modifier as a bigint gamerule, or undefined if none is selected. */
@@ -34,15 +38,23 @@ function getSelectedSlideLimit(): bigint | undefined {
 	return undefined;
 }
 
+/** Whether a load was refused mid-load, owed once the in-flight one finishes. */
+let loadOwed = false;
+
 /** Loads the variant selector's current selection onto the board (fresh preset or custom ICN). */
 function loadSelection(): void {
-	if (gamesession.isLoading()) return; // Don't stomp an in-flight load.
+	// Don't stomp an in-flight load — an unloaded gamefile would crash its graphical
+	// half. Owe it instead, so a modifier toggle made mid-load isn't silently swallowed.
+	if (gamesession.isLoading()) {
+		loadOwed = true;
+		return;
+	}
 
 	const slideLimit = getSelectedSlideLimit();
 	const selection = variantSelector.getSelection();
 
 	if (selection.kind === 'preset') {
-		analysisloader.loadVariant(selection.code, slideLimit);
+		void analysisloader.loadVariant(selection.code, slideLimit);
 	} else {
 		// Custom (saved position or ICN) — only load once it resolves to a legal position.
 		const custom = variantSelector.getCustomPosition();
@@ -58,6 +70,13 @@ function loadSelection(): void {
 
 	// Remember what's now loaded, so a later board move can revert the display to it.
 	variantSelector.snapshotAccepted();
+}
+
+/** Runs the load refused during the one that just finished, re-reading the selection fresh. */
+function drainOwedLoad(): void {
+	if (!loadOwed) return;
+	loadOwed = false;
+	loadSelection();
 }
 
 export default { init };

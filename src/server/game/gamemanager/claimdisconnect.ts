@@ -11,6 +11,7 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
 
+import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
@@ -26,7 +27,7 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
 function mayClaimAgainstOpponent(servergame: ServerGame, ourColor: Player): boolean {
 	if (gameutility.isEngineGame(servergame)) return false;
 	if (gameutility.isGameOver(servergame)) return false;
-	if (!gameutility.isGameResignable(servergame)) return false; // Nothing to claim before resignable.
+	if (!moveutil.isGameResignable(servergame)) return false; // Nothing to claim before resignable.
 
 	const opponentColor = typeutil.invertPlayer(ourColor);
 	const claimTime = servergame.match.playerData[opponentColor]!.disconnect.timeOpponentMayClaim;

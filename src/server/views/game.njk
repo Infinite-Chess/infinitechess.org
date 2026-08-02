@@ -232,7 +232,9 @@
 						{% if gamePageData.isLive and gamePageData.role is defined and not gamePageData.engineGame %}
 						<button class="action-btn" id="btn-rematch">Rematch</button>
 						{% endif %}
-						<button class="action-btn" id="btn-analysis">Analysis</button>
+						{# Nothing to analyze with zero moves. A live game can still gain
+						   moves — guigameactions.ts reveals it at conclusion. #}
+						<button class="action-btn{{ ' hidden' if meta.moveCount == 0 }}" id="btn-analysis">Analysis</button>
 					</div>
 				</div>
 

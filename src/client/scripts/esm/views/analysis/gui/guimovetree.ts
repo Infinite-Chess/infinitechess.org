@@ -12,10 +12,11 @@
 import type { VNode } from 'snabbdom';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { MoveEvalLabel } from '../moveevals.js';
 import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
 import type { AnalysisMoveNode } from '../movetree.js';
 
-import { attributesModule, h, init } from 'snabbdom';
+import { attributesModule, classModule, h, init } from 'snabbdom';
 
 import movepiece from '../../../../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -37,6 +38,7 @@ import { GameBus } from '../../../game/GameBus.js';
 import frametracker from '../../../game/rendering/frametracker.js';
 import movesequence from '../../../game/chess/movesequence.js';
 import guimoveslist from '../../../game/gui/guimoveslist.js';
+import guiboardcontrols from '../../../game/gui/guiboardcontrols.js';
 
 // State ---------------------------------------------------------------------------------------
 
@@ -48,7 +50,7 @@ const idToNode = new Map<number, AnalysisMoveNode>();
 
 // Rendering ----------------------------------------------------------------------------------
 
-const patch = init([attributesModule]);
+const patch = init([attributesModule, classModule]);
 
 /**
  * The persistent host snabbdom patches into, sitting just above the result banner so the banner
@@ -92,8 +94,17 @@ function reconcileMoveTree(): void {
 	idToNode.clear();
 	const root = movetree.getRoot()!;
 	treeVNode = patch(treeVNode, h('div#analysis-move-tree', buildMainline(root)));
-	highlightCurrentNode();
-	scrollToCurrentNode();
+}
+
+/**
+ * Empties the rendered tree on unload. Node ids restart per game, so surviving plies would be
+ * reused by the next game's patch — keeping the silhouette their `insert` hook added, which
+ * only fires on creation and so would show the wrong piece for the new game's move.
+ */
+function clearMoveTree(): void {
+	movetree.clear();
+	idToNode.clear();
+	treeVNode = patch(treeVNode, h('div#analysis-move-tree', []));
 }
 
 /** The ply element for the currently-viewed node, or undefined (the root has none). */
@@ -125,11 +136,12 @@ function scrollToCurrentNode(): void {
 
 /**
  * Builds a tree `.ply` vnode for `node`, keyed by its node id so promote/demote/delete reorder
- * the existing button instead of rebuilding it. The silhouette (cloned from cache) is added once
- * in the `insert` hook — never on reuse — while review decoration re-derives on `update` too,
- * so a ply that changes mainline status (its `data-mainline`) refreshes its inline eval label.
+ * the existing button instead of rebuilding it. Everything the game review adds — the color
+ * class, the lapse glyph, the tooltip suffix, the inline eval label — is plain vnode data, so
+ * snabbdom diffs it in and out as the review lands. The silhouette (cloned from cache) is the
+ * one exception, added once in the `insert` hook and never on reuse.
  */
-function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean): VNode {
+function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean, isMainline: boolean): VNode {
 	idToNode.set(node.id, node);
 	const { title, coord, rawType } = guimoveslist.getPlyDisplay(node.move!);
 
@@ -137,26 +149,46 @@ function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean): VNode {
 	if (showIndex) children.push(h('span.move-index', formatMoveIndex(node.ply)));
 	children.push(h('span.move-coord', coord));
 
-	const attrs: Record<string, string> = { title, 'data-node-id': String(node.id) };
-	// The inline eval label is only shown on the mainline (see decoratePlyWithReview) —
-	// stash this so decoration, which later only has the node id, can tell them apart.
-	if (movetree.isMainLine(node)) attrs['data-mainline'] = '1';
+	let tooltip = title;
+	const classes: Record<string, boolean> = {};
+	const review = gamereview.getReviewForNode(node.id);
+	if (review?.classification) {
+		const display = gamereview.CLASSIFICATION_DISPLAY[review.classification];
+		tooltip += ` · ${display.label}`;
+		if (!review.isBestMove && review.bestMove) tooltip += ` — best was ${review.bestMove}`;
+		// Only lapses are marked visually — coloring the good tiers too would tint most
+		// of the list, and every classification is named in the tooltip regardless.
+		if (gamereview.isLapseKey(review.classification)) {
+			classes[`review-${review.classification}`] = true;
+			children.push(h('span.review-glyph', display.symbol));
+		}
+	}
+
+	// Inline eval labels are mainline-only — a variation's evaluated position isn't part of
+	// the game's actual eval graph, and coordinate-notation lines are cramped enough already.
+	const evalLabel = isMainline ? moveevals.get(node.id) : undefined;
+	if (evalLabel)
+		children.push(
+			h(
+				'span.review-eval',
+				{ attrs: { title: `Evaluation at depth ${evalLabel.depth}` } },
+				formatEvalLabel(evalLabel),
+			),
+		);
 
 	return h(
 		'button.ply.analysis-ply',
 		{
 			key: node.id,
-			attrs,
+			class: classes,
+			attrs: { title: tooltip, 'data-node-id': String(node.id) },
 			hook: {
 				insert: (vnode) => {
 					const ply = vnode.elm as HTMLElement;
 					const silhouette = svgcache.getCachedSilhouetteSVG(rawType);
 					silhouette.classList.add('move-piece');
 					ply.insertBefore(silhouette, ply.querySelector('.move-coord')); // Before the coord text.
-					decoratePlyWithReview(ply, node.id);
 				},
-				update: (_oldVnode, vnode) =>
-					decoratePlyWithReview(vnode.elm as HTMLElement, node.id),
 			},
 		},
 		children,
@@ -192,7 +224,7 @@ function buildMainline(from: AnalysisMoveNode): VNode[] {
 		// The variations that branch off as alternatives to THIS move; they render
 		// directly below the move so a variation never appears above the move it replaces.
 		const variations = getVariationChildren(node.parent!);
-		const ply = buildPlyVNode(node, false);
+		const ply = buildPlyVNode(node, false, true);
 
 		if (node.ply % 2 === 1 && !whiteHadVariations) {
 			// Black reply — join the open white move's row.
@@ -249,7 +281,7 @@ function buildVariationLine(head: AnalysisMoveNode, depth: number): VNode[] {
 	};
 
 	while (node) {
-		lineChildren.push(buildPlyVNode(node, showIndex || node.ply % 2 === 0));
+		lineChildren.push(buildPlyVNode(node, showIndex || node.ply % 2 === 0, false));
 		showIndex = false;
 
 		// Alternatives to THIS move (its variation siblings). The head's are its fork-siblings,
@@ -298,72 +330,15 @@ function getVariationChildren(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	return first?.forceVariation ? node.children : node.children.slice(1);
 }
 
-// Game review decoration -----------------------------------------------------------------------
+// Game review repaints -------------------------------------------------------------------------
 
-// Annotate a ply's element in place the moment its move classifies, so the list
-// colors gradually while the review runs (re-renders re-decorate via build).
-gamereview.onClassified((review) => decorateNodeById(review.nodeId));
-moveevals.onLabel(decorateNodeById);
-
-/** Re-decorates the rendered ply for `nodeId`, if it's currently in the tree. */
-function decorateNodeById(nodeId: number): void {
-	const ply = guimoveslist.element_MovesTable.querySelector<HTMLElement>(
-		`.ply[data-node-id="${nodeId}"]`,
-	);
-	if (ply) decoratePlyWithReview(ply, nodeId);
-}
-
-/**
- * Applies the move's review classification to its ply button: a `review-<key>` color
- * class, a tooltip, and — for lapses (inaccuracy/mistake/blunder) — a visible glyph.
- */
-function decoratePlyWithReview(ply: HTMLElement, nodeId: number): void {
-	const review = gamereview.getReviewForNode(nodeId);
-	if (review?.classification && !ply.classList.contains(`review-${review.classification}`)) {
-		const display = gamereview.CLASSIFICATION_DISPLAY[review.classification];
-		ply.classList.add(`review-${review.classification}`);
-
-		let label = display.label;
-		if (!review.isBestMove && review.bestMove) label += ` — best was ${review.bestMove}`;
-		ply.title = `${ply.title} · ${label}`;
-
-		if (
-			display.symbol &&
-			(review.classification === 'inaccuracy' ||
-				review.classification === 'mistake' ||
-				review.classification === 'blunder')
-		) {
-			const glyph = document.createElement('span');
-			glyph.classList.add('review-glyph');
-			glyph.textContent = display.symbol;
-			// Always land between the move coord and the eval label — an eval label can already
-			// be there (interactive analysis can label a ply before the review classifies it,
-			// while the review is still running), and a bare append would land after it.
-			const existingEval = ply.querySelector('.review-eval');
-			if (existingEval) ply.insertBefore(glyph, existingEval);
-			else ply.append(glyph);
-		}
-	}
-
-	// Inline eval labels are mainline-only — a variation's evaluated position isn't part of
-	// the game's actual eval graph, and coordinate-notation lines are cramped enough already.
-	const evalLabel = ply.dataset['mainline'] ? moveevals.get(nodeId) : undefined;
-	if (evalLabel) {
-		let evalElement = ply.querySelector<HTMLElement>('.review-eval');
-		if (!evalElement) {
-			evalElement = document.createElement('span');
-			evalElement.classList.add('review-eval');
-			ply.append(evalElement);
-		}
-		evalElement.textContent = formatEvalLabel(evalLabel);
-		evalElement.title = `Evaluation at depth ${evalLabel.depth}`;
-	} else {
-		ply.querySelector('.review-eval')?.remove();
-	}
-}
+// Repaint as classifications and evals land, so the list colors gradually while a review runs.
+// Coalesced: restoring a cached review classifies and labels every move in one synchronous pass.
+gamereview.onClassified(scheduleReconcile);
+moveevals.onLabel(scheduleReconcile);
 
 /** Formats a white-POV score like lichess's inline move eval. */
-function formatEvalLabel(label: { cp?: number; mate?: number }): string {
+function formatEvalLabel(label: MoveEvalLabel): string {
 	if (label.mate !== undefined)
 		return label.mate > 0 ? `#${label.mate}` : `#−${Math.abs(label.mate)}`;
 	const pawns = (label.cp ?? 0) / 100;
@@ -443,12 +418,14 @@ function createContextAction(label: string, onClick: () => void): HTMLButtonElem
 	return button;
 }
 
-/** After a tree edit, navigates to `target` and re-renders the tree. */
+/** After a tree edit, navigates to `target`, re-renders the tree, and follows the target. */
 function syncAnalysisTreeAfterAction(target: AnalysisMoveNode): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 	navigateToAnalysisNode(gamefile, target);
 	reconcileMoveTree();
+	highlightCurrentNode();
+	scrollToCurrentNode();
 }
 
 /**
@@ -477,7 +454,9 @@ function deleteAnalysisNode(node: AnalysisMoveNode): void {
 	gamefile.moves = movetree.getMovesFromLine(movetree.getActiveLine());
 	// Realign the conclusion too, since the front may have changed.
 	gamefile.gameConclusion = movetree.getActiveLineConclusion();
-	GameBus.dispatch('moves-changed');
+	GameBus.dispatch('moves-changed'); // Synchronously rebuilds the tree, dropping the highlight.
+	highlightCurrentNode();
+	if (viewingDeleted) scrollToCurrentNode(); // Only then did we navigate.
 }
 
 /** Places the menu at the cursor, clamped to stay within the viewport. */
@@ -570,25 +549,28 @@ guimoveslist.registerRenderer({
 	reconcile: reconcileMoveTree,
 	updateCurrentPly: highlightCurrentNode,
 	scrollToCurrentPly: scrollToCurrentNode,
-	onGameLoaded: () => movetree.initFromGame(gameslot.getGamefile()!),
+	onGraphicalLoaded: () => movetree.initFromGame(gameslot.getGamefile()!),
 	onMovesChanged: () => movetree.syncAfterMovesChanged(gameslot.getGamefile()!),
-	onGameUnloaded: () => movetree.clear(),
+	onGameUnloaded: clearMoveTree,
 });
 
-// Game Review API -----------------------------------------------------------------------
+// Public API -----------------------------------------------------------------------
 
 /**
- * Navigates the board to the given move-tree node (the review graph's click-to-jump).
- * Clicking an already-selected node zooms to its destination coordinate — the same
- * behavior a ply button gives when clicked again (see createVariationPlyButton).
+ * Navigates the board to the given move-tree node. Navigating to the already-viewed node
+ * zooms to its destination coordinate instead — the same behavior a ply click gives.
  */
 function navigateToNode(node: AnalysisMoveNode, scrollIntoView = false): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile || gamesession.isLoading()) return;
 	const wasAlreadySelected = movetree.getCurrentNode(gamefile) === node;
 	navigateToAnalysisNode(gamefile, node);
-	// The root (starting position, ply -1) has no move/destination square to zoom to.
-	if (wasAlreadySelected && node.ply >= 0) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
+	if (wasAlreadySelected) {
+		// The root (starting position, ply -1) has no move/destination square to zoom to,
+		// so it recenters on the whole position instead, like the Recenter button.
+		if (node.ply >= 0) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
+		else guiboardcontrols.callback_Recenter();
+	}
 	if (scrollIntoView) scrollToCurrentNode();
 }
 
@@ -647,7 +629,8 @@ function generateVariationMoves(
 			break;
 		}
 		moves.push(movepiece.generateAndMakeMove(gamefile, result.tagged));
-		conclusion = wincondition.getGameConclusion(gamefile);
+		wincondition.doGameOverChecks(gamefile);
+		conclusion = gamefile.gameConclusion;
 		if (conclusion) break; // The line ends the game — stop extending it.
 	}
 
@@ -678,7 +661,8 @@ function applyToIndex(gamefile: GameFile, index: number): void {
 /**
  * Coalesces move-tree repaints: many variations grafted in one synchronous pass (restoring a
  * cached review) collapse to a single repaint, while variations arriving across separate turns
- * (a live review) each repaint as they land.
+ * (a live review) each repaint as they land. Deliberately does NOT scroll — the viewed position
+ * never changes, so a grafted variation must not yank a panel the user is scrolling.
  */
 let reconcilePending = false;
 function scheduleReconcile(): void {
@@ -687,6 +671,7 @@ function scheduleReconcile(): void {
 	queueMicrotask(() => {
 		reconcilePending = false;
 		reconcileMoveTree();
+		highlightCurrentNode();
 	});
 }
 

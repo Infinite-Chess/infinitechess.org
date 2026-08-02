@@ -26,8 +26,8 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { getFormattedEngineName, type ValidEngine } from '../../../shared/chess/engine.js';
 
 import { getGameData } from '../../database/gamesManager.js';
-import { getEngineGamesForGame } from '../../database/engineGamesManager.js';
 import { getPlayerGamesOfGame } from '../../database/playerGamesManager.js';
+import { getEngineGamesForGame } from '../../database/engineGamesManager.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 
@@ -54,21 +54,20 @@ export function resolveDeadParticipantColor(game_id: number, user_id: number): P
 }
 
 /**
- * Builds the {@link StaticGameState} of a concluded game — the
- * static side bar info — plus its per-player rating deltas.
+ * Builds the {@link StaticGameState} of a concluded game — the static
+ * side bar info — plus its ply count and per-player rating deltas.
  * @returns The state (+ deltas), or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */
-export function produceDeadStaticGameState(
-	game_id: number,
-):
+export function produceDeadStaticGameState(game_id: number):
 	| {
 			state: StaticGameState;
+			moveCount: number;
 			engineGame?: EngineGamePageInfo;
 			ratingChanges?: PlayerGroup<number>;
 	  }
 	| undefined {
-	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS]);
+	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS, 'move_count']);
 	if (game === undefined) return undefined;
 	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS, 'elo_change_from_game']); // prettier-ignore
 	const engineParticipant = getEngineParticipant(game_id);
@@ -84,6 +83,7 @@ export function produceDeadStaticGameState(
 
 	return {
 		state,
+		moveCount: game.move_count,
 		...(engineParticipant && {
 			engineGame: {
 				engine: engineParticipant.engine,

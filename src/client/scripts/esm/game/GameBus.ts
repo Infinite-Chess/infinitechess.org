@@ -9,6 +9,14 @@ interface GameBusEvents {
 	// =========== Logical Events ============
 	/** Dispatched when the LOGICAL part of a game is finished loading (not GRAPHICAL). */
 	'game-loaded': void;
+	/** Dispatched when the GRAPHICAL part finishes successfully, so the game is now fully loaded. */
+	'graphical-loaded': void;
+	/**
+	 * Dispatched whenever a load stops being in flight, whether it finished or
+	 * failed — the moment `gamesession.isLoading()` goes false. Listen to this,
+	 * not 'graphical-loaded', to resume work a load was blocking.
+	 */
+	'load-ended': void;
 	'game-unloaded': void;
 	/** Dispatched when games end, and the termination is shown on screen. */
 	'game-concluded': void;

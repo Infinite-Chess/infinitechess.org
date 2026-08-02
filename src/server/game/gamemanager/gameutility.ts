@@ -12,11 +12,11 @@ import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
+import type { ValidEngine } from '../../../shared/chess/engine.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Game, LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { ValidEngine } from '../../../shared/chess/engine.js';
 import type {
 	AuthSeekVariant,
 	ClockValues,
@@ -37,14 +37,15 @@ import type {
 import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
 import timeutil from '../../../shared/util/timeutil.js';
+import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
-import { getFormattedEngineName } from '../../../shared/chess/engine.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
+import { getFormattedEngineName } from '../../../shared/chess/engine.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
@@ -838,7 +839,7 @@ function getGameClockValues(servergame: ServerGame & { untimed: false }): ClockV
  */
 function updateClockValues(servergame: ServerGame & { untimed: false }): undefined {
 	const now = Date.now();
-	if (!isGameResignable(servergame) || isGameOver(servergame)) return;
+	if (!moveutil.isGameResignable(servergame) || isGameOver(servergame)) return;
 	if (servergame.clocks.colorTicking === undefined) return;
 	if (servergame.clocks.timeAtTurnStart === undefined)
 		throw new Error('cannot update clock values when timeAtTurnStart is not defined!');
@@ -899,16 +900,6 @@ function cancelFinalizeTimer(match: MatchInfo): void {
 }
 
 /**
- * Tests if the game is resignable (at least 2 moves have been played).
- * If not, then the game is abortable.
- * @param basegame - The game
- * @returns *true* if the game is resignable.
- */
-function isGameResignable(servergame: ServerGame): boolean {
-	return servergame.moves.length > 1;
-}
-
-/**
  * Tests if the game has just become resignable with the latest move (exactly 2 moves have been played).
  * @param servergame - The game
  * @returns *true* if the game has just become resignable after the last move.
@@ -961,7 +952,6 @@ export default {
 	isColorDisconnected,
 	getGameClockValues,
 	cancelFinalizeTimer,
-	isGameResignable,
 	isGameBorderlineResignable,
 	getColorThatPlayedMoveIndex,
 };

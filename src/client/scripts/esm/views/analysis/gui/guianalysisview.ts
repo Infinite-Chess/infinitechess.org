@@ -41,7 +41,7 @@ function updateShortcuts(): void {
 
 /** Flips the board orientation in place. */
 function flipBoard(): void {
-	if (gamesession.isLoading()) return;
+	if (!gameslot.getGamefile() || gamesession.isLoading()) return;
 	gameslot.flipView();
 }
 

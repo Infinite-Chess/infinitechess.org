@@ -8,6 +8,7 @@
  */
 
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { AnalysisMoveNode } from '../movetree.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
@@ -20,6 +21,7 @@ import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
 import selection from '../../../game/chess/selection.js';
 import animation from '../../../game/rendering/animation.js';
+import guimovetree from './guimovetree.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../rendering/enginearrows.js';
@@ -583,23 +585,48 @@ function playLine(tokens: string[], untilIndex: number): void {
 	if (!gamefile || gamesession.isLoading()) return;
 
 	const mesh = gameslot.getMesh();
-	if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile);
-	// Board moveIndex where the line's first token applies. Used for debugging.
-	const startMoveIndex = gamefile.state.local.moveIndex;
-	for (let i = 0; i <= untilIndex; i++) {
-		const result = movevalidation.isTokenMoveLegal(gamefile, tokens[i]!);
-		if (!result.valid) {
-			console.error(`Engine line move "${tokens[i]}" (token index ${i}) at moveIndex ${gamefile.state.local.moveIndex} is not legal to apply here: ${result.reason}`); // prettier-ignore
-			console.error(`Full line (starting at moveIndex ${startMoveIndex}):`, tokens);
-			break;
+	// The line's opening moves may already exist as a branch (e.g. a game review's suggested
+	// line). Swap onto it rather than grafting a duplicate, so its continuation stays navigable.
+	const start = enterExistingBranch(gamefile, tokens, untilIndex);
+
+	if (start <= untilIndex) {
+		if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile);
+		// Board moveIndex where the line's first uncommitted token applies. Used for debugging.
+		const startMoveIndex = gamefile.state.local.moveIndex;
+		for (let i = start; i <= untilIndex; i++) {
+			const result = movevalidation.isTokenMoveLegal(gamefile, tokens[i]!);
+			if (!result.valid) {
+				console.error(`Engine line move "${tokens[i]}" (token index ${i}) at moveIndex ${gamefile.state.local.moveIndex} is not legal to apply here: ${result.reason}`); // prettier-ignore
+				console.error(`Full line (starting at moveIndex ${startMoveIndex}):`, tokens);
+				break;
+			}
+			// Animate only the final move of the sequence.
+			if (i === untilIndex) movesequence.makeMoveAndAnimate(gamefile, mesh, result.tagged);
+			else movesequence.makeMove(gamefile, mesh, result.tagged);
+			if (gamefile.gameConclusion) break; // The line ended the game.
 		}
-		// Animate only the final move of the sequence.
-		if (i === untilIndex) movesequence.makeMoveAndAnimate(gamefile, mesh, result.tagged);
-		else movesequence.makeMove(gamefile, mesh, result.tagged);
-		if (gamefile.gameConclusion) break; // The line ended the game.
 	}
 
 	selection.reselectPiece();
+}
+
+/**
+ * Walks `tokens` down the branches that already exist beneath the viewed move, navigating once to
+ * the deepest node reached. Returns the index of the first token with no matching branch — where
+ * committing must resume — which is `untilIndex + 1` when the whole clicked line already existed.
+ */
+function enterExistingBranch(gamefile: GameFile, tokens: string[], untilIndex: number): number {
+	let node = movetree.getCurrentNode(gamefile);
+	let deepest: AnalysisMoveNode | undefined;
+	let i = 0;
+	while (node && i <= untilIndex) {
+		const child = node.children.find((candidate) => candidate.move!.token === tokens[i]);
+		if (!child) break;
+		node = deepest = child;
+		i++;
+	}
+	if (deepest) guimovetree.navigateToNode(deepest);
+	return i;
 }
 
 /**

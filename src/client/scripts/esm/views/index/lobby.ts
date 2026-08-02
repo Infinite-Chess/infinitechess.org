@@ -518,11 +518,9 @@ function spawnSeekPulse(row: HTMLElement, isOurs: boolean): void {
 }
 
 /** Fetches and shows the variant preview tooltip for a seek row's variant cell. */
-async function handleVariantPreviewHover(anchor: HTMLElement, seek: LobbySeek): Promise<void> {
+function handleVariantPreviewHover(anchor: HTMLElement, seek: LobbySeek): void {
 	if (seek.variant.group === 'custom') {
-		const variantOptions = await seekPreviewCache.getSeekPreview(seek.id);
-		if (variantOptions === undefined) return;
-		variantPreviewTooltip.showForPosition(anchor, t.shared.variant_groups.custom.display_label, variantOptions, 'below', seek.modifiers); // prettier-ignore
+		void variantPreviewTooltip.showForPosition(anchor, t.shared.variant_groups.custom.display_label, () => seekPreviewCache.getSeekPreview(seek.id), 'below', seek.modifiers); // prettier-ignore
 	} else {
 		variantPreviewTooltip.showForVariantCode(anchor, seek.variant.code, 'below', seek.modifiers); // prettier-ignore
 	}

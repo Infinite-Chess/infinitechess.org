@@ -58,9 +58,21 @@
 	min-width: 0;
 }
 
+/* Standing alone on the bare /analysis page, the stats are their own panel rather than
+   sitting inside the meta panel — so they supply the padding it would have given them. */
+.review-stats.panel {
+	padding: 8px 12px;
+}
+
 .review-stats-col .meta-player {
 	margin-bottom: 2px;
 	font-size: 14px;
+}
+
+/* The standalone header's name stands in for a username embed, so it matches its weight
+   (global.css: .username-embed .username). Its color already matches by inheritance. */
+.review-player-name {
+	font-weight: bold;
 }
 
 .review-accuracy {

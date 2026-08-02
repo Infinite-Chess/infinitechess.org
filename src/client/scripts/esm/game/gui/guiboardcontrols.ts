@@ -350,4 +350,5 @@ export default {
 	callback_Arrows,
 	isAnnotationsButtonEnabled,
 	callback_Expand,
+	callback_Recenter,
 };

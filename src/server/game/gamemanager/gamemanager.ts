@@ -7,11 +7,12 @@
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { EngineGamePageInfo, StaticGameState } from '../../../shared/types.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { EngineGamePageInfo, StaticGameState } from '../../../shared/types.js';
 import type { GameSetup, PlayerRatingResult, ServerGame } from './gameutility.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
+import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import gamefile, { type LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
@@ -274,14 +275,13 @@ function getGameByID(id: number): ServerGame | undefined {
 
 /**
  * Resolves a game id's {@link StaticGameState} — live (in memory) or dead (in the DB) —
- * plus its liveness, for the SSR game page. `undefined` if no such game.
+ * plus its ply count and liveness, for the SSR game page. `undefined` if no such game.
  * @throws If a database error occurs.
  */
-function produceStaticGameState(
-	id: number,
-):
+function produceStaticGameState(id: number):
 	| {
 			state: StaticGameState;
+			moveCount: number;
 			game?: ServerGame;
 			engineGame?: EngineGamePageInfo;
 			ratingChanges?: PlayerGroup<number>;
@@ -292,16 +292,11 @@ function produceStaticGameState(
 		return {
 			game,
 			state: gameutility.buildStaticGameState(game),
+			moveCount: game.moves.length,
 			ratingChanges: gameutility.getRatingChanges(game),
 		};
 
-	const dead = produceDeadStaticGameState(id);
-	if (dead === undefined) return undefined; // Game doesn't exist
-	return {
-		state: dead.state,
-		engineGame: dead.engineGame,
-		ratingChanges: dead.ratingChanges,
-	};
+	return produceDeadStaticGameState(id); // undefined if the game doesn't exist
 }
 
 /**
@@ -357,7 +352,7 @@ function armAutoTimeLoss(servergame: ServerGame): void {
 	if (
 		servergame.untimed ||
 		gameutility.isGameOver(servergame) ||
-		!gameutility.isGameResignable(servergame) ||
+		!moveutil.isGameResignable(servergame) ||
 		servergame.clocks.colorTicking === undefined
 	)
 		return;
@@ -389,7 +384,7 @@ function resumeEngineClock(servergame: ServerGame): void {
 		servergame.untimed ||
 		gameutility.isGameOver(servergame) ||
 		servergame.whosTurn !== engine.color ||
-		!gameutility.isGameResignable(servergame)
+		!moveutil.isGameResignable(servergame)
 	)
 		return;
 	const remaining =
@@ -597,7 +592,7 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 
 	if (gameutility.isGameOver(servergame)) return;
 
-	if (gameutility.isGameResignable(servergame)) {
+	if (moveutil.isGameResignable(servergame)) {
 		const engine = servergame.match.engineParticipant;
 		onGameConclusion(
 			servergame,

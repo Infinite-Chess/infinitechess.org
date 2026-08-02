@@ -34,6 +34,10 @@ const element_BannerText = element_ResultBanner.querySelector('.result-text')!;
 /** The participant `.username-embed`s, in SSR order: white first, then black. */
 const element_MetaPlayerEmbeds = document.querySelectorAll('.meta-players .meta-player .username-embed'); // prettier-ignore
 
+// Events ------------------------------------------------------------------------------------
+
+GameBus.addEventListener('game-concluded', showResultBanner);
+
 // =============================== Started X ago ===============================
 
 /** Re-derives `#meta-started` no more than once a minute (the string only changes by the minute). */
@@ -76,8 +80,6 @@ function showResultBanner(): void {
 	element_BannerText.textContent = text;
 	element_ResultBanner.classList.remove('hidden');
 }
-
-GameBus.addEventListener('game-concluded', showResultBanner);
 
 // =============================== Rating Changes ===============================
 

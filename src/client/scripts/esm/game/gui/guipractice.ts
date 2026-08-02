@@ -79,13 +79,15 @@ const SCROLL: {
 /** Whether the practice page is open */
 let isOpen: boolean = false;
 
-// Functions ------------------------------------------------------------------------
+// Events ---------------------------------------------------------------------------
 
 // Set an event listener, for when the theme changes, to re-generate the icons, as their color may change
 document.addEventListener('theme-change', () => {
 	removePieceIcons(); // Remove the existing icons
 	if (isOpen) addPieceIcons(); // Regenerate the icons so they can update their color, if the new theme has different color arguments
 });
+
+// Functions ------------------------------------------------------------------------
 
 /**
  * Returns the last selected checkmate practce. Useful

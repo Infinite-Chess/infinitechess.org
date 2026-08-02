@@ -153,19 +153,23 @@ async function ensureGLReady(): Promise<void> {
 }
 
 /**
- * Shows the preview tooltip for a custom position (from variantOptions).
+ * Shows the preview tooltip for a custom position.
  * @param anchor - The element the tooltip should appear beside.
  * @param name - The display name of the saved position.
- * @param variantOptions - The position and gamerules to preview.
+ * @param resolvePosition - Resolves the position to preview, or undefined if unavailable.
+ * A resolver, not the position itself, so the show is claimed before any fetching begins —
+ * a hide partway through then cancels it, instead of the tooltip surfacing after the pointer left.
  */
 async function showForPosition(
 	anchor: HTMLElement,
 	name: string,
-	variantOptions: VariantOptions,
+	resolvePosition: () => Promise<VariantOptions | undefined>,
 	placement: 'left' | 'below' = 'left',
 	modifiers?: SeekModifier[],
 ): Promise<void> {
 	const token = ++showToken;
+	const variantOptions = await resolvePosition();
+	if (variantOptions === undefined || token !== showToken) return; // Unavailable, or they have since left hover.
 	const boardsim = boardpreviewer.initBoardPreview(
 		variantOptions.gameRules,
 		undefined,

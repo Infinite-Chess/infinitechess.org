@@ -12,6 +12,8 @@
  * light/dark theme.
  */
 
+import type { LapseKey } from '../gamereview.js';
+
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 import space from '../../../game/misc/space.js';
@@ -20,29 +22,20 @@ import boardpos from '../../../game/rendering/boardpos.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
 import primitives from '../../../game/rendering/primitives.js';
+import gamereview from '../gamereview.js';
 import { GameBus } from '../../../game/GameBus.js';
 import frametracker from '../../../game/rendering/frametracker.js';
 import TextureLoader from '../../../webgl/TextureLoader.js';
 import svgtoimageconverter from '../../../util/svgtoimageconverter.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
-import gamereview, { ClassificationKey } from '../gamereview.js';
 
 // Constants -----------------------------------------------------------------
-
-/** Classifications badged on the board (the "lapse" tiers, matching the move list). */
-type BadgeKey = 'inaccuracy' | 'mistake' | 'blunder';
-const BADGED_CLASSIFICATIONS = new Set<BadgeKey>(['inaccuracy', 'mistake', 'blunder']);
-
-/** Whether a classification gets a board badge (narrows to {@link BadgeKey}). */
-function isBadged(classification: ClassificationKey): classification is BadgeKey {
-	return (BADGED_CLASSIFICATIONS as Set<ClassificationKey>).has(classification);
-}
 
 /**
  * lila's exact white glyph paths, authored in the same 0–100 coordinate space as the
  * circle (`cx=50 cy=50 r=50`). Verbatim from `lila/ui/lib/src/game/glyphs.ts`.
  */
-const GLYPH_PATHS: Record<BadgeKey, string> = {
+const GLYPH_PATHS: Record<LapseKey, string> = {
 	inaccuracy:
 		'M37.734 21.947c-3.714 0-7.128.464-10.242 1.393-3.113.928-6.009 2.13-8.685 3.605l4.343 8.766c2.35-1.202 4.644-2.157 6.883-2.867a22.366 22.366 0 0 1 6.799-1.065c2.294 0 4.07.464 5.326 1.393 1.311.874 1.967 2.186 1.967 3.933 0 1.748-.546 3.277-1.639 4.588-1.038 1.257-2.786 2.758-5.244 4.506-2.786 2.021-4.751 3.961-5.898 5.819-1.147 1.857-1.721 4.15-1.721 6.88v2.952h10.568v-2.377c0-1.147.137-2.103.41-2.868.328-.764.93-1.557 1.803-2.376.874-.82 2.104-1.803 3.688-2.95 2.13-1.584 3.906-3.058 5.326-4.424 1.42-1.42 2.485-2.95 3.195-4.59.71-1.638 1.065-3.576 1.065-5.816 0-4.206-1.584-7.675-4.752-10.406-3.114-2.731-7.51-4.096-13.192-4.096zm24.745.819 2.048 39.084h9.75l2.047-39.084zM35.357 68.73c-1.966 0-3.632.52-4.998 1.557-1.365.983-2.047 2.732-2.047 5.244 0 2.404.682 4.152 2.047 5.244 1.366 1.038 3.032 1.557 4.998 1.557 1.912 0 3.55-.519 4.916-1.557 1.366-1.092 2.05-2.84 2.05-5.244 0-2.512-.684-4.26-2.05-5.244-1.365-1.038-3.004-1.557-4.916-1.557zm34.004 0c-1.966 0-3.632.52-4.998 1.557-1.365.983-2.049 2.732-2.049 5.244 0 2.404.684 4.152 2.05 5.244 1.365 1.038 3.03 1.557 4.997 1.557 1.912 0 3.55-.519 4.916-1.557 1.366-1.092 2.047-2.84 2.047-5.244 0-2.512-.681-4.26-2.047-5.244-1.365-1.038-3.004-1.557-4.916-1.557z',
 	mistake:
@@ -66,9 +59,9 @@ const OFFSET_Y_FRACTION = 0.42;
 // State -----------------------------------------------------------------------------
 
 /** Rasterized badge textures, built lazily per classification. `null` marks a failed build (don't retry). */
-const textureCache: Partial<Record<BadgeKey, WebGLTexture | null>> = {};
+const textureCache: Partial<Record<LapseKey, WebGLTexture | null>> = {};
 /** Classifications whose texture is currently loading, to avoid duplicate builds. */
-const loading = new Set<BadgeKey>();
+const loading = new Set<LapseKey>();
 
 // Init ------------------------------------------------------------------------------
 
@@ -93,7 +86,7 @@ function render(): void {
 	if (!node?.move) return; // Root (starting position) has no move to badge.
 
 	const review = gamereview.getReviewForNode(node.id);
-	if (!review?.classification || !isBadged(review.classification)) return;
+	if (!review?.classification || !gamereview.isLapseKey(review.classification)) return;
 	const classification = review.classification;
 
 	const texture = getBadgeTexture(classification);
@@ -132,7 +125,7 @@ function render(): void {
 }
 
 /** Returns the cached badge texture, kicking off a one-time async build on first use. */
-function getBadgeTexture(classification: BadgeKey): WebGLTexture | undefined {
+function getBadgeTexture(classification: LapseKey): WebGLTexture | undefined {
 	const cached = textureCache[classification];
 	if (cached !== undefined) return cached ?? undefined;
 	if (loading.has(classification)) return undefined;
@@ -142,7 +135,7 @@ function getBadgeTexture(classification: BadgeKey): WebGLTexture | undefined {
 }
 
 /** Rasterizes one classification's badge SVG to a cached WebGL texture, then requests a redraw. */
-async function buildBadgeTexture(classification: BadgeKey): Promise<void> {
+async function buildBadgeTexture(classification: LapseKey): Promise<void> {
 	try {
 		const fill = getDarkThemeReviewColor(classification);
 		const svg = buildBadgeSvg(fill, GLYPH_PATHS[classification]);
@@ -166,7 +159,7 @@ async function buildBadgeTexture(classification: BadgeKey): Promise<void> {
  * of truth. The board tiles behind the badge don't change with the light/dark theme, so its color
  * shouldn't either.
  */
-function getDarkThemeReviewColor(classification: BadgeKey): string {
+function getDarkThemeReviewColor(classification: LapseKey): string {
 	const probe = document.createElement('div');
 	probe.setAttribute('data-theme', 'dark');
 	probe.style.display = 'none';

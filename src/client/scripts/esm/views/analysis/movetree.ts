@@ -129,7 +129,8 @@ function beginBranchFromViewedPosition(gamefile: GameFile): void {
 /**
  * Reconciles the tree with `gamefile.moves` after it changed: trims the active line on an undo,
  * or on new moves reuses a matching existing child (canonicalizing the flat move to it) or grafts
- * a fresh node. Records the resulting front's game-conclusion.
+ * a fresh node. A reused child rejoins its branch, restoring the flat list to that whole branch.
+ * Records the resulting front's game-conclusion.
  */
 function syncAfterMovesChanged(gamefile: GameFile): void {
 	if (!root) initFromGame(gamefile);
@@ -140,6 +141,7 @@ function syncAfterMovesChanged(gamefile: GameFile): void {
 		activeLine = activeLine.slice(0, gamefile.moves.length + 1);
 	} else {
 		let parent = activeLine[activeLine.length - 1] ?? root;
+		let rejoinedExistingBranch = false;
 		for (let i = activeMoveCount; i < gamefile.moves.length; i++) {
 			const move = gamefile.moves[i]!;
 			let child = parent.children.find((candidate) => isSameMove(candidate.move, move));
@@ -147,10 +149,23 @@ function syncAfterMovesChanged(gamefile: GameFile): void {
 				child = createNode(move, i, parent);
 				parent.children.push(child);
 			} else {
+				// Not a leak: same position via the same path yields identical changes/state, and
+				// only the tree's copy carries the ICN's comment and clockStamp.
 				gamefile.moves[i] = child.move!;
+				rejoinedExistingBranch = true;
 			}
 			activeLine.push(child);
 			parent = child;
+		}
+
+		// Rejoining an existing branch restores the rest of it, so it stays navigable instead of
+		// dead-ending at the move just played. Returns early on purpose: the global conclusion
+		// describes the played move's position, not this front's, so we adopt the front's instead.
+		if (rejoinedExistingBranch) {
+			activeLine = extendWithMainline(activeLine);
+			gamefile.moves = getMovesFromLine(activeLine);
+			gamefile.gameConclusion = getActiveLineConclusion();
+			return;
 		}
 	}
 

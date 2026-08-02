@@ -18,8 +18,8 @@ import type {
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
-import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
+import variantreader from '../../../../../shared/chess/variants/variantreader.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -50,7 +50,7 @@ type DisplaySelection =
 interface VariantSelectorConfig {
 	/**
 	 * Whether this selector creates seeks (lobby), vs. loading positions for analysis. Gates all
-	 * seek-only hardening: rejecting oversized positions and positions that are already game-over.
+	 * seek-only hardening: rejecting oversized positions, 4D movement, and already game-over ones.
 	 */
 	isSeekContext: boolean;
 	/** Fires on every selection/validity change (live). Sync dependent UI (e.g. a submit button). */
@@ -204,10 +204,14 @@ function initIcnValidation(): void {
 	let forceCommit = false;
 
 	// Blur/paste are "commit" points; live typing only updates validity (onChange), not a commit.
-	element_icnInput.addEventListener('blur', () => {
-		validateIcnInput(true);
+	element_icnInput.addEventListener('blur', async () => {
+		const value = element_icnInput.value;
+		await validateIcnInput(true);
 		const wasForceCommit = forceCommit;
 		forceCommit = false;
+		// Validating can await a variant module, during which another selection may have rewritten
+		// the field and committed its own state. Ours is stale then — leave it alone.
+		if (element_icnInput.value !== value) return;
 		// Skip the commit if the field still holds exactly the ICN already accepted — re-committing
 		// would reload the position, needlessly wiping any analysis branches made from it.
 		if (
@@ -221,18 +225,17 @@ function initIcnValidation(): void {
 	element_icnInput.addEventListener('focus', () => clearError(element_icnInputWrap));
 	// Validate live so validity updates the moment the position is valid, but suppress
 	// error display until blur so we don't nag as the user types. No commit while typing.
-	element_icnInput.addEventListener('input', () => validateIcnInput(false));
+	element_icnInput.addEventListener('input', (e) => {
+		// A paste is a finished code, so reveal its errors instantly rather than waiting for blur.
+		const pasted = (e as InputEvent).inputType === 'insertFromPaste';
+		void validateIcnInput(pasted);
+	});
 	// Enter commits the ICN (blur runs validate + commit) rather than inserting a newline.
 	element_icnInput.addEventListener('keydown', (e) => {
 		if (e.key !== 'Enter' || e.shiftKey) return;
 		e.preventDefault();
 		forceCommit = true; // The enter key overrides the "already loaded" check
 		element_icnInput.blur();
-	});
-	// Instantly reveal validity when a code is pasted, don't wait for blur.
-	element_icnInput.addEventListener('paste', () => {
-		// Pasted value isn't in the textarea until after the paste event, so defer by one tick.
-		setTimeout(() => validateIcnInput(true), 0);
 	});
 }
 
@@ -475,11 +478,13 @@ function openFromICN(): void {
 }
 
 /** Programmatically selects Custom From-ICN, fills the input with the given ICN, and validates it. */
-function applyIcn(icn: string): void {
+async function applyIcn(icn: string): Promise<void> {
 	selection = { kind: 'icn' };
 	showCustomSection();
 	element_icnInput.value = icn;
-	validateIcnInput(true);
+	await validateIcnInput(true);
+	// Something rewrote the field while we validated — it has committed its own state, so ours is stale.
+	if (element_icnInput.value !== icn) return;
 	config.onCommit?.();
 }
 
@@ -544,7 +549,7 @@ function restoreAcceptedDisplay(): void {
 		// then re-validate to refresh validity and clear the error highlight.
 		showCustomSection();
 		element_icnInput.value = loaded.icn!;
-		validateIcnInput(false);
+		void validateIcnInput(false);
 	} else {
 		hideCustomSection();
 		if (selection.kind === 'preset') applyVariantToSelector(selection.code);
@@ -569,13 +574,16 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
 		return;
 	}
-	// Legal position; in a seek context, reject it if it's already game-over. Construct a
-	// transient gamefile (no moves) purely to read its computed conclusion, then discard it.
-	const constructed = gameformulator.tryConstructGame(variantOptions, [], false);
-	if (constructed !== 'moves_invalid' && isSeekBlockingGameOver(constructed)) {
-		showError(element_variantDisplay, t.shared.position_errors.game_over);
-		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
-		return;
+	// Legal position; in a seek context, reject it if it's already game-over — analysis loads
+	// finished games fine. Only there do we construct the transient gamefile the conclusion is
+	// read off of, then discard it.
+	if (config.isSeekContext) {
+		const constructed = gameformulator.tryConstructPosition(variantOptions);
+		if (constructed !== null && gamefileutility.isGameOver(constructed)) {
+			showError(element_variantDisplay, t.shared.position_errors.game_over);
+			setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
+			return;
+		}
 	}
 	setIcnResult({ kind: 'saved', options: variantOptions, isValid: true });
 }
@@ -594,18 +602,25 @@ function variantOptionsToICN(options: VariantOptions): string {
 	);
 }
 
-/** Serializes variant options to their canonical ICN and validates that flattened position (size + legality). */
+/** Validates a flattened position's legality, plus its ICN size in a seek context. */
 function validateOptions(options: VariantOptions): PositionErrorCode | null {
-	const icnString = variantOptionsToICN(options);
-	return validatePosition(options, icnString, config.isSeekContext);
+	// Serialize only for seeks — that's the sole consumer of the ICN here.
+	return validatePosition(
+		options,
+		config.isSeekContext ? variantOptionsToICN(options) : undefined,
+	);
 }
 
 /**
- * Whether an otherwise-legal position cannot be seeked because it's already game-over.
- * Seek-context only: analysis loads finished games fine. Preview still renders either way.
+ * Why a legal position still can't be seeked, or null if it can (or we're not seeking).
+ * A seek carries only a position + gamerules, so a variant with custom piece movement (4D)
+ * would silently revert to default movement; and a finished game has nothing left to play.
  */
-function isSeekBlockingGameOver(gamefile: GameFile): boolean {
-	return config.isSeekContext && gamefileutility.isGameOver(gamefile);
+function getSeekRejection(constructed: GameFile): 'no_4d_movement' | 'game_over' | null {
+	if (!config.isSeekContext) return null;
+	if (variantreader.hasCustomMovement(constructed.variant?.mod)) return 'no_4d_movement';
+	if (gamefileutility.isGameOver(constructed)) return 'game_over';
+	return null;
 }
 
 /** Clears any saved-position error state from the variant display. */
@@ -632,7 +647,9 @@ function clearError(outline: HTMLElement): void {
 }
 
 /** Surfaces why the ICN input is illegal, on its wrap and error text. */
-function revealIcnError(reason: PositionErrorCode | 'moves_invalid' | 'game_over'): void {
+function revealIcnError(
+	reason: PositionErrorCode | 'moves_invalid' | 'no_4d_movement' | 'game_over',
+): void {
 	showError(element_icnInputWrap, t.shared.position_errors[reason]);
 }
 
@@ -643,11 +660,13 @@ function revealIcnError(reason: PositionErrorCode | 'moves_invalid' | 'game_over
  * @param revealErrors - Whether to surface invalid styling/error text. False while typing
  * (validity still updates); true on blur/paste so errors show once done.
  */
-function validateIcnInput(revealErrors: boolean): void {
+async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	const value = element_icnInput.value;
+	// Nothing is resolved until this settles. Held results describe the previous value, and
+	// awaiting a variant module makes that window long enough to act on — so retire them now.
+	setIcnResult(null);
 	if (value === '') {
 		clearError(element_icnInputWrap);
-		setIcnResult(null);
 		return;
 	}
 
@@ -667,14 +686,12 @@ function validateIcnInput(revealErrors: boolean): void {
 
 	// Atleast the ICN is valid syntax, now let's check position, gamerules, and moves...
 
-	// Only accept positions explicitly defined in the ICN. Variant metadata is ignored here so
-	// users can't smuggle in massive preset positions (e.g. Omega^2) via a tiny metadata-only string.
-	const icnVariantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
-
-	// Build the gamefile regardless of play-legality, so the preview always reflects the moves —
+	// Built through the same path the board loads by, so the gate validates the exact game that
+	// will be loaded. Built regardless of play-legality, so the preview always reflects the moves —
 	// a play-illegal position (e.g. king capturable) still previews faithfully once they're applied.
-	const movePackets = longFormat.moves ? icnimport.movePacketsFromParsed(longFormat.moves) : [];
-	const constructed = gameformulator.tryConstructGame(icnVariantOptions, movePackets, revealErrors); // prettier-ignore
+	const constructed = await gameformulator.tryFormulateGame(longFormat, revealErrors);
+	// Awaiting the variant module let the user keep typing — discard a result they've moved past.
+	if (element_icnInput.value !== value) return;
 	if (constructed === 'moves_invalid') {
 		// Construction crashed — the position can't be previewed or played.
 		if (revealErrors) revealIcnError('moves_invalid');
@@ -685,17 +702,11 @@ function validateIcnInput(revealErrors: boolean): void {
 	// Validate the flattened position the moves lead to — the exact
 	// position a seek plays from and the server re-validates.
 	const finalOptions = gamecompressor.gamefileToPositionOptions(constructed);
-	const illegalReason = validateOptions(finalOptions);
+	const rejection = validateOptions(finalOptions) ?? getSeekRejection(constructed);
 
-	// The moves-applied gamefile is available; the position is playable only if it was also legal.
-	if (illegalReason !== null) {
-		if (revealErrors) revealIcnError(illegalReason);
-		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
-		return;
-	}
-	// In a seek context, an already-over game can't be seeked, but the preview still renders it.
-	if (isSeekBlockingGameOver(constructed)) {
-		if (revealErrors) revealIcnError('game_over');
+	// The moves-applied gamefile is kept either way, so a rejected position still previews.
+	if (rejection !== null) {
+		if (revealErrors) revealIcnError(rejection);
 		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
 		return;
 	}
@@ -715,13 +726,15 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 	} else if (selection.kind === 'local') {
 		handleSavePreview(anchor, selection.name, localPreviewCache, editorpositionsdb.readLocal);
 	} else if (selection.kind === 'icn') {
-		validateIcnInput(true);
-		if (icnResult?.kind !== 'icn') return; // Construction failed — show nothing rather than a lie of a starting position.
-		const options = gamecompressor.gamefileToPositionOptions(icnResult.gamefile);
-		variantPreviewTooltip.showForPosition(
+		void variantPreviewTooltip.showForPosition(
 			anchor,
 			t.shared.variant_groups.custom.display_label,
-			options,
+			async () => {
+				await validateIcnInput(true);
+				// Construction failed — show nothing rather than a lie of a starting position.
+				if (icnResult?.kind !== 'icn') return undefined;
+				return gamecompressor.gamefileToPositionOptions(icnResult.gamefile);
+			},
 		);
 	}
 }
@@ -739,22 +752,15 @@ function handleSavePreview(
 	cache: Map<string, VariantOptions>,
 	read: (n: string) => Promise<{ variantOptions: VariantOptions }>,
 ): void {
-	const cached = cache.get(positionName);
-	if (cached !== undefined) {
-		// Cache hit!
-		// console.log('Preview cache hit for', positionName);
-		variantPreviewTooltip.showForPosition(anchor, positionName, cached);
-		return;
-	}
-	// Request for the first time, cache the result.
-	read(positionName)
-		.then((saveState) => {
-			cache.set(positionName, saveState.variantOptions);
-			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions);
-		})
-		.catch(() => {
-			/* Preview unavailable – silently ignore */
-		});
+	void variantPreviewTooltip.showForPosition(anchor, positionName, async () => {
+		const cached = cache.get(positionName);
+		if (cached !== undefined) return cached; // Cache hit!
+		// Request for the first time, cache the result.
+		const saveState = await read(positionName).catch(() => undefined);
+		if (saveState === undefined) return undefined; // Preview unavailable – silently ignore
+		cache.set(positionName, saveState.variantOptions);
+		return saveState.variantOptions;
+	});
 }
 
 // Selection accessors ----------------------------------------------
