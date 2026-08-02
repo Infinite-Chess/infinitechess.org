@@ -473,8 +473,8 @@ function restoreCachedReview(): boolean {
 
 /**
  * Validates a persisted review and confirms it's compatible with the current engine —
- * same engine/worker URLs and deep enough. The cache key is the immutable DB game id, so
- * the game itself is already guaranteed to match. Returns undefined when unusable.
+ * same engine/worker URLs, deep enough, and one result per position of the current
+ * mainline. Returns undefined when unusable.
  */
 function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 	if (raw === undefined) return undefined;
@@ -488,7 +488,10 @@ function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 	if (
 		cached.engineUrl !== window.analysisPageData.engineUrl ||
 		cached.workerUrl !== window.analysisPageData.workerUrl ||
-		cached.depth < reviewDepth
+		cached.depth < reviewDepth ||
+		// Load-bearing despite the game id key implying it: a mismatch desyncs `results` from
+		// the other per-position arrays, which every consumer indexes as parallel.
+		cached.results.length !== mainlineNodes.length + 1
 	) {
 		console.warn('[Game Review] Local review cache is incompatible with the current game or engine.'); // prettier-ignore
 		return undefined;
@@ -521,6 +524,10 @@ function spawnWorkers(count: number): void {
 }
 
 function spawnWorker(): void {
+	// Pool invariant: once the review leaves 'running', no worker is spawned or dispatched to.
+	// A caller's own receiveEvaluation() can finish the review synchronously before reaching here.
+	if (status !== 'running') return;
+
 	const worker = new Worker(window.analysisPageData.workerUrl, { type: 'module' });
 	workers.push(worker);
 	worker.onmessage = (e: MessageEvent<AnalysisResponse>) => handleWorkerMessage(worker, e.data);
@@ -616,6 +623,8 @@ function positionIsEvaluable(index: number): boolean {
 
 /** Hands the worker the next queued position, building its ICN on demand. */
 function dispatchNext(worker: Worker): void {
+	if (status !== 'running') return; // Pool invariant — see spawnWorker.
+
 	for (;;) {
 		let localChunk = workerChunk.get(worker);
 		if (!localChunk || localChunk.length === 0) {
