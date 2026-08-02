@@ -553,12 +553,11 @@ guimoveslist.registerRenderer({
 	onGameUnloaded: clearMoveTree,
 });
 
-// Game Review API -----------------------------------------------------------------------
+// Public API -----------------------------------------------------------------------
 
 /**
- * Navigates the board to the given move-tree node (the review graph's click-to-jump).
- * Clicking an already-selected node zooms to its destination coordinate — the same
- * behavior a ply button gives when clicked again (see createVariationPlyButton).
+ * Navigates the board to the given move-tree node. Navigating to the already-viewed node
+ * zooms to its destination coordinate instead — the same behavior a ply click gives.
  */
 function navigateToNode(node: AnalysisMoveNode, scrollIntoView = false): void {
 	const gamefile = gameslot.getGamefile();

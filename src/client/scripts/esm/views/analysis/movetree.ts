@@ -129,7 +129,8 @@ function beginBranchFromViewedPosition(gamefile: GameFile): void {
 /**
  * Reconciles the tree with `gamefile.moves` after it changed: trims the active line on an undo,
  * or on new moves reuses a matching existing child (canonicalizing the flat move to it) or grafts
- * a fresh node. Records the resulting front's game-conclusion.
+ * a fresh node. A reused child rejoins its branch, restoring the flat list to that whole branch.
+ * Records the resulting front's game-conclusion.
  */
 function syncAfterMovesChanged(gamefile: GameFile): void {
 	if (!root) initFromGame(gamefile);
@@ -140,6 +141,7 @@ function syncAfterMovesChanged(gamefile: GameFile): void {
 		activeLine = activeLine.slice(0, gamefile.moves.length + 1);
 	} else {
 		let parent = activeLine[activeLine.length - 1] ?? root;
+		let rejoinedExistingBranch = false;
 		for (let i = activeMoveCount; i < gamefile.moves.length; i++) {
 			const move = gamefile.moves[i]!;
 			let child = parent.children.find((candidate) => isSameMove(candidate.move, move));
@@ -148,9 +150,23 @@ function syncAfterMovesChanged(gamefile: GameFile): void {
 				parent.children.push(child);
 			} else {
 				gamefile.moves[i] = child.move!;
+				rejoinedExistingBranch = true;
 			}
 			activeLine.push(child);
 			parent = child;
+		}
+
+		// Rejoining an existing branch restores the rest of it, so the branch stays navigable
+		// instead of dead-ending at the move just played. Returns early deliberately: the global
+		// conclusion describes the played move's position, NOT the restored front's, so storing it
+		// there would corrupt that node. We adopt the front's own conclusion instead. Nothing is
+		// lost — a node with a continuation is non-terminal, and a rejoined leaf already holds the
+		// conclusion recorded for that identical position when it was created.
+		if (rejoinedExistingBranch) {
+			activeLine = extendWithMainline(activeLine);
+			gamefile.moves = getMovesFromLine(activeLine);
+			gamefile.gameConclusion = getActiveLineConclusion();
+			return;
 		}
 	}
 
