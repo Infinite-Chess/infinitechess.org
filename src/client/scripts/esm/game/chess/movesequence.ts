@@ -36,19 +36,11 @@ import { animateMove, meshChanges } from './graphicalchanges.js';
 function commitMove(
 	gamefile: GameFile,
 	moveTagged: MoveTagged,
-	{
-		doGameOverChecks = true,
-		clockStamp,
-	}: { doGameOverChecks?: boolean; clockStamp?: number } = {},
+	{ doGameOverChecks = true }: { doGameOverChecks?: boolean } = {},
 ): MoveFull {
 	const move = movepiece.generateMove(gamefile, moveTagged);
 
 	movepiece.makeMove(gamefile, move); // Logical changes
-
-	if (clockStamp !== undefined) {
-		// Online games: the server is boss of the clocks, so record the stamp it reported.
-		move.clockStamp = clockStamp;
-	}
 
 	// Must run ABOVE 'moves-changed': the checks flag a checkmating move as mate, and the
 	// move list renders each ply's notation (# vs +) once, from the flags it sees then.
@@ -79,7 +71,7 @@ function makeMove(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
-	options: { doGameOverChecks?: boolean; clockStamp?: number } = {},
+	options: { doGameOverChecks?: boolean } = {},
 ): MoveFull {
 	const move = commitMove(gamefile, moveTagged, options);
 	if (mesh) runMeshChanges(gamefile, mesh, move, true);
@@ -97,11 +89,10 @@ function makeMoveKeepingView(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
-	options: { clockStamp?: number } = {},
 ): MoveFull {
 	const move = movepiece.runActionAtGameFront(gamefile, () =>
 		// Doesn't touch the mesh
-		commitMove(gamefile, moveTagged, options),
+		commitMove(gamefile, moveTagged),
 	);
 	// Appending the move may have reallocated the piece arrays; if so, rebuild the
 	// mesh (now back on the viewed position) to match. REQUIRED.
@@ -115,7 +106,7 @@ function makeMoveAndAnimate(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
-	options: { doGameOverChecks?: boolean; clockStamp?: number } = {},
+	options: { doGameOverChecks?: boolean } = {},
 ): MoveFull {
 	const move = makeMove(gamefile, mesh, moveTagged, options);
 	if (mesh) animateMove(move.changes, true);

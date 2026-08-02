@@ -23,12 +23,12 @@ import gameslot from '../../chess/gameslot.js';
 import premoves from '../../chess/premoves.js';
 import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
+import enginegame from '../enginegame.js';
 import gamesession from '../../chess/gamesession.js';
 import guigamemeta from '../../gui/guigamemeta.js';
 import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
-import enginegame from '../enginegame.js';
 
 // Functions -----------------------------------------------------------------------------
 
@@ -166,7 +166,6 @@ function synchronizeMovesList(
 
 			movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
 				doGameOverChecks: isLastMove,
-				clockStamp: thisShortmove.clockStamp,
 			}); // Automatically cancels animations of forwarded moves in previous loops
 
 			// Our own moves aren't dispatched here: 'user-move-played' would

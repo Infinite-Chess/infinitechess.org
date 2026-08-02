@@ -6,19 +6,19 @@
  * Centralized here to avoid circular dependency issues.
  */
 
+import type { Player } from './chess/util/typeutil.js';
+import type { ValidEngine } from './chess/engine.js';
+
 import * as z from 'zod';
 
+import clockutil from './chess/util/clockutil.js';
 import winconutil from './chess/util/winconutil.js';
 import editorutil from './util/editorutil.js';
 import gameconfig from './util/gameconfig.js';
 import typeschemas from './chess/util/typeschemas.js';
-import type { Player } from './chess/util/typeutil.js';
-import clockutil from './chess/util/clockutil.js';
-
 import { players } from './chess/util/typeutil.js';
 import variantregistry from './chess/variants/variantregistry.js';
 import { POSITION_STRING_THRESHOLD } from './chess/variants/servervalidation.js';
-import type { ValidEngine } from './chess/engine.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
 
@@ -77,10 +77,14 @@ export const ClockValuesSchema = z.strictObject({
 	timeColorTickingLosesAt: z.number().optional(),
 });
 
-/** A move as transmitted over the wire: the serialized move token (e.g. `"1,2>3,4=N"`) and an optional clock stamp. */
+/**
+ * A move as transmitted over the wire, or as parsed out of
+ * an ICN: the serialized move token (e.g. `"1,2>3,4=N"`).
+ */
 export type MovePacket = z.infer<typeof MovePacketSchema>;
 export const MovePacketSchema = z.strictObject({
 	token: z.string(),
+	/** Only ever set by the ICN parser, for the analysis page's per-move clocks. Never sent over the wire. */
 	clockStamp: z.number().optional(),
 });
 

@@ -883,13 +883,12 @@ function broadcastToEveryone(servergame: ServerGame, action: string, value: any)
 }
 
 /**
- * Simplifies a game's move into the {@link MovePacket} sent over the wire: its
- * serialized token plus its clockStamp (the clock at that move, for rewind display).
+ * Simplifies a game's move into the {@link MovePacket} sent over the wire.
+ * Clock stamps are deliberately omitted — the game page never reads them;
+ * they reach the analysis page through the archived ICN instead.
  */
 function simplifyMove(move: MoveRecord): MovePacket {
-	const packet: MovePacket = { token: move.token };
-	if (move.clockStamp !== undefined) packet.clockStamp = move.clockStamp;
-	return packet;
+	return { token: move.token };
 }
 
 /**
