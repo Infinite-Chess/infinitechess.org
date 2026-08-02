@@ -38,6 +38,7 @@ import { GameBus } from '../../../game/GameBus.js';
 import frametracker from '../../../game/rendering/frametracker.js';
 import movesequence from '../../../game/chess/movesequence.js';
 import guimoveslist from '../../../game/gui/guimoveslist.js';
+import guiboardcontrols from '../../../game/gui/guiboardcontrols.js';
 
 // State ---------------------------------------------------------------------------------------
 
@@ -564,8 +565,12 @@ function navigateToNode(node: AnalysisMoveNode, scrollIntoView = false): void {
 	if (!gamefile || gamesession.isLoading()) return;
 	const wasAlreadySelected = movetree.getCurrentNode(gamefile) === node;
 	navigateToAnalysisNode(gamefile, node);
-	// The root (starting position, ply -1) has no move/destination square to zoom to.
-	if (wasAlreadySelected && node.ply >= 0) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
+	if (wasAlreadySelected) {
+		// The root (starting position, ply -1) has no move/destination square to zoom to,
+		// so it recenters on the whole position instead, like the Recenter button.
+		if (node.ply >= 0) guimoveslist.zoomToPlyDestination(gamefile, node.ply);
+		else guiboardcontrols.callback_Recenter();
+	}
 	if (scrollIntoView) scrollToCurrentNode();
 }
 
