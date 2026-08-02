@@ -107,6 +107,12 @@ interface CachedGameReview {
 	results: EvaluateResult[];
 }
 
+interface ReviewWorkItem {
+	index: number;
+	warmup?: true;
+	newChunk?: true;
+}
+
 // Constants ----------------------------------------------------------------------
 
 /** Classification thresholds on win-probability loss [0,1]. */
@@ -174,12 +180,6 @@ const ICN_OPTIONS = {
 	make_new_lines: false,
 	move_numbers: false,
 } as const;
-
-interface ReviewWorkItem {
-	index: number;
-	warmup?: true;
-	newChunk?: true;
-}
 
 // Schemas ----------------------------------------------------------------------------
 
