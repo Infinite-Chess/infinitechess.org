@@ -145,8 +145,11 @@ const MATE_CP = 1800;
 const ACPL_CLAMP = 1000;
 /** How many times a crashed worker's position is retried before being skipped. */
 const MAX_POSITION_ATTEMPTS = 2;
-/** Fishnet analyzes five reported positions plus one overlapping TT warmup per chunk. */
-const REAL_POSITIONS_PER_CHUNK = 5;
+
+/** Fishnet-style chunk size: reported positions sharing one overlapping TT warmup. */
+const MAX_POSITIONS_PER_CHUNK = 5;
+/** Chunk size floor, keeping each warmup amortized. The trailing chunk may still be shorter. */
+const MIN_POSITIONS_PER_CHUNK = 2;
 
 /** Depth of a review whose chunks all run in one parallel round. */
 const MAX_REVIEW_DEPTH = 15;
@@ -306,22 +309,22 @@ function pickReviewDepth(totalChunks: number, workerCount: number): number {
 	return Math.max(MIN_REVIEW_DEPTH, MAX_REVIEW_DEPTH - Math.ceil(Math.log2(rounds)));
 }
 
-/** Engine workers to spawn: one per hardware thread minus one, leaving the UI responsive. */
-function pickWorkerCount(totalChunks: number): number {
-	const hw = Math.max(1, (navigator.hardwareConcurrency || 4) - 1);
-	return math.clamp(hw, 1, totalChunks);
-}
-
 /**
- * Fishnet-style chunks: positions run from the game end toward the start. Each
- * chunk begins by searching its immediate child without reporting it, then keeps
- * that warm TT while evaluating up to five real positions.
+ * Fishnet-style chunks: positions run from the game end toward the start. Each chunk
+ * begins by searching its immediate child without reporting it, then keeps that warm
+ * TT while evaluating its real positions. Chunks shrink when the review is too short
+ * to fill every thread, so idle workers take positions instead of one worker taking all.
  */
-function buildReverseChunks(totalPositions: number): ReviewWorkItem[][] {
+function buildReverseChunks(totalPositions: number, threads: number): ReviewWorkItem[][] {
+	const chunkSize = math.clamp(
+		Math.ceil(totalPositions / threads),
+		MIN_POSITIONS_PER_CHUNK,
+		MAX_POSITIONS_PER_CHUNK,
+	);
 	const reversed = Array.from({ length: totalPositions }, (_, i) => totalPositions - 1 - i);
 	const groups: number[][] = [];
-	for (let i = 0; i < reversed.length; i += REAL_POSITIONS_PER_CHUNK)
-		groups.push(reversed.slice(i, i + REAL_POSITIONS_PER_CHUNK));
+	for (let i = 0; i < reversed.length; i += chunkSize)
+		groups.push(reversed.slice(i, i + chunkSize));
 
 	return groups.map((group, index) => {
 		const warmupIndex = index === 0 ? group[0]! : groups[index - 1]!.at(-1)!;
@@ -416,8 +419,11 @@ function start(): void {
 	division = reviewdivision.determineDivision(longformIn.position, mainlineMoves);
 
 	const totalPositions = mainlineNodes.length + 1;
-	chunkQueue = buildReverseChunks(totalPositions);
-	const workerCount = pickWorkerCount(chunkQueue.length);
+	// All but one hardware thread, leaving the UI responsive.
+	const threads = Math.max(1, (navigator.hardwareConcurrency || 4) - 1);
+	chunkQueue = buildReverseChunks(totalPositions, threads);
+	// One worker per thread, never more than there are chunks to hand out.
+	const workerCount = math.clamp(threads, 1, chunkQueue.length);
 	reviewDepth = pickReviewDepth(chunkQueue.length, workerCount);
 
 	results = new Array(totalPositions).fill(undefined);
