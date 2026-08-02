@@ -13,6 +13,7 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { MatchInfo, ServerGame } from './gameutility.js';
 
+import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
@@ -68,7 +69,7 @@ function startDisconnectClaimTimer(
 	involuntary: boolean,
 ): void {
 	const now = Date.now();
-	const resignable = gameutility.isGameResignable(servergame);
+	const resignable = moveutil.isGameResignable(servergame);
 
 	const timeUntilClaimable =
 		involuntary && resignable

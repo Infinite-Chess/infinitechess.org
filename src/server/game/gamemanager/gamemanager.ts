@@ -12,6 +12,7 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 import type { GameSetup, PlayerRatingResult, ServerGame } from './gameutility.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
+import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
@@ -339,7 +340,7 @@ function pushGameClock(servergame: ServerGame): number | undefined {
 	const data = clock.push(servergame);
 
 	// Reset the timer that will auto terminate the game when one player loses on time.
-	if (!gameutility.isGameOver(servergame) && gameutility.isGameResignable(servergame)) {
+	if (!gameutility.isGameOver(servergame) && moveutil.isGameResignable(servergame)) {
 		// Cancel previous auto loss timer if it exists
 		clearTimeout(servergame.match.autoTimeLossTimeoutID);
 		// Set the next one
@@ -543,7 +544,7 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 
 	if (gameutility.isGameOver(servergame)) return;
 
-	if (gameutility.isGameResignable(servergame)) {
+	if (moveutil.isGameResignable(servergame)) {
 		onGameConclusion(servergame, { victor: null, condition: 'abandonment' });
 	} else {
 		onGameConclusion(servergame, { condition: 'aborted' });

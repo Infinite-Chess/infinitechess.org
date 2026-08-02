@@ -8,6 +8,7 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
 
+import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
@@ -40,7 +41,7 @@ function offerDraw(servergame: ServerGame, ourRole: Player): void {
 		);
 	if (hasColorOfferedDrawTooFast(servergame, ourRole))
 		return console.error('Client tried to offer a draw too fast.');
-	if (!gameutility.isGameResignable(servergame))
+	if (!moveutil.isGameResignable(servergame))
 		return console.error('Client tried to offer a draw on the first 2 moves');
 
 	// Extend the draw offer!
