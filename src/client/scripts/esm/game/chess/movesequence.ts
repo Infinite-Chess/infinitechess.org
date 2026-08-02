@@ -54,8 +54,7 @@ function commitMove(
 	// move list renders each ply's notation (# vs +) once, from the flags it sees then.
 	if (doGameOverChecks) wincondition.doGameOverChecks(gamefile);
 
-	// Forward chokepoint for the committed move list. MUST stay after the clock stamp assignment
-	// so clock listeners see the new move's stamp, else PvP clock display lags by one ply.
+	// Forward chokepoint for the committed move list.
 	GameBus.dispatch('moves-changed');
 
 	// Must stay BELOW 'moves-changed': the reconcile it triggers has to enqueue before
