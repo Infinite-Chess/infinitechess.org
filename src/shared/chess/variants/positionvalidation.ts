@@ -9,8 +9,10 @@ import type { RawType } from '../util/typeutil.js';
 import type { VariantOptions } from '../logic/gamefile.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 
+import bounds from '../../util/math/bounds.js';
 import moveutil from '../util/moveutil.js';
 import gamerules from '../util/gamerules.js';
+import coordutil from '../util/coordutil.js';
 import boardinit from '../logic/boardinit.js';
 import winconutil from '../util/winconutil.js';
 import checkdetection from '../logic/checkdetection.js';
@@ -43,6 +45,7 @@ export type PositionErrorCode =
 	| 'mixed_player_modes'
 	| 'incomplete_turn_order'
 	| 'position_too_large'
+	| 'piece_outside_world_border'
 	| 'gargoyles_not_allowed'
 	| 'invalid_player_id'
 	| 'player_missing_pieces'
@@ -60,10 +63,11 @@ export type PositionErrorCode =
  * 1. White/black and colored (4-player) players in the turn order are mutually exclusive.
  * 2. Mode completeness: 2-player needs both white+black; 4-player needs all 4 colored players.
  * 3. ICN string length is not too large (only when an icn is provided).
- * 4. Every non-neutral piece's color is in the turn order.
+ * 4. Every piece lies inside the world border, if one is present.
+ * 5. Every non-neutral piece's color is in the turn order.
  *    In 2-player mode, no neutral gargoyle pieces are allowed.
- * 5. Every player in the turn order has at least one piece and, if required, a royal piece.
- * 6. Checkmate incompatibility: No player gets consecutive turns; royal count
+ * 6. Every player in the turn order has at least one piece and, if required, a royal piece.
+ * 7. Checkmate incompatibility: No player gets consecutive turns; royal count
  *    is not too high; and king capture is not possible on turn 1.
  *
  * @param variantOptions - The position and game rules to validate.
@@ -100,14 +104,24 @@ export function validatePosition(
 		return 'position_too_large';
 	}
 
-	// --- Rule 4: Piece color and turn order consistency ---
+	// --- Rules 4 & 5: World border containment, piece color and turn order consistency ---
 	const neutralExemptRawTypes = new Set<RawType>(neutralRawTypes); // void and obstacle
 	const royalRawTypes = new Set<RawType>(typeutil.royals);
 	const playersWithPieces = new Set<number>();
 	const playersWithRoyals = new Set<number>();
+	const worldBorder = gameRules.worldBorder;
 	let royalCount = 0;
 
-	for (const pieceType of position.values()) {
+	for (const [coordsKey, pieceType] of position) {
+		// Only an explicit world border can exclude a piece — one derived from
+		// `worldBorderDist` is built around the position's own bounding box.
+		if (worldBorder !== undefined) {
+			const coords = coordutil.getCoordsFromKey(coordsKey);
+			if (!bounds.boxContainsSquare(worldBorder, coords)) {
+				return 'piece_outside_world_border';
+			}
+		}
+
 		const [rawType, color] = typeutil.splitType(pieceType);
 
 		if (color === p.NEUTRAL) {
@@ -132,7 +146,7 @@ export function validatePosition(
 		}
 	}
 
-	// --- Rule 5: Per-player post-checks ---
+	// --- Rule 6: Per-player post-checks ---
 	for (const player of uniquePlayers) {
 		if (!playersWithPieces.has(player)) {
 			return 'player_missing_pieces';
@@ -146,7 +160,7 @@ export function validatePosition(
 		}
 	}
 
-	// --- Rule 6: Checkmate incompatibility ---
+	// --- Rule 7: Checkmate incompatibility ---
 	const checkmateUsed = uniquePlayers.some((player) =>
 		(gameRules.winConditions[player] ?? []).includes('checkmate'),
 	);

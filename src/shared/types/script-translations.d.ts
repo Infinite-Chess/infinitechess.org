@@ -232,6 +232,7 @@ export interface ScriptTranslations {
 			mixed_player_modes: string;
 			incomplete_turn_order: string;
 			position_too_large: string;
+			piece_outside_world_border: string;
 			gargoyles_not_allowed: string;
 			invalid_player_id: string;
 			player_missing_pieces: string;
