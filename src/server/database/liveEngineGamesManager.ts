@@ -2,6 +2,8 @@
 
 /**
  * Manages live engine participants. They omit disconnect state because engines never disconnect.
+ *
+ * See docs/systems/LIVE_GAME_PERSISTENCE.md for the column reference.
  */
 
 import jsutil from '../../shared/util/jsutil.js';

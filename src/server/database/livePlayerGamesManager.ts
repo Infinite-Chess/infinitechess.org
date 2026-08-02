@@ -3,6 +3,8 @@
 /**
  * This script manages the live_player_games table, which persists per-player
  * state for active games across server restarts. One row per player per game.
+ *
+ * See docs/systems/LIVE_GAME_PERSISTENCE.md for the column reference.
  */
 
 import jsutil from '../../shared/util/jsutil.js';

@@ -362,6 +362,9 @@ function generateTables(): void {
 		);
 	`);
 
+	// The live-game tables below are documented in docs/systems/LIVE_GAME_PERSISTENCE.md.
+	// Keep it in sync with any edit made here.
+
 	// Live Games table — persists active games across server restarts
 	db.run(`
 		CREATE TABLE IF NOT EXISTS live_games (
