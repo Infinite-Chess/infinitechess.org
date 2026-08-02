@@ -9,8 +9,8 @@ import type { ValidEngine } from '../../../../../shared/chess/engine.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { engineDictionary } from '../../../../../shared/chess/engine.js';
+import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
@@ -19,11 +19,11 @@ import selection from '../chess/selection.js';
 import { GameBus } from '../GameBus.js';
 import gamesession from '../chess/gamesession.js';
 import movesequence from '../chess/movesequence.js';
-import gamecompressor from '../chess/gamecompressor.js';
-import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';
-import enginelegalmovesdebug from './enginelegalmovesdebug.js';
-import socketmessages from '../../websocket/socketmessages.js';
 import { SocketBus } from '../../websocket/SocketBus.js';
+import gamecompressor from '../chess/gamecompressor.js';
+import socketmessages from '../../websocket/socketmessages.js';
+import enginelegalmovesdebug from './enginelegalmovesdebug.js';
+import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -144,12 +144,7 @@ function initEngineGame(options: {
 
 /** Resumes a frozen server clock once this page's worker is ready. */
 function notifyServerEngineReady(): void {
-	if (
-		!serverNeedsReady ||
-		!engineReady ||
-		gamesession.getGameType() !== 'online'
-	)
-		return;
+	if (!serverNeedsReady || !engineReady || gamesession.getGameType() !== 'online') return;
 	socketmessages.send('game', 'engineready', undefined, true);
 	serverNeedsReady = false;
 }
