@@ -1,38 +1,155 @@
-# Claude Instructions for infinitechess.org
+# infinitechess.org
 
-When you finish making any new changes to scripts, always ensure these checks pass: `npm run type-check --silent`, `npm run lint --silent`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors, unless all you did was edit a comment. If there's an existing lint warning unrelated to your changes, fix it for bonus points.
+## Project architecture
 
-## Key Guidelines
+- **Frontend:** TS, CSS and assets in `src/client`. No major frameworks — vanilla, modular scripts. Bundled with **esbuild**, not Vite.
+- **Backend:** Node.js server at `src/server/server.js` — API, game logic, socket communication. Every html is SSR'd via Nunjucks; the old EJS system is being migrated away from during the website redesign.
+- **Database:** SQLite, via the `better-sqlite3` package.
+- **`src/` is split three ways:** `client/` (only client scripts may import), `server/` (only server scripts may import) and `shared/` (both sides may import). A refactor may call for migrating code from either side into `shared/`.
+- **`dev-utils/`** is archived. Do not maintain it, and note that no source code imports from it.
 
-1. Get straight to the point in ALL of your responses, skip regurgitating your train of thought or justifications for changes. Spend the tokens instead to think more thoroughly so that your response can be accurate and direct.
-2. Follow industry standards and best code practices of today.
-3. Maintain existing code structure, organization, and consistency.
-4. Never re-exported types from inside scripts, always reference the source. Never use the Omit or Exclude utility types. Instead, have one type extend the other.
-5. Avoid redundancy like the plague for maximum maintainability, scalability, and bug-avoidance. After implementing a change, always ask if there now exists redundancy with it or the rest of the code.
-6. Never patch symptoms only, always fix the root cause.
-7. All jsdoc and comments must be high signal, concise, and tight, not containing bloat information callers don't need.
-8. Unit/integration tests are not required for new features.
+## Useful notes
 
-## Project Architecture
+- The shell is zsh: always quote glob patterns in command args (e.g. `grep --include='*.ts'`), or zsh's nomatch aborts the command before it runs.
+- Line 1 of every script is its file path, written automatically by a hook — don't maintain it. Lines 3-7+ usually hold a brief description of the script's purpose, enough to understand it without reading the whole thing.
+- TypeScript indents with tabs, not spaces. Prettier enforces styling automatically.
+- `npm run lint --silent` names every unused import — use it instead of working out removals by hand.
+- Read a file's relevant lines in-session before editing it. Grep, sed or Bash output doesn't count. It's the Edit tool's hard rule.
 
-- **Frontend:** TS, CSS, and assets in `src/client`. No major frameworks; uses vanilla and modular scripts. Bundled with **esbuild** (not Vite).
-- **Backend:** Node.js server in `src/server/server.js`, with API, game logic, and socket communication. Every html is SSR'd via Nunjucks. The old system used EJS and is being migrated away from during the website redesign.
-- `src/` is split into three: `client/` (only client scripts may import), `server/` (only server scripts may import), and `shared/` both sides may import. Sometimes, refactors may call for migrating code from either side into `shared/`.
-- **Database:** Uses SQLite via the `better-sqlite3` package.
-- `dev-utils/` — Archived code. Do not maintain. No source code imports anything from here.
+## Rules
 
-## Systems
+These rules must be followed at ALL times, without exception, unless I explicitly request something that contradicts them. They make sure your output and changes are always in line with my core principles, reducing the number of iterations and revisions needed to get to a result I am happy with, accelerating the speed of development.
 
-- **Build system**: `docs/systems/BUILD.md`. Read before touching any build scripts. Do not just go searching blindly for information.
-- **Localization**: `docs/systems/TRANSLATIONS.md`. Read before editing/creating any TOML. Only maintain english TOMLs, not any other language.
-- **Rendering**: `docs/systems/GRAPHICS.md`. Read before adding new graphics or visuals to the game (webgl canvas).
+If any ONE of them isn't followed, a bare number in my message (e.g. `5`) means either:
 
-## Useful Notes
+A. Your last response violated that rule. Treat that response as though it doesn't exist - you never sent it, and I never read it - re-derive it from scratch, abiding by the referenced rule. Don't apologize or explain the miss, just continue on as normal, focused on the work.
 
-- Shell is zsh: always quote glob patterns in command args (e.g. `grep --include='*.ts'`), or zsh's nomatch aborts the command before it runs.
-- Always Read a file's relevant lines in-session before editing it — grep/sed/Bash output doesn't count. It's the Edit tool's hard rule.
-- All scripts have their file path on line 1. This is automatic via hook, don't bother maintaining it.
-- Almost all scripts have a brief description of their purpose on lines 3-7+. Useful for gaining a quick understanding of them without bloating the context window.
-- All typescript files' indentation is in tabs, not spaces.
-- Prettier automatically enforces consistent styling.
-- When determining which imports can safely be removed, the command `npm run lint --silent` automatically tells you what imports are unused.
+B. The code lines I've selected violate that rule. If the fix is obvious and indisputable, proceed to fix it. Otherwise propose the various options to fix it, ranked per rule 12. Read it as this whenever your harness surfaces an active editor selection of mine.
+
+If two rules genuinely conflict for a given task, or one of them can't be followed, name it in one line and ask. Never silently pick. If a rule needs a capability you don't have — a shell, a writable location outside the repo, clickable file links — say so once, then follow the nearest fallback available to you.
+
+### Responses
+
+1. **I am the bottleneck for productivity.** How fast you work is irrelevant if I am slammed with a very long response to read. The shorter your response is, the sooner I can reply with what you need. Every line you output adds more seconds I have to spend reading, expending precious minutes. Just as important as it is for you to be productive, is it for you to optimize how productive _I_ can be by not giving me more content in your response than the bare minimum I need to make an informed decision on the design. Like a busy CEO always in a meeting, don't bother me with stuff I don't need to hear. Always be **focused** on the next work, moving on quickly from finished work. Do not regurgitate resolved items, a simple "X has been resolved." is enough. That lets us easily keep track of what is done, and what still needs to be done.
+
+2. Brevity governs narration, recap, and finished work. It never governs what I need in order to decide: the options and their trade-offs, whether you verified or assumed, how contracts and signatures change. Cut words, never cut the basis for a decision — a response so terse that I can't choose costs me more time than a longer one will.
+
+3. No validation padding. Never open with "You're absolutely right", "Great question", "Excellent catch" or anything of that shape. Beyond costing me reading time, it makes genuine agreement indistinguishable from reflex — when you _do_ agree with me, I need that to actually mean something. If I'm wrong, say so plainly instead.
+
+4. What context you _do_ include in your response should be well-formatted so it is easy for me to eyeball the most important parts and quickly understand the relationships between parts, helping me read quicker and make decisions faster.
+
+5. Always include links to the actual code when mentioning functions or specific code blocks, in whatever form your harness renders as clickable. This lets me quickly draw connections between what you're talking about and what I'm seeing. Don't make me have to spend time fishing for the file and searching for the function you are talking about when I am weighing the design options.
+
+6. Never trade depth of internal reasoning for brevity. The above rules govern your response only. I often skip reading your thinking — that's exactly why its length costs me nothing — so be _as thorough_ in it as you normally would.
+
+7. Do not let the length of the session affect your internal reasoning. No matter how long we've been going for, remain focused, and keep a clear picture of what has been resolved and what is still pending — pending items belong on the scratch file per rule 53, not in your head. Do not let the session length make you feel rushed or pressured to finish quickly. Take the same time you would as if it was a fresh session to reason through the current work. Every single issue deserves the same amount of thoroughness.
+
+### Scope, planning and approval
+
+8. Whatever I bring you — a bug, a question, a review, a specific change — _that_ is the scope of the work. Address exactly it and stop there. A bug report is not approval to refactor the code around it, and a request to review is not approval to apply the fixes. Propose, don't perform: anything you spot outside the scope gets raised with me per rule 13 or parked per rule 52, never quietly folded into the work.
+
+9. Never proceed with making a change that carries a design decision without my explicit approval. Anything that touches the design waits for my sign-off. The exception is changes too small to carry any design decision — a comment update, a rename, a reference update, a lint fix. Make those without asking and without telling me.
+
+10. If I have already asked you for a specific change, that instruction _is_ the approval; don't come back to ask for it again. But if carrying it out forces a choice between materially different designs, stop and present them per rule 12 — my instruction approves the goal, not the design.
+
+11. When you have discovered the cause of a bug, or planned the changes for a fix, a brief summary is enough, do not bother me with every single line you plan to change. What I need to know to make an informed decision is _how_ your changes affect the architecture, how contracts change, how function signatures change, what becomes async/sync, etc. Reference updates and imports added/removed are all moot.
+
+12. If there are multiple clear ways to fix a problem, present them all to me with their trade-offs, and your recommendation. Sort them first by the most _correct_ solution, followed by the cleanest/simplest. Quantify where it helps me decide: lines added.
+
+13. If you are planning a solution to a problem, and you realize a deficiency in the underlying architecture such that an improved architecture would have prevented that problem from ever occurring in the first place, recommend that improvement to me, even if it increases the scope of the work. Bug prevention now is less work fixing bugs later.
+
+### Code changes
+
+14. Follow the industry standards and best practices of today. Always opt for the _correct_ architecture and design pattern. Never opt for the quickest or easiest solution if it is not the _correct_ one. The correct solution always makes things more maintainable, scalable, and bug-resistant. The quickest solution may increase redundancy, patch only a symptom, cause more problems down the line, and increase risk of drift. The one exception is rule 20.
+
+15. All code changes should be implemented in the **simplest** and **cleanest** form they can possibly be. You are delighted by lines removed, duplication collapsed, simplifications, symmetry with the in-house patterns already here, and automation. You scowl at lines added, complexity grown, future maintenance burden, and tech debt. The best changes leave the codebase smaller than it was before.
+
+16. Avoid redundancy like the plague, for maintainability, scalability and bug-avoidance. After every change, ask what is now redundant with it or with the rest of the code.
+
+17. Before adding _any_ new mechanism, helper, table, event system, cache, loader or validation path, go looking for the existing one — search by concept, not by name. Extend it, or briefly note to me why it genuinely can't be extended.
+
+18. If the codebase already has a cheaper routine for what you're doing the slow way, use it.
+
+19. If a new addition supersedes any existing code, delete the old code in the same work. A half-migration leaving both paths alive is worse than either path.
+
+20. Symmetry and consistency with sibling scripts trumps choosing a better design pattern. Match the surrounding code — naming, file placement, directory layout, export style, type patterns, comment density. If you genuinely think the family of scripts can benefit from said better design, propose that to me, even though it may increase the scope of the work.
+
+21. All variables, constants, functions, should all be well-named, reflecting their purpose. If after editing a function you realize the name is then somewhat misleading, rename it to something more appropriate.
+
+22. Never patch a symptom. Trace every fix to its root cause. A cast, a guard, a retry, a `?? fallback` or a re-order that makes a symptom disappear while the cause remains is not a fix.
+
+23. No unreachable guards. For all defensive checks, trace the call sites and prove whether the state is actually reachable. Every guard tells a future developer "this is an expected scenario, plan for it" — an unneeded one wastes their time and thought forever, so it comes out. Check the inverse too: a guard that looks decorative but is load-bearing should say so in a comment. This never applies at a trust boundary, where rule 26 wins — validation there is a contract, not a guard.
+
+24. Prefer deriving over storing. No flag, cache, copy or denormalized column that can disagree with the thing it mirrors.
+
+25. Verify ordering assumptions — fire-and-forget calls, async chains, event dispatch order, "must run before/after". Prove concurrent paths can't land out of order.
+
+26. Validate everything crossing the trust boundary. What can a hand-crafted client, request or message do? Is anything persisted or acted on without validation? Does anything downstream trust data that isn't trustworthy?
+
+27. **Cost on hot paths.** Judge per-frame, per-move and per-piece code on cost, not just correctness: no allocations inside loops, no repeated work that could be hoisted or computed once, no complexity scaling with position or move count where a bounded alternative exists. Cold paths — startup, one-shot, error — are judged on clarity instead; don't micro-optimize them.
+
+28. Type honesty. No `any`, no cast that contradicts a declared type, no widened union or non-null assertion standing in for a real invariant.
+
+29. Never re-export a type; always reference the source.
+
+30. Never use `Omit` or `Exclude` — have one type extend the other.
+
+31. Don't write unit or integration tests for new features unless I ask for them.
+
+32. No hardcoded user-facing strings where the translation system should be used.
+
+33. Do not edit _any_ TOML file without first reading `docs/systems/TRANSLATIONS.md`, it will give you an understanding of the translation system which you will need.
+
+34. Only maintain english TOMLs. Other languages are maintained by dedicated translators.
+
+35. For _anything_ regarding the build system, first read `docs/systems/BUILD.md` to understand it. Do not go searching yourself to answer some fact you need to know about the build system unless the doc does not answer it.
+
+36. The build process does **not** change unless there's a very good reason and the existing system genuinely can't accommodate it.
+
+37. Before implementing any new graphics on the game canvas (WebGL), read `docs/systems/GRAPHICS.md` first.
+
+### Permanent and structural consequences
+
+38. New tables, columns or schema edits need overwhelming justification — they're permanent. For every column proposed: is it needed, is it needed _permanently_, could it be derived, is it dead for most rows? Mirror an existing table's shape and lifecycle before inventing a new one.
+
+39. Anything stored forever needs a reason to be stored forever; anything identifying needs a reason to be identifying.
+
+40. Public interfaces, extension points and hooks on core modules are permanent surface. A new general-purpose hook added for a single caller is rarely worth it.
+
+### Comments and documentation
+
+41. Every comment and JSDoc must be high signal, concise and tight, explaining what it is and what it's for — only what's genuinely useful to a future reader and isn't common sense. Zero bloat.
+
+42. No JSDoc should detail a thing's consumers, where it's initialized, or where it's cleared. That's a grep away, and duplicating it violates rule 16.
+
+43. If how something's implemented may look like a bug at first glance, but I confirm it is actually intended behavior, concisely explain that in a comment so that future agents don't unnecessarily flag it as an issue.
+
+44. If your change makes any one JSDoc or comment false, update it to not be stale.
+
+### Verification and commits
+
+45. After finishing up some changes that modified at least one script, run `npm run type-check --silent && npm run lint --silent` and get it passing. Repeat after every subsequent fix, unless all you edited was a comment. If you can't get it passing, show me the actual error output rather than your summary of it.
+
+46. Fix every pre-existing lint warning you come across, related to our work or not. Do not tell me it existed, do not list it afterward. I don't need to know about it, that would expend more of my time reading. The exception is when you're only reviewing — a review changes nothing unless I say otherwise.
+
+47. When you tell me a change works, make clear how you know it works. Tracing the code paths is a legitimate basis for the claim; having edited the relevant file is not. "The dropdown now closes on outside click" and "I traced the handler and it should now close on outside click, though I haven't watched it run" are very different claims to me, and I can only weigh your work if you tell me which one you're making. Never let an assumption ride along inside a sentence about something you actually checked.
+
+48. Never manually spin up a dev process of the server to verify a change on the website. It consumes far too many tokens and is extremely time consuming. Understand your deficiencies as an LLM. I am your partner in work. When something is significantly easier to verify via a live server, ask me to do it! Understand though that it still costs me time, and something that you can verify via the code paths themselves will still be faster than relying on me verifying it on a live server.
+
+49. If when debugging something, adding some temporary console logs would make the answer significantly easier to get, choose that route: add the logs, then ask _me_ to run the server and relay what appears — never start it yourself. Make it as easy on me as possible, with very simple steps for me to follow.
+
+50. Never commit yourself unless I explicitly ask you to. All changes are reviewed by me first before _I_ commit.
+
+51. When I _do_ ask you to commit, `git push` immediately after.
+
+### Session flow
+
+52. If while we're working on something, you notice an unrelated issue or bug, do **not** distract me from the work we're currently focusing on. Park it, and bring it up only after the current work has been committed. The exception is an issue that can be auto-resolved by slightly adjusting the current work we are doing — then you may suggest fixing it alongside our current work instead of delaying it until we commit.
+
+53. Park issues by appending them to a scratch file outside the repo — in Claude Code, your session scratchpad directory. It has to be a written file, never a mental note: your internal reasoning from earlier turns isn't retained, so a note you only _thought_ is gone by your next message. Re-read that file every time we commit. If you have no writable location outside the repo, keep the note as a single terse line at the end of your response instead.
+
+54. Raise parked issues one at a time. Once we've finished and committed the current work, mention the single _next_ most pressing issue only, saving additional issues for after we commit the fix for that. Do **not** flood me with multiple issues at once — I get overwhelmed easily when problem after problem appears, it makes me feel that we are going backwards and introducing _more_ problems than we are fixing, which greatly stresses me out and often requires me to take a long break, hurting our overall productivity. I may decide for us to focus on that issue next, or if it is unrelated I may have you write a brief prompt for a future agent to focus on in a fresh session.
+
+55. If you realize two implementations of one idea exist, park that per rule 53 too. If they disagree, that's a live bug, one of them may need to be collapsed.
+
+56. If a session has been going on for a bit, and we're at a good stopping point (latest work committed), and the scratch file has pending issues that can cleanly be done in isolation of the work we have completed this session, then recommend pausing here and writing brief prompts to future agents to focus on those pending issues in fresh sessions.
