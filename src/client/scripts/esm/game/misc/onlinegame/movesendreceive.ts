@@ -93,14 +93,10 @@ function handleMove(
 
 		if (moveutil.areWeViewingLatestMove(gamefile)) {
 			// Normal case: play and animate the move.
-			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResult.tagged, {
-				clockStamp: message.move.clockStamp,
-			});
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResult.tagged);
 		} else {
 			// We're reviewing a past move. Silently append it, staying on our current view.
-			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged, {
-				clockStamp: message.move.clockStamp,
-			});
+			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged);
 		}
 
 		// Edit the clocks

@@ -5,7 +5,6 @@ import type { GameMessage } from '../../../websocket/socketschemas.js';
 import type { ClockValues, GameConclusionMessage } from '../../../../../../shared/types.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import toast from '../../../components/toast.js';
 import resyncer from './resyncer.js';
@@ -92,7 +91,7 @@ function routeMessage(contents: GameMessage): void {
 			movesendreceive.handleMove(gamefile, mesh, contents.value);
 			break;
 		case 'clock':
-			handleUpdatedClock(gamefile, contents.value);
+			movesendreceive.applyClockValues(gamefile, contents.value);
 			break;
 		case 'gameconclusion':
 			handleGameConclusion(gamefile, contents.value);
@@ -194,20 +193,6 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 function flushQueue(): void {
 	messageQueue.forEach((m) => routeMessage(m));
 	messageQueue.length = 0;
-}
-
-/**
- * Called when we received the updated clock values from the server after submitting our move.
- */
-function handleUpdatedClock(gamefile: GameFile, clockValues: ClockValues): void {
-	movesendreceive.applyClockValues(gamefile, clockValues);
-
-	// 'clock' only arrives right after WE move, so the last move is ours, and our now-frozen
-	// time (untouched by ping, which only adjusts the opponent's ticking clock) is its stamp.
-	// The opponent gets this stamp on their 'move' message; we must derive it since we don't.
-	const ourColor = gamesession.getRole()!;
-	const ourMove = moveutil.getLastMove(gamefile.moves)!;
-	ourMove.clockStamp = clockValues.clocks[ourColor]!;
 }
 
 /**

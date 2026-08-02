@@ -2,8 +2,8 @@
 
 /**
  * The dead/review load path: fetches a concluded game's {@link DeadGameState} over HTTP, parses its
- * ICN for the move list (and clock stamps), normalizes it into the same `gamestate` shape the live
- * path builds, and hands it to the shared loader — no socket opened.
+ * ICN for the move list, normalizes it into the same `gamestate` shape the live path builds, and
+ * hands it to the shared loader — no socket opened.
  */
 
 import type { DeadGameState, GameStateMessage } from '../../../../../../shared/types.js';
@@ -40,11 +40,13 @@ async function fetchDeadState(): Promise<DeadGameState> {
 
 /** Normalizes a `DeadGameState` into the live `gamestate` shape the loader consumes. */
 function normalizeToGameState(deadState: DeadGameState): GameStateMessage {
-	// Parse the ICN for the move list and clock stamps.
+	// Parse the ICN for the move list.
 	const longformat = icnconverter.ShortToLong_Format(deadState.icn);
 
 	const state: GameStateMessage = {
-		moves: icnimport.movePacketsFromParsed(longformat.moves ?? []),
+		// Drop the ICN's clock stamps: the game page never reads them, and keeping them would
+		// leave a dead game's moves stamped while a live game's aren't. Analysis keeps its own.
+		moves: icnimport.movePacketsFromParsed(longformat.moves ?? []).map(({ token }) => ({ token })), // prettier-ignore
 		gameConclusion: deadState.gameConclusion,
 		finalized: true, // A dead game's result is locked in permanently.
 	};

@@ -74,10 +74,14 @@ export const ClockValuesSchema = z.strictObject({
 	timeColorTickingLosesAt: z.number().optional(),
 });
 
-/** A move as transmitted over the wire: the serialized move token (e.g. `"1,2>3,4=N"`) and an optional clock stamp. */
+/**
+ * A move as transmitted over the wire, or as parsed out of
+ * an ICN: the serialized move token (e.g. `"1,2>3,4=N"`).
+ */
 export type MovePacket = z.infer<typeof MovePacketSchema>;
 export const MovePacketSchema = z.strictObject({
 	token: z.string(),
+	/** Only ever set by the ICN parser, for the analysis page's per-move clocks. Never sent over the wire. */
 	clockStamp: z.number().optional(),
 });
 

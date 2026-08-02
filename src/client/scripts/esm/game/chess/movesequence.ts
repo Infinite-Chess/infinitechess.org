@@ -38,24 +38,16 @@ import { animateMove, meshChanges } from './graphicalchanges.js';
 function commitMove(
 	gamefile: GameFile,
 	moveTagged: MoveTagged,
-	{
-		doGameOverChecks = true,
-		clockStamp,
-	}: { doGameOverChecks?: boolean; clockStamp?: number } = {},
+	{ doGameOverChecks = true }: { doGameOverChecks?: boolean } = {},
 ): MoveFull {
 	const move = movepiece.generateMove(gamefile, moveTagged);
 
 	movepiece.makeMove(gamefile, move); // Logical changes
 
-	// Stamp the move with how much time the player had left after playing it.
+	// Engine games have no server driving the clocks, so push them here.
 	if (!gamefile.untimed && gamesession.getGameType() === 'engine') {
-		// Engine games: push the clocks locally and record the resulting stamp.
-		const stamp = clock.push(gamefile);
+		clock.push(gamefile);
 		guiclock.push(gamefile.clocks!);
-		if (stamp !== undefined) move.clockStamp = stamp;
-	} else if (clockStamp !== undefined) {
-		// Online games: the server is boss of the clocks, so record the stamp it reported.
-		move.clockStamp = clockStamp;
 	}
 
 	// Must run ABOVE 'moves-changed': the checks flag a checkmating move as mate, and the
@@ -87,7 +79,7 @@ function makeMove(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
-	options: { doGameOverChecks?: boolean; clockStamp?: number } = {},
+	options: { doGameOverChecks?: boolean } = {},
 ): MoveFull {
 	const move = commitMove(gamefile, moveTagged, options);
 	if (mesh) runMeshChanges(gamefile, mesh, move, true);
@@ -105,11 +97,10 @@ function makeMoveKeepingView(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
-	options: { clockStamp?: number } = {},
 ): MoveFull {
 	const move = movepiece.runActionAtGameFront(gamefile, () =>
 		// Doesn't touch the mesh
-		commitMove(gamefile, moveTagged, options),
+		commitMove(gamefile, moveTagged),
 	);
 	// Appending the move may have reallocated the piece arrays; if so, rebuild the
 	// mesh (now back on the viewed position) to match. REQUIRED.
@@ -123,7 +114,7 @@ function makeMoveAndAnimate(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
-	options: { doGameOverChecks?: boolean; clockStamp?: number } = {},
+	options: { doGameOverChecks?: boolean } = {},
 ): MoveFull {
 	const move = makeMove(gamefile, mesh, moveTagged, options);
 	if (mesh) animateMove(move.changes, true);
