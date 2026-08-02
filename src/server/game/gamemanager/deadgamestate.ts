@@ -51,15 +51,15 @@ export function resolveDeadParticipantColor(game_id: number, user_id: number): P
 }
 
 /**
- * Builds the {@link StaticGameState} of a concluded game — the
- * static side bar info — plus its per-player rating deltas.
+ * Builds the {@link StaticGameState} of a concluded game — the static
+ * side bar info — plus its ply count and per-player rating deltas.
  * @returns The state (+ deltas), or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */
 export function produceDeadStaticGameState(
 	game_id: number,
-): { state: StaticGameState; ratingChanges?: PlayerGroup<number> } | undefined {
-	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS]);
+): { state: StaticGameState; moveCount: number; ratingChanges?: PlayerGroup<number> } | undefined {
+	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS, 'move_count']);
 	if (game === undefined) return undefined;
 	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS, 'elo_change_from_game']); // prettier-ignore
 
@@ -72,7 +72,11 @@ export function produceDeadStaticGameState(
 			ratingChanges[row.player_number] = row.elo_change_from_game;
 	}
 
-	return Object.keys(ratingChanges).length > 0 ? { state, ratingChanges } : { state };
+	return {
+		state,
+		moveCount: game.move_count,
+		...(Object.keys(ratingChanges).length > 0 && { ratingChanges }),
+	};
 }
 
 /**

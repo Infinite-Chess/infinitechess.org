@@ -13,7 +13,6 @@ import type { Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
 import type { StaticGameSetup, StaticGameState } from '../../shared/types.js';
 
 import timeutil from '../../shared/util/timeutil.js';
-import moveutil from '../../shared/chess/util/moveutil.js';
 import clockutil from '../../shared/chess/util/clockutil.js';
 import metadatautil from '../../shared/chess/util/metadatautil.js';
 import gameresultutil from '../../shared/chess/util/gameresultutil.js';
@@ -58,6 +57,8 @@ export interface GameMetaViewModel {
 	}>;
 	/** Player-bar orientation from the viewer's role; bottom = you (or white for spectators). */
 	bars: { top: Player; bottom: Player };
+	/** Plies played. Zero means there's nothing to analyze, so the Analysis button SSRs hidden. */
+	moveCount: number;
 	/**
 	 * Whether the game is resignable (2+ plies played). Drives whether the offer
 	 * draw button is enabled, and whether the abort or resign button is visible.
@@ -83,12 +84,11 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 
 	const resolved = produceStaticGameState(id);
 	if (resolved === undefined) return undefined; // Game doesn't exist
-	const { state, game, ratingChanges } = resolved; // game is defined if live
+	const { state, game, ratingChanges, moveCount } = resolved; // game is defined if live
 
 	// Resolve the viewer's color (board orientation + role); undefined => spectator (white POV).
 	const memberInfo = req.memberInfo!;
 	let role: Player | undefined;
-	let resignable: boolean = false;
 	if (game) {
 		for (const [strColor, { identifier }] of Object.entries(game.match.playerData)) {
 			if (memberInfoEqPartial(identifier, memberInfo)) {
@@ -96,7 +96,6 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 				break;
 			}
 		}
-		resignable = moveutil.isGameResignable(game);
 	} else if (memberInfo.signedIn) {
 		// Dead games match members only (dead guests aren't identifiable).
 		role = resolveDeadParticipantColor(id, memberInfo.user_id);
@@ -111,7 +110,7 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 			timeControl: state.timeControl,
 			timeCreated: state.timeCreated,
 		},
-		meta: buildGameMetaViewModel(state, ratingChanges, role, resignable, req),
+		meta: buildGameMetaViewModel(state, ratingChanges, role, moveCount, req),
 	};
 }
 
@@ -142,7 +141,7 @@ export function getDeadGameViewState(
 
 	return {
 		...(role !== undefined && { role }),
-		meta: buildGameMetaViewModel(dead.state, dead.ratingChanges, role, false, req),
+		meta: buildGameMetaViewModel(dead.state, dead.ratingChanges, role, dead.moveCount, req),
 	};
 }
 
@@ -151,7 +150,7 @@ function buildGameMetaViewModel(
 	state: StaticGameState,
 	ratingChanges: PlayerGroup<number> | undefined,
 	role: Player | undefined,
-	resignable: boolean,
+	moveCount: number,
 	req: Request,
 ): GameMetaViewModel {
 	const variantGroup =
@@ -205,6 +204,7 @@ function buildGameMetaViewModel(
 			result: gameresultutil.getResultDisplay(state.gameConclusion, req.t.shared),
 		}),
 		players,
-		resignable,
+		moveCount,
+		resignable: moveCount > 1,
 	};
 }

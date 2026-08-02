@@ -271,23 +271,27 @@ function getGameByID(id: number): ServerGame | undefined {
 
 /**
  * Resolves a game id's {@link StaticGameState} — live (in memory) or dead (in the DB) —
- * plus its liveness, for the SSR game page. `undefined` if no such game.
+ * plus its ply count and liveness, for the SSR game page. `undefined` if no such game.
  * @throws If a database error occurs.
  */
-function produceStaticGameState(
-	id: number,
-): { state: StaticGameState; game?: ServerGame; ratingChanges?: PlayerGroup<number> } | undefined {
+function produceStaticGameState(id: number):
+	| {
+			state: StaticGameState;
+			moveCount: number;
+			game?: ServerGame;
+			ratingChanges?: PlayerGroup<number>;
+	  }
+	| undefined {
 	const game = getGameByID(id); // Defined if live
 	if (game !== undefined)
 		return {
 			game,
 			state: gameutility.buildStaticGameState(game),
+			moveCount: game.moves.length,
 			ratingChanges: gameutility.getRatingChanges(game),
 		};
 
-	const dead = produceDeadStaticGameState(id);
-	if (dead === undefined) return undefined; // Game doesn't exist
-	return { state: dead.state, ratingChanges: dead.ratingChanges };
+	return produceDeadStaticGameState(id); // undefined if the game doesn't exist
 }
 
 /**
