@@ -624,7 +624,8 @@ function generateVariationMoves(
 			break;
 		}
 		moves.push(movepiece.generateAndMakeMove(gamefile, result.tagged));
-		conclusion = wincondition.getGameConclusion(gamefile);
+		wincondition.doGameOverChecks(gamefile);
+		conclusion = gamefile.gameConclusion;
 		if (conclusion) break; // The line ends the game — stop extending it.
 	}
 

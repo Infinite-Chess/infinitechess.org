@@ -149,6 +149,8 @@ function syncAfterMovesChanged(gamefile: GameFile): void {
 				child = createNode(move, i, parent);
 				parent.children.push(child);
 			} else {
+				// Not a leak: same position via the same path yields identical changes/state, and
+				// only the tree's copy carries the ICN's comment and clockStamp.
 				gamefile.moves[i] = child.move!;
 				rejoinedExistingBranch = true;
 			}
