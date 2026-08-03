@@ -24,20 +24,6 @@ import annotations from '../../../game/rendering/highlights/annotations/annotati
 import gamecompressor from '../../../game/chess/gamecompressor.js';
 import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
 
-/**
- * Compact single-line ICN formatting — the same form the engine worker consumes, so any
- * position or game exported through here round-trips cleanly back through the variant
- * selector's From-ICN import field.
- */
-const ICN_FORMAT_OPTIONS = {
-	skipPosition: false,
-	compact: true,
-	spaces: false,
-	comments: false,
-	make_new_lines: false,
-	move_numbers: false,
-};
-
 // The "More actions" menu ==========================================================
 
 const element_ActionsButton = document.getElementById('btn-analysis-actions') as HTMLButtonElement;
@@ -119,7 +105,7 @@ function getGameICN(gamefile: GameFile): string {
 	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
 		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
 	}
-	return icnconverter.LongToShort_Format(longformIn, ICN_FORMAT_OPTIONS);
+	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
 }
 
 /** Exports the current position as ICN plus the variant options needed to reload it, or undefined if nothing's loaded. */
@@ -149,7 +135,7 @@ function exportCurrentPosition():
 	};
 
 	position.metadata = trimMetadata(position.metadata);
-	const icn = icnconverter.LongToShort_Format(position, ICN_FORMAT_OPTIONS);
+	const icn = icnconverter.LongToShort_Format(position, icnconverter.COMPACT_FORMAT_OPTIONS);
 	return { icn, pieceCount: position.position.size, variantOptions };
 }
 

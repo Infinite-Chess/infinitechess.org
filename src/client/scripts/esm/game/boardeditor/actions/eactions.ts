@@ -152,14 +152,10 @@ async function copy(): Promise<void> {
 			{} as MetaData /** Empty metadata, in order to make copied codes easier to share */,
 		...variantOptions,
 	};
-	const shortFormatOut = icnconverter.LongToShort_Format(LongFormatIn, {
-		skipPosition: false,
-		compact: true,
-		spaces: false,
-		comments: false,
-		make_new_lines: false,
-		move_numbers: false,
-	});
+	const shortFormatOut = icnconverter.LongToShort_Format(
+		LongFormatIn,
+		icnconverter.COMPACT_FORMAT_OPTIONS,
+	);
 	if (await docutil.copyToClipboard(shortFormatOut)) {
 		toast.show(translations.copypaste.copied_position);
 	} else {
@@ -284,8 +280,8 @@ function getValidatedPosition(): VariantOptions | null {
 	const variantOptions = getCurrentPositionInformation(true);
 	const icnString = icnconverter.LongToShort_Format(
 		{ metadata: {} as MetaData, ...variantOptions },
-		{ skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false },
-	); // prettier-ignore
+		icnconverter.COMPACT_FORMAT_OPTIONS,
+	);
 	const illegalReason = validatePosition(variantOptions, icnString);
 	if (illegalReason !== null) {
 		// The position is illegal

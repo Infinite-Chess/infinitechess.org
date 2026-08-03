@@ -86,14 +86,10 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 		const engineColor = data.youAreColor;
 
 		// Convert compressed gamefile (lf) to ICN string
-		const icnString = icnconverter.LongToShort_Format(data.lf, {
-			compact: true,
-			skipPosition: false,
-			spaces: false,
-			comments: false,
-			make_new_lines: false,
-			move_numbers: false,
-		});
+		const icnString = icnconverter.LongToShort_Format(
+			data.lf,
+			icnconverter.COMPACT_FORMAT_OPTIONS,
+		);
 
 		// Initialize engine configuration
 		const engineConfig = {
