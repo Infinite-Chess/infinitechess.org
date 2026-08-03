@@ -365,18 +365,26 @@ function assignWhiteBlackPlayersFromSeek(
 /**
  * Links their socket to this game and runs reconnect
  * side-effects (cancels disconnect/claim timer).
+ * @returns `evicted` — whether a socket already attached as that player was kicked to make room.
  */
-function subscribeClientToGame(servergame: ServerGame, ws: CustomWebSocket, ourRole: Player): void {
+function subscribeClientToGame(
+	servergame: ServerGame,
+	ws: CustomWebSocket,
+	ourRole: Player,
+): { evicted: boolean } {
 	const match = servergame.match;
 	// 1. Attach their socket to the game for receiving updates
 	const playerData = match.playerData[ourRole];
-	if (playerData === undefined)
-		return console.error(
+	if (playerData === undefined) {
+		console.error(
 			`Cannot subscribe client to game when game does not expect color ${ourRole} to be present`,
 		);
-	if (playerData.socket) {
-		sendSocketMessage(playerData.socket, 'game', 'leavegame');
-		detatchSocketFromGame(match, playerData.socket);
+		return { evicted: false };
+	}
+	const previousSocket = playerData.socket;
+	if (previousSocket) {
+		sendSocketMessage(previousSocket, 'game', 'leavegame');
+		detatchSocketFromGame(match, previousSocket);
 	}
 	playerData.socket = ws;
 
@@ -388,6 +396,8 @@ function subscribeClientToGame(servergame: ServerGame, ws: CustomWebSocket, ourR
 	};
 
 	runReconnectSideEffects(servergame, ourRole);
+
+	return { evicted: previousSocket !== undefined };
 }
 
 /** Attaches a spectator's socket to a game, marking its subscription metadata. */

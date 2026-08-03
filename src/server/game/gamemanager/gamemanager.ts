@@ -202,18 +202,15 @@ function unsubSocketParticipantFromGame(ws: CustomWebSocket, involuntary: boolea
 
 	if (!gameutility.isGameOver(servergame)) {
 		// Game is ongoing: inform the opponent they disconnected.
-		if (
-			gameutility.isEngineGame(servergame) &&
-			servergame.whosTurn === servergame.match.engineParticipant!.color
-		)
-			freezeEngineClock(servergame);
-
 		if (involuntary) {
 			// Internet interruption. Give them 5 seconds before opening the opponent's claim window.
 			startDisconnectCushionTimer(servergame, role);
+			// The tab lives on and its engine keeps searching, so its clock keeps ticking.
 		} else {
-			// Closed tab manually. Immediately open the opponent's claim window.
+			// Immediately open the opponent's claim window.
 			startDisconnectClaimTimer(servergame, role, involuntary);
+			// Closed tab manually: the page is gone, taking the engine's worker with it.
+			freezeEngineClock(servergame);
 		}
 
 		// If this leaves BOTH players disconnected, start the timer that concludes the
@@ -369,36 +366,39 @@ function armAutoTimeLoss(servergame: ServerGame): void {
 	);
 }
 
+/** If it's an engine game: Pauses the engine's clock, rewinding its turn. */
 function freezeEngineClock(servergame: ServerGame): void {
-	if (servergame.untimed || servergame.clocks.colorTicking === undefined) return;
-	const engineColor = servergame.match.engineParticipant!.color;
-	servergame.clocks.currentTime[engineColor] = servergame.clocks.timeRemainAtTurnStart;
+	const engine = servergame.match.engineParticipant;
+	if (
+		engine === undefined || // Not an engine game
+		servergame.untimed || // No clocks
+		servergame.clocks.colorTicking === undefined || // Already frozen
+		servergame.whosTurn !== engine.color || // Not the engine's turn
+		gameutility.isGameOver(servergame)
+	)
+		return;
+
+	servergame.clocks.currentTime[engine.color] = servergame.clocks.timeRemainAtTurnStart;
 	clock.endGame(servergame);
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	liveGameValues.onEngineClockChanged(servergame);
-	gameutility.broadcastToSpectators(
-		servergame,
-		'clock',
-		gameutility.getGameClockValues(servergame),
-	);
+	const clockValues = gameutility.getGameClockValues(servergame);
+	gameutility.broadcastToSpectators(servergame, 'clock', clockValues);
 }
 
+/** Restarts the engine's frozen clock: a client has attached to think for it. */
 function resumeEngineClock(servergame: ServerGame): void {
 	const engine = servergame.match.engineParticipant;
 	if (
-		engine === undefined ||
-		servergame.untimed ||
+		engine === undefined || // Not an engine game
+		servergame.untimed || // No clocks
+		servergame.clocks.colorTicking !== undefined || // Already ticking
+		servergame.whosTurn !== engine.color || // Not the engine's turn
 		gameutility.isGameOver(servergame) ||
-		servergame.whosTurn !== engine.color ||
 		!moveutil.isGameResignable(servergame)
 	)
 		return;
-	const remaining =
-		servergame.clocks.colorTicking === engine.color
-			? servergame.clocks.timeRemainAtTurnStart
-			: servergame.clocks.currentTime[engine.color]!;
-	if (servergame.clocks.colorTicking !== undefined) clock.endGame(servergame);
-	servergame.clocks.currentTime[engine.color] = remaining;
+	const remaining = servergame.clocks.currentTime[engine.color]!;
 	clock.edit(servergame.clocks, {
 		clocks: { ...servergame.clocks.currentTime },
 		colorTicking: engine.color,
@@ -787,6 +787,7 @@ export {
 	freeGame,
 	evictGame,
 	pushGameClock,
+	freezeEngineClock,
 	resumeEngineClock,
 	getGameByID,
 	produceStaticGameState,

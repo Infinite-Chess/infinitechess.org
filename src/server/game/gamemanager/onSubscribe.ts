@@ -11,7 +11,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import gameutility from './gameutility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { getGameByID, resumeEngineClock } from './gamemanager.js';
+import { getGameByID, freezeEngineClock, resumeEngineClock } from './gamemanager.js';
 
 /**
  * Fires when a client sends the 'subscribe' action with a game id, to attach to a live game and
@@ -24,7 +24,10 @@ function onSubscribeToGame(ws: CustomWebSocket, game_id: number): void {
 		const ourRole = gameutility.getSocketRoleInGame(game, ws);
 		if (ourRole !== undefined) {
 			// Participant path: attach, then send the current state.
-			gameutility.subscribeClientToGame(game, ws, ourRole);
+			const { evicted } = gameutility.subscribeClientToGame(game, ws, ourRole);
+			// A takeover kicks the previous tab, terminating its engine worker mid-search. It can
+			// never finish that search, so rewind the engine's turn before this client resumes it.
+			if (evicted) freezeEngineClock(game);
 			resumeEngineClock(game);
 			const gameStateMessage = gameutility.getGameStateMessageContents(game, ourRole, false);
 			sendSocketMessage(ws, 'game', 'gamestate', gameStateMessage);

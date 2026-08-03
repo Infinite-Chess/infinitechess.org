@@ -130,9 +130,13 @@ function initEngineGame(options: {
 	});
 }
 
+/** Aborts a failed engine load: resigns the server game, tears the worker down. */
 function failEngineLoad(error: Error): void {
-	toast.show('The engine failed to load and resigned the game.', { error: true });
-	resignFailedEngine();
+	// Practice games resign nothing, and their loader shows its own error toast.
+	if (gamesession.getGameType() === 'online') {
+		resignFailedEngine();
+		toast.show('The engine failed to load and has resigned the game.', { error: true });
+	}
 	terminate(error);
 }
 
@@ -258,7 +262,7 @@ function makeEngineMove(tokenMove: unknown): void {
 				`Engine submitted an illegal move. Please report this bug! Move "${tokenMove}" is illegal for reason: ${moveValidationResults.reason}`,
 				{ error: true, durationMultiplier: 100 },
 			);
-			resignFailedEngine();
+			if (gamesession.getGameType() === 'online') resignFailedEngine();
 			return false; // Don't physically play next premove
 		}
 
@@ -278,9 +282,9 @@ function makeEngineMove(tokenMove: unknown): void {
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 }
 
+/** Asks the server to resign the engine in the current online game. */
 function resignFailedEngine(): void {
-	if (gamesession.getGameType() === 'online')
-		socketmessages.send('game', 'engineresign', undefined, true);
+	socketmessages.send('game', 'engineresign', undefined, true);
 }
 
 /** Requests engine-generated legal moves for the currently viewed position. */
