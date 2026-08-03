@@ -605,7 +605,7 @@ function LongToShort_Format(
 	 *
 	 * As an example:
 	 *
-	 * w 0/100 1 (8;Q,R,B,N|1;q,r,b,n) checkmate {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
+	 * w 0/100 1 (8;Q,R,B,N|1;q,r,b,n) checkmate P1,2+|P2,2+|P3,2+|P4,2+|P5,2+
 	 */
 
 	// Turn order
@@ -792,7 +792,7 @@ function LongToShort_Format(
 	// Combine them all, with an extra line break if make_new_lines = true
 
 	const sectionDelimiter = options.make_new_lines ? '\n\n' : ' ';
-	return segments.join(sectionDelimiter); // 'w 0/100 1 (8,17|1,10) (checkmate|checkmate,allpiecescaptured) {"slideLimit": 100, "cannotPassTurn": true} P1,2+|P2,2+|P3,2+|P4,2+|P5,2+'
+	return segments.join(sectionDelimiter); // 'w 0/100 1 (8,17|1,10) (checkmate|checkmate,allpiecescaptured) P1,2+|P2,2+|P3,2+|P4,2+|P5,2+'
 }
 
 /**

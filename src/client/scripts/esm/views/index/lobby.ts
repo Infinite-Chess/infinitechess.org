@@ -15,7 +15,7 @@ import type {
 	OutSeek,
 	SeekVariant,
 	GameMode,
-	SeekModifier,
+	GameModifier,
 	CreateEngineGameBody,
 } from '../../../../../shared/types.js';
 
@@ -54,7 +54,7 @@ type CreateSeekOptions = {
 	time: TimeControl;
 	color: Player | null;
 	mode: GameMode;
-	modifiers: SeekModifier[];
+	modifiers: GameModifier[];
 };
 
 // Constants ------------------------------------------

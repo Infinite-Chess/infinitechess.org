@@ -319,8 +319,8 @@ export const OutSeekVariantSchema = z.discriminatedUnion('kind', [
 ]);
 
 /** The full configuration for a single game modifier applied to a seek. */
-export type SeekModifier = z.infer<typeof SeekModifierSchema>;
-export const SeekModifierSchema = z.discriminatedUnion('kind', [
+export type GameModifier = z.infer<typeof GameModifierSchema>;
+export const GameModifierSchema = z.discriminatedUnion('kind', [
 	z.strictObject({
 		kind: z.literal('slide-limit'),
 		value: z.literal(gameconfig.SLIDE_LIMIT_VALUES),
@@ -344,7 +344,7 @@ export const BaseSeekSchema = z.strictObject({
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
 	time: TimeControlSchema,
 	mode: GameModeSchema,
-	modifiers: z.array(SeekModifierSchema).optional(),
+	modifiers: z.array(GameModifierSchema).optional(),
 });
 
 /** The version of seeks broadcast to lobby viewers. */

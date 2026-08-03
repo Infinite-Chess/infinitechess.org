@@ -32,6 +32,8 @@ db.pragma('journal_mode = WAL');
 // With WAL, NORMAL synchronous is safe and faster than the default FULL.
 // WAL provides its own durability guarantees that make FULL redundant.
 db.pragma('synchronous = NORMAL');
+// No `foreign_keys` pragma is needed: better-sqlite3 compiles SQLite with
+// SQLITE_DEFAULT_FOREIGN_KEYS=1, so enforcement is already ON for every connection.
 
 // Variables ----------------------------------------------------------------------------------------------
 

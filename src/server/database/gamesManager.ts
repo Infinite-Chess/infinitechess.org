@@ -112,17 +112,9 @@ export function getGameData<K extends GamesColumn>(
 ): Pick<GamesRecord, K> | undefined {
 	return dbCall(() => {
 		if (!Array.isArray(columns))
-			throw new Error(
-				`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
-			);
-		if (
-			!columns.every(
-				(column) => typeof column === 'string' && allGamesColumns.includes(column),
-			)
-		)
-			throw new Error(
-				`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`,
-			);
+			throw new Error(`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
+		if (!columns.every((column) => typeof column === 'string' && allGamesColumns.includes(column)))
+			throw new Error(`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
 
 		// Arguments are valid, move onto the SQL query
 		const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id = ?`;
@@ -144,17 +136,9 @@ export function getMultipleGameData<K extends GamesColumn>(
 	return dbCall(
 		() => {
 			if (!Array.isArray(columns))
-				throw new Error(
-					`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
-				);
-			if (
-				!columns.every(
-					(column) => typeof column === 'string' && allGamesColumns.includes(column),
-				)
-			)
-				throw new Error(
-					`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`,
-				);
+				throw new Error(`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
+			if (!columns.every((column) => typeof column === 'string' && allGamesColumns.includes(column)))
+				throw new Error(`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
 
 			// Arguments are valid, move onto the SQL query
 			const placeholders = game_id_list.map(() => '?').join(', ');
