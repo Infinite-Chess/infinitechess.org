@@ -74,8 +74,6 @@ function relockMouse(): void {
 
 function lockMouse(): void {
 	camera.getCanvas().requestPointerLock();
-	// Disables OS-level mouse acceleration. This does NOT solve safari being more sensitive.
-	// camera.getCanvas().requestPointerLock({ unadjustedMovement: true });
 }
 
 /**
