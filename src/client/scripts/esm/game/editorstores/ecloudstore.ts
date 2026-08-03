@@ -98,14 +98,7 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<CloudSa
 
 	let icn: string;
 	try {
-		icn = icnconverter.LongToShort_Format(longFormatIn, {
-			skipPosition: false,
-			compact: true,
-			spaces: false,
-			comments: false,
-			make_new_lines: false,
-			move_numbers: false,
-		});
+		icn = icnconverter.LongToShort_Format(longFormatIn, icnconverter.COMPACT_FORMAT_OPTIONS);
 	} catch (err) {
 		console.error('Failed to convert position to ICN:', err);
 		throw new ICNConversionError();

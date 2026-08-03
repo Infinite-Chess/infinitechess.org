@@ -598,7 +598,7 @@ function variantOptionsToICN(options: VariantOptions): string {
 			fullMove: options.fullMove,
 			state_global: options.state_global,
 		},
-		{ compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false }, // prettier-ignore
+		icnconverter.COMPACT_FORMAT_OPTIONS,
 	);
 }
 

@@ -223,6 +223,20 @@ const metadata_ordering: (keyof MetaData)[] = [
 	'Termination',
 ];
 
+/**
+ * {@link LongToShort_Format} options producing the canonical compact, single-line ICN —
+ * the form engines consume, exports copy to the clipboard, and position caches key on.
+ * Always round-trips back through {@link ShortToLong_Format}.
+ */
+const COMPACT_FORMAT_OPTIONS = {
+	skipPosition: false,
+	compact: true,
+	spaces: false,
+	comments: false,
+	make_new_lines: false,
+	move_numbers: false,
+} as const;
+
 // Defaults when pasting an ICN ----------------------------------------------------------
 
 /** Tests if the provided array of legal promotions is the default set of promotions. */
@@ -1639,6 +1653,8 @@ function parsePresetRays(presetRays: string): BaseRay[] {
 // Exports --------------------------------------------------------------------------------------------------------
 
 export default {
+	COMPACT_FORMAT_OPTIONS,
+
 	LongToShort_Format,
 	ShortToLong_Format,
 

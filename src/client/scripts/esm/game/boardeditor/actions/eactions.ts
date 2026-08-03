@@ -69,6 +69,9 @@ import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js'
  */
 const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
 
+/** Shown to the user when the browser denies clipboard access. */
+const CLIPBOARD_DENIED = 'Clipboard permission denied. This might be your browser.';
+
 // Actions ----------------------------------------------------------------------
 
 /** Resets the board editor position to the Classical position. */
@@ -136,27 +139,25 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 }
 
 /**
- * copygame uses the move list instead of the position
- * which doesn't work for the board editor.
- * This function uses the position of pieces on the board.
+ * Copies the position as game notation. Serializes the pieces on the
+ * board, since the editor has no move list to derive a position from.
  */
-function copy(): void {
+async function copy(): Promise<void> {
 	const variantOptions = getCurrentPositionInformation(false);
 	const LongFormatIn: LongFormatIn = {
 		metadata:
 			{} as MetaData /** Empty metadata, in order to make copied codes easier to share */,
 		...variantOptions,
 	};
-	const shortFormatOut = icnconverter.LongToShort_Format(LongFormatIn, {
-		skipPosition: false,
-		compact: true,
-		spaces: false,
-		comments: false,
-		make_new_lines: false,
-		move_numbers: false,
-	});
-	docutil.copyToClipboard(shortFormatOut);
-	toast.show(translations.copypaste.copied_position);
+	const shortFormatOut = icnconverter.LongToShort_Format(
+		LongFormatIn,
+		icnconverter.COMPACT_FORMAT_OPTIONS,
+	);
+	if (await docutil.copyToClipboard(shortFormatOut)) {
+		toast.show(translations.copypaste.copied_position);
+	} else {
+		toast.show(CLIPBOARD_DENIED, { error: true });
+	}
 }
 
 /** Loads the position from the clipboard. */
@@ -164,12 +165,9 @@ async function paste(): Promise<undefined> {
 	let longformOut: LongFormatOut;
 
 	// Do we have clipboard permission?
-	let clipboard: string;
-	try {
-		clipboard = await navigator.clipboard.readText();
-	} catch (error) {
-		const message: string = 'Clipboard permission denied. This might be your browser.';
-		toast.show(message + '\n' + error, { error: true });
+	const clipboard = await docutil.readFromClipboard();
+	if (clipboard === undefined) {
+		toast.show(CLIPBOARD_DENIED, { error: true });
 		return;
 	}
 
@@ -231,8 +229,8 @@ function getValidatedPosition(): VariantOptions | null {
 	const variantOptions = getCurrentPositionInformation(true);
 	const icnString = icnconverter.LongToShort_Format(
 		{ metadata: {} as MetaData, ...variantOptions },
-		{ skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false },
-	); // prettier-ignore
+		icnconverter.COMPACT_FORMAT_OPTIONS,
+	);
 	const illegalReason = validatePosition(variantOptions, icnString);
 	if (illegalReason !== null) {
 		// The position is illegal

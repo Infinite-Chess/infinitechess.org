@@ -171,16 +171,6 @@ const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
 /** How long a persisted review survives LocalStorage. */
 const REVIEW_CACHE_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 365; // 1 year
 
-/** ICN serialization options — compact, position-only, no move numbers (matches ceval). */
-const ICN_OPTIONS = {
-	compact: true,
-	skipPosition: false,
-	spaces: false,
-	comments: false,
-	make_new_lines: false,
-	move_numbers: false,
-} as const;
-
 // Schemas ----------------------------------------------------------------------------
 
 /** The result of a one-shot `evaluate` command (see {@link EvaluateResultSchema}). */
@@ -670,7 +660,8 @@ function serializePosition(index: number): string {
 	// never dispatched to a worker (dispatchNext skips it), but cache callers still ask
 	// for its ICN — clamping keeps GameToPosition within the move list instead of overrunning it.
 	const safeStart = Math.min(safeStartByIndex[index]!, index);
-	if (safeStart === 0) return icnconverter.LongToShort_Format(longformIn!, ICN_OPTIONS); // Common path.
+	if (safeStart === 0)
+		return icnconverter.LongToShort_Format(longformIn!, icnconverter.COMPACT_FORMAT_OPTIONS); // Common path.
 
 	// Earlier history left the engine's safe coordinate range: re-base past it (see
 	// analysisenginebounds.getSafeStartPlies). Rare, so we copy onto a fresh longform rather than
@@ -682,7 +673,7 @@ function serializePosition(index: number): string {
 		state_global: jsutil.deepCopyObject(longformIn!.state_global),
 	};
 	gamecompressor.rebaseToPly(rebased, mainlineMoves, safeStart, index);
-	return icnconverter.LongToShort_Format(rebased, ICN_OPTIONS);
+	return icnconverter.LongToShort_Format(rebased, icnconverter.COMPACT_FORMAT_OPTIONS);
 }
 
 // Result processing --------------------------------------------------------------------------

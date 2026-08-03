@@ -459,14 +459,7 @@ function getViewedPositionIcn(gamefile: GameFile): string {
 	// lets it evaluate the full safe coordinate range. compressGamefile deep-copies gameRules,
 	// so this doesn't touch the live game.
 	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
-	return icnconverter.LongToShort_Format(longformIn, {
-		compact: true,
-		skipPosition: false,
-		spaces: false,
-		comments: false,
-		make_new_lines: false,
-		move_numbers: false,
-	});
+	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
 }
 
 /** Coalesces a burst of synchronous 'view-move' events into one refresh of the final position. */

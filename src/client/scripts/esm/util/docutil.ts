@@ -27,17 +27,30 @@ function isLocalEnvironment(): boolean {
 
 /**
  * Copies the provided text to the operating system's clipboard.
- * @param text - The text to copy
+ * @returns Whether it succeeded. The reason for a failure is logged, never returned.
  */
-function copyToClipboard(text: string): void {
-	navigator.clipboard
-		.writeText(text)
-		.then(() => {
-			console.log('Copied to clipboard');
-		})
-		.catch((error) => {
-			console.error('Failed to copy to clipboard', error);
-		});
+async function copyToClipboard(text: string): Promise<boolean> {
+	try {
+		await navigator.clipboard.writeText(text);
+		return true;
+	} catch (error) {
+		console.error('Failed to copy to clipboard', error);
+		return false;
+	}
+}
+
+/**
+ * Reads the operating system's clipboard.
+ * @returns Its text, or undefined if access was denied. The reason for a failure is
+ * logged, never returned.
+ */
+async function readFromClipboard(): Promise<string | undefined> {
+	try {
+		return await navigator.clipboard.readText();
+	} catch (error) {
+		console.error('Failed to read from clipboard', error);
+		return undefined;
+	}
 }
 
 /**
@@ -150,6 +163,7 @@ function createSvgElementFromString(svgText: string): SVGElement {
 export default {
 	isLocalEnvironment,
 	copyToClipboard,
+	readFromClipboard,
 	isMouseSupported,
 	isTouchSupported,
 	getLastSegmentOfURL,

@@ -15,26 +15,14 @@ import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.
 
 import view from './guianalysisview.js';
 import toast from '../../../components/toast.js';
+import docutil from '../../../util/docutil.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import IndexedDB from '../../../util/IndexedDB.js';
 import estoretypes from '../../../game/editorstores/estoretypes.js';
 import gamesession from '../../../game/chess/gamesession.js';
+import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
 import gamecompressor from '../../../game/chess/gamecompressor.js';
 import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
-
-/**
- * Compact single-line ICN formatting — the same form the engine worker consumes, so any
- * position or game exported through here round-trips cleanly back through the variant
- * selector's From-ICN import field.
- */
-const ICN_FORMAT_OPTIONS = {
-	skipPosition: false,
-	compact: true,
-	spaces: false,
-	comments: false,
-	make_new_lines: false,
-	move_numbers: false,
-};
 
 // The "More actions" menu ==========================================================
 
@@ -110,13 +98,14 @@ function init(): void {
  * board as you cycle through moves.
  */
 function getGameICN(gamefile: GameFile): string {
-	const longformIn = gamecompressor.compressGamefile(gamefile);
+	const presetOverrides = annotations.getPresetOverrides();
+	const longformIn = gamecompressor.compressGamefile(gamefile, false, presetOverrides);
 	longformIn.metadata = trimMetadata(longformIn.metadata);
 	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
 	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
 		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
 	}
-	return icnconverter.LongToShort_Format(longformIn, ICN_FORMAT_OPTIONS);
+	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
 }
 
 /** Exports the current position as ICN plus the variant options needed to reload it, or undefined if nothing's loaded. */
@@ -126,7 +115,8 @@ function exportCurrentPosition():
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return undefined;
 
-	const position = gamecompressor.compressGamefile(gamefile, true);
+	const presetOverrides = annotations.getPresetOverrides();
+	const position = gamecompressor.compressGamefile(gamefile, true, presetOverrides);
 	if (!position.position) return undefined;
 
 	const variantOptions: VariantOptions = {
@@ -145,7 +135,7 @@ function exportCurrentPosition():
 	};
 
 	position.metadata = trimMetadata(position.metadata);
-	const icn = icnconverter.LongToShort_Format(position, ICN_FORMAT_OPTIONS);
+	const icn = icnconverter.LongToShort_Format(position, icnconverter.COMPACT_FORMAT_OPTIONS);
 	return { icn, pieceCount: position.position.size, variantOptions };
 }
 
@@ -169,11 +159,10 @@ async function exportIcnToClipboard(): Promise<void> {
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
-	try {
-		await navigator.clipboard.writeText(getGameICN(gamefile));
+	if (await docutil.copyToClipboard(getGameICN(gamefile))) {
 		toast.show('Copied ICN to your clipboard!');
-	} catch (e) {
-		toast.show('Clipboard permission denied. This might be your browser.' + '\n' + e, { error: true }); // prettier-ignore
+	} else {
+		toast.show('Clipboard permission denied. This might be your browser.', { error: true });
 	}
 }
 
