@@ -8,6 +8,7 @@
  */
 
 import type { Ray } from '../../../../../../../shared/util/math/vectors.js';
+import type { PresetAnnotes } from '../../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil.js';
 
 import jsutil from '../../../../../../../shared/util/jsutil.js';
@@ -181,6 +182,17 @@ function Collapse(): void {
 	} else clearAnnotes(annotes);
 }
 
+/**
+ * Returns the preset annotation overrides carried in from the loaded ICN,
+ * if any. Re-attach these when exporting so presets survive a round trip.
+ */
+function getPresetOverrides(): PresetAnnotes | undefined {
+	const squares = drawsquares.getPresetOverrides();
+	const rays = drawrays.getPresetOverrides();
+	if (!squares && !rays) return undefined;
+	return { ...(squares && { squares }), ...(rays && { rays }) };
+}
+
 function resetState(): void {
 	annotes_plies.length = 0;
 	clearAnnotes(annotes_linger);
@@ -213,6 +225,7 @@ export default {
 
 	update,
 	Collapse,
+	getPresetOverrides,
 	resetState,
 	render_belowPieces,
 	render_abovePieces,

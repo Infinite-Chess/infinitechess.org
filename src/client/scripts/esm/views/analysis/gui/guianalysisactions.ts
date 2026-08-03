@@ -19,6 +19,7 @@ import gameslot from '../../../game/chess/gameslot.js';
 import IndexedDB from '../../../util/IndexedDB.js';
 import estoretypes from '../../../game/editorstores/estoretypes.js';
 import gamesession from '../../../game/chess/gamesession.js';
+import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
 import gamecompressor from '../../../game/chess/gamecompressor.js';
 import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
 
@@ -110,7 +111,8 @@ function init(): void {
  * board as you cycle through moves.
  */
 function getGameICN(gamefile: GameFile): string {
-	const longformIn = gamecompressor.compressGamefile(gamefile);
+	const presetOverrides = annotations.getPresetOverrides();
+	const longformIn = gamecompressor.compressGamefile(gamefile, false, presetOverrides);
 	longformIn.metadata = trimMetadata(longformIn.metadata);
 	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
 	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
@@ -126,7 +128,8 @@ function exportCurrentPosition():
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return undefined;
 
-	const position = gamecompressor.compressGamefile(gamefile, true);
+	const presetOverrides = annotations.getPresetOverrides();
+	const position = gamecompressor.compressGamefile(gamefile, true, presetOverrides);
 	if (!position.position) return undefined;
 
 	const variantOptions: VariantOptions = {
