@@ -357,18 +357,19 @@ export const OutSeekSchema = BaseSeekSchema.extend({
 
 /** Client → server websocket payload for creating an engine game. */
 export type CreateEngineGameBody = z.infer<typeof CreateEngineGameBodySchema>;
-export const CreateEngineGameBodySchema = z
-	.strictObject({
-		variant: SeekVariantSchema,
-		timeControl: TimeControlSchema,
-		/** The color the human plays, or null for random. */
-		color: z.literal([players.WHITE, players.BLACK, null]),
-		/** The engine's strength level (validated against the engine's max server-side). */
-		strengthLevel: z.int().min(1),
-	})
-	.refine((body) => clockutil.isTimedControlValid(body.timeControl), {
-		error: 'Invalid clock value.',
-	});
+export const CreateEngineGameBodySchema = z.strictObject({
+	variant: SeekVariantSchema,
+	timeControl: TimeControlSchema.refine(
+		(timeControl) => clockutil.isTimedControlValid(timeControl),
+		{
+			error: 'Invalid clock value.',
+		},
+	),
+	/** The color the human plays, or null for random. */
+	color: z.literal([players.WHITE, players.BLACK, null]),
+	/** The engine's strength level (validated against the engine's max server-side). */
+	strengthLevel: z.int().min(1),
+});
 
 /** SSR→client channel info marking the game page's game as an engine game. */
 export interface EngineGamePageInfo {

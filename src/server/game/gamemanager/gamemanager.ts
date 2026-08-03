@@ -293,6 +293,12 @@ function produceStaticGameState(id: number):
 			game,
 			state: gameutility.buildStaticGameState(game),
 			moveCount: game.moves.length,
+			...(game.match.engineParticipant && {
+				engineGame: {
+					engine: game.match.engineParticipant.engine,
+					strengthLevel: game.match.engineParticipant.strengthLevel,
+				},
+			}),
 			ratingChanges: gameutility.getRatingChanges(game),
 		};
 
@@ -401,7 +407,6 @@ function resumeEngineClock(servergame: ServerGame): void {
 	armAutoTimeLoss(servergame);
 	liveGameValues.onEngineClockChanged(servergame);
 	const clockValues = gameutility.getGameClockValues(servergame);
-	gameutility.broadcastToParticipants(servergame, 'game', 'clock', clockValues);
 	gameutility.broadcastToSpectators(servergame, 'clock', clockValues);
 }
 

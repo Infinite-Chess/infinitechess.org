@@ -87,13 +87,7 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 
 	const resolved = produceStaticGameState(id);
 	if (resolved === undefined) return undefined; // Game doesn't exist
-	const { state, game, ratingChanges, moveCount } = resolved; // game is defined if live
-	const engineGame = game?.match.engineParticipant
-		? {
-				engine: game.match.engineParticipant.engine,
-				strengthLevel: game.match.engineParticipant.strengthLevel,
-			}
-		: resolved.engineGame;
+	const { state, game, engineGame, ratingChanges, moveCount } = resolved; // game is defined if live
 
 	// Resolve the viewer's color (board orientation + role); undefined => spectator (white POV).
 	let role: Player | undefined;

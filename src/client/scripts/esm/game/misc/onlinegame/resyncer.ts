@@ -23,7 +23,6 @@ import gameslot from '../../chess/gameslot.js';
 import premoves from '../../chess/premoves.js';
 import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
-import enginegame from '../enginegame.js';
 import gamesession from '../../chess/gamesession.js';
 import guigamemeta from '../../gui/guigamemeta.js';
 import { GameBus } from '../../GameBus.js';
@@ -59,7 +58,6 @@ function handleGameState(
 
 	// Adjust the timer whos turn it is depending on ping.
 	movesendreceive.applyClockValues(gamefile, message.clockValues);
-	enginegame.notifyServerEngineReady();
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
 	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();

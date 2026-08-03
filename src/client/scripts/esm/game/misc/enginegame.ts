@@ -19,7 +19,6 @@ import selection from '../chess/selection.js';
 import { GameBus } from '../GameBus.js';
 import gamesession from '../chess/gamesession.js';
 import movesequence from '../chess/movesequence.js';
-import { SocketBus } from '../../websocket/SocketBus.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import socketmessages from '../../websocket/socketmessages.js';
 import enginelegalmovesdebug from './enginelegalmovesdebug.js';
@@ -45,17 +44,12 @@ let currentEngine: ValidEngine | undefined; // name of the current engine used
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 let engineWorker: Worker | undefined;
 let rejectEngineLoad: ((reason: Error) => void) | undefined;
-let engineReady: boolean = false;
-let serverNeedsReady: boolean = false;
 
 // Events -----------------------------------------------------------------------
 
 GameBus.addEventListener('user-move-played', () => onMovePlayed());
 GameBus.addEventListener('game-concluded', () => terminate());
 GameBus.addEventListener('game-unloaded', () => terminate());
-SocketBus.addEventListener('closed', () => {
-	if (inEngineGame) serverNeedsReady = true;
-});
 
 enginelegalmovesdebug.init({
 	canRequest: () => inEngineGame && engineWorker !== undefined,
@@ -87,15 +81,13 @@ function initEngineGame(options: {
 	engineColor = typeutil.invertPlayer(options.youAreColor);
 	currentEngine = options.currentEngine;
 	engineConfig = options.engineConfig;
-	engineReady = false;
-	serverNeedsReady = true;
 
 	// Initialize the engine as a webworker
 	if (!window.Worker) {
 		const error = new Error(
 			"Cannot finish loading engine game because web workers aren't supported.",
 		);
-		resignFailedEngine();
+		failEngineLoad(error);
 		return Promise.reject(error);
 	}
 	engineWorker = new Worker(options.workerUrl, {
@@ -113,13 +105,11 @@ function initEngineGame(options: {
 				resolve(); // Engine is ready!
 			} else if (e.data?.type === 'initerror') {
 				const message = String(e.data.message ?? 'Unknown initialization error.');
-				resignFailedEngine();
-				terminate(new Error(`Engine failed to initialize: ${message}`));
+				failEngineLoad(new Error(`Engine failed to initialize: ${message}`));
 			}
 		};
 		engineWorker!.onerror = (e: ErrorEvent): void => {
-			resignFailedEngine();
-			terminate(new Error('Worker failed to load: ' + e.message));
+			failEngineLoad(new Error('Worker failed to load: ' + e.message));
 		};
 		if (engineDictionary[options.currentEngine].loadsWasmGlueAtRuntime)
 			engineWorker!.postMessage({
@@ -133,8 +123,6 @@ function initEngineGame(options: {
 		engineWorker.onmessage = (e: MessageEvent): void => handleEngineMessage(e.data);
 		// Remove the error handler (no longer needed after worker is ready)
 		engineWorker.onerror = null;
-		engineReady = true;
-		notifyServerEngineReady();
 		onMovePlayed();
 		// Ensures if the debug mode was on before starting an engine game,
 		// the engine generated legal moves are rendered as soon as the engine is ready.
@@ -142,11 +130,10 @@ function initEngineGame(options: {
 	});
 }
 
-/** Resumes a frozen server clock once this page's worker is ready. */
-function notifyServerEngineReady(): void {
-	if (!serverNeedsReady || !engineReady || gamesession.getGameType() !== 'online') return;
-	socketmessages.send('game', 'engineready', undefined, true);
-	serverNeedsReady = false;
+function failEngineLoad(error: Error): void {
+	toast.show('The engine failed to load and resigned the game.', { error: true });
+	resignFailedEngine();
+	terminate(error);
 }
 
 /**
@@ -330,8 +317,6 @@ function terminate(loadError: Error = new Error('Engine game ended during initia
 	currentEngine = undefined;
 	engineConfig = undefined;
 	inEngineGame = false;
-	engineReady = false;
-	serverNeedsReady = false;
 	rejectEngineLoad?.(loadError);
 	rejectEngineLoad = undefined;
 }
@@ -341,7 +326,6 @@ function terminate(loadError: Error = new Error('Engine game ended during initia
 export default {
 	initEngineGame,
 	onMovePlayed,
-	notifyServerEngineReady,
 };
 
 export type { EngineConfig };

@@ -10,8 +10,8 @@
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import gameutility from './gameutility.js';
-import { getGameByID } from './gamemanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { getGameByID, resumeEngineClock } from './gamemanager.js';
 
 /**
  * Fires when a client sends the 'subscribe' action with a game id, to attach to a live game and
@@ -25,6 +25,7 @@ function onSubscribeToGame(ws: CustomWebSocket, game_id: number): void {
 		if (ourRole !== undefined) {
 			// Participant path: attach, then send the current state.
 			gameutility.subscribeClientToGame(game, ws, ourRole);
+			resumeEngineClock(game);
 			const gameStateMessage = gameutility.getGameStateMessageContents(game, ourRole, false);
 			sendSocketMessage(ws, 'game', 'gamestate', gameStateMessage);
 		} else {

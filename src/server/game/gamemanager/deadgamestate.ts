@@ -55,7 +55,7 @@ export function resolveDeadParticipantColor(game_id: number, user_id: number): P
 
 /**
  * Builds the {@link StaticGameState} of a concluded game — the static
- * side bar info — plus its ply count and per-player rating deltas.
+ * side bar info — plus its ply count, engine participant page info, and per-player rating deltas.
  * @returns The state (+ deltas), or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */

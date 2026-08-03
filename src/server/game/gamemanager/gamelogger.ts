@@ -23,8 +23,8 @@ import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
 import { updatePlayerGame } from '../../database/playerGamesManager.js';
-import { updateGame, deleteGame } from '../../database/gamesManager.js';
 import { insertEngineGame } from '../../database/engineGamesManager.js';
+import { updateGame, deleteGame } from '../../database/gamesManager.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import {
 	computeRatingDataChanges,
@@ -114,7 +114,7 @@ function updateLeaderboardsInTransaction(
 ): RatingData | undefined {
 	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
-	const leaderboard_id = VariantLeaderboards[match.variant]!;
+	const leaderboard_id = VariantLeaderboards[match.variant]!; // Will always be defined if the game is rated.
 
 	// 1. Build initial rating data by reading from the DB.
 	let ratingdata: RatingData = {};

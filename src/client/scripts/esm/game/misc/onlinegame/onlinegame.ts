@@ -12,7 +12,6 @@ import gamefileutility from '../../../../../../shared/chess/util/gamefileutility
 import { engineDictionary } from '../../../../../../shared/chess/engine.js';
 import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
-import toast from '../../../components/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import drawoffers from './drawoffers.js';
@@ -131,9 +130,6 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 					})
 					.catch((error: Error) => {
 						console.error('Failed to initialize engine game:', error);
-						toast.show('The engine failed to load and resigned the game.', {
-							error: true,
-						});
 					});
 			}
 

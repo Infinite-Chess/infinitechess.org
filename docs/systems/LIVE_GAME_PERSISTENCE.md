@@ -6,11 +6,10 @@ Active games are persisted to the database so they survive server restarts inste
 
 ## Database Schema: Three Tables
 
-Following the pattern of `games` + `player_games` for ended games, live state is split across two tables to support an arbitrary number of players per game:
+Following the pattern of `games` + `player_games` for ended games, live state is split across three tables to support an arbitrary number of participants per game:
 
 - **`live_games`** — One row per active game. Contains game-level state.
 - **`live_player_games`** — One row per human player per active game. Contains identity and disconnect state.
-
 - **`live_engine_games`** — One row per engine participant per active game. Contains engine settings and clock state.
 
 ### Table 1: `live_games`
@@ -41,7 +40,7 @@ Following the pattern of `games` + `player_games` for ended games, live state is
 | `color_ticking`       | INTEGER | Player number whose clock is running. NULL if untimed, < 2 moves, or game over.                                                                                         |
 | `clock_snapshot_time` | INTEGER | Epoch ms when clock values were snapshotted. Used to adjust the ticking player's time on restoration: `actual = stored_remaining - (Date.now() - clock_snapshot_time)`. |
 
-Per-player `time_remaining_ms` lives in `live_player_games`.
+Per-participant `time_remaining_ms` lives in `live_player_games` or `live_engine_games`.
 
 #### Group 4: Draw Offer State
 
@@ -108,24 +107,24 @@ One row per engine participant per live game. Engines have no identity or discon
 
 ## Event Matrix: When Each Column Is Written
 
-| Event                                                       | `live_games` Columns Updated                                                     | `live_player_games` Columns Updated                                                                 |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **Game created**                                            | INSERT full row (all Group 1 columns, defaults for the rest)                     | INSERT human rows into `live_player_games` and any engine row into `live_engine_games`              |
-| **Move submitted**                                          | `moves`, `color_ticking`, `clock_snapshot_time`, `validate_moves`                | `time_remaining_ms` for every participant                                                           |
-| **Engine turn paused/resumed**                              | `color_ticking`, `clock_snapshot_time`                                           | `time_remaining_ms` for every participant                                                           |
-| **Draw offer extended**                                     | `draw_offer_state`                                                               | `last_draw_offer_ply` (offering player)                                                             |
-| **Draw offer declined**                                     | `draw_offer_state` → NULL                                                        | —                                                                                                   |
-| **Draw accepted**                                           | DELETE row (game logged to permanent tables) — cascades to `live_player_games`   | (cascades)                                                                                          |
-| **Resignation**                                             | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
-| **Abort**                                                   | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
-| **Time loss**                                               | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
-| **Claim victory/draw**                                      | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
-| **Player disconnects**                                      | —                                                                                | `disconnect_cushion_end_time`, `disconnect_claim_time`, `disconnect_voluntary`                      |
-| **Player reconnects**                                       | `both_disconnected_end_time` → NULL                                              | `disconnect_cushion_end_time` → NULL, `disconnect_claim_time` → NULL, `disconnect_voluntary` → NULL |
-| **Both-disconnected timer set/cleared**                     | `both_disconnected_end_time`                                                     | —                                                                                                   |
-| **Both-disconnected timeout** (draw by abandonment / abort) | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
-| **Game finalized** (result locked in)                       | — (row already deleted at conclusion; only the in-memory `finalized` flag flips) | —                                                                                                   |
-| **Game evicted** (both players left the rematch window)     | — (row already removed at conclusion)                                            | —                                                                                                   |
+| Event                                                                                  | `live_games` Columns Updated                                                     | Participant Tables Columns Updated                                                                  |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **Game created**                                                                       | INSERT full row (all Group 1 columns, defaults for the rest)                     | INSERT human rows into `live_player_games` and any engine row into `live_engine_games`              |
+| **Move submitted**                                                                     | `moves`, `color_ticking`, `clock_snapshot_time`, `validate_moves`                | `time_remaining_ms` for every participant                                                           |
+| **Engine turn paused/resumed**                                                         | `color_ticking`, `clock_snapshot_time`                                           | `time_remaining_ms` for every participant                                                           |
+| **Draw offer extended**                                                                | `draw_offer_state`                                                               | `last_draw_offer_ply` (offering player)                                                             |
+| **Draw offer declined**                                                                | `draw_offer_state` → NULL                                                        | —                                                                                                   |
+| **Draw accepted**                                                                      | DELETE row (game logged to permanent tables) — cascades to participant tables    | (cascades)                                                                                          |
+| **Resignation**                                                                        | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
+| **Abort**                                                                              | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
+| **Time loss**                                                                          | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
+| **Claim victory/draw**                                                                 | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
+| **Player disconnects**                                                                 | —                                                                                | `disconnect_cushion_end_time`, `disconnect_claim_time`, `disconnect_voluntary`                      |
+| **Player reconnects**                                                                  | `both_disconnected_end_time` → NULL                                              | `disconnect_cushion_end_time` → NULL, `disconnect_claim_time` → NULL, `disconnect_voluntary` → NULL |
+| **Both-disconnected timer set/cleared**                                                | `both_disconnected_end_time`                                                     | —                                                                                                   |
+| **Both-disconnected timeout** (draw by abandonment / abort / engine win by disconnect) | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
+| **Game finalized** (result locked in)                                                  | — (row already deleted at conclusion; only the in-memory `finalized` flag flips) | —                                                                                                   |
+| **Game evicted** (both players left the rematch window)                                | — (row already removed at conclusion)                                            | —                                                                                                   |
 
 ### Game conclusion & the rematch window
 
