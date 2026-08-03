@@ -15,6 +15,7 @@ import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.
 
 import view from './guianalysisview.js';
 import toast from '../../../components/toast.js';
+import docutil from '../../../util/docutil.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import IndexedDB from '../../../util/IndexedDB.js';
 import estoretypes from '../../../game/editorstores/estoretypes.js';
@@ -172,11 +173,10 @@ async function exportIcnToClipboard(): Promise<void> {
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
-	try {
-		await navigator.clipboard.writeText(getGameICN(gamefile));
+	if (await docutil.copyToClipboard(getGameICN(gamefile))) {
 		toast.show('Copied ICN to your clipboard!');
-	} catch (e) {
-		toast.show('Clipboard permission denied. This might be your browser.' + '\n' + e, { error: true }); // prettier-ignore
+	} else {
+		toast.show('Clipboard permission denied. This might be your browser.', { error: true });
 	}
 }
 
