@@ -32,7 +32,7 @@ function init(): void {
 
 /** The active Slide Limit modifier as a bigint gamerule, or undefined if none is selected. */
 function getSelectedSlideLimit(): bigint | undefined {
-	for (const modifier of modifierSelector.getSeekModifiers()) {
+	for (const modifier of modifierSelector.getGameModifiers()) {
 		if (modifier.kind === 'slide-limit') return BigInt(modifier.value);
 	}
 	return undefined;

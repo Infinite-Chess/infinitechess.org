@@ -9,7 +9,7 @@
 import type { VNode } from 'snabbdom';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
 import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { SeekVariant, SeekModifier } from '../../../../../shared/types.js';
+import type { SeekVariant, GameModifier } from '../../../../../shared/types.js';
 import type {
 	VariantGroup,
 	VariantCode,
@@ -110,7 +110,7 @@ let loaded: {
 	/** The ICN a From-ICN position was loaded from; undefined for non-ICN selections. */
 	icn?: string;
 	/** The modifiers active at load, restored alongside the selection. */
-	modifiers: SeekModifier[];
+	modifiers: GameModifier[];
 } = { selection: { kind: 'preset', code: 'Classical' }, icn: '', modifiers: [] };
 
 let customContentVNode: VNode | Element = element_customVariantContent;
@@ -494,7 +494,7 @@ function snapshotAccepted(): void {
 	loaded = {
 		selection,
 		icn: selection.kind === 'icn' ? element_icnInput.value : undefined,
-		modifiers: modifierSelector.getSeekModifiers(),
+		modifiers: modifierSelector.getGameModifiers(),
 	};
 }
 

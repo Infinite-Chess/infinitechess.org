@@ -6,7 +6,7 @@
  */
 
 import type { ModifierCode } from '../../../../../shared/util/modutil.js';
-import type { SeekModifier } from '../../../../../shared/types.js';
+import type { GameModifier } from '../../../../../shared/types.js';
 
 import modutil from '../../../../../shared/util/modutil.js';
 import gameconfig from '../../../../../shared/util/gameconfig.js';
@@ -155,7 +155,7 @@ function hasVisibleModifierItems(): boolean {
  * Replaces the current selection with the given modifiers, syncing the dropdown,
  * chips, and slider. Used to restore a snapshotted modifier state (no commit fired).
  */
-function applyModifiers(modifiers: SeekModifier[]): void {
+function applyModifiers(modifiers: GameModifier[]): void {
 	selectedModifiers.clear();
 	for (const modifier of modifiers) {
 		selectedModifiers.add(modifier.kind);
@@ -175,8 +175,8 @@ function applyModifiers(modifiers: SeekModifier[]): void {
 }
 
 /** Returns the complete configuration for every currently selected modifier. */
-function getSeekModifiers(): SeekModifier[] {
-	const configs: SeekModifier[] = [];
+function getGameModifiers(): GameModifier[] {
+	const configs: GameModifier[] = [];
 	if (selectedModifiers.has('slide-limit')) {
 		const idx = parseInt(element_slideLimitSlider.value, 10);
 		const slideLimit = gameconfig.SLIDE_LIMIT_VALUES[idx]!;
@@ -190,6 +190,6 @@ function getSeekModifiers(): SeekModifier[] {
 export default {
 	initModifierSelector,
 	closeModifierDropdown,
-	getSeekModifiers,
+	getGameModifiers,
 	applyModifiers,
 };

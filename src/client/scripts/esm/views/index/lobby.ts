@@ -15,7 +15,7 @@ import type {
 	OutSeek,
 	SeekVariant,
 	GameMode,
-	SeekModifier,
+	GameModifier,
 } from '../../../../../shared/types.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
@@ -53,7 +53,7 @@ type CreateSeekOptions = {
 	time: TimeControl;
 	color: Player | null;
 	mode: GameMode;
-	modifiers: SeekModifier[];
+	modifiers: GameModifier[];
 };
 
 // Constants ------------------------------------------

@@ -29,7 +29,7 @@ import {
 } from '../../../shared/chess/variants/servervalidation.js';
 import {
 	SeekVariantSchema,
-	SeekModifierSchema,
+	GameModifierSchema,
 	TimeControlSchema,
 	GameModeSchema,
 } from '../../../shared/types.js';
@@ -68,7 +68,7 @@ const createseekschem = z
 		}),
 		color: z.literal([p.WHITE, p.BLACK, null]),
 		mode: GameModeSchema,
-		modifiers: z.array(SeekModifierSchema).max(SeekModifierSchema.options.length),
+		modifiers: z.array(GameModifierSchema).max(GameModifierSchema.options.length),
 	})
 	.refine(
 		(val) =>

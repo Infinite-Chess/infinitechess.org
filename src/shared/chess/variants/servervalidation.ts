@@ -11,7 +11,7 @@
 import type { Player } from '../util/typeutil.js';
 import type { VariantCode } from './variantregistry.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
-import type { SeekVariant, TimeControl, SeekModifier } from '../../types.js';
+import type { SeekVariant, TimeControl, GameModifier } from '../../types.js';
 
 import variantpreviewer from './variantpreviewer.js';
 import { VariantLeaderboards } from './validleaderboard.js';
@@ -73,7 +73,7 @@ function isRatedAllowed(
 	variant: SeekVariant | null,
 	time: TimeControl,
 	color: Player | null,
-	modifiers: SeekModifier[],
+	modifiers: GameModifier[],
 ): boolean {
 	if (variant === null) return false;
 	if (variant.kind !== 'preset') return false; // Custom variants are never rated

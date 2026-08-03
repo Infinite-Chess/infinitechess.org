@@ -9,7 +9,7 @@
  * Obstocean (infinite obstacles), Drawback Chess, Progressive Chess.
  */
 
-import type { SeekModifier } from '../types.js';
+import type { GameModifier } from '../types.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ type ModifierDescriptionVars = Record<string, string | number>;
 
 // ================================ MODIFIER REGISTRY ================================
 
-const MODIFIER_ICONS: Record<SeekModifier['kind'], string> = {
+const MODIFIER_ICONS: Record<GameModifier['kind'], string> = {
 	'slide-limit': 'svg-slide-limit',
 };
 
@@ -42,7 +42,7 @@ function getModifierIconId(code: ModifierCode): string {
  * Modifiers that don't need an active-value parameter should reuse their
  * static `t.shared.modifiers.<code>.description` directly with no vars.
  */
-function getModifierDescriptionVars(modifier: SeekModifier): ModifierDescriptionVars {
+function getModifierDescriptionVars(modifier: GameModifier): ModifierDescriptionVars {
 	switch (modifier.kind) {
 		case 'slide-limit':
 			return { n: modifier.value };
