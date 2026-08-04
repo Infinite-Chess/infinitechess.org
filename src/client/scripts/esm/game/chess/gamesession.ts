@@ -127,11 +127,12 @@ function onCatchLoadingError(err: Error): void {
 }
 
 /**
- * Concludes the game if it loaded already over. Call AFTER {@link markLoadingDone}: the moves
- * list only paints its plies on 'graphical-loaded', and the result banner sits beneath them.
+ * Concludes the game if it's over — whether it loaded that way, or a conclusion arrived mid-load
+ * (gameslot.concludeGame() defers to here while loading). Call AFTER {@link markLoadingDone}: the
+ * moves list only paints its plies on 'graphical-loaded', and the result banner sits beneath them.
  */
 function concludeGameIfOver(): void {
-	// Suppresses the game-over sound — the game concluded before this load, not live in front of us.
+	// Suppresses the game-over sound — it didn't happen live in front of us; the board wasn't up yet.
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame(false);
 }
 
