@@ -28,6 +28,7 @@ import boardeditor from '../boardeditor/boardeditor.js';
 /** Initializes the board editor. */
 async function startBoardEditor(): Promise<void> {
 	gamesession.setSessionGame({ type: 'editor' });
+	gamesession.markLoading();
 
 	const dateTimestamp = Date.now();
 	const variantCode: VariantCode = 'Classical';
@@ -66,6 +67,7 @@ async function startCustomLocalGame(options: {
 	presetAnnotes?: PresetAnnotes;
 }): Promise<void> {
 	gamesession.setSessionGame({ type: 'analysis' });
+	gamesession.markLoading();
 
 	const dateTimestamp = Date.now();
 
@@ -105,6 +107,7 @@ async function startBoardEditorFromCustomPosition(
 	castling?: boolean,
 ): Promise<void> {
 	gamesession.setSessionGame({ type: 'editor' });
+	gamesession.markLoading();
 
 	const dateTimestamp = Date.now();
 

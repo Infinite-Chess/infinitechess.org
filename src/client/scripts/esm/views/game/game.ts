@@ -6,6 +6,7 @@
 
 import gameloop from '../../game/gameloop.js';
 import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
+import gamesession from '../../game/chess/gamesession.js';
 import deadgameloader from '../../game/misc/onlinegame/deadgameloader.js';
 
 import '../../game/gui/guigamemeta.js';
@@ -21,6 +22,8 @@ const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
 /** Starts the game page. Runs once the page is loaded. */
 function start(): void {
 	gameloop.init(canvas);
+
+	gamesession.setSessionGame({ type: 'online', role: window.gamePageData.role });
 
 	// Prevent clicking buttons from focusing them, keyboard controls interacting with them.
 	document.querySelectorAll<HTMLElement>('.btn-bare, .action-btn').forEach((btn) => {

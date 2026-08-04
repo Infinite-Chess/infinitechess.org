@@ -39,6 +39,7 @@ type GameSession =
 
 // Variables --------------------------------------------------------------------
 
+/** Every page must establish this at entry, before the game loop starts, so it is never read un-set. */
 let session: GameSession;
 
 /** True while the gamefile's logical, graphical (images), or engine resources are currently loading. */
@@ -77,10 +78,9 @@ function isLoading(): boolean {
 
 // Load / Unload lifecycle ------------------------------------------------------
 
-/** Sets the type of game we're in, and marks it as loading. */
+/** Declares the kind of game session we're in. */
 function setSessionGame(gameSession: GameSession): void {
 	session = gameSession;
-	markLoading();
 }
 
 /** Flags the game's graphics/engine as newly loading. */

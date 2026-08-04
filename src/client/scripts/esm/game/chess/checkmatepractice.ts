@@ -137,6 +137,7 @@ function startEngineGame(options: {
 	};
 }): void {
 	gamesession.setSessionGame({ type: 'engine', role: options.youAreColor });
+	gamesession.markLoading();
 	gameslot
 		.loadGamefile({
 			timeControl: options.timeControl,

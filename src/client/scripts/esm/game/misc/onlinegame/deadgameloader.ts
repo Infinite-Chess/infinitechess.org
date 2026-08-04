@@ -20,7 +20,7 @@ async function loadDeadGame(): Promise<void> {
 	try {
 		const deadState: DeadGameState = await fetchDeadState();
 		const gameState = normalizeToGameState(deadState);
-		onlinegame.loadGameFromState(gameState, true, window.gamePageData.role);
+		onlinegame.loadGameFromState(gameState, true);
 	} catch (e: unknown) {
 		console.error('Failed to fetch dead game state:', e);
 		toast.show('Failed to load game. Please refresh.', { error: true });

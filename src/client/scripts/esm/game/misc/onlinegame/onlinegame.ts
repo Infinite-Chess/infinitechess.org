@@ -9,8 +9,8 @@ import type { GameStateMessage, ParticipantState } from '../../../../../../share
 
 import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 import { engineDictionary } from '../../../../../../shared/chess/engine.js';
-import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
@@ -78,10 +78,12 @@ function setInSync(value: boolean): void {
  * A fresh page load (not a reconnect, game live OR dead): Loads a game onto the
  * board from a fresh `gamestate` message and sets up the online-game session.
  * @param dead - Whether the server has evicted it from memory. True if fetched over HTTP.
- * @param ourRole - The viewer's color, if they're a participant; undefined => spectator (white POV).
  */
-function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Player): void {
-	gamesession.setSessionGame({ type: 'online', role: ourRole });
+function loadGameFromState(state: GameStateMessage, dead: boolean): void {
+	gamesession.markLoading();
+
+	/** The viewer's color, if they're a participant; undefined => spectator (white POV). */
+	const ourRole = gamesession.getRole();
 
 	// The static setup (variant/time control/creation time) is SSR'd
 	const { variant, timeControl, timeCreated, engineGame } = window.gamePageData;

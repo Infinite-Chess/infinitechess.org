@@ -64,7 +64,7 @@ function receiveMessage(contents: GameMessage): void {
 		} else if (contents.action === 'gamestate') {
 			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
 			// Nothing loaded/loading yet: the first `gamestate` bootstraps the game.
-			onlinegame.loadGameFromState(contents.value, false, window.gamePageData.role);
+			onlinegame.loadGameFromState(contents.value, false);
 		} else {
 			console.error(`Received game message before receiving gamestate: ${JSON.stringify(contents)}`); // prettier-ignore
 		}

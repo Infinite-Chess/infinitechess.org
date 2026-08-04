@@ -58,7 +58,7 @@ async function loadInitialGame(): Promise<void> {
 		await loadVariant('Classical');
 	} else {
 		// Load the game from the server
-		gamesession.setSessionGame({ type: 'analysis' }); // pasteGame requires an analysis session.
+		gamesession.markLoading(); // Covers the fetch too, ahead of the load pasteGame flags.
 		try {
 			const response = await fetch(`/api/game/${uuid.base10ToBase62(gameId)}`);
 			if (!response.ok) throw new Error(`Game fetch failed (${response.status})`);
@@ -101,8 +101,8 @@ function runLoad(loadOptions: LoadOptions): Promise<void> {
 function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
 	lastLoad = { replay: () => loadVariant(variant, slideLimit), players: {} };
 	if (gameslot.getGamefile()) gamesession.unloadGame();
+	gamesession.markLoading();
 
-	gamesession.setSessionGame({ type: 'analysis' });
 	return runLoad({
 		timeControl: '-',
 		variant,

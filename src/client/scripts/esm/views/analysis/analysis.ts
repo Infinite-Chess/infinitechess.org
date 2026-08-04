@@ -8,6 +8,7 @@
  */
 
 import gameloop from '../../game/gameloop.js';
+import gamesession from '../../game/chess/gamesession.js';
 import guigamereview from './gui/guigamereview.js';
 import analysisloader from './analysisloader.js';
 import guienginepanel from './gui/guienginepanel.js';
@@ -25,6 +26,8 @@ const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
 /** Starts the analysis page. Runs once the page is loaded. */
 function start(): void {
 	gameloop.init(canvas);
+
+	gamesession.setSessionGame({ type: 'analysis' });
 
 	// Prevent clicking buttons from focusing them, so keyboard controls don't interact with them.
 	document
