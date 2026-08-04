@@ -12,6 +12,7 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 
 import area from '../rendering/area.js';
 import toast from '../../components/toast.js';
+import thread from '../../util/thread.js';
 import meshes from '../rendering/meshes.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
@@ -111,9 +112,14 @@ function markLoading(): void {
  * tear down the old game, await both load halves, reveal the board, surface any error.
  * Resolves once fully loaded — or once a failure has been surfaced. Never rejects.
  */
-function loadGame(loadOptions: LoadOptions, hooks?: LoadHooks): Promise<void> {
+async function loadGame(loadOptions: LoadOptions, hooks?: LoadHooks): Promise<void> {
 	if (gameslot.getGamefile()) unloadGame();
 	markLoading();
+
+	// Yield a task so the browser gets a rendering step to composite the canvas hide above.
+	// (A timer is not a hard paint guarantee — double-rAF is, but rAF never fires in a hidden
+	// tab, which would stall the whole load until the tab is foregrounded.)
+	await thread.sleep(0);
 
 	return gameslot
 		.loadGamefile(loadOptions)
