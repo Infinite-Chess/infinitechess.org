@@ -77,6 +77,7 @@ function init(): void {
 	});
 	enginelegalmovesdebug.init({
 		canRequest: () => !ceval.isBlocked(),
+		getBlockedReason: () => ceval.getBlockReason(),
 		requestMoves: ({ id, positionIcn }) => ceval.requestLegalMoves(id, positionIcn),
 		release: () => ceval.terminateLegalWorker(),
 	});

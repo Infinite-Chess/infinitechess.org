@@ -51,11 +51,6 @@ GameBus.addEventListener('user-move-played', () => onMovePlayed());
 GameBus.addEventListener('game-concluded', () => terminate());
 GameBus.addEventListener('game-unloaded', () => terminate());
 
-enginelegalmovesdebug.init({
-	canRequest: () => engine?.ready === true,
-	requestMoves: ({ gamefile }) => requestGeneratedMoves(gamefile),
-});
-
 // Functions ------------------------------------------------------------------------
 
 /**
@@ -91,6 +86,13 @@ function initEngineGame(options: {
 		type: 'module',
 	}); // module type allows the web worker to import methods and types from other scripts.
 	engine = { worker, ready: false };
+
+	// Installed per engine game, so the debug toggle stays inert where no engine
+	// is loaded (spectators). Requests wait for 'readyok'; onEngineReady() then fires them.
+	enginelegalmovesdebug.init({
+		canRequest: () => engine?.ready === true,
+		requestMoves: ({ gamefile }) => requestGeneratedMoves(gamefile),
+	});
 
 	// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
 	// We have to manually send this message at the top of our engines.
@@ -312,6 +314,7 @@ function terminate(): void {
 	engine = undefined;
 	engineColor = undefined;
 	engineConfig = undefined;
+	enginelegalmovesdebug.detach();
 }
 
 // Export ---------------------------------------------------------------------------------

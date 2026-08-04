@@ -34,8 +34,13 @@ interface DebugMoveRequest {
 
 /** Callbacks provided by the engine consumer to wire the overlay into a specific engine worker. */
 interface EngineLegalMovesDebugOptions {
-	/** Returns true when the position is within the engine's safe world border. */
+	/** Returns true when the engine can be asked for moves right now. */
 	canRequest: () => boolean;
+	/**
+	 * The user-facing reason the overlay can't be enabled in this position, or undefined
+	 * when it can. Omit if the engine has no such positions.
+	 */
+	getBlockedReason?: () => string | undefined;
 	/** Sends `request` to the engine worker. */
 	requestMoves: (request: DebugMoveRequest) => void;
 	/**
@@ -62,7 +67,7 @@ const requestKeyById = new Map<number, string>();
 /** Ordered queue of in-flight request ids, used for FIFO response matching. */
 const pendingRequestIds: number[] = [];
 
-/** Wires up the overlay's engine hooks and (once) its GameBus listeners. */
+/** Wires up the overlay's engine hooks and (once) its GameBus listeners. Call only when an engine exists. */
 function init(nextOptions: EngineLegalMovesDebugOptions): void {
 	options = nextOptions;
 	if (initialized) return;
@@ -74,14 +79,22 @@ function init(nextOptions: EngineLegalMovesDebugOptions): void {
 	GameBus.addEventListener('game-unloaded', () => clear());
 }
 
+/** Uninstalls the hooks when the engine goes away, leaving the overlay off and its toggle inert. */
+function detach(): void {
+	disable();
+	options = undefined;
+}
+
 /** Toggles the overlay on/off, requesting moves when enabling and dropping pending requests when disabling. */
 function toggle(): void {
+	if (!options) return; // No engine here (e.g. spectating) — the overlay isn't installed.
 	if (enabled) {
 		disable();
 		return;
 	}
-	if (!options?.canRequest()) {
-		toast.show('Engine legal moves debug disabled: pieces outside world border', { error: true }); // prettier-ignore
+	const blockedReason = options.getBlockedReason?.();
+	if (blockedReason !== undefined) {
+		toast.show(`Engine legal moves debug unavailable: ${blockedReason}`, { error: true });
 		return;
 	}
 	enabled = true;
@@ -198,6 +211,7 @@ function clear(): void {
 
 export default {
 	init,
+	detach,
 	disable,
 	receiveMoves,
 	receiveMovesForOldestRequest,
