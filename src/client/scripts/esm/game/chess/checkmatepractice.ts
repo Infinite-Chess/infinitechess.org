@@ -85,10 +85,6 @@ function setUndoingIsLegal(value: boolean): void {
 	// TODO: reflect undo/restart button state in the new game page's side bar.
 }
 
-function areInCheckmatePractice(): boolean {
-	return inCheckmatePractice;
-}
-
 /**
  * Starts a checkmate practice game
  */
@@ -160,20 +156,10 @@ function startEngineGame(options: {
 	);
 }
 
-function onGameUnload(): void {
-	closeListeners();
-	inCheckmatePractice = false;
-	setUndoingIsLegal(false);
-}
-
+/** Re-registering the same handler refs on a restart is a no-op, so these are never removed. */
 function initListeners(): void {
 	document.addEventListener('guigameinfo-undoMove', undoMove);
 	document.addEventListener('guigameinfo-restart', restartGame);
-}
-
-function closeListeners(): void {
-	document.removeEventListener('guigameinfo-undoMove', undoMove);
-	document.removeEventListener('guigameinfo-restart', restartGame);
 }
 
 /**
@@ -464,9 +450,7 @@ function restartGame(): void {
 // Exports ------------------------------------------------------------------------------
 
 export default {
-	areInCheckmatePractice,
 	startCheckmatePractice,
-	onGameUnload,
 	updateCompletedCheckmates,
 	eraseCheckmatePracticeProgressFromLocalStorage,
 };
