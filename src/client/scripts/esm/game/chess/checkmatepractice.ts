@@ -23,6 +23,7 @@ import {
 	rawTypes as r,
 } from '../../../../../shared/chess/util/typeutil.js';
 
+import toast from '../../components/toast.js';
 import docutil from '../../util/docutil.js';
 import gameslot from './gameslot.js';
 import selection from '../chess/selection.js';
@@ -456,9 +457,9 @@ function undoMove(): void {
 
 function restartGame(): void {
 	if (!inCheckmatePractice)
-		return console.error(
-			'Restarting games is currently not supported for non-practice mode games',
-		);
+		return console.error('Restarting games is currently not supported for non-practice mode games'); // prettier-ignore
+	// Don't stomp an in-flight load — unloading its gamefile would crash its graphical half.
+	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 
 	gamesession.unloadGame(); // Unload current game
 	startCheckmatePractice(guipractice.getCheckmateSelectedID());
