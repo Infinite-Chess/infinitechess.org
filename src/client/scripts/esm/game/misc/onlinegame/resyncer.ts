@@ -53,7 +53,9 @@ function handleGameState(
 
 	onlinegame.setParticipantState(message.participantState);
 
-	// Must be set before editing the clocks.
+	// Must be set before editing the clocks. Overwriting a conclusion we derived locally with
+	// undefined is intended — online games never conclude off ours (it's set only so the move
+	// list can render '#'); the server's own conclusion message follows right behind this.
 	gamefile.gameConclusion = claimedGameConclusion;
 
 	// Adjust the timer whos turn it is depending on ping.
