@@ -135,6 +135,13 @@ interface PlayerData {
 	disconnect: PlayerDisconnect;
 }
 
+/** Identifies the engine a human is playing against. */
+interface EngineInfo {
+	engine: ValidEngine;
+	version: string;
+	strengthLevel: number;
+}
+
 /** The info for the server hosting the game */
 interface MatchInfo {
 	/** The match's unique ID. This is also the same ID the game will have when logged to the database. */
@@ -157,12 +164,7 @@ interface MatchInfo {
 	/** The data held for each player */
 	playerData: PlayerGroup<PlayerData>;
 	/** Present only for games against an engine. Its moves arrive over the human's socket. */
-	engineParticipant?: {
-		color: Player;
-		engine: ValidEngine;
-		version: string;
-		strengthLevel: number;
-	};
+	engineParticipant?: EngineInfo & { color: Player };
 
 	/** The ID of the timeout which will auto-lose the player
 	 * whos turn it currently is when they run out of time. */
@@ -780,10 +782,15 @@ function printGame(servergame: ServerGame): void {
  */
 function getSimplifiedGameString(servergame: ServerGame): string {
 	// Only transfer interesting information.
-	const players: PlayerGroup<AuthMemberInfo> = {};
+	const players: PlayerGroup<AuthMemberInfo | EngineInfo> = {};
 	for (const [c, data] of Object.entries(servergame.match.playerData)) {
 		players[Number(c) as Player] = data.identifier;
 	}
+	if (servergame.match.engineParticipant) {
+		const { color, ...engineInfo } = servergame.match.engineParticipant;
+		players[color] = engineInfo;
+	}
+
 	let moves: undefined | string[];
 	if (servergame.moves.length > 0) moves = servergame.moves.map((m) => m.token);
 	const simplifiedGame = {
