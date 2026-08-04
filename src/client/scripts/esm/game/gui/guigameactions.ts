@@ -15,7 +15,7 @@
  *
  * It also wires every action button. Within `.actions-live`, resign and abort
  * share one slot: abort shows before the game is resignable (0–1 plies), resign
- * after. Rematch is a placeholder until the server supports it.
+ * after.
  */
 
 import type { RematchOfferInfo } from '../../../../../shared/types.js';

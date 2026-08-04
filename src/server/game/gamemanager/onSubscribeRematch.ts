@@ -26,10 +26,6 @@ function onSubscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 			console.error(`Client requested a rematch subscription for a game that is not over (game_id ${game_id}).`); // prettier-ignore
 			return;
 		}
-		if (gameutility.isEngineGame(game)) {
-			sendSocketMessage(ws, 'game', 'unsub');
-			return;
-		}
 		const ourRole = gameutility.getSocketRoleInGame(game, ws);
 		if (ourRole !== undefined) {
 			// Participant path: attach, then send the current rematch state.

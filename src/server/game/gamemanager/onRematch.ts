@@ -4,7 +4,8 @@
  * This script contains the route for offering a rematch after a game concludes.
  *
  * Each player independently offers; once BOTH have offered, a rematch game is
- * created (same variant/time/rated, colors swapped).
+ * created (same variant/time/rated, colors swapped). Engine games skip the
+ * handshake — an engine always accepts, so the human's offer starts it outright.
  */
 
 import type { AuthMemberInfo } from '../../types.js';
@@ -15,6 +16,7 @@ import type { GameSetup, ServerGame } from './gameutility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
+import { getEngineVersion } from '../../config/manifest.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { createGame, evictGame } from './gamemanager.js';
 import { getIDOfGamePlayerIsIn } from './activeplayers.js';
@@ -28,9 +30,11 @@ import { getIDOfGamePlayerIsIn } from './activeplayers.js';
  * @param ourRole - The color the socket is playing as.
  */
 function offerRematch(servergame: ServerGame, ourRole: Player): void {
-	if (gameutility.isEngineGame(servergame)) return;
 	if (!gameutility.isGameOver(servergame))
 		return console.error('Client offered a rematch when the game is not over. Ignoring.');
+
+	// There's no engine to await an acceptance from — start the rematch immediately.
+	if (gameutility.isEngineGame(servergame)) return createRematchGame(servergame);
 
 	const match = servergame.match;
 	const opponentColor = typeutil.invertPlayer(ourRole);
@@ -52,10 +56,11 @@ function offerRematch(servergame: ServerGame, ourRole: Player): void {
 }
 
 /**
- * Creates a rematch of a concluded game: same variant/time/rated, players swapped to the
- * opposite colors. Tears down the old game, starts the fresh one, and navigates both still-
- * connected players to it. Silently aborts if either player is already in another game.
- * @param oldGame - The concluded game both players have offered a rematch of.
+ * Creates a rematch of a concluded game: same variant/time/rated (and same engine/difficulty,
+ * if any), participants swapped to the opposite colors. Tears down the old game, starts the
+ * fresh one, and navigates all still-connected players to it. Silently aborts if either player
+ * is already in another game.
+ * @param oldGame - The concluded game a rematch has been agreed upon for.
  */
 function createRematchGame(oldGame: ServerGame): void {
 	const oldMatch = oldGame.match;
@@ -85,6 +90,15 @@ function createRematchGame(oldGame: ServerGame): void {
 		variant: { kind: 'preset', code: oldMatch.variant },
 		time: oldMatch.clock,
 		rated: oldMatch.rated,
+		// The version is re-seeded rather than carried over — an engine update could have
+		// landed mid-game, in which case the old game's version is no longer what we'd serve.
+		...(oldMatch.engineParticipant && {
+			engineParticipant: {
+				...oldMatch.engineParticipant,
+				color: typeutil.invertPlayer(oldMatch.engineParticipant.color),
+				version: getEngineVersion(),
+			},
+		}),
 	};
 
 	evictGame(oldGame); // Removes the old game from memory (and unsubscribes its sockets).

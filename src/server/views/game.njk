@@ -229,7 +229,7 @@
 					{% endif %}
 					{# Post-game actions: rematch and analysis board. #}
 					<div class="actions-over{{ '' if meta.result else ' hidden' }}">
-						{% if gamePageData.isLive and gamePageData.role is defined and not gamePageData.engineGame %}
+						{% if gamePageData.isLive and gamePageData.role is defined %}
 						<button class="action-btn" id="btn-rematch">Rematch</button>
 						{% endif %}
 						{# Nothing to analyze with zero moves. A live game can still gain

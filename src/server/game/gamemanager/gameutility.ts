@@ -714,7 +714,9 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
  * offer (glow) and whether they're connected (button enabled). Undefined while the game is live.
  */
 function getRematchOfferInfo(servergame: ServerGame, role: Player): RematchOfferInfo | undefined {
-	if (!isGameOver(servergame) || isEngineGame(servergame)) return undefined;
+	if (!isGameOver(servergame)) return undefined;
+	// An engine is always present, and never offers first — it accepts ours the instant we send it.
+	if (isEngineGame(servergame)) return { offered: false, present: true };
 	const opponentRole = typeutil.invertPlayer(role);
 	const opponentData = servergame.match.playerData[opponentRole]!;
 	return {
