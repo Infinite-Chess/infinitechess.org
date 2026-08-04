@@ -136,16 +136,13 @@ function concludeGameIfOver(): void {
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame(false);
 }
 
-function unloadLogicalAndRendering(): void {
+/** Tears the current board down — gamefile, perspective, momentum, transitions — and hides the canvas. */
+function unloadGame(): void {
 	perspective.disable();
 	gameslot.unloadGame();
 	boardpos.eraseMomentum();
 	Transition.terminate();
 	gamecore.getCanvas().classList.add('visibility-hidden');
-}
-
-function unloadGame(): void {
-	unloadLogicalAndRendering();
 }
 
 // Exports --------------------------------------------------------------------
@@ -160,6 +157,5 @@ export default {
 	markLoadingDone,
 	onCatchLoadingError,
 	concludeGameIfOver,
-	unloadLogicalAndRendering,
 	unloadGame,
 };

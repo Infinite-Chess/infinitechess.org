@@ -65,7 +65,7 @@ SocketBus.addEventListener('reconnect', () => {
 // Getters ------------------------------------------------------------
 
 function areInSync(): boolean {
-	return inSync!;
+	return inSync;
 }
 
 function setInSync(value: boolean): void {

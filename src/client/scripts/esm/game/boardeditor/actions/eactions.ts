@@ -76,8 +76,7 @@ const CLIPBOARD_DENIED = 'Clipboard permission denied. This might be your browse
 
 /** Resets the board editor position to the Classical position. */
 async function reset(): Promise<void> {
-	// Unload logical and rendering parts of current position
-	gamesession.unloadLogicalAndRendering();
+	gamesession.unloadGame();
 
 	// Load default board editor position
 	boardeditor.clearActivePosition();
@@ -86,8 +85,7 @@ async function reset(): Promise<void> {
 
 /** Clears the entire board editor position. */
 async function clearAll(): Promise<void> {
-	// Unload logical and rendering parts of current position
-	gamesession.unloadLogicalAndRendering();
+	gamesession.unloadGame();
 
 	// Initialize board editor with empty position and bare minimum game rules
 	const gameRules = variantpreviewer.getBareMinimumGameRules();
@@ -115,8 +113,7 @@ async function clearAll(): Promise<void> {
 
 /** Loads a position from a savestate. */
 async function load(editorSaveState: EditorSaveState, storage_type: StorageType): Promise<void> {
-	// Unload logical and rendering parts of current position
-	gamesession.unloadLogicalAndRendering();
+	gamesession.unloadGame();
 
 	// prettier-ignore
 	const new_active_position: ActivePosition =
