@@ -48,50 +48,30 @@ function reloadPristine(): Promise<void> {
 
 // Load Paths -------------------------------------------------------------------
 
-/** Loads the game named by the URL, falling back to a fresh Classical board. */
-async function loadInitialGame(): Promise<void> {
-	const gameId = window.analysisPageData.gameId;
-
-	if (gameId === null) {
-		// No game ID in the URL -> start a fresh board. The variant setup panel drives
-		// subsequent loads (see analysissetup.ts).
-		await loadVariant('Classical');
-	} else {
-		// Load the game from the server
-		gamesession.markLoading(); // Covers the fetch too, ahead of the load pasteGame flags.
-		try {
-			const response = await fetch(`/api/game/${uuid.base10ToBase62(gameId)}`);
-			if (!response.ok) throw new Error(`Game fetch failed (${response.status})`);
-			const state: DeadGameState = await response.json();
-			// Auto-orient the board to the side the viewer played from
-			// (black flips it; spectators/white keep white's perspective).
-			const viewWhitePerspective = window.analysisPageData.role !== p.BLACK;
-			const longFormat = icnconverter.ShortToLong_Format(state.icn);
-			await pasteGame(longFormat, state.gameConclusion, viewWhitePerspective);
-			// Only the reviewed game gets a result banner. Deliberately NOT done for the other load paths.
-			gamesession.concludeGameIfOver();
-			guianalysisview.syncClockDisplayToViewedMove(true);
-		} catch (e) {
-			// This can only be reached if the game was deleted from the DB between
-			// SSR'ing (otherwise we would have seen a 404 page) and the client fetch.
-			// Don't fall back to a fresh board — the SSR'd game info stays in the
-			// sidebar, so a blank board beside it be a lie.
-			console.error('Failed to load game for analysis:', e);
-			toast.show('Failed to load game. Please refresh.', { error: true });
-		}
-	}
-}
-
 /**
- * Runs a loadGamefile call through the analysis loading lifecycle
- * (mark graphical done → surface load errors).
+ * Fetches a finished game from the server by its id and loads it, auto-oriented to the
+ * side the viewer played from (black flips it; spectators/white keep white's perspective).
  */
-function runLoad(loadOptions: LoadOptions): Promise<void> {
-	return gameslot
-		.loadGamefile(loadOptions)
-		.then(({ graphical }) => graphical) // Also await the graphical load
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
+async function loadGameById(gameId: number): Promise<void> {
+	gamesession.markLoading(); // Covers the fetch too, ahead of the load pasteGame flags.
+	try {
+		const response = await fetch(`/api/game/${uuid.base10ToBase62(gameId)}`);
+		if (!response.ok) throw new Error(`Game fetch failed (${response.status})`);
+		const state: DeadGameState = await response.json();
+		const viewWhitePerspective = window.analysisPageData.role !== p.BLACK;
+		const longFormat = icnconverter.ShortToLong_Format(state.icn);
+		await pasteGame(longFormat, state.gameConclusion, viewWhitePerspective);
+		// Only a game fetched from the server gets a result banner. Deliberately NOT done for the other load paths.
+		gamesession.concludeGameIfOver();
+		guianalysisview.syncClockDisplayToViewedMove(true);
+	} catch (e) {
+		// This can only be reached if the game was deleted from the DB between
+		// SSR'ing (otherwise we would have seen a 404 page) and the client fetch.
+		// Don't fall back to a fresh board — the SSR'd game info stays in the
+		// sidebar, so a blank board beside it be a lie.
+		console.error('Failed to load game for analysis:', e);
+		toast.show('Failed to load game. Please refresh.', { error: true });
+	}
 }
 
 /**
@@ -112,6 +92,18 @@ function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
 			additional: { slideLimit },
 		}),
 	});
+}
+
+/**
+ * Runs a loadGamefile call through the analysis loading lifecycle
+ * (mark graphical done → surface load errors).
+ */
+function runLoad(loadOptions: LoadOptions): Promise<void> {
+	return gameslot
+		.loadGamefile(loadOptions)
+		.then(({ graphical }) => graphical) // Also await the graphical load
+		.then(() => gamesession.markLoadingDone()) // Graphical loaded
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 
 /**
@@ -193,7 +185,7 @@ async function pasteGame(
 export default {
 	getPastedPlayers,
 	reloadPristine,
-	loadInitialGame,
+	loadGameById,
 	loadVariant,
 	loadVariantOptions,
 	pasteGame,

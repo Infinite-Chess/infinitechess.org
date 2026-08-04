@@ -46,7 +46,11 @@ function start(): void {
 		void import('./analysissetup.js').then((m) => m.default.init());
 	}
 
-	void analysisloader.loadInitialGame();
+	// Load the game named by the URL, or a fresh Classical board if there is none —
+	// from there the variant setup panel drives subsequent loads (see analysissetup.ts).
+	const gameId = window.analysisPageData.gameId;
+	if (gameId === null) void analysisloader.loadVariant('Classical');
+	else void analysisloader.loadGameById(gameId);
 
 	// Poll each module's keyboard shortcuts every frame (via gamecore's document input listener).
 	gameloop.start(() => {
