@@ -69,10 +69,13 @@ function createRematchGame(oldGame: ServerGame): void {
 	}
 
 	// Capture identities (swapped colors) and connected sockets before tearing down the old game.
-	const swapped: PlayerGroup<{ identifier: AuthMemberInfo }> = {};
+	const swapped: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }> = {};
 	const socketsToNavigate: CustomWebSocket[] = [];
 	for (const [c, data] of Object.entries(oldMatch.playerData)) {
-		swapped[typeutil.invertPlayer(Number(c) as Player)] = { identifier: data.identifier };
+		swapped[typeutil.invertPlayer(Number(c) as Player)] = {
+			identifier: data.identifier,
+			socket: data.socket,
+		};
 		if (data.socket) socketsToNavigate.push(data.socket);
 	}
 	// Also notify spectators of the rematch

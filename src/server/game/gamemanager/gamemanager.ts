@@ -70,9 +70,9 @@ const activeGames: Record<number, ServerGame> = {};
 // Functions -----------------------------------------------------------------------------------
 
 /**
- * Creates and persists the `ServerGame`, then signals each connected player's lobby
- * client to navigate to the game page (where they re-subscribe to the live game),
- * arming a silent disconnect cushion in the meantime.
+ * Creates and persists the `ServerGame`, then signals each requesting socket to navigate to
+ * the game page (where they re-subscribe to the live game), arming a silent disconnect cushion
+ * in the meantime. A player with no socket is told on their next lobby subscribe instead.
  * @param setup - The variant, time control, and rated flag of the game to start.
  * @param assignments - The color each player has, and their socket if connected.
  * @returns The id of the newly created game.
@@ -108,8 +108,9 @@ function createGame(
 		validateMoves,
 		variant,
 	);
-	for (const data of Object.values(match.playerData)) {
-		addUserToActiveGames(data.identifier, servergame.match.id);
+	for (const { identifier, socket } of Object.values(assignments)) {
+		// A player with no socket to push to is owed the navigate notice on their next lobby subscribe.
+		addUserToActiveGames(identifier, servergame.match.id, socket === undefined);
 	}
 
 	activeGames[servergame.match.id] = servergame;
@@ -119,10 +120,11 @@ function createGame(
 	// state and therefore requires the game row to already exist.
 	liveGameValues.onGameCreated(servergame);
 
-	for (const [strcolor, { identifier }] of Object.entries(assignments)) {
+	for (const [strcolor, { identifier, socket }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
-		// Alert all their lobby-subscribed clients they are in a game.
-		broadcastMemberInGameStatus(identifier);
+		// Alert all their lobby-subscribed clients they are in a game. Only the socket that
+		// asked for this game is taken into it; their other tabs get the rejoin banner.
+		broadcastMemberInGameStatus(identifier, socket);
 		// Give them 5 seconds to navigate to the game page and re-connect
 		// before they're considered disconnected.
 		startDisconnectCushionTimer(servergame, player);
@@ -715,7 +717,8 @@ function restoreLiveGames(): void {
 		// is never persisted to restore. Register its players in the active-players list (blocks
 		// them from joining a second game, and shows their lobby in-game banner).
 		for (const data of Object.values(servergame.match.playerData)) {
-			addUserToActiveGames(data.identifier, servergame.match.id);
+			// No navigate notice owed — the game predates the restart, so they already know of it.
+			addUserToActiveGames(data.identifier, servergame.match.id, false);
 		}
 
 		// Start timers

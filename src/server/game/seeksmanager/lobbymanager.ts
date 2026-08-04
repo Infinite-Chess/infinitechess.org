@@ -14,8 +14,8 @@ import { IDLengthOfSeeks } from '../../../shared/types.js';
 
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { getIDOfGamePlayerIsIn } from '../gamemanager/activeplayers.js';
 import { safelyCopySeek, AuthSeek } from './seekutility.js';
+import { consumeNavigateNotice, getIDOfGamePlayerIsIn } from '../gamemanager/activeplayers.js';
 import {
 	getLobbySubscribers,
 	getSubscriberCount,
@@ -87,12 +87,21 @@ function broadcastSeeks(): void {
  * Broadcasts the member's current in-game status to ALL their lobby-subscribed sockets, so
  * every open lobby tab shows/hides its in-game banner (or navigates). Call right after adding
  * them to, or removing them from, the active games list.
+ * @param navigatingSocket - The socket that asked for the game, if any. It's taken into the
+ * game page, while their other lobby tabs merely show the banner to rejoin it.
  */
-function broadcastMemberInGameStatus(user: AuthMemberInfo): void {
+function broadcastMemberInGameStatus(
+	user: AuthMemberInfo,
+	navigatingSocket?: CustomWebSocket,
+): void {
 	const gameID = getIDOfGamePlayerIsIn(user);
 	for (const ws of getLobbySubscribers()) {
 		if (!memberInfoEq(user, ws.metadata.memberInfo)) continue;
-		if (gameID !== undefined) sendSocketMessage(ws, 'lobby', 'ingame', gameID);
+		if (gameID !== undefined)
+			sendSocketMessage(ws, 'lobby', 'ingame', {
+				id: gameID,
+				navigate: ws === navigatingSocket,
+			});
 		else sendSocketMessage(ws, 'lobby', 'outgame');
 	}
 }
@@ -211,11 +220,14 @@ function subToLobby(ws: CustomWebSocket): void {
 
 	addSocketToLobbySubs(ws);
 
-	// If they're already in a game (e.g. their seek was accepted during a disconnect cushion,
-	// so they never got the in-game push), tell them BEFORE the seek snapshot below — the
-	// client reads its surviving `ourSeekId` belief synchronously, before the snapshot clears it.
+	// If they're already in a game, tell them. They're only taken into it if we still owe them
+	// the notice (their seek was accepted during a disconnect cushion, so they never got the
+	// push at creation) — otherwise they just get the banner to rejoin it.
 	const gameID = getIDOfGamePlayerIsIn(ws.metadata.memberInfo);
-	if (gameID !== undefined) sendSocketMessage(ws, 'lobby', 'ingame', gameID);
+	if (gameID !== undefined) {
+		const navigate = consumeNavigateNotice(ws.metadata.memberInfo);
+		sendSocketMessage(ws, 'lobby', 'ingame', { id: gameID, navigate });
+	}
 
 	sendClientLobbySnapshot(ws, getSeeksListSafe());
 	broadcastViewerCount(ws); // Notify all existing subscribers of the incremented count

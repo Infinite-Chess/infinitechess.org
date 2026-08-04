@@ -39,7 +39,7 @@ function onLobbyMessage(contents: LobbyMessage): void {
 			lobby.onViewerCountUpdate(contents.value);
 			break;
 		case 'ingame':
-			void lobby.onInGame(contents.value);
+			void lobby.onInGame(contents.value.id, contents.value.navigate);
 			break;
 		case 'outgame':
 			lobby.onOutGame();

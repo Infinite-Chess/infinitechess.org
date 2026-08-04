@@ -57,6 +57,7 @@ import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
 import { cancelDisconnectTimer } from './disconnect.js';
+import { consumeNavigateNotice } from './activeplayers.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { buildServerUsernameContainer } from '../seeksmanager/seekutility.js';
@@ -387,6 +388,8 @@ function subscribeClientToGame(
 		detatchSocketFromGame(match, previousSocket);
 	}
 	playerData.socket = ws;
+
+	consumeNavigateNotice(playerData.identifier); // They've arrived; any pending lobby notice is moot.
 
 	// 2. Modify their socket metadata to add the 'game', subscription,
 	// and indicate what game the belong in and what color they are!

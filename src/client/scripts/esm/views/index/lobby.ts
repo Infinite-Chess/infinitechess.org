@@ -82,12 +82,6 @@ const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
 /** The ID of our current seek, if we have one. */
 let ourSeekId: string | undefined;
-/**
- * Whether we've accepted a seek or requested a bot game this page-session, and are
- * expecting a game to start. Lets {@link onInGame} auto-navigate an initiator (who
- * owns no seek of their own).
- */
-let weInitiatedGame = false;
 /** Live map of all current seeks by id, for fast click-handler lookup. */
 const seekMap = new Map<string, OutSeek>();
 
@@ -182,10 +176,6 @@ const trackNewSeeks = (() => {
  * so seeks returning after a reconnect aren't treated as new and replay arrival sounds.
  */
 function onSeekListUpdate(seeks: OutSeek[], preserveNewSeekTracker = false): void {
-	// Reset the flag in case the seek was cancelled immediately before.
-	// The server sends the 'ingame' action before the new seek list, so this is safe.
-	weInitiatedGame = false;
-
 	seekMap.clear();
 	for (const seek of seeks) seekMap.set(seek.id, seek);
 	seekPreviewCache.evictRemovedSeeks(new Set(seekMap.keys()));
@@ -209,23 +199,21 @@ function onViewerCountUpdate(count: number): void {
 
 /**
  * Called when the server reports we're in game `id` (on seek acceptance, bot game creation,
- * or on lobby resub while already in one). Auto-navigates only if WE initiated it — we own
- * the accepted seek (`ourSeekId`, which survives an in-page reconnect) or accepted one /
- * requested a bot game (`weInitiatedGame`); a fresh page-load mid-game has neither and stays put.
+ * or on lobby resub while already in one).
  * @param id - The numeric game id (encoded into the base62 URL).
+ * @param navigate - Whether the server wants THIS tab taken into the game: we asked for it,
+ * or it started while we were away and this is our first chance to be told.
  */
-async function onInGame(id: number): Promise<void> {
-	// These are only cleared on receiving a new seek list, but since the server
-	// sends the 'ingame' action before then, these should still be accurate.
-	if (ourSeekId !== undefined || weInitiatedGame) {
+async function onInGame(id: number, navigate: boolean): Promise<void> {
+	if (navigate) {
 		// Plays the notify sound and awaits it so the hard-navigate doesn't cut it off.
 		// No reverb added here, it makes us wait too long.
 		const sound = await gamesound.playNotify(false);
 		if (sound) await sound.whenEnded;
 		window.location.assign(`/game/${uuid.base10ToBase62(id)}`);
 	} else {
-		// A fresh page-load while already in a game: stay on the lobby but show a banner
-		// letting them rejoin. The server pushes 'outgame' once we leave (see onOutGame).
+		// We already know of this game (another tab of ours, or a page-load mid-game): stay on
+		// the lobby, but show a banner letting them rejoin. The server pushes 'outgame' once it ends.
 		showInGameBanner(id);
 	}
 }
@@ -282,7 +270,6 @@ function createSeek(options: CreateSeekOptions): void {
  * socket is required, gating bots. Navigation happens on the server's `ingame` push.
  */
 function createEngineGame(body: CreateEngineGameBody): void {
-	weInitiatedGame = true;
 	socketmessages.send('lobby', 'createengine', body, true);
 }
 
@@ -295,7 +282,6 @@ function cancel(seekId: string): void {
 
 /** Sends an acceptseek message for an opponent's seek. */
 function accept(seekId: string): void {
-	weInitiatedGame = true;
 	socketmessages.send('lobby', 'acceptseek', seekId, true);
 }
 
