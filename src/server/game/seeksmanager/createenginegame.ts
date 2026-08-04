@@ -2,24 +2,24 @@
 
 /** Handles engine-game creation through the normal live-game pipeline. */
 
-import type { CreateEngineGameBody } from '../../../shared/types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CreateEngineGameBody } from '../../../shared/types.js';
 
-import { engineDictionary, ONLINE_ENGINE } from '../../../shared/chess/engine.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
+import { engineDictionary, ONLINE_ENGINE } from '../../../shared/chess/engine.js';
 
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { resolveAndValidateVariant } from './createseek.js';
 import { createGame } from '../gamemanager/gamemanager.js';
-import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getEngineVersion } from '../../config/manifest.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
+import { resolveAndValidateVariant } from './createseek.js';
 
 // Functions ---------------------------------------------------------------------------
 
 /**
- * Creates an engine game from the owner's websocket message. On success, pushes the new
- * game id back so the client navigates; on failure, notifies the client with the reason.
+ * Creates an engine game from the owner's websocket message. On success, createGame's
+ * 'ingame' push navigates the client; on failure, notifies the client with the reason.
  */
 async function createEngineGameWs(ws: CustomWebSocket, body: CreateEngineGameBody): Promise<void> {
 	if (isSocketInAnActiveGame(ws))
@@ -37,7 +37,7 @@ async function createEngineGameWs(ws: CustomWebSocket, body: CreateEngineGameBod
 
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
 		const engineColor = humanColor === players.WHITE ? players.BLACK : players.WHITE;
-		const id = createGame(
+		createGame(
 			{
 				variant,
 				time: body.timeControl,
@@ -53,9 +53,6 @@ async function createEngineGameWs(ws: CustomWebSocket, body: CreateEngineGameBod
 				[humanColor]: { identifier: memberInfo, socket: ws },
 			},
 		);
-
-		// Tell the client to navigate to its new game (base62-encoded in the URL).
-		sendSocketMessage(ws, 'lobby', 'enginegame', id);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error creating engine game: ${message}`, 'errLog');

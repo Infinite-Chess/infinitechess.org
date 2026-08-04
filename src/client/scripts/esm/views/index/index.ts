@@ -44,9 +44,6 @@ function onLobbyMessage(contents: LobbyMessage): void {
 		case 'outgame':
 			lobby.onOutGame();
 			break;
-		case 'enginegame':
-			void lobby.onEngineGameCreated(contents.value);
-			break;
 		default:
 			// @ts-ignore
 			console.error(`Unknown lobby action: ${contents.action}`);
