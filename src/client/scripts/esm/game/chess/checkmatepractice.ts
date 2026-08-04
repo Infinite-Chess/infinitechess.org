@@ -147,8 +147,8 @@ function startEngineGame(options: {
 				worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
 			},
 		})
-		.then(async ({ graphical }) => {
-			await enginegame.initEngineGame({
+		.then(({ graphical }) => {
+			enginegame.initEngineGame({
 				...options,
 				workerUrl: window.checkmatePracticePageData.workerUrl,
 				engineUrl: window.checkmatePracticePageData.engineUrl,

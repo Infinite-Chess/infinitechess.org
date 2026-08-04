@@ -37,13 +37,13 @@ interface EngineConfig {
 
 // Variables --------------------------------------------------------------------
 
-/** Whether we are currently in an engine game. */
-let inEngineGame: boolean = false;
 let engineColor: Player | undefined;
-let currentEngine: ValidEngine | undefined; // name of the current engine used
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
-let engineWorker: Worker | undefined;
-let rejectEngineLoad: ((reason: Error) => void) | undefined;
+/**
+ * The engine worker of the game we're in, if any. `ready` flips true on its
+ * 'readyok' message; until then it answers nothing.
+ */
+let engine: { worker: Worker; ready: boolean } | undefined;
 
 // Events -----------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ GameBus.addEventListener('game-concluded', () => terminate());
 GameBus.addEventListener('game-unloaded', () => terminate());
 
 enginelegalmovesdebug.init({
-	canRequest: () => inEngineGame && engineWorker !== undefined,
+	canRequest: () => engine?.ready === true,
 	requestMoves: ({ gamefile }) => requestGeneratedMoves(gamefile),
 });
 
@@ -61,6 +61,8 @@ enginelegalmovesdebug.init({
 /**
  * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
  * This method launches an engine webworker for the current game.
+ * Deliberately not awaitable: the board never waits on the engine. Once the worker is ready it
+ * requests a move itself, catching any played while it loaded.
  * @param options - An object that contains the properties `currentEngine` and `engineConfig`
  */
 function initEngineGame(options: {
@@ -74,70 +76,64 @@ function initEngineGame(options: {
 	 * runtime (apeiron). Sent to the worker as an init message, with the thread count.
 	 */
 	engineUrl: string;
-}): Promise<void> {
+}): void {
 	console.log(`Starting engine game with engine "${options.currentEngine}".`);
 
-	inEngineGame = true;
 	engineColor = typeutil.invertPlayer(options.youAreColor);
-	currentEngine = options.currentEngine;
 	engineConfig = options.engineConfig;
 
 	// Initialize the engine as a webworker
 	if (!window.Worker) {
-		const error = new Error(
-			"Cannot finish loading engine game because web workers aren't supported.",
-		);
-		failEngineLoad(error);
-		return Promise.reject(error);
+		const error = new Error("Cannot finish loading engine game because web workers aren't supported."); // prettier-ignore
+		return failEngineLoad(error);
 	}
-	engineWorker = new Worker(options.workerUrl, {
+
+	const worker = new Worker(options.workerUrl, {
 		type: 'module',
 	}); // module type allows the web worker to import methods and types from other scripts.
+	engine = { worker, ready: false };
 
-	// Return a promise that resolves when the ENGINE WORKER has finished fetching/loading.
-	return new Promise<void>((resolve, reject): void => {
-		rejectEngineLoad = reject;
-		// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
-		// We have to manually send this message at the top of our engines.
-		engineWorker!.onmessage = (e: MessageEvent): void => {
-			if (e.data === 'readyok') {
-				rejectEngineLoad = undefined;
-				resolve(); // Engine is ready!
-			} else if (e.data?.type === 'initerror') {
-				const message = String(e.data.message ?? 'Unknown initialization error.');
-				failEngineLoad(new Error(`Engine failed to initialize: ${message}`));
-			}
-		};
-		engineWorker!.onerror = (e: ErrorEvent): void => {
-			failEngineLoad(new Error('Worker failed to load: ' + e.message));
-		};
-		if (engineDictionary[options.currentEngine].loadsWasmGlueAtRuntime)
-			engineWorker!.postMessage({
-				engineUrl: options.engineUrl,
-				threads: getEngineThreadCount(),
-			});
-	}).then(() => {
-		// After the promise resolves, we know the worker is ready
-		if (!engineWorker) throw new Error('Engine stopped before initialization completed.');
-		// Overwrite the onmessage listener to listen for move submissions
-		engineWorker.onmessage = (e: MessageEvent): void => handleEngineMessage(e.data);
-		// Remove the error handler (no longer needed after worker is ready)
-		engineWorker.onerror = null;
-		onMovePlayed();
-		// Ensures if the debug mode was on before starting an engine game,
-		// the engine generated legal moves are rendered as soon as the engine is ready.
-		enginelegalmovesdebug.requestMovesForCurrentPosition();
-	});
+	// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
+	// We have to manually send this message at the top of our engines.
+	worker.onmessage = (e: MessageEvent): void => {
+		if (e.data === 'readyok') onEngineReady();
+		else if (e.data?.type === 'initerror') {
+			const message = String(e.data.message ?? 'Unknown initialization error.');
+			failEngineLoad(new Error(`Engine failed to initialize: ${message}`));
+		}
+	};
+	worker.onerror = (e: ErrorEvent): void => {
+		failEngineLoad(new Error('Worker failed to load: ' + e.message));
+	};
+	if (engineDictionary[options.currentEngine].loadsWasmGlueAtRuntime)
+		worker.postMessage({
+			engineUrl: options.engineUrl,
+			threads: getEngineThreadCount(),
+		});
 }
 
-/** Aborts a failed engine load: resigns the server game, tears the worker down. */
+/** Opens the engine for business once its worker signals it has finished fetching/loading. */
+function onEngineReady(): void {
+	if (!engine) return; // A straggling 'readyok' from a worker terminated mid-load — the game ended.
+	engine.ready = true;
+	// Overwrite the onmessage listener to listen for move submissions
+	engine.worker.onmessage = (e: MessageEvent): void => handleEngineMessage(e.data);
+	// Remove the error handler (no longer needed after worker is ready)
+	engine.worker.onerror = null;
+	onMovePlayed(); // Catches a move played while the engine was still loading.
+	// Ensures if the debug mode was on before starting an engine game,
+	// the engine generated legal moves are rendered as soon as the engine is ready.
+	enginelegalmovesdebug.requestMovesForCurrentPosition();
+}
+
+/** Aborts a failed engine load: reports it, resigns the server game, tears the worker down. */
 function failEngineLoad(error: Error): void {
-	// Practice games resign nothing, and their loader shows its own error toast.
+	console.error(error);
 	if (gamesession.getGameType() === 'online') {
 		resignFailedEngine();
 		toast.show('The engine failed to load and has resigned the game.', { error: true });
-	}
-	terminate(error);
+	} else toast.show('The engine failed to load. Please refresh.', { error: true });
+	terminate();
 }
 
 /**
@@ -145,7 +141,8 @@ function failEngineLoad(error: Error): void {
  * It submits the gamefile to the webworker
  */
 function onMovePlayed(): void {
-	if (!inEngineGame) return; // Don't do anything if it's not an engine game
+	// Not an engine game, or the engine is still loading — onEngineReady() requests the move once it's up.
+	if (!engine?.ready) return;
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
 	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
@@ -181,18 +178,16 @@ function onMovePlayed(): void {
 	} : undefined;
 
 	if (gamefile.gameConclusion) return;
-	if (engineWorker)
-		engineWorker.postMessage({
-			stringGamefile,
-			lf: longformIn,
-			engineConfig: engineConfig,
-			youAreColor: engineColor,
-			wtime: timing?.wtime,
-			btime: timing?.btime,
-			winc: timing?.winc,
-			binc: timing?.binc,
-		});
-	else console.error('User made a move in an engine game but no engine webworker is loaded!');
+	engine.worker.postMessage({
+		stringGamefile,
+		lf: longformIn,
+		engineConfig: engineConfig,
+		youAreColor: engineColor,
+		wtime: timing?.wtime,
+		btime: timing?.btime,
+		winc: timing?.winc,
+		binc: timing?.binc,
+	});
 }
 
 function handleEngineMessage(data: any): void {
@@ -230,9 +225,7 @@ function handleEngineMessage(data: any): void {
  * @param move - The move that SHOULD be a string in compact format "x,y>x,y=P"
  */
 function makeEngineMove(tokenMove: unknown): void {
-	if (!inEngineGame) return;
-	if (!currentEngine)
-		return console.error('Attempting to make engine move, but no engine loaded!');
+	if (!engine) return console.error('Attempting to make engine move, but no engine loaded!');
 
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
@@ -289,19 +282,20 @@ function resignFailedEngine(): void {
 
 /** Requests engine-generated legal moves for the currently viewed position. */
 function requestGeneratedMoves(gamefile: GameFile): void {
+	if (!engine?.ready) return; // The overlay gates on canRequest(), so this is belt-and-braces.
+
 	// Compress the gamefile as a single position (not including future moves)
 	// This ensures the engine analyzes the currently viewed position
 	const longformIn = gamecompressor.compressGamefile(gamefile, true);
 	const stringGamefile = JSON.stringify(gamefile, jsutil.stringifyReplacer);
 
-	if (engineWorker)
-		engineWorker.postMessage({
-			stringGamefile,
-			lf: longformIn,
-			engineConfig: engineConfig,
-			youAreColor: engineColor,
-			requestGeneratedMoves: true,
-		});
+	engine.worker.postMessage({
+		stringGamefile,
+		lf: longformIn,
+		engineConfig: engineConfig,
+		youAreColor: engineColor,
+		requestGeneratedMoves: true,
+	});
 }
 
 /**
@@ -314,15 +308,11 @@ function getEngineThreadCount(): number {
 }
 
 /** Stops the active engine worker and clears its session state. */
-function terminate(loadError: Error = new Error('Engine game ended during initialization.')): void {
-	engineWorker?.terminate();
-	engineWorker = undefined;
+function terminate(): void {
+	engine?.worker.terminate();
+	engine = undefined;
 	engineColor = undefined;
-	currentEngine = undefined;
 	engineConfig = undefined;
-	inEngineGame = false;
-	rejectEngineLoad?.(loadError);
-	rejectEngineLoad = undefined;
 }
 
 // Export ---------------------------------------------------------------------------------

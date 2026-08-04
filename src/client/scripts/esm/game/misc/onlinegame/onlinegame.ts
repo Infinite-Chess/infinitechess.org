@@ -104,7 +104,7 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 			viewWhitePerspective: ourRole !== p.BLACK,
 			additional,
 		})
-		.then(async ({ graphical }) => {
+		.then(({ graphical }) => {
 			// Logical loaded, return graphical promise
 			const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
 			initOnlineGame(initialStage, state.participantState);
@@ -116,21 +116,17 @@ function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Pla
 				const { engineWorkerUrl, engineUrl } = window.gamePageData;
 				if (!engineWorkerUrl || !engineUrl)
 					throw new Error('Engine assets are missing from the game page.');
-				void enginegame
-					.initEngineGame({
-						youAreColor: ourRole,
-						currentEngine: engineGame.engine,
-						engineConfig: {
-							engineTimeLimitPerMoveMillis:
-								engineDictionary[engineGame.engine].defaultTimeLimitPerMoveMillis,
-							strengthLevel: engineGame.strengthLevel,
-						},
-						workerUrl: engineWorkerUrl,
-						engineUrl,
-					})
-					.catch((error: Error) => {
-						console.error('Failed to initialize engine game:', error);
-					});
+				enginegame.initEngineGame({
+					youAreColor: ourRole,
+					currentEngine: engineGame.engine,
+					engineConfig: {
+						engineTimeLimitPerMoveMillis:
+							engineDictionary[engineGame.engine].defaultTimeLimitPerMoveMillis,
+						strengthLevel: engineGame.strengthLevel,
+					},
+					workerUrl: engineWorkerUrl,
+					engineUrl,
+				});
 			}
 
 			return graphical;
