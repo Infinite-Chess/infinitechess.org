@@ -229,6 +229,7 @@ function showInGameBanner(id: number): void {
 	element_lobbyIngameJoin.setAttribute('href', `/game/${uuid.base10ToBase62(id)}`);
 	element_lobbyIngameOverlay.classList.remove('hidden');
 	for (const btn of elements_disabledWhileInGame) btn.setAttribute('disabled', '');
+	gameSetupModal.close();
 }
 
 /** Hides the in-game banner. */
