@@ -137,9 +137,8 @@ function startEngineGame(options: {
 	};
 }): void {
 	gamesession.setSessionGame({ type: 'engine', role: options.youAreColor });
-	gamesession.markLoading();
-	gameslot
-		.loadGamefile({
+	gamesession.loadGame(
+		{
 			timeControl: options.timeControl,
 			variant: undefined,
 			dateTimestamp: Date.now(),
@@ -148,20 +147,17 @@ function startEngineGame(options: {
 				variantOptions: options.variantOptions,
 				worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
 			},
-		})
-		.then(({ graphical }) => {
-			enginegame.initEngineGame({
-				...options,
-				workerUrl: window.checkmatePracticePageData.workerUrl,
-				engineUrl: window.checkmatePracticePageData.engineUrl,
-			});
-			return graphical;
-		})
-		.then(() => {
-			gamesession.markLoadingDone();
-			gamesession.concludeGameIfOver();
-		})
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
+		},
+		{
+			onLogicalLoaded: () =>
+				enginegame.initEngineGame({
+					...options,
+					workerUrl: window.checkmatePracticePageData.workerUrl,
+					engineUrl: window.checkmatePracticePageData.engineUrl,
+				}),
+			concludeIfOver: true,
+		},
+	);
 }
 
 function onGameUnload(): void {
@@ -462,7 +458,6 @@ function restartGame(): void {
 	// Don't stomp an in-flight load — unloading its gamefile would crash its graphical half.
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 
-	gamesession.unloadGame(); // Unload current game
 	startCheckmatePractice(guipractice.getCheckmateSelectedID());
 }
 

@@ -18,7 +18,6 @@ import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
-import gameslot from './gameslot.js';
 import guipalette from '../gui/boardeditor/guipalette.js';
 import gamesession from './gamesession.js';
 import boardeditor from '../boardeditor/boardeditor.js';
@@ -28,31 +27,26 @@ import boardeditor from '../boardeditor/boardeditor.js';
 /** Initializes the board editor. */
 async function startBoardEditor(): Promise<void> {
 	gamesession.setSessionGame({ type: 'editor' });
-	gamesession.markLoading();
 
 	const dateTimestamp = Date.now();
 	const variantCode: VariantCode = 'Classical';
 
 	const viewWhitePerspective = true;
 
-	gameslot
-		.loadGamefile({
-			timeControl: '-',
-			variant: variantCode,
-			dateTimestamp,
-			viewWhitePerspective,
-			/**
-			 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
-			 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
-			 *
-			 * This flag triggers the gamefile to add images for EVERY single piece in the spritesheet!
-			 * If that also includes all COLORS, then loading a game can take a few seconds...
-			 */
-			additional: { editor: true },
-		})
-		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
+	gamesession.loadGame({
+		timeControl: '-',
+		variant: variantCode,
+		dateTimestamp,
+		viewWhitePerspective,
+		/**
+		 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
+		 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
+		 *
+		 * This flag triggers the gamefile to add images for EVERY single piece in the spritesheet!
+		 * If that also includes all COLORS, then loading a game can take a few seconds...
+		 */
+		additional: { editor: true },
+	});
 
 	await guipalette.initUI();
 	boardeditor.initBoardEditor(true); // Dirty position since its a new unsaved position being loaded
@@ -67,27 +61,21 @@ async function startCustomLocalGame(options: {
 	presetAnnotes?: PresetAnnotes;
 }): Promise<void> {
 	gamesession.setSessionGame({ type: 'analysis' });
-	gamesession.markLoading();
 
 	const dateTimestamp = Date.now();
 
 	const viewWhitePerspective = true;
 
-	gameslot
-		.loadGamefile({
+	gamesession.loadGame(
+		{
 			...options,
 			timeControl: '-',
 			dateTimestamp,
 			variant: undefined, // Not specified for custom position
 			viewWhitePerspective,
-		})
-		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
-		.then(() => {
-			// Graphical loaded
-			gamesession.markLoadingDone();
-			gamesession.concludeGameIfOver();
-		})
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
+		},
+		{ concludeIfOver: true },
+	);
 }
 
 /** Initializes the board editor from a custom position. */
@@ -107,7 +95,6 @@ async function startBoardEditorFromCustomPosition(
 	castling?: boolean,
 ): Promise<void> {
 	gamesession.setSessionGame({ type: 'editor' });
-	gamesession.markLoading();
 
 	const dateTimestamp = Date.now();
 
@@ -116,19 +103,15 @@ async function startBoardEditorFromCustomPosition(
 
 	const viewWhitePerspective = true;
 
-	gameslot
-		.loadGamefile({
-			timeControl: '-',
-			variant: undefined, // Not specified for custom position
-			dateTimestamp,
-			viewWhitePerspective,
-			// See comment in startBoardEditor for why "editor: true" is needed
-			additional: { ...options.additional, editor: true },
-			presetAnnotes: options.presetAnnotes,
-		})
-		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
+	gamesession.loadGame({
+		timeControl: '-',
+		variant: undefined, // Not specified for custom position
+		dateTimestamp,
+		viewWhitePerspective,
+		// See comment in startBoardEditor for why "editor: true" is needed
+		additional: { ...options.additional, editor: true },
+		presetAnnotes: options.presetAnnotes,
+	});
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.

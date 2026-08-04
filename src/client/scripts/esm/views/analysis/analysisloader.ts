@@ -17,11 +17,11 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 import toast from '../../components/toast.js';
+import gameslot from '../../game/chess/gameslot.js';
 import gamesession from '../../game/chess/gamesession.js';
 import gameformulator from '../../game/chess/gameformulator.js';
 import guianalysisview from './gui/guianalysisview.js';
 import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
-import gameslot, { LoadOptions } from '../../game/chess/gameslot.js';
 
 // State -----------------------------------------------------------------------
 
@@ -80,10 +80,8 @@ async function loadGameById(gameId: number): Promise<void> {
  */
 function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
 	lastLoad = { replay: () => loadVariant(variant, slideLimit), players: {} };
-	if (gameslot.getGamefile()) gamesession.unloadGame();
-	gamesession.markLoading();
 
-	return runLoad({
+	return gamesession.loadGame({
 		timeControl: '-',
 		variant,
 		dateTimestamp: Date.now(),
@@ -92,18 +90,6 @@ function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
 			additional: { slideLimit },
 		}),
 	});
-}
-
-/**
- * Runs a loadGamefile call through the analysis loading lifecycle
- * (mark graphical done → surface load errors).
- */
-function runLoad(loadOptions: LoadOptions): Promise<void> {
-	return gameslot
-		.loadGamefile(loadOptions)
-		.then(({ graphical }) => graphical) // Also await the graphical load
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 
 /**
@@ -127,10 +113,7 @@ function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint)
 	// Retain the current board's orientation, defaulting to white's.
 	const vwp = gameslot.getGamefile() ? gameslot.areViewingWhite() : true;
 
-	if (gameslot.getGamefile()) gameslot.unloadGame();
-	gamesession.markLoading();
-
-	return runLoad({
+	return gamesession.loadGame({
 		timeControl: '-',
 		variant: undefined, // Custom position — no preset variant; variantOptions drives everything.
 		dateTimestamp: Date.now(),
@@ -175,11 +158,8 @@ async function pasteGame(
 	const vwp =
 		viewWhitePerspective ?? (gameslot.getGamefile() ? gameslot.areViewingWhite() : true);
 
-	if (gameslot.getGamefile()) gameslot.unloadGame();
-	gamesession.markLoading();
-
 	// Returned so callers can await the load (the gamefile only exists once it resolves).
-	return runLoad({ ...constructionOptions, viewWhitePerspective: vwp });
+	return gamesession.loadGame({ ...constructionOptions, viewWhitePerspective: vwp });
 }
 
 export default {

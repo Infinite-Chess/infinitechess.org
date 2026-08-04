@@ -23,6 +23,7 @@ const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
 function start(): void {
 	gameloop.init(canvas);
 
+	// enginegame.initEngineGame() may override this with 'engine' if the game is an engine game.
 	gamesession.setSessionGame({ type: 'online', role: window.gamePageData.role });
 
 	// Prevent clicking buttons from focusing them, keyboard controls interacting with them.

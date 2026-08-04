@@ -49,7 +49,6 @@ import docutil from '../../../util/docutil';
 import gameslot from '../../chess/gameslot';
 import gameloader from '../../chess/gameloader';
 import egamerules from '../egamerules';
-import gamesession from '../../chess/gamesession';
 import annotations from '../../rendering/highlights/annotations/annotations';
 import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
@@ -76,17 +75,14 @@ const CLIPBOARD_DENIED = 'Clipboard permission denied. This might be your browse
 
 /** Resets the board editor position to the Classical position. */
 async function reset(): Promise<void> {
-	gamesession.unloadGame();
-
 	// Load default board editor position
-	boardeditor.clearActivePosition();
 	await gameloader.startBoardEditor();
+	// AFTER the load: clearing flushes the autosave, which serializes the live gamefile.
+	boardeditor.clearActivePosition();
 }
 
 /** Clears the entire board editor position. */
 async function clearAll(): Promise<void> {
-	gamesession.unloadGame();
-
 	// Initialize board editor with empty position and bare minimum game rules
 	const gameRules = variantpreviewer.getBareMinimumGameRules();
 	const position: Map<CoordsKey, number> = new Map();
@@ -99,7 +95,6 @@ async function clearAll(): Promise<void> {
 		state_global,
 	};
 
-	boardeditor.clearActivePosition();
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			additional: {
@@ -109,18 +104,17 @@ async function clearAll(): Promise<void> {
 		true, // Dirty position (unsaved changes)
 		false,
 	);
+	// AFTER the load: clearing flushes the autosave, which serializes the live gamefile.
+	boardeditor.clearActivePosition();
 }
 
 /** Loads a position from a savestate. */
 async function load(editorSaveState: EditorSaveState, storage_type: StorageType): Promise<void> {
-	gamesession.unloadGame();
-
 	// prettier-ignore
 	const new_active_position: ActivePosition =
 		storage_type === 'cloud'
 			? { name: editorSaveState.position_name, storage_type: 'cloud', owner: validatorama.getOurUsername()! }
 			: { name: editorSaveState.position_name, storage_type: 'local' };
-	boardeditor.setActivePosition(new_active_position);
 
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
@@ -132,6 +126,8 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 		editorSaveState.pawnDoublePush,
 		editorSaveState.castling,
 	);
+	// AFTER the load: setting flushes the autosave, which serializes the live gamefile.
+	boardeditor.setActivePosition(new_active_position);
 	toast.show(translations.editor.position_loaded);
 }
 
@@ -187,7 +183,6 @@ function startLocalGame(): void {
 	const variantOptions = getValidatedPosition();
 	if (variantOptions === null) return;
 
-	gamesession.unloadGame();
 	gameloader.startCustomLocalGame({
 		additional: {
 			variantOptions,

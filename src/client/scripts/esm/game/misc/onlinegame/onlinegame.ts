@@ -80,8 +80,6 @@ function setInSync(value: boolean): void {
  * @param dead - Whether the server has evicted it from memory. True if fetched over HTTP.
  */
 function loadGameFromState(state: GameStateMessage, dead: boolean): void {
-	gamesession.markLoading();
-
 	/** The viewer's color, if they're a participant; undefined => spectator (white POV). */
 	const ourRole = gamesession.getRole();
 
@@ -97,52 +95,45 @@ function loadGameFromState(state: GameStateMessage, dead: boolean): void {
 		additional.worldBorderCap = apeiron_card.BORDER_CAP;
 	}
 
-	gameslot
-		.loadGamefile({
+	gamesession.loadGame(
+		{
 			timeControl,
 			variant: variant.kind === 'preset' ? variant.code : undefined,
 			dateTimestamp: timeCreated,
 			// Black views from their side; white and spectators (no role) view white's side.
 			viewWhitePerspective: ourRole !== p.BLACK,
 			additional,
-		})
-		.then(({ graphical }) => {
-			// Logical loaded, return graphical promise
-			const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
-			initOnlineGame(initialStage, state.participantState);
+		},
+		{
+			onLogicalLoaded: () => {
+				const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
+				initOnlineGame(initialStage, state.participantState);
 
-			// A finalized rated game carries its deltas in the state.
-			if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
+				// A finalized rated game carries its deltas in the state.
+				if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
 
-			if (engineGame && ourRole !== undefined && !state.gameConclusion) {
-				const { engineWorkerUrl, engineUrl } = window.gamePageData;
-				if (!engineWorkerUrl || !engineUrl)
-					throw new Error('Engine assets are missing from the game page.');
-				enginegame.initEngineGame({
-					youAreColor: ourRole,
-					currentEngine: engineGame.engine,
-					engineConfig: {
-						engineTimeLimitPerMoveMillis:
-							engineDictionary[engineGame.engine].defaultTimeLimitPerMoveMillis,
-						strengthLevel: engineGame.strengthLevel,
-					},
-					workerUrl: engineWorkerUrl,
-					engineUrl,
-				});
-			}
-
-			return graphical;
-		})
-		.then(() => {
-			// Graphical loaded
-			gamesession.markLoadingDone();
-			gamesession.concludeGameIfOver();
-		})
-		.catch((err: Error) => {
+				if (engineGame && ourRole !== undefined && !state.gameConclusion) {
+					const { engineWorkerUrl, engineUrl } = window.gamePageData;
+					if (!engineWorkerUrl || !engineUrl)
+						throw new Error('Engine assets are missing from the game page.');
+					enginegame.initEngineGame({
+						youAreColor: ourRole,
+						currentEngine: engineGame.engine,
+						engineConfig: {
+							engineTimeLimitPerMoveMillis:
+								engineDictionary[engineGame.engine].defaultTimeLimitPerMoveMillis,
+							strengthLevel: engineGame.strengthLevel,
+						},
+						workerUrl: engineWorkerUrl,
+						engineUrl,
+					});
+				}
+			},
+			concludeIfOver: true,
 			// The gamestate arrived but never became a game — we don't hold it after all.
-			inSync = false;
-			gamesession.onCatchLoadingError(err);
-		});
+			onLoadError: () => (inSync = false),
+		},
+	);
 }
 
 /**
