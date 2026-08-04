@@ -84,8 +84,7 @@ function initEngineGame(options: {
 
 	// Initialize the engine as a webworker
 	if (!window.Worker) {
-		const error = new Error("Cannot finish loading engine game because web workers aren't supported."); // prettier-ignore
-		return failEngineLoad(error);
+		return failEngineLoad(new Error("Cannot finish loading engine game because web workers aren't supported.")); // prettier-ignore
 	}
 
 	const worker = new Worker(options.workerUrl, {
