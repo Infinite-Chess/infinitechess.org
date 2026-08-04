@@ -200,19 +200,9 @@ async function startEngineGame(): Promise<void> {
 	if (variantOptions === null) return;
 	const icn = icnconverter.LongToShort_Format(
 		{ metadata: {} as MetaData, ...variantOptions },
-		{
-			skipPosition: false,
-			compact: true,
-			spaces: false,
-			comments: false,
-			make_new_lines: false,
-			move_numbers: false,
-		},
+		icnconverter.COMPACT_FORMAT_OPTIONS,
 	);
-	await gameSetupModalHandoff.save({
-		icn,
-		mode: 'computer',
-	});
+	await gameSetupModalHandoff.save({ icn, mode: 'computer' });
 	window.location.assign('/');
 }
 
