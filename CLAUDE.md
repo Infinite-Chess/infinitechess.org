@@ -140,7 +140,7 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 50. Never commit yourself unless I explicitly ask you to. All changes are reviewed by me first before _I_ commit.
 
-51. When I _do_ ask you to commit, `git push` immediately after.
+51. When I _do_ ask you to commit, `git push` immediately after. On a branch whose name won't match its remote's (`pr/<author>/<number>`, from `gh pr checkout` of a fork PR), bare `git push` aborts — read the upstream with `git rev-parse --abbrev-ref '@{upstream}'` and push it explicitly: `git push <remote> HEAD:<branch>`.
 
 ### Session flow
 
