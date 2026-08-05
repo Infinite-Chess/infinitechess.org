@@ -43,6 +43,7 @@ import boardinit from '../../../shared/chess/logic/boardinit.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import { getFormattedEngineName } from '../../../shared/chess/engine.js';
@@ -309,8 +310,12 @@ function initServerGame(
 	moves: MoveRecord[] = [],
 ): ServerGame {
 	if (validateMoves) {
+		// Engine games are played inside the engine's world border. The client builds its gamefile
+		// with the same one, so the two must agree on what's in bounds — otherwise a checkmate
+		// against the border the client sees would never be concluded here.
+		const border = match.engineParticipant !== undefined ? apeiron_card.PLAY_BORDER : undefined;
 		// Spread last, so the servergame's rules are the board's own copy — never a second one.
-		const boardsim = boardinit.initBoard(gameRules, variant);
+		const boardsim = boardinit.initBoard(gameRules, variant, undefined, undefined, border?.worldBorderDist, border?.worldBorderCap); // prettier-ignore
 		if (moves.length > 0) movepiece.makeAllMovesInGame(boardsim, moves);
 		return { ...game, match, ...boardsim, spectators: new Set(), validateMoves: true };
 	} else {

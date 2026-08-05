@@ -6,17 +6,17 @@
  * (local eval + Game Review) must agree on when the engine may run.
  */
 
-import type { GameFile } from '../logic/gamefile';
-import type { GameRules } from '../util/gamerules';
-import type { VariantCode } from '../variants/variantregistry';
-import type { GameruleWinCondition } from '../util/winconutil';
+import type { GameFile } from '../logic/gamefile.js';
+import type { GameRules } from '../util/gamerules.js';
+import type { VariantCode } from '../variants/variantregistry.js';
+import type { GameruleWinCondition } from '../util/winconutil.js';
 
-import bimath from '../../util/math/bimath';
-import bounds from '../../util/math/bounds';
-import boardutil from '../util/boardutil';
-import coordutil from '../util/coordutil';
-import { I64_MAX, ONLINE_ENGINE, engineDictionary } from '../engine';
-import typeutil, { RawType, rawTypes as r, players as p } from '../util/typeutil';
+import bimath from '../../util/math/bimath.js';
+import bounds from '../../util/math/bounds.js';
+import boardutil from '../util/boardutil.js';
+import coordutil from '../util/coordutil.js';
+import { I64_MAX, ONLINE_ENGINE, engineDictionary } from '../engine.js';
+import typeutil, { RawType, rawTypes as r, players as p } from '../util/typeutil.js';
 
 /** Why the engine can't handle a game. Keys into `position_errors.engine` in the shared translations. */
 export type EngineSupportCode =
