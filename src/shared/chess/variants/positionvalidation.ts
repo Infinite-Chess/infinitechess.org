@@ -174,7 +174,7 @@ export function validatePosition(
 		}
 		// King capture must not be possible on turn 1
 		const secondPlayer = gameRules.turnOrder[1]!;
-		const boardsim = boardinit.initBoard(gameRules, undefined, variantOptions);
+		const boardsim = boardinit.initBoard(gameRules, undefined, { variantOptions });
 		const checkResult = checkdetection.detectCheck(boardsim, secondPlayer, false);
 		if (checkResult.check) {
 			return 'king_capture_on_turn_1';

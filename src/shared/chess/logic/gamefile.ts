@@ -216,14 +216,12 @@ function initGameFile(
 		additional.gameConclusion,
 		additional.clockValues,
 	);
-	const boardsim = boardinit.initBoard(
-		gameRules,
-		variant,
-		additional.variantOptions,
-		additional.editor,
-		additional.worldBorderDist,
-		additional.worldBorderCap,
-	);
+	const boardsim = boardinit.initBoard(gameRules, variant, {
+		variantOptions: additional.variantOptions,
+		editor: additional.editor,
+		worldBorderDist: additional.worldBorderDist,
+		worldBorderCap: additional.worldBorderCap,
+	});
 	return loadGameWithBoard(game, boardsim, additional.moves, validateMoves);
 }
 

@@ -183,7 +183,11 @@ async function showForPosition(
 	const token = ++showToken;
 	const variantOptions = await resolvePosition();
 	if (variantOptions === undefined || token !== showToken) return; // Unavailable, or they have since left hover.
-	const boardsim = boardpreviewer.initBoardPreview(variantOptions.gameRules, undefined, variantOptions, false, options.border?.worldBorderDist, options.border?.worldBorderCap); // prettier-ignore
+	const boardsim = boardpreviewer.initBoardPreview(variantOptions.gameRules, undefined, {
+		variantOptions,
+		worldBorderDist: options.border?.worldBorderDist,
+		worldBorderCap: options.border?.worldBorderCap,
+	});
 	await showForBoard(anchor, name, boardsim, token, placement, undefined, options.modifiers);
 }
 
@@ -208,7 +212,10 @@ async function showForVariantCode(
 		dateTimestamp: Date.now(),
 	};
 	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant);
-	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant, undefined, false, options.border?.worldBorderDist, options.border?.worldBorderCap); // prettier-ignore
+	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant, {
+		worldBorderDist: options.border?.worldBorderDist,
+		worldBorderCap: options.border?.worldBorderCap,
+	});
 	await showForBoard(anchor, variantName, boardsim, token, placement, code, options.modifiers);
 }
 

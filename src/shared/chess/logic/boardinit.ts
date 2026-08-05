@@ -12,12 +12,12 @@ import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { PieceMoveset } from './movesets.js';
-import type { BoardPreview } from './boardpreviewer.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
+import type { LoadedVariant } from './gamefile.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';
 import type { RawType, RawTypeGroup } from '../util/typeutil.js';
-import type { VariantOptions, LoadedVariant } from './gamefile.js';
+import type { BoardInitOptions, BoardPreview } from './boardpreviewer.js';
 
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
@@ -53,13 +53,9 @@ function initBoard(
 	/** The rules to base the board on. Deep-copied — the board owns its own rules. */
 	gameRules: GameRules,
 	variant: LoadedVariant | undefined,
-	variantOptions?: VariantOptions,
-	editor: boolean = false,
-	/** Only has an effect if the `worldBorder` gamerule is not present. */
-	worldBorderDist?: bigint,
-	worldBorderCap?: bigint,
+	options: BoardInitOptions = {},
 ): Board {
-	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, variantOptions, editor, worldBorderDist, worldBorderCap); // prettier-ignore
+	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, options);
 
 	// Calculate movesets
 	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, boardPreview.gameRules.slideLimit); // prettier-ignore

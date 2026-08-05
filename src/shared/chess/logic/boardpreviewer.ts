@@ -23,6 +23,18 @@ import variantpreviewer from '../variants/variantpreviewer.js';
 
 // Types ------------------------------------------------------------------
 
+/** Shared setup options for board and board-preview initialization. */
+export interface BoardInitOptions {
+	/** Optional variant-specific state for custom or loaded positions. */
+	variantOptions?: VariantOptions;
+	/** Whether the board is being built for the editor. */
+	editor?: boolean;
+	/** Only has an effect if the `worldBorder` gamerule is not present. */
+	worldBorderDist?: bigint;
+	/** Clamps each generated world-border edge to this absolute coordinate. */
+	worldBorderCap?: bigint;
+}
+
 /**
  * The lightweight subset of {@link Board} used by preview renderers.
  * Contains everything needed to render a static position snapshot, but
@@ -67,13 +79,10 @@ function initBoardPreview(
 	/** The rules to base the board on. */
 	gameRulesIn: GameRules,
 	variant: LoadedVariant | undefined,
-	variantOptions?: VariantOptions,
-	editor: boolean = false,
-	/** Only has an effect if the `worldBorder` gamerule is not present. */
-	worldBorderDist?: bigint,
-	/** Clamps each generated world-border edge to this absolute coordinate. */
-	worldBorderCap?: bigint,
+	options: BoardInitOptions = {},
 ): BoardPreview {
+	const { variantOptions, editor = false, worldBorderDist, worldBorderCap } = options;
+
 	// The board owns its rules: the generated world border is written onto this copy, never the
 	// caller's object — callers commonly retain their options, and a cached or stored position
 	// must not acquire a board's rules.

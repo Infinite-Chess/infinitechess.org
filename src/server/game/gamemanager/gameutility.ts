@@ -315,7 +315,10 @@ function initServerGame(
 		// against the border the client sees would never be concluded here.
 		const border = match.engineParticipant !== undefined ? apeiron_card.PLAY_BORDER : undefined;
 		// Spread last, so the servergame's rules are the board's own copy — never a second one.
-		const boardsim = boardinit.initBoard(gameRules, variant, undefined, undefined, border?.worldBorderDist, border?.worldBorderCap); // prettier-ignore
+		const boardsim = boardinit.initBoard(gameRules, variant, {
+			worldBorderDist: border?.worldBorderDist,
+			worldBorderCap: border?.worldBorderCap,
+		});
 		if (moves.length > 0) movepiece.makeAllMovesInGame(boardsim, moves);
 		return { ...game, match, ...boardsim, spectators: new Set(), validateMoves: true };
 	} else {
