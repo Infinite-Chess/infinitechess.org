@@ -36,9 +36,6 @@ const timeBeforeClaimableByDisconnectMillis = 10_000; // 10 seconds
 /**
  * How long after disconnection, when the player's internet cuts out (more forgiving),
  * before their opponent may claim victory / a draw against them.
- *
- * Reused as the duration of the both-disconnected timer (see gamemanager): once BOTH
- * players are disconnected, the game concludes after this long if neither reconnects.
  */
 const timeBeforeClaimableByDisconnectMillis_Involuntary = 60_000; // 60 seconds
 

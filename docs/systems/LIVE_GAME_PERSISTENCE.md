@@ -52,9 +52,9 @@ Per-player `last_draw_offer_ply` lives in `live_player_games`.
 
 #### Group 5: Timer State
 
-| Column                       | Type    | Notes                                                                                                                                                                                                                                                    |
-| ---------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `both_disconnected_end_time` | INTEGER | Epoch ms when the both-disconnected timer concludes the game (draw by abandonment, abort, or engine win by disconnect) if neither player returns. NULL unless both players are currently disconnected. On restoration, if elapsed, conclude immediately. |
+| Column                       | Type    | Notes                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `both_disconnected_end_time` | INTEGER | Epoch ms when the timer concludes the game (draw by abandonment, abort, or engine win by disconnect) if nobody returns. NULL unless **every human** in the game is currently disconnected — in an engine game that's the lone human, since only humans occupy `live_player_games`. On restoration, if elapsed, conclude immediately. |
 
 #### Group 6: Flags
 
@@ -86,7 +86,7 @@ One row per human player per live game.
 - `disconnect_cushion_end_time` non-NULL, `disconnect_claim_time` NULL → still in the 5-second cushion; revive it (or open the claim window if elapsed).
 - All disconnect columns NULL → player was connected before the restart; start a fresh 5-second cushion (server restart counts as not-by-choice).
 
-After restoring per-player disconnect state, if **both** players are disconnected, `both_disconnected_end_time` is revived (or, if NULL because the restart itself disconnected both, started fresh at 60 seconds).
+Every human is disconnected once restoration finishes — sockets never survive a restart — so `both_disconnected_end_time` is **always** revived, or started fresh at 5 minutes if NULL. It's cleared the moment any player reconnects.
 
 ---
 
