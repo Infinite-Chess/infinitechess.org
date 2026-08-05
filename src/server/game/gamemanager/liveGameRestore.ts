@@ -16,6 +16,7 @@
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
+import type { ValidEngine } from '../../../shared/chess/engine.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
@@ -23,17 +24,17 @@ import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManage
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
 import type { ClockValues, TimeControl } from '../../../shared/types.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
-import type { ValidEngine } from '../../../shared/chess/engine.js';
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
+import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js';
 import gamefile, { type LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 
 import gameutility from './gameutility.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { getMemberDataByCriteria } from '../../database/memberManager.js';
 import { getAllLivePlayerGames } from '../../database/livePlayerGamesManager.js';
 import { getAllLiveEngineGames } from '../../database/liveEngineGamesManager.js';
+import { getMemberDataByCriteria } from '../../database/memberManager.js';
 import { getAllLiveGames, deleteLiveGame } from '../../database/liveGamesManager.js';
 
 // Types -----------------------------------------------------------------------------------------
@@ -153,10 +154,11 @@ function restoreSingleGame(
 		mod: variantcache.getModule(gameRow.variant as VariantCode),
 		dateTimestamp: gameRow.time_created,
 	};
-	const gameWithRules = gamefile.initGame(
+	const gameRules = variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
+	const game = gamefile.initGame(
 		gameRow.clock as TimeControl,
 		gameRow.time_created,
-		variant,
+		gameRules,
 		undefined,
 		clockValues,
 	);
@@ -172,7 +174,8 @@ function restoreSingleGame(
 	const validateMoves = Boolean(gameRow.validate_moves);
 
 	const servergame: ServerGame = gameutility.initServerGame(
-		gameWithRules,
+		game,
+		gameRules,
 		match,
 		validateMoves,
 		variant,

@@ -14,7 +14,6 @@ import type { GameModifier } from '../../../../../shared/types.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
-import jsutil from '../../../../../shared/util/jsutil.js';
 import modutil from '../../../../../shared/util/modutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
@@ -184,12 +183,8 @@ async function showForPosition(
 	const token = ++showToken;
 	const variantOptions = await resolvePosition();
 	if (variantOptions === undefined || token !== showToken) return; // Unavailable, or they have since left hover.
-	// Copied, since initBoardPreview adopts the gamerules it's handed and writes the generated
-	// world border onto them, while resolvers commonly hand back a cached position that outlives
-	// the preview. The position and state are only ever read, so they pass straight through.
-	const gameRules = jsutil.deepCopyObject(variantOptions.gameRules);
-	const boardsim = boardpreviewer.initBoardPreview(gameRules, undefined, variantOptions, false, options.border?.worldBorderDist, options.border?.worldBorderCap); // prettier-ignore
-	await showForBoard(anchor, name, boardsim, gameRules, token, placement, undefined, options.modifiers); // prettier-ignore
+	const boardsim = boardpreviewer.initBoardPreview(variantOptions.gameRules, undefined, variantOptions, false, options.border?.worldBorderDist, options.border?.worldBorderCap); // prettier-ignore
+	await showForBoard(anchor, name, boardsim, token, placement, undefined, options.modifiers);
 }
 
 /**
@@ -212,9 +207,9 @@ async function showForVariantCode(
 		mod: variantcache.getModule(code),
 		dateTimestamp: Date.now(),
 	};
-	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant); // Already a fresh copy
+	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant);
 	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant, undefined, false, options.border?.worldBorderDist, options.border?.worldBorderCap); // prettier-ignore
-	await showForBoard(anchor, variantName, boardsim, gameRules, token, placement, code, options.modifiers); // prettier-ignore
+	await showForBoard(anchor, variantName, boardsim, token, placement, code, options.modifiers);
 }
 
 /** Hides the tooltip. */
@@ -229,7 +224,6 @@ async function showForBoard(
 	anchor: HTMLElement,
 	name: string,
 	boardsim: BoardPreview,
-	gameRules: GameRules,
 	token: number,
 	placement: 'left' | 'below',
 	/** Undefined for custom positions, which have no variant. */
@@ -237,13 +231,13 @@ async function showForBoard(
 	modifiers: GameModifier[] | undefined,
 ): Promise<void> {
 	element_name.textContent = name;
-	await populateRules(gameRules, boardsim, variantCode, modifiers);
+	await populateRules(boardsim, variantCode, modifiers);
 	await ensureReady(boardsim);
 
 	if (token !== showToken || !anchor.isConnected) return; // They have since left hover, hovered over another tooltip anchor, or the anchor has been removed from the DOM mid-load.
 
 	positionTooltip(anchor, placement);
-	renderBoard(boardsim, gameRules);
+	renderBoard(boardsim);
 	element_tooltip.classList.remove('visibility-hidden');
 	currentAnchor = anchor;
 }
@@ -277,8 +271,9 @@ async function ensureReady(boardsim: BoardPreview): Promise<void> {
 }
 
 /** Renders the board to the preview canvas, using the preview's own render context. */
-function renderBoard(boardsim: BoardPreview, gameRules: GameRules): void {
+function renderBoard(boardsim: BoardPreview): void {
 	const ctx = previewCtx;
+	const { gameRules } = boardsim;
 
 	const mesh: Mesh = { offset: [0n, 0n], inverted: false, types: {} };
 	piecemodels.regenAll(ctx, boardsim, mesh);
@@ -318,11 +313,11 @@ function renderBoard(boardsim: BoardPreview, gameRules: GameRules): void {
 
 /** Populates the gamerule modifications list above the canvas. */
 async function populateRules(
-	gameRules: GameRules,
 	boardsim: BoardPreview,
 	variantCode: VariantCode | undefined,
 	modifiers: GameModifier[] | undefined,
 ): Promise<void> {
+	const { gameRules } = boardsim;
 	const items: Array<string | HTMLElement> = [];
 	/** Reference to the variant preview translations. */
 	const tp = t.shared.variant_preview;

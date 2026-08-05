@@ -44,6 +44,9 @@ export type BoardPreview = {
 	pieces: OrganizedPiecesBase;
 	state: GameState;
 
+	/** Determines turn order, win conditions, promotion, etc. */
+	gameRules: GameRules;
+
 	/** Whether the gamefile is for the board editor. */
 	editor: boolean;
 
@@ -61,7 +64,8 @@ export type BoardPreview = {
 
 /** Creates a new {@link BoardPreview} from the provided arguments. */
 function initBoardPreview(
-	gameRules: GameRules,
+	/** The rules to base the board on. */
+	gameRulesIn: GameRules,
 	variant: LoadedVariant | undefined,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
@@ -70,6 +74,11 @@ function initBoardPreview(
 	/** Clamps each generated world-border edge to this absolute coordinate. */
 	worldBorderCap?: bigint,
 ): BoardPreview {
+	// The board owns its rules: the generated world border is written onto this copy, never the
+	// caller's object — callers commonly retain their options, and a cached or stored position
+	// must not acquire a board's rules.
+	const gameRules: GameRules = jsutil.deepCopyObject(gameRulesIn);
+
 	if (
 		variantOptions?.gameRules.moveRule !== undefined &&
 		variantOptions?.state_global.moveRuleState === undefined
@@ -151,6 +160,7 @@ function initBoardPreview(
 		existingTypes,
 		existingRawTypes,
 		state,
+		gameRules,
 		editor,
 		variant,
 		startSnapshot,

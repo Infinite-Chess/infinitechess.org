@@ -15,6 +15,7 @@ import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
+import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js';
 import gamefile, { type LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
@@ -98,12 +99,14 @@ function createGame(
 		mod: variantcache.getModule(setup.variant.code),
 		dateTimestamp,
 	};
-	const gameWithRules = gamefile.initGame(setup.time, dateTimestamp, variant);
+	const gameRules = variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
+	const game = gamefile.initGame(setup.time, dateTimestamp, gameRules);
 	const match = gameutility.initMatch(setup, gameID, assignments);
 	const validateMoves = doesVariantSupportServerValidation(variant);
 
 	const servergame: ServerGame = gameutility.initServerGame(
-		gameWithRules,
+		game,
+		gameRules,
 		match,
 		validateMoves,
 		variant,

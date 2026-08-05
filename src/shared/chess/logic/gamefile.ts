@@ -13,7 +13,6 @@ import type { GlobalGameState } from './state.js';
 import type { ClockValues, TimeControl } from '../../types.js';
 
 import clock from './clock.js';
-import jsutil from '../../util/jsutil.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
 import boardinit from './boardinit.js';
@@ -109,29 +108,21 @@ export interface Additional {
 	worldBorderDist?: bigint;
 	/** Maximum absolute edge of a world border generated from {@link worldBorderDist}. */
 	worldBorderCap?: bigint;
-	/** Exact dimensions of the world border. OVERRIDES {@link worldBorderDist} if both are specified. */
-	worldBorder?: BoundingBox;
 }
 
 // Functions -------------------------------------------------------------
 
-/** Creates a new {@link Game} object from provided arguments. */
+/**
+ * Creates a new {@link Game} object from provided arguments.
+ * @param gameRules - The game's rules. Only read, for the turn order the clocks are built from.
+ */
 function initGame(
 	timeControl: TimeControl,
 	dateTimestamp: number,
-	variant: LoadedVariant | undefined,
+	gameRules: GameRules,
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
-	variantOptions?: VariantOptions,
-): Game & { gameRules: GameRules } {
-	// The gamerules are the one part of the options construction writes to (the generated world
-	// border, the slide limit override, swapping checkmate for royalcapture), so they're copied —
-	// callers commonly retain their options, and a cached or stored position must not acquire this
-	// game's rules. Everything else the options carry is consumed: the game takes ownership of it.
-	const gameRules = variantOptions
-		? jsutil.deepCopyObject(variantOptions.gameRules)
-		: variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
-
+): Game {
 	const clockDependantVars: ClockDependant = clock.init(
 		gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder),
 		timeControl,
@@ -150,11 +141,9 @@ function initGame(
 		clock.edit(game.clocks, clockValues);
 	}
 
-	const gameWithRules = { ...game, gameRules };
+	game.gameConclusion = gameConclusion;
 
-	gameWithRules.gameConclusion = gameConclusion;
-
-	return gameWithRules;
+	return game;
 }
 
 /**
@@ -211,27 +200,31 @@ function initGameFile(
 			? { code: variantCode, mod: variantcache.getModule(variantCode), dateTimestamp }
 			: undefined;
 
-	const gameWithRules = initGame(
+	let gameRules: GameRules =
+		additional.variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
+
+	// Slide Limit modifier override. Onto a shallow copy, so the caller's rules stay untouched —
+	// initBoard deep-copies from here, so the gamefile shares no nested objects with them either.
+	// Must precede initBoard, which builds the movesets from the slide limit.
+	if (additional.slideLimit !== undefined)
+		gameRules = { ...gameRules, slideLimit: additional.slideLimit };
+
+	const game = initGame(
 		timeControl,
 		dateTimestamp,
-		variant,
+		gameRules,
 		additional.gameConclusion,
 		additional.clockValues,
-		additional.variantOptions,
 	);
-	// Slide Limit modifier override
-	if (additional.slideLimit !== undefined)
-		gameWithRules.gameRules.slideLimit = additional.slideLimit;
-
 	const boardsim = boardinit.initBoard(
-		gameWithRules.gameRules,
+		gameRules,
 		variant,
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,
 		additional.worldBorderCap,
 	);
-	return loadGameWithBoard(gameWithRules, boardsim, additional.moves, validateMoves);
+	return loadGameWithBoard(game, boardsim, additional.moves, validateMoves);
 }
 
 export default {

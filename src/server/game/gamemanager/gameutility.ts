@@ -301,24 +301,24 @@ function initMatch(
  * Pass an existing moves list to replay them (e.g. on server restore); omit for a fresh game.
  */
 function initServerGame(
-	gameWithRules: Game & { gameRules: GameRules },
+	game: Game,
+	gameRules: GameRules,
 	match: MatchInfo,
 	validateMoves: boolean,
 	variant: LoadedVariant,
 	moves: MoveRecord[] = [],
 ): ServerGame {
 	if (validateMoves) {
-		const boardsim = boardinit.initBoard(gameWithRules.gameRules, variant);
+		// Spread last, so the servergame's rules are the board's own copy — never a second one.
+		const boardsim = boardinit.initBoard(gameRules, variant);
 		if (moves.length > 0) movepiece.makeAllMovesInGame(boardsim, moves);
-		return { ...gameWithRules, match, ...boardsim, spectators: new Set(), validateMoves: true };
+		return { ...game, match, ...boardsim, spectators: new Set(), validateMoves: true };
 	} else {
 		return {
-			...gameWithRules,
+			...game,
+			gameRules,
 			match,
-			whosTurn:
-				gameWithRules.gameRules.turnOrder[
-					moves.length % gameWithRules.gameRules.turnOrder.length
-				]!,
+			whosTurn: gameRules.turnOrder[moves.length % gameRules.turnOrder.length]!,
 			moves,
 			spectators: new Set(),
 			validateMoves: false,
