@@ -20,20 +20,20 @@ import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil
  * coordinate Apeiron can safely evaluate (i64 minus a little wiggle room). The same cap
  * engine games clip their generated border to, so analysis and play agree on what's in range.
  */
-const MAX_SAFE_COORD = apeiron_card.PLAY_BORDER.worldBorderCap;
+const WORLD_BORDER_CAP = apeiron_card.PLAY_BORDER.worldBorderCap;
 
 /**
  * The world border Apeiron evaluates the position within: the position's own `worldBorder`
- * gamerule where defined, falling back to ±{@link MAX_SAFE_COORD} on any unbounded side.
+ * gamerule where defined, falling back to ±{@link WORLD_BORDER_CAP} on any unbounded side.
  * (Unlike engine games, the fallback is absolute — not offset from the piece bounding box.)
  */
 function getEngineWorldBorder(gamefile: GameFile): BoundingBox {
 	const wb = gamefile.gameRules.worldBorder;
 	return {
-		left: wb?.left ?? -MAX_SAFE_COORD,
-		right: wb?.right ?? MAX_SAFE_COORD,
-		bottom: wb?.bottom ?? -MAX_SAFE_COORD,
-		top: wb?.top ?? MAX_SAFE_COORD,
+		left: wb?.left ?? -WORLD_BORDER_CAP,
+		right: wb?.right ?? WORLD_BORDER_CAP,
+		bottom: wb?.bottom ?? -WORLD_BORDER_CAP,
+		top: wb?.top ?? WORLD_BORDER_CAP,
 	};
 }
 

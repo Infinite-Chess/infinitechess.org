@@ -31,8 +31,13 @@ type SupportedResult = { supported: true } | { supported: false; reason: EngineS
 
 // Constants -------------------------------------------------------------
 
-/** The maximum world border distance the engine can handle. */
-const BORDER_CAP = I64_MAX - 1000n; // Small cushion
+/**
+ * Hard cap on the absolute edge of an engine game's world border — i64 with a small cushion.
+ * Deliberately 1000 further out than the engine's `worldBorderDist`, so any position whose pieces
+ * lie within ±1000 of the origin (every preset variant) keeps a border spaced evenly around them.
+ * Only pieces reaching beyond that trip the cap, trading even spacing for staying inside i64.
+ */
+const WORLD_BORDER_CAP = I64_MAX - 1000n;
 
 /** Max non-neutral pieces the engine handles before it bogs down (excludes voids/obstacles). */
 const MAX_PIECES = 1000;
@@ -43,8 +48,8 @@ const MAX_PIECES = 1000;
  * real game loads onto — otherwise the two could disagree on what's in bounds.
  */
 const PLAY_BORDER = {
-	worldBorderDist: engineDictionary[ONLINE_ENGINE].worldBorder,
-	worldBorderCap: BORDER_CAP,
+	worldBorderDist: engineDictionary[ONLINE_ENGINE].worldBorderDist,
+	worldBorderCap: WORLD_BORDER_CAP,
 };
 
 const SUPPORTED_VARIANTS: Set<VariantCode> = new Set(['Classical', 'Confined_Classical', 'Classical_Plus', 'Core', 'CoaIP', 'CoaIP_HO', 'CoaIP_RO', 'CoaIP_NO', 'Palace', 'Pawndard', 'Standarch', 'Space_Classic', 'Space', 'Pawn_Horde', 'Knightline', 'Obstocean', 'Chess', 'Omega']); // prettier-ignore
@@ -109,7 +114,7 @@ function checkPieceTypes(rawTypes: Iterable<RawType>): SupportedResult {
 /**
  * Whether the engine can PLAY the given game (engine games). Requires a bounded board within the
  * engine's safe coordinate range — engine games always run inside a world border, so the gamefile
- * must be constructed with the engine's `worldBorderDist`/{@link BORDER_CAP} for this to pass.
+ * must be constructed with the engine's `worldBorderDist`/{@link WORLD_BORDER_CAP} for this to pass.
  *
  * Judged on the CURRENT position, since that's what an engine game plays on from here.
  */
@@ -121,7 +126,9 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 	const worldBorder = gamefile.gameRules.worldBorder;
 	if (
 		!worldBorder ||
-		Object.values(worldBorder).some((dist) => dist === null || bimath.abs(dist) > BORDER_CAP)
+		Object.values(worldBorder).some(
+			(edge) => edge === null || bimath.abs(edge) > WORLD_BORDER_CAP,
+		)
 	) {
 		return { supported: false, reason: 'border_too_large' };
 	}
@@ -131,8 +138,8 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 	);
 	if (!pieceCountResult.supported) return pieceCountResult;
 
-	// No piece may lie outside the border. Only reachable for a border generated around this
-	// position and then clipped by BORDER_CAP — an explicit one is validated upstream in validatePosition.
+	// No piece may lie outside the border. Only reachable for a border generated around this position
+	// and then clipped by WORLD_BORDER_CAP — an explicit one is validated upstream in validatePosition.
 	const piecesBox = boardutil.getBoundingBoxOfAllPieces(gamefile.pieces);
 	if (piecesBox !== undefined && !bounds.boxContainsBox(worldBorder, piecesBox)) {
 		return { supported: false, reason: 'out_of_bounds' };
