@@ -199,7 +199,9 @@ function initVariantGroupDropdown(hostConfig: VariantSelectorConfig): void {
 			});
 			const preview = btn.querySelector<HTMLElement>('.preview')!;
 			variantPreviewTooltip.attachAnchor(preview, (anchor) => {
-				variantPreviewTooltip.showForVariantCode(anchor, code, 'left');
+				variantPreviewTooltip.showForVariantCode(anchor, code, 'left', {
+					border: engineBorder(),
+				});
 			});
 		});
 	});
@@ -580,9 +582,9 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
 		return;
 	}
-	// Legal position; in a seek context it still has to be playable from here — analysis loads
-	// finished and engine-unplayable games fine. Only there do we construct the transient
-	// gamefile those checks read off of, then discard it.
+	// Legal position; in a seek context it still has to be playable from here — analysis
+	// loads finished and engine-unplayable games fine. Only there do we construct the
+	// transient gamefile those checks read off of, then discard it.
 	if (config.isSeekContext) {
 		const constructed = gameformulator.tryConstructPosition(variantOptions, engineBorder());
 		const rejection = constructed === null ? null : getContextRejection(constructed);
@@ -639,9 +641,9 @@ function engineBorder(): typeof apeiron_card.PLAY_BORDER | undefined {
 
 /**
  * Why this context can't play an otherwise-legal position, as display text, or null if it can.
- * A seek carries only a position + gamerules, so a variant with custom piece movement (4D) would
- * silently revert to default movement; and a finished game has nothing left to play. Against the
- * engine, the position also has to be one it can actually handle.
+ * A seek carries only a position + gamerules, so a variant with custom piece movement (4D)
+ * would silently revert to default movement; and a finished game has nothing left to play.
+ * Against the engine, the position also has to be one it can actually handle.
  */
 function getContextRejection(constructed: GameFile): string | null {
 	if (config.isSeekContext) {
@@ -754,7 +756,7 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 /** Shows the preview tooltip for the currently selected variant in the display button. */
 function handleDisplayPreviewHover(anchor: HTMLElement): void {
 	if (selection.kind === 'preset') {
-		variantPreviewTooltip.showForVariantCode(anchor, selection.code, 'left');
+		variantPreviewTooltip.showForVariantCode(anchor, selection.code, 'left', { border: engineBorder() }); // prettier-ignore
 	} else if (selection.kind === 'online') {
 		handleSavePreview(anchor, selection.name, cloudPreviewCache, ecloudstore.readCloud);
 	} else if (selection.kind === 'local') {
@@ -769,6 +771,8 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 				if (icnResult?.kind !== 'icn') return undefined;
 				return gamecompressor.gamefileToPositionOptions(icnResult.gamefile);
 			},
+			'left',
+			{ border: engineBorder() },
 		);
 	}
 }
@@ -786,15 +790,21 @@ function handleSavePreview(
 	cache: Map<string, VariantOptions>,
 	read: (n: string) => Promise<{ variantOptions: VariantOptions }>,
 ): void {
-	void variantPreviewTooltip.showForPosition(anchor, positionName, async () => {
-		const cached = cache.get(positionName);
-		if (cached !== undefined) return cached; // Cache hit!
-		// Request for the first time, cache the result.
-		const saveState = await read(positionName).catch(() => undefined);
-		if (saveState === undefined) return undefined; // Preview unavailable – silently ignore
-		cache.set(positionName, saveState.variantOptions);
-		return saveState.variantOptions;
-	});
+	void variantPreviewTooltip.showForPosition(
+		anchor,
+		positionName,
+		async () => {
+			const cached = cache.get(positionName);
+			if (cached !== undefined) return cached; // Cache hit!
+			// Request for the first time, cache the result.
+			const saveState = await read(positionName).catch(() => undefined);
+			if (saveState === undefined) return undefined; // Preview unavailable – silently ignore
+			cache.set(positionName, saveState.variantOptions);
+			return saveState.variantOptions;
+		},
+		'left',
+		{ border: engineBorder() },
+	);
 }
 
 // Selection accessors ----------------------------------------------

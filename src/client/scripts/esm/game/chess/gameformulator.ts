@@ -36,7 +36,7 @@ export interface GameConstructionOptions {
 }
 
 /** Caller-supplied {@link Additional} fields, layered onto what the source itself resolves to. */
-export interface ConstructionOverrides {
+interface ConstructionOverrides {
 	/** See {@link Additional.gameConclusion}. */
 	gameConclusion?: GameConclusion;
 	/** See {@link Additional.slideLimit}. */
@@ -87,8 +87,8 @@ async function tryFormulateGame(
 }
 
 /**
- * Constructs the gamefile of a moveless position, purely so callers can inspect the
- * game it produces (its computed conclusion, its engine support).
+ * Constructs the gamefile of a moveless position, purely so callers can
+ * inspect the game it produces (its computed conclusion, its engine support).
  * @returns The constructed gamefile, or `null` if the position couldn't be built.
  */
 function tryConstructPosition(

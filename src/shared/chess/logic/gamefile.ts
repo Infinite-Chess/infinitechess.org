@@ -13,6 +13,7 @@ import type { GlobalGameState } from './state.js';
 import type { ClockValues, TimeControl } from '../../types.js';
 
 import clock from './clock.js';
+import jsutil from '../../util/jsutil.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
 import boardinit from './boardinit.js';
@@ -123,7 +124,13 @@ function initGame(
 	clockValues?: ClockValues,
 	variantOptions?: VariantOptions,
 ): Game & { gameRules: GameRules } {
-	const gameRules = variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(variant);
+	// The gamerules are the one part of the options construction writes to (the generated world
+	// border, the slide limit override, swapping checkmate for royalcapture), so they're copied —
+	// callers commonly retain their options, and a cached or stored position must not acquire this
+	// game's rules. Everything else the options carry is consumed: the game takes ownership of it.
+	const gameRules = variantOptions
+		? jsutil.deepCopyObject(variantOptions.gameRules)
+		: variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
 
 	const clockDependantVars: ClockDependant = clock.init(
 		gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder),

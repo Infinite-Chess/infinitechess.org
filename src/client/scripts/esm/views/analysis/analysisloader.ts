@@ -11,7 +11,6 @@ import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icncon
 import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
@@ -101,12 +100,7 @@ function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
 function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint): Promise<void> {
 	lastLoad = { replay: () => loadVariantOptions(variantOptions, slideLimit), players: {} };
 	const additional: Additional = {
-		// Construction writes to gameRules, and this module retains `variantOptions` for
-		// replay — so give construction its own copy of the rules (not the position).
-		variantOptions: {
-			...variantOptions,
-			gameRules: jsutil.deepCopyObject(variantOptions.gameRules),
-		},
+		variantOptions,
 		...(slideLimit !== undefined && { slideLimit }),
 	};
 
