@@ -37,7 +37,6 @@ const elements_actions = [
 	document.getElementById('copy-notation')!,
 	document.getElementById('paste-notation')!,
 	document.getElementById('gamerules')!,
-	document.getElementById('start-engine-game')!,
 	// Selection
 	document.getElementById('select-all')!,
 	document.getElementById('delete-selection')!,
@@ -228,11 +227,6 @@ function callback_Action(e: Event): void {
 			const wasOpen = guigamerules.isOpen();
 			closeAllFloatingWindows(false);
 			if (!wasOpen) guigamerules.open();
-			return;
-		}
-		case 'start-engine-game': {
-			closeAllFloatingWindows(false);
-			void eactions.startEngineGame();
 			return;
 		}
 		// Selection (buttons that are always active)
