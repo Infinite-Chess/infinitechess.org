@@ -131,7 +131,8 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 	);
 	if (!pieceCountResult.supported) return pieceCountResult;
 
-	// All pieces must sit inside the world border.
+	// No piece may lie outside the border. Only reachable for a border generated around this
+	// position and then clipped by BORDER_CAP — an explicit one is validated upstream in validatePosition.
 	const piecesBox = boardutil.getBoundingBoxOfAllPieces(gamefile.pieces);
 	if (piecesBox !== undefined && !bounds.boxContainsBox(worldBorder, piecesBox)) {
 		return { supported: false, reason: 'out_of_bounds' };
