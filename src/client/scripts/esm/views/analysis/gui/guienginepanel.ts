@@ -257,7 +257,7 @@ function clearPanelReadout(
 /** The localized label for why the engine won't analyze the viewed position. */
 function getBlockedReasonText(): string | undefined {
 	const code = ceval.getBlockReason();
-	return code === undefined ? undefined : t.shared.position_errors.engine[code];
+	return code === undefined ? undefined : t.shared.position_errors.engine[code].label;
 }
 
 function onEngineStatus(status: CevalStatus): void {
@@ -274,7 +274,7 @@ function onEngineStatus(status: CevalStatus): void {
 	} else if (status.kind === 'blocked') {
 		enginelegalmovesdebug.disable();
 		setGaugeVisible(false);
-		clearPanelReadout(t.shared.position_errors.engine[status.reason]);
+		clearPanelReadout(t.shared.position_errors.engine[status.reason].label);
 	} else if (status.kind === 'crashed') {
 		clearPanelReadout('Analysis crashed', { gauge: 0 });
 		if (!crashToastShown) {

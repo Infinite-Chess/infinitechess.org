@@ -244,13 +244,34 @@ export interface ScriptTranslations {
 			no_4d_movement: string;
 			game_over: string;
 			engine: {
-				unsupported_variant: string;
-				unsupported_win_rule: string;
-				too_many_promotions: string;
-				too_many_pieces: string;
-				unsupported_piece: string;
-				border_too_large: string;
-				out_of_bounds: string;
+				unsupported_variant: {
+					label: string;
+					message: string;
+				};
+				unsupported_win_rule: {
+					label: string;
+					message: string;
+				};
+				too_many_promotions: {
+					label: string;
+					message: string;
+				};
+				too_many_pieces: {
+					label: string;
+					message: string;
+				};
+				unsupported_piece: {
+					label: string;
+					message: string;
+				};
+				border_too_large: {
+					label: string;
+					message: string;
+				};
+				out_of_bounds: {
+					label: string;
+					message: string;
+				};
 			};
 		};
 		game_result: {

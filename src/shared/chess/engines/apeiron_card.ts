@@ -62,8 +62,8 @@ const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GI
 
 // Individual rule checks (shared by both entry points) --------------------
 
-// Reason codes are rendered in the engine panel's single-line, ellipsis-truncated stats readout,
-// so keep their translations around "Unsupported variant" in length (~20 chars, give or take).
+// Every reason code has both a short `label` (the engine panel's single-line, ellipsis-truncated
+// stats readout) and a full-sentence `message` (the variant selector's error text).
 
 /** Only checkmate-family win conditions are understood. */
 function checkWinConditions(gameRules: GameRules): SupportedResult {

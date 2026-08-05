@@ -653,7 +653,7 @@ function getContextRejection(constructed: GameFile): string | null {
 	}
 	if (engineOnly) {
 		const support = apeiron_card.isPlaySupported(constructed);
-		if (!support.supported) return t.shared.position_errors.engine[support.reason];
+		if (!support.supported) return t.shared.position_errors.engine[support.reason].message;
 	}
 	return null;
 }

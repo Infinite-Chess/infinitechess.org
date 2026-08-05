@@ -143,17 +143,38 @@ moves_invalid = "One or more moves are invalid."
 no_4d_movement = "Custom positions don't support 4D movement."
 game_over = "The game is already over."
 
-# Display labels for codes returned by the engine's support checks. Unlike the errors above,
-# these also render in the analysis engine panel's single-line, ellipsis-truncated readout —
-# so keep them SHORT (~20 characters, give or take) rather than full sentences.
-[position_errors.engine]
-unsupported_variant = "Unsupported variant"
-unsupported_win_rule = "Unsupported win rule"
-too_many_promotions = "Too many promotions"
-too_many_pieces = "Too many pieces"
-unsupported_piece = "Unsupported piece"
-border_too_large = "Border too large"
-out_of_bounds = "Out of bounds"
+# Codes returned by the engine's support checks. Each has two forms: `label` renders in the
+# analysis engine panel's single-line, ellipsis-truncated readout, so keep it SHORT (~20
+# characters, give or take); `message` is the full sentence shown under the variant selector,
+# matching the sentences in [position_errors] above.
+
+[position_errors.engine.unsupported_variant]
+label = "Unsupported variant"
+message = "The engine doesn't support this variant."
+
+[position_errors.engine.unsupported_win_rule]
+label = "Unsupported win rule"
+message = "The engine doesn't support this win condition."
+
+[position_errors.engine.too_many_promotions]
+label = "Too many promotions"
+message = "The engine supports at most one promotion line per player."
+
+[position_errors.engine.too_many_pieces]
+label = "Too many pieces"
+message = "The engine doesn't support this many pieces."
+
+[position_errors.engine.unsupported_piece]
+label = "Unsupported piece"
+message = "The engine doesn't support one of these pieces."
+
+[position_errors.engine.border_too_large]
+label = "Border too large"
+message = "The engine doesn't support a world border this large."
+
+[position_errors.engine.out_of_bounds]
+label = "Out of bounds"
+message = "At least one piece is outside the engine's world border."
 
 [game_result] # Sentences shown when a game ends (the result banner).
 # {color} is filled in from [sides] above; {label} from [conditions] below.
