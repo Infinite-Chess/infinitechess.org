@@ -163,7 +163,10 @@ function removePendingRequest(requestId: number): void {
 /** Returns the compact ICN of the viewed position, used as the cache/request key. */
 function getPositionKey(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile, true);
-	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
+	return icnconverter.getShortFormPosition(
+		longformIn.position!,
+		longformIn.state_global.specialRights!,
+	);
 }
 
 /** Renders the cached legal-move destinations for the viewed position as highlighted squares. */
