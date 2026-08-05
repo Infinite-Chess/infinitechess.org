@@ -37,8 +37,8 @@ interface EngineLegalMovesDebugOptions {
 	/** Returns true when the engine can be asked for moves right now. */
 	canRequest: () => boolean;
 	/**
-	 * The user-facing reason the overlay can't be enabled in this position, or undefined
-	 * when it can. Omit if the engine has no such positions.
+	 * The user-facing reason the overlay can't be enabled in this position
+	 * or undefined when it can. Omit if the engine has no such positions.
 	 */
 	getBlockedReason?: () => string | undefined;
 	/** Sends `request` to the engine worker. */

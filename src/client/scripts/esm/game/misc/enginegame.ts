@@ -323,5 +323,3 @@ export default {
 	initEngineGame,
 	onMovePlayed,
 };
-
-export type { EngineConfig };
