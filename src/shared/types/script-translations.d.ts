@@ -236,7 +236,6 @@ export interface ScriptTranslations {
 			gargoyles_not_allowed: string;
 			invalid_player_id: string;
 			player_missing_pieces: string;
-			player_missing_royal: string;
 			consecutive_turns_with_checkmate: string;
 			too_many_royals_for_checkmate: string;
 			king_capture_on_turn_1: string;

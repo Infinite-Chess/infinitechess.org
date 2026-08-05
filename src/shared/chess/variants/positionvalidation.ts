@@ -7,7 +7,6 @@
 
 import type { RawType } from '../util/typeutil.js';
 import type { VariantOptions } from '../logic/gamefile.js';
-import type { GameruleWinCondition } from '../util/winconutil.js';
 
 import bounds from '../../util/math/bounds.js';
 import moveutil from '../util/moveutil.js';
@@ -20,17 +19,6 @@ import { POSITION_STRING_THRESHOLD } from './servervalidation.js';
 import typeutil, { neutralRawTypes, players as p } from '../util/typeutil.js';
 
 // Constants -------------------------------------------------------------------------
-
-/**
- * Win conditions that require a player to have at least one royal piece on the board.
- * If a player uses one of these but has no royal, the position is illegal.
- */
-const WIN_CONDITIONS_REQUIRING_ROYAL: string[] = [
-	'checkmate',
-	'royalcapture',
-	'allroyalscaptured',
-	'koth',
-] satisfies GameruleWinCondition[];
 
 /** All colored players required in a complete 4-player game's turn order. */
 const FOUR_PLAYER_COLORS: number[] = [p.RED, p.BLUE, p.YELLOW, p.GREEN];
@@ -49,7 +37,6 @@ export type PositionErrorCode =
 	| 'gargoyles_not_allowed'
 	| 'invalid_player_id'
 	| 'player_missing_pieces'
-	| 'player_missing_royal'
 	| 'consecutive_turns_with_checkmate'
 	| 'too_many_royals_for_checkmate'
 	| 'king_capture_on_turn_1';
@@ -66,7 +53,7 @@ export type PositionErrorCode =
  * 4. Every piece lies inside the world border, if one is present.
  * 5. Every non-neutral piece's color is in the turn order.
  *    In 2-player mode, no neutral gargoyle pieces are allowed.
- * 6. Every player in the turn order has at least one piece and, if required, a royal piece.
+ * 6. Every player in the turn order has at least one piece.
  * 7. Checkmate incompatibility: No player gets consecutive turns; royal count
  *    is not too high; and king capture is not possible on turn 1.
  *
@@ -108,7 +95,6 @@ export function validatePosition(
 	const neutralExemptRawTypes = new Set<RawType>(neutralRawTypes); // void and obstacle
 	const royalRawTypes = new Set<RawType>(typeutil.royals);
 	const playersWithPieces = new Set<number>();
-	const playersWithRoyals = new Set<number>();
 	const worldBorder = gameRules.worldBorder;
 	let royalCount = 0;
 
@@ -139,25 +125,15 @@ export function validatePosition(
 				return 'mixed_player_modes';
 			}
 			playersWithPieces.add(color);
-			if (royalRawTypes.has(rawType)) {
-				playersWithRoyals.add(color);
-				royalCount++;
-			}
+			if (royalRawTypes.has(rawType)) royalCount++;
 		}
 	}
 
-	// --- Rule 6: Per-player post-checks ---
+	// --- Rule 6: Every player has at least one piece ---
+	// A player with no royal is legal, even under a royal-requiring win
+	// condition — they simply can't win (e.g. a practice checkmate played PvP).
 	for (const player of uniquePlayers) {
-		if (!playersWithPieces.has(player)) {
-			return 'player_missing_pieces';
-		}
-		const playerWinCons = gameRules.winConditions[player] ?? [];
-		const playerRequiresRoyal = playerWinCons.some((wc) =>
-			WIN_CONDITIONS_REQUIRING_ROYAL.includes(wc),
-		);
-		if (playerRequiresRoyal && !playersWithRoyals.has(player)) {
-			return 'player_missing_royal';
-		}
+		if (!playersWithPieces.has(player)) return 'player_missing_pieces';
 	}
 
 	// --- Rule 7: Checkmate incompatibility ---
