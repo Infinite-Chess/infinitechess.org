@@ -72,9 +72,9 @@ interface CevalUpdate {
 }
 
 /**
- * Engine lifecycle status, for the UI status row. `crashed` = this position reliably panics the
- * engine; `blocked` carries why the engine won't touch the position, so consumers can't observe
- * one without the other.
+ * Engine lifecycle status, for the UI status row.
+ * `crashed` = this position reliably panics them engine;
+ * `blocked` carries why the engine won't touch the position.
  */
 type CevalStatus =
 	| { kind: 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'crashed' }
