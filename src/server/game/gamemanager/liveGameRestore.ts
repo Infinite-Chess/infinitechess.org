@@ -265,9 +265,9 @@ function reconstructClockValues(
 	if (engineRow?.time_remaining_ms !== null && engineRow?.time_remaining_ms !== undefined)
 		clocks[engineRow.player_number as Player] = engineRow.time_remaining_ms;
 
-	let colorTicking =
+	// If the engine's clock was frozen already, restore it still frozen.
+	const colorTicking =
 		gameRow.color_ticking === null ? undefined : (gameRow.color_ticking as Player);
-	if (colorTicking === engineRow?.player_number) colorTicking = undefined;
 	const timeColorTickingLosesAt =
 		colorTicking !== undefined
 			? gameRow.clock_snapshot_time! + clocks[colorTicking]!

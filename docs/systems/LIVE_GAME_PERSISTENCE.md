@@ -37,7 +37,7 @@ Following the pattern of `games` + `player_games` for ended games, live state is
 
 | Column                | Type    | Notes                                                                                                                                                                   |
 | --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `color_ticking`       | INTEGER | Player number whose clock is running. NULL if untimed, < 2 moves, or game over.                                                                                         |
+| `color_ticking`       | INTEGER | Player number whose clock is running. NULL if untimed, < 2 moves, game over, or the engine's turn is frozen.                                                            |
 | `clock_snapshot_time` | INTEGER | Epoch ms when clock values were snapshotted. Used to adjust the ticking player's time on restoration: `actual = stored_remaining - (Date.now() - clock_snapshot_time)`. |
 
 Per-participant `time_remaining_ms` lives in `live_player_games` or `live_engine_games`.
