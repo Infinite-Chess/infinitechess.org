@@ -592,6 +592,7 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 			return;
 		}
 	}
+	clearError(element_variantDisplay);
 	setIcnResult({ kind: 'saved', options: variantOptions, isValid: true });
 }
 
