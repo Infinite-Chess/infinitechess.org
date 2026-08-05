@@ -6,6 +6,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { CreateEngineGameBody } from '../../../shared/types.js';
 
 import { players } from '../../../shared/chess/util/typeutil.js';
+import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import { engineDictionary, ONLINE_ENGINE } from '../../../shared/chess/engine.js';
 
 import { createGame } from '../gamemanager/gamemanager.js';
@@ -25,9 +26,15 @@ async function createEngineGameWs(ws: CustomWebSocket, body: CreateEngineGameBod
 	if (isSocketInAnActiveGame(ws))
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 
-	const memberInfo = ws.metadata.memberInfo;
-	// These are unreachable via the client (it validates first), so a hand-crafted message.
-	if (body.strengthLevel > engineDictionary[ONLINE_ENGINE].maxStrengthLevel) return;
+	// The properties zod can't constrain, since they depend on the engine's capabilities.
+	// Unreachable via the client (it validates first), so reaching here is a hand-crafted message.
+	if (
+		body.strengthLevel > engineDictionary[ONLINE_ENGINE].maxStrengthLevel ||
+		(body.variant.kind === 'preset' && !apeiron_card.SUPPORTED_VARIANTS.has(body.variant.code))
+	) {
+		logEventsAndPrint('Player tried to create an engine game with invalid properties!', 'errLog'); // prettier-ignore
+		return;
+	}
 
 	try {
 		const variant = await resolveAndValidateVariant(ws, body.variant);
@@ -50,7 +57,7 @@ async function createEngineGameWs(ws: CustomWebSocket, body: CreateEngineGameBod
 				},
 			},
 			{
-				[humanColor]: { identifier: memberInfo, socket: ws },
+				[humanColor]: { identifier: ws.metadata.memberInfo, socket: ws },
 			},
 		);
 	} catch (error: unknown) {
