@@ -193,10 +193,6 @@ button {
 	transform: scale(0.75);
 }
 
-.svg-start-local-game {
-	transform: scale(0.9);
-}
-
 .svg-start-engine-game {
 	transform: scale(0.8);
 }

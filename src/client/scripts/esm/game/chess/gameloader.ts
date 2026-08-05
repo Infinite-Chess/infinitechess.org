@@ -52,32 +52,6 @@ async function startBoardEditor(): Promise<void> {
 	boardeditor.initBoardEditor(true); // Dirty position since its a new unsaved position being loaded
 }
 
-/** Initializes a local game from a custom position. */
-async function startCustomLocalGame(options: {
-	additional: {
-		moves?: MovePacket[];
-		variantOptions: VariantOptions;
-	};
-	presetAnnotes?: PresetAnnotes;
-}): Promise<void> {
-	gamesession.setSessionGame({ type: 'analysis' });
-
-	const dateTimestamp = Date.now();
-
-	const viewWhitePerspective = true;
-
-	gamesession.loadGame(
-		{
-			...options,
-			timeControl: '-',
-			dateTimestamp,
-			variant: undefined, // Not specified for custom position
-			viewWhitePerspective,
-		},
-		{ concludeIfOver: true },
-	);
-}
-
 /** Initializes the board editor from a custom position. */
 async function startBoardEditorFromCustomPosition(
 	options: {
@@ -124,6 +98,5 @@ async function startBoardEditorFromCustomPosition(
 
 export default {
 	startBoardEditor,
-	startCustomLocalGame,
 	startBoardEditorFromCustomPosition,
 };

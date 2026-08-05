@@ -178,18 +178,6 @@ async function paste(): Promise<undefined> {
 	toast.show(translations.copypaste.loaded_position_from_clipboard);
 }
 
-/** Starts a local game from the current board editor position, to test play. */
-function startLocalGame(): void {
-	const variantOptions = getValidatedPosition();
-	if (variantOptions === null) return;
-
-	gameloader.startCustomLocalGame({
-		additional: {
-			variantOptions,
-		},
-	});
-}
-
 async function startEngineGame(): Promise<void> {
 	const variantOptions = getValidatedPosition();
 	if (variantOptions === null) return;
@@ -404,7 +392,6 @@ export default {
 	load,
 	copy,
 	paste,
-	startLocalGame,
 	startEngineGame,
 	getCurrentPositionInformation,
 };
