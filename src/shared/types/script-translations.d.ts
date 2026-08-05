@@ -65,9 +65,6 @@ export interface ScriptTranslations {
 			cancel_seek: string;
 			accept_seek: string;
 		};
-		engine: {
-			position_unsupported: string;
-		};
 	};
 	register: {
 		verification_failed: string;
@@ -246,6 +243,15 @@ export interface ScriptTranslations {
 			moves_invalid: string;
 			no_4d_movement: string;
 			game_over: string;
+			engine: {
+				unsupported_variant: string;
+				unsupported_win_rule: string;
+				too_many_promotions: string;
+				too_many_pieces: string;
+				unsupported_piece: string;
+				border_too_large: string;
+				out_of_bounds: string;
+			};
 		};
 		game_result: {
 			color_wins_by: string;

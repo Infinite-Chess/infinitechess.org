@@ -52,6 +52,3 @@ play_computer = "Play against computer"
 [script.lobby]
 cancel_seek = "Cancel seek"
 accept_seek = "Accept seek"
-
-[script.engine]
-position_unsupported = "The engine doesn't support this position. {reason}"

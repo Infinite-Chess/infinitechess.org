@@ -80,7 +80,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 			// built fine but a move was illegal; anything else means it wouldn't build.
 			let game: GameFile;
 			try {
-				game = await gameformulator.formulateGame(longFormat, true);
+				game = await gameformulator.formulateGame(longFormat, undefined, true);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				const illegalMove = error instanceof IllegalMoveError;

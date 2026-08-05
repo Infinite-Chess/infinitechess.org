@@ -109,6 +109,13 @@ let config: VariantSelectorConfig;
 /** The currently selected variant. */
 let selection: DisplaySelection = { kind: 'preset', code: 'Classical' };
 /**
+ * Whether the selection is restricted to what the engine can play (the computer-game flow).
+ * Unlike {@link VariantSelectorConfig.isSeekContext} this toggles per modal-open, so flipping
+ * it re-validates the current custom position against the new rules. Only ever set within a
+ * seek context — the engine checks ride along with the seek-only ones.
+ */
+let engineOnly = false;
+/**
  * The full state currently committed — what the display reverts to when
  * {@link restoreAcceptedDisplay} is called to abandon an un-committed selection.
  * Always valid since invalid selections are never committed.
@@ -268,12 +275,13 @@ function openVariantList(group: VariantGroup): void {
 }
 
 /**
- * Restricts the selector to engine-supported variants (the computer-game flow), or lifts
- * the restriction. Hides unsupported preset variants — and any group left empty — rather
- * than erroring on submit. Custom positions stay available; they're validated on submit.
- * An unsupported current selection falls back to Classical.
+ * Restricts the selector to what the engine can play (the computer-game flow), or lifts the
+ * restriction. Hides unsupported preset variants — and any group left empty — rather than
+ * erroring on submit; an unsupported current selection falls back to Classical. Custom
+ * positions stay available, re-validated here against the newly active rules.
  */
-function setEngineOnlyVariants(engineOnly: boolean): void {
+function setEngineOnly(restrict: boolean): void {
+	engineOnly = restrict;
 	element_variantListPanels.forEach((panel) => {
 		const group = panel.getAttribute('data-group') as GroupType;
 		if (group === 'custom') return;
@@ -290,12 +298,10 @@ function setEngineOnlyVariants(engineOnly: boolean): void {
 			?.classList.toggle('hidden', engineOnly && !anySupported);
 	});
 
-	if (
-		engineOnly &&
-		selection.kind === 'preset' &&
-		!apeiron_card.SUPPORTED_VARIANTS.has(selection.code)
-	)
-		selectVariant('Classical');
+	if (selection.kind === 'preset') {
+		if (engineOnly && !apeiron_card.SUPPORTED_VARIANTS.has(selection.code))
+			selectVariant('Classical');
+	} else revalidateCustomSelection();
 }
 
 /** Opens the custom variant panel and refreshes saved positions. */
@@ -574,18 +580,29 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
 		return;
 	}
-	// Legal position; in a seek context, reject it if it's already game-over — analysis loads
-	// finished games fine. Only there do we construct the transient gamefile the conclusion is
-	// read off of, then discard it.
+	// Legal position; in a seek context it still has to be playable from here — analysis loads
+	// finished and engine-unplayable games fine. Only there do we construct the transient
+	// gamefile those checks read off of, then discard it.
 	if (config.isSeekContext) {
-		const constructed = gameformulator.tryConstructPosition(variantOptions);
-		if (constructed !== null && gamefileutility.isGameOver(constructed)) {
-			showError(element_variantDisplay, t.shared.position_errors.game_over);
+		const constructed = gameformulator.tryConstructPosition(variantOptions, engineBorder());
+		const rejection = constructed === null ? null : getContextRejection(constructed);
+		if (rejection !== null) {
+			showError(element_variantDisplay, rejection);
 			setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
 			return;
 		}
 	}
 	setIcnResult({ kind: 'saved', options: variantOptions, isValid: true });
+}
+
+/**
+ * Re-runs validation on the current custom selection, for when the rules
+ * it's judged by have changed out from under an already-settled result.
+ */
+function revalidateCustomSelection(): void {
+	if (selection.kind === 'icn') void validateIcnInput(true);
+	else if (icnResult?.kind === 'saved') validateSavedPosition(icnResult.options);
+	// A saved position still being fetched has no result yet; it'll validate under the new rules.
 }
 
 /** Serializes a custom position's VariantOptions to its canonical compact ICN string. */
@@ -612,14 +629,29 @@ function validateOptions(options: VariantOptions): PositionErrorCode | null {
 }
 
 /**
- * Why a legal position still can't be seeked, or null if it can (or we're not seeking).
- * A seek carries only a position + gamerules, so a variant with custom piece movement (4D)
- * would silently revert to default movement; and a finished game has nothing left to play.
+ * The world border an engine game would be played inside, for constructing a gamefile that
+ * matches the one that will actually load. Undefined unless the engine is the opponent.
  */
-function getSeekRejection(constructed: GameFile): 'no_4d_movement' | 'game_over' | null {
-	if (!config.isSeekContext) return null;
-	if (variantreader.hasCustomMovement(constructed.variant?.mod)) return 'no_4d_movement';
-	if (gamefileutility.isGameOver(constructed)) return 'game_over';
+function engineBorder(): typeof apeiron_card.PLAY_BORDER | undefined {
+	return engineOnly ? apeiron_card.PLAY_BORDER : undefined;
+}
+
+/**
+ * Why this context can't play an otherwise-legal position, as display text, or null if it can.
+ * A seek carries only a position + gamerules, so a variant with custom piece movement (4D) would
+ * silently revert to default movement; and a finished game has nothing left to play. Against the
+ * engine, the position also has to be one it can actually handle.
+ */
+function getContextRejection(constructed: GameFile): string | null {
+	if (config.isSeekContext) {
+		if (variantreader.hasCustomMovement(constructed.variant?.mod))
+			return t.shared.position_errors.no_4d_movement;
+		if (gamefileutility.isGameOver(constructed)) return t.shared.position_errors.game_over;
+	}
+	if (engineOnly) {
+		const support = apeiron_card.isPlaySupported(constructed);
+		if (!support.supported) return t.shared.position_errors.engine[support.reason];
+	}
 	return null;
 }
 
@@ -644,13 +676,6 @@ function showError(outline: HTMLElement, message: string | null): void {
 function clearError(outline: HTMLElement): void {
 	outline.classList.remove('invalid');
 	element_icnErrorText.textContent = '';
-}
-
-/** Surfaces why the ICN input is illegal, on its wrap and error text. */
-function revealIcnError(
-	reason: PositionErrorCode | 'moves_invalid' | 'no_4d_movement' | 'game_over',
-): void {
-	showError(element_icnInputWrap, t.shared.position_errors[reason]);
 }
 
 /**
@@ -689,12 +714,16 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	// Built through the same path the board loads by, so the gate validates the exact game that
 	// will be loaded. Built regardless of play-legality, so the preview always reflects the moves —
 	// a play-illegal position (e.g. king capturable) still previews faithfully once they're applied.
-	const constructed = await gameformulator.tryFormulateGame(longFormat, revealErrors);
+	const constructed = await gameformulator.tryFormulateGame(
+		longFormat,
+		revealErrors,
+		engineBorder(),
+	);
 	// Awaiting the variant module let the user keep typing — discard a result they've moved past.
 	if (element_icnInput.value !== value) return;
 	if (constructed === 'moves_invalid') {
 		// Construction crashed — the position can't be previewed or played.
-		if (revealErrors) revealIcnError('moves_invalid');
+		if (revealErrors) showError(element_icnInputWrap, t.shared.position_errors.moves_invalid);
 		setIcnResult(null);
 		return;
 	}
@@ -702,11 +731,15 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	// Validate the flattened position the moves lead to — the exact
 	// position a seek plays from and the server re-validates.
 	const finalOptions = gamecompressor.gamefileToPositionOptions(constructed);
-	const rejection = validateOptions(finalOptions) ?? getSeekRejection(constructed);
+	const positionError = validateOptions(finalOptions);
+	const rejection =
+		positionError !== null
+			? t.shared.position_errors[positionError]
+			: getContextRejection(constructed);
 
 	// The moves-applied gamefile is kept either way, so a rejected position still previews.
 	if (rejection !== null) {
-		if (revealErrors) revealIcnError(rejection);
+		if (revealErrors) showError(element_icnInputWrap, rejection);
 		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
 		return;
 	}
@@ -798,18 +831,6 @@ function getCustomPosition():
 }
 
 /**
- * Returns the parsed VariantOptions of the current CUSTOM selection (saved position or
- * ICN input), or null for preset selections / while the position is invalid or loading.
- */
-function getSelectedVariantOptions(): VariantOptions | null {
-	if (selection.kind === 'preset') return null;
-	if (!icnResult?.isValid) return null;
-	return icnResult.kind === 'icn'
-		? gamecompressor.gamefileToPositionOptions(icnResult.gamefile)
-		: icnResult.options;
-}
-
-/**
  * Returns the current variant selection as a SeekVariant for the wire format,
  * or null if the selection cannot be used for an online seek (invalid ICN, local save).
  */
@@ -839,12 +860,11 @@ export default {
 	initVariantGroupDropdown,
 	initIcnValidation,
 	closeVariantDropdown,
-	setEngineOnlyVariants,
+	setEngineOnly,
 	getSelection,
 	isSelectionValid,
 	getCustomPosition,
 	getSeekVariant,
-	getSelectedVariantOptions,
 	applyIcn,
 	snapshotAccepted,
 	restoreAcceptedDisplay,

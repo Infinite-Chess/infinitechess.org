@@ -90,10 +90,7 @@ function loadGameFromState(state: GameStateMessage, dead: boolean): void {
 		gameConclusion: state.gameConclusion,
 		clockValues: state.clockValues,
 	};
-	if (engineGame) {
-		additional.worldBorderDist = engineDictionary[engineGame.engine].worldBorder;
-		additional.worldBorderCap = apeiron_card.BORDER_CAP;
-	}
+	if (engineGame) Object.assign(additional, apeiron_card.PLAY_BORDER);
 
 	gamesession.loadGame(
 		{

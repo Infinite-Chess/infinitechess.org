@@ -8,11 +8,7 @@ import type { ModalMode } from '../../components/gameSetupModalHandoff.js';
 import type { GameMode, TimeControl } from '../../../../../shared/types.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
-import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
-import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
-import { interpolate } from '../../../../../shared/util/interpolate.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
-import { engineDictionary, ONLINE_ENGINE } from '../../../../../shared/chess/engine.js';
 
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
@@ -183,9 +179,7 @@ function handleOnlineSeek(): void {
  */
 function handleComputerGame(): void {
 	const variant = variantSelector.getSeekVariant();
-	if (variant === null) return; // Invalid selection (e.g. unparsable icn or illegal position)
-
-	if (!isVariantSupportedByEngine()) return; // Error toast already shown.
+	if (variant === null) return; // Invalid selection (e.g. unparsable icn, illegal position, or one the engine can't play)
 
 	const time: TimeControl = timeControls.getTimeControl();
 	const strengthLevel = getSelectedEngineStrength();
@@ -197,33 +191,6 @@ function handleComputerGame(): void {
 		strengthLevel,
 	});
 	close();
-}
-
-/**
- * Whether the engine supports the selected variant/position,
- * showing an error toast when it doesn't.
- */
-function isVariantSupportedByEngine(): boolean {
-	const customOptions = variantSelector.getSelectedVariantOptions();
-	if (customOptions === null) return true;
-
-	const checkedOptions = { ...customOptions, gameRules: { ...customOptions.gameRules } };
-	boardpreviewer.initBoardPreview(
-		checkedOptions.gameRules,
-		undefined,
-		checkedOptions,
-		false,
-		engineDictionary[ONLINE_ENGINE].worldBorder,
-		apeiron_card.BORDER_CAP,
-	);
-	const result = apeiron_card.isPositionSupported(checkedOptions);
-	if (!result.supported) {
-		toast.show(interpolate(t.index.engine.position_unsupported, { reason: result.reason }), {
-			error: true,
-		});
-		return false;
-	}
-	return true;
 }
 
 /** The selected engine strength level (the modal's Strength row mirrors the engine's 1-8 range). */
@@ -242,7 +209,7 @@ function openModal(mode: ModalMode): void {
 	element_rowGameMode.classList.toggle('hidden', mode === 'computer');
 	element_rowStrength.classList.toggle('hidden', mode !== 'computer');
 	// Computer games allow supported presets and validated custom positions.
-	variantSelector.setEngineOnlyVariants(mode === 'computer');
+	variantSelector.setEngineOnly(mode === 'computer');
 
 	element_modalOverlay.classList.remove('hidden');
 

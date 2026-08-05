@@ -8,7 +8,7 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import { maxEngineThreads, THREAD_CAP } from '../../game/chess/engines/enginewasm.js';
+import type { EngineSupportCode } from '../../../../../shared/chess/engines/apeiron_card.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
@@ -23,6 +23,7 @@ import { GameBus } from '../../game/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import analysisenginebounds from './analysisenginebounds.js';
+import { maxEngineThreads, THREAD_CAP } from '../../game/chess/engines/enginewasm.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -70,8 +71,14 @@ interface CevalUpdate {
 	terminal: boolean;
 }
 
-/** Engine lifecycle status, for the UI status row. `crashed` = this position reliably panics the engine. */
-type CevalStatus = 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'blocked' | 'crashed';
+/**
+ * Engine lifecycle status, for the UI status row. `crashed` = this position reliably panics the
+ * engine; `blocked` carries why the engine won't touch the position, so consumers can't observe
+ * one without the other.
+ */
+type CevalStatus =
+	| { kind: 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'crashed' }
+	| { kind: 'blocked'; reason: EngineSupportCode };
 
 interface CevalLegalMovesUpdate {
 	requestId: number;
@@ -157,9 +164,9 @@ let currentTargetDepth = DEFAULT_SETTINGS.depth;
 let allowDepthRegressionForCurrentSearch = false;
 /**
  * Why the engine won't analyze the viewed position (piece out of Apeiron's safe coordinate range,
- * an unsupported variant/position, etc.) — a user-facing message, or undefined when analyzable.
+ * an unsupported variant/position, etc.), or undefined when analyzable.
  */
-let blockReason: string | undefined;
+let blockReason: EngineSupportCode | undefined;
 
 let latestUpdate: CevalUpdate | undefined;
 
@@ -391,7 +398,7 @@ function handleWorkerFailure(): void {
 	terminateLegalWorker();
 	enabled = false;
 	queuedLegalMovesRequests.length = 0;
-	notifyStatus('failed');
+	notifyStatus({ kind: 'failed' });
 }
 
 function handleWorkerMessage(msg: AnalysisResponse): void {
@@ -496,7 +503,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		return;
 	}
 	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) {
-		blockAnalysis('Out of bounds');
+		blockAnalysis('out_of_bounds');
 		return;
 	}
 
@@ -592,8 +599,8 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	notifyStatus();
 }
 
-/** Stops the engine and marks the viewed position un-analyzable, with a user-facing `reason`. */
-function blockAnalysis(reason: string): void {
+/** Stops the engine and marks the viewed position un-analyzable, for the given `reason`. */
+function blockAnalysis(reason: EngineSupportCode): void {
 	interruptSearch();
 	send({ cmd: 'stop' });
 	blockReason = reason;
@@ -835,8 +842,8 @@ function isBlocked(): boolean {
 	return blockReason !== undefined;
 }
 
-/** The user-facing reason the engine won't analyze the viewed position, or undefined when it will. */
-function getBlockReason(): string | undefined {
+/** Why the engine won't analyze the viewed position, or undefined when it will. */
+function getBlockReason(): EngineSupportCode | undefined {
 	return blockReason;
 }
 
@@ -921,12 +928,12 @@ function getLatestUpdate(): CevalUpdate | undefined {
 }
 
 function getStatus(): CevalStatus {
-	if (!enabled) return 'off';
-	if (crash.onDeadPosition) return 'crashed';
-	if (blockReason !== undefined) return 'blocked';
-	if (!search?.ready) return 'loading';
-	if (latestUpdate?.done) return 'idle';
-	return 'computing';
+	if (!enabled) return { kind: 'off' };
+	if (crash.onDeadPosition) return { kind: 'crashed' };
+	if (blockReason !== undefined) return { kind: 'blocked', reason: blockReason };
+	if (!search?.ready) return { kind: 'loading' };
+	if (latestUpdate?.done) return { kind: 'idle' };
+	return { kind: 'computing' };
 }
 
 /** Subscribes to throttled engine updates. `undefined` means "eval cleared". */
