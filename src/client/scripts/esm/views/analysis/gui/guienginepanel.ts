@@ -76,8 +76,10 @@ function init(): void {
 		workerUrl: window.analysisPageData.workerUrl,
 	});
 	enginelegalmovesdebug.init({
-		canRequest: () => !ceval.isBlocked(),
-		getBlockedReason: getBlockedReasonText,
+		canRequest: () => {
+			const gamefile = gameslot.getGamefile();
+			return gamefile !== undefined && ceval.computeBlockReason(gamefile) === undefined;
+		},
 		requestMoves: ({ id, positionIcn }) => ceval.requestLegalMoves(id, positionIcn),
 		release: () => ceval.terminateLegalWorker(),
 	});
@@ -254,12 +256,6 @@ function clearPanelReadout(
 	updateProgress(opts.progress);
 }
 
-/** The localized label for why the engine won't analyze the viewed position. */
-function getBlockedReasonText(): string | undefined {
-	const code = ceval.getBlockReason();
-	return code === undefined ? undefined : t.shared.position_errors.engine[code].label;
-}
-
 function onEngineStatus(status: CevalStatus): void {
 	applyThreadsCap(); // Re-evaluate: the engine's threading capability arrives with its status.
 	if (status.kind === 'loading') {
@@ -272,7 +268,6 @@ function onEngineStatus(status: CevalStatus): void {
 		updateProgress(undefined);
 		toast.show('The engine failed to load.', { error: true });
 	} else if (status.kind === 'blocked') {
-		enginelegalmovesdebug.disable();
 		setGaugeVisible(false);
 		clearPanelReadout(t.shared.position_errors.engine[status.reason].label);
 	} else if (status.kind === 'crashed') {

@@ -10,7 +10,6 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
-import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
@@ -34,13 +33,8 @@ interface DebugMoveRequest {
 
 /** Callbacks provided by the engine consumer to wire the overlay into a specific engine worker. */
 interface EngineLegalMovesDebugOptions {
-	/** Returns true when the engine can be asked for moves right now. */
+	/** Returns true when the engine can be asked for moves for the *currently viewed* position. */
 	canRequest: () => boolean;
-	/**
-	 * The user-facing reason the overlay can't be enabled in this position
-	 * or undefined when it can. Omit if the engine has no such positions.
-	 */
-	getBlockedReason?: () => string | undefined;
 	/** Sends `request` to the engine worker. */
 	requestMoves: (request: DebugMoveRequest) => void;
 	/**
@@ -92,20 +86,12 @@ function toggle(): void {
 		disable();
 		return;
 	}
-	const blockedReason = options.getBlockedReason?.();
-	if (blockedReason !== undefined) {
-		toast.show(`Engine legal moves debug unavailable: ${blockedReason}`, { error: true });
-		return;
-	}
 	enabled = true;
 	console.log('Toggled engine debug: true');
 	requestMovesForCurrentPosition();
 }
 
-/**
- * Forces the overlay off, e.g. when the position goes outside
- * the engine's safe world border. No-op if already off.
- */
+/** Forces the overlay off, e.g. when the engine goes away. No-op if already off. */
 function disable(): void {
 	if (!enabled) return;
 	enabled = false;
@@ -215,7 +201,6 @@ function clear(): void {
 export default {
 	init,
 	detach,
-	disable,
 	receiveMoves,
 	receiveMovesForOldestRequest,
 	requestMovesForCurrentPosition,

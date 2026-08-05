@@ -494,16 +494,9 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
-	// The engine can't handle some positions at all (4D/5D variants, too many pieces, unsupported
-	// pieces/win conditions) — block outright. Bounds are separate: an out-of-range VIEWED position
-	// blocks too, but out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
-	const result = apeiron_card.isAnalysisSupported(gamefile);
-	if (!result.supported) {
-		blockAnalysis(result.reason);
-		return;
-	}
-	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) {
-		blockAnalysis('out_of_bounds');
+	const reason = computeBlockReason(gamefile);
+	if (reason !== undefined) {
+		blockAnalysis(reason);
 		return;
 	}
 
@@ -597,6 +590,19 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	lastAnalyzedIcn = icn;
 	nextPositionIsNewGame = false;
 	notifyStatus();
+}
+
+/**
+ * Why the engine can't analyze `gamefile`'s viewed position, or undefined when it can.
+ * The engine can't handle some positions at all (4D/5D variants, too many pieces, unsupported
+ * pieces/win conditions). Bounds are separate: an out-of-range VIEWED position blocks too, but
+ * out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
+ */
+function computeBlockReason(gamefile: GameFile): EngineSupportCode | undefined {
+	const result = apeiron_card.isAnalysisSupported(gamefile);
+	if (!result.supported) return result.reason;
+	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) return 'out_of_bounds';
+	return undefined;
 }
 
 /** Stops the engine and marks the viewed position un-analyzable, for the given `reason`. */
@@ -786,7 +792,6 @@ function seedPositionCache(seed: {
 
 /** Requests the legal moves for {@link icn} from the idle helper worker (never blocked by the search). */
 function requestLegalMoves(requestId: number, icn: string): void {
-	if (blockReason !== undefined) return;
 	ensureLegalWorker();
 	if (!legal || !legal.ready) {
 		queuedLegalMovesRequests.push({ requestId, icn });
@@ -840,11 +845,6 @@ function isEnabled(): boolean {
 /** Whether the engine is refusing to analyze the viewed position for any reason. */
 function isBlocked(): boolean {
 	return blockReason !== undefined;
-}
-
-/** Why the engine won't analyze the viewed position, or undefined when it will. */
-function getBlockReason(): EngineSupportCode | undefined {
-	return blockReason;
 }
 
 function setEnabled(value: boolean): void {
@@ -961,7 +961,7 @@ export default {
 	init,
 	isEnabled,
 	isBlocked,
-	getBlockReason,
+	computeBlockReason,
 	setEnabled,
 	getSettings,
 	updateSettings,
