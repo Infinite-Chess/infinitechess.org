@@ -1,9 +1,9 @@
 // src/client/types/globals.d.ts
 
 import type { Player } from '../../shared/chess/util/typeutil.js';
+import type { GamePageData } from '../../shared/types.js';
 import type { TranslationsObject } from '../../types/translations.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
-import type { GamePageData } from '../../shared/types.js';
 
 /**
  * Legacy i18next-era client translations. Backs the global `translations` object
@@ -98,7 +98,9 @@ declare global {
 
 	/** Engine assets for the checkmate-practice page. */
 	var checkmatePracticePageData: {
+		/** Hashed URL of the checkmate-practice engine worker script (from the asset manifest). */
 		workerUrl: string;
+		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`), from the manifest. */
 		engineUrl: string;
 	};
 

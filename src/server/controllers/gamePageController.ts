@@ -87,7 +87,8 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 
 	const resolved = produceStaticGameState(id);
 	if (resolved === undefined) return undefined; // Game doesn't exist
-	const { state, game, engineGame, ratingChanges, moveCount } = resolved; // game is defined if live
+	const { state, game, ratingChanges, moveCount } = resolved; // game is defined if live
+	let { engineGame } = resolved; // Gains the client's engine asset URLs below, if live
 
 	// Resolve the viewer's color (board orientation + role); undefined => spectator (white POV).
 	let role: Player | undefined;
@@ -103,17 +104,13 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 		role = resolveDeadParticipantColor(id, memberInfo.user_id);
 	}
 
-	let engineWorkerUrl: string | undefined;
-	let engineUrl: string | undefined;
-	if (game?.match.engineParticipant) {
+	// Only a live engine game still needs the assets to run the engine client-side.
+	if (engineGame && game) {
 		const manifest = getManifest();
-		engineWorkerUrl =
-			manifest[
-				`scripts/esm/game/chess/engines/${game.match.engineParticipant.engine}.worker.ts`
-			];
-		engineUrl = manifest['engine'];
-		if (!engineWorkerUrl || !engineUrl)
-			throw new Error('Engine assets missing from asset manifest.');
+		const workerUrl = manifest[`scripts/esm/game/chess/engines/${engineGame.engine}.worker.ts`];
+		const engineUrl = manifest['engine'];
+		if (!workerUrl || !engineUrl) throw new Error('Engine assets missing from asset manifest.');
+		engineGame = { ...engineGame, workerUrl, engineUrl };
 	}
 
 	return {
@@ -122,8 +119,6 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 			isLive: !!game,
 			role,
 			engineGame,
-			engineWorkerUrl,
-			engineUrl,
 			variant: state.variant,
 			timeControl: state.timeControl,
 			timeCreated: state.timeCreated,

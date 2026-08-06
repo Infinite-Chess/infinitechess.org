@@ -113,8 +113,8 @@ function loadGameFromState(state: GameStateMessage, dead: boolean): void {
 				if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
 
 				if (engineGame && ourRole !== undefined && !state.gameConclusion) {
-					const { engineWorkerUrl, engineUrl } = window.gamePageData;
-					if (!engineWorkerUrl || !engineUrl)
+					const { workerUrl, engineUrl } = engineGame;
+					if (!workerUrl || !engineUrl)
 						throw new Error('Engine assets are missing from the game page.');
 					enginegame.initEngineGame({
 						youAreColor: ourRole,
@@ -124,7 +124,7 @@ function loadGameFromState(state: GameStateMessage, dead: boolean): void {
 								engineDictionary[engineGame.engine].defaultTimeLimitPerMoveMillis,
 							strengthLevel: engineGame.strengthLevel,
 						},
-						workerUrl: engineWorkerUrl,
+						workerUrl,
 						engineUrl,
 					});
 				}

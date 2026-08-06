@@ -179,16 +179,12 @@ function handleComputerGame(): void {
 
 	const time: TimeControl = timeControls.getTimeControl();
 	const color = getSelectedColor();
-	const strengthLevel = getSelectedEngineStrength();
+
+	const levelBtn = document.querySelector<HTMLElement>('[data-level].active')!;
+	const strengthLevel = Number(levelBtn.getAttribute('data-level')!);
 
 	lobby.createEngineGame({ variant, time, color, strengthLevel });
 	close();
-}
-
-/** The selected engine strength level (the modal's Strength row mirrors the engine's 1-8 range). */
-function getSelectedEngineStrength(): number {
-	const levelBtn = document.querySelector<HTMLElement>('[data-level].active')!;
-	return Number(levelBtn.getAttribute('data-level')!);
 }
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */

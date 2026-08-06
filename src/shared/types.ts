@@ -399,6 +399,16 @@ export interface EngineGamePageInfo {
 	engine: ValidEngine;
 	/** The engine's strength level for this game. */
 	strengthLevel: number;
+	/**
+	 * Hashed URL of the checkmate-practice engine worker script (from the asset manifest).
+	 * Present only while the game is still live — a concluded engine game has nothing left to run.
+	 */
+	workerUrl?: string;
+	/**
+	 * Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`), from the manifest.
+	 * Present only while the game is still live — a concluded engine game has nothing left to run.
+	 */
+	engineUrl?: string;
 }
 
 /** Static game-page data injected by the server. */
@@ -407,6 +417,4 @@ export interface GamePageData extends StaticGameSetup {
 	isLive: boolean;
 	role?: Player;
 	engineGame?: EngineGamePageInfo;
-	engineWorkerUrl?: string;
-	engineUrl?: string;
 }
