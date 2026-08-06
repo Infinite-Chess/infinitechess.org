@@ -143,6 +143,30 @@ export function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
 	}, `Error fetching recent rated games for user ${user_id} on leaderboard ${leaderboard_id}`);
 }
 
+// Writes ---------------------------------------------------------------------------------------------
+
+// These intentionally skip `dbCall`. gamelogger is their only caller, and it already logs the
+// failure and rolls back the surrounding transaction — wrapping them would log the same error twice.
+
+/**
+ * Inserts one player's row for a game. Guests have no row.
+ * @throws If a database error occurs.
+ */
+export function insertPlayerGame(record: PlayerGamesRecord): void {
+	const query = `
+		INSERT INTO player_games (
+			user_id, game_id, player_number, score,
+			clock_at_end_millis, elo_at_game, elo_change_from_game,
+			rating_deviation_at_game, rating_deviation_after_game
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`;
+	db.run(query, [
+		record.user_id, record.game_id, record.player_number, record.score,
+		record.clock_at_end_millis, record.elo_at_game, record.elo_change_from_game,
+		record.rating_deviation_at_game, record.rating_deviation_after_game,
+	]); // prettier-ignore
+}
+
 /**
  * Updates specific columns of a single player's row for a game.
  * Used when a cheat report overturns an already-logged game.
@@ -156,19 +180,17 @@ export function updatePlayerGame(
 	player_number: Player,
 	updates: Partial<PlayerGamesRecord>,
 ): void {
-	dbCall(() => {
-		const entries = Object.entries(updates);
-		if (entries.length === 0)
-			throw new Error(`Empty updates provided when updating player_games row (game ${game_id}, player ${player_number})! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
-		if (!entries.every(([col]) => col !== 'user_id' && col !== 'game_id' && col !== 'player_number' && allPlayerGamesColumns.includes(col)))
-			throw new Error(`Invalid columns provided when updating player_games row (game ${game_id}, player ${player_number})! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
+	const entries = Object.entries(updates);
+	if (entries.length === 0)
+		throw new Error(`Empty updates provided when updating player_games row (game ${game_id}, player ${player_number})! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
+	if (!entries.every(([col]) => col !== 'user_id' && col !== 'game_id' && col !== 'player_number' && allPlayerGamesColumns.includes(col)))
+		throw new Error(`Invalid columns provided when updating player_games row (game ${game_id}, player ${player_number})! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
 
-		const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
-		const values = entries.map(([, val]) => val);
-		db.run(`UPDATE player_games SET ${setClauses} WHERE game_id = ? AND player_number = ?`, [
-			...values,
-			game_id,
-			player_number,
-		]);
-	}, `Error updating player_games row (game ${game_id}, player ${player_number})`);
+	const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
+	const values = entries.map(([, val]) => val);
+	db.run(`UPDATE player_games SET ${setClauses} WHERE game_id = ? AND player_number = ?`, [
+		...values,
+		game_id,
+		player_number,
+	]);
 }

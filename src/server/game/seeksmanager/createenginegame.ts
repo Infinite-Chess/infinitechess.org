@@ -59,9 +59,7 @@ async function createEngineGameWs(
 					strengthLevel: body.strengthLevel,
 				},
 			},
-			{
-				[humanColor]: { identifier: ws.metadata.memberInfo, socket: ws },
-			},
+			{ [humanColor]: { identifier: ws.metadata.memberInfo, socket: ws } },
 		);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);

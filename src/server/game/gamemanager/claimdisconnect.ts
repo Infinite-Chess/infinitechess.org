@@ -25,12 +25,11 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
  * the game is resignable and ongoing, and the opponent's claim window has opened.
  */
 function mayClaimAgainstOpponent(servergame: ServerGame, ourColor: Player): boolean {
-	if (gameutility.isEngineGame(servergame)) return false;
 	if (gameutility.isGameOver(servergame)) return false;
 	if (!moveutil.isGameResignable(servergame)) return false; // Nothing to claim before resignable.
 
 	const opponentColor = typeutil.invertPlayer(ourColor);
-	const claimTime = servergame.match.playerData[opponentColor]!.disconnect.timeOpponentMayClaim;
+	const claimTime = servergame.match.playerData[opponentColor]?.disconnect.timeOpponentMayClaim;
 	if (claimTime === undefined) return false; // Opponent isn't in an open-able claim window.
 	return Date.now() >= claimTime; // The window has opened.
 }

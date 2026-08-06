@@ -104,10 +104,7 @@ export function updateLivePlayerGame(
 /** Retrieves every live human participant for startup restoration. */
 export function getAllLivePlayerGames(): LivePlayerGamesRecord[] {
 	return dbCall(
-		() =>
-			db.all<LivePlayerGamesRecord>(
-				'SELECT * FROM live_player_games ORDER BY game_id, player_number',
-			),
+		() => db.all<LivePlayerGamesRecord>('SELECT * FROM live_player_games ORDER BY game_id, player_number'), // prettier-ignore
 		'Error retrieving all live player games',
 	);
 }

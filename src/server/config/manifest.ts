@@ -11,10 +11,7 @@ let manifest: Record<string, string> | undefined;
 function loadManifest(): Record<string, string> {
 	if (!fs.existsSync(MANIFEST_PATH))
 		throw new Error('Manifest file not found. Did we build first?');
-	const loadedManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as Record<
-		string,
-		string
-	>;
+	const loadedManifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as Record<string,string>; // prettier-ignore
 	manifest = loadedManifest;
 	return loadedManifest;
 }

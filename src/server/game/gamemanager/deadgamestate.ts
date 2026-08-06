@@ -23,13 +23,24 @@ import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
-import { getFormattedEngineName, type ValidEngine } from '../../../shared/chess/engine.js';
+import { getFormattedEngineName, ValidEngine } from '../../../shared/chess/engine.js';
 
 import { getGameData } from '../../database/gamesManager.js';
 import { getPlayerGamesOfGame } from '../../database/playerGamesManager.js';
-import { getEngineGamesForGame } from '../../database/engineGamesManager.js';
+import { getEngineGamesOfGame } from '../../database/engineGamesManager.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
+
+// Types --------------------------------------------------------------------------------------------------
+
+/** The engine participant of a concluded engine game, as stored in `engine_games`. */
+type EngineParticipant = {
+	color: Player;
+	engine: ValidEngine;
+	strengthLevel: number;
+	container: ServerUsernameContainer;
+	clockAtEnd: number | null;
+};
 
 // Constants ----------------------------------------------------------------------------------------------
 
@@ -114,7 +125,7 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 		if (row.clock_at_end_millis !== null)
 			finalClocks[row.player_number] = row.clock_at_end_millis;
 	}
-	if (engineParticipant?.clockAtEnd !== null && engineParticipant?.clockAtEnd !== undefined)
+	if (engineParticipant && engineParticipant.clockAtEnd !== null)
 		finalClocks[engineParticipant.color] = engineParticipant.clockAtEnd;
 
 	const state: DeadGameState = {
@@ -134,7 +145,7 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 function assembleStaticGameState(
 	game: Pick<GamesRecord, (typeof STATIC_GAME_COLUMNS)[number]>,
 	playerRows: Pick<PlayerGamesRecord, (typeof STATIC_PLAYER_COLUMNS)[number]>[],
-	engineParticipant: ReturnType<typeof getEngineParticipant>,
+	engineParticipant: EngineParticipant | undefined,
 ): StaticGameState {
 	/** Per-color username container; a color absent from `playerRows` -> guest. */
 	const playerContainers: PlayerGroup<ServerUsernameContainer> = {};
@@ -186,16 +197,13 @@ function assembleStaticGameState(
 	};
 }
 
-function getEngineParticipant(game_id: number):
-	| {
-			color: Player;
-			engine: ValidEngine;
-			strengthLevel: number;
-			container: ServerUsernameContainer;
-			clockAtEnd: number | null;
-	  }
-	| undefined {
-	const row = getEngineGamesForGame(game_id, [
+/**
+ * Reads the engine participant of a concluded game.
+ * @returns The participant, or `undefined` if the game had no engine (human vs human).
+ * @throws If a database error occurs.
+ */
+function getEngineParticipant(game_id: number): EngineParticipant | undefined {
+	const row = getEngineGamesOfGame(game_id, [
 		'player_number',
 		'clock_at_end_millis',
 		'engine',
