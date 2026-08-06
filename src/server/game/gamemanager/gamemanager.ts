@@ -77,7 +77,7 @@ const activeGames: Record<number, ServerGame> = {};
  * @param setup - The variant, time control, and rated flag of the game to start.
  * @param assignments - The color each player has, and their socket if connected.
  * @returns The id of the newly created game.
- * @throws If a database error occurs (from {@link liveGameValues.onGameCreated}).
+ * @throws If the variant is custom — starting those isn't implemented yet.
  */
 function createGame(
 	setup: GameSetup,

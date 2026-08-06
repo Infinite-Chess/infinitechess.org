@@ -399,6 +399,7 @@ function computePendingTimers(
 	return timers;
 }
 
+/** Buckets participant rows by their game_id. Games with no rows get no entry. */
 function groupRowsByGame<T extends { game_id: number }>(rows: T[]): Map<number, T[]> {
 	const grouped = new Map<number, T[]>();
 	for (const row of rows) {

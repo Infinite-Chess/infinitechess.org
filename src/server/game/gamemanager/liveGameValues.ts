@@ -18,6 +18,7 @@ import type {
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 
+import db from '../../database/database.js';
 import { insertLiveGame, updateLiveGame, deleteLiveGame } from '../../database/liveGamesManager.js';
 import {
 	insertLivePlayerGame,
@@ -106,12 +107,15 @@ function buildPlayerRecord(
 /**
  * Runs a best-effort live-game persistence write, swallowing any database error (already
  * logged by dbCall) so it can't abort the game lifecycle or crash a timer callback.
+ * Atomic: several events touch multiple tables, and a partial write would leave a live
+ * game the restorer can't reconstruct.
  */
 function persist(operation: () => void): void {
 	try {
-		operation();
+		db.transaction(operation)();
 	} catch {
-		// Already logged by dbCall. The in-memory game continues uninterrupted.
+		// Already logged by dbCall. The in-memory game continues
+		// uninterrupted, and the transaction rolled back.
 	}
 }
 
