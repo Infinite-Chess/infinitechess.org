@@ -154,9 +154,7 @@ function onGameCreated(servergame: ServerGame): void {
 			insertLiveEngineGame({
 				game_id: match.id,
 				player_number: engine.color,
-				time_remaining_ms: servergame.untimed
-					? null
-					: (servergame.clocks.currentTime[engine.color] ?? null),
+				time_remaining_ms: servergame.clocks?.currentTime[engine.color] ?? null,
 				engine: engine.engine,
 				engine_version: engine.version,
 				strength_level: engine.strengthLevel,
@@ -256,13 +254,14 @@ function onBothDisconnectedTimerChanged(servergame: ServerGame): void {
 /** Persists a paused or resumed engine turn. */
 function onEngineClockChanged(servergame: ServerGame): void {
 	if (servergame.untimed) return;
-	persist(() => {
+	persist(() =>
+		// Only the ticking state is written: freezing rewinds the engine's turn rather
+		// than charging it, so no player's remaining time changes across either event.
 		updateLiveGame(servergame.match.id, {
 			color_ticking: servergame.clocks.colorTicking ?? null,
 			clock_snapshot_time: servergame.clocks.timeAtTurnStart ?? null,
-		});
-		persistCurrentClockTimes(servergame);
-	});
+		}),
+	);
 }
 
 /**
