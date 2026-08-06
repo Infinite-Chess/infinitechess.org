@@ -26,7 +26,7 @@ export interface Engine {
 	/** The maximum strength level supported by this engine. */
 	maxStrengthLevel: number;
 	/** Whether the worker loads separately served wasm glue at runtime. */
-	loadsWasmGlueAtRuntime: boolean;
+	hasGlue: boolean;
 }
 
 /** Union of all valid engine names, derived from the keys of engineDictionary. */
@@ -48,14 +48,14 @@ export const engineDictionary = {
 		defaultTimeLimitPerMoveMillis: 500,
 		displayName: 'Practice Bot',
 		maxStrengthLevel: 1,
-		loadsWasmGlueAtRuntime: false,
+		hasGlue: false,
 	},
 	apeiron: {
 		worldBorderDist: I64_MAX - 2000n,
 		defaultTimeLimitPerMoveMillis: 4000,
 		displayName: 'Apeiron',
 		maxStrengthLevel: 8,
-		loadsWasmGlueAtRuntime: true,
+		hasGlue: true,
 	},
 } satisfies { [key: string]: Engine };
 

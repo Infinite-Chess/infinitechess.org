@@ -106,7 +106,7 @@ function initEngineGame(options: {
 	worker.onerror = (e: ErrorEvent): void => {
 		failEngineLoad(new Error('Worker failed to load: ' + e.message));
 	};
-	if (engineDictionary[options.currentEngine].loadsWasmGlueAtRuntime)
+	if (engineDictionary[options.currentEngine].hasGlue)
 		worker.postMessage({
 			engineUrl: options.engineUrl,
 			threads: getEngineThreadCount(),
