@@ -134,9 +134,18 @@ function restoreAllLiveGames(): RestoredGame[] {
 	return restored;
 }
 
-/**
- * Restores a single live game from its database rows.
- */
+/** Buckets participant rows by their game_id. Games with no rows get no entry. */
+function groupRowsByGame<T extends { game_id: number }>(rows: T[]): Map<number, T[]> {
+	const grouped = new Map<number, T[]>();
+	for (const row of rows) {
+		const gameRows = grouped.get(row.game_id) ?? [];
+		gameRows.push(row);
+		grouped.set(row.game_id, gameRows);
+	}
+	return grouped;
+}
+
+/** Restores a single live game from its database rows. */
 function restoreSingleGame(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
@@ -190,9 +199,7 @@ function restoreSingleGame(
 
 // Helper functions ---------------------------------------------------------------------------------
 
-/**
- * Reconstructs AuthMemberInfo for each player from the database rows.
- */
+/** Reconstructs AuthMemberInfo for each player from the database rows. */
 function reconstructPlayerIdentities(
 	playerRows: LivePlayerGamesRecord[],
 ): PlayerGroup<AuthMemberInfo> {
@@ -245,9 +252,7 @@ function reconstructPlayerIdentities(
 	return identities;
 }
 
-/**
- * Reconstructs ClockValues from stored per-player times.
- */
+/** Reconstructs ClockValues from stored per-player times. */
 function reconstructClockValues(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
@@ -262,7 +267,7 @@ function reconstructClockValues(
 			clocks[row.player_number as Player] = row.time_remaining_ms;
 		}
 	}
-	if (engineRow?.time_remaining_ms !== null && engineRow?.time_remaining_ms !== undefined)
+	if (engineRow && engineRow.time_remaining_ms !== null)
 		clocks[engineRow.player_number as Player] = engineRow.time_remaining_ms;
 
 	// If the engine's clock was frozen already, restore it still frozen.
@@ -280,9 +285,7 @@ function reconstructClockValues(
 	};
 }
 
-/**
- * Reconstructs the MatchInfo from stored values.
- */
+/** Reconstructs the MatchInfo from stored values. */
 function reconstructMatchInfo(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
@@ -332,17 +335,13 @@ function reconstructMatchInfo(
 	};
 }
 
-/**
- * Parses the moves string back into move objects.
- */
+/** Parses the moves string back into move objects. */
 function parseMoves(movesString: string): MoveRecord[] {
 	if (movesString === '') return [];
 	return icnconverter.parseShortFormMoves(movesString);
 }
 
-/**
- * Computes which timers need to be started after restoration.
- */
+/** Computes which timers need to be started after restoration. */
 function computePendingTimers(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
@@ -397,17 +396,6 @@ function computePendingTimers(
 	}
 
 	return timers;
-}
-
-/** Buckets participant rows by their game_id. Games with no rows get no entry. */
-function groupRowsByGame<T extends { game_id: number }>(rows: T[]): Map<number, T[]> {
-	const grouped = new Map<number, T[]>();
-	for (const row of rows) {
-		const gameRows = grouped.get(row.game_id) ?? [];
-		gameRows.push(row);
-		grouped.set(row.game_id, gameRows);
-	}
-	return grouped;
 }
 
 // Exports --------------------------------------------------------------------------------------------
