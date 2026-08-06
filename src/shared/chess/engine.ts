@@ -37,9 +37,6 @@ export type ValidEngine = keyof typeof engineDictionary;
 /** Maximum signed 64-bit integer value (2^63 - 1). Used in Rust. */
 export const I64_MAX = 2n ** 63n - 1n;
 
-/** The engine used for online computer games. */
-export const ONLINE_ENGINE: ValidEngine = 'apeiron';
-
 /**
  * Centralized data structure for all engine properties.
  * Add a new entry here when adding a new engine.

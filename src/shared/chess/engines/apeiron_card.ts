@@ -14,7 +14,7 @@ import type { GameruleWinCondition } from '../util/winconutil.js';
 import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
 import boardutil from '../util/boardutil.js';
-import { I64_MAX, ONLINE_ENGINE, engineDictionary } from '../engine.js';
+import { I64_MAX, engineDictionary } from '../engine.js';
 import typeutil, { RawType, rawTypes as r, players as p } from '../util/typeutil.js';
 
 /** Why the engine can't handle a game. Keys into `position_errors.engine` in the shared translations. */
@@ -48,7 +48,7 @@ const MAX_PIECES = 1000;
  * real game loads onto — otherwise the two could disagree on what's in bounds.
  */
 const PLAY_BORDER = {
-	worldBorderDist: engineDictionary[ONLINE_ENGINE].worldBorderDist,
+	worldBorderDist: engineDictionary['apeiron'].worldBorderDist,
 	worldBorderCap: WORLD_BORDER_CAP,
 };
 

@@ -7,7 +7,7 @@ import type { CreateEngineGameMessage } from '../../../shared/types.js';
 
 import { players } from '../../../shared/chess/util/typeutil.js';
 import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
-import { engineDictionary, ONLINE_ENGINE } from '../../../shared/chess/engine.js';
+import { engineDictionary, ValidEngine } from '../../../shared/chess/engine.js';
 
 import { createGame } from '../gamemanager/gamemanager.js';
 import { getEngineVersion } from '../../config/manifest.js';
@@ -15,6 +15,11 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { resolveAndValidateVariant } from './createseek.js';
+
+// Constants ---------------------------------------------------------------------------
+
+/** The engine used for online computer games. */
+const ONLINE_ENGINE: ValidEngine = 'apeiron';
 
 // Functions ---------------------------------------------------------------------------
 
