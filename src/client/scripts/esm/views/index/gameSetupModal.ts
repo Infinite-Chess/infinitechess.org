@@ -172,24 +172,16 @@ function handleOnlineSeek(): void {
 	close();
 }
 
-/**
- * Reads the computer game form state and asks the server (over the websocket) to create the
- * engine game. On success the server pushes back the id and we hard-navigate to its game page —
- * where the engine runs locally in wasm; on failure it pushes an error toast.
- */
+/** Reads the computer game form state and asks the server to create the engine game. */
 function handleComputerGame(): void {
 	const variant = variantSelector.getSeekVariant();
 	if (variant === null) return; // Invalid selection (e.g. unparsable icn, illegal position, or one the engine can't play)
 
 	const time: TimeControl = timeControls.getTimeControl();
+	const color = getSelectedColor();
 	const strengthLevel = getSelectedEngineStrength();
 
-	lobby.createEngineGame({
-		variant,
-		timeControl: time,
-		color: getSelectedColor(),
-		strengthLevel,
-	});
+	lobby.createEngineGame({ variant, time, color, strengthLevel });
 	close();
 }
 

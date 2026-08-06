@@ -18,7 +18,7 @@ import gameconfig from './util/gameconfig.js';
 import typeschemas from './chess/util/typeschemas.js';
 import { players } from './chess/util/typeutil.js';
 import variantregistry from './chess/variants/variantregistry.js';
-import { POSITION_STRING_THRESHOLD } from './chess/variants/servervalidation.js';
+import { isRatedAllowed, POSITION_STRING_THRESHOLD } from './chess/variants/servervalidation.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
 
@@ -330,6 +330,7 @@ export const GameModifierSchema = z.discriminatedUnion('kind', [
 /** The number of digits generated seek IDs are. */
 export const IDLengthOfSeeks = 5;
 /** Seek ID: Base36 alphanumeric, fixed length of 5. */
+export type SeekId = z.infer<typeof SeekIdSchema>;
 export const SeekIdSchema = z
 	.string()
 	.length(IDLengthOfSeeks)
@@ -353,18 +354,40 @@ export const OutSeekSchema = BaseSeekSchema.extend({
 	variant: OutSeekVariantSchema,
 });
 
+// Create Seek Schemas ---------------------------------------------------------------
+
+/** The seek options the client's game setup form produces. (excludes the tag) */
+export type CreateSeekOptions = z.infer<typeof CreateSeekOptionsSchema>;
+export const CreateSeekOptionsSchema = z.strictObject({
+	variant: SeekVariantSchema,
+	time: TimeControlSchema.refine((timeControl) => clockutil.isTimedControlValid(timeControl), {
+		error: 'Invalid clock value.',
+	}),
+	color: z.literal([players.WHITE, players.BLACK, null]),
+	mode: GameModeSchema,
+	modifiers: z.array(GameModifierSchema).max(GameModifierSchema.options.length),
+});
+
+/** Client → server websocket payload for creating a seek. */
+export type CreateSeekMessage = z.infer<typeof CreateSeekMessageSchema>;
+export const CreateSeekMessageSchema = CreateSeekOptionsSchema.extend({
+	/** Client-generated ownership token, letting it recognize its own seek in the lobby list. */
+	tag: z.string().length(8),
+}).refine(
+	(val) =>
+		val.mode !== 'rated' || isRatedAllowed(val.variant, val.time, val.color, val.modifiers),
+	{ error: 'Invalid seek parameters for a rated game.' },
+);
+
 // Engine Game Schemas ---------------------------------------------------------------
 
 /** Client → server websocket payload for creating an engine game. */
-export type CreateEngineGameBody = z.infer<typeof CreateEngineGameBodySchema>;
-export const CreateEngineGameBodySchema = z.strictObject({
+export type CreateEngineGameMessage = z.infer<typeof CreateEngineGameMessageSchema>;
+export const CreateEngineGameMessageSchema = z.strictObject({
 	variant: SeekVariantSchema,
-	timeControl: TimeControlSchema.refine(
-		(timeControl) => clockutil.isTimedControlValid(timeControl),
-		{
-			error: 'Invalid clock value.',
-		},
-	),
+	time: TimeControlSchema.refine((timeControl) => clockutil.isTimedControlValid(timeControl), {
+		error: 'Invalid clock value.',
+	}),
 	/** The color the human plays, or null for random. */
 	color: z.literal([players.WHITE, players.BLACK, null]),
 	/** The engine's strength level (validated against the engine's max server-side). */

@@ -5,11 +5,10 @@
  * creating a new game if successful.
  */
 
+import type { SeekId } from '../../../shared/types.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-
-import * as z from 'zod';
 
 import gameutility from '../gamemanager/gameutility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
@@ -25,20 +24,14 @@ import {
 	findSocketFromOwner,
 	onPublicSeeksChange,
 	broadcastViewerCount,
-	IDLengthOfSeeks,
 } from './lobbymanager.js';
-
-/** The zod schema for validating the contents of the acceptseek message. */
-const acceptseekschem = z.string().length(IDLengthOfSeeks);
-
-type AcceptSeekMessage = z.infer<typeof acceptseekschem>;
 
 /**
  * Attempts to accept a seek of given id.
  * @param ws - The socket performing this action
  * @param messageContents - The incoming socket message containing the seek id
  */
-function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): void {
+function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 	// { id, isPrivate }
 	if (isSocketInAnActiveGame(ws)) {
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
@@ -132,4 +125,4 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 	if (hadPublicSeek) onPublicSeeksChange(); // Broadcast to all seeks list subscribers!
 }
 
-export { acceptSeek, acceptseekschem };
+export { acceptSeek };

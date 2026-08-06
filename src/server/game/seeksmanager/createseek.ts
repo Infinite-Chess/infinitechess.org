@@ -5,15 +5,18 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { Rating, SeekVariant, AuthSeekVariant } from '../../../shared/types.js';
-
-import * as z from 'zod';
+import type {
+	Rating,
+	SeekVariant,
+	AuthSeekVariant,
+	CreateSeekMessage,
+} from '../../../shared/types.js';
 
 import uuid from '../../../shared/util/uuid.js';
-import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p } from '../../../shared/chess/util/typeutil.js';
+import { IDLengthOfSeeks } from '../../../shared/types.js';
+import { POSITION_STRING_THRESHOLD } from '../../../shared/chess/variants/servervalidation.js';
 import compression, { CompressionMode } from '../../../shared/util/compression.js';
 import {
 	Leaderboards,
@@ -23,28 +26,13 @@ import {
 	validatePosition,
 	PositionErrorCode,
 } from '../../../shared/chess/variants/positionvalidation.js';
-import {
-	isRatedAllowed,
-	POSITION_STRING_THRESHOLD,
-} from '../../../shared/chess/variants/servervalidation.js';
-import {
-	SeekVariantSchema,
-	GameModifierSchema,
-	TimeControlSchema,
-	GameModeSchema,
-} from '../../../shared/types.js';
 
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { getSavedPositionICN } from '../../database/editorSavesManager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { AuthSeek, buildServerUsernameContainer } from './seekutility.js';
-import {
-	existingSeekHasID,
-	deleteUsersExistingSeek,
-	addSeek,
-	IDLengthOfSeeks,
-} from './lobbymanager.js';
+import { existingSeekHasID, deleteUsersExistingSeek, addSeek } from './lobbymanager.js';
 
 // Types -------------------------------------------------------------------------------
 
@@ -54,27 +42,6 @@ type IcnSeekErrorCode =
 	| 'invalid_icn'
 	| 'icn_missing_position'
 	| 'icn_contains_moves';
-
-// Schemas ---------------------------------------------------------------------------
-
-export type CreateSeekMessage = z.infer<typeof createseekschem>;
-/** The zod schema for validating the contents of the createseek message. */
-const createseekschem = z
-	.strictObject({
-		tag: z.string().length(8),
-		variant: SeekVariantSchema,
-		time: TimeControlSchema.refine((c) => clockutil.isTimedControlValid(c), {
-			error: 'Invalid clock value.',
-		}),
-		color: z.literal([p.WHITE, p.BLACK, null]),
-		mode: GameModeSchema,
-		modifiers: z.array(GameModifierSchema).max(GameModifierSchema.options.length),
-	})
-	.refine(
-		(val) =>
-			val.mode !== 'rated' || isRatedAllowed(val.variant, val.time, val.color, val.modifiers),
-		{ error: 'Invalid seek parameters for a rated game.' },
-	);
 
 // Functions -------------------------------------------------------------------------
 
@@ -238,4 +205,4 @@ function localizePositionError(code: IcnSeekErrorCode, ws: CustomWebSocket): str
 	return ws.t.shared.position_errors[code] ?? code;
 }
 
-export { createSeek, createseekschem };
+export { createSeek };

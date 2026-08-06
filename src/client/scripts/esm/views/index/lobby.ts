@@ -6,17 +6,13 @@
  */
 
 import type { VNode } from 'snabbdom';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { VariantInfo } from '../../../../../shared/chess/variants/variantregistry.js';
 import type {
-	TimeControl,
 	Rating,
 	BaseSeek,
 	OutSeek,
-	SeekVariant,
-	GameMode,
-	GameModifier,
-	CreateEngineGameBody,
+	CreateSeekOptions,
+	CreateEngineGameMessage,
 } from '../../../../../shared/types.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
@@ -48,14 +44,6 @@ export type LobbySeek = BaseSeek &
 	({ variant: VariantInfo } | { variant: { group: 'custom' } }) & {
 		isOurs: boolean;
 	};
-
-type CreateSeekOptions = {
-	variant: SeekVariant;
-	time: TimeControl;
-	color: Player | null;
-	mode: GameMode;
-	modifiers: GameModifier[];
-};
 
 // Constants ------------------------------------------
 
@@ -270,7 +258,7 @@ function createSeek(options: CreateSeekOptions): void {
  * Asks the server to create an engine (vs computer) game over the websocket — an open
  * socket is required, gating bots. Navigation happens on the server's `ingame` push.
  */
-function createEngineGame(body: CreateEngineGameBody): void {
+function createEngineGame(body: CreateEngineGameMessage): void {
 	socketmessages.send('lobby', 'createengine', body, true);
 }
 

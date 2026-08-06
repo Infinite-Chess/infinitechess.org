@@ -3,7 +3,7 @@
 /** Handles engine-game creation through the normal live-game pipeline. */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { CreateEngineGameBody } from '../../../shared/types.js';
+import type { CreateEngineGameMessage } from '../../../shared/types.js';
 
 import { players } from '../../../shared/chess/util/typeutil.js';
 import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
@@ -22,7 +22,10 @@ import { resolveAndValidateVariant } from './createseek.js';
  * Creates an engine game from the owner's websocket message. On success, createGame's
  * 'ingame' push navigates the client; on failure, notifies the client with the reason.
  */
-async function createEngineGameWs(ws: CustomWebSocket, body: CreateEngineGameBody): Promise<void> {
+async function createEngineGameWs(
+	ws: CustomWebSocket,
+	body: CreateEngineGameMessage,
+): Promise<void> {
 	if (isSocketInAnActiveGame(ws))
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 
@@ -47,7 +50,7 @@ async function createEngineGameWs(ws: CustomWebSocket, body: CreateEngineGameBod
 		createGame(
 			{
 				variant,
-				time: body.timeControl,
+				time: body.time,
 				rated: false,
 				engineParticipant: {
 					color: engineColor,

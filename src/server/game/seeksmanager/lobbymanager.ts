@@ -10,8 +10,6 @@ import type { OutSeek } from '../../../shared/types.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-import { IDLengthOfSeeks } from '../../../shared/types.js';
-
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { safelyCopySeek, AuthSeek } from './seekutility.js';
@@ -330,5 +328,4 @@ export {
 	findSocketFromOwner,
 	broadcastMemberInGameStatus,
 	onPublicSeeksChange,
-	IDLengthOfSeeks,
 };
