@@ -117,7 +117,6 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 
 	if (colorTicking !== undefined) {
 		currentClocks.timeAtTurnStart = now;
-
 		currentClocks.timeRemainAtTurnStart = currentClocks.currentTime[colorTicking];
 	}
 }

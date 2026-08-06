@@ -61,7 +61,6 @@ function offerDraw(servergame: ServerGame, ourRole: Player): void {
  * @param ourRole - The color the socket is playing as.
  */
 function acceptDraw(servergame: ServerGame, ourRole: Player): void {
-	if (gameutility.isEngineGame(servergame)) return;
 	// console.log('Client accepts a draw.');
 
 	if (gameutility.isGameOver(servergame))
@@ -83,7 +82,6 @@ function acceptDraw(servergame: ServerGame, ourRole: Player): void {
  * @param ourRole - The color the socket is playing as.
  */
 function declineDraw(servergame: ServerGame, ourRole: Player): void {
-	if (gameutility.isEngineGame(servergame)) return;
 	const opponentColor = typeutil.invertPlayer(ourRole);
 
 	// Since this method is run every time a move is submitted, we have to early exit

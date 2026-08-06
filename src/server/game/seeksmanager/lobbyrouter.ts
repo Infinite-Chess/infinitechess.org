@@ -18,7 +18,7 @@ import {
 import { createSeek } from './createseek.js';
 import { cancelSeek } from './cancelseek.js';
 import { acceptSeek } from './acceptseek.js';
-import { createEngineGameWs } from './createenginegame.js';
+import { createEngineGame } from './createenginegame.js';
 
 const LobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('createseek'), value: CreateSeekMessageSchema }),
@@ -48,7 +48,7 @@ function routeLobbyMessage(ws: CustomWebSocket, contents: LobbyMessage): void {
 			acceptSeek(ws, contents.value);
 			break;
 		case 'createengine':
-			createEngineGameWs(ws, contents.value);
+			createEngineGame(ws, contents.value);
 			break;
 		default:
 			console.error(

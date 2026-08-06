@@ -181,10 +181,9 @@ export async function resolveAndValidateVariant(
 
 /**
  * Parses an ICN seek's content and runs position legality checks.
- * Also used by websocket engine-game creation.
  * @returns `null` if the ICN is legal, or an {@link IcnSeekErrorCode} describing the failure.
  */
-export function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
+function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 	let longFormat;
 	try {
 		longFormat = icnconverter.ShortToLong_Format(content);

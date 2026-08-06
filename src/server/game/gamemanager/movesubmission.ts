@@ -130,7 +130,7 @@ function submitMove(
 	// console.log("New move list:")
 	// console.log(game.moves);
 
-	if (!engineParticipant) declineDraw(servergame, role);
+	declineDraw(servergame, role); // Auto-decline any open draw offer on move submissions
 
 	// Persist the move and updated game state to the database.
 	liveGameValues.onMoveSubmitted(servergame);

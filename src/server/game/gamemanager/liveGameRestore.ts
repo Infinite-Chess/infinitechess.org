@@ -270,7 +270,8 @@ function reconstructClockValues(
 	if (engineRow && engineRow.time_remaining_ms !== null)
 		clocks[engineRow.player_number as Player] = engineRow.time_remaining_ms;
 
-	// If the engine's clock was frozen already, restore it still frozen.
+	// The engine's ticking state is restored verbatim: a restart doesn't close the client's
+	// tab, so an engine that was thinking kept thinking, and is charged for the downtime.
 	const colorTicking =
 		gameRow.color_ticking === null ? undefined : (gameRow.color_ticking as Player);
 	const timeColorTickingLosesAt =

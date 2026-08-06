@@ -356,6 +356,7 @@ function pushGameClock(servergame: ServerGame): number | undefined {
 	return data;
 }
 
+/** Arms a timer that auto-concludes the game when the player whose turn it is runs out of time. */
 function armAutoTimeLoss(servergame: ServerGame): void {
 	if (
 		servergame.untimed ||
@@ -364,11 +365,19 @@ function armAutoTimeLoss(servergame: ServerGame): void {
 		servergame.clocks.colorTicking === undefined
 	)
 		return;
+
+	// Cancel previous auto loss timer if it exists
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	servergame.match.autoTimeLossTimeoutID = setTimeout(
 		() => onPlayerLostOnTime(servergame),
 		Math.max(servergame.clocks.timeRemainAtTurnStart, 0),
 	);
+}
+
+/** A player has lost on time: set the game conclusion. */
+function onPlayerLostOnTime(servergame: ServerGame): void {
+	const winner = typeutil.invertPlayer(servergame.whosTurn);
+	onGameConclusion(servergame, { victor: winner, condition: 'time' });
 }
 
 /** If it's an engine game: Pauses the engine's clock, rewinding its turn. */
@@ -387,6 +396,7 @@ function freezeEngineClock(servergame: ServerGame): void {
 	clock.endGame(servergame);
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	liveGameValues.onEngineClockChanged(servergame);
+
 	const clockValues = gameutility.getGameClockValues(servergame);
 	gameutility.broadcastToSpectators(servergame, 'clock', clockValues);
 }
@@ -403,6 +413,7 @@ function resumeEngineClock(servergame: ServerGame): void {
 		!moveutil.isGameResignable(servergame)
 	)
 		return;
+
 	const remaining = servergame.clocks.currentTime[engine.color]!;
 	clock.edit(servergame.clocks, {
 		clocks: { ...servergame.clocks.currentTime },
@@ -411,14 +422,9 @@ function resumeEngineClock(servergame: ServerGame): void {
 	});
 	armAutoTimeLoss(servergame);
 	liveGameValues.onEngineClockChanged(servergame);
+
 	const clockValues = gameutility.getGameClockValues(servergame);
 	gameutility.broadcastToSpectators(servergame, 'clock', clockValues);
-}
-
-/** A player has lost on time: set the game conclusion. */
-function onPlayerLostOnTime(servergame: ServerGame): void {
-	const winner = typeutil.invertPlayer(servergame.whosTurn);
-	onGameConclusion(servergame, { victor: winner, condition: 'time' });
 }
 
 // Game Life Cycle -----------------------------------------------------------------------
@@ -602,16 +608,14 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 
 	if (gameutility.isGameOver(servergame)) return;
 
-	if (moveutil.isGameResignable(servergame)) {
-		const engine = servergame.match.engineParticipant;
-		onGameConclusion(
-			servergame,
-			engine
-				? { victor: engine.color, condition: 'disconnect' }
-				: { victor: null, condition: 'abandonment' },
-		);
-	} else {
+	if (!moveutil.isGameResignable(servergame)) {
 		onGameConclusion(servergame, { condition: 'aborted' });
+	} else {
+		const engine = servergame.match.engineParticipant;
+		const conclusion: GameConclusion = engine
+			? { victor: engine.color, condition: 'disconnect' }
+			: { victor: null, condition: 'abandonment' };
+		onGameConclusion(servergame, conclusion);
 	}
 }
 
@@ -626,7 +630,7 @@ function finalizeGame(servergame: ServerGame): void {
 	servergame.match.finalized = true;
 
 	// Monitor suspicion levels for all players who participated in the game.
-	if (!gameutility.isEngineGame(servergame)) ratingabuse.measureRatingAbuseAfterGame(servergame);
+	ratingabuse.measureRatingAbuseAfterGame(servergame);
 
 	// Tell any connected participants/spectators the result is now locked in, so their client knows it can
 	// never change — future reconnects fetch only rematch state (`subscriberematch`), not a full resync.

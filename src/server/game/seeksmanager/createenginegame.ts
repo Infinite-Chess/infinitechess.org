@@ -22,10 +22,7 @@ import { resolveAndValidateVariant } from './createseek.js';
  * Creates an engine game from the owner's websocket message. On success, createGame's
  * 'ingame' push navigates the client; on failure, notifies the client with the reason.
  */
-async function createEngineGameWs(
-	ws: CustomWebSocket,
-	body: CreateEngineGameMessage,
-): Promise<void> {
+async function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): Promise<void> {
 	if (isSocketInAnActiveGame(ws))
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 
@@ -68,4 +65,4 @@ async function createEngineGameWs(
 	}
 }
 
-export { createEngineGameWs };
+export { createEngineGame };
