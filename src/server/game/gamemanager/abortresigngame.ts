@@ -15,10 +15,7 @@ import { onGameConclusion } from './gamemanager.js';
 
 //--------------------------------------------------------------------------------------------------------
 
-/**
- * Called when a client tries to abort a game.
- * @param servergame - The game they are in..
- */
+/** Called when a client tries to abort a game. */
 function abortGame(servergame: ServerGame): void {
 	// Is it legal?...
 
@@ -73,4 +70,16 @@ function resignGame(servergame: ServerGame, ourRole: Player): void {
 	onGameConclusion(servergame, { victor: opponentColor, condition: 'resignation' });
 }
 
-export { abortGame, resignGame };
+/**
+ * Called when a client reports that the engine opponent resigned.
+ * Aborts the game instead if too few moves have been played for it to be resignable.
+ */
+function resignEngine(servergame: ServerGame): void {
+	const engineParticipant = servergame.match.engineParticipant;
+	if (!engineParticipant) return; // Not an engine game
+
+	if (moveutil.isGameResignable(servergame)) resignGame(servergame, engineParticipant.color);
+	else abortGame(servergame);
+}
+
+export { abortGame, resignGame, resignEngine };

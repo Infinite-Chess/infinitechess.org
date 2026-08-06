@@ -65,7 +65,7 @@ export const engineDictionary = {
 // Functions --------------------------------------------------------------------
 
 /**
- * Returns a formatted engine name string, optionally including its strength level.
+ * Returns a formatted engine name string (e.g. "Apeiron (Level 3)").
  * If the provided strength level is the maximum for the engine, it is omitted.
  */
 export function getFormattedEngineName(engineName: ValidEngine, strengthLevel?: number): string {

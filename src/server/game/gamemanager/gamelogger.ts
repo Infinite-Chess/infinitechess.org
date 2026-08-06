@@ -175,10 +175,7 @@ function updateLeaderboardsInTransaction(
 	return ratingdata;
 }
 
-/**
- * [INTERNAL] Adds records to `games` and `player_games` tables. This function contains the "merged logic". Throws on error.
- * @returns The new game_id.
- */
+/** [INTERNAL] Adds the records to the `games`, `player_games` and `engine_games` tables. Throws on error. */
 function addGameRecordsInTransaction(
 	servergame: ServerGame,
 	victor: Player | null | undefined,
@@ -241,14 +238,7 @@ function addGameRecordsInTransaction(
 		insertEngineGame({
 			game_id: match.id,
 			player_number: engine.color,
-			score:
-				victor === undefined
-					? null
-					: victor === engine.color
-						? 1
-						: victor === null
-							? 0.5
-							: 0,
+			score: victor === undefined ? null : victor === engine.color ? 1 : victor === null ? 0.5 : 0, // prettier-ignore
 			clock_at_end_millis: ending_clocks?.[engine.color] ?? null,
 			engine: engine.engine,
 			engine_version: engine.version,
