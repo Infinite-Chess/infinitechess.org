@@ -11,67 +11,47 @@ import { removeFromBlacklist } from './blacklistManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 
-// Variables -----------------------------------------------------------------------------------
+// Constants -----------------------------------------------------------------------------------
 
 /** 62**4: Limit of unique user id with 4-digit base-62 user ids! EXCLUSIVE. */
 const user_id_upper_cap: number = 14_776_336;
 /** 62**4: Limit of unique game id with 4-digit base-62 game ids! EXCLUSIVE. */
 const game_id_upper_cap: number = 14_776_336;
 
-/** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
-const uniqueMemberKeys: string[] = ['user_id', 'username', 'email'];
+// Table Columns -------------------------------------------------------------------------------
 
-/** All columns of the members table. Each of these would be valid to retrieve from any member. */
-const allMemberColumns: string[] = [
+// --- Accounts ---
+
+/** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
+const uniqueMembersColumns: string[] = ['user_id', 'username', 'email'];
+
+/** All columns of the members table. */
+const allMembersColumns: string[] = [
 	'user_id',
 	'username',
-	'username_history',
 	'email',
 	'hashed_password',
 	'roles',
 	'joined',
 	'last_seen',
-	'preferences',
 	'login_count',
+	'preferences',
+	'username_history',
 	'checkmates_beaten',
 	'last_read_news_date',
 ];
 
-/** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
-const _allPlayerStatsColumns: string[] = [
+/** All columns of the rating_abuse table. */
+const allRatingAbuseColumns: string[] = [
 	'user_id',
-	'moves_played',
-	'game_count',
-	'game_count_rated',
-	'game_count_casual',
-	'game_count_public',
-	'game_count_private',
-	'game_count_wins',
-	'game_count_losses',
-	'game_count_draws',
-	'game_count_aborted',
-	'game_count_wins_rated',
-	'game_count_losses_rated',
-	'game_count_draws_rated',
-	'game_count_wins_casual',
-	'game_count_losses_casual',
-	'game_count_draws_casual',
+	'leaderboard_id',
+	'game_count_since_last_check',
+	'last_alerted_at',
 ];
 
-/** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
-const allPlayerGamesColumns: string[] = [
-	'user_id',
-	'game_id',
-	'player_number',
-	'score',
-	'clock_at_end_millis',
-	'elo_at_game',
-	'elo_change_from_game',
-	'rating_deviation_at_game',
-	'rating_deviation_after_game',
-];
+// --- Concluded Games ---
 
-/** All columns of the games table. Each of these would be valid to retrieve from any game. */
+/** All columns of the games table. */
 const allGamesColumns: string[] = [
 	'game_id',
 	'date',
@@ -88,13 +68,31 @@ const allGamesColumns: string[] = [
 	'icn',
 ];
 
-/** All columns of the rating_abuse table. Each of these would be valid to retrieve from any member and/or leaderboard. */
-const allRatingAbuseColumns: string[] = [
+/** All columns of the player_games table. */
+const allPlayerGamesColumns: string[] = [
 	'user_id',
-	'leaderboard_id',
-	'game_count_since_last_check',
-	'last_alerted_at',
+	'game_id',
+	'player_number',
+	'score',
+	'clock_at_end_millis',
+	'elo_at_game',
+	'elo_change_from_game',
+	'rating_deviation_at_game',
+	'rating_deviation_after_game',
 ];
+
+/** All columns of the engine_games table. */
+const allEngineGamesColumns: string[] = [
+	'game_id',
+	'player_number',
+	'score',
+	'clock_at_end_millis',
+	'engine',
+	'engine_version',
+	'strength_level',
+];
+
+// --- Live Games ---
 
 /** All columns of the live_games table. */
 const allLiveGamesColumns: string[] = [
@@ -113,27 +111,6 @@ const allLiveGamesColumns: string[] = [
 	'both_disconnected_end_time',
 ];
 
-/** All columns of the engine_games table. */
-const allEngineGamesColumns: string[] = [
-	'game_id',
-	'player_number',
-	'score',
-	'clock_at_end_millis',
-	'engine',
-	'engine_version',
-	'strength_level',
-];
-
-/** All columns of the live_engine_games table. */
-const allLiveEngineGamesColumns: string[] = [
-	'game_id',
-	'player_number',
-	'time_remaining_ms',
-	'engine',
-	'engine_version',
-	'strength_level',
-];
-
 /** All columns of the live_player_games table. */
 const allLivePlayerGamesColumns: string[] = [
 	'game_id',
@@ -147,10 +124,22 @@ const allLivePlayerGamesColumns: string[] = [
 	'disconnect_voluntary',
 ];
 
+/** All columns of the live_engine_games table. */
+const allLiveEngineGamesColumns: string[] = [
+	'game_id',
+	'player_number',
+	'time_remaining_ms',
+	'engine',
+	'engine_version',
+	'strength_level',
+];
+
 // Functions -----------------------------------------------------------------------------------
 
 /** Creates the tables in our database if they do not exist. */
 function generateTables(): void {
+	// --- Accounts ---
+
 	// Members table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS members (
@@ -168,6 +157,66 @@ function generateTables(): void {
 			last_read_news_date TEXT
 		);
 	`);
+
+	// Player Stats table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS player_stats (
+			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
+			moves_played INTEGER NOT NULL DEFAULT 0,
+			game_count INTEGER NOT NULL DEFAULT 0,
+			game_count_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_public INTEGER NOT NULL DEFAULT 0,
+			game_count_private INTEGER NOT NULL DEFAULT 0,
+			game_count_wins INTEGER NOT NULL DEFAULT 0,
+			game_count_losses INTEGER NOT NULL DEFAULT 0,
+			game_count_draws INTEGER NOT NULL DEFAULT 0,
+			game_count_aborted INTEGER NOT NULL DEFAULT 0,
+			game_count_wins_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_losses_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_draws_rated INTEGER NOT NULL DEFAULT 0,
+			game_count_wins_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_losses_casual INTEGER NOT NULL DEFAULT 0,
+			game_count_draws_casual INTEGER NOT NULL DEFAULT 0
+		);
+	`);
+
+	// Leaderboards table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS leaderboards (
+        	user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
+   			leaderboard_id INTEGER NOT NULL, -- Each leaderboard's id and variants are declared in the code
+			elo REAL NOT NULL,
+			rating_deviation REAL NOT NULL,
+			-- Add other Glicko fields if needed (volatility)
+			rd_last_update_date TIMESTAMP,
+			PRIMARY KEY (user_id, leaderboard_id) -- Composite key essential
+		);
+	`);
+	// To quickly get all leaderboards for a specific user
+	db.run(`CREATE INDEX IF NOT EXISTS idx_leaderboards_user ON leaderboards (user_id);`);
+	// To quickly get rankings for a specific leaderboard (ESSENTIAL)
+	db.run(
+		`CREATE INDEX IF NOT EXISTS idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC);`,
+	);
+
+	// Rating Abuse table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS rating_abuse (
+			user_id INTEGER NOT NULL,
+			leaderboard_id INTEGER NOT NULL,
+			game_count_since_last_check INTEGER,
+			last_alerted_at TIMESTAMP,
+
+			PRIMARY KEY (user_id, leaderboard_id),
+			FOREIGN KEY (user_id, leaderboard_id)
+				REFERENCES leaderboards(user_id, leaderboard_id) ON DELETE CASCADE
+		);
+	`);
+	// To quickly get all rating_abuse entries for a specific user
+	db.run(`CREATE INDEX IF NOT EXISTS idx_rating_abuse_user ON rating_abuse (user_id);`);
+
+	// --- Authentication & Account Lifecycle ---
 
 	// Pending Registrations table — verify-first registration staging, before a real member row exists
 	db.run(`
@@ -187,6 +236,37 @@ function generateTables(): void {
 		`CREATE INDEX IF NOT EXISTS idx_pending_registrations_expires_at ON pending_registrations (expires_at);`,
 	);
 
+	// Refresh Tokens table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS refresh_tokens (
+			token TEXT PRIMARY KEY NOT NULL,
+			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
+			created_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
+			expires_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
+			is_persistent INTEGER NOT NULL DEFAULT 0 CHECK (is_persistent IN (0, 1)), -- "Keep me logged in" flag
+			consumed_at INTEGER,           -- Allows a grace period for using old tokens when renewing sessions
+			ip_address TEXT
+		);
+	`);
+	// Indexes for refresh_tokens table
+	db.run(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens (user_id);`);
+	db.run(
+		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);`,
+	);
+
+	// Password Reset Tokens table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS password_reset_tokens (
+			hashed_token TEXT PRIMARY KEY NOT NULL,
+			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
+			expires_at INTEGER NOT NULL, -- Unix timestamp (milliseconds)
+			created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000) -- Unix timestamp (milliseconds)
+		);
+	`);
+	// Indexes for password_reset_tokens table
+	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_user_id ON password_reset_tokens (user_id);`);
+	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_expires_at ON password_reset_tokens (expires_at);`);
+
 	// Deleted Members table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS deleted_members (
@@ -195,27 +275,34 @@ function generateTables(): void {
 		);
 	`);
 
-	// Leaderboards table
+	// Blacklisted Emails table
 	db.run(`
-		CREATE TABLE IF NOT EXISTS leaderboards (
-        	user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
-   			leaderboard_id INTEGER NOT NULL, -- Each leaderboard's id and variants are declared in the code
-			elo REAL NOT NULL,
-			rating_deviation REAL NOT NULL,
-			-- Add other Glicko fields if needed (volatility)
-			rd_last_update_date TIMESTAMP,
-			PRIMARY KEY (user_id, leaderboard_id) -- Composite key essential
+		CREATE TABLE IF NOT EXISTS email_blacklist (
+			email TEXT PRIMARY KEY NOT NULL,
+			reason TEXT NOT NULL, -- e.g. 'bounce', 'spam_report', 'banned'
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 	`);
 
-	// Indexes for leaderboards table
+	// --- User Content ---
 
-	// To quickly get all leaderboards for a specific user
-	db.run(`CREATE INDEX IF NOT EXISTS idx_leaderboards_user ON leaderboards (user_id);`);
-	// To quickly get rankings for a specific leaderboard (ESSENTIAL)
-	db.run(
-		`CREATE INDEX IF NOT EXISTS idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC);`,
-	);
+	// Editor Saves table
+	db.run(`
+		CREATE TABLE IF NOT EXISTS editor_saves (
+			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
+			name TEXT NOT NULL,
+			piece_count INTEGER NOT NULL,
+			timestamp INTEGER NOT NULL,
+			icn TEXT NOT NULL,
+			compression TEXT NOT NULL DEFAULT 'none',
+			pawn_double_push INTEGER NOT NULL CHECK (pawn_double_push IN (-1, 0, 1)),
+			castling INTEGER NOT NULL CHECK (castling IN (-1, 0, 1)),
+
+			PRIMARY KEY (user_id, name)
+		);
+	`);
+
+	// --- Concluded Games ---
 
 	// Games table
 	db.run(`
@@ -243,7 +330,6 @@ function generateTables(): void {
 			)
 		);
 	`);
-
 	// Create an index on the date column of the games table for faster queries
 	db.run(`CREATE INDEX IF NOT EXISTS idx_games_date ON games (date DESC);`);
 
@@ -262,105 +348,24 @@ function generateTables(): void {
 			PRIMARY KEY (user_id, game_id) -- Ensures unique link
 		);
 	`);
-
 	// Create an index for efficiently finding players in a specific game
 	db.run(`CREATE INDEX IF NOT EXISTS idx_player_games_game ON player_games (game_id);`);
 
-	// Player Stats table
+	// Engine Games table
 	db.run(`
-		CREATE TABLE IF NOT EXISTS player_stats (
-			user_id INTEGER PRIMARY KEY REFERENCES members(user_id) ON DELETE CASCADE,
-			moves_played INTEGER NOT NULL DEFAULT 0,
-			game_count INTEGER NOT NULL DEFAULT 0,
-			game_count_rated INTEGER NOT NULL DEFAULT 0,
-			game_count_casual INTEGER NOT NULL DEFAULT 0,
-			game_count_public INTEGER NOT NULL DEFAULT 0,
-			game_count_private INTEGER NOT NULL DEFAULT 0,
-			game_count_wins INTEGER NOT NULL DEFAULT 0,
-			game_count_losses INTEGER NOT NULL DEFAULT 0,
-			game_count_draws INTEGER NOT NULL DEFAULT 0,
-			game_count_aborted INTEGER NOT NULL DEFAULT 0,
-			game_count_wins_rated INTEGER NOT NULL DEFAULT 0,
-			game_count_losses_rated INTEGER NOT NULL DEFAULT 0,
-			game_count_draws_rated INTEGER NOT NULL DEFAULT 0,
-			game_count_wins_casual INTEGER NOT NULL DEFAULT 0,
-			game_count_losses_casual INTEGER NOT NULL DEFAULT 0,
-			game_count_draws_casual INTEGER NOT NULL DEFAULT 0
+		CREATE TABLE IF NOT EXISTS engine_games (
+			game_id             INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
+			player_number       INTEGER NOT NULL,
+			score               REAL,
+			clock_at_end_millis INTEGER,
+			engine              TEXT NOT NULL,
+			engine_version      TEXT NOT NULL,
+			strength_level      INTEGER NOT NULL,
+			PRIMARY KEY (game_id, player_number)
 		);
 	`);
 
-	// Rating Abuse table
-	db.run(`
-		CREATE TABLE IF NOT EXISTS rating_abuse (
-			user_id INTEGER NOT NULL,
-			leaderboard_id INTEGER NOT NULL,
-			game_count_since_last_check INTEGER,
-			last_alerted_at TIMESTAMP,
-
-			PRIMARY KEY (user_id, leaderboard_id),
-			FOREIGN KEY (user_id, leaderboard_id)
-				REFERENCES leaderboards(user_id, leaderboard_id) ON DELETE CASCADE
-		);
-	`);
-
-	// To quickly get all rating_abuse entries for a specific user
-	db.run(`CREATE INDEX IF NOT EXISTS idx_rating_abuse_user ON rating_abuse (user_id);`);
-
-	// Password Reset Tokens table
-	db.run(`
-		CREATE TABLE IF NOT EXISTS password_reset_tokens (
-			hashed_token TEXT PRIMARY KEY NOT NULL,
-			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
-			expires_at INTEGER NOT NULL, -- Unix timestamp (milliseconds)
-			created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000) -- Unix timestamp (milliseconds)
-		);
-	`);
-	// Indexes for password_reset_tokens table
-	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_user_id ON password_reset_tokens (user_id);`);
-	db.run(`CREATE INDEX IF NOT EXISTS idx_prt_expires_at ON password_reset_tokens (expires_at);`);
-
-	// Refresh Tokens table
-	db.run(`
-		CREATE TABLE IF NOT EXISTS refresh_tokens (
-			token TEXT PRIMARY KEY NOT NULL,
-			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
-			created_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
-			expires_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
-			is_persistent INTEGER NOT NULL DEFAULT 0 CHECK (is_persistent IN (0, 1)), -- "Keep me logged in" flag
-			consumed_at INTEGER,           -- Allows a grace period for using old tokens when renewing sessions
-			ip_address TEXT
-		);
-	`);
-	// Indexes for refresh_tokens table
-	db.run(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens (user_id);`);
-	db.run(
-		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);`,
-	);
-
-	// Editor Saves table
-	db.run(`
-		CREATE TABLE IF NOT EXISTS editor_saves (
-			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
-			name TEXT NOT NULL,
-			piece_count INTEGER NOT NULL,
-			timestamp INTEGER NOT NULL,
-			icn TEXT NOT NULL,
-			compression TEXT NOT NULL DEFAULT 'none',
-			pawn_double_push INTEGER NOT NULL CHECK (pawn_double_push IN (-1, 0, 1)),
-			castling INTEGER NOT NULL CHECK (castling IN (-1, 0, 1)),
-
-			PRIMARY KEY (user_id, name)
-		);
-	`);
-
-	// Blacklisted Emails table
-	db.run(`
-		CREATE TABLE IF NOT EXISTS email_blacklist (
-			email TEXT PRIMARY KEY NOT NULL,
-			reason TEXT NOT NULL, -- e.g. 'bounce', 'spam_report', 'banned'
-			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-		);
-	`);
+	// --- Live Games ---
 
 	// The live-game tables below are documented in docs/systems/LIVE_GAME_PERSISTENCE.md.
 	// Keep it in sync with any edit made here.
@@ -400,8 +405,6 @@ function generateTables(): void {
 		);
 	`);
 
-	createEngineGamesTable();
-
 	// Engines have no disconnect state, so live participants use a separate table.
 	db.run(`
 		CREATE TABLE IF NOT EXISTS live_engine_games (
@@ -416,23 +419,9 @@ function generateTables(): void {
 	`);
 }
 
-function createEngineGamesTable(): void {
-	db.run(`
-		CREATE TABLE IF NOT EXISTS engine_games (
-			game_id             INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
-			player_number       INTEGER NOT NULL,
-			score               REAL,
-			clock_at_end_millis INTEGER,
-			engine              TEXT NOT NULL,
-			engine_version      TEXT NOT NULL,
-			strength_level      INTEGER NOT NULL,
-			PRIMARY KEY (game_id, player_number)
-		);
-	`);
-}
-
 function initDatabase(): void {
 	generateTables();
+	// Migration functions (temporary, deleted after they've run in production)
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
 	dropLegacyLivePlayerGamesEloColumnIfPresent();
 	addIsPersistentColumnToRefreshTokens();
@@ -445,10 +434,39 @@ function initDatabase(): void {
 	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
 	dropLiveGamesConclusionColumnsIfPresent();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
+	// Start periodic tasks
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
 }
+
+/** Wipes all data from all tables. ONLY call in a test environment! */
+function clearAllTables(): void {
+	if (process.env['NODE_ENV'] !== 'test') {
+		return console.error('CANNOT CLEAR DATABASE TABLES OUTSIDE OF TEST ENVIRONMENT!');
+	}
+
+	// Get all table names dynamically
+	const tables = db.all<{ name: string }>(
+		"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
+	);
+
+	// Disable foreign keys temporarily to avoid constraint errors (e.g. deleting Parent before Child)
+	db.run('PRAGMA foreign_keys = OFF');
+
+	// Wrap deletions in a transaction for speed
+	const wipeTransaction = db.transaction(() => {
+		for (const table of tables) {
+			db.run(`DELETE FROM ${table.name}`);
+		}
+	});
+	wipeTransaction();
+
+	// Re-enable foreign keys
+	db.run('PRAGMA foreign_keys = ON');
+}
+
+// Migration -----------------------------------------------------------------------------------
 
 /**
  * TEMPORARY MIGRATION: Remove this function (and its call in initDatabase) once it has run in production.
@@ -666,43 +684,19 @@ function addRatingDeviationColumnsToPlayerGamesIfNeeded(): void {
 	console.log('Temporary DB migration: added player_games rating_deviation columns.');
 }
 
-/** Wipes all data from all tables. ONLY call in a test environment! */
-function clearAllTables(): void {
-	if (process.env['NODE_ENV'] !== 'test') {
-		return console.error('CANNOT CLEAR DATABASE TABLES OUTSIDE OF TEST ENVIRONMENT!');
-	}
-
-	// Get all table names dynamically
-	const tables = db.all<{ name: string }>(
-		"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-	);
-
-	// Disable foreign keys temporarily to avoid constraint errors (e.g. deleting Parent before Child)
-	db.run('PRAGMA foreign_keys = OFF');
-
-	// Wrap deletions in a transaction for speed
-	const wipeTransaction = db.transaction(() => {
-		for (const table of tables) {
-			db.run(`DELETE FROM ${table.name}`);
-		}
-	});
-	wipeTransaction();
-
-	// Re-enable foreign keys
-	db.run('PRAGMA foreign_keys = ON');
-}
+// Exports -------------------------------------------------------------------------------------
 
 export {
 	user_id_upper_cap,
 	game_id_upper_cap,
-	uniqueMemberKeys,
-	allMemberColumns,
-	allPlayerGamesColumns,
-	allGamesColumns,
+	uniqueMembersColumns,
+	allMembersColumns,
 	allRatingAbuseColumns,
+	allGamesColumns,
+	allPlayerGamesColumns,
+	allEngineGamesColumns,
 	allLiveGamesColumns,
 	allLivePlayerGamesColumns,
-	allEngineGamesColumns,
 	allLiveEngineGamesColumns,
 	initDatabase,
 	generateTables,
