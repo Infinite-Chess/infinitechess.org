@@ -27,6 +27,12 @@ export interface Engine {
 	maxStrengthLevel: number;
 	/** Whether the worker loads separately served wasm glue at runtime. */
 	hasGlue: boolean;
+	/**
+	 * Whether the engine is sent the game's move history alongside the position.
+	 * Engines that detect repetition or the fifty-move rule need it; those that only
+	 * look at the pieces in front of them are sent the current position on its own.
+	 */
+	needsMoveHistory: boolean;
 }
 
 /** Union of all valid engine names, derived from the keys of engineDictionary. */
@@ -49,6 +55,7 @@ export const engineDictionary = {
 		displayName: 'Practice Bot',
 		maxStrengthLevel: 1,
 		hasGlue: false,
+		needsMoveHistory: false,
 	},
 	apeiron: {
 		worldBorderDist: I64_MAX - 2000n,
@@ -56,6 +63,7 @@ export const engineDictionary = {
 		displayName: 'Apeiron',
 		maxStrengthLevel: 8,
 		hasGlue: true,
+		needsMoveHistory: true,
 	},
 } satisfies { [key: string]: Engine };
 

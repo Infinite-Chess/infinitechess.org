@@ -36,8 +36,6 @@ interface EngineWorkerInitMessage {
 
 /** Every message after the init one: search the given position and post a move back. */
 interface EngineWorkerMessage {
-	/** Serialized gamefile. Part of the shared engine-worker contract, but unread by Apeiron. */
-	stringGamefile: string;
 	/** The compressed position/game to search, converted to ICN before it reaches wasm. */
 	lf: LongFormatIn;
 	engineConfig?: EngineConfig;

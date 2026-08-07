@@ -6,7 +6,6 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ValidEngine } from '../../../../../shared/chess/engine.js';
 
-import jsutil from '../../../../../shared/util/jsutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import { engineDictionary } from '../../../../../shared/chess/engine.js';
@@ -40,10 +39,11 @@ interface EngineConfig {
 let engineColor: Player | undefined;
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 /**
- * The engine worker of the game we're in, if any. `ready` flips true on its
- * 'readyok' message; until then it answers nothing.
+ * The engine worker of the game we're in, if any.
+ * `name` keys its {@link engineDictionary} entry, for the properties that vary per engine.
+ * `ready` flips true on its 'readyok' message; until then it answers nothing.
  */
-let engine: { worker: Worker; ready: boolean } | undefined;
+let engine: { name: ValidEngine; worker: Worker; ready: boolean } | undefined;
 
 // Events -----------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ function initEngineGame(options: {
 	const worker = new Worker(options.workerUrl, {
 		type: 'module',
 	}); // module type allows the web worker to import methods and types from other scripts.
-	engine = { worker, ready: false };
+	engine = { name: options.currentEngine, worker, ready: false };
 
 	// Installed per engine game, so the debug toggle stays inert where no engine
 	// is loaded (spectators). Requests wait for 'readyok'; onEngineReady() then fires them.
@@ -150,10 +150,13 @@ function onMovePlayed(): void {
 
 	// Request the engine to perform a best move calculation...
 
-	const longformIn = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
-	// Send the gamefile to the engine web worker
-	/** This has all nested functions removed. */
-	const stringGamefile = JSON.stringify(gamefile, jsutil.stringifyReplacer);
+	// Compress the gamefile to send to the engine in a simpler json format. Engines that don't
+	// read the move history get the current position on its own, rather than the start position
+	// plus every move to replay onto it.
+	const longformIn = gamecompressor.compressGamefile(
+		gamefile,
+		!engineDictionary[engine.name].needsMoveHistory,
+	);
 
 	// Derive clock times for both colors in milliseconds, similar to UCI wtime/btime/winc/binc
 	let wtime: number | undefined;
@@ -180,7 +183,6 @@ function onMovePlayed(): void {
 
 	if (gamefile.gameConclusion) return;
 	engine.worker.postMessage({
-		stringGamefile,
 		lf: longformIn,
 		engineConfig: engineConfig,
 		youAreColor: engineColor,
@@ -288,10 +290,8 @@ function requestGeneratedMoves(gamefile: GameFile): void {
 	// Compress the gamefile as a single position (not including future moves)
 	// This ensures the engine analyzes the currently viewed position
 	const longformIn = gamecompressor.compressGamefile(gamefile, true);
-	const stringGamefile = JSON.stringify(gamefile, jsutil.stringifyReplacer);
 
 	engine.worker.postMessage({
-		stringGamefile,
 		lf: longformIn,
 		engineConfig: engineConfig,
 		youAreColor: engineColor,
