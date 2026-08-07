@@ -136,6 +136,7 @@ async function initWasm(msg: EngineWorkerInitMessage): Promise<void> {
  * posts a null move, which the page treats as the engine resigning.
  */
 function respondToMoveRequest(data: EngineWorkerMessage): void {
+	let engine: GameplayEngine | undefined;
 	try {
 		const engineColor = data.youAreColor;
 
@@ -154,14 +155,7 @@ function respondToMoveRequest(data: EngineWorkerMessage): void {
 			binc: toClockMillis(data.binc),
 		};
 
-		let engine: GameplayEngine;
-		try {
-			engine = wasm.Engine.from_icn(icnString, engineConfig);
-		} catch (e) {
-			console.error('[Engine] Failed to start engine from ICN:', e);
-			postMessage({ type: 'move', data: null });
-			return;
-		}
+		engine = wasm.Engine.from_icn(icnString, engineConfig);
 
 		// Send generated moves for debugging if requested
 		if (data.requestGeneratedMoves === true) {
@@ -169,13 +163,11 @@ function respondToMoveRequest(data: EngineWorkerMessage): void {
 			const formattedMoves: string[] = legalMoves.map((m) => `${m.from}>${m.to}`);
 			// Send the generated moves back to the main thread for rendering
 			postMessage({ type: 'generatedMoves', data: formattedMoves });
-			engine.free();
 			return;
 		}
 
 		const timeLimit = data.engineConfig?.engineTimeLimitPerMoveMillis ?? 0;
 		const bestMoveResult = engine.get_best_move_with_time(timeLimit, true);
-		engine.free();
 
 		if (!bestMoveResult) {
 			console.error('[Engine] No best move result returned from WASM');
@@ -195,6 +187,8 @@ function respondToMoveRequest(data: EngineWorkerMessage): void {
 	} catch (error) {
 		console.error(`[Engine] Error finding best move:`, error);
 		postMessage({ type: 'move', data: null });
+	} finally {
+		engine?.free();
 	}
 }
 
