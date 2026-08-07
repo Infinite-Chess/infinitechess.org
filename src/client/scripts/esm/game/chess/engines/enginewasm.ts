@@ -1,19 +1,40 @@
 // src/client/scripts/esm/game/chess/engines/enginewasm.ts
 
-/** Loads an engine's wasm glue and shared-memory thread pool. */
+/**
+ * Loads an engine's wasm glue and shared-memory thread pool, and adapts the
+ * engine's own piece codes to the site's ICN abbreviations.
+ */
 
+import type { Player, RawType } from '../../../../../../shared/chess/util/typeutil.js';
+
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import typeutil, { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
+
+// Types ------------------------------------------------------------------
+
+/** The exports every engine glue module provides. */
+export interface EngineWasmModule {
+	/** wasm-bindgen's init. Compiles and instantiates the .wasm alongside the glue. */
+	default: () => Promise<EngineWasmInitOutput>;
+	/** Starts the rayon thread pool. Absent on single-threaded engine builds. */
+	initThreadPool?: (threads: number) => Promise<void>;
+}
+
+/** What a glue module's init hands back. */
 interface EngineWasmInitOutput {
+	/** The instance's linear memory, shared when the build is multithreaded. */
 	memory: WebAssembly.Memory;
 }
 
-interface EngineWasmModule {
-	default: () => Promise<EngineWasmInitOutput>;
-	initThreadPool?: (threads: number) => Promise<void>;
-}
+// Wasm Loading -----------------------------------------------------------
 
 /** Hard cap on Lazy SMP threads used by engine features. */
 const THREAD_CAP = 4;
 
+/**
+ * Whether this browser can run a multithreaded engine build. Requires cross-origin
+ * isolation, without which wasm shared memory isn't backed by a SharedArrayBuffer.
+ */
 const BROWSER_SUPPORTS_THREADS: boolean = (() => {
 	try {
 		if (!globalThis.crossOriginIsolated) return false;
@@ -26,13 +47,11 @@ const BROWSER_SUPPORTS_THREADS: boolean = (() => {
 	}
 })();
 
-/** Returns the usable hardware-thread count after an optional reservation. */
-function maxEngineThreads(cap: number, reserve: number = 0): number {
-	if (!BROWSER_SUPPORTS_THREADS) return 1;
-	return Math.min(cap, Math.max(1, (navigator.hardwareConcurrency || 2) - reserve));
-}
-
-/** Loads the unbundled engine glue and initializes its optional thread pool. */
+/**
+ * Loads the unbundled engine glue and initializes its optional thread pool.
+ * `beforeThreadPool` runs after init but before the pool starts, for setup the
+ * search threads must already see (e.g. hash size).
+ */
 async function loadEngineWasm<T extends EngineWasmModule>(
 	engineUrl: string,
 	threads: number,
@@ -47,5 +66,37 @@ async function loadEngineWasm<T extends EngineWasmModule>(
 	return { wasm, output, multithreaded };
 }
 
-export { BROWSER_SUPPORTS_THREADS, THREAD_CAP, maxEngineThreads, loadEngineWasm };
-export type { EngineWasmModule };
+/** Returns the usable hardware-thread count after an optional reservation. */
+function maxEngineThreads(cap: number, reserve: number = 0): number {
+	if (!BROWSER_SUPPORTS_THREADS) return 1;
+	return Math.min(cap, Math.max(1, (navigator.hardwareConcurrency || 2) - reserve));
+}
+
+// Piece Codes ------------------------------------------------------------
+
+/**
+ * Apeiron's own single-letter piece codes (its `PieceType::to_str()`, src/board.rs), which
+ * it uses for the `promotion` field of the moves it hands back. They are arbitrary engine
+ * identifiers — not derivable from the site's abbreviations — so the mapping lives here,
+ * while the abbreviations themselves stay owned by icnconverter's `piece_codes`.
+ */
+const ENGINE_PROMOTION_RAWTYPES: Record<string, RawType> = {
+	k: r.KING, p: r.PAWN, n: r.KNIGHT, b: r.BISHOP,
+	r: r.ROOK, q: r.QUEEN, m: r.AMAZON, h: r.HAWK,
+	c: r.CHANCELLOR, a: r.ARCHBISHOP, g: r.GUARD, l: r.CAMEL,
+	i: r.GIRAFFE, z: r.ZEBRA, e: r.CENTAUR, y: r.ROYALQUEEN,
+	d: r.ROYALCENTAUR, s: r.KNIGHTRIDER, u: r.HUYGEN, o: r.ROSE,
+}; // prettier-ignore
+
+/**
+ * Translates one of the engine's promotion codes into the site's ICN piece abbreviation, cased for `mover`.
+ * @throws On an unknown code, which means {@link ENGINE_PROMOTION_RAWTYPES} has drifted
+ * from the engine's piece list.
+ */
+function getPromotionAbbr(engineCode: string, mover: Player): string {
+	const rawType = ENGINE_PROMOTION_RAWTYPES[engineCode.toLowerCase()];
+	if (rawType === undefined) throw Error(`Unknown engine promotion code: (${engineCode})`);
+	return icnconverter.getAbbrFromType(typeutil.buildType(rawType, mover));
+}
+
+export { BROWSER_SUPPORTS_THREADS, THREAD_CAP, maxEngineThreads, loadEngineWasm, getPromotionAbbr };

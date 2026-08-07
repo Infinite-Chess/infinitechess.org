@@ -4,6 +4,9 @@
  * Apeiron Engine
  * A JavaScript wrapper for the WASM implementation of Apeiron
  *
+ * Answers one best-move request per message from the page (contrast the analysis
+ * board's apeironanalysis.worker.ts, which holds a persistent streaming search).
+ *
  * The engine glue is served UNBUNDLED at a content-versioned `/engine/<hash>/` path (see
  * build/engine-wasm.ts) and loaded via a runtime dynamic import whose URL arrives in the
  * init message — the same mechanism as the analysis worker. wasm-bindgen-rayon self-spawns
@@ -13,31 +16,15 @@
  * @author FirePlank
  */
 
-import icnconverter, {
-	LongFormatIn,
-} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
+import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { EngineWasmModule } from './enginewasm.js';
 
-import { loadEngineWasm } from './enginewasm.js';
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
-interface GameplayEngine {
-	get_legal_moves_js: () => WasmBestMoveResult[];
-	get_best_move_with_time: (timeLimit: number, useBook: boolean) => WasmBestMoveResult | null;
-	free: () => void;
-}
+import { loadEngineWasm, getPromotionAbbr } from './enginewasm.js';
 
-interface GameplayWasmModule extends EngineWasmModule {
-	Engine: {
-		from_icn: (icn: string, config: Record<string, number>) => GameplayEngine;
-	};
-}
-
-let wasm: GameplayWasmModule;
-
-interface EngineConfig {
-	engineTimeLimitPerMoveMillis?: number;
-	strengthLevel?: number;
-}
+// Types ----------------------------------------------------------------
 
 /** The first message from the page: where to load the engine glue, and the Lazy SMP pool size. */
 interface EngineWorkerInitMessage {
@@ -47,23 +34,80 @@ interface EngineWorkerInitMessage {
 	threads: number;
 }
 
+/** Every message after the init one: search the given position and post a move back. */
 interface EngineWorkerMessage {
+	/** Serialized gamefile. Part of the shared engine-worker contract, but unread by Apeiron. */
 	stringGamefile: string;
+	/** The compressed position/game to search, converted to ICN before it reaches wasm. */
 	lf: LongFormatIn;
 	engineConfig?: EngineConfig;
-	youAreColor: number;
+	/** The color the engine is playing, which the returned move is cased for. */
+	youAreColor: Player;
+	/** UCI-style clock remaining, in ms. Absent in untimed games. */
 	wtime?: number;
 	btime?: number;
+	/** UCI-style clock increment, in ms. Absent in untimed games. */
 	winc?: number;
 	binc?: number;
+	/** Debug: post the position's generated legal moves instead of searching for a move. */
 	requestGeneratedMoves?: boolean;
 }
 
-interface WasmBestMoveResult {
+/** Search settings the page chose for this engine game. */
+interface EngineConfig {
+	/** Hard per-move thinking budget. */
+	engineTimeLimitPerMoveMillis?: number;
+	/** Engine strength preset. */
+	strengthLevel?: number;
+}
+
+/** The gameplay engine glue's exports. */
+interface GameplayWasmModule extends EngineWasmModule {
+	Engine: {
+		/** Constructs an engine at the position described by `icn`, with the search config. */
+		from_icn: (icn: string, config: Record<string, number>) => GameplayEngine;
+	};
+}
+
+/** One wasm engine instance, bound to the position it was constructed at. */
+interface GameplayEngine {
+	/** Every legal move in the position. Drives the debug move overlay. */
+	get_legal_moves_js: () => WasmMove[];
+	/**
+	 * Searches for the best move, bounded by `timeLimit` ms, optionally consulting
+	 * the opening book. Null when the search produced no move.
+	 */
+	get_best_move_with_time: (timeLimit: number, useBook: boolean) => WasmMove | null;
+	/** Releases the wasm-side allocation. Mandatory — wasm memory isn't GC'd. */
+	free: () => void;
+}
+
+/** A move as wasm reports it: `from`/`to` are compact ICN coords ("x,y"). */
+interface WasmMove {
 	from: string;
 	to: string;
+	/** The engine's own single-letter piece code, NOT a site abbreviation. */
 	promotion?: string | null;
 }
+
+// Constants ------------------------------------------------------------
+
+/** Strength used when the page doesn't specify one. */
+const DEFAULT_STRENGTH_LEVEL = 3;
+
+// State ----------------------------------------------------------------
+
+let wasm: GameplayWasmModule;
+
+// Message Handling -----------------------------------------------------
+
+self.onmessage = async function (
+	e: MessageEvent<EngineWorkerInitMessage | EngineWorkerMessage>,
+): Promise<void> {
+	// The first message carries the engine-glue URL + thread count.
+	if ('engineUrl' in e.data) return initWasm(e.data);
+	respondToMoveRequest(e.data);
+};
 
 /**
  * Initializes the WASM module from the served glue, bringing up the
@@ -86,15 +130,12 @@ async function initWasm(msg: EngineWorkerInitMessage): Promise<void> {
 	}
 }
 
-// Main entry point for the engine
-self.onmessage = async function (
-	e: MessageEvent<EngineWorkerInitMessage | EngineWorkerMessage>,
-): Promise<void> {
-	// The first message carries the engine-glue URL + thread count.
-	if ('engineUrl' in e.data) return initWasm(e.data);
-
-	const data = e.data;
-
+/**
+ * Constructs an engine at the requested position, then posts back either its generated
+ * legal moves (debug) or the best move it finds, as a compact ICN token. Any failure
+ * posts a null move, which the page treats as the engine resigning.
+ */
+function respondToMoveRequest(data: EngineWorkerMessage): void {
 	try {
 		const engineColor = data.youAreColor;
 
@@ -106,7 +147,7 @@ self.onmessage = async function (
 
 		// Initialize engine configuration
 		const engineConfig = {
-			strength_level: data.engineConfig?.strengthLevel ?? 3,
+			strength_level: data.engineConfig?.strengthLevel ?? DEFAULT_STRENGTH_LEVEL,
 			wtime: toClockMillis(data.wtime),
 			btime: toClockMillis(data.btime),
 			winc: toClockMillis(data.winc),
@@ -124,7 +165,7 @@ self.onmessage = async function (
 
 		// Send generated moves for debugging if requested
 		if (data.requestGeneratedMoves === true) {
-			const legalMoves: WasmBestMoveResult[] = engine.get_legal_moves_js();
+			const legalMoves: WasmMove[] = engine.get_legal_moves_js();
 			const formattedMoves: string[] = legalMoves.map((m) => `${m.from}>${m.to}`);
 			// Send the generated moves back to the main thread for rendering
 			postMessage({ type: 'generatedMoves', data: formattedMoves });
@@ -147,8 +188,7 @@ self.onmessage = async function (
 		const to = bestMoveResult.to;
 		let moveString = `${from}>${to}`;
 		if (bestMoveResult.promotion) {
-			const promoAbbr = mapRustPromotionToSiteAbbr(bestMoveResult.promotion, engineColor);
-			moveString += `=${promoAbbr}`;
+			moveString += `=${getPromotionAbbr(bestMoveResult.promotion, engineColor)}`;
 		}
 
 		postMessage({ type: 'move', data: moveString });
@@ -156,43 +196,11 @@ self.onmessage = async function (
 		console.error(`[Engine] Error finding best move:`, error);
 		postMessage({ type: 'move', data: null });
 	}
-};
-
-function toClockMillis(value: number | undefined): number {
-	return value === undefined ? 0 : Math.max(0, Math.round(value));
 }
 
-function mapRustPromotionToSiteAbbr(
-	promotion: string | null | undefined,
-	engineColor: number,
-): string {
-	const code = String(promotion ?? '').toLowerCase();
-	const isWhite = engineColor === 1;
-	const map: Record<string, { w: string; b: string }> = {
-		q: { w: 'Q', b: 'q' },
-		r: { w: 'R', b: 'r' },
-		b: { w: 'B', b: 'b' },
-		n: { w: 'N', b: 'n' },
-		m: { w: 'AM', b: 'am' },
-		h: { w: 'HA', b: 'ha' },
-		c: { w: 'CH', b: 'ch' },
-		a: { w: 'AR', b: 'ar' },
-		e: { w: 'CE', b: 'ce' },
-		g: { w: 'GU', b: 'gu' },
-		l: { w: 'CA', b: 'ca' },
-		i: { w: 'GI', b: 'gi' },
-		z: { w: 'ZE', b: 'ze' },
-		y: { w: 'RQ', b: 'rq' },
-		d: { w: 'RC', b: 'rc' },
-		s: { w: 'NR', b: 'nr' },
-		u: { w: 'HU', b: 'hu' },
-		o: { w: 'RO', b: 'ro' },
-		k: { w: 'K', b: 'k' },
-		p: { w: 'P', b: 'p' },
-	};
-	const entry = map[code];
-	if (!entry) return isWhite ? 'Q' : 'q';
-	return isWhite ? entry.w : entry.b;
+/** Normalizes an optional clock value to whole, non-negative milliseconds. Absent = 0. */
+function toClockMillis(value: number | undefined): number {
+	return value === undefined ? 0 : Math.max(0, Math.round(value));
 }
 
 export {};

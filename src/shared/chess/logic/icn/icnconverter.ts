@@ -1658,6 +1658,7 @@ export default {
 	LongToShort_Format,
 	ShortToLong_Format,
 
+	getAbbrFromType,
 	getTypeFromAbbr,
 	getCompactMoveFromDraft,
 

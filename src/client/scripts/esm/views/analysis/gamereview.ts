@@ -645,6 +645,7 @@ function dispatchNext(worker: Worker): void {
 			requestId: index, // The position index doubles as the request id.
 			icn,
 			maxDepth: reviewDepth,
+			mover: moverAtPly(index),
 			...(work.newChunk && { newChunk: true }),
 			...(work.warmup && { warmup: true }),
 		} satisfies AnalysisCommand);
