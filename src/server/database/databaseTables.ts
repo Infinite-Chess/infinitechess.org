@@ -136,6 +136,28 @@ const allLiveEngineGamesColumns: string[] = [
 
 // Functions -----------------------------------------------------------------------------------
 
+/** Initializes database schema, runs temporary migrations, and starts DB-related background tasks. */
+function initDatabase(): void {
+	generateTables();
+	// Migration functions (temporary, deleted after they've run in production)
+	dropLegacyLiveGamesPosPastedColumnIfPresent();
+	dropLegacyLivePlayerGamesEloColumnIfPresent();
+	addIsPersistentColumnToRefreshTokensIfNeeded();
+	dropLegacyVerificationColumnsIfPresent();
+	clearSpamReportBlacklistEntries();
+	makeVariantColumnsNullableIfNeeded();
+	addPositionColumnToLiveGamesIfNeeded();
+	renameDisconnectResignTimeColumnIfNeeded();
+	renameDisconnectByChoiceColumnIfNeeded();
+	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
+	dropLiveGamesConclusionColumnsIfPresent();
+	addRatingDeviationColumnsToPlayerGamesIfNeeded();
+	// Start periodic tasks
+	startPeriodicDatabaseCleanupTasks();
+	startPeriodicLeaderboardRatingDeviationUpdate();
+	startDailyBackups();
+}
+
 /** Creates the tables in our database if they do not exist. */
 function generateTables(): void {
 	// --- Accounts ---
@@ -416,27 +438,6 @@ function generateTables(): void {
 	`);
 }
 
-function initDatabase(): void {
-	generateTables();
-	// Migration functions (temporary, deleted after they've run in production)
-	dropLegacyLiveGamesPosPastedColumnIfPresent();
-	dropLegacyLivePlayerGamesEloColumnIfPresent();
-	addIsPersistentColumnToRefreshTokensIfNeeded();
-	dropLegacyVerificationColumnsIfPresent();
-	clearSpamReportBlacklistEntries();
-	makeVariantColumnsNullableIfNeeded();
-	addPositionColumnToLiveGamesIfNeeded();
-	renameDisconnectResignTimeColumnIfNeeded();
-	renameDisconnectByChoiceColumnIfNeeded();
-	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
-	dropLiveGamesConclusionColumnsIfPresent();
-	addRatingDeviationColumnsToPlayerGamesIfNeeded();
-	// Start periodic tasks
-	startPeriodicDatabaseCleanupTasks();
-	startPeriodicLeaderboardRatingDeviationUpdate();
-	startDailyBackups();
-}
-
 /** Wipes all data from all tables. ONLY call in a test environment! */
 function clearAllTables(): void {
 	if (process.env['NODE_ENV'] !== 'test') {
@@ -684,8 +685,10 @@ function addRatingDeviationColumnsToPlayerGamesIfNeeded(): void {
 // Exports -------------------------------------------------------------------------------------
 
 export {
+	// Constants
 	user_id_upper_cap,
 	game_id_upper_cap,
+	// Table Columns
 	uniqueMembersColumns,
 	allMembersColumns,
 	allRatingAbuseColumns,
@@ -695,6 +698,7 @@ export {
 	allLiveGamesColumns,
 	allLivePlayerGamesColumns,
 	allLiveEngineGamesColumns,
+	// Functions
 	initDatabase,
 	generateTables,
 	clearAllTables,
