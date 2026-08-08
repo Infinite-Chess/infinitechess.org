@@ -183,7 +183,10 @@ function initVariantGroupDropdown(hostConfig: VariantSelectorConfig): void {
 
 	// Wire up the static custom-panel action buttons (Create + From ICN).
 	element_btnCustomCreate.addEventListener('click', goToEditor);
-	element_btnCustomFromICN.addEventListener('click', openFromICN);
+	element_btnCustomFromICN.addEventListener('click', () => {
+		openFromICN();
+		element_icnInput.focus(); // Picking it from the menu means they're about to type in it
+	});
 
 	// Wire up variant buttons
 	element_variantListPanels.forEach((panel) => {
@@ -482,13 +485,11 @@ function openFromICN(): void {
 	clearSavedPositionError();
 	showCustomSection();
 	closeVariantDropdown();
-	element_icnInput.focus();
 }
 
 /** Programmatically selects Custom From-ICN, fills the input with the given ICN, and validates it. */
 async function applyIcn(icn: string): Promise<void> {
-	selection = { kind: 'icn' };
-	showCustomSection();
+	openFromICN();
 	element_icnInput.value = icn;
 	await validateIcnInput(true);
 	// Something rewrote the field while we validated — it has committed its own state, so ours is stale.
