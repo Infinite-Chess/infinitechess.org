@@ -161,8 +161,6 @@ interface AnalysisWasmEngine extends WasmEngine {
 		},
 		onInfo: (info: AnalysisInfo) => void,
 	) => AnalysisInfo | null;
-	/** Releases the wasm-side allocation. Mandatory — wasm memory isn't GC'd. */
-	free: () => void;
 }
 
 // Constants --------------------------------------------------------------------
