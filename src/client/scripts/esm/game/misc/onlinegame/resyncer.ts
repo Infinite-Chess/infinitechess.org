@@ -2,7 +2,7 @@
 
 /**
  * Reconciles our board against the server's authoritative state — rewinding/forwarding moves until
- * they match, re-submitting an in-flight move if the server never saw it, and applying the conclusion.
+ * they match, submitting any moves the server never saw, and applying the conclusion.
  *
  * Runs for every `gamestate` message that arrives while a board is loaded: the `subscribe` reply on a
  * live reconnect (socket reopened), or a live push (e.g. the game concluded the instant we moved).
@@ -53,7 +53,9 @@ function handleGameState(
 
 	onlinegame.setParticipantState(message.participantState);
 
-	// Must be set before editing the clocks.
+	// Must be set before editing the clocks. Overwriting a conclusion we derived locally with
+	// undefined is intended — online games never conclude off ours (it's set only so the move
+	// list can render '#'); the server's own conclusion message follows right behind this.
 	gamefile.gameConclusion = claimedGameConclusion;
 
 	// Adjust the timer whos turn it is depending on ping.
@@ -74,7 +76,7 @@ function handleGameState(
  * @param gamefile - The gamefile
  * @param moves - The moves list in the most compact form: `['1,2>3,4','5,6>7,8Q']`
  * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
- * @param forceSync - If true, skip the early-exit re-submit path and force our move list to exactly match the server's
+ * @param forceSync - If true, skip the early-exit submit path and force our move list to exactly match the server's
  * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
  */
 function synchronizeMovesList(
@@ -86,41 +88,29 @@ function synchronizeMovesList(
 ): { opponentPlayedIllegalMove: boolean } {
 	// console.log("Resyncing...");
 
-	// Early exit case. If we have played exactly 1 more move than the server,
-	// and the rest of the moves list matches, don't modify our moves,
-	// just re-submit our move!
+	/** The index of the lastest move in the game we agree with the server on. -1 = starting position. */
+	const latestMatchingMoveIndex = findLastestMatchingMoveIndex(gamefile.moves, moves);
+
+	// Early exit case. If the server's moves list is a strict prefix of ours, and every move
+	// it's missing is one we're allowed to submit, don't modify our moves — just submit them.
 	// Skip this if forceSync is set — the server wants us to match its state exactly
 	// (e.g. it rejected our last move as illegal).
-	const hasOneMoreMoveThanServer = gamefile.moves.length === moves.length + 1;
-	const finalMoveIsOurMove =
-		gamefile.moves.length > 0 &&
-		moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) ===
-			gamesession.getRole();
-	const previousMove =
-		gamefile.moves.length > 1 ? gamefile.moves[gamefile.moves.length - 2] : undefined;
-	const previousMoveMatches =
-		(moves.length === 0 && gamefile.moves.length === 1) ||
-		(gamefile.moves.length > 1 &&
-			moves.length > 0 &&
-			previousMove!.token === moves[moves.length - 1]!.token);
+	const serverIsBehindUs =
+		latestMatchingMoveIndex === moves.length - 1 && gamefile.moves.length > moves.length;
 	if (
 		!forceSync &&
 		!claimedGameConclusion &&
-		hasOneMoreMoveThanServer &&
-		finalMoveIsOurMove &&
-		previousMoveMatches
+		serverIsBehindUs &&
+		mayWeSubmitMovesFrom(gamefile, moves.length)
 	) {
-		console.log('Sending our move again after resyncing..');
-		movesendreceive.sendMove();
+		console.log(`Submitting the ${gamefile.moves.length - moves.length} move(s) the server is behind on after resyncing..`); // prettier-ignore
+		movesendreceive.submitMovesFrom(gamefile, moves.length);
 		return { opponentPlayedIllegalMove: false };
 	}
 
 	const originalMoveIndex = gamefile.state.local.moveIndex;
 	movesequence.viewFront(gamefile, mesh, false);
 	let aChangeWasMade = false;
-
-	/** The index of the lastest move in the game we agree with the server on. -1 = starting position. */
-	const latestMatchingMoveIndex = findLastestMatchingMoveIndex(gamefile.moves, moves);
 
 	// Rewind moves until we reach the first move we agree with the server on.
 	// Catches our move if we moved RIGHT after the game ended but we haven't seen the conclusion.
@@ -193,6 +183,19 @@ function synchronizeMovesList(
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
 	return { opponentPlayedIllegalMove: false }; // No cheating detected
+}
+
+/**
+ * Whether we're authorized to submit every one of our moves from `startIndex` onward.
+ * In engine games we submit both colors' moves, so always. Otherwise only our own moves,
+ * and since colors alternate that can only ever be the single trailing move.
+ */
+function mayWeSubmitMovesFrom(gamefile: GameFile, startIndex: number): boolean {
+	if (window.gamePageData.engineGame) return true;
+	return (
+		startIndex === gamefile.moves.length - 1 &&
+		moveutil.getColorThatPlayedMoveIndex(gamefile, startIndex) === gamesession.getRole()
+	);
 }
 
 /**

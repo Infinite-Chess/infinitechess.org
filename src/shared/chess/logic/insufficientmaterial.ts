@@ -4,10 +4,11 @@
  * This script detects draws by insufficient material.
  */
 
-import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
+import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { GameConclusion } from '../util/winconutil.js';
+import type { OrganizedPiecesBase } from './organizedpieces.js';
 
 import bimath from '../../util/math/bimath.js';
 import jsutil from '../../util/jsutil.js';
@@ -20,14 +21,21 @@ import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeut
 
 // Types -----------------------------------------------------------------------
 
+/** The subset of a Board that insufficient material detection reads. */
+type InsuffmatBoard = {
+	gameRules: GameRules;
+	moves: MoveFull[];
+	pieces: OrganizedPiecesBase;
+};
+
+/** Defines an object mapping piece types to their counts, representing a specific collection of pieces on the board. */
+type Scenario = TypeGroup<PieceCount>;
 /**
  * Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately.
  * The tuple should be SORTED in descending order! Otherwise, some insuffmat checks won't work.
  * i.e. whatever light/dark square has the most bishops should be the first entry of the tuple.
  */
 type PieceCount = number | [number, number];
-/** Defines an object mapping piece types to their counts, representing a specific collection of pieces on the board. */
-type Scenario = TypeGroup<PieceCount>;
 
 // Constants -------------------------------------------------------------------
 
@@ -281,7 +289,7 @@ function normalizeBishopParities(scen: Scenario): void {
 // Main Logic ---------------------------------------------------------------
 
 /** Whether the position supports insufficient material checks. */
-function doesPositionSupportInsuffmat(boardsim: Board): boolean {
+function doesPositionSupportInsuffmat(boardsim: InsuffmatBoard): boolean {
 	const gameRules = boardsim.gameRules;
 
 	// Is the win condition is checkmate for both players?
@@ -319,7 +327,10 @@ function doesPositionSupportInsuffmat(boardsim: Board): boolean {
  * @param exclude - Optional function, run for each piece, that returns
  * whether that piece should be excluded from the scenario.
  */
-function buildBoardScenario(boardsim: Board, exclude?: (coords: Coords) => boolean): Scenario {
+function buildBoardScenario(
+	boardsim: InsuffmatBoard,
+	exclude?: (coords: Coords) => boolean,
+): Scenario {
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario: Scenario = {};
 	// bishops are treated specially and separated by parity
@@ -372,7 +383,7 @@ function invertScenario(scenario: Scenario): Scenario {
  * Detects if the game is drawn by insufficient material,
  * returning the game conclusion if so.
  */
-export function detectInsufficientMaterial(boardsim: Board): GameConclusion | undefined {
+export function detectInsufficientMaterial(boardsim: InsuffmatBoard): GameConclusion | undefined {
 	if (!doesPositionSupportInsuffmat(boardsim)) return undefined;
 
 	const gameRules = boardsim.gameRules;
@@ -416,7 +427,7 @@ export function detectInsufficientMaterial(boardsim: Board): GameConclusion | un
  * all possible promotion outcomes of up to 2 promotable pawns.
  * Returns false if there are 3+ promotable pawns (skip insuffmat check entirely).
  */
-function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] | false {
+function buildBoardScenarios(gameRules: GameRules, boardsim: InsuffmatBoard): Scenario[] | false {
 	// Collect all promotable pawns (across all players) into a flat list
 	const promotablePawns: Array<{ coords: Coords; player: Player; pawnType: number }> = [];
 	for (const idx of boardsim.pieces.coords.values()) {

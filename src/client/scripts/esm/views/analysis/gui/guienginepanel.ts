@@ -76,7 +76,10 @@ function init(): void {
 		workerUrl: window.analysisPageData.workerUrl,
 	});
 	enginelegalmovesdebug.init({
-		canRequest: () => !ceval.isBlocked(),
+		canRequest: () => {
+			const gamefile = gameslot.getGamefile();
+			return gamefile !== undefined && ceval.computeBlockReason(gamefile) === undefined;
+		},
 		requestMoves: ({ id, positionIcn }) => ceval.requestLegalMoves(id, positionIcn),
 		release: () => ceval.terminateLegalWorker(),
 	});
@@ -255,20 +258,19 @@ function clearPanelReadout(
 
 function onEngineStatus(status: CevalStatus): void {
 	applyThreadsCap(); // Re-evaluate: the engine's threading capability arrives with its status.
-	if (status === 'loading') {
+	if (status.kind === 'loading') {
 		element_Stats.textContent = 'Loading engine…';
 		updateProgress(ceval.getLatestUpdate());
-	} else if (status === 'failed') {
+	} else if (status.kind === 'failed') {
 		element_Toggle.checked = false;
 		setGaugeVisible(false);
 		element_Stats.textContent = 'Engine failed to load';
 		updateProgress(undefined);
 		toast.show('The engine failed to load.', { error: true });
-	} else if (status === 'blocked') {
-		enginelegalmovesdebug.disable();
+	} else if (status.kind === 'blocked') {
 		setGaugeVisible(false);
-		clearPanelReadout(ceval.getBlockReason() ?? 'Out of bounds');
-	} else if (status === 'crashed') {
+		clearPanelReadout(t.shared.position_errors.engine[status.reason].label);
+	} else if (status.kind === 'crashed') {
 		clearPanelReadout('Analysis crashed', { gauge: 0 });
 		if (!crashToastShown) {
 			toast.show('The engine crashed analyzing this position. Please report this bug!', { error: true }); // prettier-ignore

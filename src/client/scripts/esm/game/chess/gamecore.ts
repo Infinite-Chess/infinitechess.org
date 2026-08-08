@@ -144,16 +144,9 @@ function update(): void {
 
 	const mesh = gameslot.getMesh()!;
 
-	starfield.update(); // Update the star field animation, if needed.
-
 	controls.testInGameToggles(gamefile, mesh);
 
-	const timeWinner = clock.update(gamefile); // undefined if no clock has ran out
-	// If the clock has ran out, and we are in an engine game, conclude the game.
-	if (timeWinner !== undefined && gamesession.getGameType() === 'engine') {
-		gamefile.gameConclusion = { victor: timeWinner, condition: 'time' };
-		gameslot.concludeGame();
-	}
+	clock.update(gamefile);
 	guiclock.update(gamefile);
 
 	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
@@ -166,6 +159,7 @@ function update(): void {
 	// AFTER transition.update() since that updates the board position
 	boardgeometry.recalcVariables();
 
+	starfield.update();
 	// Update the effect zone manager (after board variables are recalculated).
 	effectZoneManager!.update(getFurthestTileVisible());
 

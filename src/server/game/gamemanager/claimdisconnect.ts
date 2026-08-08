@@ -29,7 +29,7 @@ function mayClaimAgainstOpponent(servergame: ServerGame, ourColor: Player): bool
 	if (!moveutil.isGameResignable(servergame)) return false; // Nothing to claim before resignable.
 
 	const opponentColor = typeutil.invertPlayer(ourColor);
-	const claimTime = servergame.match.playerData[opponentColor]!.disconnect.timeOpponentMayClaim;
+	const claimTime = servergame.match.playerData[opponentColor]?.disconnect.timeOpponentMayClaim;
 	if (claimTime === undefined) return false; // Opponent isn't in an open-able claim window.
 	return Date.now() >= claimTime; // The window has opened.
 }

@@ -10,11 +10,12 @@
 /** A single engine entry object in the engine dictionary. */
 export interface Engine {
 	/**
-	 * World border distance for this engine.
+	 * World border distance for this engine, measured out from the piece
+	 * bounding box so the border sits evenly on all sides — fair to both players.
 	 * Engine games have a world border enabled so as to keep the position within safe floating point range.
-	 * If the variant's world border is smaller, that will be used instead.
+	 * If the variant's own distance is smaller, that is used instead.
 	 */
-	worldBorder: bigint;
+	worldBorderDist: bigint;
 	/**
 	 * The number of milliseconds the engine thinks when Time Control is unlimited.
 	 * May vary from engine to engine because of different engine speeds and requirements.
@@ -24,10 +25,43 @@ export interface Engine {
 	displayName: string;
 	/** The maximum strength level supported by this engine. */
 	maxStrengthLevel: number;
+	/** Whether the worker loads separately served wasm glue at runtime. */
+	hasGlue: boolean;
+	/**
+	 * Whether the engine is sent the game's move history alongside the position.
+	 * Engines that detect repetition or the fifty-move rule need it; those that only
+	 * look at the pieces in front of them are sent the current position on its own.
+	 */
+	needsMoveHistory: boolean;
 }
 
 /** Union of all valid engine names, derived from the keys of engineDictionary. */
 export type ValidEngine = keyof typeof engineDictionary;
+
+// Engine Config -----------------------------------------------------------------
+
+/** What every engine's worker is configured with when the page asks it for a move. */
+export interface BaseEngineConfig {
+	/** Hard time limit for the engine to think in milliseconds. */
+	engineTimeLimitPerMoveMillis: number;
+}
+
+/** Config for `engineCheckmatePractice`. */
+export interface CheckmatePracticeEngineConfig extends BaseEngineConfig {
+	/** Which practice checkmate is being played — the engine's play is tuned per problem. */
+	checkmateSelectedID: string;
+}
+
+/** Config for `apeiron`. */
+export interface ApeironEngineConfig extends BaseEngineConfig {
+	/** Engine strength preset, up to the entry's `maxStrengthLevel`. */
+	strengthLevel: number;
+}
+
+/** An engine paired with the config its own worker expects. */
+export type EngineAndConfig =
+	| { name: 'engineCheckmatePractice'; config: CheckmatePracticeEngineConfig }
+	| { name: 'apeiron'; config: ApeironEngineConfig };
 
 // Constants --------------------------------------------------------------------
 
@@ -40,24 +74,28 @@ export const I64_MAX = 2n ** 63n - 1n;
  */
 export const engineDictionary = {
 	engineCheckmatePractice: {
-		// worldBorder: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
-		worldBorder: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
+		// worldBorderDist: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
+		worldBorderDist: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
 		defaultTimeLimitPerMoveMillis: 500,
 		displayName: 'Practice Bot',
 		maxStrengthLevel: 1,
+		hasGlue: false,
+		needsMoveHistory: false,
 	},
 	apeiron: {
-		worldBorder: I64_MAX - 2000n,
+		worldBorderDist: I64_MAX - 2000n,
 		defaultTimeLimitPerMoveMillis: 4000,
 		displayName: 'Apeiron',
-		maxStrengthLevel: 3,
+		maxStrengthLevel: 8,
+		hasGlue: true,
+		needsMoveHistory: true,
 	},
 } satisfies { [key: string]: Engine };
 
 // Functions --------------------------------------------------------------------
 
 /**
- * Returns a formatted engine name string, optionally including its strength level.
+ * Returns a formatted engine name string (e.g. "Apeiron (Level 3)").
  * If the provided strength level is the maximum for the engine, it is omitted.
  */
 export function getFormattedEngineName(engineName: ValidEngine, strengthLevel?: number): string {

@@ -236,13 +236,42 @@ export interface ScriptTranslations {
 			gargoyles_not_allowed: string;
 			invalid_player_id: string;
 			player_missing_pieces: string;
-			player_missing_royal: string;
 			consecutive_turns_with_checkmate: string;
 			too_many_royals_for_checkmate: string;
 			king_capture_on_turn_1: string;
 			moves_invalid: string;
 			no_4d_movement: string;
 			game_over: string;
+			engine: {
+				unsupported_variant: {
+					label: string;
+					message: string;
+				};
+				unsupported_win_rule: {
+					label: string;
+					message: string;
+				};
+				too_many_promotions: {
+					label: string;
+					message: string;
+				};
+				too_many_pieces: {
+					label: string;
+					message: string;
+				};
+				unsupported_piece: {
+					label: string;
+					message: string;
+				};
+				border_too_large: {
+					label: string;
+					message: string;
+				};
+				out_of_bounds: {
+					label: string;
+					message: string;
+				};
+			};
 		};
 		game_result: {
 			color_wins_by: string;

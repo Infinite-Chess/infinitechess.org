@@ -12,6 +12,7 @@ import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
+import type { ValidEngine } from '../../../shared/chess/engine.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Game, LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
@@ -42,8 +43,10 @@ import boardinit from '../../../shared/chess/logic/boardinit.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
+import { getFormattedEngineName } from '../../../shared/chess/engine.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
@@ -55,6 +58,7 @@ import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
 import { cancelDisconnectTimer } from './disconnect.js';
+import { consumeNavigateNotice } from './activeplayers.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { buildServerUsernameContainer } from '../seeksmanager/seekutility.js';
@@ -132,6 +136,13 @@ interface PlayerData {
 	disconnect: PlayerDisconnect;
 }
 
+/** Identifies the engine a human is playing against. */
+interface EngineInfo {
+	engine: ValidEngine;
+	version: string;
+	strengthLevel: number;
+}
+
 /** The info for the server hosting the game */
 interface MatchInfo {
 	/** The match's unique ID. This is also the same ID the game will have when logged to the database. */
@@ -153,6 +164,8 @@ interface MatchInfo {
 	clock: TimeControl;
 	/** The data held for each player */
 	playerData: PlayerGroup<PlayerData>;
+	/** Present only for games against an engine. Its moves arrive over the human's socket. */
+	engineParticipant?: EngineInfo & { color: Player };
 
 	/** The ID of the timeout which will auto-lose the player
 	 * whos turn it currently is when they run out of time. */
@@ -241,6 +254,7 @@ interface GameSetup {
 	variant: AuthSeekVariant;
 	time: TimeControl;
 	rated: boolean;
+	engineParticipant?: MatchInfo['engineParticipant'];
 }
 
 // Functions --------------------------------------------------------------------------------------
@@ -272,6 +286,7 @@ function initMatch(
 		id,
 		variant: setup.variant.code,
 		playerData,
+		engineParticipant: setup.engineParticipant,
 		timeCreated: Date.now(),
 		rated: setup.rated,
 		clock: setup.time,
@@ -287,24 +302,31 @@ function initMatch(
  * Pass an existing moves list to replay them (e.g. on server restore); omit for a fresh game.
  */
 function initServerGame(
-	gameWithRules: Game & { gameRules: GameRules },
+	game: Game,
+	gameRules: GameRules,
 	match: MatchInfo,
 	validateMoves: boolean,
 	variant: LoadedVariant,
 	moves: MoveRecord[] = [],
 ): ServerGame {
 	if (validateMoves) {
-		const boardsim = boardinit.initBoard(gameWithRules.gameRules, variant);
+		// Engine games are played inside the engine's world border. The client builds its gamefile
+		// with the same one, so the two must agree on what's in bounds — otherwise a checkmate
+		// against the border the client sees would never be concluded here.
+		const border = match.engineParticipant !== undefined ? apeiron_card.PLAY_BORDER : undefined;
+		// Spread last, so the servergame's rules are the board's own copy — never a second one.
+		const boardsim = boardinit.initBoard(gameRules, variant, {
+			worldBorderDist: border?.worldBorderDist,
+			worldBorderCap: border?.worldBorderCap,
+		});
 		if (moves.length > 0) movepiece.makeAllMovesInGame(boardsim, moves);
-		return { ...gameWithRules, match, ...boardsim, spectators: new Set(), validateMoves: true };
+		return { ...game, match, ...boardsim, spectators: new Set(), validateMoves: true };
 	} else {
 		return {
-			...gameWithRules,
+			...game,
+			gameRules,
 			match,
-			whosTurn:
-				gameWithRules.gameRules.turnOrder[
-					moves.length % gameWithRules.gameRules.turnOrder.length
-				]!,
+			whosTurn: gameRules.turnOrder[moves.length % gameRules.turnOrder.length]!,
 			moves,
 			spectators: new Set(),
 			validateMoves: false,
@@ -354,20 +376,30 @@ function assignWhiteBlackPlayersFromSeek(
 /**
  * Links their socket to this game and runs reconnect
  * side-effects (cancels disconnect/claim timer).
+ * @returns `evicted` — whether a socket already attached as that player was kicked to make room.
  */
-function subscribeClientToGame(servergame: ServerGame, ws: CustomWebSocket, ourRole: Player): void {
+function subscribeClientToGame(
+	servergame: ServerGame,
+	ws: CustomWebSocket,
+	ourRole: Player,
+): { evicted: boolean } {
 	const match = servergame.match;
 	// 1. Attach their socket to the game for receiving updates
 	const playerData = match.playerData[ourRole];
-	if (playerData === undefined)
-		return console.error(
+	if (playerData === undefined) {
+		console.error(
 			`Cannot subscribe client to game when game does not expect color ${ourRole} to be present`,
 		);
-	if (playerData.socket) {
-		sendSocketMessage(playerData.socket, 'game', 'leavegame');
-		detatchSocketFromGame(match, playerData.socket);
+		return { evicted: false };
+	}
+	const previousSocket = playerData.socket;
+	if (previousSocket) {
+		sendSocketMessage(previousSocket, 'game', 'leavegame');
+		detatchSocketFromGame(match, previousSocket);
 	}
 	playerData.socket = ws;
+
+	consumeNavigateNotice(playerData.identifier); // They've arrived; any pending lobby notice is moot.
 
 	// 2. Modify their socket metadata to add the 'game', subscription,
 	// and indicate what game the belong in and what color they are!
@@ -377,6 +409,8 @@ function subscribeClientToGame(servergame: ServerGame, ws: CustomWebSocket, ourR
 	};
 
 	runReconnectSideEffects(servergame, ourRole);
+
+	return { evicted: previousSocket !== undefined };
 }
 
 /** Attaches a spectator's socket to a game, marking its subscription metadata. */
@@ -470,6 +504,13 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 		const color = Number(p) as Player;
 		players[color] = buildServerUsernameContainer(data.identifier, ratings[color]);
 	}
+	if (match.engineParticipant) {
+		const { color, engine, strengthLevel } = match.engineParticipant;
+		players[color] = {
+			type: 'engine',
+			username: getFormattedEngineName(engine, strengthLevel),
+		};
+	}
 
 	const state: StaticGameState = {
 		...buildStaticGameSetup(servergame),
@@ -519,30 +560,38 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 		Object.assign(ratings, getRatingDataForGamePlayers(match.playerData, match.variant));
 	}
 
-	const white = match.playerData[p.WHITE]!.identifier;
-	const black = match.playerData[p.BLACK]!.identifier;
 	const scriptT = getScriptTranslations('shared', tconfig.DEFAULT_LANGUAGE); // Game metadata should only ever be in English
 	const variantEnglishName = variantregistry.getVariantName(match.variant, scriptT);
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(match.timeCreated);
+	const getPlayerName = (color: Player): string => {
+		if (match.engineParticipant?.color === color)
+			return getFormattedEngineName(
+				match.engineParticipant.engine,
+				match.engineParticipant.strengthLevel,
+			);
+		const identity = match.playerData[color]!.identifier;
+		return identity.signedIn ? identity.username : metadatautil.GUEST_NAME_ICN_METADATA;
+	};
 
 	const metadata: MetaData = {
-		Event: `${match.rated ? 'Rated' : 'Casual'} ${variantEnglishName} infinite chess game`,
+		Event: `${match.rated ? 'Rated' : 'Casual'} ${variantEnglishName} infinite chess game${match.engineParticipant ? ' against an engine' : ''}`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
+		White: getPlayerName(p.WHITE),
+		Black: getPlayerName(p.BLACK),
 		Variant: variantEnglishName,
-		White: white.signedIn ? white.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
-		Black: black.signedIn ? black.username : metadatautil.GUEST_NAME_ICN_METADATA,
 		TimeControl: match.clock,
 		UTCDate,
 		UTCTime,
 	};
-
 	// ID + display elo, present only for signed-in players.
-	if (white.signedIn) {
+	const white = match.playerData[p.WHITE]?.identifier;
+	const black = match.playerData[p.BLACK]?.identifier;
+	if (white?.signedIn) {
 		metadata.WhiteID = uuid.base10ToBase62(white.user_id);
 		if (ratings[p.WHITE]) metadata.WhiteElo = metadatautil.getFormattedElo(ratings[p.WHITE]!);
 	}
-	if (black.signedIn) {
+	if (black?.signedIn) {
 		metadata.BlackID = uuid.base10ToBase62(black.user_id);
 		if (ratings[p.BLACK]) metadata.BlackElo = metadatautil.getFormattedElo(ratings[p.BLACK]!);
 	}
@@ -641,7 +690,7 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
 	const opponentRole = typeutil.invertPlayer(role);
 	const now = Date.now();
 	const match = servergame.match;
-	const opponentData = match.playerData[opponentRole]!;
+	const opponentData = match.playerData[opponentRole];
 
 	const participantState: ParticipantState = {
 		drawOffer: {
@@ -653,7 +702,7 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
 	// Include other relevant stuff if defined...
 
 	// If their opponent has disconnected and the claim window is set, send them that info too.
-	if (opponentData.disconnect.timeOpponentMayClaim !== undefined) {
+	if (opponentData?.disconnect.timeOpponentMayClaim !== undefined) {
 		participantState.disconnect = {
 			millisUntilClaimable: opponentData.disconnect.timeOpponentMayClaim - now,
 			voluntary: opponentData.disconnect.voluntary,
@@ -674,6 +723,8 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
  */
 function getRematchOfferInfo(servergame: ServerGame, role: Player): RematchOfferInfo | undefined {
 	if (!isGameOver(servergame)) return undefined;
+	// An engine is always present, and never offers first — it accepts ours the instant we send it.
+	if (isEngineGame(servergame)) return { offered: false, present: true };
 	const opponentRole = typeutil.invertPlayer(role);
 	const opponentData = servergame.match.playerData[opponentRole]!;
 	return {
@@ -715,7 +766,7 @@ function sendMessageToColor(
 	action: string,
 	value?: any,
 ): void {
-	const ws = match.playerData[role]!.socket;
+	const ws = match.playerData[role]?.socket;
 	if (!ws) return; // They are not connected, can't send message
 	if (sub === 'general') {
 		if (action === 'notify') return sendNotify(ws, value); // The value needs translating
@@ -741,10 +792,15 @@ function printGame(servergame: ServerGame): void {
  */
 function getSimplifiedGameString(servergame: ServerGame): string {
 	// Only transfer interesting information.
-	const players: PlayerGroup<AuthMemberInfo> = {};
+	const players: PlayerGroup<AuthMemberInfo | EngineInfo> = {};
 	for (const [c, data] of Object.entries(servergame.match.playerData)) {
 		players[Number(c) as Player] = data.identifier;
 	}
+	if (servergame.match.engineParticipant) {
+		const { color, ...engineInfo } = servergame.match.engineParticipant;
+		players[color] = engineInfo;
+	}
+
 	let moves: undefined | string[];
 	if (servergame.moves.length > 0) moves = servergame.moves.map((m) => m.token);
 	const simplifiedGame = {
@@ -771,6 +827,10 @@ function getSimplifiedGameString(servergame: ServerGame): string {
  */
 function isGameOver(basegame: Game): boolean {
 	return basegame.gameConclusion !== undefined;
+}
+
+function isEngineGame(servergame: ServerGame): boolean {
+	return servergame.match.engineParticipant !== undefined;
 }
 
 /**
@@ -810,6 +870,7 @@ function getGameClockValues(servergame: ServerGame & { untimed: false }): ClockV
 function updateClockValues(servergame: ServerGame & { untimed: false }): undefined {
 	const now = Date.now();
 	if (!moveutil.isGameResignable(servergame) || isGameOver(servergame)) return;
+	if (servergame.clocks.colorTicking === undefined) return;
 	if (servergame.clocks.timeAtTurnStart === undefined)
 		throw new Error('cannot update clock values when timeAtTurnStart is not defined!');
 
@@ -827,12 +888,15 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): undefin
 	return;
 }
 
-/** Broadcasts a game-route message to every connected participant of the game. */
-function broadcastToParticipants(servergame: ServerGame, action: string, value: any): void {
-	for (const data of Object.values(servergame.match.playerData)) {
-		if (data.socket === undefined) continue; // Not connected, can't send message
-		sendSocketMessage(data.socket, 'game', action, value);
-	}
+/** Broadcasts a message to every connected participant of the game. */
+function broadcastToParticipants(
+	servergame: ServerGame,
+	sub: string,
+	action: string,
+	value?: any,
+): void {
+	for (const color of Object.keys(servergame.match.playerData))
+		sendMessageToColor(servergame.match, Number(color) as Player, sub, action, value);
 }
 
 /** Broadcasts a role-agnostic game-route message to every spectator of the game. */
@@ -844,7 +908,7 @@ function broadcastToSpectators(servergame: ServerGame, action: string, value: an
 
 /** Broadcasts a role-agnostic game-route message to every connected client of the game. */
 function broadcastToEveryone(servergame: ServerGame, action: string, value: any): void {
-	broadcastToParticipants(servergame, action, value);
+	broadcastToParticipants(servergame, 'game', action, value);
 	broadcastToSpectators(servergame, action, value);
 }
 
@@ -912,6 +976,7 @@ export default {
 	printGame,
 	getSimplifiedGameString,
 	isGameOver,
+	isEngineGame,
 	isClaimWindowSetForColor,
 	isColorDisconnected,
 	getGameClockValues,

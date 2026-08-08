@@ -10,7 +10,6 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
-import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
@@ -34,7 +33,7 @@ interface DebugMoveRequest {
 
 /** Callbacks provided by the engine consumer to wire the overlay into a specific engine worker. */
 interface EngineLegalMovesDebugOptions {
-	/** Returns true when the position is within the engine's safe world border. */
+	/** Returns true when the engine can be asked for moves for the *currently viewed* position. */
 	canRequest: () => boolean;
 	/** Sends `request` to the engine worker. */
 	requestMoves: (request: DebugMoveRequest) => void;
@@ -62,7 +61,7 @@ const requestKeyById = new Map<number, string>();
 /** Ordered queue of in-flight request ids, used for FIFO response matching. */
 const pendingRequestIds: number[] = [];
 
-/** Wires up the overlay's engine hooks and (once) its GameBus listeners. */
+/** Wires up the overlay's engine hooks and (once) its GameBus listeners. Call only when an engine exists. */
 function init(nextOptions: EngineLegalMovesDebugOptions): void {
 	options = nextOptions;
 	if (initialized) return;
@@ -74,14 +73,17 @@ function init(nextOptions: EngineLegalMovesDebugOptions): void {
 	GameBus.addEventListener('game-unloaded', () => clear());
 }
 
+/** Uninstalls the hooks when the engine goes away, leaving the overlay off and its toggle inert. */
+function detach(): void {
+	disable();
+	options = undefined;
+}
+
 /** Toggles the overlay on/off, requesting moves when enabling and dropping pending requests when disabling. */
 function toggle(): void {
+	if (!options) return; // No engine here (e.g. spectating) — the overlay isn't installed.
 	if (enabled) {
 		disable();
-		return;
-	}
-	if (!options?.canRequest()) {
-		toast.show('Engine legal moves debug disabled: pieces outside world border', { error: true }); // prettier-ignore
 		return;
 	}
 	enabled = true;
@@ -89,10 +91,7 @@ function toggle(): void {
 	requestMovesForCurrentPosition();
 }
 
-/**
- * Forces the overlay off, e.g. when the position goes outside
- * the engine's safe world border. No-op if already off.
- */
+/** Forces the overlay off, e.g. when the engine goes away. No-op if already off. */
 function disable(): void {
 	if (!enabled) return;
 	enabled = false;
@@ -150,6 +149,9 @@ function removePendingRequest(requestId: number): void {
 /** Returns the compact ICN of the viewed position, used as the cache/request key. */
 function getPositionKey(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile, true);
+	// Metadata is blanked so a change to it (e.g. the Result on game end) doesn't miss the cache.
+	// Everything else stays: the engine reads whos turn it is, enpassant, and the game rules from this ICN.
+	longformIn.metadata = {};
 	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
 }
 
@@ -198,7 +200,7 @@ function clear(): void {
 
 export default {
 	init,
-	disable,
+	detach,
 	receiveMoves,
 	receiveMovesForOldestRequest,
 	requestMovesForCurrentPosition,

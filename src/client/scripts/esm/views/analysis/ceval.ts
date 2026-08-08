@@ -8,6 +8,7 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { EngineSupportCode } from '../../../../../shared/chess/engines/apeiron_card.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
@@ -22,6 +23,7 @@ import { GameBus } from '../../game/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import analysisenginebounds from './analysisenginebounds.js';
+import { maxEngineThreads, THREAD_CAP } from '../../game/chess/engines/enginewasm.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -69,8 +71,14 @@ interface CevalUpdate {
 	terminal: boolean;
 }
 
-/** Engine lifecycle status, for the UI status row. `crashed` = this position reliably panics the engine. */
-type CevalStatus = 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'blocked' | 'crashed';
+/**
+ * Engine lifecycle status, for the UI status row.
+ * `crashed` = this position reliably panics them engine;
+ * `blocked` carries why the engine won't touch the position.
+ */
+type CevalStatus =
+	| { kind: 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'crashed' }
+	| { kind: 'blocked'; reason: EngineSupportCode };
 
 interface CevalLegalMovesUpdate {
 	requestId: number;
@@ -95,34 +103,14 @@ const MAX_MULTI_PV = 5;
 const THROTTLE_MS = 60;
 /** Crashes on the same position before we give up on it (2 = retry once, then flag it un-analyzable). */
 const CRASHES_BEFORE_GIVING_UP = 2;
-/** Hard cap on Lazy SMP threads: the engine's analysis path uses at most 4. */
-const THREAD_CAP = 4;
-
-/**
- * Whether this browser can run WebAssembly threads: needs cross-origin isolation (COOP+COEP)
- * for a shared-memory SharedArrayBuffer. Same feature detection Stockfish/lichess use.
- */
-const BROWSER_SUPPORTS_THREADS: boolean = (() => {
-	try {
-		// crossOriginIsolated gates SharedArrayBuffer in every modern browser.
-		if (!globalThis.crossOriginIsolated) return false;
-		if (typeof SharedArrayBuffer !== 'function' || typeof Atomics !== 'object') return false;
-		if (typeof WebAssembly !== 'object') return false;
-		const mem = new WebAssembly.Memory({ shared: true, initial: 1, maximum: 2 });
-		return mem.buffer instanceof SharedArrayBuffer;
-	} catch {
-		return false;
-	}
-})();
-
 /** Whether the served engine build supports Lazy SMP (a single-threaded build exports no
  * `initThreadPool`). The worker reports it on load; assume true until then. */
 let engineSupportsThreads = true;
 
 /** Most threads the user can pick: {@link THREAD_CAP} when threading is usable, else 1 (locked). */
 function maxThreads(): number {
-	if (!BROWSER_SUPPORTS_THREADS || !engineSupportsThreads) return 1;
-	return math.clamp(navigator.hardwareConcurrency || 2, 1, THREAD_CAP);
+	if (!engineSupportsThreads) return 1;
+	return maxEngineThreads(THREAD_CAP);
 }
 
 const DEFAULT_THREADS = maxThreads();
@@ -176,9 +164,9 @@ let currentTargetDepth = DEFAULT_SETTINGS.depth;
 let allowDepthRegressionForCurrentSearch = false;
 /**
  * Why the engine won't analyze the viewed position (piece out of Apeiron's safe coordinate range,
- * an unsupported variant/position, etc.) — a user-facing message, or undefined when analyzable.
+ * an unsupported variant/position, etc.), or undefined when analyzable.
  */
-let blockReason: string | undefined;
+let blockReason: EngineSupportCode | undefined;
 
 let latestUpdate: CevalUpdate | undefined;
 
@@ -410,7 +398,7 @@ function handleWorkerFailure(): void {
 	terminateLegalWorker();
 	enabled = false;
 	queuedLegalMovesRequests.length = 0;
-	notifyStatus('failed');
+	notifyStatus({ kind: 'failed' });
 }
 
 function handleWorkerMessage(msg: AnalysisResponse): void {
@@ -506,16 +494,9 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
-	// The engine can't handle some positions at all (4D/5D variants, too many pieces, unsupported
-	// pieces/win conditions) — block outright. Bounds are separate: an out-of-range VIEWED position
-	// blocks too, but out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
-	const result = apeiron_card.isAnalysisSupported(gamefile);
-	if (!result.supported) {
-		blockAnalysis(result.reason);
-		return;
-	}
-	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) {
-		blockAnalysis('Out of bounds');
+	const reason = computeBlockReason(gamefile);
+	if (reason !== undefined) {
+		blockAnalysis(reason);
 		return;
 	}
 
@@ -611,8 +592,21 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	notifyStatus();
 }
 
-/** Stops the engine and marks the viewed position un-analyzable, with a user-facing `reason`. */
-function blockAnalysis(reason: string): void {
+/**
+ * Why the engine can't analyze `gamefile`'s viewed position, or undefined when it can.
+ * The engine can't handle some positions at all (4D/5D variants, too many pieces, unsupported
+ * pieces/win conditions). Bounds are separate: an out-of-range VIEWED position blocks too, but
+ * out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
+ */
+function computeBlockReason(gamefile: GameFile): EngineSupportCode | undefined {
+	const result = apeiron_card.isAnalysisSupported(gamefile);
+	if (!result.supported) return result.reason;
+	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) return 'out_of_bounds';
+	return undefined;
+}
+
+/** Stops the engine and marks the viewed position un-analyzable, for the given `reason`. */
+function blockAnalysis(reason: EngineSupportCode): void {
 	interruptSearch();
 	send({ cmd: 'stop' });
 	blockReason = reason;
@@ -798,7 +792,6 @@ function seedPositionCache(seed: {
 
 /** Requests the legal moves for {@link icn} from the idle helper worker (never blocked by the search). */
 function requestLegalMoves(requestId: number, icn: string): void {
-	if (blockReason !== undefined) return;
 	ensureLegalWorker();
 	if (!legal || !legal.ready) {
 		queuedLegalMovesRequests.push({ requestId, icn });
@@ -852,11 +845,6 @@ function isEnabled(): boolean {
 /** Whether the engine is refusing to analyze the viewed position for any reason. */
 function isBlocked(): boolean {
 	return blockReason !== undefined;
-}
-
-/** The user-facing reason the engine won't analyze the viewed position, or undefined when it will. */
-function getBlockReason(): string | undefined {
-	return blockReason;
 }
 
 function setEnabled(value: boolean): void {
@@ -940,12 +928,12 @@ function getLatestUpdate(): CevalUpdate | undefined {
 }
 
 function getStatus(): CevalStatus {
-	if (!enabled) return 'off';
-	if (crash.onDeadPosition) return 'crashed';
-	if (blockReason !== undefined) return 'blocked';
-	if (!search?.ready) return 'loading';
-	if (latestUpdate?.done) return 'idle';
-	return 'computing';
+	if (!enabled) return { kind: 'off' };
+	if (crash.onDeadPosition) return { kind: 'crashed' };
+	if (blockReason !== undefined) return { kind: 'blocked', reason: blockReason };
+	if (!search?.ready) return { kind: 'loading' };
+	if (latestUpdate?.done) return { kind: 'idle' };
+	return { kind: 'computing' };
 }
 
 /** Subscribes to throttled engine updates. `undefined` means "eval cleared". */
@@ -973,7 +961,7 @@ export default {
 	init,
 	isEnabled,
 	isBlocked,
-	getBlockReason,
+	computeBlockReason,
 	setEnabled,
 	getSettings,
 	updateSettings,

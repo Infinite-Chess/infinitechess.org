@@ -4,7 +4,6 @@
  * This script manages the game setup invite/seek creation modal.
  */
 
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { ModalMode } from '../../components/gameSetupModalHandoff.js';
 import type { GameMode, TimeControl } from '../../../../../shared/types.js';
 
@@ -111,8 +110,7 @@ function initModal(): void {
 		if (currentMode === 'online') handleOnlineSeek();
 		else if (currentMode === 'friend')
 			toast.show('Friend challenge flow not implemented yet', { error: true });
-		else if (currentMode === 'computer')
-			toast.show('Computer game flow not implemented yet', { error: true });
+		else if (currentMode === 'computer') handleComputerGame();
 		else console.error('Invalid modal mode:', currentMode);
 	});
 
@@ -148,7 +146,7 @@ export function syncRatedButton(): void {
 }
 
 /** Returns the color the player has selected, or null for random. */
-function getSelectedColor(): Player | null {
+function getSelectedColor(): typeof players.WHITE | typeof players.BLACK | null {
 	const sideBtn = document.querySelector<HTMLElement>('[data-side].active')!;
 	const sideVal = sideBtn.getAttribute('data-side')!;
 	if (sideVal === 'random') return null;
@@ -174,6 +172,21 @@ function handleOnlineSeek(): void {
 	close();
 }
 
+/** Reads the computer game form state and asks the server to create the engine game. */
+function handleComputerGame(): void {
+	const variant = variantSelector.getSeekVariant();
+	if (variant === null) return; // Invalid selection (e.g. unparsable icn, illegal position, or one the engine can't play)
+
+	const time: TimeControl = timeControls.getTimeControl();
+	const color = getSelectedColor();
+
+	const levelBtn = document.querySelector<HTMLElement>('[data-level].active')!;
+	const strengthLevel = Number(levelBtn.getAttribute('data-level')!);
+
+	lobby.createEngineGame({ variant, time, color, strengthLevel });
+	close();
+}
+
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
 function openModal(mode: ModalMode): void {
 	lobby.exitIdle();
@@ -183,6 +196,8 @@ function openModal(mode: ModalMode): void {
 
 	element_rowGameMode.classList.toggle('hidden', mode === 'computer');
 	element_rowStrength.classList.toggle('hidden', mode !== 'computer');
+	// Computer games allow supported presets and validated custom positions.
+	variantSelector.setEngineOnly(mode === 'computer');
 
 	element_modalOverlay.classList.remove('hidden');
 

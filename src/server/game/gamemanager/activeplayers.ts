@@ -1,7 +1,8 @@
 // src/server/game/gamemanager/activeplayers.ts
 
 /**
- * This script keeps track of the ID's of games members and browsers are currently in.
+ * This script keeps track of the ID's of games members and browsers are currently in,
+ * and whether they've yet been told to navigate to them.
  */
 
 import type { AuthMemberInfo } from '../../types.js';
@@ -9,21 +10,34 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 //--------------------------------------------------------------------------------------------------------
 
+/** What we track about a single user currently in an active game. */
+interface ActiveGameEntry {
+	/** The id of the game they are in. */
+	gameID: number;
+	/**
+	 * Whether they still have to be told to navigate to the game page. Armed at game creation
+	 * for a player with no socket to push to (e.g. their seek was accepted while their connection
+	 * was interrupted), and consumed by whichever comes first: their next lobby subscribe, or
+	 * their arrival at the game page.
+	 */
+	awaitingNavigateNotice: boolean;
+}
+
 /**
- * Contains what members are currently in a game: `{ member: gameID }`
+ * Contains what members are currently in a game: `{ member: entry }`
  * Users that are present in this list are not allowed to join another game until they're
  * deleted from here. As soon as a game is over, we can {@link removeUserFromActiveGame()},
  * even though the game may not be finalized or evicted yet.
  */
-const membersInActiveGames: Record<number, number> = {};
+const membersInActiveGames: Record<number, ActiveGameEntry> = {};
 
 /**
- * Contains what browsers are currently in a game: `{ browser: gameID }`
+ * Contains what browsers are currently in a game: `{ browser: entry }`
  * Users that are present in this list are not allowed to join another game until they're
  * deleted from here. As soon as a game is over, we can {@link removeUserFromActiveGame()}
  * even though the game may not be finalized or evicted yet.
  */
-const browsersInActiveGames: Record<string, number> = {};
+const browsersInActiveGames: Record<string, ActiveGameEntry> = {};
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -31,10 +45,16 @@ const browsersInActiveGames: Record<string, number> = {};
  * Adds the user to the list of users currently in an active game.
  * Players in this are not allowed to join a second game.
  * @param id - The id of the game they are in.
+ * @param awaitingNavigateNotice - Whether they still have to be told to navigate to the game.
  */
-function addUserToActiveGames(user: AuthMemberInfo, id: number): void {
-	if (user.signedIn) membersInActiveGames[user.user_id] = id;
-	else browsersInActiveGames[user.browser_id] = id;
+function addUserToActiveGames(
+	user: AuthMemberInfo,
+	id: number,
+	awaitingNavigateNotice: boolean,
+): void {
+	const entry: ActiveGameEntry = { gameID: id, awaitingNavigateNotice };
+	if (user.signedIn) membersInActiveGames[user.user_id] = entry;
+	else browsersInActiveGames[user.browser_id] = entry;
 }
 
 /**
@@ -49,14 +69,14 @@ function removeUserFromActiveGame(user: AuthMemberInfo, gameID: number): void {
 	// If they DON'T belong to that game, that means they speedily
 	// resigned and started a new game, so don't modify this!
 	if (user.signedIn) {
-		if (membersInActiveGames[user.user_id] === gameID)
+		if (membersInActiveGames[user.user_id]?.gameID === gameID)
 			delete membersInActiveGames[user.user_id];
 		else if (membersInActiveGames[user.user_id] !== undefined)
 			console.log(
 				'Not removing member from active games because they speedily joined a new game!',
 			);
 	} else {
-		if (browsersInActiveGames[user.browser_id] === gameID)
+		if (browsersInActiveGames[user.browser_id]?.gameID === gameID)
 			delete browsersInActiveGames[user.browser_id];
 		else if (browsersInActiveGames[user.browser_id] !== undefined)
 			console.log(
@@ -79,14 +99,30 @@ function isSocketInAnActiveGame(ws: CustomWebSocket): boolean {
 	} else return player.browser_id in browsersInActiveGames;
 }
 
+/** Gets the active-game entry of a player, if they belong to one. */
+function getEntry(player: AuthMemberInfo): ActiveGameEntry | undefined {
+	if (player.signedIn) return membersInActiveGames[player.user_id];
+	else return browsersInActiveGames[player.browser_id];
+}
+
 /**
  * Gets a game by player.
  * @param player - The player object containing all the memberinfo
  * @returns The game they are in, if they belong in one, otherwise undefined.
  */
 function getIDOfGamePlayerIsIn(player: AuthMemberInfo): number | undefined {
-	if (player.signedIn) return membersInActiveGames[player.user_id];
-	else return browsersInActiveGames[player.browser_id];
+	return getEntry(player)?.gameID;
+}
+
+/**
+ * Reads and clears whether the player still has to be told to navigate to their active game.
+ * Returns false if they're in no game, or already know about it.
+ */
+function consumeNavigateNotice(player: AuthMemberInfo): boolean {
+	const entry = getEntry(player);
+	if (entry === undefined || !entry.awaitingNavigateNotice) return false;
+	entry.awaitingNavigateNotice = false;
+	return true;
 }
 
 //--------------------------------------------------------------------------------------------------------
@@ -96,4 +132,5 @@ export {
 	removeUserFromActiveGame,
 	isSocketInAnActiveGame,
 	getIDOfGamePlayerIsIn,
+	consumeNavigateNotice,
 };

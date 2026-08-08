@@ -22,9 +22,10 @@ import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
-import { updatePlayerGame } from '../../database/playerGamesManager.js';
-import { updateGame, deleteGame } from '../../database/gamesManager.js';
+import { insertEngineGame } from '../../database/engineGamesManager.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
+import { insertPlayerGame, updatePlayerGame } from '../../database/playerGamesManager.js';
+import { insertGame, updateGame, deleteGame } from '../../database/gamesManager.js';
 import {
 	computeRatingDataChanges,
 	DEFAULT_LEADERBOARD_ELO,
@@ -174,10 +175,7 @@ function updateLeaderboardsInTransaction(
 	return ratingdata;
 }
 
-/**
- * [INTERNAL] Adds records to `games` and `player_games` tables. This function contains the "merged logic". Throws on error.
- * @returns The new game_id.
- */
+/** [INTERNAL] Adds the records to the `games`, `player_games` and `engine_games` tables. Throws on error. */
 function addGameRecordsInTransaction(
 	servergame: ServerGame,
 	victor: Player | null | undefined,
@@ -196,38 +194,23 @@ function addGameRecordsInTransaction(
 	const dateSqliteString = timeutil.timestampToSqlite(match.timeCreated);
 
 	// 1. Insert the main record into the 'games' table.
-	const gameQuery = `
-		INSERT INTO games (
-			game_id, date, base_time_seconds, increment_seconds, variant, rated,
-			leaderboard_id, private, result, termination, move_count,
-			time_duration_millis, icn
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-	const gameResult = db.run(gameQuery, [
-		match.id,
-		dateSqliteString,
+	insertGame({
+		game_id: match.id,
+		date: dateSqliteString,
 		base_time_seconds,
 		increment_seconds,
-		match.variant,
-		match.rated ? 1 : 0,
-		VariantLeaderboards[match.variant] ?? null,
-		0, // All matches are considered public for now, even "Challenge a friend" games.
-		metadata.Result!,
+		variant: match.variant,
+		rated: match.rated ? 1 : 0,
+		leaderboard_id: VariantLeaderboards[match.variant] ?? null,
+		private: 0, // All matches are considered public for now, even "Challenge a friend" games.
+		result: metadata.Result!,
 		termination,
-		servergame.moves.length,
-		match.timeEnded ? match.timeEnded - match.timeCreated : null,
+		move_count: servergame.moves.length,
+		time_duration_millis: match.timeEnded ? match.timeEnded - match.timeCreated : null,
 		icn, // Use the pre-generated ICN
-	]);
-	const game_id = gameResult.lastInsertRowid as number;
+	});
 
 	// 2. Loop through players and insert records into the 'player_games' table.
-	const playerGamesQuery = `
-		INSERT INTO player_games (
-			user_id, game_id, player_number, score,
-			clock_at_end_millis, elo_at_game, elo_change_from_game,
-			rating_deviation_at_game, rating_deviation_after_game
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
 	const ending_clocks = !servergame.untimed
 		? gameutility.getGameClockValues(servergame).clocks
 		: undefined;
@@ -238,18 +221,29 @@ function addGameRecordsInTransaction(
 			: undefined;
 		if (!user_id) continue;
 
-		// prettier-ignore
-		db.run(playerGamesQuery, [
+		insertPlayerGame({
 			user_id,
-			game_id,
-			player,
-			victor === undefined ? null : victor === player ? 1 : victor === null ? 0.5 : 0,
-			!servergame.untimed ? ending_clocks![player]! : null,
-			ratingData?.[player]?.elo_at_game ?? null,
-			ratingData?.[player]?.elo_change_from_game ?? null,
-			ratingData?.[player]?.rating_deviation_at_game ?? null,
-			ratingData?.[player]?.rating_deviation_after_game ?? null,
-		]);
+			game_id: match.id,
+			player_number: player,
+			score: victor === undefined ? null : victor === player ? 1 : victor === null ? 0.5 : 0,
+			clock_at_end_millis: !servergame.untimed ? ending_clocks![player]! : null,
+			elo_at_game: ratingData?.[player]?.elo_at_game ?? null,
+			elo_change_from_game: ratingData?.[player]?.elo_change_from_game ?? null,
+			rating_deviation_at_game: ratingData?.[player]?.rating_deviation_at_game ?? null,
+			rating_deviation_after_game: ratingData?.[player]?.rating_deviation_after_game ?? null,
+		});
+	}
+	if (match.engineParticipant) {
+		const engine = match.engineParticipant;
+		insertEngineGame({
+			game_id: match.id,
+			player_number: engine.color,
+			score: victor === undefined ? null : victor === engine.color ? 1 : victor === null ? 0.5 : 0, // prettier-ignore
+			clock_at_end_millis: ending_clocks?.[engine.color] ?? null,
+			engine: engine.engine,
+			engine_version: engine.version,
+			strength_level: engine.strengthLevel,
+		});
 	}
 }
 

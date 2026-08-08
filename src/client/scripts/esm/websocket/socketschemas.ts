@@ -64,7 +64,14 @@ const LobbySchema = z.discriminatedUnion('action', [
 		}),
 	}),
 	z.strictObject({ action: z.literal('viewercount'), value: ViewerCountSchema }),
-	z.strictObject({ action: z.literal('ingame'), value: GameIDSchema }),
+	z.strictObject({
+		action: z.literal('ingame'),
+		value: z.strictObject({
+			id: GameIDSchema,
+			/** Whether the server wants THIS tab taken into the game, instead of shown the rejoin banner. */
+			navigate: z.boolean(),
+		}),
+	}),
 	z.strictObject({ action: z.literal('outgame') }),
 ]);
 

@@ -129,15 +129,6 @@ export type TranslationKeys =
 	| 'play.editor.world_border'
 	| 'play.editor.start_local_game'
 	| 'play.editor.start_local_game_message'
-	| 'play.editor.start_engine_game'
-	| 'play.editor.play_as'
-	| 'play.editor.time_control'
-	| 'play.editor.engine_difficulty'
-	| 'play.editor.easy'
-	| 'play.editor.medium'
-	| 'play.editor.hard'
-	| 'play.editor.use_default_border'
-	| 'play.editor.start_engine_game_message'
 	| 'play.editor.yes'
 	| 'play.editor.no'
 	| 'play.guide.title'
@@ -436,7 +427,6 @@ export type TranslationKeys =
 	| 'play.javascript.editor.position_loaded'
 	| 'play.javascript.editor.cannot_start_local_empty'
 	| 'play.javascript.editor.cannot_start_engine_empty'
-	| 'play.javascript.editor.position_not_supported'
 	| 'play.javascript.editor.illegal_position_king_capture'
 	| 'play.javascript.editor.saved_in_browser'
 	| 'play.javascript.editor.position_corrupted'
@@ -629,15 +619,6 @@ export interface TranslationsObject {
 			world_border: string;
 			start_local_game: string;
 			start_local_game_message: string;
-			start_engine_game: string;
-			play_as: string;
-			time_control: string;
-			engine_difficulty: string;
-			easy: string;
-			medium: string;
-			hard: string;
-			use_default_border: string;
-			start_engine_game_message: string;
 			yes: string;
 			no: string;
 		};
@@ -987,7 +968,6 @@ export interface TranslationsObject {
 				position_loaded: string;
 				cannot_start_local_empty: string;
 				cannot_start_engine_empty: string;
-				position_not_supported: string;
 				illegal_position_king_capture: string;
 				saved_in_browser: string;
 				position_corrupted: string;

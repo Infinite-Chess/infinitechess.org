@@ -14,6 +14,7 @@ import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
 	DeadGameState,
+	EngineGamePageInfo,
 	ServerUsernameContainer,
 	StaticGameState,
 } from '../../../shared/types.js';
@@ -22,11 +23,24 @@ import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import { getFormattedEngineName, ValidEngine } from '../../../shared/chess/engine.js';
 
 import { getGameData } from '../../database/gamesManager.js';
 import { getPlayerGamesOfGame } from '../../database/playerGamesManager.js';
+import { getEngineGamesOfGame } from '../../database/engineGamesManager.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
+
+// Types --------------------------------------------------------------------------------------------------
+
+/** The engine participant of a concluded engine game, as stored in `engine_games`. */
+type EngineParticipant = {
+	color: Player;
+	engine: ValidEngine;
+	strengthLevel: number;
+	container: ServerUsernameContainer;
+	clockAtEnd: number | null;
+};
 
 // Constants ----------------------------------------------------------------------------------------------
 
@@ -52,18 +66,24 @@ export function resolveDeadParticipantColor(game_id: number, user_id: number): P
 
 /**
  * Builds the {@link StaticGameState} of a concluded game — the static
- * side bar info — plus its ply count and per-player rating deltas.
+ * side bar info — plus its ply count, engine participant page info, and per-player rating deltas.
  * @returns The state (+ deltas), or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */
-export function produceDeadStaticGameState(
-	game_id: number,
-): { state: StaticGameState; moveCount: number; ratingChanges?: PlayerGroup<number> } | undefined {
+export function produceDeadStaticGameState(game_id: number):
+	| {
+			state: StaticGameState;
+			moveCount: number;
+			engineGame?: EngineGamePageInfo;
+			ratingChanges?: PlayerGroup<number>;
+	  }
+	| undefined {
 	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS, 'move_count']);
 	if (game === undefined) return undefined;
 	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS, 'elo_change_from_game']); // prettier-ignore
+	const engineParticipant = getEngineParticipant(game_id);
 
-	const state = assembleStaticGameState(game, playerRows);
+	const state = assembleStaticGameState(game, playerRows, engineParticipant);
 
 	/** Per signed-in player rating delta; populated only for rated games. */
 	const ratingChanges: PlayerGroup<number> = {};
@@ -75,6 +95,12 @@ export function produceDeadStaticGameState(
 	return {
 		state,
 		moveCount: game.move_count,
+		...(engineParticipant && {
+			engineGame: {
+				engine: engineParticipant.engine,
+				strengthLevel: engineParticipant.strengthLevel,
+			},
+		}),
 		...(Object.keys(ratingChanges).length > 0 && { ratingChanges }),
 	};
 }
@@ -91,6 +117,7 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	if (game === undefined) return undefined;
 
 	const playerRows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id', 'elo_at_game', 'clock_at_end_millis', 'rating_deviation_at_game']); // prettier-ignore
+	const engineParticipant = getEngineParticipant(game_id);
 
 	/** Per-color ms remaining at game end; populated only for timed games. */
 	const finalClocks: PlayerGroup<number> = {};
@@ -98,9 +125,11 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 		if (row.clock_at_end_millis !== null)
 			finalClocks[row.player_number] = row.clock_at_end_millis;
 	}
+	if (engineParticipant && engineParticipant.clockAtEnd !== null)
+		finalClocks[engineParticipant.color] = engineParticipant.clockAtEnd;
 
 	const state: DeadGameState = {
-		...assembleStaticGameState(game, playerRows),
+		...assembleStaticGameState(game, playerRows, engineParticipant),
 		icn: game.icn,
 	};
 
@@ -110,16 +139,21 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 }
 
 /**
- * Maps already-fetched DB rows into the {@link StaticGameState} base. Pure (no queries
- * beyond the per-player username lookup), so both readers below share one field mapping.
+ * Maps already-fetched DB rows into the {@link StaticGameState} base,
+ * so both readers above share one field mapping.
  */
 function assembleStaticGameState(
 	game: Pick<GamesRecord, (typeof STATIC_GAME_COLUMNS)[number]>,
 	playerRows: Pick<PlayerGamesRecord, (typeof STATIC_PLAYER_COLUMNS)[number]>[],
+	engineParticipant: EngineParticipant | undefined,
 ): StaticGameState {
 	/** Per-color username container; a color absent from `playerRows` -> guest. */
 	const playerContainers: PlayerGroup<ServerUsernameContainer> = {};
 	for (const color of [players.WHITE, players.BLACK]) {
+		if (engineParticipant?.color === color) {
+			playerContainers[color] = engineParticipant.container;
+			continue;
+		}
 		const row = playerRows.find((r) => r.player_number === color);
 		if (row === undefined) {
 			// No row -> this color was a guest.
@@ -160,6 +194,31 @@ function assembleStaticGameState(
 		timeCreated: timeutil.sqliteToTimestamp(game.date),
 		players: playerContainers,
 		gameConclusion,
+	};
+}
+
+/**
+ * Reads the engine participant of a concluded game.
+ * @returns The participant, or `undefined` if the game had no engine (human vs human).
+ * @throws If a database error occurs.
+ */
+function getEngineParticipant(game_id: number): EngineParticipant | undefined {
+	const row = getEngineGamesOfGame(game_id, [
+		'player_number',
+		'clock_at_end_millis',
+		'engine',
+		'strength_level',
+	])[0];
+	if (!row) return undefined;
+	return {
+		color: row.player_number as Player,
+		engine: row.engine as ValidEngine,
+		strengthLevel: row.strength_level,
+		container: {
+			type: 'engine',
+			username: getFormattedEngineName(row.engine as ValidEngine, row.strength_level),
+		},
+		clockAtEnd: row.clock_at_end_millis,
 	};
 }
 

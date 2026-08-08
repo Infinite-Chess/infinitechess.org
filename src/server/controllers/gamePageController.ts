@@ -10,7 +10,7 @@
 import type { Request } from 'express';
 import type { SpeedCategory } from '../../shared/chess/util/clockutil.js';
 import type { Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
-import type { StaticGameSetup, StaticGameState } from '../../shared/types.js';
+import type { GamePageData, StaticGameState } from '../../shared/types.js';
 
 import timeutil from '../../shared/util/timeutil.js';
 import clockutil from '../../shared/chess/util/clockutil.js';
@@ -20,6 +20,7 @@ import { players as p } from '../../shared/chess/util/typeutil.js';
 import variantregistry, { VariantCode } from '../../shared/chess/variants/variantregistry.js';
 
 import tconfig from '../config/translationconfig.js';
+import { getManifest } from '../config/manifest.js';
 import { decodeGameId } from '../database/gamesManager.js';
 import { memberInfoEqPartial } from '../utility/memberInfoUtil.js';
 import { produceStaticGameState } from '../game/gamemanager/gamemanager.js';
@@ -69,7 +70,7 @@ export interface GameMetaViewModel {
 /** The full render context for `game.njk`. */
 interface GamePageState {
 	/** Includes all static info about the game. */
-	gamePageData: { id: number; isLive: boolean; role?: Player } & StaticGameSetup;
+	gamePageData: GamePageData;
 	meta: GameMetaViewModel;
 }
 
@@ -82,12 +83,14 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 	const id = decodeGameId(req.params['id']!);
 	if (id === undefined) return undefined; // Malformed id
 
+	const memberInfo = req.memberInfo!;
+
 	const resolved = produceStaticGameState(id);
 	if (resolved === undefined) return undefined; // Game doesn't exist
 	const { state, game, ratingChanges, moveCount } = resolved; // game is defined if live
+	let { engineGame } = resolved; // Gains the client's engine asset URLs below, if live
 
 	// Resolve the viewer's color (board orientation + role); undefined => spectator (white POV).
-	const memberInfo = req.memberInfo!;
 	let role: Player | undefined;
 	if (game) {
 		for (const [strColor, { identifier }] of Object.entries(game.match.playerData)) {
@@ -97,8 +100,17 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 			}
 		}
 	} else if (memberInfo.signedIn) {
-		// Dead games match members only (dead guests aren't identifiable).
+		// Dead games match members only; dead guests aren't identifiable.
 		role = resolveDeadParticipantColor(id, memberInfo.user_id);
+	}
+
+	// Only a live engine game still needs the assets to run the engine client-side.
+	if (engineGame && game) {
+		const manifest = getManifest();
+		const workerUrl = manifest[`scripts/esm/game/chess/engines/${engineGame.engine}.worker.ts`];
+		const engineUrl = manifest['engine'];
+		if (!workerUrl || !engineUrl) throw new Error('Engine assets missing from asset manifest.');
+		engineGame = { ...engineGame, workerUrl, engineUrl };
 	}
 
 	return {
@@ -106,6 +118,7 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 			id,
 			isLive: !!game,
 			role,
+			engineGame,
 			variant: state.variant,
 			timeControl: state.timeControl,
 			timeCreated: state.timeCreated,
@@ -133,7 +146,7 @@ export function getDeadGameViewState(
 	const dead = produceDeadStaticGameState(id);
 	if (dead === undefined) return undefined; // Game not in the database
 
-	// Resolve the viewer's color for board orientation; dead guests aren't identifiable.
+	// Dead guests aren't identifiable.
 	const memberInfo = req.memberInfo!;
 	const role = memberInfo.signedIn
 		? resolveDeadParticipantColor(id, memberInfo.user_id)

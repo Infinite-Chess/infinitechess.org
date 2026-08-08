@@ -17,10 +17,23 @@ import type { GameState, GlobalGameState } from './state.js';
 import type { Snapshot, VariantOptions, LoadedVariant } from './gamefile.js';
 
 import jsutil from '../../util/jsutil.js';
+import bimath from '../../util/math/bimath.js';
 import organizedpieces from './organizedpieces.js';
 import variantpreviewer from '../variants/variantpreviewer.js';
 
 // Types ------------------------------------------------------------------
+
+/** Shared setup options for board and board-preview initialization. */
+export interface BoardInitOptions {
+	/** Optional variant-specific state for custom or loaded positions. */
+	variantOptions?: VariantOptions;
+	/** Whether the board is being built for the editor. */
+	editor?: boolean;
+	/** Only has an effect if the `worldBorder` gamerule is not present. */
+	worldBorderDist?: bigint;
+	/** Clamps each generated world-border edge to this absolute coordinate. */
+	worldBorderCap?: bigint;
+}
 
 /**
  * The lightweight subset of {@link Board} used by preview renderers.
@@ -43,6 +56,9 @@ export type BoardPreview = {
 	pieces: OrganizedPiecesBase;
 	state: GameState;
 
+	/** Determines turn order, win conditions, promotion, etc. */
+	gameRules: GameRules;
+
 	/** Whether the gamefile is for the board editor. */
 	editor: boolean;
 
@@ -60,13 +76,18 @@ export type BoardPreview = {
 
 /** Creates a new {@link BoardPreview} from the provided arguments. */
 function initBoardPreview(
-	gameRules: GameRules,
+	/** The rules to base the board on. */
+	gameRulesIn: GameRules,
 	variant: LoadedVariant | undefined,
-	variantOptions?: VariantOptions,
-	editor: boolean = false,
-	/** Only has an effect if the `worldBorder` gamerule is not present. */
-	worldBorderDist?: bigint,
+	options: BoardInitOptions = {},
 ): BoardPreview {
+	const { variantOptions, editor = false, worldBorderDist, worldBorderCap } = options;
+
+	// The board owns its rules: the generated world border is written onto this copy, never the
+	// caller's object — callers commonly retain their options, and a cached or stored position
+	// must not acquire a board's rules.
+	const gameRules: GameRules = jsutil.deepCopyObject(gameRulesIn);
+
 	if (
 		variantOptions?.gameRules.moveRule !== undefined &&
 		variantOptions?.state_global.moveRuleState === undefined
@@ -121,12 +142,19 @@ function initBoardPreview(
 
 	if (gameRules.worldBorder === undefined && worldBorderProperty !== undefined) {
 		// No override for exact world border dimensions provided, calculate it using the provided distance.
-		gameRules.worldBorder = {
+		const generatedBorder = {
 			left: startingPositionBox.left - worldBorderProperty,
 			right: startingPositionBox.right + worldBorderProperty,
 			bottom: startingPositionBox.bottom - worldBorderProperty,
 			top: startingPositionBox.top + worldBorderProperty,
 		};
+		if (worldBorderCap !== undefined) {
+			generatedBorder.left = bimath.max(generatedBorder.left, -worldBorderCap);
+			generatedBorder.right = bimath.min(generatedBorder.right, worldBorderCap);
+			generatedBorder.bottom = bimath.max(generatedBorder.bottom, -worldBorderCap);
+			generatedBorder.top = bimath.min(generatedBorder.top, worldBorderCap);
+		}
+		gameRules.worldBorder = generatedBorder;
 	}
 
 	const startSnapshot: Snapshot = {
@@ -141,6 +169,7 @@ function initBoardPreview(
 		existingTypes,
 		existingRawTypes,
 		state,
+		gameRules,
 		editor,
 		variant,
 		startSnapshot,

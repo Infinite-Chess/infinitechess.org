@@ -9,6 +9,7 @@
  * dynamically so its variant-selector imports never run where the widget DOM is absent.
  */
 
+import docutil from '../../util/docutil.js';
 import gamesession from '../../game/chess/gamesession.js';
 import { GameBus } from '../../game/GameBus.js';
 import analysisloader from './analysisloader.js';
@@ -28,6 +29,19 @@ function init(): void {
 	// finished or failed — matching the isLoading() check the owed load is waiting on.
 	// Deferred out of the dispatch, since draining unloads the game its listeners are reading.
 	GameBus.addEventListener('load-ended', () => queueMicrotask(drainOwedLoad));
+	document.addEventListener('paste', onPaste);
+}
+
+/**
+ * Pasting anywhere on the page routes the clipboard through the From-ICN field —
+ * loading it if it's a legal position, or surfacing the ICN error if it isn't.
+ */
+function onPaste(e: ClipboardEvent): void {
+	if (docutil.isTypingInTextField()) return; // The paste belongs to the field (e.g. the ICN input itself)
+	// clipboardData is only ever absent on synthetic events, but the DOM types it nullable.
+	const icn = e.clipboardData?.getData('text/plain').trim();
+	if (!icn) return; // Nothing textual was pasted (e.g. an image)
+	void variantSelector.applyIcn(icn);
 }
 
 /** The active Slide Limit modifier as a bigint gamerule, or undefined if none is selected. */

@@ -30,9 +30,8 @@ import socketmessages from '../../../websocket/socketmessages.js';
 
 // Events ---------------------------------------------------------------------
 
-GameBus.addEventListener('user-move-played', () => {
-	sendMove();
-});
+GameBus.addEventListener('user-move-played', () => sendMove());
+GameBus.addEventListener('engine-move-played', () => sendMove());
 
 // Functions -------------------------------------------------------------------
 
@@ -42,16 +41,29 @@ function sendMove(): void {
 	// console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile()!;
-	const lastMove = moveutil.getLastMove(gamefile.moves)!;
-	const moveToken = lastMove.token; // "x,y>x,yN"
+	submitMove(gamefile, gamefile.moves.length - 1);
+}
+
+/** Sends a single move from our moves list to the server, by its index. */
+function submitMove(gamefile: GameFile, moveIndex: number): void {
+	const isLastMove = moveIndex === gamefile.moves.length - 1;
 
 	const data = {
-		move: moveToken,
-		moveNumber: gamefile.moves.length,
-		gameConclusion: gamefile.gameConclusion,
+		move: gamefile.moves[moveIndex]!.token, // "x,y>x,y=Q"
+		moveNumber: moveIndex + 1,
+		// Only our latest move can have triggered the conclusion we detected locally.
+		gameConclusion: isLastMove ? gamefile.gameConclusion : undefined,
 	};
 
 	socketmessages.send('game', 'submitmove', data, true);
+}
+
+/**
+ * Submits every move from `startIndex` onward, catching the server up after a resync.
+ * The server accepts them back-to-back, each matching its next expected move number.
+ */
+function submitMovesFrom(gamefile: GameFile, startIndex: number): void {
+	for (let i = startIndex; i < gamefile.moves.length; i++) submitMove(gamefile, i);
 }
 
 /**
@@ -132,6 +144,7 @@ function checkAndReportIllegalOpponentMove(
 	console.log(`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`); // prettier-ignore
 
 	if (gamesession.getRole() === undefined) return; // Spectators never report
+	if (window.gamePageData.engineGame) return; // If the engine plays an illegal move, we already force it to resign.
 	if (isGameInstantlyDeleted(gamefile.variant)) return; // Server-validated game
 
 	reportOpponentsMove(moveValidationResult.reason);
@@ -163,6 +176,7 @@ function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefin
 
 export default {
 	sendMove,
+	submitMovesFrom,
 	handleMove,
 	checkAndReportIllegalOpponentMove,
 	applyClockValues,

@@ -12,28 +12,28 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
-import { engineDictionary } from '../../../../../shared/chess/engine.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 /**
- * Absolute fallback border distance for a side the position leaves unbounded — the largest
- * coordinate Apeiron can safely evaluate (i64 minus a little wiggle room). Matches the
- * distance engine games hand the engine, so analysis stays within the same safe range.
+ * Absolute fallback border edge for a side the position leaves unbounded — the largest
+ * coordinate Apeiron can safely evaluate (i64 minus a little wiggle room). The same cap
+ * engine games clip their generated border to, so analysis and play agree on what's in range.
  */
-const DEFAULT_BORDER_DISTANCE = engineDictionary.apeiron.worldBorder;
+const WORLD_BORDER_CAP = apeiron_card.PLAY_BORDER.worldBorderCap;
 
 /**
  * The world border Apeiron evaluates the position within: the position's own `worldBorder`
- * gamerule where defined, falling back to ±{@link DEFAULT_BORDER_DISTANCE} on any unbounded side.
+ * gamerule where defined, falling back to ±{@link WORLD_BORDER_CAP} on any unbounded side.
  * (Unlike engine games, the fallback is absolute — not offset from the piece bounding box.)
  */
 function getEngineWorldBorder(gamefile: GameFile): BoundingBox {
 	const wb = gamefile.gameRules.worldBorder;
 	return {
-		left: wb?.left ?? -DEFAULT_BORDER_DISTANCE,
-		right: wb?.right ?? DEFAULT_BORDER_DISTANCE,
-		bottom: wb?.bottom ?? -DEFAULT_BORDER_DISTANCE,
-		top: wb?.top ?? DEFAULT_BORDER_DISTANCE,
+		left: wb?.left ?? -WORLD_BORDER_CAP,
+		right: wb?.right ?? WORLD_BORDER_CAP,
+		bottom: wb?.bottom ?? -WORLD_BORDER_CAP,
+		top: wb?.top ?? WORLD_BORDER_CAP,
 	};
 }
 

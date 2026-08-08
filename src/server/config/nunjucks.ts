@@ -14,10 +14,9 @@ import { fileURLToPath } from 'node:url';
 
 import { players as p } from '../../shared/chess/util/typeutil.js';
 import { getVersionedEngineName } from '../../shared/chess/engine.js';
+import { MANIFEST_PATH, getEngineVersion, loadManifest } from './manifest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const MANIFEST_PATH = path.join(process.cwd(), 'dist/manifest.json');
 
 /**
  * Configures Nunjucks as the view engine for the given Express app,
@@ -36,11 +35,7 @@ export function configureNunjucks(app: Application): void {
 		throwOnUndefined: process.env['NODE_ENV'] !== 'production',
 	});
 
-	// Load the asset manifest (maps logical entry-point
-	// names to their output paths, which are content-hashed.
-	if (!fs.existsSync(MANIFEST_PATH))
-		throw new Error('Manifest file not found. Did we build first?');
-	setManifestGlobals(nunjucksEnv, JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')));
+	setManifestGlobals(nunjucksEnv, loadManifest());
 	nunjucksEnv.addGlobal('p', p); // Player-color constants, so templates reference WHITE/BLACK by name
 
 	// Serializes a value to JSON safe for inline <script> injection.
@@ -58,7 +53,7 @@ export function configureNunjucks(app: Application): void {
 	if (process.env['NODE_ENV'] !== 'production') {
 		fs.watch(MANIFEST_PATH, () => {
 			try {
-				setManifestGlobals(nunjucksEnv, JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')));
+				setManifestGlobals(nunjucksEnv, loadManifest());
 			} catch (_err) {
 				// File may be mid-write; the next 'change' event will pick it up.
 			}
@@ -72,8 +67,5 @@ export function configureNunjucks(app: Application): void {
  */
 function setManifestGlobals(env: nunjucks.Environment, manifest: Record<string, string>): void {
 	env.addGlobal('manifest', manifest);
-	env.addGlobal(
-		'engineNameVersioned',
-		getVersionedEngineName('apeiron', manifest['engineVersion']!),
-	);
+	env.addGlobal('engineNameVersioned', getVersionedEngineName('apeiron', getEngineVersion()));
 }

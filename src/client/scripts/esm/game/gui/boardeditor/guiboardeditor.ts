@@ -20,8 +20,6 @@ import guiloadposition from './actions/loadposition/guiloadposition.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
 import guiresetposition from './actions/guiresetposition.js';
 import guiclearposition from './actions/guiclearposition.js';
-import guistartlocalgame from './actions/guistartlocalgame.js';
-import guistartenginegame from './actions/guistartenginegame.js';
 import guiloadpositionsavelist from './actions/loadposition/guiloadpositionsavelist.js';
 
 // Elements ---------------------------------------------------------------
@@ -39,8 +37,6 @@ const elements_actions = [
 	document.getElementById('copy-notation')!,
 	document.getElementById('paste-notation')!,
 	document.getElementById('gamerules')!,
-	document.getElementById('start-local-game')!,
-	document.getElementById('start-engine-game')!,
 	// Selection
 	document.getElementById('select-all')!,
 	document.getElementById('delete-selection')!,
@@ -138,8 +134,6 @@ function closeAllFloatingWindows(resetPositioning: boolean): void {
 	guiclearposition.close(resetPositioning);
 	guiloadposition.close(resetPositioning);
 	guigamerules.close(resetPositioning);
-	guistartlocalgame.close(resetPositioning);
-	guistartenginegame.close(resetPositioning);
 }
 
 // Callbacks ---------------------------------------------------------------
@@ -233,18 +227,6 @@ function callback_Action(e: Event): void {
 			const wasOpen = guigamerules.isOpen();
 			closeAllFloatingWindows(false);
 			if (!wasOpen) guigamerules.open();
-			return;
-		}
-		case 'start-local-game': {
-			const wasOpen = guistartlocalgame.isOpen();
-			closeAllFloatingWindows(false);
-			if (!wasOpen) guistartlocalgame.open();
-			return;
-		}
-		case 'start-engine-game': {
-			const wasOpen = guistartenginegame.isOpen();
-			closeAllFloatingWindows(false);
-			if (!wasOpen) guistartenginegame.open();
 			return;
 		}
 		// Selection (buttons that are always active)

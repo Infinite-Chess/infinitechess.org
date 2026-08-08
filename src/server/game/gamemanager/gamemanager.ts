@@ -7,15 +7,16 @@
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { StaticGameState } from '../../../shared/types.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { EngineGamePageInfo, StaticGameState } from '../../../shared/types.js';
 import type { GameSetup, PlayerRatingResult, ServerGame } from './gameutility.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
-import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
+import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js';
+import gamefile, { type LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
 import statlogger from '../statlogger.js';
@@ -27,6 +28,7 @@ import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { executeSafely } from '../../utility/errorGuard.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
 import { timeBeforeFinalizeMillis } from './gameutility.js';
@@ -70,13 +72,14 @@ const activeGames: Record<number, ServerGame> = {};
 // Functions -----------------------------------------------------------------------------------
 
 /**
- * Creates and persists the `ServerGame`, then signals each connected player's lobby
- * client to navigate to the game page (where they re-subscribe to the live game),
- * arming a silent disconnect cushion in the meantime.
+ * Creates and persists the `ServerGame`, then signals each requesting socket to navigate to
+ * the game page (where they re-subscribe to the live game), arming a silent disconnect cushion
+ * in the meantime. A player with no socket is told on their next lobby subscribe instead.
  * @param setup - The variant, time control, and rated flag of the game to start.
  * @param assignments - The color each player has, and their socket if connected.
  * @returns The id of the newly created game.
- * @throws If a database error occurs (from {@link liveGameValues.onGameCreated}).
+ * @throws If a database error occurs, or if the variant is custom — starting those isn't
+ * implemented yet.
  */
 function createGame(
 	setup: GameSetup,
@@ -88,30 +91,31 @@ function createGame(
 		throw new Error(errText);
 	}
 
-	const variantCode = setup.variant.code;
-
 	// Joining a new game counts as leaving any concluded game still lingering for a rematch.
 	for (const { identifier } of Object.values(assignments)) forceLeaveLingeringGame(identifier);
 
 	const gameID = issueUniqueGameId();
 	const dateTimestamp = Date.now();
 	const variant: LoadedVariant = {
-		code: variantCode,
-		mod: variantcache.getModule(variantCode),
+		code: setup.variant.code,
+		mod: variantcache.getModule(setup.variant.code),
 		dateTimestamp,
 	};
-	const gameWithRules = gamefile.initGame(setup.time, dateTimestamp, variant);
+	const gameRules = variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
+	const game = gamefile.initGame(setup.time, dateTimestamp, gameRules);
 	const match = gameutility.initMatch(setup, gameID, assignments);
 	const validateMoves = doesVariantSupportServerValidation(variant);
 
 	const servergame: ServerGame = gameutility.initServerGame(
-		gameWithRules,
+		game,
+		gameRules,
 		match,
 		validateMoves,
 		variant,
 	);
-	for (const data of Object.values(match.playerData)) {
-		addUserToActiveGames(data.identifier, servergame.match.id);
+	for (const { identifier, socket } of Object.values(assignments)) {
+		// A player with no socket to push to is owed the navigate notice on their next lobby subscribe.
+		addUserToActiveGames(identifier, servergame.match.id, socket === undefined);
 	}
 
 	activeGames[servergame.match.id] = servergame;
@@ -121,10 +125,11 @@ function createGame(
 	// state and therefore requires the game row to already exist.
 	liveGameValues.onGameCreated(servergame);
 
-	for (const [strcolor, { identifier }] of Object.entries(assignments)) {
+	for (const [strcolor, { identifier, socket }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
-		// Alert all their lobby-subscribed clients they are in a game.
-		broadcastMemberInGameStatus(identifier);
+		// Alert all their lobby-subscribed clients they are in a game. Only the socket that
+		// asked for this game is taken into it; their other tabs get the rejoin banner.
+		broadcastMemberInGameStatus(identifier, socket);
 		// Give them 5 seconds to navigate to the game page and re-connect
 		// before they're considered disconnected.
 		startDisconnectCushionTimer(servergame, player);
@@ -143,6 +148,7 @@ function createGame(
  * AND the live games inside {@link activeGames}.
  *
  * The game will receive this same id in the database when it is logged.
+ * @throws If a database error occurs.
  */
 function issueUniqueGameId(): number {
 	let id: number;
@@ -169,6 +175,21 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 			onPostGameLeave(servergame, Number(c) as Player, false);
 			return; // A player can only be a participant of one lingering game.
 		}
+	}
+}
+
+/**
+ * Handles a throw from {@link createGame}: logs it, then tells each connected
+ * participant a server error prevented their game from starting.
+ * @param error - The error thrown.
+ * @param sockets - Every socket awaiting the game, undefined entries skipped.
+ */
+function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefined)[]): void {
+	// The stack, not just the message — these are unexpected internal failures.
+	const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
+	logEventsAndPrint(`Error creating game: ${details}`, 'errLog');
+	for (const ws of sockets) {
+		if (ws) sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
 	}
 }
 
@@ -204,13 +225,15 @@ function unsubSocketParticipantFromGame(ws: CustomWebSocket, involuntary: boolea
 
 	if (!gameutility.isGameOver(servergame)) {
 		// Game is ongoing: inform the opponent they disconnected.
-
 		if (involuntary) {
 			// Internet interruption. Give them 5 seconds before opening the opponent's claim window.
 			startDisconnectCushionTimer(servergame, role);
+			// The tab lives on and its engine keeps searching, so its clock keeps ticking.
 		} else {
-			// Closed tab manually. Immediately open the opponent's claim window.
+			// Immediately open the opponent's claim window.
 			startDisconnectClaimTimer(servergame, role, involuntary);
+			// Closed tab manually: the page is gone, taking the engine's worker with it.
+			freezeEngineClock(servergame);
 		}
 
 		// If this leaves BOTH players disconnected, start the timer that concludes the
@@ -280,6 +303,7 @@ function produceStaticGameState(id: number):
 			state: StaticGameState;
 			moveCount: number;
 			game?: ServerGame;
+			engineGame?: EngineGamePageInfo;
 			ratingChanges?: PlayerGroup<number>;
 	  }
 	| undefined {
@@ -289,6 +313,12 @@ function produceStaticGameState(id: number):
 			game,
 			state: gameutility.buildStaticGameState(game),
 			moveCount: game.moves.length,
+			...(game.match.engineParticipant && {
+				engineGame: {
+					engine: game.match.engineParticipant.engine,
+					strengthLevel: game.match.engineParticipant.strengthLevel,
+				},
+			}),
 			ratingChanges: gameutility.getRatingChanges(game),
 		};
 
@@ -339,25 +369,80 @@ function pushGameClock(servergame: ServerGame): number | undefined {
 
 	const data = clock.push(servergame);
 
-	// Reset the timer that will auto terminate the game when one player loses on time.
-	if (!gameutility.isGameOver(servergame) && moveutil.isGameResignable(servergame)) {
-		// Cancel previous auto loss timer if it exists
-		clearTimeout(servergame.match.autoTimeLossTimeoutID);
-		// Set the next one
-		const timeUntilLoseOnTime = Math.max(servergame.clocks.timeRemainAtTurnStart!, 0);
-		servergame.match.autoTimeLossTimeoutID = setTimeout(
-			() => onPlayerLostOnTime(servergame),
-			timeUntilLoseOnTime,
-		);
-	}
+	armAutoTimeLoss(servergame);
 
 	return data;
+}
+
+/** Arms a timer that auto-concludes the game when the player whose turn it is runs out of time. */
+function armAutoTimeLoss(servergame: ServerGame): void {
+	if (
+		servergame.untimed ||
+		gameutility.isGameOver(servergame) ||
+		!moveutil.isGameResignable(servergame) ||
+		servergame.clocks.colorTicking === undefined
+	)
+		return;
+
+	// Cancel previous auto loss timer if it exists
+	clearTimeout(servergame.match.autoTimeLossTimeoutID);
+	servergame.match.autoTimeLossTimeoutID = setTimeout(
+		() => onPlayerLostOnTime(servergame),
+		Math.max(servergame.clocks.timeRemainAtTurnStart, 0),
+	);
 }
 
 /** A player has lost on time: set the game conclusion. */
 function onPlayerLostOnTime(servergame: ServerGame): void {
 	const winner = typeutil.invertPlayer(servergame.whosTurn);
 	onGameConclusion(servergame, { victor: winner, condition: 'time' });
+}
+
+/** If it's an engine game: Pauses the engine's clock, rewinding its turn. */
+function freezeEngineClock(servergame: ServerGame): void {
+	const engine = servergame.match.engineParticipant;
+	if (
+		engine === undefined || // Not an engine game
+		servergame.untimed || // No clocks
+		servergame.clocks.colorTicking === undefined || // Already frozen
+		servergame.whosTurn !== engine.color || // Not the engine's turn
+		gameutility.isGameOver(servergame)
+	)
+		return;
+
+	servergame.clocks.currentTime[engine.color] = servergame.clocks.timeRemainAtTurnStart;
+	clock.endGame(servergame);
+	clearTimeout(servergame.match.autoTimeLossTimeoutID);
+	liveGameValues.onEngineClockChanged(servergame);
+
+	const clockValues = gameutility.getGameClockValues(servergame);
+	gameutility.broadcastToSpectators(servergame, 'clock', clockValues);
+}
+
+/** Restarts the engine's frozen clock: a client has attached to think for it. */
+function resumeEngineClock(servergame: ServerGame): void {
+	const engine = servergame.match.engineParticipant;
+	if (
+		engine === undefined || // Not an engine game
+		servergame.untimed || // No clocks
+		servergame.clocks.colorTicking !== undefined || // Already ticking
+		servergame.whosTurn !== engine.color || // Not the engine's turn
+		gameutility.isGameOver(servergame) ||
+		!moveutil.isGameResignable(servergame)
+	)
+		return;
+
+	const remaining = servergame.clocks.currentTime[engine.color]!;
+	clock.edit(servergame.clocks, {
+		clocks: { ...servergame.clocks.currentTime },
+		colorTicking: engine.color,
+		timeColorTickingLosesAt: Date.now() + remaining,
+	});
+	armAutoTimeLoss(servergame);
+	liveGameValues.onEngineClockChanged(servergame);
+
+	const clockValues = gameutility.getGameClockValues(servergame);
+	gameutility.broadcastToSpectators(servergame, 'clock', clockValues);
 }
 
 // Game Life Cycle -----------------------------------------------------------------------
@@ -478,12 +563,9 @@ function logConcludedGame(servergame: ServerGame): void {
 		}
 	} catch {
 		// Log failure already logged.
-		// Notify both players.
-		gameutility.broadcastToParticipants(
-			servergame,
-			'notifyerror',
-			"A server error occurred while logging this game. It won't be available in your game history.",
-		);
+		const message =
+			"A server error occurred while logging this game. It won't be available in your game history.";
+		gameutility.broadcastToParticipants(servergame, 'general', 'notifyerror', message);
 	}
 
 	// The result now lives in the permanent tables — drop the live game row so a restart doesn't
@@ -536,7 +618,7 @@ function maybeStartBothDisconnectedTimer(servergame: ServerGame, explicitEndTime
 
 /**
  * Called when both players have been disconnected too long for either to claim.
- * Concludes the game as a draw by abandonment, or aborts it if not yet resignable.
+ * Concludes as abandonment (an engine wins its game), or aborts if not yet resignable.
  */
 function onBothPlayersDisconnected(servergame: ServerGame): void {
 	servergame.match.bothDisconnectedTimeoutID = undefined;
@@ -544,10 +626,14 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 
 	if (gameutility.isGameOver(servergame)) return;
 
-	if (moveutil.isGameResignable(servergame)) {
-		onGameConclusion(servergame, { victor: null, condition: 'abandonment' });
-	} else {
+	if (!moveutil.isGameResignable(servergame)) {
 		onGameConclusion(servergame, { condition: 'aborted' });
+	} else {
+		const engine = servergame.match.engineParticipant;
+		const conclusion: GameConclusion = engine
+			? { victor: engine.color, condition: 'disconnect' }
+			: { victor: null, condition: 'abandonment' };
+		onGameConclusion(servergame, conclusion);
 	}
 }
 
@@ -656,7 +742,8 @@ function restoreLiveGames(): void {
 		// is never persisted to restore. Register its players in the active-players list (blocks
 		// them from joining a second game, and shows their lobby in-game banner).
 		for (const data of Object.values(servergame.match.playerData)) {
-			addUserToActiveGames(data.identifier, servergame.match.id);
+			// No navigate notice owed — the game predates the restart, so they already know of it.
+			addUserToActiveGames(data.identifier, servergame.match.id, false);
 		}
 
 		// Start timers
@@ -719,6 +806,7 @@ function restoreLiveGames(): void {
 export {
 	activeGames,
 	createGame,
+	onGameCreationError,
 	isMemberInSomeActiveGame,
 	unsubSocketParticipantFromGame,
 	unsubSocketSpectatorFromGame,
@@ -728,6 +816,8 @@ export {
 	freeGame,
 	evictGame,
 	pushGameClock,
+	freezeEngineClock,
+	resumeEngineClock,
 	getGameByID,
 	produceStaticGameState,
 	// Shutdown Preparation & Startup Restoration

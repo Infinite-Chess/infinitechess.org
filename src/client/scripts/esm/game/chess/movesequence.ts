@@ -10,7 +10,6 @@
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Edit, MoveFull, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
-import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
@@ -19,7 +18,6 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 
 import gamecore from './gamecore.js';
 import gameslot from './gameslot.js';
-import guiclock from '../gui/guiclock.js';
 import { Mesh } from '../rendering/piecemodels.js';
 import premoves from './premoves.js';
 import animation from '../rendering/animation.js';
@@ -43,12 +41,6 @@ function commitMove(
 	const move = movepiece.generateMove(gamefile, moveTagged);
 
 	movepiece.makeMove(gamefile, move); // Logical changes
-
-	// Engine games have no server driving the clocks, so push them here.
-	if (!gamefile.untimed && gamesession.getGameType() === 'engine') {
-		clock.push(gamefile);
-		guiclock.push(gamefile.clocks!);
-	}
 
 	// Must run ABOVE 'moves-changed': the checks flag a checkmating move as mate, and the
 	// move list renders each ply's notation (# vs +) once, from the flags it sees then.

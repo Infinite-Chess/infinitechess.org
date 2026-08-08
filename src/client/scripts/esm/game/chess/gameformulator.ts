@@ -35,6 +35,18 @@ export interface GameConstructionOptions {
 	additional?: Additional;
 }
 
+/** Caller-supplied {@link Additional} fields, layered onto what the source itself resolves to. */
+interface ConstructionOverrides {
+	/** See {@link Additional.gameConclusion}. */
+	gameConclusion?: GameConclusion;
+	/** See {@link Additional.slideLimit}. */
+	slideLimit?: bigint;
+	/** See {@link Additional.worldBorderDist}. */
+	worldBorderDist?: bigint;
+	/** See {@link Additional.worldBorderCap}. */
+	worldBorderCap?: bigint;
+}
+
 // Functions ------------------------------------------------------------------------
 
 /**
@@ -43,8 +55,12 @@ export interface GameConstructionOptions {
  * @param validateMoves - Throws an IllegalMoveError if any move played is illegal.
  * @throws Any other error if the game couldn't be constructed at all.
  */
-async function formulateGame(longFormat: LongFormatOut, validateMoves?: true): Promise<GameFile> {
-	const constructionOptions = await resolveConstructionOptions(longFormat);
+async function formulateGame(
+	longFormat: LongFormatOut,
+	overrides?: ConstructionOverrides,
+	validateMoves?: true,
+): Promise<GameFile> {
+	const constructionOptions = await resolveConstructionOptions(longFormat, overrides);
 	return constructGame(constructionOptions, validateMoves);
 }
 
@@ -59,9 +75,10 @@ async function formulateGame(longFormat: LongFormatOut, validateMoves?: true): P
 async function tryFormulateGame(
 	longFormat: LongFormatOut,
 	revealErrors: boolean,
+	overrides?: ConstructionOverrides,
 ): Promise<GameFile | 'moves_invalid'> {
 	try {
-		return await formulateGame(longFormat);
+		return await formulateGame(longFormat, overrides);
 	} catch (e: unknown) {
 		if (revealErrors)
 			console.error("Pasted ICN's moves are invalid:", e instanceof Error ? e.message : e);
@@ -70,17 +87,20 @@ async function tryFormulateGame(
 }
 
 /**
- * Constructs the gamefile of a moveless position, purely so callers can read its
- * computed conclusion.
+ * Constructs the gamefile of a moveless position, purely so callers can
+ * inspect the game it produces (its computed conclusion, its engine support).
  * @returns The constructed gamefile, or `null` if the position couldn't be built.
  */
-function tryConstructPosition(variantOptions: VariantOptions): GameFile | null {
+function tryConstructPosition(
+	variantOptions: VariantOptions,
+	overrides?: ConstructionOverrides,
+): GameFile | null {
 	try {
 		return constructGame({
 			timeControl: '-',
 			variant: undefined,
 			dateTimestamp: Date.now(),
-			additional: { variantOptions },
+			additional: { variantOptions, ...overrides },
 		});
 	} catch {
 		return null;
@@ -97,7 +117,7 @@ function tryConstructPosition(variantOptions: VariantOptions): GameFile | null {
  */
 async function resolveConstructionOptions(
 	longFormat: LongFormatOut,
-	overrides?: { gameConclusion?: GameConclusion; slideLimit?: bigint },
+	overrides?: ConstructionOverrides,
 ): Promise<GameConstructionOptions> {
 	const variant = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
 	if (variant !== undefined) await variantcache.ensureVariantLoaded(variant);
@@ -109,8 +129,7 @@ async function resolveConstructionOptions(
 			position,
 			specialRights,
 		}),
-		...(overrides?.gameConclusion !== undefined && { gameConclusion: overrides.gameConclusion }), // prettier-ignore
-		...(overrides?.slideLimit !== undefined && { slideLimit: overrides.slideLimit }),
+		...overrides,
 	};
 	// FUTURE: transfer the pasted move comments into the gamefile here, too.
 	if (longFormat.moves) additional.moves = icnimport.movePacketsFromParsed(longFormat.moves);

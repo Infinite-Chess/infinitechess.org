@@ -87,8 +87,10 @@ interface ReviewSummary {
 	depth: number;
 }
 
+/** Where the review stands. Only 'idle' allows a new one to start. */
 type ReviewStatus = 'idle' | 'running' | 'done' | 'failed';
 
+/** The events consumers can subscribe to, and what each hands them. */
 interface ReviewListeners {
 	/** Fired when a position evaluation lands (progress) or the status changes. */
 	progress: () => void;
@@ -107,10 +109,26 @@ interface CachedGameReview {
 	results: EvaluateResult[];
 }
 
+/** One position handed to a worker: its index, plus how the worker should treat it. */
 interface ReviewWorkItem {
 	index: number;
+	/** Searched only to warm the TT for the rest of the chunk; its result isn't reported. */
 	warmup?: true;
+	/** Starts a fresh chunk: the worker clears its engine state first. */
 	newChunk?: true;
+}
+
+/** A pooled engine worker and every piece of state scoped to its lifetime. */
+interface ReviewWorker {
+	worker: Worker;
+	/** Remaining work held back for this worker, so adjacent positions share its warm TT. */
+	chunk: ReviewWorkItem[];
+	/** The work item it is currently evaluating; undefined = idle. */
+	assignment?: ReviewWorkItem;
+	/** View over its wasm memory + the byte offset of its stop flag (arrives on 'sharedmem'). */
+	stop?: { flags: Uint8Array; ptr: number };
+	/** Stall watchdog over its in-flight search, re-armed on every completed depth. */
+	watchdog?: ReturnType<typeof setTimeout>;
 }
 
 // Constants ----------------------------------------------------------------------
@@ -151,6 +169,8 @@ const MATE_CP = 1800;
 const ACPL_CLAMP = 1000;
 /** How many times a crashed worker's position is retried before being skipped. */
 const MAX_POSITION_ATTEMPTS = 2;
+/** How long a worker may search without completing a depth before we cut it short. */
+const SEARCH_STALL_TIMEOUT_MILLIS = 15_000;
 
 /** Fishnet-style chunk size: reported positions sharing one overlapping TT warmup. */
 const MAX_POSITIONS_PER_CHUNK = 5;
@@ -210,14 +230,11 @@ const CachedGameReviewSchema = z.object({
 // State ----------------------------------------------------------------------------
 
 let status: ReviewStatus = 'idle';
-let workers: Worker[] = [];
+/** The live worker pool. Dropping an entry disposes everything that worker owned. */
+let workers: ReviewWorker[] = [];
 
-/** The work item each worker is currently evaluating (undefined = idle). */
-const workerAssignment = new Map<Worker, ReviewWorkItem>();
 /** Reverse-analysis chunks waiting for an engine worker. */
 let chunkQueue: ReviewWorkItem[][] = [];
-/** Remaining work kept on one worker so adjacent positions share its TT. */
-const workerChunk = new Map<Worker, ReviewWorkItem[]>();
 /** Attempts already spent per position index (for crash retries). */
 const positionAttempts = new Map<number, number>();
 
@@ -519,11 +536,12 @@ function spawnWorker(): void {
 	if (status !== 'running') return;
 
 	const worker = new Worker(window.analysisPageData.workerUrl, { type: 'module' });
-	workers.push(worker);
-	worker.onmessage = (e: MessageEvent<AnalysisResponse>) => handleWorkerMessage(worker, e.data);
+	const entry: ReviewWorker = { worker, chunk: [] };
+	workers.push(entry);
+	worker.onmessage = (e: MessageEvent<AnalysisResponse>) => handleWorkerMessage(entry, e.data);
 	worker.onerror = (e: ErrorEvent) => {
 		console.error(`[Game Review] Worker crashed: ${e.message || '(no message)'}`);
-		handleWorkerFault(worker);
+		handleWorkerFault(entry);
 	};
 	// No `threads`: review workers search single-threaded — parallelism is across positions.
 	worker.postMessage({
@@ -534,29 +552,37 @@ function spawnWorker(): void {
 }
 
 function terminateWorkers(): void {
-	for (const worker of workers) worker.terminate();
+	for (const entry of workers) {
+		clearStallWatchdog(entry);
+		entry.worker.terminate();
+	}
 	workers = [];
-	workerAssignment.clear();
-	workerChunk.clear();
 }
 
-function handleWorkerMessage(worker: Worker, msg: AnalysisResponse): void {
+function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 	if (status !== 'running') return;
 	switch (msg.type) {
 		case 'ready':
-			dispatchNext(worker);
+			dispatchNext(entry);
+			break;
+		case 'sharedmem':
+			entry.stop = { flags: new Uint8Array(msg.buffer), ptr: msg.stopFlagPtr };
 			break;
 		case 'initerror':
-			handleWorkerFault(worker);
+			handleWorkerFault(entry);
+			break;
+		case 'info':
+			armStallWatchdog(entry); // The search completed a depth: it's making progress.
 			break;
 		case 'evaluated':
-			workerAssignment.delete(worker);
+			clearStallWatchdog(entry);
+			delete entry.assignment;
 			if (!msg.warmup) receiveEvaluation(msg);
-			dispatchNext(worker);
+			dispatchNext(entry);
 			break;
 		case 'searcherror':
 			// The wasm module is poisoned — respawn the worker; its position retries.
-			handleWorkerFault(worker);
+			handleWorkerFault(entry);
 			break;
 	}
 }
@@ -565,31 +591,30 @@ function handleWorkerMessage(worker: Worker, msg: AnalysisResponse): void {
  * Handles a crashed/failed worker: requeues its position (skipping it after
  * {@link MAX_POSITION_ATTEMPTS}) and respawns a replacement with fresh wasm.
  */
-function handleWorkerFault(worker: Worker): void {
-	const assigned = workerAssignment.get(worker);
-	const remaining = workerChunk.get(worker) ?? [];
-	workerAssignment.delete(worker);
-	workerChunk.delete(worker);
-	worker.terminate();
-	workers = workers.filter((w) => w !== worker);
+function handleWorkerFault(entry: ReviewWorker): void {
+	const { assignment, chunk } = entry;
+	clearStallWatchdog(entry);
+	// The entry owns nothing from here on, so a second fault from
+	// the same dying worker can't re-queue its work a second time.
+	delete entry.assignment;
+	entry.chunk = [];
+	entry.worker.terminate();
+	workers = workers.filter((w) => w !== entry);
 	if (status !== 'running') return;
 
-	if (assigned !== undefined) {
+	if (assignment !== undefined) {
 		if (
-			assigned.warmup ||
-			(positionAttempts.get(assigned.index) ?? 0) < MAX_POSITION_ATTEMPTS
+			assignment.warmup ||
+			(positionAttempts.get(assignment.index) ?? 0) < MAX_POSITION_ATTEMPTS
 		) {
-			chunkQueue.unshift([{ ...assigned, newChunk: true }, ...remaining]);
+			chunkQueue.unshift([{ ...assignment, newChunk: true }, ...chunk]);
 		} else {
 			// Give up on this position: record an empty evaluation so the review continues
 			// (its eval carries over; adjacent moves classify as unknown).
-			if (remaining.length > 0)
-				chunkQueue.unshift([{ ...remaining[0]!, newChunk: true }, ...remaining.slice(1)]);
-			receiveEvaluation({ requestId: assigned.index, legalMoveCount: 2, inCheck: false, depth: 0 }); // prettier-ignore
+			requeueChunk(chunk);
+			receiveEvaluation({ requestId: assignment.index, legalMoveCount: 2, inCheck: false, depth: 0 }); // prettier-ignore
 		}
-	} else if (remaining.length > 0) {
-		chunkQueue.unshift([{ ...remaining[0]!, newChunk: true }, ...remaining.slice(1)]);
-	}
+	} else requeueChunk(chunk);
 
 	if (chunkQueue.length > 0) {
 		// Positions still remain: replace the dead worker to keep the pool full — repeated
@@ -611,18 +636,23 @@ function positionIsEvaluable(index: number): boolean {
 	return safeStartByIndex[index]! <= index;
 }
 
+/** Returns a partly-worked chunk to the queue, so whichever worker takes it re-warms its own TT. */
+function requeueChunk(chunk: ReviewWorkItem[]): void {
+	if (chunk.length === 0) return;
+	chunkQueue.unshift([{ ...chunk[0]!, newChunk: true }, ...chunk.slice(1)]);
+}
+
 /** Hands the worker the next queued position, building its ICN on demand. */
-function dispatchNext(worker: Worker): void {
+function dispatchNext(entry: ReviewWorker): void {
 	if (status !== 'running') return; // Pool invariant — see spawnWorker.
 
 	for (;;) {
-		let localChunk = workerChunk.get(worker);
-		if (!localChunk || localChunk.length === 0) {
-			localChunk = chunkQueue.shift();
-			if (!localChunk) return;
-			workerChunk.set(worker, localChunk);
+		if (entry.chunk.length === 0) {
+			const nextChunk = chunkQueue.shift();
+			if (!nextChunk) return;
+			entry.chunk = nextChunk;
 		}
-		const work = localChunk.shift()!;
+		const work = entry.chunk.shift()!;
 		const index = work.index;
 
 		// A position with a piece outside the engine's safe coordinate range can't be evaluated
@@ -634,20 +664,22 @@ function dispatchNext(worker: Worker): void {
 			continue; // Pull the next work item for this worker.
 		}
 
-		workerAssignment.set(worker, work);
+		entry.assignment = work;
 		if (!work.warmup) positionAttempts.set(index, (positionAttempts.get(index) ?? 0) + 1);
 
 		const icn = serializePosition(index);
 		icnByPosition[index] = icn;
 
-		worker.postMessage({
+		entry.worker.postMessage({
 			cmd: 'evaluate',
 			requestId: index, // The position index doubles as the request id.
 			icn,
 			maxDepth: reviewDepth,
+			mover: moverAtPly(index),
 			...(work.newChunk && { newChunk: true }),
 			...(work.warmup && { warmup: true }),
 		} satisfies AnalysisCommand);
+		armStallWatchdog(entry);
 		return;
 	}
 }
@@ -674,6 +706,29 @@ function serializePosition(index: number): string {
 	};
 	gamecompressor.rebaseToPly(rebased, mainlineMoves, safeStart, index);
 	return icnconverter.LongToShort_Format(rebased, icnconverter.COMPACT_FORMAT_OPTIONS);
+}
+
+// Stall watchdog ---------------------------------------------------------------------------
+
+/** (Re)arms the stall watchdog over a worker's in-flight search. */
+function armStallWatchdog(entry: ReviewWorker): void {
+	clearStallWatchdog(entry);
+	entry.watchdog = setTimeout(() => abortStalledSearch(entry), SEARCH_STALL_TIMEOUT_MILLIS);
+}
+
+function clearStallWatchdog(entry: ReviewWorker): void {
+	if (entry.watchdog !== undefined) clearTimeout(entry.watchdog);
+	delete entry.watchdog;
+}
+
+/** Cuts short a search that hasn't completed a depth in {@link SEARCH_STALL_TIMEOUT_MILLIS}. */
+function abortStalledSearch(entry: ReviewWorker): void {
+	delete entry.watchdog;
+	// Writing the flag (polled every node batch, cleared by the engine on its next search) makes
+	// the worker settle for its deepest completed depth's lines — a graceful, in-place finish.
+	// A single-threaded build shares no memory to write, so killing it is the only way out.
+	if (entry.stop) entry.stop.flags[entry.stop.ptr] = 1;
+	else handleWorkerFault(entry);
 }
 
 // Result processing --------------------------------------------------------------------------

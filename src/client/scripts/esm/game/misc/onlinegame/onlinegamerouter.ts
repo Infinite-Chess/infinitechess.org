@@ -64,7 +64,7 @@ function receiveMessage(contents: GameMessage): void {
 		} else if (contents.action === 'gamestate') {
 			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
 			// Nothing loaded/loading yet: the first `gamestate` bootstraps the game.
-			onlinegame.loadGameFromState(contents.value, false, window.gamePageData.role);
+			onlinegame.loadGameFromState(contents.value, false);
 		} else {
 			console.error(`Received game message before receiving gamestate: ${JSON.stringify(contents)}`); // prettier-ignore
 		}
@@ -179,7 +179,10 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 		throw Error(
 			`Invalid color "${clockValues.colorTicking}" to modify clock value to account for ping.`,
 		);
-	clockValues.clocks[clockValues.colorTicking]! -= halfPing;
+	clockValues.clocks[clockValues.colorTicking] = Math.max(
+		0,
+		clockValues.clocks[clockValues.colorTicking]! - halfPing,
+	);
 
 	// Flag what time the player who's clock is ticking will lose on time.
 	// Do this because while while the gamefile is being constructed, the time left may become innacurate.

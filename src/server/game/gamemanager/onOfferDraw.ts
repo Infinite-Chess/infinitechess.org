@@ -30,6 +30,7 @@ import {
  * @param ourRole - The color the socket is playing as.
  */
 function offerDraw(servergame: ServerGame, ourRole: Player): void {
+	if (gameutility.isEngineGame(servergame)) return;
 	// console.log('Client offers a draw.');
 	const match = servergame.match;
 

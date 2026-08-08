@@ -9,14 +9,22 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
-import { createSeek, createseekschem } from './createseek.js';
-import { cancelSeek, cancelseekschem } from './cancelseek.js';
-import { acceptSeek, acceptseekschem } from './acceptseek.js';
+import {
+	SeekIdSchema,
+	CreateSeekMessageSchema,
+	CreateEngineGameMessageSchema,
+} from '../../../shared/types.js';
+
+import { createSeek } from './createseek.js';
+import { cancelSeek } from './cancelseek.js';
+import { acceptSeek } from './acceptseek.js';
+import { createEngineGame } from './createenginegame.js';
 
 const LobbySchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('createseek'), value: createseekschem }),
-	z.strictObject({ action: z.literal('cancelseek'), value: cancelseekschem }),
-	z.strictObject({ action: z.literal('acceptseek'), value: acceptseekschem }),
+	z.strictObject({ action: z.literal('createseek'), value: CreateSeekMessageSchema }),
+	z.strictObject({ action: z.literal('cancelseek'), value: SeekIdSchema }),
+	z.strictObject({ action: z.literal('acceptseek'), value: SeekIdSchema }),
+	z.strictObject({ action: z.literal('createengine'), value: CreateEngineGameMessageSchema }),
 ]);
 type LobbyMessage = z.infer<typeof LobbySchema>;
 
@@ -38,6 +46,9 @@ function routeLobbyMessage(ws: CustomWebSocket, contents: LobbyMessage): void {
 			break;
 		case 'acceptseek':
 			acceptSeek(ws, contents.value);
+			break;
+		case 'createengine':
+			createEngineGame(ws, contents.value);
 			break;
 		default:
 			console.error(

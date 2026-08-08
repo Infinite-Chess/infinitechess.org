@@ -12,12 +12,12 @@ import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { PieceMoveset } from './movesets.js';
-import type { BoardPreview } from './boardpreviewer.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
+import type { LoadedVariant } from './gamefile.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';
 import type { RawType, RawTypeGroup } from '../util/typeutil.js';
-import type { VariantOptions, LoadedVariant } from './gamefile.js';
+import type { BoardInitOptions, BoardPreview } from './boardpreviewer.js';
 
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
@@ -40,8 +40,6 @@ export interface Board extends BoardPreview {
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
 	specialVicinity: Record<CoordsKey, RawType[]>;
 	vicinity: Record<CoordsKey, RawType[]>;
-	/** Determines turn order, win conditions, promotion, etc. */
-	gameRules: GameRules;
 	/** The color whose turn it currently is at the front of the game. */
 	whosTurn: Player;
 }
@@ -52,17 +50,15 @@ type Vicinity = Record<CoordsKey, RawType[]>;
 
 /** Creates a new {@link Board} object from provided arguments */
 function initBoard(
+	/** The rules to base the board on. Deep-copied — the board owns its own rules. */
 	gameRules: GameRules,
 	variant: LoadedVariant | undefined,
-	variantOptions?: VariantOptions,
-	editor: boolean = false,
-	/** Only has an effect if the `worldBorder` gamerule is not present. */
-	worldBorderDist?: bigint,
+	options: BoardInitOptions = {},
 ): Board {
-	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, variantOptions, editor, worldBorderDist); // prettier-ignore
+	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, options);
 
 	// Calculate movesets
-	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, gameRules.slideLimit);
+	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, boardPreview.gameRules.slideLimit); // prettier-ignore
 	const specialMoves = variantreader.getSpecialMovesOfVariant(variant?.mod);
 
 	// Trim both groups to only include types actually present in the game
@@ -86,8 +82,7 @@ function initBoard(
 		specialVicinity,
 		pieceMovesets,
 		specialMoves,
-		gameRules,
-		whosTurn: gameRules.turnOrder[0]!,
+		whosTurn: boardPreview.gameRules.turnOrder[0]!,
 	};
 }
 

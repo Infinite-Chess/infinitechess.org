@@ -43,6 +43,19 @@ import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { createMaskedDraw } from '../../webgl/maskedDraw.js';
 import { createTextureCache } from '../../chess/rendering/texturecache.js';
 
+// Types -------------------------------------------------------------------
+
+/** Optional extras a preview may be shown with. */
+interface PreviewOptions {
+	/** Gamerule modifiers active on the game, listed among its rules. */
+	modifiers?: GameModifier[];
+	/**
+	 * The world border the game would be constructed with, so the preview shows the
+	 * board that will actually load. Only present when the engine is the opponent.
+	 */
+	border?: { worldBorderDist: bigint; worldBorderCap: bigint };
+}
+
 // Constants ---------------------------------------------------------------
 
 /** Size of mini image icons in the preview tooltip, in virtual pixels. */
@@ -164,18 +177,18 @@ async function showForPosition(
 	anchor: HTMLElement,
 	name: string,
 	resolvePosition: () => Promise<VariantOptions | undefined>,
-	placement: 'left' | 'below' = 'left',
-	modifiers?: GameModifier[],
+	placement: 'left' | 'below',
+	options: PreviewOptions = {},
 ): Promise<void> {
 	const token = ++showToken;
 	const variantOptions = await resolvePosition();
 	if (variantOptions === undefined || token !== showToken) return; // Unavailable, or they have since left hover.
-	const boardsim = boardpreviewer.initBoardPreview(
-		variantOptions.gameRules,
-		undefined,
+	const boardsim = boardpreviewer.initBoardPreview(variantOptions.gameRules, undefined, {
 		variantOptions,
-	);
-	await showForBoard(anchor, name, boardsim, variantOptions.gameRules, token, false, placement, undefined, modifiers); // prettier-ignore
+		worldBorderDist: options.border?.worldBorderDist,
+		worldBorderCap: options.border?.worldBorderCap,
+	});
+	await showForBoard(anchor, name, boardsim, token, placement, undefined, options.modifiers);
 }
 
 /**
@@ -187,7 +200,7 @@ async function showForVariantCode(
 	anchor: HTMLElement,
 	code: VariantCode,
 	placement: 'left' | 'below',
-	modifiers?: GameModifier[],
+	options: PreviewOptions = {},
 ): Promise<void> {
 	const token = ++showToken;
 	const variantName = t.shared.variants[code];
@@ -199,8 +212,11 @@ async function showForVariantCode(
 		dateTimestamp: Date.now(),
 	};
 	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant);
-	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant);
-	await showForBoard(anchor, variantName, boardsim, gameRules, token, true, placement, code, modifiers); // prettier-ignore
+	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant, {
+		worldBorderDist: options.border?.worldBorderDist,
+		worldBorderCap: options.border?.worldBorderCap,
+	});
+	await showForBoard(anchor, variantName, boardsim, token, placement, code, options.modifiers);
 }
 
 /** Hides the tooltip. */
@@ -215,21 +231,20 @@ async function showForBoard(
 	anchor: HTMLElement,
 	name: string,
 	boardsim: BoardPreview,
-	gameRules: GameRules,
 	token: number,
-	isPreset: boolean,
 	placement: 'left' | 'below',
-	variantCode?: VariantCode,
-	modifiers?: GameModifier[],
+	/** Undefined for custom positions, which have no variant. */
+	variantCode: VariantCode | undefined,
+	modifiers: GameModifier[] | undefined,
 ): Promise<void> {
 	element_name.textContent = name;
-	await populateRules(gameRules, boardsim, isPreset, variantCode, modifiers);
+	await populateRules(boardsim, variantCode, modifiers);
 	await ensureReady(boardsim);
 
 	if (token !== showToken || !anchor.isConnected) return; // They have since left hover, hovered over another tooltip anchor, or the anchor has been removed from the DOM mid-load.
 
 	positionTooltip(anchor, placement);
-	renderBoard(boardsim, gameRules);
+	renderBoard(boardsim);
 	element_tooltip.classList.remove('visibility-hidden');
 	currentAnchor = anchor;
 }
@@ -263,8 +278,9 @@ async function ensureReady(boardsim: BoardPreview): Promise<void> {
 }
 
 /** Renders the board to the preview canvas, using the preview's own render context. */
-function renderBoard(boardsim: BoardPreview, gameRules: GameRules): void {
+function renderBoard(boardsim: BoardPreview): void {
 	const ctx = previewCtx;
+	const { gameRules } = boardsim;
 
 	const mesh: Mesh = { offset: [0n, 0n], inverted: false, types: {} };
 	piecemodels.regenAll(ctx, boardsim, mesh);
@@ -304,12 +320,11 @@ function renderBoard(boardsim: BoardPreview, gameRules: GameRules): void {
 
 /** Populates the gamerule modifications list above the canvas. */
 async function populateRules(
-	gameRules: GameRules,
 	boardsim: BoardPreview,
-	isPreset: boolean,
-	variantCode?: VariantCode,
-	modifiers?: GameModifier[],
+	variantCode: VariantCode | undefined,
+	modifiers: GameModifier[] | undefined,
 ): Promise<void> {
+	const { gameRules } = boardsim;
 	const items: Array<string | HTMLElement> = [];
 	/** Reference to the variant preview translations. */
 	const tp = t.shared.variant_preview;
@@ -375,7 +390,7 @@ async function populateRules(
 	// when absent. For custom positions, always show the full promotion info.
 	if (gameRules.promotion === undefined) {
 		items.push(tp.no_promotion);
-	} else if (!isPreset) {
+	} else if (variantCode === undefined) {
 		const span = document.createElement('span');
 		span.className = 'preview-tooltip-promotion-icons';
 		span.append(tp.promotion_prefix);

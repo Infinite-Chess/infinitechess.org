@@ -16,23 +16,19 @@
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit';
-import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
 import type { EditorSaveState } from '../../editorstores/estoretypes';
 import type { MetaData, MovePacket } from '../../../../../../shared/types.js';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 import type { ActivePosition, StorageType } from '../boardeditor';
 
-import bimath from '../../../../../../shared/util/math/bimath';
 import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
-import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card';
 import variantcache from '../../../../../../shared/chess/variants/variantcache';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
-import { engineDictionary } from '../../../../../../shared/chess/engine';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
@@ -53,7 +49,6 @@ import docutil from '../../../util/docutil';
 import gameslot from '../../chess/gameslot';
 import gameloader from '../../chess/gameloader';
 import egamerules from '../egamerules';
-import gamesession from '../../chess/gamesession';
 import annotations from '../../rendering/highlights/annotations/annotations';
 import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
@@ -62,6 +57,7 @@ import selectiontool from '../tools/selection/selectiontool';
 import gamecompressor from '../../chess/gamecompressor';
 import guiboardcontrols from '../../gui/guiboardcontrols';
 import clientmetadatautil from '../../chess/clientmetadatautil';
+import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
 
 // Constants ----------------------------------------------------------------------
 
@@ -79,19 +75,14 @@ const CLIPBOARD_DENIED = 'Clipboard permission denied. This might be your browse
 
 /** Resets the board editor position to the Classical position. */
 async function reset(): Promise<void> {
-	// Unload logical and rendering parts of current position
-	gamesession.unloadLogicalAndRendering();
-
 	// Load default board editor position
-	boardeditor.clearActivePosition();
 	await gameloader.startBoardEditor();
+	// AFTER the load: clearing flushes the autosave, which serializes the live gamefile.
+	boardeditor.clearActivePosition();
 }
 
 /** Clears the entire board editor position. */
 async function clearAll(): Promise<void> {
-	// Unload logical and rendering parts of current position
-	gamesession.unloadLogicalAndRendering();
-
 	// Initialize board editor with empty position and bare minimum game rules
 	const gameRules = variantpreviewer.getBareMinimumGameRules();
 	const position: Map<CoordsKey, number> = new Map();
@@ -104,7 +95,6 @@ async function clearAll(): Promise<void> {
 		state_global,
 	};
 
-	boardeditor.clearActivePosition();
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			additional: {
@@ -114,19 +104,17 @@ async function clearAll(): Promise<void> {
 		true, // Dirty position (unsaved changes)
 		false,
 	);
+	// AFTER the load: clearing flushes the autosave, which serializes the live gamefile.
+	boardeditor.clearActivePosition();
 }
 
 /** Loads a position from a savestate. */
 async function load(editorSaveState: EditorSaveState, storage_type: StorageType): Promise<void> {
-	// Unload logical and rendering parts of current position
-	gamesession.unloadLogicalAndRendering();
-
 	// prettier-ignore
 	const new_active_position: ActivePosition =
 		storage_type === 'cloud'
 			? { name: editorSaveState.position_name, storage_type: 'cloud', owner: validatorama.getOurUsername()! }
 			: { name: editorSaveState.position_name, storage_type: 'local' };
-	boardeditor.setActivePosition(new_active_position);
 
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
@@ -138,6 +126,8 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 		editorSaveState.pawnDoublePush,
 		editorSaveState.castling,
 	);
+	// AFTER the load: setting flushes the autosave, which serializes the live gamefile.
+	boardeditor.setActivePosition(new_active_position);
 	toast.show(translations.editor.position_loaded);
 }
 
@@ -188,86 +178,15 @@ async function paste(): Promise<undefined> {
 	toast.show(translations.copypaste.loaded_position_from_clipboard);
 }
 
-/** Starts a local game from the current board editor position, to test play. */
-function startLocalGame(): void {
+async function startEngineGame(): Promise<void> {
 	const variantOptions = getValidatedPosition();
 	if (variantOptions === null) return;
-
-	gamesession.unloadGame();
-	gameloader.startCustomLocalGame({
-		additional: {
-			variantOptions,
-		},
-	});
-}
-
-function startEngineGame(engineUIConfig: EngineUIConfig): void {
-	const currentEngine = 'apeiron';
-
-	const variantOptions = getValidatedPosition();
-	if (variantOptions === null) return;
-
-	// Determine whether it's not supported...
-
-	// Set world border automatically, if wished
-	if (engineUIConfig.setDefaultWorldBorder) {
-		// Calculate minimum bounding box of all pieces
-		const bb = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.pieces)!; // Guaranteed defined since above we check if there's > 0 pieces
-
-		/*
-		 * Priority:
-		 * 1. Default distance
-		 * 2. Capped at engine's cap
-		 */
-
-		const worldBorderProperty = engineDictionary[currentEngine].worldBorder;
-		const cap = apeiron_card.BORDER_CAP;
-
-		// How far can we extend in each direction before hitting ±limit?
-		const availableLeft = bb.left + cap;
-		const availableRight = cap - bb.right;
-		const availableBottom = bb.bottom + cap;
-		const availableTop = cap - bb.top;
-
-		// Calculate separate limiting distances for horizontal and vertical axes
-		const availableHorz = bimath.min(availableLeft, availableRight);
-		const availableVert = bimath.min(availableBottom, availableTop);
-
-		// Use the minimum between the default and the capped
-		const distHorz = bimath.min(worldBorderProperty, availableHorz);
-		const distVert = bimath.min(worldBorderProperty, availableVert);
-
-		variantOptions.gameRules.worldBorder = {
-			left: bb.left - distHorz,
-			right: bb.right + distHorz,
-			bottom: bb.bottom - distVert,
-			top: bb.top + distVert,
-		};
-	}
-
-	// Does the engine support the position and settings?
-	const supported_result = apeiron_card.isPositionSupported(variantOptions);
-	if (!supported_result.supported) {
-		toast.show(`${translations.editor.position_not_supported} ${supported_result.reason}`, {
-			error: true,
-		});
-		return;
-	}
-
-	gamesession.unloadGame();
-	gameloader.startCustomEngineGame({
-		timeControl: engineUIConfig.timeControl,
-		additional: {
-			variantOptions,
-		},
-		youAreColor: engineUIConfig.youAreColor,
-		currentEngine,
-		engineConfig: {
-			engineTimeLimitPerMoveMillis:
-				engineDictionary[currentEngine].defaultTimeLimitPerMoveMillis,
-			strengthLevel: engineUIConfig.strengthLevel,
-		},
-	});
+	const icn = icnconverter.LongToShort_Format(
+		{ metadata: {} as MetaData, ...variantOptions },
+		icnconverter.COMPACT_FORMAT_OPTIONS,
+	);
+	await gameSetupModalHandoff.save({ icn, mode: 'computer' });
+	window.location.assign('/');
 }
 
 // Helpers ----------------------------------------------------------------
@@ -473,7 +392,6 @@ export default {
 	load,
 	copy,
 	paste,
-	startLocalGame,
 	startEngineGame,
 	getCurrentPositionInformation,
 };

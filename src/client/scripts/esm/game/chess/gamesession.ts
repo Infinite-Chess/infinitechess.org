@@ -6,11 +6,13 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { LoadOptions } from './gameslot.js';
 
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
 import area from '../rendering/area.js';
 import toast from '../../components/toast.js';
+import thread from '../../util/thread.js';
 import meshes from '../rendering/meshes.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
@@ -20,6 +22,19 @@ import perspective from '../rendering/perspective.js';
 import { GameBus } from '../GameBus.js';
 
 // Types ------------------------------------------------------------------------
+
+/** Optional per-page steps woven into {@link loadGame}'s lifecycle. */
+type LoadHooks = {
+	/** Runs once the logical gamefile exists, before the graphical half is awaited. */
+	onLogicalLoaded?: () => void;
+	/**
+	 * Whether to conclude the game if it loaded already over (result banner, stopped clocks).
+	 * Fresh analysis/editor loads opt out — no result banner on a board you're still building.
+	 */
+	concludeIfOver?: boolean;
+	/** Runs before a load error is surfaced, to unwind caller state the dead load left set. */
+	onLoadError?: () => void;
+};
 
 /** The type of game session we're in, and our role in it, if applicable. */
 type GameSession =
@@ -39,6 +54,7 @@ type GameSession =
 
 // Variables --------------------------------------------------------------------
 
+/** Every page must establish this at entry, before the game loop starts, so it is never read un-set. */
 let session: GameSession;
 
 /** True while the gamefile's logical, graphical (images), or engine resources are currently loading. */
@@ -77,17 +93,50 @@ function isLoading(): boolean {
 
 // Load / Unload lifecycle ------------------------------------------------------
 
-/** Sets the type of game we're in, and marks it as loading. */
+/** Declares the kind of game session we're in. */
 function setSessionGame(gameSession: GameSession): void {
 	session = gameSession;
-	markLoading();
 }
 
-/** Flags the game's graphics/engine as newly loading. */
+/**
+ * Flags the game (logical & graphical) as newly loading. {@link loadGame} does this itself
+ * — call it directly only to cover work that must precede the load, such as a fetch.
+ */
 function markLoading(): void {
 	// console.log('START loading.');
 	loading = true;
-	gamecore.getCanvas().classList.add('visibility-hidden');
+}
+
+/**
+ * Swaps whatever's on the board for a freshly loaded game, running the full load lifecycle:
+ * tear down the old game, await both load halves, reveal the board, surface any error.
+ * Resolves once fully loaded — or once a failure has been surfaced. Never rejects.
+ */
+async function loadGame(loadOptions: LoadOptions, hooks?: LoadHooks): Promise<void> {
+	if (gameslot.getGamefile()) unloadGame();
+	markLoading();
+
+	// Yield a task so the browser gets a rendering step to composite the canvas hide above.
+	// (A timer is not a hard paint guarantee — double-rAF is, but rAF never fires in a hidden
+	// tab, which would stall the whole load until the tab is foregrounded.)
+	await thread.sleep(0);
+
+	return gameslot
+		.loadGamefile(loadOptions)
+		.then(({ graphical }) => {
+			// Logical loaded. Init anything that needs the gamefile before the board shows.
+			hooks?.onLogicalLoaded?.();
+			return graphical;
+		})
+		.then(() => {
+			// Graphical loaded
+			markLoadingDone();
+			if (hooks?.concludeIfOver) concludeGameIfOver();
+		})
+		.catch((err: Error) => {
+			hooks?.onLoadError?.();
+			onCatchLoadingError(err);
+		});
 }
 
 /**
@@ -97,7 +146,8 @@ function markLoading(): void {
 function markLoadingDone(): void {
 	// console.log('Game fully loaded.');
 	loading = false;
-	gamecore.getCanvas().classList.remove('visibility-hidden'); // Show the canvas now that the game is fully loaded.
+	// The canvas is visible exactly while a fully-loaded game exists: this is its only reveal.
+	gamecore.getCanvas().classList.remove('visibility-hidden');
 	centerView();
 	GameBus.dispatch('graphical-loaded');
 	GameBus.dispatch('load-ended');
@@ -127,24 +177,24 @@ function onCatchLoadingError(err: Error): void {
 }
 
 /**
- * Concludes the game if it loaded already over. Call AFTER {@link markLoadingDone}: the moves
- * list only paints its plies on 'graphical-loaded', and the result banner sits beneath them.
+ * Concludes the game if it's over — whether it loaded that way, or a conclusion arrived mid-load
+ * (gameslot.concludeGame() defers to here while loading). Call only AFTER the load has fully
+ * finished: the moves list paints its plies on 'graphical-loaded', and the result banner sits
+ * beneath them. Prefer {@link loadGame}'s `concludeIfOver`, which enforces that ordering.
  */
 function concludeGameIfOver(): void {
-	// Suppresses the game-over sound — the game concluded before this load, not live in front of us.
+	// Suppresses the game-over sound — it didn't happen live in front of us; the board wasn't up yet.
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame(false);
 }
 
-function unloadLogicalAndRendering(): void {
+/** Tears the current board down — gamefile, perspective, momentum, transitions — and hides the canvas. */
+function unloadGame(): void {
 	perspective.disable();
 	gameslot.unloadGame();
 	boardpos.eraseMomentum();
 	Transition.terminate();
+	// unloadGame() is its only hide, and all board pages ship it hidden.
 	gamecore.getCanvas().classList.add('visibility-hidden');
-}
-
-function unloadGame(): void {
-	unloadLogicalAndRendering();
 }
 
 // Exports --------------------------------------------------------------------
@@ -156,9 +206,6 @@ export default {
 	isLoading,
 	setSessionGame,
 	markLoading,
-	markLoadingDone,
-	onCatchLoadingError,
+	loadGame,
 	concludeGameIfOver,
-	unloadLogicalAndRendering,
-	unloadGame,
 };

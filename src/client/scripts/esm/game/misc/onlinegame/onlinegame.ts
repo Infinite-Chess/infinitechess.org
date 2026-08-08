@@ -4,14 +4,18 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
+import type { Additional } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { GameStateMessage, ParticipantState } from '../../../../../../shared/types.js';
 
+import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
-import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
+import { engineDictionary } from '../../../../../../shared/chess/engine.js';
 
 import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import drawoffers from './drawoffers.js';
+import enginegame from '../enginegame.js';
 import gameactions from '../../gui/guigameactions.js';
 import gamesession from '../../chess/gamesession.js';
 import guigamemeta from '../../gui/guigamemeta.js';
@@ -61,7 +65,7 @@ SocketBus.addEventListener('reconnect', () => {
 // Getters ------------------------------------------------------------
 
 function areInSync(): boolean {
-	return inSync!;
+	return inSync;
 }
 
 function setInSync(value: boolean): void {
@@ -74,47 +78,69 @@ function setInSync(value: boolean): void {
  * A fresh page load (not a reconnect, game live OR dead): Loads a game onto the
  * board from a fresh `gamestate` message and sets up the online-game session.
  * @param dead - Whether the server has evicted it from memory. True if fetched over HTTP.
- * @param ourRole - The viewer's color, if they're a participant; undefined => spectator (white POV).
  */
-function loadGameFromState(state: GameStateMessage, dead: boolean, ourRole?: Player): void {
-	gamesession.setSessionGame({ type: 'online', role: ourRole });
+function loadGameFromState(state: GameStateMessage, dead: boolean): void {
+	/** The viewer's color, if they're a participant; undefined => spectator (white POV). */
+	const ourRole = gamesession.getRole();
 
 	// The static setup (variant/time control/creation time) is SSR'd
-	const { variant, timeControl, timeCreated } = window.gamePageData;
+	const { variant, timeControl, timeCreated, engineGame } = window.gamePageData;
+	const additional: Additional = {
+		moves: state.moves,
+		gameConclusion: state.gameConclusion,
+		clockValues: state.clockValues,
+	};
+	if (engineGame) {
+		additional.worldBorderDist = apeiron_card.PLAY_BORDER.worldBorderDist;
+		additional.worldBorderCap = apeiron_card.PLAY_BORDER.worldBorderCap;
+	}
 
-	gameslot
-		.loadGamefile({
+	gamesession.loadGame(
+		{
 			timeControl,
 			variant: variant.kind === 'preset' ? variant.code : undefined,
 			dateTimestamp: timeCreated,
 			// Black views from their side; white and spectators (no role) view white's side.
 			viewWhitePerspective: ourRole !== p.BLACK,
-			additional: {
-				moves: state.moves,
-				gameConclusion: state.gameConclusion,
-				clockValues: state.clockValues,
+			additional,
+		},
+		{
+			onLogicalLoaded: () => {
+				const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
+				initOnlineGame(initialStage, state.participantState);
+
+				// A finalized rated game carries its deltas in the state.
+				if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
+
+				if (engineGame && ourRole !== undefined && !state.gameConclusion) {
+					const { workerUrl, engineUrl } = engineGame;
+					if (!workerUrl || !engineUrl)
+						throw new Error('Engine assets are missing from the game page.');
+					// The server only ever creates online engine games against apeiron
+					// (createenginegame.ts) — no other engine's config can be built from page data.
+					if (engineGame.engine !== 'apeiron')
+						throw new Error(`Unsupported online engine "${engineGame.engine}".`);
+					enginegame.initEngineGame({
+						youAreColor: ourRole,
+						engine: {
+							name: engineGame.engine,
+							config: {
+								engineTimeLimitPerMoveMillis:
+									engineDictionary[engineGame.engine]
+										.defaultTimeLimitPerMoveMillis,
+								strengthLevel: engineGame.strengthLevel,
+							},
+						},
+						workerUrl,
+						engineUrl,
+					});
+				}
 			},
-		})
-		.then(({ graphical }) => {
-			// Logical loaded, return graphical promise
-			const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
-			initOnlineGame(initialStage, state.participantState);
-
-			// A finalized rated game carries its deltas in the state.
-			if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
-
-			return graphical;
-		})
-		.then(() => {
-			// Graphical loaded
-			gamesession.markLoadingDone();
-			gamesession.concludeGameIfOver();
-		})
-		.catch((err: Error) => {
+			concludeIfOver: true,
 			// The gamestate arrived but never became a game — we don't hold it after all.
-			inSync = false;
-			gamesession.onCatchLoadingError(err);
-		});
+			onLoadError: () => (inSync = false),
+		},
+	);
 }
 
 /**

@@ -54,6 +54,55 @@ positions is the consumer (T9/T10), not part of this task.
    the "Game created" event row. Also revisit `requirements.md`'s custom-game notes if anything there
    now reads as stale.
 
+## Engine games on a custom position
+
+Removing the throws in scope item 1 also opens custom positions to **engine** games, which carry
+constraints preset games never hit. None of it is enforced server-side today.
+
+- **Nothing server-side checks the engine can play the position.** `isPlaySupported`
+  ([apeiron_card.ts](../../../../src/shared/chess/engines/apeiron_card.ts)) has **zero** server callers —
+  the entire gate lives in the client's variant selector. Until custom games start, an unplayable
+  position dead-ends in the `createGame` throw; once that's gone, a hand-crafted `createenginegame`
+  message starts a game the WASM engine can't handle. The check must apply **only** to engine games —
+  `resolveAndValidateVariant` ([createseek.ts](../../../../src/server/game/seeksmanager/createseek.ts))
+  is shared with ordinary seeks.
+- **`isPlaySupported` requires a bounded board**, so the gamefile it judges has to be constructed with
+  `apeiron_card.PLAY_BORDER`. Engine games already get that border when the board is really built
+  ([gameutility.ts](../../../../src/server/game/gamemanager/gameutility.ts) `initServerGame`); the
+  validation path must use the same one or the two disagree on what's in bounds.
+- **`isPlaySupported` does NOT check `SUPPORTED_VARIANTS`.** That lives solely in `checkGameRules`,
+  which `isPlaySupported` never calls — only the analysis/review entry points reach it. The selector
+  enforces it separately, by hiding unsupported preset buttons. Custom seeks drop the variant identity
+  on the wire regardless (`gamefileToPositionOptions` keeps position + gamerules only); what stops a 4D
+  ICN from becoming a seek is the unrelated `hasCustomMovement` check, and that rejection is
+  **intended** — someone pasting `[Variant "4×4×4×4 Chess"]` would expect 4D movement a seek can't carry.
+- **Reason codes are `EngineSupportCode`**, keying `position_errors.engine.<code>.{label,message}` in
+  `translation/shared/en-US.toml` — nested objects, not the flat strings `PositionErrorCode` uses, so
+  `localizePositionError` does not extend to them as-is.
+
+### Where the world border comes from — the three client paths disagree
+
+Only the **From-ICN** path bakes an explicit `worldBorder` into the ICN it sends:
+`tryFormulateGame(…, engineBorder())` → the constructed gamefile's generated `gameRules.worldBorder` →
+`gamecompressor.gamefileToPositionOptions` copies gameRules → `variantOptionsToICN` → serialized by
+[icnconverter.ts](../../../../src/shared/chess/logic/icn/icnconverter.ts).
+
+- **Local save** and **cloudSave** do not. Both build *previews* with the engine border
+  (`handleSavePreview` and `validateSavedPosition` pass `engineBorder()`) — which is why the preview
+  tooltip renders it correctly — but that gamefile is discarded, and `getSeekVariant` serializes the raw,
+  border-less options. cloudSave sends only a name; the server reads the stored ICN straight from the DB.
+- **Presets** can never carry one, since no gameRules cross the wire; the server always reconstructs it.
+- **The From-ICN baking is load-bearing, not incidental.** That border is generated from the
+  **pre-move** position's bounding box, and only *then* is the position flattened. A server regenerating
+  from the flattened position gets a different, tighter border. Preserving it is what makes client and
+  server agree for an ICN carrying moves.
+- A server-supplied `PLAY_BORDER` is a **no-op** when the ICN already carries a border —
+  [boardpreviewer.ts](../../../../src/shared/chess/logic/boardpreviewer.ts) only generates one when
+  `gameRules.worldBorder === undefined`.
+
+Normalizing the three (client never bakes, server always supplies) is the cleaner invariant, but it
+can't be settled until the server can build a custom game at all — hence it belongs to this task.
+
 ## Notes
 
 - **The ICN is the source of truth for custom games' game rules.** A preset variant derives its

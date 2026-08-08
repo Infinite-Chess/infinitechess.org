@@ -4,8 +4,10 @@
  * This script handles checkmate practice logic
  */
 
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { EngineAndConfig } from '../../../../../shared/chess/engine.js';
 import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
@@ -22,12 +24,14 @@ import {
 	rawTypes as r,
 } from '../../../../../shared/chess/util/typeutil.js';
 
+import toast from '../../components/toast.js';
 import docutil from '../../util/docutil.js';
 import gameslot from './gameslot.js';
 import selection from '../chess/selection.js';
-import gameloader from './gameloader.js';
+import enginegame from '../misc/enginegame.js';
 import gamesession from './gamesession.js';
 import guipractice from '../gui/guipractice.js';
+import { GameBus } from '../GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
@@ -71,15 +75,15 @@ let inCheckmatePractice: boolean = false;
 /** Whether the player is allowed to undo a move in the current position. */
 let undoingIsLegal: boolean = false;
 
+GameBus.addEventListener('user-move-played', registerHumanMove);
+GameBus.addEventListener('engine-move-played', registerEngineMove);
+GameBus.addEventListener('game-concluded', onEngineGameConclude);
+
 // Functions ----------------------------------------------------------------------------
 
 function setUndoingIsLegal(value: boolean): void {
 	undoingIsLegal = value;
 	// TODO: reflect undo/restart button state in the new game page's side bar.
-}
-
-function areInCheckmatePractice(): boolean {
-	return inCheckmatePractice;
 }
 
 /**
@@ -99,40 +103,62 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		state_global: { specialRights },
 		gameRules: variantpreviewer.getBareMinimumGameRules(),
 	};
-	const currentEngine = 'engineCheckmatePractice' as const;
+	const engine = {
+		name: 'engineCheckmatePractice',
+		config: {
+			checkmateSelectedID,
+			engineTimeLimitPerMoveMillis:
+				engineDictionary.engineCheckmatePractice.defaultTimeLimitPerMoveMillis,
+		},
+	} satisfies EngineAndConfig;
 
 	const options = {
 		event: 'Infinite chess checkmate practice',
 		timeControl: '-' as const,
 		variant: undefined,
 		youAreColor: p.WHITE,
-		currentEngine,
-		engineConfig: {
-			checkmateSelectedID: checkmateSelectedID,
-			engineTimeLimitPerMoveMillis:
-				engineDictionary[currentEngine].defaultTimeLimitPerMoveMillis,
-		},
+		engine,
 		variantOptions,
 		showGameControlButtons: true as true,
 	};
 
-	gameloader.startEngineGame(options);
+	startEngineGame(options);
 }
 
-function onGameUnload(): void {
-	closeListeners();
-	inCheckmatePractice = false;
-	setUndoingIsLegal(false);
+function startEngineGame(options: {
+	timeControl: '-';
+	variantOptions: VariantOptions;
+	youAreColor: Player;
+	engine: EngineAndConfig;
+}): void {
+	gamesession.setSessionGame({ type: 'engine', role: options.youAreColor });
+	gamesession.loadGame(
+		{
+			timeControl: options.timeControl,
+			variant: undefined,
+			dateTimestamp: Date.now(),
+			viewWhitePerspective: options.youAreColor === p.WHITE,
+			additional: {
+				variantOptions: options.variantOptions,
+				worldBorderDist: engineDictionary[options.engine.name].worldBorderDist,
+			},
+		},
+		{
+			onLogicalLoaded: () =>
+				enginegame.initEngineGame({
+					...options,
+					workerUrl: window.checkmatePracticePageData.workerUrl,
+					engineUrl: window.checkmatePracticePageData.engineUrl,
+				}),
+			concludeIfOver: true,
+		},
+	);
 }
 
+/** Re-registering the same handler refs on a restart is a no-op, so these are never removed. */
 function initListeners(): void {
 	document.addEventListener('guigameinfo-undoMove', undoMove);
 	document.addEventListener('guigameinfo-restart', restartGame);
-}
-
-function closeListeners(): void {
-	document.removeEventListener('guigameinfo-undoMove', undoMove);
-	document.removeEventListener('guigameinfo-restart', restartGame);
 }
 
 /**
@@ -413,23 +439,17 @@ function undoMove(): void {
 
 function restartGame(): void {
 	if (!inCheckmatePractice)
-		return console.error(
-			'Restarting games is currently not supported for non-practice mode games',
-		);
+		return console.error('Restarting games is currently not supported for non-practice mode games'); // prettier-ignore
+	// Don't stomp an in-flight load — unloading its gamefile would crash its graphical half.
+	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 
-	gamesession.unloadGame(); // Unload current game
 	startCheckmatePractice(guipractice.getCheckmateSelectedID());
 }
 
 // Exports ------------------------------------------------------------------------------
 
 export default {
-	areInCheckmatePractice,
 	startCheckmatePractice,
-	onGameUnload,
 	updateCompletedCheckmates,
 	eraseCheckmatePracticeProgressFromLocalStorage,
-	onEngineGameConclude,
-	registerHumanMove,
-	registerEngineMove,
 };

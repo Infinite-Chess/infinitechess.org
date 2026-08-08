@@ -5,19 +5,18 @@
  * creating a new game if successful.
  */
 
+import type { SeekId } from '../../../shared/types.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 
-import * as z from 'zod';
-
 import gameutility from '../gamemanager/gameutility.js';
-import { createGame } from '../gamemanager/gamemanager.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
+import { createGame, onGameCreationError } from '../gamemanager/gamemanager.js';
 import {
 	getSeekAndIndexByID,
 	deleteSeekByIndex,
@@ -25,20 +24,14 @@ import {
 	findSocketFromOwner,
 	onPublicSeeksChange,
 	broadcastViewerCount,
-	IDLengthOfSeeks,
 } from './lobbymanager.js';
-
-/** The zod schema for validating the contents of the acceptseek message. */
-const acceptseekschem = z.string().length(IDLengthOfSeeks);
-
-type AcceptSeekMessage = z.infer<typeof acceptseekschem>;
 
 /**
  * Attempts to accept a seek of given id.
  * @param ws - The socket performing this action
  * @param messageContents - The incoming socket message containing the seek id
  */
-function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): void {
+function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 	// { id, isPrivate }
 	if (isSocketInAnActiveGame(ws)) {
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
@@ -107,18 +100,11 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 			{ variant: seek.variant, time: seek.time, rated: seek.mode === 'rated' },
 			assignments,
 		);
-	} catch {
-		// DB error (already logged)
-		// Notify both parties a server error occurred
-		for (const { socket: ws } of Object.values(assignments)) {
-			if (!ws) continue;
-			sendSocketMessage(
-				ws,
-				'general',
-				'notifyerror',
-				"Couldn't create game. A server error occurred. Please try again.",
-			);
-		}
+	} catch (error: unknown) {
+		onGameCreationError(
+			error,
+			Object.values(assignments).map(({ socket }) => socket),
+		);
 		return;
 	}
 
@@ -132,4 +118,4 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 	if (hadPublicSeek) onPublicSeeksChange(); // Broadcast to all seeks list subscribers!
 }
 
-export { acceptSeek, acceptseekschem };
+export { acceptSeek };

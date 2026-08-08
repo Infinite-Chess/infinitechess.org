@@ -9,7 +9,7 @@ import type { DeleteReason } from '../controllers/deleteAccountController.js';
 import jsutil from '../../shared/util/jsutil.js';
 
 import db, { dbCall } from './database.js';
-import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
+import { allMembersColumns, uniqueMembersColumns, user_id_upper_cap } from './databaseTables.js';
 import {
 	isEmailTakenInPending,
 	isUsernameTakenInPending,
@@ -185,7 +185,7 @@ export function updateMemberColumns(
 		// Validate they are all valid database columns
 		if (
 			columns.length === 0 ||
-			!columns.every((col) => allMemberColumns.includes(col)) ||
+			!columns.every((col) => allMembersColumns.includes(col)) ||
 			!values.every(
 				(val) => typeof val === 'string' || typeof val === 'number' || val === null,
 			)
@@ -408,17 +408,15 @@ function validateMemberQueryArgs(
 	if (
 		!Array.isArray(columns) ||
 		columns.length === 0 ||
-		!columns.every((column) => typeof column === 'string' && allMemberColumns.includes(column))
+		!columns.every((column) => typeof column === 'string' && allMembersColumns.includes(column))
 	)
 		throw new Error(
 			`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`,
 		);
 
 	// 2. Validate Search Key
-	if (typeof searchKey !== 'string' || !uniqueMemberKeys.includes(searchKey))
-		throw new Error(
-			`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`,
-		);
+	if (typeof searchKey !== 'string' || !uniqueMembersColumns.includes(searchKey))
+		throw new Error(`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMembersColumns.join(', ')}`); // prettier-ignore
 
 	// 3. Validate Search Values
 	if (

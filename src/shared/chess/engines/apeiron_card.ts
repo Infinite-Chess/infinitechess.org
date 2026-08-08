@@ -6,27 +6,51 @@
  * (local eval + Game Review) must agree on when the engine may run.
  */
 
-import type { GameRules } from '../util/gamerules';
-import type { VariantCode } from '../variants/variantregistry';
-import type { GameruleWinCondition } from '../util/winconutil';
-import type { GameFile, VariantOptions } from '../logic/gamefile';
+import type { GameFile } from '../logic/gamefile.js';
+import type { GameRules } from '../util/gamerules.js';
+import type { VariantCode } from '../variants/variantregistry.js';
+import type { GameruleWinCondition } from '../util/winconutil.js';
 
-import bimath from '../../util/math/bimath';
-import bounds from '../../util/math/bounds';
-import boardutil from '../util/boardutil';
-import coordutil from '../util/coordutil';
-import { I64_MAX } from '../engine';
-import typeutil, { RawType, rawTypes as r, players as p } from '../util/typeutil';
+import bimath from '../../util/math/bimath.js';
+import bounds from '../../util/math/bounds.js';
+import boardutil from '../util/boardutil.js';
+import { I64_MAX, engineDictionary } from '../engine.js';
+import typeutil, { RawType, rawTypes as r, players as p } from '../util/typeutil.js';
 
-type SupportedResult = { supported: true } | { supported: false; reason: string };
+/** Why the engine can't handle a game. Keys into `position_errors.engine` in the shared translations. */
+export type EngineSupportCode =
+	| 'unsupported_variant'
+	| 'unsupported_win_rule'
+	| 'too_many_promotions'
+	| 'too_many_pieces'
+	| 'unsupported_piece'
+	| 'border_too_large'
+	| 'out_of_bounds';
+
+type SupportedResult = { supported: true } | { supported: false; reason: EngineSupportCode };
 
 // Constants -------------------------------------------------------------
 
-/** The maximum world border distance the engine can handle. */
-const BORDER_CAP = I64_MAX - 1000n; // Small cushion
+/**
+ * Hard cap on the absolute edge of an engine game's world border — i64 with a small cushion.
+ * Deliberately 1000 further out than the engine's `worldBorderDist`, so any position whose pieces
+ * lie within ±1000 of the origin (every preset variant) keeps a border spaced evenly around them.
+ * Only pieces reaching beyond that trip the cap, trading even spacing for staying inside i64.
+ */
+const WORLD_BORDER_CAP = I64_MAX - 1000n;
 
 /** Max non-neutral pieces the engine handles before it bogs down (excludes voids/obstacles). */
 const MAX_PIECES = 1000;
+
+/**
+ * The world border every engine game is played inside, as gamefile construction takes it.
+ * Shared so a game validated against {@link isPlaySupported} is built on the same board the
+ * real game loads onto — otherwise the two could disagree on what's in bounds.
+ */
+const PLAY_BORDER = {
+	worldBorderDist: engineDictionary['apeiron'].worldBorderDist,
+	worldBorderCap: WORLD_BORDER_CAP,
+};
 
 const SUPPORTED_VARIANTS: Set<VariantCode> = new Set(['Classical', 'Confined_Classical', 'Classical_Plus', 'Core', 'CoaIP', 'CoaIP_HO', 'CoaIP_RO', 'CoaIP_NO', 'Palace', 'Pawndard', 'Standarch', 'Space_Classic', 'Space', 'Pawn_Horde', 'Knightline', 'Obstocean', 'Chess', 'Omega']); // prettier-ignore
 
@@ -38,16 +62,15 @@ const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GI
 
 // Individual rule checks (shared by both entry points) --------------------
 
-// Reason strings are shown in the engine panel's single-line, ellipsis-truncated stats readout.
-// Keep each around "Unsupported variant" in length (~20 chars, give or take) — no dynamic names.
-// TODO: Localize these
+// Every reason code has both a short `label` (the engine panel's single-line, ellipsis-truncated
+// stats readout) and a full-sentence `message` (the variant selector's error text).
 
 /** Only checkmate-family win conditions are understood. */
 function checkWinConditions(gameRules: GameRules): SupportedResult {
 	const used: GameruleWinCondition[] = Object.values(gameRules.winConditions).flat();
 	for (const winCondition of used) {
 		if (!SUPPORTED_WIN_CONDITIONS.includes(winCondition))
-			return { supported: false, reason: `Unsupported win rule` };
+			return { supported: false, reason: 'unsupported_win_rule' };
 	}
 	return { supported: true };
 }
@@ -56,7 +79,7 @@ function checkWinConditions(gameRules: GameRules): SupportedResult {
 function checkPromotions(gameRules: GameRules): SupportedResult {
 	if (gameRules.promotion) {
 		for (const playerRanks of Object.values(gameRules.promotion.ranks)) {
-			if (playerRanks.length > 1) return { supported: false, reason: `Too many promotions` };
+			if (playerRanks.length > 1) return { supported: false, reason: 'too_many_promotions' };
 		}
 	}
 	return { supported: true };
@@ -64,7 +87,7 @@ function checkPromotions(gameRules: GameRules): SupportedResult {
 
 /** No more than {@link MAX_PIECES} non-neutral pieces. */
 function checkPieceCount(nonNeutralCount: number): SupportedResult {
-	if (nonNeutralCount > MAX_PIECES) return { supported: false, reason: `Too many pieces` };
+	if (nonNeutralCount > MAX_PIECES) return { supported: false, reason: 'too_many_pieces' };
 	return { supported: true };
 }
 
@@ -81,7 +104,7 @@ function checkPositionPieceCount(types: Iterable<number>): SupportedResult {
 function checkPieceTypes(rawTypes: Iterable<RawType>): SupportedResult {
 	for (const rawType of rawTypes) {
 		if (!SUPPORTED_PIECES.has(rawType))
-			return { supported: false, reason: `Unsupported piece` };
+			return { supported: false, reason: 'unsupported_piece' };
 	}
 	return { supported: true };
 }
@@ -89,43 +112,48 @@ function checkPieceTypes(rawTypes: Iterable<RawType>): SupportedResult {
 // Entry points ----------------------------------------------------------
 
 /**
- * Whether the engine can PLAY the given position (engine games). Requires a bounded board
- * within the engine's safe coordinate range — engine games always run inside a world border.
+ * Whether the engine can PLAY the given game (engine games). Requires a bounded board within the
+ * engine's safe coordinate range — engine games always run inside a world border, so the gamefile
+ * must be constructed with the engine's `worldBorderDist`/{@link WORLD_BORDER_CAP} for this to pass.
+ *
+ * Judged on the CURRENT position, since that's what an engine game plays on from here.
  */
-function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
-	const winConsResult = checkWinConditions(variantOptions.gameRules);
+function isPlaySupported(gamefile: GameFile): SupportedResult {
+	const winConsResult = checkWinConditions(gamefile.gameRules);
 	if (!winConsResult.supported) return winConsResult;
 
 	// World border larger than i64, or absent, is unsupported.
+	const worldBorder = gamefile.gameRules.worldBorder;
 	if (
-		!variantOptions.gameRules.worldBorder ||
-		Object.values(variantOptions.gameRules.worldBorder).some(
-			(dist) => dist === null || bimath.abs(dist) > BORDER_CAP,
+		!worldBorder ||
+		Object.values(worldBorder).some(
+			(edge) => edge === null || bimath.abs(edge) > WORLD_BORDER_CAP,
 		)
 	) {
-		return { supported: false, reason: `Border too large` };
+		return { supported: false, reason: 'border_too_large' };
 	}
 
-	// Piece count can't be too high
-	const pieceCountResult = checkPositionPieceCount(variantOptions.position.values());
+	const pieceCountResult = checkPieceCount(
+		boardutil.getPieceCountOfGame(gamefile.pieces, { ignoreColors: new Set([p.NEUTRAL]) }),
+	);
 	if (!pieceCountResult.supported) return pieceCountResult;
 
-	// All pieces must sit inside the world border.
-	for (const coordsKey of variantOptions.position.keys()) {
-		const coords = coordutil.getCoordsFromKey(coordsKey);
-		if (!bounds.boxContainsSquare(variantOptions.gameRules.worldBorder, coords))
-			return { supported: false, reason: `Out of bounds` };
+	// No piece may lie outside the border. Only reachable for a border generated around this position
+	// and then clipped by WORLD_BORDER_CAP — an explicit one is validated upstream in validatePosition.
+	const piecesBox = boardutil.getBoundingBoxOfAllPieces(gamefile.pieces);
+	if (piecesBox !== undefined && !bounds.boxContainsBox(worldBorder, piecesBox)) {
+		return { supported: false, reason: 'out_of_bounds' };
 	}
 
-	const promotionsResult = checkPromotions(variantOptions.gameRules);
+	const promotionsResult = checkPromotions(gamefile.gameRules);
 	if (!promotionsResult.supported) return promotionsResult;
 
 	const allRawTypes = new Set<RawType>();
-	for (const type of variantOptions.position.values()) {
-		allRawTypes.add(typeutil.getRawType(type));
+	for (const idx of gamefile.pieces.coords.values()) {
+		allRawTypes.add(typeutil.getRawType(gamefile.pieces.types[idx]!));
 	}
-	// Promotion can introduce a piece type absent from the starting position.
-	for (const rawType of variantOptions.gameRules.promotion?.pieces ?? []) {
+	// Promotion can introduce a piece type absent from the board.
+	for (const rawType of gamefile.gameRules.promotion?.pieces ?? []) {
 		allRawTypes.add(rawType);
 	}
 	return checkPieceTypes(allRawTypes);
@@ -134,12 +162,12 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 /**
  * Game-level support that's independent of any single position's piece set: the variant's movement
  * rules (4D ones the engine can't replay), win conditions, and promotion lines. Unlike
- * {@link isPositionSupported} these apply to a loaded game and require no bounded board — the
+ * {@link isPlaySupported} these require no bounded board — the
  * analysis engine handles out-of-range coordinates itself (blocking/re-basing).
  */
 function checkGameRules(gamefile: GameFile): SupportedResult {
 	if (gamefile.variant !== undefined && !SUPPORTED_VARIANTS.has(gamefile.variant.code))
-		return { supported: false, reason: `Unsupported variant` };
+		return { supported: false, reason: 'unsupported_variant' };
 
 	const winConsResult = checkWinConditions(gamefile.gameRules);
 	if (!winConsResult.supported) return winConsResult;
@@ -186,7 +214,7 @@ function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 	const currentPieceCount = boardutil.getPieceCountOfGame(gamefile.pieces, {
 		ignoreColors: new Set([p.NEUTRAL]),
 	});
-	if (currentPieceCount > MAX_PIECES) return { supported: false, reason: `Too many pieces` };
+	if (currentPieceCount > MAX_PIECES) return { supported: false, reason: 'too_many_pieces' };
 
 	// Now we have set a realistic upper bound
 	const pieceCountResult = checkPositionPieceCount(gamefile.startSnapshot.position.values());
@@ -197,10 +225,10 @@ function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 
 export default {
 	// Constants
-	BORDER_CAP,
+	PLAY_BORDER,
 	SUPPORTED_VARIANTS,
 	// Functions
-	isPositionSupported,
+	isPlaySupported,
 	isAnalysisSupported,
 	isGameReviewSupported,
 };

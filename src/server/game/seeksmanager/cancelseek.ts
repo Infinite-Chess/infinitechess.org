@@ -4,26 +4,19 @@
  * This script handles seek cancelation.
  */
 
+import type { SeekId } from '../../../shared/types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-
-import * as z from 'zod';
 
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { getSeekAndIndexByID, deleteSeekByIndex, IDLengthOfSeeks } from './lobbymanager.js';
-
-/** The zod schema for validating the contents of the cancelseek message. */
-const cancelseekschem = z.string().length(IDLengthOfSeeks);
-
-/** This is also the id of the seek to delete */
-type CancelSeekMessage = z.infer<typeof cancelseekschem>;
+import { getSeekAndIndexByID, deleteSeekByIndex } from './lobbymanager.js';
 
 /**
  * Cancels/deletes the specified seek.
  * @param ws - Their socket
  * @param messageContents - The incoming socket message that is the ID of the seek to be cancelled!
  */
-function cancelSeek(ws: CustomWebSocket, messageContents: CancelSeekMessage): void {
+function cancelSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 	// Value should be the ID of the seek to cancel!
 	const id = messageContents; // id of seek to delete
 
@@ -41,4 +34,4 @@ function cancelSeek(ws: CustomWebSocket, messageContents: CancelSeekMessage): vo
 	deleteSeekByIndex(seek, index);
 }
 
-export { cancelSeek, cancelseekschem };
+export { cancelSeek };

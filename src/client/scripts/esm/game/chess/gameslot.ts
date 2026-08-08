@@ -32,6 +32,7 @@ import miniimage from '../rendering/miniimage.js';
 import starfield from '../rendering/starfield.js';
 import gamesound from '../misc/gamesound.js';
 import imagecache from '../../chess/rendering/imagecache.js';
+import gamesession from './gamesession.js';
 import piecemodels from '../rendering/piecemodels.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../GameBus.js';
@@ -249,6 +250,11 @@ function concludeGame(playSound = true): void {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
 	if (loadedGamefile.gameConclusion === undefined)
 		throw Error("Cannot conclude game when the game hasn't ended.");
+
+	// Nothing this updates is on screen yet, and the moves list hasn't painted its plies for the
+	// result banner to sit beneath. The conclusion is already recorded on the gamefile, so
+	// gamesession.concludeGameIfOver() performs this the moment the load finishes.
+	if (gamesession.isLoading()) return;
 
 	clock.endGame(loadedGamefile);
 	guiclock.stopClocks(loadedGamefile);

@@ -3,6 +3,8 @@
 /**
  * This script manages the live_games table, which persists active game state
  * across server restarts. One row per active game.
+ *
+ * See docs/systems/LIVE_GAME_PERSISTENCE.md for the column reference.
  */
 
 import jsutil from '../../shared/util/jsutil.js';
@@ -102,7 +104,7 @@ export function updateLiveGame(game_id: number, updates: Partial<LiveGameData>):
 }
 
 /**
- * Deletes a live game row (cascades to live_player_games).
+ * Deletes a live game row and its live participant rows.
  * @param game_id - The game to delete.
  * @throws If a database error occurs.
  */

@@ -1,26 +1,33 @@
-// src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts
+// src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.worker.ts
 
 /**
- * This script runs a chess engine for checkmate practice that computes the best move for the black royal piece.
+ * Runs the checkmate-practice engine in a worker.
  * It is called as a WebWorker from enginegame.js so that it can run asynchronously from the rest of the website.
  * You may specify a different engine to be used by specifying a different engine name in the gameOptions when initializing an engine game.
  *
  * @author Andreas Tsevas
  */
 
-import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
-import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { GameRules } from '../../../../../../shared/chess/util/gamerules.js';
+import type { OrganizedPiecesBase } from '../../../../../../shared/chess/logic/organizedpieces.js';
 import type {
 	Coords,
 	CoordsKey,
 	DoubleCoords,
 } from '../../../../../../shared/chess/util/coordutil.js';
+import type {
+	CheckmatePracticeMoveRequest,
+	EngineInitResponse,
+	EngineResponse,
+} from './engineprotocol.js';
 
-import jsutil from '../../../../../../shared/util/jsutil.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import { primalityTest } from '../../../../../../shared/util/isprime.js';
-import icnconverter, { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import { detectInsufficientMaterial } from '../../../../../../shared/chess/logic/insufficientmaterial.js';
+import icnconverter, {
+	LongFormatIn,
+	MoveCoords,
+} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import {
 	rawTypes as r,
 	ext as e,
@@ -28,27 +35,26 @@ import {
 	numTypes,
 } from '../../../../../../shared/chess/util/typeutil.js';
 
-// If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
-// type gamefile = import("../../chess/logic/gamefile").default;
-// type Coords = import("../../chess/util/coordutil").Coords;
+/**
+ * The subset of the game this engine reads, rebuilt from the compressed position the
+ * page sends. Practice games carry no move history, so this is the live position.
+ */
+interface EngineBoard {
+	gameRules: GameRules;
+	pieces: OrganizedPiecesBase;
+}
 
 /**
  * Let the main thread know that the Worker has finished fetching and
  * its code is now executing! We may now hide the spinny pawn loading animation.
  */
-postMessage('readyok');
+postMessage('readyok' satisfies EngineInitResponse);
 
 // Here, the engine webworker received messages from the outside
 
-self.onmessage = function (e: MessageEvent): void {
-	const message = e.data as {
-		stringGamefile: string;
-		engineConfig: { checkmateSelectedID: string; engineTimeLimitPerMoveMillis: number };
-		requestGeneratedMoves: boolean;
-	};
-	if (message.requestGeneratedMoves) return; // ignore generated moves requests in this engine, this doesn't support sending them
-	input_gamefile = JSON.parse(message.stringGamefile, jsutil.parseReviver); // parse the gamefile (it's nested functions won't be included)
-	// console.log("input_gamefile", jsutil.deepCopyObject(input_gamefile));
+self.onmessage = function (e: MessageEvent<CheckmatePracticeMoveRequest>): void {
+	const message = e.data;
+	input_board = buildBoardFromLongform(message.lf);
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
 	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
 	globallyBestScore = -Infinity;
@@ -68,8 +74,8 @@ let rand: Function;
 /** Whether the engine has already been initialized for the current game */
 let engineInitialized: boolean = false;
 
-/** Externally supplied gamefile */
-let input_gamefile: GameFile;
+/** The position the engine is currently calculating for. */
+let input_board: EngineBoard;
 
 /** Start time of current engine calculation in millis */
 let engineStartTime: number;
@@ -129,6 +135,20 @@ const pieceNameDictionary: { [pieceType: number]: number } = {
 	[r.KNIGHTRIDER + e.W]: 11,
 	[r.HUYGEN + e.W]: 12,
 };
+
+/**
+ * Rebuilds the pieces and rules the engine reads from the page's compressed position.
+ * Practice games are never board-editor games, so no extra promotion/editor slots are reserved.
+ */
+function buildBoardFromLongform(lf: LongFormatIn): EngineBoard {
+	const { pieces } = organizedpieces.processInitialPosition(
+		lf.position!,
+		lf.gameRules.turnOrder,
+		false,
+		lf.gameRules.promotion,
+	);
+	return { gameRules: lf.gameRules, pieces };
+}
 
 function invertPieceNameDictionary(json: { [key: string]: number }): { [key: number]: number } {
 	const inv: { [key: number]: number } = {};
@@ -1649,8 +1669,6 @@ function runIterativeDeepening(
 				);
 
 				// If a piece is captured, immediately check for insuffmat
-				// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
-				// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
 				if (
 					new_piecelist.filter((x) => x === 0).length >
 					piecelist.filter((x) => x === 0).length
@@ -1668,18 +1686,19 @@ function runIterativeDeepening(
 							);
 						}
 					}
-					const gamefile = input_gamefile;
+					const gameRules = input_board.gameRules;
 					const dummy_board = {
-						gameRules: gamefile.gameRules,
+						gameRules,
+						// Empty on purpose: it makes getLastMove() return undefined, skipping the
+						// "was the last move a capture" gate — we only get here after a capture.
 						moves: [],
-						// Slide lines are not needed here — detectInsufficientMaterial() never reads lines.
 						pieces: organizedpieces.processInitialPosition(
 							piecesOrganizedByKey,
-							gamefile.gameRules.turnOrder,
-							input_gamefile.editor,
-							gamefile.gameRules.promotion,
+							gameRules.turnOrder,
+							false, // Practice games are never board-editor games.
+							gameRules.promotion,
 						).pieces,
-					} as unknown as Board;
+					};
 
 					if (detectInsufficientMaterial(dummy_board)) break;
 				}
@@ -1764,7 +1783,7 @@ function move_to_gamefile_move(target_square: DoubleCoords): string {
 	return icnconverter.getCompactMoveFromDraft(moveCoords);
 }
 
-function doesTypeExist(boardsim: Board, type: number): boolean {
+function doesTypeExist(boardsim: EngineBoard, type: number): boolean {
 	const range = boardsim.pieces.typeRanges.get(type);
 
 	if (range === undefined) return false;
@@ -1772,7 +1791,7 @@ function doesTypeExist(boardsim: Board, type: number): boolean {
 	return range.end - range.start - range.undefineds.length > 0;
 }
 
-function getFirstOfType(boardsim: Board, type: number): DoubleCoords | undefined {
+function getFirstOfType(boardsim: EngineBoard, type: number): DoubleCoords | undefined {
 	const range = boardsim.pieces.typeRanges.get(type);
 
 	if (range === undefined) return;
@@ -1804,18 +1823,18 @@ function convertBigIntCoordsToFloating(coords: Coords): DoubleCoords {
 }
 
 /**
- * This function is called from outside and initializes the engine calculation given the provided gamefile
+ * This function is called from outside and initializes the engine calculation given the provided position
  */
 async function runEngine(): Promise<void> {
 	try {
-		const gamefile = input_gamefile;
+		const board = input_board;
 		// get real coordinates and parse type of black royal piece
-		if (doesTypeExist(gamefile, r.KING + e.B)) {
-			gamefile_royal_coords = getFirstOfType(gamefile, r.KING + e.B)!;
+		if (doesTypeExist(board, r.KING + e.B)) {
+			gamefile_royal_coords = getFirstOfType(board, r.KING + e.B)!;
 			royal_moves = king_moves;
 			royal_type = 'k';
-		} else if (doesTypeExist(gamefile, r.ROYALCENTAUR + e.B)) {
-			gamefile_royal_coords = getFirstOfType(gamefile, r.ROYALCENTAUR + e.B)!;
+		} else if (doesTypeExist(board, r.ROYALCENTAUR + e.B)) {
+			gamefile_royal_coords = getFirstOfType(board, r.ROYALCENTAUR + e.B)!;
 			royal_moves = centaur_moves;
 			royal_type = 'rc';
 		} else {
@@ -1825,7 +1844,7 @@ async function runEngine(): Promise<void> {
 		// create list of types and coords of white pieces, in order to initialize start_piecelist and start_coordlist
 		start_piecelist = [];
 		start_coordlist = [];
-		for (const [type, range] of gamefile.pieces.typeRanges) {
+		for (const [type, range] of board.pieces.typeRanges) {
 			let undefinedidx = 0;
 			for (let idx = range.start; idx < range.end; idx++) {
 				if (idx === range.undefineds[undefinedidx]) {
@@ -1835,8 +1854,8 @@ async function runEngine(): Promise<void> {
 				}
 				if (Math.floor(type / numTypes) !== p.WHITE) continue;
 				const bigintCoords: Coords = [
-					gamefile.pieces.XPositions[idx]!,
-					gamefile.pieces.YPositions[idx]!,
+					board.pieces.XPositions[idx]!,
+					board.pieces.YPositions[idx]!,
 				];
 				// Convert the bigint coordinates to floating point coordinates that the engine works with.
 				const coords = convertBigIntCoordsToFloating(bigintCoords);
@@ -1898,7 +1917,10 @@ async function runEngine(): Promise<void> {
 				setTimeout(r, engineTimeLimitPerMoveMillis - (time_now - engineStartTime)),
 			);
 		}
-		postMessage({ type: 'move', data: move_to_gamefile_move(globallyBestVariation[0]![1]!) });
+		postMessage({
+			type: 'move',
+			data: move_to_gamefile_move(globallyBestVariation[0]![1]!),
+		} satisfies EngineResponse);
 	} catch (e) {
 		console.error('An error occurred in the engine computation of the checkmate practice');
 		console.error(e);

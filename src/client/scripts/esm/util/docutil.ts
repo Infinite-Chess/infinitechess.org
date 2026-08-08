@@ -54,6 +54,20 @@ async function readFromClipboard(): Promise<string | undefined> {
 }
 
 /**
+ * Whether the user is typing in a text field (text input, textarea, or contenteditable),
+ * meaning keyboard and clipboard events belong to it rather than to the page.
+ */
+function isTypingInTextField(): boolean {
+	const active = document.activeElement;
+	return (
+		// A focused checkbox isn't typing — bare keys (Space, arrows…) should still control the board.
+		(active instanceof HTMLInputElement && active.type !== 'checkbox') ||
+		active instanceof HTMLTextAreaElement ||
+		(active instanceof HTMLElement && active.isContentEditable)
+	);
+}
+
+/**
  * Returns true if the current device has a mouse pointer.
  */
 function isMouseSupported(): boolean {
@@ -164,6 +178,7 @@ export default {
 	isLocalEnvironment,
 	copyToClipboard,
 	readFromClipboard,
+	isTypingInTextField,
 	isMouseSupported,
 	isTouchSupported,
 	getLastSegmentOfURL,

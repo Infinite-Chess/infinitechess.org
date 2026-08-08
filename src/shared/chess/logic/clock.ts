@@ -33,7 +33,7 @@ export type ClockData = {
 		minutes: number;
 		/** The number of miliseconds both sides started with.  */
 		millis: number;
-		/** The increment used, in milliseconds. */
+		/** The increment used, in seconds. */
 		increment: number;
 	};
 } & (
@@ -117,7 +117,6 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 
 	if (colorTicking !== undefined) {
 		currentClocks.timeAtTurnStart = now;
-
 		currentClocks.timeRemainAtTurnStart = currentClocks.currentTime[colorTicking];
 	}
 }

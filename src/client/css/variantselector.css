@@ -386,3 +386,13 @@
 .slide-limit-name {
 	font-size: 15px;
 }
+
+/* ========================
+   Utility classes
+   ======================== */
+
+/* Recommended for specificity, because `display` rules in here may overwrite the .hidden
+   class from global.css. Without this, the variants the engine doesn't support are visible. */
+.hidden {
+	display: none;
+}
