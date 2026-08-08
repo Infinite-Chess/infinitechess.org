@@ -116,13 +116,20 @@ function loadGameFromState(state: GameStateMessage, dead: boolean): void {
 					const { workerUrl, engineUrl } = engineGame;
 					if (!workerUrl || !engineUrl)
 						throw new Error('Engine assets are missing from the game page.');
+					// The server only ever creates online engine games against apeiron
+					// (createenginegame.ts) — no other engine's config can be built from page data.
+					if (engineGame.engine !== 'apeiron')
+						throw new Error(`Unsupported online engine "${engineGame.engine}".`);
 					enginegame.initEngineGame({
 						youAreColor: ourRole,
-						currentEngine: engineGame.engine,
-						engineConfig: {
-							engineTimeLimitPerMoveMillis:
-								engineDictionary[engineGame.engine].defaultTimeLimitPerMoveMillis,
-							strengthLevel: engineGame.strengthLevel,
+						engine: {
+							name: engineGame.engine,
+							config: {
+								engineTimeLimitPerMoveMillis:
+									engineDictionary[engineGame.engine]
+										.defaultTimeLimitPerMoveMillis,
+								strengthLevel: engineGame.strengthLevel,
+							},
 						},
 						workerUrl,
 						engineUrl,

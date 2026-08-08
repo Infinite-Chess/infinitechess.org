@@ -39,7 +39,7 @@ export interface Engine {
 export type ValidEngine = keyof typeof engineDictionary;
 
 /** What every engine's worker is configured with when the page asks it for a move. */
-interface BaseEngineConfig {
+export interface BaseEngineConfig {
 	/** Hard time limit for the engine to think in milliseconds. */
 	engineTimeLimitPerMoveMillis: number;
 }
@@ -56,8 +56,10 @@ export interface ApeironEngineConfig extends BaseEngineConfig {
 	strengthLevel: number;
 }
 
-/** The config of whichever engine the game is against. Each engine reads only its own member. */
-export type EngineConfig = CheckmatePracticeEngineConfig | ApeironEngineConfig;
+/** An engine paired with the config its own worker expects. */
+export type EngineAndConfig =
+	| { name: 'engineCheckmatePractice'; config: CheckmatePracticeEngineConfig }
+	| { name: 'apeiron'; config: ApeironEngineConfig };
 
 // Constants --------------------------------------------------------------------
 

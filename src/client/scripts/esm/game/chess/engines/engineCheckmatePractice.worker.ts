@@ -10,12 +10,16 @@
 
 import type { GameRules } from '../../../../../../shared/chess/util/gamerules.js';
 import type { OrganizedPiecesBase } from '../../../../../../shared/chess/logic/organizedpieces.js';
-import type { CheckmatePracticeEngineConfig } from '../../../../../../shared/chess/engine.js';
 import type {
 	Coords,
 	CoordsKey,
 	DoubleCoords,
 } from '../../../../../../shared/chess/util/coordutil.js';
+import type {
+	CheckmatePracticeMoveRequest,
+	EngineInitResponse,
+	EngineResponse,
+} from './engineprotocol.js';
 
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import { primalityTest } from '../../../../../../shared/util/isprime.js';
@@ -44,17 +48,12 @@ interface EngineBoard {
  * Let the main thread know that the Worker has finished fetching and
  * its code is now executing! We may now hide the spinny pawn loading animation.
  */
-postMessage('readyok');
+postMessage('readyok' satisfies EngineInitResponse);
 
 // Here, the engine webworker received messages from the outside
 
-self.onmessage = function (e: MessageEvent): void {
-	const message = e.data as {
-		lf: LongFormatIn;
-		engineConfig: CheckmatePracticeEngineConfig;
-		requestGeneratedMoves: boolean;
-	};
-	if (message.requestGeneratedMoves) return; // ignore generated moves requests in this engine, this doesn't support sending them
+self.onmessage = function (e: MessageEvent<CheckmatePracticeMoveRequest>): void {
+	const message = e.data;
 	input_board = buildBoardFromLongform(message.lf);
 	checkmateSelectedID = message.engineConfig.checkmateSelectedID;
 	engineTimeLimitPerMoveMillis = message.engineConfig.engineTimeLimitPerMoveMillis;
@@ -1918,7 +1917,10 @@ async function runEngine(): Promise<void> {
 				setTimeout(r, engineTimeLimitPerMoveMillis - (time_now - engineStartTime)),
 			);
 		}
-		postMessage({ type: 'move', data: move_to_gamefile_move(globallyBestVariation[0]![1]!) });
+		postMessage({
+			type: 'move',
+			data: move_to_gamefile_move(globallyBestVariation[0]![1]!),
+		} satisfies EngineResponse);
 	} catch (e) {
 		console.error('An error occurred in the engine computation of the checkmate practice');
 		console.error(e);

@@ -4,8 +4,16 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineConfig, ValidEngine } from '../../../../../shared/chess/engine.js';
+import type { EngineAndConfig } from '../../../../../shared/chess/engine.js';
+import type {
+	ApeironMoveRequest,
+	CheckmatePracticeMoveRequest,
+	EngineInitRequest,
+	EngineInitResponse,
+	EngineResponse,
+} from '../chess/engines/engineprotocol.js';
 
+import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import { engineDictionary } from '../../../../../shared/chess/engine.js';
@@ -25,14 +33,14 @@ import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';
 
 // State --------------------------------------------------------------------
 
-let engineColor: Player | undefined;
 /**
  * The engine worker of the game we're in, if any.
  * `name` keys its {@link engineDictionary} entry, for the properties that vary per engine.
  * `ready` flips true on its 'readyok' message; until then it answers nothing.
  * `config` is sent to the worker with every move request.
+ * `color` is the side the engine plays — ours inverted.
  */
-let engine: { name: ValidEngine; worker: Worker; ready: boolean; config: EngineConfig } | undefined;
+let engine: ({ worker: Worker; ready: boolean; color: Player } & EngineAndConfig) | undefined;
 
 // Events -----------------------------------------------------------------------
 
@@ -47,12 +55,11 @@ GameBus.addEventListener('game-unloaded', () => terminate());
  * This method launches an engine webworker for the current game.
  * Deliberately not awaitable: the board never waits on the engine. Once the worker is ready it
  * requests a move itself, catching any played while it loaded.
- * @param options - An object that contains the properties `currentEngine` and `engineConfig`
  */
 function initEngineGame(options: {
 	youAreColor: Player;
-	currentEngine: ValidEngine;
-	engineConfig: EngineConfig;
+	/** Which engine the game is against, with the config its worker expects. */
+	engine: EngineAndConfig;
 	/** Hashed URL of the engine's worker script. */
 	workerUrl: string;
 	/**
@@ -61,9 +68,7 @@ function initEngineGame(options: {
 	 */
 	engineUrl: string;
 }): void {
-	console.log(`Starting engine game with engine "${options.currentEngine}".`);
-
-	engineColor = typeutil.invertPlayer(options.youAreColor);
+	console.log(`Starting engine game with engine "${options.engine.name}".`);
 
 	// Initialize the engine as a webworker
 	if (!window.Worker) {
@@ -74,36 +79,36 @@ function initEngineGame(options: {
 		type: 'module',
 	}); // module type allows the web worker to import methods and types from other scripts.
 	engine = {
-		name: options.currentEngine,
 		worker,
 		ready: false,
-		config: options.engineConfig,
+		color: typeutil.invertPlayer(options.youAreColor),
+		...options.engine,
 	};
 
-	// Installed per engine game, so the debug toggle stays inert where no engine
-	// is loaded (spectators). Requests wait for 'readyok'; onEngineReady() then fires them.
-	enginelegalmovesdebug.init({
-		canRequest: () => engine?.ready === true,
-		requestMoves: ({ gamefile }) => requestGeneratedMoves(gamefile),
-	});
+	// Installed per engine game, so the debug toggle stays inert where no engine is loaded
+	// (spectators). Apeiron alone answers a generated-moves request — leaving it uninstalled
+	// for the practice bot keeps requests it never replies to out of the pending queue.
+	// Requests wait for 'readyok'; onEngineReady() then fires them.
+	if (options.engine.name === 'apeiron')
+		enginelegalmovesdebug.init({
+			canRequest: () => engine?.ready === true,
+			requestMoves: ({ gamefile }) => requestGeneratedMoves(gamefile),
+		});
 
 	// Set up a handler for the 'isready' command that indicates the worker is loaded and ready
 	// We have to manually send this message at the top of our engines.
-	worker.onmessage = (e: MessageEvent): void => {
+	worker.onmessage = (e: MessageEvent<EngineInitResponse>): void => {
 		if (e.data === 'readyok') onEngineReady();
-		else if (e.data?.type === 'initerror') {
-			const message = String(e.data.message ?? 'Unknown initialization error.');
-			failEngineLoad(new Error(`Engine failed to initialize: ${message}`));
-		}
+		else failEngineLoad(new Error(`Engine failed to initialize: ${e.data.message}`));
 	};
 	worker.onerror = (e: ErrorEvent): void => {
 		failEngineLoad(new Error('Worker failed to load: ' + e.message));
 	};
-	if (engineDictionary[options.currentEngine].hasGlue)
+	if (engineDictionary[options.engine.name].hasGlue)
 		worker.postMessage({
 			engineUrl: options.engineUrl,
 			threads: getEngineThreadCount(),
-		});
+		} satisfies EngineInitRequest);
 }
 
 /** Opens the engine for business once its worker signals it has finished fetching/loading. */
@@ -111,7 +116,8 @@ function onEngineReady(): void {
 	if (!engine) return; // A straggling 'readyok' from a worker terminated mid-load — the game ended.
 	engine.ready = true;
 	// Overwrite the onmessage listener to listen for move submissions
-	engine.worker.onmessage = (e: MessageEvent): void => handleEngineMessage(e.data);
+	engine.worker.onmessage = (e: MessageEvent<EngineResponse>): void =>
+		handleEngineMessage(e.data);
 	// Remove the error handler (no longer needed after worker is ready)
 	engine.worker.onerror = null;
 	onMovePlayed(); // Catches a move played while the engine was still loading.
@@ -139,7 +145,7 @@ function onMovePlayed(): void {
 	if (!engine?.ready) return;
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
-	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
+	if (gamefile.whosTurn !== engine.color) return; // Don't do anything if it's our turn (not the engines)
 
 	// Request the engine to perform a best move calculation...
 
@@ -151,44 +157,31 @@ function onMovePlayed(): void {
 		!engineDictionary[engine.name].needsMoveHistory,
 	);
 
-	// Derive clock times for both colors in milliseconds, similar to UCI wtime/btime/winc/binc
-	let wtime: number | undefined;
-	let btime: number | undefined;
-	let winc: number | undefined;
-	let binc: number | undefined;
-	const basegame = gamefile;
-	const clocks = basegame.clocks;
-	if (!basegame.untimed && clocks) {
-		wtime = clocks.currentTime[p.WHITE];
-		btime = clocks.currentTime[p.BLACK];
-		const incSeconds = clocks.startTime.increment;
-		winc = incSeconds * 1000;
-		binc = incSeconds * 1000;
-	}
-
-	// prettier-ignore
-	const timing = wtime !== undefined && btime !== undefined ? {
-		wtime,
-		btime,
-		winc,
-		binc,
-	} : undefined;
-
 	if (gamefile.gameConclusion) return;
-	engine.worker.postMessage({
-		lf: longformIn,
-		engineConfig: engine.config,
-		youAreColor: engineColor,
-		wtime: timing?.wtime,
-		btime: timing?.btime,
-		winc: timing?.winc,
-		binc: timing?.binc,
-	});
+
+	if (engine.name === 'apeiron') {
+		// UCI-style clock values, in millis. Untimed games (no clocks) send none.
+		const clocks = gamefile.clocks;
+		const incrementMillis = clocks && timeutil.secondsToMillis(clocks.startTime.increment);
+		engine.worker.postMessage({
+			lf: longformIn,
+			engineConfig: engine.config,
+			youAreColor: engine.color,
+			wtime: clocks?.currentTime[p.WHITE],
+			btime: clocks?.currentTime[p.BLACK],
+			winc: incrementMillis,
+			binc: incrementMillis,
+		} satisfies ApeironMoveRequest);
+	} else {
+		engine.worker.postMessage({
+			lf: longformIn,
+			engineConfig: engine.config,
+			youAreColor: engine.color,
+		} satisfies CheckmatePracticeMoveRequest);
+	}
 }
 
-function handleEngineMessage(data: any): void {
-	// console.log('Received message from engine worker:', data);
-
+function handleEngineMessage(data: EngineResponse): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) {
 		console.error('Received an engine reply after the game unloaded:', data);
@@ -199,28 +192,16 @@ function handleEngineMessage(data: any): void {
 		return;
 	}
 
-	if (typeof data !== 'object' || data === null) {
-		console.error('Received invalid message from engine worker:', data);
-		return;
-	}
-
-	// Check if the message contains generated moves for debugging
-	if (data.type === 'move') {
-		// Message contains the engine's best move suggestion
-		makeEngineMove(data.data);
-	} else if (data.type === 'generatedMoves') {
-		enginelegalmovesdebug.receiveMovesForOldestRequest([...data.data]);
-	} else {
-		console.error('Received unknown message from engine worker:', data);
-	}
+	if (data.type === 'move') makeEngineMove(data.data);
+	else enginelegalmovesdebug.receiveMovesForOldestRequest(data.data);
 }
 
 /**
  * This method takes care of all the logic involved in making an engine move
  * It gets called after the engine finishes its calculation
- * @param move - The move that SHOULD be a string in compact format "x,y>x,y=P"
+ * @param tokenMove - The engine's move in compact format "x,y>x,y=P", or null if it has none.
  */
-function makeEngineMove(tokenMove: unknown): void {
+function makeEngineMove(tokenMove: string | null): void {
 	if (!engine) return console.error('Attempting to make engine move, but no engine loaded!');
 
 	const gamefile = gameslot.getGamefile()!;
@@ -278,7 +259,8 @@ function resignFailedEngine(): void {
 
 /** Requests engine-generated legal moves for the currently viewed position. */
 function requestGeneratedMoves(gamefile: GameFile): void {
-	if (!engine?.ready) return; // The overlay gates on canRequest(), so this is belt-and-braces.
+	// The overlay gates on canRequest(), and is only installed for engines that answer these.
+	if (!engine?.ready || engine.name !== 'apeiron') return;
 
 	// Compress the gamefile as a single position (not including future moves)
 	// This ensures the engine analyzes the currently viewed position
@@ -287,9 +269,9 @@ function requestGeneratedMoves(gamefile: GameFile): void {
 	engine.worker.postMessage({
 		lf: longformIn,
 		engineConfig: engine.config,
-		youAreColor: engineColor,
+		youAreColor: engine.color,
 		requestGeneratedMoves: true,
-	});
+	} satisfies ApeironMoveRequest);
 }
 
 /**
@@ -305,7 +287,6 @@ function getEngineThreadCount(): number {
 function terminate(): void {
 	engine?.worker.terminate();
 	engine = undefined;
-	engineColor = undefined;
 	enginelegalmovesdebug.detach();
 }
 

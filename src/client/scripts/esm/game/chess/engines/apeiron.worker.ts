@@ -16,42 +16,19 @@
  * @author FirePlank
  */
 
-import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
-import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { ApeironEngineConfig } from '../../../../../../shared/chess/engine.js';
 import type { EngineWasmModule, WasmEngine, WasmMove } from './enginewasm.js';
+import type {
+	ApeironMoveRequest,
+	EngineInitRequest,
+	EngineInitResponse,
+	EngineResponse,
+} from './engineprotocol.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import { loadEngineWasm, getPromotionAbbr } from './enginewasm.js';
 
 // Types ----------------------------------------------------------------
-
-/** The first message from the page: where to load the engine glue, and the Lazy SMP pool size. */
-interface EngineWorkerInitMessage {
-	/** Served engine-glue URL (from the asset manifest). */
-	engineUrl: string;
-	/** Lazy SMP search threads (1 = single-threaded). */
-	threads: number;
-}
-
-/** Every message after the init one: search the given position and post a move back. */
-interface EngineWorkerMessage {
-	/** The compressed position/game to search, converted to ICN before it reaches wasm. */
-	lf: LongFormatIn;
-	/** Search settings the user chose for this engine game. */
-	engineConfig: ApeironEngineConfig;
-	/** The color the engine is playing, which the returned move is cased for. */
-	youAreColor: Player;
-	/** UCI-style clock remaining, in ms. Absent in untimed games. */
-	wtime?: number;
-	btime?: number;
-	/** UCI-style clock increment, in ms. Absent in untimed games. */
-	winc?: number;
-	binc?: number;
-	/** Debug: post the position's generated legal moves instead of searching for a move. */
-	requestGeneratedMoves?: boolean;
-}
 
 /** The gameplay engine glue's exports. */
 interface GameplayWasmModule extends EngineWasmModule {
@@ -77,7 +54,7 @@ let wasm: GameplayWasmModule;
 // Message Handling -----------------------------------------------------
 
 self.onmessage = async function (
-	e: MessageEvent<EngineWorkerInitMessage | EngineWorkerMessage>,
+	e: MessageEvent<EngineInitRequest | ApeironMoveRequest>,
 ): Promise<void> {
 	// The first message carries the engine-glue URL + thread count.
 	if ('engineUrl' in e.data) return initWasm(e.data);
@@ -88,19 +65,19 @@ self.onmessage = async function (
  * Initializes the WASM module from the served glue, bringing up the
  * Lazy SMP thread pool when supported, then posts 'readyok'.
  */
-async function initWasm(msg: EngineWorkerInitMessage): Promise<void> {
+async function initWasm(msg: EngineInitRequest): Promise<void> {
 	try {
 		console.debug('[Engine] Initializing Apeiron WASM module');
 		({ wasm } = await loadEngineWasm<GameplayWasmModule>(msg.engineUrl, msg.threads));
 
 		console.debug('[Engine] Apeiron WASM module initialized');
-		postMessage('readyok');
+		postMessage('readyok' satisfies EngineInitResponse);
 	} catch (err: unknown) {
 		console.error('[Engine] Failed to initialize Apeiron WASM module', err);
 		postMessage({
 			type: 'initerror',
 			message: err instanceof Error ? err.message : String(err),
-		});
+		} satisfies EngineInitResponse);
 		self.close();
 	}
 }
@@ -110,7 +87,7 @@ async function initWasm(msg: EngineWorkerInitMessage): Promise<void> {
  * legal moves (debug) or the best move it finds, as a compact ICN token. Any failure
  * posts a null move, which the page treats as the engine resigning.
  */
-function respondToMoveRequest(data: EngineWorkerMessage): void {
+function respondToMoveRequest(data: ApeironMoveRequest): void {
 	let engine: GameplayEngine | undefined;
 	try {
 		const engineColor = data.youAreColor;
@@ -137,7 +114,7 @@ function respondToMoveRequest(data: EngineWorkerMessage): void {
 			const legalMoves: WasmMove[] = engine.get_legal_moves_js();
 			const formattedMoves: string[] = legalMoves.map((m) => `${m.from}>${m.to}`);
 			// Send the generated moves back to the main thread for rendering
-			postMessage({ type: 'generatedMoves', data: formattedMoves });
+			postMessage({ type: 'generatedMoves', data: formattedMoves } satisfies EngineResponse);
 			return;
 		}
 
@@ -146,7 +123,7 @@ function respondToMoveRequest(data: EngineWorkerMessage): void {
 
 		if (!bestMoveResult) {
 			console.error('[Engine] No best move result returned from WASM');
-			postMessage({ type: 'move', data: null });
+			postMessage({ type: 'move', data: null } satisfies EngineResponse);
 			return;
 		}
 
@@ -158,10 +135,10 @@ function respondToMoveRequest(data: EngineWorkerMessage): void {
 			moveString += `=${getPromotionAbbr(bestMoveResult.promotion, engineColor)}`;
 		}
 
-		postMessage({ type: 'move', data: moveString });
+		postMessage({ type: 'move', data: moveString } satisfies EngineResponse);
 	} catch (error) {
 		console.error(`[Engine] Error finding best move:`, error);
-		postMessage({ type: 'move', data: null });
+		postMessage({ type: 'move', data: null } satisfies EngineResponse);
 	} finally {
 		engine?.free();
 	}

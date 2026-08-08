@@ -7,8 +7,8 @@
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { EngineAndConfig } from '../../../../../shared/chess/engine.js';
 import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
-import type { CheckmatePracticeEngineConfig } from '../../../../../shared/chess/engine.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -103,19 +103,21 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		state_global: { specialRights },
 		gameRules: variantpreviewer.getBareMinimumGameRules(),
 	};
-	const currentEngine = 'engineCheckmatePractice' as const;
+	const engine = {
+		name: 'engineCheckmatePractice',
+		config: {
+			checkmateSelectedID,
+			engineTimeLimitPerMoveMillis:
+				engineDictionary.engineCheckmatePractice.defaultTimeLimitPerMoveMillis,
+		},
+	} satisfies EngineAndConfig;
 
 	const options = {
 		event: 'Infinite chess checkmate practice',
 		timeControl: '-' as const,
 		variant: undefined,
 		youAreColor: p.WHITE,
-		currentEngine,
-		engineConfig: {
-			checkmateSelectedID: checkmateSelectedID,
-			engineTimeLimitPerMoveMillis:
-				engineDictionary[currentEngine].defaultTimeLimitPerMoveMillis,
-		},
+		engine,
 		variantOptions,
 		showGameControlButtons: true as true,
 	};
@@ -127,8 +129,7 @@ function startEngineGame(options: {
 	timeControl: '-';
 	variantOptions: VariantOptions;
 	youAreColor: Player;
-	currentEngine: 'engineCheckmatePractice';
-	engineConfig: CheckmatePracticeEngineConfig;
+	engine: EngineAndConfig;
 }): void {
 	gamesession.setSessionGame({ type: 'engine', role: options.youAreColor });
 	gamesession.loadGame(
@@ -139,7 +140,7 @@ function startEngineGame(options: {
 			viewWhitePerspective: options.youAreColor === p.WHITE,
 			additional: {
 				variantOptions: options.variantOptions,
-				worldBorderDist: engineDictionary[options.currentEngine].worldBorderDist,
+				worldBorderDist: engineDictionary[options.engine.name].worldBorderDist,
 			},
 		},
 		{
