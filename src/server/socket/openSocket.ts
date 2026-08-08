@@ -10,16 +10,16 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 import { parse as parseCookie } from 'cookie';
 
-import { GAME_VERSION } from '../../shared/game_version.js';
+import wsutil from '../../shared/util/wsutil.js';
 
 import { onclose } from './closeSocket.js';
 import { onmessage } from './receiveSocketMessage.js';
 import { getClientIP } from '../utility/IP.js';
 import { executeSafely } from '../utility/errorGuard.js';
 import { runWithRequestID } from '../middleware/requestContext.js';
-import { sendSocketMessage } from './sendSocketMessage.js';
 import { buildTranslations } from '../middleware/reqTranslations.js';
 import { logWebsocketStart } from './wsLogger.js';
+import { sendSocketMessage } from './sendSocketMessage.js';
 import { logIncomingRequest } from '../middleware/reqLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
@@ -80,8 +80,8 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 
 	addListenersToSocket(ws);
 
-	// Send the current game vesion, so they will know whether to refresh.
-	sendSocketMessage(ws, 'general', 'gameversion', GAME_VERSION);
+	// Announce our protocol version, so a client running pre-protocol-change code knows to refresh.
+	sendSocketMessage(ws, 'general', 'protocolversion', wsutil.PROTOCOL_VERSION);
 }
 
 function closeIfInvalidAndAddMetadata(

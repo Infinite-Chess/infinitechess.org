@@ -155,7 +155,7 @@ function rescheduleHeartbeatTimer(): void {
 	if (socketsubs.zeroSubs()) return;
 	heartbeatTimerID = window.setTimeout(
 		onHeartbeatTimeout,
-		wsutil.heartbeatIntervalMillis + wsutil.ECHO_TIMEOUT,
+		wsutil.HEARTBEAT_INTERVAL_MS + wsutil.ECHO_TIMEOUT,
 	);
 }
 
@@ -183,7 +183,7 @@ function onHeartbeatTimeout(): void {
 	const socket = socketman.getSocket();
 	if (!socket) return;
 	console.log(
-		`No message received for ${wsutil.heartbeatIntervalMillis + wsutil.ECHO_TIMEOUT}ms. Assuming connection lost.`,
+		`No message received for ${wsutil.HEARTBEAT_INTERVAL_MS + wsutil.ECHO_TIMEOUT}ms. Assuming connection lost.`,
 	);
 	socket.close(1000, 'Connection closed by client. Renew.');
 }

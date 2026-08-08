@@ -7,8 +7,17 @@
 
 // Constants ---------------------------------------------------------------------------------
 
+/**
+ * The version of the websocket protocol the server and client speak.
+ * The server announces this the moment a socket opens. If the client's compiled-in
+ * copy doesn't match, the client is running pre-protocol-change code and reloads.
+ *
+ * Increment by 1 whenever the socket messages change at all.
+ */
+const PROTOCOL_VERSION = 1;
+
 /** How long the server waits without sending a message before sending a heartbeat ping. */
-const heartbeatIntervalMillis = 10000;
+const HEARTBEAT_INTERVAL_MS = 10000;
 /** How long to wait for an echo before assuming the connection is dead. */
 const ECHO_TIMEOUT = 5000;
 
@@ -98,7 +107,8 @@ function wasSocketClosureInvoluntary(code: number, reason: string): boolean {
 // -----------------------------------------------------------------------------------------
 
 export default {
-	heartbeatIntervalMillis,
+	PROTOCOL_VERSION,
+	HEARTBEAT_INTERVAL_MS,
 	ECHO_TIMEOUT,
 	wasSocketClosureInvoluntary,
 };

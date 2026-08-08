@@ -9,24 +9,13 @@ import type { GeneralMessage } from './socketschemas.js';
 
 import * as z from 'zod';
 
-import timeutil from '../../../../shared/util/timeutil.js';
-import { GAME_VERSION } from '../../../../shared/game_version.js';
+import wsutil from '../../../../shared/util/wsutil.js';
 
 import toast from '../components/toast.js';
 import socketman from './socketman.js';
-import LocalStorage from '../util/LocalStorage.js';
 import { SocketBus } from './SocketBus.js';
 import socketmessages from './socketmessages.js';
 import { MasterSchema } from './socketschemas.js';
-
-// Types -----------------------------------------------------------------------
-
-/** Information about the last hard refresh we attempted. */
-type HardRefreshInfo = {
-	timeLastHardRefreshed: number;
-	expectedVersion: string;
-	refreshFailed?: boolean;
-};
 
 // Routing ---------------------------------------------------------------------
 
@@ -127,42 +116,15 @@ function ongeneralmessage(message: GeneralMessage): void {
 		case 'ping':
 			// Server sends this expecting a pong (echo), to verify we're still connected.
 			break;
-		case 'gameversion':
-			if (message.value !== GAME_VERSION) handleHardRefresh(message.value);
+		case 'protocolversion':
+			// Our code predates a protocol change. Reload to fetch the current scripts —
+			// they're content-hashed, so a plain reload is guaranteed to pull the new ones.
+			if (message.value !== wsutil.PROTOCOL_VERSION) location.reload();
 			break;
 		default:
 			// @ts-ignore
 			console.log(`Unknown server action "${message.action}" in general route.`);
 			break;
-	}
-}
-
-/**
- * Attempts a hard refresh if the server reports a newer game version.
- * Prevents endless refreshing cycles for browsers that don't support hard refresh.
- * @param LATEST_GAME_VERSION - The game version the server is currently running.
- */
-function handleHardRefresh(LATEST_GAME_VERSION: string): void {
-	const reloadInfo = {
-		timeLastHardRefreshed: Date.now(),
-		expectedVersion: LATEST_GAME_VERSION,
-	};
-	const preexistingHardRefreshInfo: HardRefreshInfo = LocalStorage.loadItem('hardrefreshinfo');
-	if (preexistingHardRefreshInfo?.expectedVersion === LATEST_GAME_VERSION) {
-		if (!preexistingHardRefreshInfo.refreshFailed)
-			console.warn(
-				`location.reload(true) failed to hard refresh. Server version: ${LATEST_GAME_VERSION}. Still running: ${GAME_VERSION}`,
-			);
-		preexistingHardRefreshInfo.refreshFailed = true;
-		saveInfo(preexistingHardRefreshInfo);
-		return;
-	}
-	saveInfo(reloadInfo);
-	// @ts-expect-error This parameter does indeed exist -> https://developer.mozilla.org/en-US/docs/Web/API/Location/reload
-	location.reload(true);
-
-	function saveInfo(info: HardRefreshInfo): void {
-		LocalStorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ hours: 4 })); // I think cloudflare caches scripts for 4 hours
 	}
 }
 

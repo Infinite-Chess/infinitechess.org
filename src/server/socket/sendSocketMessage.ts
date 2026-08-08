@@ -166,7 +166,7 @@ function rescheduleHeartbeatTimer(ws: CustomWebSocket): void {
 	cancelHeartbeatTimer(ws);
 	ws.metadata.heartbeatTimerID = setTimeout(
 		() => sendSocketMessage(ws, 'general', 'ping'),
-		wsutil.heartbeatIntervalMillis,
+		wsutil.HEARTBEAT_INTERVAL_MS,
 	);
 }
 
