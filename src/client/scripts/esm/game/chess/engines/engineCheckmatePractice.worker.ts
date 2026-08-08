@@ -8,7 +8,6 @@
  * @author Andreas Tsevas
  */
 
-import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { GameRules } from '../../../../../../shared/chess/util/gamerules.js';
 import type { OrganizedPiecesBase } from '../../../../../../shared/chess/logic/organizedpieces.js';
 import type {
@@ -1670,8 +1669,6 @@ function runIterativeDeepening(
 				);
 
 				// If a piece is captured, immediately check for insuffmat
-				// We do this by constructing the piecesOrganizedByKey property of a dummy gamefile
-				// This works as long insufficientmaterial.js only cares about piecesOrganizedByKey
 				if (
 					new_piecelist.filter((x) => x === 0).length >
 					piecelist.filter((x) => x === 0).length
@@ -1695,14 +1692,13 @@ function runIterativeDeepening(
 						// Empty on purpose: it makes getLastMove() return undefined, skipping the
 						// "was the last move a capture" gate — we only get here after a capture.
 						moves: [],
-						// Slide lines are not needed here — detectInsufficientMaterial() never reads lines.
 						pieces: organizedpieces.processInitialPosition(
 							piecesOrganizedByKey,
 							gameRules.turnOrder,
 							false, // Practice games are never board-editor games.
 							gameRules.promotion,
 						).pieces,
-					} as unknown as Board;
+					};
 
 					if (detectInsufficientMaterial(dummy_board)) break;
 				}
