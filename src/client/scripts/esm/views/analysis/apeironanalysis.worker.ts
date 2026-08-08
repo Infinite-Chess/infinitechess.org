@@ -36,9 +36,9 @@ import { loadEngineWasm, getPromotionAbbr } from '../../game/chess/engines/engin
 /** Messages accepted by this worker. */
 type AnalysisCommand =
 	/**
-	 * `engineUrl` is the served glue path (from the manifest). `threads` > 0 spins up
-	 * the Lazy SMP pool and posts the shared stop flag (the search worker); omit it for
-	 * the idle legal-moves helper and game-review workers.
+	 * `engineUrl` is the served glue path (from the manifest). `threads` > 1 spins up
+	 * the Lazy SMP pool (the search worker); omit it for the idle legal-moves helper
+	 * and game-review workers, which search single-threaded.
 	 */
 	| { cmd: 'init'; hashMb: number; engineUrl: string; threads?: number }
 	/**
@@ -272,10 +272,10 @@ async function initialize(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promi
 		wasm = loaded.wasm;
 		const { output, multithreaded: engineIsMultithreaded } = loaded;
 
-		if (msg.threads && msg.threads > 0) {
-			// Search worker: bring up the Lazy SMP pool BEFORE any search (analyse() calls into
-			// rayon), then hand the page the shared stop flag for instant, warm-hash position
-			// switches (the search polls the flag even single-threaded).
+		// Hand the page the shared stop flag, letting it abort an in-flight search instantly (the
+		// search polls the flag every node batch, even single-threaded). Only a shared-memory
+		// (multithreaded) engine build exposes wasm memory the page can write into.
+		if (engineIsMultithreaded) {
 			postMessage({
 				type: 'sharedmem',
 				buffer: output.memory.buffer,
@@ -462,15 +462,23 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 			result.pv = [`${move.from}>${move.to}${promotion}`];
 		} else if (legalMoves.length > 1) {
 			// The same search call the analysis loop uses — its summary carries the full PV.
+			// Every completed depth is streamed so the page can tell a live search from a stalled
+			// one, and abort the latter via the shared stop flag (see gamereview's watchdog).
+			let lastCompletedDepth: AnalysisInfo | undefined;
 			const summary: AnalysisInfo | null = evaluationEngine.analyse(
 				{ multi_pv: 1, max_depth: msg.maxDepth, start_depth: 1, slice_ms: 0 },
-				() => {},
+				(info: AnalysisInfo) => {
+					lastCompletedDepth = info;
+					postMessage({ type: 'info', requestId: msg.requestId, info } satisfies AnalysisResponse); // prettier-ignore
+				},
 			);
-			const line = summary?.lines[0];
-			if (line) {
+			// A search the page aborted may return nothing: fall back to the deepest completed depth.
+			const finalInfo = summary ?? lastCompletedDepth;
+			const line = finalInfo?.lines[0];
+			if (finalInfo && line) {
 				if (line.cp !== undefined && line.cp !== null) result.cp = line.cp;
 				if (line.mate !== undefined && line.mate !== null) result.mate = line.mate;
-				result.depth = summary!.depth;
+				result.depth = finalInfo.depth;
 				// Lila stores at most 12 PV plies in game-analysis advice.
 				result.pv = line.moves.slice(0, 12);
 			}

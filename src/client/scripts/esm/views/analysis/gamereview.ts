@@ -151,6 +151,8 @@ const MATE_CP = 1800;
 const ACPL_CLAMP = 1000;
 /** How many times a crashed worker's position is retried before being skipped. */
 const MAX_POSITION_ATTEMPTS = 2;
+/** How long a worker may search without completing a depth before we cut it short. */
+const SEARCH_STALL_TIMEOUT_MILLIS = 15_000;
 
 /** Fishnet-style chunk size: reported positions sharing one overlapping TT warmup. */
 const MAX_POSITIONS_PER_CHUNK = 5;
@@ -214,6 +216,10 @@ let workers: Worker[] = [];
 
 /** The work item each worker is currently evaluating (undefined = idle). */
 const workerAssignment = new Map<Worker, ReviewWorkItem>();
+/** Each worker's view over its wasm memory + the byte offset of its stop flag (arrives on 'sharedmem'). */
+const workerStopFlag = new Map<Worker, { flags: Uint8Array; ptr: number }>();
+/** Each busy worker's stall watchdog, re-armed on every completed depth. */
+const workerWatchdog = new Map<Worker, ReturnType<typeof setTimeout>>();
 /** Reverse-analysis chunks waiting for an engine worker. */
 let chunkQueue: ReviewWorkItem[][] = [];
 /** Remaining work kept on one worker so adjacent positions share its TT. */
@@ -534,10 +540,14 @@ function spawnWorker(): void {
 }
 
 function terminateWorkers(): void {
-	for (const worker of workers) worker.terminate();
+	for (const worker of workers) {
+		clearStallWatchdog(worker);
+		worker.terminate();
+	}
 	workers = [];
 	workerAssignment.clear();
 	workerChunk.clear();
+	workerStopFlag.clear();
 }
 
 function handleWorkerMessage(worker: Worker, msg: AnalysisResponse): void {
@@ -546,10 +556,17 @@ function handleWorkerMessage(worker: Worker, msg: AnalysisResponse): void {
 		case 'ready':
 			dispatchNext(worker);
 			break;
+		case 'sharedmem':
+			workerStopFlag.set(worker, { flags: new Uint8Array(msg.buffer), ptr: msg.stopFlagPtr });
+			break;
 		case 'initerror':
 			handleWorkerFault(worker);
 			break;
+		case 'info':
+			armStallWatchdog(worker); // The search completed a depth: it's making progress.
+			break;
 		case 'evaluated':
+			clearStallWatchdog(worker);
 			workerAssignment.delete(worker);
 			if (!msg.warmup) receiveEvaluation(msg);
 			dispatchNext(worker);
@@ -568,8 +585,10 @@ function handleWorkerMessage(worker: Worker, msg: AnalysisResponse): void {
 function handleWorkerFault(worker: Worker): void {
 	const assigned = workerAssignment.get(worker);
 	const remaining = workerChunk.get(worker) ?? [];
+	clearStallWatchdog(worker);
 	workerAssignment.delete(worker);
 	workerChunk.delete(worker);
+	workerStopFlag.delete(worker);
 	worker.terminate();
 	workers = workers.filter((w) => w !== worker);
 	if (status !== 'running') return;
@@ -649,6 +668,7 @@ function dispatchNext(worker: Worker): void {
 			...(work.newChunk && { newChunk: true }),
 			...(work.warmup && { warmup: true }),
 		} satisfies AnalysisCommand);
+		armStallWatchdog(worker);
 		return;
 	}
 }
@@ -675,6 +695,32 @@ function serializePosition(index: number): string {
 	};
 	gamecompressor.rebaseToPly(rebased, mainlineMoves, safeStart, index);
 	return icnconverter.LongToShort_Format(rebased, icnconverter.COMPACT_FORMAT_OPTIONS);
+}
+
+// Stall watchdog ---------------------------------------------------------------------------
+
+/** (Re)arms the stall watchdog over a worker's in-flight search. */
+function armStallWatchdog(worker: Worker): void {
+	clearStallWatchdog(worker);
+	const timer = setTimeout(() => abortStalledSearch(worker), SEARCH_STALL_TIMEOUT_MILLIS);
+	workerWatchdog.set(worker, timer);
+}
+
+function clearStallWatchdog(worker: Worker): void {
+	const timer = workerWatchdog.get(worker);
+	if (timer !== undefined) clearTimeout(timer);
+	workerWatchdog.delete(worker);
+}
+
+/** Cuts short a search that hasn't completed a depth in {@link SEARCH_STALL_TIMEOUT_MILLIS}. */
+function abortStalledSearch(worker: Worker): void {
+	workerWatchdog.delete(worker);
+	const stop = workerStopFlag.get(worker);
+	// Writing the flag (polled every node batch, cleared by the engine on its next search) makes
+	// the worker settle for its deepest completed depth's lines — a graceful, in-place finish.
+	// A single-threaded build shares no memory to write, so killing it is the only way out.
+	if (stop) stop.flags[stop.ptr] = 1;
+	else handleWorkerFault(worker);
 }
 
 // Result processing --------------------------------------------------------------------------
