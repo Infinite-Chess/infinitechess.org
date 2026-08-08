@@ -28,6 +28,7 @@ import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { executeSafely } from '../../utility/errorGuard.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
 import { timeBeforeFinalizeMillis } from './gameutility.js';
@@ -77,7 +78,8 @@ const activeGames: Record<number, ServerGame> = {};
  * @param setup - The variant, time control, and rated flag of the game to start.
  * @param assignments - The color each player has, and their socket if connected.
  * @returns The id of the newly created game.
- * @throws If the variant is custom — starting those isn't implemented yet.
+ * @throws If a database error occurs, or if the variant is custom — starting those isn't
+ * implemented yet.
  */
 function createGame(
 	setup: GameSetup,
@@ -146,6 +148,7 @@ function createGame(
  * AND the live games inside {@link activeGames}.
  *
  * The game will receive this same id in the database when it is logged.
+ * @throws If a database error occurs.
  */
 function issueUniqueGameId(): number {
 	let id: number;
@@ -172,6 +175,21 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 			onPostGameLeave(servergame, Number(c) as Player, false);
 			return; // A player can only be a participant of one lingering game.
 		}
+	}
+}
+
+/**
+ * Handles a throw from {@link createGame}: logs it, then tells each connected
+ * participant a server error prevented their game from starting.
+ * @param error - The error thrown.
+ * @param sockets - Every socket awaiting the game, undefined entries skipped.
+ */
+function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefined)[]): void {
+	// The stack, not just the message — these are unexpected internal failures.
+	const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
+	logEventsAndPrint(`Error creating game: ${details}`, 'errLog');
+	for (const ws of sockets) {
+		if (ws) sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
 	}
 }
 
@@ -788,6 +806,7 @@ function restoreLiveGames(): void {
 export {
 	activeGames,
 	createGame,
+	onGameCreationError,
 	isMemberInSomeActiveGame,
 	unsubSocketParticipantFromGame,
 	unsubSocketSpectatorFromGame,

@@ -11,12 +11,12 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from '../gamemanager/gameutility.js';
-import { createGame } from '../gamemanager/gamemanager.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
+import { createGame, onGameCreationError } from '../gamemanager/gamemanager.js';
 import {
 	getSeekAndIndexByID,
 	deleteSeekByIndex,
@@ -100,18 +100,11 @@ function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 			{ variant: seek.variant, time: seek.time, rated: seek.mode === 'rated' },
 			assignments,
 		);
-	} catch {
-		// DB error (already logged)
-		// Notify both parties a server error occurred
-		for (const { socket: ws } of Object.values(assignments)) {
-			if (!ws) continue;
-			sendSocketMessage(
-				ws,
-				'general',
-				'notifyerror',
-				"Couldn't create game. A server error occurred. Please try again.",
-			);
-		}
+	} catch (error: unknown) {
+		onGameCreationError(
+			error,
+			Object.values(assignments).map(({ socket }) => socket),
+		);
 		return;
 	}
 

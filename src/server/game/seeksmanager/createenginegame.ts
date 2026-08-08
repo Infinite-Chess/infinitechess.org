@@ -1,20 +1,22 @@
 // src/server/game/seeksmanager/createenginegame.ts
 
-/** Handles engine-game creation through the normal live-game pipeline. */
+/**
+ * Handles engine-game creation through the normal live-game pipeline.
+ */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { CreateEngineGameMessage } from '../../../shared/types.js';
 
-import { players } from '../../../shared/chess/util/typeutil.js';
 import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
+import typeutil, { players } from '../../../shared/chess/util/typeutil.js';
 import { engineDictionary, ValidEngine } from '../../../shared/chess/engine.js';
 
-import { createGame } from '../gamemanager/gamemanager.js';
 import { getEngineVersion } from '../../config/manifest.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { resolveAndValidateVariant } from './createseek.js';
+import { createGame, onGameCreationError } from '../gamemanager/gamemanager.js';
 
 // Constants ---------------------------------------------------------------------------
 
@@ -44,11 +46,12 @@ async function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessa
 	try {
 		const variant = await resolveAndValidateVariant(ws, body.variant);
 		if (variant === null) return; // Invalid variant; error already sent to the client.
+		// Check this again, as we have since awaited a promise.
 		if (isSocketInAnActiveGame(ws))
 			return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
-		const engineColor = humanColor === players.WHITE ? players.BLACK : players.WHITE;
+		const engineColor = typeutil.invertPlayer(humanColor);
 		createGame(
 			{
 				variant,
@@ -64,9 +67,7 @@ async function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessa
 			{ [humanColor]: { identifier: ws.metadata.memberInfo, socket: ws } },
 		);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error creating engine game: ${message}`, 'errLog');
-		sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
+		onGameCreationError(error, [ws]);
 	}
 }
 

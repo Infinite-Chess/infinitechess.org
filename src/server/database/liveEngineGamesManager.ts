@@ -71,11 +71,8 @@ export function updateLiveEngineGame(
 ): void {
 	dbCall(() => {
 		const entries = Object.entries(updates);
-		if (
-			entries.length === 0 ||
-			!entries.every(([column]) => allLiveEngineGamesColumns.includes(column))
-		)
-			throw new Error(`Invalid live engine updates: ${jsutil.ensureJSONString(updates)}`);
+		if (entries.length === 0 || !entries.every(([column]) => allLiveEngineGamesColumns.includes(column)))
+			throw new Error(`Invalid live engine updates: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
 		const setClauses = entries.map(([column]) => `${column} = ?`).join(', ');
 		db.run(
 			`UPDATE live_engine_games SET ${setClauses} WHERE game_id = ? AND player_number = ?`,

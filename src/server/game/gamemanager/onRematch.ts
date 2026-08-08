@@ -18,8 +18,8 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import gameutility from './gameutility.js';
 import { getEngineVersion } from '../../config/manifest.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { createGame, evictGame } from './gamemanager.js';
 import { getIDOfGamePlayerIsIn } from './activeplayers.js';
+import { createGame, evictGame, onGameCreationError } from './gamemanager.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -102,7 +102,15 @@ function createRematchGame(oldGame: ServerGame): void {
 	};
 
 	evictGame(oldGame); // Removes the old game from memory (and unsubscribes its sockets).
-	const newGameID = createGame(setup, swapped);
+
+	let newGameID: number;
+	try {
+		newGameID = createGame(setup, swapped);
+	} catch (error: unknown) {
+		// The old game is already evicted, so there's nothing left to navigate anyone back to.
+		onGameCreationError(error, socketsToNavigate);
+		return;
+	}
 
 	// Alert all connected players of the new game (they auto navigate)
 	for (const socket of socketsToNavigate) sendSocketMessage(socket, 'game', 'ingame', newGameID);
