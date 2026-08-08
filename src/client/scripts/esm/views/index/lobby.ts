@@ -66,12 +66,23 @@ let tbodyVNode: VNode | Element = element_lobbyTbody;
 const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 // const IDLE_TIMEOUT = 10 * 1000; // Testing: 10 seconds
 
+/**
+ * How long after a lobby row loses its occupant that row stays unacceptable,
+ * so a click aimed at the vanished seek can't fire on whatever replaces it.
+ * KEEP IN SYNC with the game page's action-block grace period (guigameactions.ts).
+ */
+const GRACE_MILLIS = 667;
+
 // State ----------------------------------------------
 
 /** The ID of our current seek, if we have one. */
 let ourSeekId: string | undefined;
 /** Live map of all current seeks by id, for fast click-handler lookup. */
 const seekMap = new Map<string, OutSeek>();
+/** Seeks mid grace period, mapped to the timer that ends it. */
+const graceTimers = new Map<string, number>();
+/** When each row last lost its occupant. Its grace always ends {@link GRACE_MILLIS} after this. */
+const rowVacatedTimes: number[] = [];
 
 /** Whether the user is currently idle (lobby unsubbed, overlay visible). */
 let isIdle = false;
@@ -98,6 +109,7 @@ function initLobbyClickHandler(): void {
 		const row = (e.target as HTMLElement).closest<HTMLElement>('[data-seek-id]');
 		if (!row) return;
 		const seekId = row.getAttribute('data-seek-id')!;
+		if (graceTimers.has(seekId)) return; // Mid grace period
 		const seek = seekMap.get(seekId);
 		if (!seek) return;
 		if (isSeekOurs(seek)) cancel(seekId);
@@ -164,6 +176,7 @@ const trackNewSeeks = (() => {
  * so seeks returning after a reconnect aren't treated as new and replay arrival sounds.
  */
 function onSeekListUpdate(seeks: OutSeek[], preserveNewSeekTracker = false): void {
+	const previousSeekIds = [...seekMap.keys()];
 	seekMap.clear();
 	for (const seek of seeks) seekMap.set(seek.id, seek);
 	seekPreviewCache.evictRemovedSeeks(new Set(seekMap.keys()));
@@ -174,10 +187,43 @@ function onSeekListUpdate(seeks: OutSeek[], preserveNewSeekTracker = false): voi
 	const newSeekIds = preserveNewSeekTracker ? new Set<string>() : trackNewSeeks(seeks);
 	if (ourSeekId !== undefined && newSeekIds.has(ourSeekId)) gamesound.playMarimba();
 
+	armGracePeriods(previousSeekIds, seeks);
+
 	renderSeekList(
 		seeks.map((s) => outSeekToLobbySeek(s)),
 		newSeekIds,
 	);
+}
+
+/**
+ * Grace-periods every seek that didn't already hold its row last update, so a click aimed at
+ * whatever the user last saw there can't accept or cancel it. A row's grace always ends
+ * {@link GRACE_MILLIS} after its previous occupant left, so a seek taking over a row directly
+ * gets the full period, one filling a briefly-empty row gets the remainder, and one filling a
+ * long-empty row gets none.
+ * @param previousSeekIds - The seek ids by row, as of the previous update.
+ */
+function armGracePeriods(previousSeekIds: string[], seeks: OutSeek[]): void {
+	const now = Date.now();
+	for (let row = 0; row < previousSeekIds.length; row++) {
+		if (previousSeekIds[row] !== seeks[row]?.id) rowVacatedTimes[row] = now;
+	}
+
+	seeks.forEach((seek, row) => {
+		if (previousSeekIds[row] === seek.id) return; // Held this row already
+		const vacatedAt = rowVacatedTimes[row];
+		if (vacatedAt === undefined) return; // Row has never held a seek
+		const remaining = vacatedAt + GRACE_MILLIS - now;
+		if (remaining <= 0) return; // Empty long enough that nothing was there to be clicked
+		// A seek moved again mid-grace gets its new row's remainder, not the old row's.
+		clearTimeout(graceTimers.get(seek.id));
+		const timer = window.setTimeout(() => {
+			graceTimers.delete(seek.id);
+			// Skipped once the seek has left the list, where the re-render would be a no-op.
+			if (seekMap.has(seek.id)) renderSeekList([...seekMap.values()].map(outSeekToLobbySeek));
+		}, remaining);
+		graceTimers.set(seek.id, timer);
+	});
 }
 
 /** Called when the server sends an updated lobby viewer count. Displays count minus ourself. */
@@ -389,6 +435,7 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 			attrs: {
 				title: seek.isOurs ? t.index.lobby.cancel_seek : t.index.lobby.accept_seek,
 				'data-seek-id': seek.id,
+				'aria-disabled': String(graceTimers.has(seek.id)),
 			},
 			hook: isNew
 				? {

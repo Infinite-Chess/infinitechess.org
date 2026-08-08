@@ -386,7 +386,7 @@ svg.bg-omega {
 	align-items: center;
 }
 
-.seek-row:hover {
+.seek-row:hover:not([aria-disabled='true']) {
 	color: var(--c-text-emphasis);
 	background: rgb(255 88 0 / 40%);
 }
@@ -396,8 +396,15 @@ svg.bg-omega {
 	color: var(--c-text-emphasis);
 }
 
-.seek-row.ours:hover {
+.seek-row.ours:hover:not([aria-disabled='true']) {
 	background: rgba(0, 220, 18, 0.37);
+}
+
+/* A seek mid grace period after taking over another seek's row. Still receives pointer
+   events, so its variant preview tooltip opens, but clicks won't accept or cancel it. */
+.seek-row[aria-disabled='true'] {
+	cursor: default;
+	opacity: 0.4;
 }
 
 /* ============================================================

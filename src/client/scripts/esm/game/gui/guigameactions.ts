@@ -119,6 +119,7 @@ function updateResignAbortButtons(): void {
 /**
  * How long a freshly-revealed block's buttons stay disabled, so
  * a click landing the instant it appears can't accidentally fire.
+ * KEEP IN SYNC with the lobby's seek grace period (lobby.ts).
  */
 const GRACE_MILLIS = 667;
 
