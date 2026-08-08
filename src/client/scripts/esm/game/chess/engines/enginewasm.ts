@@ -26,6 +26,22 @@ interface EngineWasmInitOutput {
 	memory: WebAssembly.Memory;
 }
 
+/** What every engine instance exposes, whatever the build. */
+export interface WasmEngine {
+	/** Every legal move in the position. */
+	get_legal_moves_js: () => WasmMove[];
+	/** Releases the wasm-side allocation. Mandatory — wasm memory isn't GC'd. */
+	free: () => void;
+}
+
+/** A move as wasm reports it: `from`/`to` are compact ICN coords ("x,y"). */
+export interface WasmMove {
+	from: string;
+	to: string;
+	/** The engine's own single-letter piece code, NOT a site abbreviation. */
+	promotion?: string | null;
+}
+
 // Wasm Loading -----------------------------------------------------------
 
 /** Hard cap on Lazy SMP threads used by engine features. */

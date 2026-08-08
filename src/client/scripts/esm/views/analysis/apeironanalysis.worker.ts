@@ -27,7 +27,11 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { EvaluateResult } from './gamereview.js';
-import type { EngineWasmModule } from '../../game/chess/engines/enginewasm.js';
+import type {
+	EngineWasmModule,
+	WasmEngine,
+	WasmMove,
+} from '../../game/chess/engines/enginewasm.js';
 
 import { loadEngineWasm, getPromotionAbbr } from '../../game/chess/engines/enginewasm.js';
 
@@ -139,11 +143,9 @@ interface AnalysisWasmModule extends EngineWasmModule {
 }
 
 /** One wasm engine instance, holding the position it is searching. */
-interface AnalysisWasmEngine {
+interface AnalysisWasmEngine extends WasmEngine {
 	/** Moves the instance to a new position, keeping the warm transposition table. */
 	set_position: (icn: string) => void;
-	/** Every legal move in the position. */
-	get_legal_moves_js: () => WasmMove[];
 	is_in_check: () => boolean;
 	/**
 	 * Runs iterative deepening from `start_depth` toward `max_depth`, invoking `onInfo` after
@@ -161,14 +163,6 @@ interface AnalysisWasmEngine {
 	) => AnalysisInfo | null;
 	/** Releases the wasm-side allocation. Mandatory — wasm memory isn't GC'd. */
 	free: () => void;
-}
-
-/** A move as wasm reports it: `from`/`to` are compact ICN coords ("x,y"). */
-interface WasmMove {
-	from: string;
-	to: string;
-	/** The engine's own single-letter piece code, NOT a site abbreviation. */
-	promotion?: string | null;
 }
 
 // Constants --------------------------------------------------------------------

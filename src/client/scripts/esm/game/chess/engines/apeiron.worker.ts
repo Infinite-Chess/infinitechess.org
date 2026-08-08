@@ -18,7 +18,7 @@
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { EngineWasmModule } from './enginewasm.js';
+import type { EngineWasmModule, WasmEngine, WasmMove } from './enginewasm.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -68,24 +68,12 @@ interface GameplayWasmModule extends EngineWasmModule {
 }
 
 /** One wasm engine instance, bound to the position it was constructed at. */
-interface GameplayEngine {
-	/** Every legal move in the position. Drives the debug move overlay. */
-	get_legal_moves_js: () => WasmMove[];
+interface GameplayEngine extends WasmEngine {
 	/**
 	 * Searches for the best move, bounded by `timeLimit` ms, optionally consulting
 	 * the opening book. Null when the search produced no move.
 	 */
 	get_best_move_with_time: (timeLimit: number, useBook: boolean) => WasmMove | null;
-	/** Releases the wasm-side allocation. Mandatory — wasm memory isn't GC'd. */
-	free: () => void;
-}
-
-/** A move as wasm reports it: `from`/`to` are compact ICN coords ("x,y"). */
-interface WasmMove {
-	from: string;
-	to: string;
-	/** The engine's own single-letter piece code, NOT a site abbreviation. */
-	promotion?: string | null;
 }
 
 // Constants ------------------------------------------------------------
