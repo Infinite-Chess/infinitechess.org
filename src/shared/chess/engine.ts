@@ -38,6 +38,27 @@ export interface Engine {
 /** Union of all valid engine names, derived from the keys of engineDictionary. */
 export type ValidEngine = keyof typeof engineDictionary;
 
+/** What every engine's worker is configured with when the page asks it for a move. */
+interface BaseEngineConfig {
+	/** Hard time limit for the engine to think in milliseconds. */
+	engineTimeLimitPerMoveMillis: number;
+}
+
+/** Config for `engineCheckmatePractice`. */
+export interface CheckmatePracticeEngineConfig extends BaseEngineConfig {
+	/** Which practice checkmate is being played — the engine's play is tuned per problem. */
+	checkmateSelectedID: string;
+}
+
+/** Config for `apeiron`. */
+export interface ApeironEngineConfig extends BaseEngineConfig {
+	/** Engine strength preset, up to the entry's `maxStrengthLevel`. */
+	strengthLevel: number;
+}
+
+/** The config of whichever engine the game is against. Each engine reads only its own member. */
+export type EngineConfig = CheckmatePracticeEngineConfig | ApeironEngineConfig;
+
 // Constants --------------------------------------------------------------------
 
 /** Maximum signed 64-bit integer value (2^63 - 1). Used in Rust. */

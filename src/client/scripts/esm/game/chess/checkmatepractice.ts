@@ -8,6 +8,7 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import type { CheckmatePracticeEngineConfig } from '../../../../../shared/chess/engine.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -127,10 +128,7 @@ function startEngineGame(options: {
 	variantOptions: VariantOptions;
 	youAreColor: Player;
 	currentEngine: 'engineCheckmatePractice';
-	engineConfig: {
-		checkmateSelectedID: string;
-		engineTimeLimitPerMoveMillis: number;
-	};
+	engineConfig: CheckmatePracticeEngineConfig;
 }): void {
 	gamesession.setSessionGame({ type: 'engine', role: options.youAreColor });
 	gamesession.loadGame(

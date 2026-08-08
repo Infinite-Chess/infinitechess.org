@@ -10,6 +10,7 @@
 
 import type { GameRules } from '../../../../../../shared/chess/util/gamerules.js';
 import type { OrganizedPiecesBase } from '../../../../../../shared/chess/logic/organizedpieces.js';
+import type { CheckmatePracticeEngineConfig } from '../../../../../../shared/chess/engine.js';
 import type {
 	Coords,
 	CoordsKey,
@@ -50,7 +51,7 @@ postMessage('readyok');
 self.onmessage = function (e: MessageEvent): void {
 	const message = e.data as {
 		lf: LongFormatIn;
-		engineConfig: { checkmateSelectedID: string; engineTimeLimitPerMoveMillis: number };
+		engineConfig: CheckmatePracticeEngineConfig;
 		requestGeneratedMoves: boolean;
 	};
 	if (message.requestGeneratedMoves) return; // ignore generated moves requests in this engine, this doesn't support sending them

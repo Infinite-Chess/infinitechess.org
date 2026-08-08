@@ -4,7 +4,7 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { ValidEngine } from '../../../../../shared/chess/engine.js';
+import type { EngineConfig, ValidEngine } from '../../../../../shared/chess/engine.js';
 
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
@@ -23,27 +23,16 @@ import socketmessages from '../../websocket/socketmessages.js';
 import enginelegalmovesdebug from './enginelegalmovesdebug.js';
 import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';
 
-// Types ------------------------------------------------------------------------
-
-interface EngineConfig {
-	/** Hard time limit for the engine to think in milliseconds */
-	engineTimeLimitPerMoveMillis: number;
-	// If you are using a checkmate practice engine, this is required.
-	checkmateSelectedID?: string;
-	strengthLevel?: number;
-	multiPv?: number;
-}
-
-// Variables --------------------------------------------------------------------
+// State --------------------------------------------------------------------
 
 let engineColor: Player | undefined;
-let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
 /**
  * The engine worker of the game we're in, if any.
  * `name` keys its {@link engineDictionary} entry, for the properties that vary per engine.
  * `ready` flips true on its 'readyok' message; until then it answers nothing.
+ * `config` is sent to the worker with every move request.
  */
-let engine: { name: ValidEngine; worker: Worker; ready: boolean } | undefined;
+let engine: { name: ValidEngine; worker: Worker; ready: boolean; config: EngineConfig } | undefined;
 
 // Events -----------------------------------------------------------------------
 
@@ -75,7 +64,6 @@ function initEngineGame(options: {
 	console.log(`Starting engine game with engine "${options.currentEngine}".`);
 
 	engineColor = typeutil.invertPlayer(options.youAreColor);
-	engineConfig = options.engineConfig;
 
 	// Initialize the engine as a webworker
 	if (!window.Worker) {
@@ -85,7 +73,12 @@ function initEngineGame(options: {
 	const worker = new Worker(options.workerUrl, {
 		type: 'module',
 	}); // module type allows the web worker to import methods and types from other scripts.
-	engine = { name: options.currentEngine, worker, ready: false };
+	engine = {
+		name: options.currentEngine,
+		worker,
+		ready: false,
+		config: options.engineConfig,
+	};
 
 	// Installed per engine game, so the debug toggle stays inert where no engine
 	// is loaded (spectators). Requests wait for 'readyok'; onEngineReady() then fires them.
@@ -184,7 +177,7 @@ function onMovePlayed(): void {
 	if (gamefile.gameConclusion) return;
 	engine.worker.postMessage({
 		lf: longformIn,
-		engineConfig: engineConfig,
+		engineConfig: engine.config,
 		youAreColor: engineColor,
 		wtime: timing?.wtime,
 		btime: timing?.btime,
@@ -293,7 +286,7 @@ function requestGeneratedMoves(gamefile: GameFile): void {
 
 	engine.worker.postMessage({
 		lf: longformIn,
-		engineConfig: engineConfig,
+		engineConfig: engine.config,
 		youAreColor: engineColor,
 		requestGeneratedMoves: true,
 	});
@@ -313,7 +306,6 @@ function terminate(): void {
 	engine?.worker.terminate();
 	engine = undefined;
 	engineColor = undefined;
-	engineConfig = undefined;
 	enginelegalmovesdebug.detach();
 }
 

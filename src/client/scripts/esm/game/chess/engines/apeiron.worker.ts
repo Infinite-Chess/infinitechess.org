@@ -18,6 +18,7 @@
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { ApeironEngineConfig } from '../../../../../../shared/chess/engine.js';
 import type { EngineWasmModule, WasmEngine, WasmMove } from './enginewasm.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -38,7 +39,8 @@ interface EngineWorkerInitMessage {
 interface EngineWorkerMessage {
 	/** The compressed position/game to search, converted to ICN before it reaches wasm. */
 	lf: LongFormatIn;
-	engineConfig?: EngineConfig;
+	/** Search settings the user chose for this engine game. */
+	engineConfig: ApeironEngineConfig;
 	/** The color the engine is playing, which the returned move is cased for. */
 	youAreColor: Player;
 	/** UCI-style clock remaining, in ms. Absent in untimed games. */
@@ -49,14 +51,6 @@ interface EngineWorkerMessage {
 	binc?: number;
 	/** Debug: post the position's generated legal moves instead of searching for a move. */
 	requestGeneratedMoves?: boolean;
-}
-
-/** Search settings the page chose for this engine game. */
-interface EngineConfig {
-	/** Hard per-move thinking budget. */
-	engineTimeLimitPerMoveMillis?: number;
-	/** Engine strength preset. */
-	strengthLevel?: number;
 }
 
 /** The gameplay engine glue's exports. */
@@ -75,11 +69,6 @@ interface GameplayEngine extends WasmEngine {
 	 */
 	get_best_move_with_time: (timeLimit: number, useBook: boolean) => WasmMove | null;
 }
-
-// Constants ------------------------------------------------------------
-
-/** Strength used when the page doesn't specify one. */
-const DEFAULT_STRENGTH_LEVEL = 3;
 
 // State ----------------------------------------------------------------
 
@@ -134,7 +123,7 @@ function respondToMoveRequest(data: EngineWorkerMessage): void {
 
 		// Initialize engine configuration
 		const engineConfig = {
-			strength_level: data.engineConfig?.strengthLevel ?? DEFAULT_STRENGTH_LEVEL,
+			strength_level: data.engineConfig.strengthLevel,
 			wtime: toClockMillis(data.wtime),
 			btime: toClockMillis(data.btime),
 			winc: toClockMillis(data.winc),
@@ -152,7 +141,7 @@ function respondToMoveRequest(data: EngineWorkerMessage): void {
 			return;
 		}
 
-		const timeLimit = data.engineConfig?.engineTimeLimitPerMoveMillis ?? 0;
+		const timeLimit = data.engineConfig.engineTimeLimitPerMoveMillis;
 		const bestMoveResult = engine.get_best_move_with_time(timeLimit, true);
 
 		if (!bestMoveResult) {
