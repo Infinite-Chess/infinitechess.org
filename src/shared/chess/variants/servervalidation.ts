@@ -73,14 +73,14 @@ function isRatedAllowed(
 	variant: SeekVariant | null,
 	time: TimeControl,
 	color: Player | null,
-	modifiers: GameModifier[],
+	modifiers: GameModifier[] | undefined,
 ): boolean {
 	if (variant === null) return false;
 	if (variant.kind !== 'preset') return false; // Custom variants are never rated
 	if (!(variant.code in VariantLeaderboards)) return false; // Variant needs a leaderboard
 	if (time === '-') return false; // Must be timed
 	if (color !== null) return false; // No specific color for rated **public** games
-	if (modifiers.length > 0) return false; // No modifiers for rated
+	if (modifiers?.length ?? 0 > 0) return false; // No modifiers for rated
 	return true;
 }
 

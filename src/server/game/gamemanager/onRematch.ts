@@ -4,7 +4,7 @@
  * This script contains the route for offering a rematch after a game concludes.
  *
  * Each player independently offers; once BOTH have offered, a rematch game is
- * created (same variant/time/rated, colors swapped). Engine games skip the
+ * created (same variant/time/rated/modifiers, colors swapped). Engine games skip the
  * handshake — an engine always accepts, so the human's offer starts it outright.
  */
 
@@ -90,6 +90,7 @@ function createRematchGame(oldGame: ServerGame): void {
 		variant: { kind: 'preset', code: oldMatch.variant },
 		time: oldMatch.clock,
 		rated: oldMatch.rated,
+		modifiers: oldMatch.modifiers, // A rematch inherits the original game's modifiers.
 		// The version is re-seeded rather than carried over — an engine update could have
 		// landed mid-game, in which case the old game's version is no longer what we'd serve.
 		...(oldMatch.engineParticipant && {

@@ -17,7 +17,7 @@ import { allPlayerGamesColumns } from './databaseTables.js';
 export interface PlayerGamesRecord {
 	user_id: number;
 	game_id: number;
-	player_number: Player;
+	player_number: number;
 	score: number | null;
 	clock_at_end_millis: number | null;
 	elo_at_game: number | null;

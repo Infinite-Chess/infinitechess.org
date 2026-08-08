@@ -59,7 +59,14 @@ async function loadGameById(gameId: number): Promise<void> {
 		const state: DeadGameState = await response.json();
 		const viewWhitePerspective = window.analysisPageData.role !== p.BLACK;
 		const longFormat = icnconverter.ShortToLong_Format(state.icn);
-		await pasteGame(longFormat, state.gameConclusion, viewWhitePerspective);
+		// The slide limit comes from the game's stored config, the ICN carries no modifiers.
+		const slideLimit = state.modifiers?.find((m) => m.kind === 'slide-limit')?.value;
+		await pasteGame(
+			longFormat,
+			state.gameConclusion,
+			viewWhitePerspective,
+			slideLimit !== undefined ? BigInt(slideLimit) : undefined,
+		);
 		// Only a game fetched from the server gets a result banner. Deliberately NOT done for the other load paths.
 		gamesession.concludeGameIfOver();
 		guianalysisview.syncClockDisplayToViewedMove(true);

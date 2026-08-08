@@ -168,7 +168,13 @@ function handleOnlineSeek(): void {
 
 	const modifiers = modifierSelector.getGameModifiers();
 
-	lobby.createSeek({ variant, time, color, mode, modifiers });
+	lobby.createSeek({
+		variant,
+		time,
+		color,
+		mode,
+		modifiers: modifiers.length > 0 ? modifiers : undefined,
+	});
 	close();
 }
 

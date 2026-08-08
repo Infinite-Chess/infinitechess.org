@@ -23,6 +23,7 @@ import type {
 	StaticGameSetup,
 	StaticGameState,
 	GameConclusionMessage,
+	GameModifier,
 	GameStateBase,
 	GameStateMessage,
 	MetaData,
@@ -162,6 +163,8 @@ interface MatchInfo {
 	 * Guaranteed defined here because we can't read it from MetaData since it is optional there.
 	 */
 	clock: TimeControl;
+	/** The modifiers configuration applied to this game. Absent if none. */
+	modifiers?: GameModifier[];
 	/** The data held for each player */
 	playerData: PlayerGroup<PlayerData>;
 	/** Present only for games against an engine. Its moves arrive over the human's socket. */
@@ -254,6 +257,8 @@ interface GameSetup {
 	variant: AuthSeekVariant;
 	time: TimeControl;
 	rated: boolean;
+	/** The modifiers to apply to the game. Absent if none. */
+	modifiers?: GameModifier[];
 	engineParticipant?: MatchInfo['engineParticipant'];
 }
 
@@ -289,6 +294,7 @@ function initMatch(
 		engineParticipant: setup.engineParticipant,
 		timeCreated: Date.now(),
 		rated: setup.rated,
+		modifiers: setup.modifiers,
 		clock: setup.time,
 		freed: false,
 		finalized: false,
@@ -532,6 +538,7 @@ function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 		variant: { kind: 'preset', code: match.variant },
 		timeControl: match.clock,
 		timeCreated: match.timeCreated,
+		modifiers: match.modifiers,
 	};
 }
 

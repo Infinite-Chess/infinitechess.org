@@ -16,14 +16,15 @@ Following the pattern of `games` + `player_games` for ended games, live state is
 
 #### Group 1: Game Identity
 
-| Column         | Type                                       | Notes                               |
-| -------------- | ------------------------------------------ | ----------------------------------- |
-| `game_id`      | INTEGER PRIMARY KEY                        | Unique across live and logged games |
-| `time_created` | INTEGER NOT NULL                           | Epoch milliseconds                  |
-| `variant`      | TEXT NOT NULL                              | e.g. `"Classical"`, `"Omega^3"`     |
-| `clock`        | TEXT NOT NULL                              | e.g. `"600+5"` or `"-"` for untimed |
-| `rated`        | BOOLEAN NOT NULL CHECK (rated IN (0, 1))   | 0 = casual, 1 = rated               |
-| `private`      | BOOLEAN NOT NULL CHECK (private IN (0, 1)) | 0 = public, 1 = private             |
+| Column            | Type                                       | Notes                                                                                   |
+| ----------------- | ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `game_id`         | INTEGER PRIMARY KEY                        | Unique across live and logged games                                                     |
+| `time_created`    | INTEGER NOT NULL                           | Epoch milliseconds                                                                      |
+| `variant`         | TEXT NOT NULL                              | e.g. `"Classical"`, `"Omega^3"`                                                         |
+| `clock`           | TEXT NOT NULL                              | e.g. `"600+5"` or `"-"` for untimed                                                     |
+| `rated`           | BOOLEAN NOT NULL CHECK (rated IN (0, 1))   | 0 = casual, 1 = rated                                                                   |
+| `private`         | BOOLEAN NOT NULL CHECK (private IN (0, 1)) | 0 = public, 1 = private                                                                 |
+| `mod_slide_limit` | INTEGER                                    | Slide Limit modifier: max squares a sliding piece may travel. NULL = modifier inactive. |
 
 #### Group 2: Move History
 

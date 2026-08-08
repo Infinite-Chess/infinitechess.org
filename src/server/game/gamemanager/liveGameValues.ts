@@ -119,9 +119,7 @@ function persist(operation: () => void): void {
 	}
 }
 
-/**
- * Called when a new game is created. Inserts the full initial state into both tables.
- */
+/** Called when a new game is created. Inserts the full initial state into both tables. */
 function onGameCreated(servergame: ServerGame): void {
 	const match = servergame.match;
 
@@ -139,6 +137,7 @@ function onGameCreated(servergame: ServerGame): void {
 		draw_offer_state: null,
 		validate_moves: servergame.validateMoves ? 1 : 0,
 		both_disconnected_end_time: null,
+		mod_slide_limit: match.modifiers?.find((m) => m.kind === 'slide-limit')?.value ?? null,
 	};
 
 	// Build one record per player (pure) before touching the database.

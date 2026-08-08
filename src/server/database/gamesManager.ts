@@ -37,6 +37,8 @@ export interface GamesRecord {
 	 * and if the variant is null (custom), the position as well.
 	 */
 	icn: string;
+	/** Slide Limit modifier: max squares a sliding piece may travel. Null if the modifier is inactive. */
+	mod_slide_limit: number | null;
 }
 
 type GamesColumn = keyof GamesRecord;
@@ -168,13 +170,14 @@ export function insertGame(record: GamesRecord): void {
 		INSERT INTO games (
 			game_id, date, base_time_seconds, increment_seconds, variant, rated,
 			leaderboard_id, private, result, termination, move_count,
-			time_duration_millis, icn
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			time_duration_millis, icn, mod_slide_limit
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 	db.run(query, [
 		record.game_id, record.date, record.base_time_seconds, record.increment_seconds,
 		record.variant, record.rated, record.leaderboard_id, record.private, record.result,
-		record.termination, record.move_count, record.time_duration_millis, record.icn
+		record.termination, record.move_count, record.time_duration_millis, record.icn,
+		record.mod_slide_limit
 	]); // prettier-ignore
 }
 

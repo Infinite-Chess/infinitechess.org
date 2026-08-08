@@ -66,6 +66,7 @@ const allGamesColumns: string[] = [
 	'move_count',
 	'time_duration_millis',
 	'icn',
+	'mod_slide_limit',
 ];
 
 /** All columns of the player_games table. */
@@ -109,6 +110,7 @@ const allLiveGamesColumns: string[] = [
 	'draw_offer_state',
 	'validate_moves',
 	'both_disconnected_end_time',
+	'mod_slide_limit',
 ];
 
 /** All columns of the live_player_games table. */
@@ -152,6 +154,7 @@ function initDatabase(): void {
 	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
 	dropLiveGamesConclusionColumnsIfPresent();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
+	addModifierColumnsIfNeeded();
 	// Start periodic tasks
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
@@ -339,7 +342,8 @@ function generateTables(): void {
 			termination          TEXT NOT NULL,
 			move_count           INTEGER NOT NULL,
 			time_duration_millis INTEGER, -- Number of milliseconds that the game lasted in total on the server. Null if info is missing.
-			icn                  TEXT NOT NULL -- Also includes clock timestamps after each move
+			icn                  TEXT NOT NULL, -- Also includes clock timestamps after each move
+			mod_slide_limit      INTEGER, -- Slide Limit modifier: max squares a sliding piece may travel. NULL = modifier inactive.
 
 			-- Add a CHECK constraint to ensure consistency:
 			-- EITHER both are NULL (untimed) OR both are NOT NULL and >= 0 (timed)
@@ -404,7 +408,8 @@ function generateTables(): void {
 			clock_snapshot_time        INTEGER,
 			draw_offer_state           INTEGER,
 			validate_moves             BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1)),
-			both_disconnected_end_time INTEGER -- Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected.
+			both_disconnected_end_time INTEGER, -- Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected.
+			mod_slide_limit            INTEGER -- Slide Limit modifier: max squares a sliding piece may travel. NULL = modifier inactive.
 		);
 	`);
 
@@ -680,6 +685,21 @@ function addRatingDeviationColumnsToPlayerGamesIfNeeded(): void {
 	db.run('ALTER TABLE player_games ADD COLUMN rating_deviation_at_game REAL');
 	db.run('ALTER TABLE player_games ADD COLUMN rating_deviation_after_game REAL');
 	console.log('Temporary DB migration: added player_games rating_deviation columns.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Adds the `mod_slide_limit` column to `games` and `live_games` — the Slide Limit modifier's
+ * value, with NULL marking the modifier inactive. Existing rows need no backfill: every game
+ * played before modifiers existed had none. Fresh DBs get the column from `generateTables()`.
+ */
+function addModifierColumnsIfNeeded(): void {
+	for (const table of ['games', 'live_games'] as const) {
+		if (db.columnExists(table, 'mod_slide_limit')) continue; // Already migrated.
+		db.run(`ALTER TABLE ${table} ADD COLUMN mod_slide_limit INTEGER`);
+		console.log(`Temporary DB migration: added ${table}.mod_slide_limit column.`);
+	}
 }
 
 // Exports -------------------------------------------------------------------------------------

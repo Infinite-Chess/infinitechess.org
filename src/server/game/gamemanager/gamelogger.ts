@@ -208,6 +208,7 @@ function addGameRecordsInTransaction(
 		move_count: servergame.moves.length,
 		time_duration_millis: match.timeEnded ? match.timeEnded - match.timeCreated : null,
 		icn, // Use the pre-generated ICN
+		mod_slide_limit: match.modifiers?.find((m) => m.kind === 'slide-limit')?.value ?? null,
 	});
 
 	// 2. Loop through players and insert records into the 'player_games' table.

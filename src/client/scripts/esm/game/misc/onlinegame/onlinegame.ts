@@ -84,11 +84,13 @@ function loadGameFromState(state: GameStateMessage, dead: boolean): void {
 	const ourRole = gamesession.getRole();
 
 	// The static setup (variant/time control/creation time) is SSR'd
-	const { variant, timeControl, timeCreated, engineGame } = window.gamePageData;
+	const { variant, timeControl, timeCreated, modifiers, engineGame } = window.gamePageData;
+	const slideLimit = modifiers?.find((m) => m.kind === 'slide-limit')?.value;
 	const additional: Additional = {
 		moves: state.moves,
 		gameConclusion: state.gameConclusion,
 		clockValues: state.clockValues,
+		...(slideLimit !== undefined && { slideLimit: BigInt(slideLimit) }),
 	};
 	if (engineGame) {
 		additional.worldBorderDist = apeiron_card.PLAY_BORDER.worldBorderDist;

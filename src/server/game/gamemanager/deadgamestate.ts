@@ -10,6 +10,7 @@
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
+import type { SlideLimitValue } from '../../../shared/util/gameconfig.js';
 import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
@@ -48,7 +49,7 @@ type EngineParticipant = {
 const DELETED_USER_DISPLAY_NAME = '(Deleted User)';
 
 /** The `games` columns needed to assemble a {@link StaticGameState}. */
-const STATIC_GAME_COLUMNS = ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination'] as const; // prettier-ignore
+const STATIC_GAME_COLUMNS = ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination', 'mod_slide_limit'] as const; // prettier-ignore
 /** The `player_games` columns needed to assemble a {@link StaticGameState}. */
 const STATIC_PLAYER_COLUMNS = ['player_number', 'user_id', 'elo_at_game', 'rating_deviation_at_game'] as const; // prettier-ignore
 
@@ -89,7 +90,7 @@ export function produceDeadStaticGameState(game_id: number):
 	const ratingChanges: PlayerGroup<number> = {};
 	for (const row of playerRows) {
 		if (row.elo_change_from_game !== null)
-			ratingChanges[row.player_number] = row.elo_change_from_game;
+			ratingChanges[row.player_number as Player] = row.elo_change_from_game;
 	}
 
 	return {
@@ -113,7 +114,7 @@ export function produceDeadStaticGameState(game_id: number):
  * @throws If a database error occurs.
  */
 export function produceDeadGameState(game_id: number): DeadGameState | undefined {
-	const game = getGameData(game_id, ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination', 'icn']); // prettier-ignore
+	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS, 'icn']);
 	if (game === undefined) return undefined;
 
 	const playerRows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id', 'elo_at_game', 'clock_at_end_millis', 'rating_deviation_at_game']); // prettier-ignore
@@ -123,7 +124,7 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	const finalClocks: PlayerGroup<number> = {};
 	for (const row of playerRows) {
 		if (row.clock_at_end_millis !== null)
-			finalClocks[row.player_number] = row.clock_at_end_millis;
+			finalClocks[row.player_number as Player] = row.clock_at_end_millis;
 	}
 	if (engineParticipant && engineParticipant.clockAtEnd !== null)
 		finalClocks[engineParticipant.color] = engineParticipant.clockAtEnd;
@@ -192,6 +193,10 @@ function assembleStaticGameState(
 				: { kind: 'custom' },
 		timeControl: clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds),
 		timeCreated: timeutil.sqliteToTimestamp(game.date),
+		modifiers:
+			game.mod_slide_limit !== null
+				? [{ kind: 'slide-limit', value: game.mod_slide_limit as SlideLimitValue }]
+				: undefined,
 		players: playerContainers,
 		gameConclusion,
 	};

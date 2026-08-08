@@ -42,6 +42,8 @@ export interface LiveGameData {
 	validate_moves: 0 | 1;
 	/** Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected. */
 	both_disconnected_end_time: number | null;
+	/** Slide Limit modifier: max squares a sliding piece may travel. Null if the modifier is inactive. */
+	mod_slide_limit: number | null;
 }
 
 // Methods --------------------------------------------------------------------------------------------
@@ -56,26 +58,17 @@ export function insertLiveGame(record: LiveGamesRecord): void {
 			INSERT INTO live_games (
 				game_id, time_created, variant, position, clock, rated, private,
 				moves, color_ticking, clock_snapshot_time,
-				draw_offer_state, validate_moves, both_disconnected_end_time
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				draw_offer_state, validate_moves, both_disconnected_end_time, mod_slide_limit
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 	dbCall(
 		() =>
 			db.run(query, [
-				record.game_id,
-				record.time_created,
-				record.variant,
-				record.position,
-				record.clock,
-				record.rated,
-				record.private,
-				record.moves,
-				record.color_ticking,
-				record.clock_snapshot_time,
-				record.draw_offer_state,
-				record.validate_moves,
-				record.both_disconnected_end_time,
-			]),
+				record.game_id, record.time_created, record.variant, record.position,
+				record.clock, record.rated, record.private, record.moves, record.color_ticking,
+				record.clock_snapshot_time, record.draw_offer_state, record.validate_moves,
+				record.both_disconnected_end_time, record.mod_slide_limit,
+			]), // prettier-ignore
 		`Error inserting live game ${record.game_id}`,
 	);
 }

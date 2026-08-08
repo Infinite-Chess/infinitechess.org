@@ -102,6 +102,11 @@ function createGame(
 		dateTimestamp,
 	};
 	const gameRules = variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
+
+	// Slide Limit modifier override.
+	const slideLimit = setup.modifiers?.find((m) => m.kind === 'slide-limit')?.value;
+	if (slideLimit !== undefined) gameRules.slideLimit = BigInt(slideLimit);
+
 	const game = gamefile.initGame(setup.time, dateTimestamp, gameRules);
 	const match = gameutility.initMatch(setup, gameID, assignments);
 	const validateMoves = doesVariantSupportServerValidation(variant);

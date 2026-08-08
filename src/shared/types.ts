@@ -241,6 +241,15 @@ export const GameStateVariantSchema = z.discriminatedUnion('kind', [
 	z.strictObject({ kind: z.literal('custom') }),
 ]);
 
+/** The full configuration for a single game modifier, chosen on a seek and carried onto its game. */
+export type GameModifier = z.infer<typeof GameModifierSchema>;
+export const GameModifierSchema = z.discriminatedUnion('kind', [
+	z.strictObject({
+		kind: z.literal('slide-limit'),
+		value: z.literal(gameconfig.SLIDE_LIMIT_VALUES),
+	}),
+]);
+
 /**
  * The static setup of a game: how it was configured at creation — variant, clock settings, and
  * creation time. Unchanging for the game's whole life. SSR'd into `gamePageData` (and embedded in
@@ -253,6 +262,8 @@ export const StaticGameSetupSchema = z.strictObject({
 	timeControl: TimeControlSchema,
 	/** Epoch milliseconds the game was created. */
 	timeCreated: z.number(),
+	/** The modifiers applied to this game. Absent if none. */
+	modifiers: z.array(GameModifierSchema).optional(),
 });
 
 /**
@@ -318,15 +329,6 @@ export const OutSeekVariantSchema = z.discriminatedUnion('kind', [
 	z.strictObject({ kind: z.literal('custom') }),
 ]);
 
-/** The full configuration for a single game modifier applied to a seek. */
-export type GameModifier = z.infer<typeof GameModifierSchema>;
-export const GameModifierSchema = z.discriminatedUnion('kind', [
-	z.strictObject({
-		kind: z.literal('slide-limit'),
-		value: z.literal(gameconfig.SLIDE_LIMIT_VALUES),
-	}),
-]);
-
 /** The number of digits generated seek IDs are. */
 export const IDLengthOfSeeks = 5;
 /** Seek ID: Base36 alphanumeric, fixed length of 5. */
@@ -365,7 +367,7 @@ export const CreateSeekOptionsSchema = z.strictObject({
 	}),
 	color: z.literal([players.WHITE, players.BLACK, null]),
 	mode: GameModeSchema,
-	modifiers: z.array(GameModifierSchema).max(GameModifierSchema.options.length),
+	modifiers: z.array(GameModifierSchema).max(GameModifierSchema.options.length).optional(),
 });
 
 /** Client → server websocket payload for creating a seek. */

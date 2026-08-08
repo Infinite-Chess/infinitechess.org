@@ -28,6 +28,9 @@ const SLIDE_LIMIT_VALUES = [
 	100,
 ] as const; // prettier-ignore
 
+/** A valid Slide Limit modifier value: max squares a sliding piece may travel. */
+export type SlideLimitValue = (typeof SLIDE_LIMIT_VALUES)[number];
+
 export default {
 	TELEPORT_LIMIT,
 	SLIDE_LIMIT_VALUES,

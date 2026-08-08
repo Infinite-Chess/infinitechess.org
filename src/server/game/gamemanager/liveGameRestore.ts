@@ -19,6 +19,7 @@ import type { VariantCode } from '../../../shared/chess/variants/variantregistry
 import type { ValidEngine } from '../../../shared/chess/engine.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
+import type { SlideLimitValue } from '../../../shared/util/gameconfig.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
@@ -164,6 +165,11 @@ function restoreSingleGame(
 		dateTimestamp: gameRow.time_created,
 	};
 	const gameRules = variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
+
+	// Slide Limit modifier override. Must precede initServerGame, whose initBoard()
+	// reads gameRules.slideLimit to narrow the sliding movesets.
+	if (gameRow.mod_slide_limit !== null) gameRules.slideLimit = BigInt(gameRow.mod_slide_limit);
+
 	const game = gamefile.initGame(
 		gameRow.clock as TimeControl,
 		gameRow.time_created,
@@ -316,6 +322,10 @@ function reconstructMatchInfo(
 		timeCreated: gameRow.time_created,
 		timeEnded: undefined, // Only ongoing games are restored — none have ended.
 		rated: gameRow.rated === 1,
+		modifiers:
+			gameRow.mod_slide_limit !== null
+				? [{ kind: 'slide-limit', value: gameRow.mod_slide_limit as SlideLimitValue }]
+				: undefined,
 		clock: gameRow.clock as TimeControl,
 		playerData,
 		engineParticipant: engineRow

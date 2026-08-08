@@ -97,7 +97,12 @@ function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	try {
 		createGame(
-			{ variant: seek.variant, time: seek.time, rated: seek.mode === 'rated' },
+			{
+				variant: seek.variant,
+				time: seek.time,
+				rated: seek.mode === 'rated',
+				modifiers: seek.modifiers,
+			},
 			assignments,
 		);
 	} catch (error: unknown) {
