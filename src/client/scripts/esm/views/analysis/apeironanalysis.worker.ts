@@ -202,13 +202,54 @@ let goOptions: GoOptions = { multiPv: 1, maxDepth: 13, requestId: 0 };
  */
 let reachedDepth = 0;
 
+// Init -----------------------------------------------------------------------------
+
+/**
+ * Loads the wasm module from the served glue, sizes its hash, brings up the Lazy SMP
+ * pool when this is the search worker, then posts 'ready'.
+ */
+async function init(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promise<void> {
+	try {
+		const loaded = await loadEngineWasm<AnalysisWasmModule>(
+			msg.engineUrl,
+			msg.threads ?? 1,
+			(module) => module.set_hash_size(msg.hashMb),
+		);
+		wasm = loaded.wasm;
+		const { output, multithreaded: engineIsMultithreaded } = loaded;
+
+		// Hand the page the shared stop flag, letting it abort an in-flight search instantly (the
+		// search polls the flag every node batch, even single-threaded). Only a shared-memory
+		// (multithreaded) engine build exposes wasm memory the page can write into.
+		if (engineIsMultithreaded) {
+			postMessage({
+				type: 'sharedmem',
+				buffer: output.memory.buffer,
+				stopFlagPtr: wasm.stop_flag_ptr(),
+			} satisfies AnalysisResponse);
+		}
+
+		wasmReady = true;
+		postMessage({
+			type: 'ready',
+			mt: engineIsMultithreaded,
+		} satisfies AnalysisResponse);
+	} catch (e) {
+		console.error('[Analysis Engine] Failed to initialize wasm', e);
+		postMessage({
+			type: 'initerror',
+			message: e instanceof Error ? e.message : String(e),
+		} satisfies AnalysisResponse);
+	}
+}
+
 // Message Handling ---------------------------------------------------------------
 
 self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 	const msg = e.data;
 	switch (msg.cmd) {
 		case 'init':
-			void initialize(msg);
+			void init(msg);
 			break;
 		case 'position':
 			currentIcn = msg.icn;
@@ -247,47 +288,6 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 			break;
 	}
 };
-
-// Init -----------------------------------------------------------------------------
-
-/**
- * Loads the wasm module from the served glue, sizes its hash, brings up the Lazy SMP
- * pool when this is the search worker, then posts 'ready'.
- */
-async function initialize(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promise<void> {
-	try {
-		const loaded = await loadEngineWasm<AnalysisWasmModule>(
-			msg.engineUrl,
-			msg.threads ?? 1,
-			(module) => module.set_hash_size(msg.hashMb),
-		);
-		wasm = loaded.wasm;
-		const { output, multithreaded: engineIsMultithreaded } = loaded;
-
-		// Hand the page the shared stop flag, letting it abort an in-flight search instantly (the
-		// search polls the flag every node batch, even single-threaded). Only a shared-memory
-		// (multithreaded) engine build exposes wasm memory the page can write into.
-		if (engineIsMultithreaded) {
-			postMessage({
-				type: 'sharedmem',
-				buffer: output.memory.buffer,
-				stopFlagPtr: wasm.stop_flag_ptr(),
-			} satisfies AnalysisResponse);
-		}
-
-		wasmReady = true;
-		postMessage({
-			type: 'ready',
-			mt: engineIsMultithreaded,
-		} satisfies AnalysisResponse);
-	} catch (e) {
-		console.error('[Analysis Engine] Failed to initialize wasm', e);
-		postMessage({
-			type: 'initerror',
-			message: e instanceof Error ? e.message : String(e),
-		} satisfies AnalysisResponse);
-	}
-}
 
 // Search loop ------------------------------------------------------------------------
 
