@@ -1,7 +1,9 @@
 // src/server/database/liveEngineGamesManager.ts
 
 /**
- * Manages live engine participants. They omit disconnect state because engines never disconnect.
+ * This script manages the live_engine_games table, which persists per-engine
+ * state for active games across server restarts. One row per engine per game.
+ * Engines omit disconnect state, as they never disconnect.
  *
  * See docs/systems/LIVE_GAME_PERSISTENCE.md for the column reference.
  */
@@ -11,6 +13,9 @@ import jsutil from '../../shared/util/jsutil.js';
 import db, { dbCall } from './database.js';
 import { allLiveEngineGamesColumns } from './databaseTables.js';
 
+// Types ----------------------------------------------------------------------------------------------
+
+/** Per-engine live game data columns, excluding the composite key fields. */
 interface LiveEngineGameData {
 	time_remaining_ms: number | null;
 	engine: string;
@@ -18,11 +23,19 @@ interface LiveEngineGameData {
 	strength_level: number;
 }
 
+/** Structure of a complete live_engine_games record. */
 export interface LiveEngineGamesRecord extends LiveEngineGameData {
 	game_id: number;
 	player_number: number;
 }
 
+// Methods --------------------------------------------------------------------------------------------
+
+/**
+ * Inserts a new live engine game row into the database.
+ * @param record - The complete live_engine_games record to insert.
+ * @throws If a database error occurs.
+ */
 export function insertLiveEngineGame(record: LiveEngineGamesRecord): void {
 	const query = `
 		INSERT INTO live_engine_games (
@@ -44,6 +57,13 @@ export function insertLiveEngineGame(record: LiveEngineGamesRecord): void {
 	);
 }
 
+/**
+ * Updates specific columns of an engine's live game record.
+ * @param game_id - The game ID.
+ * @param player_number - The player number to update.
+ * @param updates - An object containing only the columns to update and their new values.
+ * @throws If a database error occurs.
+ */
 export function updateLiveEngineGame(
 	game_id: number,
 	player_number: number,
@@ -64,6 +84,7 @@ export function updateLiveEngineGame(
 	}, `Error updating live engine participant for game ${game_id}`);
 }
 
+/** Retrieves every live engine participant for startup restoration. */
 export function getAllLiveEngineGames(): LiveEngineGamesRecord[] {
 	return dbCall(
 		() => db.all<LiveEngineGamesRecord>('SELECT * FROM live_engine_games'),

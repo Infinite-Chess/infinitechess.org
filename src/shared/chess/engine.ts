@@ -38,6 +38,8 @@ export interface Engine {
 /** Union of all valid engine names, derived from the keys of engineDictionary. */
 export type ValidEngine = keyof typeof engineDictionary;
 
+// Engine Config -----------------------------------------------------------------
+
 /** What every engine's worker is configured with when the page asks it for a move. */
 export interface BaseEngineConfig {
 	/** Hard time limit for the engine to think in milliseconds. */
