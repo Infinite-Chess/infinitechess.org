@@ -115,13 +115,12 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 
 	return {
 		gamePageData: {
+			// The client channel carries the whole setup; the rest of the state feeds `meta`.
+			...state.setup,
 			id,
 			isLive: !!game,
 			role,
 			engineGame,
-			variant: state.variant,
-			timeControl: state.timeControl,
-			timeCreated: state.timeCreated,
 		},
 		meta: buildGameMetaViewModel(state, ratingChanges, role, moveCount, req),
 	};
@@ -166,12 +165,13 @@ function buildGameMetaViewModel(
 	moveCount: number,
 	req: Request,
 ): GameMetaViewModel {
+	const { setup } = state;
 	const variantGroup =
-		state.variant.kind === 'preset'
-			? variantregistry.getVariantGroup(state.variant.code)
+		setup.variant.kind === 'preset'
+			? variantregistry.getVariantGroup(setup.variant.code)
 			: 'custom';
 	const variantCode: VariantCode | null =
-		state.variant.kind === 'preset' ? state.variant.code : null;
+		setup.variant.kind === 'preset' ? setup.variant.code : null;
 	const variant = {
 		name: variantregistry.getVariantName(variantCode, req.t.shared),
 		iconId: variantregistry.getVariantGroupIconId(variantGroup),
@@ -205,14 +205,14 @@ function buildGameMetaViewModel(
 		variant,
 		bars: { top, bottom },
 		speed: {
-			iconId: clockutil.getSpeedIconId(state.timeControl),
-			category: clockutil.getSpeedCategory(state.timeControl),
+			iconId: clockutil.getSpeedIconId(setup.timeControl),
+			category: clockutil.getSpeedCategory(setup.timeControl),
 		},
-		timed: !clockutil.isClockValueInfinite(state.timeControl),
-		timeControl: clockutil.getTimeControlLabel(state.timeControl),
+		timed: !clockutil.isClockValueInfinite(setup.timeControl),
+		timeControl: clockutil.getTimeControlLabel(setup.timeControl),
 		rated: state.rated,
-		timeCreated: state.timeCreated,
-		startedAgo: timeutil.getRelativeTimeString(state.timeCreated, locale),
+		timeCreated: setup.timeCreated,
+		startedAgo: timeutil.getRelativeTimeString(setup.timeCreated, locale),
 		...(state.gameConclusion && {
 			result: gameresultutil.getResultDisplay(state.gameConclusion, req.t.shared),
 		}),

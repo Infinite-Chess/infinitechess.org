@@ -519,7 +519,7 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 	}
 
 	const state: StaticGameState = {
-		...buildStaticGameSetup(servergame),
+		setup: buildStaticGameSetup(servergame),
 		rated: match.rated,
 		players,
 	};
@@ -529,7 +529,7 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 
 /**
  * Assembles the {@link StaticGameSetup} of a live game: how it was configured
- * — variant, clock settings, and creation time. SSR'd into `gamePageData`.
+ * — variant, clock settings, modifiers, creation time. SSR'd into `gamePageData`.
  */
 function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 	const match = servergame.match;

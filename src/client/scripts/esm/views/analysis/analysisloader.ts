@@ -60,7 +60,7 @@ async function loadGameById(gameId: number): Promise<void> {
 		const viewWhitePerspective = window.analysisPageData.role !== p.BLACK;
 		const longFormat = icnconverter.ShortToLong_Format(state.icn);
 		// The slide limit comes from the game's stored config, the ICN carries no modifiers.
-		const slideLimit = state.modifiers?.find((m) => m.kind === 'slide-limit')?.value;
+		const slideLimit = state.setup.modifiers?.find((m) => m.kind === 'slide-limit')?.value;
 		await pasteGame(
 			longFormat,
 			state.gameConclusion,

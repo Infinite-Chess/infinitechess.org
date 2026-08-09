@@ -185,18 +185,20 @@ function assembleStaticGameState(
 	} as GameConclusion;
 
 	return {
+		setup: {
+			// A null `variant` column marks a custom game; its position comes from the ICN (parsed client-side), never here.
+			variant:
+				game.variant !== null
+					? { kind: 'preset', code: game.variant as VariantCode }
+					: { kind: 'custom' },
+			timeControl: clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds),
+			timeCreated: timeutil.sqliteToTimestamp(game.date),
+			modifiers:
+				game.mod_slide_limit !== null
+					? [{ kind: 'slide-limit', value: game.mod_slide_limit as SlideLimitValue }]
+					: undefined,
+		},
 		rated: Boolean(game.rated),
-		// A null `variant` column marks a custom game; its position comes from the ICN (parsed client-side), never here.
-		variant:
-			game.variant !== null
-				? { kind: 'preset', code: game.variant as VariantCode }
-				: { kind: 'custom' },
-		timeControl: clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds),
-		timeCreated: timeutil.sqliteToTimestamp(game.date),
-		modifiers:
-			game.mod_slide_limit !== null
-				? [{ kind: 'slide-limit', value: game.mod_slide_limit as SlideLimitValue }]
-				: undefined,
 		players: playerContainers,
 		gameConclusion,
 	};

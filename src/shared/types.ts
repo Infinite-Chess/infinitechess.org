@@ -251,10 +251,10 @@ export const GameModifierSchema = z.discriminatedUnion('kind', [
 ]);
 
 /**
- * The static setup of a game: how it was configured at creation — variant, clock settings, and
- * creation time. Unchanging for the game's whole life. SSR'd into `gamePageData` (and embedded in
- * {@link StaticGameState} for the side bar / dead-game HTTP), so it is never sent over the subscribe
- * socket — the client already has it by game-load time.
+ * The static setup of a game: how it was configured at creation — variant, clock settings,
+ * modifiers, creation time. Unchanging for the game's whole life. SSR'd into `gamePageData`
+ * (and the `setup` of {@link StaticGameState} for the side bar / dead-game HTTP), so it is
+ * never sent over the subscribe socket — the client already has it by game-load time.
  */
 export type StaticGameSetup = z.infer<typeof StaticGameSetupSchema>;
 export const StaticGameSetupSchema = z.strictObject({
@@ -267,12 +267,14 @@ export const StaticGameSetupSchema = z.strictObject({
 });
 
 /**
- * A game's {@link StaticGameSetup} plus its identity + display fields (id, rated, players) and current
- * conclusion. Used by the SSR side bar and the dead-game HTTP path. Everything here is static &
- * unchanging since the game's inception EXCEPT the gameConclusion.
+ * A game's {@link StaticGameSetup} plus its display fields (rated, players) and current conclusion.
+ * Used by the SSR side bar and the dead-game HTTP path. Everything here is static & unchanging
+ * since the game's inception EXCEPT the gameConclusion.
  */
 export type StaticGameState = z.infer<typeof StaticGameStateSchema>;
-export const StaticGameStateSchema = StaticGameSetupSchema.extend({
+export const StaticGameStateSchema = z.strictObject({
+	// Kept whole so it can be forwarded to the client channel without field-by-field copying.
+	setup: StaticGameSetupSchema,
 	rated: z.boolean(),
 	/** Per-color username container, with rating embedded per player. */
 	players: typeschemas.GenPlayerGroupSchema(ServerUsernameContainerSchema),
