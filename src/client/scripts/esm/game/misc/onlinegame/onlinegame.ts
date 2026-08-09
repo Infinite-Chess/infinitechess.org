@@ -8,7 +8,6 @@ import type { Additional } from '../../../../../../shared/chess/logic/gamefile.j
 import type { GameStateMessage, ParticipantState } from '../../../../../../shared/types.js';
 
 import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 import { engineDictionary } from '../../../../../../shared/chess/engine.js';
 
@@ -192,7 +191,7 @@ function setParticipantState(participantState?: ParticipantState): void {
 function confirmNavigationAwayFromGame(event: MouseEvent): void {
 	// Check if Command (Meta) or Ctrl key is held down
 	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return;
+	if (!gameslot.isGameLive()) return;
 	if (gamesession.getRole() === undefined) return; // Spectator
 
 	const userConfirmed = confirm('Are you sure you want to leave the game?');
