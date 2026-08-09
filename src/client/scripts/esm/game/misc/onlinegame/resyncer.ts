@@ -34,12 +34,14 @@ import movesendreceive from './movesendreceive.js';
 /**
  * Reconciles our board against a `gamestate` message — a live reconnect reply, or a push (e.g. the
  * game concluded the instant we moved). The game may not always be over.
+ * @returns Whether we adopted the server's state. False if we refused it because it contained an
+ * illegal opponent move, leaving our board deliberately short of the server's.
  */
 function handleGameState(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	message: GameStateMessage,
-): void {
+): boolean {
 	const claimedGameConclusion = message.gameConclusion;
 	if (message.finalized) onlinegame.onFinalized();
 
@@ -49,7 +51,7 @@ function handleGameState(
 	 * server sees our move, but on our screen we have still played it.
 	 */
 	const result = synchronizeMovesList(gamefile, mesh, message.moves, claimedGameConclusion, message.forceSync ?? false); // prettier-ignore
-	if (result.opponentPlayedIllegalMove) return;
+	if (result.opponentPlayedIllegalMove) return false;
 
 	onlinegame.setParticipantState(message.participantState);
 
@@ -66,6 +68,8 @@ function handleGameState(
 
 	// A finalized rated game carries its deltas — show them.
 	if (message.ratingChanges) guigamemeta.showRatingChanges(message.ratingChanges);
+
+	return true;
 }
 
 /**

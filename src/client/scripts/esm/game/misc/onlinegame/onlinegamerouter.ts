@@ -86,8 +86,12 @@ function routeMessage(contents: GameMessage): void {
 
 	switch (contents.action) {
 		case 'gamestate':
-			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
-			resyncer.handleGameState(gamefile, mesh, contents.value);
+			// BEFORE the resync: resyncer submits moves as it reconciles, which movesendreceive gates on areInSync().
+			onlinegame.setInSync(true);
+			if (!resyncer.handleGameState(gamefile, mesh, contents.value)) {
+				onlinegame.setInSync(false); // It refused the server's state, so we hold none of it.
+				break;
+			}
 			// AFTER the resync, not alongside setInSync() above: the intents held through the
 			// outage check the reconciled board to decide whether they still make sense.
 			socketintents.onRouteSynced('game');
