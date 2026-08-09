@@ -80,7 +80,7 @@ function isRatedAllowed(
 	if (!(variant.code in VariantLeaderboards)) return false; // Variant needs a leaderboard
 	if (time === '-') return false; // Must be timed
 	if (color !== null) return false; // No specific color for rated **public** games
-	if (modifiers?.length ?? 0 > 0) return false; // No modifiers for rated
+	if ((modifiers?.length ?? 0) > 0) return false; // No modifiers for rated
 	return true;
 }
 
