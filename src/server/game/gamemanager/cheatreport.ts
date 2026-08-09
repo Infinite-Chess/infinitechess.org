@@ -114,9 +114,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 }
 
 /**
- * Concludes a game after a valid cheat report. The full game state is sent to all participants,
- * but not spectators, this is because illegal moves are not forwarded in the game. However, the
- * cheater and whosTurn may be desynced, so they need the full state.
+ * Concludes a game after a valid cheat report.
  * Custom version of gamemanager.onGameConclusion
  * @param cheaterColor - The color whose (now-popped) perpetrating move triggered the report.
  */
@@ -132,7 +130,10 @@ function concludeReportedGame(
 
 	applyConclusion(servergame, conclusion);
 
-	// Send participants the full state
+	// Everyone gets the full state, not just the conclusion, because the popped move may still be
+	// sitting on their board: the cheater played it, so they're a move ahead of the server (whosTurn
+	// included), and any spectator who joined after it was played has it too — an initial load
+	// replays the move list unvalidated, so they never ran the check that refuses it live.
 	const base = gameutility.buildGameStateBase(servergame);
 	for (const [color, data] of Object.entries(servergame.match.playerData)) {
 		if (data.socket === undefined) continue; // Not connected, can't send message
@@ -143,9 +144,8 @@ function concludeReportedGame(
 		sendSocketMessage(data.socket, 'game', 'gamestate', message);
 	}
 
-	// Send spectators the conclusion message
-	const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
-	gameutility.broadcastToSpectators(servergame, 'gameconclusion', conclusionMessage);
+	// Spectators get the same state, minus the participant overlay.
+	gameutility.broadcastToSpectators(servergame, 'gamestate', base);
 
 	freeGame(servergame);
 

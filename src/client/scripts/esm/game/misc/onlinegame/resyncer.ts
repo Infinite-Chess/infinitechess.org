@@ -50,8 +50,8 @@ function handleGameState(
 	 * We need to do this because sometimes the game can end before the
 	 * server sees our move, but on our screen we have still played it.
 	 */
-	const result = synchronizeMovesList(gamefile, mesh, message.moves, claimedGameConclusion, message.forceSync ?? false); // prettier-ignore
-	if (result.opponentPlayedIllegalMove) return false;
+	const adoptedMoves = synchronizeMovesList(gamefile, mesh, message.moves, claimedGameConclusion, message.forceSync ?? false); // prettier-ignore
+	if (!adoptedMoves) return false;
 
 	onlinegame.setParticipantState(message.participantState);
 
@@ -81,7 +81,7 @@ function handleGameState(
  * @param moves - The moves list in the most compact form: `['1,2>3,4','5,6>7,8Q']`
  * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
  * @param forceSync - If true, skip the early-exit submit path and force our move list to exactly match the server's
- * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
+ * @returns Whether we adopted the server's move list. False if the opponent played an illegal move, which we report.
  */
 function synchronizeMovesList(
 	gamefile: GameFile,
@@ -89,7 +89,7 @@ function synchronizeMovesList(
 	moves: MovePacket[],
 	claimedGameConclusion: GameConclusion | undefined,
 	forceSync: boolean,
-): { opponentPlayedIllegalMove: boolean } {
+): boolean {
 	// console.log("Resyncing...");
 
 	/** The index of the lastest move in the game we agree with the server on. -1 = starting position. */
@@ -109,7 +109,7 @@ function synchronizeMovesList(
 	) {
 		console.log(`Submitting the ${gamefile.moves.length - moves.length} move(s) the server is behind on after resyncing..`); // prettier-ignore
 		movesendreceive.submitMovesFrom(gamefile, moves.length);
-		return { opponentPlayedIllegalMove: false };
+		return true;
 	}
 
 	const originalMoveIndex = gamefile.state.local.moveIndex;
@@ -181,12 +181,12 @@ function synchronizeMovesList(
 	// would be so behind to inherit this), then also cancel all premoves we had.
 	if (atleastOneOfOurMovesWasForwarded) premoves.cancelPremoves(gamefile, mesh);
 
-	if (opponentPlayedIllegalMove) return { opponentPlayedIllegalMove: true };
+	if (opponentPlayedIllegalMove) return false;
 
 	if (!aChangeWasMade) movesequence.viewIndex(gamefile, mesh, originalMoveIndex, false);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
 
-	return { opponentPlayedIllegalMove: false }; // No cheating detected
+	return true; // No cheating detected
 }
 
 /**

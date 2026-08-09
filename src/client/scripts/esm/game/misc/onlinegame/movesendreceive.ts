@@ -129,6 +129,12 @@ function handleMove(
 
 /**
  * Logs an illegal opponent move and reports it to the server if the game warrants it.
+ *
+ * When we can't report it (the checks below), callers still refuse the move, leaving our board a
+ * move behind the server's — indefinitely, if nobody else ever reports it. That's intended, not an
+ * oversight: forwarding it instead wouldn't agree with a page refresh either, since the initial
+ * load replays the move list unvalidated and derives special tags from PSEUDO-legal moves. An
+ * illegal castle, for instance, moves the rook on load but couldn't here.
  * @param moveValidationResult - The result of move validation (may be valid or invalid).
  * @param tokenMove - The move in compact string format, used for logging.
  * @param moveNumber - The move number, used for logging.
