@@ -245,10 +245,7 @@ function updateRematchButton(): void {
 	element_Rematch.disabled = !canOfferRematch() || !onlinegame.areInSync();
 }
 
-/**
- * Whether extending a rematch offer currently makes sense. A resync resets
- * {@link weOfferedRematch}, since the server doesn't report our own outstanding offer back.
- */
+/** Whether extending a rematch offer currently makes sense. */
 function canOfferRematch(): boolean {
 	return !weOfferedRematch && opponentPresentPostGame;
 }
@@ -258,7 +255,8 @@ function canOfferRematch(): boolean {
  * page load or 'subscriberematch'. Updates the rematch button.
  */
 function setRematchState(rematch: RematchOfferInfo): void {
-	// A page load/resync resets our own pending offer (not restored — see the server protocol).
+	// Not a lost-offer bug: the server withdraws our offer the instant our socket closes
+	// (onPostGameLeave), and we only ever get here on a fresh socket, so it's genuinely gone.
 	weOfferedRematch = false;
 	opponentOfferedRematch = rematch.offered;
 	opponentPresentPostGame = rematch.present;
