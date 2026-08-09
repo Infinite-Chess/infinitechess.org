@@ -55,7 +55,7 @@ function submitMove(gamefile: GameFile, moveIndex: number): void {
 		gameConclusion: isLastMove ? gamefile.gameConclusion : undefined,
 	};
 
-	socketmessages.send('game', 'submitmove', data, true);
+	void socketmessages.send('game', 'submitmove', data);
 }
 
 /**
@@ -155,7 +155,7 @@ function reportOpponentsMove(reason: string): void {
 	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
 	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
 	const message = { reason, opponentsMoveNumber };
-	socketmessages.send('game', 'report', message);
+	void socketmessages.send('game', 'report', message);
 }
 
 /**

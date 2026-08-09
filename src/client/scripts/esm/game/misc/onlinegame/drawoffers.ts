@@ -17,7 +17,7 @@ import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import gameactions from '../../gui/guigameactions.js';
 import { GameBus } from '../../GameBus.js';
-import socketmessages from '../../../websocket/socketmessages.js';
+import socketintents from '../../../websocket/socketintents.js';
 
 // Variables ---------------------------------------------------
 
@@ -54,6 +54,7 @@ GameBus.addEventListener('user-move-played', () => closeDraw());
 function isOfferingDrawLegal(): boolean {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return false; // Game not loaded yet
+	if (!gameslot.isGameLive()) return false; // Already concluded
 	if (!moveutil.isGameResignable(gamefile)) return false; // Not at least 2+ moves
 	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
 	return true; // Is legal to EXTEND
@@ -97,7 +98,9 @@ function onOpponentDeclinedOffer(): void {
  * All legality checks have already passed!
  */
 function extendOffer(): void {
-	socketmessages.send('game', 'offerdraw');
+	// A resync restores plyOfLastOfferedDraw from the server, so if our offer never landed
+	// this reads as "we haven't offered" and the held intent is still legal to send.
+	socketintents.submit('game', 'offerdraw', undefined, () => isOfferingDrawLegal());
 	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.moves.length;
 	gameactions.updateOfferDrawButton(); // It's now too soon to offer again — disable the button.
@@ -111,7 +114,9 @@ function extendOffer(): void {
  */
 function callback_AcceptDraw(): void {
 	isAcceptingDraw = false;
-	socketmessages.send('game', 'acceptdraw');
+	// A resync restores isAcceptingDraw from the server, so a held intent
+	// is dropped if the offer is no longer open by the time we're back.
+	socketintents.submit('game', 'acceptdraw', undefined, () => gameslot.isGameLive() && isAcceptingDraw); // prettier-ignore
 	gameactions.refresh();
 }
 
@@ -127,7 +132,7 @@ function callback_declineDraw(): void {
 	if (!isAcceptingDraw) return; // No open draw offer from our opponent
 	closeDraw();
 	// Notify the server
-	socketmessages.send('game', 'declinedraw');
+	socketintents.submit('game', 'declinedraw', undefined, () => gameslot.isGameLive() && isAcceptingDraw); // prettier-ignore
 	// TODO: Log into chat window instead.
 	toast.show(`Draw declined`);
 }

@@ -43,7 +43,6 @@ type GameMessage = z.infer<typeof GameSchema>;
  * Possible actions: submitmove/offerdraw/abort/resign/subscribe/subscriberematch/paste...
  * @param ws - The socket
  * @param contents - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
- * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
  */
 function routeGameMessage(ws: CustomWebSocket, contents: GameMessage): void {
 	// All actions that don't require a game

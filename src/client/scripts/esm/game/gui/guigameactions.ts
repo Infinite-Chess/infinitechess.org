@@ -29,7 +29,7 @@ import drawoffers from '../misc/onlinegame/drawoffers.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import { GameBus } from '../GameBus.js';
 import { SocketBus } from '../../websocket/SocketBus.js';
-import socketmessages from '../../websocket/socketmessages.js';
+import socketintents from '../../websocket/socketintents.js';
 
 // Elements ----------------------------------------------------------------------------------
 
@@ -199,7 +199,7 @@ function callback_OfferDraw(): void {
 
 /** Resigns the game. Server only accepts if the game is resignable (2+ plies). */
 function callback_Resign(): void {
-	socketmessages.send('game', 'resign');
+	socketintents.submit('game', 'resign', undefined, () => gameslot.isGameLive());
 }
 
 /**
@@ -209,7 +209,13 @@ function callback_Resign(): void {
  * but the abort button hadn't yet swapped out for resign.
  */
 function callback_Abort(): void {
-	socketmessages.send('game', 'abort');
+	// Held across a disconnect only while the game is still in abort territory —
+	// the same condition that decides which of the two buttons is showing.
+	socketintents.submit('game', 'abort', undefined, () => {
+		const gamefile = gameslot.getGamefile();
+		if (gamefile === undefined || gamefileutility.isGameOver(gamefile)) return false;
+		return !moveutil.isGameResignable(gamefile);
+	});
 }
 
 /** Navigates to the post-game analysis board. */
@@ -236,8 +242,15 @@ function updateRematchButton(): void {
 	if (!element_Rematch) return; // Absent (spectator, or game loaded dead).
 	element_Rematch.classList.toggle('rematch-offered', opponentOfferedRematch && !weOfferedRematch); // prettier-ignore
 	if (graceTimers.has(element_ActionsOver)) return; // Mid-appearance grace — leave disabled state to it.
-	element_Rematch.disabled =
-		weOfferedRematch || !opponentPresentPostGame || !onlinegame.areInSync();
+	element_Rematch.disabled = !canOfferRematch() || !onlinegame.areInSync();
+}
+
+/**
+ * Whether extending a rematch offer currently makes sense. A resync resets
+ * {@link weOfferedRematch}, since the server doesn't report our own outstanding offer back.
+ */
+function canOfferRematch(): boolean {
+	return !weOfferedRematch && opponentPresentPostGame;
 }
 
 /**
@@ -255,7 +268,7 @@ function setRematchState(rematch: RematchOfferInfo): void {
 /** Extends a rematch offer to our opponent. Clicking while they're offering accepts theirs. */
 function callback_Rematch(): void {
 	if (weOfferedRematch) return; // Already offered.
-	socketmessages.send('game', 'offerrematch');
+	socketintents.submit('game', 'offerrematch', undefined, () => canOfferRematch());
 	weOfferedRematch = true;
 	updateRematchButton();
 }

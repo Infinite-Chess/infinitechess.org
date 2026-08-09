@@ -19,7 +19,7 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import { GameBus } from '../GameBus.js';
-import socketmessages from '../../websocket/socketmessages.js';
+import socketintents from '../../websocket/socketintents.js';
 
 // Elements ----------------------------------------------------------------------------------
 
@@ -96,14 +96,25 @@ function render(): void {
 
 // Button handlers ----------------------------------------------------------------------------
 
+/**
+ * Whether the claim window is currently open. A resync restores the opponent's disconnect
+ * state from the server, so a held claim is dropped once they're back.
+ */
+function isClaimable(): boolean {
+	// Load-bearing: claimableAt is only cleared on 'game-concluded', which online games don't
+	// dispatch off our own locally-detected conclusion — so it outlives the game briefly.
+	if (!gameslot.isGameLive()) return false;
+	return claimableAt !== undefined && Date.now() >= claimableAt;
+}
+
 /** Claims victory against the disconnected opponent. Server validates the window is open. */
 function callback_ClaimVictory(): void {
-	socketmessages.send('game', 'claimvictory');
+	socketintents.submit('game', 'claimvictory', undefined, isClaimable);
 }
 
 /** Claims a draw against the disconnected opponent. Server validates the window is open. */
 function callback_ClaimDraw(): void {
-	socketmessages.send('game', 'claimdraw');
+	socketintents.submit('game', 'claimdraw', undefined, isClaimable);
 }
 
 element_ClaimVictory?.addEventListener('click', callback_ClaimVictory);

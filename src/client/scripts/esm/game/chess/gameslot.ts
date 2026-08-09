@@ -20,6 +20,7 @@ import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import arrows from '../rendering/arrows/arrows.js';
@@ -105,6 +106,11 @@ function getMesh(): Mesh | undefined {
 
 function areInGame(): boolean {
 	return loadedGamefile !== undefined;
+}
+
+/** Whether a game is loaded and hasn't concluded (locally) yet. */
+function isGameLive(): boolean {
+	return loadedGamefile !== undefined && !gamefileutility.isGameOver(loadedGamefile);
 }
 
 function areViewingWhite(): boolean {
@@ -268,6 +274,7 @@ export default {
 	getGamefile,
 	getMesh,
 	areInGame,
+	isGameLive,
 	areViewingWhite,
 	flipView,
 	loadGamefile,

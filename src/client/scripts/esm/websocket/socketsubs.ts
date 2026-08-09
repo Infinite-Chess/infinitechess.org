@@ -9,9 +9,9 @@
 
 import socketmessages from './socketmessages.js';
 
-const validSubs = ['lobby', 'game'];
+const validSubs = ['lobby', 'game'] as const;
 
-type Sub = (typeof validSubs)[number];
+export type Sub = (typeof validSubs)[number];
 
 const subs: Record<Sub, boolean> = {
 	lobby: false,
@@ -67,13 +67,12 @@ function unsubFromSub(sub: Sub): void {
 	if (!areSubbedToSub(sub)) return; // Already unsubbed.
 	deleteSub(sub);
 	// Tell the server we no longer want updates.
-	socketmessages.send('general', 'unsub', sub);
+	void socketmessages.send('general', 'unsub', sub);
 }
 
 // Exports --------------------------------------------------------------------
 
 export default {
-	validSubs,
 	zeroSubs,
 	areSubbedToSub,
 	addSub,

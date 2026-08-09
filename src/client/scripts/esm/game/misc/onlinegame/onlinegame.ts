@@ -8,7 +8,6 @@ import type { Additional } from '../../../../../../shared/chess/logic/gamefile.j
 import type { GameStateMessage, ParticipantState } from '../../../../../../shared/types.js';
 
 import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 import { engineDictionary } from '../../../../../../shared/chess/engine.js';
 
@@ -192,7 +191,7 @@ function setParticipantState(participantState?: ParticipantState): void {
 function confirmNavigationAwayFromGame(event: MouseEvent): void {
 	// Check if Command (Meta) or Ctrl key is held down
 	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return;
+	if (!gameslot.isGameLive()) return;
 	if (gamesession.getRole() === undefined) return; // Spectator
 
 	const userConfirmed = confirm('Are you sure you want to leave the game?');
@@ -221,11 +220,11 @@ function subscribeToGame(): void {
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
 	if (stage === 'finalized' && gameslot.getGamefile()) {
 		// The result is locked in — nothing but rematch offers can change, so we can't desync.
-		socketmessages.send('game', 'subscriberematch', id);
+		void socketmessages.send('game', 'subscriberematch', id);
 	} else {
 		// No game loaded yet (initial subscribe), a load that failed and left us with none,
 		// or it's live but not finalized (may still change) — request the full state.
-		socketmessages.send('game', 'subscribe', id);
+		void socketmessages.send('game', 'subscribe', id);
 	}
 }
 

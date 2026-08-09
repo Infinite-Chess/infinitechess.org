@@ -12,6 +12,7 @@ import type {
 	BaseSeek,
 	OutSeek,
 	CreateSeekOptions,
+	LobbyStateMessage,
 	CreateEngineGameMessage,
 } from '../../../../../shared/types.js';
 
@@ -30,6 +31,7 @@ import gamesound from '../../game/misc/gamesound.js';
 import socketsubs from '../../websocket/socketsubs.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import validatorama from '../../util/validatorama.js';
+import socketintents from '../../websocket/socketintents.js';
 import socketmessages from '../../websocket/socketmessages.js';
 import gameSetupModal from './gameSetupModal.js';
 import seekPreviewCache from './seekPreviewCache.js';
@@ -86,8 +88,11 @@ const rowVacatedTimes: number[] = [];
 
 /** Whether the user is currently idle (lobby unsubbed, overlay visible). */
 let isIdle = false;
-/** Whether the in-a-game banner is currently shown (set by the server's 'ingame'/'outgame' pushes). */
-let inGameBannerShown = false;
+/**
+ * The id of the game the server says we're in, if any. Set by the lobby state and
+ * the live 'ingame'/'outgame' pushes. Seeks are pointless while we're in a game.
+ */
+let gameIdWeAreIn: number | undefined;
 
 // Init -----------------------------------------------
 
@@ -133,6 +138,15 @@ function isSeekOurs(seek: OutSeek): boolean {
 	}
 	const localTag = LocalStorage.loadItem('invite-tag');
 	return seek.tag === localTag;
+}
+
+/** Applies the full lobby snapshot received the moment we (re)subscribe. */
+function handleLobbyState(state: LobbyStateMessage): void {
+	// In-game status first: the seek intents released after this check it.
+	if (state.ingame) void onInGame(state.ingame.id, state.ingame.navigate);
+	else onOutGame();
+	onSeekListUpdate(state.seekslist);
+	onViewerCountUpdate(state.viewercount);
 }
 
 /**
@@ -239,6 +253,7 @@ function onViewerCountUpdate(count: number): void {
  * or it started while we were away and this is our first chance to be told.
  */
 async function onInGame(id: number, navigate: boolean): Promise<void> {
+	gameIdWeAreIn = id;
 	if (navigate) {
 		// Plays the notify sound and awaits it so the hard-navigate doesn't cut it off.
 		// No reverb added here, it makes us wait too long.
@@ -252,14 +267,14 @@ async function onInGame(id: number, navigate: boolean): Promise<void> {
 	}
 }
 
-/** Called on the server's 'outgame' push — we've left our game, so hide the banner. */
+/** Called when the server reports we're in no game — its 'outgame' push, or a snapshot without one. */
 function onOutGame(): void {
+	gameIdWeAreIn = undefined;
 	hideInGameBanner();
 }
 
 /** Shows the "you're in a game" banner, pointing its rejoin link at game `id`. */
 function showInGameBanner(id: number): void {
-	inGameBannerShown = true;
 	element_lobbyIngameJoin.setAttribute('href', `/game/${uuid.base10ToBase62(id)}`);
 	element_lobbyIngameOverlay.classList.remove('hidden');
 	for (const btn of elements_disabledWhileInGame) btn.setAttribute('disabled', '');
@@ -268,8 +283,6 @@ function showInGameBanner(id: number): void {
 
 /** Hides the in-game banner. */
 function hideInGameBanner(): void {
-	if (!inGameBannerShown) return;
-	inGameBannerShown = false;
 	element_lobbyIngameOverlay.classList.add('hidden');
 	for (const btn of elements_disabledWhileInGame) btn.removeAttribute('disabled');
 }
@@ -297,7 +310,7 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 /** Sends a createseek message to the server with the given options. */
 function createSeek(options: CreateSeekOptions): void {
 	const tag = generateTag();
-	socketmessages.send('lobby', 'createseek', { ...options, tag }, true);
+	socketintents.submit('lobby', 'createseek', { ...options, tag }, () => gameIdWeAreIn === undefined); // prettier-ignore
 }
 
 /**
@@ -305,19 +318,21 @@ function createSeek(options: CreateSeekOptions): void {
  * socket is required, gating bots. Navigation happens on the server's `ingame` push.
  */
 function createEngineGame(body: CreateEngineGameMessage): void {
-	socketmessages.send('lobby', 'createengine', body, true);
+	socketintents.submit('lobby', 'createengine', body, () => gameIdWeAreIn === undefined);
 }
 
 /** Sends a cancelseek message for our current seek. */
 function cancel(seekId: string): void {
 	if (ourSeekId === undefined) return;
 	LocalStorage.deleteItem('invite-tag');
-	socketmessages.send('lobby', 'cancelseek', seekId, true);
+	// Nothing to cancel if the seek is gone by the time we're back in sync. Checked by
+	// presence, not ownership — the tag deleted above is what ownership is derived from.
+	socketintents.submit('lobby', 'cancelseek', seekId, () => seekMap.has(seekId));
 }
 
 /** Sends an acceptseek message for an opponent's seek. */
 function accept(seekId: string): void {
-	socketmessages.send('lobby', 'acceptseek', seekId, true);
+	socketintents.submit('lobby', 'acceptseek', seekId, () => gameIdWeAreIn === undefined && seekMap.has(seekId)); // prettier-ignore
 }
 
 // Subscribing ---------------------------------------------
@@ -327,7 +342,7 @@ async function subscribe(): Promise<void> {
 	if (isIdle) return; // Don't resubscribe while idle; the user must interact with the lobby to reconnect
 	if (socketsubs.areSubbedToSub('lobby')) return;
 	socketsubs.addSub('lobby');
-	socketmessages.send('general', 'sub', 'lobby');
+	void socketmessages.send('general', 'sub', 'lobby');
 }
 
 /** Unsubscribes from the invites list and clears the rendered seek list. */
@@ -561,6 +576,7 @@ function createSideDotVNode(color: LobbySeek['color']): VNode | null {
 export default {
 	renderSeekList,
 	clearSeekList,
+	handleLobbyState,
 	onSeekListUpdate,
 	onViewerCountUpdate,
 	onInGame,

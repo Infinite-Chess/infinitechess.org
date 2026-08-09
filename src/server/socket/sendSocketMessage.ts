@@ -20,18 +20,14 @@ import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID } from './echoTrack
 
 /** Represents an outgoing WebSocket server message. */
 interface WebsocketOutMessage {
-	/** The route to forward the message to (e.g., "general", "lobby", "game", "echo").
-	 * Undefined if it's a reply-only message. */
-	route?: string;
+	/** The route to forward the message to (e.g., "general", "lobby", "game", "echo"). */
+	route: string;
 	/** The message contents. For echo messages, this is the message ID being echoed.
-	 * For other messages, this is an object with action and value.
-	 * Absent for reply-only acknowledgement messages (route and action are both undefined). */
-	contents?: any;
+	 * For other messages, this is an object with action and value. */
+	contents: any;
 	/** The ID of the message to echo, indicating the connection is still active.
 	 * Or undefined if this message itself is an echo. */
 	id?: number;
-	/** Optionally, we can include the id of the incoming message that this outgoing message is the reply to. */
-	replyto?: number;
 }
 
 import type { CustomWebSocket } from './socketUtility.js';
@@ -57,22 +53,20 @@ if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis
  * @param route - What subscription/route this message should be forwarded to.
  * @param action - What type of action the client should take within the subscription route.
  * @param value - The contents of the message.
- * @param [replyto] If applicable, the id of the socket message this message is a reply to.
  * @param [options] - Additional options for sending the message.
  * @param [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
  */
 function sendSocketMessage(
 	ws: CustomWebSocket,
-	route: string | undefined,
-	action: string | undefined,
+	route: string,
+	action: string,
 	value?: any,
-	replyto?: number,
 	{ skipLatency }: { skipLatency?: boolean } = {},
 ): void {
 	// If we're applying simulated latency delay, set a timer to send this message.
 	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) {
 		setTimeout(() => {
-			sendSocketMessage(ws, route, action, value, replyto, { skipLatency: true });
+			sendSocketMessage(ws, route, action, value, { skipLatency: true });
 		}, simulatedWebsocketLatencyMillis);
 		return;
 	}
@@ -83,28 +77,19 @@ function sendSocketMessage(
 	if (ws.readyState !== WebSocket.OPEN) return;
 
 	const isEcho = action === 'echo';
-	// Reply-only messages should have no empty "contents" field
-	const isReplyOnly = route === undefined;
 	const payload: WebsocketOutMessage = isEcho
 		? {
 				route: 'echo',
 				contents: value, // For echo, value contains the message ID
-				replyto,
 			}
-		: isReplyOnly
-			? {
-					id: uuid.generateNumbID(10),
-					replyto,
-				}
-			: {
-					route,
-					contents: {
-						action,
-						value,
-					},
-					id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
-					replyto,
-				};
+		: {
+				route,
+				contents: {
+					action,
+					value,
+				},
+				id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
+			};
 	const stringifiedPayload = JSON.stringify(payload);
 
 	// if (!isEcho) console.log(`Sending: ${stringifiedPayload}`);
@@ -130,16 +115,10 @@ function sendSocketMessage(
  * Sends a notification message to the client through the WebSocket connection, to be displayed on-screen.
  * @param ws - The WebSocket connection object.
  * @param translationCode - The code corresponding to the message that needs to be retrieved for language-specific translation. For example, `"server.javascript.ws-already_in_game"`.
- * @param [options] - An object containing additional options.
- * @param [options.replyto] - The ID of the incoming WebSocket message to which this message is replying.
  */
-function sendNotify(
-	ws: CustomWebSocket,
-	translationCode: TranslationKeys,
-	{ replyto }: { replyto?: number } = {},
-): void {
+function sendNotify(ws: CustomWebSocket, translationCode: TranslationKeys): void {
 	const text = getTranslation(translationCode, ws.metadata.cookies.lang);
-	sendSocketMessage(ws, 'general', 'notify', text, replyto);
+	sendSocketMessage(ws, 'general', 'notify', text);
 }
 
 /**
