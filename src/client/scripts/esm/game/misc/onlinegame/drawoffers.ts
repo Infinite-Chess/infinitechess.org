@@ -114,8 +114,8 @@ function extendOffer(): void {
  */
 function callback_AcceptDraw(): void {
 	isAcceptingDraw = false;
-	// A resync restores isAcceptingDraw from the server, so a held intent is dropped
-	// if the offer is no longer open by the time we're back.
+	// A resync restores isAcceptingDraw from the server, so a held intent
+	// is dropped if the offer is no longer open by the time we're back.
 	socketintents.submit('game', 'acceptdraw', undefined, () => gameslot.isGameLive() && isAcceptingDraw); // prettier-ignore
 	gameactions.refresh();
 }

@@ -108,7 +108,7 @@ function areInGame(): boolean {
 	return loadedGamefile !== undefined;
 }
 
-/** Whether a game is loaded and hasn't concluded yet. */
+/** Whether a game is loaded and hasn't concluded (locally) yet. */
 function isGameLive(): boolean {
 	return loadedGamefile !== undefined && !gamefileutility.isGameOver(loadedGamefile);
 }

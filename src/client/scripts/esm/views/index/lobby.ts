@@ -12,6 +12,7 @@ import type {
 	BaseSeek,
 	OutSeek,
 	CreateSeekOptions,
+	LobbyStateMessage,
 	CreateEngineGameMessage,
 } from '../../../../../shared/types.js';
 
@@ -88,8 +89,8 @@ const rowVacatedTimes: number[] = [];
 /** Whether the user is currently idle (lobby unsubbed, overlay visible). */
 let isIdle = false;
 /**
- * The id of the game the server says we're in, if any. Set by the lobby snapshot and the
- * live 'ingame'/'outgame' pushes. Seeks are pointless while we're in a game.
+ * The id of the game the server says we're in, if any. Set by the lobby state and
+ * the live 'ingame'/'outgame' pushes. Seeks are pointless while we're in a game.
  */
 let gameIdWeAreIn: number | undefined;
 
@@ -137,6 +138,15 @@ function isSeekOurs(seek: OutSeek): boolean {
 	}
 	const localTag = LocalStorage.loadItem('invite-tag');
 	return seek.tag === localTag;
+}
+
+/** Applies the full lobby snapshot received the moment we (re)subscribe. */
+function handleLobbyState(state: LobbyStateMessage): void {
+	// In-game status first: the seek intents released after this check it.
+	if (state.ingame) void onInGame(state.ingame.id, state.ingame.navigate);
+	else onOutGame();
+	onSeekListUpdate(state.seekslist);
+	onViewerCountUpdate(state.viewercount);
 }
 
 /**
@@ -566,6 +576,7 @@ function createSideDotVNode(color: LobbySeek['color']): VNode | null {
 export default {
 	renderSeekList,
 	clearSeekList,
+	handleLobbyState,
 	onSeekListUpdate,
 	onViewerCountUpdate,
 	onInGame,

@@ -16,18 +16,15 @@ import {
 	ClockValuesSchema,
 	DisconnectInfoSchema,
 	GameConclusionMessageSchema,
+	GameIDSchema,
 	GameStateMessageSchema,
+	InGameMessageSchema,
+	LobbyStateMessageSchema,
 	OpponentsMoveMessageSchema,
-	OutSeekSchema,
 	RematchOfferInfoSchema,
+	SeeksListSchema,
+	ViewerCountSchema,
 } from '../../../../shared/types.js';
-
-// Seek Helper Schemas ---------------------------------------------------------------
-
-// Game Helper Schemas ---------------------------------------------------------------
-
-/** Zod schema for the id of an online game. */
-const GameIDSchema = z.number().int().nonnegative();
 
 // General Schema ---------------------------------------------------------------
 
@@ -42,30 +39,12 @@ const GeneralSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('protocolversion'), value: z.number() }),
 ]);
 
-// Seeks Schema ---------------------------------------------------------------
-
-const SeeksListSchema = z.array(OutSeekSchema);
-const ViewerCountSchema = z.number().nonnegative();
-
-/** Tells us we're in a game — carried by the snapshot on subscribe, and pushed live thereafter. */
-const InGameSchema = z.strictObject({
-	id: GameIDSchema,
-	/** Whether the server wants THIS tab taken into the game, instead of shown the rejoin banner. */
-	navigate: z.boolean(),
-});
+// Lobby Schema ---------------------------------------------------------------
 
 /** Represents all possible types an incoming 'lobby' route websocket message contents could be. */
 export type LobbyMessage = z.infer<typeof LobbySchema>;
 const LobbySchema = z.discriminatedUnion('action', [
-	z.strictObject({
-		action: z.literal('lobbysnapshot'),
-		value: z.strictObject({
-			seekslist: SeeksListSchema,
-			viewercount: ViewerCountSchema,
-			/** Present only if we're already in a game at the time we subscribe. */
-			ingame: InGameSchema.optional(),
-		}),
-	}),
+	z.strictObject({ action: z.literal('lobbystate'), value: LobbyStateMessageSchema }),
 	z.strictObject({
 		action: z.literal('seekslist'),
 		value: z.strictObject({
@@ -73,7 +52,7 @@ const LobbySchema = z.discriminatedUnion('action', [
 		}),
 	}),
 	z.strictObject({ action: z.literal('viewercount'), value: ViewerCountSchema }),
-	z.strictObject({ action: z.literal('ingame'), value: InGameSchema }),
+	z.strictObject({ action: z.literal('ingame'), value: InGameMessageSchema }),
 	z.strictObject({ action: z.literal('outgame') }),
 ]);
 

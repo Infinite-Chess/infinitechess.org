@@ -57,6 +57,9 @@ export const ServerUsernameContainerSchema = z.strictObject({
 
 // Game Helper Schemas ---------------------------------------------------------------
 
+/** The id of an online game. */
+export const GameIDSchema = z.number().int().nonnegative();
+
 /** The values of each color's clock, and which one is currently counting down, if any. */
 export type ClockValues = z.infer<typeof ClockValuesSchema>;
 export const ClockValuesSchema = z.strictObject({
@@ -354,6 +357,30 @@ export const BaseSeekSchema = z.strictObject({
 export type OutSeek = z.infer<typeof OutSeekSchema>;
 export const OutSeekSchema = BaseSeekSchema.extend({
 	variant: OutSeekVariantSchema,
+});
+
+// Lobby State Schemas ---------------------------------------------------------------
+
+/** Every seek currently open in the lobby. */
+export const SeeksListSchema = z.array(OutSeekSchema);
+
+/** How many clients are currently viewing the lobby. */
+export const ViewerCountSchema = z.number().nonnegative();
+
+/** Tells us we're in a game — carried by the lobby state on subscribe, and pushed live thereafter. */
+export const InGameMessageSchema = z.strictObject({
+	id: GameIDSchema,
+	/** Whether the server wants THIS tab taken into the game, instead of shown the rejoin banner. */
+	navigate: z.boolean(),
+});
+
+/** The payload of the `lobbystate` message — the full lobby snapshot, sent the moment we subscribe. */
+export type LobbyStateMessage = z.infer<typeof LobbyStateMessageSchema>;
+export const LobbyStateMessageSchema = z.strictObject({
+	seekslist: SeeksListSchema,
+	viewercount: ViewerCountSchema,
+	/** Present only if we're already in a game at the time we subscribe. */
+	ingame: InGameMessageSchema.optional(),
 });
 
 // Create Seek Schemas ---------------------------------------------------------------

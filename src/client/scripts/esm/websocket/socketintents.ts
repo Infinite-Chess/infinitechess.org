@@ -34,9 +34,9 @@ type Intent = {
 // Constants -------------------------------------------------------------------
 
 /**
- * How long a held intent stays eligible to send. Past this the user has long since assumed
- * their click didn't register, and would be surprised to see it take effect. A backstop only —
- * correctness comes from each intent's validity check, not from this.
+ * How long a held intent stays eligible to send. Past this the user has long since
+ * assumed their click didn't register, and would be surprised to see it take effect.
+ * A backstop only — correctness comes from each intent's validity check, not from this.
  */
 const INTENT_LIFETIME_MILLIS = 10000;
 
@@ -71,12 +71,22 @@ function submit(route: Sub, action: string, value: unknown, isStillValid: () => 
 		void socketmessages.send(route, action, value);
 		return;
 	}
+	// Not ready: hold it until the route resyncs, or until the user has moved on.
 	held[route].push({
 		action,
 		value,
 		isStillValid,
 		expiresAt: Date.now() + INTENT_LIFETIME_MILLIS,
 	});
+}
+
+/** Whether a route can take a message right now: an open socket, and its state in hand. */
+function isRouteReady(route: Sub): boolean {
+	if (!synced[route]) return false;
+	// Not redundant with the sync flag: a client-initiated close() leaves the socket CLOSING
+	// for a while, and `closed` (which clears the flag) only fires once it's actually shut.
+	const socket = socketman.getSocket();
+	return socket !== undefined && socket.readyState === WebSocket.OPEN;
 }
 
 /**
@@ -96,17 +106,10 @@ function onRouteSynced(route: Sub): void {
 
 	const now = Date.now();
 	for (const intent of intents) {
-		if (now > intent.expiresAt) continue;
-		if (!intent.isStillValid()) continue;
+		if (now > intent.expiresAt) continue; // User has moved on.
+		if (!intent.isStillValid()) continue; // No longer makes sense.
 		void socketmessages.send(route, intent.action, intent.value);
 	}
-}
-
-/** Whether a route can take a message right now: an open socket, and its state in hand. */
-function isRouteReady(route: Sub): boolean {
-	if (!synced[route]) return false;
-	const socket = socketman.getSocket();
-	return socket !== undefined && socket.readyState === WebSocket.OPEN;
 }
 
 // Exports ---------------------------------------------------------------------

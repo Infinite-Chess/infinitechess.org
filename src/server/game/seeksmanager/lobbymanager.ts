@@ -6,9 +6,9 @@
  * and broadcasts changes out to the clients.
  */
 
-import type { OutSeek } from '../../../shared/types.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { OutSeek, LobbyStateMessage } from '../../../shared/types.js';
 
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -105,13 +105,13 @@ function broadcastMemberInGameStatus(
 }
 
 /**
- * Sends the full lobby snapshot state (seeks list, viewer count, and whether they're already
+ * Sends the full lobby state (seeks list, viewer count, and whether they're already
  * in a game) to a single client. Called once when a socket first subscribes — everything the
  * client needs to be fully in sync arrives in this one message.
- * @param ws - The socket of the player to send the snapshot to.
- * @param seekslist - The current list of seeks.
+ * @param ws - The socket of the player to send the state to.
  */
-function sendClientLobbySnapshot(ws: CustomWebSocket, seekslist: OutSeek[]): void {
+function sendClientLobbyState(ws: CustomWebSocket): void {
+	const seekslist = getSeeksListSafe();
 	const viewercount = getSubscriberCount();
 
 	// If they're already in a game, tell them. They're only taken into it if we still owe them
@@ -123,14 +123,14 @@ function sendClientLobbySnapshot(ws: CustomWebSocket, seekslist: OutSeek[]): voi
 			? { id: gameID, navigate: consumeNavigateNotice(ws.metadata.memberInfo) }
 			: undefined;
 
-	const message = { seekslist, viewercount, ingame };
-	sendSocketMessage(ws, 'lobby', 'lobbysnapshot', message); // In order: socket, sub, action, value
+	const message: LobbyStateMessage = { seekslist, viewercount, ingame };
+	sendSocketMessage(ws, 'lobby', 'lobbystate', message); // In order: socket, sub, action, value
 }
 
 /**
  * Broadcasts the current viewer count to all subscribed clients.
  * Called when the subscriber count changes (i.e. on sub/unsub), not on seek changes.
- * @param skipWs - Optional socket to exclude from the broadcast (e.g. the socket that just subscribed, who already received the count in their lobbysnapshot).
+ * @param skipWs - Optional socket to exclude from the broadcast (e.g. the socket that just subscribed, who already received the count in their lobbystate).
  */
 function broadcastViewerCount(skipWs?: CustomWebSocket): void {
 	const count = getSubscriberCount();
@@ -213,23 +213,22 @@ function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined
 	for (const ws of getLobbySubscribers()) {
 		if (memberInfoEq(owner, ws.metadata.memberInfo)) return ws;
 	}
-
-	console.log(`Unable to find a lobby subscriber that belongs to ${JSON.stringify(owner)}!`);
-	return undefined;
+	// They must have disconnected involuntarily, and be within
+	// that 5-second cushion before their seek is deleted.
+	return;
 }
 
 /**
- * Subscribes a socket to the lobby,
- * sends them the full lobby snapshot,
- * and cancels any active timers to delete their seeks if
- * their socket was previously closed by a network interruption.
+ * Subscribes a socket to the lobby, sends them the full lobby state,
+ * and cancels any active timers to delete their seeks if their
+ * socket was previously closed by a network interruption.
  */
 function subToLobby(ws: CustomWebSocket): void {
 	if (ws.metadata.subscriptions.lobby) return; // Already subscribed. Happens occasionally
 
 	addSocketToLobbySubs(ws);
 
-	sendClientLobbySnapshot(ws, getSeeksListSafe());
+	sendClientLobbyState(ws);
 	broadcastViewerCount(ws); // Notify all existing subscribers of the incremented count
 	cancelTimerToDeleteUsersSeeksFromNetworkInterruption(ws);
 }

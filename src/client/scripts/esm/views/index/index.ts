@@ -29,13 +29,8 @@ SocketBus.addEventListener('lobby', (e) => onLobbyMessage(e.detail));
 
 function onLobbyMessage(contents: LobbyMessage): void {
 	switch (contents.action) {
-		case 'lobbysnapshot':
-			// In-game status first: the seek intents released below check it.
-			if (contents.value.ingame)
-				void lobby.onInGame(contents.value.ingame.id, contents.value.ingame.navigate);
-			else lobby.onOutGame();
-			lobby.onSeekListUpdate(contents.value.seekslist);
-			lobby.onViewerCountUpdate(contents.value.viewercount);
+		case 'lobbystate':
+			lobby.handleLobbyState(contents.value);
 			// The full lobby state is now applied — release any intents held through the outage.
 			socketintents.onRouteSynced('lobby');
 			break;
