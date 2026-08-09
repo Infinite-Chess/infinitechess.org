@@ -404,6 +404,10 @@ svg.bg-omega {
    events, so its variant preview tooltip opens, but clicks won't accept or cancel it. */
 .seek-row[aria-disabled='true'] {
 	cursor: default;
+}
+
+/* Faded on the cells, not the row, so the row's border stays solid. */
+.seek-row[aria-disabled='true'] .lobby-cell {
 	opacity: 0.4;
 }
 
