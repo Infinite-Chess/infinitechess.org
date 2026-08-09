@@ -71,10 +71,7 @@ function onmessage(serverMessage: MessageEvent): void {
 			JSON.stringify(message),
 		);
 	}
-	socketmessages.send('general', 'echo', message.id);
-
-	// Execute any on-reply function
-	socketmessages.executeOnreplyFunc(message.replyto);
+	void socketmessages.send('general', 'echo', message.id);
 
 	switch (message.route) {
 		case 'general':

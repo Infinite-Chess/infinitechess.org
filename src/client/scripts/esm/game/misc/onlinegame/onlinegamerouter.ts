@@ -21,6 +21,7 @@ import pingManager from '../../../util/pingManager.js';
 import guigamemeta from '../../gui/guigamemeta.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
+import socketintents from '../../../websocket/socketintents.js';
 import guigameactions from '../../gui/guigameactions.js';
 import movesendreceive from './movesendreceive.js';
 
@@ -65,6 +66,7 @@ function receiveMessage(contents: GameMessage): void {
 			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
 			// Nothing loaded/loading yet: the first `gamestate` bootstraps the game.
 			onlinegame.loadGameFromState(contents.value, false);
+			socketintents.onRouteSynced('game');
 		} else {
 			console.error(`Received game message before receiving gamestate: ${JSON.stringify(contents)}`); // prettier-ignore
 		}
@@ -86,6 +88,9 @@ function routeMessage(contents: GameMessage): void {
 		case 'gamestate':
 			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
 			resyncer.handleGameState(gamefile, mesh, contents.value);
+			// AFTER the resync, not alongside setInSync() above: the intents held through the
+			// outage check the reconciled board to decide whether they still make sense.
+			socketintents.onRouteSynced('game');
 			break;
 		case 'move':
 			movesendreceive.handleMove(gamefile, mesh, contents.value);
@@ -120,6 +125,7 @@ function routeMessage(contents: GameMessage): void {
 		case 'rematchstate':
 			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
 			gameactions.setRematchState(contents.value);
+			socketintents.onRouteSynced('game');
 			break;
 		case 'rematchoffer':
 			gameactions.onOpponentRematchOffer();

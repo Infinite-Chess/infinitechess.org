@@ -10,6 +10,7 @@ import type { LobbyMessage } from '../../websocket/socketschemas.js';
 
 import lobby from './lobby.js';
 import flashToast from '../../util/flashToast.js';
+import socketintents from '../../websocket/socketintents.js';
 import { SocketBus } from '../../websocket/SocketBus.js';
 
 import './newPrompt.js';
@@ -29,8 +30,14 @@ SocketBus.addEventListener('lobby', (e) => onLobbyMessage(e.detail));
 function onLobbyMessage(contents: LobbyMessage): void {
 	switch (contents.action) {
 		case 'lobbysnapshot':
+			// In-game status first: the seek intents released below check it.
+			if (contents.value.ingame)
+				void lobby.onInGame(contents.value.ingame.id, contents.value.ingame.navigate);
+			else lobby.onOutGame();
 			lobby.onSeekListUpdate(contents.value.seekslist);
 			lobby.onViewerCountUpdate(contents.value.viewercount);
+			// The full lobby state is now applied — release any intents held through the outage.
+			socketintents.onRouteSynced('lobby');
 			break;
 		case 'seekslist':
 			lobby.onSeekListUpdate(contents.value.seeksList);

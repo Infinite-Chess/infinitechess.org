@@ -47,6 +47,13 @@ const GeneralSchema = z.discriminatedUnion('action', [
 const SeeksListSchema = z.array(OutSeekSchema);
 const ViewerCountSchema = z.number().nonnegative();
 
+/** Tells us we're in a game — carried by the snapshot on subscribe, and pushed live thereafter. */
+const InGameSchema = z.strictObject({
+	id: GameIDSchema,
+	/** Whether the server wants THIS tab taken into the game, instead of shown the rejoin banner. */
+	navigate: z.boolean(),
+});
+
 /** Represents all possible types an incoming 'lobby' route websocket message contents could be. */
 export type LobbyMessage = z.infer<typeof LobbySchema>;
 const LobbySchema = z.discriminatedUnion('action', [
@@ -55,6 +62,8 @@ const LobbySchema = z.discriminatedUnion('action', [
 		value: z.strictObject({
 			seekslist: SeeksListSchema,
 			viewercount: ViewerCountSchema,
+			/** Present only if we're already in a game at the time we subscribe. */
+			ingame: InGameSchema.optional(),
 		}),
 	}),
 	z.strictObject({
@@ -64,14 +73,7 @@ const LobbySchema = z.discriminatedUnion('action', [
 		}),
 	}),
 	z.strictObject({ action: z.literal('viewercount'), value: ViewerCountSchema }),
-	z.strictObject({
-		action: z.literal('ingame'),
-		value: z.strictObject({
-			id: GameIDSchema,
-			/** Whether the server wants THIS tab taken into the game, instead of shown the rejoin banner. */
-			navigate: z.boolean(),
-		}),
-	}),
+	z.strictObject({ action: z.literal('ingame'), value: InGameSchema }),
 	z.strictObject({ action: z.literal('outgame') }),
 ]);
 
@@ -124,19 +126,16 @@ const MasterSchema = z.discriminatedUnion('route', [
 		id: z.number(),
 		route: z.literal('general'),
 		contents: GeneralSchema,
-		replyto: z.number().optional(),
 	}),
 	z.strictObject({
 		id: z.number(),
 		route: z.literal('lobby'),
 		contents: LobbySchema,
-		replyto: z.number().optional(),
 	}),
 	z.strictObject({
 		id: z.number(),
 		route: z.literal('game'),
 		contents: GameSchema,
-		replyto: z.number().optional(),
 	}),
 ]);
 

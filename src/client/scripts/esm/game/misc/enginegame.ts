@@ -26,8 +26,8 @@ import selection from '../chess/selection.js';
 import { GameBus } from '../GameBus.js';
 import gamesession from '../chess/gamesession.js';
 import movesequence from '../chess/movesequence.js';
+import socketintents from '../../websocket/socketintents.js';
 import gamecompressor from '../chess/gamecompressor.js';
-import socketmessages from '../../websocket/socketmessages.js';
 import enginelegalmovesdebug from './enginelegalmovesdebug.js';
 import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';
 
@@ -254,7 +254,7 @@ function makeEngineMove(tokenMove: string | null): void {
 
 /** Asks the server to resign the engine in the current online game. */
 function resignFailedEngine(): void {
-	socketmessages.send('game', 'engineresign', undefined, true);
+	socketintents.submit('game', 'engineresign', undefined, () => gameslot.isGameLive());
 }
 
 /** Requests engine-generated legal moves for the currently viewed position. */

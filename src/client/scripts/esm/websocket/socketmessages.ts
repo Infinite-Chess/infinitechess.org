@@ -1,7 +1,10 @@
 // src/client/scripts/esm/websocket/socketmessages.ts
 
 /**
- * Handles outgoing websocket messages, echo tracking, and on-reply functions.
+ * Handles outgoing websocket messages and echo tracking.
+ *
+ * This is the raw transport. User-triggered messages go through socketintents instead,
+ * which holds them across a disconnect rather than letting them fall on the floor.
  */
 
 import uuid from '../../../../shared/util/uuid.js';
@@ -40,9 +43,6 @@ const alsoPrintIncomingEchos = false;
 
 /** Echo timers for sent messages awaiting acknowledgement. */
 let echoTimers: Record<string, { timeSent: number; timeoutID: number }> = {};
-
-/** Functions to execute when we get a specific reply back. */
-let onreplyFuncs: { [key: MessageID]: Function } = {};
 
 /** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
 let timeoutIDToAutoClose: number;
@@ -102,34 +102,6 @@ function cancelAllEchoTimers(): void {
 	echoTimers = {};
 }
 
-// On-Reply Functions ----------------------------------------------------------
-
-/**
- * Flags an outgoing message to execute a function when the server replies.
- * @param messageID - The ID of the outgoing message
- * @param onreplyFunc - The function to execute on reply
- */
-function scheduleOnreplyFunc(messageID: MessageID, onreplyFunc?: () => void): void {
-	if (!onreplyFunc) return;
-	onreplyFuncs[messageID] = onreplyFunc;
-}
-
-/**
- * When we receive a message with the `replyto` property,
- * executes the on-reply function for that sent message.
- */
-function executeOnreplyFunc(id: number | undefined): void {
-	if (id === undefined) return;
-	if (!onreplyFuncs[id]) return;
-	onreplyFuncs[id]();
-	delete onreplyFuncs[id];
-}
-
-/** Erases all on-reply functions. Called when the socket is terminated. */
-function resetOnreplyFuncs(): void {
-	onreplyFuncs = {};
-}
-
 // Timer Management ------------------------------------------------------------
 
 /** If we have zero subscriptions, resets the timer to auto-close the socket. */
@@ -167,11 +139,10 @@ function cancelHeartbeatTimer(): void {
 	}
 }
 
-/** Clears all timers and pending callbacks tied to the socket. Called when it's torn down. */
+/** Clears all timers tied to the socket. Called when it's torn down. */
 function clearPendingState(): void {
 	cancelAllEchoTimers();
 	cancelHeartbeatTimer();
-	resetOnreplyFuncs();
 }
 
 /**
@@ -191,33 +162,19 @@ function onHeartbeatTimeout(): void {
 // Sending Messages ------------------------------------------------------------
 
 /**
- * Sends a message to the server with the provided route, action, and values.
- * @param route - Where the server needs to forward this to. general/invites/game
+ * Sends a message to the server, lazily opening the socket if one isn't up yet.
+ *
+ * Fire-and-forget: a message that can't go out is dropped. Only protocol traffic belongs here —
+ * anything the user asked for goes through socketintents.submit() so a disconnect can't eat it.
+ * @param route - Where the server needs to forward this to. general/lobby/game
  * @param action - What action to take within the route.
  * @param value - The contents of the message
- * @param isUserAction - Whether this message is a direct result of a user action. Default: false
- * @param onreplyFunc - Optional function to execute when we receive the server's response.
- * @returns *true* if the message was able to send.
  */
-async function send(
-	route: string,
-	action: string,
-	value?: WebsocketMessageValue,
-	isUserAction?: boolean,
-	onreplyFunc?: () => void,
-): Promise<boolean> {
-	// Guard: messages to a subscription route require an active subscription.
-	if (socketsubs.validSubs.includes(route) && !socketsubs.areSubbedToSub(route)) {
-		console.error(`Can't send route '${route}' action '${action}' while not subscribed.`);
-		onreplyFunc?.();
-		return false;
-	}
+async function send(route: string, action: string, value?: WebsocketMessageValue): Promise<void> {
+	if (!(await socketman.establishSocket())) return;
 
-	if (!(await socketman.establishSocket())) {
-		if (isUserAction) console.error("Too many requests. Can't send socket message.");
-		onreplyFunc?.();
-		return false;
-	}
+	const socket = socketman.getSocket();
+	if (!socket || socket.readyState !== WebSocket.OPEN) return; // Died while we awaited it.
 
 	resetTimerToCloseSocket();
 
@@ -245,12 +202,7 @@ async function send(
 			timeSent: Date.now(),
 			timeoutID: window.setTimeout(() => onEchoTimeout(payload.id!), wsutil.ECHO_TIMEOUT),
 		};
-
-		scheduleOnreplyFunc(payload.id!, onreplyFunc);
 	}
-
-	const socket = socketman.getSocket();
-	if (!socket || socket.readyState !== WebSocket.OPEN) return false; // Closed state, can't send message.
 
 	const stringifiedMessage = JSON.stringify(payload);
 
@@ -260,8 +212,6 @@ async function send(
 			simulatedWebsocketLatencyMillis_Debug,
 		);
 	} else socket.send(stringifiedMessage); // Send immediately
-
-	return true;
 }
 
 // Exports --------------------------------------------------------------------
@@ -270,7 +220,6 @@ export default {
 	send,
 	cancelTimerOfMessageID,
 	clearPendingState,
-	executeOnreplyFunc,
 	rescheduleHeartbeatTimer,
 	alsoPrintIncomingEchos,
 };

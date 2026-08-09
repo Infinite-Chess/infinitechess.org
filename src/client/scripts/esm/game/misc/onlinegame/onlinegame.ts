@@ -221,11 +221,11 @@ function subscribeToGame(): void {
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
 	if (stage === 'finalized' && gameslot.getGamefile()) {
 		// The result is locked in — nothing but rematch offers can change, so we can't desync.
-		socketmessages.send('game', 'subscriberematch', id);
+		void socketmessages.send('game', 'subscriberematch', id);
 	} else {
 		// No game loaded yet (initial subscribe), a load that failed and left us with none,
 		// or it's live but not finalized (may still change) — request the full state.
-		socketmessages.send('game', 'subscribe', id);
+		void socketmessages.send('game', 'subscribe', id);
 	}
 }
 
