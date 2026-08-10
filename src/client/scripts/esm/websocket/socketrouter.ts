@@ -67,16 +67,6 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	// Not a receipt...
 
-	// Send our echo — we always echo every message EXCEPT receipts themselves
-	// TEMPORARY. TO HELP DEBUG why zod errors are happening all the time on the server!
-	if (message.id === undefined) {
-		console.error(
-			'Received routed message without id field. This should not happen after Zod validation. Route:',
-			message.route,
-			'Message:',
-			JSON.stringify(message),
-		);
-	}
 	void socketmessages.sendEcho(message.id);
 
 	switch (message.route) {
