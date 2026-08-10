@@ -43,6 +43,8 @@ function onmessage(serverMessage: MessageEvent): void {
 			parsedUnvalidatedMessage,
 		);
 		console.error('Error:', z.prettifyError(zod_result.error));
+		// Don't echo, accept that the server's echo timer may close the socket.
+		// We can't even know whether this message is something we SHOULD echo.
 		return;
 	}
 
