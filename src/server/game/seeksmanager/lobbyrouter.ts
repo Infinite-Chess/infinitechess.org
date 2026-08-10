@@ -6,27 +6,12 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-
-import * as z from 'zod';
-
-import {
-	SeekIdSchema,
-	CreateSeekMessageSchema,
-	CreateEngineGameMessageSchema,
-} from '../../../shared/types.js';
+import type { ClientLobbyMessage } from '../../../shared/wsmessages.js';
 
 import { createSeek } from './createseek.js';
 import { cancelSeek } from './cancelseek.js';
 import { acceptSeek } from './acceptseek.js';
 import { createEngineGame } from './createenginegame.js';
-
-const LobbySchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('createseek'), value: CreateSeekMessageSchema }),
-	z.strictObject({ action: z.literal('cancelseek'), value: SeekIdSchema }),
-	z.strictObject({ action: z.literal('acceptseek'), value: SeekIdSchema }),
-	z.strictObject({ action: z.literal('createengine'), value: CreateEngineGameMessageSchema }),
-]);
-type LobbyMessage = z.infer<typeof LobbySchema>;
 
 /**
  * Routes all incoming websocket messages related to the lobby.
@@ -34,7 +19,7 @@ type LobbyMessage = z.infer<typeof LobbySchema>;
  * @param contents
  * @returns
  */
-function routeLobbyMessage(ws: CustomWebSocket, contents: LobbyMessage): void {
+function routeLobbyMessage(ws: CustomWebSocket, contents: ClientLobbyMessage): void {
 	// data: { route, action, value, id }
 	// Route them according to their action
 	switch (contents.action) {
@@ -58,6 +43,4 @@ function routeLobbyMessage(ws: CustomWebSocket, contents: LobbyMessage): void {
 	}
 }
 
-export { routeLobbyMessage, LobbySchema };
-
-export type {};
+export { routeLobbyMessage };

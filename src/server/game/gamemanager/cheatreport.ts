@@ -6,10 +6,9 @@
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
+import type { ReportMessage } from '../../../shared/wsmessages.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { GameStateMessage } from '../../../shared/types.js';
-
-import * as z from 'zod';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
@@ -18,15 +17,6 @@ import gameutility from './gameutility.js';
 import { logEvents } from '../../middleware/logEvents.js';
 import { applyConclusion, freeGame } from './gamemanager.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-
-/** The zod schema for validating the contents of the cheatreport message. */
-const reportschem = z.strictObject({
-	/** The client's reason they reported their opponent. */
-	reason: z.string(),
-	opponentsMoveNumber: z.int(),
-});
-
-type ReportMessage = z.infer<typeof reportschem>;
 
 /**
  *
@@ -153,4 +143,4 @@ function concludeReportedGame(
 	if (wasLogged) gamelogger.updateOverturnedGame(servergame, originalConclusion!, cheaterColor);
 }
 
-export { onReport, reportschem };
+export { onReport };

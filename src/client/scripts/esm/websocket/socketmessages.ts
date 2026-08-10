@@ -7,6 +7,12 @@
  * which holds them across a disconnect rather than letting them fall on the floor.
  */
 
+import type {
+	ClientGameMessage,
+	ClientGeneralMessage,
+	ClientLobbyMessage,
+} from '../../../../shared/wsmessages.js';
+
 import uuid from '../../../../shared/util/uuid.js';
 import wsutil from '../../../../shared/util/wsutil.js';
 
@@ -18,17 +24,22 @@ import { SocketBus } from './SocketBus.js';
 
 type MessageID = number;
 
-type WebsocketMessageValue = MessageEvent['data'];
-
-/** The shape of an outgoing websocket payload sent to the server. */
-type OutgoingPayload = {
-	route: string;
-	contents: {
-		action: string;
-		value: WebsocketMessageValue;
-	};
-	id?: number;
+/** Every message we may send, keyed by the route it goes out on. */
+type OutMessages = {
+	general: ClientGeneralMessage;
+	lobby: ClientLobbyMessage;
+	game: ClientGameMessage;
 };
+
+/** A route we may send on. */
+type OutRoute = keyof OutMessages;
+
+/** The actions valid on a given route. */
+export type OutAction<R extends OutRoute> = OutMessages[R]['action'];
+
+/** The value an action carries, or `undefined` for the actions that carry none. */
+export type OutValue<R extends OutRoute, A extends OutAction<R>> =
+	Extract<OutMessages[R], { action: A }> extends { value: infer V } ? V : undefined;
 
 // Constants -------------------------------------------------------------------
 
@@ -166,60 +177,78 @@ function onHeartbeatTimeout(): void {
  *
  * Fire-and-forget: a message that can't go out is dropped. Only protocol traffic belongs here —
  * anything the user asked for goes through socketintents.submit() so a disconnect can't eat it.
- * @param route - Where the server needs to forward this to. general/lobby/game
+ * @param route - Where the server needs to forward this to.
  * @param action - What action to take within the route.
- * @param value - The contents of the message
+ * @param value - The contents of the message. `undefined` for actions that carry none.
  */
-async function send(route: string, action: string, value?: WebsocketMessageValue): Promise<void> {
+async function send<R extends OutRoute, A extends OutAction<R>>(
+	route: R,
+	action: A,
+	value: OutValue<R, A>,
+): Promise<void> {
+	const socket = await acquireSocket();
+	if (!socket) return;
+
+	const payload = {
+		route,
+		contents: { action, value },
+		id: uuid.generateNumbID(10),
+	};
+
+	const message = JSON.stringify(payload);
+	if (socketman.isDebugEnabled()) console.log(`Sending: ${message}`);
+
+	// Set a timer to assume disconnection if echo not received
+	echoTimers[payload.id] = {
+		timeSent: Date.now(),
+		timeoutID: window.setTimeout(() => onEchoTimeout(payload.id), wsutil.ECHO_TIMEOUT),
+	};
+
+	transmit(socket, message);
+}
+
+/**
+ * Acknowledges a message we received from the server.
+ * Echoes are never echoed back, so they skip the id and echo timer {@link send} attaches.
+ */
+async function sendEcho(id: MessageID): Promise<void> {
+	const socket = await acquireSocket();
+	if (!socket) return;
+
+	transmit(socket, JSON.stringify({ route: 'echo', contents: id }));
+}
+
+/**
+ * Readies the socket to take a message, lazily opening one if it isn't up yet.
+ * Returns undefined if we couldn't get an open socket, in which case the message is dropped.
+ */
+async function acquireSocket(): Promise<WebSocket | undefined> {
 	if (!(await socketman.establishSocket())) return;
 
 	const socket = socketman.getSocket();
 	if (!socket || socket.readyState !== WebSocket.OPEN) return; // Died while we awaited it.
 
 	resetTimerToCloseSocket();
+	return socket;
+}
 
-	let payload: OutgoingPayload;
-	if (action === 'echo') {
-		payload = {
-			route: 'echo',
-			contents: value,
-		};
-	} else {
-		// Not an echo, attach an ID and expect an echo back.
-		payload = {
-			route,
-			contents: {
-				action,
-				value,
-			},
-			id: uuid.generateNumbID(10),
-		};
-
-		if (socketman.isDebugEnabled()) console.log(`Sending: ${JSON.stringify(payload)}`);
-
-		// Set a timer to assume disconnection if echo not received
-		echoTimers[payload.id!] = {
-			timeSent: Date.now(),
-			timeoutID: window.setTimeout(() => onEchoTimeout(payload.id!), wsutil.ECHO_TIMEOUT),
-		};
-	}
-
-	const stringifiedMessage = JSON.stringify(payload);
-
+/**
+ * Puts an already-serialized message on the wire, honoring debug mode's simulated latency.
+ * Pure transport — conforming to the server's expected shape is the caller's responsibility.
+ */
+function transmit(socket: WebSocket, message: string): void {
 	if (socketman.isDebugEnabled()) {
-		window.setTimeout(
-			() => socket.send(stringifiedMessage),
-			simulatedWebsocketLatencyMillis_Debug,
-		);
-	} else socket.send(stringifiedMessage); // Send immediately
+		window.setTimeout(() => socket.send(message), simulatedWebsocketLatencyMillis_Debug);
+	} else socket.send(message); // Send immediately
 }
 
 // Exports --------------------------------------------------------------------
 
 export default {
-	send,
-	cancelTimerOfMessageID,
-	clearPendingState,
-	rescheduleHeartbeatTimer,
 	alsoPrintIncomingEchos,
+	cancelTimerOfMessageID,
+	rescheduleHeartbeatTimer,
+	clearPendingState,
+	send,
+	sendEcho,
 };

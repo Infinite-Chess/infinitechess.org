@@ -71,7 +71,7 @@ function onmessage(serverMessage: MessageEvent): void {
 			JSON.stringify(message),
 		);
 	}
-	void socketmessages.send('general', 'echo', message.id);
+	void socketmessages.sendEcho(message.id);
 
 	switch (message.route) {
 		case 'general':

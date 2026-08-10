@@ -15,6 +15,7 @@
  */
 
 import type { Sub } from './socketsubs.js';
+import type { OutAction, OutValue } from './socketmessages.js';
 
 import socketman from './socketman.js';
 import { SocketBus } from './SocketBus.js';
@@ -24,8 +25,8 @@ import socketmessages from './socketmessages.js';
 
 /** A user-triggered message held until its route can accept it. */
 type Intent = {
-	action: string;
-	value: unknown;
+	/** Bound at submission, while the message's route/action/value are still in hand. */
+	send: () => void;
 	isStillValid: () => boolean;
 	/** Epoch ms past which the user has mentally moved on, and we silently drop it. */
 	expiresAt: number;
@@ -66,15 +67,19 @@ SocketBus.addEventListener('closed', () => {
  * @param isStillValid - Re-checked against the server's state before a held intent goes out.
  * Return false once the action no longer makes sense and it's dropped instead.
  */
-function submit(route: Sub, action: string, value: unknown, isStillValid: () => boolean): void {
+function submit<R extends Sub, A extends OutAction<R>>(
+	route: R,
+	action: A,
+	value: OutValue<R, A>,
+	isStillValid: () => boolean,
+): void {
 	if (isRouteReady(route)) {
 		void socketmessages.send(route, action, value);
 		return;
 	}
 	// Not ready: hold it until the route resyncs, or until the user has moved on.
 	held[route].push({
-		action,
-		value,
+		send: () => void socketmessages.send(route, action, value),
 		isStillValid,
 		expiresAt: Date.now() + INTENT_LIFETIME_MILLIS,
 	});
@@ -108,7 +113,7 @@ function onRouteSynced(route: Sub): void {
 	for (const intent of intents) {
 		if (now > intent.expiresAt) continue; // User has moved on.
 		if (!intent.isStillValid()) continue; // No longer makes sense.
-		void socketmessages.send(route, intent.action, intent.value);
+		intent.send();
 	}
 }
 

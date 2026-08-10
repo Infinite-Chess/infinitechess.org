@@ -9,10 +9,13 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 import * as z from 'zod';
 
-import { GameSchema } from '../game/gamemanager/gamerouter.js';
+import {
+	ClientGameSchema,
+	ClientGeneralSchema,
+	ClientLobbySchema,
+} from '../../shared/wsmessages.js';
+
 import { logZodError } from '../utility/zodlogger.js';
-import { LobbySchema } from '../game/seeksmanager/lobbyrouter.js';
-import { GeneralSchema } from './generalrouter.js';
 import { logReqWebsocketIn } from './wsLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
@@ -26,9 +29,9 @@ import { rescheduleHeartbeatTimer, sendSocketMessage } from './sendSocketMessage
 export type WebsocketInMessage = z.infer<typeof MasterSchema>;
 /** The schema for validating all non-echo incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [
-	z.strictObject({ id: z.int(), route: z.literal('general'), contents: GeneralSchema }),
-	z.strictObject({ id: z.int(), route: z.literal('lobby'), contents: LobbySchema }),
-	z.strictObject({ id: z.int(), route: z.literal('game'), contents: GameSchema }),
+	z.strictObject({ id: z.int(), route: z.literal('general'), contents: ClientGeneralSchema }),
+	z.strictObject({ id: z.int(), route: z.literal('lobby'), contents: ClientLobbySchema }),
+	z.strictObject({ id: z.int(), route: z.literal('game'), contents: ClientGameSchema }),
 ]);
 
 /** This is the id of the message being replied to. */

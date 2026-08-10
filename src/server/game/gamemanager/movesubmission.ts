@@ -10,9 +10,8 @@ import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { SubmitMoveMessage } from '../../../shared/wsmessages.js';
 import type { OpponentsMoveMessage } from '../../../shared/types.js';
-
-import * as z from 'zod';
 
 import bimath from '../../../shared/util/math/bimath.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
@@ -29,15 +28,6 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import gameutility, { ServerGame } from './gameutility.js';
 import { pushGameClock, applyConclusion, freeGame } from './gamemanager.js';
-
-/** The zod schema for validating the contents of the submitmove message. */
-const submitmoveschem = z.strictObject({
-	move: z.string(),
-	moveNumber: z.int(),
-	gameConclusion: winconutil.gameConclusionSchema.optional(),
-});
-
-type SubmitMoveMessage = z.infer<typeof submitmoveschem>;
 
 /** The number of additional coordinate digits allowed per second of game duration. */
 const DIGITS_PER_SECOND = 4.5;
@@ -339,4 +329,4 @@ function buildMoveMessage(servergame: ServerGame, move: MoveRecord): OpponentsMo
 	return message;
 }
 
-export { submitMove, submitmoveschem };
+export { submitMove };

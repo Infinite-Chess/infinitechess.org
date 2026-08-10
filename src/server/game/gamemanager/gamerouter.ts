@@ -6,37 +6,18 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-
-import * as z from 'zod';
+import type { ClientGameMessage } from '../../../shared/wsmessages.js';
 
 import gameutility from './gameutility.js';
+import { onReport } from './cheatreport.js';
+import { submitMove } from './movesubmission.js';
 import { offerRematch } from './onRematch.js';
 import { getGameBySocket } from './gamemanager.js';
 import { onSubscribeToGame } from './onSubscribe.js';
 import { onSubscribeToRematch } from './onSubscribeRematch.js';
-import { onReport, reportschem } from './cheatreport.js';
 import { claimVictory, claimDraw } from './claimdisconnect.js';
-import { submitMove, submitmoveschem } from './movesubmission.js';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
 import { abortGame, resignGame, resignEngine } from './abortresigngame.js';
-
-const GameSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('abort') }),
-	z.strictObject({ action: z.literal('subscriberematch'), value: z.int() }),
-	z.strictObject({ action: z.literal('offerdraw') }),
-	z.strictObject({ action: z.literal('acceptdraw') }),
-	z.strictObject({ action: z.literal('declinedraw') }),
-	z.strictObject({ action: z.literal('offerrematch') }),
-	z.strictObject({ action: z.literal('subscribe'), value: z.number().int().nonnegative() }),
-	z.strictObject({ action: z.literal('resign') }),
-	z.strictObject({ action: z.literal('engineresign') }),
-	z.strictObject({ action: z.literal('claimvictory') }),
-	z.strictObject({ action: z.literal('claimdraw') }),
-	z.strictObject({ action: z.literal('report'), value: reportschem }),
-	z.strictObject({ action: z.literal('submitmove'), value: submitmoveschem }),
-]);
-
-type GameMessage = z.infer<typeof GameSchema>;
 
 /**
  * Handles all incoming websocket messages related to active games.
@@ -44,7 +25,7 @@ type GameMessage = z.infer<typeof GameSchema>;
  * @param ws - The socket
  * @param contents - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
  */
-function routeGameMessage(ws: CustomWebSocket, contents: GameMessage): void {
+function routeGameMessage(ws: CustomWebSocket, contents: ClientGameMessage): void {
 	// All actions that don't require a game
 	switch (contents.action) {
 		case 'subscribe':
@@ -109,4 +90,4 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage): void {
 	}
 }
 
-export { routeGameMessage, GameSchema };
+export { routeGameMessage };

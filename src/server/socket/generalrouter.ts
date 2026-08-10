@@ -5,8 +5,7 @@
  */
 
 import type { CustomWebSocket } from './socketUtility.js';
-
-import * as z from 'zod';
+import type { ClientGeneralMessage, ValidUnsub } from '../../shared/wsmessages.js';
 
 import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
 import {
@@ -14,25 +13,10 @@ import {
 	unsubSocketSpectatorFromGame,
 } from '../game/gamemanager/gamemanager.js';
 
-/**
- * The subscription lists a client may explicitly request
- * to unsub from (also the full set handled on socket close).
- */
-const validUnsubs = ['lobby', 'game', 'spectating'] as const;
-
-type ValidUnsub = (typeof validUnsubs)[number];
-
-const GeneralSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('sub'), value: z.literal(['lobby']) }),
-	z.strictObject({ action: z.literal('unsub'), value: z.literal(validUnsubs) }),
-]);
-
-type GeneralMessage = z.infer<typeof GeneralSchema>;
-
 // Functions -------------------------------------------------------------------
 
 // Route for this incoming message is "general". What is their action?
-function routeGeneralMessage(ws: CustomWebSocket, message: GeneralMessage): void {
+function routeGeneralMessage(ws: CustomWebSocket, message: ClientGeneralMessage): void {
 	// data: { route, action, value, id }
 	// Route them according to their action
 	switch (message.action) {
@@ -89,4 +73,4 @@ function handleUnsubbing(ws: CustomWebSocket, key: ValidUnsub, involuntary: bool
 
 // Exports ------------------------------------------------------------
 
-export { routeGeneralMessage, handleUnsubbing, GeneralSchema };
+export { routeGeneralMessage, handleUnsubbing };
