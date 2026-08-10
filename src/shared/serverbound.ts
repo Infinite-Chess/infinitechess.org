@@ -112,7 +112,7 @@ const SubmitMoveMessageSchema = z.strictObject({
 export type ServerboundGameMessage = z.infer<typeof ServerboundGameSchema>;
 const ServerboundGameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('abort') }),
-	z.strictObject({ action: z.literal('subscriberematch'), value: z.int() }),
+	z.strictObject({ action: z.literal('subscriberematch'), value: GameIDSchema }),
 	z.strictObject({ action: z.literal('offerdraw') }),
 	z.strictObject({ action: z.literal('acceptdraw') }),
 	z.strictObject({ action: z.literal('declinedraw') }),
