@@ -17,10 +17,7 @@ export interface CustomWebSocket extends WebSocket {
 	t: ScriptTranslations;
 	/** Our custom-entered information about this websocket. */
 	metadata: {
-		/**
-		 * What subscription lists they are subscribed to. (e.g. 'lobby', 'game', 'spectating').
-		 * Let's unsubSocketFromAllSubs() know which detach handlers to call on socket close.
-		 */
+		/** What subscription lists they are subscribed to. (e.g. 'lobby', 'game', 'spectating'). */
 		subscriptions: {
 			/** Whether they are subscribed to the lobby (seeks/spectating) list. */
 			lobby?: boolean;
@@ -56,3 +53,6 @@ export interface CustomWebSocket extends WebSocket {
 		echoTimers: { [messageID: number]: NodeJS.Timeout };
 	};
 }
+
+/** Every subscription list a socket can be attached to, each with its own detach handler run on close. */
+export type SubscriptionKey = keyof CustomWebSocket['metadata']['subscriptions'];

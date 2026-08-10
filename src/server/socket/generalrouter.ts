@@ -4,8 +4,8 @@
  * This script handles the incoming general websocket message route.
  */
 
-import type { CustomWebSocket } from './socketUtility.js';
-import type { ServerboundGeneralMessage, ValidUnsub } from '../../shared/serverbound.js';
+import type { ServerboundGeneralMessage } from '../../shared/serverbound.js';
+import type { CustomWebSocket, SubscriptionKey } from './socketUtility.js';
 
 import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
 import {
@@ -49,8 +49,9 @@ function handleSubbing(ws: CustomWebSocket, value: 'lobby'): void {
 /**
  * Unsubscribes a socket from a subscription list.
  * Entry points: Socket closure, or the client explicitly requested to unsub.
+ * Clients may only request a subset of these keys (see SubscribedRoute).
  */
-function handleUnsubbing(ws: CustomWebSocket, key: ValidUnsub, involuntary: boolean): void {
+function handleUnsubbing(ws: CustomWebSocket, key: SubscriptionKey, involuntary: boolean): void {
 	// What are they wanting to unsubscribe from updates from?
 	switch (key) {
 		case 'lobby':

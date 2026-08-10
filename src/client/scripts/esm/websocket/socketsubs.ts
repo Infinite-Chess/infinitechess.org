@@ -7,28 +7,26 @@
  * and provides methods to add, remove, and query subscriptions.
  */
 
+import type { SubscribedRoute } from '../../../../shared/serverbound.js';
+
 import socketmessages from './socketmessages.js';
 
-const validSubs = ['lobby', 'game'] as const;
-
-export type Sub = (typeof validSubs)[number];
-
-const subs: Record<Sub, boolean> = {
+/** Whether we are subscribed to each route's stream. */
+const subs: Record<SubscribedRoute, boolean> = {
 	lobby: false,
 	game: false,
 };
 
 /** Returns true if we're currently not subscribed to anything. */
 function zeroSubs(): boolean {
-	for (const sub of validSubs) if (subs[sub] === true) return false;
-	return true;
+	return Object.values(subs).every((subbed) => !subbed);
 }
 
 /**
  * Whether we are subbed to the given subscription list.
  * @param sub - The name of the sub
  */
-function areSubbedToSub(sub: Sub): boolean {
+function areSubbedToSub(sub: SubscribedRoute): boolean {
 	return subs[sub] !== false;
 }
 
@@ -36,7 +34,7 @@ function areSubbedToSub(sub: Sub): boolean {
  * Marks ourself as subscribed to a subscription list.
  * @param sub - The name of the sub to add
  */
-function addSub(sub: Sub): void {
+function addSub(sub: SubscribedRoute): void {
 	subs[sub] = true;
 }
 
@@ -46,7 +44,7 @@ function addSub(sub: Sub): void {
  * If our websocket happens to close unexpectedly, we won't re-subscribe to it.
  * @param sub - The name of the sub to delete
  */
-function deleteSub(sub: Sub): void {
+function deleteSub(sub: SubscribedRoute): void {
 	subs[sub] = false;
 }
 
@@ -55,7 +53,7 @@ function deleteSub(sub: Sub): void {
  * Called when the websocket closes, since the server drops all subs on its side.
  */
 function clearAllSubs(): void {
-	for (const sub of validSubs) subs[sub] = false;
+	for (const sub of Object.keys(subs) as SubscribedRoute[]) subs[sub] = false;
 }
 
 /**
@@ -63,7 +61,7 @@ function clearAllSubs(): void {
  * informing the server we no longer want updates.
  * @param sub - The name of the sub to unsubscribe from
  */
-function unsubFromSub(sub: Sub): void {
+function unsubFromSub(sub: SubscribedRoute): void {
 	if (!areSubbedToSub(sub)) return; // Already unsubbed.
 	deleteSub(sub);
 	// Tell the server we no longer want updates.

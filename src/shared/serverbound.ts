@@ -28,20 +28,25 @@ import {
 	TimeControlSchema,
 } from './domain.js';
 
-// General Route ---------------------------------------------------------------
+// Routes ----------------------------------------------------------------------
 
 /**
- * The subscription lists a client may explicitly request
- * to unsub from (also the full set handled on socket close).
+ * The routes carrying a server-pushed subscription stream, which a client may unsub from.
+ * 'general' is absent — it's the protocol route, with no stream of its own.
+ *
+ * Note they attach asymmetrically: 'lobby' via the general route's `sub`, 'game' via
+ * the game route's `subscribe`, which needs an id.
  */
-export type ValidUnsub = (typeof validUnsubs)[number];
-const validUnsubs = ['lobby', 'game', 'spectating'] as const;
+export type SubscribedRoute = (typeof subscribedRoutes)[number];
+const subscribedRoutes = ['lobby', 'game'] as const;
+
+// General Route ---------------------------------------------------------------
 
 /** Every message the client may send on the 'general' route. */
 export type ServerboundGeneralMessage = z.infer<typeof ServerboundGeneralSchema>;
 const ServerboundGeneralSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('sub'), value: z.literal(['lobby']) }),
-	z.strictObject({ action: z.literal('unsub'), value: z.literal(validUnsubs) }),
+	z.strictObject({ action: z.literal('unsub'), value: z.literal(subscribedRoutes) }),
 ]);
 
 // Lobby Route -----------------------------------------------------------------

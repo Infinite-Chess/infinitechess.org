@@ -14,8 +14,8 @@
  * deadlock, and moves have their own reconciliation in resyncer.
  */
 
-import type { Sub } from './socketsubs.js';
 import type { Exact } from '../../../../shared/util/wsutil.js';
+import type { SubscribedRoute } from '../../../../shared/serverbound.js';
 import type { OutAction, OutValue } from './socketmessages.js';
 
 import socketman from './socketman.js';
@@ -45,20 +45,20 @@ const INTENT_LIFETIME_MILLIS = 10000;
 // Variables -------------------------------------------------------------------
 
 /** Intents held per route, in submission order. Only ever non-empty while that route is out of sync. */
-const held: Record<Sub, Intent[]> = { lobby: [], game: [] };
+const held: Record<SubscribedRoute, Intent[]> = { lobby: [], game: [] };
 
 /**
  * Which routes we currently hold the server's authoritative state for.
  * Being subscribed isn't enough — an intent's validity check reads that state.
  */
-const synced: Record<Sub, boolean> = { lobby: false, game: false };
+const synced: Record<SubscribedRoute, boolean> = { lobby: false, game: false };
 
 // Events ----------------------------------------------------------------------
 
 // Whatever state we held is stale the moment the connection drops. Held intents
 // deliberately survive this — they're what the next resync re-evaluates.
 SocketBus.addEventListener('closed', () => {
-	for (const route of Object.keys(synced) as Sub[]) synced[route] = false;
+	for (const route of Object.keys(synced) as SubscribedRoute[]) synced[route] = false;
 });
 
 // Functions -------------------------------------------------------------------
@@ -68,7 +68,7 @@ SocketBus.addEventListener('closed', () => {
  * @param isStillValid - Re-checked against the server's state before a held intent goes out.
  * Return false once the action no longer makes sense and it's dropped instead.
  */
-function submit<R extends Sub, A extends OutAction<R>, V extends OutValue<R, A>>(
+function submit<R extends SubscribedRoute, A extends OutAction<R>, V extends OutValue<R, A>>(
 	route: R,
 	action: A,
 	value: Exact<V, OutValue<R, A>>,
@@ -87,7 +87,7 @@ function submit<R extends Sub, A extends OutAction<R>, V extends OutValue<R, A>>
 }
 
 /** Whether a route can take a message right now: an open socket, and its state in hand. */
-function isRouteReady(route: Sub): boolean {
+function isRouteReady(route: SubscribedRoute): boolean {
 	if (!synced[route]) return false;
 	// Not redundant with the sync flag: a client-initiated close() leaves the socket CLOSING
 	// for a while, and `closed` (which clears the flag) only fires once it's actually shut.
@@ -103,7 +103,7 @@ function isRouteReady(route: Sub): boolean {
  * checks read it. That's why this is separate from onlinegame's `inSync` flag, which has to
  * be set beforehand so resyncer can submit moves as it reconciles the board.
  */
-function onRouteSynced(route: Sub): void {
+function onRouteSynced(route: SubscribedRoute): void {
 	synced[route] = true;
 
 	const intents = held[route];
