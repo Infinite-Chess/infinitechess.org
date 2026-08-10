@@ -5,6 +5,17 @@
  * sockets that both the CLIENT and server can use.
  */
 
+// Types -------------------------------------------------------------------------------------
+
+/**
+ * Constrains a value to EXACTLY `Shape`, rejecting undeclared properties.
+ *
+ * TypeScript's own excess property check only fires on fresh object literals, so a message
+ * built into a variable first would smuggle extra properties onto the wire. Applied to a
+ * send function's value parameter, this catches them however the caller assembled the value.
+ */
+export type Exact<V, Shape> = V & { [K in keyof V]: K extends keyof Shape ? V[K] : never };
+
 // Constants ---------------------------------------------------------------------------------
 
 /**

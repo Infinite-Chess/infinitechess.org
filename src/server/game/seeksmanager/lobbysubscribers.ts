@@ -7,6 +7,7 @@
  * On demand, it broadcasts stuff out to the players.
  */
 
+import type { Exact } from '../../../shared/util/wsutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { OutAction, OutValue } from '../../socket/sendSocketMessage.js';
@@ -32,9 +33,9 @@ function getLobbySubscribers(): SetIterator<CustomWebSocket> {
  * @param action - The action of the socket message
  * @param message - The message contents
  */
-function broadcastToAllLobbySubs<A extends OutAction<'lobby'>>(
+function broadcastToAllLobbySubs<A extends OutAction<'lobby'>, V extends OutValue<'lobby', A>>(
 	action: A,
-	message: OutValue<'lobby', A>,
+	message: Exact<V, OutValue<'lobby', A>>,
 ): void {
 	for (const ws of subscribedClients) {
 		sendSocketMessage(ws, 'lobby', action, message); // In order: socket, sub, action, value

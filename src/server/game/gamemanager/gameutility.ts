@@ -8,6 +8,7 @@
  */
 
 import type { Board } from '../../../shared/chess/logic/boardinit.js';
+import type { Exact } from '../../../shared/util/wsutil.js';
 import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { RatingData } from './ratingcalculation.js';
@@ -769,12 +770,12 @@ function getSocketRoleInGame(servergame: ServerGame, ws: CustomWebSocket): Playe
  * @param action - The action the client should perform.
  * @param value - The value to send to the client. Already-translated text for notify/notifyerror.
  */
-function sendMessageToColor<R extends OutRoute, A extends OutAction<R>>(
+function sendMessageToColor<R extends OutRoute, A extends OutAction<R>, V extends OutValue<R, A>>(
 	match: MatchInfo,
 	role: Player,
 	sub: R,
 	action: A,
-	value: OutValue<R, A>,
+	value: Exact<V, OutValue<R, A>>,
 ): void {
 	const ws = match.playerData[role]?.socket;
 	if (!ws) return; // They are not connected, can't send message
@@ -895,21 +896,20 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): undefin
 }
 
 /** Broadcasts a message to every connected participant of the game. */
-function broadcastToParticipants<R extends OutRoute, A extends OutAction<R>>(
-	servergame: ServerGame,
-	sub: R,
-	action: A,
-	value: OutValue<R, A>,
-): void {
+function broadcastToParticipants<
+	R extends OutRoute,
+	A extends OutAction<R>,
+	V extends OutValue<R, A>,
+>(servergame: ServerGame, sub: R, action: A, value: Exact<V, OutValue<R, A>>): void {
 	for (const color of Object.keys(servergame.match.playerData))
 		sendMessageToColor(servergame.match, Number(color) as Player, sub, action, value);
 }
 
 /** Broadcasts a role-agnostic game-route message to every spectator of the game. */
-function broadcastToSpectators<A extends OutAction<'game'>>(
+function broadcastToSpectators<A extends OutAction<'game'>, V extends OutValue<'game', A>>(
 	servergame: ServerGame,
 	action: A,
-	value: OutValue<'game', A>,
+	value: Exact<V, OutValue<'game', A>>,
 ): void {
 	for (const ws of servergame.spectators) {
 		sendSocketMessage(ws, 'game', action, value);
@@ -917,10 +917,10 @@ function broadcastToSpectators<A extends OutAction<'game'>>(
 }
 
 /** Broadcasts a role-agnostic game-route message to every connected client of the game. */
-function broadcastToEveryone<A extends OutAction<'game'>>(
+function broadcastToEveryone<A extends OutAction<'game'>, V extends OutValue<'game', A>>(
 	servergame: ServerGame,
 	action: A,
-	value: OutValue<'game', A>,
+	value: Exact<V, OutValue<'game', A>>,
 ): void {
 	broadcastToParticipants(servergame, 'game', action, value);
 	broadcastToSpectators(servergame, action, value);

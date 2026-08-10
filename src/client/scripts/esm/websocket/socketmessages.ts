@@ -7,6 +7,7 @@
  * which holds them across a disconnect rather than letting them fall on the floor.
  */
 
+import type { Exact } from '../../../../shared/util/wsutil.js';
 import type {
 	ServerboundGameMessage,
 	ServerboundGeneralMessage,
@@ -181,10 +182,10 @@ function onHeartbeatTimeout(): void {
  * @param action - What action to take within the route.
  * @param value - The contents of the message. `undefined` for actions that carry none.
  */
-async function send<R extends OutRoute, A extends OutAction<R>>(
+async function send<R extends OutRoute, A extends OutAction<R>, V extends OutValue<R, A>>(
 	route: R,
 	action: A,
-	value: OutValue<R, A>,
+	value: Exact<V, OutValue<R, A>>,
 ): Promise<void> {
 	const socket = await acquireSocket();
 	if (!socket) return;

@@ -5,6 +5,7 @@
  * and regularly sends messages by itself to confirm the socket is still connected and responding (we will hear an echo).
  */
 
+import type { Exact } from '../../shared/util/wsutil.js';
 import type { CustomWebSocket } from './socketUtility.js';
 import type {
 	ClientboundGameMessage,
@@ -63,11 +64,11 @@ if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis
  * @param [options] - Additional options for sending the message.
  * @param [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
  */
-function sendSocketMessage<R extends OutRoute, A extends OutAction<R>>(
+function sendSocketMessage<R extends OutRoute, A extends OutAction<R>, V extends OutValue<R, A>>(
 	ws: CustomWebSocket,
 	route: R,
 	action: A,
-	value: OutValue<R, A>,
+	value: Exact<V, OutValue<R, A>>,
 	{ skipLatency }: { skipLatency?: boolean } = {},
 ): void {
 	// If we're applying simulated latency delay, set a timer to send this message.

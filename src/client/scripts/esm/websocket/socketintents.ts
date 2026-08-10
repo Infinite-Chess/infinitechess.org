@@ -15,6 +15,7 @@
  */
 
 import type { Sub } from './socketsubs.js';
+import type { Exact } from '../../../../shared/util/wsutil.js';
 import type { OutAction, OutValue } from './socketmessages.js';
 
 import socketman from './socketman.js';
@@ -67,10 +68,10 @@ SocketBus.addEventListener('closed', () => {
  * @param isStillValid - Re-checked against the server's state before a held intent goes out.
  * Return false once the action no longer makes sense and it's dropped instead.
  */
-function submit<R extends Sub, A extends OutAction<R>>(
+function submit<R extends Sub, A extends OutAction<R>, V extends OutValue<R, A>>(
 	route: R,
 	action: A,
-	value: OutValue<R, A>,
+	value: Exact<V, OutValue<R, A>>,
 	isStillValid: () => boolean,
 ): void {
 	if (isRouteReady(route)) {
