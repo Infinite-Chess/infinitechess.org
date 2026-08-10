@@ -15,7 +15,7 @@
  */
 
 import type { Exact } from '../../../../shared/util/wsutil.js';
-import type { SubscribedRoute } from '../../../../shared/serverbound.js';
+import type { SubscribedRoute } from './socketsubs.js';
 import type { OutAction, OutValue } from './socketmessages.js';
 
 import socketman from './socketman.js';

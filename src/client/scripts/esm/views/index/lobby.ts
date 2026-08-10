@@ -346,7 +346,7 @@ async function subscribe(): Promise<void> {
 /** Unsubscribes from the invites list and clears the rendered seek list. */
 function unsubscribe(): void {
 	clearSeekList();
-	socketsubs.unsubFromSub('lobby');
+	socketsubs.unsubFromLobby();
 }
 
 // Idle detection ---------------------------------------------

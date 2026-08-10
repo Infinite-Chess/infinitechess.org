@@ -49,7 +49,7 @@ function handleSubbing(ws: CustomWebSocket, value: 'lobby'): void {
 /**
  * Unsubscribes a socket from a subscription list.
  * Entry points: Socket closure, or the client explicitly requested to unsub.
- * Clients may only request a subset of these keys (see SubscribedRoute).
+ * Clients may only request 'lobby' — the other keys are detached server-side.
  */
 function handleUnsubbing(ws: CustomWebSocket, key: SubscriptionKey, involuntary: boolean): void {
 	// What are they wanting to unsubscribe from updates from?

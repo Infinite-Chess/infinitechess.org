@@ -7,9 +7,10 @@
  * and provides methods to add, remove, and query subscriptions.
  */
 
-import type { SubscribedRoute } from '../../../../shared/serverbound.js';
-
 import socketmessages from './socketmessages.js';
+
+/** The routes carrying a server-pushed stream we subscribe to. Excludes 'general', the protocol route. */
+export type SubscribedRoute = 'lobby' | 'game';
 
 /** Whether we are subscribed to each route's stream. */
 const subs: Record<SubscribedRoute, boolean> = {
@@ -57,15 +58,14 @@ function clearAllSubs(): void {
 }
 
 /**
- * Unsubs from the provided subscription list,
- * informing the server we no longer want updates.
- * @param sub - The name of the sub to unsubscribe from
+ * Detaches from the lobby's stream, informing the server we no longer want updates.
+ * The only stream detachable in place — a game's ends with the socket.
  */
-function unsubFromSub(sub: SubscribedRoute): void {
-	if (!areSubbedToSub(sub)) return; // Already unsubbed.
-	deleteSub(sub);
+function unsubFromLobby(): void {
+	if (!areSubbedToSub('lobby')) return; // Already unsubbed.
+	deleteSub('lobby');
 	// Tell the server we no longer want updates.
-	void socketmessages.send('general', 'unsub', sub);
+	void socketmessages.send('general', 'unsub', 'lobby');
 }
 
 // Exports --------------------------------------------------------------------
@@ -76,5 +76,5 @@ export default {
 	addSub,
 	deleteSub,
 	clearAllSubs,
-	unsubFromSub,
+	unsubFromLobby,
 };
