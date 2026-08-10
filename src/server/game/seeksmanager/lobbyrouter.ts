@@ -36,10 +36,7 @@ function routeLobbyMessage(ws: CustomWebSocket, contents: ServerboundLobbyMessag
 			createEngineGame(ws, contents.value);
 			break;
 		default:
-			console.error(
-				// @ts-ignore
-				`UNKNOWN web socket action received in lobby route! "${contents.action}"`,
-			);
+			console.error('UNKNOWN web socket action received in lobby route!', contents satisfies never); // prettier-ignore
 	}
 }
 

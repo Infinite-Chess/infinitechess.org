@@ -197,7 +197,6 @@ const ClientboundGameSchema = z.discriminatedUnion('action', [
 		value: typeschemas.GenPlayerGroupSchema(z.number()),
 	}),
 	z.strictObject({ action: z.literal('unsub') }),
-	z.strictObject({ action: z.literal('login') }),
 	z.strictObject({ action: z.literal('notlive') }),
 	z.strictObject({ action: z.literal('leavegame') }),
 	z.strictObject({

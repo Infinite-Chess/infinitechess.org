@@ -28,8 +28,7 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: ServerboundRou
 			routeGameMessage(ws, message.contents);
 			break;
 		default:
-			// @ts-ignore
-			console.error(`UNKNOWN web socket route received! "${message.route}"`);
+			console.error('UNKNOWN web socket route received!', message satisfies never);
 	}
 }
 

@@ -85,8 +85,7 @@ function routeGameMessage(ws: CustomWebSocket, contents: ServerboundGameMessage)
 			onReport(servergame, color, contents.value);
 			break;
 		default:
-			// @ts-ignore
-			console.error(`UNKNOWN web socket action received in game route! "${contents.action}"`);
+			console.error('UNKNOWN web socket action received in game route!', contents satisfies never); // prettier-ignore
 	}
 }
 

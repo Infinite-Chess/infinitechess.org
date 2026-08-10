@@ -7,7 +7,6 @@ import type { ClientboundGameMessage } from '../../../../../../shared/clientboun
 
 import uuid from '../../../../../../shared/util/uuid.js';
 
-import toast from '../../../components/toast.js';
 import resyncer from './resyncer.js';
 import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
@@ -26,10 +25,15 @@ import socketintents from '../../../websocket/socketintents.js';
 import guigameactions from '../../gui/guigameactions.js';
 import movesendreceive from './movesendreceive.js';
 
+// Types ------------------------------------------------------------
+
+/** Every game message that reaches the router. `notlive` is consumed by receiveMessage first. */
+type RoutedGameMessage = Exclude<ClientboundGameMessage, { action: 'notlive' }>;
+
 // State ------------------------------------------------------------
 
 /** Messages received while the game's logical part is still loading, replayed once it's ready. */
-const messageQueue: ClientboundGameMessage[] = [];
+const messageQueue: RoutedGameMessage[] = [];
 
 // Routing ----------------------------------------------------------
 
@@ -81,7 +85,7 @@ function receiveMessage(contents: ClientboundGameMessage): void {
  * Routes a game message to its handler. The gamefile's logical part MUST be loaded.
  * @param contents - The contents of the incoming server websocket message
  */
-function routeMessage(contents: ClientboundGameMessage): void {
+function routeMessage(contents: RoutedGameMessage): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
@@ -148,12 +152,7 @@ function routeMessage(contents: ClientboundGameMessage): void {
 			handleInGame(contents.value);
 			break;
 		default:
-			toast.show(
-				// @ts-ignore
-				`Unknown action "${contents.action}" received from server in 'game' route.`,
-				{ error: true },
-			);
-			break;
+			console.error("Unknown action received from server in 'game' route.", contents satisfies never); // prettier-ignore
 	}
 }
 

@@ -84,11 +84,7 @@ function onmessage(serverMessage: MessageEvent): void {
 			SocketBus.dispatch('game', message.contents);
 			break;
 		default:
-			console.error(
-				// @ts-ignore
-				`Unknown socket subscription "${message.route}" received from the server!`,
-			);
-			break;
+			console.error('Unknown socket route received from the server!', message satisfies never); // prettier-ignore
 	}
 }
 
@@ -119,9 +115,7 @@ function ongeneralmessage(message: ClientboundGeneralMessage): void {
 			if (message.value !== wsutil.PROTOCOL_VERSION) location.reload();
 			break;
 		default:
-			// @ts-ignore
-			console.log(`Unknown server action "${message.action}" in general route.`);
-			break;
+			console.error('Unknown server action in general route.', message satisfies never);
 	}
 }
 

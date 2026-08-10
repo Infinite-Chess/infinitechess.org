@@ -27,10 +27,7 @@ function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGeneralMes
 			handleUnsubbing(ws, message.value, false);
 			break;
 		default:
-			console.error(
-				// @ts-ignore
-				`UNKNOWN web socket action received in general route! "${message.action}"`,
-			);
+			console.error('UNKNOWN web socket action received in general route!', message satisfies never); // prettier-ignore
 	}
 }
 
