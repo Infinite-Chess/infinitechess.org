@@ -87,8 +87,27 @@ SocketBus.addEventListener('closed', () => {
 	// A message sent but never acked may or may not have been handled before the socket died.
 	// Rather than guess, unlock: the user is free to act again, and the resync that follows
 	// replaces whatever they were acting on with the server's own state.
-	for (const [key, sentAs] of outstanding) if (sentAs !== undefined) outstanding.delete(key);
+	for (const [key, sentAs] of outstanding) if (sentAs !== undefined) release(key);
 });
+
+// Locks -----------------------------------------------------------------------
+
+/** Whether an action is submitted but not yet answered — what a button pending on it reads. */
+function isOutstanding(route: SubscribedRoute, action: string): boolean {
+	return outstanding.has(`${route}/${action}`);
+}
+
+/** Locks an action, announcing the change so anything pending on it re-derives. */
+function lock(key: IntentKey): void {
+	outstanding.set(key, undefined);
+	SocketBus.dispatch('intents');
+}
+
+/** Releases an action's lock, if it holds one, announcing the change. */
+function release(key: IntentKey): void {
+	if (!outstanding.delete(key)) return;
+	SocketBus.dispatch('intents');
+}
 
 // Functions -------------------------------------------------------------------
 
@@ -113,7 +132,9 @@ function submit<R extends SubscribedRoute, A extends OutAction<R>, V extends Out
 		// couldn't be sent at all is released right away — nothing is coming back to release it.
 		send: async () => {
 			const messageID = await socketmessages.send(route, action, value, true);
-			if (messageID === undefined) outstanding.delete(key);
+			// Couldn't go out, so nothing is coming back to release it. Otherwise it stays
+			// locked and merely learns the id it's waiting on, which no one needs to hear.
+			if (messageID === undefined) release(key);
 			else outstanding.set(key, messageID);
 		},
 		isStillValid,
@@ -131,7 +152,7 @@ function submit<R extends SubscribedRoute, A extends OutAction<R>, V extends Out
 	}
 
 	if (outstanding.has(key)) return; // Already on its way; the server owes us a reply for it.
-	outstanding.set(key, undefined);
+	lock(key);
 
 	if (isRouteReady(route)) {
 		void intent.send();
@@ -145,7 +166,7 @@ function submit<R extends SubscribedRoute, A extends OutAction<R>, V extends Out
 function onAck(messageID: MessageID): void {
 	for (const [key, sentAs] of outstanding) {
 		if (sentAs !== messageID) continue;
-		outstanding.delete(key);
+		release(key);
 		return;
 	}
 }
@@ -178,7 +199,7 @@ function onRouteSynced(route: SubscribedRoute): void {
 	for (const intent of intents) {
 		const stale = now > intent.expiresAt; // User has moved on.
 		if (stale || !intent.isStillValid()) {
-			outstanding.delete(intent.key); // Dropped, so no ack is coming to release it.
+			release(intent.key); // Dropped, so no ack is coming to release it.
 			continue;
 		}
 		void intent.send();
@@ -188,6 +209,7 @@ function onRouteSynced(route: SubscribedRoute): void {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	isOutstanding,
 	submit,
 	onAck,
 	onRouteSynced,

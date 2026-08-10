@@ -40,8 +40,8 @@ const element_ActionsOver = document.querySelector('.actions-over')!;
 
 // Live actions (present only alongside `.actions-live`).
 const element_OfferDraw = document.getElementById('btn-offer-draw') as HTMLButtonElement | null;
-const element_Abort = document.getElementById('btn-abort');
-const element_Resign = document.getElementById('btn-resign');
+const element_Abort = document.getElementById('btn-abort') as HTMLButtonElement | null;
+const element_Resign = document.getElementById('btn-resign') as HTMLButtonElement | null;
 
 // Incoming draw-offer accept/reject (present only alongside `.actions-draw-offer`).
 const element_AcceptDraw = document.getElementById('btn-accept-draw') as HTMLButtonElement | null;
@@ -67,6 +67,8 @@ GameBus.addEventListener('game-concluded', () => refresh());
 // A lost connection disables the rematch button until we resync. A reconnect
 // restores its true state via setRematchState() (called after 'subscriberematch').
 SocketBus.addEventListener('connection-lost', () => updateRematchButton());
+// Resign and abort are disabled while the server still owes us an answer for them.
+SocketBus.addEventListener('intents', () => updateResignAbortButtons());
 
 // Block visibility ---------------------------------------------------------------------------
 
@@ -112,6 +114,11 @@ function updateResignAbortButtons(): void {
 	const resignable = moveutil.isGameResignable(gamefile);
 	element_Resign.classList.toggle('hidden', !resignable);
 	element_Abort.classList.toggle('hidden', resignable);
+
+	// Disabled from the click until the server has answered, so a game
+	// that takes a moment to end doesn't look like the click did nothing.
+	element_Resign.disabled = socketintents.isOutstanding('game', 'resign');
+	element_Abort.disabled = socketintents.isOutstanding('game', 'abort');
 }
 
 // Appearance grace period --------------------------------------------------------------------

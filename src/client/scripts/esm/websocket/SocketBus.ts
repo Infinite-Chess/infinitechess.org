@@ -24,6 +24,11 @@ interface SocketBusEvents {
 	ping: number;
 	/** Dispatched when application code should attempt to re-subscribe to what they need. */
 	reconnect: void;
+	/**
+	 * The set of outstanding intents changed — one was submitted, or one was answered/released.
+	 * Anything deriving its appearance from a pending action (a disabled button) re-derives.
+	 */
+	intents: void;
 
 	// --- Incoming server messages ---
 	lobby: ClientboundLobbyMessage;
