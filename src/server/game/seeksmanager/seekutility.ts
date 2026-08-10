@@ -13,7 +13,7 @@ import type {
 	OutSeekVariant,
 	Rating,
 	ServerUsernameContainer,
-} from '../../../shared/types.js';
+} from '../../../shared/domain.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';

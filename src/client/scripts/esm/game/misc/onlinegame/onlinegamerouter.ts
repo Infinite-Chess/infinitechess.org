@@ -1,8 +1,9 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { GameMessage } from '../../../websocket/socketschemas.js';
-import type { ClockValues, GameConclusionMessage } from '../../../../../../shared/types.js';
+import type { ClockValues } from '../../../../../../shared/domain.js';
+import type { GameConclusionMessage } from '../../../../../../shared/clientbound.js';
+import type { ClientboundGameMessage } from '../../../../../../shared/clientbound.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
 
@@ -28,7 +29,7 @@ import movesendreceive from './movesendreceive.js';
 // State ------------------------------------------------------------
 
 /** Messages received while the game's logical part is still loading, replayed once it's ready. */
-const messageQueue: GameMessage[] = [];
+const messageQueue: ClientboundGameMessage[] = [];
 
 // Routing ----------------------------------------------------------
 
@@ -42,7 +43,7 @@ GameBus.addEventListener('game-loaded', () => flushQueue());
  * during load, bootstraps the game on the first `gamestate`, or hands it off to be routed.
  * @param contents - The contents of the incoming server websocket message
  */
-function receiveMessage(contents: GameMessage): void {
+function receiveMessage(contents: ClientboundGameMessage): void {
 	// The subscribed game isn't live in server memory (concluded + evicted, or never existed).
 	// Reload regardless of our load state; fresh SSR then serves the correct page — the dead
 	// review page (which fetches the state over HTTP) or the 404 page.
@@ -80,7 +81,7 @@ function receiveMessage(contents: GameMessage): void {
  * Routes a game message to its handler. The gamefile's logical part MUST be loaded.
  * @param contents - The contents of the incoming server websocket message
  */
-function routeMessage(contents: GameMessage): void {
+function routeMessage(contents: ClientboundGameMessage): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
@@ -157,7 +158,7 @@ function routeMessage(contents: GameMessage): void {
 }
 
 /** Returns the clock values embedded in a game message, if it carries any. */
-function getClockValues(contents: GameMessage): ClockValues | undefined {
+function getClockValues(contents: ClientboundGameMessage): ClockValues | undefined {
 	switch (contents.action) {
 		case 'gamestate':
 		case 'move':

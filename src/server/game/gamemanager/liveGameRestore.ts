@@ -23,7 +23,7 @@ import type { SlideLimitValue } from '../../../shared/util/gameconfig.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
-import type { ClockValues, TimeControl } from '../../../shared/types.js';
+import type { ClockValues, TimeControl } from '../../../shared/domain.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';

@@ -11,7 +11,7 @@
 import type { Player } from '../util/typeutil.js';
 import type { VariantCode } from './variantregistry.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
-import type { SeekVariant, TimeControl, GameModifier } from '../../types.js';
+import type { SeekVariant, TimeControl, GameModifier } from '../../domain.js';
 
 import variantpreviewer from './variantpreviewer.js';
 import { VariantLeaderboards } from './validleaderboard.js';

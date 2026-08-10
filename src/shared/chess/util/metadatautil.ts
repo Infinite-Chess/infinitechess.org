@@ -8,7 +8,7 @@
  */
 
 import type { Player } from './typeutil.js';
-import type { MetaData, Rating } from '../../types.js';
+import type { MetaData, Rating } from '../../domain.js';
 
 import timeutil from '../../util/timeutil.js';
 import { players as p } from './typeutil.js';

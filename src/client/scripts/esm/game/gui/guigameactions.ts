@@ -18,7 +18,7 @@
  * after.
  */
 
-import type { RematchOfferInfo } from '../../../../../shared/types.js';
+import type { RematchOfferInfo } from '../../../../../shared/clientbound.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';

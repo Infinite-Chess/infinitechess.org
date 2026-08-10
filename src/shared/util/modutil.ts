@@ -9,7 +9,7 @@
  * Obstocean (infinite obstacles), Drawback Chess, Progressive Chess.
  */
 
-import type { GameModifier } from '../types.js';
+import type { GameModifier } from '../domain.js';
 
 // Types -----------------------------------------------------------------------
 

@@ -6,7 +6,7 @@
  * Untimed = `-`
  */
 
-import type { TimeControl } from '../../types.js';
+import type { TimeControl } from '../../domain.js';
 
 // Types --------------------------------------------------
 

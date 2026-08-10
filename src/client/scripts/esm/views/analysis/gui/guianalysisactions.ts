@@ -6,7 +6,7 @@
  * (copies the current game's ICN to the clipboard).
  */
 
-import type { MetaData } from '../../../../../../shared/types.js';
+import type { MetaData } from '../../../../../../shared/domain.js';
 import type { ModalMode } from '../../../components/gameSetupModalHandoff.js';
 import type { EditorAutosaveState } from '../../../game/editorstores/estoretypes.js';
 import type { GameFile, VariantOptions } from '../../../../../../shared/chess/logic/gamefile.js';

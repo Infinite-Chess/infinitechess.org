@@ -8,10 +8,10 @@
  */
 
 import type {
-	ClientGameMessage,
-	ClientGeneralMessage,
-	ClientLobbyMessage,
-} from '../../../../shared/wsmessages.js';
+	ServerboundGameMessage,
+	ServerboundGeneralMessage,
+	ServerboundLobbyMessage,
+} from '../../../../shared/serverbound.js';
 
 import uuid from '../../../../shared/util/uuid.js';
 import wsutil from '../../../../shared/util/wsutil.js';
@@ -26,9 +26,9 @@ type MessageID = number;
 
 /** Every message we may send, keyed by the route it goes out on. */
 type OutMessages = {
-	general: ClientGeneralMessage;
-	lobby: ClientLobbyMessage;
-	game: ClientGameMessage;
+	general: ServerboundGeneralMessage;
+	lobby: ServerboundLobbyMessage;
+	game: ServerboundGameMessage;
 };
 
 /** A route we may send on. */

@@ -6,7 +6,10 @@
  * socketrouter dispatches incoming messages onto it; handlers self-register by listening.
  */
 
-import type { LobbyMessage, GameMessage } from './socketschemas.js';
+import type {
+	ClientboundLobbyMessage,
+	ClientboundGameMessage,
+} from '../../../../shared/clientbound.js';
 
 import { EventBus } from '../../../../shared/util/EventBus.js';
 
@@ -23,8 +26,8 @@ interface SocketBusEvents {
 	reconnect: void;
 
 	// --- Incoming server messages ---
-	lobby: LobbyMessage;
-	game: GameMessage;
+	lobby: ClientboundLobbyMessage;
+	game: ClientboundGameMessage;
 }
 
 export const SocketBus: EventBus<SocketBusEvents> = new EventBus<SocketBusEvents>();

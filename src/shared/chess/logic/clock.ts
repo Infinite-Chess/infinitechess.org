@@ -13,7 +13,7 @@ import type { MoveRecord } from './movepiece.js';
 import type { PlayerGroup } from '../util/typeutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { ClockDependant } from './gamefile.js';
-import type { ClockValues, TimeControl } from '../../types.js';
+import type { ClockValues, TimeControl } from '../../domain.js';
 
 import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';

@@ -13,7 +13,7 @@
  * may be absent.
  */
 
-import type { DisconnectInfo } from '../../../../../shared/types.js';
+import type { DisconnectInfo } from '../../../../../shared/clientbound.js';
 
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 

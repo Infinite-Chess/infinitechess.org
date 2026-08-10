@@ -4,7 +4,7 @@
  * Low-level cloud read/write operations for board editor saves.
  */
 
-import type { MetaData } from '../../../../../shared/types';
+import type { MetaData } from '../../../../../shared/domain.js';
 import type { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter';
 import type { EditorSaveState } from './estoretypes';
 import type { CloudPositionRecord, CloudSaveListRecord } from './editorSavesAPI';

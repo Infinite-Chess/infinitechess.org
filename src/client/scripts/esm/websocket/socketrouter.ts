@@ -5,17 +5,17 @@
  * based on the subscription type.
  */
 
-import type { GeneralMessage } from './socketschemas.js';
+import type { ClientboundGeneralMessage } from '../../../../shared/clientbound.js';
 
 import * as z from 'zod';
 
 import wsutil from '../../../../shared/util/wsutil.js';
+import { ClientboundSchema } from '../../../../shared/clientbound.js';
 
 import toast from '../components/toast.js';
 import socketman from './socketman.js';
 import { SocketBus } from './SocketBus.js';
 import socketmessages from './socketmessages.js';
-import { MasterSchema } from './socketschemas.js';
 
 // Routing ---------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ function onmessage(serverMessage: MessageEvent): void {
 	// Reschedule the inactivity timer that detects silent disconnections.
 	socketmessages.rescheduleHeartbeatTimer();
 
-	const zod_result = MasterSchema.safeParse(parsedUnvalidatedMessage);
+	const zod_result = ClientboundSchema.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
 		console.error(
 			'Received malformed websocket message from the server:',
@@ -96,7 +96,7 @@ function onmessage(serverMessage: MessageEvent): void {
  * Handles incoming messages with route "general".
  * @param message - The validated general route message contents
  */
-function ongeneralmessage(message: GeneralMessage): void {
+function ongeneralmessage(message: ClientboundGeneralMessage): void {
 	switch (message.action) {
 		case 'notify':
 			toast.show(message.value);

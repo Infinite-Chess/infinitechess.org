@@ -10,9 +10,10 @@
 
 import type { Mesh } from '../../rendering/piecemodels.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { MovePacket } from '../../../../../../shared/domain.js';
 import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
+import type { GameStateMessage } from '../../../../../../shared/clientbound.js';
 import type { MoveRecord, MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
-import type { GameStateMessage, MovePacket } from '../../../../../../shared/types.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';

@@ -8,7 +8,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { EngineGamePageInfo, StaticGameState } from '../../../shared/types.js';
+import type { EngineGamePageInfo, StaticGameState } from '../../../shared/domain.js';
 import type { GameSetup, PlayerRatingResult, ServerGame } from './gameutility.js';
 
 import clock from '../../../shared/chess/logic/clock.js';

@@ -10,7 +10,7 @@
 import type { Request } from 'express';
 import type { SpeedCategory } from '../../shared/chess/util/clockutil.js';
 import type { Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
-import type { GamePageData, StaticGameState } from '../../shared/types.js';
+import type { GamePageData, StaticGameState } from '../../shared/domain.js';
 
 import timeutil from '../../shared/util/timeutil.js';
 import clockutil from '../../shared/chess/util/clockutil.js';

@@ -4,7 +4,7 @@
  * This script handles seek cancelation.
  */
 
-import type { SeekId } from '../../../shared/types.js';
+import type { SeekId } from '../../../shared/domain.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';

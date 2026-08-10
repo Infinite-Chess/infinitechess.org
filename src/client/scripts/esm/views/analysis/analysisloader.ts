@@ -6,7 +6,7 @@
  */
 
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { DeadGameState } from '../../../../../shared/types.js';
+import type { DeadGameState } from '../../../../../shared/domain.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 

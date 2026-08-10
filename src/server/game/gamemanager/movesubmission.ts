@@ -10,8 +10,8 @@ import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { SubmitMoveMessage } from '../../../shared/wsmessages.js';
-import type { OpponentsMoveMessage } from '../../../shared/types.js';
+import type { SubmitMoveMessage } from '../../../shared/serverbound.js';
+import type { OpponentsMoveMessage } from '../../../shared/clientbound.js';
 
 import bimath from '../../../shared/util/math/bimath.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';

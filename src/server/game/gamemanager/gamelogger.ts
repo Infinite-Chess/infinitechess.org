@@ -9,7 +9,7 @@
  * that reconstructs a concluded game from these columns.
  */
 
-import type { MetaData } from '../../../shared/types.js';
+import type { MetaData } from '../../../shared/domain.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { MatchInfo, ServerGame } from './gameutility.js';

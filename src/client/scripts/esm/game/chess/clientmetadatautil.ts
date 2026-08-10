@@ -5,7 +5,7 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MetaData, Rating } from '../../../../../shared/types.js';
+import type { MetaData, Rating } from '../../../../../shared/domain.js';
 import type { Condition, GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 import * as z from 'zod';

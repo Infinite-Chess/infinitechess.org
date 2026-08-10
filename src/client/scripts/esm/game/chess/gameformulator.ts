@@ -6,7 +6,7 @@
  */
 
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { TimeControl } from '../../../../../shared/types.js';
+import type { TimeControl } from '../../../../../shared/domain.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { Additional, GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js'; // prettier-ignore
 import type {

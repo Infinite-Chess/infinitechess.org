@@ -18,7 +18,7 @@ import type {
 	EngineGamePageInfo,
 	ServerUsernameContainer,
 	StaticGameState,
-} from '../../../shared/types.js';
+} from '../../../shared/domain.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';

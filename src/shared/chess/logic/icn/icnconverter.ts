@@ -12,7 +12,7 @@
  */
 
 import type { BaseRay } from '../../../util/math/geometry.js';
-import type { MetaData } from '../../../types.js';
+import type { MetaData } from '../../../domain.js';
 import type { UnboundedRectangle } from '../../../util/math/bounds.js';
 import type { GameRules, Promotion } from '../../util/gamerules.js';
 import type { GameruleWinCondition } from '../../util/winconutil.js';

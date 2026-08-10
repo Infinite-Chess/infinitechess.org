@@ -6,14 +6,9 @@
  */
 
 import type { CustomWebSocket } from './socketUtility.js';
+import type { ServerboundMessage } from '../../shared/serverbound.js';
 
-import * as z from 'zod';
-
-import {
-	ClientGameSchema,
-	ClientGeneralSchema,
-	ClientLobbySchema,
-} from '../../shared/wsmessages.js';
+import { ServerboundSchema } from '../../shared/serverbound.js';
 
 import { logZodError } from '../utility/zodlogger.js';
 import { logReqWebsocketIn } from './wsLogger.js';
@@ -22,29 +17,6 @@ import { routeIncomingSocketMessage } from './socketRouter.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
 import { rescheduleHeartbeatTimer, sendSocketMessage } from './sendSocketMessage.js';
-
-// Types --------------------------------------------------------------------------------------
-
-/** Represents all possible types a non-echo incoming websocket message could be! */
-export type WebsocketInMessage = z.infer<typeof MasterSchema>;
-/** The schema for validating all non-echo incoming websocket messages. */
-const MasterSchema = z.discriminatedUnion('route', [
-	z.strictObject({ id: z.int(), route: z.literal('general'), contents: ClientGeneralSchema }),
-	z.strictObject({ id: z.int(), route: z.literal('lobby'), contents: ClientLobbySchema }),
-	z.strictObject({ id: z.int(), route: z.literal('game'), contents: ClientGameSchema }),
-]);
-
-/** This is the id of the message being replied to. */
-const EchoSchema = z.strictObject({
-	/** The route to forward the message to (e.g., "general", "lobby", "game"). */
-	route: z.literal('echo'),
-	/** The contents of the message, for the router to read. */
-	contents: z.int(),
-});
-
-type AnyIncomingMessage = z.infer<typeof MasterSchemaWithEchos>;
-/** The schema for validating all incoming websocket messages, including echos. */
-const MasterSchemaWithEchos = z.discriminatedUnion('route', [MasterSchema, EchoSchema]);
 
 // Constants ---------------------------------------------------------------------------
 
@@ -106,7 +78,7 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
  * Sends the appropriate error to the client on failure.
  * Returns the parsed message on success, or null on failure.
  */
-function parseAndValidateMessage(messageStr: string): AnyIncomingMessage | null {
+function parseAndValidateMessage(messageStr: string): ServerboundMessage | null {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(messageStr);
@@ -120,7 +92,7 @@ function parseAndValidateMessage(messageStr: string): AnyIncomingMessage | null 
 		return null;
 	}
 
-	const result = MasterSchemaWithEchos.safeParse(parsed);
+	const result = ServerboundSchema.safeParse(parsed);
 	if (!result.success) {
 		// Should only be reachable from explicitly crafted messages, but thus far
 		// no bots have exploited this. Safe to log in case it's ever a legit bug.

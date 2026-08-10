@@ -6,9 +6,10 @@
  * and broadcasts changes out to the clients.
  */
 
+import type { OutSeek } from '../../../shared/domain.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { OutSeek, LobbyStateMessage } from '../../../shared/types.js';
+import type { LobbyStateMessage } from '../../../shared/clientbound.js';
 
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';

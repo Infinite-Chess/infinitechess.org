@@ -7,14 +7,12 @@
 
 import type { VNode } from 'snabbdom';
 import type { VariantInfo } from '../../../../../shared/chess/variants/variantregistry.js';
+import type { LobbyStateMessage } from '../../../../../shared/clientbound.js';
+import type { Rating, BaseSeek, OutSeek } from '../../../../../shared/domain.js';
 import type {
-	Rating,
-	BaseSeek,
-	OutSeek,
 	CreateSeekOptions,
-	LobbyStateMessage,
 	CreateEngineGameMessage,
-} from '../../../../../shared/types.js';
+} from '../../../../../shared/serverbound.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
 

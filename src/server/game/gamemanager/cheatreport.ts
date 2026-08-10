@@ -6,9 +6,9 @@
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
-import type { ReportMessage } from '../../../shared/wsmessages.js';
+import type { ReportMessage } from '../../../shared/serverbound.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
-import type { GameStateMessage } from '../../../shared/types.js';
+import type { GameStateMessage } from '../../../shared/clientbound.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 

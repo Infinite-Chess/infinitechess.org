@@ -6,7 +6,7 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { ClientLobbyMessage } from '../../../shared/wsmessages.js';
+import type { ServerboundLobbyMessage } from '../../../shared/serverbound.js';
 
 import { createSeek } from './createseek.js';
 import { cancelSeek } from './cancelseek.js';
@@ -19,7 +19,7 @@ import { createEngineGame } from './createenginegame.js';
  * @param contents
  * @returns
  */
-function routeLobbyMessage(ws: CustomWebSocket, contents: ClientLobbyMessage): void {
+function routeLobbyMessage(ws: CustomWebSocket, contents: ServerboundLobbyMessage): void {
 	// data: { route, action, value, id }
 	// Route them according to their action
 	switch (contents.action) {

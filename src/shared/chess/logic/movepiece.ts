@@ -12,7 +12,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { Change } from './boardchanges.js';
 import type { MoveState } from './state.js';
 import type { MoveCoords } from './icn/icnconverter.js';
-import type { MovePacket } from '../../types.js';
+import type { MovePacket } from '../../domain.js';
 import type { MoveSpecialTags, SpecialTags } from '../util/moveutil.js';
 
 import state from './state.js';

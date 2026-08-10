@@ -5,7 +5,7 @@
  */
 
 import type { CustomWebSocket } from './socketUtility.js';
-import type { ClientGeneralMessage, ValidUnsub } from '../../shared/wsmessages.js';
+import type { ServerboundGeneralMessage, ValidUnsub } from '../../shared/serverbound.js';
 
 import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
 import {
@@ -16,7 +16,7 @@ import {
 // Functions -------------------------------------------------------------------
 
 // Route for this incoming message is "general". What is their action?
-function routeGeneralMessage(ws: CustomWebSocket, message: ClientGeneralMessage): void {
+function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGeneralMessage): void {
 	// data: { route, action, value, id }
 	// Route them according to their action
 	switch (message.action) {

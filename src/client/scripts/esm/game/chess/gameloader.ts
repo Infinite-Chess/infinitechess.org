@@ -11,7 +11,7 @@
  * but also prepares and opens the UI elements for that type of game.
  */
 
-import type { MovePacket } from '../../../../../shared/types.js';
+import type { MovePacket } from '../../../../../shared/domain.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';

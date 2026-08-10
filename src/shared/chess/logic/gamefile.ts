@@ -4,13 +4,13 @@ import type { Board } from './boardinit.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
-import type { MovePacket } from '../../types.js';
+import type { MovePacket } from '../../domain.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantregistry.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { GlobalGameState } from './state.js';
-import type { ClockValues, TimeControl } from '../../types.js';
+import type { ClockValues, TimeControl } from '../../domain.js';
 
 import clock from './clock.js';
 import movepiece from './movepiece.js';

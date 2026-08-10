@@ -5,7 +5,7 @@
  * creating a new game if successful.
  */
 
-import type { SeekId } from '../../../shared/types.js';
+import type { SeekId } from '../../../shared/domain.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';

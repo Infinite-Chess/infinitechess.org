@@ -5,17 +5,13 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type {
-	Rating,
-	SeekVariant,
-	AuthSeekVariant,
-	CreateSeekMessage,
-} from '../../../shared/types.js';
+import type { CreateSeekMessage } from '../../../shared/serverbound.js';
+import type { Rating, SeekVariant, AuthSeekVariant } from '../../../shared/domain.js';
 
 import uuid from '../../../shared/util/uuid.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import { IDLengthOfSeeks } from '../../../shared/types.js';
+import { IDLengthOfSeeks } from '../../../shared/domain.js';
 import { POSITION_STRING_THRESHOLD } from '../../../shared/chess/variants/servervalidation.js';
 import compression, { CompressionMode } from '../../../shared/util/compression.js';
 import {

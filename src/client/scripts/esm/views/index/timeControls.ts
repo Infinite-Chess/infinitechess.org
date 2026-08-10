@@ -1,6 +1,6 @@
 // src/client/scripts/esm/views/index/timeControls.ts
 
-import type { TimeControl } from '../../../../../shared/types.js';
+import type { TimeControl } from '../../../../../shared/domain.js';
 
 import clockutil from '../../../../../shared/chess/util/clockutil';
 

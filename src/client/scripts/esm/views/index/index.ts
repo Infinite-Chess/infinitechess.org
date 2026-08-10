@@ -6,7 +6,7 @@
  * Subscribes to lobby updates and resubscribes after socket reconnections.
  */
 
-import type { LobbyMessage } from '../../websocket/socketschemas.js';
+import type { ClientboundLobbyMessage } from '../../../../../shared/clientbound.js';
 
 import lobby from './lobby.js';
 import flashToast from '../../util/flashToast.js';
@@ -27,7 +27,7 @@ SocketBus.addEventListener('closed', () => lobby.clearSeekList());
 
 SocketBus.addEventListener('lobby', (e) => onLobbyMessage(e.detail));
 
-function onLobbyMessage(contents: LobbyMessage): void {
+function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 	switch (contents.action) {
 		case 'lobbystate':
 			lobby.handleLobbyState(contents.value);

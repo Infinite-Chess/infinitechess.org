@@ -3,12 +3,11 @@
 /**
  * This script receives routes incoming socket messages them where they need to go.
  *
- *
  * It also handles subbing to subscription lists.
  */
 
 import type { CustomWebSocket } from './socketUtility.js';
-import type { WebsocketInMessage } from './receiveSocketMessage.js';
+import type { ServerboundRoutedMessage } from '../../shared/serverbound.js';
 
 import { routeGameMessage } from '../game/gamemanager/gamerouter.js';
 import { routeLobbyMessage } from '../game/seeksmanager/lobbyrouter.js';
@@ -16,7 +15,7 @@ import { routeGeneralMessage } from './generalrouter.js';
 
 // Functions ---------------------------------------------------------------------------
 
-function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMessage): void {
+function routeIncomingSocketMessage(ws: CustomWebSocket, message: ServerboundRoutedMessage): void {
 	// Route them to their specified location
 	switch (message.route) {
 		case 'general':

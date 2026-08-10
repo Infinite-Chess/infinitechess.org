@@ -6,7 +6,7 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { ClientGameMessage } from '../../../shared/wsmessages.js';
+import type { ServerboundGameMessage } from '../../../shared/serverbound.js';
 
 import gameutility from './gameutility.js';
 import { onReport } from './cheatreport.js';
@@ -25,7 +25,7 @@ import { abortGame, resignGame, resignEngine } from './abortresigngame.js';
  * @param ws - The socket
  * @param contents - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
  */
-function routeGameMessage(ws: CustomWebSocket, contents: ClientGameMessage): void {
+function routeGameMessage(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
 	// All actions that don't require a game
 	switch (contents.action) {
 		case 'subscribe':

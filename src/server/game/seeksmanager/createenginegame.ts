@@ -5,7 +5,7 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { CreateEngineGameMessage } from '../../../shared/types.js';
+import type { CreateEngineGameMessage } from '../../../shared/serverbound.js';
 
 import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import typeutil, { players } from '../../../shared/chess/util/typeutil.js';

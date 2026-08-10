@@ -4,7 +4,7 @@
  * This script handles queries to the leaderboards table.
  */
 
-import type { Rating } from '../../shared/types.js';
+import type { Rating } from '../../shared/domain.js';
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';

@@ -9,7 +9,7 @@
 import type { VNode } from 'snabbdom';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
 import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { SeekVariant, GameModifier } from '../../../../../shared/types.js';
+import type { SeekVariant, GameModifier } from '../../../../../shared/domain.js';
 import type {
 	VariantGroup,
 	VariantCode,

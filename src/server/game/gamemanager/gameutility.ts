@@ -18,22 +18,24 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Game, LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
+	GameConclusionMessage,
+	GameStateBase,
+	GameStateMessage,
+	ParticipantState,
+	RematchOfferInfo,
+} from '../../../shared/clientbound.js';
+import type {
 	AuthSeekVariant,
 	ClockValues,
 	StaticGameSetup,
 	StaticGameState,
-	GameConclusionMessage,
 	GameModifier,
-	GameStateBase,
-	GameStateMessage,
 	MetaData,
 	MovePacket,
-	ParticipantState,
-	RematchOfferInfo,
 	Rating,
 	ServerUsernameContainer,
 	TimeControl,
-} from '../../../shared/types.js';
+} from '../../../shared/domain.js';
 
 import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';

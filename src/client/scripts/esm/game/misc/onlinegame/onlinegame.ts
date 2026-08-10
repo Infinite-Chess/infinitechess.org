@@ -5,7 +5,7 @@
  */
 
 import type { Additional } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { GameStateMessage, ParticipantState } from '../../../../../../shared/types.js';
+import type { GameStateMessage, ParticipantState } from '../../../../../../shared/clientbound.js';
 
 import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
