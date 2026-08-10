@@ -16,7 +16,7 @@ import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
-import { rescheduleHeartbeatTimer, sendSocketMessage } from './sendSocketMessage.js';
+import { rescheduleHeartbeatTimer, sendEcho } from './sendSocketMessage.js';
 
 // Constants ---------------------------------------------------------------------------
 
@@ -66,7 +66,7 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 	if (!logAndRateLimitMessage(ws, messageStr)) return; // Rate limited; socket already closed.
 
 	// Send our own echo
-	sendSocketMessage(ws, 'general', 'echo', message.id);
+	sendEcho(ws, message.id);
 	// Their message is evidence the connection is alive
 	rescheduleHeartbeatTimer(ws);
 	// console.log('Received message: ' + rawMessage);

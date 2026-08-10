@@ -51,7 +51,7 @@ function offerRematch(servergame: ServerGame, ourRole: Player): void {
 		createRematchGame(servergame);
 	} else {
 		// Relay the offer to the opponent (their rematch button starts glowing).
-		gameutility.sendMessageToColor(match, opponentColor, 'game', 'rematchoffer');
+		gameutility.sendMessageToColor(match, opponentColor, 'game', 'rematchoffer', undefined);
 	}
 }
 

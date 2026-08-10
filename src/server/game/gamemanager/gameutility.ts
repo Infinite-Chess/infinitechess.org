@@ -17,6 +17,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Game, LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { OutAction, OutRoute, OutValue } from '../../socket/sendSocketMessage.js';
 import type {
 	GameConclusionMessage,
 	GameStateBase,
@@ -402,7 +403,7 @@ function subscribeClientToGame(
 	}
 	const previousSocket = playerData.socket;
 	if (previousSocket) {
-		sendSocketMessage(previousSocket, 'game', 'leavegame');
+		sendSocketMessage(previousSocket, 'game', 'leavegame', undefined);
 		detatchSocketFromGame(match, previousSocket);
 	}
 	playerData.socket = ws;
@@ -444,10 +445,10 @@ function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void 
 		liveGameValues.onPlayerReconnected(servergame, ourRole);
 		// Alert their opponent we have returned, if they were informed of the disconnect
 		if (claimWindowWasSet) {
-			sendMessageToColor(servergame.match, opponentRole, 'game', 'opponentdisconnectreturn'); // prettier-ignore
+			sendMessageToColor(servergame.match, opponentRole, 'game', 'opponentdisconnectreturn', undefined); // prettier-ignore
 		}
 	} else {
-		sendMessageToColor(servergame.match, opponentRole, 'game', 'opponentreturn');
+		sendMessageToColor(servergame.match, opponentRole, 'game', 'opponentreturn', undefined);
 	}
 }
 
@@ -768,12 +769,12 @@ function getSocketRoleInGame(servergame: ServerGame, ws: CustomWebSocket): Playe
  * @param action - The action the client should perform.
  * @param value - The value to send to the client. Already-translated text for notify/notifyerror.
  */
-function sendMessageToColor(
+function sendMessageToColor<R extends OutRoute, A extends OutAction<R>>(
 	match: MatchInfo,
 	role: Player,
-	sub: string,
-	action: string,
-	value?: any,
+	sub: R,
+	action: A,
+	value: OutValue<R, A>,
 ): void {
 	const ws = match.playerData[role]?.socket;
 	if (!ws) return; // They are not connected, can't send message
@@ -894,25 +895,33 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): undefin
 }
 
 /** Broadcasts a message to every connected participant of the game. */
-function broadcastToParticipants(
+function broadcastToParticipants<R extends OutRoute, A extends OutAction<R>>(
 	servergame: ServerGame,
-	sub: string,
-	action: string,
-	value?: any,
+	sub: R,
+	action: A,
+	value: OutValue<R, A>,
 ): void {
 	for (const color of Object.keys(servergame.match.playerData))
 		sendMessageToColor(servergame.match, Number(color) as Player, sub, action, value);
 }
 
 /** Broadcasts a role-agnostic game-route message to every spectator of the game. */
-function broadcastToSpectators(servergame: ServerGame, action: string, value: any): void {
+function broadcastToSpectators<A extends OutAction<'game'>>(
+	servergame: ServerGame,
+	action: A,
+	value: OutValue<'game', A>,
+): void {
 	for (const ws of servergame.spectators) {
 		sendSocketMessage(ws, 'game', action, value);
 	}
 }
 
 /** Broadcasts a role-agnostic game-route message to every connected client of the game. */
-function broadcastToEveryone(servergame: ServerGame, action: string, value: any): void {
+function broadcastToEveryone<A extends OutAction<'game'>>(
+	servergame: ServerGame,
+	action: A,
+	value: OutValue<'game', A>,
+): void {
 	broadcastToParticipants(servergame, 'game', action, value);
 	broadcastToSpectators(servergame, action, value);
 }

@@ -52,7 +52,7 @@ function offerDraw(servergame: ServerGame, ourRole: Player): void {
 
 	// Alert their opponent
 	const opponentColor = typeutil.invertPlayer(ourRole);
-	gameutility.sendMessageToColor(match, opponentColor, 'game', 'drawoffer');
+	gameutility.sendMessageToColor(match, opponentColor, 'game', 'drawoffer', undefined);
 }
 
 /**
@@ -98,7 +98,7 @@ function declineDraw(servergame: ServerGame, ourRole: Player): void {
 	closeDrawOffer(servergame.match);
 
 	// Alert their opponent
-	gameutility.sendMessageToColor(servergame.match, opponentColor, 'game', 'declinedraw');
+	gameutility.sendMessageToColor(servergame.match, opponentColor, 'game', 'declinedraw', undefined); // prettier-ignore
 	liveGameValues.onDrawOfferDeclined(servergame);
 }
 

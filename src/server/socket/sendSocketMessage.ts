@@ -5,6 +5,13 @@
  * and regularly sends messages by itself to confirm the socket is still connected and responding (we will hear an echo).
  */
 
+import type { CustomWebSocket } from './socketUtility.js';
+import type {
+	ClientboundGameMessage,
+	ClientboundGeneralMessage,
+	ClientboundLobbyMessage,
+} from '../../shared/clientbound.js';
+
 import { WebSocket } from 'ws';
 
 import uuid from '../../shared/util/uuid.js';
@@ -15,19 +22,22 @@ import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID } from './echoTrack
 
 // Types --------------------------------------------------------------------------------------
 
-/** Represents an outgoing WebSocket server message. */
-interface WebsocketOutMessage {
-	/** The route to forward the message to (e.g., "general", "lobby", "game", "echo"). */
-	route: string;
-	/** The message contents. For echo messages, this is the message ID being echoed.
-	 * For other messages, this is an object with action and value. */
-	contents: any;
-	/** The ID of the message to echo, indicating the connection is still active.
-	 * Or undefined if this message itself is an echo. */
-	id?: number;
-}
+/** Every message we may send, keyed by the route it goes out on. */
+type OutMessages = {
+	general: ClientboundGeneralMessage;
+	lobby: ClientboundLobbyMessage;
+	game: ClientboundGameMessage;
+};
 
-import type { CustomWebSocket } from './socketUtility.js';
+/** A route we may send on. */
+export type OutRoute = keyof OutMessages;
+
+/** The actions valid on a given route. */
+export type OutAction<R extends OutRoute> = OutMessages[R]['action'];
+
+/** The value an action carries, or `undefined` for the actions that carry none. */
+export type OutValue<R extends OutRoute, A extends OutAction<R>> =
+	Extract<OutMessages[R], { action: A }> extends { value: infer V } ? V : undefined;
 
 // Variables ---------------------------------------------------------------------------
 
@@ -49,15 +59,15 @@ if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis
  * @param ws - The websocket
  * @param route - What subscription/route this message should be forwarded to.
  * @param action - What type of action the client should take within the subscription route.
- * @param value - The contents of the message.
+ * @param value - The contents of the message. `undefined` for actions that carry none.
  * @param [options] - Additional options for sending the message.
  * @param [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
  */
-function sendSocketMessage(
+function sendSocketMessage<R extends OutRoute, A extends OutAction<R>>(
 	ws: CustomWebSocket,
-	route: string,
-	action: string,
-	value?: any,
+	route: R,
+	action: A,
+	value: OutValue<R, A>,
 	{ skipLatency }: { skipLatency?: boolean } = {},
 ): void {
 	// If we're applying simulated latency delay, set a timer to send this message.
@@ -73,39 +83,36 @@ function sendSocketMessage(
 	// Occasionally happens on dev at least for the `viewercount` action.
 	if (ws.readyState !== WebSocket.OPEN) return;
 
-	const isEcho = action === 'echo';
-	const payload: WebsocketOutMessage = isEcho
-		? {
-				route: 'echo',
-				contents: value, // For echo, value contains the message ID
-			}
-		: {
-				route,
-				contents: {
-					action,
-					value,
-				},
-				id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
-			};
-	const stringifiedPayload = JSON.stringify(payload);
+	const id = uuid.generateNumbID(10);
+	const stringifiedPayload = JSON.stringify({ route, contents: { action, value }, id });
 
-	// if (!isEcho) console.log(`Sending: ${stringifiedPayload}`);
+	// console.log(`Sending: ${stringifiedPayload}`);
 
 	ws.send(stringifiedPayload); // Send the message
-	if (!isEcho) {
-		// Not an echo
-		logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
+	logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
 
-		// Set a timer. At the end, if we have heard no echo, just assume they've disconnected, terminate the socket.
-		const timeout = setTimeout(() => {
-			ws.close(1014, 'No echo heard');
-			deleteEchoTimerForMessageID(payload.id!);
-		}, wsutil.ECHO_TIMEOUT); // We pass in an arrow function so it doesn't lose scope of ws.
-		//console.log(`Set timer of message id "${id}"`)
-		addTimeoutToEchoTimers(payload.id!, timeout);
+	// Set a timer. At the end, if we have heard no echo, just assume they've disconnected, terminate the socket.
+	const timeout = setTimeout(() => {
+		ws.close(1014, 'No echo heard');
+		deleteEchoTimerForMessageID(id);
+	}, wsutil.ECHO_TIMEOUT); // We pass in an arrow function so it doesn't lose scope of ws.
+	addTimeoutToEchoTimers(id, timeout);
 
-		rescheduleHeartbeatTimer(ws);
-	}
+	rescheduleHeartbeatTimer(ws);
+}
+
+/**
+ * Acknowledges a message the client sent us.
+ * Echoes are never echoed back, so they skip the id, echo timer,
+ * and out-logging {@link sendSocketMessage} attaches.
+ */
+function sendEcho(ws: CustomWebSocket, id: number): void {
+	if (ws.readyState !== WebSocket.OPEN) return; // Sends on a CLOSING/CLOSED socket are silently dropped by ws.
+
+	const stringifiedPayload = JSON.stringify({ route: 'echo', contents: id });
+	if (simulatedWebsocketLatencyMillis !== 0) {
+		setTimeout(() => ws.send(stringifiedPayload), simulatedWebsocketLatencyMillis);
+	} else ws.send(stringifiedPayload);
 }
 
 // Heartbeat Ping-Pong ----------------------------------------------------------
@@ -117,7 +124,7 @@ function sendSocketMessage(
 function rescheduleHeartbeatTimer(ws: CustomWebSocket): void {
 	cancelHeartbeatTimer(ws);
 	ws.metadata.heartbeatTimerID = setTimeout(
-		() => sendSocketMessage(ws, 'general', 'ping'),
+		() => sendSocketMessage(ws, 'general', 'ping', undefined),
 		wsutil.HEARTBEAT_INTERVAL_MS,
 	);
 }
@@ -127,4 +134,4 @@ function cancelHeartbeatTimer(ws: CustomWebSocket): void {
 	ws.metadata.heartbeatTimerID = undefined;
 }
 
-export { sendSocketMessage, rescheduleHeartbeatTimer, cancelHeartbeatTimer };
+export { sendSocketMessage, sendEcho, rescheduleHeartbeatTimer, cancelHeartbeatTimer };

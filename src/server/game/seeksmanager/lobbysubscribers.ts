@@ -9,6 +9,7 @@
 
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { OutAction, OutValue } from '../../socket/sendSocketMessage.js';
 
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -27,10 +28,14 @@ function getLobbySubscribers(): SetIterator<CustomWebSocket> {
 
 /**
  * Broadcasts a message to all lobby subscribers.
+ * Currently uncalled — reserved for pushing the live spectatable-games list to the home page.
  * @param action - The action of the socket message
  * @param message - The message contents
  */
-function broadcastToAllLobbySubs(action: string, message: any): void {
+function broadcastToAllLobbySubs<A extends OutAction<'lobby'>>(
+	action: A,
+	message: OutValue<'lobby', A>,
+): void {
 	for (const ws of subscribedClients) {
 		sendSocketMessage(ws, 'lobby', action, message); // In order: socket, sub, action, value
 	}

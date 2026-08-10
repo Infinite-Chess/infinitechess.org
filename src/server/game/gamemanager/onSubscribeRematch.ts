@@ -42,7 +42,7 @@ function onSubscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 		// Client should already have seen the finalized conclusion (otherwise they wouldn't
 		// be requesting to 'subscriberematch'). Tell them to unsub, they should then reset
 		// rematch offer state and disable the button.
-		sendSocketMessage(ws, 'game', 'unsub');
+		sendSocketMessage(ws, 'game', 'unsub', undefined);
 	}
 }
 

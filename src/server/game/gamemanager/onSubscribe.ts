@@ -42,7 +42,7 @@ function onSubscribeToGame(ws: CustomWebSocket, game_id: number): void {
 		// requested a full `subscribe`, so it may not yet have seen the conclusion — tell it to reload
 		// (`notlive`). Fresh SSR then serves the dead review page (if logged) or the 404 page, and a
 		// review client fetches the dead state over HTTP.
-		sendSocketMessage(ws, 'game', 'notlive');
+		sendSocketMessage(ws, 'game', 'notlive', undefined);
 	}
 }
 

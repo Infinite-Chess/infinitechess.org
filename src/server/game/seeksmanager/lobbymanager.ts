@@ -101,7 +101,7 @@ function broadcastMemberInGameStatus(
 				id: gameID,
 				navigate: ws === navigatingSocket,
 			});
-		else sendSocketMessage(ws, 'lobby', 'outgame');
+		else sendSocketMessage(ws, 'lobby', 'outgame', undefined);
 	}
 }
 

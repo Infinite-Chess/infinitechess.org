@@ -174,7 +174,7 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 		for (const [c, data] of Object.entries(servergame.match.playerData)) {
 			if (!memberInfoEq(data.identifier, identifier)) continue;
 			if (data.socket) {
-				sendSocketMessage(data.socket, 'game', 'unsub'); // Unsub the game on their old tab.
+				sendSocketMessage(data.socket, 'game', 'unsub', undefined); // Unsub the game on their old tab.
 				gameutility.detatchSocketFromGame(servergame.match, data.socket);
 			}
 			onPostGameLeave(servergame, Number(c) as Player, false);
@@ -261,7 +261,7 @@ function onPostGameLeave(servergame: ServerGame, role: Player, involuntary: bool
 
 	// Withdraw their rematch offer, if any, and tell the opponent they've left (disable + unglow).
 	match.rematchOffers.delete(role);
-	gameutility.sendMessageToColor(match, typeutil.invertPlayer(role), 'game', 'opponentleft'); // prettier-ignore
+	gameutility.sendMessageToColor(match, typeutil.invertPlayer(role), 'game', 'opponentleft', undefined); // prettier-ignore
 
 	const playerdata = match.playerData[role]!;
 	clearTimeout(playerdata.disconnect.startID);
@@ -680,11 +680,11 @@ function evictGame(servergame: ServerGame): void {
 	// may still be attached — tell any remaining socket to unsubscribe.
 	for (const data of Object.values(servergame.match.playerData)) {
 		if (!data.socket) continue;
-		sendSocketMessage(data.socket, 'game', 'unsub');
+		sendSocketMessage(data.socket, 'game', 'unsub', undefined);
 		gameutility.detatchSocketFromGame(servergame.match, data.socket);
 	}
 	for (const ws of servergame.spectators) {
-		sendSocketMessage(ws, 'game', 'unsub');
+		sendSocketMessage(ws, 'game', 'unsub', undefined);
 		delete ws.metadata.subscriptions.spectating;
 	}
 	servergame.spectators.clear();
