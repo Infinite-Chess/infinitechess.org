@@ -42,7 +42,6 @@ function makeSeekSafe(seek: AuthSeek): OutSeek {
 	return {
 		id: seek.id,
 		player: jsutil.deepCopyObject(seek.player),
-		tag: seek.tag,
 		variant,
 		time: seek.time,
 		color: seek.color,

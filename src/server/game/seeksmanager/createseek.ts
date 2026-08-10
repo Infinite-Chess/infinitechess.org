@@ -120,7 +120,6 @@ async function getSeekFromWebsocketMessageContents(
 		mode: messageContents.mode,
 		color: messageContents.color,
 		modifiers: messageContents.modifiers,
-		tag: messageContents.tag,
 	};
 }
 

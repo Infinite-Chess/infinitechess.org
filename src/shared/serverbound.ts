@@ -45,28 +45,26 @@ const ServerboundGeneralSchema = z.discriminatedUnion('action', [
 
 // Lobby Route -----------------------------------------------------------------
 
-/** The seek options the client's game setup form produces. (excludes the tag) */
-export type CreateSeekOptions = z.infer<typeof CreateSeekOptionsSchema>;
-const CreateSeekOptionsSchema = z.strictObject({
-	variant: SeekVariantSchema,
-	time: TimeControlSchema.refine((timeControl) => clockutil.isTimedControlValid(timeControl), {
-		error: 'Invalid clock value.',
-	}),
-	color: z.literal([players.WHITE, players.BLACK, null]),
-	mode: GameModeSchema,
-	modifiers: z.array(GameModifierSchema).max(GameModifierSchema.options.length).optional(),
-});
-
-/** Client → server websocket payload for creating a seek. */
+/** Client → server websocket payload for creating a seek — exactly what the game setup form produces. */
 export type CreateSeekMessage = z.infer<typeof CreateSeekMessageSchema>;
-const CreateSeekMessageSchema = CreateSeekOptionsSchema.extend({
-	/** Client-generated ownership token, letting it recognize its own seek in the lobby list. */
-	tag: z.string().length(8),
-}).refine(
-	(val) =>
-		val.mode !== 'rated' || isRatedAllowed(val.variant, val.time, val.color, val.modifiers),
-	{ error: 'Invalid seek parameters for a rated game.' },
-);
+const CreateSeekMessageSchema = z
+	.strictObject({
+		variant: SeekVariantSchema,
+		time: TimeControlSchema.refine(
+			(timeControl) => clockutil.isTimedControlValid(timeControl),
+			{
+				error: 'Invalid clock value.',
+			},
+		),
+		color: z.literal([players.WHITE, players.BLACK, null]),
+		mode: GameModeSchema,
+		modifiers: z.array(GameModifierSchema).max(GameModifierSchema.options.length).optional(),
+	})
+	.refine(
+		(val) =>
+			val.mode !== 'rated' || isRatedAllowed(val.variant, val.time, val.color, val.modifiers),
+		{ error: 'Invalid seek parameters for a rated game.' },
+	);
 
 /** Client → server websocket payload for creating an engine game. */
 export type CreateEngineGameMessage = z.infer<typeof CreateEngineGameMessageSchema>;

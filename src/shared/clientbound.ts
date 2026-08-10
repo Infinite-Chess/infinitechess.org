@@ -18,7 +18,13 @@ import * as z from 'zod';
 
 import winconutil from './chess/util/winconutil.js';
 import typeschemas from './chess/util/typeschemas.js';
-import { ClockValuesSchema, GameIDSchema, MovePacketSchema, OutSeekSchema } from './domain.js';
+import {
+	ClockValuesSchema,
+	GameIDSchema,
+	MovePacketSchema,
+	OutSeekSchema,
+	SeekIdSchema,
+} from './domain.js';
 
 // General Route ---------------------------------------------------------------
 
@@ -35,11 +41,16 @@ const ClientboundGeneralSchema = z.discriminatedUnion('action', [
 
 // Lobby Route -----------------------------------------------------------------
 
-/** Every seek currently open in the lobby. */
-const SeeksListSchema = z.array(OutSeekSchema);
-
 /** How many clients are currently viewing the lobby. */
 const ViewerCountSchema = z.number().nonnegative();
+
+/** The payload of the `seekslist` message — every seek currently open in the lobby, and which one is ours. */
+export type SeeksMessage = z.infer<typeof SeeksMessageSchema>;
+const SeeksMessageSchema = z.strictObject({
+	seekslist: z.array(OutSeekSchema),
+	/** The id of our own open seek, absent if we have none. Always one of {@link SeeksMessage.seekslist}. */
+	ourseekid: SeekIdSchema.optional(),
+});
 
 /** Tells us we're in a game — carried by the lobby state on subscribe, and pushed live thereafter. */
 const InGameMessageSchema = z.strictObject({
@@ -50,8 +61,7 @@ const InGameMessageSchema = z.strictObject({
 
 /** The payload of the `lobbystate` message — the full lobby snapshot, sent the moment we subscribe. */
 export type LobbyStateMessage = z.infer<typeof LobbyStateMessageSchema>;
-const LobbyStateMessageSchema = z.strictObject({
-	seekslist: SeeksListSchema,
+const LobbyStateMessageSchema = SeeksMessageSchema.extend({
 	viewercount: ViewerCountSchema,
 	/** Present only if we're already in a game at the time we subscribe. */
 	ingame: InGameMessageSchema.optional(),
@@ -61,12 +71,7 @@ const LobbyStateMessageSchema = z.strictObject({
 export type ClientboundLobbyMessage = z.infer<typeof ClientboundLobbySchema>;
 const ClientboundLobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('lobbystate'), value: LobbyStateMessageSchema }),
-	z.strictObject({
-		action: z.literal('seekslist'),
-		value: z.strictObject({
-			seeksList: SeeksListSchema,
-		}),
-	}),
+	z.strictObject({ action: z.literal('seekslist'), value: SeeksMessageSchema }),
 	z.strictObject({ action: z.literal('viewercount'), value: ViewerCountSchema }),
 	z.strictObject({ action: z.literal('ingame'), value: InGameMessageSchema }),
 	z.strictObject({ action: z.literal('outgame') }),

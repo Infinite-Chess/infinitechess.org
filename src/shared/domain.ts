@@ -240,7 +240,6 @@ export const SeekIdSchema = z
 export type BaseSeek = z.infer<typeof BaseSeekSchema>;
 const BaseSeekSchema = z.strictObject({
 	id: SeekIdSchema,
-	tag: z.string(),
 	player: ServerUsernameContainerSchema,
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
 	time: TimeControlSchema,

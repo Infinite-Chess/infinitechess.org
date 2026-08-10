@@ -7,10 +7,10 @@
 
 import type { VNode } from 'snabbdom';
 import type { VariantInfo } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { LobbyStateMessage } from '../../../../../shared/clientbound.js';
-import type { Rating, BaseSeek, OutSeek } from '../../../../../shared/domain.js';
+import type { LobbyStateMessage, SeeksMessage } from '../../../../../shared/clientbound.js';
+import type { Rating, BaseSeek, OutSeek, SeekId } from '../../../../../shared/domain.js';
 import type {
-	CreateSeekOptions,
+	CreateSeekMessage,
 	CreateEngineGameMessage,
 } from '../../../../../shared/serverbound.js';
 
@@ -27,8 +27,6 @@ import docutil from '../../util/docutil.js';
 import idleness from '../../util/idleness.js';
 import gamesound from '../../game/misc/gamesound.js';
 import socketsubs from '../../websocket/socketsubs.js';
-import LocalStorage from '../../util/LocalStorage.js';
-import validatorama from '../../util/validatorama.js';
 import socketintents from '../../websocket/socketintents.js';
 import socketmessages from '../../websocket/socketmessages.js';
 import gameSetupModal from './gameSetupModal.js';
@@ -76,7 +74,7 @@ const GRACE_MILLIS = 667;
 // State ----------------------------------------------
 
 /** The ID of our current seek, if we have one. */
-let ourSeekId: string | undefined;
+let ourSeekId: SeekId | undefined;
 /** Live map of all current seeks by id, for fast click-handler lookup. */
 const seekMap = new Map<string, OutSeek>();
 /** Seeks mid grace period, mapped to the timer that ends it. */
@@ -113,29 +111,10 @@ function initLobbyClickHandler(): void {
 		if (!row) return;
 		const seekId = row.getAttribute('data-seek-id')!;
 		if (graceTimers.has(seekId)) return; // Mid grace period
-		const seek = seekMap.get(seekId);
-		if (!seek) return;
-		if (isSeekOurs(seek)) cancel(seekId);
+		if (!seekMap.has(seekId)) return;
+		if (seekId === ourSeekId) cancel(seekId);
 		else accept(seekId);
 	});
-}
-
-/** Generates a fresh 8-char tag and persists it to localStorage for ownership detection. */
-function generateTag(): string {
-	const tag = uuid.generateID_Base62(8);
-	LocalStorage.saveItem('invite-tag', tag);
-	return tag;
-}
-
-/** Returns true if the given seek was created by the current user. */
-function isSeekOurs(seek: OutSeek): boolean {
-	if (validatorama.areWeLoggedIn()) {
-		return (
-			seek.player.type === 'player' && validatorama.getOurUsername() === seek.player.username
-		);
-	}
-	const localTag = LocalStorage.loadItem('invite-tag');
-	return seek.tag === localTag;
 }
 
 /** Applies the full lobby snapshot received the moment we (re)subscribe. */
@@ -143,7 +122,7 @@ function handleLobbyState(state: LobbyStateMessage): void {
 	// In-game status first: the seek intents released after this check it.
 	if (state.ingame) void onInGame(state.ingame.id, state.ingame.navigate);
 	else onOutGame();
-	onSeekListUpdate(state.seekslist);
+	onSeekListUpdate(state);
 	onViewerCountUpdate(state.viewercount);
 }
 
@@ -163,7 +142,7 @@ const trackNewSeeks = (() => {
 		for (const seek of seekList) {
 			newIds.add(seek.id);
 			if (idsInLastList.has(seek.id)) continue;
-			if (isSeekOurs(seek)) {
+			if (seek.id === ourSeekId) {
 				idsToAnimate.add(seek.id);
 				continue;
 			}
@@ -187,14 +166,17 @@ const trackNewSeeks = (() => {
  * @param preserveNewSeekTracker - Skips the new-seek tracker so its memory survives the update,
  * so seeks returning after a reconnect aren't treated as new and replay arrival sounds.
  */
-function onSeekListUpdate(seeks: OutSeek[], preserveNewSeekTracker = false): void {
+function onSeekListUpdate(
+	{ seekslist: seeks, ourseekid }: SeeksMessage,
+	preserveNewSeekTracker = false,
+): void {
 	const previousSeekIds = [...seekMap.keys()];
 	seekMap.clear();
 	for (const seek of seeks) seekMap.set(seek.id, seek);
 	seekPreviewCache.evictRemovedSeeks(new Set(seekMap.keys()));
 
-	const ourSeek = seeks.find((s) => isSeekOurs(s));
-	ourSeekId = ourSeek?.id;
+	// Adopted before anything below reads it — ownership drives the arrival sounds and rendering.
+	ourSeekId = ourseekid;
 
 	const newSeekIds = preserveNewSeekTracker ? new Set<string>() : trackNewSeeks(seeks);
 	if (ourSeekId !== undefined && newSeekIds.has(ourSeekId)) gamesound.playMarimba();
@@ -287,7 +269,7 @@ function hideInGameBanner(): void {
 
 /** Converts a server OutSeek into a client LobbySeek with rendering metadata. */
 function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
-	const isOurs = isSeekOurs(seek);
+	const isOurs = seek.id === ourSeekId;
 	if (seek.variant.kind === 'preset') {
 		const variant: VariantInfo = {
 			group: variantregistry.getVariantGroup(seek.variant.code),
@@ -306,9 +288,8 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 // Creating/Accepting/Canceling Seeks -------------------------------------------
 
 /** Sends a createseek message to the server with the given options. */
-function createSeek(options: CreateSeekOptions): void {
-	const tag = generateTag();
-	socketintents.submit('lobby', 'createseek', { ...options, tag }, () => gameIdWeAreIn === undefined); // prettier-ignore
+function createSeek(options: CreateSeekMessage): void {
+	socketintents.submit('lobby', 'createseek', options, () => gameIdWeAreIn === undefined);
 }
 
 /**
@@ -320,16 +301,13 @@ function createEngineGame(body: CreateEngineGameMessage): void {
 }
 
 /** Sends a cancelseek message for our current seek. */
-function cancel(seekId: string): void {
-	if (ourSeekId === undefined) return;
-	LocalStorage.deleteItem('invite-tag');
-	// Nothing to cancel if the seek is gone by the time we're back in sync. Checked by
-	// presence, not ownership — the tag deleted above is what ownership is derived from.
-	socketintents.submit('lobby', 'cancelseek', seekId, () => seekMap.has(seekId));
+function cancel(seekId: SeekId): void {
+	// Nothing to cancel if it's no longer ours by the time we're back in sync.
+	socketintents.submit('lobby', 'cancelseek', seekId, () => seekId === ourSeekId);
 }
 
 /** Sends an acceptseek message for an opponent's seek. */
-function accept(seekId: string): void {
+function accept(seekId: SeekId): void {
 	socketintents.submit('lobby', 'acceptseek', seekId, () => gameIdWeAreIn === undefined && seekMap.has(seekId)); // prettier-ignore
 }
 
@@ -405,7 +383,7 @@ function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<string>()): voi
  * but preserves the new-seek tracker so a reconnect doesn't replay arrival sounds.
  */
 function clearSeekList(): void {
-	onSeekListUpdate([], true); // Don't clear seek tracker memory
+	onSeekListUpdate({ seekslist: [] }, true); // Don't clear seek tracker memory
 	element_lobbyViewerCount.textContent = '0';
 }
 

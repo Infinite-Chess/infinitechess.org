@@ -6,8 +6,8 @@
  * and broadcasts changes out to the clients.
  */
 
-import type { OutSeek } from '../../../shared/domain.js';
 import type { AuthMemberInfo } from '../../types.js';
+import type { OutSeek, SeekId } from '../../../shared/domain.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { LobbyStateMessage } from '../../../shared/clientbound.js';
 
@@ -73,12 +73,14 @@ function onPublicSeeksChange(): void {
 	broadcastSeeks();
 }
 
-/** Broadcasts a live seek list update to all subbed clients. */
+/** Broadcasts a live seek list update to all subbed clients, each told which seek is theirs. */
 function broadcastSeeks(): void {
-	const seeksList = getSeeksListSafe();
-	const message = { seeksList };
+	const seekslist = getSeeksListSafe();
 	for (const subbedSocket of getLobbySubscribers()) {
-		sendSocketMessage(subbedSocket, 'lobby', 'seekslist', message);
+		sendSocketMessage(subbedSocket, 'lobby', 'seekslist', {
+			seekslist,
+			ourseekid: getUsersSeekId(subbedSocket.metadata.memberInfo),
+		});
 	}
 }
 
@@ -124,7 +126,12 @@ function sendClientLobbyState(ws: CustomWebSocket): void {
 			? { id: gameID, navigate: consumeNavigateNotice(ws.metadata.memberInfo) }
 			: undefined;
 
-	const message: LobbyStateMessage = { seekslist, viewercount, ingame };
+	const message: LobbyStateMessage = {
+		seekslist,
+		ourseekid: getUsersSeekId(ws.metadata.memberInfo),
+		viewercount,
+		ingame,
+	};
 	sendSocketMessage(ws, 'lobby', 'lobbystate', message); // In order: socket, sub, action, value
 }
 
@@ -192,6 +199,14 @@ function deleteSeekByIndex(
 function existingSeekHasID(id: string): boolean {
 	for (const seek of seeks) if (seek.id === id) return true;
 	return false;
+}
+
+/**
+ * Returns the id of the user's open seek, if they have one. A user
+ * holds at most one at a time — creating one replaces any existing.
+ */
+function getUsersSeekId(info: AuthMemberInfo): SeekId | undefined {
+	return seeks.find((seek) => memberInfoEq(info, seek.owner))?.id;
 }
 
 /** Finds an index by ID, and returns an object: `{ seek, index }`, otherwise undefined. */
