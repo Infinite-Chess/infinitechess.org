@@ -31,7 +31,7 @@ const ECHO_TIMEOUT = 5000;
 // 1008 "Unable to identify client IP address"
 // 1008 "User agent is required"  (Automated scanner and prober bots often omit it)
 // 1008 "Authentication needed"  (The client has cookies disabled)
-// 1008 "Logged out"  (Logging out, or deleting the account)
+// 1008 "Logged out"  (Logging out, deleting the account, or resetting the password)
 // 1009 "Too Many Requests"
 // 1009 "Too Many Sockets"
 // 1009 ""  Message exceeded MAX_PAYLOAD_BYTES (see socketServer.ts). The `ws` library
@@ -46,23 +46,18 @@ const ECHO_TIMEOUT = 5000;
 // 1006 ""  Network error, or the server is down
 // 1001 ""  Endpoint going away. (Closed tab without performing cleanup)
 
-// All closure codes defined by the websocket spec:
+// The only closure codes reachable here, and what produces them.
+// The spec defines more (1003, 1010-1013, 1015), but nothing on either side ever sends them.
 
-// 1000: Normal closure.
-// 1001: Endpoint going away.
-// 1002: Protocol error.
-// 1003: Unsupported data.
-// 1005: No status code received (reserved).
-// 1006: Abnormal closure, no further detail available (reserved). This is usually a network interruption, OR the server is down.
-// 1007: Invalid data received.
-// 1008: Policy violation.
-// 1009: Message too big.
-// 1010: Missing extension.
-// 1011: Internal server error.
-// 1012: Service restart.
-// 1013: Try again later.
-// 1014: Bad gateway.
-// 1015: TLS handshake failure (reserved).
+// 1000: Normal closure. Every reason above we close with 1000.
+// 1001: Endpoint going away. The tab closed without running our cleanup.
+// 1002: Protocol error. The `ws` library rejecting a malformed frame.
+// 1006: Abnormal closure. A network interruption, or the server is down.
+//       Reserved — never sent on the wire, only surfaced locally.
+// 1007: Invalid payload data. The `ws` library rejecting invalid UTF-8.
+// 1008: Policy violation. Every reason above we close with 1008.
+// 1009: Message too big. Our request/socket limits, plus the `ws` receiver's maxPayload.
+// 1014: The spec calls this "Bad Gateway", but we reuse it for "No echo heard".
 
 // These are the closure reasons where we will RETAIN their seek for a set amount of time before deleting it by disconnection!
 // We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
