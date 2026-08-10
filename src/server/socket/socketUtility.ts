@@ -51,5 +51,8 @@ export interface CustomWebSocket extends WebSocket {
 		clearafter?: NodeJS.Timeout;
 		/** The timeout ID to cancel the timer that sends a heartbeat ping to verify the client is alive. */
 		heartbeatTimerID?: NodeJS.Timeout;
+		/** The timeout IDs to cancel the timers that close this socket
+		 * if we never hear an echo back for a message we sent it. */
+		echoTimers: { [messageID: number]: NodeJS.Timeout };
 	};
 }

@@ -8,7 +8,7 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 import wsutil from '../../shared/util/wsutil.js';
 
-import { cancelHeartbeatTimer } from './sendSocketMessage.js';
+import { clearPendingState } from './sendSocketMessage.js';
 import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from './socketManager.js';
 
 // Functions ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	// SUBSCRIPTION service! Unsubbing them from their game will start their disconnect claim timer.
 	unsubSocketFromAllSubs(ws, involuntary);
 
-	cancelHeartbeatTimer(ws);
+	clearPendingState(ws);
 }
 
 export { onclose };

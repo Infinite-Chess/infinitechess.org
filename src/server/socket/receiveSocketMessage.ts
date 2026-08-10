@@ -14,9 +14,8 @@ import { logZodError } from '../utility/zodlogger.js';
 import { logReqWebsocketIn } from './wsLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
-import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
-import { rescheduleHeartbeatTimer, sendEcho } from './sendSocketMessage.js';
+import { cancelEchoTimer, rescheduleHeartbeatTimer, sendEcho } from './sendSocketMessage.js';
 
 // Functions ---------------------------------------------------------------------------
 
@@ -40,7 +39,7 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 
 	if (message.route === 'echo') {
 		// Echo, don't log or route.
-		deleteEchoTimerForMessageID(message.contents);
+		cancelEchoTimer(ws, message.contents);
 		return;
 	}
 

@@ -3,6 +3,8 @@
 /**
  * This script sends socket messages,
  * and regularly sends messages by itself to confirm the socket is still connected and responding (we will hear an echo).
+ *
+ * It also owns the echo timers each sent message arms, closing the socket if the echo never arrives.
  */
 
 import type { Exact } from '../../shared/util/wsutil.js';
@@ -19,7 +21,6 @@ import uuid from '../../shared/util/uuid.js';
 import wsutil from '../../shared/util/wsutil.js';
 
 import { logReqWebsocketOut } from './wsLogger.js';
-import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID } from './echoTracker.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -93,11 +94,10 @@ function sendSocketMessage<R extends OutRoute, A extends OutAction<R>, V extends
 	logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
 
 	// Set a timer. At the end, if we have heard no echo, just assume they've disconnected, terminate the socket.
-	const timeout = setTimeout(() => {
+	ws.metadata.echoTimers[id] = setTimeout(() => {
+		delete ws.metadata.echoTimers[id];
 		ws.close(1014, 'No echo heard');
-		deleteEchoTimerForMessageID(id);
 	}, wsutil.ECHO_TIMEOUT); // We pass in an arrow function so it doesn't lose scope of ws.
-	addTimeoutToEchoTimers(id, timeout);
 
 	rescheduleHeartbeatTimer(ws);
 }
@@ -114,6 +114,25 @@ function sendEcho(ws: CustomWebSocket, id: number): void {
 	if (simulatedWebsocketLatencyMillis !== 0) {
 		setTimeout(() => ws.send(stringifiedPayload), simulatedWebsocketLatencyMillis);
 	} else ws.send(stringifiedPayload);
+}
+
+// Echo Timers ----------------------------------------------------------
+
+/**
+ * Cancels the timer that closes the socket when we
+ * don't hear the expected echo for a message we sent it.
+ */
+function cancelEchoTimer(ws: CustomWebSocket, messageID: number): void {
+	// An echo can occasionally arrive after ECHO_TIMEOUT has elapsed — the timer
+	// has already fired and deleted itself, so there's nothing left to cancel.
+	clearTimeout(ws.metadata.echoTimers[messageID]);
+	delete ws.metadata.echoTimers[messageID];
+}
+
+/** Cancels every echo timer still pending on the socket. */
+function cancelAllEchoTimers(ws: CustomWebSocket): void {
+	for (const timeout of Object.values(ws.metadata.echoTimers)) clearTimeout(timeout);
+	ws.metadata.echoTimers = {};
 }
 
 // Heartbeat Ping-Pong ----------------------------------------------------------
@@ -135,4 +154,20 @@ function cancelHeartbeatTimer(ws: CustomWebSocket): void {
 	ws.metadata.heartbeatTimerID = undefined;
 }
 
-export { sendSocketMessage, sendEcho, rescheduleHeartbeatTimer, cancelHeartbeatTimer };
+// Teardown ---------------------------------------------------------------------
+
+/** Clears all timers tied to the socket. Called when it's torn down. */
+function clearPendingState(ws: CustomWebSocket): void {
+	cancelAllEchoTimers(ws);
+	cancelHeartbeatTimer(ws);
+}
+
+// Exports ---------------------------------------------------------------------
+
+export {
+	sendSocketMessage,
+	sendEcho,
+	cancelEchoTimer,
+	rescheduleHeartbeatTimer,
+	clearPendingState,
+};

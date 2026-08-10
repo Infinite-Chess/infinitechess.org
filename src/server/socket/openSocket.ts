@@ -134,6 +134,7 @@ function closeIfInvalidAndAddMetadata(
 		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
 		id: generateUniqueIDForSocket(), // Sets the ws.metadata.id property of the websocket
 		IP,
+		echoTimers: {},
 	};
 
 	// Bind this connection's translations
