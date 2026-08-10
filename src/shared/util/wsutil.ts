@@ -23,29 +23,30 @@ const ECHO_TIMEOUT = 5000;
 
 // Variables ---------------------------------------------------------------------------------
 
-// Possible websocket closure reasons:
+// Every closure code/reason pairing that can occur:
 
-// Server closure reasons:
-// 1000 "Connection expired"  (This can say this even if in dev tools we disable our network)
+// Sent by the server:
+// 1000 "Connection expired"  (Can read this even if we disable our own network in dev tools)
+// 1008 "Origin Error"
 // 1008 "Unable to identify client IP address"
-// 1008 "Authentication needed"
-// 1008 "Logged out"
+// 1008 "User agent is required"  (Automated scanner and prober bots often omit it)
+// 1008 "Authentication needed"  (The client has cookies disabled)
+// 1008 "Logged out"  (Logging out, or deleting the account)
 // 1009 "Too Many Requests"
-// 1009 "" Message exceeded the server's MAX_PAYLOAD_BYTES (see socketServer.ts). The `ws`
-//          library closes it itself, before the payload is buffered, so it sends no reason.
 // 1009 "Too Many Sockets"
-// 1009 "Origin Error"
+// 1009 ""  Message exceeded MAX_PAYLOAD_BYTES (see socketServer.ts). The `ws` library
+//          closes it itself, before the payload is buffered, so it sends no reason.
 // 1014 "No echo heard"  (Client took too long to respond)
 
-// Client closure reasons:
+// Sent by the client:
 // 1000 "Connection closed by client"
 // 1000 "Connection closed by client. Renew."
 
-// Other:
-// 1006 "" Network error
-// 1001 "" Endpoint going away. (Closed tab without performing cleanup)
+// Sent by neither:
+// 1006 ""  Network error, or the server is down
+// 1001 ""  Endpoint going away. (Closed tab without performing cleanup)
 
-// All client-side closure codes:
+// All closure codes defined by the websocket spec:
 
 // 1000: Normal closure.
 // 1001: Endpoint going away.
@@ -62,20 +63,6 @@ const ECHO_TIMEOUT = 5000;
 // 1013: Try again later.
 // 1014: Bad gateway.
 // 1015: TLS handshake failure (reserved).
-
-// Possible closure reasons (pairings of code and reason):
-
-// 1000 "Connection expired"  (This can say this even if in dev tools we disable our network)
-// 1000 "Connection closed by client"
-// 1000 "Connection closed by client. Renew."
-// 1008 "Unable to identify client IP address"
-// 1008 "Authentication needed"
-// 1008 "Logged out" (Happens when we click log out button)
-// 1009 "Too Many Requests"
-// 1009 "" Message exceeded the server's maxPayload
-// 1009 "Too Many Sockets"
-// 1009 "Origin Error"
-// 1014 "No echo heard"  (Client took too long to respond)
 
 // These are the closure reasons where we will RETAIN their seek for a set amount of time before deleting it by disconnection!
 // We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
