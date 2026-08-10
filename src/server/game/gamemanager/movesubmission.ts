@@ -100,6 +100,10 @@ function submitMove(
 	if (!isMoveWithinDistanceCap(moveParsed, servergame.match.timeCreated)) {
 		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog');
+		// Force their move list to match ours, else they keep the rejected move
+		// and resubmit it on every resync, desynced for the rest of the game.
+		gameutility.sendGameStateToColor(servergame, role, true);
+		// Send notifyerror last to override any previous toasts
 		sendSocketMessage(
 			ws,
 			'general',

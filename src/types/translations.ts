@@ -356,17 +356,6 @@ export type TranslationKeys =
 	| 'play.javascript.invites.cancel_invite'
 	| 'play.javascript.invites.start_game'
 	| 'play.javascript.invites.join_existing_active_games'
-	| 'play.javascript.websocket.no_connection'
-	| 'play.javascript.websocket.reconnected'
-	| 'play.javascript.websocket.unable_to_identify_ip'
-	| 'play.javascript.websocket.online_play_disabled'
-	| 'play.javascript.websocket.too_many_requests'
-	| 'play.javascript.websocket.message_too_big'
-	| 'play.javascript.websocket.too_many_sockets'
-	| 'play.javascript.websocket.origin_error'
-	| 'play.javascript.websocket.connection_closed'
-	| 'play.javascript.websocket.please_report_bug'
-	| 'play.javascript.websocket.malformed_message'
 	| 'play.javascript.results.you_checkmate'
 	| 'play.javascript.results.you_time'
 	| 'play.javascript.results.you_resignation'
@@ -888,19 +877,6 @@ export interface TranslationsObject {
 				cancel_invite: string;
 				start_game: string;
 				join_existing_active_games: string;
-			};
-			websocket: {
-				no_connection: string;
-				reconnected: string;
-				unable_to_identify_ip: string;
-				online_play_disabled: string;
-				too_many_requests: string;
-				message_too_big: string;
-				too_many_sockets: string;
-				origin_error: string;
-				connection_closed: string;
-				please_report_bug: string;
-				malformed_message: string;
 			};
 			results: {
 				you_checkmate: string;

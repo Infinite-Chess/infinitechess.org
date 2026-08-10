@@ -46,10 +46,8 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	if (ws === undefined) return; // We will have already closed the socket
 
 	// Rate Limit Here
-	// A false could either mean:
-	// 1. Too many requests
-	// 2. Message too big
-	// In ALL these cases, we are terminating all the IPs sockets for now!
+	// A false means too many requests, in which case
+	// we are terminating all the IP's sockets for now!
 	if (!rateLimitWebSocket(ws)) {
 		// Connection not allowed
 		return terminateAllIPSockets(ws.metadata.IP);
@@ -180,8 +178,16 @@ function onerror(error: Error): void {
 	// Cause (from errLog analysis): client stacks/proxies on flaky networks (mobile, VPNs, webviews)
 	// that echo their own abnormal-disconnect code onto the wire — a compliant browser can never
 	// transmit 1006. Rare, benign, entirely client-side.
-	if ('code' in error && typeof error.code === 'string' && error.code.startsWith('WS_ERR_'))
+	if ('code' in error && typeof error.code === 'string' && error.code.startsWith('WS_ERR_')) {
+		// The exception: a message exceeding MAX_PAYLOAD_BYTES (see socketServer.ts), which
+		// the receiver rejected before buffering it. Nearly always hand-crafted, but an honest
+		// client and extremely determined individual can reach it too — a move token only gets
+		// this big after ~8 hours of nonstop max-rate zooming out on mobile, so it's worth
+		// knowing if it ever happens.
+		if (error.code === 'WS_ERR_UNSUPPORTED_MESSAGE_LENGTH')
+			logEvents('Client sent too big a websocket message.', 'hackLog');
 		return;
+	}
 
 	const errText = `An error occurred in a websocket: ${error.stack}`;
 	logEventsAndPrint(errText, 'errLog');

@@ -31,7 +31,8 @@ const ECHO_TIMEOUT = 5000;
 // 1008 "Authentication needed"
 // 1008 "Logged out"
 // 1009 "Too Many Requests"
-// 1009 "Message Too Big"
+// 1009 "" Message exceeded the server's MAX_PAYLOAD_BYTES (see socketServer.ts). The `ws`
+//          library closes it itself, before the payload is buffered, so it sends no reason.
 // 1009 "Too Many Sockets"
 // 1009 "Origin Error"
 // 1014 "No echo heard"  (Client took too long to respond)
@@ -71,7 +72,7 @@ const ECHO_TIMEOUT = 5000;
 // 1008 "Authentication needed"
 // 1008 "Logged out" (Happens when we click log out button)
 // 1009 "Too Many Requests"
-// 1009 "Message Too Big"
+// 1009 "" Message exceeded the server's maxPayload
 // 1009 "Too Many Sockets"
 // 1009 "Origin Error"
 // 1014 "No echo heard"  (Client took too long to respond)
@@ -83,7 +84,6 @@ const ECHO_TIMEOUT = 5000;
 const involuntaryClosureCodes: number[] = [1006];
 const involuntaryClosureReasons: string[] = [
 	'Connection expired',
-	'Message Too Big',
 	'Too Many Sockets',
 	'No echo heard',
 	'Connection closed by client. Renew.',

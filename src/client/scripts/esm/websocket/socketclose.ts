@@ -21,8 +21,6 @@ import socketmessages from './socketmessages.js';
 
 /** Time before attempting resub after too many requests. */
 const timeToResubAfterTooManyRequestsMillis = 10000;
-/** Time before attempting resub after message too big. */
-const timeToResubAfterMessageTooBigMillis = 5000;
 
 // Variables -------------------------------------------------------------------
 
@@ -92,10 +90,6 @@ function onclose(event: CloseEvent): void {
 		case 'Too Many Requests':
 			console.error('Too many requests when establishing socket.');
 			enterTimeout(timeToResubAfterTooManyRequestsMillis);
-			break;
-		case 'Message Too Big':
-			console.error('Message too big when establishing socket.');
-			enterTimeout(timeToResubAfterMessageTooBigMillis);
 			break;
 		case 'Too Many Sockets':
 			console.error('Too many sockets when establishing socket.');

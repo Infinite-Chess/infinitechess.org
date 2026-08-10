@@ -18,36 +18,17 @@ import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
 import { rescheduleHeartbeatTimer, sendEcho } from './sendSocketMessage.js';
 
-// Constants ---------------------------------------------------------------------------
-
-/**
- * The maximum size of an incoming websocket message, in bytes.
- * Above this will be rejected, and an error sent to the client.
- *
- * DIRECTLY CONTROLS THE maximum distance players can move in online games!
- * 500 KB allows moves up to 1e100000 squares away, with some padding.
- * On mobile it would take 6 hours of zooming out at
- * MAXIMUM speed to reach that distance, without rest.
- * It would take WAYYYY longer on desktop!
- */
-const maxWebsocketMessageSizeBytes = 500_000; // 500 KB
-
 // Functions ---------------------------------------------------------------------------
 
 /**
  * Callback function that is executed whenever we receive an incoming websocket message.
  * Sends an echo (unless this message itself **is** an echo), rate limits,
  * logs the message, then routes the message where it needs to go.
+ *
+ * Oversized messages never reach here — the `ws` receiver rejects anything
+ * over MAX_PAYLOAD_BYTES (see socketServer.ts) before it's ever buffered.
  */
 function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
-	// Test if the message is too big. People could DDOS this way
-	// THIS MAY NOT WORK if the bytes get read before we reach this part of the code, it could still DDOS us before we reject them.
-	if (Buffer.byteLength(rawMessage) > maxWebsocketMessageSizeBytes) {
-		logEvents(`Client sent too big a websocket message.`, 'hackLog');
-		ws.close(1009, 'Message Too Big');
-		return;
-	}
-
 	const messageStr = rawMessage.toString('utf8');
 	const message = parseAndValidateMessage(messageStr);
 
