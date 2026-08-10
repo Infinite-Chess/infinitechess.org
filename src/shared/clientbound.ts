@@ -223,8 +223,11 @@ const ClientboundGameSchema = z.discriminatedUnion('action', [
 
 /** Every clientbound message, envelope included. What the client validates against. */
 export const ClientboundSchema = z.discriminatedUnion('route', [
-	// An acknowledgement of a message we sent. Carries only the id being acknowledged.
+	// Receipts for a message we sent, carrying only the id being receipted. `echo` says it
+	// arrived (and is what the echo timer waits on); `ack` says it has been handled, and
+	// comes only for a message we flagged `needsack`. Neither is echoed back.
 	z.strictObject({ route: z.literal('echo'), contents: z.int() }),
+	z.strictObject({ route: z.literal('ack'), contents: z.int() }),
 	// Routed messages
 	z.strictObject({
 		id: z.int(),

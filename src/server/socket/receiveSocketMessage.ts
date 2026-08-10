@@ -15,7 +15,7 @@ import { logReqWebsocketIn } from './wsLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
 import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
-import { cancelEchoTimer, rescheduleHeartbeatTimer, sendEcho } from './sendSocketMessage.js';
+import { cancelEchoTimer, rescheduleHeartbeatTimer, sendReceipt } from './sendSocketMessage.js';
 
 // Functions ---------------------------------------------------------------------------
 
@@ -27,7 +27,7 @@ import { cancelEchoTimer, rescheduleHeartbeatTimer, sendEcho } from './sendSocke
  * Oversized messages never reach here — the `ws` receiver rejects anything
  * over MAX_PAYLOAD_BYTES (see socketServer.ts) before it's ever buffered.
  */
-function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
+async function onmessage(ws: CustomWebSocket, rawMessage: Buffer): Promise<void> {
 	const messageStr = rawMessage.toString('utf8');
 	const message = parseAndValidateMessage(messageStr);
 
@@ -46,11 +46,18 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 	if (!logAndRateLimitMessage(ws, messageStr)) return; // Rate limited; socket already closed.
 
 	// Send our own echo
-	sendEcho(ws, message.id);
+	sendReceipt(ws, 'echo', message.id);
 	// Their message is evidence the connection is alive
 	rescheduleHeartbeatTimer(ws);
 	// console.log('Received message: ' + rawMessage);
-	routeIncomingSocketMessage(ws, message);
+	try {
+		await routeIncomingSocketMessage(ws, message);
+	} finally {
+		// Acked even if the handler threw. The client releases its lock on this action when
+		// the ack lands, and an action stuck outstanding forever is worse than one acked
+		// after failing — the ack promises the message was handled, not that it succeeded.
+		if (message.needsack) sendReceipt(ws, 'ack', message.id);
+	}
 }
 
 /**

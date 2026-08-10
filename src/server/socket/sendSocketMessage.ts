@@ -103,14 +103,15 @@ function sendSocketMessage<R extends OutRoute, A extends OutAction<R>, V extends
 }
 
 /**
- * Acknowledges a message the client sent us.
- * Echoes are never echoed back, so they skip the id, echo timer,
- * and out-logging {@link sendSocketMessage} attaches.
+ * Sends a bare receipt for a message the client sent us: an `echo` the moment it arrives,
+ * proving the socket is alive, and an `ack` once we've finished handling it, proving the
+ * action landed. Receipts are never echoed back, so they skip the id, echo timer, and
+ * out-logging {@link sendSocketMessage} attaches.
  */
-function sendEcho(ws: CustomWebSocket, id: number): void {
+function sendReceipt(ws: CustomWebSocket, route: 'echo' | 'ack', id: number): void {
 	if (ws.readyState !== WebSocket.OPEN) return; // Sends on a CLOSING/CLOSED socket are silently dropped by ws.
 
-	const stringifiedPayload = JSON.stringify({ route: 'echo', contents: id });
+	const stringifiedPayload = JSON.stringify({ route, contents: id });
 	if (simulatedWebsocketLatencyMillis !== 0) {
 		setTimeout(() => ws.send(stringifiedPayload), simulatedWebsocketLatencyMillis);
 	} else ws.send(stringifiedPayload);
@@ -166,7 +167,7 @@ function clearPendingState(ws: CustomWebSocket): void {
 
 export {
 	sendSocketMessage,
-	sendEcho,
+	sendReceipt,
 	cancelEchoTimer,
 	rescheduleHeartbeatTimer,
 	clearPendingState,

@@ -23,7 +23,7 @@ import { SocketBus } from './SocketBus.js';
 
 // Types -----------------------------------------------------------------------
 
-type MessageID = number;
+export type MessageID = number;
 
 /** Every message we may send, keyed by the route it goes out on. */
 type OutMessages = {
@@ -181,12 +181,15 @@ function onHeartbeatTimeout(): void {
  * @param route - Where the server needs to forward this to.
  * @param action - What action to take within the route.
  * @param value - The contents of the message. `undefined` for actions that carry none.
+ * @param needsack - Asks the server to ack this message once it has handled it.
+ * @returns The id the message went out under, or undefined if it couldn't be sent.
  */
 async function send<R extends OutRoute, A extends OutAction<R>, V extends OutValue<R, A>>(
 	route: R,
 	action: A,
 	value: Exact<V, OutValue<R, A>>,
-): Promise<void> {
+	needsack?: true,
+): Promise<MessageID | undefined> {
 	const socket = await acquireSocket();
 	if (!socket) return;
 
@@ -194,6 +197,7 @@ async function send<R extends OutRoute, A extends OutAction<R>, V extends OutVal
 		route,
 		contents: { action, value },
 		id: uuid.generateNumbID(10),
+		needsack,
 	};
 
 	const message = JSON.stringify(payload);
@@ -206,6 +210,7 @@ async function send<R extends OutRoute, A extends OutAction<R>, V extends OutVal
 	};
 
 	transmit(socket, message);
+	return payload.id;
 }
 
 /**

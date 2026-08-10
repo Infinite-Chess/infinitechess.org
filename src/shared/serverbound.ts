@@ -126,19 +126,36 @@ const ServerboundGameSchema = z.discriminatedUnion('action', [
 
 // Envelope --------------------------------------------------------------------
 
+/**
+ * The envelope fields common to every routed message.
+ *
+ * `needsack` asks the server to send an `ack` back once this message has been handled, so the
+ * client knows the action is no longer outstanding. Set only on the user actions the client
+ * locks; omitted (never `false`) on everything else, so the two states have one encoding each.
+ */
+const RoutedEnvelope = { id: z.int(), needsack: z.literal(true).optional() };
+
 /** A routed (non-echo) message, wrapped in the envelope it travels in. */
 export type ServerboundRoutedMessage = z.infer<typeof ServerboundRoutedSchema>;
 const ServerboundRoutedSchema = z.discriminatedUnion('route', [
 	z.strictObject({
-		id: z.int(),
+		...RoutedEnvelope,
 		route: z.literal('general'),
 		contents: ServerboundGeneralSchema,
 	}),
-	z.strictObject({ id: z.int(), route: z.literal('lobby'), contents: ServerboundLobbySchema }),
-	z.strictObject({ id: z.int(), route: z.literal('game'), contents: ServerboundGameSchema }),
+	z.strictObject({
+		...RoutedEnvelope,
+		route: z.literal('lobby'),
+		contents: ServerboundLobbySchema,
+	}),
+	z.strictObject({
+		...RoutedEnvelope,
+		route: z.literal('game'),
+		contents: ServerboundGameSchema,
+	}),
 ]);
 
-/** An acknowledgement of a message we sent. Carries only the id being acknowledged. */
+/** The client's echo of a message we sent them. Carries only the id being echoed. */
 const EchoSchema = z.strictObject({
 	route: z.literal('echo'),
 	contents: z.int(),

@@ -15,6 +15,7 @@ import { ClientboundSchema } from '../../../../shared/clientbound.js';
 import toast from '../components/toast.js';
 import socketman from './socketman.js';
 import { SocketBus } from './SocketBus.js';
+import socketintents from './socketintents.js';
 import socketmessages from './socketmessages.js';
 
 // Routing ---------------------------------------------------------------------
@@ -59,11 +60,14 @@ function onmessage(serverMessage: MessageEvent): void {
 		} else console.log(`Incoming message: ${JSON.stringify(message)}`);
 	}
 
+	// Receipts are never echoed back.
 	if (message.route === 'echo') return socketmessages.cancelTimerOfMessageID(message.contents);
+	// The action we asked about is no longer outstanding.
+	if (message.route === 'ack') return socketintents.onAck(message.contents);
 
-	// Not an echo...
+	// Not a receipt...
 
-	// Send our echo — we always echo every message EXCEPT echos themselves
+	// Send our echo — we always echo every message EXCEPT receipts themselves
 	// TEMPORARY. TO HELP DEBUG why zod errors are happening all the time on the server!
 	if (message.id === undefined) {
 		console.error(
