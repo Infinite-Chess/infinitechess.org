@@ -15,7 +15,6 @@ import type {
 	ServerUsernameContainer,
 } from '../../../shared/domain.js';
 
-import jsutil from '../../../shared/util/jsutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 
 // Type Definitions
@@ -30,10 +29,12 @@ export interface AuthSeek extends BaseSeek {
 //-------------------------------------------------------------------------------------------
 
 /**
- * Removes sensitive data such as their browser-id.
- * Returns a deep copy of the original seek.
- * Also strips ICN content from the variant so the full position text is not
- * broadcast to every lobby viewer.
+ * Projects a seek into the form broadcast to lobby viewers, dropping the owner's
+ * sensitive data such as their browser-id, and stripping ICN content from
+ * the variant so the full position text isn't sent to every lobby viewer.
+ *
+ * The result is serialized straight to the wire and never mutated, so
+ * nested values are shared with the source seek instead of copied.
  */
 function makeSeekSafe(seek: AuthSeek): OutSeek {
 	const variant: OutSeekVariant =
@@ -41,22 +42,13 @@ function makeSeekSafe(seek: AuthSeek): OutSeek {
 
 	return {
 		id: seek.id,
-		player: jsutil.deepCopyObject(seek.player),
+		player: seek.player,
 		variant,
 		time: seek.time,
 		color: seek.color,
 		mode: seek.mode,
-		modifiers: jsutil.deepCopyObject(seek.modifiers),
+		modifiers: seek.modifiers,
 	};
-}
-
-/**
- * Makes a deep copy of provided seek, and
- * removes sensitive data such as their browser-id.
- */
-function safelyCopySeek(seek: AuthSeek): OutSeek {
-	const seekDeepCopy = jsutil.deepCopyObject(seek);
-	return makeSeekSafe(seekDeepCopy);
 }
 
 /**
@@ -76,4 +68,4 @@ function buildServerUsernameContainer(
 
 //-------------------------------------------------------------------------------------------
 
-export { safelyCopySeek, buildServerUsernameContainer };
+export { makeSeekSafe, buildServerUsernameContainer };

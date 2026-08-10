@@ -13,7 +13,7 @@ import type { LobbyStateMessage } from '../../../shared/clientbound.js';
 
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { safelyCopySeek, AuthSeek } from './seekutility.js';
+import { makeSeekSafe, AuthSeek } from './seekutility.js';
 import { consumeNavigateNotice, getIDOfGamePlayerIsIn } from '../gamemanager/activeplayers.js';
 import {
 	getLobbySubscribers,
@@ -54,13 +54,7 @@ const timersBrowser: Record<string, ReturnType<typeof setTimeout>> = {};
 
 /** Gets the list of seeks with sensitive information REMOVED (such as browser-ids) */
 function getSeeksListSafe(): OutSeek[] {
-	const deepCopiedSeeks: OutSeek[] = [];
-
-	for (const seek of seeks) {
-		deepCopiedSeeks.push(safelyCopySeek(seek)); // Remove sensitive information
-	}
-
-	return deepCopiedSeeks;
+	return seeks.map((seek) => makeSeekSafe(seek));
 }
 
 // When a PUBLIC seek is added or removed..
