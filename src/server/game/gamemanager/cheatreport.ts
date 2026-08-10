@@ -15,8 +15,8 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamelogger from './gamelogger.js';
 import gameutility from './gameutility.js';
 import { logEvents } from '../../middleware/logEvents.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { applyConclusion, freeGame } from './gamemanager.js';
-import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
  *
@@ -87,17 +87,16 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	logEvents(errText, 'hackLog');
 
 	// Notify all players a cheat was detected
-	for (const playerStr in servergame.match.playerData) {
-		const player: Player = Number(playerStr) as Player;
-		const isSuspectedCheater = player === opponentColor;
-		if (isSuspectedCheater) {
-			gameutility.sendMessageToColor(servergame.match, player, 'general', 'notifyerror', 'server.javascript.ws-you_cheated'); // prettier-ignore
+	for (const [colorStr, { socket: ws }] of Object.entries(servergame.match.playerData)) {
+		if (!ws) continue; // Not connected, can't send message
+		if (Number(colorStr) === opponentColor) {
+			sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.game.you_cheated);
 		} else {
-			gameutility.sendMessageToColor(servergame.match, player, 'general', 'notify', 'server.javascript.ws-opponent_cheated'); // prettier-ignore
+			sendSocketMessage(ws, 'general', 'notify', ws.t.responses.game.opponent_cheated);
 		}
 	}
 	for (const ws of servergame.spectators) {
-		sendNotify(ws, 'server.javascript.ws-cheat_detected');
+		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.game.cheat_detected);
 	}
 
 	concludeReportedGame(servergame, { condition: 'aborted' }, colorThatPlayedPerpetratingMove);

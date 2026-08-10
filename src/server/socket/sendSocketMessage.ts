@@ -5,14 +5,11 @@
  * and regularly sends messages by itself to confirm the socket is still connected and responding (we will hear an echo).
  */
 
-import type { TranslationKeys } from '../../types/translations.js';
-
 import { WebSocket } from 'ws';
 
 import uuid from '../../shared/util/uuid.js';
 import wsutil from '../../shared/util/wsutil.js';
 
-import { getTranslation } from '../utility/translate.js';
 import { logReqWebsocketOut } from './wsLogger.js';
 import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID } from './echoTracker.js';
 
@@ -111,30 +108,6 @@ function sendSocketMessage(
 	}
 }
 
-/**
- * Sends a notification message to the client through the WebSocket connection, to be displayed on-screen.
- * @param ws - The WebSocket connection object.
- * @param translationCode - The code corresponding to the message that needs to be retrieved for language-specific translation. For example, `"server.javascript.ws-already_in_game"`.
- */
-function sendNotify(ws: CustomWebSocket, translationCode: TranslationKeys): void {
-	const text = getTranslation(translationCode, ws.metadata.cookies.lang);
-	sendSocketMessage(ws, 'general', 'notify', text);
-}
-
-/**
- * Sends a message to the client through the websocket, to be displayed on-screen as an ERROR.
- * @param ws - The socket
- * @param translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
- */
-function sendNotifyError(ws: CustomWebSocket, translationCode: TranslationKeys): void {
-	sendSocketMessage(
-		ws,
-		'general',
-		'notifyerror',
-		getTranslation(translationCode, ws.metadata.cookies.lang),
-	);
-}
-
 // Heartbeat Ping-Pong ----------------------------------------------------------
 
 /**
@@ -154,10 +127,4 @@ function cancelHeartbeatTimer(ws: CustomWebSocket): void {
 	ws.metadata.heartbeatTimerID = undefined;
 }
 
-export {
-	sendSocketMessage,
-	sendNotify,
-	sendNotifyError,
-	rescheduleHeartbeatTimer,
-	cancelHeartbeatTimer,
-};
+export { sendSocketMessage, rescheduleHeartbeatTimer, cancelHeartbeatTimer };

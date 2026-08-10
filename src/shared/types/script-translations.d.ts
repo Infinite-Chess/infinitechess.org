@@ -105,6 +105,11 @@ export interface ScriptTranslations {
 			cloud_requires_sign_in: string;
 			cloud_not_found: string;
 		};
+		game: {
+			you_cheated: string;
+			opponent_cheated: string;
+			cheat_detected: string;
+		};
 		editor_saves: {
 			must_be_signed_in: string;
 			position_not_found: string;

@@ -57,13 +57,13 @@ import tconfig from '../../config/translationconfig.js';
 import liveGameValues from './liveGameValues.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
 import { cancelDisconnectTimer } from './disconnect.js';
 import { consumeNavigateNotice } from './activeplayers.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { buildServerUsernameContainer } from '../seeksmanager/seekutility.js';
-import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
 
 // Constants ------------------------------------------------------------------------------------
@@ -763,8 +763,8 @@ function getSocketRoleInGame(servergame: ServerGame, ws: CustomWebSocket): Playe
  * @param match - The game
  * @param role - The color of the player in this game to send the message to
  * @param sub - Where this message should be routed to, client side.
- * @param action - The action the client should perform. If sub is "general" and action is "notify" or "notifyerror", then this needs to be the key of the message in the TOML, and we will auto-translate it!
- * @param value - The value to send to the client.
+ * @param action - The action the client should perform.
+ * @param value - The value to send to the client. Already-translated text for notify/notifyerror.
  */
 function sendMessageToColor(
 	match: MatchInfo,
@@ -775,11 +775,7 @@ function sendMessageToColor(
 ): void {
 	const ws = match.playerData[role]?.socket;
 	if (!ws) return; // They are not connected, can't send message
-	if (sub === 'general') {
-		if (action === 'notify') return sendNotify(ws, value); // The value needs translating
-		if (action === 'notifyerror') return sendNotifyError(ws, value); // The value needs translating
-	}
-	sendSocketMessage(ws, sub, action, value); // Value doesn't need translating, send normally.
+	sendSocketMessage(ws, sub, action, value);
 }
 
 /**
