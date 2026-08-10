@@ -22,7 +22,7 @@ import {
 	deleteSeekByIndex,
 	deleteUsersExistingSeek,
 	findSocketFromOwner,
-	onPublicSeeksChange,
+	broadcastSeeks,
 	broadcastViewerCount,
 } from './lobbymanager.js';
 
@@ -32,7 +32,6 @@ import {
  * @param messageContents - The incoming socket message containing the seek id
  */
 function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
-	// { id, isPrivate }
 	if (isSocketInAnActiveGame(ws)) {
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 	}
@@ -66,11 +65,11 @@ function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	// Accept the seek!
 
-	let hadPublicSeek = false;
+	let deletedAnySeek = false;
 	// Delete the seek accepted.
-	if (deleteSeekByIndex(seek, index, { dontBroadcast: true })) hadPublicSeek = true;
+	if (deleteSeekByIndex(seek, index, { dontBroadcast: true })) deletedAnySeek = true;
 	// Delete their existing seeks
-	if (deleteUsersExistingSeek(user, { broadCastNewSeeks: false })) hadPublicSeek = true;
+	if (deleteUsersExistingSeek(user, { broadCastNewSeeks: false })) deletedAnySeek = true;
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 
@@ -118,9 +117,9 @@ function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 	removeSocketFromLobbySubs(player2Socket);
 	broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
 
-	// Broadcast the seeks list change after creating the game,
-	// because the new game ups the game count.
-	if (hadPublicSeek) onPublicSeeksChange(); // Broadcast to all seeks list subscribers!
+	// Broadcast the seeks list change after creating
+	// the game, because the new game ups the game count.
+	if (deletedAnySeek) broadcastSeeks();
 }
 
 export { acceptSeek };

@@ -57,17 +57,10 @@ function getSeeksListSafe(): OutSeek[] {
 	return seeks.map((seek) => makeSeekSafe(seek));
 }
 
-// When a PUBLIC seek is added or removed..
-
 /**
- * Call when an seek is added or deleted.
+ * Broadcasts a live seek list update to all subbed clients, each told which seek is theirs.
+ * Call whenever a seek is added or deleted.
  */
-function onPublicSeeksChange(): void {
-	// The message that this broadcast is the reply to
-	broadcastSeeks();
-}
-
-/** Broadcasts a live seek list update to all subbed clients, each told which seek is theirs. */
 function broadcastSeeks(): void {
 	const seekslist = getSeeksListSafe();
 	for (const subbedSocket of getLobbySubscribers()) {
@@ -150,7 +143,7 @@ function broadcastViewerCount(skipWs?: CustomWebSocket): void {
 function addSeek(seek: AuthSeek): void {
 	seeks.push(seek);
 
-	onPublicSeeksChange();
+	broadcastSeeks();
 
 	if (printNewSeekCreationsAndDeletions)
 		console.log(`Created seek for user ${JSON.stringify(seek.owner)}`);
@@ -177,7 +170,7 @@ function deleteSeekByIndex(
 	}
 	seeks.splice(index, 1); // Delete the seek
 
-	if (!dontBroadcast) onPublicSeeksChange();
+	if (!dontBroadcast) broadcastSeeks();
 
 	if (printNewSeekCreationsAndDeletions)
 		console.log(`Deleted seek for user ${JSON.stringify(seek.owner)}`);
@@ -321,7 +314,7 @@ function deleteUsersExistingSeek(info: AuthMemberInfo, { broadCastNewSeeks = tru
 			);
 	}
 
-	if (deletedSeek && broadCastNewSeeks) onPublicSeeksChange(); // Broadcast the change if an seek was deleted
+	if (deletedSeek && broadCastNewSeeks) broadcastSeeks(); // Broadcast the change if an seek was deleted
 	return deletedSeek;
 }
 
@@ -338,5 +331,5 @@ export {
 	deleteUsersExistingSeek,
 	findSocketFromOwner,
 	broadcastMemberInGameStatus,
-	onPublicSeeksChange,
+	broadcastSeeks,
 };
