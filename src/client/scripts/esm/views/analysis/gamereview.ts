@@ -87,8 +87,16 @@ interface ReviewSummary {
 	depth: number;
 }
 
-/** Where the review stands. Only 'idle' allows a new one to start. */
-type ReviewStatus = 'idle' | 'running' | 'done' | 'failed';
+/**
+ * Where the review stands. Only 'idle' allows a new one to start, and a failed review returns
+ * there at once so it can be — which is why no failed state is reachable here.
+ */
+type ReviewStatus = 'idle' | 'running' | 'done';
+/**
+ * How a review ended. 'unavailable' separates an engine that never loaded from 'failed',
+ * where workers ran but couldn't finish the positions — only the latter is worth retrying.
+ */
+export type ReviewOutcome = 'done' | 'failed' | 'unavailable';
 
 /** The events consumers can subscribe to, and what each hands them. */
 interface ReviewListeners {
@@ -96,8 +104,8 @@ interface ReviewListeners {
 	progress: () => void;
 	/** Fired when a move's classification resolves, in ply order. */
 	classified: (review: MoveReview) => void;
-	/** Fired once every move is classified (or the review failed/was cancelled). */
-	finished: () => void;
+	/** Fired once every move is classified, or the review ended without getting there. */
+	finished: (outcome: ReviewOutcome) => void;
 }
 
 /** Persisted engine output. Classifications are deliberately recomputed on restore. */
@@ -121,6 +129,8 @@ interface ReviewWorkItem {
 /** A pooled engine worker and every piece of state scoped to its lifetime. */
 interface ReviewWorker {
 	worker: Worker;
+	/** Whether it has posted 'ready'. A fault before that means the engine itself won't load. */
+	ready: boolean;
 	/** Remaining work held back for this worker, so adjacent positions share its warm TT. */
 	chunk: ReviewWorkItem[];
 	/** The work item it is currently evaluating; undefined = idle. */
@@ -474,7 +484,7 @@ function restoreCachedReview(): boolean {
 	classifyReadyMoves();
 	status = 'done';
 	notifyProgress();
-	for (const listener of listeners.finished) listener();
+	for (const listener of listeners.finished) listener('done');
 	return true;
 }
 
@@ -487,7 +497,7 @@ function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 	if (raw === undefined) return undefined;
 	const parsed = CachedGameReviewSchema.safeParse(raw);
 	if (!parsed.success) {
-		console.warn('[Game Review] Could not parse the local review cache:', parsed.error);
+		console.warn('[game review] Could not parse the local review cache:', parsed.error);
 		return undefined;
 	}
 	const cached = parsed.data;
@@ -500,7 +510,7 @@ function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 		// the other per-position arrays, which every consumer indexes as parallel.
 		cached.results.length !== mainlineNodes.length + 1
 	) {
-		console.warn('[Game Review] Local review cache is incompatible with the current game or engine.'); // prettier-ignore
+		console.warn('[game review] Local review cache is incompatible with the current game or engine.'); // prettier-ignore
 		return undefined;
 	}
 
@@ -520,7 +530,7 @@ function persistCompletedReview(): void {
 	try {
 		LocalStorage.saveItem(key, cached, REVIEW_CACHE_EXPIRY_MILLIS);
 	} catch (error) {
-		console.warn('[Game Review] Could not save the local review cache:', error);
+		console.warn('[game review] Could not save the local review cache:', error);
 	}
 }
 
@@ -536,11 +546,11 @@ function spawnWorker(): void {
 	if (status !== 'running') return;
 
 	const worker = new Worker(window.analysisPageData.workerUrl, { type: 'module' });
-	const entry: ReviewWorker = { worker, chunk: [] };
+	const entry: ReviewWorker = { worker, ready: false, chunk: [] };
 	workers.push(entry);
 	worker.onmessage = (e: MessageEvent<AnalysisResponse>) => handleWorkerMessage(entry, e.data);
 	worker.onerror = (e: ErrorEvent) => {
-		console.error(`[Game Review] Worker crashed: ${e.message || '(no message)'}`);
+		console.error(`[game review] Worker crashed: ${e.message || '(no message)'}`);
 		handleWorkerFault(entry);
 	};
 	// No `threads`: review workers search single-threaded — parallelism is across positions.
@@ -563,6 +573,7 @@ function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 	if (status !== 'running') return;
 	switch (msg.type) {
 		case 'ready':
+			entry.ready = true;
 			dispatchNext(entry);
 			break;
 		case 'sharedmem':
@@ -588,8 +599,9 @@ function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 }
 
 /**
- * Handles a crashed/failed worker: requeues its position (skipping it after
- * {@link MAX_POSITION_ATTEMPTS}) and respawns a replacement with fresh wasm.
+ * Handles a crashed/failed worker: aborts the whole review when the engine never loaded, else
+ * requeues its position (skipping it after {@link MAX_POSITION_ATTEMPTS}) and respawns a
+ * replacement with fresh wasm.
  */
 function handleWorkerFault(entry: ReviewWorker): void {
 	const { assignment, chunk } = entry;
@@ -601,6 +613,11 @@ function handleWorkerFault(entry: ReviewWorker): void {
 	entry.worker.terminate();
 	workers = workers.filter((w) => w !== entry);
 	if (status !== 'running') return;
+
+	// It faulted before going ready, so it was never dispatched to and holds no work: the engine
+	// itself can't load. Every worker pulls the same URL, so respawning only loops on the same
+	// failure — nothing here consumes a position's attempts, since none was ever attempted.
+	if (!entry.ready) return failReview('unavailable');
 
 	if (assignment !== undefined) {
 		if (
@@ -620,14 +637,17 @@ function handleWorkerFault(entry: ReviewWorker): void {
 		// Positions still remain: replace the dead worker to keep the pool full — repeated
 		// faults burn through the per-position attempts, so this always terminates.
 		spawnWorker();
-	} else if (workers.length === 0 && evaluatedCount < results.length) failReview();
+	} else if (workers.length === 0 && evaluatedCount < results.length) failReview('failed');
 }
 
-function failReview(): void {
-	terminateWorkers();
-	status = 'failed';
-	notifyProgress();
-	for (const listener of listeners.finished) listener();
+/**
+ * Ends the review without completing it. Returns straight to 'idle' (disposing the pool) rather
+ * than parking in a failed state, so the user can start a fresh one — the listeners are told why
+ * it ended by argument, not by reading the status back.
+ */
+function failReview(outcome: 'failed' | 'unavailable'): void {
+	resetState();
+	for (const listener of listeners.finished) listener(outcome);
 }
 
 /** Whether position `index` is itself within the engine's safe coordinate range (evaluable). */
@@ -919,7 +939,7 @@ function finishReview(): void {
 	terminateWorkers();
 	status = 'done';
 	notifyProgress();
-	for (const listener of listeners.finished) listener();
+	for (const listener of listeners.finished) listener('done');
 	persistCompletedReview();
 }
 

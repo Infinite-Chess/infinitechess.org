@@ -16,7 +16,7 @@
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
-import type { LapseKey, MoveReview } from '../gamereview.js';
+import type { LapseKey, MoveReview, ReviewOutcome } from '../gamereview.js';
 
 import math from '../../../../../../shared/util/math/math.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -109,24 +109,16 @@ function revealButtonIfReviewable(): void {
 }
 
 /**
- * Closes the outgoing game's review UI, so nothing of it can outlive the
- * game it describes. gamereview discards its own state on the same event.
+ * Undoes {@link openReview}'s takeover of the panel, leaving the loaded game itself untouched
+ * — so a review that failed can be started over from the button.
  */
-function closeReview(): void {
-	// Hidden here as well as on load: a load is async, and until the next one lands the button
-	// would otherwise still offer a review of the game that just went away.
-	element_GameReviewBtn.classList.add('hidden');
-	pristineMainline = '';
-
+function hideReviewUI(): void {
 	element_Stats.classList.add('hidden');
 	element_Progress.classList.add('hidden');
 	element_Graph.classList.add('hidden');
 	element_PhaseMarkers.replaceChildren();
 	hoveredPosition = undefined; // Else a phantom hover dot draws on the next review's first frame.
 	element_GraphTooltip.classList.add('hidden');
-	// Blanked, not reset to the fallback — the next game's participants aren't known yet.
-	setPlayerName(p.WHITE, '');
-	setPlayerName(p.BLACK, '');
 
 	// Hand the borrowed participant rows back to the meta panel (see revealStats).
 	const metaPlayers = document.querySelector('.meta-players');
@@ -134,6 +126,21 @@ function closeReview(): void {
 	metaPlayers.append(...element_Stats.querySelectorAll('.meta-player'));
 	metaPlayers.classList.remove('hidden');
 	document.querySelector('.game-meta')!.classList.remove('review');
+}
+
+/**
+ * Closes the outgoing game's review UI, so nothing of it can outlive the
+ * game it describes. gamereview discards its own state on the same event.
+ */
+function closeReview(): void {
+	hideReviewUI();
+	// Hidden here as well as on load: a load is async, and until the next one lands the button
+	// would otherwise still offer a review of the game that just went away.
+	element_GameReviewBtn.classList.add('hidden');
+	pristineMainline = '';
+	// Blanked, not reset to the fallback — the next game's participants aren't known yet.
+	setPlayerName(p.WHITE, '');
+	setPlayerName(p.BLACK, '');
 }
 
 /** Serializes a move list to bar-joined tokens, for cheap comparison. */
@@ -201,16 +208,19 @@ function updateProgress(): void {
 	element_ProgressText.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total} · depth ${depth}`;
 }
 
-function onReviewFinished(): void {
-	const status = gamereview.getStatus();
-	element_Progress.classList.add('hidden');
-
-	if (status === 'done') {
+function onReviewFinished(outcome: ReviewOutcome): void {
+	if (outcome === 'done') {
+		element_Progress.classList.add('hidden'); // Swapped out for the eval graph.
 		drawGraph();
 		updateStats();
-	} else if (status === 'failed') {
-		toast.show('Game review failed. Please try again.', { error: true });
+		return;
 	}
+	// Tear the empty stats/graph back down and re-offer the button, so the user can
+	// start over — gamereview has already returned itself to 'idle' for exactly that.
+	hideReviewUI();
+	revealButtonIfReviewable();
+	if (outcome === 'failed') toast.show('Game review failed. Please try again.', { error: true });
+	else toast.show('The engine failed to load.', { error: true });
 }
 
 // Stats columns ------------------------------------------------------------------------------

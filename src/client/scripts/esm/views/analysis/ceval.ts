@@ -357,10 +357,21 @@ function recoverFromEngineFault(): void {
 	restartWorkerForSearch(); // A fresh worker either retries (under the limit) or stays warm for OTHER positions.
 }
 
-/** Fully clears engine runtime state that cannot safely cross game/variant boundaries. */
+/**
+ * Clears every page-side trace of the unloaded game. The workers survive it: the next position
+ * carries `newGame`, which makes the engine drop its searcher and transposition table — all a
+ * respawn would clear, without the wasm reload (which offline can't even complete). The
+ * legal-moves helper builds and frees an engine per request, so it holds nothing to clear.
+ */
 function resetEngineSession(): void {
-	terminateWorker();
-	terminateLegalWorker();
+	// The old game's search must not outlive it. A not-yet-ready worker has no search to stop, and
+	// the shared flag aborts a running one within a node batch — but a single-threaded build shares
+	// no flag to write and stays blocked inside its unbounded search call, so terminating is the
+	// only way out there (as in gamereview's abortStalledSearch).
+	if (!search?.ready || search.stop) {
+		interruptSearch();
+		send({ cmd: 'stop' });
+	} else terminateWorker();
 	latestUpdate = undefined;
 	analyzed = undefined;
 	activeRequestId++;
@@ -829,7 +840,7 @@ function init(options: { workerUrl: string; engineUrl: string }): void {
 	GameBus.addEventListener('view-move', scheduleRefresh);
 	GameBus.addEventListener('game-loaded', () => {
 		nextPositionIsNewGame = true;
-		// Re-warm regardless of `enabled`: 'game-unloaded' tore the pre-warmed worker down.
+		// Re-warm regardless of `enabled`, for the rare unload or failure that left no worker.
 		if (!search) spawnWorker();
 		refreshAnalysis(true);
 	});
