@@ -54,6 +54,34 @@ positions is the consumer (T9/T10), not part of this task.
    the "Game created" event row. Also revisit `requirements.md`'s custom-game notes if anything there
    now reads as stale.
 
+## The server must mirror every client-side gate
+
+The variant selector is the *only* thing enforcing several of these rules today. Each is a
+hand-crafted `createseek` / `createengine` message away from being bypassed the moment scope item 1
+removes the throws, so parity is a prerequisite of this task, not a follow-up.
+
+| Client gate ([variantSelector.ts](../../../../src/client/scripts/esm/components/variantselector/variantSelector.ts)) | Server |
+| --- | --- |
+| `validatePosition` — legality + ICN size | ✅ `validateIcnSeekContent` |
+| ICN parses, carries an explicit position, carries no moves | ✅ `validateIcnSeekContent` |
+| Metadata allowlist + `hasCustomMovement` (4D) | ✅ `validateSeekMetadata` |
+| `gamefileutility.isGameOver` → `game_over` | ❌ nothing |
+| `apeiron_card.isPlaySupported`, engine games only | ❌ nothing (detailed below) |
+| Construction viability — `tryFormulateGame` → `moves_invalid` | ❌ nothing |
+
+Every missing one needs the thing the server never does: **construct the gamefile and inspect it**.
+That is exactly `getContextRejection` run over `gameformulator.tryConstructPosition`'s output.
+
+**Collapse it into one shared gate rather than reimplementing it server-side.** Both halves are
+already shared-safe — `gameformulator` imports nothing client-only, and `getContextRejection`'s
+dependencies (`variantreader`, `gamefileutility`, `apeiron_card`) all live in `shared/`. The one thing
+blocking a straight move is that `getContextRejection` returns **translated display text**, while the
+server returns a code it localizes per-socket. Have the shared version return a code instead — the
+same split `validatePosition` / `PositionErrorCode` already uses — and let each end localize it:
+client `t.shared.position_errors[code]`, server `ws.t.shared.position_errors[code]`. `game_over`
+already has a flat translation key; the engine codes are nested objects and need their shape settled
+first (see the last bullet below).
+
 ## Engine games on a custom position
 
 Removing the throws in scope item 1 also opens custom positions to **engine** games, which carry
@@ -72,10 +100,11 @@ constraints preset games never hit. None of it is enforced server-side today.
   validation path must use the same one or the two disagree on what's in bounds.
 - **`isPlaySupported` does NOT check `SUPPORTED_VARIANTS`.** That lives solely in `checkGameRules`,
   which `isPlaySupported` never calls — only the analysis/review entry points reach it. The selector
-  enforces it separately, by hiding unsupported preset buttons. Custom seeks drop the variant identity
-  on the wire regardless (`gamefileToPositionOptions` keeps position + gamerules only); what stops a 4D
-  ICN from becoming a seek is the unrelated `hasCustomMovement` check, and that rejection is
-  **intended** — someone pasting `[Variant "4×4×4×4 Chess"]` would expect 4D movement a seek can't carry.
+  enforces it separately, by hiding unsupported preset buttons. A custom seek names its source variant
+  but never plays as it (`gamefileToPositionOptions` keeps position + gamerules only), so what stops a
+  4D ICN from becoming a seek is the unrelated `hasCustomMovement` check — enforced on both ends now,
+  and that rejection is **intended**: someone pasting `[Variant "4×4×4×4 Chess"]` would expect 4D
+  movement a seek can't carry.
 - **Reason codes are `EngineSupportCode`**, keying `position_errors.engine.<code>.{label,message}` in
   `translation/shared/en-US.toml` — nested objects, not the flat strings `PositionErrorCode` uses, so
   `localizePositionError` does not extend to them as-is.
@@ -110,10 +139,17 @@ can't be settled until the server can build a custom game at all — hence it be
   game has no code, so the ICN itself is authoritative for **game rules, turn order, starting position,
   moves, and clock stamps** — the client parses them out of it (`ShortToLong_Format` →
   `gameRules`/`position`/`state_global`/`moves`). What the ICN is **NOT** the source of truth for is
-  anything in its metadata tags (variant name, players, elo, result, dates): those stay eyeball-only,
-  and the authoritative values come from the typed state (`gamePageData` / `DeadGameState`). This
-  matters wherever move→color mapping or clock fallback assumes a turn order — read it from the parsed
+  the player/result metadata tags (players, elo, result): those stay eyeball-only, and the
+  authoritative values come from the typed state (`gamePageData` / `DeadGameState`). This matters
+  wherever move→color mapping or clock fallback assumes a turn order — read it from the parsed
   gamerules, never assume white/black alternation.
+- **`Variant`/`UTCDate`/`UTCTime` are the exception — on a custom position they are load-bearing.**
+  They name the variant, and the revision of it, the position was lifted from, which is what lets a
+  mid-game position of a balanced variant still show material bars
+  ([guimaterial.ts](../../../../src/client/scripts/esm/game/gui/guimaterial.ts) `isGameBalanced`).
+  They are also the *only* tags a custom seek's ICN may carry, and the server validates them at seek
+  creation (`validateSeekMetadata`). Whatever field shape scope item 4 settles on must carry them
+  through to the client, or custom games lose that identity the seek took care to preserve.
 - Independent of the T9–T12 client/protocol chain (those already work for preset games); orderable
   whenever custom games become a priority. Gated only on the schema work above, which is landed.
 - Once this ships, the temporary `is_custom`/nullability migrations are irrelevant to the feature — they
