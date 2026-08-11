@@ -89,7 +89,7 @@ async function readCloud(position_name: string): Promise<EditorSaveState> {
  */
 async function saveCloudState(editorSaveState: EditorSaveState): Promise<CloudSaveListRecord[]> {
 	const longFormatIn: LongFormatIn = {
-		metadata: {} as MetaData,
+		metadata: {},
 		position: editorSaveState.variantOptions.position,
 		gameRules: editorSaveState.variantOptions.gameRules,
 		state_global: editorSaveState.variantOptions.state_global,
