@@ -8,11 +8,12 @@
  * types against the other side, plus a `+X` estimated point lead on the side that's
  * net ahead.
  *
- * Recomputed on every `view-move` so rewinding reflects the material at
- * that point in time. Disabled entirely for games whose starting position is
- * unbalanced (either side starts with an unequal count of any piece type).
+ * Recomputed on every `view-move` so rewinding reflects the material at that point
+ * in time. Disabled entirely for unbalanced games (either side starts with an
+ * unequal count of any piece type).
  */
 
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { Player, RawType } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -62,9 +63,8 @@ const element_MaterialBottom = document.getElementById('material-bottom')!;
 // Variables -----------------------------------------------------------------------------------
 
 /**
- * Whether the loaded game's starting position is balanced (all sides start with an equal count
- * of every piece type, and only white & black are present). Material bars are disabled otherwise
- * Computed on `graphical-loaded`.
+ * Whether the loaded game is balanced (see {@link isGameBalanced}).
+ * Material bars are disabled otherwise. Computed on `graphical-loaded`.
  */
 let balanced = false;
 
@@ -74,7 +74,7 @@ let balanced = false;
 // Must be 'graphical-loaded' — see the SVG cache note in render().
 GameBus.addEventListener('graphical-loaded', () => {
 	const gamefile = gameslot.getGamefile()!;
-	balanced = isStartPositionBalanced(gamefile.startSnapshot.position);
+	balanced = isGameBalanced(gamefile);
 	// Unbalanced games never show material differences, so hide the bars to reclaim their space.
 	element_MaterialTop.classList.toggle('hidden', !balanced);
 	element_MaterialBottom.classList.toggle('hidden', !balanced);
@@ -88,6 +88,21 @@ GameBus.addEventListener('view-move', () => render());
 GameBus.addEventListener('board-flipped', () => render());
 
 // Balance detection ---------------------------------------------------------------------------
+
+/**
+ * Tests whether a game's material differences are meaningful — true if its start position is
+ * balanced, or, when the position is a custom one, if the variant it declares itself a position of
+ * starts balanced. The latter covers an ICN sourced from the middle of a balanced game, whose
+ * explicit position is lopsided purely because pieces have already been captured.
+ */
+function isGameBalanced(gamefile: GameFile): boolean {
+	if (isStartPositionBalanced(gamefile.startSnapshot.position)) return true;
+	if (gamefile.variant === undefined) return false;
+	// Regenerating the variant's position is only reached for an explicit, unbalanced position
+	// carrying a Variant tag — a tag-only ICN's start position already IS the variant's.
+	const variantPosition = gamefile.variant.mod.getPosition(gamefile.variant.dateTimestamp).position; // prettier-ignore
+	return isStartPositionBalanced(variantPosition);
+}
 
 /**
  * Tests whether a starting position is balanced: every raw piece type must have equal white and
