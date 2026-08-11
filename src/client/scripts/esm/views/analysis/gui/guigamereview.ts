@@ -367,9 +367,8 @@ function graphY(cp: number, height: number): number {
 
 /**
  * Splits a contiguous run of points into above-zero / below-zero runs for the advantage
- * fill, inserting the true zero-crossing (linearly interpolated between the two straddling
- * points) as the shared boundary between adjacent runs — an exact-zero point counts as the
- * end of whichever run it closes.
+ * fill, inserting the true zero-crossing as the shared boundary between adjacent runs — an
+ * exact-zero point counts as the end of whichever run it closes.
  */
 function splitIntoSignRuns(
 	segment: { index: number; cp: number }[],
@@ -386,7 +385,11 @@ function splitIntoSignRuns(
 		const pointSide: 'pos' | 'neg' = point.cp >= 0 ? 'pos' : 'neg';
 
 		if (pointSide !== side) {
-			const t = prev.cp / (prev.cp - point.cp);
+			// Interpolated in winning-chances space, not cp space, since graphY's cp => y curve is a
+			// sigmoid — a cp-space crossing lands off the drawn line, kinking it at the zero line.
+			const prevChances = ceval.cpWinningChances(prev.cp);
+			const pointChances = ceval.cpWinningChances(point.cp);
+			const t = prevChances / (prevChances - pointChances);
 			const crossingIndex = prev.index + t * (point.index - prev.index);
 			current.push({ index: crossingIndex, cp: 0 }); // Closes the run just ended.
 			runs.push({ side, points: current });
@@ -465,10 +468,10 @@ function drawGraph(): void {
 	// visually diverge — they're built from the exact same vertices, crossings included.
 	const segmentRuns = segments.map(splitIntoSignRuns);
 
-	// Advantage fills: white above the zero line, black below. Split at the true (linearly
-	// interpolated) zero-crossing between two points of opposite sign, not at either point's own
-	// x — otherwise one side's fill overshoots all the way to the next point's x instead of
-	// stopping where the eval line actually crosses zero (how lila's Chart.js area fill splits it).
+	// Advantage fills: white above the zero line, black below. Split at the true zero-crossing
+	// between two points of opposite sign, not at either point's own x — otherwise one side's
+	// fill overshoots all the way to the next point's x instead of stopping where the eval
+	// line actually crosses zero (how lila's Chart.js area fill splits it).
 	if (points.length > 0) {
 		for (const runs of segmentRuns) {
 			for (const run of runs) {
