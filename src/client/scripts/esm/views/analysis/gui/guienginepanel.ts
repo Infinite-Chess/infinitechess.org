@@ -58,14 +58,25 @@ const ENABLED_STORAGE_KEY = 'ceval.enabled';
 
 // State ----------------------------------------------------------------------------
 
-/** Per-rank (PV line index) window offset into that line's moves, for the '…' pager. Cleared whenever the line set is cleared. */
+/**
+ * Per-rank (PV line index) window offset into that line's moves, for the '…' pager.
+ * Cleared whenever the line set is cleared.
+ */
 const lineWindowOffsets = new Map<number, number>();
-/** Per-rank snapshot of that line's moves as of the last render, to detect when a deeper search revises earlier moves out from under the page you're viewing. */
+/**
+ * Per-rank snapshot of that line's moves as of the last render, to detect when
+ * a deeper search revises earlier moves out from under the page you're viewing.
+ */
 const lastSeenLineMoves = new Map<number, string[]>();
 /** The moveIndex the above per-rank state belongs to. */
 let lineWindowStateMoveIndex: number | undefined;
 /** Whether the "report this bug" crash toast has already been shown this session (show it once). */
 let crashToastShown = false;
+/**
+ * The last status kind received, so a status that repeats doesn't
+ * re-toast (a genuine retry re-enters 'failed' through 'loading')
+ */
+let lastStatusKind: CevalStatus['kind'] | undefined;
 
 // Functions -----------------------------------------------------------------------
 
@@ -255,6 +266,8 @@ function clearPanelReadout(
 
 function onEngineStatus(status: CevalStatus): void {
 	applyThreadsCap(); // Re-evaluate: the engine's threading capability arrives with its status.
+	const changed = status.kind !== lastStatusKind;
+	lastStatusKind = status.kind;
 	if (status.kind === 'loading') {
 		element_Stats.textContent = 'Loading engine…';
 		updateProgress(ceval.getLatestUpdate());
@@ -263,7 +276,7 @@ function onEngineStatus(status: CevalStatus): void {
 		setGaugeVisible(false);
 		element_Stats.textContent = 'Engine failed to load';
 		updateProgress(undefined);
-		toast.show('The engine failed to load.', { error: true });
+		if (changed) toast.show('The engine failed to load.', { error: true });
 	} else if (status.kind === 'blocked') {
 		setGaugeVisible(false);
 		clearPanelReadout(t.shared.position_errors.engine[status.reason].label);

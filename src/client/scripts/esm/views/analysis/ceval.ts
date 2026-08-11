@@ -75,6 +75,7 @@ interface CevalUpdate {
 
 /**
  * Engine lifecycle status, for the UI status row.
+ * `failed` = the engine couldn't load at all, and hasn't been retried since;
  * `crashed` = this position reliably panics the engine;
  * `blocked` carries why the engine won't touch the position.
  */
@@ -134,6 +135,12 @@ const DEFAULT_SETTINGS: CevalSettings = {
  * transposition table stays warm.
  */
 let search: AnalysisWorker | undefined;
+
+/**
+ * Whether the last spawn attempt died before the worker ever loaded.
+ * Cleared by the next spawn, so it never outlives a retry.
+ */
+let engineUnloadable = false;
 
 /** An idle helper worker that only answers legal-moves queries, so they never queue behind the search. */
 let legal: AnalysisWorker | undefined;
@@ -245,6 +252,7 @@ function lineWinningChances(cp: number | undefined, mate: number | undefined): n
 /** Spawns (or respawns) the search worker with the current settings and Lazy SMP thread count. */
 function spawnWorker(): void {
 	terminateWorker();
+	engineUnloadable = false;
 	search = analysisworker.spawn({
 		hashMb: settings.hashMb,
 		threads: settings.threads,
@@ -383,13 +391,17 @@ function flushQueuedLegalMovesRequests(): void {
 	}
 }
 
-/** Switches analysis off entirely, for an engine that can't be loaded at all. */
+/**
+ * Switches analysis off entirely, for an engine that can't be loaded at all. Only a deliberate
+ * retry (toggling the engine on, or the next game load) respawns it — recovering an offline user.
+ */
 function handleWorkerFailure(): void {
 	terminateWorker();
 	terminateLegalWorker();
+	engineUnloadable = true;
 	enabled = false;
 	queuedLegalMovesRequests.length = 0;
-	notifyStatus({ kind: 'failed' });
+	notifyStatus();
 }
 
 function handleWorkerMessage(msg: AnalysisResponse): void {
@@ -784,8 +796,8 @@ function receiveLegalMoves(update: CevalLegalMovesUpdate): void {
 	for (const listener of legalMovesListeners) listener(update);
 }
 
-function notifyStatus(override?: CevalStatus): void {
-	const status = override ?? getStatus();
+function notifyStatus(): void {
+	const status = getStatus();
 	for (const listener of statusListeners) listener(status);
 }
 
@@ -904,6 +916,9 @@ function getLatestUpdate(): CevalUpdate | undefined {
 }
 
 function getStatus(): CevalStatus {
+	// Outranks 'off': the failure switched the engine off itself, so reporting 'off' would
+	// claim the user did. Holds until a retry is attempted, which clears the flag.
+	if (engineUnloadable) return { kind: 'failed' };
 	if (!enabled) return { kind: 'off' };
 	if (lastAnalyzedIcn !== undefined && isPositionDead(lastAnalyzedIcn))
 		return { kind: 'crashed' };
