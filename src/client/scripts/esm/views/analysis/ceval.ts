@@ -75,7 +75,7 @@ interface CevalUpdate {
 
 /**
  * Engine lifecycle status, for the UI status row.
- * `crashed` = this position reliably panics them engine;
+ * `crashed` = this position reliably panics the engine;
  * `blocked` carries why the engine won't touch the position.
  */
 type CevalStatus =
@@ -174,15 +174,12 @@ const scheduler: {
 	refreshQueued: boolean;
 } = { timer: undefined, lastEmitMs: 0, refreshQueued: false };
 
-/** Per-position crash tracking. Once a position (by ICN) crashes too many times, we stop feeding it in. */
-let crash: {
-	/** The ICN of the most recent crash position and how many times it's crashed consecutively. */
-	last?: { icn: string | undefined; count: number };
-	/** A position that has crashed the engine too many times — never re-fed to the worker. */
-	deadIcn?: string;
-	/** Whether the currently-viewed position is {@link crash.deadIcn} (drives the 'crashed' status). */
-	onDeadPosition: boolean;
-} = { onDeadPosition: false };
+/**
+ * Crashes per position, by ICN. NOT reset by search progress — a crash can arrive after several
+ * depths stream in. A position reaching {@link CRASHES_BEFORE_GIVING_UP} is un-analyzable, and is
+ * never fed to a worker again.
+ */
+const crashCounts = new Map<string, number>();
 
 /** Per-page-session cache of every viewed position's deepest local analysis. */
 const positionCache = new Map<string, CevalUpdate>();
@@ -300,8 +297,7 @@ function terminateLegalWorker(): void {
 
 /**
  * Handles the search worker dying. An engine that never loaded switches analysis off — a respawn
- * would only repeat the failure. One that crashed after running gets a fresh worker, with the
- * position it died on counted against {@link CRASHES_BEFORE_GIVING_UP}.
+ * would only repeat the failure. One that crashed after running is recovered per-position.
  */
 function handleSearchWorkerFault(fault: AnalysisWorkerFault, reason: string): void {
 	console.error(`[ceval] Analysis worker ${fault}: ${reason}`);
@@ -309,27 +305,37 @@ function handleSearchWorkerFault(fault: AnalysisWorkerFault, reason: string): vo
 	else recoverFromEngineFault();
 }
 
+/** Whether the engine has crashed on this position too many times to keep trying it. */
+function isPositionDead(icn: string): boolean {
+	return (crashCounts.get(icn) ?? 0) >= CRASHES_BEFORE_GIVING_UP;
+}
+
 /**
- * Handles a worker crash. Counts crashes per position by ICN — NOT reset by search progress,
- * since a crash can arrive after several depths stream in. Once the same position has crashed
- * {@link CRASHES_BEFORE_GIVING_UP} times, flags it un-analyzable so we stop feeding it in and
- * looping. The respawn still happens so other positions keep working.
+ * Handles a worker crash by counting it against the position it died on ({@link crashCounts}).
+ *
+ * Respawns ONLY to retry that position — that bound is what stops the loop, since a fresh
+ * worker's 'ready' re-feeds the viewed position, so an unconditional respawn would crash,
+ * respawn and re-feed forever with no user input in it. A crash with no retry left (dead
+ * position) or none to attribute (nothing was being analyzed) leaves the slot empty instead;
+ * {@link refreshAnalysis} re-warms it as soon as there's an analyzable position for it.
  */
 function recoverFromEngineFault(): void {
 	const icn = analyzed?.icn ?? lastAnalyzedIcn;
-	if (crash.last && icn !== undefined && crash.last.icn === icn) crash.last.count++;
-	else crash.last = { icn, count: 1 };
-	const count = crash.last.count;
-
-	if (count >= CRASHES_BEFORE_GIVING_UP) {
+	if (icn !== undefined) {
+		const count = (crashCounts.get(icn) ?? 0) + 1;
+		crashCounts.set(icn, count);
+		if (!isPositionDead(icn)) {
+			console.warn(`[ceval] Analysis worker crashed; restarting (crash ${count}).`);
+			restartWorkerForSearch();
+			return;
+		}
 		console.error(
 			'[ceval] Analysis engine crashed repeatedly on this position; giving up on it.',
 		);
-		crash.deadIcn = icn;
-	} else {
-		console.warn(`[ceval] Analysis worker crashed; restarting (crash ${count}).`);
-	}
-	restartWorkerForSearch(); // A fresh worker either retries (under the limit) or stays warm for OTHER positions.
+	} else console.error('[ceval] Analysis worker crashed while idle; not respawning.');
+
+	terminateWorker();
+	refreshAnalysis(true); // Re-warms only if the VIEWED position is analyzable — never the dead one.
 }
 
 /**
@@ -354,7 +360,7 @@ function resetEngineSession(): void {
 	currentTargetDepth = settings.depth;
 	allowDepthRegressionForCurrentSearch = false;
 	blockReason = undefined;
-	crash = { onDeadPosition: false };
+	crashCounts.clear();
 	positionCache.clear();
 	queuedLegalMovesRequests.length = 0;
 	emitNow();
@@ -476,13 +482,11 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		lastAnalyzedIcn = undefined;
 	}
 
-	if (!search?.ready) return;
-
 	const icn = getViewedPositionIcn(gamefile);
 
-	// This position crashed the engine twice — never send it again (that just re-crashes the worker).
-	crash.onDeadPosition = icn === crash.deadIcn;
-	if (crash.onDeadPosition) {
+	// This position crashed the engine too many times — never send it again (that just re-crashes
+	// the worker). Checked ahead of the spawn below, so a dead position never costs a wasm load.
+	if (isPositionDead(icn)) {
 		interruptSearch();
 		latestUpdate = undefined;
 		lastAnalyzedIcn = icn;
@@ -490,6 +494,10 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		notifyStatus();
 		return;
 	}
+
+	// Re-warm the slot a crash left empty, now that there's analyzable work for a worker.
+	if (!search) spawnWorker();
+	if (!search?.ready) return; // A fresh worker re-enters here from its 'ready'.
 
 	const positionChanged = icn !== lastAnalyzedIcn;
 	if (!force && !positionChanged) return;
@@ -798,7 +806,7 @@ function init(): void {
 	GameBus.addEventListener('view-move', scheduleRefresh);
 	GameBus.addEventListener('game-loaded', () => {
 		nextPositionIsNewGame = true;
-		// Re-warm regardless of `enabled`, for the rare unload or failure that left no worker.
+		// Re-warm regardless of `enabled`, for the unload or crash that left no worker.
 		if (!search) spawnWorker();
 		refreshAnalysis(true);
 	});
@@ -820,8 +828,7 @@ function setEnabled(value: boolean): void {
 	if (enabled === value) return;
 	enabled = value;
 	if (enabled) {
-		if (!search) spawnWorker(); // Only needed if the pre-warmed worker crashed/never spawned.
-		refreshAnalysis(true);
+		refreshAnalysis(true); // Spawns a worker itself if the pre-warmed one crashed/never spawned.
 		// Show the retained eval right away (refreshAnalysis only blanks it when the
 		// position changed while the engine was off) instead of a gap until the resume.
 		reemitCurrent();
@@ -898,7 +905,8 @@ function getLatestUpdate(): CevalUpdate | undefined {
 
 function getStatus(): CevalStatus {
 	if (!enabled) return { kind: 'off' };
-	if (crash.onDeadPosition) return { kind: 'crashed' };
+	if (lastAnalyzedIcn !== undefined && isPositionDead(lastAnalyzedIcn))
+		return { kind: 'crashed' };
 	if (blockReason !== undefined) return { kind: 'blocked', reason: blockReason };
 	if (!search?.ready) return { kind: 'loading' };
 	if (latestUpdate?.done) return { kind: 'idle' };
