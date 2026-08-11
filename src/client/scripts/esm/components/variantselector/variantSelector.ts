@@ -9,7 +9,7 @@
 import type { VNode } from 'snabbdom';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
 import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { SeekVariant, GameModifier } from '../../../../../shared/domain.js';
+import type { MetaData, SeekVariant, GameModifier } from '../../../../../shared/domain.js';
 import type {
 	VariantGroup,
 	VariantCode,
@@ -35,6 +35,7 @@ import gamecompressor from '../../game/chess/gamecompressor.js';
 import gameformulator from '../../game/chess/gameformulator.js';
 import modifierSelector from './modifierSelector.js';
 import editorpositionsdb from '../../game/editorstores/esavestore.js';
+import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
 
 // Types -------------------------------------------------
@@ -577,7 +578,8 @@ function setIcnResult(result: IcnResult | null): void {
 
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(variantOptions: VariantOptions): void {
-	const illegalReason = validateOptions(variantOptions);
+	// Saved positions are authored in the editor, so they were never sourced from a variant.
+	const illegalReason = validateOptions(variantOptions, {});
 	if (illegalReason !== null) {
 		showError(element_variantDisplay, t.shared.position_errors[illegalReason]);
 		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
@@ -609,11 +611,14 @@ function revalidateCustomSelection(): void {
 	// A saved position still being fetched has no result yet; it'll validate under the new rules.
 }
 
-/** Serializes a custom position's VariantOptions to its canonical compact ICN string. */
-function variantOptionsToICN(options: VariantOptions): string {
+/**
+ * Serializes a custom position's VariantOptions to its canonical compact ICN string.
+ * @param metadata - The source-variant tags to declare, from {@link clientmetadatautil.buildSourceVariantMetadata}.
+ */
+function variantOptionsToICN(options: VariantOptions, metadata: MetaData): string {
 	return icnconverter.LongToShort_Format(
 		{
-			metadata: {},
+			metadata,
 			position: options.position,
 			gameRules: options.gameRules,
 			fullMove: options.fullMove,
@@ -623,12 +628,16 @@ function variantOptionsToICN(options: VariantOptions): string {
 	);
 }
 
-/** Validates a flattened position's legality, plus its ICN size in a seek context. */
-function validateOptions(options: VariantOptions): PositionErrorCode | null {
+/**
+ * Validates a flattened position's legality, plus its ICN size in a seek context.
+ * @param metadata - The tags the seek's ICN will carry — measured here so the size
+ * checked is the size sent, which the server re-checks against the same threshold.
+ */
+function validateOptions(options: VariantOptions, metadata: MetaData): PositionErrorCode | null {
 	// Serialize only for seeks — that's the sole consumer of the ICN here.
 	return validatePosition(
 		options,
-		config.isSeekContext ? variantOptionsToICN(options) : undefined,
+		config.isSeekContext ? variantOptionsToICN(options, metadata) : undefined,
 	);
 }
 
@@ -735,7 +744,8 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	// Validate the flattened position the moves lead to — the exact
 	// position a seek plays from and the server re-validates.
 	const finalOptions = gamecompressor.gamefileToPositionOptions(constructed);
-	const positionError = validateOptions(finalOptions);
+	const metadata = clientmetadatautil.buildSourceVariantMetadata(constructed);
+	const positionError = validateOptions(finalOptions, metadata);
 	const rejection =
 		positionError !== null
 			? t.shared.position_errors[positionError]
@@ -861,7 +871,13 @@ function getSeekVariant(): SeekVariant | null {
 		icnResult.kind === 'icn'
 			? gamecompressor.gamefileToPositionOptions(icnResult.gamefile)
 			: icnResult.options;
-	const position = variantOptionsToICN(options);
+	// The source-variant tags ride along — an explicit position lifted from the middle of a
+	// balanced game is lopsided, and they are all that tells the game it starts otherwise.
+	const metadata =
+		icnResult.kind === 'icn'
+			? clientmetadatautil.buildSourceVariantMetadata(icnResult.gamefile)
+			: {};
+	const position = variantOptionsToICN(options, metadata);
 	if (!position) return null;
 	return { kind: 'custom', position };
 }

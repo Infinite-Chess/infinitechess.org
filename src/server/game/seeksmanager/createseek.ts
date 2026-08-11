@@ -6,11 +6,14 @@
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { CreateSeekMessage } from '../../../shared/serverbound.js';
-import type { Rating, SeekVariant, AuthSeekVariant } from '../../../shared/domain.js';
+import type { MetaData, Rating, SeekVariant, AuthSeekVariant } from '../../../shared/domain.js';
 
 import uuid from '../../../shared/util/uuid.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
+import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import variantreader from '../../../shared/chess/variants/variantreader.js';
+import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { IDLengthOfSeeks } from '../../../shared/domain.js';
 import { POSITION_STRING_THRESHOLD } from '../../../shared/chess/variants/servervalidation.js';
 import compression, { CompressionMode } from '../../../shared/util/compression.js';
@@ -37,7 +40,21 @@ type IcnSeekErrorCode =
 	| PositionErrorCode
 	| 'invalid_icn'
 	| 'icn_missing_position'
-	| 'icn_contains_moves';
+	| 'icn_contains_moves'
+	| 'no_4d_movement';
+
+// Constants ---------------------------------------------------------------------------
+
+/**
+ * The only metadata a custom seek's ICN may carry: the tags declaring which variant, at which
+ * revision of it, its position was sourced from. Everything else is rejected — the seek's ICN
+ * is served verbatim to lobby viewers by the seek-preview endpoint.
+ */
+const PERMITTED_SEEK_METADATA: ReadonlySet<string> = new Set<keyof MetaData>([
+	'Variant',
+	'UTCDate',
+	'UTCTime',
+]);
 
 // Functions -------------------------------------------------------------------------
 
@@ -185,6 +202,8 @@ function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 	} catch {
 		return 'invalid_icn';
 	}
+	const metadataError = validateSeekMetadata(longFormat.metadata);
+	if (metadataError !== null) return metadataError;
 	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined) {
 		return 'icn_missing_position';
 	}
@@ -192,6 +211,23 @@ function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 	if (longFormat.moves && longFormat.moves.length > 0) return 'icn_contains_moves';
 	const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
 	return validatePosition(variantOptions, content);
+}
+
+/**
+ * Validates a custom seek ICN's metadata: only the {@link PERMITTED_SEEK_METADATA} tags may be
+ * present, and any variant they declare must be a real one that doesn't move its pieces
+ * differently. A seek carries only a position + gamerules, so a variant with custom piece
+ * movement (4D) would not play as the name it declares promises.
+ */
+function validateSeekMetadata(metadata: MetaData): IcnSeekErrorCode | null {
+	if (Object.keys(metadata).some((key) => !PERMITTED_SEEK_METADATA.has(key)))
+		return 'invalid_icn';
+	if (metadata.Variant === undefined) return null;
+	const code = variantregistry.resolveVariantCode(metadata.Variant);
+	if (code === undefined) return 'invalid_icn';
+	// Every variant module is preloaded at server startup.
+	if (variantreader.hasCustomMovement(variantcache.getModule(code))) return 'no_4d_movement';
+	return null;
 }
 
 /** Localizes a position/ICN error code for the websocket's `notify` channel. */

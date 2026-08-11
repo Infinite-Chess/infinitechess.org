@@ -35,9 +35,9 @@ function buildMetaDataFromGamefile(gamefile: GameFile): MetaData {
 		TimeControl: gamefile.timeControl,
 		UTCDate,
 		UTCTime,
+		// Adds the Variant tag (alongside the same date pair) when the game declares one.
+		...buildSourceVariantMetadata(gamefile),
 	};
-	if (gamefile.variant)
-		metadata.Variant = variantregistry.getVariantName(gamefile.variant.code, t.shared);
 	if (gamefile.gameConclusion) {
 		metadata.Result = metadatautil.getResultFromVictor(gamefile.gameConclusion.victor);
 		metadata.Termination = winconutil.getTerminationInEnglish(
@@ -46,6 +46,21 @@ function buildMetaDataFromGamefile(gamefile: GameFile): MetaData {
 		);
 	}
 	return metadata;
+}
+
+/**
+ * The metadata declaring which variant, at which revision of it, a position was sourced from —
+ * everything an explicit position needs to still identify its origin. Empty for a game with no
+ * variant, since the date alone declares no provenance.
+ */
+function buildSourceVariantMetadata(gamefile: GameFile): MetaData {
+	if (!gamefile.variant) return {};
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(gamefile.dateTimestamp);
+	return {
+		Variant: variantregistry.getVariantName(gamefile.variant.code, t.shared),
+		UTCDate,
+		UTCTime,
+	};
 }
 
 /** Calculates the game conclusion from the Result metadata and termination CODE. */
@@ -112,6 +127,7 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 
 export default {
 	buildMetaDataFromGamefile,
+	buildSourceVariantMetadata,
 	getGameConclusionFromResultAndTermination,
 	getRatingFromWhiteBlackElo,
 	resolveAndNormalizeVariantFromMetadata,
