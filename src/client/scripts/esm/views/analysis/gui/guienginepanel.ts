@@ -71,10 +71,7 @@ let crashToastShown = false;
 
 /** Initializes the engine panel. Called once by the page entry. */
 function init(): void {
-	ceval.init({
-		engineUrl: window.analysisPageData.engineUrl,
-		workerUrl: window.analysisPageData.workerUrl,
-	});
+	ceval.init();
 	enginelegalmovesdebug.init({
 		canRequest: () => {
 			const gamefile = gameslot.getGamefile();

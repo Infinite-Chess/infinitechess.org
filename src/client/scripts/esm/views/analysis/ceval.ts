@@ -9,6 +9,7 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { EngineSupportCode } from '../../../../../shared/chess/engines/apeiron_card.js';
+import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
@@ -22,6 +23,7 @@ import gameslot from '../../game/chess/gameslot.js';
 import { GameBus } from '../../game/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
+import analysisworker from './analysisworker.js';
 import analysisenginebounds from './analysisenginebounds.js';
 import { maxEngineThreads, THREAD_CAP } from '../../game/chess/engines/enginewasm.js';
 
@@ -127,22 +129,14 @@ const DEFAULT_SETTINGS: CevalSettings = {
 
 // State ----------------------------------------------------------------------------
 
-/** Set once by {@link init} with the page-provided worker + engine-glue URLs. */
-let config: { engineUrl: string; workerUrl: string } | undefined;
-
 /**
- * The persistent search worker, kept alive across position switches so its transposition table
- * stays warm. `ready` flips true on the worker's 'ready' message. `stop` is a view over the
- * worker's shared wasm memory + the byte offset of its stop flag (arrives via a separate
- * 'sharedmem' message); writing a 1 there aborts the in-flight search within a node batch —
- * instant position switch, warm hash.
+ * The persistent search worker, kept alive across position switches so its
+ * transposition table stays warm.
  */
-let search:
-	| { worker: Worker; ready: boolean; stop?: { flags: Uint8Array; ptr: number } }
-	| undefined;
+let search: AnalysisWorker | undefined;
 
 /** An idle helper worker that only answers legal-moves queries, so they never queue behind the search. */
-let legal: { worker: Worker; ready: boolean } | undefined;
+let legal: AnalysisWorker | undefined;
 
 let enabled = false;
 let settings: CevalSettings = loadSettings();
@@ -251,38 +245,20 @@ function lineWinningChances(cp: number | undefined, mate: number | undefined): n
 
 // Worker lifecycle -----------------------------------------------------------------------
 
-/** Wires an active worker's responses into the main message + crash handlers. */
-function attachActiveWorkerHandlers(w: Worker): void {
-	w.onmessage = (e: MessageEvent<AnalysisResponse>) => handleWorkerMessage(e.data);
-	w.onerror = (e: ErrorEvent) => {
-		console.error(
-			`[ceval] Analysis worker crashed: ${e.message || '(no message)'} @ ${e.filename}:${e.lineno}:${e.colno}`,
-			e.error,
-		);
-		handleWorkerFailure();
-	};
-}
-
 /** Spawns (or respawns) the search worker with the current settings and Lazy SMP thread count. */
 function spawnWorker(): void {
-	if (!config) throw Error('ceval.init() must be called before enabling analysis.');
 	terminateWorker();
-
-	const w = new Worker(config.workerUrl, { type: 'module' });
-	search = { worker: w, ready: false };
-	notifyStatus();
-
-	attachActiveWorkerHandlers(w);
-	send({
-		cmd: 'init',
+	search = analysisworker.spawn({
 		hashMb: settings.hashMb,
 		threads: settings.threads,
-		engineUrl: config.engineUrl,
+		onMessage: handleWorkerMessage,
+		onFault: handleSearchWorkerFault,
 	});
+	notifyStatus();
 }
 
 function terminateWorker(): void {
-	search?.worker.terminate();
+	if (search) analysisworker.terminate(search);
 	// The stop-flag view points into the terminated worker's memory; the respawn posts a fresh one.
 	search = undefined;
 	// Keep lastAnalyzedIcn: a respawn (e.g. hash change) re-sends the same position
@@ -291,48 +267,47 @@ function terminateWorker(): void {
 
 /** Aborts the search worker's in-flight slice instantly (the search polls this shared flag every node batch). */
 function interruptSearch(): void {
-	if (search?.stop) search.stop.flags[search.stop.ptr] = 1;
+	if (search) analysisworker.interrupt(search);
 }
 
 // Legal-moves helper worker --------------------------------------------------------------
 
 /** Lazily spins up the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
 function ensureLegalWorker(): void {
-	if (legal || !config) return;
-	const w = new Worker(config.workerUrl, { type: 'module' });
-	legal = { worker: w, ready: false };
-	w.onmessage = (e: MessageEvent<AnalysisResponse>) => {
-		if (!legal || legal.worker !== w) return; // Superseded; ignore late messages.
-		switch (e.data.type) {
-			case 'ready':
-				legal.ready = true;
-				flushQueuedLegalMovesRequests();
-				break;
-			case 'initerror':
-				terminateLegalWorker();
-				break;
-			case 'legalmoves':
-				receiveLegalMoves(e.data);
-				break;
-		}
-	};
-	w.onerror = () => {
-		if (legal?.worker === w) terminateLegalWorker();
-	};
-	w.postMessage({
-		cmd: 'init',
-		hashMb: settings.hashMb,
-		engineUrl: config.engineUrl,
-	} satisfies AnalysisCommand);
+	if (legal) return;
+	legal = analysisworker.spawn({
+		// Arbitrary — it builds a throwaway engine per request and never searches,
+		// so its transposition table is never read. Kept small to waste no memory.
+		hashMb: 16,
+		onMessage: (msg) => {
+			if (msg.type === 'ready') flushQueuedLegalMovesRequests();
+			else if (msg.type === 'legalmoves') receiveLegalMoves(msg);
+		},
+		// Silent by design: the overlay is a debug aid that degrades to showing nothing, and a
+		// helper spawned while offline fails on every request. Its queued requests survive —
+		// the next request spawns a fresh helper, which flushes them.
+		onFault: () => { legal = undefined; }, // prettier-ignore
+	});
 }
 
 /** Frees the idle legal-moves helper worker. Call when the debug overlay is toggled off. */
 function terminateLegalWorker(): void {
-	legal?.worker.terminate();
+	if (legal) analysisworker.terminate(legal);
 	legal = undefined;
 }
 
 // Fault recovery -------------------------------------------------------------------------
+
+/**
+ * Handles the search worker dying. An engine that never loaded switches analysis off — a respawn
+ * would only repeat the failure. One that crashed after running gets a fresh worker, with the
+ * position it died on counted against {@link CRASHES_BEFORE_GIVING_UP}.
+ */
+function handleSearchWorkerFault(fault: AnalysisWorkerFault, reason: string): void {
+	console.error(`[ceval] Analysis worker ${fault}: ${reason}`);
+	if (fault === 'unloadable') handleWorkerFailure();
+	else recoverFromEngineFault();
+}
 
 /**
  * Handles a worker crash. Counts crashes per position by ICN — NOT reset by search progress,
@@ -368,10 +343,8 @@ function resetEngineSession(): void {
 	// the shared flag aborts a running one within a node batch — but a single-threaded build shares
 	// no flag to write and stays blocked inside its unbounded search call, so terminating is the
 	// only way out there (as in gamereview's abortStalledSearch).
-	if (!search?.ready || search.stop) {
-		interruptSearch();
-		send({ cmd: 'stop' });
-	} else terminateWorker();
+	if (!search?.ready || analysisworker.interrupt(search)) send({ cmd: 'stop' });
+	else terminateWorker();
 	latestUpdate = undefined;
 	analyzed = undefined;
 	activeRequestId++;
@@ -404,6 +377,7 @@ function flushQueuedLegalMovesRequests(): void {
 	}
 }
 
+/** Switches analysis off entirely, for an engine that can't be loaded at all. */
 function handleWorkerFailure(): void {
 	terminateWorker();
 	terminateLegalWorker();
@@ -415,7 +389,6 @@ function handleWorkerFailure(): void {
 function handleWorkerMessage(msg: AnalysisResponse): void {
 	switch (msg.type) {
 		case 'ready':
-			if (search) search.ready = true;
 			// A single-threaded engine build locks the thread setting to 1 (panel disables the slider).
 			if (!msg.mt && engineSupportsThreads) {
 				engineSupportsThreads = false;
@@ -427,12 +400,6 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 			refreshAnalysis(true); // Fresh wasm module, so this always restarts from depth 1.
 			notifyStatus();
 			break;
-		case 'initerror':
-			handleWorkerFailure();
-			break;
-		case 'sharedmem':
-			if (search) search.stop = { flags: new Uint8Array(msg.buffer), ptr: msg.stopFlagPtr };
-			break;
 		case 'info':
 			// NOTE: deliberately does NOT reset the crash counter — a crash can arrive after
 			// several depths stream in, so progress must not clear the per-position count.
@@ -441,13 +408,6 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 		case 'done':
 			receiveInfo(msg.requestId, msg.info, true, msg.reason === 'terminal');
 			notifyStatus();
-			break;
-		case 'searcherror':
-			console.error('[ceval] Analysis search crashed:', msg.message);
-			recoverFromEngineFault();
-			break;
-		case 'legalmoves':
-			receiveLegalMoves(msg);
 			break;
 	}
 }
@@ -823,10 +783,8 @@ function notifyStatus(override?: CevalStatus): void {
 
 // Public API --------------------------------------------------------------------------------
 
-/** Provides the engine-glue + page-specific worker URLs. Must be called before {@link setEnabled}. */
-function init(options: { workerUrl: string; engineUrl: string }): void {
-	config = options;
-
+/** Starts the engine and wires it to the board. Must be called before {@link setEnabled}. */
+function init(): void {
 	// Pre-warm the engine immediately, regardless of whether eval is enabled, so its wasm module is
 	// loaded and enabling eval later starts analyzing instantly instead of waiting on a cold load.
 	// refreshAnalysis() no-ops while `enabled` is false, so this doesn't start any searching.

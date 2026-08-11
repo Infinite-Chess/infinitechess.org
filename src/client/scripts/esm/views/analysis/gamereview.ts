@@ -15,6 +15,7 @@ import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { AnalysisCommand, AnalysisResponse } from './apeironanalysis.worker.js';
+import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
 
 import * as z from 'zod';
 
@@ -32,6 +33,7 @@ import { GameBus } from '../../game/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
 import reviewdivision from './reviewdivision.js';
+import analysisworker from './analysisworker.js';
 import analysisenginebounds from './analysisenginebounds.js';
 
 // Types ------------------------------------------------------------------------
@@ -128,15 +130,12 @@ interface ReviewWorkItem {
 
 /** A pooled engine worker and every piece of state scoped to its lifetime. */
 interface ReviewWorker {
-	worker: Worker;
-	/** Whether it has posted 'ready'. A fault before that means the engine itself won't load. */
-	ready: boolean;
+	/** The supervised worker: its readiness, stop flag and fault classification. */
+	engine: AnalysisWorker;
 	/** Remaining work held back for this worker, so adjacent positions share its warm TT. */
 	chunk: ReviewWorkItem[];
 	/** The work item it is currently evaluating; undefined = idle. */
 	assignment?: ReviewWorkItem;
-	/** View over its wasm memory + the byte offset of its stop flag (arrives on 'sharedmem'). */
-	stop?: { flags: Uint8Array; ptr: number };
 	/** Stall watchdog over its in-flight search, re-armed on every completed depth. */
 	watchdog?: ReturnType<typeof setTimeout>;
 }
@@ -545,26 +544,22 @@ function spawnWorker(): void {
 	// A caller's own receiveEvaluation() can finish the review synchronously before reaching here.
 	if (status !== 'running') return;
 
-	const worker = new Worker(window.analysisPageData.workerUrl, { type: 'module' });
-	const entry: ReviewWorker = { worker, ready: false, chunk: [] };
-	workers.push(entry);
-	worker.onmessage = (e: MessageEvent<AnalysisResponse>) => handleWorkerMessage(entry, e.data);
-	worker.onerror = (e: ErrorEvent) => {
-		console.error(`[game review] Worker crashed: ${e.message || '(no message)'}`);
-		handleWorkerFault(entry);
+	const entry: ReviewWorker = {
+		// No `threads`: review workers search single-threaded — parallelism is across positions.
+		engine: analysisworker.spawn({
+			hashMb: 16,
+			onMessage: (msg) => handleWorkerMessage(entry, msg),
+			onFault: (fault, reason) => handleWorkerFault(entry, fault, reason),
+		}),
+		chunk: [],
 	};
-	// No `threads`: review workers search single-threaded — parallelism is across positions.
-	worker.postMessage({
-		cmd: 'init',
-		hashMb: 16,
-		engineUrl: window.analysisPageData.engineUrl,
-	} satisfies AnalysisCommand);
+	workers.push(entry);
 }
 
 function terminateWorkers(): void {
 	for (const entry of workers) {
 		clearStallWatchdog(entry);
-		entry.worker.terminate();
+		analysisworker.terminate(entry.engine);
 	}
 	workers = [];
 }
@@ -573,14 +568,7 @@ function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 	if (status !== 'running') return;
 	switch (msg.type) {
 		case 'ready':
-			entry.ready = true;
 			dispatchNext(entry);
-			break;
-		case 'sharedmem':
-			entry.stop = { flags: new Uint8Array(msg.buffer), ptr: msg.stopFlagPtr };
-			break;
-		case 'initerror':
-			handleWorkerFault(entry);
 			break;
 		case 'info':
 			armStallWatchdog(entry); // The search completed a depth: it's making progress.
@@ -591,33 +579,30 @@ function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 			if (!msg.warmup) receiveEvaluation(msg);
 			dispatchNext(entry);
 			break;
-		case 'searcherror':
-			// The wasm module is poisoned — respawn the worker; its position retries.
-			handleWorkerFault(entry);
-			break;
 	}
 }
 
 /**
- * Handles a crashed/failed worker: aborts the whole review when the engine never loaded, else
- * requeues its position (skipping it after {@link MAX_POSITION_ATTEMPTS}) and respawns a
- * replacement with fresh wasm.
+ * Handles a dead worker: aborts the whole review when the engine never loaded, else requeues its
+ * position (skipping it after {@link MAX_POSITION_ATTEMPTS}) and respawns a replacement with
+ * fresh wasm. Also the exit for a stalled worker we kill ourselves ({@link abortStalledSearch}).
  */
-function handleWorkerFault(entry: ReviewWorker): void {
+function handleWorkerFault(entry: ReviewWorker, fault: AnalysisWorkerFault, reason: string): void {
+	console.error(`[game review] Worker ${fault}: ${reason}`);
 	const { assignment, chunk } = entry;
 	clearStallWatchdog(entry);
 	// The entry owns nothing from here on, so a second fault from
 	// the same dying worker can't re-queue its work a second time.
 	delete entry.assignment;
 	entry.chunk = [];
-	entry.worker.terminate();
+	analysisworker.terminate(entry.engine);
 	workers = workers.filter((w) => w !== entry);
 	if (status !== 'running') return;
 
-	// It faulted before going ready, so it was never dispatched to and holds no work: the engine
-	// itself can't load. Every worker pulls the same URL, so respawning only loops on the same
-	// failure — nothing here consumes a position's attempts, since none was ever attempted.
-	if (!entry.ready) return failReview('unavailable');
+	// The engine glue itself can't load, so this worker was never dispatched to and holds no work.
+	// Every worker pulls the same URL, so respawning only loops on the same failure — nothing here
+	// consumes a position's attempts, since none was ever attempted.
+	if (fault === 'unloadable') return failReview('unavailable');
 
 	if (assignment !== undefined) {
 		if (
@@ -690,7 +675,7 @@ function dispatchNext(entry: ReviewWorker): void {
 		const icn = serializePosition(index);
 		icnByPosition[index] = icn;
 
-		entry.worker.postMessage({
+		entry.engine.worker.postMessage({
 			cmd: 'evaluate',
 			requestId: index, // The position index doubles as the request id.
 			icn,
@@ -746,9 +731,10 @@ function abortStalledSearch(entry: ReviewWorker): void {
 	delete entry.watchdog;
 	// Writing the flag (polled every node batch, cleared by the engine on its next search) makes
 	// the worker settle for its deepest completed depth's lines — a graceful, in-place finish.
-	// A single-threaded build shares no memory to write, so killing it is the only way out.
-	if (entry.stop) entry.stop.flags[entry.stop.ptr] = 1;
-	else handleWorkerFault(entry);
+	// A single-threaded build shares no memory to write, so killing it is the only way out; its
+	// position is then retried exactly as a crash's would be.
+	if (!analysisworker.interrupt(entry.engine))
+		handleWorkerFault(entry, 'crashed', 'search stalled with no shared stop flag');
 }
 
 // Result processing --------------------------------------------------------------------------
