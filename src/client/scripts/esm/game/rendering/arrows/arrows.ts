@@ -20,6 +20,7 @@ import type {
 
 import gameslot from '../../chess/gameslot.js';
 import arrowshifts from './arrowshifts.js';
+import { GameBus } from '../../GameBus.js';
 import frametracker from '../frametracker.js';
 import arrowscalculator from './arrowscalculator.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
@@ -178,11 +179,25 @@ function getMode(): typeof mode {
 
 /** Sets the current mode of the arrow indicators. */
 function setMode(value: typeof mode): void {
+	if (value === mode) return;
+
 	mode = value;
 	if (mode === 0) {
 		reset();
 		arrowlegalmovehighlights.reset(); // Erase, otherwise their legal move highlights continue to render
 	}
+	GameBus.dispatch('arrow-mode-change');
+}
+
+/** The highest mode the current game offers. Hippogonal arrows are only offered in variants using them. */
+function getModeCap(): 2 | 3 {
+	return gameslot.getGamefile()!.pieces.hippogonalsPresent ? 3 : 2;
+}
+
+/** Lowers the mode to the current game's cap, if it exceeds it. The mode persists across games. */
+function clampModeToCap(): void {
+	const cap = getModeCap();
+	if (mode > cap) setMode(cap);
 }
 
 /** Rotates the current mode of the arrow indicators. */
@@ -191,9 +206,7 @@ function toggleArrows(): void {
 	// Have to do it weirdly like this, instead of using '++', because typescript complains that nextMode is of type number.
 	let nextMode: typeof mode =
 		mode === 0 ? 1 : mode === 1 ? 2 : mode === 2 ? 3 : /* mode === 3 ? */ 0;
-	// Calculate the cap
-	const cap = gameslot.getGamefile()!.pieces.hippogonalsPresent ? 3 : 2;
-	if (nextMode > cap) nextMode = 0; // Wrap back to zero
+	if (nextMode > getModeCap()) nextMode = 0; // Wrap back to zero
 	setMode(nextMode);
 }
 
@@ -309,6 +322,7 @@ export default {
 	// Mode management
 	getMode,
 	setMode,
+	clampModeToCap,
 	toggleArrows,
 	// Getters
 	getAllArrows,

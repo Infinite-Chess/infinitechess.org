@@ -28,6 +28,7 @@ import { Mouse } from '../input.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
+import { GameBus } from '../GameBus.js';
 import { listener_document, listener_canvas } from '../chess/gamecore.js';
 
 // Elements ----------------------------------------------------------------------------------
@@ -76,9 +77,14 @@ document.addEventListener('ray-count-change', (e) => {
 	else hideCollapse();
 });
 
+// The view toggles are also changed by scripts other than us (game loads, unloads,
+// board edits), so we always re-read the owner's state instead of tracking our own.
+GameBus.addEventListener('arrow-mode-change', () => update_ArrowsButton());
+GameBus.addEventListener('perspective-toggle', () => update_PerspectiveButton());
+
 // =============================== View Toggles ===============================
 
-/** Toggles perspective view, glowing the button while it's enabled. */
+/** Toggles perspective view. */
 function callback_Perspective(): void {
 	if (!gameslot.getGamefile()) return; // Game not loaded yet
 	// Prevent the sidebar click that toggled perspective
@@ -86,14 +92,17 @@ function callback_Perspective(): void {
 	// Without this, any mini image underneath the crosshair instantly gets clicked.
 	listener_document.claimMouseClick(Mouse.LEFT);
 	perspective.toggle();
+}
+
+/** Glows the perspective button while perspective view is enabled. */
+function update_PerspectiveButton(): void {
 	element_Perspective.classList.toggle('enabled', perspective.getEnabled());
 }
 
-/** Cycles the arrow-indicators mode, then syncs the button's glyph + tooltip. */
+/** Cycles the arrow-indicators mode. */
 function callback_Arrows(): void {
 	if (!gameslot.getGamefile()) return; // Game not loaded yet
 	arrows.toggleArrows();
-	update_ArrowsButton();
 }
 
 /** Reveals the glyph + tooltip matching the active arrow-indicators mode. */

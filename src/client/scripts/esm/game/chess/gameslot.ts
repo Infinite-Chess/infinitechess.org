@@ -172,6 +172,7 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 	// Disable arrows if there's too many pieces or lines in the game
 	if (pieceCount > arrows.MAX_PIECES || loadedGamefile.pieces.slides.length > arrows.MAX_LINES)
 		arrows.setMode(0);
+	else arrows.clampModeToCap(); // The previous game may have left it on a mode this one doesn't offer
 
 	// If custom preset rays are specified, initiate them in drawrays.ts
 	if (loadOptions.presetAnnotes?.squares)

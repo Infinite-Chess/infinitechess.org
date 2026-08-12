@@ -12,6 +12,7 @@ import config from '../config.js';
 import camera from './camera.js';
 import gameslot from '../chess/gameslot.js';
 import preferences from '../../components/header/preferences.js';
+import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
 import { Renderable, createRenderable } from '../../webgl/Renderable.js';
 
@@ -47,21 +48,20 @@ function toggle(): void {
 function enable(): void {
 	if (enabled)
 		return console.error('Should not be enabling perspective when it is already enabled.');
+
 	enabled = true;
-
 	lockMouse();
-
 	initCrosshairModel();
+	GameBus.dispatch('perspective-toggle');
 }
 
 function disable(): void {
 	if (!enabled) return;
+
 	frametracker.onVisualChange();
-
 	enabled = false;
-
-	// Reset rotations
-	camera.setPerspectiveRotation(0, gameslot.areViewingWhite() ? 0 : 180);
+	camera.setPerspectiveRotation(0, gameslot.areViewingWhite() ? 0 : 180); // Reset rotations
+	GameBus.dispatch('perspective-toggle');
 }
 
 // Called when the mouse re-clicks the screen after ALREADY in perspective.

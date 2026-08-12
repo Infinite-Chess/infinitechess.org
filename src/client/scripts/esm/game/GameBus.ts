@@ -58,8 +58,14 @@ interface GameBusEvents {
 	 * a move made/taken back) — scroll moves list to follow.
 	 */
 	'view-front': void;
+
 	/** Dispatched when the board's view orientation is flipped (white ⇄ black perspective). */
 	'board-flipped': void;
+	/** Dispatched when the arrow indicators' mode changes. */
+	'arrow-mode-change': void;
+	/** Dispatched when perspective view is enabled or disabled. */
+	'perspective-toggle': void;
+
 	/**
 	 * Dispatched when the board is about to be pinched. Tells any
 	 * single-pointer action using the given pointer (piece drag, annotation
