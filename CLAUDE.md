@@ -136,7 +136,7 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 48. If when debugging something, adding some temporary console logs would make the answer significantly easier to get, choose that route: add the logs, then ask _me_ to run the server and relay what appears — never start it yourself. Make it as easy on me as possible, with very simple steps for me to follow.
 
-49. Never commit yourself unless I explicitly ask you to. All changes are reviewed by me first before _I_ commit.
+49. Never commit yourself unless I explicitly ask you to. All changes are reviewed by me first before _I_ commit. I stage files as I review them, so occasionally expect your changes to move into the index mid-session — a clean `git diff` or `git status` working tree doesn't mean your edits vanished.
 
 50. When I _do_ ask you to commit, `git push` immediately after. On a branch whose name won't match its remote's (`pr/<author>/<number>`, from `gh pr checkout` of a fork PR), bare `git push` aborts — read the remote and branch as two _separate_ values, from `branch.<current>.remote` and `branch.<current>.merge` in `git config`, then push explicitly: `git push <remote> HEAD:<branch>`.
 
