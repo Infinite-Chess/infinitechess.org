@@ -29,7 +29,7 @@ function handleSubbing(ws: CustomWebSocket, value: 'lobby'): void {
 			subToLobby(ws);
 			break;
 		default:
-			console.error(`UNKNOWN subscription list to subscribe client to! "${value}"`);
+			console.error('UNKNOWN subscription list to subscribe client to!', value satisfies never); // prettier-ignore
 	}
 }
 
@@ -57,7 +57,7 @@ function handleUnsubbing(ws: CustomWebSocket, key: SubscriptionKey, involuntary:
 			unsubSocketSpectatorFromGame(ws);
 			break;
 		default:
-			console.error(`UNKNOWN subscription list to unsubscribe client from! "${key}"`);
+			console.error('UNKNOWN subscription list to unsubscribe client from!', key satisfies never); // prettier-ignore
 	}
 }
 
