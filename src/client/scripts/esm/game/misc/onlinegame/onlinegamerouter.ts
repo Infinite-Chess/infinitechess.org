@@ -3,9 +3,12 @@
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { ClockValues } from '../../../../../../shared/domain.js';
 import type { GameConclusionMessage } from '../../../../../../shared/clientbound.js';
-import type { ClientboundGameMessage } from '../../../../../../shared/clientbound.js';
+import type {
+	ClientboundGameMessage,
+	NavigateToGame,
+} from '../../../../../../shared/clientbound.js';
 
-import uuid from '../../../../../../shared/util/uuid.js';
+import gameurl from '../../../../../../shared/util/gameurl.js';
 
 import resyncer from './resyncer.js';
 import gameslot from '../../chess/gameslot.js';
@@ -245,17 +248,17 @@ function handleLeaveGame(): void {
 
 /**
  * Called when the server reports both players agreed to a rematch.
- * Play the notify sound and navigate to the new game.
+ * Play the notify sound and navigate to the new game, its URL pinned to the side we
+ * play it as (colors swap, so spectators aside, it's the opposite of this game's).
  * Agnostic of whether we are a participant or spectator.
  * TODO: Remove redundancy with this and the lobby.onInGame()'s logic.
- * @param id - The numeric game id (encoded into the base62 URL).
  */
-async function handleInGame(id: number): Promise<void> {
+async function handleInGame(rematch: NavigateToGame): Promise<void> {
 	// Plays the notify sound and awaits it so the hard-navigate doesn't cut it off.
 	// No reverb added here, it makes us wait too long.
 	const sound = await gamesound.playNotify(false);
 	if (sound) await sound.whenEnded;
-	window.location.assign(`/game/${uuid.base10ToBase62(id)}`);
+	window.location.assign(gameurl.getGameUrl(rematch.id, rematch.role));
 }
 
 export default {

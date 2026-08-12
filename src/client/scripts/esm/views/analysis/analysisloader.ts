@@ -49,8 +49,9 @@ function reloadPristine(): Promise<void> {
 // Load Paths -------------------------------------------------------------------
 
 /**
- * Fetches a finished game from the server by its id and loads it, auto-oriented to the
- * side the viewer played from (black flips it; spectators/white keep white's perspective).
+ * Fetches a finished game from the server by its id and loads it, oriented to the
+ * perspective the server resolved for the page (the URL's color segment, else the
+ * side the viewer played from).
  */
 async function loadGameById(gameId: number): Promise<void> {
 	gamesession.markLoading(); // Covers the fetch too, ahead of the load pasteGame flags.
@@ -58,7 +59,7 @@ async function loadGameById(gameId: number): Promise<void> {
 		const response = await fetch(`/api/game/${uuid.base10ToBase62(gameId)}`);
 		if (!response.ok) throw new Error(`Game fetch failed (${response.status})`);
 		const state: DeadGameState = await response.json();
-		const viewWhitePerspective = window.analysisPageData.role !== p.BLACK;
+		const viewWhitePerspective = window.analysisPageData.viewColor === p.WHITE;
 		const longFormat = icnconverter.ShortToLong_Format(state.icn);
 		// The slide limit comes from the game's stored config, the ICN carries no modifiers.
 		const slideLimit = state.setup.modifiers?.find((m) => m.kind === 'slide-limit')?.value;

@@ -276,6 +276,9 @@ export interface EngineGamePageInfo {
 export interface GamePageData extends StaticGameSetup {
 	id: number;
 	isLive: boolean;
+	/** The viewer's color if they're a participant — what they're allowed to move. */
 	role?: Player;
+	/** The side of the board the viewer sees it from, overridable by the URL's color segment. */
+	viewColor: Player;
 	engineGame?: EngineGamePageInfo;
 }

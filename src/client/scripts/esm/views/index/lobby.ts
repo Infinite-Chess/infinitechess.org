@@ -7,17 +7,21 @@
 
 import type { VNode } from 'snabbdom';
 import type { VariantInfo } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { LobbyStateMessage, SeeksMessage } from '../../../../../shared/clientbound.js';
 import type { Rating, BaseSeek, OutSeek, SeekId } from '../../../../../shared/domain.js';
 import type {
 	CreateSeekMessage,
 	CreateEngineGameMessage,
 } from '../../../../../shared/serverbound.js';
+import type {
+	InGameMessage,
+	LobbyStateMessage,
+	SeeksMessage,
+} from '../../../../../shared/clientbound.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
 
-import uuid from '../../../../../shared/util/uuid.js';
 import modutil from '../../../../../shared/util/modutil.js';
+import gameurl from '../../../../../shared/util/gameurl.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
@@ -120,7 +124,7 @@ function initLobbyClickHandler(): void {
 /** Applies the full lobby snapshot received the moment we (re)subscribe. */
 function handleLobbyState(state: LobbyStateMessage): void {
 	// In-game status first: the seek intents released after this check it.
-	if (state.ingame) void onInGame(state.ingame.id, state.ingame.navigate);
+	if (state.ingame) void onInGame(state.ingame);
 	else onOutGame();
 	onSeekListUpdate(state);
 	onViewerCountUpdate(state.viewercount);
@@ -226,24 +230,22 @@ function onViewerCountUpdate(count: number): void {
 }
 
 /**
- * Called when the server reports we're in game `id` (on seek acceptance, bot game creation,
- * or on lobby resub while already in one).
- * @param id - The numeric game id (encoded into the base62 URL).
- * @param navigate - Whether the server wants THIS tab taken into the game: we asked for it,
- * or it started while we were away and this is our first chance to be told.
+ * Called when the server reports we're in a game (on seek acceptance, bot game creation,
+ * or on lobby resub while already in one). Its URL pins the board to the side we're
+ * playing, so the game page never has to flip it after navigating.
  */
-async function onInGame(id: number, navigate: boolean): Promise<void> {
-	gameIdWeAreIn = id;
-	if (navigate) {
+async function onInGame(ingame: InGameMessage): Promise<void> {
+	gameIdWeAreIn = ingame.id;
+	if (ingame.navigate) {
 		// Plays the notify sound and awaits it so the hard-navigate doesn't cut it off.
 		// No reverb added here, it makes us wait too long.
 		const sound = await gamesound.playNotify(false);
 		if (sound) await sound.whenEnded;
-		window.location.assign(`/game/${uuid.base10ToBase62(id)}`);
+		window.location.assign(gameurl.getGameUrl(ingame.id, ingame.role));
 	} else {
 		// We already know of this game (another tab of ours, or a page-load mid-game): stay on
 		// the lobby, but show a banner letting them rejoin. The server pushes 'outgame' once it ends.
-		showInGameBanner(id);
+		showInGameBanner(ingame);
 	}
 }
 
@@ -253,9 +255,9 @@ function onOutGame(): void {
 	hideInGameBanner();
 }
 
-/** Shows the "you're in a game" banner, pointing its rejoin link at game `id`. */
-function showInGameBanner(id: number): void {
-	element_lobbyIngameJoin.setAttribute('href', `/game/${uuid.base10ToBase62(id)}`);
+/** Shows the "you're in a game" banner, pointing its rejoin link at the game. */
+function showInGameBanner(ingame: InGameMessage): void {
+	element_lobbyIngameJoin.setAttribute('href', gameurl.getGameUrl(ingame.id, ingame.role));
 	element_lobbyIngameOverlay.classList.remove('hidden');
 	for (const btn of elements_disabledWhileInGame) btn.setAttribute('disabled', '');
 	gameSetupModal.close();

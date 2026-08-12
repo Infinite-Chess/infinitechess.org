@@ -84,12 +84,12 @@ declare global {
 	 */
 	var gamePageData: GamePageData;
 
-	/** SSR→client data for the analysis page (/analysis/:id?), injected by analysis.njk. */
+	/** SSR→client data for the analysis page (/analysis/:id?/:color?), injected by analysis.njk. */
 	var analysisPageData: {
 		/** Numeric id of a game to auto-load, or null for a fresh board. */
 		gameId: number | null;
-		/** The viewer's color if they were a participant (auto-orients the board); undefined for non-participants. */
-		role?: Player;
+		/** The side to orient the board to: the URL's color segment, else the side the viewer played on. */
+		viewColor: Player;
 		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`), from the manifest. */
 		engineUrl: string;
 		/** Hashed URL of the analysis engine worker script (from the asset manifest). */

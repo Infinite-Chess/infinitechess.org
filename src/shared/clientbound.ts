@@ -26,6 +26,19 @@ import {
 	SeekIdSchema,
 } from './domain.js';
 
+// Common Helper Schemas -------------------------------------------------------
+
+/**
+ * A game to take the client to. Carries their role in it so the URL they navigate
+ * to can pin the board's perspective to the side they're playing.
+ */
+export type NavigateToGame = z.infer<typeof NavigateToGameSchema>;
+const NavigateToGameSchema = z.strictObject({
+	id: GameIDSchema,
+	/** Our color in the game. Absent if we're not a participant (spectator). */
+	role: typeschemas.PlayerSchema.optional(),
+});
+
 // General Route ---------------------------------------------------------------
 
 /** Every message the server may send on the 'general' route. */
@@ -53,8 +66,8 @@ const SeeksMessageSchema = z.strictObject({
 });
 
 /** Tells us we're in a game — carried by the lobby state on subscribe, and pushed live thereafter. */
-const InGameMessageSchema = z.strictObject({
-	id: GameIDSchema,
+export type InGameMessage = z.infer<typeof InGameMessageSchema>;
+const InGameMessageSchema = NavigateToGameSchema.extend({
 	/** Whether the server wants THIS tab taken into the game, instead of shown the rejoin banner. */
 	navigate: z.boolean(),
 });
@@ -216,7 +229,7 @@ const ClientboundGameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('rematchoffer') }),
 	z.strictObject({ action: z.literal('opponentleft') }),
 	z.strictObject({ action: z.literal('opponentreturn') }),
-	z.strictObject({ action: z.literal('ingame'), value: GameIDSchema }),
+	z.strictObject({ action: z.literal('ingame'), value: NavigateToGameSchema }),
 ]);
 
 // Envelope --------------------------------------------------------------------

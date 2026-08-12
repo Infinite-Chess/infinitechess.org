@@ -9,12 +9,12 @@
 {% endblock %}
 
 {% block head %}
-{# SSR→client channel: optional game id to auto-load, plus the hashed engine-worker
-   asset URL (workers can't resolve the manifest themselves) and the runtime-copied
-   multithreaded engine package location. #}
+{# SSR→client channel: optional game id to auto-load and the side to view it from, plus
+   the hashed engine-worker asset URL (workers can't resolve the manifest themselves)
+   and the runtime-copied multithreaded engine package location. #}
 <script>window.analysisPageData = {
 	gameId: {{ gameId | json | safe }},
-	{% if role is defined %}role: {{ role | json | safe }},{% endif %}
+	viewColor: {{ viewColor | json | safe }},
 	engineUrl: "{{ manifest['engine'] }}",
 	workerUrl: "{{ manifest['scripts/esm/views/analysis/apeironanalysis.worker.ts'] }}"
 };</script>

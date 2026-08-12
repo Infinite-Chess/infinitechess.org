@@ -1,7 +1,7 @@
 // src/server/controllers/analysisPageController.ts
 
 /**
- * Builds the SSR render state for the `/analysis/:id?` page: the optional game id
+ * Builds the SSR render state for the `/analysis/:id?/:color?` page: the optional game id
  * to auto-load (validated to exist) and the variant groups that populate the
  * variant dropdown, with display names resolved server-side.
  */
@@ -12,6 +12,7 @@ import type { GameMetaViewModel } from './gamePageController.js';
 import type { VariantGroup, VariantCode } from '../../shared/chess/variants/variantregistry.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
+import { players as p } from '../../shared/chess/util/typeutil.js';
 
 import { decodeGameId } from '../database/gamesManager.js';
 import { getDeadGameViewState } from './gamePageController.js';
@@ -20,8 +21,8 @@ import { getDeadGameViewState } from './gamePageController.js';
 interface AnalysisPageState {
 	/** Numeric id of a game to auto-load client-side, or null for a fresh board. */
 	gameId: number | null;
-	/** The viewer's color if they were a participant, so the board auto-orients to their side. */
-	role?: Player;
+	/** The side the board is viewed from: the URL's color segment, else the side they played on. */
+	viewColor: Player;
 	/** Variant groups + their variants, in display order — feeds the shared variant selector macro. */
 	variantGroups: { group: VariantGroup; iconId: string; variants: VariantCode[] }[];
 	/** Game metadata shown when analysis is opened for a saved/live game. */
@@ -32,14 +33,15 @@ interface AnalysisPageState {
 const variantGroups = variantregistry.getVariantGroupsWithVariants();
 
 /**
- * Resolves the render state for `/analysis/:id?`, or `undefined` if an id was
+ * Resolves the render state for `/analysis/:id?/:color?`, or `undefined` if an id was
  * given but is malformed or names no game in the database (live-only games included).
  * @throws If a database error occurs.
  */
 export function getAnalysisPageState(req: Request): AnalysisPageState | undefined {
 	let gameId: number | null = null;
+	// A fresh board has no participants to orient by, and no id for a color segment to follow.
+	let viewColor: Player = p.WHITE;
 	const idParam = req.params['id'];
-	let role: Player | undefined;
 	let meta: GameMetaViewModel | undefined;
 	if (idParam !== undefined) {
 		// A game_id was provided in the URL
@@ -50,12 +52,12 @@ export function getAnalysisPageState(req: Request): AnalysisPageState | undefine
 		const deadState = getDeadGameViewState(req, id);
 		if (deadState === undefined) return undefined; // Game not in the database
 		gameId = id;
-		({ role, meta } = deadState);
+		({ viewColor, meta } = deadState);
 	}
 
 	return {
 		gameId,
-		...(role !== undefined && { role }),
+		viewColor,
 		variantGroups,
 		...(meta && { meta }),
 	};

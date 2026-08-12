@@ -14,7 +14,11 @@ import type { LobbyStateMessage } from '../../../shared/clientbound.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { makeSeekSafe, AuthSeek } from './seekutility.js';
-import { consumeNavigateNotice, getIDOfGamePlayerIsIn } from '../gamemanager/activeplayers.js';
+import {
+	consumeNavigateNotice,
+	getIDOfGamePlayerIsIn,
+	getRoleOfGamePlayerIsIn,
+} from '../gamemanager/activeplayers.js';
 import {
 	getLobbySubscribers,
 	getSubscriberCount,
@@ -83,11 +87,13 @@ function broadcastMemberInGameStatus(
 	navigatingSocket?: CustomWebSocket,
 ): void {
 	const gameID = getIDOfGamePlayerIsIn(user);
+	const role = getRoleOfGamePlayerIsIn(user);
 	for (const ws of getLobbySubscribers()) {
 		if (!memberInfoEq(user, ws.metadata.memberInfo)) continue;
 		if (gameID !== undefined)
 			sendSocketMessage(ws, 'lobby', 'ingame', {
 				id: gameID,
+				role,
 				navigate: ws === navigatingSocket,
 			});
 		else sendSocketMessage(ws, 'lobby', 'outgame', undefined);
@@ -110,7 +116,11 @@ function sendClientLobbyState(ws: CustomWebSocket): void {
 	const gameID = getIDOfGamePlayerIsIn(ws.metadata.memberInfo);
 	const ingame =
 		gameID !== undefined
-			? { id: gameID, navigate: consumeNavigateNotice(ws.metadata.memberInfo) }
+			? {
+					id: gameID,
+					role: getRoleOfGamePlayerIsIn(ws.metadata.memberInfo),
+					navigate: consumeNavigateNotice(ws.metadata.memberInfo),
+				}
 			: undefined;
 
 	const message: LobbyStateMessage = {

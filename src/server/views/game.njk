@@ -233,7 +233,7 @@
 						{# A link, not a button, so ctrl/cmd/middle-click opens it in a new tab.
 						   Nothing to analyze with zero moves. A live game can still gain
 						   moves — guigameactions.ts reveals it at conclusion. #}
-						<a class="action-btn{{ ' hidden' if meta.moveCount == 0 }}" id="btn-analysis" href="/analysis/{{ idBase62 }}">Analysis</a>
+						<a class="action-btn{{ ' hidden' if meta.moveCount == 0 }}" id="btn-analysis" href="{{ analysisUrl }}">Analysis</a>
 					</div>
 				</div>
 

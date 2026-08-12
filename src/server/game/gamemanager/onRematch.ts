@@ -75,16 +75,18 @@ function createRematchGame(oldGame: ServerGame): void {
 
 	// Capture identities (swapped colors) and connected sockets before tearing down the old game.
 	const swapped: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }> = {};
-	const socketsToNavigate: CustomWebSocket[] = [];
+	/** Everyone taken into the rematch, each with the color they play it as (spectators: none). */
+	const toNavigate: { socket: CustomWebSocket; role?: Player }[] = [];
 	for (const [c, data] of Object.entries(oldMatch.playerData)) {
-		swapped[typeutil.invertPlayer(Number(c) as Player)] = {
+		const newColor = typeutil.invertPlayer(Number(c) as Player);
+		swapped[newColor] = {
 			identifier: data.identifier,
 			socket: data.socket,
 		};
-		if (data.socket) socketsToNavigate.push(data.socket);
+		if (data.socket) toNavigate.push({ socket: data.socket, role: newColor });
 	}
 	// Also notify spectators of the rematch
-	socketsToNavigate.push(...oldGame.spectators);
+	for (const socket of oldGame.spectators) toNavigate.push({ socket });
 
 	const setup: GameSetup = {
 		variant: { kind: 'preset', code: oldMatch.variant },
@@ -109,12 +111,16 @@ function createRematchGame(oldGame: ServerGame): void {
 		newGameID = createGame(setup, swapped);
 	} catch (error: unknown) {
 		// The old game is already evicted, so there's nothing left to navigate anyone back to.
-		onGameCreationError(error, socketsToNavigate);
+		onGameCreationError(
+			error,
+			toNavigate.map((n) => n.socket),
+		);
 		return;
 	}
 
 	// Alert all connected players of the new game (they auto navigate)
-	for (const socket of socketsToNavigate) sendSocketMessage(socket, 'game', 'ingame', newGameID);
+	for (const { socket, role } of toNavigate)
+		sendSocketMessage(socket, 'game', 'ingame', { id: newGameID, role });
 }
 
 //--------------------------------------------------------------------------------------------------------

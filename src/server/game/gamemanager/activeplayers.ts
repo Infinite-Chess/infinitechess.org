@@ -5,6 +5,7 @@
  * and whether they've yet been told to navigate to them.
  */
 
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
@@ -14,6 +15,8 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 interface ActiveGameEntry {
 	/** The id of the game they are in. */
 	gameID: number;
+	/** The color they are playing as, so their lobby tabs can link to the game from their side. */
+	role: Player;
 	/**
 	 * Whether they still have to be told to navigate to the game page. Armed at game creation
 	 * for a player with no socket to push to (e.g. their seek was accepted while their connection
@@ -45,14 +48,16 @@ const browsersInActiveGames: Record<string, ActiveGameEntry> = {};
  * Adds the user to the list of users currently in an active game.
  * Players in this are not allowed to join a second game.
  * @param id - The id of the game they are in.
+ * @param role - The color they are playing as.
  * @param awaitingNavigateNotice - Whether they still have to be told to navigate to the game.
  */
 function addUserToActiveGames(
 	user: AuthMemberInfo,
 	id: number,
+	role: Player,
 	awaitingNavigateNotice: boolean,
 ): void {
-	const entry: ActiveGameEntry = { gameID: id, awaitingNavigateNotice };
+	const entry: ActiveGameEntry = { gameID: id, role, awaitingNavigateNotice };
 	if (user.signedIn) membersInActiveGames[user.user_id] = entry;
 	else browsersInActiveGames[user.browser_id] = entry;
 }
@@ -114,6 +119,11 @@ function getIDOfGamePlayerIsIn(player: AuthMemberInfo): number | undefined {
 	return getEntry(player)?.gameID;
 }
 
+/** The color a player is playing as in their active game, if they're in one. */
+function getRoleOfGamePlayerIsIn(player: AuthMemberInfo): Player | undefined {
+	return getEntry(player)?.role;
+}
+
 /**
  * Reads and clears whether the player still has to be told to navigate to their active game.
  * Returns false if they're in no game, or already know about it.
@@ -132,5 +142,6 @@ export {
 	removeUserFromActiveGame,
 	isSocketInAnActiveGame,
 	getIDOfGamePlayerIsIn,
+	getRoleOfGamePlayerIsIn,
 	consumeNavigateNotice,
 };

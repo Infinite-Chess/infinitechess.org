@@ -1,8 +1,8 @@
 // src/server/controllers/gamePageController.ts
 
 /**
- * Builds the SSR render state for the `/game/:id` page: the client `gamePageData`
- * channel ({ id, isLive, role }) and a display-ready view-model of the static
+ * Builds the SSR render state for the `/game/:id/:color?` page: the client `gamePageData`
+ * channel ({ id, isLive, role, viewColor }) and a display-ready view-model of the static
  * game-meta info, so the side bar paints many game info on first request without a
  * socket/HTTP round-trip.
  */
@@ -12,6 +12,7 @@ import type { SpeedCategory } from '../../shared/chess/util/clockutil.js';
 import type { Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
 import type { GamePageData, StaticGameState } from '../../shared/domain.js';
 
+import gameurl from '../../shared/util/gameurl.js';
 import timeutil from '../../shared/util/timeutil.js';
 import clockutil from '../../shared/chess/util/clockutil.js';
 import metadatautil from '../../shared/chess/util/metadatautil.js';
@@ -56,7 +57,7 @@ export interface GameMetaViewModel {
 		 */
 		eloDiff?: { text: string; positive: boolean };
 	}>;
-	/** Player-bar orientation from the viewer's role; bottom = you (or white for spectators). */
+	/** Player-bar orientation; bottom = the side the board is viewed from. */
 	bars: { top: Player; bottom: Player };
 	/** Plies played. Zero means there's nothing to analyze, so the Analysis button SSRs hidden. */
 	moveCount: number;
@@ -71,8 +72,8 @@ export interface GameMetaViewModel {
 interface GamePageState {
 	/** Includes all static info about the game. */
 	gamePageData: GamePageData;
-	/** The game's id in its URL (base62) form, for links to the game's other pages. */
-	idBase62: string;
+	/** Link to this game's analysis page, carrying the perspective it's currently viewed from. */
+	analysisUrl: string;
 	meta: GameMetaViewModel;
 }
 
@@ -82,8 +83,7 @@ interface GamePageState {
  * @throws If a database error occurs.
  */
 export function getGamePageState(req: Request): GamePageState | undefined {
-	const idBase62 = req.params['id']!;
-	const id = decodeGameId(idBase62);
+	const id = decodeGameId(req.params['id']!);
 	if (id === undefined) return undefined; // Malformed id
 
 	const memberInfo = req.memberInfo!;
@@ -93,7 +93,7 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 	const { state, game, ratingChanges, moveCount } = resolved; // game is defined if live
 	let { engineGame } = resolved; // Gains the client's engine asset URLs below, if live
 
-	// Resolve the viewer's color (board orientation + role); undefined => spectator (white POV).
+	// Resolve the viewer's role in the game; undefined => spectator.
 	let role: Player | undefined;
 	if (game) {
 		for (const [strColor, { identifier }] of Object.entries(game.match.playerData)) {
@@ -116,6 +116,8 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 		engineGame = { ...engineGame, workerUrl, engineUrl };
 	}
 
+	const viewColor = resolveViewColor(req, role);
+
 	return {
 		gamePageData: {
 			// The client channel carries the whole setup; the rest of the state feeds `meta`.
@@ -123,16 +125,24 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 			id,
 			isLive: !!game,
 			role,
+			viewColor,
 			engineGame,
 		},
-		// Safe to reuse the URL param verbatim: decodeGameId rejects non-canonical encodings.
-		idBase62,
-		meta: buildGameMetaViewModel(state, ratingChanges, role, moveCount, req),
+		analysisUrl: gameurl.getAnalysisUrl(id, viewColor),
+		meta: buildGameMetaViewModel(state, ratingChanges, role, viewColor, moveCount, req),
 	};
 }
 
 /**
- * Resolves the viewer-facing SSR state (participant role + meta) for a concluded game straight
+ * Resolves which side of the board the viewer sees it from: the URL's color segment if it
+ * carries one, else the side they played on, else white's (spectators and non-participants).
+ */
+function resolveViewColor(req: Request, role: Player | undefined): Player {
+	return gameurl.parseViewColorCode(req.params['color']) ?? role ?? p.WHITE;
+}
+
+/**
+ * Resolves the viewer-facing SSR state (board perspective + meta) for a concluded game straight
  * from the database, or `undefined` if no such game row exists. Unlike {@link getGamePageState}
  * this ignores live games — the analysis page only ever loads a game from the DB, never a live one.
  * @throws If a database error occurs.
@@ -142,8 +152,8 @@ export function getDeadGameViewState(
 	id: number,
 ):
 	| {
-			/** The viewer's color if they were a participant; undefined => not one (white POV). */
-			role?: Player;
+			/** The side of the board the viewer sees it from. */
+			viewColor: Player;
 			meta: GameMetaViewModel;
 	  }
 	| undefined {
@@ -155,10 +165,18 @@ export function getDeadGameViewState(
 	const role = memberInfo.signedIn
 		? resolveDeadParticipantColor(id, memberInfo.user_id)
 		: undefined;
+	const viewColor = resolveViewColor(req, role);
 
 	return {
-		...(role !== undefined && { role }),
-		meta: buildGameMetaViewModel(dead.state, dead.ratingChanges, role, dead.moveCount, req),
+		viewColor,
+		meta: buildGameMetaViewModel(
+			dead.state,
+			dead.ratingChanges,
+			role,
+			viewColor,
+			dead.moveCount,
+			req,
+		),
 	};
 }
 
@@ -167,6 +185,7 @@ function buildGameMetaViewModel(
 	state: StaticGameState,
 	ratingChanges: PlayerGroup<number> | undefined,
 	role: Player | undefined,
+	viewColor: Player,
 	moveCount: number,
 	req: Request,
 ): GameMetaViewModel {
@@ -201,14 +220,13 @@ function buildGameMetaViewModel(
 		};
 	}
 
-	const bottom = role ?? p.WHITE;
-	const top = bottom === p.WHITE ? p.BLACK : p.WHITE;
+	const top = viewColor === p.WHITE ? p.BLACK : p.WHITE;
 
 	const locale = tconfig.getDateLocale(req.lang);
 
 	return {
 		variant,
-		bars: { top, bottom },
+		bars: { top, bottom: viewColor },
 		speed: {
 			iconId: clockutil.getSpeedIconId(setup.timeControl),
 			category: clockutil.getSpeedCategory(setup.timeControl),

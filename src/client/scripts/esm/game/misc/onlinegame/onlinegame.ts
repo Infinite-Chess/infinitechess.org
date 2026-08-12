@@ -83,7 +83,8 @@ function loadGameFromState(state: GameStateMessage, dead: boolean): void {
 	const ourRole = gamesession.getRole();
 
 	// The static setup (variant/time control/creation time) is SSR'd
-	const { variant, timeControl, timeCreated, modifiers, engineGame } = window.gamePageData;
+	const { variant, timeControl, timeCreated, modifiers, engineGame, viewColor } =
+		window.gamePageData;
 	const slideLimit = modifiers?.find((m) => m.kind === 'slide-limit')?.value;
 	const additional: Additional = {
 		moves: state.moves,
@@ -101,8 +102,8 @@ function loadGameFromState(state: GameStateMessage, dead: boolean): void {
 			timeControl,
 			variant: variant.kind === 'preset' ? variant.code : undefined,
 			dateTimestamp: timeCreated,
-			// Black views from their side; white and spectators (no role) view white's side.
-			viewWhitePerspective: ourRole !== p.BLACK,
+			// Resolved server-side: the URL's color segment, else the side we played on.
+			viewWhitePerspective: viewColor === p.WHITE,
 			additional,
 		},
 		{

@@ -56,7 +56,7 @@ page('^/$|/index(.html)?', (req: Request, res: Response) => res.render('index.nj
 page('/about(.html)?', (_req: Request, res: Response) => res.render('about.njk'));
 page('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.njk'));
 page(
-	'/game/:id',
+	'/game/:id/:color(w|b)?',
 	(req: Request, res: Response) => {
 		const state = getGamePageState(req);
 		if (state === undefined) return send404(req, res); // Malformed or nonexistent id
@@ -65,7 +65,7 @@ page(
 	crossOriginIsolation, // Engine games run the multi-threaded engine (SharedArrayBuffer) locally.
 );
 page(
-	'/analysis(.html)?/:id?',
+	'/analysis(.html)?/:id?/:color(w|b)?',
 	(req: Request, res: Response) => {
 		const state = getAnalysisPageState(req);
 		if (state === undefined) return send404(req, res); // Malformed or nonexistent id

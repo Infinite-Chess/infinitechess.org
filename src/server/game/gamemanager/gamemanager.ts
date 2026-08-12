@@ -118,9 +118,14 @@ function createGame(
 		validateMoves,
 		variant,
 	);
-	for (const { identifier, socket } of Object.values(assignments)) {
+	for (const [strcolor, { identifier, socket }] of Object.entries(assignments)) {
 		// A player with no socket to push to is owed the navigate notice on their next lobby subscribe.
-		addUserToActiveGames(identifier, servergame.match.id, socket === undefined);
+		addUserToActiveGames(
+			identifier,
+			servergame.match.id,
+			Number(strcolor) as Player,
+			socket === undefined,
+		);
 	}
 
 	activeGames[servergame.match.id] = servergame;
@@ -750,9 +755,14 @@ function restoreLiveGames(): void {
 		// concludes (its result then lives permanently in the games table), so a concluded game
 		// is never persisted to restore. Register its players in the active-players list (blocks
 		// them from joining a second game, and shows their lobby in-game banner).
-		for (const data of Object.values(servergame.match.playerData)) {
+		for (const [strcolor, data] of Object.entries(servergame.match.playerData)) {
 			// No navigate notice owed — the game predates the restart, so they already know of it.
-			addUserToActiveGames(data.identifier, servergame.match.id, false);
+			addUserToActiveGames(
+				data.identifier,
+				servergame.match.id,
+				Number(strcolor) as Player,
+				false,
+			);
 		}
 
 		// Start timers
