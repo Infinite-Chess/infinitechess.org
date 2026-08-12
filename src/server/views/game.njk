@@ -25,9 +25,9 @@
    values, `tempo`, `eloChange`). Blocks tagged "EXAMPLE" are static sample
    structure only; the client REPLACES their contents (and toggles `.hidden`)
    once real game data loads. Static "skeleton" blocks (result-banner,
-   draw-offer, disconnect-status) are ALWAYS SSR'd with fixed structure and
-   start `.hidden` (unless already true at load); the client only toggles
-   `.hidden` + writes their text — it must never rebuild their markup.
+   draw-offer, disconnect-status, self-disconnect-status) are SSR'd with a
+   fixed structure and start `.hidden` (unless already true at load); the client
+   only toggles `.hidden` + writes their text — it must never rebuild their markup.
    ════════════════════════════════════════════════════════════════════════ #}
 <main class="game">
 
@@ -239,17 +239,24 @@
 
 				{# Opponent-disconnect status — live-only static skeleton; omitted entirely once the game
 				   is over (an opponent can't disconnect or be claimed against in a concluded game), so
-				   it won't be found on a game that loaded concluded. Starts `.hidden`: the client reveals/
-				   hides the block as the opponent drops/returns and writes the live countdown into
+				   it won't be found on a game that loaded concluded. Starts empty and `.hidden`: the client
+				   reveals/hides the block as the opponent drops/returns and writes the live countdown into
 				   `.disconnect-text`, then reveals `.disconnect-buttons` (also `.hidden`) on expiry. #}
 				{% if not meta.result and not gamePageData.engineGame %}
 				<div class="disconnect-status hidden">
-					<span class="disconnect-text">Opponent disconnected. You can claim victory in 10 seconds.</span>
+					<span class="disconnect-text"></span>
 					<div class="disconnect-buttons hidden">
 						<button class="action-btn" id="btn-claim-victory">Claim victory</button>
 						<button class="action-btn" id="btn-claim-draw">Call a draw</button>
 					</div>
 				</div>
+				{% endif %}
+
+				{# Our OWN connection-loss notice. Starts empty and `.hidden`; the client writes the
+				   text and reveals it while we're disconnected, then swaps in a brief "Reconnected."
+				   (`.reconnected`) once we're back in sync before hiding it. #}
+				{% if gamePageData.isLive %}
+				<div class="self-disconnect-status hidden"></div>
 				{% endif %}
 
 				{# Bottom username container — SSR-OWNED (near side: you, or white for spectators).

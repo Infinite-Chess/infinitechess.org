@@ -1,16 +1,16 @@
 // src/client/scripts/esm/game/gui/guidisconnect.ts
 
 /**
- * Manages the `.disconnect-status` block on the game page: the live status of an
- * opponent's disconnection in the side bar.
+ * Manages the two disconnect blocks in the game page's side bar: the live status of an
+ * opponent's disconnection, and the notice that WE have lost connection.
  *
  * While the opponent is gone it shows a 1-second countdown until we may claim, then
  * reveals the "Claim victory" / "Call a draw" buttons once the window opens. In a not-
  * yet-resignable game there's nothing to claim, so it only informs us they disconnected
  * (we can already abort at will). It hides the moment they reconnect or the game ends.
  *
- * SSR omits `.disconnect-status` for a game that loaded concluded, so every element here
- * may be absent.
+ * SSR omits `.disconnect-status` for a game that loaded concluded, and `.self-disconnect-status`
+ * for one that loaded memory-evicted, so every element here may be absent.
  */
 
 import type { DisconnectInfo } from '../../../../../shared/clientbound.js';
@@ -19,11 +19,18 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import { GameBus } from '../GameBus.js';
+import { SocketBus } from '../../websocket/SocketBus.js';
 import socketintents from '../../websocket/socketintents.js';
+
+// Constants ---------------------------------------------------------------------------------
+
+/** How long the "Reconnected." confirmation lingers before the notice hides itself. */
+const RECONNECTED_LINGER_MILLIS = 2000;
 
 // Elements ----------------------------------------------------------------------------------
 
 const element_DisconnectStatus = document.querySelector('.disconnect-status');
+const element_SelfDisconnectStatus = document.querySelector('.self-disconnect-status');
 const element_DisconnectText = document.querySelector('.disconnect-text');
 const element_DisconnectButtons = document.querySelector('.disconnect-buttons');
 const element_ClaimVictory = document.getElementById(
@@ -39,6 +46,8 @@ let claimableAt: number | undefined;
 let voluntary: boolean = false;
 /** The 1-second render loop's interval id, while the opponent is disconnected. */
 let renderIntervalID: number | undefined;
+/** The hide timer's id, while the "Reconnected." confirmation is showing. */
+let reconnectedTimeoutID: number | undefined;
 
 // Events ------------------------------------------------------------------------------------
 
@@ -120,9 +129,44 @@ function callback_ClaimDraw(): void {
 element_ClaimVictory?.addEventListener('click', callback_ClaimVictory);
 element_ClaimDraw?.addEventListener('click', callback_ClaimDraw);
 
-// =================================================================================
+// Our own disconnection ------------------------------------------------------------------------
+
+// Only fires on an involuntary close while we still hold a subscription — exactly when
+// our opponent's claim timer is running against us.
+SocketBus.addEventListener('connection-lost', () => onSelfDisconnect());
+
+/** Called when we lose connection. */
+function onSelfDisconnect(): void {
+	if (!element_SelfDisconnectStatus) return; // Memory-evicted game: block absent.
+	clearTimeout(reconnectedTimeoutID); // A fresh drop overrides a lingering "Reconnected."
+	reconnectedTimeoutID = undefined;
+	element_SelfDisconnectStatus.textContent = 'You have disconnected.';
+	element_SelfDisconnectStatus.classList.remove('reconnected');
+	element_SelfDisconnectStatus.classList.remove('hidden');
+}
+
+/**
+ * Called once we're back in sync with the server game. Not when the socket reopens: only a
+ * fresh full game state means we've actually caught back up.
+ * Confirms with "Reconnected." for a moment before hiding.
+ */
+function onSelfReturn(): void {
+	if (!element_SelfDisconnectStatus) return; // Memory-evicted game: block absent.
+	// Also fires on the page-load sync and on desync recoveries, where we never dropped.
+	if (element_SelfDisconnectStatus.classList.contains('hidden')) return;
+	element_SelfDisconnectStatus.textContent = 'Reconnected.';
+	element_SelfDisconnectStatus.classList.add('reconnected');
+	clearTimeout(reconnectedTimeoutID);
+	reconnectedTimeoutID = window.setTimeout(() => {
+		element_SelfDisconnectStatus.classList.add('hidden');
+		reconnectedTimeoutID = undefined;
+	}, RECONNECTED_LINGER_MILLIS);
+}
+
+// Exports ------------------------------------------------------------
 
 export default {
 	onOpponentDisconnect,
 	onOpponentReturn,
+	onSelfReturn,
 };

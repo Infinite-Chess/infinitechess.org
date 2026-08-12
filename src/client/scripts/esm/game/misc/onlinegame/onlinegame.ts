@@ -32,10 +32,11 @@ type GameStage = 'active' | 'finalized' | 'evicted';
 // Variables ----------------------------------------------------------------
 
 /**
- * Whetherwe are in sync with the server game, and the game isn't finalized yet (excludes rematch state).
+ * Whether we are in sync with the server game, and the game isn't finalized yet (excludes rematch state).
  * If false, we do not submit our moves (instead auto-submitted upon re-subscribing).
  * Set to false whenever we lose connection, or detect a desync.
- * Set to true whenever we receive a fresh full game state.
+ * Set to true whenever we receive a fresh full game state, or the game is evicted —
+ * there's then nothing left to be out of sync with.
  */
 let inSync: boolean = false;
 
@@ -69,6 +70,8 @@ function areInSync(): boolean {
 
 function setInSync(value: boolean): void {
 	inSync = value;
+	// Being back in sync is what ends a disconnection from our perspective.
+	if (value) guidisconnect.onSelfReturn();
 }
 
 // Functions --------------------------------------------------
@@ -240,6 +243,10 @@ function onFinalized(): void {
  */
 function onEvicted(): void {
 	stage = 'evicted';
+	// An evicted game receives nothing further, so it can never be out of sync. Without this,
+	// an eviction landing while we're disconnected (the reconnect's `subscribe` answered with
+	// `unsub`) would leave us marked out of sync permanently.
+	setInSync(true);
 }
 
 // Exports -------------------------------------------------------------------------

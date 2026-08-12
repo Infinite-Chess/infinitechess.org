@@ -567,27 +567,35 @@
 	--pulse-glow-max: 24%;
 }
 
-/* Intensity is driven by custom properties (with the default values as fallbacks) so a
-   consumer can brighten the pulse — e.g. the rematch button on hover — without a 2nd animation. */
+/* Color and intensity are driven by custom properties (with the default values as fallbacks) so a
+   consumer can tint or brighten the pulse — e.g. the rematch button on hover — without a 2nd animation. */
 @keyframes attention-pulse {
 	0%,
 	100% {
 		background-color: color-mix(
 			in srgb,
-			var(--c-text-emphasis) var(--pulse-bg-min, 3%),
+			var(--pulse-color, var(--c-text-emphasis)) var(--pulse-bg-min, 3%),
 			transparent
 		);
 		box-shadow: inset 0 0 5px 1px
-			color-mix(in srgb, var(--c-text-emphasis) var(--pulse-glow-min, 6%), transparent);
+			color-mix(
+				in srgb,
+				var(--pulse-color, var(--c-text-emphasis)) var(--pulse-glow-min, 6%),
+				transparent
+			);
 	}
 	50% {
 		background-color: color-mix(
 			in srgb,
-			var(--c-text-emphasis) var(--pulse-bg-max, 8%),
+			var(--pulse-color, var(--c-text-emphasis)) var(--pulse-bg-max, 8%),
 			transparent
 		);
 		box-shadow: inset 0 0 12px 2px
-			color-mix(in srgb, var(--c-text-emphasis) var(--pulse-glow-max, 16%), transparent);
+			color-mix(
+				in srgb,
+				var(--pulse-color, var(--c-text-emphasis)) var(--pulse-glow-max, 16%),
+				transparent
+			);
 	}
 }
 
@@ -633,6 +641,31 @@
 
 .disconnect-buttons .action-btn:active {
 	transform: translateY(1px);
+}
+
+/* =================================
+   Self-disconnect status
+   ================================= */
+
+/* Pulses in the error color — urgent, as our opponent may claim victory if we stay gone. */
+.self-disconnect-status {
+	padding: 8px 12px;
+	border-top: 1px solid var(--c-border-muted);
+	font-size: 0.9em;
+	text-align: center;
+	color: var(--c-error);
+	--pulse-color: var(--c-error);
+	--pulse-bg-min: 6%;
+	--pulse-bg-max: 16%;
+	--pulse-glow-min: 12%;
+	--pulse-glow-max: 30%;
+	animation: attention-pulse 1.8s ease-in-out infinite;
+}
+
+/* The brief "Reconnected." confirmation the notice ends on: no alarm color, no pulse. */
+.self-disconnect-status.reconnected {
+	color: var(--c-text);
+	animation: none;
 }
 
 /* ================================
