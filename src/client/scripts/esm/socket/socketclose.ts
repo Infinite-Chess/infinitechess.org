@@ -84,7 +84,7 @@ function onclose(code: number, reason: string): void {
 			break;
 		case 'Too Many Requests':
 			console.error('Too many requests when establishing socket.');
-			enterTimeout(timeToResubAfterTooManyRequestsMillis);
+			enterTimeout();
 			break;
 		case 'Too Many Sockets':
 			console.error('Too many sockets when establishing socket.');
@@ -95,7 +95,7 @@ function onclose(code: number, reason: string): void {
 			break;
 		case 'Origin Error':
 			console.error('Origin error when establishing socket.');
-			enterTimeout(timeToResubAfterTooManyRequestsMillis);
+			enterTimeout();
 			break;
 		default:
 			console.error(`Socket closed unexpectedly. Server message: "${trimmedReason}". Code: ${code}.`); // prettier-ignore
@@ -106,14 +106,11 @@ function onclose(code: number, reason: string): void {
 
 /**
  * Enters a rate-limit timeout period during which we won't reconnect.
- * @param timeMillis - The duration to remain in timeout, in milliseconds.
  */
-function enterTimeout(timeMillis: number): void {
-	if (timeMillis === undefined)
-		return console.error('Cannot enter timeout for an undefined amount of time!');
+function enterTimeout(): void {
 	if (inTimeout) return;
 	inTimeout = true;
-	window.setTimeout(() => leaveTimeout(), timeMillis);
+	window.setTimeout(() => leaveTimeout(), timeToResubAfterTooManyRequestsMillis);
 }
 
 /** Timeout from sending too many requests is over, try to reconnect. */
