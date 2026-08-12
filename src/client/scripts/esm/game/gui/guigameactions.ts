@@ -20,7 +20,6 @@
 
 import type { RematchOfferInfo } from '../../../../../shared/clientbound.js';
 
-import uuid from '../../../../../shared/util/uuid.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
@@ -50,7 +49,8 @@ const element_RejectDraw = document.getElementById('btn-reject-draw') as HTMLBut
 // Post-game actions. Analysis is always present; Rematch is SSR'd only for
 // a participant (not spectator) of an unevicted (live, in-memory) game.
 const element_Rematch = document.getElementById('btn-rematch') as HTMLButtonElement | null;
-const element_Analysis = document.getElementById('btn-analysis') as HTMLButtonElement;
+// A link (SSR'd href), so it navigates natively and honors ctrl/cmd/middle-click.
+const element_Analysis = document.getElementById('btn-analysis') as HTMLAnchorElement;
 
 // Events ------------------------------------------------------------------------------------
 
@@ -131,7 +131,7 @@ function updateResignAbortButtons(): void {
 const GRACE_MILLIS = 667;
 
 /** Buttons to briefly disable when their action block first appears. */
-const graceButtons = new Map<Element, HTMLButtonElement[]>();
+const graceButtons = new Map<Element, HTMLElement[]>();
 if (element_ActionsDrawOffer && element_AcceptDraw && element_RejectDraw)
 	graceButtons.set(element_ActionsDrawOffer, [element_AcceptDraw, element_RejectDraw]);
 graceButtons.set(
@@ -142,19 +142,21 @@ graceButtons.set(
 /** Blocks mid-grace, mapped to their pending re-enable timer. */
 const graceTimers = new Map<Element, number>();
 
-/** Disables `block`'s {@link graceButtons} for {@link GRACE_MILLIS}, then re-enables them. */
+/**
+ * Marks `block`'s {@link graceButtons} aria-disabled for {@link GRACE_MILLIS}, then restores them.
+ * Deliberately not the `disabled` property: the Analysis action is a link, and this leaves each
+ * button's genuine disabled state (e.g. rematch's) untouched.
+ */
 function armGracePeriod(block: Element): void {
 	const buttons = graceButtons.get(block);
 	if (!buttons) return; // Block has no grace-disabled buttons (e.g. actions-live).
-	for (const button of buttons) button.disabled = true;
+	for (const button of buttons) button.setAttribute('aria-disabled', 'true');
 	clearTimeout(graceTimers.get(block));
 	graceTimers.set(
 		block,
 		window.setTimeout(() => {
 			graceTimers.delete(block);
-			for (const button of buttons) button.disabled = false;
-			// The rematch button's enabled state depends on live rematch state, not just the grace.
-			updateRematchButton();
+			for (const button of buttons) button.removeAttribute('aria-disabled');
 		}, GRACE_MILLIS),
 	);
 }
@@ -225,11 +227,6 @@ function callback_Abort(): void {
 	});
 }
 
-/** Navigates to the post-game analysis board. */
-function callback_Analysis(): void {
-	window.location.assign(`/analysis/${uuid.base10ToBase62(window.gamePageData.id)}`);
-}
-
 // Rematch ------------------------------------------------------------------------------------
 
 /** Whether WE have extended a rematch offer this game (button disabled, waiting on opponent). */
@@ -243,12 +240,10 @@ let opponentPresentPostGame = true;
 /**
  * Repaints the rematch button: glows while the opponent has an offer out (and we haven't
  * yet responded), and is disabled once we've offered or while the opponent is away.
- * Leaves the button alone during its appearance grace period (see {@link armGracePeriod}).
  */
 function updateRematchButton(): void {
 	if (!element_Rematch) return; // Absent (spectator, or game loaded dead).
 	element_Rematch.classList.toggle('rematch-offered', opponentOfferedRematch && !weOfferedRematch); // prettier-ignore
-	if (graceTimers.has(element_ActionsOver)) return; // Mid-appearance grace — leave disabled state to it.
 	element_Rematch.disabled = !canOfferRematch() || !onlinegame.areInSync();
 }
 
@@ -319,7 +314,6 @@ function initListeners(): void {
 	element_RejectDraw?.addEventListener('click', () => drawoffers.callback_declineDraw());
 
 	element_Rematch?.addEventListener('click', callback_Rematch);
-	element_Analysis.addEventListener('click', callback_Analysis);
 }
 
 initListeners();

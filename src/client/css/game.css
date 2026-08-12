@@ -459,9 +459,11 @@
 	align-items: center;
 	justify-content: center;
 	min-height: 40px;
+	font: inherit;
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--c-text-emphasis);
+	text-decoration: none;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
@@ -479,7 +481,7 @@
 	background: transparent;
 }
 
-.action-btn:hover:not(:disabled) {
+.action-btn:hover:not(:disabled, [aria-disabled='true']) {
 	color: var(--c-text-emphasis);
 	background: var(--c-hover-overlay);
 }
@@ -487,6 +489,13 @@
 /* Disabled action buttons (e.g. offer-draw when offering is illegal): no not-allowed cursor. */
 .action-btn:disabled {
 	cursor: default;
+}
+
+/* Mid appearance grace period (guigameactions.ts): visibly inert, clicks ignored. Enforced
+   with pointer-events because aria-disabled alone wouldn't stop the Analysis link navigating. */
+.action-btn[aria-disabled='true'] {
+	opacity: 0.4;
+	pointer-events: none;
 }
 
 /* Live actions: fixed-size buttons (not full-width). */

@@ -71,6 +71,8 @@ export interface GameMetaViewModel {
 interface GamePageState {
 	/** Includes all static info about the game. */
 	gamePageData: GamePageData;
+	/** The game's id in its URL (base62) form, for links to the game's other pages. */
+	idBase62: string;
 	meta: GameMetaViewModel;
 }
 
@@ -80,7 +82,8 @@ interface GamePageState {
  * @throws If a database error occurs.
  */
 export function getGamePageState(req: Request): GamePageState | undefined {
-	const id = decodeGameId(req.params['id']!);
+	const idBase62 = req.params['id']!;
+	const id = decodeGameId(idBase62);
 	if (id === undefined) return undefined; // Malformed id
 
 	const memberInfo = req.memberInfo!;
@@ -122,6 +125,8 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 			role,
 			engineGame,
 		},
+		// Safe to reuse the URL param verbatim: decodeGameId rejects non-canonical encodings.
+		idBase62,
 		meta: buildGameMetaViewModel(state, ratingChanges, role, moveCount, req),
 	};
 }
