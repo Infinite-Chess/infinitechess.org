@@ -222,7 +222,12 @@ function initGameFile(
 		worldBorderDist: additional.worldBorderDist,
 		worldBorderCap: additional.worldBorderCap,
 	});
-	return loadGameWithBoard(game, boardsim, additional.moves, validateMoves);
+	const gamefile = loadGameWithBoard(game, boardsim, additional.moves, validateMoves);
+
+	// Must follow the moves being made, as the stamps are read off them.
+	clock.seedFromMoveStamps(gamefile, additional.clockValues?.clocks);
+
+	return gamefile;
 }
 
 export default {

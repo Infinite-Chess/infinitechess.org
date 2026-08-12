@@ -6,6 +6,7 @@
  */
 
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
+import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { DeadGameState } from '../../../../../shared/domain.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
@@ -66,6 +67,7 @@ async function loadGameById(gameId: number): Promise<void> {
 			state.gameConclusion,
 			viewWhitePerspective,
 			slideLimit !== undefined ? BigInt(slideLimit) : undefined,
+			state.finalClocks,
 		);
 		// Only a game fetched from the server gets a result banner. Deliberately NOT done for the other load paths.
 		gamesession.concludeGameIfOver();
@@ -134,24 +136,29 @@ function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint)
  * @param viewWhitePerspective - Board orientation override; defaults to retaining
  * the current game's perspective, or white's if this is the initial load.
  * @param slideLimit - Optional Slide Limit modifier override (see the variant setup panel).
+ * @param finalClocks - The exact clocks the game ended on, for a game fetched from the server.
+ * Only stored for signed-in players; a guest's clock falls back to their final ICN stamp.
  */
 async function pasteGame(
 	longFormat: LongFormatOut,
 	gameConclusion?: GameConclusion,
 	viewWhitePerspective?: boolean,
 	slideLimit?: bigint,
+	finalClocks?: PlayerGroup<number>,
 ): Promise<void> {
 	// Normalize the ICN's Variant metadata to the English display name (or drop it if
 	// unrecognized), so the game we go on to display carries canonical metadata.
 	clientmetadatautil.resolveAndNormalizeVariantFromMetadata(longFormat.metadata);
 	const { White, Black } = longFormat.metadata;
 	lastLoad = {
-		replay: () => pasteGame(longFormat, gameConclusion, viewWhitePerspective, slideLimit),
+		replay: () =>
+			pasteGame(longFormat, gameConclusion, viewWhitePerspective, slideLimit, finalClocks),
 		players: { White, Black },
 	};
 	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
 		gameConclusion,
 		slideLimit,
+		...(finalClocks && { clockValues: { clocks: finalClocks } }),
 	});
 
 	// Explicit override (e.g. the loaded game's participant orientation) wins; otherwise retain

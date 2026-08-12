@@ -7,7 +7,6 @@ import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeu
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -103,38 +102,21 @@ function set(basegame: GameFile): void {
 	updateTextContent(basegame.clocks);
 }
 
-/** Shows the static clock values stored on moves for the currently viewed analysis position. */
-function showViewedMoveClockStamps(basegame: GameFile): void {
+/** Shows the static clock values of the currently viewed position of a game being reviewed. */
+function showClocksAtViewedMove(basegame: GameFile): void {
 	if (basegame.untimed) return;
 
-	// A time forfeit at the final position zeroes the flagged player (the one who was to move).
-	const viewingFinalForfeit =
-		basegame.gameConclusion?.condition === 'time' && moveutil.areWeViewingLatestMove(basegame);
-	const flaggedPlayer = viewingFinalForfeit
-		? moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1)
-		: undefined;
+	// At the front of the played game the gamefile's own clocks are the most accurate — the server's
+	// exact end-of-game values, where it had them. A stamped final move means we're there, rather
+	// than at the front of a variation added on the analysis board (whose moves carry no stamp).
+	const atFrontOfPlayedGame =
+		moveutil.areWeViewingLatestMove(basegame) &&
+		(basegame.moves.length === 0 ||
+			moveutil.getLastMove(basegame.moves)!.clockStamp !== undefined);
 
-	// For each player, walk backwards from the viewed move to their most recent move.
-	const turnOrder = basegame.gameRules.turnOrder;
-	const currentTime: PlayerGroup<number> = {};
-	for (const player of gamerules.getUniquePlayersInTurnOrder(turnOrder)) {
-		if (currentTime[player] !== undefined) continue; // Already set (duplicate in turn order)
-		if (player === flaggedPlayer) {
-			// They lost on time, and we're viewing the final move
-			currentTime[player] = 0;
-			continue;
-		}
-		currentTime[player] = basegame.clocks.startTime.millis; // Fallback if they never moved.
-		for (let i = basegame.state.local.moveIndex; i >= 0; i--) {
-			if (moveutil.getColorThatPlayedMoveIndex(basegame, i) !== player) continue;
-			const stamp = basegame.moves[i]!.clockStamp;
-			// Analysis moves added on the board carry no clock; skip past them so the
-			// clock keeps this variation's last real value instead of dropping to 0.
-			if (stamp === undefined) continue;
-			currentTime[player] = stamp;
-			break;
-		}
-	}
+	const currentTime = atFrontOfPlayedGame
+		? basegame.clocks.currentTime
+		: clock.clocksAtMoveIndex(basegame, basegame.state.local.moveIndex);
 
 	updateTextContent({ startTime: basegame.clocks.startTime, currentTime });
 }
@@ -203,6 +185,6 @@ export default {
 	edit,
 	push,
 	update,
-	showViewedMoveClockStamps,
+	showClocksAtViewedMove,
 	updateTempo,
 };

@@ -18,6 +18,7 @@ import type { ClockValues, TimeControl } from '../../domain.js';
 import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import timeutil from '../../util/timeutil.js';
+import gamerules from '../util/gamerules.js';
 import clockutil from '../util/clockutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 
@@ -119,6 +120,74 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 		currentClocks.timeAtTurnStart = now;
 		currentClocks.timeRemainAtTurnStart = currentClocks.currentTime[colorTicking];
 	}
+}
+
+/**
+ * Seeds the clocks of a game loaded from an ICN with the values it ended on, read
+ * from its final clock stamps, so a concluded game doesn't display its starting times.
+ * @param alreadyKnown - Clock values sourced from the server, which are exact where a stamp isn't
+ * (it predates any time burned before a resignation). The colors it covers are left untouched.
+ */
+function seedFromMoveStamps(
+	basegame: {
+		moves: MoveRecord[];
+		gameRules: GameRules;
+		gameConclusion?: GameConclusion;
+	} & ClockDependant,
+	alreadyKnown: PlayerGroup<number> = {},
+): void {
+	if (basegame.untimed) return;
+
+	const stamped = clocksAtMoveIndex(basegame, basegame.moves.length - 1);
+	for (const [playerStr, time] of Object.entries(stamped)) {
+		const player = Number(playerStr) as Player;
+		if (alreadyKnown[player] === undefined) basegame.clocks.currentTime[player] = time;
+	}
+}
+
+/**
+ * Reads each color's remaining time as of the given move index off the moves' clock stamps —
+ * the time a player had left after their most recent move at or before that index.
+ * Only games loaded from an ICN carry stamps; live move packets are stripped of them.
+ * @param moveIndex - The move to read the clocks as of. -1 for the start of the game.
+ */
+function clocksAtMoveIndex(
+	basegame: {
+		moves: MoveRecord[];
+		gameRules: GameRules;
+		gameConclusion?: GameConclusion;
+		clocks: ClockData;
+	},
+	moveIndex: number,
+): PlayerGroup<number> {
+	// A time forfeit zeroes the player who was to move at the game's end,
+	// as their last stamp predates all the time they burned up to the flag.
+	const flaggedPlayer =
+		basegame.gameConclusion?.condition === 'time' && moveIndex === basegame.moves.length - 1
+			? moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1)
+			: undefined;
+
+	const currentTime: PlayerGroup<number> = {};
+	for (const player of gamerules.getUniquePlayersInTurnOrder(basegame.gameRules.turnOrder)) {
+		if (player === flaggedPlayer) {
+			// They lost on time, and we're viewing the final move
+			currentTime[player] = 0;
+			continue;
+		}
+		currentTime[player] = basegame.clocks.startTime.millis; // Fallback if they never moved.
+		// Walk backwards to their most recent move.
+		for (let i = moveIndex; i >= 0; i--) {
+			if (moveutil.getColorThatPlayedMoveIndex(basegame, i) !== player) continue;
+			const stamp = basegame.moves[i]!.clockStamp;
+			// Moves added on the analysis board carry no clock; skip past them so the
+			// clock keeps this variation's last real value instead of dropping to 0.
+			if (stamp === undefined) continue;
+			currentTime[player] = stamp;
+			break;
+		}
+	}
+
+	return currentTime;
 }
 
 /**
@@ -254,6 +323,8 @@ export default {
 	init,
 	createEdit,
 	edit,
+	seedFromMoveStamps,
+	clocksAtMoveIndex,
 	stop,
 	endGame,
 	update,

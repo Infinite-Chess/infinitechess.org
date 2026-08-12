@@ -30,7 +30,7 @@ GameBus.addEventListener('view-move', () => syncClockDisplayToViewedMove());
 function syncClockDisplayToViewedMove(remapBars = false): void {
 	const gamefile = gameslot.getGamefile()!;
 	if (remapBars) guiclock.set(gamefile);
-	guiclock.showViewedMoveClockStamps(gamefile);
+	guiclock.showClocksAtViewedMove(gamefile);
 }
 
 /** Polls this module's keyboard shortcuts. Called once per frame by the page loop. */

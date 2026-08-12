@@ -45,11 +45,13 @@ function normalizeToGameState(deadState: DeadGameState): GameStateMessage {
 	const longformat = icnconverter.ShortToLong_Format(deadState.icn);
 
 	const state: GameStateMessage = {
-		// Drop the ICN's clock stamps: the game page never reads them, and keeping them would
-		// leave a dead game's moves stamped while a live game's aren't. Analysis keeps its own.
-		moves: icnimport.movePacketsFromParsed(longformat.moves ?? []).map(({ token }) => ({ token })), // prettier-ignore
+		// The ICN's clock stamps ride along: they seed the clock of any color
+		// the server stored no final value for — guests keep no `player_games` row.
+		moves: icnimport.movePacketsFromParsed(longformat.moves ?? []),
 		gameConclusion: deadState.gameConclusion,
 		finalized: true, // A dead game's result is locked in permanently.
+		// The exact clocks the game ended on. Absent for untimed games.
+		...(deadState.finalClocks && { clockValues: { clocks: deadState.finalClocks } }),
 	};
 
 	return state;

@@ -6,8 +6,8 @@
  */
 
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { TimeControl } from '../../../../../shared/domain.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { ClockValues, TimeControl } from '../../../../../shared/domain.js';
 import type { Additional, GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js'; // prettier-ignore
 import type {
 	LongFormatOut,
@@ -41,6 +41,8 @@ interface ConstructionOverrides {
 	gameConclusion?: GameConclusion;
 	/** See {@link Additional.slideLimit}. */
 	slideLimit?: bigint;
+	/** See {@link Additional.clockValues}. */
+	clockValues?: ClockValues;
 	/** See {@link Additional.worldBorderDist}. */
 	worldBorderDist?: bigint;
 	/** See {@link Additional.worldBorderCap}. */
