@@ -88,19 +88,13 @@ function cancelTimerOfMessageID(ID: number): void {
 }
 
 /**
- * Closes the current websocket when an echo hasn't been heard.
+ * Drops the current websocket when an echo hasn't been heard.
  * Called a few seconds after not hearing a server echo.
  */
 function onEchoTimeout(messageID: MessageID): void {
-	if (messageID) {
-		delete echoTimers[messageID];
-	}
-	const socket = socketman.getSocket();
-	if (!socket) return;
-	console.log(
-		`Renewing connection after we haven't received an echo for ${wsutil.ECHO_TIMEOUT} milliseconds...`,
-	);
-	socket.close(1000, 'Connection closed by client. Renew.');
+	if (messageID) delete echoTimers[messageID];
+	console.log(`Renewing connection after we haven't received an echo for ${wsutil.ECHO_TIMEOUT} ms...`); // prettier-ignore
+	socketman.dropSocket();
 }
 
 /**
@@ -157,18 +151,13 @@ function clearPendingState(): void {
 	cancelHeartbeatTimer();
 }
 
-/**
- * Called when no message has been received within the expected time frame.
- * Closes the socket.
- */
+/** Called when no message has been received within the expected time frame. Drops the socket. */
 function onHeartbeatTimeout(): void {
 	heartbeatTimerID = undefined;
-	const socket = socketman.getSocket();
-	if (!socket) return;
 	console.log(
 		`No message received for ${wsutil.HEARTBEAT_INTERVAL_MS + wsutil.ECHO_TIMEOUT}ms. Assuming connection lost.`,
 	);
-	socket.close(1000, 'Connection closed by client. Renew.');
+	socketman.dropSocket();
 }
 
 // Sending Messages ------------------------------------------------------------

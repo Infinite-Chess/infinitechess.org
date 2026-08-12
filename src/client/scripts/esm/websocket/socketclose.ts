@@ -34,18 +34,19 @@ function isInTimeout(): boolean {
 // Close Handler ---------------------------------------------------------------
 
 /**
- * Called when our open socket fires the 'close' event.
+ * Runs the teardown for a socket that is no longer connected.
  * Cancels echo timers and on-reply functions, then handles reconnection
  * based on the closure reason.
- * @param event - The 'close' event fired.
+ * @param code - The closure code.
+ * @param reason - The reason given for the closure.
  */
-function onclose(event: CloseEvent): void {
-	if (config.DEV_BUILD) console.log('WebSocket connection closed:', event.code, event.reason);
+function onclose(code: number, reason: string): void {
+	if (config.DEV_BUILD) console.log('WebSocket connection closed:', code, reason);
 
 	socketmessages.clearPendingState();
 
-	const trimmedReason = event.reason.trim();
-	const involuntary = wsutil.wasSocketClosureInvoluntary(event.code, trimmedReason);
+	const trimmedReason = reason.trim();
+	const involuntary = wsutil.wasSocketClosureInvoluntary(code, trimmedReason);
 
 	SocketBus.dispatch('closed');
 	// An unintentional close (with subs to reconnect for) means we lost the connection and
@@ -58,12 +59,12 @@ function onclose(event: CloseEvent): void {
 
 	// Connection closed unexpectedly (network interrupted) or server is down/restarting.
 	// Schedule a reconnect — delay and resubAll() are handled inside scheduleReconnect().
-	if (event.code === 1006) {
+	if (code === 1006) {
 		socketman.scheduleReconnect();
 		return;
 	}
 
-	if (event.code === 1001) return; // "going away": Page unloaded
+	if (code === 1001) return; // "going away": Page unloaded
 
 	switch (trimmedReason) {
 		case 'Connection expired':
@@ -71,18 +72,12 @@ function onclose(event: CloseEvent): void {
 			break;
 		case 'Connection closed by client':
 			break;
-		case 'Connection closed by client. Renew.':
-			console.log('Closed web socket successfully. Renewing now..');
-			socketman.resubAll();
-			break;
 		case 'Unable to identify client IP address':
 			console.error('Unable to identify IP when establishing socket.');
 			break;
 		case 'Authentication needed':
 			// Called when the server closes our websocket due to missing authentication.
-			toast.show(t.shared.socket.cookies_required, {
-				error: true,
-			});
+			toast.show(t.shared.socket.cookies_required, { error: true });
 			break;
 		case 'Logged out':
 			validatorama.reloadAfterLogout();
@@ -100,9 +95,7 @@ function onclose(event: CloseEvent): void {
 			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;
 		default:
-			console.error(
-				`Socket closed unexpectedly. Server message: "${trimmedReason}". Code: ${event.code}.`,
-			);
+			console.error(`Socket closed unexpectedly. Server message: "${trimmedReason}". Code: ${code}.`); // prettier-ignore
 	}
 }
 

@@ -160,7 +160,7 @@ async function openSocket(): Promise<boolean> {
 		ws.onmessage = (event: MessageEvent) => socketrouter.onmessage(event);
 		ws.onclose = (event: CloseEvent) => {
 			socket = undefined;
-			socketclose.onclose(event);
+			socketclose.onclose(event.code, event.reason);
 		};
 	});
 }
@@ -171,6 +171,28 @@ function closeSocket(): void {
 	if (socket.readyState !== WebSocket.OPEN)
 		return console.error("Cannot close socket because it's not open! Yet socket is defined.");
 	socket.close(1000, 'Connection closed by client');
+}
+
+/**
+ * Tears the socket down at once, for when we've already concluded the connection is dead.
+ *
+ * Browsers expose no terminate(), and a severed network stalls the 'close' event for tens of
+ * seconds while the closing handshake goes unanswered — yet every consequence of the
+ * disconnection, telling the user included, waits on that event. So we send the close frame in
+ * case the wire turns out to be fine, then stop listening and run the teardown ourselves.
+ */
+function dropSocket(): void {
+	if (!socket) return;
+	const dropped = socket;
+	socket = undefined;
+	// Anything this socket does from here — a late close, a message once the network returns —
+	// is moot, and must not reach a session that has since opened a replacement.
+	dropped.onclose = null;
+	dropped.onmessage = null;
+	// The reason is for the server alone, should the frame still land: it grants us the
+	// reconnection grace period, where a plain client closure would cost us our seek.
+	dropped.close(1000, 'Connection closed by client. Renew.');
+	socketclose.onclose(1006, ''); // Report it as the abnormal closure it is.
 }
 
 // Resubscription --------------------------------------------------------------
@@ -190,6 +212,7 @@ export default {
 	getSocket,
 	establishSocket,
 	closeSocket,
+	dropSocket,
 	scheduleReconnect,
 	resubAll,
 	toggleDebug,
