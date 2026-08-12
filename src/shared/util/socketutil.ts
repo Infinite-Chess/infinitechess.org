@@ -52,6 +52,11 @@ const ECHO_TIMEOUT = 5000;
 
 // Every closure code/reason pairing that can occur:
 
+// BOTH sides see BOTH lists below. `ws` populates the server's 'close' event purely from the
+// PEER's close frame — but a browser answers a close frame by echoing back the code and reason
+// it received, so a reason the server sent still comes back to it. Don't strike the
+// server-sent reasons from involuntaryClosureReasons as unreachable server-side; they aren't.
+
 // Sent by the server:
 // 1000 "Connection expired"  (Can read this even if we disable our own network in dev tools)
 // 1008 "Origin Error"

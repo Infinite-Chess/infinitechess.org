@@ -38,7 +38,9 @@ async function onmessage(ws: CustomWebSocket, rawMessage: Buffer): Promise<void>
 	}
 
 	if (message.route === 'echo') {
-		// Echo, don't log or route.
+		// Deliberately unlogged and unmetered. An echo isn't traffic the client chose to send — we
+		// oblige one per message WE send — so charging their budget for our own send volume would
+		// close honest sockets. Safe: it's validated above, and handling one is an O(1) clearTimeout.
 		cancelEchoTimer(ws, message.contents);
 		return;
 	}
