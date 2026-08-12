@@ -110,6 +110,15 @@ function playNotify(includeReverb: boolean): Promise<SoundObject | undefined> {
 	return playSoundEffect('notify', options);
 }
 
+/**
+ * Plays the notify sound, resolving only once it has finished, so a hard-navigate
+ * that follows can't cut it off. No reverb — it makes us wait too long.
+ */
+async function playNotifyToCompletion(): Promise<void> {
+	const sound = await playNotify(false);
+	if (sound) await sound.whenEnded;
+}
+
 function playLowtime(): void {
 	playSoundEffect('low_time');
 }
@@ -145,6 +154,7 @@ export default {
 	playMarimba,
 	playBase,
 	playNotify,
+	playNotifyToCompletion,
 	playLowtime,
 	playGlassCrack,
 };

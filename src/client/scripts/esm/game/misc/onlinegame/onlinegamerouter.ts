@@ -33,7 +33,10 @@ import movesendreceive from './movesendreceive.js';
 
 // Types ------------------------------------------------------------
 
-/** Every game message that reaches the router. `notlive` is consumed by receiveMessage first. */
+/**
+ * Every game message that reaches the router. `notlive` is consumed by receiveMessage first.
+ * This use of Exclude is approved.
+ */
 type RoutedGameMessage = Exclude<ClientboundGameMessage, { action: 'notlive' }>;
 
 // State ------------------------------------------------------------
@@ -253,13 +256,9 @@ function handleLeaveGame(): void {
  * Called when the server reports both players agreed to a rematch.
  * Play the notify sound and navigate to the new game.
  * Agnostic of whether we are a participant or spectator.
- * TODO: Remove redundancy with this and the lobby.onInGame()'s logic.
  */
 async function handleInGame(rematch: GameNavigation): Promise<void> {
-	// Plays the notify sound and awaits it so the hard-navigate doesn't cut it off.
-	// No reverb added here, it makes us wait too long.
-	const sound = await gamesound.playNotify(false);
-	if (sound) await sound.whenEnded;
+	await gamesound.playNotifyToCompletion();
 	const viewColor = resolveRematchViewColor(rematch.role);
 	window.location.assign(gameurl.getGameUrl(rematch.id, viewColor));
 }

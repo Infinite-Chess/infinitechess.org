@@ -236,10 +236,7 @@ function onViewerCountUpdate(count: number): void {
 async function onInGame(ingame: InGameMessage): Promise<void> {
 	gameIdWeAreIn = ingame.id;
 	if (ingame.navigate) {
-		// Plays the notify sound and awaits it so the hard-navigate doesn't cut it off.
-		// No reverb added here, it makes us wait too long.
-		const sound = await gamesound.playNotify(false);
-		if (sound) await sound.whenEnded;
+		await gamesound.playNotifyToCompletion();
 		window.location.assign(gameurl.getGameUrl(ingame.id, ingame.role));
 	} else {
 		// We already know of this game (another tab of ours, or a page-load mid-game): stay on
