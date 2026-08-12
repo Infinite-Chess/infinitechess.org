@@ -4,8 +4,7 @@
  * This script stores all open websockets organized by ID, IP, and session.
  *
  * This contains methods for terminating all websockets by given criteria,
- * Rate limiting the socket count per user,
- * And unsubbing a socket from subscriptions.
+ * and rate limiting the socket count per user.
  */
 
 import type { CustomWebSocket } from './socketUtility.js';
@@ -82,17 +81,8 @@ function startTimerToExpireSocket(ws: CustomWebSocket): void {
 	); // We pass in an arrow function so it doesn't lose scope of ws.
 }
 
-/**
- * Removes the given WebSocket connection from all tracking lists.
- * @param ws - The WebSocket connection to remove.
- * @param _code - The WebSocket closure code.
- * @param _reason - The reason for the WebSocket closure.
- */
-function removeConnectionFromConnectionLists(
-	ws: CustomWebSocket,
-	_code: number,
-	_reason: string,
-): void {
+/** Removes the given WebSocket connection from all tracking lists. */
+function removeConnectionFromConnectionLists(ws: CustomWebSocket): void {
 	delete websocketConnections[ws.metadata.id];
 	removeConnectionFromList(connectedIPs, ws.metadata.IP, ws.metadata.id); // Remove IP connection
 	if (ws.metadata.cookies.jwt)
@@ -101,9 +91,6 @@ function removeConnectionFromConnectionLists(
 		removeConnectionFromList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Remove member connection
 
 	clearTimeout(ws.metadata.clearafter); // Cancel the timer to auto delete it at the end of its life
-	// console.log(
-	// 	`WebSocket connection has been closed. Code: ${_code}. Reason: ${_reason}. Socket count: ${Object.keys(websocketConnections).length}`,
-	// );
 }
 
 /**

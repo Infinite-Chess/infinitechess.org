@@ -18,7 +18,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	const reasonString = reason.toString();
 
 	// Delete connection from object.
-	removeConnectionFromConnectionLists(ws, code, reasonString);
+	removeConnectionFromConnectionLists(ws);
 
 	// What if the code is 1000, and reason is "Connection closed by client"?
 	// I then immediately want to delete their seek.
