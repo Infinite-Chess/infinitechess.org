@@ -259,12 +259,13 @@ function canOfferRematch(): boolean {
 }
 
 /**
- * Receives the full rematch state from the server, after a
- * page load or 'subscriberematch'. Updates the rematch button.
+ * Receives the full rematch state from the server — on the game concluding,
+ * a page load, or a 'subscriberematch'. Updates the rematch button.
  */
 function setRematchState(rematch: RematchOfferInfo): void {
-	// Not a lost-offer bug: the server withdraws our offer the instant our socket closes
-	// (onPostGameLeave), and we only ever get here on a fresh socket, so it's genuinely gone.
+	// Not a lost-offer bug. Either the game just concluded, before we could have offered at all,
+	// or we're on a fresh socket, and the server withdrew our offer the instant the old one
+	// closed (onPostGameLeave) — so there is never a standing offer of ours to clear here.
 	weOfferedRematch = false;
 	opponentOfferedRematch = rematch.offered;
 	opponentPresentPostGame = rematch.present;

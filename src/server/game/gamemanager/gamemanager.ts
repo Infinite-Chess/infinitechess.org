@@ -487,6 +487,10 @@ function applyConclusion(servergame: ServerGame, conclusion: GameConclusion): vo
 
 	// Set end time
 	if (servergame.match.timeEnded === undefined) servergame.match.timeEnded = Date.now();
+
+	// The game now lingers for the rematch handshake. Sent from here, ahead of every
+	// conclusion message, so participants hold the overlay before the button is revealed.
+	gameutility.sendRematchStateToParticipants(servergame);
 }
 
 /** Game has ended: console log the result for debugging. */

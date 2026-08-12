@@ -745,6 +745,22 @@ function getRematchOfferInfo(servergame: ServerGame, role: Player): RematchOffer
 }
 
 /**
+ * Hands every connected participant their rematch overlay, the moment the game's conclusion
+ * brings it into existence. The conclusion itself reaches them over several recipient-agnostic
+ * messages (`gameconclusion`, `move`) that spectators receive too, so none of them can carry it.
+ * Recipients also getting a full `gamestate` receive it twice — {@link getParticipantState}
+ * embeds the same overlay — which is idempotent, and the price of one un-missable call site.
+ */
+function sendRematchStateToParticipants(servergame: ServerGame): void {
+	for (const color of Object.keys(servergame.match.playerData)) {
+		const role = Number(color) as Player;
+		// Guaranteed defined — callers invoke this only once the conclusion is applied.
+		const rematch = getRematchOfferInfo(servergame, role)!;
+		sendMessageToColor(servergame.match, role, 'game', 'rematchstate', rematch);
+	}
+}
+
+/**
  * Resolves the color a websocket is playing as in a specific live game, if they are a participant.
  * Uses game subscription metadata when valid, with identity fallback for resync/refresh cases.
  * @returns The player's color if the socket belongs to the game, otherwise undefined.
@@ -987,6 +1003,7 @@ export default {
 	simplifyMove,
 	broadcastToParticipants,
 	getRematchOfferInfo,
+	sendRematchStateToParticipants,
 	printGame,
 	getSimplifiedGameString,
 	isGameOver,
