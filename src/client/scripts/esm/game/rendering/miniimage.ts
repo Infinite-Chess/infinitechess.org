@@ -71,8 +71,8 @@ function toggle(): void {
 	disabled = !disabled;
 	frametracker.onVisualChange();
 
-	if (disabled) toast.show(translations.rendering.icon_rendering_off);
-	else toast.show(translations.rendering.icon_rendering_on);
+	if (disabled) toast.show('Toggled off icon rendering.');
+	else toast.show('Toggled on icon rendering.');
 }
 
 // Updating --------------------------------------------------------------------------

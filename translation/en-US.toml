@@ -425,8 +425,6 @@ clear_position = "Position was cleared!"
 [play.javascript.rendering]
 on = "On"
 off = "Off"
-icon_rendering_off = "Toggled off icon rendering."
-icon_rendering_on = "Toggled on icon rendering."
 perspective = "Perspective"
 perspective_mode_on_desktop = "Perspective mode is available on desktop!"
 movement_tutorial = "WASD to move. Space & shift to zoom."
