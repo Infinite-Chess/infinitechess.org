@@ -10,7 +10,7 @@
  * a type-only import is erased at build time, keeping the schemas out of its bundle.
  *
  * A schema belongs here if it exists ONLY as websocket message contents. Domain values
- * used by HTTP or SSR as well (TimeControl, MovePacket, SeekId...) live in types.ts.
+ * used by HTTP or SSR as well (TimeControl, MovePacket, SeekId...) live in domain.ts.
  */
 
 import * as z from 'zod';

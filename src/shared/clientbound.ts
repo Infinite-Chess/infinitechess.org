@@ -11,7 +11,7 @@
  * schemas, which the client only ever needs as types, into its bundle.
  *
  * A schema belongs here if it exists ONLY as websocket message contents. Domain values
- * used by HTTP or SSR as well (ClockValues, MovePacket, OutSeek...) live in types.ts.
+ * used by HTTP or SSR as well (ClockValues, MovePacket, OutSeek...) live in domain.ts.
  */
 
 import * as z from 'zod';
