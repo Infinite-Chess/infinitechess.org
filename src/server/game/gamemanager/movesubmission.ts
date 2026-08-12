@@ -9,7 +9,7 @@ import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { SubmitMoveMessage } from '../../../shared/serverbound.js';
 import type { OpponentsMoveMessage } from '../../../shared/clientbound.js';
 
@@ -25,7 +25,7 @@ import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 import liveGameValues from './liveGameValues.js';
 import { declineDraw } from './onOfferDraw.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 import gameutility, { ServerGame } from './gameutility.js';
 import { pushGameClock, applyConclusion, freeGame } from './gamemanager.js';
 

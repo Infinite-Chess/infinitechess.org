@@ -1,11 +1,11 @@
-// src/server/socket/wsLogger.ts
+// src/server/socket/socketLogger.ts
 
 /**
  * Logs websocket connection handshakes and incoming/outgoing messages.
  * Reflection of reqLogger middleware, but for websockets.
  */
 
-import type { CustomWebSocket } from './socketUtility.js';
+import type { CustomWebSocket } from './socketTypes.js';
 
 import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
 
@@ -23,7 +23,7 @@ function truncateMessage(messageData: string): string {
 }
 
 /** Additionally logs a newly-opened authenticated socket's metadata into  `wsInLog/. */
-function logWebsocketStart(ws: CustomWebSocket): void {
+function logSocketOpen(ws: CustomWebSocket): void {
 	const socketID = ws.metadata.id;
 	const logThis = `Opened socket of ID "${socketID}": ${JSON.stringify(ws.metadata.memberInfo)}`;
 	logEvents(logThis, 'wsInLog');
@@ -33,7 +33,7 @@ function logWebsocketStart(ws: CustomWebSocket): void {
  * Logs incoming websocket messages into `wsInLog/`.
  * @param messageData - The raw data of the incoming message.
  */
-function logReqWebsocketIn(ws: CustomWebSocket, messageData: string): void {
+function logSocketIn(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;
 	const logThis = `From socket of ID "${socketID}":   ${escapeLogNewlines(truncateMessage(messageData))}`;
 	logEvents(logThis, 'wsInLog');
@@ -43,10 +43,10 @@ function logReqWebsocketIn(ws: CustomWebSocket, messageData: string): void {
  * Logs outgoing websocket messages into `wsOutLog/`.
  * @param messageData - The raw data of the outgoing message.
  */
-function logReqWebsocketOut(ws: CustomWebSocket, messageData: string): void {
+function logSocketOut(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;
 	const logThis = `To socket of ID "${socketID}":   ${truncateMessage(messageData)}`;
 	logEvents(logThis, 'wsOutLog');
 }
 
-export { logWebsocketStart, logReqWebsocketIn, logReqWebsocketOut };
+export { logSocketOpen, logSocketIn, logSocketOut };

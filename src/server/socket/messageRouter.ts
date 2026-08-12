@@ -1,12 +1,12 @@
-// src/server/socket/socketRouter.ts
+// src/server/socket/messageRouter.ts
 
 /**
- * This script receives routes incoming socket messages them where they need to go.
+ * This script routes incoming socket messages where they need to go.
  *
  * It also handles subbing to subscription lists.
  */
 
-import type { CustomWebSocket } from './socketUtility.js';
+import type { CustomWebSocket } from './socketTypes.js';
 import type { ServerboundRoutedMessage } from '../../shared/serverbound.js';
 
 import { routeGameMessage } from '../game/gamemanager/gamerouter.js';

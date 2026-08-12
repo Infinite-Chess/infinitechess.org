@@ -6,7 +6,7 @@
 
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { EngineGamePageInfo, StaticGameState } from '../../../shared/domain.js';
 import type { GameSetup, PlayerRatingResult, ServerGame } from './gameutility.js';
@@ -29,7 +29,7 @@ import { executeSafely } from '../../utility/errorGuard.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
 import { timeBeforeFinalizeMillis } from './gameutility.js';
 import { produceDeadStaticGameState } from './deadgamestate.js';

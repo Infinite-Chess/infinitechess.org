@@ -1,4 +1,4 @@
-// src/client/scripts/esm/websocket/socketman.ts
+// src/client/scripts/esm/socket/socketconnection.ts
 
 /**
  * Manages the websocket connection lifecycle: opening, closing,
@@ -10,7 +10,7 @@ import config from '../game/config.js';
 import thread from '../util/thread.js';
 import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
-import socketrouter from './socketrouter.js';
+import socketreceive from './socketreceive.js';
 import { SocketBus } from './SocketBus.js';
 
 // Constants -------------------------------------------------------------------
@@ -146,7 +146,7 @@ async function openSocket(): Promise<boolean> {
 			clearTimeout(noResponseTimer);
 			resolve(false);
 		};
-		ws.onmessage = (event: MessageEvent) => socketrouter.onmessage(event);
+		ws.onmessage = (event: MessageEvent) => socketreceive.onmessage(event);
 		ws.onclose = (event: CloseEvent) => {
 			socket = undefined;
 			socketclose.onclose(event.code, event.reason);
@@ -199,7 +199,7 @@ function dropSocket(): void {
 
 /**
  * Called when the socket unexpectedly closes. Notifies all subs to resubscribe.
- * Then socketmessages.send() lazily reopens the socket.
+ * Then socketsend.send() lazily reopens the socket.
  */
 function resubAll(): void {
 	if (config.DEV_BUILD) console.log('Resubbing all..');

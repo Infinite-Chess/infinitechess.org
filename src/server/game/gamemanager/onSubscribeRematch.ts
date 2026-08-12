@@ -6,11 +6,11 @@
  * state can change. Unfinalized reconnects instead go through `subscribe` (see onSubscribe.ts).
  */
 
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
 import gameutility from './gameutility.js';
 import { getGameByID } from './gamemanager.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 
 /**
  * A lean reconnect for a game the client already knows is finalized:

@@ -1,4 +1,4 @@
-// src/server/socket/sendSocketMessage.ts
+// src/server/socket/socketSend.ts
 
 /**
  * This script sends socket messages,
@@ -7,8 +7,8 @@
  * It also owns the echo timers each sent message arms, closing the socket if the echo never arrives.
  */
 
-import type { CustomWebSocket } from './socketUtility.js';
-import type { ActionValue, Exact, RouteAction } from '../../shared/util/wsutil.js';
+import type { CustomWebSocket } from './socketTypes.js';
+import type { ActionValue, Exact, RouteAction } from '../../shared/util/socketutil.js';
 import type {
 	ClientboundGameMessage,
 	ClientboundGeneralMessage,
@@ -18,9 +18,9 @@ import type {
 import { WebSocket } from 'ws';
 
 import uuid from '../../shared/util/uuid.js';
-import wsutil from '../../shared/util/wsutil.js';
+import socketutil from '../../shared/util/socketutil.js';
 
-import { logReqWebsocketOut } from './wsLogger.js';
+import { logSocketOut } from './socketLogger.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -90,7 +90,7 @@ function sendSocketMessage<R extends OutRoute, A extends OutAction<R>, V extends
 	// console.log(`Sending: ${stringifiedPayload}`);
 
 	ws.send(stringifiedPayload); // Send the message
-	logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
+	logSocketOut(ws, stringifiedPayload); // Log the sent message
 
 	// Set a timer. At the end, if we have heard no echo, just assume they've disconnected, terminate the socket.
 	// terminate() and not close(): a closing handshake with a peer we have already concluded is
@@ -99,7 +99,7 @@ function sendSocketMessage<R extends OutRoute, A extends OutAction<R>, V extends
 	ws.metadata.echoTimers[id] = setTimeout(() => {
 		delete ws.metadata.echoTimers[id];
 		ws.terminate();
-	}, wsutil.ECHO_TIMEOUT); // We pass in an arrow function so it doesn't lose scope of ws.
+	}, socketutil.ECHO_TIMEOUT); // We pass in an arrow function so it doesn't lose scope of ws.
 
 	rescheduleHeartbeatTimer(ws);
 }
@@ -148,7 +148,7 @@ function rescheduleHeartbeatTimer(ws: CustomWebSocket): void {
 	cancelHeartbeatTimer(ws);
 	ws.metadata.heartbeatTimerID = setTimeout(
 		() => sendSocketMessage(ws, 'general', 'ping', undefined),
-		wsutil.HEARTBEAT_INTERVAL_MS,
+		socketutil.HEARTBEAT_INTERVAL_MS,
 	);
 }
 

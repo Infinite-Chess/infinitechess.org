@@ -1,4 +1,4 @@
-// src/client/scripts/esm/websocket/socketmessages.ts
+// src/client/scripts/esm/socket/socketsend.ts
 
 /**
  * Handles outgoing websocket messages and echo tracking.
@@ -7,7 +7,7 @@
  * which holds them across a disconnect rather than letting them fall on the floor.
  */
 
-import type { ActionValue, Exact, RouteAction } from '../../../../shared/util/wsutil.js';
+import type { ActionValue, Exact, RouteAction } from '../../../../shared/util/socketutil.js';
 import type {
 	ServerboundGameMessage,
 	ServerboundGeneralMessage,
@@ -15,12 +15,12 @@ import type {
 } from '../../../../shared/serverbound.js';
 
 import uuid from '../../../../shared/util/uuid.js';
-import wsutil from '../../../../shared/util/wsutil.js';
+import socketutil from '../../../../shared/util/socketutil.js';
 
-import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
 import socketlogger from './socketlogger.js';
 import { SocketBus } from './SocketBus.js';
+import socketconnection from './socketconnection.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -86,8 +86,8 @@ function cancelTimerOfMessageID(ID: number): void {
  */
 function onEchoTimeout(messageID: MessageID): void {
 	if (messageID) delete echoTimers[messageID];
-	console.log(`Renewing connection after we haven't received an echo for ${wsutil.ECHO_TIMEOUT} ms...`); // prettier-ignore
-	socketman.dropSocket();
+	console.log(`Renewing connection after we haven't received an echo for ${socketutil.ECHO_TIMEOUT} ms...`); // prettier-ignore
+	socketconnection.dropSocket();
 }
 
 /**
@@ -113,7 +113,7 @@ function rescheduleHeartbeatTimer(): void {
 	if (socketsubs.zeroSubs()) return;
 	heartbeatTimerID = window.setTimeout(
 		onHeartbeatTimeout,
-		wsutil.HEARTBEAT_INTERVAL_MS + wsutil.ECHO_TIMEOUT,
+		socketutil.HEARTBEAT_INTERVAL_MS + socketutil.ECHO_TIMEOUT,
 	);
 }
 
@@ -135,9 +135,9 @@ function clearPendingState(): void {
 function onHeartbeatTimeout(): void {
 	heartbeatTimerID = undefined;
 	console.log(
-		`No message received for ${wsutil.HEARTBEAT_INTERVAL_MS + wsutil.ECHO_TIMEOUT}ms. Assuming connection lost.`,
+		`No message received for ${socketutil.HEARTBEAT_INTERVAL_MS + socketutil.ECHO_TIMEOUT}ms. Assuming connection lost.`,
 	);
-	socketman.dropSocket();
+	socketconnection.dropSocket();
 }
 
 // Sending Messages ------------------------------------------------------------
@@ -175,7 +175,7 @@ async function send<R extends OutRoute, A extends OutAction<R>, V extends OutVal
 	// Set a timer to assume disconnection if echo not received
 	echoTimers[payload.id] = {
 		timeSent: Date.now(),
-		timeoutID: window.setTimeout(() => onEchoTimeout(payload.id), wsutil.ECHO_TIMEOUT),
+		timeoutID: window.setTimeout(() => onEchoTimeout(payload.id), socketutil.ECHO_TIMEOUT),
 	};
 
 	transmit(socket, message);
@@ -198,12 +198,12 @@ async function sendEcho(id: MessageID): Promise<void> {
  * Returns undefined if we couldn't get an open socket, in which case the message is dropped.
  */
 async function acquireSocket(): Promise<WebSocket | undefined> {
-	if (!(await socketman.establishSocket())) return;
+	if (!(await socketconnection.establishSocket())) return;
 
-	const socket = socketman.getSocket();
+	const socket = socketconnection.getSocket();
 	if (!socket || socket.readyState !== WebSocket.OPEN) return; // Died while we awaited it.
 
-	socketman.resetIdleCloseTimer();
+	socketconnection.resetIdleCloseTimer();
 	return socket;
 }
 

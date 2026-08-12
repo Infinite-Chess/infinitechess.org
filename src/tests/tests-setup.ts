@@ -27,9 +27,9 @@ vi.mock('../server/middleware/logEvents.js', async (importOriginal) => {
 		logEvents: vi.fn(), // Do nothing
 		logEventsAndPrint: vi.fn(), // Do nothing
 		reqLogger: (_req: Request, _res: Response, next: NextFunction) => next(), // Continue to next middleware
-		logWebsocketStart: vi.fn(), // Do nothing
-		logReqWebsocketIn: vi.fn(), // Do nothing
-		logReqWebsocketOut: vi.fn(), // Do nothing
+		logSocketOpen: vi.fn(), // Do nothing
+		logSocketIn: vi.fn(), // Do nothing
+		logSocketOut: vi.fn(), // Do nothing
 	};
 });
 

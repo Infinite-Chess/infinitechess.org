@@ -7,7 +7,7 @@
  * This script is only used for subtracting the ping value from the clock values the server reported.
  */
 
-import { SocketBus } from '../websocket/SocketBus.js';
+import { SocketBus } from '../socket/SocketBus.js';
 
 // Variables -------------------------------------------------------------
 

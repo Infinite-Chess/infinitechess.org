@@ -7,13 +7,13 @@
  * On demand, it broadcasts stuff out to the players.
  */
 
-import type { Exact } from '../../../shared/util/wsutil.js';
+import type { Exact } from '../../../shared/util/socketutil.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { OutAction, OutValue } from '../../socket/sendSocketMessage.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
+import type { OutAction, OutValue } from '../../socket/socketSend.js';
 
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 
 /** Set of clients currently subscribed to the lobby. */
 const subscribedClients: Set<CustomWebSocket> = new Set();

@@ -24,10 +24,10 @@ import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
 import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
+import socketsend from '../../../socket/socketsend.js';
 import { GameBus } from '../../GameBus.js';
 import gamesession from '../../chess/gamesession.js';
 import movesequence from '../../chess/movesequence.js';
-import socketmessages from '../../../websocket/socketmessages.js';
 
 // Events ---------------------------------------------------------------------
 
@@ -56,7 +56,7 @@ function submitMove(gamefile: GameFile, moveIndex: number): void {
 		gameConclusion: isLastMove ? gamefile.gameConclusion : undefined,
 	};
 
-	void socketmessages.send('game', 'submitmove', data);
+	void socketsend.send('game', 'submitmove', data);
 }
 
 /**
@@ -162,7 +162,7 @@ function reportOpponentsMove(reason: string): void {
 	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
 	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
 	const message = { reason, opponentsMoveNumber };
-	void socketmessages.send('game', 'report', message);
+	void socketsend.send('game', 'report', message);
 }
 
 /**

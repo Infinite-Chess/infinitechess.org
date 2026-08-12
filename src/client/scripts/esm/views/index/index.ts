@@ -10,8 +10,8 @@ import type { ClientboundLobbyMessage } from '../../../../../shared/clientbound.
 
 import lobby from './lobby.js';
 import flashToast from '../../util/flashToast.js';
-import socketintents from '../../websocket/socketintents.js';
-import { SocketBus } from '../../websocket/SocketBus.js';
+import socketintents from '../../socket/socketintents.js';
+import { SocketBus } from '../../socket/SocketBus.js';
 
 import './newPrompt.js';
 import './gameSetupModal.js';

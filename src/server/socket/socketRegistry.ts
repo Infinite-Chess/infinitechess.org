@@ -1,4 +1,4 @@
-// src/server/socket/socketManager.ts
+// src/server/socket/socketRegistry.ts
 
 /**
  * This script stores all open websockets organized by ID, IP, and session.
@@ -7,7 +7,7 @@
  * and rate limiting the socket count per user.
  */
 
-import type { CustomWebSocket } from './socketUtility.js';
+import type { CustomWebSocket } from './socketTypes.js';
 
 import uuid from '../../shared/util/uuid.js';
 

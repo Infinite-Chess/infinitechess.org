@@ -4,7 +4,7 @@
  * Handles engine-game creation through the normal live-game pipeline.
  */
 
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { CreateEngineGameMessage } from '../../../shared/serverbound.js';
 
 import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
@@ -12,7 +12,7 @@ import typeutil, { players } from '../../../shared/chess/util/typeutil.js';
 import { engineDictionary, ValidEngine } from '../../../shared/chess/engine.js';
 
 import { getEngineVersion } from '../../config/manifest.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { resolveAndValidateVariant } from './createseek.js';

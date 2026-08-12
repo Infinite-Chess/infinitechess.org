@@ -1,21 +1,21 @@
-// src/server/socket/receiveSocketMessage.ts
+// src/server/socket/socketReceive.ts
 
 /**
  * This script receives incoming socket messages, rate limits them, logs them,
  * cancels their echo timer, sends an echo, then sends the message to our router.
  */
 
-import type { CustomWebSocket } from './socketUtility.js';
+import type { CustomWebSocket } from './socketTypes.js';
 import type { ServerboundMessage } from '../../shared/serverbound.js';
 
 import { ServerboundSchema } from '../../shared/serverbound.js';
 
 import { logZodError } from '../utility/zodlogger.js';
-import { logReqWebsocketIn } from './wsLogger.js';
+import { logSocketIn } from './socketLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
-import { routeIncomingSocketMessage } from './socketRouter.js';
+import { routeIncomingSocketMessage } from './messageRouter.js';
 import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
-import { cancelEchoTimer, rescheduleHeartbeatTimer, sendReceipt } from './sendSocketMessage.js';
+import { cancelEchoTimer, rescheduleHeartbeatTimer, sendReceipt } from './socketSend.js';
 
 // Functions ---------------------------------------------------------------------------
 
@@ -96,7 +96,7 @@ function parseAndValidateMessage(messageStr: string): ServerboundMessage | null 
  * is being rate limited and the socket has already been closed.
  */
 function logAndRateLimitMessage(ws: CustomWebSocket, rawMessage: string): boolean {
-	logReqWebsocketIn(ws, rawMessage); // Log every incoming message, even rate-limited ones.
+	logSocketIn(ws, rawMessage); // Log every incoming message, even rate-limited ones.
 	if (!rateLimitWebSocket(ws)) return false; // Rate limited; the socket will have already been closed.
 	return true;
 }

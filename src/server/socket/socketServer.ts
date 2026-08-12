@@ -8,7 +8,7 @@ import { WebSocketServer as Server } from 'ws';
 
 import { executeSafely } from '../utility/errorGuard.js';
 import { runWithRequestID } from '../middleware/requestContext.js';
-import { onConnectionRequest } from './openSocket.js';
+import { onConnectionRequest } from './socketOpen.js';
 
 // Constants ---------------------------------------------------------------------------
 

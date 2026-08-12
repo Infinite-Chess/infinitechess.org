@@ -17,7 +17,7 @@ import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import gameactions from '../../gui/guigameactions.js';
 import { GameBus } from '../../GameBus.js';
-import socketintents from '../../../websocket/socketintents.js';
+import socketintents from '../../../socket/socketintents.js';
 
 // Variables ---------------------------------------------------
 

@@ -9,7 +9,7 @@
  */
 
 import type { AuthMemberInfo } from '../../types.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { GameSetup, ServerGame } from './gameutility.js';
 
@@ -17,7 +17,7 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import { getEngineVersion } from '../../config/manifest.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 import { getIDOfGamePlayerIsIn } from './activeplayers.js';
 import { createGame, evictGame, onGameCreationError } from './gamemanager.js';
 

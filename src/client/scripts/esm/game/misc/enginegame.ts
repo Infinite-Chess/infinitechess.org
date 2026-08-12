@@ -26,7 +26,7 @@ import selection from '../chess/selection.js';
 import { GameBus } from '../GameBus.js';
 import gamesession from '../chess/gamesession.js';
 import movesequence from '../chess/movesequence.js';
-import socketintents from '../../websocket/socketintents.js';
+import socketintents from '../../socket/socketintents.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import enginelegalmovesdebug from './enginelegalmovesdebug.js';
 import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';

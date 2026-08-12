@@ -8,17 +8,17 @@
  */
 
 import type { Board } from '../../../shared/chess/logic/boardinit.js';
-import type { Exact } from '../../../shared/util/wsutil.js';
+import type { Exact } from '../../../shared/util/socketutil.js';
 import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { ValidEngine } from '../../../shared/chess/engine.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Game, LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { OutAction, OutRoute, OutValue } from '../../socket/sendSocketMessage.js';
+import type { OutAction, OutRoute, OutValue } from '../../socket/socketSend.js';
 import type {
 	GameConclusionMessage,
 	GameStateBase,
@@ -61,7 +61,7 @@ import tconfig from '../../config/translationconfig.js';
 import liveGameValues from './liveGameValues.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
 import { cancelDisconnectTimer } from './disconnect.js';
 import { consumeNavigateNotice } from './activeplayers.js';

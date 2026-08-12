@@ -1,4 +1,4 @@
-// src/client/scripts/esm/websocket/socketsubs.ts
+// src/client/scripts/esm/socket/socketsubs.ts
 
 /**
  * Manages subscription state for the client websocket system.
@@ -7,7 +7,7 @@
  * and provides methods to add, remove, and query subscriptions.
  */
 
-import socketmessages from './socketmessages.js';
+import socketsend from './socketsend.js';
 
 /** The routes carrying a server-pushed stream we subscribe to. Excludes 'general', the protocol route. */
 export type SubscribedRoute = 'lobby' | 'game';
@@ -65,7 +65,7 @@ function unsubFromLobby(): void {
 	if (!areSubbedToSub('lobby')) return; // Already unsubbed.
 	deleteSub('lobby');
 	// Tell the server we no longer want updates.
-	void socketmessages.send('general', 'unsub', 'lobby');
+	void socketsend.send('general', 'unsub', 'lobby');
 }
 
 // Exports --------------------------------------------------------------------

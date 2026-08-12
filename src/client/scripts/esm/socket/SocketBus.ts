@@ -1,9 +1,9 @@
-// src/client/scripts/esm/websocket/SocketBus.ts
+// src/client/scripts/esm/socket/SocketBus.ts
 
 /**
  * Typed event bus for all websocket-related events.
  * Covers both socket lifecycle events and incoming server messages.
- * socketrouter dispatches incoming messages onto it; handlers self-register by listening.
+ * socketreceive dispatches incoming messages onto it; handlers self-register by listening.
  */
 
 import type {

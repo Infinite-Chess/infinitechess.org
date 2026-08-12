@@ -1,4 +1,4 @@
-// src/client/scripts/esm/websocket/socketclose.ts
+// src/client/scripts/esm/socket/socketclose.ts
 
 /**
  * Handles websocket close events and reconnection logic.
@@ -7,15 +7,15 @@
  * including reconnection, timeout, and user notification.
  */
 
-import wsutil from '../../../../shared/util/wsutil.js';
+import socketutil from '../../../../shared/util/socketutil.js';
 
 import toast from '../components/toast.js';
 import config from '../game/config.js';
-import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
+import socketsend from './socketsend.js';
 import validatorama from '../util/validatorama.js';
 import { SocketBus } from './SocketBus.js';
-import socketmessages from './socketmessages.js';
+import socketconnection from './socketconnection.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -43,10 +43,10 @@ function isInTimeout(): boolean {
 function onclose(code: number, reason: string): void {
 	if (config.DEV_BUILD) console.log('WebSocket connection closed:', code, reason);
 
-	socketmessages.clearPendingState();
+	socketsend.clearPendingState();
 
 	const trimmedReason = reason.trim();
-	const involuntary = wsutil.wasSocketClosureInvoluntary(code, trimmedReason);
+	const involuntary = socketutil.wasSocketClosureInvoluntary(code, trimmedReason);
 
 	SocketBus.dispatch('closed');
 	// An unintentional close (with subs to reconnect for) means we lost the connection and
@@ -60,7 +60,7 @@ function onclose(code: number, reason: string): void {
 	// Connection closed unexpectedly (network interrupted) or server is down/restarting.
 	// Schedule a reconnect — delay and resubAll() are handled inside scheduleReconnect().
 	if (code === 1006) {
-		socketman.scheduleReconnect();
+		socketconnection.scheduleReconnect();
 		return;
 	}
 
@@ -68,7 +68,7 @@ function onclose(code: number, reason: string): void {
 
 	switch (trimmedReason) {
 		case 'Connection expired':
-			socketman.resubAll();
+			socketconnection.resubAll();
 			break;
 		case 'Connection closed by client':
 			break;
@@ -88,7 +88,10 @@ function onclose(code: number, reason: string): void {
 			break;
 		case 'Too Many Sockets':
 			console.error('Too many sockets when establishing socket.');
-			window.setTimeout(() => socketman.resubAll(), timeToResubAfterTooManyRequestsMillis);
+			window.setTimeout(
+				() => socketconnection.resubAll(),
+				timeToResubAfterTooManyRequestsMillis,
+			);
 			break;
 		case 'Origin Error':
 			console.error('Origin error when establishing socket.');
@@ -116,7 +119,7 @@ function enterTimeout(timeMillis: number): void {
 /** Timeout from sending too many requests is over, try to reconnect. */
 function leaveTimeout(): void {
 	inTimeout = false;
-	socketman.resubAll();
+	socketconnection.resubAll();
 }
 
 // Exports -------------------------------------------------------------------

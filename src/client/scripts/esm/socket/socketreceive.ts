@@ -1,4 +1,4 @@
-// src/client/scripts/esm/websocket/socketrouter.ts
+// src/client/scripts/esm/socket/socketreceive.ts
 
 /**
  * Routes incoming websocket messages to the appropriate handler
@@ -9,14 +9,14 @@ import type { ClientboundGeneralMessage } from '../../../../shared/clientbound.j
 
 import * as z from 'zod';
 
-import wsutil from '../../../../shared/util/wsutil.js';
+import socketutil from '../../../../shared/util/socketutil.js';
 import { ClientboundSchema } from '../../../../shared/clientbound.js';
 
 import toast from '../components/toast.js';
+import socketsend from './socketsend.js';
 import socketlogger from './socketlogger.js';
 import { SocketBus } from './SocketBus.js';
 import socketintents from './socketintents.js';
-import socketmessages from './socketmessages.js';
 
 // Routing ---------------------------------------------------------------------
 
@@ -35,7 +35,7 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	// Any incoming message proves the connection is alive.
 	// Reschedule the inactivity timer that detects silent disconnections.
-	socketmessages.rescheduleHeartbeatTimer();
+	socketsend.rescheduleHeartbeatTimer();
 
 	const zod_result = ClientboundSchema.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
@@ -56,13 +56,13 @@ function onmessage(serverMessage: MessageEvent): void {
 	socketlogger.logIncoming(message);
 
 	// Receipts are never echoed back.
-	if (message.route === 'echo') return socketmessages.cancelTimerOfMessageID(message.contents);
+	if (message.route === 'echo') return socketsend.cancelTimerOfMessageID(message.contents);
 	// The action we asked about is no longer outstanding.
 	if (message.route === 'ack') return socketintents.onAck(message.contents);
 
 	// Not a receipt...
 
-	void socketmessages.sendEcho(message.id);
+	void socketsend.sendEcho(message.id);
 
 	switch (message.route) {
 		case 'general':
@@ -103,7 +103,7 @@ function ongeneralmessage(message: ClientboundGeneralMessage): void {
 		case 'protocolversion':
 			// Our code predates a protocol change. Reload to fetch the current scripts —
 			// they're content-hashed, so a plain reload is guaranteed to pull the new ones.
-			if (message.value !== wsutil.PROTOCOL_VERSION) location.reload();
+			if (message.value !== socketutil.PROTOCOL_VERSION) location.reload();
 			break;
 		default:
 			console.error('Unknown server action in general route.', message satisfies never);

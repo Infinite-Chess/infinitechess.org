@@ -8,11 +8,11 @@
 
 import type { AuthMemberInfo } from '../../types.js';
 import type { OutSeek, SeekId } from '../../../shared/domain.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { LobbyStateMessage } from '../../../shared/clientbound.js';
 
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 import { makeSeekSafe, AuthSeek } from './seekutility.js';
 import {
 	consumeNavigateNotice,

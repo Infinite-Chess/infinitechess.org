@@ -19,8 +19,8 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import { GameBus } from '../GameBus.js';
-import { SocketBus } from '../../websocket/SocketBus.js';
-import socketintents from '../../websocket/socketintents.js';
+import { SocketBus } from '../../socket/SocketBus.js';
+import socketintents from '../../socket/socketintents.js';
 
 // Constants ---------------------------------------------------------------------------------
 

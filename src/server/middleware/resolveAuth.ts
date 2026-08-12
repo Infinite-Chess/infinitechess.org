@@ -9,7 +9,7 @@ import type { Request, Response, NextFunction } from 'express';
 
 import { getClientIP } from '../utility/IP.js';
 import { ParsedCookies } from '../types.js';
-import { CustomWebSocket } from '../socket/socketUtility.js';
+import { CustomWebSocket } from '../socket/socketTypes.js';
 import { logEventsAndPrint } from './logEvents.js';
 import { validateRefreshToken } from '../controllers/authenticationTokens/tokenValidator.js';
 import {

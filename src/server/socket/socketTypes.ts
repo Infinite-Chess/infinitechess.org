@@ -1,6 +1,6 @@
-// src/server/socket/socketUtility.ts
+// src/server/socket/socketTypes.ts
 
-// This script contains generalized methods for working with websocket objects.
+// This script defines the CustomWebSocket interface used by server socket handlers.
 
 import type WebSocket from 'ws';
 import type { Player } from '../../shared/chess/util/typeutil.js';

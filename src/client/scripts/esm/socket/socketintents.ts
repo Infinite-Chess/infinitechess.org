@@ -1,4 +1,4 @@
-// src/client/scripts/esm/websocket/socketintents.ts
+// src/client/scripts/esm/socket/socketintents.ts
 
 /**
  * Delivery layer for user-triggered socket messages ("intents").
@@ -15,17 +15,17 @@
  * ("You are already in a game").
  *
  * Protocol traffic (echoes, sub/unsub, resubscribing, move submission) bypasses this and uses
- * socketmessages.send() directly — deferring the messages the resync itself depends on would
+ * socketsend.send() directly — deferring the messages the resync itself depends on would
  * deadlock, and moves have their own reconciliation in resyncer.
  */
 
-import type { Exact } from '../../../../shared/util/wsutil.js';
+import type { Exact } from '../../../../shared/util/socketutil.js';
 import type { SubscribedRoute } from './socketsubs.js';
-import type { MessageID, OutAction, OutValue } from './socketmessages.js';
+import type { MessageID, OutAction, OutValue } from './socketsend.js';
 
-import socketman from './socketman.js';
+import socketsend from './socketsend.js';
 import { SocketBus } from './SocketBus.js';
-import socketmessages from './socketmessages.js';
+import socketconnection from './socketconnection.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -132,7 +132,7 @@ function submit<R extends SubscribedRoute, A extends OutAction<R>, V extends Out
 		// Records the id it goes out under, so the ack for it can release the lock. One that
 		// couldn't be sent at all is released right away — nothing is coming back to release it.
 		send: async () => {
-			const messageID = await socketmessages.send(route, action, value, true);
+			const messageID = await socketsend.send(route, action, value, true);
 			// Couldn't go out, so nothing is coming back to release it. Otherwise it stays
 			// locked and merely learns the id it's waiting on, which no one needs to hear.
 			if (messageID === undefined) release(key);
@@ -180,7 +180,7 @@ function isRouteReady(route: SubscribedRoute): boolean {
 	if (!synced[route]) return false;
 	// Not redundant with the sync flag: a client-initiated close() leaves the socket CLOSING
 	// for a while, and `closed` (which clears the flag) only fires once it's actually shut.
-	const socket = socketman.getSocket();
+	const socket = socketconnection.getSocket();
 	return socket !== undefined && socket.readyState === WebSocket.OPEN;
 }
 

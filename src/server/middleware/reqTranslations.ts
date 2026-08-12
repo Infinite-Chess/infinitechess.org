@@ -20,7 +20,7 @@ import { getScriptTranslations } from '../config/componentTranslationLoader.js';
 /**
  * Builds a translations accessor for a resolved language: a Proxy that resolves each
  * component's script-facing strings lazily, so only the components actually read are
- * looked up. Shared by `req.t` (here) and `ws.t` (see openSocket.ts).
+ * looked up. Shared by `req.t` (here) and `ws.t` (see socketOpen.ts).
  */
 export function buildTranslations(lang: string): ScriptTranslations {
 	return new Proxy({} as ScriptTranslations, {

@@ -7,10 +7,10 @@
  * board against the returned state on reconnect. (Finalized-game reconnects use `subscriberematch` instead)
  */
 
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
 import gameutility from './gameutility.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 import { getGameByID, freezeEngineClock, resumeEngineClock } from './gamemanager.js';
 
 /**

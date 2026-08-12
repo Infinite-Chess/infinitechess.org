@@ -10,7 +10,7 @@ import { deleteMember } from '../database/memberManager.js';
 import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
-import { closeAllSocketsOfMember } from '../socket/socketManager.js';
+import { closeAllSocketsOfMember } from '../socket/socketRegistry.js';
 import { isMemberInSomeActiveGame } from '../game/gamemanager/gamemanager.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 

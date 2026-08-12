@@ -15,7 +15,7 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamelogger from './gamelogger.js';
 import gameutility from './gameutility.js';
 import { logEvents } from '../../middleware/logEvents.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 import { applyConclusion, freeGame } from './gamemanager.js';
 
 /**

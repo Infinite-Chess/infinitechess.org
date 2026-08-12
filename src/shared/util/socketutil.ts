@@ -1,4 +1,4 @@
-// src/shared/util/wsutil.ts
+// src/shared/util/socketutil.ts
 
 /*
  * This script should contain utility methods regarding

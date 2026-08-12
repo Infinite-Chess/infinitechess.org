@@ -1,9 +1,9 @@
-// src/client/scripts/esm/websocket/socketlogger.ts
+// src/client/scripts/esm/socket/socketlogger.ts
 
 /**
  * Owns debug mode and prints the socket traffic it enables.
  *
- * Counterpart of the server's wsLogger, which writes to log files unconditionally.
+ * Counterpart of the server's socketLogger, which writes to log files unconditionally.
  * Ours is a dev toggle: off, nothing is printed and no latency is simulated.
  */
 

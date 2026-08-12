@@ -12,15 +12,15 @@ import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 import { engineDictionary } from '../../../../../../shared/chess/engine.js';
 
 import gameslot from '../../chess/gameslot.js';
-import socketsubs from '../../../websocket/socketsubs.js';
+import socketsubs from '../../../socket/socketsubs.js';
 import drawoffers from './drawoffers.js';
 import enginegame from '../enginegame.js';
+import socketsend from '../../../socket/socketsend.js';
 import gameactions from '../../gui/guigameactions.js';
 import gamesession from '../../chess/gamesession.js';
 import guigamemeta from '../../gui/guigamemeta.js';
 import guidisconnect from '../../gui/guidisconnect.js';
-import { SocketBus } from '../../../websocket/SocketBus.js';
-import socketmessages from '../../../websocket/socketmessages.js';
+import { SocketBus } from '../../../socket/SocketBus.js';
 
 import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 
@@ -224,11 +224,11 @@ function subscribeToGame(): void {
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
 	if (stage === 'finalized' && gameslot.getGamefile()) {
 		// The result is locked in — nothing but rematch offers can change, so we can't desync.
-		void socketmessages.send('game', 'subscriberematch', id);
+		void socketsend.send('game', 'subscriberematch', id);
 	} else {
 		// No game loaded yet (initial subscribe), a load that failed and left us with none,
 		// or it's live but not finalized (may still change) — request the full state.
-		void socketmessages.send('game', 'subscribe', id);
+		void socketsend.send('game', 'subscribe', id);
 	}
 }
 

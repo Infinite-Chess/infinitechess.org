@@ -1,16 +1,16 @@
-// src/server/socket/closeSocket.ts
+// src/server/socket/socketClose.ts
 
 /**
- * This script terminates websockets.
+ * This script handles cleanup after a websocket has closed.
  */
 
-import type { CustomWebSocket } from './socketUtility.js';
+import type { CustomWebSocket } from './socketTypes.js';
 
-import wsutil from '../../shared/util/wsutil.js';
+import socketutil from '../../shared/util/socketutil.js';
 
-import { clearPendingState } from './sendSocketMessage.js';
+import { clearPendingState } from './socketSend.js';
 import { unsubSocketFromAllSubs } from './socketSubs.js';
-import { removeConnectionFromConnectionLists } from './socketManager.js';
+import { removeConnectionFromConnectionLists } from './socketRegistry.js';
 
 // Functions ---------------------------------------------------------------------------
 
@@ -28,7 +28,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	// True if client had no power over the closure,
 	// DON'T COUNT this as a disconnection!
 	// They would want to keep their seek, AND remain in their game!
-	const involuntary = wsutil.wasSocketClosureInvoluntary(code, reasonString);
+	const involuntary = socketutil.wasSocketClosureInvoluntary(code, reasonString);
 
 	// Unsubscribe them from all. NO LIST. It doesn't matter if they want to keep their seek or remain
 	// connected to their game, without a websocket to send updates to, there's no point in any

@@ -77,7 +77,7 @@ res.status(400).send(req.t.responses.auth.invalid_token);
 
 `req.t` is a fully-typed `ScriptTranslations` accessor present on every Express request, mirroring the client-side global `t`. It's a lazy getter installed on the request prototype ([reqTranslations.ts](/src/server/middleware/reqTranslations.ts)) that, on first access, reads the language off `req.lang` and caches a Proxy for the rest of the request. Because `req.lang` resolves itself lazily too, `req.t` works **everywhere** — including code that runs before the routers (e.g. the rate limiter), with no pipeline-ordering concerns.
 
-For socket replies, the connection-bound `ws.t` is the equivalent — a `ScriptTranslations` accessor of the same shape, read the same way. It's built once when the socket connects ([openSocket.ts](/src/server/socket/openSocket.ts)) and lives on the `CustomWebSocket` ([socketUtility.ts](/src/server/socket/socketUtility.ts)). Unlike `req.t`, there's no lazy getter: the language is fixed at connection time, so the accessor is assigned eagerly — the Proxy still resolves each component lazily on first access.
+For socket replies, the connection-bound `ws.t` is the equivalent — a `ScriptTranslations` accessor of the same shape, read the same way. It's built once when the socket connects ([socketOpen.ts](/src/server/socket/socketOpen.ts)) and lives on the `CustomWebSocket` ([socketTypes.ts](/src/server/socket/socketTypes.ts)). Unlike `req.t`, there's no lazy getter: the language is fixed at connection time, so the accessor is assigned eagerly — the Proxy still resolves each component lazily on first access.
 
 When the caller holds only a resolved language code (e.g. SSR template-render code, or a queued email sender that resolved the language from the DB), use the lower-level primitive `getScriptTranslations(component, lang)` that the bound accessors delegate to.
 
@@ -159,7 +159,7 @@ When working on this refactor, the migration approach in todo.md is: localize ea
 | Constants (folder, default lang)       | [src/server/config/translationconfig.ts](/src/server/config/translationconfig.ts)                   |
 | Language resolution (`req.lang`)       | [src/server/middleware/reqLanguage.ts](/src/server/middleware/reqLanguage.ts)                       |
 | Request-bound translations (`req.t`)   | [src/server/middleware/reqTranslations.ts](/src/server/middleware/reqTranslations.ts)               |
-| Connection-bound translations (`ws.t`) | [src/server/socket/openSocket.ts](/src/server/socket/openSocket.ts)                                 |
+| Connection-bound translations (`ws.t`) | [src/server/socket/socketOpen.ts](/src/server/socket/socketOpen.ts)                                 |
 | Per-request `res.locals` setup         | [src/server/routes/root.ts](/src/server/routes/root.ts)                                             |
 | Client-side `window.t` injection       | [src/server/views/layout.njk](/src/server/views/layout.njk)                                         |
 | Type generation                        | [scripts/generate-component-translation-types.ts](/scripts/generate-component-translation-types.ts) |

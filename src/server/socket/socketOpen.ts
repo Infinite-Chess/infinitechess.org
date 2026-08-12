@@ -1,4 +1,4 @@
-// src/server/socket/openSocket.ts
+// src/server/socket/socketOpen.ts
 
 /**
  * This script handles socket upgrade connection requests, and creating new sockets.
@@ -6,19 +6,19 @@
 
 import type WebSocket from 'ws';
 import type { IncomingMessage } from 'http';
-import type { CustomWebSocket } from './socketUtility.js';
+import type { CustomWebSocket } from './socketTypes.js';
 
 import { parse as parseCookie } from 'cookie';
 
-import wsutil from '../../shared/util/wsutil.js';
+import socketutil from '../../shared/util/socketutil.js';
 
-import { onclose } from './closeSocket.js';
-import { onmessage } from './receiveSocketMessage.js';
+import { onclose } from './socketClose.js';
+import { onmessage } from './socketReceive.js';
 import { getClientIP } from '../utility/IP.js';
+import { logSocketOpen } from './socketLogger.js';
 import { runWithRequestID } from '../middleware/requestContext.js';
 import { buildTranslations } from '../middleware/reqTranslations.js';
-import { logWebsocketStart } from './wsLogger.js';
-import { sendSocketMessage } from './sendSocketMessage.js';
+import { sendSocketMessage } from './socketSend.js';
 import { logIncomingRequest } from '../middleware/reqLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
@@ -31,7 +31,7 @@ import {
 	doesSessionHaveMaxSocketCount,
 	generateUniqueIDForSocket,
 	terminateAllIPSockets,
-} from './socketManager.js';
+} from './socketRegistry.js';
 
 // Variables ---------------------------------------------------------------------------
 
@@ -74,12 +74,12 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 
 	addConnectionToConnectionLists(ws);
 
-	logWebsocketStart(ws); // Log the opened socket in wsInLog with more metadata.
+	logSocketOpen(ws); // Log the opened socket in wsInLog with more metadata.
 
 	addListenersToSocket(ws);
 
 	// Announce our protocol version, so a client running pre-protocol-change code knows to refresh.
-	sendSocketMessage(ws, 'general', 'protocolversion', wsutil.PROTOCOL_VERSION);
+	sendSocketMessage(ws, 'general', 'protocolversion', socketutil.PROTOCOL_VERSION);
 }
 
 function closeIfInvalidAndAddMetadata(

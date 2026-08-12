@@ -26,7 +26,7 @@ import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
 import { GameBus } from '../GameBus.js';
-import socketlogger from '../../websocket/socketlogger.js';
+import socketlogger from '../../socket/socketlogger.js';
 import guipromotion from '../gui/guipromotion.js';
 import guimoveslist from '../gui/guimoveslist.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';

@@ -5,7 +5,7 @@ import type { Request, Response } from 'express';
 import { logEvents } from '../middleware/logEvents.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
-import { closeAllSocketsOfSession } from '../socket/socketManager.js';
+import { closeAllSocketsOfSession } from '../socket/socketRegistry.js';
 
 /** `POST /api/logout` — revokes the caller's session, deletes its refresh token, and closes its sockets. */
 async function handleLogout(req: Request, res: Response): Promise<void> {

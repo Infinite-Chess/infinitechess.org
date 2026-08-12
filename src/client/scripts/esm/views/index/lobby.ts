@@ -30,9 +30,9 @@ import variantregistry from '../../../../../shared/chess/variants/variantregistr
 import docutil from '../../util/docutil.js';
 import idleness from '../../util/idleness.js';
 import gamesound from '../../game/misc/gamesound.js';
-import socketsubs from '../../websocket/socketsubs.js';
-import socketintents from '../../websocket/socketintents.js';
-import socketmessages from '../../websocket/socketmessages.js';
+import socketsubs from '../../socket/socketsubs.js';
+import socketsend from '../../socket/socketsend.js';
+import socketintents from '../../socket/socketintents.js';
 import gameSetupModal from './gameSetupModal.js';
 import seekPreviewCache from './seekPreviewCache.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
@@ -316,7 +316,7 @@ async function subscribe(): Promise<void> {
 	if (isIdle) return; // Don't resubscribe while idle; the user must interact with the lobby to reconnect
 	if (socketsubs.areSubbedToSub('lobby')) return;
 	socketsubs.addSub('lobby');
-	void socketmessages.send('general', 'sub', 'lobby');
+	void socketsend.send('general', 'sub', 'lobby');
 }
 
 /** Unsubscribes from the invites list and clears the rendered seek list. */

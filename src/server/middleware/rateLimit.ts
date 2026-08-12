@@ -1,7 +1,7 @@
 // src/server/middleware/rateLimit.ts
 
 import type { Request, Response, NextFunction } from 'express';
-import type { CustomWebSocket } from '../socket/socketUtility.js';
+import type { CustomWebSocket } from '../socket/socketTypes.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 

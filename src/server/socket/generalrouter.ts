@@ -4,7 +4,7 @@
  * This script handles the incoming general websocket message route.
  */
 
-import type { CustomWebSocket } from './socketUtility.js';
+import type { CustomWebSocket } from './socketTypes.js';
 import type { ServerboundGeneralMessage } from '../../shared/serverbound.js';
 
 import { handleSubbing, handleUnsubbing } from './socketSubs.js';

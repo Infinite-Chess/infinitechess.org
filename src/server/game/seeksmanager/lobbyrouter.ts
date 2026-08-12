@@ -5,7 +5,7 @@
  * with the "lobby" route to where they need to go.
  */
 
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { ServerboundLobbyMessage } from '../../../shared/serverbound.js';
 
 import { createSeek } from './createseek.js';

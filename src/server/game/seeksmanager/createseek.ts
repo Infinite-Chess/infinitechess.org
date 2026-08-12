@@ -4,7 +4,7 @@
  * This script handles seek creation, making sure that the seeks have valid properties.
  */
 
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { CreateSeekMessage } from '../../../shared/serverbound.js';
 import type { MetaData, Rating, SeekVariant, AuthSeekVariant } from '../../../shared/domain.js';
 
@@ -26,7 +26,7 @@ import {
 	PositionErrorCode,
 } from '../../../shared/chess/variants/positionvalidation.js';
 
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/socketSend.js';
 import { getSavedPositionICN } from '../../database/editorSavesManager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';

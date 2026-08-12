@@ -7,7 +7,7 @@
  * Counterpart of the client's socketsubs.
  */
 
-import type { CustomWebSocket } from './socketUtility.js';
+import type { CustomWebSocket } from './socketTypes.js';
 
 import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
 import {
