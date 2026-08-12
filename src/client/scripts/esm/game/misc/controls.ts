@@ -17,7 +17,6 @@ import camera from '../rendering/camera.js';
 import docutil from '../../util/docutil.js';
 import boardpos from '../rendering/boardpos.js';
 import deltatime from '../misc/deltatime.js';
-import socketman from '../../websocket/socketman.js';
 import boarddrag from '../rendering/boarddrag.js';
 import selection from '../chess/selection.js';
 import animation from '../rendering/animation.js';
@@ -27,6 +26,7 @@ import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
 import { GameBus } from '../GameBus.js';
+import socketlogger from '../../websocket/socketlogger.js';
 import guipromotion from '../gui/guipromotion.js';
 import guimoveslist from '../gui/guimoveslist.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';
@@ -237,7 +237,7 @@ function deccelerateScaleVel(scaleVel: number): number {
 /** Debug toggles that are not only for in a game, but outside. */
 function testOutGameToggles(): void {
 	if (listener_document.isKeyDown('Backquote')) camera.toggleDebug();
-	if (listener_document.isKeyDown('Digit3')) socketman.toggleDebug(); // Adds simulated websocket latency with high ping
+	if (listener_document.isKeyDown('Digit3')) socketlogger.toggleDebug(); // Adds simulated websocket latency with high ping
 	if (listener_document.isKeyDown('Digit5')) GameBus.dispatch('engine-debug'); // Render engine generated legal moves & engine border
 }
 

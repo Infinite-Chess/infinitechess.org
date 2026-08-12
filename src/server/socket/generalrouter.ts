@@ -4,14 +4,10 @@
  * This script handles the incoming general websocket message route.
  */
 
+import type { CustomWebSocket } from './socketUtility.js';
 import type { ServerboundGeneralMessage } from '../../shared/serverbound.js';
-import type { CustomWebSocket, SubscriptionKey } from './socketUtility.js';
 
-import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
-import {
-	unsubSocketParticipantFromGame,
-	unsubSocketSpectatorFromGame,
-} from '../game/gamemanager/gamemanager.js';
+import { handleSubbing, handleUnsubbing } from './socketSubs.js';
 
 // Functions -------------------------------------------------------------------
 
@@ -31,44 +27,6 @@ function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGeneralMes
 	}
 }
 
-// Actions -------------------------------------------------------------------
-
-function handleSubbing(ws: CustomWebSocket, value: 'lobby'): void {
-	// What are they wanting to subscribe to for updates?
-	switch (value) {
-		case 'lobby':
-			subToLobby(ws);
-			break;
-		default:
-			console.error(`UNKNOWN subscription list to subscribe client to! "${value}"`);
-	}
-}
-
-// Set involuntary to true if you don't immediately want to disconnect them, but say after 5 seconds
-
-/**
- * Unsubscribes a socket from a subscription list.
- * Entry points: Socket closure, or the client explicitly requested to unsub.
- * Clients may only request 'lobby' — the other keys are detached server-side.
- */
-function handleUnsubbing(ws: CustomWebSocket, key: SubscriptionKey, involuntary: boolean): void {
-	// What are they wanting to unsubscribe from updates from?
-	switch (key) {
-		case 'lobby':
-			unsubFromLobby(ws, involuntary);
-			break;
-		case 'game':
-			unsubSocketParticipantFromGame(ws, involuntary);
-			break;
-		case 'spectating':
-			// Read-only spectator: no cushion/auto-resign, just detach.
-			unsubSocketSpectatorFromGame(ws);
-			break;
-		default:
-			console.error(`UNKNOWN subscription list to unsubscribe client from! "${key}"`);
-	}
-}
-
 // Exports ------------------------------------------------------------
 
-export { routeGeneralMessage, handleUnsubbing };
+export { routeGeneralMessage };

@@ -8,12 +8,11 @@
  * And unsubbing a socket from subscriptions.
  */
 
-import type { CustomWebSocket, SubscriptionKey } from './socketUtility.js';
+import type { CustomWebSocket } from './socketUtility.js';
 
 import uuid from '../../shared/util/uuid.js';
 
 import { ID_LENGTH } from '../middleware/requestContext.js';
-import { handleUnsubbing } from './generalrouter.js';
 
 // Variables ---------------------------------------------------------------------------
 
@@ -199,14 +198,6 @@ function doesSessionHaveMaxSocketCount(jwt: string): boolean {
 	return connectedSessions[jwt].length >= maxSocketsAllowedPerSession;
 }
 
-// Unsubbing ---------------------------------------------------------------------------
-
-/** The socket is closing: Unsubscribe them from all subscriptions they are in. */
-function unsubSocketFromAllSubs(ws: CustomWebSocket, involuntary: boolean): void {
-	const subscriptionsKeys = Object.keys(ws.metadata.subscriptions) as SubscriptionKey[];
-	for (const key of subscriptionsKeys) handleUnsubbing(ws, key, involuntary);
-}
-
 // Miscellaneous ---------------------------------------------------------------------------
 
 function generateUniqueIDForSocket(): string {
@@ -220,7 +211,6 @@ export {
 	doesClientHaveMaxSocketCount,
 	doesSessionHaveMaxSocketCount,
 	generateUniqueIDForSocket,
-	unsubSocketFromAllSubs,
 	closeAllSocketsOfSession,
 	closeAllSocketsOfMember,
 };

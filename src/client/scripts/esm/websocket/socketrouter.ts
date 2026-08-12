@@ -13,7 +13,7 @@ import wsutil from '../../../../shared/util/wsutil.js';
 import { ClientboundSchema } from '../../../../shared/clientbound.js';
 
 import toast from '../components/toast.js';
-import socketman from './socketman.js';
+import socketlogger from './socketlogger.js';
 import { SocketBus } from './SocketBus.js';
 import socketintents from './socketintents.js';
 import socketmessages from './socketmessages.js';
@@ -53,12 +53,7 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	const message = zod_result.data;
 
-	if (socketman.isDebugEnabled()) {
-		if (message.route === 'echo') {
-			if (socketmessages.alsoPrintIncomingEchos)
-				console.log(`Incoming message: ${JSON.stringify(message)}`);
-		} else console.log(`Incoming message: ${JSON.stringify(message)}`);
-	}
+	socketlogger.logIncoming(message);
 
 	// Receipts are never echoed back.
 	if (message.route === 'echo') return socketmessages.cancelTimerOfMessageID(message.contents);

@@ -9,7 +9,8 @@ import type { CustomWebSocket } from './socketUtility.js';
 import wsutil from '../../shared/util/wsutil.js';
 
 import { clearPendingState } from './sendSocketMessage.js';
-import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from './socketManager.js';
+import { unsubSocketFromAllSubs } from './socketSubs.js';
+import { removeConnectionFromConnectionLists } from './socketManager.js';
 
 // Functions ---------------------------------------------------------------------------
 

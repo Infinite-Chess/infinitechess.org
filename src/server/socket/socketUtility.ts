@@ -53,6 +53,3 @@ export interface CustomWebSocket extends WebSocket {
 		echoTimers: { [messageID: number]: NodeJS.Timeout };
 	};
 }
-
-/** Every subscription list a socket can be attached to, each with its own detach handler run on close. */
-export type SubscriptionKey = keyof CustomWebSocket['metadata']['subscriptions'];

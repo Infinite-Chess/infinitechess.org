@@ -7,7 +7,7 @@
  * which holds them across a disconnect rather than letting them fall on the floor.
  */
 
-import type { Exact } from '../../../../shared/util/wsutil.js';
+import type { ActionValue, Exact, RouteAction } from '../../../../shared/util/wsutil.js';
 import type {
 	ServerboundGameMessage,
 	ServerboundGeneralMessage,
@@ -19,6 +19,7 @@ import wsutil from '../../../../shared/util/wsutil.js';
 
 import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
+import socketlogger from './socketlogger.js';
 import { SocketBus } from './SocketBus.js';
 
 // Types -----------------------------------------------------------------------
@@ -36,28 +37,20 @@ type OutMessages = {
 type OutRoute = keyof OutMessages;
 
 /** The actions valid on a given route. */
-export type OutAction<R extends OutRoute> = OutMessages[R]['action'];
+export type OutAction<R extends OutRoute> = RouteAction<OutMessages, R>;
 
 /** The value an action carries, or `undefined` for the actions that carry none. */
-export type OutValue<R extends OutRoute, A extends OutAction<R>> =
-	Extract<OutMessages[R], { action: A }> extends { value: infer V } ? V : undefined;
+export type OutValue<R extends OutRoute, A extends OutAction<R>> = ActionValue<OutMessages, R, A>;
 
 // Constants -------------------------------------------------------------------
 
-/** Time the websocket remains open without subscriptions, in milliseconds. */
-const cushionBeforeAutoClose = 10000;
 /** Simulated websocket latency in debug mode. */
-const simulatedWebsocketLatencyMillis_Debug = 1000;
-/** Whether to also print incoming echos in debug mode. */
-const alsoPrintIncomingEchos = false;
+const DEBUG_SOCKET_LATENCY_MILLIS = 1000;
 
 // Variables -------------------------------------------------------------------
 
 /** Echo timers for sent messages awaiting acknowledgement. */
 let echoTimers: Record<string, { timeSent: number; timeoutID: number }> = {};
-
-/** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
-let timeoutIDToAutoClose: number;
 
 /**
  * The timeout ID for detecting server inactivity.
@@ -106,19 +99,6 @@ function cancelAllEchoTimers(): void {
 		clearTimeout(echoTimerEntry.timeoutID);
 	}
 	echoTimers = {};
-}
-
-// Timer Management ------------------------------------------------------------
-
-/** If we have zero subscriptions, resets the timer to auto-close the socket. */
-function resetTimerToCloseSocket(): void {
-	clearTimeout(timeoutIDToAutoClose);
-	if (socketsubs.zeroSubs()) {
-		timeoutIDToAutoClose = window.setTimeout(
-			() => socketman.closeSocket(),
-			cushionBeforeAutoClose,
-		);
-	}
 }
 
 // Inactivity Detection --------------------------------------------------------
@@ -190,7 +170,7 @@ async function send<R extends OutRoute, A extends OutAction<R>, V extends OutVal
 	};
 
 	const message = JSON.stringify(payload);
-	if (socketman.isDebugEnabled()) console.log(`Sending: ${message}`);
+	socketlogger.logOutgoing(message);
 
 	// Set a timer to assume disconnection if echo not received
 	echoTimers[payload.id] = {
@@ -223,7 +203,7 @@ async function acquireSocket(): Promise<WebSocket | undefined> {
 	const socket = socketman.getSocket();
 	if (!socket || socket.readyState !== WebSocket.OPEN) return; // Died while we awaited it.
 
-	resetTimerToCloseSocket();
+	socketman.resetIdleCloseTimer();
 	return socket;
 }
 
@@ -232,15 +212,14 @@ async function acquireSocket(): Promise<WebSocket | undefined> {
  * Pure transport — conforming to the server's expected shape is the caller's responsibility.
  */
 function transmit(socket: WebSocket, message: string): void {
-	if (socketman.isDebugEnabled()) {
-		window.setTimeout(() => socket.send(message), simulatedWebsocketLatencyMillis_Debug);
+	if (socketlogger.isDebugEnabled()) {
+		window.setTimeout(() => socket.send(message), DEBUG_SOCKET_LATENCY_MILLIS);
 	} else socket.send(message); // Send immediately
 }
 
 // Exports --------------------------------------------------------------------
 
 export default {
-	alsoPrintIncomingEchos,
 	cancelTimerOfMessageID,
 	rescheduleHeartbeatTimer,
 	clearPendingState,

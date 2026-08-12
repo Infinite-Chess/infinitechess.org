@@ -235,6 +235,7 @@ const ClientboundGameSchema = z.discriminatedUnion('action', [
 // Envelope --------------------------------------------------------------------
 
 /** Every clientbound message, envelope included. What the client validates against. */
+export type ClientboundMessage = z.infer<typeof ClientboundSchema>;
 export const ClientboundSchema = z.discriminatedUnion('route', [
 	// Receipts for a message we sent, carrying only the id being receipted. `echo` says it
 	// arrived (and is what the echo timer waits on); `ack` says it has been handled, and

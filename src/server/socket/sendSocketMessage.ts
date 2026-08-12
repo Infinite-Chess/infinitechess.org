@@ -7,8 +7,8 @@
  * It also owns the echo timers each sent message arms, closing the socket if the echo never arrives.
  */
 
-import type { Exact } from '../../shared/util/wsutil.js';
 import type { CustomWebSocket } from './socketUtility.js';
+import type { ActionValue, Exact, RouteAction } from '../../shared/util/wsutil.js';
 import type {
 	ClientboundGameMessage,
 	ClientboundGeneralMessage,
@@ -35,11 +35,10 @@ type OutMessages = {
 export type OutRoute = keyof OutMessages;
 
 /** The actions valid on a given route. */
-export type OutAction<R extends OutRoute> = OutMessages[R]['action'];
+export type OutAction<R extends OutRoute> = RouteAction<OutMessages, R>;
 
 /** The value an action carries, or `undefined` for the actions that carry none. */
-export type OutValue<R extends OutRoute, A extends OutAction<R>> =
-	Extract<OutMessages[R], { action: A }> extends { value: infer V } ? V : undefined;
+export type OutValue<R extends OutRoute, A extends OutAction<R>> = ActionValue<OutMessages, R, A>;
 
 // Variables ---------------------------------------------------------------------------
 

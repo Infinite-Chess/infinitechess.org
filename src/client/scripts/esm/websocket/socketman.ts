@@ -3,11 +3,12 @@
 /**
  * Manages the websocket connection lifecycle: opening, closing,
  * reconnecting, and resubscribing after unexpected disconnections.
- * Also owns the socket instance and debug toggle.
+ * Also owns the socket instance, and the timer that closes it once idle.
  */
 
 import config from '../game/config.js';
 import thread from '../util/thread.js';
+import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
 import socketrouter from './socketrouter.js';
 import { SocketBus } from './SocketBus.js';
@@ -16,6 +17,8 @@ import { SocketBus } from './SocketBus.js';
 
 /** Time to wait for HTTP connection before assuming lost connection. */
 const TIME_TO_WAIT_FOR_HTTP_MILLIS = 5000;
+/** Time the websocket remains open without subscriptions, in milliseconds. */
+const AUTO_CLOSE_CUSHION = 10000;
 /**
  * Delays in milliseconds to wait before each reconnection attempt.
  * Indexed by consecutive failure count; the last element repeats indefinitely.
@@ -37,9 +40,8 @@ let noConnection = false;
 let consecutiveFailures = 0;
 /** The timer ID for a pending scheduleReconnect() call, or undefined if none is pending. */
 let reconnectTimerId: number | undefined;
-
-/** Enables simulated websocket latency and prints all sent and received messages. */
-let DEBUG = false;
+/** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
+let timeoutIDToAutoClose: number;
 
 // Listeners --------------------------------------------------------------
 
@@ -59,19 +61,6 @@ window.addEventListener('pageshow', (event) => {
 	console.log('Page was returned to using the back or forward button.');
 	resubAll();
 });
-
-// Debug -----------------------------------------------------------------------
-
-/** Returns whether debug mode is enabled. */
-function isDebugEnabled(): boolean {
-	return DEBUG;
-}
-
-/** Toggles debug mode on or off, showing a toast notification. */
-function toggleDebug(): void {
-	DEBUG = !DEBUG;
-	console.log(`Toggled websocket latency: ${DEBUG}`);
-}
 
 // Socket Access ---------------------------------------------------------------
 
@@ -165,6 +154,17 @@ async function openSocket(): Promise<boolean> {
 	});
 }
 
+/**
+ * If we have zero subscriptions, resets the timer to auto-close the socket.
+ * Called every time we put a message on the wire.
+ */
+function resetIdleCloseTimer(): void {
+	clearTimeout(timeoutIDToAutoClose);
+	if (socketsubs.zeroSubs()) {
+		timeoutIDToAutoClose = window.setTimeout(() => closeSocket(), AUTO_CLOSE_CUSHION);
+	}
+}
+
 /** Closes the socket. Called when it's no longer in use (no active subscriptions). */
 function closeSocket(): void {
 	if (!socket) return;
@@ -211,10 +211,9 @@ function resubAll(): void {
 export default {
 	getSocket,
 	establishSocket,
+	resetIdleCloseTimer,
 	closeSocket,
 	dropSocket,
 	scheduleReconnect,
 	resubAll,
-	toggleDebug,
-	isDebugEnabled,
 };
