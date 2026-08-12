@@ -25,7 +25,6 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 
 import gameslot from '../chess/gameslot.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
 import { GameBus } from '../GameBus.js';
 import { SocketBus } from '../../websocket/SocketBus.js';
 import socketintents from '../../websocket/socketintents.js';
@@ -64,11 +63,12 @@ GameBus.addEventListener('moves-changed', () => {
 	updateOfferDrawButton();
 });
 GameBus.addEventListener('game-concluded', () => refresh());
-// A lost connection disables the rematch button until we resync. A reconnect
-// restores its true state via setRematchState() (called after 'subscriberematch').
-SocketBus.addEventListener('connection-lost', () => updateRematchButton());
 // Resign and abort are disabled while the server still owes us an answer for them.
-SocketBus.addEventListener('intents', () => updateResignAbortButtons());
+// Rematch is disabled while the socket is down.
+SocketBus.addEventListener('intents', () => {
+	updateResignAbortButtons();
+	updateRematchButton();
+});
 
 // Block visibility ---------------------------------------------------------------------------
 
@@ -82,6 +82,9 @@ function refresh(): void {
 	if (gamefile && gamefileutility.isGameOver(gamefile)) {
 		// Hide the Analysis action if zero moves were played (nothing to analyze).
 		element_Analysis.classList.toggle('hidden', gamefile.moves.length === 0);
+		// A game concluding mid-session reveals the rematch button for the first
+		// time — until now nothing has derived it, so it still holds its SSR guess.
+		updateRematchButton();
 		showOnly(element_ActionsOver);
 	}
 	// Live game: an incoming draw offer trumps the default live actions.
@@ -240,11 +243,14 @@ let opponentPresentPostGame = true;
 /**
  * Repaints the rematch button: glows while the opponent has an offer out (and we haven't
  * yet responded), and is disabled once we've offered or while the opponent is away.
+ * Also disabled whenever the game route isn't ready — unlike resign/abort, whose enablement
+ * derives from the board we still hold, every input here is pushed server state that goes
+ * stale the moment the socket drops.
  */
 function updateRematchButton(): void {
 	if (!element_Rematch) return; // Absent (spectator, or game loaded dead).
 	element_Rematch.classList.toggle('rematch-offered', opponentOfferedRematch && !weOfferedRematch); // prettier-ignore
-	element_Rematch.disabled = !canOfferRematch() || !onlinegame.areInSync();
+	element_Rematch.disabled = !canOfferRematch() || !socketintents.isRouteReady('game');
 }
 
 /** Whether extending a rematch offer currently makes sense. */

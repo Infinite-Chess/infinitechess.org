@@ -25,8 +25,9 @@ interface SocketBusEvents {
 	/** Dispatched when application code should attempt to re-subscribe to what they need. */
 	reconnect: void;
 	/**
-	 * The set of outstanding intents changed — one was submitted, or one was answered/released.
-	 * Anything deriving its appearance from a pending action (a disabled button) re-derives.
+	 * Intent-layer state changed — an intent was submitted or answered/released,
+	 * or a route's readiness flipped. Anything deriving its appearance from a pending
+	 * action or from the server state a route holds (a disabled button) re-derives.
 	 */
 	intents: void;
 

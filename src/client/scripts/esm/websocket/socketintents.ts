@@ -88,6 +88,7 @@ SocketBus.addEventListener('closed', () => {
 	// Rather than guess, unlock: the user is free to act again, and the resync that follows
 	// replaces whatever they were acting on with the server's own state.
 	for (const [key, sentAs] of outstanding) if (sentAs !== undefined) release(key);
+	SocketBus.dispatch('intents'); // The routes are no longer ready, so anything gated on that re-derives.
 });
 
 // Locks -----------------------------------------------------------------------
@@ -171,7 +172,10 @@ function onAck(messageID: MessageID): void {
 	}
 }
 
-/** Whether a route can take a message right now: an open socket, and its state in hand. */
+/**
+ * Whether a route can take a message right now: an open socket, and its state in hand.
+ * Also what a button whose enablement derives from that pushed state reads.
+ */
 function isRouteReady(route: SubscribedRoute): boolean {
 	if (!synced[route]) return false;
 	// Not redundant with the sync flag: a client-initiated close() leaves the socket CLOSING
@@ -185,11 +189,14 @@ function isRouteReady(route: SubscribedRoute): boolean {
  * it that are still worth sending.
  *
  * MUST be called only once that state has been APPLIED, not merely received — the validity
- * checks read it. That's why this is separate from onlinegame's `inSync` flag, which has to
- * be set beforehand so resyncer can submit moves as it reconciles the board.
+ * checks read it. That's why this is separate from onlinegame's `inSync` flag, which is
+ * set beforehand so resyncer can submit moves as it reconciles the board. The two aren't
+ * redundant either: `inSync` says our move list matches the server's, and goes false
+ * on a detected desync with the socket still wide open, where this stays true.
  */
 function onRouteSynced(route: SubscribedRoute): void {
 	synced[route] = true;
+	SocketBus.dispatch('intents'); // The route is ready again, so anything gated on that re-derives.
 
 	const intents = held[route];
 	if (intents.length === 0) return;
@@ -211,6 +218,7 @@ function onRouteSynced(route: SubscribedRoute): void {
 export default {
 	isOutstanding,
 	submit,
+	isRouteReady,
 	onAck,
 	onRouteSynced,
 };
