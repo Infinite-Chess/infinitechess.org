@@ -314,7 +314,7 @@ function accept(seekId: SeekId): void {
 /** Subscribes to the server's lobby subscription list (seeks, live games). */
 async function subscribe(): Promise<void> {
 	if (isIdle) return; // Don't resubscribe while idle; the user must interact with the lobby to reconnect
-	if (socketsubs.areSubbedToSub('lobby')) return;
+	if (socketsubs.isSubbedTo('lobby')) return;
 	socketsubs.addSub('lobby');
 	void socketsend.send('general', 'sub', 'lobby');
 }

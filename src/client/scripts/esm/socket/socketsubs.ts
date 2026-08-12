@@ -24,11 +24,11 @@ function zeroSubs(): boolean {
 }
 
 /**
- * Whether we are subbed to the given subscription list.
+ * Whether we are subbed to the given subscription route.
  * @param sub - The name of the sub
  */
-function areSubbedToSub(sub: SubscribedRoute): boolean {
-	return subs[sub] !== false;
+function isSubbedTo(sub: SubscribedRoute): boolean {
+	return subs[sub];
 }
 
 /**
@@ -62,7 +62,7 @@ function clearAllSubs(): void {
  * The only stream detachable in place — a game's ends with the socket.
  */
 function unsubFromLobby(): void {
-	if (!areSubbedToSub('lobby')) return; // Already unsubbed.
+	if (!isSubbedTo('lobby')) return; // Already unsubbed.
 	deleteSub('lobby');
 	// Tell the server we no longer want updates.
 	void socketsend.send('general', 'unsub', 'lobby');
@@ -72,7 +72,7 @@ function unsubFromLobby(): void {
 
 export default {
 	zeroSubs,
-	areSubbedToSub,
+	isSubbedTo,
 	addSub,
 	deleteSub,
 	clearAllSubs,
