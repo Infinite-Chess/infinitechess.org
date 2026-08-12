@@ -66,39 +66,52 @@ function onclose(code: number, reason: string): void {
 
 	if (code === 1001) return; // "going away": Page unloaded
 
+	// Narrows the reason to a known closure reason. The switch below is already exhaustive.
+	if (!socketutil.isClosureReason(trimmedReason)) {
+		console.error(`Socket closed unexpectedly. Server message: "${trimmedReason}". Code: ${code}.`); // prettier-ignore
+		return;
+	}
+
 	switch (trimmedReason) {
-		case 'Connection expired':
+		case socketutil.ClosureReasons.CONNECTION_EXPIRED:
 			socketconnection.resubAll();
 			break;
-		case 'Connection closed by client':
+		// Our own frames, echoed back by the server. The RENEW one can't actually reach us —
+		// dropSocket() detaches onclose before sending it — but the switch is exhaustive.
+		case socketutil.ClosureReasons.CLOSED_BY_CLIENT:
+		case socketutil.ClosureReasons.CLOSED_BY_CLIENT_RENEW:
 			break;
-		case 'Unable to identify client IP address':
+		case socketutil.ClosureReasons.UNIDENTIFIABLE_IP:
 			console.error('Unable to identify IP when establishing socket.');
 			break;
-		case 'Authentication needed':
+		case socketutil.ClosureReasons.USER_AGENT_REQUIRED:
+			// A browser always sends one, so this means our request never reached the server intact.
+			console.error('User agent missing when establishing socket.');
+			break;
+		case socketutil.ClosureReasons.AUTHENTICATION_NEEDED:
 			// Called when the server closes our websocket due to missing authentication.
 			toast.show(t.shared.socket.cookies_required, { error: true });
 			break;
-		case 'Logged out':
+		case socketutil.ClosureReasons.LOGGED_OUT:
 			validatorama.reloadAfterLogout();
 			break;
-		case 'Too Many Requests':
+		case socketutil.ClosureReasons.TOO_MANY_REQUESTS:
 			console.error('Too many requests when establishing socket.');
 			enterTimeout();
 			break;
-		case 'Too Many Sockets':
+		case socketutil.ClosureReasons.TOO_MANY_SOCKETS:
 			console.error('Too many sockets when establishing socket.');
 			window.setTimeout(
 				() => socketconnection.resubAll(),
 				timeToResubAfterTooManyRequestsMillis,
 			);
 			break;
-		case 'Origin Error':
+		case socketutil.ClosureReasons.ORIGIN_ERROR:
 			console.error('Origin error when establishing socket.');
 			enterTimeout();
 			break;
 		default:
-			console.error(`Socket closed unexpectedly. Server message: "${trimmedReason}". Code: ${code}.`); // prettier-ignore
+			console.error('Socket closed for an unhandled reason!', trimmedReason satisfies never); // prettier-ignore
 	}
 }
 

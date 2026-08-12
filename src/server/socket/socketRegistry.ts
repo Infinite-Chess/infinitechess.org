@@ -7,9 +7,11 @@
  * and rate limiting the socket count per user.
  */
 
+import type { ClosureReason } from '../../shared/util/socketutil.js';
 import type { CustomWebSocket } from './socketTypes.js';
 
 import uuid from '../../shared/util/uuid.js';
+import socketutil from '../../shared/util/socketutil.js';
 
 import { ID_LENGTH } from '../middleware/requestContext.js';
 
@@ -76,7 +78,7 @@ function addConnectionToList(
 
 function startTimerToExpireSocket(ws: CustomWebSocket): void {
 	ws.metadata.clearafter = setTimeout(
-		() => ws.close(1000, 'Connection expired'),
+		() => ws.close(1000, socketutil.ClosureReasons.CONNECTION_EXPIRED),
 		maxWebSocketAgeMillis,
 	); // We pass in an arrow function so it doesn't lose scope of ws.
 }
@@ -121,7 +123,7 @@ function terminateAllIPSockets(IP: string): void {
 	for (const id of connectionList) {
 		//console.log(`Terminating 1.. id ${id}`)
 		const ws = websocketConnections[id];
-		ws?.close(1009, 'Too Many Requests');
+		ws?.close(1009, socketutil.ClosureReasons.TOO_MANY_REQUESTS);
 	}
 
 	// console.log(`Terminated all of IP ${IP}`)
@@ -134,7 +136,11 @@ function terminateAllIPSockets(IP: string): void {
  * @param closureCode - The code of the socket closure, sent to the client.
  * @param closureReason - The closure reason, sent to the client.
  */
-function closeAllSocketsOfSession(jwt: string, closureCode: number, closureReason: string): void {
+function closeAllSocketsOfSession(
+	jwt: string,
+	closureCode: number,
+	closureReason: ClosureReason,
+): void {
 	connectedSessions[jwt]?.slice().forEach((socketID) => {
 		// slice() makes a copy of it
 		const ws = websocketConnections[socketID];
@@ -151,7 +157,7 @@ function closeAllSocketsOfSession(jwt: string, closureCode: number, closureReaso
 function closeAllSocketsOfMember(
 	user_id: number,
 	closureCode: number,
-	closureReason: string,
+	closureReason: ClosureReason,
 ): void {
 	const socketIDs = connectedMembers[user_id];
 	if (!socketIDs) return; // This member doesn't have any connected sockets

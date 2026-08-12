@@ -48,32 +48,51 @@ const HEARTBEAT_INTERVAL_MS = 10000;
 /** How long to wait for an echo before assuming the connection is dead. */
 const ECHO_TIMEOUT = 5000;
 
-// Variables ---------------------------------------------------------------------------------
+/**
+ * Every closure reason that can go on the wire, and the code each is sent with.
+ *
+ * BOTH sides see BOTH groups. `ws` populates the server's 'close' event purely from the
+ * PEER's close frame — but a browser answers a close frame by echoing back the code and reason
+ * it received, so a reason the server sent still comes back to it. Don't strike the
+ * server-sent reasons from {@link involuntaryClosureReasons} as unreachable server-side; they aren't.
+ */
+const ClosureReasons = {
+	// Sent by the server:
 
-// Every closure code/reason pairing that can occur:
+	/** 1000. Can read this even if we disable our own network in dev tools. */
+	CONNECTION_EXPIRED: 'Connection expired',
+	/** 1008 */
+	ORIGIN_ERROR: 'Origin Error',
+	/** 1008 */
+	UNIDENTIFIABLE_IP: 'Unable to identify client IP address',
+	/** 1008. Automated scanner and prober bots often omit it. */
+	USER_AGENT_REQUIRED: 'User agent is required',
+	/** 1008. The client has cookies disabled. */
+	AUTHENTICATION_NEEDED: 'Authentication needed',
+	/** 1008. Logging out, deleting the account, or resetting the password. */
+	LOGGED_OUT: 'Logged out',
+	/** 1009 */
+	TOO_MANY_REQUESTS: 'Too Many Requests',
+	/** 1009 */
+	TOO_MANY_SOCKETS: 'Too Many Sockets',
 
-// BOTH sides see BOTH lists below. `ws` populates the server's 'close' event purely from the
-// PEER's close frame — but a browser answers a close frame by echoing back the code and reason
-// it received, so a reason the server sent still comes back to it. Don't strike the
-// server-sent reasons from involuntaryClosureReasons as unreachable server-side; they aren't.
+	// Sent by the client:
 
-// Sent by the server:
-// 1000 "Connection expired"  (Can read this even if we disable our own network in dev tools)
-// 1008 "Origin Error"
-// 1008 "Unable to identify client IP address"
-// 1008 "User agent is required"  (Automated scanner and prober bots often omit it)
-// 1008 "Authentication needed"  (The client has cookies disabled)
-// 1008 "Logged out"  (Logging out, deleting the account, or resetting the password)
-// 1009 "Too Many Requests"
-// 1009 "Too Many Sockets"
+	/** 1000 */
+	CLOSED_BY_CLIENT: 'Connection closed by client',
+	/** 1000. Earns the reconnection grace period a plain client closure wouldn't. */
+	CLOSED_BY_CLIENT_RENEW: 'Connection closed by client. Renew.',
+} as const;
+
+/** A reason one end gave the other for closing the socket. */
+export type ClosureReason = (typeof ClosureReasons)[keyof typeof ClosureReasons];
+
+/** The reason values, for {@link isClosureReason} to test membership against. */
+const closureReasonValues: ReadonlySet<string> = new Set(Object.values(ClosureReasons));
+
+// Closures that carry no reason at all:
 // 1009 ""  Message exceeded MAX_PAYLOAD_BYTES (see socketServer.ts). The `ws` library
 //          closes it itself, before the payload is buffered, so it sends no reason.
-
-// Sent by the client:
-// 1000 "Connection closed by client"
-// 1000 "Connection closed by client. Renew."
-
-// Sent by neither:
 // 1006 ""  Network error, the server is down, or the server terminated a socket that stopped echoing.
 // 1001 ""  Endpoint going away. (Closed tab without performing cleanup)
 
@@ -94,13 +113,21 @@ const ECHO_TIMEOUT = 5000;
 // If the closure code is NOT one of the ones below, it means they purposefully closed the socket (like closed the tab),
 // so IMMEDIATELY tell their opponent they disconnected!
 const involuntaryClosureCodes: number[] = [1006];
-const involuntaryClosureReasons: string[] = [
-	'Connection expired',
-	'Too Many Sockets',
-	'Connection closed by client. Renew.',
+const involuntaryClosureReasons: ClosureReason[] = [
+	ClosureReasons.CONNECTION_EXPIRED,
+	ClosureReasons.TOO_MANY_SOCKETS,
+	ClosureReasons.CLOSED_BY_CLIENT_RENEW,
 ];
 
 // Functions ---------------------------------------------------------------------------------
+
+/**
+ * Tests whether an incoming closure reason is one we declare.
+ * Acts as a type guard, narrowing the input to {@link ClosureReason}.
+ */
+function isClosureReason(reason: string): reason is ClosureReason {
+	return closureReasonValues.has(reason);
+}
 
 /**
  * Determines if the WebSocket closure was not initiated by the client (i.e., they had no control over the closure).
@@ -110,9 +137,9 @@ const involuntaryClosureReasons: string[] = [
  * @returns `true` if the closure was not initiated by the client, otherwise `false`.
  */
 function wasSocketClosureInvoluntary(code: number, reason: string): boolean {
-	return (
-		involuntaryClosureCodes.includes(code) || involuntaryClosureReasons.includes(reason.trim())
-	);
+	if (involuntaryClosureCodes.includes(code)) return true;
+	const trimmedReason = reason.trim();
+	return isClosureReason(trimmedReason) && involuntaryClosureReasons.includes(trimmedReason);
 }
 
 // -----------------------------------------------------------------------------------------
@@ -121,5 +148,7 @@ export default {
 	PROTOCOL_VERSION,
 	HEARTBEAT_INTERVAL_MS,
 	ECHO_TIMEOUT,
+	ClosureReasons,
+	isClosureReason,
 	wasSocketClosureInvoluntary,
 };

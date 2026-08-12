@@ -6,6 +6,8 @@
  * Also owns the socket instance, and the timer that closes it once idle.
  */
 
+import socketutil from '../../../../shared/util/socketutil.js';
+
 import config from '../game/config.js';
 import thread from '../util/thread.js';
 import socketsubs from './socketsubs.js';
@@ -170,7 +172,7 @@ function closeSocket(): void {
 	if (!socket) return;
 	if (socket.readyState !== WebSocket.OPEN)
 		return console.error("Cannot close socket because it's not open! Yet socket is defined.");
-	socket.close(1000, 'Connection closed by client');
+	socket.close(1000, socketutil.ClosureReasons.CLOSED_BY_CLIENT);
 }
 
 /**
@@ -191,7 +193,7 @@ function dropSocket(): void {
 	dropped.onmessage = null;
 	// The reason is for the server alone, should the frame still land: it grants us the
 	// reconnection grace period, where a plain client closure would cost us our seek.
-	dropped.close(1000, 'Connection closed by client. Renew.');
+	dropped.close(1000, socketutil.ClosureReasons.CLOSED_BY_CLIENT_RENEW);
 	socketclose.onclose(1006, ''); // Report it as the abnormal closure it is.
 }
 

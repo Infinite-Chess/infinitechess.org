@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
 import validators from '../../shared/util/validators.js';
+import socketutil from '../../shared/util/socketutil.js';
 
 import db from '../database/database.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
@@ -211,7 +212,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// Every session is now dead, so close their sockets with the same reason logging
 		// out uses — the client reloads and re-auths off whatever session it has left.
-		closeAllSocketsOfMember(member.user_id, 1008, 'Logged out');
+		closeAllSocketsOfMember(member.user_id, 1008, socketutil.ClosureReasons.LOGGED_OUT);
 
 		// Issue a fresh session to this browser — the device that proved control
 		// of the account by clicking the email link and setting the new password.

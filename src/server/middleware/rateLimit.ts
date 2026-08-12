@@ -4,6 +4,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { CustomWebSocket } from '../socket/socketTypes.js';
 
 import jsutil from '../../shared/util/jsutil.js';
+import socketutil from '../../shared/util/socketutil.js';
 
 import { isIPBanned } from './banned.js';
 import { getClientIP } from '../utility/IP.js';
@@ -205,7 +206,7 @@ function rateLimitWebSocket(ws: CustomWebSocket): boolean {
 
 	if (rateLimitHash[userKey]!.length > maxRequestsPerMinute) {
 		// Rate limit them (too many requests sent)
-		ws.close(1009, 'Too Many Requests');
+		ws.close(1009, socketutil.ClosureReasons.TOO_MANY_REQUESTS);
 		return false;
 	}
 

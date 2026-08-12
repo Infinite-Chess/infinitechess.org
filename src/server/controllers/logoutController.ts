@@ -2,6 +2,8 @@
 
 import type { Request, Response } from 'express';
 
+import socketutil from '../../shared/util/socketutil.js';
+
 import { logEvents } from '../middleware/logEvents.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
@@ -23,7 +25,7 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 			res.sendStatus(500);
 			return;
 		}
-		closeAllSocketsOfSession(refreshToken, 1008, 'Logged out');
+		closeAllSocketsOfSession(refreshToken, 1008, socketutil.ClosureReasons.LOGGED_OUT);
 	}
 
 	res.sendStatus(200);
