@@ -66,12 +66,10 @@ function startDisconnectClaimTimer(
 	involuntary: boolean,
 ): void {
 	const now = Date.now();
-	const resignable = moveutil.isGameResignable(servergame);
 
-	const timeUntilClaimable =
-		involuntary && resignable
-			? timeBeforeClaimableByDisconnectMillis_Involuntary
-			: timeBeforeClaimableByDisconnectMillis;
+	const timeUntilClaimable = involuntary
+		? timeBeforeClaimableByDisconnectMillis_Involuntary
+		: timeBeforeClaimableByDisconnectMillis;
 
 	const playerdata = servergame.match.playerData[role]!;
 	const opponentRole = typeutil.invertPlayer(role);
