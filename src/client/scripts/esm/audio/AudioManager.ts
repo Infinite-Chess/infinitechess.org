@@ -21,7 +21,7 @@ interface SoundObject {
 	/**
 	 * Resolves once the note AND its effect tails (e.g. reverb) have fully finished —
 	 * await before anything that would cut the sound off (e.g. a hard navigation).
-	 * Never resolves for looping sounds.
+	 * Looping sounds only resolve it once stopped.
 	 */
 	whenEnded: Promise<void>;
 	/**
@@ -77,13 +77,6 @@ const VOLUME_DANGER_THRESHOLD = 4;
 
 /** This context plays all our sounds. */
 const audioContext: AudioContext = new AudioContext();
-// Chrome auto-suspends the context after a period of inactivity. Resume it whenever
-// that happens so sounds don't delay starting, and then their tail cut off.
-audioContext.addEventListener('statechange', () => {
-	if (audioContext.state !== 'suspended') return;
-	console.log('Audio context suspended, resuming...');
-	audioContext.resume();
-});
 
 /** An input bus for all sound chains before they reach the master gain. Allows for global effects. */
 const effectsBus = audioContext.createGain();
@@ -226,7 +219,7 @@ function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObj
 	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Effects Bus -> Master Gain -> Limiter -> Destination
 	connectNodeChain(mainSource.gainNode, effectNodes, bypassDownsampler);
 
-	// Resolved by scheduleDisconnection's single timer once the sound + tails finish.
+	// Resolved by scheduleDisconnection once the sound + tails finish.
 	let resolveWhenEnded!: () => void;
 	const whenEnded = new Promise<void>((resolve) => (resolveWhenEnded = resolve));
 
@@ -240,12 +233,12 @@ function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObj
 			soundObject.source.stop();
 		},
 		fadeOut: (durationMillis): void => {
-			const fadeOutDurationSecs = durationMillis / 1000;
-			const fadeOutEndTime = audioContext.currentTime + fadeOutDurationSecs;
+			const fadeOutEndTime = audioContext.currentTime + durationMillis / 1000;
 			// Fade the source to silent
 			fadeOut(soundObject.source, fadeOutEndTime);
-			// For non-looping sounds, schedule them to stop completely after the fade.
-			if (!soundObject.looping) setTimeout(() => soundObject.stop(), durationMillis);
+			// For non-looping sounds, stop them completely after the fade. Scheduled on the
+			// audio clock, so it can never land before the ramp it's waiting on has finished.
+			if (!soundObject.looping) soundObject.source.stop(fadeOutEndTime);
 		},
 		fadeIn: (targetVolume, durationMillis): void => {
 			const fadeInDurationSecs = durationMillis / 1000;
@@ -258,7 +251,7 @@ function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObj
 	// Start the playback
 	soundObject.source.start(startAt, startTime, duration);
 
-	scheduleDisconnection(mainSource, buffer, loop, delay, effects, resolveWhenEnded, duration, startTime); // prettier-ignore
+	scheduleDisconnection(mainSource, effects, resolveWhenEnded);
 
 	return soundObject;
 }
@@ -272,33 +265,31 @@ function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObj
  */
 function scheduleDisconnection(
 	source: AudioBufferSourceNode,
-	buffer: AudioBuffer,
-	loop: boolean,
-	delay: number,
 	effects: EffectConfig[],
 	onEnded: () => void,
-	duration?: number,
-	startTime?: number,
 ): void {
-	if (loop) return; // A loop never ends, so onEnded is intentionally never called.
+	// Anchored to 'ended', which fires on the AUDIO clock, so it stays correct however
+	// late a suspended context actually begins rendering. Timing the whole lifetime off
+	// setTimeout instead would disconnect mid-note whenever the context started late,
+	// cutting the sound off (or silencing it outright, for sounds shorter than the delay).
+	// A looping source never fires 'ended' until stopped — exactly onEnded's contract.
+	source.addEventListener('ended', () => {
+		// 'ended' marks the end of the BUFFER, so any effect tails are still sounding.
+		// Find the longest tail duration among all applied effects.
+		const maxTailSecs = effects.reduce((max, effect) => {
+			if (effect.type === 'reverb') return Math.max(max, effect.durationSecs);
+			// Future effects with tails (e.g., delay) could be accounted for here.
+			else throw Error(`Sound effect type "${effect.type}" not accounted for in tail duration calculation.`); // prettier-ignore
+		}, 0);
 
-	const sourceDurationSecs = duration ?? buffer.duration - (startTime ?? 0);
-
-	// Find the longest tail duration among all applied effects.
-	const maxTailSecs = effects.reduce((max, effect) => {
-		if (effect.type === 'reverb') return Math.max(max, effect.durationSecs);
-		// Future effects with tails (e.g., delay) could be accounted for here.
-		else throw Error(`Sound effect type "${effect.type}" not accounted for in tail duration calculation.`); // prettier-ignore
-	}, 0);
-
-	const totalLifetimeMillis = (sourceDurationSecs + maxTailSecs + delay) * 1000;
-
-	// Keep a reference to the source for the entire lifetime of the sound + effects.
-	// This same timer marks the full completion (note + tails), so resolve onEnded here too.
-	setTimeout(() => {
-		source.disconnect();
-		onEnded();
-	}, totalLifetimeMillis);
+		// Safe as wall-clock: the audio clock can only ever lag behind it, never lead,
+		// so this can fire late (harmless — disconnection only frees the nodes) but never early.
+		// Holds a reference to the source, and through it the whole chain, until the tails finish.
+		setTimeout(() => {
+			source.disconnect();
+			onEnded();
+		}, maxTailSecs * 1000);
+	});
 }
 
 // Audio Nodes ------------------------------------------------------------------------------------------
