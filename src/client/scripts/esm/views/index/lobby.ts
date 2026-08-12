@@ -231,8 +231,7 @@ function onViewerCountUpdate(count: number): void {
 
 /**
  * Called when the server reports we're in a game (on seek acceptance, bot game creation,
- * or on lobby resub while already in one). Its URL pins the board to the side we're
- * playing, so the game page never has to flip it after navigating.
+ * or on lobby resub while already in one). Its URL pins the board to the side we're playing.
  */
 async function onInGame(ingame: InGameMessage): Promise<void> {
 	gameIdWeAreIn = ingame.id;
