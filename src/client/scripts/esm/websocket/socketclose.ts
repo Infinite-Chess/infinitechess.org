@@ -99,9 +99,6 @@ function onclose(event: CloseEvent): void {
 			console.error('Origin error when establishing socket.');
 			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;
-		case 'No echo heard':
-			socketman.resubAll();
-			break;
 		default:
 			console.error(
 				`Socket closed unexpectedly. Server message: "${trimmedReason}". Code: ${event.code}.`,

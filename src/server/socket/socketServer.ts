@@ -26,6 +26,17 @@ import { onConnectionRequest } from './openSocket.js';
  */
 const MAX_PAYLOAD_BYTES = 500_000; // 500 KB
 
+/**
+ * How long `ws` waits for the client's answering close frame before destroying the socket,
+ * in milliseconds. Overrides the library's 30 second default.
+ *
+ * Nothing about a closure is acted on until the 'close' event fires — including telling an
+ * opponent their player disconnected. Every close() we call presumes a peer that's still there
+ * to receive the reason, and one round trip is all such a peer needs; this bounds the wait for
+ * when that presumption turns out to be wrong.
+ */
+const CLOSE_HANDSHAKE_TIMEOUT_MS = 2500;
+
 // Variables ---------------------------------------------------------------------------
 
 let WebSocketServer: Server;
@@ -37,6 +48,7 @@ function start(httpsServer: HttpsServer): void {
 	WebSocketServer = new Server({
 		server: httpsServer,
 		maxPayload: MAX_PAYLOAD_BYTES,
+		closeTimeout: CLOSE_HANDSHAKE_TIMEOUT_MS,
 	});
 	// WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
 	WebSocketServer.on('connection', (socket: WebSocket, req: IncomingMessage) => {

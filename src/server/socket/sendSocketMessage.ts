@@ -94,9 +94,12 @@ function sendSocketMessage<R extends OutRoute, A extends OutAction<R>, V extends
 	logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
 
 	// Set a timer. At the end, if we have heard no echo, just assume they've disconnected, terminate the socket.
+	// terminate() and not close(): a closing handshake with a peer we have already concluded is
+	// unreachable can only stall the 'close' event, and every consequence of the disconnection —
+	// dropping their subscriptions, telling their opponent — waits on that event.
 	ws.metadata.echoTimers[id] = setTimeout(() => {
 		delete ws.metadata.echoTimers[id];
-		ws.close(1014, 'No echo heard');
+		ws.terminate();
 	}, wsutil.ECHO_TIMEOUT); // We pass in an arrow function so it doesn't lose scope of ws.
 
 	rescheduleHeartbeatTimer(ws);

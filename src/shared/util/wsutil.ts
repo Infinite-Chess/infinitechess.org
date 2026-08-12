@@ -47,14 +47,13 @@ const ECHO_TIMEOUT = 5000;
 // 1009 "Too Many Sockets"
 // 1009 ""  Message exceeded MAX_PAYLOAD_BYTES (see socketServer.ts). The `ws` library
 //          closes it itself, before the payload is buffered, so it sends no reason.
-// 1014 "No echo heard"  (Client took too long to respond)
 
 // Sent by the client:
 // 1000 "Connection closed by client"
 // 1000 "Connection closed by client. Renew."
 
 // Sent by neither:
-// 1006 ""  Network error, or the server is down
+// 1006 ""  Network error, the server is down, or the server terminated a socket that stopped echoing.
 // 1001 ""  Endpoint going away. (Closed tab without performing cleanup)
 
 // The only closure codes reachable here, and what produces them.
@@ -63,12 +62,11 @@ const ECHO_TIMEOUT = 5000;
 // 1000: Normal closure. Every reason above we close with 1000.
 // 1001: Endpoint going away. The tab closed without running our cleanup.
 // 1002: Protocol error. The `ws` library rejecting a malformed frame.
-// 1006: Abnormal closure. A network interruption, or the server is down.
-//       Reserved — never sent on the wire, only surfaced locally.
+// 1006: Abnormal closure. A network interruption, the server is down, or the server terminated
+//       a socket that stopped echoing. Reserved — never sent on the wire, only surfaced locally.
 // 1007: Invalid payload data. The `ws` library rejecting invalid UTF-8.
 // 1008: Policy violation. Every reason above we close with 1008.
 // 1009: Message too big. Our request/socket limits, plus the `ws` receiver's maxPayload.
-// 1014: The spec calls this "Bad Gateway", but we reuse it for "No echo heard".
 
 // These are the closure reasons where we will RETAIN their seek for a set amount of time before deleting it by disconnection!
 // We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
@@ -78,7 +76,6 @@ const involuntaryClosureCodes: number[] = [1006];
 const involuntaryClosureReasons: string[] = [
 	'Connection expired',
 	'Too Many Sockets',
-	'No echo heard',
 	'Connection closed by client. Renew.',
 ];
 

@@ -1,5 +1,6 @@
 // src/server/types.ts
 
+import type { IncomingMessage } from 'http';
 import type { Role } from './controllers/roles';
 import type { ScriptTranslations } from '../shared/types/script-translations.js';
 
@@ -17,6 +18,25 @@ declare global {
 			 * Mirrors the client's global `t`. Set lazilly via reqTranslation.ts.
 			 */
 			t: ScriptTranslations;
+		}
+	}
+}
+
+/*
+ * Declares the `closeTimeout` server option, present in ws since 8.19
+ * but absent from @types/ws 8.18.1, the latest published.
+ *
+ * Delete this once the types catch up.
+ */
+declare module 'ws' {
+	namespace WebSocket {
+		interface ServerOptions<
+			// eslint-disable-next-line
+			U extends typeof WebSocket = typeof WebSocket,
+			// eslint-disable-next-line
+			V extends typeof IncomingMessage = typeof IncomingMessage,
+		> {
+			closeTimeout?: number | undefined;
 		}
 	}
 }
