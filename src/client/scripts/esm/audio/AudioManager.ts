@@ -185,13 +185,9 @@ function fadeOutDownsampler(durationMillis: number): void {
 // Sound Playing ------------------------------------------------------------------------------------------
 
 /** Plays the specified audio buffer with the specified options. */
-function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObject | undefined {
+function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObject {
 	// Attempt to resume if it was suspended (e.g., due to browser autoplay policy)
 	if (audioContext.state === 'suspended') audioContext.resume();
-	if (!audioContext) {
-		console.warn(`Can't play sound when audioContext isn't initialized yet. (Still loading)`);
-		return;
-	}
 
 	const {
 		startTime,
@@ -386,23 +382,6 @@ function fadeOut(source: AudioBufferWithGainNode, endTime: number): void {
 	source.gainNode.gain.linearRampToValueAtTime(0, endTime);
 }
 
-// Utility ----------------------------------------------------------------------------------
-
-/** Decodes audio data from an ArrayBuffer from a fetch request into an AudioBuffer. */
-function decodeAudioData(buffer: ArrayBuffer): Promise<AudioBuffer> {
-	return new Promise((resolve, reject) => {
-		if (!audioContext) {
-			reject('Audio context not initialized.');
-			return;
-		}
-		audioContext.decodeAudioData(
-			buffer,
-			(decodedData) => resolve(decodedData),
-			(error) => reject(error),
-		);
-	});
-}
-
 // Exports ----------------------------------------------------------------------
 
 export type { SoundObject };
@@ -416,6 +395,4 @@ export default {
 	fadeOutDownsampler,
 	// Sound Playing
 	playAudio,
-	// Utility
-	decodeAudioData,
 };

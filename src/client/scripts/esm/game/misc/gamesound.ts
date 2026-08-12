@@ -31,7 +31,7 @@ async function getBuffer(soundName: SoundName): Promise<AudioBuffer | undefined>
 		// isn't valid audio, so skip the needless decode and fail explicitly instead.
 		if (!response.ok) throw new Error(`Fetch returned status ${response.status}.`);
 		const arrayBuffer = await response.arrayBuffer();
-		const decoded = await AudioManager.decodeAudioData(arrayBuffer);
+		const decoded = await AudioManager.getContext().decodeAudioData(arrayBuffer);
 		audioCache.set(soundName, decoded);
 		return decoded;
 	} catch (error) {
