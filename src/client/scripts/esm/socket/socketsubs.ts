@@ -5,6 +5,8 @@
  *
  * Tracks which subscriptions (e.g. 'lobby', 'game') are currently active,
  * and provides methods to add, remove, and query subscriptions.
+ *
+ * Counterpart of the server's socketSubs, which holds the authoritative side.
  */
 
 import socketsend from './socketsend.js';

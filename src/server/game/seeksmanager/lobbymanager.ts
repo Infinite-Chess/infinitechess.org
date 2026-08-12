@@ -248,7 +248,6 @@ function subToLobby(ws: CustomWebSocket): void {
 
 // Set involuntary to true if you don't immediately want to delete their seek, but say after 5 seconds.
 function unsubFromLobby(ws: CustomWebSocket, involuntary?: boolean): void {
-	// data: { route, action, value, id }
 	removeSocketFromLobbySubs(ws);
 	broadcastViewerCount(); // Notify remaining subscribers of the decremented count
 

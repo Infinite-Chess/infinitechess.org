@@ -1,7 +1,8 @@
 // src/client/scripts/esm/socket/socketsend.ts
 
 /**
- * Handles outgoing websocket messages and echo tracking.
+ * Handles outgoing websocket messages and echo tracking, and owns the inactivity
+ * watchdog that drops the socket once the server has gone silent.
  *
  * This is the raw transport. User-triggered messages go through socketintents instead,
  * which holds them across a disconnect rather than letting them fall on the floor.
@@ -50,7 +51,7 @@ const DEBUG_SOCKET_LATENCY_MILLIS = 1000;
 // Variables -------------------------------------------------------------------
 
 /** Echo timers for sent messages awaiting acknowledgement. */
-let echoTimers: Record<string, { timeSent: number; timeoutID: number }> = {};
+let echoTimers: Record<MessageID, { timeSent: number; timeoutID: number }> = {};
 
 /**
  * The timeout ID for detecting server inactivity.

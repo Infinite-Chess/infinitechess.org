@@ -1,8 +1,11 @@
 // src/client/scripts/esm/socket/socketreceive.ts
 
 /**
- * Routes incoming websocket messages to the appropriate handler
- * based on the subscription type.
+ * Entry point for every incoming server message: validates it against the clientbound
+ * contract at the trust boundary, feeds the heartbeat watchdog, echoes it back, then
+ * dispatches it onto the SocketBus for its route's handlers to pick up.
+ *
+ * Counterpart of the server's socketReceive.
  */
 
 import type { ClientboundGeneralMessage } from '../../../../shared/clientbound.js';

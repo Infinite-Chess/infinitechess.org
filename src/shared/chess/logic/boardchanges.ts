@@ -359,8 +359,7 @@ function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]
 				position.set(startCoordsKey, change.piece.type);
 				break;
 			default:
-				// @ts-expect-error
-				throw Error(`Unknown change action: ${change.action}`);
+				throw Error(`Unknown change: ${JSON.stringify(change satisfies never)}`);
 		}
 	}
 }

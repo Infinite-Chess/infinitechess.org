@@ -1,6 +1,9 @@
 // src/server/socket/socketTypes.ts
 
-// This script defines the CustomWebSocket interface used by server socket handlers.
+/**
+ * Defines the CustomWebSocket interface every server socket handler works with —
+ * a `ws` socket plus the `metadata` we attach to it at upgrade time.
+ */
 
 import type WebSocket from 'ws';
 import type { Player } from '../../shared/chess/util/typeutil.js';

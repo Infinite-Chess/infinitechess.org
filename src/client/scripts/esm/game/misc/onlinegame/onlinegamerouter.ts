@@ -1,5 +1,15 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
+/**
+ * Routes every incoming `game`-route message to its handler.
+ *
+ * Nothing can be acted on until the gamefile's logical part is loaded, so messages
+ * arriving during a load are buffered and replayed the instant it finishes, and the
+ * first `gamestate` is what bootstraps the game when nothing is loaded at all.
+ *
+ * Counterpart of the server's gamerouter.
+ */
+
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { ClockValues } from '../../../../../../shared/domain.js';

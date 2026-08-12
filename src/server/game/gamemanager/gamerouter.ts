@@ -21,9 +21,8 @@ import { abortGame, resignGame, resignEngine } from './abortresigngame.js';
 
 /**
  * Handles all incoming websocket messages related to active games.
- * Possible actions: submitmove/offerdraw/abort/resign/subscribe/subscriberematch/paste...
- * @param ws - The socket
- * @param contents - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
+ * The actions needing no game are routed first; the rest resolve
+ * the game the socket belongs to, and its color in it.
  */
 function routeGameMessage(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
 	// All actions that don't require a game

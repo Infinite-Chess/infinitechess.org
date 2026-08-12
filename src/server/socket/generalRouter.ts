@@ -1,4 +1,4 @@
-// src/server/socket/generalrouter.ts
+// src/server/socket/generalRouter.ts
 
 /**
  * This script handles the incoming general websocket message route.
@@ -13,7 +13,6 @@ import { handleSubbing, handleUnsubbing } from './socketSubs.js';
 
 // Route for this incoming message is "general". What is their action?
 function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGeneralMessage): void {
-	// data: { route, action, value, id }
 	// Route them according to their action
 	switch (message.action) {
 		case 'sub':

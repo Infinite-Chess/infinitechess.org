@@ -47,7 +47,6 @@ function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 			lobby.onOutGame();
 			break;
 		default:
-			// @ts-ignore
-			console.error(`Unknown lobby action: ${contents.action}`);
+			console.error("Unknown action received from server in 'lobby' route.", contents satisfies never); // prettier-ignore
 	}
 }

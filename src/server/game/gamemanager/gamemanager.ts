@@ -694,9 +694,8 @@ function evictGame(servergame: ServerGame): void {
 	}
 	for (const ws of servergame.spectators) {
 		sendSocketMessage(ws, 'game', 'unsub', undefined);
-		delete ws.metadata.subscriptions.spectating;
+		gameutility.detachSpectatorFromGame(servergame, ws);
 	}
-	servergame.spectators.clear();
 
 	if (PRINT_GAMES) console.log(`Evicted game ${servergame.match.id}.`);
 }

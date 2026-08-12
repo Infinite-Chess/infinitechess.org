@@ -1,5 +1,13 @@
 // src/server/socket/socketServer.ts
 
+/**
+ * Stands the websocket server up on top of the HTTPS server, handing every upgrade
+ * request to socketOpen inside its own correlation context.
+ *
+ * Owns the two connection-wide limits the `ws` library enforces for us: the largest
+ * incoming message we'll accept, and how long we wait for a peer's answering close frame.
+ */
+
 import type { Server as HttpsServer } from 'https';
 
 import WebSocket from 'ws';

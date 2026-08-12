@@ -1,8 +1,11 @@
 // src/shared/util/socketutil.ts
 
-/*
- * This script should contain utility methods regarding
- * sockets that both the CLIENT and server can use.
+/**
+ * What both ends of the websocket need in common: the type helpers their send functions
+ * are built from, the wire protocol version, the heartbeat/echo timings, and the taxonomy
+ * of closure codes and reasons — including which of them the client had no control over.
+ *
+ * The message contracts themselves live in clientbound.ts / serverbound.ts.
  */
 
 // Types -------------------------------------------------------------------------------------

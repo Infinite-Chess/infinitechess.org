@@ -278,8 +278,7 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 		const variant = { group: 'custom' as const };
 		return { ...seek, variant, isOurs };
 	} else {
-		// @ts-ignore
-		throw new Error(`Unknown seek variant kind: ${seek.variant.kind}`);
+		throw new Error(`Unknown seek variant: ${JSON.stringify(seek.variant satisfies never)}`);
 	}
 }
 
