@@ -339,8 +339,6 @@ export type TranslationKeys =
 	| 'play.javascript.copypaste.clear_position'
 	| 'play.javascript.rendering.on'
 	| 'play.javascript.rendering.off'
-	| 'play.javascript.rendering.icon_rendering_off'
-	| 'play.javascript.rendering.icon_rendering_on'
 	| 'play.javascript.rendering.perspective'
 	| 'play.javascript.rendering.perspective_mode_on_desktop'
 	| 'play.javascript.rendering.movement_tutorial'
@@ -858,8 +856,6 @@ export interface TranslationsObject {
 			rendering: {
 				on: string;
 				off: string;
-				icon_rendering_off: string;
-				icon_rendering_on: string;
 				perspective: string;
 				perspective_mode_on_desktop: string;
 				movement_tutorial: string;
