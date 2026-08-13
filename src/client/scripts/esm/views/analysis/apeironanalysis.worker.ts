@@ -453,27 +453,16 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 				: '';
 			result.pv = [`${move.from}>${move.to}${promotion}`];
 		} else if (legalMoves.length > 1) {
-			// The same search call the analysis loop uses — its summary carries the full PV.
-			// Every completed depth is streamed so the page can tell a live search from a stalled
-			// one, and abort the latter via the shared stop flag (see gamereview's watchdog).
-			let lastCompletedDepth: AnalysisInfo | undefined;
-			const summary: AnalysisInfo | null = evaluationEngine.analyse(
+			// The same search call the analysis loop uses. Its return value is deliberately
+			// discarded: the page scores the position from the deepest depth streamed here, so a
+			// search that never returns (wedged past the engine's stop-flag poll, and killed by
+			// gamereview's watchdog) still yields its best answer.
+			evaluationEngine.analyse(
 				{ multi_pv: 1, max_depth: msg.maxDepth, start_depth: 1, slice_ms: 0 },
 				(info: AnalysisInfo) => {
-					lastCompletedDepth = info;
 					postMessage({ type: 'info', requestId: msg.requestId, info } satisfies AnalysisResponse); // prettier-ignore
 				},
 			);
-			// A search the page aborted may return nothing: fall back to the deepest completed depth.
-			const finalInfo = summary ?? lastCompletedDepth;
-			const line = finalInfo?.lines[0];
-			if (finalInfo && line) {
-				if (line.cp !== undefined && line.cp !== null) result.cp = line.cp;
-				if (line.mate !== undefined && line.mate !== null) result.mate = line.mate;
-				result.depth = finalInfo.depth;
-				// Lila stores at most 12 PV plies in game-analysis advice.
-				result.pv = line.moves.slice(0, 12);
-			}
 		}
 	} catch (e) {
 		// Likely a wasm panic (poisoned module) — tell the page so it can respawn this worker.

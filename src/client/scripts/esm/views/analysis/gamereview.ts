@@ -14,8 +14,8 @@ import type { MoveEvalLabel } from './moveevals.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { AnalysisCommand, AnalysisResponse } from './apeironanalysis.worker.js';
 import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
+import type { AnalysisCommand, AnalysisResponse, AnalysisInfo } from './apeironanalysis.worker.js';
 
 import * as z from 'zod';
 
@@ -64,7 +64,7 @@ export interface MoveReview {
 	accuracy: number;
 	/** The engine's best move token ("x,y>x,y"); absent for forced/unevaluated moves. */
 	bestMove?: string;
-	/** Best continuation from the position before this move, capped by the worker. */
+	/** Best continuation from the position before this move, capped to {@link MAX_PV_PLIES}. */
 	pv?: string[];
 	/** Whether the played move matches the engine's best move. */
 	isBestMove: boolean;
@@ -136,8 +136,15 @@ interface ReviewWorker {
 	chunk: ReviewWorkItem[];
 	/** The work item it is currently evaluating; undefined = idle. */
 	assignment?: ReviewWorkItem;
+	/**
+	 * The deepest depth its current search has streamed. THE source of the position's score —
+	 * the worker's own final message can't be, since a wedged worker never sends one.
+	 */
+	lastInfo?: AnalysisInfo;
 	/** Stall watchdog over its in-flight search, re-armed on every completed depth. */
 	watchdog?: ReturnType<typeof setTimeout>;
+	/** Whether its stalled search has already been asked to stop, and ignoring that is fatal. */
+	aborting?: true;
 }
 
 // Constants ----------------------------------------------------------------------
@@ -176,10 +183,17 @@ function isLapseKey(key: string): key is LapseKey {
 const MATE_CP = 1800;
 /** Cp values are clamped to this for average-centipawn-loss, mirroring lichess. */
 const ACPL_CLAMP = 1000;
+/** How many plies of a position's best line the review keeps, mirroring lichess. */
+const MAX_PV_PLIES = 12;
 /** How many times a crashed worker's position is retried before being skipped. */
 const MAX_POSITION_ATTEMPTS = 2;
 /** How long a worker may search without completing a depth before we cut it short. */
 const SEARCH_STALL_TIMEOUT_MILLIS = 15_000;
+/**
+ * How long a stalled search gets to honor its stop flag before the worker is killed instead.
+ * The flag is polled every node batch, so a search that can see it at all stops in milliseconds.
+ */
+const ABORT_GRACE_MILLIS = 2_000;
 
 /** Fishnet-style chunk size: reported positions sharing one overlapping TT warmup. */
 const MAX_POSITIONS_PER_CHUNK = 5;
@@ -221,7 +235,7 @@ const EvaluateResultSchema = z.object({
 	legalMoveCount: z.int(),
 	/** Whether the side to move is in check (distinguishes checkmate from stalemate when terminal). */
 	inCheck: z.boolean(),
-	/** The depth actually searched (0 for terminal/forced positions). */
+	/** The deepest depth the search completed (0 for terminal/forced/unevaluated positions). */
 	depth: z.int(),
 	/** Echoed for an unreported TT-warming search. */
 	warmup: z.boolean().optional(),
@@ -571,12 +585,13 @@ function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 			dispatchNext(entry);
 			break;
 		case 'info':
+			entry.lastInfo = msg.info;
 			armStallWatchdog(entry); // The search completed a depth: it's making progress.
 			break;
 		case 'evaluated':
 			clearStallWatchdog(entry);
 			delete entry.assignment;
-			if (!msg.warmup) receiveEvaluation(msg);
+			if (!msg.warmup) receiveEvaluation({ ...msg, ...scoreFromInfo(entry.lastInfo) });
 			dispatchNext(entry);
 			break;
 	}
@@ -589,7 +604,7 @@ function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
  */
 function handleWorkerFault(entry: ReviewWorker, fault: AnalysisWorkerFault, reason: string): void {
 	console.error(`[game review] Worker ${fault}: ${reason}`);
-	const { assignment, chunk } = entry;
+	const { assignment, chunk, lastInfo } = entry;
 	clearStallWatchdog(entry);
 	// The entry owns nothing from here on, so a second fault from
 	// the same dying worker can't re-queue its work a second time.
@@ -604,19 +619,21 @@ function handleWorkerFault(entry: ReviewWorker, fault: AnalysisWorkerFault, reas
 	// consumes a position's attempts, since none was ever attempted.
 	if (fault === 'unloadable') return failReview('unavailable');
 
-	if (assignment !== undefined) {
-		if (
-			assignment.warmup ||
-			(positionAttempts.get(assignment.index) ?? 0) < MAX_POSITION_ATTEMPTS
-		) {
-			chunkQueue.unshift([{ ...assignment, newChunk: true }, ...chunk]);
-		} else {
-			// Give up on this position: record an empty evaluation so the review continues
-			// (its eval carries over; adjacent moves classify as unknown).
-			requeueChunk(chunk);
-			receiveEvaluation({ requestId: assignment.index, legalMoveCount: 2, inCheck: false, depth: 0 }); // prettier-ignore
-		}
-	} else requeueChunk(chunk);
+	// A warmup's result is never reported, so it's pure TT optimization: drop it and let the chunk
+	// run cold. Retrying it would loop forever, since warmups consume no position attempts.
+	if (assignment === undefined || assignment.warmup) requeueChunk(chunk);
+	else if (
+		lastInfo === undefined &&
+		(positionAttempts.get(assignment.index) ?? 0) < MAX_POSITION_ATTEMPTS
+	) {
+		// The search died having completed nothing: retry the position on a fresh worker.
+		chunkQueue.unshift([{ ...assignment, newChunk: true }, ...chunk]);
+	} else {
+		// Settle for the depths it did complete, so the review continues. With none, the
+		// evaluation is empty: its eval carries over and adjacent moves classify as unknown.
+		requeueChunk(chunk);
+		receiveEvaluation({ requestId: assignment.index, legalMoveCount: 2, inCheck: false, depth: 0, ...scoreFromInfo(lastInfo) }); // prettier-ignore
+	}
 
 	if (chunkQueue.length > 0) {
 		// Positions still remain: replace the dead worker to keep the pool full — repeated
@@ -670,6 +687,7 @@ function dispatchNext(entry: ReviewWorker): void {
 		}
 
 		entry.assignment = work;
+		delete entry.lastInfo;
 		if (!work.warmup) positionAttempts.set(index, (positionAttempts.get(index) ?? 0) + 1);
 
 		const icn = serializePosition(index);
@@ -724,17 +742,25 @@ function armStallWatchdog(entry: ReviewWorker): void {
 function clearStallWatchdog(entry: ReviewWorker): void {
 	if (entry.watchdog !== undefined) clearTimeout(entry.watchdog);
 	delete entry.watchdog;
+	delete entry.aborting;
 }
 
-/** Cuts short a search that hasn't completed a depth in {@link SEARCH_STALL_TIMEOUT_MILLIS}. */
+/**
+ * Cuts short a search that hasn't completed a depth in {@link SEARCH_STALL_TIMEOUT_MILLIS}: first by
+ * writing the shared stop flag, which lets the worker finish in place and keep its warm TT for the
+ * rest of its chunk. A search wedged past the engine's poll point never sees that flag, so ignoring
+ * it for {@link ABORT_GRACE_MILLIS} escalates to killing the worker — its position keeps whatever
+ * depths it streamed either way.
+ */
 function abortStalledSearch(entry: ReviewWorker): void {
 	delete entry.watchdog;
-	// Writing the flag (polled every node batch, cleared by the engine on its next search) makes
-	// the worker settle for its deepest completed depth's lines — a graceful, in-place finish.
-	// A single-threaded build shares no memory to write, so killing it is the only way out; its
-	// position is then retried exactly as a crash's would be.
+	const index = entry.assignment?.index;
+	if (entry.aborting) return handleWorkerFault(entry, 'crashed', `search at position ${index} ignored its stop flag`); // prettier-ignore
+	// A single-threaded build shares no memory to write, so killing it is the only way out.
 	if (!analysisworker.interrupt(entry.engine))
-		handleWorkerFault(entry, 'crashed', 'search stalled with no shared stop flag');
+		return handleWorkerFault(entry, 'crashed', `search at position ${index} stalled with no shared stop flag`); // prettier-ignore
+	entry.aborting = true;
+	entry.watchdog = setTimeout(() => abortStalledSearch(entry), ABORT_GRACE_MILLIS);
 }
 
 // Result processing --------------------------------------------------------------------------
@@ -742,6 +768,21 @@ function abortStalledSearch(entry: ReviewWorker): void {
 /** The player to move at position `index` (= the mover of mainline move `index`). */
 function moverAtPly(index: number): Player {
 	return turnOrder[index % turnOrder.length]!;
+}
+
+/**
+ * A searched position's score, taken from the deepest depth its worker streamed.
+ * Empty when the search completed none, which leaves the position unevaluated.
+ */
+function scoreFromInfo(info: AnalysisInfo | undefined): Partial<EvaluateResult> {
+	const line = info?.lines[0];
+	if (!info || !line) return {};
+	return {
+		depth: info.depth,
+		pv: line.moves.slice(0, MAX_PV_PLIES),
+		...(line.cp !== undefined && line.cp !== null && { cp: line.cp }),
+		...(line.mate !== undefined && line.mate !== null && { mate: line.mate }),
+	};
 }
 
 /** The result's score from the side-to-move's perspective, as an effective cp. */
@@ -889,7 +930,7 @@ function classifyMove(i: number, before: EvaluateResult, after: EvaluateResult):
 		wpLoss: 0,
 		accuracy: 100,
 		bestMove: before.pv?.[0],
-		pv: before.pv ? before.pv.slice(0, 12) : undefined,
+		pv: before.pv ? before.pv.slice(0, MAX_PV_PLIES) : undefined,
 		isBestMove: false,
 	};
 
