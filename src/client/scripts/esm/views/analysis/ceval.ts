@@ -15,11 +15,11 @@ import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeirona
 import math from '../../../../../shared/util/math/math.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
+import engineicn from '../../game/chess/engines/engineicn.js';
 import { GameBus } from '../../game/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
@@ -447,15 +447,13 @@ function getViewedPositionIcn(gamefile: GameFile): string {
 	// Re-base the start snapshot to safeStartPly (no-op at ply 0).
 	gamecompressor.rebaseToPly(longformIn, gamefile.moves, safeStartPly, viewedPlyCount);
 
-	// Result/Termination are irrelevant to the engine
-	delete longformIn.metadata.Result;
-	delete longformIn.metadata.Termination;
+	engineicn.stripToEngineMetadata(longformIn);
 	// Always hand the engine an explicit world border. Without one it falls back to its own
 	// narrow internal default (1e15); the resolved border (the position's own, else ±i64-wiggle)
 	// lets it evaluate the full safe coordinate range. compressGamefile deep-copies gameRules,
 	// so this doesn't touch the live game.
 	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
-	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
+	return engineicn.serialize(longformIn);
 }
 
 /** Coalesces a burst of synchronous 'view-move' events into one refresh of the final position. */

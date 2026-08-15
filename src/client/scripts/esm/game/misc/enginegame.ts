@@ -23,6 +23,7 @@ import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
 import premoves from '../chess/premoves.js';
 import selection from '../chess/selection.js';
+import engineicn from '../chess/engines/engineicn.js';
 import { GameBus } from '../GameBus.js';
 import gamesession from '../chess/gamesession.js';
 import movesequence from '../chess/movesequence.js';
@@ -160,6 +161,7 @@ function onMovePlayed(): void {
 	if (gamefile.gameConclusion) return;
 
 	if (engine.name === 'apeiron') {
+		engineicn.stripToEngineMetadata(longformIn);
 		// UCI-style clock values, in millis. Untimed games (no clocks) send none.
 		const clocks = gamefile.clocks;
 		const incrementMillis = clocks && timeutil.secondsToMillis(clocks.startTime.increment);
@@ -265,6 +267,7 @@ function requestGeneratedMoves(gamefile: GameFile): void {
 	// Compress the gamefile as a single position (not including future moves)
 	// This ensures the engine analyzes the currently viewed position
 	const longformIn = gamecompressor.compressGamefile(gamefile, true);
+	engineicn.stripToEngineMetadata(longformIn);
 
 	engine.worker.postMessage({
 		lf: longformIn,

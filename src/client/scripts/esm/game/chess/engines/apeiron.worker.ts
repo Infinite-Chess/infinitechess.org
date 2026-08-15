@@ -24,8 +24,7 @@ import type {
 	EngineResponse,
 } from './engineprotocol.js';
 
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-
+import engineicn from './engineicn.js';
 import { loadEngineWasm, getPromotionAbbr } from './enginewasm.js';
 
 // Types ----------------------------------------------------------------
@@ -93,10 +92,7 @@ function respondToMoveRequest(data: ApeironMoveRequest): void {
 		const engineColor = data.youAreColor;
 
 		// Convert compressed gamefile (lf) to ICN string
-		const icnString = icnconverter.LongToShort_Format(
-			data.lf,
-			icnconverter.COMPACT_FORMAT_OPTIONS,
-		);
+		const icnString = engineicn.serialize(data.lf);
 
 		// Initialize engine configuration
 		const engineConfig = {

@@ -23,12 +23,13 @@ import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
-import icnconverter, { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import ceval from './ceval.js';
 import movetree from './movetree.js';
 import gameslot from '../../game/chess/gameslot.js';
 import moveevals from './moveevals.js';
+import engineicn from '../../game/chess/engines/engineicn.js';
 import { GameBus } from '../../game/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
@@ -441,8 +442,7 @@ function start(): void {
 
 	// Serialize the game once; each position re-slices the move list.
 	longformIn = gamecompressor.compressGamefile(gamefile);
-	delete longformIn.metadata.Result; // Irrelevant to the engine.
-	delete longformIn.metadata.Termination;
+	engineicn.stripToEngineMetadata(longformIn);
 	// Always hand the engine an explicit world border (its own internal fallback is only 1e15),
 	// so every reviewed position is evaluated over the full safe coordinate range. Matches ceval.
 	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
@@ -715,8 +715,7 @@ function serializePosition(index: number): string {
 	// never dispatched to a worker (dispatchNext skips it), but cache callers still ask
 	// for its ICN — clamping keeps GameToPosition within the move list instead of overrunning it.
 	const safeStart = Math.min(safeStartByIndex[index]!, index);
-	if (safeStart === 0)
-		return icnconverter.LongToShort_Format(longformIn!, icnconverter.COMPACT_FORMAT_OPTIONS); // Common path.
+	if (safeStart === 0) return engineicn.serialize(longformIn!); // Common path.
 
 	// Earlier history left the engine's safe coordinate range: re-base past it (see
 	// analysisenginebounds.getSafeStartPlies). Rare, so we copy onto a fresh longform rather than
@@ -728,7 +727,7 @@ function serializePosition(index: number): string {
 		state_global: jsutil.deepCopyObject(longformIn!.state_global),
 	};
 	gamecompressor.rebaseToPly(rebased, mainlineMoves, safeStart, index);
-	return icnconverter.LongToShort_Format(rebased, icnconverter.COMPACT_FORMAT_OPTIONS);
+	return engineicn.serialize(rebased);
 }
 
 // Stall watchdog ---------------------------------------------------------------------------
