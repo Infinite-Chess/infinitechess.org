@@ -7,12 +7,12 @@
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
+import engineicn from '../chess/engines/engineicn.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
@@ -149,10 +149,11 @@ function removePendingRequest(requestId: number): void {
 /** Returns the compact ICN of the viewed position, used as the cache/request key. */
 function getPositionKey(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile, true);
-	// Metadata is blanked so a change to it (e.g. the Result on game end) doesn't miss the cache.
-	// Everything else stays: the engine reads whos turn it is, enpassant, and the game rules from this ICN.
-	longformIn.metadata = {};
-	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
+	// Dropping the metadata the engine ignores doubles as cache hygiene: a change to it
+	// (e.g. the Result on game end) can't miss the cache. Everything else stays — the
+	// engine reads whos turn it is, enpassant, and the game rules from this ICN.
+	engineicn.stripToEngineMetadata(longformIn);
+	return engineicn.serialize(longformIn);
 }
 
 /** Renders the cached legal-move destinations for the viewed position as highlighted squares. */
