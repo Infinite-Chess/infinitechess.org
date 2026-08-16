@@ -3,11 +3,18 @@
 import type { Movesets } from '../../logic/movesets.js';
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { Promotion } from '../../util/gamerules.js';
+import type { UnboundedRectangle } from '../../../util/math/bounds.js';
 import type { GameruleWinCondition } from '../../util/winconutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../../logic/specialmove.js';
 import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../../util/typeutil.js';
 
-/** The shape of a dynamically imported variant script module. */
+/**
+ * The shape of a dynamically imported variant script module.
+ *
+ * Rules that read as derivable from the starting position — `promotion.pieces`, `worldBorder` —
+ * are still stated outright here, since deriving them means processing the whole position.
+ * They must therefore be revised (and time-versioned) alongside any change to that position.
+ */
 export interface VariantModule {
 	/** Returns the variant's position at the given timestamp. */
 	getPosition: (timestamp?: number) => {
@@ -20,8 +27,6 @@ export interface VariantModule {
 	};
 	/** Returns the gamerule modifications for this variant at the given timestamp, if it has any. */
 	gameruleModifications?: (timestamp?: number) => GameRuleModifications;
-	/** If present, it's how many squares of padding exist between the furthest piece on each side to the world border. */
-	worldBorderDist?: bigint;
 	/**
 	 * Returns the length of the raw ICN position string for this variant at the resolved timestamp.
 	 * Only present on string-based variants, generator-based variants omit this.
@@ -58,6 +63,7 @@ export type GameRuleModifications = {
 	turnOrder?: Player[];
 	winConditions?: PlayerGroup<GameruleWinCondition[]>;
 	promotion?: PromotionModifications | null;
+	worldBorder?: UnboundedRectangle;
 };
 
 type PromotionModifications = {

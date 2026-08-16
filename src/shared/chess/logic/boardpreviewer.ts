@@ -29,7 +29,11 @@ export interface BoardInitOptions {
 	variantOptions?: VariantOptions;
 	/** Whether the board is being built for the editor. */
 	editor?: boolean;
-	/** Only has an effect if the `worldBorder` gamerule is not present. */
+	/**
+	 * Generates a world border this distance out from the starting position's bounding box.
+	 * The sole source of a generated border — only has an effect if the rules, which are
+	 * authoritative, declare no `worldBorder` of their own.
+	 */
 	worldBorderDist?: bigint;
 	/** Clamps each generated world-border edge to this absolute coordinate. */
 	worldBorderCap?: bigint;
@@ -130,23 +134,13 @@ function initBoardPreview(
 	if (startingPositionBox === undefined)
 		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
 
-	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variantpreviewer.getVariantWorldBorder(
-		variant?.mod,
-	);
-	if (worldBorderDist !== undefined) {
-		if (worldBorderProperty === undefined)
-			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
-		else if (worldBorderDist < worldBorderProperty) worldBorderProperty = worldBorderDist; // Use the smaller of the two if both exist.
-	}
-
-	if (gameRules.worldBorder === undefined && worldBorderProperty !== undefined) {
-		// No override for exact world border dimensions provided, calculate it using the provided distance.
+	if (gameRules.worldBorder === undefined && worldBorderDist !== undefined) {
+		// The rules declare no border of their own, so generate one at the requested distance.
 		const generatedBorder = {
-			left: startingPositionBox.left - worldBorderProperty,
-			right: startingPositionBox.right + worldBorderProperty,
-			bottom: startingPositionBox.bottom - worldBorderProperty,
-			top: startingPositionBox.top + worldBorderProperty,
+			left: startingPositionBox.left - worldBorderDist,
+			right: startingPositionBox.right + worldBorderDist,
+			bottom: startingPositionBox.bottom - worldBorderDist,
+			top: startingPositionBox.top + worldBorderDist,
 		};
 		if (worldBorderCap !== undefined) {
 			generatedBorder.left = bimath.max(generatedBorder.left, -worldBorderCap);

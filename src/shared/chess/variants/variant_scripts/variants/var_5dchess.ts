@@ -29,10 +29,9 @@ export function gameruleModifications(): GameRuleModifications {
 				[p.BLACK]: [1n, 10n, 19n, 28n, 37n, 46n, 55n, 64n],
 			},
 		},
+		worldBorder: { left: 0n, right: 72n, bottom: 0n, top: 72n },
 	};
 }
-
-export const worldBorderDist = 0n;
 
 export function getGeneratorRules(): { pawnDoublePush: boolean; castleWith?: RawType } {
 	return { pawnDoublePush: true, castleWith: r.ROOK };

@@ -33,10 +33,9 @@ export function getPosition(): { position: Map<CoordsKey, number> } {
 export function gameruleModifications(): GameRuleModifications {
 	return {
 		promotion: { ranks: { [p.WHITE]: [19n], [p.BLACK]: [1n] } },
+		worldBorder: { left: 0n, right: 20n, bottom: 0n, top: 20n },
 	};
 }
-
-export const worldBorderDist = 0n;
 
 export function getGeneratorRules(): { pawnDoublePush: boolean; castleWith?: RawType } {
 	return { pawnDoublePush: true };

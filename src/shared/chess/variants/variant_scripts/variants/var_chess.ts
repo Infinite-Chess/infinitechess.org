@@ -5,6 +5,7 @@
  */
 
 import type { CoordsKey } from '../../../util/coordutil.js';
+import type { GameRuleModifications } from '../variantutil.js';
 
 import icnconverter from '../../../logic/icn/icnconverter.js';
 import { CLASSICAL_POSITION_STRING } from '../classicalPositionString.js';
@@ -15,7 +16,10 @@ export function getPosition(): {
 } {
 	return icnconverter.generatePositionFromShortForm(CLASSICAL_POSITION_STRING);
 }
-export const worldBorderDist = 0n;
+
+export function gameruleModifications(): GameRuleModifications {
+	return { worldBorder: { left: 1n, right: 8n, bottom: 1n, top: 8n } };
+}
 
 export function getPositionStringLength(): number {
 	return CLASSICAL_POSITION_STRING.length;

@@ -95,17 +95,9 @@ function getGameRules(modifications: GameRuleModifications = {}): GameRules {
 		};
 	}
 	if (modifications.moveRule !== null) gameRules.moveRule = modifications.moveRule || 100;
+	if (modifications.worldBorder !== undefined) gameRules.worldBorder = modifications.worldBorder;
 
 	return jsutil.deepCopyObject(gameRules); // Copy it so the game doesn't modify the values in this module.
-}
-
-/**
- * Returns the worldBorder property for the given variant module, if it has one.
- * @param mod - The loaded variant module, or `undefined` for pasted games with no variant.
- */
-function getVariantWorldBorder(mod: VariantModule | undefined): bigint | undefined {
-	if (mod === undefined) return undefined;
-	return mod.worldBorderDist;
 }
 
 /**
@@ -142,7 +134,6 @@ export default {
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
 	getBareMinimumGameRules,
-	getVariantWorldBorder,
 	getVariantPositionStringLength,
 	getSquarePresets,
 	getRayPresets,
