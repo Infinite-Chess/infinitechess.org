@@ -156,7 +156,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 /** Loads all of the logical components of a game */
 async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 	if (loadOptions.variant !== undefined)
-		await variantcache.ensureVariantLoaded(loadOptions.variant);
+		await variantcache.ensureVariantLoaded(loadOptions.variant.code);
 	loadedGamefile = gamefile.initGameFile(
 		loadOptions.timeControl,
 		loadOptions.dateTimestamp,

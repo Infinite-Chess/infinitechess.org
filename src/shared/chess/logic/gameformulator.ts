@@ -5,11 +5,11 @@
  * used by both ends — the client to load a game, the server to inspect one.
  */
 
-import type { VariantCode } from '../variants/variantregistry.js';
+import type { CoordsKey } from '../util/coordutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { ClockValues, TimeControl } from '../../domain.js';
 import type { LongFormatOut, PresetAnnotes } from './icn/icnconverter.js';
-import type { Additional, GameFile, VariantOptions } from './gamefile.js';
+import type { Additional, DatedVariant, GameFile, VariantOptions } from './gamefile.js';
 
 import gamefile from './gamefile.js';
 import icnimport from './icn/icnimport.js';
@@ -23,8 +23,8 @@ import variantregistry from '../variants/variantregistry.js';
 export interface GameConstructionOptions {
 	/** The time control of the game (e.g. `"600+5"`, or `"-"` for untimed). */
 	timeControl: TimeControl;
-	/** The variant code. Pass undefined for custom/unknown positions. */
-	variant: VariantCode | undefined;
+	/** The variant, at the revision of it that applies. Pass undefined for custom/unknown positions. */
+	variant: DatedVariant | undefined;
 	/** The game's start timestamp in milliseconds since epoch. */
 	dateTimestamp: number;
 	/** Preset ray overrides for the variant's rays. */
@@ -113,21 +113,37 @@ function tryConstructPosition(
  * Loads the resolved variant module first, since the position is read off it whenever
  * the ICN omits an explicit one (e.g. server-stored games carrying only Variant + moves).
  * An ICN with neither resolves to an empty position, left for position validation to reject.
+ * That fallback is the sole reason this is async — see {@link constructionOptionsFromLongFormat}.
  */
 async function resolveConstructionOptions(
 	longFormat: LongFormatOut,
 	overrides?: ConstructionOverrides,
 ): Promise<GameConstructionOptions> {
-	const variant = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
-	if (variant !== undefined) await variantcache.ensureVariantLoaded(variant);
+	const code = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
+	if (code !== undefined) await variantcache.ensureVariantLoaded(code);
 
-	const { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant); // prettier-ignore
+	const positionSource = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, code);
+	return constructionOptionsFromLongFormat(longFormat, overrides, positionSource);
+}
+
+/**
+ * The half of {@link resolveConstructionOptions} a parsed ICN determines on its own — everything
+ * but the position fallback, which is the only part needing the variant module. Callers whose ICN
+ * always carries an explicit position use this directly, and stay synchronous.
+ * @param positionSource - The position to build from. Defaults to the ICN's own, or empty if it
+ *   carries none — pass the variant's when you want a tag-only ICN to resolve to its position.
+ */
+function constructionOptionsFromLongFormat(
+	longFormat: LongFormatOut,
+	overrides?: ConstructionOverrides,
+	positionSource?: { position: Map<CoordsKey, number>; specialRights: Set<CoordsKey> },
+): GameConstructionOptions {
+	// The ICN's date is both the game's start and the variant revision it declares itself of.
+	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
+	const code = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
 
 	const additional: Additional = {
-		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat, {
-			position,
-			specialRights,
-		}),
+		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat, positionSource),
 		...overrides,
 	};
 	// FUTURE: transfer the pasted move comments into the gamefile here, too.
@@ -135,8 +151,8 @@ async function resolveConstructionOptions(
 
 	return {
 		timeControl: longFormat.metadata.TimeControl ?? '-',
-		variant,
-		dateTimestamp: metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime), // prettier-ignore
+		variant: code !== undefined ? { code, dateTimestamp } : undefined,
+		dateTimestamp,
 		presetAnnotes: longFormat.presetAnnotes,
 		additional,
 	};
@@ -162,4 +178,5 @@ export default {
 	tryFormulateGame,
 	tryConstructPosition,
 	resolveConstructionOptions,
+	constructionOptionsFromLongFormat,
 };

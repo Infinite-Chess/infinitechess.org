@@ -7,6 +7,7 @@
  */
 
 import type { DeadGameState } from '../../../../../../shared/domain.js';
+import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameStateMessage } from '../../../../../../shared/clientbound.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
@@ -20,10 +21,12 @@ import onlinegame from './onlinegame.js';
 async function loadDeadGame(): Promise<void> {
 	try {
 		const deadState: DeadGameState = await fetchDeadState();
-		const gameState = normalizeToGameState(deadState);
-		onlinegame.loadGameFromState(gameState, true);
+		// Parsed once here and handed on: it is also the start position of a custom game.
+		const longformat = icnconverter.ShortToLong_Format(deadState.icn);
+		const gameState = normalizeToGameState(deadState, longformat);
+		onlinegame.loadGameFromState(gameState, true, longformat);
 	} catch (e: unknown) {
-		console.error('Failed to fetch dead game state:', e);
+		console.error('Failed to fetch/parse dead game state:', e);
 		toast.show('Failed to load game. Please refresh.', { error: true });
 	}
 }
@@ -39,11 +42,14 @@ async function fetchDeadState(): Promise<DeadGameState> {
 	return await response.json();
 }
 
-/** Normalizes a `DeadGameState` into the live `gamestate` shape the loader consumes. */
-function normalizeToGameState(deadState: DeadGameState): GameStateMessage {
-	// Parse the ICN for the move list.
-	const longformat = icnconverter.ShortToLong_Format(deadState.icn);
-
+/**
+ * Normalizes a `DeadGameState` into the live `gamestate` shape the loader consumes.
+ * @param longformat - The state's already-parsed {@link DeadGameState.icn}, holding its move list.
+ */
+function normalizeToGameState(
+	deadState: DeadGameState,
+	longformat: LongFormatOut,
+): GameStateMessage {
 	const state: GameStateMessage = {
 		// The ICN's clock stamps ride along: they seed the clock of any color
 		// the server stored no final value for — guests keep no `player_games` row.

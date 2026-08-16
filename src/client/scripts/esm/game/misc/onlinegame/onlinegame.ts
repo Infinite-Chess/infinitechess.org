@@ -4,10 +4,13 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
-import type { Additional } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Additional, DatedVariant } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { LongFormatOut, PresetAnnotes } from '../../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
 import type { GameStateMessage, ParticipantState } from '../../../../../../shared/clientbound.js';
 
 import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card.js';
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import gameformulator from '../../../../../../shared/chess/logic/gameformulator.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 import { engineDictionary } from '../../../../../../shared/chess/engine.js';
 
@@ -80,8 +83,14 @@ function setInSync(value: boolean): void {
  * A fresh page load (not a reconnect, game live OR dead): Loads a game onto the
  * board from a fresh `gamestate` message and sets up the online-game session.
  * @param dead - Whether the server has evicted it from memory. True if fetched over HTTP.
+ * @param longformat - The game's parsed ICN. Required of the dead path, where a custom game's
+ *   start position lives ONLY here; the live path SSRs that position instead, and passes nothing.
  */
-function loadGameFromState(state: GameStateMessage, dead: boolean): void {
+function loadGameFromState(
+	state: GameStateMessage,
+	dead: boolean,
+	longformat?: LongFormatOut,
+): void {
 	/** The viewer's color, if they're a participant; undefined => spectator (white POV). */
 	const ourRole = gamesession.getRole();
 
@@ -100,11 +109,37 @@ function loadGameFromState(state: GameStateMessage, dead: boolean): void {
 		additional.worldBorderCap = apeiron_card.PLAY_BORDER.worldBorderCap;
 	}
 
+	// A custom game has no variant code to build its position from — its ICN is the source of
+	// truth for the position, the gamerules, and which variant revision it's a position of.
+	// (Only the position-defining half of it: time control, moves, clocks and conclusion are the
+	// typed state's to declare, and the ICN's player/result tags are eyeball-only.)
+	let datedVariant: DatedVariant | undefined;
+	let presetAnnotes: PresetAnnotes | undefined;
+	if (variant.kind === 'preset') {
+		datedVariant = { code: variant.code, dateTimestamp: timeCreated };
+	} else {
+		let startFormat = longformat;
+		if (startFormat === undefined) {
+			if (variant.position === undefined)
+				throw new Error('Custom game page carries no start position.');
+			startFormat = icnconverter.ShortToLong_Format(variant.position);
+		}
+		// The sync half suffices: a custom game's ICN always carries an explicit position,
+		// so the variant-module fallback the async resolver adds has nothing left to resolve.
+		const resolved = gameformulator.constructionOptionsFromLongFormat(startFormat);
+		datedVariant = resolved.variant;
+		presetAnnotes = resolved.presetAnnotes;
+		additional.variantOptions = resolved.additional?.variantOptions;
+	}
+
 	gamesession.loadGame(
 		{
 			timeControl,
-			variant: variant.kind === 'preset' ? variant.code : undefined,
+			variant: datedVariant,
+			// The game's own start time — NOT the variant revision, which a custom
+			// position lifted from an older game pins to its own, earlier date.
 			dateTimestamp: timeCreated,
+			presetAnnotes,
 			// Resolved server-side: the URL's color segment, else the side we played on.
 			viewWhitePerspective: viewColor === p.WHITE,
 			additional,

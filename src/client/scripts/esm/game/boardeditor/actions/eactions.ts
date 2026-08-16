@@ -317,7 +317,9 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		const loadedGamefile = gamefile.initGameFile(
 			longformOut.metadata.TimeControl ?? '-',
 			timestamp,
-			resolvedVariantCode,
+			resolvedVariantCode !== undefined
+				? { code: resolvedVariantCode, dateTimestamp: timestamp }
+				: undefined,
 			additional,
 		);
 		const new_gamestate = gamecompressor.GameToPosition(

@@ -89,11 +89,11 @@ async function loadGameById(gameId: number): Promise<void> {
  */
 function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
 	lastLoad = { replay: () => loadVariant(variant, slideLimit), players: {} };
-
+	const dateTimestamp = Date.now();
 	return gamesession.loadGame({
 		timeControl: '-',
-		variant,
-		dateTimestamp: Date.now(),
+		variant: { code: variant, dateTimestamp },
+		dateTimestamp,
 		viewWhitePerspective: true,
 		...(slideLimit !== undefined && {
 			additional: { slideLimit },

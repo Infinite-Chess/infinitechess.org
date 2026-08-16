@@ -25,9 +25,22 @@ import variantpreviewer from '../variants/variantpreviewer.js';
 
 // Types ----------------------------------------------------
 
-/** A variant code paired with its loaded module and the game's creation timestamp. */
-export type LoadedVariant = { code: VariantCode; mod: VariantModule; dateTimestamp: number };
+/** A variant, paired with the timestamp pinning which revision of it applies. */
+export interface DatedVariant {
+	code: VariantCode;
+	/**
+	 * Selects which revision of the variant applies. Usually the game's start time; for a custom
+	 * position, the date it was lifted from — which may long predate the game it's now played in.
+	 */
+	dateTimestamp: number;
+}
 
+/** A {@link DatedVariant} with its module resolved. */
+export interface LoadedVariant extends DatedVariant {
+	mod: VariantModule;
+}
+
+/** The game's position as it was at move zero. */
 export interface Snapshot {
 	/** In key format 'x,y':'type' */
 	position: Map<CoordsKey, number>;
@@ -193,13 +206,13 @@ function loadGameWithBoard(
 function initGameFile(
 	timeControl: TimeControl,
 	dateTimestamp: number,
-	variantCode: VariantCode | undefined,
+	datedVariant: DatedVariant | undefined,
 	additional: Additional = {},
 	validateMoves?: true,
 ): GameFile {
 	const variant: LoadedVariant | undefined =
-		variantCode !== undefined
-			? { code: variantCode, mod: variantcache.getModule(variantCode), dateTimestamp }
+		datedVariant !== undefined
+			? { ...datedVariant, mod: variantcache.getModule(datedVariant.code) }
 			: undefined;
 
 	let gameRules: GameRules =

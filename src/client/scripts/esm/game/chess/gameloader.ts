@@ -35,7 +35,7 @@ async function startBoardEditor(): Promise<void> {
 
 	gamesession.loadGame({
 		timeControl: '-',
-		variant: variantCode,
+		variant: { code: variantCode, dateTimestamp },
 		dateTimestamp,
 		viewWhitePerspective,
 		/**

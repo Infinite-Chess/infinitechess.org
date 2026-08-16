@@ -147,7 +147,17 @@ export interface MetaData {
 // rather than validates — nothing ever parses them. See the note at the top of the file.
 
 /** A game's variant: a preset `code`, or a `custom` game (position sourced from the ICN / live state). */
-type GameStateVariant = { kind: 'preset'; code: VariantCode } | { kind: 'custom' };
+type GameStateVariant =
+	| { kind: 'preset'; code: VariantCode }
+	| {
+			kind: 'custom';
+			/**
+			 * The ICN the game's starting position was set from, carrying the source-variant
+			 * tags (`Variant`/`UTCDate`/`UTCTime`) that identify what it's a position of.
+			 * Present only on the live path — a dead game's comes from {@link DeadGameState.icn}.
+			 */
+			position?: string;
+	  };
 
 /**
  * The static setup of a game: how it was configured at creation — variant, clock settings,
