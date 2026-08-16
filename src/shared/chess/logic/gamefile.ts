@@ -175,8 +175,10 @@ function loadGameWithBoard(
 	}
 
 	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
-	// Do not overwrite pre-existing server conclusion, if present.
+	// A pre-existing server conclusion is authoritative — don't recompute it, but still
+	// route it through setGameConclusion so the last move gets its mate flag.
 	if (gamefile.gameConclusion === undefined) wincondition.doGameOverChecks(gamefile);
+	else wincondition.setGameConclusion(gamefile, gamefile.gameConclusion);
 	return gamefile;
 }
 

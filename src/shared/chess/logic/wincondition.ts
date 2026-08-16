@@ -31,7 +31,12 @@ const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
  * and adds the respective mate flag on the last move played.
  */
 function doGameOverChecks(gamefile: GameFile): void {
-	const conclusion = getGameConclusion(gamefile);
+	const gameConclusion = getGameConclusion(gamefile);
+	setGameConclusion(gamefile, gameConclusion);
+}
+
+/** Sets the game's conclusion, adding the mate flag to the last move played if it was checkmate. */
+function setGameConclusion(gamefile: GameFile, conclusion: GameConclusion | undefined): void {
 	gamefile.gameConclusion = conclusion;
 	if (conclusion?.condition === 'checkmate') moveutil.flagLastMoveAsMate(gamefile);
 }
@@ -197,4 +202,5 @@ function wasLastMoveARoyalCapture(boardsim: Board): boolean | undefined {
 export default {
 	getGameConclusion,
 	doGameOverChecks,
+	setGameConclusion,
 };
