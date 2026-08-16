@@ -6,6 +6,7 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MetaData, Rating } from '../../../../../shared/domain.js';
+import type { SourceVariantMetaData } from '../../../../../shared/chess/util/metadatautil.js';
 import type { Condition, GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 import * as z from 'zod';
@@ -49,11 +50,10 @@ function buildMetaDataFromGamefile(gamefile: GameFile): MetaData {
 }
 
 /**
- * The metadata declaring which variant, at which revision of it, a position was sourced from —
- * everything an explicit position needs to still identify its origin. Empty for a game with no
- * variant, since the date alone declares no provenance.
+ * Builds the {@link metadatautil.SOURCE_VARIANT_METADATA} tags from a loaded gamefile.
+ * Empty for a game with no variant, since the date alone declares no provenance.
  */
-function buildSourceVariantMetadata(gamefile: GameFile): MetaData {
+function buildSourceVariantMetadata(gamefile: GameFile): SourceVariantMetaData {
 	if (!gamefile.variant) return {};
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(gamefile.dateTimestamp);
 	return {

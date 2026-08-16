@@ -18,12 +18,34 @@ import { players as p } from './typeutil.js';
 /** All valid metadata names. */
 export type MetadataKey = keyof MetaData;
 
+/** {@link MetaData} narrowed to the {@link SOURCE_VARIANT_METADATA} tags. */
+export type SourceVariantMetaData = Pick<MetaData, (typeof SOURCE_VARIANT_METADATA)[number]>;
+
 // Constants -----------------------------------------------------------------------
 
 /** Canonical display name used for guest players in ICN metadata. Metadata is always in English. */
 const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
 
+/**
+ * The tags declaring which variant, at which revision of it, a position was sourced from —
+ * everything an explicit position needs to still identify its origin. `Variant` selects the
+ * movesets, `UTCDate`/`UTCTime` pin which revision of that variant applies.
+ */
+const SOURCE_VARIANT_METADATA = ['Variant', 'UTCDate', 'UTCTime'] as const satisfies readonly MetadataKey[]; // prettier-ignore
+
 // Functions -----------------------------------------------------------------------
+
+/**
+ * Trims metadata down to the {@link SOURCE_VARIANT_METADATA} tags.
+ * Everything else (player names, elo, result, ...) is bloat in an exported position.
+ */
+function trimToSourceVariantMetadata(metadata: MetaData): SourceVariantMetaData {
+	const trimmed: SourceVariantMetaData = {};
+	for (const key of SOURCE_VARIANT_METADATA) {
+		if (metadata[key] !== undefined) trimmed[key] = metadata[key];
+	}
+	return trimmed;
+}
 
 /**
  * Resolves a timestamp (ms since epoch) from UTCDate and UTCTime metadata strings.
@@ -80,6 +102,8 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 
 export default {
 	GUEST_NAME_ICN_METADATA,
+	SOURCE_VARIANT_METADATA,
+	trimToSourceVariantMetadata,
 	resolveTimestampFromMetadata,
 	getResultFromVictor,
 	getVictorFromResult,

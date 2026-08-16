@@ -13,6 +13,7 @@ import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantreader from '../../../shared/chess/variants/variantreader.js';
 import gameformulator from '../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
@@ -36,19 +37,6 @@ import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { AuthSeek, buildServerUsernameContainer } from './seekutility.js';
 import { existingSeekHasID, deleteUsersExistingSeek, addSeek } from './lobbymanager.js';
-
-// Constants ---------------------------------------------------------------------------
-
-/**
- * The only metadata a custom seek's ICN may carry: the tags declaring which variant, at which
- * revision of it, its position was sourced from. Everything else is rejected — the seek's ICN
- * is served verbatim to lobby viewers by the seek-preview endpoint.
- */
-const PERMITTED_SEEK_METADATA: ReadonlySet<string> = new Set<keyof MetaData>([
-	'Variant',
-	'UTCDate',
-	'UTCTime',
-]);
 
 // Functions -------------------------------------------------------------------------
 
@@ -223,13 +211,15 @@ function validateIcnSeekContent(content: string, engineGame: boolean): PositionR
 }
 
 /**
- * Validates a custom seek ICN's metadata: only the {@link PERMITTED_SEEK_METADATA} tags may be
- * present, and any variant they declare must be a real one that doesn't move its pieces
- * differently. A seek carries only a position + gamerules, so a variant with custom piece
+ * Validates a custom seek ICN's metadata: only the source-variant tags may be present — everything
+ * else is rejected, since the seek's ICN is served verbatim to lobby viewers by the seek-preview
+ * endpoint. Any variant they declare must also be a real one that doesn't move its pieces
+ * differently: a seek carries only a position + gamerules, so a variant with custom piece
  * movement (4D) would not play as the name it declares promises.
  */
 function validateSeekMetadata(metadata: MetaData): PositionRejection | null {
-	if (Object.keys(metadata).some((key) => !PERMITTED_SEEK_METADATA.has(key)))
+	const permitted: readonly string[] = metadatautil.SOURCE_VARIANT_METADATA;
+	if (Object.keys(metadata).some((key) => !permitted.includes(key)))
 		return { kind: 'position', code: 'invalid_icn' };
 	if (metadata.Variant === undefined) return null;
 	const code = variantregistry.resolveVariantCode(metadata.Variant);

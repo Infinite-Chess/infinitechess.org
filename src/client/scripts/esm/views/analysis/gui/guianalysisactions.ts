@@ -6,12 +6,12 @@
  * (copies the current game's ICN to the clipboard).
  */
 
-import type { MetaData } from '../../../../../../shared/domain.js';
 import type { ModalMode } from '../../../components/gameSetupModalHandoff.js';
 import type { EditorAutosaveState } from '../../../game/editorstores/estoretypes.js';
 import type { GameFile, VariantOptions } from '../../../../../../shared/chess/logic/gamefile.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 
 import view from './guianalysisview.js';
 import toast from '../../../components/toast.js';
@@ -100,7 +100,7 @@ function init(): void {
 function getGameICN(gamefile: GameFile): string {
 	const presetOverrides = annotations.getPresetOverrides();
 	const longformIn = gamecompressor.compressGamefile(gamefile, false, presetOverrides);
-	longformIn.metadata = trimMetadata(longformIn.metadata);
+	longformIn.metadata = metadatautil.trimToSourceVariantMetadata(longformIn.metadata);
 	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
 	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
 		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
@@ -134,7 +134,7 @@ function exportCurrentPosition():
 		},
 	};
 
-	position.metadata = trimMetadata(position.metadata);
+	position.metadata = metadatautil.trimToSourceVariantMetadata(position.metadata);
 	const icn = icnconverter.LongToShort_Format(position, icnconverter.COMPACT_FORMAT_OPTIONS);
 	return { icn, pieceCount: position.position.size, variantOptions };
 }
@@ -216,19 +216,6 @@ function syncActionsToggle(): void {
 		!element_ContinueChoiceMenu.classList.contains('hidden');
 	element_ActionsButton.classList.toggle('active', anyOpen);
 	element_ActionsButton.setAttribute('aria-expanded', String(anyOpen));
-}
-
-/**
- * Trims the metadata down to what an exported ICN can't be reloaded 100% accurately without:
- * Variant selects movesets, UTCDate/UTCTime pin which revision of that variant applies.
- * Everything else (player names, elo, result, ...) is bloat in an exported position.
- */
-function trimMetadata(metadata: MetaData): MetaData {
-	return {
-		Variant: metadata.Variant,
-		UTCDate: metadata.UTCDate,
-		UTCTime: metadata.UTCTime,
-	};
 }
 
 export default { init };
