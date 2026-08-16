@@ -16,7 +16,7 @@ import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
-import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
+import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validleaderboard.js';
 
 import gameutility from './gameutility.js';
 import { getMultipleGameData } from '../../database/gamesManager.js';
@@ -147,7 +147,7 @@ function measureRatingAbuseAfterGame(servergame: ServerGame): void {
 	if (servergame.gameConclusion!.victor === undefined) return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
-	const leaderboard_id = VariantLeaderboards[servergame.match.variant];
+	const leaderboard_id = getLeaderboardOfVariant(servergame.match.variant);
 	if (leaderboard_id === undefined) return;
 
 	for (const [playerStr, player] of Object.entries(servergame.match.playerData)) {

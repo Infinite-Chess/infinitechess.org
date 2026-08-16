@@ -23,13 +23,11 @@ import type { SlideLimitValue } from '../../../shared/util/gameconfig.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
-import type { ClockValues, TimeControl } from '../../../shared/domain.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
+import type { AuthSeekVariant, ClockValues, TimeControl } from '../../../shared/domain.js';
 
+import gamefile from '../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import variantcache from '../../../shared/chess/variants/variantcache.js';
-import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js';
-import gamefile, { type LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 
 import gameutility from './gameutility.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -159,21 +157,20 @@ function restoreSingleGame(
 	const clockValues = reconstructClockValues(gameRow, playerRows, engineRow);
 
 	// 3. Create the game (also computes gameRules).
-	const variant: LoadedVariant = {
-		code: gameRow.variant as VariantCode,
-		mod: variantcache.getModule(gameRow.variant as VariantCode),
-		dateTimestamp: gameRow.time_created,
-	};
-	const gameRules = variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
-
-	// Slide Limit modifier override. Must precede initServerGame, whose initBoard()
-	// reads gameRules.slideLimit to narrow the sliding movesets.
-	if (gameRow.mod_slide_limit !== null) gameRules.slideLimit = BigInt(gameRow.mod_slide_limit);
+	const variant = reconstructVariant(gameRow);
+	const construction = gameutility.resolveGameConstruction(
+		variant,
+		gameRow.time_created,
+		gameRow.mod_slide_limit ?? undefined,
+	);
+	// The column wins over what the variant resolves to now: a game keeps the
+	// mode it started under, even if the threshold deciding it has moved since.
+	construction.validateMoves = Boolean(gameRow.validate_moves);
 
 	const game = gamefile.initGame(
 		gameRow.clock as TimeControl,
 		gameRow.time_created,
-		gameRules,
+		construction.gameRules,
 		undefined,
 		clockValues,
 	);
@@ -182,20 +179,12 @@ function restoreSingleGame(
 	// by clock.edit() inside initGame() via the clockValues we pass in.
 
 	// 4. Reconstruct MatchInfo
-	const match = reconstructMatchInfo(gameRow, playerRows, playerIdentities, engineRow);
+	const match = reconstructMatchInfo(gameRow, variant, playerRows, playerIdentities, engineRow);
 
 	// 5. Parse & replay moves, conditionally constructing the board state
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
-	const validateMoves = Boolean(gameRow.validate_moves);
 
-	const servergame: ServerGame = gameutility.initServerGame(
-		game,
-		gameRules,
-		match,
-		validateMoves,
-		variant,
-		moves,
-	);
+	const servergame: ServerGame = gameutility.initServerGame(game, construction, match, moves);
 
 	// 6. Compute pending timers
 	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame);
@@ -292,9 +281,21 @@ function reconstructClockValues(
 	};
 }
 
+/**
+ * Reads a live game's variant back off its complementary `variant` / `position` columns.
+ * @throws If the row carries neither (a corrupt row — the caller drops the game).
+ */
+function reconstructVariant(gameRow: LiveGamesRecord): AuthSeekVariant {
+	if (gameRow.variant !== null) return { kind: 'preset', code: gameRow.variant as VariantCode };
+	if (gameRow.position === null)
+		throw new Error('Live game row carries neither a variant nor a position.');
+	return { kind: 'custom', position: gameRow.position };
+}
+
 /** Reconstructs the MatchInfo from stored values. */
 function reconstructMatchInfo(
 	gameRow: LiveGamesRecord,
+	variant: AuthSeekVariant,
 	playerRows: LivePlayerGamesRecord[],
 	playerIdentities: PlayerGroup<AuthMemberInfo>,
 	engineRow: LiveEngineGamesRecord | undefined,
@@ -318,7 +319,7 @@ function reconstructMatchInfo(
 
 	return {
 		id: gameRow.game_id,
-		variant: gameRow.variant as VariantCode,
+		variant,
 		timeCreated: gameRow.time_created,
 		timeEnded: undefined, // Only ongoing games are restored — none have ended.
 		rated: gameRow.rated === 1,

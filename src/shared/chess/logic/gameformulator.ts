@@ -32,6 +32,14 @@ export interface GameConstructionOptions {
 	additional?: Additional;
 }
 
+/**
+ * {@link GameConstructionOptions} carrying an explicit position — what parsing an ICN
+ * always yields, since every ICN resolves to one (an empty position if it declares none).
+ */
+interface PositionedConstructionOptions extends GameConstructionOptions {
+	additional: Additional & { variantOptions: VariantOptions };
+}
+
 /** Caller-supplied {@link Additional} fields, layered onto what the source itself resolves to. */
 interface ConstructionOverrides {
 	/** See {@link Additional.gameConclusion}. */
@@ -137,12 +145,12 @@ function constructionOptionsFromLongFormat(
 	longFormat: LongFormatOut,
 	overrides?: ConstructionOverrides,
 	positionSource?: { position: Map<CoordsKey, number>; specialRights: Set<CoordsKey> },
-): GameConstructionOptions {
+): PositionedConstructionOptions {
 	// The ICN's date is both the game's start and the variant revision it declares itself of.
 	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
 	const code = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
 
-	const additional: Additional = {
+	const additional: PositionedConstructionOptions['additional'] = {
 		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat, positionSource),
 		...overrides,
 	};

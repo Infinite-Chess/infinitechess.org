@@ -14,10 +14,7 @@ import type { GameSetup, PlayerRatingResult, ServerGame } from './gameutility.js
 import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import variantcache from '../../../shared/chess/variants/variantcache.js';
-import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js';
-import gamefile, { type LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
-import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
+import gamefile from '../../../shared/chess/logic/gamefile.js';
 
 import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
@@ -78,46 +75,27 @@ const activeGames: Record<number, ServerGame> = {};
  * @param setup - The variant, time control, and rated flag of the game to start.
  * @param assignments - The color each player has, and their socket if connected.
  * @returns The id of the newly created game.
- * @throws If a database error occurs, or if the variant is custom — starting those isn't
- * implemented yet.
+ * @throws If a database error occurs.
  */
 function createGame(
 	setup: GameSetup,
 	assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }>,
 ): number {
-	if (setup.variant.kind !== 'preset') {
-		const errText = 'Custom variant game starting is not yet implemented.';
-		console.error(errText);
-		throw new Error(errText);
-	}
-
 	// Joining a new game counts as leaving any concluded game still lingering for a rematch.
 	for (const { identifier } of Object.values(assignments)) forceLeaveLingeringGame(identifier);
 
 	const gameID = issueUniqueGameId();
 	const dateTimestamp = Date.now();
-	const variant: LoadedVariant = {
-		code: setup.variant.code,
-		mod: variantcache.getModule(setup.variant.code),
+	const construction = gameutility.resolveGameConstruction(
+		setup.variant,
 		dateTimestamp,
-	};
-	const gameRules = variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
-
-	// Slide Limit modifier override.
-	const slideLimit = setup.modifiers?.find((m) => m.kind === 'slide-limit')?.value;
-	if (slideLimit !== undefined) gameRules.slideLimit = BigInt(slideLimit);
-
-	const game = gamefile.initGame(setup.time, dateTimestamp, gameRules);
-	const match = gameutility.initMatch(setup, gameID, assignments);
-	const validateMoves = doesVariantSupportServerValidation(variant);
-
-	const servergame: ServerGame = gameutility.initServerGame(
-		game,
-		gameRules,
-		match,
-		validateMoves,
-		variant,
+		setup.modifiers?.find((m) => m.kind === 'slide-limit')?.value,
 	);
+
+	const game = gamefile.initGame(setup.time, dateTimestamp, construction.gameRules);
+	const match = gameutility.initMatch(setup, gameID, assignments);
+
+	const servergame: ServerGame = gameutility.initServerGame(game, construction, match);
 	for (const [strcolor, { identifier, socket }] of Object.entries(assignments)) {
 		// A player with no socket to push to is owed the navigate notice on their next lobby subscribe.
 		addUserToActiveGames(

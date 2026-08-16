@@ -22,7 +22,7 @@ import { POSITION_STRING_THRESHOLD } from '../../../shared/chess/variants/server
 import compression, { CompressionMode } from '../../../shared/util/compression.js';
 import {
 	Leaderboards,
-	VariantLeaderboards,
+	getLeaderboardOfVariant,
 } from '../../../shared/chess/variants/validleaderboard.js';
 import {
 	PositionRejection,
@@ -99,9 +99,7 @@ async function getSeekFromWebsocketMessageContents(
 	if (ws.metadata.memberInfo.signedIn) {
 		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
 		const leaderboardId =
-			messageContents.variant.kind === 'preset'
-				? (VariantLeaderboards[messageContents.variant.code] ?? Leaderboards.INFINITY)
-				: Leaderboards.INFINITY;
+			getLeaderboardOfVariant(messageContents.variant) ?? Leaderboards.INFINITY;
 		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 

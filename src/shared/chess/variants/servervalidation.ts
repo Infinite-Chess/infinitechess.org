@@ -11,7 +11,7 @@
 import type { Player } from '../util/typeutil.js';
 import type { VariantCode } from './variantregistry.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
-import type { SeekVariant, TimeControl, GameModifier } from '../../domain.js';
+import type { GameStateVariant, SeekVariant, TimeControl, GameModifier } from '../../domain.js';
 
 import variantpreviewer from './variantpreviewer.js';
 import { VariantLeaderboards } from './validleaderboard.js';
@@ -54,15 +54,21 @@ function doesVariantSupportServerValidation(variant: LoadedVariant | undefined):
 }
 
 /**
- * DELETE UNNECESSARY WRAPPER once the `private` game flag has been unused for a while.
- *
  * Returns `true` if the game is finalized (result locked in, db logged) the instant
  * it concludes — meaning the server validated every move (cheating is impossible), so
  * clients should not send cheat reports (the server would reject them anyway).
- * @param variant - The loaded variant, if available.
+ * @param variant - What the game is played with.
+ * @param loaded - The loaded variant its board was built from. Read only for a preset game:
+ *   a custom game's source variant says nothing about the size of the position it was lifted from.
  */
-function isGameInstantlyDeleted(variant: LoadedVariant | undefined): boolean {
-	return doesVariantSupportServerValidation(variant);
+function isGameInstantlyDeleted(
+	variant: GameStateVariant,
+	loaded: LoadedVariant | undefined,
+): boolean {
+	// A custom position is capped at POSITION_STRING_THRESHOLD when its seek is
+	// created — the same bound presets are admitted by — so it's always validated.
+	if (variant.kind === 'custom') return true;
+	return doesVariantSupportServerValidation(loaded);
 }
 
 /**

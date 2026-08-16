@@ -43,6 +43,7 @@ export type PositionErrorCode =
 	| 'gargoyles_not_allowed'
 	| 'invalid_player_id'
 	| 'player_missing_pieces'
+	| 'four_player_checkmate'
 	| 'consecutive_turns_with_checkmate'
 	| 'too_many_royals_for_checkmate'
 	| 'king_capture_on_turn_1';
@@ -82,8 +83,10 @@ export type PositionRejection =
  * 5. Every non-neutral piece's color is in the turn order.
  *    In 2-player mode, no neutral gargoyle pieces are allowed.
  * 6. Every player in the turn order has at least one piece.
- * 7. Checkmate incompatibility: No player gets consecutive turns; royal count
- *    is not too high; and king capture is not possible on turn 1.
+ * 7. Checkmate incompatibility: Not 4-player; no player gets consecutive turns; royal count
+ *    is not too high; and king capture is not possible on turn 1. Mirrors
+ *    {@link winconutil.isCheckmateCompatibleWithGame}, whose remaining checks (piece count,
+ *    slide-line count) only trip on positions far larger than any this ever sees.
  *
  * @param variantOptions - The position and game rules to validate.
  * @param icnString - The position's ICN, used solely to check its length. Provide it in
@@ -169,8 +172,10 @@ export function validatePosition(
 		(gameRules.winConditions[player] ?? []).includes('checkmate'),
 	);
 	if (checkmateUsed) {
-		// In 2-player mode, if any player gets 2+ turns in a row, king capture is possible
-		if (!isFourPlayerMode && moveutil.doesAnyPlayerGet2TurnsInARow(gameRules)) {
+		// 3+ players allows one to open a discovered attack and a second to capture the king.
+		if (isFourPlayerMode) return 'four_player_checkmate';
+		// If any player gets 2+ turns in a row, king capture is possible
+		if (moveutil.doesAnyPlayerGet2TurnsInARow(gameRules)) {
 			return 'consecutive_turns_with_checkmate';
 		}
 		if (royalCount > winconutil.royalCountToDisableCheckmate) {

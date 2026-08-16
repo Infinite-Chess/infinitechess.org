@@ -171,7 +171,9 @@ function loadGameWithBoard(
 ): GameFile {
 	const gamefile: GameFile = { ...game, ...boardsim };
 
-	// Do we need to convert any checkmate win conditions to royalcapture?
+	// Do we need to convert any checkmate win conditions to royalcapture? Only reachable for the
+	// editor and analysis-pasted games, which must degrade rather than refuse a position — a played
+	// game's was already rejected upfront by validatePosition().
 	if (!winconutil.isCheckmateCompatibleWithGame(gamefile))
 		gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
 
@@ -247,5 +249,6 @@ function initGameFile(
 
 export default {
 	initGame,
+	loadGameWithBoard,
 	initGameFile,
 };

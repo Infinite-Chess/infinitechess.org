@@ -89,7 +89,7 @@ function createRematchGame(oldGame: ServerGame): void {
 	for (const socket of oldGame.spectators) toNavigate.push({ socket });
 
 	const setup: GameSetup = {
-		variant: { kind: 'preset', code: oldMatch.variant },
+		variant: oldMatch.variant,
 		time: oldMatch.clock,
 		rated: oldMatch.rated,
 		modifiers: oldMatch.modifiers, // A rematch inherits the original game's modifiers.

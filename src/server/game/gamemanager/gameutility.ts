@@ -16,9 +16,10 @@ import type { VariantCode } from '../../../shared/chess/variants/variantregistry
 import type { ValidEngine } from '../../../shared/chess/engine.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { Game, LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { SourceVariantMetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { OutAction, OutRoute, OutValue } from '../../socket/socketSend.js';
+import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 import type {
 	GameConclusionMessage,
 	GameStateBase,
@@ -41,20 +42,25 @@ import type {
 
 import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
+import gamefile from '../../../shared/chess/logic/gamefile.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
-import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
+import variantcache from '../../../shared/chess/variants/variantcache.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
+import gameformulator from '../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
+import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import { getFormattedEngineName } from '../../../shared/chess/engine.js';
+import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 import {
 	Leaderboards,
-	VariantLeaderboards,
+	getLeaderboardOfVariant,
 } from '../../../shared/chess/variants/validleaderboard.js';
 
 import tconfig from '../../config/translationconfig.js';
@@ -153,8 +159,8 @@ interface MatchInfo {
 	/** The match's unique ID. This is also the same ID the game will have when logged to the database. */
 	id: number;
 
-	/** The variant code of the game being played. */
-	variant: VariantCode;
+	/** The variant of the game being played: a preset code, or a custom game's start position. */
+	variant: AuthSeekVariant;
 
 	/** The time this match was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	timeCreated: number;
@@ -253,6 +259,18 @@ type ValidationDependant =
 			moves: MoveRecord[];
 	  };
 
+/** Everything a game's board is built from, resolved from the variant it's played with. */
+interface GameConstruction {
+	/** The variant supplying the movesets. Undefined for a position declaring no source variant. */
+	variant: LoadedVariant | undefined;
+	/** The rules to play by. Owned by the caller until {@link boardinit.initBoard} deep-copies them. */
+	gameRules: GameRules;
+	/** The explicit start position. Custom games only — a preset's comes off its variant module. */
+	variantOptions?: VariantOptions;
+	/** Whether the server tracks a board and validates every move against it. */
+	validateMoves: boolean;
+}
+
 /**
  * The properties needed to start a game, distilled from either an accepted seek or an
  * existing game being rematched. Kept minimal so both paths can share {@link initMatch}.
@@ -267,6 +285,68 @@ interface GameSetup {
 }
 
 // Functions --------------------------------------------------------------------------------------
+
+/**
+ * The registry code of the variant a game is played with, or `null` if it's a custom position —
+ * the shape both the `variant` columns and {@link variantregistry.getVariantName} take.
+ */
+function getVariantCode(variant: AuthSeekVariant): VariantCode | null {
+	return variant.kind === 'preset' ? variant.code : null;
+}
+
+/**
+ * Resolves what a game's board is built from: a preset variant's own position, or the explicit
+ * one a custom game's ICN carries. Custom positions go through the very resolver the client loads
+ * them with ({@link gameformulator.constructionOptionsFromLongFormat}), so the two can't disagree
+ * on the board — which they must not, since every move is validated against ours.
+ * @param dateTimestamp - The game's start time, pinning a PRESET variant's revision. A custom
+ *   position pins its own with the source-variant tags in its ICN.
+ * @param slideLimit - The value of the Slide Limit modifier, if it's active.
+ */
+function resolveGameConstruction(
+	variant: AuthSeekVariant,
+	dateTimestamp: number,
+	slideLimit: number | undefined,
+): GameConstruction {
+	let construction: GameConstruction;
+
+	if (variant.kind === 'preset') {
+		const loaded: LoadedVariant = {
+			code: variant.code,
+			mod: variantcache.getModule(variant.code),
+			dateTimestamp,
+		};
+		construction = {
+			variant: loaded,
+			gameRules: variantpreviewer.getGameRulesOfVariant(loaded), // Already a fresh copy
+			validateMoves: doesVariantSupportServerValidation(loaded),
+		};
+	} else {
+		// The ICN is the source of truth for the position, the gamerules, and which variant
+		// revision it's a position of. Parsing can't fail here — a position only becomes a
+		// game's after seek validation has already parsed it.
+		const longFormat = icnconverter.ShortToLong_Format(variant.position);
+		const resolved = gameformulator.constructionOptionsFromLongFormat(longFormat);
+		const variantOptions = resolved.additional.variantOptions;
+		construction = {
+			variant: resolved.variant && {
+				...resolved.variant,
+				mod: variantcache.getModule(resolved.variant.code), // Every module is preloaded at startup
+			},
+			gameRules: variantOptions.gameRules,
+			variantOptions,
+			// A custom position is capped at POSITION_STRING_THRESHOLD when its seek is created —
+			// the same bound presets are admitted by — so every one of them is small enough.
+			validateMoves: true,
+		};
+	}
+
+	// Slide Limit modifier override. Must precede initBoard(),
+	// which reads gameRules.slideLimit to narrow the sliding movesets.
+	if (slideLimit !== undefined) construction.gameRules.slideLimit = BigInt(slideLimit);
+
+	return construction;
+}
 
 /**
  * Construct the match object based on the game setup and how players have been assigned
@@ -288,12 +368,9 @@ function initMatch(
 		};
 	}
 
-	if (setup.variant.kind !== 'preset')
-		throw new Error('Custom variant game starting is not yet implemented.');
-
 	return {
 		id,
-		variant: setup.variant.code,
+		variant: setup.variant,
 		playerData,
 		engineParticipant: setup.engineParticipant,
 		timeCreated: Date.now(),
@@ -313,24 +390,26 @@ function initMatch(
  */
 function initServerGame(
 	game: Game,
-	gameRules: GameRules,
+	construction: GameConstruction,
 	match: MatchInfo,
-	validateMoves: boolean,
-	variant: LoadedVariant,
 	moves: MoveRecord[] = [],
 ): ServerGame {
+	const { variant, gameRules, variantOptions, validateMoves } = construction;
 	if (validateMoves) {
 		// Engine games are played inside the engine's world border. The client builds its gamefile
 		// with the same one, so the two must agree on what's in bounds — otherwise a checkmate
 		// against the border the client sees would never be concluded here.
 		const border = match.engineParticipant !== undefined ? apeiron_card.PLAY_BORDER : undefined;
-		// Spread last, so the servergame's rules are the board's own copy — never a second one.
 		const boardsim = boardinit.initBoard(gameRules, variant, {
+			variantOptions,
 			worldBorderDist: border?.worldBorderDist,
 			worldBorderCap: border?.worldBorderCap,
 		});
-		if (moves.length > 0) movepiece.makeAllMovesInGame(boardsim, moves);
-		return { ...game, match, ...boardsim, spectators: new Set(), validateMoves: true };
+		// The same load the client runs, so both ends settle on identical
+		// win conditions and starting check state. Spread last, so the servergame's
+		// rules are the board's own copy — never a second one.
+		const loaded = gamefile.loadGameWithBoard(game, boardsim, moves);
+		return { ...loaded, match, spectators: new Set(), validateMoves: true };
 	} else {
 		return {
 			...game,
@@ -475,10 +554,10 @@ function detachSpectatorFromGame(servergame: ServerGame, ws: CustomWebSocket): v
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
-	variant: VariantCode,
+	variant: AuthSeekVariant,
 ): PlayerGroup<Rating> {
 	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
-	const leaderboardId = VariantLeaderboards[variant] ?? Leaderboards.INFINITY;
+	const leaderboardId = getLeaderboardOfVariant(variant) ?? Leaderboards.INFINITY;
 
 	const ratingData: PlayerGroup<Rating> = {};
 	for (const [color, { identifier }] of Object.entries(players)) {
@@ -538,8 +617,7 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 	const match = servergame.match;
 	return {
-		// initMatch rejects non-preset seeks, so a live game's variant is always a preset code right now.
-		variant: { kind: 'preset', code: match.variant },
+		variant: match.variant,
 		timeControl: match.clock,
 		timeCreated: match.timeCreated,
 		modifiers: match.modifiers,
@@ -572,8 +650,22 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 	}
 
 	const scriptT = getScriptTranslations('shared', tconfig.DEFAULT_LANGUAGE); // Game metadata should only ever be in English
-	const variantEnglishName = variantregistry.getVariantName(match.variant, scriptT);
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(match.timeCreated);
+	const variantCode = getVariantCode(match.variant);
+	// Names the GAME: a custom game is a "Custom Variant" game no matter what it's a position of.
+	const variantEnglishName = variantregistry.getVariantName(variantCode, scriptT);
+	// These name the POSITION instead: which variant, at which revision of it, it was lifted from —
+	// a date that may long predate this game, so a custom game's are carried over verbatim from its
+	// seek rather than derived from its start. The game's own start time is a `games` table column.
+	const sourceVariant: SourceVariantMetaData =
+		match.variant.kind === 'preset'
+			? {
+					Variant: variantEnglishName,
+					...timeutil.convertTimestampToUTCDateUTCTime(match.timeCreated),
+				}
+			: metadatautil.trimToSourceVariantMetadata(
+					icnconverter.ShortToLong_Format(match.variant.position).metadata,
+				);
+
 	const getPlayerName = (color: Player): string => {
 		if (match.engineParticipant?.color === color)
 			return getFormattedEngineName(
@@ -590,10 +682,8 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 		Round: '-',
 		White: getPlayerName(p.WHITE),
 		Black: getPlayerName(p.BLACK),
-		Variant: variantEnglishName,
 		TimeControl: match.clock,
-		UTCDate,
-		UTCTime,
+		...sourceVariant,
 	};
 	// ID + display elo, present only for signed-in players.
 	const white = match.playerData[p.WHITE]?.identifier;
@@ -810,6 +900,7 @@ function printGame(servergame: ServerGame): void {
 
 /**
  * Stringifies a game, by removing any recursion or Node timers from within, so it's JSON.stringify()'able.
+ * Only meant for eye-balling games in the console, not used as source of truth.
  * @param servergame - The game
  * @returns The simplified game string
  */
@@ -833,7 +924,7 @@ function getSimplifiedGameString(servergame: ServerGame): string {
 			servergame.match.timeEnded !== undefined
 				? timeutil.timestampToISO(servergame.match.timeEnded)
 				: undefined,
-		variant: servergame.match.variant,
+		variant: getVariantCode(servergame.match.variant) ?? 'Custom',
 		clock: servergame.match.clock,
 		rated: servergame.match.rated,
 		players,
@@ -982,6 +1073,8 @@ export type { ServerGame, MatchInfo, PlayerData, PlayerDisconnect, GameSetup };
 
 export default {
 	initMatch,
+	getVariantCode,
+	resolveGameConstruction,
 	initServerGame,
 	subscribeClientToGame,
 	subscribeSpectatorToGame,

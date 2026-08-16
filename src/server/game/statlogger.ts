@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import timeutil from '../../shared/util/timeutil.js';
 
+import gameutility from './gamemanager/gameutility.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { readFile, writeFile } from '../utility/lockFile.js';
 
@@ -78,8 +79,8 @@ function logGame(servergame: ServerGame): void {
 	const month = timeutil.getCurrentMonth(); // 'yyyy-mm'
 	// What is the current day?
 	const day = timeutil.getCurrentDay(); // 'yyyy-mm-dd'
-	// What variant was played?
-	const variant = servergame.match.variant;
+	// What variant was played? Every custom position shares the one bucket.
+	const variant = gameutility.getVariantCode(servergame.match.variant) ?? 'Custom';
 
 	// Now record the number of moves played
 

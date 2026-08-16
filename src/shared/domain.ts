@@ -147,7 +147,7 @@ export interface MetaData {
 // rather than validates — nothing ever parses them. See the note at the top of the file.
 
 /** A game's variant: a preset `code`, or a `custom` game (position sourced from the ICN / live state). */
-type GameStateVariant =
+export type GameStateVariant =
 	| { kind: 'preset'; code: VariantCode }
 	| {
 			kind: 'custom';

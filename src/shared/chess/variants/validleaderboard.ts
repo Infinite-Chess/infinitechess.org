@@ -1,5 +1,7 @@
 // src/shared/chess/variants/validleaderboard.ts
 
+import type { SeekVariant } from '../../domain.js';
+
 import { VariantCode } from './variantregistry';
 
 /**
@@ -36,4 +38,12 @@ const VariantLeaderboards: Partial<Record<VariantCode, Leaderboard>> = {
 	// Add more variants and their corresponding leaderboard here
 };
 
-export { Leaderboard, Leaderboards, VariantLeaderboards };
+/**
+ * The leaderboard a seek or game belongs to, or `undefined` if it belongs to none.
+ * Only preset variants can: a custom position is unique to its game.
+ */
+function getLeaderboardOfVariant(variant: SeekVariant): Leaderboard | undefined {
+	return variant.kind === 'preset' ? VariantLeaderboards[variant.code] : undefined;
+}
+
+export { Leaderboard, Leaderboards, VariantLeaderboards, getLeaderboardOfVariant };

@@ -17,8 +17,8 @@ import type { MatchInfo, ServerGame } from './gameutility.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
+import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validleaderboard.js';
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
@@ -114,7 +114,7 @@ function updateLeaderboardsInTransaction(
 ): RatingData | undefined {
 	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
-	const leaderboard_id = VariantLeaderboards[match.variant]!; // Will always be defined if the game is rated.
+	const leaderboard_id = getLeaderboardOfVariant(match.variant)!; // Will always be defined if the game is rated.
 
 	// 1. Build initial rating data by reading from the DB.
 	let ratingdata: RatingData = {};
@@ -199,9 +199,10 @@ function addGameRecordsInTransaction(
 		date: dateSqliteString,
 		base_time_seconds,
 		increment_seconds,
-		variant: match.variant,
+		// NULL marks a custom game, whose start position is in the ICN instead.
+		variant: gameutility.getVariantCode(match.variant),
 		rated: match.rated ? 1 : 0,
-		leaderboard_id: VariantLeaderboards[match.variant] ?? null,
+		leaderboard_id: getLeaderboardOfVariant(match.variant) ?? null,
 		private: 0, // All matches are considered public for now, even "Challenge a friend" games.
 		result: metadata.Result!,
 		termination,
@@ -337,28 +338,32 @@ function getOutcomeForPlayer(victor: Player | null | undefined, player: Player):
 function getICNOfGame(servergame: ServerGame, metadata: MetaData): string {
 	// Get ICN of game
 	let ICN: string;
-	const fullMove = servergame.validateMoves ? servergame.startSnapshot.fullMove : 1;
-	const moveRuleState = servergame.validateMoves
-		? servergame.startSnapshot.state_global.moveRuleState
+	// Only a server-validated game tracks a board; the rest hold their moves as text alone.
+	const snapshot = servergame.validateMoves ? servergame.startSnapshot : undefined;
+	const fullMove = snapshot?.fullMove ?? 1;
+	const moveRuleState = snapshot
+		? snapshot.state_global.moveRuleState
 		: servergame.gameRules.moveRule !== undefined
 			? 0
 			: undefined;
-	const enpassant = servergame.validateMoves
-		? servergame.startSnapshot.state_global.enpassant
-		: undefined;
 	try {
 		ICN = icnconverter.LongToShort_Format(
 			{
 				...servergame,
 				metadata,
 				fullMove,
+				// Custom games are always server-validated, so this is always there for them.
+				position: snapshot?.position,
 				state_global: {
 					moveRuleState,
-					enpassant,
+					enpassant: snapshot?.state_global.enpassant,
+					specialRights: snapshot?.state_global.specialRights,
 				},
 			},
 			{
-				skipPosition: true,
+				// A custom game's start position survives nowhere but
+				// here — a preset's is regenerated from its Variant tag.
+				skipPosition: servergame.match.variant.kind === 'preset',
 				compact: true,
 				spaces: false,
 				comments: true,
