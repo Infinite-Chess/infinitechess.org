@@ -44,7 +44,7 @@ async function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessa
 	}
 
 	try {
-		const variant = await resolveAndValidateVariant(ws, body.variant);
+		const variant = await resolveAndValidateVariant(ws, body.variant, true);
 		if (variant === null) return; // Invalid variant; error already sent to the client.
 		// Check this again, as we have since awaited a promise.
 		if (isSocketInAnActiveGame(ws))

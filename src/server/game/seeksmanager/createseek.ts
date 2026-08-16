@@ -11,8 +11,10 @@ import type { MetaData, Rating, SeekVariant, AuthSeekVariant } from '../../../sh
 import uuid from '../../../shared/util/uuid.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
+import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantreader from '../../../shared/chess/variants/variantreader.js';
+import gameformulator from '../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { IDLengthOfSeeks } from '../../../shared/domain.js';
 import { POSITION_STRING_THRESHOLD } from '../../../shared/chess/variants/servervalidation.js';
@@ -22,8 +24,10 @@ import {
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
 import {
+	PositionRejection,
 	validatePosition,
-	PositionErrorCode,
+	localizeRejection,
+	getPlayabilityRejection,
 } from '../../../shared/chess/variants/positionvalidation.js';
 
 import { sendSocketMessage } from '../../socket/socketSend.js';
@@ -32,16 +36,6 @@ import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { AuthSeek, buildServerUsernameContainer } from './seekutility.js';
 import { existingSeekHasID, deleteUsersExistingSeek, addSeek } from './lobbymanager.js';
-
-// Types -------------------------------------------------------------------------------
-
-/** Codes returned by {@link validateIcnSeekContent}; superset of {@link PositionErrorCode}. */
-type IcnSeekErrorCode =
-	| PositionErrorCode
-	| 'invalid_icn'
-	| 'icn_missing_position'
-	| 'icn_contains_moves'
-	| 'no_4d_movement';
 
 // Constants ---------------------------------------------------------------------------
 
@@ -125,7 +119,7 @@ async function getSeekFromWebsocketMessageContents(
 
 	const player = buildServerUsernameContainer(owner, rating);
 
-	const variant = await resolveAndValidateVariant(ws, messageContents.variant);
+	const variant = await resolveAndValidateVariant(ws, messageContents.variant, false);
 	if (variant === null) return; // Invalid variant; error already sent to the client.
 
 	return {
@@ -142,13 +136,16 @@ async function getSeekFromWebsocketMessageContents(
 
 /**
  * Resolves a seek/engine-game variant to a legal {@link AuthSeekVariant}: expands a cloudSave
- * to its stored ICN and validates a custom position's legality. Sends the client an error and
- * returns `null` on any failure. Shared by seek creation and engine-game creation.
+ * to its stored ICN and validates a custom position is legal and playable. Sends the client an
+ * error and returns `null` on any failure. Shared by seek creation and engine-game creation.
+ * @param engineGame - Whether the engine will be the opponent. Its position is then judged on
+ * the engine's board, and additionally on whether the engine can play it at all.
  * @throws If a database error occurs.
  */
 export async function resolveAndValidateVariant(
 	ws: CustomWebSocket,
 	variant: SeekVariant,
+	engineGame: boolean,
 ): Promise<AuthSeekVariant | null> {
 	const owner = ws.metadata.memberInfo;
 
@@ -167,7 +164,7 @@ export async function resolveAndValidateVariant(
 		}
 		// Skip decompression if the compressed payload is already too large to be legal.
 		if (record.icn.length > POSITION_STRING_THRESHOLD) {
-			sendSocketMessage(ws, 'general', 'notify', localizePositionError('position_too_large', ws)); // prettier-ignore
+			sendSocketMessage(ws, 'general', 'notify', localizeRejection(ws.t, { kind: 'position', code: 'position_too_large' })); // prettier-ignore
 			return null;
 		}
 		const position = await compression.decompressString(
@@ -179,11 +176,11 @@ export async function resolveAndValidateVariant(
 		resolved = variant;
 	}
 
-	// Validate the resolved ICN's position is legal.
+	// Validate the resolved ICN's position is legal and playable.
 	if (resolved.kind === 'custom') {
-		const illegalReason = validateIcnSeekContent(resolved.position);
-		if (illegalReason !== null) {
-			sendSocketMessage(ws, 'general', 'notify', localizePositionError(illegalReason, ws));
+		const rejection = validateIcnSeekContent(resolved.position, engineGame);
+		if (rejection !== null) {
+			sendSocketMessage(ws, 'general', 'notify', localizeRejection(ws.t, rejection));
 			return null;
 		}
 	}
@@ -192,25 +189,37 @@ export async function resolveAndValidateVariant(
 }
 
 /**
- * Parses an ICN seek's content and runs position legality checks.
- * @returns `null` if the ICN is legal, or an {@link IcnSeekErrorCode} describing the failure.
+ * Parses an ICN seek's content and runs the position legality and playability checks.
+ * @param engineGame - See {@link resolveAndValidateVariant}.
+ * @returns `null` if the ICN may be played, or the {@link PositionRejection} refusing it.
  */
-function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
+function validateIcnSeekContent(content: string, engineGame: boolean): PositionRejection | null {
 	let longFormat;
 	try {
 		longFormat = icnconverter.ShortToLong_Format(content);
 	} catch {
-		return 'invalid_icn';
+		return { kind: 'position', code: 'invalid_icn' };
 	}
-	const metadataError = validateSeekMetadata(longFormat.metadata);
-	if (metadataError !== null) return metadataError;
+	const metadataRejection = validateSeekMetadata(longFormat.metadata);
+	if (metadataRejection !== null) return metadataRejection;
 	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined) {
-		return 'icn_missing_position';
+		return { kind: 'position', code: 'icn_missing_position' };
 	}
 	// A behaving client should always flatten their moves into a single position before seeking.
-	if (longFormat.moves && longFormat.moves.length > 0) return 'icn_contains_moves';
+	if (longFormat.moves && longFormat.moves.length > 0) {
+		return { kind: 'position', code: 'icn_contains_moves' };
+	}
 	const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
-	return validatePosition(variantOptions, content);
+	const positionError = validatePosition(variantOptions, content);
+	if (positionError !== null) return { kind: 'position', code: positionError };
+
+	// Legal, but the game still has to be playable from here. Built on the board the real game
+	// gets, so the gate judges the same position that will load, then discarded.
+	const border = engineGame ? apeiron_card.PLAY_BORDER : undefined;
+	const constructed = gameformulator.tryConstructPosition(variantOptions, border);
+	// Construction only ever fails on moves, which are rejected above.
+	if (constructed === null) return null;
+	return getPlayabilityRejection(constructed, { seek: true, engine: engineGame });
 }
 
 /**
@@ -219,20 +228,17 @@ function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
  * differently. A seek carries only a position + gamerules, so a variant with custom piece
  * movement (4D) would not play as the name it declares promises.
  */
-function validateSeekMetadata(metadata: MetaData): IcnSeekErrorCode | null {
+function validateSeekMetadata(metadata: MetaData): PositionRejection | null {
 	if (Object.keys(metadata).some((key) => !PERMITTED_SEEK_METADATA.has(key)))
-		return 'invalid_icn';
+		return { kind: 'position', code: 'invalid_icn' };
 	if (metadata.Variant === undefined) return null;
 	const code = variantregistry.resolveVariantCode(metadata.Variant);
-	if (code === undefined) return 'invalid_icn';
+	if (code === undefined) return { kind: 'position', code: 'invalid_icn' };
 	// Every variant module is preloaded at server startup.
-	if (variantreader.hasCustomMovement(variantcache.getModule(code))) return 'no_4d_movement';
+	if (variantreader.hasCustomMovement(variantcache.getModule(code))) {
+		return { kind: 'position', code: 'no_4d_movement' };
+	}
 	return null;
-}
-
-/** Localizes a position/ICN error code for the websocket's `notify` channel. */
-function localizePositionError(code: IcnSeekErrorCode, ws: CustomWebSocket): string {
-	return ws.t.shared.position_errors[code] ?? code;
 }
 
 export { createSeek };

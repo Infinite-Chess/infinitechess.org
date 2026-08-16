@@ -1,12 +1,15 @@
 // src/shared/chess/variants/positionvalidation.ts
 
 /**
- * This script provides validation of a VariantOptions object and ICN.
- * No illegal positions, nor excessively large games, are allowed.
+ * This script decides whether a position may be used where it's being used: whether it's
+ * legal at all (no illegal positions, nor excessively large games), and whether the context
+ * asking for it can actually play it. Also the single place their error codes become text.
  */
 
 import type { RawType } from '../util/typeutil.js';
-import type { VariantOptions } from '../logic/gamefile.js';
+import type { EngineSupportCode } from '../engines/apeiron_card.js';
+import type { ScriptTranslations } from '../../types/script-translations.js';
+import type { GameFile, VariantOptions } from '../logic/gamefile.js';
 
 import bounds from '../../util/math/bounds.js';
 import moveutil from '../util/moveutil.js';
@@ -14,7 +17,10 @@ import gamerules from '../util/gamerules.js';
 import coordutil from '../util/coordutil.js';
 import boardinit from '../logic/boardinit.js';
 import winconutil from '../util/winconutil.js';
+import apeiron_card from '../engines/apeiron_card.js';
+import variantreader from './variantreader.js';
 import checkdetection from '../logic/checkdetection.js';
+import gamefileutility from '../util/gamefileutility.js';
 import { POSITION_STRING_THRESHOLD } from './servervalidation.js';
 import typeutil, { neutralRawTypes, players as p } from '../util/typeutil.js';
 
@@ -40,6 +46,28 @@ export type PositionErrorCode =
 	| 'consecutive_turns_with_checkmate'
 	| 'too_many_royals_for_checkmate'
 	| 'king_capture_on_turn_1';
+
+/**
+ * Every code keying a flat string under `position_errors`: an illegal position, plus the ways
+ * an ICN can be unusable ({@link validatePosition} never sees one) and the ways a context can
+ * refuse an otherwise-legal position.
+ */
+export type PositionRejectionCode =
+	| PositionErrorCode
+	| 'invalid_icn'
+	| 'icn_missing_position'
+	| 'icn_contains_moves'
+	| 'moves_invalid'
+	| 'no_4d_movement'
+	| 'game_over';
+
+/**
+ * Why a position was refused. Discriminated because the engine's codes key nested objects
+ * (`position_errors.engine.<code>`) — {@link localizeRejection} is the only place that matters.
+ */
+export type PositionRejection =
+	| { kind: 'position'; code: PositionRejectionCode }
+	| { kind: 'engine'; code: EngineSupportCode };
 
 // Functions -------------------------------------------------------------------------
 
@@ -158,4 +186,38 @@ export function validatePosition(
 	}
 
 	return null; // Position is valid.
+}
+
+/**
+ * Why the given context can't play an otherwise-legal position, or `null` if it can.
+ * A seek carries only a position + gamerules, so a variant with custom piece movement (4D)
+ * would silently revert to default movement; and a finished game has nothing left to play.
+ * Against the engine, the position also has to be one it can actually handle.
+ * @param gamefile - The position as it will be played. MUST be constructed with the same world
+ * border the real game gets — {@link apeiron_card.PLAY_BORDER} for engine games — or this judges
+ * a different board than the one that loads.
+ * @param context - Which play contexts to judge it by. Analysis is neither: it loads finished
+ * and engine-unplayable games fine.
+ */
+export function getPlayabilityRejection(
+	gamefile: GameFile,
+	context: { seek: boolean; engine: boolean },
+): PositionRejection | null {
+	if (context.seek) {
+		if (variantreader.hasCustomMovement(gamefile.variant?.mod))
+			return { kind: 'position', code: 'no_4d_movement' };
+		if (gamefileutility.isGameOver(gamefile)) return { kind: 'position', code: 'game_over' };
+	}
+	if (context.engine) {
+		const support = apeiron_card.isPlaySupported(gamefile);
+		if (!support.supported) return { kind: 'engine', code: support.reason };
+	}
+	return null;
+}
+
+/** The display text for a rejection, in the language of the given translations. */
+export function localizeRejection(t: ScriptTranslations, rejection: PositionRejection): string {
+	return rejection.kind === 'engine'
+		? t.shared.position_errors.engine[rejection.code].message
+		: t.shared.position_errors[rejection.code];
 }

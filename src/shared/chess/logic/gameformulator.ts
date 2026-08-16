@@ -1,24 +1,21 @@
-// src/client/scripts/esm/game/chess/gameformulator.ts
+// src/shared/chess/logic/gameformulator.ts
 
 /**
- * The single path from a parsed ICN (longformat) to a constructed gamefile, shared by
- * the analysis paste, the ICN validator tool, and the variant selector's validation gate.
+ * The single path from a parsed ICN (longformat) to a constructed gamefile,
+ * used by both ends — the client to load a game, the server to inspect one.
  */
 
-import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
-import type { ClockValues, TimeControl } from '../../../../../shared/domain.js';
-import type { Additional, GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js'; // prettier-ignore
-import type {
-	LongFormatOut,
-	PresetAnnotes,
-} from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { VariantCode } from '../variants/variantregistry.js';
+import type { GameConclusion } from '../util/winconutil.js';
+import type { ClockValues, TimeControl } from '../../domain.js';
+import type { LongFormatOut, PresetAnnotes } from './icn/icnconverter.js';
+import type { Additional, GameFile, VariantOptions } from './gamefile.js';
 
-import gamefile from '../../../../../shared/chess/logic/gamefile.js';
-import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
-import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
-import variantcache from '../../../../../shared/chess/variants/variantcache.js';
-import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
+import gamefile from './gamefile.js';
+import icnimport from './icn/icnimport.js';
+import metadatautil from '../util/metadatautil.js';
+import variantcache from '../variants/variantcache.js';
+import variantregistry from '../variants/variantregistry.js';
 
 // Types ----------------------------------------------------------------------------
 

@@ -13,13 +13,13 @@ import type { Additional, VariantOptions } from '../../../../../shared/chess/log
 
 import uuid from '../../../../../shared/util/uuid.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import gameformulator from '../../../../../shared/chess/logic/gameformulator.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
 import gamesession from '../../game/chess/gamesession.js';
-import gameformulator from '../../game/chess/gameformulator.js';
 import guianalysisview from './gui/guianalysisview.js';
 import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
 

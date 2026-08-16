@@ -185,7 +185,7 @@ function loadGameWithBoard(
 /**
  * Initiates both the base game and board of the GameFile at the same time.
  * REQUIRES THE VARIANT MODULE TO BE PRELOADED via {@link variantcache.ensureVariantLoaded}
- * if a variant is specified. Used on just the client.
+ * if a variant is specified.
  * @param validateMoves - During game construction, throws an error if any move played is illegal,
  *   such as no piece on the start coords, or promotion to a piece with no space in the piece lists
  *   for (not a promotion piece).

@@ -19,20 +19,20 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
-import variantreader from '../../../../../shared/chess/variants/variantreader.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import gameformulator from '../../../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import {
-	PositionErrorCode,
+	PositionRejection,
 	validatePosition,
+	localizeRejection,
+	getPlayabilityRejection,
 } from '../../../../../shared/chess/variants/positionvalidation.js';
 
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
-import gameformulator from '../../game/chess/gameformulator.js';
 import modifierSelector from './modifierSelector.js';
 import editorpositionsdb from '../../game/editorstores/esavestore.js';
 import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
@@ -579,23 +579,18 @@ function setIcnResult(result: IcnResult | null): void {
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(variantOptions: VariantOptions): void {
 	// Saved positions are authored in the editor, so they were never sourced from a variant.
-	const illegalReason = validateOptions(variantOptions, {});
-	if (illegalReason !== null) {
-		showError(element_variantDisplay, t.shared.position_errors[illegalReason]);
-		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
-		return;
-	}
+	let rejection = validateOptions(variantOptions, {});
 	// Legal position; in a seek context it still has to be playable from here — analysis
 	// loads finished and engine-unplayable games fine. Only there do we construct the
 	// transient gamefile those checks read off of, then discard it.
-	if (config.isSeekContext) {
+	if (rejection === null && config.isSeekContext) {
 		const constructed = gameformulator.tryConstructPosition(variantOptions, engineBorder());
-		const rejection = constructed === null ? null : getContextRejection(constructed);
-		if (rejection !== null) {
-			showError(element_variantDisplay, rejection);
-			setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
-			return;
-		}
+		if (constructed !== null) rejection = playabilityRejection(constructed);
+	}
+	if (rejection !== null) {
+		showError(element_variantDisplay, localizeRejection(t, rejection));
+		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
+		return;
 	}
 	clearError(element_variantDisplay);
 	setIcnResult({ kind: 'saved', options: variantOptions, isValid: true });
@@ -633,12 +628,13 @@ function variantOptionsToICN(options: VariantOptions, metadata: MetaData): strin
  * @param metadata - The tags the seek's ICN will carry — measured here so the size
  * checked is the size sent, which the server re-checks against the same threshold.
  */
-function validateOptions(options: VariantOptions, metadata: MetaData): PositionErrorCode | null {
+function validateOptions(options: VariantOptions, metadata: MetaData): PositionRejection | null {
 	// Serialize only for seeks — that's the sole consumer of the ICN here.
-	return validatePosition(
+	const code = validatePosition(
 		options,
 		config.isSeekContext ? variantOptionsToICN(options, metadata) : undefined,
 	);
+	return code === null ? null : { kind: 'position', code };
 }
 
 /**
@@ -649,23 +645,12 @@ function engineBorder(): typeof apeiron_card.PLAY_BORDER | undefined {
 	return engineOnly ? apeiron_card.PLAY_BORDER : undefined;
 }
 
-/**
- * Why this context can't play an otherwise-legal position, as display text, or null if it can.
- * A seek carries only a position + gamerules, so a variant with custom piece movement (4D)
- * would silently revert to default movement; and a finished game has nothing left to play.
- * Against the engine, the position also has to be one it can actually handle.
- */
-function getContextRejection(constructed: GameFile): string | null {
-	if (config.isSeekContext) {
-		if (variantreader.hasCustomMovement(constructed.variant?.mod))
-			return t.shared.position_errors.no_4d_movement;
-		if (gamefileutility.isGameOver(constructed)) return t.shared.position_errors.game_over;
-	}
-	if (engineOnly) {
-		const support = apeiron_card.isPlaySupported(constructed);
-		if (!support.supported) return t.shared.position_errors.engine[support.reason].message;
-	}
-	return null;
+/** {@link getPlayabilityRejection} under the contexts this selector is currently in. */
+function playabilityRejection(constructed: GameFile): PositionRejection | null {
+	return getPlayabilityRejection(constructed, {
+		seek: config.isSeekContext,
+		engine: engineOnly,
+	});
 }
 
 /** Clears any saved-position error state from the variant display. */
@@ -745,15 +730,11 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	// position a seek plays from and the server re-validates.
 	const finalOptions = gamecompressor.gamefileToPositionOptions(constructed);
 	const metadata = clientmetadatautil.buildSourceVariantMetadata(constructed);
-	const positionError = validateOptions(finalOptions, metadata);
-	const rejection =
-		positionError !== null
-			? t.shared.position_errors[positionError]
-			: getContextRejection(constructed);
+	const rejection = validateOptions(finalOptions, metadata) ?? playabilityRejection(constructed);
 
 	// The moves-applied gamefile is kept either way, so a rejected position still previews.
 	if (rejection !== null) {
-		if (revealErrors) showError(element_icnInputWrap, rejection);
+		if (revealErrors) showError(element_icnInputWrap, localizeRejection(t, rejection));
 		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
 		return;
 	}
