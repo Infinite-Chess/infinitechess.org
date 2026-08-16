@@ -152,7 +152,8 @@ interface ReviewWorker {
 
 /** Classification thresholds on win-probability loss [0,1]. */
 const THRESHOLDS: { max: number; key: ClassificationKey }[] = [
-	{ max: 0.001, key: 'best' },
+	// 'best' is deliberately absent: it means the played move
+	// WAS the engine's best, never merely that it lost nothing.
 	{ max: 0.02, key: 'excellent' },
 	{ max: 0.05, key: 'good' },
 	{ max: 0.1, key: 'inaccuracy' },
