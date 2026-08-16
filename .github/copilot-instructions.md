@@ -113,46 +113,48 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 37. Before implementing any new graphics on the game canvas (WebGL), read `docs/systems/GRAPHICS.md` first.
 
+38. Before touching the websocket system at all — client or server — read `docs/systems/WEBSOCKETS.md` first.
+
 ### Permanent and structural consequences
 
-38. New tables, columns or schema edits need overwhelming justification — they're permanent. For every column proposed: is it needed, is it needed _permanently_, could it be derived, is it dead for most rows? Mirror an existing table's shape and lifecycle before inventing a new one.
+39. New tables, columns or schema edits need overwhelming justification — they're permanent. For every column proposed: is it needed, is it needed _permanently_, could it be derived, is it dead for most rows? Mirror an existing table's shape and lifecycle before inventing a new one.
 
-39. Anything stored forever needs a reason to be stored forever; anything identifying needs a reason to be identifying.
+40. Anything stored forever needs a reason to be stored forever; anything identifying needs a reason to be identifying.
 
-40. Public interfaces, extension points and hooks on core modules are permanent surface. A new general-purpose hook added for a single caller is rarely worth it.
+41. Public interfaces, extension points and hooks on core modules are permanent surface. A new general-purpose hook added for a single caller is rarely worth it.
 
 ### Comments and documentation
 
-41. Every comment and JSDoc must be high signal, concise and tight, explaining what it is and what it's for — only what's genuinely useful to a future reader and isn't common sense. Zero bloat.
+42. Every comment and JSDoc must be high signal, concise and tight, explaining what it is and what it's for — only what's genuinely useful to a future reader and isn't common sense. Zero bloat.
 
-42. No JSDoc should detail a thing's consumers, where it's initialized, or where it's cleared. That's a grep away, and duplicating it violates rule 16.
+43. No JSDoc should detail a thing's consumers, where it's initialized, or where it's cleared. That's a grep away, and duplicating it violates rule 16.
 
-43. If how something's implemented may look like a bug at first glance, but I confirm it is actually intended behavior, concisely explain that in a comment so that future agents don't unnecessarily flag it as an issue.
+44. If how something's implemented may look like a bug at first glance, but I confirm it is actually intended behavior, concisely explain that in a comment so that future agents don't unnecessarily flag it as an issue.
 
-44. If your change makes any one JSDoc or comment false, update it to not be stale.
+45. If your change makes any one JSDoc or comment false, update it to not be stale.
 
 ### Verification and commits
 
-45. After finishing up some changes that modified at least one script, run `npm run type-check --silent && npm run lint --silent` and get it passing. Repeat after every subsequent fix, unless all you edited was a comment. If you can't get it passing, show me the actual error output rather than your summary of it.
+46. After finishing up some changes that modified at least one script, run `npm run type-check --silent && npm run lint --silent` and get it passing. Repeat after every subsequent fix, unless all you edited was a comment. If you can't get it passing, show me the actual error output rather than your summary of it.
 
-46. Fix every pre-existing lint warning you come across, related to our work or not. Do not tell me it existed, do not list it afterward. I don't need to know about it, that would expend more of my time reading. The exception is when you're only reviewing — a review changes nothing unless I say otherwise.
+47. Fix every pre-existing lint warning you come across, related to our work or not. Do not tell me it existed, do not list it afterward. I don't need to know about it, that would expend more of my time reading. The exception is when you're only reviewing — a review changes nothing unless I say otherwise.
 
-47. Never manually spin up a dev process of the server to verify a change on the website. It consumes far too many tokens and is extremely time consuming. Understand your deficiencies as an LLM. I am your partner in work. When something is significantly easier to verify via a live server, ask me to do it! Understand though that it still costs me time, and something that you can verify via the code paths themselves will still be faster than relying on me verifying it on a live server. In a non-local session I'm not there to run anything for you, so verify from the code paths alone and state plainly what you couldn't verify, per rule 47.
+48. Never manually spin up a dev process of the server to verify a change on the website. It consumes far too many tokens and is extremely time consuming. Understand your deficiencies as an LLM. I am your partner in work. When something is significantly easier to verify via a live server, ask me to do it! Understand though that it still costs me time, and something that you can verify via the code paths themselves will still be faster than relying on me verifying it on a live server. In a non-local session I'm not there to run anything for you, so verify from the code paths alone and state plainly what you couldn't verify, per rule 48.
 
-48. If when debugging something, adding some temporary console logs would make the answer significantly easier to get, choose that route: add the logs, then ask _me_ to run the server and relay what appears — never start it yourself. Make it as easy on me as possible, with very simple steps for me to follow. In a non-local session there is nobody to relay them, so don't add the logs at all.
+49. If when debugging something, adding some temporary console logs would make the answer significantly easier to get, choose that route: add the logs, then ask _me_ to run the server and relay what appears — never start it yourself. Make it as easy on me as possible, with very simple steps for me to follow. In a non-local session there is nobody to relay them, so don't add the logs at all.
 
-49. Never commit yourself unless I explicitly ask you to. All changes are reviewed by me first before _I_ commit. The exception is a non-local session, where committing to your own branch _is_ how the work reaches me — commit there as normal, and the pull request stands in for my review. Otherwise, I stage files as I review them, so occasionally expect your changes to move into the index mid-session — a clean `git diff` or `git status` working tree doesn't mean your edits vanished.
+50. Never commit yourself unless I explicitly ask you to. All changes are reviewed by me first before _I_ commit. The exception is a non-local session, where committing to your own branch _is_ how the work reaches me — commit there as normal, and the pull request stands in for my review. Otherwise, I stage files as I review them, so occasionally expect your changes to move into the index mid-session — a clean `git diff` or `git status` working tree doesn't mean your edits vanished.
 
-50. When I _do_ ask you to commit, `git push` immediately after. On a branch whose name won't match its remote's (`pr/<author>/<number>`, from `gh pr checkout` of a fork PR), bare `git push` aborts — read the remote and branch as two _separate_ values, from `branch.<current>.remote` and `branch.<current>.merge` in `git config`, then push explicitly: `git push <remote> HEAD:<branch>`.
+51. When I _do_ ask you to commit, `git push` immediately after. On a branch whose name won't match its remote's (`pr/<author>/<number>`, from `gh pr checkout` of a fork PR), bare `git push` aborts — read the remote and branch as two _separate_ values, from `branch.<current>.remote` and `branch.<current>.merge` in `git config`, then push explicitly: `git push <remote> HEAD:<branch>`.
 
 ### Session flow
 
-51. If while we're working on something, you notice an unrelated issue or bug, do **not** distract me from the work we're currently focusing on. Park it, and bring it up only after the current work has been committed. The exception is an issue that can be auto-resolved by slightly adjusting the current work we are doing — then you may suggest fixing it alongside our current work instead of delaying it until we commit.
+52. If while we're working on something, you notice an unrelated issue or bug, do **not** distract me from the work we're currently focusing on. Park it, and bring it up only after the current work has been committed. The exception is an issue that can be auto-resolved by slightly adjusting the current work we are doing — then you may suggest fixing it alongside our current work instead of delaying it until we commit. When you park issues is NOT the time to explain it to me, a simple "One issue parked." is enough.
 
-52. Park issues by appending them to a scratch file outside the repo, if your harness gives you a writable location for one. It has to be a written file, never a mental note: your internal reasoning from earlier turns isn't retained, so a note you only _thought_ is gone by your next message. Re-read that file every time we commit. If you have no writable location outside the repo, keep the note as a single terse line at the end of your response instead.
+53. Park issues by appending them to a scratch file outside the repo, if your harness gives you a writable location for one. It has to be a written file, never a mental note: your internal reasoning from earlier turns isn't retained, so a note you only _thought_ is gone by your next message. Re-read that file every time we commit. If you have no writable location outside the repo, keep the note as a single terse line at the end of your response instead.
 
-53. Raise parked issues one at a time. Once we've finished and committed the current work, mention the single _next_ most pressing issue only, saving additional issues for after we commit the fix for that. Do **not** flood me with multiple issues at once — I get overwhelmed easily when problem after problem appears, it makes me feel that we are going backwards and introducing _more_ problems than we are fixing, which greatly stresses me out and often requires me to take a long break, hurting our overall productivity. I may decide for us to focus on that issue next, or if it is unrelated I may have you write a brief prompt for a future agent to focus on in a fresh session.
+54. Raise parked issues one at a time. Once we've finished and committed the current work, mention the single _next_ most pressing issue only, saving additional issues for after we commit the fix for that. Do **not** flood me with multiple issues at once — I get overwhelmed easily when problem after problem appears, it makes me feel that we are going backwards and introducing _more_ problems than we are fixing, which greatly stresses me out and often requires me to take a long break, hurting our overall productivity. I may decide for us to focus on that issue next, or if it is unrelated I may have you write a brief prompt for a future agent to focus on in a fresh session.
 
-54. If you realize two implementations of one idea exist, park that per rule 53 too. If they disagree, that's a live bug, one of them may need to be collapsed.
+55. If you realize two implementations of one idea exist, park that per rule 54 too. If they disagree, that's a live bug, one of them may need to be collapsed.
 
-55. If a session has been going on for a bit, and we're at a good stopping point (latest work committed), and the scratch file has pending issues that can cleanly be done in isolation of the work we have completed this session, then recommend pausing here and writing brief prompts to future agents to focus on those pending issues in fresh sessions.
+56. If a session has been going on for a bit, and we're at a good stopping point (latest work committed), and the scratch file has pending issues that can cleanly be done in isolation of the work we have completed this session, then recommend pausing here and writing brief prompts to future agents to focus on those pending issues in fresh sessions.

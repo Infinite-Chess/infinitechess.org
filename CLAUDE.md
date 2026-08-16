@@ -144,7 +144,7 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 ### Session flow
 
-52. If while we're working on something, you notice an unrelated issue or bug, do **not** distract me from the work we're currently focusing on. Park it, and bring it up only after the current work has been committed. The exception is an issue that can be auto-resolved by slightly adjusting the current work we are doing — then you may suggest fixing it alongside our current work instead of delaying it until we commit.
+52. If while we're working on something, you notice an unrelated issue or bug, do **not** distract me from the work we're currently focusing on. Park it, and bring it up only after the current work has been committed. The exception is an issue that can be auto-resolved by slightly adjusting the current work we are doing — then you may suggest fixing it alongside our current work instead of delaying it until we commit. When you park issues is NOT the time to explain it to me, a simple "One issue parked." is enough.
 
 53. Park issues by appending them to a scratch file outside the repo — in Claude Code, your session scratchpad directory. It has to be a written file, never a mental note: your internal reasoning from earlier turns isn't retained, so a note you only _thought_ is gone by your next message. Re-read that file every time we commit. If you have no writable location outside the repo, keep the note as a single terse line at the end of your response instead.
 
