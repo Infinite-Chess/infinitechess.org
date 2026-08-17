@@ -18,8 +18,8 @@ import variantreader from '../../../shared/chess/variants/variantreader.js';
 import gameformulator from '../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { IDLengthOfSeeks } from '../../../shared/domain.js';
-import { POSITION_STRING_THRESHOLD } from '../../../shared/chess/variants/servervalidation.js';
 import compression, { CompressionMode } from '../../../shared/util/compression.js';
+import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from '../../../shared/chess/variants/servervalidation.js';
 import {
 	Leaderboards,
 	getLeaderboardOfVariant,
@@ -149,7 +149,7 @@ export async function resolveAndValidateVariant(
 			return null;
 		}
 		// Skip decompression if the compressed payload is already too large to be legal.
-		if (record.icn.length > POSITION_STRING_THRESHOLD) {
+		if (record.icn.length > MAX_SERVER_VALIDATABLE_POSITION_LENGTH) {
 			sendSocketMessage(ws, 'general', 'notify', localizeRejection(ws.t, { kind: 'position', code: 'position_too_large' })); // prettier-ignore
 			return null;
 		}

@@ -23,7 +23,6 @@ import editorutil from './util/editorutil.js';
 import gameconfig from './util/gameconfig.js';
 import typeschemas from './chess/util/typeschemas.js';
 import variantregistry from './chess/variants/variantregistry.js';
-import { POSITION_STRING_THRESHOLD } from './chess/variants/servervalidation.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
 
@@ -213,7 +212,7 @@ const AuthSeekVariantSchema = z.discriminatedUnion('kind', [
 	z.strictObject({ kind: z.literal('preset'), code: z.enum(variantregistry.VARIANT_CODES) }),
 	z.strictObject({
 		kind: z.literal('custom'),
-		position: z.string().min(1).max(POSITION_STRING_THRESHOLD),
+		position: z.string().min(1),
 	}),
 ]);
 

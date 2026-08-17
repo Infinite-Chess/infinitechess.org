@@ -21,7 +21,7 @@ import apeiron_card from '../engines/apeiron_card.js';
 import variantreader from './variantreader.js';
 import checkdetection from '../logic/checkdetection.js';
 import gamefileutility from '../util/gamefileutility.js';
-import { POSITION_STRING_THRESHOLD } from './servervalidation.js';
+import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from './servervalidation.js';
 import typeutil, { neutralRawTypes, players as p } from '../util/typeutil.js';
 
 // Constants -------------------------------------------------------------------------
@@ -118,7 +118,7 @@ export function validatePosition(
 	}
 
 	// --- Rule 3: ICN string length limit (seek-hardening only) ---
-	if (icnString !== undefined && icnString.length > POSITION_STRING_THRESHOLD) {
+	if (icnString !== undefined && icnString.length > MAX_SERVER_VALIDATABLE_POSITION_LENGTH) {
 		return 'position_too_large';
 	}
 

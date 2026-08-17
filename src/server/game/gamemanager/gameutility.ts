@@ -56,8 +56,8 @@ import gameformulator from '../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
+import { isGameServerValidated } from '../../../shared/chess/variants/servervalidation.js';
 import { getFormattedEngineName } from '../../../shared/chess/engine.js';
-import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 import {
 	Leaderboards,
 	getLeaderboardOfVariant,
@@ -308,38 +308,37 @@ function resolveGameConstruction(
 	dateTimestamp: number,
 	slideLimit: number | undefined,
 ): GameConstruction {
-	let construction: GameConstruction;
+	let loaded: LoadedVariant | undefined;
+	let gameRules: GameRules;
+	let variantOptions: VariantOptions | undefined;
 
 	if (variant.kind === 'preset') {
-		const loaded: LoadedVariant = {
+		loaded = {
 			code: variant.code,
 			mod: variantcache.getModule(variant.code),
 			dateTimestamp,
 		};
-		construction = {
-			variant: loaded,
-			gameRules: variantpreviewer.getGameRulesOfVariant(loaded), // Already a fresh copy
-			validateMoves: doesVariantSupportServerValidation(loaded),
-		};
+		gameRules = variantpreviewer.getGameRulesOfVariant(loaded); // Already a fresh copy
 	} else {
 		// The ICN is the source of truth for the position, the gamerules, and which variant
 		// revision it's a position of. Parsing can't fail here — a position only becomes a
 		// game's after seek validation has already parsed it.
 		const longFormat = icnconverter.ShortToLong_Format(variant.position);
 		const resolved = gameformulator.constructionOptionsFromLongFormat(longFormat);
-		const variantOptions = resolved.additional.variantOptions;
-		construction = {
-			variant: resolved.variant && {
-				...resolved.variant,
-				mod: variantcache.getModule(resolved.variant.code), // Every module is preloaded at startup
-			},
-			gameRules: variantOptions.gameRules,
-			variantOptions,
-			// A custom position is capped at POSITION_STRING_THRESHOLD when its seek is created —
-			// the same bound presets are admitted by — so every one of them is small enough.
-			validateMoves: true,
+		variantOptions = resolved.additional.variantOptions;
+		loaded = resolved.variant && {
+			...resolved.variant,
+			mod: variantcache.getModule(resolved.variant.code), // Every module is preloaded at startup
 		};
+		gameRules = variantOptions.gameRules;
 	}
+
+	const construction: GameConstruction = {
+		variant: loaded,
+		gameRules,
+		variantOptions,
+		validateMoves: isGameServerValidated(variant, loaded),
+	};
 
 	// Slide Limit modifier override. Must precede initBoard(),
 	// which reads gameRules.slideLimit to narrow the sliding movesets.
