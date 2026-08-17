@@ -148,7 +148,8 @@ export async function resolveAndValidateVariant(
 			sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.seeks.cloud_not_found);
 			return null;
 		}
-		// Skip decompression if the compressed payload is already too large to be legal.
+		// Cheap pre-filter that also bounds the decompression work — saves are only capped at
+		// editorutil.MAX_ICN_LENGTH. The decompressed length is what's truly measured, below.
 		if (record.icn.length > MAX_SERVER_VALIDATABLE_POSITION_LENGTH) {
 			sendSocketMessage(ws, 'general', 'notify', localizeRejection(ws.t, { kind: 'position', code: 'position_too_large' })); // prettier-ignore
 			return null;
@@ -180,6 +181,10 @@ export async function resolveAndValidateVariant(
  * @returns `null` if the ICN may be played, or the {@link PositionRejection} refusing it.
  */
 function validateIcnSeekContent(content: string, engineGame: boolean): PositionRejection | null {
+	// Second cheap pre-filter that bounds the parsing work — check the decompressed length.
+	if (content.length > MAX_SERVER_VALIDATABLE_POSITION_LENGTH) {
+		return { kind: 'position', code: 'position_too_large' };
+	}
 	let longFormat;
 	try {
 		longFormat = icnconverter.ShortToLong_Format(content);
@@ -196,7 +201,7 @@ function validateIcnSeekContent(content: string, engineGame: boolean): PositionR
 		return { kind: 'position', code: 'icn_contains_moves' };
 	}
 	const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
-	const positionError = validatePosition(variantOptions, content);
+	const positionError = validatePosition(variantOptions, content); // Re-checks position length. Intended, this isn't a pre-check.
 	if (positionError !== null) return { kind: 'position', code: positionError };
 
 	// Legal, but the game still has to be playable from here. Built on the board the real game
