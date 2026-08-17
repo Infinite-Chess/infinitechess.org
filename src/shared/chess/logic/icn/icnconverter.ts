@@ -206,6 +206,7 @@ const piece_codes_raw_inverted = jsutil.invertObj(piece_codes_raw);
 const metadata_ordering: (keyof MetaData)[] = [
 	'Event',
 	'Site',
+	'GameId',
 	'Variant',
 	'Round',
 	'UTCDate',

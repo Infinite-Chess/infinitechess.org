@@ -111,6 +111,8 @@ export interface MetaData {
 	Event?: string;
 	/** The website the game was played on, or the direct URL of the game. */
 	Site?: string;
+	/** The ID of the game in base 62, if applicable. */
+	GameId?: string;
 	TimeControl?: TimeControl;
 	/** The round number. A pgn-required metadata with no current application to infinitechess.org. */
 	Round?: '-';

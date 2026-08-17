@@ -679,6 +679,7 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 	const metadata: MetaData = {
 		Event: `${match.rated ? 'Rated' : 'Casual'} ${variantEnglishName} infinite chess game${match.engineParticipant ? ' against an engine' : ''}`,
 		Site: gameurl.getAbsoluteGameUrl(match.id),
+		GameId: uuid.base10ToBase62(match.id),
 		Round: '-',
 		White: getPlayerName(p.WHITE),
 		Black: getPlayerName(p.BLACK),
