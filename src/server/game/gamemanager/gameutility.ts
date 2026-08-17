@@ -42,6 +42,7 @@ import type {
 
 import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
+import gameurl from '../../../shared/util/gameurl.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import moveutil from '../../../shared/chess/util/moveutil.js';
@@ -677,7 +678,7 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 
 	const metadata: MetaData = {
 		Event: `${match.rated ? 'Rated' : 'Casual'} ${variantEnglishName} infinite chess game${match.engineParticipant ? ' against an engine' : ''}`,
-		Site: 'https://www.infinitechess.org/',
+		Site: gameurl.getAbsoluteGameUrl(match.id),
 		Round: '-',
 		White: getPlayerName(p.WHITE),
 		Black: getPlayerName(p.BLACK),

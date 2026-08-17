@@ -42,6 +42,11 @@ function getGameUrl(id: number, viewColor?: Player): string {
 	return `/game/${uuid.base10ToBase62(id)}${getViewColorSegment(viewColor)}`;
 }
 
+/** Builds the absolute `/game/:id` URL. Carries no perspective. */
+function getAbsoluteGameUrl(id: number): string {
+	return `https://www.infinitechess.org${getGameUrl(id)}`;
+}
+
 /**
  * Builds the `/analysis/:id` URL.
  * @param id - The numeric game id (encoded into the base62 URL).
@@ -59,5 +64,6 @@ function getViewColorSegment(viewColor: Player | undefined): string {
 export default {
 	parseViewColorCode,
 	getGameUrl,
+	getAbsoluteGameUrl,
 	getAnalysisUrl,
 };

@@ -109,8 +109,8 @@ export const GameModifierSchema = z.discriminatedUnion('kind', [
 export interface MetaData {
 	/** What kind of game (rated/casual), and variant, in spoken language. E.g. "Casual local Classical infinite chess game". */
 	Event?: string;
-	/** What website the game was played on. */
-	Site?: 'https://www.infinitechess.org/';
+	/** The website the game was played on, or the direct URL of the game. */
+	Site?: string;
 	TimeControl?: TimeControl;
 	/** The round number. A pgn-required metadata with no current application to infinitechess.org. */
 	Round?: '-';
