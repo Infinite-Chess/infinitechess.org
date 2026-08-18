@@ -11,7 +11,6 @@ import type { MetaData, Rating, SeekVariant, AuthSeekVariant } from '../../../sh
 import uuid from '../../../shared/util/uuid.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
-import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantreader from '../../../shared/chess/variants/variantreader.js';
@@ -205,10 +204,9 @@ function validateIcnSeekContent(content: string, engineGame: boolean): PositionR
 	if (positionError !== null) return { kind: 'position', code: positionError };
 
 	// Legal, but the game still has to be playable from here. Built on the board the real game
-	// gets, so the gate judges the same position that will load, then discarded.
-	const constructed = gameformulator.tryConstructPosition(variantOptions);
-	// Guaranteed defined because construction only ever fails on moves, which are rejected above.
-	return getPlayabilityRejection(constructed!, { seek: true, engine: engineGame });
+	// gets — the ICN's own world border, which an engine game must carry — then discarded.
+	const constructed = gameformulator.constructPosition(variantOptions);
+	return getPlayabilityRejection(constructed, { seek: true, engine: engineGame });
 }
 
 /**

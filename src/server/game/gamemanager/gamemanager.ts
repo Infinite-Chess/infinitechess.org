@@ -90,6 +90,7 @@ function createGame(
 		setup.variant,
 		dateTimestamp,
 		setup.modifiers?.find((m) => m.kind === 'slide-limit')?.value,
+		setup.engineParticipant !== undefined,
 	);
 
 	const game = gamefile.initGame(setup.time, dateTimestamp, construction.gameRules);

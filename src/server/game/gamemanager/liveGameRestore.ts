@@ -162,6 +162,7 @@ function restoreSingleGame(
 		variant,
 		gameRow.time_created,
 		gameRow.mod_slide_limit ?? undefined,
+		engineRow !== undefined,
 	);
 	// The column wins over what the variant resolves to now: a game keeps the
 	// mode it started under, even if the threshold deciding it has moved since.

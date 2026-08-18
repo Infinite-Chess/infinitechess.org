@@ -5,6 +5,7 @@
  */
 
 import type { CoordsKey } from '../../../util/coordutil.js';
+import type { BoundingBox } from '../../../../util/math/bounds.js';
 
 import icnconverter from '../../../logic/icn/icnconverter.js';
 import { CLASSICAL_POSITION_STRING } from '../classicalPositionString.js';
@@ -18,4 +19,8 @@ export function getPosition(): {
 
 export function getPositionStringLength(): number {
 	return CLASSICAL_POSITION_STRING.length;
+}
+
+export function getPositionBox(): BoundingBox {
+	return { left: 1n, right: 8n, bottom: 1n, top: 8n };
 }

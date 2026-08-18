@@ -8,7 +8,6 @@ import type { Additional, DatedVariant } from '../../../../../../shared/chess/lo
 import type { LongFormatOut, PresetAnnotes } from '../../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
 import type { GameStateMessage, ParticipantState } from '../../../../../../shared/clientbound.js';
 
-import apeiron_card from '../../../../../../shared/chess/engines/apeiron_card.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../../shared/chess/logic/gameformulator.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
@@ -113,6 +112,10 @@ function loadGameFromState(
 	let presetAnnotes: PresetAnnotes | undefined;
 	if (variant.kind === 'preset') {
 		datedVariant = { code: variant.code, dateTimestamp: timeCreated };
+		// A preset's rules are rebuilt from its module, which knows nothing of the opponent — so
+		// the border an engine game is played inside has to be handed to us. A finished game's ICN
+		// records the board it was actually played on, so it wins over what the game declares now.
+		additional.worldBorder = longformat?.gameRules.worldBorder ?? variant.worldBorder;
 	} else {
 		let startFormat = longformat;
 		if (startFormat === undefined) {

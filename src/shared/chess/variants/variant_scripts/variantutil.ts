@@ -3,8 +3,8 @@
 import type { Movesets } from '../../logic/movesets.js';
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { Promotion } from '../../util/gamerules.js';
-import type { UnboundedRectangle } from '../../../util/math/bounds.js';
 import type { GameruleWinCondition } from '../../util/winconutil.js';
+import type { BoundingBox, UnboundedRectangle } from '../../../util/math/bounds.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../../logic/specialmove.js';
 import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../../util/typeutil.js';
 
@@ -32,6 +32,12 @@ export interface VariantModule {
 	 * Only present on string-based variants, generator-based variants omit this.
 	 */
 	getPositionStringLength?: (timestamp?: number) => number;
+	/**
+	 * Returns the bounding box of the starting position at the resolved timestamp. Declared so an
+	 * engine game's world border can be spaced evenly around the position without generating it.
+	 * Required of every variant the engine supports that declares no `worldBorder` of its own.
+	 */
+	getPositionBox?: (timestamp?: number) => BoundingBox;
 	/**
 	 * Returns properties normally extracted from the position string ('+' notation)
 	 * but unavailable for generator-based variants that have no position string.

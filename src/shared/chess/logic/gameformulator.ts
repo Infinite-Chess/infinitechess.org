@@ -92,22 +92,17 @@ async function tryFormulateGame(
 /**
  * Constructs the gamefile of a moveless position, purely so callers can
  * inspect the game it produces (its computed conclusion, its engine support).
- * @returns The constructed gamefile, or `null` if the position couldn't be built.
+ * Construction only ever fails on moves, of which this has none.
+ * @param variant - The variant the position is of, when one is known — supplying its movesets, so
+ *   the inspection sees how the pieces truly move. REQUIRES its module preloaded.
  */
-function tryConstructPosition(
-	variantOptions: VariantOptions,
-	overrides?: ConstructionOverrides,
-): GameFile | null {
-	try {
-		return constructGame({
-			timeControl: '-',
-			variant: undefined,
-			dateTimestamp: Date.now(),
-			additional: { variantOptions, ...overrides },
-		});
-	} catch {
-		return null;
-	}
+function constructPosition(variantOptions: VariantOptions, variant?: DatedVariant): GameFile {
+	return constructGame({
+		timeControl: '-',
+		variant,
+		dateTimestamp: Date.now(),
+		additional: { variantOptions },
+	});
 }
 
 /**
@@ -180,7 +175,7 @@ function constructGame(options: GameConstructionOptions, validateMoves?: true): 
 export default {
 	formulateGame,
 	tryFormulateGame,
-	tryConstructPosition,
+	constructPosition,
 	resolveConstructionOptions,
 	constructionOptionsFromLongFormat,
 };

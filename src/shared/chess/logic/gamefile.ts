@@ -5,12 +5,12 @@ import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../domain.js';
-import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantregistry.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { GlobalGameState } from './state.js';
 import type { ClockValues, TimeControl } from '../../domain.js';
+import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js';
 
 import clock from './clock.js';
 import movepiece from './movepiece.js';
@@ -111,6 +111,13 @@ export interface Additional {
 	variantOptions?: VariantOptions;
 	/** Adds the `slideLimit` gamerule. */
 	slideLimit?: bigint;
+	/**
+	 * The `worldBorder` gamerule the game is played inside, where it isn't the variant's own — an
+	 * engine game's, resolved by the server and handed to us. Only consulted for a PRESET variant,
+	 * whose rules are otherwise rebuilt from its module; a custom position's border rides in its
+	 * {@link variantOptions}.
+	 */
+	worldBorder?: UnboundedRectangle;
 	/** The conclusion of the game, if loading an online game that has already ended. */
 	gameConclusion?: GameConclusion;
 	/** Any already existing clock values for the gamefile. */
@@ -221,6 +228,11 @@ function initGameFile(
 	// Must precede initBoard, which builds the movesets from the slide limit.
 	if (additional.slideLimit !== undefined)
 		gameRules = { ...gameRules, slideLimit: additional.slideLimit };
+
+	// The board an engine game is played on, for a preset variant declaring no border of its own.
+	// Never derived here — it is settled and verified before anything is constructed.
+	if (gameRules.worldBorder === undefined && additional.worldBorder !== undefined)
+		gameRules = { ...gameRules, worldBorder: additional.worldBorder };
 
 	const game = initGame(
 		timeControl,

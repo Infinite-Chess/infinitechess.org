@@ -5,6 +5,7 @@
  */
 
 import type { CoordsKey } from '../../../util/coordutil.js';
+import type { BoundingBox } from '../../../../util/math/bounds.js';
 import type { GameRuleModifications } from '../variantutil.js';
 
 import variantutil from '../variantutil.js';
@@ -45,4 +46,14 @@ export function gameruleModifications(timestamp: number = Date.now()): GameRuleM
 
 export function getPositionStringLength(timestamp: number = Date.now()): number {
 	return variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
+}
+
+/** Time-versioned alongside {@link POSITION_STRINGS} — the rebalance moved the outermost pieces. */
+const POSITION_BOXES: Record<number, BoundingBox> = {
+	1709017200000: { left: -9n, right: 18n, bottom: -9n, top: 18n },
+	0: { left: -9n, right: 17n, bottom: -14n, top: 15n },
+};
+
+export function getPositionBox(timestamp: number = Date.now()): BoundingBox {
+	return variantutil.resolveAtTimestamp(POSITION_BOXES, timestamp);
 }

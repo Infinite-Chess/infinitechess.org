@@ -15,6 +15,7 @@
 import type { ValidEngine } from './chess/engine.js';
 import type { VariantCode } from './chess/variants/variantregistry.js';
 import type { GameConclusion } from './chess/util/winconutil.js';
+import type { UnboundedRectangle } from './util/math/bounds.js';
 import type { Player, PlayerGroup } from './chess/util/typeutil.js';
 
 import * as z from 'zod';
@@ -149,7 +150,16 @@ export interface MetaData {
 
 /** A game's variant: a preset `code`, or a `custom` game (position sourced from the ICN / live state). */
 export type GameStateVariant =
-	| { kind: 'preset'; code: VariantCode }
+	| {
+			kind: 'preset';
+			code: VariantCode;
+			/**
+			 * The world border the game is played inside, when it isn't the variant's own — an
+			 * engine game's. Sent because the client rebuilds a preset's rules from its module,
+			 * which knows nothing of the opponent, and must never guess at the board.
+			 */
+			worldBorder?: UnboundedRectangle;
+	  }
 	| {
 			kind: 'custom';
 			/**

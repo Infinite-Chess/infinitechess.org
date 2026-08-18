@@ -6,10 +6,11 @@
  * (local eval + Game Review) must agree on when the engine may run.
  */
 
-import type { GameFile } from '../logic/gamefile.js';
 import type { GameRules } from '../util/gamerules.js';
+import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantregistry.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
+import type { GameFile, LoadedVariant } from '../logic/gamefile.js';
 
 import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
@@ -43,15 +44,10 @@ const WORLD_BORDER_CAP = I64_MAX - 1000n;
 const MAX_PIECES = 1000;
 
 /**
- * The world border every engine game is played inside, as gamefile construction takes it.
- * Shared so a game validated against {@link isPlaySupported} is built on the same board the
- * real game loads onto — otherwise the two could disagree on what's in bounds.
+ * Adding a variant here obliges its module to declare `getPositionBox`, unless it declares a
+ * `worldBorder` of its own — {@link worldBorderForVariant} has no other way to space a border
+ * around it, and throws if neither is present.
  */
-const PLAY_BORDER = {
-	worldBorderDist: engineDictionary['apeiron'].worldBorderDist,
-	worldBorderCap: WORLD_BORDER_CAP,
-};
-
 const SUPPORTED_VARIANTS: Set<VariantCode> = new Set(['Classical', 'Confined_Classical', 'Classical_Plus', 'Core', 'CoaIP', 'CoaIP_HO', 'CoaIP_RO', 'CoaIP_NO', 'Palace', 'Pawndard', 'Standarch', 'Space_Classic', 'Space', 'Pawn_Horde', 'Knightline', 'Obstocean', 'Chess', 'Omega']); // prettier-ignore
 
 /** Win conditions the engine understands; anything else may crash it. */
@@ -59,6 +55,36 @@ const SUPPORTED_WIN_CONDITIONS: GameruleWinCondition[] = ['checkmate', 'royalcap
 
 /** Piece types the engine can move. Neutrals (void/obstacle) are inert blockers, so allowed. */
 const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GIRAFFE, r.CAMEL, r.ZEBRA, r.KNIGHTRIDER, r.AMAZON, r.QUEEN, r.HAWK, r.CHANCELLOR, r.ARCHBISHOP, r.CENTAUR, r.ROYALCENTAUR, r.ROSE, r.KNIGHT, r.GUARD, r.HUYGEN, r.ROOK, r.BISHOP, r.PAWN]); // prettier-ignore
+
+// The board engine games are played on -------------------------------------
+
+/**
+ * The world border an engine game is played inside: spaced evenly around the starting position,
+ * clamped to the coordinates the engine can evaluate. The single source of every engine game's
+ * border — both ends resolve it here so they build the identical board.
+ */
+function worldBorderForBox(positionBox: BoundingBox): BoundingBox {
+	const dist = engineDictionary['apeiron'].worldBorderDist;
+	return {
+		left: bimath.max(positionBox.left - dist, -WORLD_BORDER_CAP),
+		right: bimath.min(positionBox.right + dist, WORLD_BORDER_CAP),
+		bottom: bimath.max(positionBox.bottom - dist, -WORLD_BORDER_CAP),
+		top: bimath.min(positionBox.top + dist, WORLD_BORDER_CAP),
+	};
+}
+
+/**
+ * {@link worldBorderForBox} for a preset variant, whose starting position is never built just to
+ * measure it — the module declares its box outright.
+ * @throws If the variant declares neither a box nor a `worldBorder`, which every variant in
+ * {@link SUPPORTED_VARIANTS} must.
+ */
+function worldBorderForVariant(variant: LoadedVariant): BoundingBox {
+	const box = variant.mod.getPositionBox?.(variant.dateTimestamp);
+	if (box === undefined)
+		throw new Error(`Engine-supported variant "${variant.code}" declares no position box.`);
+	return worldBorderForBox(box);
+}
 
 // Individual rule checks (shared by both entry points) --------------------
 
@@ -225,9 +251,11 @@ function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 
 export default {
 	// Constants
-	PLAY_BORDER,
+	WORLD_BORDER_CAP,
 	SUPPORTED_VARIANTS,
 	// Functions
+	worldBorderForBox,
+	worldBorderForVariant,
 	isPlaySupported,
 	isAnalysisSupported,
 	isGameReviewSupported,

@@ -18,6 +18,8 @@ import type {
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import bounds from '../../../../../shared/util/math/bounds.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import gameformulator from '../../../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
@@ -204,7 +206,7 @@ function initVariantGroupDropdown(hostConfig: VariantSelectorConfig): void {
 			const preview = btn.querySelector<HTMLElement>('.preview')!;
 			variantPreviewTooltip.attachAnchor(preview, (anchor) => {
 				variantPreviewTooltip.showForVariantCode(anchor, code, 'left', {
-					border: engineBorder(),
+					engineGame: engineOnly,
 				});
 			});
 		});
@@ -578,14 +580,14 @@ function setIcnResult(result: IcnResult | null): void {
 
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(variantOptions: VariantOptions): void {
+	const played = withEngineBorder(variantOptions);
 	// Saved positions are authored in the editor, so they were never sourced from a variant.
-	let rejection = validateOptions(variantOptions, {});
+	let rejection = validateOptions(played, {});
 	// Legal position; in a seek context it still has to be playable from here — analysis
 	// loads finished and engine-unplayable games fine. Only there do we construct the
 	// transient gamefile those checks read off of, then discard it.
 	if (rejection === null && config.isSeekContext) {
-		const constructed = gameformulator.tryConstructPosition(variantOptions);
-		if (constructed !== null) rejection = playabilityRejection(constructed);
+		rejection = playabilityRejection(gameformulator.constructPosition(played));
 	}
 	if (rejection !== null) {
 		showError(element_variantDisplay, localizeRejection(t, rejection));
@@ -638,11 +640,19 @@ function validateOptions(options: VariantOptions, metadata: MetaData): PositionR
 }
 
 /**
- * The world border an engine game would be played inside, for constructing a gamefile that
- * matches the one that will actually load. Undefined unless the engine is the opponent.
+ * The position as it would be played, with the engine's world border spaced around it when the
+ * engine is the opponent and the position declares none of its own. The single point a custom
+ * seek's border is decided, so its validation, its preview, and the ICN sent all judge the exact
+ * board the game loads on. Derived rather than written onto the caller's position, which stays
+ * the pristine one the engine restriction may be lifted from later.
  */
-function engineBorder(): typeof apeiron_card.PLAY_BORDER | undefined {
-	return engineOnly ? apeiron_card.PLAY_BORDER : undefined;
+function withEngineBorder(options: VariantOptions): VariantOptions {
+	if (!engineOnly || options.gameRules.worldBorder !== undefined) return options;
+	// An empty position has no box to space a border around; validation rejects it regardless.
+	if (options.position.size === 0) return options;
+	const coords = [...options.position.keys()].map(coordutil.getCoordsFromKey);
+	const worldBorder = apeiron_card.worldBorderForBox(bounds.getBoxFromCoordsList(coords));
+	return { ...options, gameRules: { ...options.gameRules, worldBorder } };
 }
 
 /** {@link getPlayabilityRejection} under the contexts this selector is currently in. */
@@ -722,11 +732,13 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 		return;
 	}
 
-	// Validate the flattened position the moves lead to — the exact
-	// position a seek plays from and the server re-validates.
-	const finalOptions = gamecompressor.gamefileToPositionOptions(constructed);
+	// Validate the flattened position the moves lead to — the exact position a seek plays from and
+	// the server re-validates, judged on the board it gets rather than the one the moves ran on.
+	const played = withEngineBorder(gamecompressor.gamefileToPositionOptions(constructed));
 	const metadata = clientmetadatautil.buildSourceVariantMetadata(constructed);
-	const rejection = validateOptions(finalOptions, metadata) ?? playabilityRejection(constructed);
+	const rejection =
+		validateOptions(played, metadata) ??
+		playabilityRejection(gameformulator.constructPosition(played, constructed.variant));
 
 	// The moves-applied gamefile is kept either way, so a rejected position still previews.
 	if (rejection !== null) {
@@ -744,7 +756,7 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 /** Shows the preview tooltip for the currently selected variant in the display button. */
 function handleDisplayPreviewHover(anchor: HTMLElement): void {
 	if (selection.kind === 'preset') {
-		variantPreviewTooltip.showForVariantCode(anchor, selection.code, 'left', { border: engineBorder() }); // prettier-ignore
+		variantPreviewTooltip.showForVariantCode(anchor, selection.code, 'left', { engineGame: engineOnly }); // prettier-ignore
 	} else if (selection.kind === 'online') {
 		handleSavePreview(anchor, selection.name, cloudPreviewCache, ecloudstore.readCloud);
 	} else if (selection.kind === 'local') {
@@ -757,10 +769,11 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 				await validateIcnInput(true);
 				// Construction failed — show nothing rather than a lie of a starting position.
 				if (icnResult?.kind !== 'icn') return undefined;
-				return gamecompressor.gamefileToPositionOptions(icnResult.gamefile);
+				return withEngineBorder(
+					gamecompressor.gamefileToPositionOptions(icnResult.gamefile),
+				);
 			},
 			'left',
-			{ border: engineBorder() },
 		);
 	}
 }
@@ -782,16 +795,17 @@ function handleSavePreview(
 		anchor,
 		positionName,
 		async () => {
+			// The pristine save is what's cached; the border is layered on per preview, since the
+			// engine restriction can be lifted while the cache lives on.
 			const cached = cache.get(positionName);
-			if (cached !== undefined) return cached; // Cache hit!
+			if (cached !== undefined) return withEngineBorder(cached); // Cache hit!
 			// Request for the first time, cache the result.
 			const saveState = await read(positionName).catch(() => undefined);
 			if (saveState === undefined) return undefined; // Preview unavailable – silently ignore
 			cache.set(positionName, saveState.variantOptions);
-			return saveState.variantOptions;
+			return withEngineBorder(saveState.variantOptions);
 		},
 		'left',
-		{ border: engineBorder() },
 	);
 }
 
@@ -843,11 +857,13 @@ function getSeekVariant(): SeekVariant | null {
 	}
 	// local / icn — the custom wire format needs an ICN string. A From-ICN selection sends the
 	// position its moves lead to, since a seek's ICN may not contain moves; a local save's
-	// resolved options are already move-free.
-	const options =
+	// resolved options are already move-free. The engine's border is written in, since the server
+	// takes the ICN's own board as given and refuses an engine game that declares none.
+	const options = withEngineBorder(
 		icnResult.kind === 'icn'
 			? gamecompressor.gamefileToPositionOptions(icnResult.gamefile)
-			: icnResult.options;
+			: icnResult.options,
+	);
 	// The source-variant tags ride along — an explicit position lifted from the middle of a
 	// balanced game is lopsided, and they are all that tells the game it starts otherwise.
 	const metadata =

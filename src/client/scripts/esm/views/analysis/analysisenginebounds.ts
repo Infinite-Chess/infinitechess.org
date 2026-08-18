@@ -20,7 +20,7 @@ import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil
  * coordinate Apeiron can safely evaluate (i64 minus a little wiggle room). The same cap
  * engine games clip their generated border to, so analysis and play agree on what's in range.
  */
-const WORLD_BORDER_CAP = apeiron_card.PLAY_BORDER.worldBorderCap;
+const WORLD_BORDER_CAP = apeiron_card.WORLD_BORDER_CAP;
 
 /**
  * The world border Apeiron evaluates the position within: the position's own `worldBorder`

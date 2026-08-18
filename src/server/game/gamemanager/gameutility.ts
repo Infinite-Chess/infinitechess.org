@@ -30,6 +30,7 @@ import type {
 import type {
 	AuthSeekVariant,
 	ClockValues,
+	GameStateVariant,
 	StaticGameSetup,
 	StaticGameState,
 	GameModifier,
@@ -52,6 +53,7 @@ import winconutil from '../../../shared/chess/util/winconutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import gameformulator from '../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js';
@@ -302,11 +304,14 @@ function getVariantCode(variant: AuthSeekVariant): VariantCode | null {
  * @param dateTimestamp - The game's start time, pinning a PRESET variant's revision. A custom
  *   position pins its own with the source-variant tags in its ICN.
  * @param slideLimit - The value of the Slide Limit modifier, if it's active.
+ * @param engineGame - Whether the engine is a participant. A preset carries no world border over
+ *   the wire, so an engine game's is resolved here; a custom position's arrives in its ICN.
  */
 function resolveGameConstruction(
 	variant: AuthSeekVariant,
 	dateTimestamp: number,
 	slideLimit: number | undefined,
+	engineGame: boolean,
 ): GameConstruction {
 	let loaded: LoadedVariant | undefined;
 	let gameRules: GameRules;
@@ -319,6 +324,12 @@ function resolveGameConstruction(
 			dateTimestamp,
 		};
 		gameRules = variantpreviewer.getGameRulesOfVariant(loaded); // Already a fresh copy
+		// The board an engine game is played on. Only presets resolve it here — a custom position's
+		// border arrives in its ICN, which seek validation requires of an engine game. The
+		// variant's own border wins wherever it declares one.
+		if (engineGame && gameRules.worldBorder === undefined) {
+			gameRules.worldBorder = apeiron_card.worldBorderForVariant(loaded);
+		}
 	} else {
 		// The ICN is the source of truth for the position, the gamerules, and which variant
 		// revision it's a position of. Parsing can't fail here — a position only becomes a
@@ -607,8 +618,14 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
  */
 function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 	const match = servergame.match;
+	// A preset's rules are the client's to rebuild from its module — all but the border an engine
+	// game is played inside, which only we resolved. A custom game's rides in its ICN.
+	const variant: GameStateVariant =
+		match.variant.kind === 'preset' && match.engineParticipant !== undefined
+			? { ...match.variant, worldBorder: servergame.gameRules.worldBorder }
+			: match.variant;
 	return {
-		variant: match.variant,
+		variant,
 		timeControl: match.clock,
 		timeCreated: match.timeCreated,
 		modifiers: match.modifiers,

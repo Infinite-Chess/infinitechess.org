@@ -17,6 +17,7 @@ import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/
 import modutil from '../../../../../shared/util/modutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
+import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
 import { interpolate } from '../../../../../shared/util/interpolate.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
@@ -50,10 +51,10 @@ interface PreviewOptions {
 	/** Gamerule modifiers active on the game, listed among its rules. */
 	modifiers?: GameModifier[];
 	/**
-	 * The world border the game would be constructed with, so the preview shows the
-	 * board that will actually load. Only present when the engine is the opponent.
+	 * Whether the engine would be the opponent, so a preset preview shows the bordered board that
+	 * will actually load. A custom position's border is already in the rules it is previewed with.
 	 */
-	border?: { worldBorderDist: bigint; worldBorderCap: bigint };
+	engineGame?: boolean;
 }
 
 // Constants ---------------------------------------------------------------
@@ -210,6 +211,10 @@ async function showForVariantCode(
 		dateTimestamp: Date.now(),
 	};
 	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant);
+	// The board an engine game would be played on — the same one game construction resolves.
+	if (options.engineGame && gameRules.worldBorder === undefined) {
+		gameRules.worldBorder = apeiron_card.worldBorderForVariant(loadedVariant);
+	}
 	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant);
 	await showForBoard(anchor, variantName, boardsim, token, placement, code, options.modifiers);
 }
