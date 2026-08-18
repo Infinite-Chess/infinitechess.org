@@ -117,10 +117,6 @@ export interface Additional {
 	clockValues?: ClockValues;
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	editor?: boolean;
-	/** If present, the resulting gamefile will have a world border this distance away from the starting position's bounding box. */
-	worldBorderDist?: bigint;
-	/** Maximum absolute edge of a world border generated from {@link worldBorderDist}. */
-	worldBorderCap?: bigint;
 }
 
 // Functions -------------------------------------------------------------
@@ -236,8 +232,6 @@ function initGameFile(
 	const boardsim = boardinit.initBoard(gameRules, variant, {
 		variantOptions: additional.variantOptions,
 		editor: additional.editor,
-		worldBorderDist: additional.worldBorderDist,
-		worldBorderCap: additional.worldBorderCap,
 	});
 	const gamefile = loadGameWithBoard(game, boardsim, additional.moves, validateMoves);
 

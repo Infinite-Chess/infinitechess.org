@@ -140,7 +140,6 @@ function startEngineGame(options: {
 			viewWhitePerspective: options.youAreColor === p.WHITE,
 			additional: {
 				variantOptions: options.variantOptions,
-				worldBorderDist: engineDictionary[options.engine.name].worldBorderDist,
 			},
 		},
 		{

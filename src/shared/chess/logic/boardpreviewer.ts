@@ -17,7 +17,6 @@ import type { GameState, GlobalGameState } from './state.js';
 import type { Snapshot, VariantOptions, LoadedVariant } from './gamefile.js';
 
 import jsutil from '../../util/jsutil.js';
-import bimath from '../../util/math/bimath.js';
 import organizedpieces from './organizedpieces.js';
 import variantpreviewer from '../variants/variantpreviewer.js';
 
@@ -29,14 +28,6 @@ export interface BoardInitOptions {
 	variantOptions?: VariantOptions;
 	/** Whether the board is being built for the editor. */
 	editor?: boolean;
-	/**
-	 * Generates a world border this distance out from the starting position's bounding box.
-	 * The sole source of a generated border — only has an effect if the rules, which are
-	 * authoritative, declare no `worldBorder` of their own.
-	 */
-	worldBorderDist?: bigint;
-	/** Clamps each generated world-border edge to this absolute coordinate. */
-	worldBorderCap?: bigint;
 }
 
 /**
@@ -85,7 +76,7 @@ function initBoardPreview(
 	variant: LoadedVariant | undefined,
 	options: BoardInitOptions = {},
 ): BoardPreview {
-	const { variantOptions, editor = false, worldBorderDist, worldBorderCap } = options;
+	const { variantOptions, editor = false } = options;
 
 	// The board owns its rules: the generated world border is written onto this copy, never the
 	// caller's object — callers commonly retain their options, and a cached or stored position
@@ -133,23 +124,6 @@ function initBoardPreview(
 	// Fallback if no pieces present
 	if (startingPositionBox === undefined)
 		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
-
-	if (gameRules.worldBorder === undefined && worldBorderDist !== undefined) {
-		// The rules declare no border of their own, so generate one at the requested distance.
-		const generatedBorder = {
-			left: startingPositionBox.left - worldBorderDist,
-			right: startingPositionBox.right + worldBorderDist,
-			bottom: startingPositionBox.bottom - worldBorderDist,
-			top: startingPositionBox.top + worldBorderDist,
-		};
-		if (worldBorderCap !== undefined) {
-			generatedBorder.left = bimath.max(generatedBorder.left, -worldBorderCap);
-			generatedBorder.right = bimath.min(generatedBorder.right, worldBorderCap);
-			generatedBorder.bottom = bimath.max(generatedBorder.bottom, -worldBorderCap);
-			generatedBorder.top = bimath.min(generatedBorder.top, worldBorderCap);
-		}
-		gameRules.worldBorder = generatedBorder;
-	}
 
 	const startSnapshot: Snapshot = {
 		position,

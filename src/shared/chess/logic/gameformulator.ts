@@ -48,10 +48,6 @@ interface ConstructionOverrides {
 	slideLimit?: bigint;
 	/** See {@link Additional.clockValues}. */
 	clockValues?: ClockValues;
-	/** See {@link Additional.worldBorderDist}. */
-	worldBorderDist?: bigint;
-	/** See {@link Additional.worldBorderCap}. */
-	worldBorderCap?: bigint;
 }
 
 // Functions ------------------------------------------------------------------------

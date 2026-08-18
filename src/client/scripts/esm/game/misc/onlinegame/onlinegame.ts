@@ -104,10 +104,6 @@ function loadGameFromState(
 		clockValues: state.clockValues,
 		...(slideLimit !== undefined && { slideLimit: BigInt(slideLimit) }),
 	};
-	if (engineGame) {
-		additional.worldBorderDist = apeiron_card.PLAY_BORDER.worldBorderDist;
-		additional.worldBorderCap = apeiron_card.PLAY_BORDER.worldBorderCap;
-	}
 
 	// A custom game has no variant code to build its position from — its ICN is the source of
 	// truth for the position, the gamerules, and which variant revision it's a position of.

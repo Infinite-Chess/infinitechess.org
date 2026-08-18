@@ -52,7 +52,6 @@ import winconutil from '../../../shared/chess/util/winconutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import gameformulator from '../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js';
@@ -396,15 +395,7 @@ function initServerGame(
 ): ServerGame {
 	const { variant, gameRules, variantOptions, validateMoves } = construction;
 	if (validateMoves) {
-		// Engine games are played inside the engine's world border. The client builds its gamefile
-		// with the same one, so the two must agree on what's in bounds — otherwise a checkmate
-		// against the border the client sees would never be concluded here.
-		const border = match.engineParticipant !== undefined ? apeiron_card.PLAY_BORDER : undefined;
-		const boardsim = boardinit.initBoard(gameRules, variant, {
-			variantOptions,
-			worldBorderDist: border?.worldBorderDist,
-			worldBorderCap: border?.worldBorderCap,
-		});
+		const boardsim = boardinit.initBoard(gameRules, variant, { variantOptions });
 		// The same load the client runs, so both ends settle on identical
 		// win conditions and starting check state. Spread last, so the servergame's
 		// rules are the board's own copy — never a second one.

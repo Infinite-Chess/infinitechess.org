@@ -584,7 +584,7 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 	// loads finished and engine-unplayable games fine. Only there do we construct the
 	// transient gamefile those checks read off of, then discard it.
 	if (rejection === null && config.isSeekContext) {
-		const constructed = gameformulator.tryConstructPosition(variantOptions, engineBorder());
+		const constructed = gameformulator.tryConstructPosition(variantOptions);
 		if (constructed !== null) rejection = playabilityRejection(constructed);
 	}
 	if (rejection !== null) {
@@ -712,11 +712,7 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	// Built through the same path the board loads by, so the gate validates the exact game that
 	// will be loaded. Built regardless of play-legality, so the preview always reflects the moves —
 	// a play-illegal position (e.g. king capturable) still previews faithfully once they're applied.
-	const constructed = await gameformulator.tryFormulateGame(
-		longFormat,
-		revealErrors,
-		engineBorder(),
-	);
+	const constructed = await gameformulator.tryFormulateGame(longFormat, revealErrors);
 	// Awaiting the variant module let the user keep typing — discard a result they've moved past.
 	if (element_icnInput.value !== value) return;
 	if (constructed === 'moves_invalid') {
