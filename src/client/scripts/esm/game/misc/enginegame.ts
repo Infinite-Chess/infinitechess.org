@@ -204,8 +204,6 @@ function handleEngineMessage(data: EngineResponse): void {
  * @param tokenMove - The engine's move in compact format "x,y>x,y=P", or null if it has none.
  */
 function makeEngineMove(tokenMove: string | null): void {
-	if (!engine) return console.error('Attempting to make engine move, but no engine loaded!');
-
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 	if (gamefile.gameConclusion) {
@@ -223,6 +221,12 @@ function makeEngineMove(tokenMove: string | null): void {
 			gamefile.gameConclusion = { condition: 'resignation', victor: gamesession.getRole()! };
 			gameslot.concludeGame();
 		}
+		return;
+	}
+
+	// Can rarely happen if the server forced us to resync, undoing our move.
+	if (gamePageData.role === gamefile.whosTurn) {
+		console.error(`Engine returned a move when it was our turn. Ignoring it: ${tokenMove}`);
 		return;
 	}
 
