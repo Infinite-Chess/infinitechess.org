@@ -44,12 +44,6 @@ type GameSession =
 			/** Our role in the game. Undefined if we're not a participant (spectator). */
 			role?: Player;
 	  }
-	| {
-			/** The type of game we are in */
-			type: 'engine';
-			/** Our role in the game. */
-			role: Player;
-	  }
 	| { type: 'analysis' | 'editor' };
 
 // Variables --------------------------------------------------------------------
@@ -69,7 +63,7 @@ function getGameType(): GameSession['type'] {
 
 /** Returns our role in the game, if a participant, in either an online/engine game. */
 function getRole(): Player | undefined {
-	if (session.type === 'online' || session.type === 'engine') return session.role;
+	if (session.type === 'online') return session.role;
 	throw Error("Can't get our color in this type of game: " + session.type);
 }
 
@@ -77,8 +71,6 @@ function getRole(): Player | undefined {
 function isItOurTurn(): boolean {
 	switch (session.type) {
 		case 'online':
-			return gameslot.getGamefile()!.whosTurn === session.role;
-		case 'engine':
 			return gameslot.getGamefile()!.whosTurn === session.role;
 		case 'editor':
 		case 'analysis':

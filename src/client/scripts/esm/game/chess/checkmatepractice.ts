@@ -131,7 +131,7 @@ function startEngineGame(options: {
 	youAreColor: Player;
 	engine: EngineAndConfig;
 }): void {
-	gamesession.setSessionGame({ type: 'engine', role: options.youAreColor });
+	gamesession.setSessionGame({ type: 'online', role: options.youAreColor });
 	gamesession.loadGame(
 		{
 			timeControl: options.timeControl,
