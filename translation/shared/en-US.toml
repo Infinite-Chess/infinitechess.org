@@ -134,14 +134,14 @@ position_too_large = "Position is too large."
 piece_outside_world_border = "At least one piece is outside the world border."
 gargoyles_not_allowed = "No gargoyles allowed."
 invalid_player_id = "At least one piece has an invalid player ID."
-player_missing_pieces = "Each player must have at least one piece."
 four_player_checkmate = "4-player games cannot use checkmate."
 consecutive_turns_with_checkmate = "Players cannot have consecutive turns when using checkmate."
-too_many_royals_for_checkmate = "Too many royals for using checkmate."
 king_capture_on_turn_1 = "King capture possible on turn 1."
 moves_invalid = "One or more moves are invalid."
 no_4d_movement = "Custom positions don't support 4D movement."
 game_over = "The game is already over."
+player_missing_pieces = "Each player must have at least one piece."
+too_many_royals_for_checkmate = "Too many royals for using checkmate."
 
 # Codes returned by the engine's support checks. Each has two forms: `label` renders in the
 # analysis engine panel's single-line, ellipsis-truncated readout, so keep it SHORT (~20

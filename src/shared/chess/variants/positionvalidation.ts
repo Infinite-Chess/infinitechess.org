@@ -7,12 +7,14 @@
  */
 
 import type { RawType } from '../util/typeutil.js';
+import type { GameRules } from '../util/gamerules.js';
 import type { EngineSupportCode } from '../engines/apeiron_card.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 import type { GameFile, VariantOptions } from '../logic/gamefile.js';
 
 import bounds from '../../util/math/bounds.js';
 import moveutil from '../util/moveutil.js';
+import boardutil from '../util/boardutil.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../util/coordutil.js';
 import boardinit from '../logic/boardinit.js';
@@ -42,10 +44,8 @@ export type PositionErrorCode =
 	| 'piece_outside_world_border'
 	| 'gargoyles_not_allowed'
 	| 'invalid_player_id'
-	| 'player_missing_pieces'
 	| 'four_player_checkmate'
 	| 'consecutive_turns_with_checkmate'
-	| 'too_many_royals_for_checkmate'
 	| 'king_capture_on_turn_1';
 
 /**
@@ -60,7 +60,9 @@ export type PositionRejectionCode =
 	| 'icn_contains_moves'
 	| 'moves_invalid'
 	| 'no_4d_movement'
-	| 'game_over';
+	| 'game_over'
+	| 'player_missing_pieces'
+	| 'too_many_royals_for_checkmate';
 
 /**
  * Why a position was refused. Discriminated because the engine's codes key nested objects
@@ -82,11 +84,14 @@ export type PositionRejection =
  * 4. Every piece lies inside the world border, if one is present.
  * 5. Every non-neutral piece's color is in the turn order.
  *    In 2-player mode, no neutral gargoyle pieces are allowed.
- * 6. Every player in the turn order has at least one piece.
- * 7. Checkmate incompatibility: Not 4-player; no player gets consecutive turns; royal count
- *    is not too high; and king capture is not possible on turn 1. Mirrors
- *    {@link winconutil.isCheckmateCompatibleWithGame}, whose remaining checks (piece count,
- *    slide-line count) only trip on positions far larger than any this ever sees.
+ * 6. Checkmate incompatibility: Not 4-player; no player gets consecutive turns; and king
+ *    capture is not possible on turn 1. Mirrors {@link winconutil.isCheckmateCompatibleWithGame},
+ *    whose remaining checks (piece count, slide-line count) only trip on positions far larger
+ *    than any this ever sees.
+ *
+ * Rules only a fresh game must satisfy — a player still having pieces, a royal count checkmate
+ * can afford — live in {@link getPlayabilityRejection}, since a played-out position may break
+ * them and still be perfectly viewable.
  *
  * @param variantOptions - The position and game rules to validate.
  * @param icnString - The position's ICN, used solely to check its length. Provide it in
@@ -124,10 +129,7 @@ export function validatePosition(
 
 	// --- Rules 4 & 5: World border containment, piece color and turn order consistency ---
 	const neutralExemptRawTypes = new Set<RawType>(neutralRawTypes); // void and obstacle
-	const royalRawTypes = new Set<RawType>(typeutil.royals);
-	const playersWithPieces = new Set<number>();
 	const worldBorder = gameRules.worldBorder;
-	let royalCount = 0;
 
 	for (const [coordsKey, pieceType] of position) {
 		// Only an explicit world border can exclude a piece — one derived from
@@ -155,31 +157,16 @@ export function validatePosition(
 			if (!turnOrderSet.has(color)) {
 				return 'mixed_player_modes';
 			}
-			playersWithPieces.add(color);
-			if (royalRawTypes.has(rawType)) royalCount++;
 		}
 	}
 
-	// --- Rule 6: Every player has at least one piece ---
-	// A player with no royal is legal, even under a royal-requiring win
-	// condition — they simply can't win (e.g. a practice checkmate played PvP).
-	for (const player of uniquePlayers) {
-		if (!playersWithPieces.has(player)) return 'player_missing_pieces';
-	}
-
-	// --- Rule 7: Checkmate incompatibility ---
-	const checkmateUsed = uniquePlayers.some((player) =>
-		(gameRules.winConditions[player] ?? []).includes('checkmate'),
-	);
-	if (checkmateUsed) {
+	// --- Rule 6: Checkmate incompatibility ---
+	if (usesCheckmate(gameRules)) {
 		// 3+ players allows one to open a discovered attack and a second to capture the king.
 		if (isFourPlayerMode) return 'four_player_checkmate';
 		// If any player gets 2+ turns in a row, king capture is possible
 		if (moveutil.doesAnyPlayerGet2TurnsInARow(gameRules)) {
 			return 'consecutive_turns_with_checkmate';
-		}
-		if (royalCount > winconutil.royalCountToDisableCheckmate) {
-			return 'too_many_royals_for_checkmate';
 		}
 		// King capture must not be possible on turn 1
 		const secondPlayer = gameRules.turnOrder[1]!;
@@ -194,10 +181,21 @@ export function validatePosition(
 }
 
 /**
- * Why the given context can't play an otherwise-legal position, or `null` if it can.
- * A seek carries only a position + gamerules, so a variant with custom piece movement (4D)
- * would silently revert to default movement; and a finished game has nothing left to play.
- * Against the engine, the position also has to be one it can actually handle.
+ * Why the given context can't start a game from an otherwise-legal position, or `null` if it can.
+ *
+ * Checks (in order):
+ * 1. Seek: no custom piece movement (4D). A seek carries only a position + gamerules, so such a
+ *    variant would silently revert to default movement.
+ * 2. Seek: the game isn't already over — there'd be nothing left to play.
+ * 3. Seek: every player in the turn order has at least one piece. Having no *royal* is fine, even
+ *    under a royal-requiring win condition — they simply can't win (e.g. a practice checkmate PvP).
+ * 4. Seek: royal count is within what checkmate can afford. Mirrors the cap in
+ *    {@link winconutil.isCheckmateCompatibleWithGame}.
+ * 5. Engine: the position is one the engine can actually handle.
+ *
+ * Rules 3 & 4 are the pair a played-out position may break while staying perfectly viewable:
+ * pieces get captured, and promotions can add royals. Hence they live here, not in {@link validatePosition}.
+ *
  * @param gamefile - The position as it will be played. MUST be constructed with the same world
  * border the real game gets — {@link apeiron_card.PLAY_BORDER} for engine games — or this judges
  * a different board than the one that loads.
@@ -209,10 +207,29 @@ export function getPlayabilityRejection(
 	context: { seek: boolean; engine: boolean },
 ): PositionRejection | null {
 	if (context.seek) {
+		// --- Rule 1: No custom piece movement ---
 		if (variantreader.hasCustomMovement(gamefile.variant?.mod))
 			return { kind: 'position', code: 'no_4d_movement' };
+
+		// --- Rule 2: The game isn't already over ---
 		if (gamefileutility.isGameOver(gamefile)) return { kind: 'position', code: 'game_over' };
+
+		// --- Rule 3: Every player has at least one piece ---
+		for (const player of gamerules.getUniquePlayersInTurnOrder(gamefile.gameRules.turnOrder)) {
+			if (boardutil.getPieceCountOfColor(gamefile.pieces, player) === 0)
+				return { kind: 'position', code: 'player_missing_pieces' };
+		}
+
+		// --- Rule 4: Royal count is not too high for checkmate ---
+		if (
+			usesCheckmate(gamefile.gameRules) &&
+			boardutil.getRoyalCountOfGame(gamefile.pieces) > winconutil.royalCountToDisableCheckmate
+		) {
+			return { kind: 'position', code: 'too_many_royals_for_checkmate' };
+		}
 	}
+
+	// --- Rule 5: The engine can handle the position ---
 	if (context.engine) {
 		const support = apeiron_card.isPlaySupported(gamefile);
 		if (!support.supported) return { kind: 'engine', code: support.reason };
@@ -225,4 +242,13 @@ export function localizeRejection(t: ScriptTranslations, rejection: PositionReje
 	return rejection.kind === 'engine'
 		? t.shared.position_errors.engine[rejection.code].message
 		: t.shared.position_errors[rejection.code];
+}
+
+// Helpers -----------------------------------------------------------------------------
+
+/** Whether any player in the turn order wins by checkmate. */
+function usesCheckmate(gameRules: GameRules): boolean {
+	return gamerules
+		.getUniquePlayersInTurnOrder(gameRules.turnOrder)
+		.some((player) => gamerules.doesColorHaveWinCondition(gameRules, player, 'checkmate'));
 }
