@@ -64,12 +64,7 @@ function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessage): vo
 		addSeek(seek);
 	} catch {
 		// DB error (already logged)
-		sendSocketMessage(
-			ws,
-			'general',
-			'notifyerror',
-			"Couldn't create seek. A server error occurred. Please try again.",
-		);
+		sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
 	}
 }
 
