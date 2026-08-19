@@ -78,10 +78,8 @@ function worldBorderForBox(positionBox: BoundingBox, timestamp: number): Boundin
 }
 
 /**
- * {@link worldBorderForBox} for a preset variant, whose starting position is never built just to
- * measure it — the module declares its box outright.
- * @throws If the variant declares neither a box nor a `worldBorder`, which every variant in
- * {@link SUPPORTED_VARIANTS} must.
+ * {@link worldBorderForBox} for a preset variant, whose starting position
+ * is never built just to measure it — the module declares its box outright.
  */
 function worldBorderForVariant(variant: LoadedVariant): BoundingBox {
 	const box = variant.mod.getPositionBox?.(variant.dateTimestamp);

@@ -48,8 +48,8 @@ export function getPositionStringLength(timestamp: number = Date.now()): number 
 	return variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
 }
 
-/** Time-versioned alongside {@link POSITION_STRINGS} — the rebalance moved the outermost pieces. */
 const POSITION_BOXES: Record<number, BoundingBox> = {
+	// Rebalance moved the outermost pieces.
 	1709017200000: { left: -9n, right: 18n, bottom: -9n, top: 18n },
 	0: { left: -9n, right: 17n, bottom: -14n, top: 15n },
 };

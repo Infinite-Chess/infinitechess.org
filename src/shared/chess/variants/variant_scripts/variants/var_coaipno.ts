@@ -41,8 +41,8 @@ export function getPositionStringLength(timestamp: number = Date.now()): number 
 	return variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
 }
 
-/** Time-versioned alongside {@link POSITION_STRINGS} — the knightriders moved a rank further out. */
 const POSITION_BOXES: Record<number, BoundingBox> = {
+	// Knightriders moved a rank further out.
 	1766627026138: { left: -4n, right: 13n, bottom: -7n, top: 16n },
 	0: { left: -4n, right: 13n, bottom: -6n, top: 15n },
 };

@@ -323,9 +323,7 @@ function resolveGameConstruction(
 			dateTimestamp,
 		};
 		gameRules = variantpreviewer.getGameRulesOfVariant(loaded); // Already a fresh copy
-		// The board an engine game is played on. Only presets resolve it here — a custom position's
-		// border arrives in its ICN, which seek validation requires of an engine game. The
-		// variant's own border wins wherever it declares one.
+		// The board an engine game is played on.
 		if (engineGame && gameRules.worldBorder === undefined) {
 			gameRules.worldBorder = apeiron_card.worldBorderForVariant(loaded);
 		}

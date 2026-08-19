@@ -587,7 +587,8 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 	// loads finished and engine-unplayable games fine. Only there do we construct the
 	// transient gamefile those checks read off of, then discard it.
 	if (rejection === null && config.isSeekContext) {
-		rejection = playabilityRejection(gameformulator.constructPosition(played));
+		const constructed = gameformulator.constructPosition(played);
+		rejection = playabilityRejection(constructed);
 	}
 	if (rejection !== null) {
 		showError(element_variantDisplay, localizeRejection(t, rejection));
@@ -650,11 +651,9 @@ function withEngineBorder(options: VariantOptions): VariantOptions {
 	if (!engineOnly || options.gameRules.worldBorder !== undefined) return options;
 	// An empty position has no box to space a border around; validation rejects it regardless.
 	if (options.position.size === 0) return options;
-	const coords = [...options.position.keys()].map(coordutil.getCoordsFromKey);
-	const worldBorder = apeiron_card.worldBorderForBox(
-		bounds.getBoxFromCoordsList(coords),
-		Date.now(),
-	);
+	const coords = [...options.position.keys()].map((key) => coordutil.getCoordsFromKey(key));
+	const box = bounds.getBoxFromCoordsList(coords);
+	const worldBorder = apeiron_card.worldBorderForBox(box, Date.now());
 	return { ...options, gameRules: { ...options.gameRules, worldBorder } };
 }
 

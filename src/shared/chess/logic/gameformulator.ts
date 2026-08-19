@@ -92,9 +92,8 @@ async function tryFormulateGame(
 /**
  * Constructs the gamefile of a moveless position, purely so callers can
  * inspect the game it produces (its computed conclusion, its engine support).
- * Construction only ever fails on moves, of which this has none.
- * @param variant - The variant the position is of, when one is known — supplying its movesets, so
- *   the inspection sees how the pieces truly move. REQUIRES its module preloaded.
+ * @param variant - The variant the position is of, when one is known — supplying its
+ *   movesets, so the inspection sees how the pieces truly move. REQUIRES its module preloaded.
  */
 function constructPosition(variantOptions: VariantOptions, variant?: DatedVariant): GameFile {
 	return constructGame({
