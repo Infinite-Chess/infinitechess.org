@@ -13,18 +13,15 @@ import { routeGeneralMessage } from './generalRouter.js';
 
 // Functions ---------------------------------------------------------------------------
 
-/** Awaited so the caller's ack isn't sent until the message has actually been handled. */
-async function routeIncomingSocketMessage(
-	ws: CustomWebSocket,
-	message: ServerboundRoutedMessage,
-): Promise<void> {
+/** Routes a validated socket message to the handler for its route. */
+function routeIncomingSocketMessage(ws: CustomWebSocket, message: ServerboundRoutedMessage): void {
 	// Route them to their specified location
 	switch (message.route) {
 		case 'general':
 			routeGeneralMessage(ws, message.contents);
 			break;
 		case 'lobby':
-			await routeLobbyMessage(ws, message.contents);
+			routeLobbyMessage(ws, message.contents);
 			break;
 		case 'game':
 			routeGameMessage(ws, message.contents);

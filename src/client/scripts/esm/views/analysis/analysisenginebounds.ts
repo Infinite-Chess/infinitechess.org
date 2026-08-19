@@ -16,18 +16,11 @@ import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 /**
- * The world border Apeiron evaluates the position within: the position's own `worldBorder`
- * gamerule where defined, else the furthest coordinate today's engine can evaluate.
+ * The world border Apeiron evaluates the position within: the position's own
+ * `worldBorder` gamerule, held to the furthest coordinate today's engine can evaluate.
  */
 function getEngineWorldBorder(gamefile: GameFile): BoundingBox {
-	const cap = apeiron_card.worldBorderCap(Date.now());
-	const wb = gamefile.gameRules.worldBorder;
-	return {
-		left: wb?.left ?? -cap,
-		right: wb?.right ?? cap,
-		bottom: wb?.bottom ?? -cap,
-		top: wb?.top ?? cap,
-	};
+	return apeiron_card.clampBorderToCap(gamefile.gameRules.worldBorder, Date.now());
 }
 
 /** Returns whether all pieces in the gamefile are within the engine's safe evaluation bounds. */

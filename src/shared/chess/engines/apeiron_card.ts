@@ -7,10 +7,10 @@
  */
 
 import type { GameRules } from '../util/gamerules.js';
-import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantregistry.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { GameFile, LoadedVariant } from '../logic/gamefile.js';
+import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js';
 
 import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
@@ -91,6 +91,24 @@ function worldBorderForVariant(variant: LoadedVariant): BoundingBox {
 /** {@link PLAY_BORDER}'s `cap` alone, for callers bounding a position rather than spacing a border. */
 function worldBorderCap(timestamp: number): bigint {
 	return variantutil.resolveAtTimestamp(PLAY_BORDER, timestamp).cap;
+}
+
+/**
+ * An explicit world border reduced to what the engine can evaluate: every
+ * edge pulled inside the cap, and an unbounded (or absent) edge becoming it.
+ * @param timestamp - Pins the {@link PLAY_BORDER} revision.
+ */
+function clampBorderToCap(
+	worldBorder: UnboundedRectangle | undefined,
+	timestamp: number,
+): BoundingBox {
+	const cap = worldBorderCap(timestamp);
+	return {
+		left: bimath.max(worldBorder?.left ?? -cap, -cap),
+		right: bimath.min(worldBorder?.right ?? cap, cap),
+		bottom: bimath.max(worldBorder?.bottom ?? -cap, -cap),
+		top: bimath.min(worldBorder?.top ?? cap, cap),
+	};
 }
 
 // Individual rule checks (shared by both entry points) --------------------
@@ -262,6 +280,7 @@ export default {
 	worldBorderForBox,
 	worldBorderForVariant,
 	worldBorderCap,
+	clampBorderToCap,
 	isPlaySupported,
 	isAnalysisSupported,
 	isGameReviewSupported,

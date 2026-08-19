@@ -7,7 +7,7 @@
 
 import type { AuthMemberInfo } from '../../types.js';
 import type {
-	AuthSeekVariant,
+	SeekVariant,
 	BaseSeek,
 	OutSeek,
 	OutSeekVariant,
@@ -23,7 +23,7 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 export interface AuthSeek extends BaseSeek {
 	/** Contains the identifier of the owner of the seek, whether a member or browser. */
 	owner: AuthMemberInfo;
-	variant: AuthSeekVariant;
+	variant: SeekVariant;
 }
 
 //-------------------------------------------------------------------------------------------

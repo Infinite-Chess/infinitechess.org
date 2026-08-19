@@ -16,6 +16,7 @@ import { onclose } from './socketClose.js';
 import { onmessage } from './socketReceive.js';
 import { getClientIP } from '../utility/IP.js';
 import { logSocketOpen } from './socketLogger.js';
+import { executeSafely } from '../utility/errorGuard.js';
 import { runWithRequestID } from '../middleware/requestContext.js';
 import { buildTranslations } from '../middleware/reqTranslations.js';
 import { sendSocketMessage } from './socketSend.js';
@@ -24,7 +25,6 @@ import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
 import { resolveLanguageForRequest } from '../middleware/reqLanguage.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
-import { executeSafely, executeSafely_async } from '../utility/errorGuard.js';
 import {
 	addConnectionToConnectionLists,
 	doesClientHaveMaxSocketCount,
@@ -151,9 +151,9 @@ function addListenersToSocket(ws: CustomWebSocket): void {
 		// Each incoming message gets its own correlation ID,
 		// tagging every log line its processing produces.
 		// (Counterpart of assignRequestID for HTTP.)
-		void runWithRequestID(
+		runWithRequestID(
 			() =>
-				executeSafely_async(
+				executeSafely(
 					() => onmessage(ws, message),
 					'Error caught within websocket on-message event:',
 				),

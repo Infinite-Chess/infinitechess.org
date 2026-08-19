@@ -132,9 +132,9 @@ Two different questions, two different receipts. **Neither is ever echoed back**
 - **`echo`** — "your message _arrived_". Sent by the receiver the moment a routed message passes
   validation, before any handling. Purely a liveness/RTT signal.
 - **`ack`** — "your message has been _handled_". Server-only, and only for messages the client
-  flagged `needsack`. Sent in a `finally` after the router's promise settles, so **it is sent even
-  if the handler threw** — an ack promises the message was processed, not that it succeeded. An
-  action stuck outstanding forever is worse than one acked after failing.
+  flagged `needsack`. Sent in a `finally` after the router returns, so **it is sent even if the
+  handler threw** — an ack promises the message was processed, not that it succeeded. An action
+  stuck outstanding forever is worse than one acked after failing.
 
 The client's echo round-trip time is what feeds the ping meter
 ([pingmeter.ts](/src/client/scripts/esm/components/header/pingmeter.ts)) and the clock ping

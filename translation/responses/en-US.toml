@@ -30,8 +30,6 @@ login_retry_in_other = "Failed to login, try again in {n} seconds."
 already_in_game = "You are already in a game."
 rated_requires_signin = "You must be signed in to play rated games."
 game_aborted = "Game aborted."
-cloud_requires_sign_in = "Must be signed in to create a seek from a cloud save."
-cloud_not_found = "Cloud save not found."
 
 [game] # In-game notifications the server pushes over the websocket
 you_cheated = "Oops! You played something illegal. Game has been aborted. If this was a mistake, please report this bug!"

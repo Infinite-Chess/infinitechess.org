@@ -27,7 +27,7 @@ import { cancelEchoTimer, rescheduleHeartbeatTimer, sendReceipt } from './socket
  * Oversized messages never reach here — the `ws` receiver rejects anything
  * over MAX_PAYLOAD_BYTES (see socketServer.ts) before it's ever buffered.
  */
-async function onmessage(ws: CustomWebSocket, rawMessage: Buffer): Promise<void> {
+function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 	const messageStr = rawMessage.toString('utf8');
 	const message = parseAndValidateMessage(messageStr);
 
@@ -53,7 +53,7 @@ async function onmessage(ws: CustomWebSocket, rawMessage: Buffer): Promise<void>
 	rescheduleHeartbeatTimer(ws);
 	// console.log('Received message: ' + rawMessage);
 	try {
-		await routeIncomingSocketMessage(ws, message);
+		routeIncomingSocketMessage(ws, message);
 	} finally {
 		// Acked even if the handler threw. The client releases its lock on this action when
 		// the ack lands, and an action stuck outstanding forever is worse than one acked

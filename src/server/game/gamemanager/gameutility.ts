@@ -28,7 +28,7 @@ import type {
 	RematchOfferInfo,
 } from '../../../shared/clientbound.js';
 import type {
-	AuthSeekVariant,
+	SeekVariant,
 	ClockValues,
 	StaticGameSetup,
 	StaticGameState,
@@ -161,7 +161,7 @@ interface MatchInfo {
 	id: number;
 
 	/** The variant of the game being played: a preset code, or a custom game's start position. */
-	variant: AuthSeekVariant;
+	variant: SeekVariant;
 
 	/** The time this match was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	timeCreated: number;
@@ -277,7 +277,7 @@ interface GameConstruction {
  * existing game being rematched. Kept minimal so both paths can share {@link initMatch}.
  */
 interface GameSetup {
-	variant: AuthSeekVariant;
+	variant: SeekVariant;
 	time: TimeControl;
 	rated: boolean;
 	/** The modifiers to apply to the game. Absent if none. */
@@ -291,7 +291,7 @@ interface GameSetup {
  * The registry code of the variant a game is played with, or `null` if it's a custom position —
  * the shape both the `variant` columns and {@link variantregistry.getVariantName} take.
  */
-function getVariantCode(variant: AuthSeekVariant): VariantCode | null {
+function getVariantCode(variant: SeekVariant): VariantCode | null {
 	return variant.kind === 'preset' ? variant.code : null;
 }
 
@@ -307,7 +307,7 @@ function getVariantCode(variant: AuthSeekVariant): VariantCode | null {
  *   the wire, so an engine game's is resolved here; a custom position's arrives in its ICN.
  */
 function resolveGameConstruction(
-	variant: AuthSeekVariant,
+	variant: SeekVariant,
 	dateTimestamp: number,
 	slideLimit: number | undefined,
 	engineGame: boolean,
@@ -553,7 +553,7 @@ function detachSpectatorFromGame(servergame: ServerGame, ws: CustomWebSocket): v
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
-	variant: AuthSeekVariant,
+	variant: SeekVariant,
 ): PlayerGroup<Rating> {
 	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
 	const leaderboardId = getLeaderboardOfVariant(variant) ?? Leaderboards.INFINITY;

@@ -6,7 +6,7 @@
 
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { CreateSeekMessage } from '../../../shared/serverbound.js';
-import type { MetaData, Rating, SeekVariant, AuthSeekVariant } from '../../../shared/domain.js';
+import type { MetaData, Rating, SeekVariant } from '../../../shared/domain.js';
 
 import uuid from '../../../shared/util/uuid.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
@@ -17,7 +17,6 @@ import variantreader from '../../../shared/chess/variants/variantreader.js';
 import gameformulator from '../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { IDLengthOfSeeks } from '../../../shared/domain.js';
-import compression, { CompressionMode } from '../../../shared/util/compression.js';
 import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from '../../../shared/chess/variants/servervalidation.js';
 import {
 	Leaderboards,
@@ -31,7 +30,6 @@ import {
 } from '../../../shared/chess/variants/positionvalidation.js';
 
 import { sendSocketMessage } from '../../socket/socketSend.js';
-import { getSavedPositionICN } from '../../database/editorSavesManager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { AuthSeek, buildServerUsernameContainer } from './seekutility.js';
@@ -44,7 +42,7 @@ import { existingSeekHasID, deleteUsersExistingSeek, addSeek } from './lobbymana
  * @param ws - Their socket
  * @param messageContents - The incoming socket message that SHOULD contain the seek properties!
  */
-async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessage): Promise<void> {
+function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 	if (isSocketInAnActiveGame(ws)) {
 		// Can't create seek because they are already in a game
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
@@ -57,7 +55,7 @@ async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessag
 	}
 
 	try {
-		const seek = await getSeekFromWebsocketMessageContents(ws, messageContents);
+		const seek = getSeekFromWebsocketMessageContents(ws, messageContents);
 		if (!seek) return; // Message contained invalid seek parameters. Error already sent to the client.
 
 		// Replace any existing seek this user owns — the subsequent addSeek() broadcasts the new state.
@@ -76,15 +74,14 @@ async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessag
 }
 
 /**
- * Builds an {@link AuthSeek} from the client's createseek message, resolving
- * cloudSave variants to ICN and validating ICN positions for legality.
+ * Builds an {@link AuthSeek} from the client's createseek message, validating its position.
  * Returns `void` after sending an error to the client if any check fails.
- * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard} or {@link getSavedPositionICN}).
+ * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard}).
  */
-async function getSeekFromWebsocketMessageContents(
+function getSeekFromWebsocketMessageContents(
 	ws: CustomWebSocket,
 	messageContents: CreateSeekMessage,
-): Promise<AuthSeek | void> {
+): AuthSeek | void {
 	// Verify their seek contains the required properties...
 
 	let id: string;
@@ -104,14 +101,14 @@ async function getSeekFromWebsocketMessageContents(
 
 	const player = buildServerUsernameContainer(owner, rating);
 
-	const variant = await resolveAndValidateVariant(ws, messageContents.variant, false);
-	if (variant === null) return; // Invalid variant; error already sent to the client.
+	// Invalid variant; error already sent to the client.
+	if (!validateSeekVariant(ws, messageContents.variant, false)) return;
 
 	return {
 		id,
 		owner,
 		player,
-		variant,
+		variant: messageContents.variant,
 		time: messageContents.time,
 		mode: messageContents.mode,
 		color: messageContents.color,
@@ -120,67 +117,30 @@ async function getSeekFromWebsocketMessageContents(
 }
 
 /**
- * Resolves a seek/engine-game variant to a legal {@link AuthSeekVariant}: expands a cloudSave
- * to its stored ICN and validates a custom position is legal and playable. Sends the client an
- * error and returns `null` on any failure. Shared by seek creation and engine-game creation.
+ * Whether a seek/engine-game variant may be played: a custom position must be legal and playable.
+ * Sends the client an error on failure. Shared by seek creation and engine-game creation.
  * @param engineGame - Whether the engine will be the opponent. Its position is then judged on
  * the engine's board, and additionally on whether the engine can play it at all.
- * @throws If a database error occurs.
  */
-export async function resolveAndValidateVariant(
+export function validateSeekVariant(
 	ws: CustomWebSocket,
 	variant: SeekVariant,
 	engineGame: boolean,
-): Promise<AuthSeekVariant | null> {
-	const owner = ws.metadata.memberInfo;
-
-	// Resolve cloudSave variants to plain ICN.
-	let resolved: AuthSeekVariant;
-	if (variant.kind === 'cloudSave') {
-		// cloudSave variants require the user to be signed in (cloud saves belong to an account).
-		if (!owner.signedIn) {
-			sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.seeks.cloud_requires_sign_in); // prettier-ignore
-			return null;
-		}
-		const record = getSavedPositionICN(variant.name, owner.user_id);
-		if (record === undefined) {
-			sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.seeks.cloud_not_found);
-			return null;
-		}
-		// Cheap pre-filter that also bounds the decompression work — saves are only capped at
-		// editorutil.MAX_ICN_LENGTH. The decompressed length is what's truly measured, below.
-		if (record.icn.length > MAX_SERVER_VALIDATABLE_POSITION_LENGTH) {
-			sendSocketMessage(ws, 'general', 'notify', localizeRejection(ws.t, { kind: 'position', code: 'position_too_large' })); // prettier-ignore
-			return null;
-		}
-		const position = await compression.decompressString(
-			record.icn,
-			record.compression as CompressionMode,
-		);
-		resolved = { kind: 'custom', position };
-	} else {
-		resolved = variant;
-	}
-
-	// Validate the resolved ICN's position is legal and playable.
-	if (resolved.kind === 'custom') {
-		const rejection = validateIcnSeekContent(resolved.position, engineGame);
-		if (rejection !== null) {
-			sendSocketMessage(ws, 'general', 'notify', localizeRejection(ws.t, rejection));
-			return null;
-		}
-	}
-
-	return resolved;
+): boolean {
+	if (variant.kind !== 'custom') return true;
+	const rejection = validateIcnSeekContent(variant.position, engineGame);
+	if (rejection === null) return true;
+	sendSocketMessage(ws, 'general', 'notify', localizeRejection(ws.t, rejection));
+	return false;
 }
 
 /**
  * Parses an ICN seek's content and runs the position legality and playability checks.
- * @param engineGame - See {@link resolveAndValidateVariant}.
+ * @param engineGame - See {@link validateSeekVariant}.
  * @returns `null` if the ICN may be played, or the {@link PositionRejection} refusing it.
  */
 function validateIcnSeekContent(content: string, engineGame: boolean): PositionRejection | null {
-	// Second cheap pre-filter that bounds the parsing work — check the decompressed length.
+	// Cheap pre-filter that bounds the parsing work. validatePosition re-checks below.
 	if (content.length > MAX_SERVER_VALIDATABLE_POSITION_LENGTH) {
 		return { kind: 'position', code: 'position_too_large' };
 	}

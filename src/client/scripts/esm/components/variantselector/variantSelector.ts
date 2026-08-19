@@ -7,6 +7,7 @@
  */
 
 import type { VNode } from 'snabbdom';
+import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
 import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MetaData, SeekVariant, GameModifier } from '../../../../../shared/domain.js';
@@ -641,19 +642,24 @@ function validateOptions(options: VariantOptions, metadata: MetaData): PositionR
 }
 
 /**
- * The position as it would be played, with the engine's world border spaced around it when the
- * engine is the opponent and the position declares none of its own. The single point a custom
+ * The position as it would be played against the engine: its own world border held to what the
+ * engine can evaluate, or one spaced around it when it declares none. The single point a custom
  * seek's border is decided, so its validation, its preview, and the ICN sent all judge the exact
  * board the game loads on. Derived rather than written onto the caller's position, which stays
  * the pristine one the engine restriction may be lifted from later.
  */
 function withEngineBorder(options: VariantOptions): VariantOptions {
-	if (!engineOnly || options.gameRules.worldBorder !== undefined) return options;
+	if (!engineOnly) return options;
+	const declared = options.gameRules.worldBorder;
 	// An empty position has no box to space a border around; validation rejects it regardless.
-	if (options.position.size === 0) return options;
-	const coords = [...options.position.keys()].map((key) => coordutil.getCoordsFromKey(key));
-	const box = bounds.getBoxFromCoordsList(coords);
-	const worldBorder = apeiron_card.worldBorderForBox(box, Date.now());
+	if (declared === undefined && options.position.size === 0) return options;
+	let worldBorder: BoundingBox;
+	if (declared !== undefined) worldBorder = apeiron_card.clampBorderToCap(declared, Date.now());
+	else {
+		const coords = [...options.position.keys()].map((key) => coordutil.getCoordsFromKey(key));
+		const box = bounds.getBoxFromCoordsList(coords);
+		worldBorder = apeiron_card.worldBorderForBox(box, Date.now());
+	}
 	return { ...options, gameRules: { ...options.gameRules, worldBorder } };
 }
 
@@ -847,20 +853,17 @@ function getCustomPosition():
 
 /**
  * Returns the current variant selection as a SeekVariant for the wire format,
- * or null if the selection cannot be used for an online seek (invalid ICN, local save).
+ * or null if the selection is not yet valid.
  */
 function getSeekVariant(): SeekVariant | null {
 	if (selection.kind === 'preset') {
 		return { kind: 'preset', code: selection.code };
 	}
 	if (!icnResult?.isValid) return null;
-	if (selection.kind === 'online') {
-		return { kind: 'cloudSave', name: selection.name };
-	}
-	// local / icn — the custom wire format needs an ICN string. A From-ICN selection sends the
-	// position its moves lead to, since a seek's ICN may not contain moves; a local save's
-	// resolved options are already move-free. The engine's border is written in, since the server
-	// takes the ICN's own board as given and refuses an engine game that declares none.
+	// Every custom selection — saved position or From-ICN — travels as the ICN string it resolves
+	// to. A From-ICN selection sends the position its moves lead to, since a seek's ICN may not
+	// contain moves; a save's resolved options are already move-free. The engine's border is
+	// written in, since the server takes the ICN's own board as given and refuses one without.
 	const options = withEngineBorder(
 		icnResult.kind === 'icn'
 			? gamecompressor.gamefileToPositionOptions(icnResult.gamefile)

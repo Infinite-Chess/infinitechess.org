@@ -14,8 +14,8 @@ import { engineDictionary, ValidEngine } from '../../../shared/chess/engine.js';
 import { getEngineVersion } from '../../config/manifest.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { validateSeekVariant } from './createseek.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
-import { resolveAndValidateVariant } from './createseek.js';
 import { createGame, onGameCreationError } from '../gamemanager/gamemanager.js';
 
 // Constants ---------------------------------------------------------------------------
@@ -29,7 +29,7 @@ const ONLINE_ENGINE: ValidEngine = 'apeiron';
  * Creates an engine game from the owner's websocket message. On success, createGame's
  * 'ingame' push navigates the client; on failure, notifies the client with the reason.
  */
-async function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): Promise<void> {
+function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	if (isSocketInAnActiveGame(ws))
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 
@@ -44,17 +44,14 @@ async function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessa
 	}
 
 	try {
-		const variant = await resolveAndValidateVariant(ws, body.variant, true);
-		if (variant === null) return; // Invalid variant; error already sent to the client.
-		// Check this again, as we have since awaited a promise.
-		if (isSocketInAnActiveGame(ws))
-			return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
+		// Invalid variant; error already sent to the client.
+		if (!validateSeekVariant(ws, body.variant, true)) return;
 
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
 		const engineColor = typeutil.invertPlayer(humanColor);
 		createGame(
 			{
-				variant,
+				variant: body.variant,
 				time: body.time,
 				rated: false,
 				engineParticipant: {

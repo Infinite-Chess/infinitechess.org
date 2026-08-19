@@ -19,7 +19,6 @@ import type { Player, PlayerGroup } from './chess/util/typeutil.js';
 
 import * as z from 'zod';
 
-import editorutil from './util/editorutil.js';
 import gameconfig from './util/gameconfig.js';
 import typeschemas from './chess/util/typeschemas.js';
 import variantregistry from './chess/variants/variantregistry.js';
@@ -209,25 +208,15 @@ export interface DeadGameState extends StaticGameState {
 // Seek Schemas ---------------------------------------------------------------
 
 /**
- * The variant kinds that a fully-resolved seek can have.
- * CloudSave seeks are converted to 'custom' at creation time and never stored as 'cloudSave'.
+ * The variant selection as sent by the client when creating a seek, and the form a seek stores.
+ * A saved position (cloud or local) is resolved to its ICN client-side and travels as 'custom'.
  */
-export type AuthSeekVariant = z.infer<typeof AuthSeekVariantSchema>;
-const AuthSeekVariantSchema = z.discriminatedUnion('kind', [
+export type SeekVariant = z.infer<typeof SeekVariantSchema>;
+export const SeekVariantSchema = z.discriminatedUnion('kind', [
 	z.strictObject({ kind: z.literal('preset'), code: z.enum(variantregistry.VARIANT_CODES) }),
 	z.strictObject({
 		kind: z.literal('custom'),
 		position: z.string().min(1),
-	}),
-]);
-
-/** The full variant selection as sent by the client when creating a seek. */
-export type SeekVariant = z.infer<typeof SeekVariantSchema>;
-export const SeekVariantSchema = z.discriminatedUnion('kind', [
-	...AuthSeekVariantSchema.options,
-	z.strictObject({
-		kind: z.literal('cloudSave'),
-		name: z.string().min(1).max(editorutil.MAX_POSITION_NAME_LENGTH),
 	}),
 ]);
 

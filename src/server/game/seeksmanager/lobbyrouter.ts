@@ -14,14 +14,11 @@ import { acceptSeek } from './acceptseek.js';
 import { createEngineGame } from './createenginegame.js';
 
 /** Routes all incoming websocket messages related to the lobby. */
-async function routeLobbyMessage(
-	ws: CustomWebSocket,
-	contents: ServerboundLobbyMessage,
-): Promise<void> {
+function routeLobbyMessage(ws: CustomWebSocket, contents: ServerboundLobbyMessage): void {
 	// Route them according to their action
 	switch (contents.action) {
 		case 'createseek':
-			await createSeek(ws, contents.value);
+			createSeek(ws, contents.value);
 			break;
 		case 'cancelseek':
 			cancelSeek(ws, contents.value);

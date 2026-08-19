@@ -102,8 +102,6 @@ export interface ScriptTranslations {
 			already_in_game: string;
 			rated_requires_signin: string;
 			game_aborted: string;
-			cloud_requires_sign_in: string;
-			cloud_not_found: string;
 		};
 		game: {
 			you_cheated: string;

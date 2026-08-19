@@ -24,7 +24,7 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
-import type { AuthSeekVariant, ClockValues, TimeControl } from '../../../shared/domain.js';
+import type { SeekVariant, ClockValues, TimeControl } from '../../../shared/domain.js';
 
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
@@ -286,7 +286,7 @@ function reconstructClockValues(
  * Reads a live game's variant back off its complementary `variant` / `position` columns.
  * @throws If the row carries neither (a corrupt row — the caller drops the game).
  */
-function reconstructVariant(gameRow: LiveGamesRecord): AuthSeekVariant {
+function reconstructVariant(gameRow: LiveGamesRecord): SeekVariant {
 	if (gameRow.variant !== null) return { kind: 'preset', code: gameRow.variant as VariantCode };
 	if (gameRow.position === null)
 		throw new Error('Live game row carries neither a variant nor a position.');
@@ -296,7 +296,7 @@ function reconstructVariant(gameRow: LiveGamesRecord): AuthSeekVariant {
 /** Reconstructs the MatchInfo from stored values. */
 function reconstructMatchInfo(
 	gameRow: LiveGamesRecord,
-	variant: AuthSeekVariant,
+	variant: SeekVariant,
 	playerRows: LivePlayerGamesRecord[],
 	playerIdentities: PlayerGroup<AuthMemberInfo>,
 	engineRow: LiveEngineGamesRecord | undefined,
