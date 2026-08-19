@@ -117,8 +117,7 @@ function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 	removeSocketFromLobbySubs(player2Socket);
 	broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
 
-	// Broadcast the seeks list change after creating
-	// the game, because the new game ups the game count.
+	// Both deletions above were silenced so they collapse into this single broadcast.
 	if (deletedAnySeek) broadcastSeeks();
 }
 

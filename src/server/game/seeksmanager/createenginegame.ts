@@ -16,7 +16,9 @@ import { sendSocketMessage } from '../../socket/socketSend.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { validateSeekVariant } from './createseek.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
+import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
 import { createGame, onGameCreationError } from '../gamemanager/gamemanager.js';
+import { deleteUsersExistingSeek, broadcastViewerCount } from './lobbymanager.js';
 
 // Constants ---------------------------------------------------------------------------
 
@@ -47,6 +49,9 @@ function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): v
 		// Invalid variant; error already sent to the client.
 		if (!validateSeekVariant(ws, body.variant, true)) return;
 
+		// Delete their existing seeks
+		deleteUsersExistingSeek(ws.metadata.memberInfo);
+
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
 		const engineColor = typeutil.invertPlayer(humanColor);
 		createGame(
@@ -63,6 +68,10 @@ function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): v
 			},
 			{ [humanColor]: { identifier: ws.metadata.memberInfo, socket: ws } },
 		);
+
+		// Unsubscribe them from the lobby.
+		removeSocketFromLobbySubs(ws);
+		broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
 	} catch (error: unknown) {
 		onGameCreationError(error, [ws]);
 	}
