@@ -145,6 +145,19 @@
 				<span>{{ "Rated" if meta.rated else "Casual" }}</span>
 			</div>
 
+			{# Gamerule modifications. Omitted entirely when the game plays by the standard rules. #}
+			{% if meta.rules.length %}
+			<p class="meta-rules">
+				{%- for line in meta.rules %}{{ " " if not loop.first }}
+				{%- if line.kind == "text" %}{{ line.text }}
+				{%- else %}<span class="promotion-icons piece-silhouette">{{ line.prefix }}
+					{# Only the piece icons are `| safe`: this markup is our own svg asset files, never input. #}
+					{%- for svg in line.svgs %}{{ svg | safe }}{% endfor %}{{ line.suffix }}</span>
+				{%- endif %}
+				{%- endfor -%}
+			</p>
+			{% endif %}
+
 			<div class="meta-foot">
 				<time id="meta-started" data-created="{{ meta.timeCreated }}">{{ meta.startedAgo }}</time>
 			</div>
