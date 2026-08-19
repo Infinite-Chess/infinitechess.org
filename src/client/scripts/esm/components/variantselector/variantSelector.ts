@@ -584,10 +584,10 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 	const played = withEngineBorder(variantOptions);
 	// Saved positions are authored in the editor, so they were never sourced from a variant.
 	let rejection = validateOptions(played, {});
-	// Legal position; in a seek context it still has to be playable from here — analysis
-	// loads finished and engine-unplayable games fine. Only there do we construct the
-	// transient gamefile those checks read off of, then discard it.
-	if (rejection === null && config.isSeekContext) {
+	// Legal position; it still has to be playable from here. Every context rejects a position
+	// whose king can be captured, and a seek context has further rules on top. Only then do we
+	// construct the transient gamefile those checks read off of, and we discard it after.
+	if (rejection === null) {
 		const constructed = gameformulator.constructPosition(played);
 		rejection = playabilityRejection(constructed);
 	}
