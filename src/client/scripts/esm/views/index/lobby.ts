@@ -175,6 +175,7 @@ function onSeekListUpdate(
 	preserveNewSeekTracker = false,
 ): void {
 	const previousSeekIds = [...seekMap.keys()];
+	const previousOurSeekId = ourSeekId;
 	seekMap.clear();
 	for (const seek of seeks) seekMap.set(seek.id, seek);
 	seekPreviewCache.evictRemovedSeeks(new Set(seekMap.keys()));
@@ -185,7 +186,7 @@ function onSeekListUpdate(
 	const newSeekIds = preserveNewSeekTracker ? new Set<string>() : trackNewSeeks(seeks);
 	if (ourSeekId !== undefined && newSeekIds.has(ourSeekId)) gamesound.playMarimba();
 
-	armGracePeriods(previousSeekIds, seeks);
+	armGracePeriods(previousSeekIds, previousOurSeekId, seeks);
 
 	renderSeekList(
 		seeks.map((s) => outSeekToLobbySeek(s)),
@@ -200,8 +201,13 @@ function onSeekListUpdate(
  * gets the full period, one filling a briefly-empty row gets the remainder, and one filling a
  * long-empty row gets none.
  * @param previousSeekIds - The seek ids by row, as of the previous update.
+ * @param previousOurSeekId - The id of our seek, as of the previous update.
  */
-function armGracePeriods(previousSeekIds: string[], seeks: OutSeek[]): void {
+function armGracePeriods(
+	previousSeekIds: string[],
+	previousOurSeekId: SeekId | undefined,
+	seeks: OutSeek[],
+): void {
 	const now = Date.now();
 	for (let row = 0; row < previousSeekIds.length; row++) {
 		if (previousSeekIds[row] !== seeks[row]?.id) rowVacatedTimes[row] = now;
@@ -209,6 +215,8 @@ function armGracePeriods(previousSeekIds: string[], seeks: OutSeek[]): void {
 
 	seeks.forEach((seek, row) => {
 		if (previousSeekIds[row] === seek.id) return; // Held this row already
+		// Exception: One of our seeks replacing another: a click here cancels our seek either way.
+		if (previousOurSeekId !== undefined && previousSeekIds[row] === previousOurSeekId && seek.id === ourSeekId) return; // prettier-ignore
 		const vacatedAt = rowVacatedTimes[row];
 		if (vacatedAt === undefined) return; // Row has never held a seek
 		const remaining = vacatedAt + GRACE_MILLIS - now;
