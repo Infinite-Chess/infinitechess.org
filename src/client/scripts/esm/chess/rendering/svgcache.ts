@@ -3,10 +3,19 @@
 /**
  * This module handles fetching and caching of chess piece SVGs.
  * It won't request the same SVG twice.
+ *
+ * Pieces are grouped into files under `/svg/pieces/` (`classical`, `fairy/rose`, ...), each
+ * holding one `<svg>` per color variant, identified by an id like `pawn-black`. A fetched
+ * file is cached whole, and callers are handed clones — tinted to a player's color for the
+ * board, or recolored into a monochrome silhouette. The classical file is preloaded on
+ * import, since every single game uses it.
+ *
+ * `server/config/piecesvgcache.ts` is the server's counterpart, reading these same
+ * files off disk as markup for SSR'd piece icons.
  */
 
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { RawType, Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { RawType } from '../../../../../shared/chess/util/typeutil.js';
 
 import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
 import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
@@ -149,35 +158,6 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 // Helper functions ---------------------------------------------------------
 
 /**
- * Determines the priority of what player color gets what color of svg, depending on what's available.
- * For example, if player neutral needs a pawn svg, it will first look for a neutral svg,
- * but when it doesn't exist it will fallback to the white svg.
- * @param color - The player color code (0, 1, or 2).
- * @returns An array of SVG color variant suffixes, ordered by lookup priority.
- */
-function getSVGColorPriority(color: Player): string[] {
-	switch (color) {
-		case 0: // Neutral: prioritize neutral svg over white
-			return ['-neutral', '-white'];
-		case 1: // White: prioritize white svg over black
-			return ['-white', '-neutral'];
-		case 2: // Black: prioritize black svg over neutral
-			return ['-black', '-neutral'];
-		// All higher player numbers are treated as tinted white pieces...
-		case 3: // Red: prioritize white svg over neutral
-			return ['-white', '-neutral'];
-		case 4: // Blue: prioritize white svg over neutral
-			return ['-white', '-neutral'];
-		case 5: // Yellow: prioritize white svg over neutral
-			return ['-white', '-neutral'];
-		case 6: // Green: prioritize white svg over neutral
-			return ['-white', '-neutral'];
-		default:
-			throw new Error(`Invalid color code: ${color}`);
-	}
-}
-
-/**
  * Identifies the unique SVG file locations (e.g., "classical", "fairy/rose") that need to be fetched.
  * It checks the cache first and only returns locations for types whose SVG variants are not yet cached.
  * @param types - An array of piece type numbers (combining raw type and color).
@@ -188,7 +168,7 @@ function getNeededSVGLocations(types: number[]): Set<string> {
 	typeloop: for (const type of types) {
 		const [raw, c] = typeutil.splitType(type);
 		const baseId = `${typeutil.getRawTypeStr(raw)}`;
-		const checks: string[] = getSVGColorPriority(c);
+		const checks: string[] = pieceThemes.getSVGColorPriority(c);
 		for (const c of checks) {
 			const id = baseId + c;
 			if (id in cachedPieceSVGs) continue typeloop;
@@ -214,7 +194,7 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 		const tint = preferences.getTintColorOfType(type);
 		const [raw, c] = typeutil.splitType(type);
 		const baseId = `${typeutil.getRawTypeStr(raw)}`;
-		const colorExts: string[] = getSVGColorPriority(c);
+		const colorExts: string[] = pieceThemes.getSVGColorPriority(c);
 		for (const c of colorExts) {
 			const id = baseId + c;
 			if (!(id in cachedPieceSVGs)) continue;
@@ -243,9 +223,9 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 }
 
 /**
- * Returns a cloned SVG element for the given raw piece type rendered as a monochrome
- * silhouette. All fill/stroke color values are replaced with `currentColor`, so the
- * silhouette color is controlled entirely by the CSS `color` property of its container.
+ * Returns a cloned SVG element for the given raw piece type, tagged `piece-silhouette` — a
+ * global rule painting it in the CSS `color` it inherits. The server SSRs silhouettes off
+ * the same rule, which is why it's CSS.
  * @param rawType - The raw piece type (without color extension).
  */
 async function getSilhouetteSVG(rawType: RawType): Promise<SVGElement> {
@@ -263,7 +243,7 @@ async function getSilhouetteSVG(rawType: RawType): Promise<SVGElement> {
  */
 function getCachedSilhouetteSVG(rawType: RawType): SVGElement {
 	const baseId = typeutil.getRawTypeStr(rawType);
-	const colorExts = getSVGColorPriority(players.BLACK);
+	const colorExts = pieceThemes.getSVGColorPriority(players.BLACK);
 	let source: SVGElement | undefined;
 	for (const ext of colorExts) {
 		const id = baseId + ext;
@@ -276,21 +256,8 @@ function getCachedSilhouetteSVG(rawType: RawType): SVGElement {
 
 	const clone = source.cloneNode(true) as SVGElement;
 	clone.removeAttribute('id');
-	recolorToCurrentColor(clone);
+	clone.classList.add('piece-silhouette');
 	return clone;
-}
-
-/**
- * Recursively replaces all explicit fill and stroke color values on an SVG element
- * and its descendants with "currentColor", leaving "none" values untouched.
- * This converts the SVG into a monochrome silhouette driven by the CSS `color` property.
- */
-function recolorToCurrentColor(element: Element): void {
-	const fill = element.getAttribute('fill');
-	if (fill !== 'none') element.setAttribute('fill', 'currentColor');
-	const stroke = element.getAttribute('stroke');
-	if (stroke !== null && stroke !== 'none') element.setAttribute('stroke', 'currentColor');
-	for (const child of element.children) recolorToCurrentColor(child);
 }
 
 /**

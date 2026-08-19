@@ -12,11 +12,8 @@ import type { GameruleWinCondition } from '../../../../../../../shared/chess/uti
 import bounds from '../../../../../../../shared/util/math/bounds';
 import boardutil from '../../../../../../../shared/chess/util/boardutil';
 import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
-import typeutil, {
-	players as p,
-	rawTypes as r,
-	RawType,
-} from '../../../../../../../shared/chess/util/typeutil';
+import typeutil, { RawType } from '../../../../../../../shared/chess/util/typeutil';
+import { isValidPromotionPiece } from '../../../../../../../shared/chess/variants/positionvalidation';
 
 import gameslot from '../../../chess/gameslot';
 import boardeditor from '../../../boardeditor/boardeditor';
@@ -237,12 +234,10 @@ function readGameRules(): void {
 				break pa;
 			}
 			const type = Number(typeStr);
-			const [rawType, color] = typeutil.splitType(type);
+			const rawType = typeutil.getRawType(type);
 
 			if (
-				typeutil.royals.includes(rawType) || // Can't promote to royals
-				rawType === r.PAWN || // Can't promote to pawns
-				color === p.NEUTRAL || // Can't promote to neutrals
+				!isValidPromotionPiece(rawType) ||
 				runningpromotionPieces.includes(rawType) // No duplicates
 			) {
 				element_promotionpieces.classList.add('invalid-input');

@@ -789,3 +789,37 @@ button:disabled {
 	padding: 12px 28px;
 	text-decoration: none;
 }
+
+/* ============================
+   Piece silhouettes
+   ============================ */
+
+/* Paints a piece SVG monochrome in the CSS `color` it inherits, leaving `none` fills and
+   strokes alone. Replaces recoloring each element in script, so the client (svgcache.ts,
+   which tags each <svg>) and the server (piecesvgcache.ts, whose markup is emitted
+   verbatim inside a tagged container) render the one silhouette off the one rule.
+   Both placements work: the tagged element is styled along with its descendants. */
+.piece-silhouette:not([fill='none']),
+.piece-silhouette :not([fill='none']) {
+	fill: currentColor;
+}
+
+.piece-silhouette[stroke]:not([stroke='none']),
+.piece-silhouette [stroke]:not([stroke='none']) {
+	stroke: currentColor;
+}
+
+/* A run of piece icons inline in a sentence, e.g. the "Promotion: ♞♝♜♛" rule line.
+   Shared by the variant preview tooltip and the game page's gamerule summary. */
+.promotion-icons {
+	display: inline-flex;
+	align-items: center;
+}
+
+.promotion-icons svg {
+	width: 14px;
+}
+
+.promotion-icons svg:not(:first-of-type) {
+	margin-inline-start: -2px;
+}

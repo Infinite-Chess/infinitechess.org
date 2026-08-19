@@ -238,14 +238,15 @@ export interface ScriptTranslations {
 			piece_outside_world_border: string;
 			gargoyles_not_allowed: string;
 			invalid_player_id: string;
-			player_missing_pieces: string;
 			four_player_checkmate: string;
 			consecutive_turns_with_checkmate: string;
-			too_many_royals_for_checkmate: string;
-			king_capture_on_turn_1: string;
+			invalid_promotion_piece: string;
 			moves_invalid: string;
+			king_capture_on_turn_1: string;
 			no_4d_movement: string;
 			game_over: string;
+			player_missing_pieces: string;
+			too_many_royals_for_checkmate: string;
 			engine: {
 				unsupported_variant: {
 					label: string;
@@ -304,7 +305,7 @@ export interface ScriptTranslations {
 			turn_order: string;
 			win_by: string;
 			no_promotion: string;
-			promotion_prefix: string;
+			promotion_rule: string;
 			no_move_rule: string;
 			move_rule: string;
 			en_passant: string;

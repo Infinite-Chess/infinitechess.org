@@ -9,3 +9,12 @@ export function interpolate(template: string, vars: Record<string, string | numb
 		key in vars ? String(vars[key]) : `{${key}}`,
 	);
 }
+
+/**
+ * Splits a template either side of one `{key}` placeholder, for when what fills it isn't text
+ * — icons, elements — and so can't be interpolated in. Other placeholders are left untouched.
+ */
+export function splitAroundPlaceholder(template: string, key: string): [string, string] {
+	const [before, after = ''] = template.split(`{${key}}`);
+	return [before!, after];
+}

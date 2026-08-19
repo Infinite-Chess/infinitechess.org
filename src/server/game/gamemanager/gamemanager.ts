@@ -290,6 +290,8 @@ function produceStaticGameState(id: number):
 			state: StaticGameState;
 			moveCount: number;
 			game?: ServerGame;
+			/** Only concluded games have one — a live game's start position rides in its setup. */
+			icn?: string;
 			engineGame?: EngineGamePageInfo;
 			ratingChanges?: PlayerGroup<number>;
 	  }

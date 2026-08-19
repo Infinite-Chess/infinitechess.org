@@ -7,26 +7,20 @@
  */
 
 import type { Mesh } from '../../game/rendering/piecemodels.js';
-import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type { GameModifier } from '../../../../../shared/domain.js';
-import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
-import modutil from '../../../../../shared/util/modutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
-import { interpolate } from '../../../../../shared/util/interpolate.js';
-import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
-import typeutil, {
-	ext_inverted,
-	Player,
-	players,
-} from '../../../../../shared/chess/util/typeutil.js';
+import {
+	summarizeGameRules,
+	type RuleSummaryItem,
+} from '../../../../../shared/chess/variants/gamerulesummary.js';
 
 import area from '../../game/rendering/area.js';
 import webgl from '../../game/rendering/webgl.js';
@@ -128,15 +122,15 @@ function eatSynthesizedEvent(e: Event): void {
 }
 
 const element_name = document.createElement('div');
-element_name.className = 'preview-tooltip-name';
+element_name.classList.add('preview-tooltip-name');
 
 const element_canvas = document.createElement('canvas');
-element_canvas.className = 'preview-tooltip-canvas';
+element_canvas.classList.add('preview-tooltip-canvas');
 
 const element_rulesBody = document.createElement('span');
 
 const element_rules = document.createElement('p');
-element_rules.className = 'preview-tooltip-rules hidden';
+element_rules.classList.add('preview-tooltip-rules', 'hidden');
 element_rules.append(element_rulesBody);
 
 element_tooltip.append(element_name, element_rules, element_canvas);
@@ -324,137 +318,36 @@ async function populateRules(
 	variantCode: VariantCode | undefined,
 	modifiers: GameModifier[] | undefined,
 ): Promise<void> {
-	const { gameRules } = boardsim;
-	const items: Array<string | HTMLElement> = [];
-	/** Reference to the variant preview translations. */
-	const tp = t.shared.variant_preview;
-
-	// 4D movement — first
-	if (variantCode !== undefined && variantregistry.getVariantGroup(variantCode) === '4D') {
-		items.push(tp.four_d_movement);
-	}
-
-	// Turn order — show if not standard [White, Black]
-	const defaultTurnOrder = [players.WHITE, players.BLACK];
-	const blackFirstTurnOrder = [players.BLACK, players.WHITE];
-	const turnOrderIsDefault = matchesTurnOrder(gameRules, defaultTurnOrder);
-	if (!turnOrderIsDefault) {
-		const isBlackFirst = matchesTurnOrder(gameRules, blackFirstTurnOrder);
-		if (isBlackFirst) {
-			items.push(tp.black_moves_first);
-		} else {
-			const order = gameRules.turnOrder
-				.map((p) => t.shared.sides[ext_inverted[p] as keyof typeof t.shared.sides])
-				.join(', ');
-			items.push(interpolate(tp.turn_order, { order }));
-		}
-	}
-
-	// Win conditions — show if not all checkmate
-	const allCheckmate = Object.values(gameRules.winConditions).every(
-		(conds) => conds.length === 1 && conds[0] === 'checkmate',
+	const items = summarizeGameRules(
+		boardsim.gameRules,
+		boardsim.startSnapshot.state_global,
+		variantCode,
+		modifiers,
+		t.shared,
 	);
-	if (!allCheckmate) {
-		const playerCount = Object.keys(gameRules.winConditions).length;
-		// Map each non-checkmate win condition to the list of players that have it
-		const condToPlayers = new Map<GameruleWinCondition, Player[]>();
-		for (const [playerStr, conds] of Object.entries(gameRules.winConditions)) {
-			const player = Number(playerStr) as Player;
-			for (const cond of conds) {
-				if (!condToPlayers.has(cond)) condToPlayers.set(cond, []);
-				condToPlayers.get(cond)!.push(player);
-			}
-		}
-		for (const [cond, condPlayers] of condToPlayers) {
-			const label = formatWinCondition(cond);
-			if (condPlayers.length === playerCount) {
-				// All players share this win condition
-				items.push(interpolate(tp.win_by, { label }));
-			} else {
-				// Only specific players have this win condition
-				for (const player of condPlayers) {
-					const color = typeutil.strcolors[player];
-					items.push(
-						interpolate(t.shared.game_result.color_wins_by, {
-							color: t.shared.sides[color],
-							label,
-						}),
-					);
-				}
-			}
-		}
-	}
-
-	// Promotion — for preset variants, skip when promotion is defined (pieces are
-	// always explicitly set and don't need enumerating); still show "No promotion"
-	// when absent. For custom positions, always show the full promotion info.
-	if (gameRules.promotion === undefined) {
-		items.push(tp.no_promotion);
-	} else if (variantCode === undefined) {
-		const span = document.createElement('span');
-		span.className = 'preview-tooltip-promotion-icons';
-		span.append(tp.promotion_prefix);
-		for (const raw of gameRules.promotion.pieces) {
-			const silhouetteSVG = await svgcache.getSilhouetteSVG(raw);
-			span.appendChild(silhouetteSVG);
-		}
-		// The promotion line ends with SVG icons, so its terminating period
-		// can't live in the translation string — append it here.
-		span.append('.');
-		items.push(span);
-	}
-
-	// Move rule — show if not default (100)
-	if (gameRules.moveRule !== 100) {
-		if (gameRules.moveRule === undefined) items.push(tp.no_move_rule);
-		else items.push(interpolate(tp.move_rule, { plies: gameRules.moveRule }));
-	}
-
-	// Slide limit gamerule - SKIP. Covered below as a modifier.
-	// Plus, currently the modifier isn't transferred to variant preview gameRules.
-
-	// Game state: enpassant square
-	const { enpassant, moveRuleState } = boardsim.startSnapshot.state_global;
-	if (enpassant !== undefined) {
-		const [x, y] = enpassant.square;
-		items.push(interpolate(tp.en_passant, { x: String(x), y: String(y) }));
-	}
-
-	// Game state: move rule counter
-	if (moveRuleState !== undefined && moveRuleState !== 0) {
-		items.push(interpolate(tp.plies_since_capture, { n: moveRuleState }));
-	}
-
-	// Modifiers — last
-	for (const modifier of modifiers ?? []) {
-		if (modifier.kind === 'slide-limit') {
-			const descVars = modutil.getModifierDescriptionVars(modifier);
-			items.push(interpolate(t.shared.variant_preview.slide_limit_rule, descVars));
-		} else {
-			throw new Error(`Unknown modifier kind ${modifier.kind}`);
-		}
-	}
 
 	element_rules.classList.toggle('hidden', items.length === 0);
 	element_rulesBody.replaceChildren();
-	items.forEach((item, i) => {
+	for (const [i, item] of items.entries()) {
 		if (i > 0) element_rulesBody.append(' ');
-		if (typeof item === 'string') element_rulesBody.append(item);
-		else element_rulesBody.appendChild(item);
-	});
+		if (item.kind === 'text') element_rulesBody.append(item.text);
+		else {
+			const promotionLine = await buildPromotionLine(item);
+			element_rulesBody.appendChild(promotionLine);
+		}
+	}
 }
 
-/** Returns a human-readable label for a win condition code. */
-function formatWinCondition(cond: GameruleWinCondition): string {
-	return t.shared.conditions[cond] ?? cond;
-}
-
-/** Whether the turn order in gameRules matches the given order. */
-function matchesTurnOrder(gameRules: GameRules, order: Player[]): boolean {
-	return (
-		gameRules.turnOrder.length === order.length &&
-		gameRules.turnOrder.every((p, i) => p === order[i])
-	);
+/** Draws a summary's promotion line, its pieces as inline silhouette icons. */
+async function buildPromotionLine(
+	item: Extract<RuleSummaryItem, { kind: 'promotion' }>,
+): Promise<HTMLSpanElement> {
+	const span = document.createElement('span');
+	span.classList.add('promotion-icons');
+	span.append(item.prefix);
+	for (const raw of item.pieces) span.appendChild(await svgcache.getSilhouetteSVG(raw));
+	span.append(item.suffix);
+	return span;
 }
 
 // Exports -----------------------------------------------------------------

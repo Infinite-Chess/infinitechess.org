@@ -23,7 +23,7 @@ import variantreader from './variantreader.js';
 import checkdetection from '../logic/checkdetection.js';
 import gamefileutility from '../util/gamefileutility.js';
 import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from './servervalidation.js';
-import typeutil, { neutralRawTypes, players as p } from '../util/typeutil.js';
+import typeutil, { neutralRawTypes, players as p, rawTypes as r } from '../util/typeutil.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -44,7 +44,8 @@ export type PositionErrorCode =
 	| 'gargoyles_not_allowed'
 	| 'invalid_player_id'
 	| 'four_player_checkmate'
-	| 'consecutive_turns_with_checkmate';
+	| 'consecutive_turns_with_checkmate'
+	| 'invalid_promotion_piece';
 
 /**
  * Every code keying a flat string under `position_errors`: an illegal position, plus the ways
@@ -86,6 +87,8 @@ export type PositionRejection =
  * 6. Checkmate incompatibility: not 4-player, and no player gets consecutive turns. Mirrors
  *    {@link winconutil.isCheckmateCompatibleWithGame}, whose remaining checks (piece count,
  *    slide-line count) only trip on positions far larger than any this ever sees.
+ * 7. Every promotion target is a piece a pawn may actually become — see
+ *    {@link isValidPromotionPiece}.
  *
  * A pure gate, run BEFORE anything is built from the position: types pack into a Uint8Array as
  * `player * numTypes + rawType`, so an out-of-range player wraps to another piece instead of
@@ -168,6 +171,11 @@ export function validatePosition(
 		}
 	}
 
+	// --- Rule 7: Promotion targets are pieces a pawn may become ---
+	for (const promotionPiece of gameRules.promotion?.pieces ?? []) {
+		if (!isValidPromotionPiece(promotionPiece)) return 'invalid_promotion_piece';
+	}
+
 	return null; // Position is valid.
 }
 
@@ -186,8 +194,8 @@ export function validatePosition(
  *    {@link winconutil.isCheckmateCompatibleWithGame}.
  * 6. Engine: the position is one the engine can actually handle.
  *
- * Rules 4 & 5 are the pair a played-out position may break while staying perfectly viewable:
- * pieces get captured, and promotions can add royals. Hence they live here, not in {@link validatePosition}.
+ * A played-out position may break rule 4 while staying perfectly viewable
+ * — pieces get captured. So it live heres, not in {@link validatePosition}.
  *
  * @param gamefile - MUST be the exact board the game will load: moveless, carrying the real game's
  * world border ({@link apeiron_card.PLAY_BORDER} for engine games). Anything else judges a
@@ -253,4 +261,13 @@ function usesCheckmate(gameRules: GameRules): boolean {
 	return gamerules
 		.getUniquePlayersInTurnOrder(gameRules.turnOrder)
 		.some((player) => gamerules.doesColorHaveWinCondition(gameRules, player, 'checkmate'));
+}
+
+/** Whether a pawn may EVER promote into the given piece. */
+export function isValidPromotionPiece(rawType: RawType): boolean {
+	return (
+		!neutralRawTypes.includes(rawType) &&
+		!typeutil.royals.includes(rawType) &&
+		rawType !== r.PAWN
+	);
 }

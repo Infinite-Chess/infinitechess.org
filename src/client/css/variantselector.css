@@ -237,19 +237,6 @@
 	font-size: 11px;
 }
 
-.preview-tooltip-promotion-icons {
-	display: inline-flex;
-	align-items: center;
-}
-
-.preview-tooltip-promotion-icons svg {
-	width: 14px;
-}
-
-.preview-tooltip-promotion-icons svg:not(:first-of-type) {
-	margin-inline-start: -2px;
-}
-
 .preview-tooltip-canvas {
 	aspect-ratio: 1 / 1;
 	border-radius: 4px;

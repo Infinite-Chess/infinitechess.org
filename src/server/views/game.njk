@@ -111,10 +111,19 @@
 				<span>{{ "Rated" if meta.rated else "Casual" }}</span>
 			</div>
 
-			{# Gamerule modifications
-			   EXAMPLE — the client builds this from the game's gamerules, and omits the row when none.
-			   Wording takes inspiration from variant preview tooltips #}
-			{# <p class="meta-rules">Black moves first. No promotion. No 50-move rule.</p> #}
+			{# Gamerule modifications. Omitted entirely when the game plays by the standard rules.
+			   Matches the gamerule modifications variant preview tooltips show on the seek. #}
+			{% if meta.rules.length %}
+			<p class="meta-rules">
+				{%- for line in meta.rules %}{{ " " if not loop.first }}
+				{%- if line.kind == "text" %}{{ line.text }}
+				{%- else %}<span class="promotion-icons piece-silhouette">{{ line.prefix }}
+					{# Only the piece icons are `| safe`: this markup is our own svg asset files, never input. #}
+					{%- for svg in line.svgs %}{{ svg | safe }}{% endfor %}{{ line.suffix }}</span>
+				{%- endif %}
+				{%- endfor -%}
+			</p>
+			{% endif %}
 
 			{# Started X ago + live spectator count.
 			   `#meta-started` is SSR-OWNED: rendered with the relative string for first paint + the
