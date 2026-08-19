@@ -651,7 +651,10 @@ function withEngineBorder(options: VariantOptions): VariantOptions {
 	// An empty position has no box to space a border around; validation rejects it regardless.
 	if (options.position.size === 0) return options;
 	const coords = [...options.position.keys()].map(coordutil.getCoordsFromKey);
-	const worldBorder = apeiron_card.worldBorderForBox(bounds.getBoxFromCoordsList(coords));
+	const worldBorder = apeiron_card.worldBorderForBox(
+		bounds.getBoxFromCoordsList(coords),
+		Date.now(),
+	);
 	return { ...options, gameRules: { ...options.gameRules, worldBorder } };
 }
 

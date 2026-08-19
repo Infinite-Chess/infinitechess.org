@@ -15,7 +15,8 @@ import type { GameFile, LoadedVariant } from '../logic/gamefile.js';
 import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
 import boardutil from '../util/boardutil.js';
-import { I64_MAX, engineDictionary } from '../engine.js';
+import { I64_MAX } from '../engine.js';
+import variantutil from '../variants/variant_scripts/variantutil.js';
 import typeutil, { RawType, rawTypes as r, players as p } from '../util/typeutil.js';
 
 /** Why the engine can't handle a game. Keys into `position_errors.engine` in the shared translations. */
@@ -31,14 +32,6 @@ export type EngineSupportCode =
 type SupportedResult = { supported: true } | { supported: false; reason: EngineSupportCode };
 
 // Constants -------------------------------------------------------------
-
-/**
- * Hard cap on the absolute edge of an engine game's world border — i64 with a small cushion.
- * Deliberately 1000 further out than the engine's `worldBorderDist`, so any position whose pieces
- * lie within ±1000 of the origin (every preset variant) keeps a border spaced evenly around them.
- * Only pieces reaching beyond that trip the cap, trading even spacing for staying inside i64.
- */
-const WORLD_BORDER_CAP = I64_MAX - 1000n;
 
 /** Max non-neutral pieces the engine handles before it bogs down (excludes voids/obstacles). */
 const MAX_PIECES = 1000;
@@ -59,17 +52,28 @@ const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GI
 // The board engine games are played on -------------------------------------
 
 /**
- * The world border an engine game is played inside: spaced evenly around the starting position,
- * clamped to the coordinates the engine can evaluate. The single source of every engine game's
- * border — both ends resolve it here so they build the identical board.
+ * The engine's board geometry, time-versioned like a variant's position: `dist` spaces the border
+ * out from the starting position's box, `cap` hard-limits any edge to i64 with a cushion. The 1000
+ * between them keeps every preset's border evenly spaced; only pieces beyond that trip the cap.
+ *
+ * NEVER edit an entry — a game must stay on the board it began on. Add one keyed at the change.
  */
-function worldBorderForBox(positionBox: BoundingBox): BoundingBox {
-	const dist = engineDictionary['apeiron'].worldBorderDist;
+const PLAY_BORDER: Record<number, { dist: bigint; cap: bigint }> = {
+	0: { dist: I64_MAX - 2000n, cap: I64_MAX - 1000n },
+};
+
+/**
+ * The world border an engine game is played inside: spaced evenly around the starting position,
+ * clamped to what the engine can evaluate. The single source of every engine game's border.
+ * @param timestamp - The game's creation time, pinning its {@link PLAY_BORDER} revision.
+ */
+function worldBorderForBox(positionBox: BoundingBox, timestamp: number): BoundingBox {
+	const { dist, cap } = variantutil.resolveAtTimestamp(PLAY_BORDER, timestamp);
 	return {
-		left: bimath.max(positionBox.left - dist, -WORLD_BORDER_CAP),
-		right: bimath.min(positionBox.right + dist, WORLD_BORDER_CAP),
-		bottom: bimath.max(positionBox.bottom - dist, -WORLD_BORDER_CAP),
-		top: bimath.min(positionBox.top + dist, WORLD_BORDER_CAP),
+		left: bimath.max(positionBox.left - dist, -cap),
+		right: bimath.min(positionBox.right + dist, cap),
+		bottom: bimath.max(positionBox.bottom - dist, -cap),
+		top: bimath.min(positionBox.top + dist, cap),
 	};
 }
 
@@ -83,7 +87,12 @@ function worldBorderForVariant(variant: LoadedVariant): BoundingBox {
 	const box = variant.mod.getPositionBox?.(variant.dateTimestamp);
 	if (box === undefined)
 		throw new Error(`Engine-supported variant "${variant.code}" declares no position box.`);
-	return worldBorderForBox(box);
+	return worldBorderForBox(box, variant.dateTimestamp);
+}
+
+/** {@link PLAY_BORDER}'s `cap` alone, for callers bounding a position rather than spacing a border. */
+function worldBorderCap(timestamp: number): bigint {
+	return variantutil.resolveAtTimestamp(PLAY_BORDER, timestamp).cap;
 }
 
 // Individual rule checks (shared by both entry points) --------------------
@@ -140,7 +149,7 @@ function checkPieceTypes(rawTypes: Iterable<RawType>): SupportedResult {
 /**
  * Whether the engine can PLAY the given game (engine games). Requires a bounded board within the
  * engine's safe coordinate range — engine games always run inside a world border, so the gamefile
- * must be constructed with the engine's `worldBorderDist`/{@link WORLD_BORDER_CAP} for this to pass.
+ * must be constructed from {@link PLAY_BORDER} for this to pass.
  *
  * Judged on the CURRENT position, since that's what an engine game plays on from here.
  */
@@ -149,12 +158,11 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 	if (!winConsResult.supported) return winConsResult;
 
 	// World border larger than i64, or absent, is unsupported.
+	const cap = worldBorderCap(gamefile.dateTimestamp);
 	const worldBorder = gamefile.gameRules.worldBorder;
 	if (
 		!worldBorder ||
-		Object.values(worldBorder).some(
-			(edge) => edge === null || bimath.abs(edge) > WORLD_BORDER_CAP,
-		)
+		Object.values(worldBorder).some((edge) => edge === null || bimath.abs(edge) > cap)
 	) {
 		return { supported: false, reason: 'border_too_large' };
 	}
@@ -165,7 +173,7 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 	if (!pieceCountResult.supported) return pieceCountResult;
 
 	// No piece may lie outside the border. Only reachable for a border generated around this position
-	// and then clipped by WORLD_BORDER_CAP — an explicit one is validated upstream in validatePosition.
+	// and then clipped by the cap — an explicit one is validated upstream in validatePosition.
 	const piecesBox = boardutil.getBoundingBoxOfAllPieces(gamefile.pieces);
 	if (piecesBox !== undefined && !bounds.boxContainsBox(worldBorder, piecesBox)) {
 		return { supported: false, reason: 'out_of_bounds' };
@@ -251,11 +259,11 @@ function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 
 export default {
 	// Constants
-	WORLD_BORDER_CAP,
 	SUPPORTED_VARIANTS,
 	// Functions
 	worldBorderForBox,
 	worldBorderForVariant,
+	worldBorderCap,
 	isPlaySupported,
 	isAnalysisSupported,
 	isGameReviewSupported,

@@ -19,6 +19,7 @@ import boardinit from './boardinit.js';
 import winconutil from '../util/winconutil.js';
 import wincondition from './wincondition.js';
 import variantcache from '../variants/variantcache.js';
+import apeiron_card from '../engines/apeiron_card.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from '../util/gamefileutility.js';
 import variantpreviewer from '../variants/variantpreviewer.js';
@@ -112,12 +113,17 @@ export interface Additional {
 	/** Adds the `slideLimit` gamerule. */
 	slideLimit?: bigint;
 	/**
-	 * The `worldBorder` gamerule the game is played inside, where it isn't the variant's own — an
-	 * engine game's, resolved by the server and handed to us. Only consulted for a PRESET variant,
-	 * whose rules are otherwise rebuilt from its module; a custom position's border rides in its
-	 * {@link variantOptions}.
+	 * The `worldBorder` gamerule the game is played inside, where it isn't the variant's own — read
+	 * off the ICN of a game already played, which records the board it was really played on. Only
+	 * consulted for a PRESET variant, whose rules are otherwise rebuilt from its module; a custom
+	 * position's border rides in its {@link variantOptions}.
 	 */
 	worldBorder?: UnboundedRectangle;
+	/**
+	 * Whether the engine is a participant. A preset engine game still in progress has no ICN to
+	 * read a {@link worldBorder} from, so it derives one from the variant and its creation time.
+	 */
+	engineGame?: boolean;
 	/** The conclusion of the game, if loading an online game that has already ended. */
 	gameConclusion?: GameConclusion;
 	/** Any already existing clock values for the gamefile. */
@@ -230,9 +236,19 @@ function initGameFile(
 		gameRules = { ...gameRules, slideLimit: additional.slideLimit };
 
 	// The board an engine game is played on, for a preset variant declaring no border of its own.
-	// Never derived here — it is settled and verified before anything is constructed.
-	if (gameRules.worldBorder === undefined && additional.worldBorder !== undefined)
-		gameRules = { ...gameRules, worldBorder: additional.worldBorder };
+	// A finished game's ICN records the border it was really played with, so it beats deriving;
+	// one still in progress derives, stable for its creation time.
+	if (gameRules.worldBorder === undefined) {
+		let worldBorder = additional.worldBorder;
+		if (worldBorder === undefined && additional.engineGame) {
+			// A custom position's border rides in its variantOptions, so an engine game arriving
+			// without a variant has nowhere left to get one — never hand the engine an open board.
+			if (variant === undefined)
+				throw Error('Engine game on a custom position must supply its own world border.');
+			worldBorder = apeiron_card.worldBorderForVariant(variant);
+		}
+		if (worldBorder !== undefined) gameRules = { ...gameRules, worldBorder };
+	}
 
 	const game = initGame(
 		timeControl,

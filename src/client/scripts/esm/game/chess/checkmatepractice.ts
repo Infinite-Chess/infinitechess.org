@@ -130,6 +130,10 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
  * inside a world border, resolved where its gamerules are (`apeiron_card.worldBorderForBox` for an
  * explicit position, `worldBorderForVariant` for a preset). Whoever redesigns this page must give
  * its positions one too, or the engine is handed the very board it is promised never to get.
+ *
+ * The border distance this engine used to declare, kept for whoever gives it one again:
+ *   // worldBorderDist: BigInt(Number.MAX_SAFE_INTEGER) // FREEZES the engine if you move to the border
+ *   worldBorderDist: BigInt(1e15) // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
  */
 function startEngineGame(options: {
 	timeControl: '-';

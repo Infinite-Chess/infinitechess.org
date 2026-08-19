@@ -30,7 +30,6 @@ import type {
 import type {
 	AuthSeekVariant,
 	ClockValues,
-	GameStateVariant,
 	StaticGameSetup,
 	StaticGameState,
 	GameModifier,
@@ -618,14 +617,8 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
  */
 function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 	const match = servergame.match;
-	// A preset's rules are the client's to rebuild from its module — all but the border an engine
-	// game is played inside, which only we resolved. A custom game's rides in its ICN.
-	const variant: GameStateVariant =
-		match.variant.kind === 'preset' && match.engineParticipant !== undefined
-			? { ...match.variant, worldBorder: servergame.gameRules.worldBorder }
-			: match.variant;
 	return {
-		variant,
+		variant: match.variant,
 		timeControl: match.clock,
 		timeCreated: match.timeCreated,
 		modifiers: match.modifiers,

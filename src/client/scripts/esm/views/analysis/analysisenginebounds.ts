@@ -16,24 +16,17 @@ import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 /**
- * Absolute fallback border edge for a side the position leaves unbounded — the largest
- * coordinate Apeiron can safely evaluate (i64 minus a little wiggle room). The same cap
- * engine games clip their generated border to, so analysis and play agree on what's in range.
- */
-const WORLD_BORDER_CAP = apeiron_card.WORLD_BORDER_CAP;
-
-/**
  * The world border Apeiron evaluates the position within: the position's own `worldBorder`
- * gamerule where defined, falling back to ±{@link WORLD_BORDER_CAP} on any unbounded side.
- * (Unlike engine games, the fallback is absolute — not offset from the piece bounding box.)
+ * gamerule where defined, else the furthest coordinate today's engine can evaluate.
  */
 function getEngineWorldBorder(gamefile: GameFile): BoundingBox {
+	const cap = apeiron_card.worldBorderCap(Date.now());
 	const wb = gamefile.gameRules.worldBorder;
 	return {
-		left: wb?.left ?? -WORLD_BORDER_CAP,
-		right: wb?.right ?? WORLD_BORDER_CAP,
-		bottom: wb?.bottom ?? -WORLD_BORDER_CAP,
-		top: wb?.top ?? WORLD_BORDER_CAP,
+		left: wb?.left ?? -cap,
+		right: wb?.right ?? cap,
+		bottom: wb?.bottom ?? -cap,
+		top: wb?.top ?? cap,
 	};
 }
 

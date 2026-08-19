@@ -10,13 +10,6 @@
 /** A single engine entry object in the engine dictionary. */
 export interface Engine {
 	/**
-	 * World border distance for this engine, measured out from the piece
-	 * bounding box so the border sits evenly on all sides — fair to both players.
-	 * Engine games have a world border enabled so as to keep the position within safe floating point range.
-	 * If the variant's own distance is smaller, that is used instead.
-	 */
-	worldBorderDist: bigint;
-	/**
 	 * The number of milliseconds the engine thinks when Time Control is unlimited.
 	 * May vary from engine to engine because of different engine speeds and requirements.
 	 */
@@ -74,8 +67,6 @@ export const I64_MAX = 2n ** 63n - 1n;
  */
 export const engineDictionary = {
 	engineCheckmatePractice: {
-		// worldBorderDist: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
-		worldBorderDist: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
 		defaultTimeLimitPerMoveMillis: 500,
 		displayName: 'Practice Bot',
 		maxStrengthLevel: 1,
@@ -83,7 +74,6 @@ export const engineDictionary = {
 		needsMoveHistory: false,
 	},
 	apeiron: {
-		worldBorderDist: I64_MAX - 2000n,
 		defaultTimeLimitPerMoveMillis: 4000,
 		displayName: 'Apeiron',
 		maxStrengthLevel: 8,

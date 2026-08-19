@@ -113,9 +113,10 @@ function loadGameFromState(
 	if (variant.kind === 'preset') {
 		datedVariant = { code: variant.code, dateTimestamp: timeCreated };
 		// A preset's rules are rebuilt from its module, which knows nothing of the opponent — so
-		// the border an engine game is played inside has to be handed to us. A finished game's ICN
-		// records the board it was actually played on, so it wins over what the game declares now.
-		additional.worldBorder = longformat?.gameRules.worldBorder ?? variant.worldBorder;
+		// the border an engine game is played inside is resolved separately. A finished game's ICN
+		// records the board it was actually played on, so it wins over deriving one now.
+		additional.worldBorder = longformat?.gameRules.worldBorder;
+		additional.engineGame = engineGame !== undefined;
 	} else {
 		let startFormat = longformat;
 		if (startFormat === undefined) {
