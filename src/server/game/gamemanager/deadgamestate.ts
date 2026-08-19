@@ -40,7 +40,6 @@ type EngineParticipant = {
 	engine: ValidEngine;
 	strengthLevel: number;
 	container: ServerUsernameContainer;
-	clockAtEnd: number | null;
 };
 
 // Constants ----------------------------------------------------------------------------------------------
@@ -111,8 +110,8 @@ export function produceDeadStaticGameState(game_id: number):
 
 /**
  * Builds the full {@link DeadGameState} for a concluded game from the database — the static base
- * plus the `icn` and final clocks. Rating deltas are NOT included: the client displays them from
- * SSR (see {@link produceDeadStaticGameState}), never from this HTTP payload.
+ * plus the `icn`, which the client also reads the final clocks off of. Rating deltas are NOT included:
+ * the client displays them from SSR (see {@link produceDeadStaticGameState}), never from this HTTP payload.
  * @returns The state, or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */
@@ -120,26 +119,13 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS, 'icn']);
 	if (game === undefined) return undefined;
 
-	const playerRows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id', 'elo_at_game', 'clock_at_end_millis', 'rating_deviation_at_game']); // prettier-ignore
+	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS]);
 	const engineParticipant = getEngineParticipant(game_id);
 
-	/** Per-color ms remaining at game end; populated only for timed games. */
-	const finalClocks: PlayerGroup<number> = {};
-	for (const row of playerRows) {
-		if (row.clock_at_end_millis !== null)
-			finalClocks[row.player_number as Player] = row.clock_at_end_millis;
-	}
-	if (engineParticipant && engineParticipant.clockAtEnd !== null)
-		finalClocks[engineParticipant.color] = engineParticipant.clockAtEnd;
-
-	const state: DeadGameState = {
+	return {
 		...assembleStaticGameState(game, playerRows, engineParticipant),
 		icn: game.icn,
 	};
-
-	if (Object.keys(finalClocks).length > 0) state.finalClocks = finalClocks;
-
-	return state;
 }
 
 /**
@@ -213,12 +199,7 @@ function assembleStaticGameState(
  * @throws If a database error occurs.
  */
 function getEngineParticipant(game_id: number): EngineParticipant | undefined {
-	const row = getEngineGamesOfGame(game_id, [
-		'player_number',
-		'clock_at_end_millis',
-		'engine',
-		'strength_level',
-	])[0];
+	const row = getEngineGamesOfGame(game_id, ['player_number', 'engine', 'strength_level'])[0];
 	if (!row) return undefined;
 	return {
 		color: row.player_number as Player,
@@ -228,7 +209,6 @@ function getEngineParticipant(game_id: number): EngineParticipant | undefined {
 			type: 'engine',
 			username: getFormattedEngineName(row.engine as ValidEngine, row.strength_level),
 		},
-		clockAtEnd: row.clock_at_end_millis,
 	};
 }
 

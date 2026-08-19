@@ -201,8 +201,6 @@ export interface DeadGameState extends StaticGameState {
 	 * only for custom-position games); the client parses it.
 	 */
 	icn: string;
-	/** Ms remaining per color at game end. Timed games only; a guest color may be absent. */
-	finalClocks?: PlayerGroup<number>;
 }
 
 // Seek Schemas ---------------------------------------------------------------

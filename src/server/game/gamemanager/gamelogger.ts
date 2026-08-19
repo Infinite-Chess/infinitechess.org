@@ -213,9 +213,6 @@ function addGameRecordsInTransaction(
 	});
 
 	// 2. Loop through players and insert records into the 'player_games' table.
-	const ending_clocks = !servergame.untimed
-		? gameutility.getGameClockValues(servergame).clocks
-		: undefined;
 	for (const playerStr in match.playerData) {
 		const player = Number(playerStr) as Player;
 		const user_id = match.playerData[player]!.identifier.signedIn
@@ -228,7 +225,6 @@ function addGameRecordsInTransaction(
 			game_id: match.id,
 			player_number: player,
 			score: victor === undefined ? null : victor === player ? 1 : victor === null ? 0.5 : 0,
-			clock_at_end_millis: !servergame.untimed ? ending_clocks![player]! : null,
 			elo_at_game: ratingData?.[player]?.elo_at_game ?? null,
 			elo_change_from_game: ratingData?.[player]?.elo_change_from_game ?? null,
 			rating_deviation_at_game: ratingData?.[player]?.rating_deviation_at_game ?? null,
@@ -241,7 +237,6 @@ function addGameRecordsInTransaction(
 			game_id: match.id,
 			player_number: engine.color,
 			score: victor === undefined ? null : victor === engine.color ? 1 : victor === null ? 0.5 : 0, // prettier-ignore
-			clock_at_end_millis: ending_clocks?.[engine.color] ?? null,
 			engine: engine.engine,
 			engine_version: engine.version,
 			strength_level: engine.strengthLevel,

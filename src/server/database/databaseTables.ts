@@ -75,7 +75,6 @@ const allPlayerGamesColumns: string[] = [
 	'game_id',
 	'player_number',
 	'score',
-	'clock_at_end_millis',
 	'elo_at_game',
 	'elo_change_from_game',
 	'rating_deviation_at_game',
@@ -87,7 +86,6 @@ const allEngineGamesColumns: string[] = [
 	'game_id',
 	'player_number',
 	'score',
-	'clock_at_end_millis',
 	'engine',
 	'engine_version',
 	'strength_level',
@@ -153,6 +151,7 @@ function initDatabase(): void {
 	renameDisconnectByChoiceColumnIfNeeded();
 	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
 	dropLiveGamesConclusionColumnsIfPresent();
+	dropPlayerGamesClockAtEndColumnIfPresent();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
 	addModifierColumnsIfNeeded();
 	// Start periodic tasks
@@ -363,7 +362,6 @@ function generateTables(): void {
 			game_id                     INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
 			player_number               INTEGER NOT NULL, -- 1 => White  2 => Black
 			score                       REAL, -- 1 => Win   0.5 => Draw   0 => Loss   NULL => Aborted
-			clock_at_end_millis         INTEGER, -- Number of milliseconds that player still has left on his clock when the game ended. Null if game has no clock or info is missing.
 			elo_at_game                 REAL, -- Specified if they have a rating for the leaderboard, ignoring whether the game was rated
 			elo_change_from_game        REAL, -- Specified only if the game was rated
 			rating_deviation_at_game    REAL, -- Glicko RD before the game; drives the pre-game rating's confidence. Specified only if the game was rated.
@@ -380,7 +378,6 @@ function generateTables(): void {
 			game_id             INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
 			player_number       INTEGER NOT NULL,
 			score               REAL,
-			clock_at_end_millis INTEGER,
 			engine              TEXT NOT NULL,
 			engine_version      TEXT NOT NULL,
 			strength_level      INTEGER NOT NULL,
@@ -669,6 +666,19 @@ function dropLiveGamesConclusionColumnsIfPresent(): void {
 		db.run(`ALTER TABLE live_games DROP COLUMN ${column}`);
 	}
 	console.log('Temporary DB migration: dropped live_games conclusion snapshot columns.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * A concluded game's final clocks are now read back off its ICN's `clk` stamps, matching how
+ * PGN records them, so the stored `clock_at_end_millis` is vestigial. Fresh DBs never have it.
+ * `engine_games` needs no such migration — it doesn't exist in production yet.
+ */
+function dropPlayerGamesClockAtEndColumnIfPresent(): void {
+	if (!db.columnExists('player_games', 'clock_at_end_millis')) return; // Already migrated.
+	db.run(`ALTER TABLE player_games DROP COLUMN clock_at_end_millis`);
+	console.log('Temporary DB migration: dropped player_games.clock_at_end_millis column.');
 }
 
 /**

@@ -10,12 +10,19 @@
  * Naviary is notified by email of any flagged users.
  */
 
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
+import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
+import clock from '../../../shared/chess/logic/clock.js';
 import timeutil from '../../../shared/util/timeutil.js';
+import gamerules from '../../../shared/chess/util/gamerules.js';
+import clockutil from '../../../shared/chess/util/clockutil.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validleaderboard.js';
 
 import gameutility from './gameutility.js';
@@ -91,7 +98,7 @@ const SUSPICIOUS_ACCOUNT_AGE_MILLIS = 1000 * 60 * 60 * 24 * 5; // 5 days
  */
 type RatingAbuseRelevantPlayerGamesRecord = Pick<
 	PlayerGamesRecord,
-	'game_id' | 'score' | 'clock_at_end_millis' | 'elo_change_from_game'
+	'game_id' | 'score' | 'player_number' | 'elo_change_from_game'
 >;
 
 /**
@@ -105,13 +112,20 @@ type RatingAbuseRelevantGamesRecord = Pick<
 	| 'base_time_seconds'
 	| 'increment_seconds'
 	| 'termination'
+	| 'result'
 	| 'move_count'
 	| 'time_duration_millis'
 >;
 
 /** Object containing all relevant information about a specific game, which is used for the rating abuse calculation */
 type RatingAbuseRelevantGameInfo = RatingAbuseRelevantPlayerGamesRecord &
-	RatingAbuseRelevantGamesRecord;
+	RatingAbuseRelevantGamesRecord & {
+		/**
+		 * The player's remaining millis at game end, derived from
+		 * the ICN's clock stamps. Undefined if the game was untimed.
+		 */
+		finalClockMillis: number | undefined;
+	};
 
 /** Relevant entries of a MemberRecord object, which are used for the rating abuse calculation */
 type RatingAbuseRelevantMemberRecord = {
@@ -202,7 +216,7 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		user_id,
 		leaderboard_id,
 		GAME_INTERVAL_TO_MEASURE,
-		['game_id', 'score', 'clock_at_end_millis', 'elo_change_from_game'],
+		['game_id', 'score', 'player_number', 'elo_change_from_game'],
 	);
 
 	const netRatingChange = recentPlayerGamesEntries.reduce(
@@ -218,7 +232,7 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		return;
 	}
 
-	// Retrieve these same games also from the games table
+	// Retrieve these same games also from the games table.
 	const recentGamesEntries = getMultipleGameData(game_id_list, [
 		'game_id',
 		'date',
@@ -227,6 +241,8 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		'termination',
 		'move_count',
 		'time_duration_millis',
+		'icn',
+		'result',
 	]);
 	const games_table_game_id_list = recentGamesEntries.map((recent_game) => recent_game.game_id);
 
@@ -236,7 +252,17 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		const j = games_table_game_id_list.indexOf(game_id_list[i]!);
 		// If the same game_id exists in both lists of retrieved database entries, add this game as a single object to gameInfoList
 		if (j > -1) {
-			gameInfoList.push({ ...recentPlayerGamesEntries[i]!, ...recentGamesEntries[j]! });
+			const playerEntry = recentPlayerGamesEntries[i]!;
+			const gameRow = recentGamesEntries[j]!;
+			const { icn: _icn, ...gameEntry } = gameRow;
+			gameInfoList.push({
+				...playerEntry,
+				...gameEntry,
+				finalClockMillis: deriveFinalClockOfPlayer(
+					gameRow,
+					playerEntry.player_number as Player,
+				),
+			});
 		} else {
 			void logEventsAndPrint(
 				`Found game_id ${game_id_list[i]!} in player_games table but not it games table, during rating abuse calculation`,
@@ -379,6 +405,36 @@ Game_id_list: ${JSON.stringify(game_id_list)}.
 }
 
 /**
+ * Reads a player's remaining time at the end of a concluded game off its ICN's `clk` stamps.
+ * A player who was still on the move when the game ended reads as their last stamp, matching
+ * how PGN records final clocks. Uundefined if the game was untimed.
+ */
+function deriveFinalClockOfPlayer(
+	game: Pick<
+		GamesRecord,
+		'icn' | 'result' | 'termination' | 'base_time_seconds' | 'increment_seconds'
+	>,
+	player: Player,
+): number | undefined {
+	const longformat = icnconverter.ShortToLong_Format(game.icn);
+	const players = gamerules.getUniquePlayersInTurnOrder(longformat.gameRules.turnOrder);
+	const timeControl = clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds);
+	const { clocks } = clock.init(players, timeControl);
+	if (clocks === undefined) return undefined; // Untimed game — it has no clocks to read.
+
+	const moves = longformat.moves ?? [];
+	const gameConclusion = {
+		condition: game.termination,
+		victor: metadatautil.getVictorFromResult(game.result),
+	} as GameConclusion; // The columns are plain TEXT; this mirrors deadgamestate's read.
+
+	return clock.clocksAtMoveIndex(
+		{ moves, gameRules: longformat.gameRules, gameConclusion, clocks },
+		moves.length - 1,
+	)[player];
+}
+
+/**
  * Check if the game dates are too close in proximity to each other
  * If yes, append entry to suspicion_level_record_list.
  */
@@ -479,7 +535,7 @@ function checkClockAtEnd(
 
 		// Game is suspicious if the clock at the end is still similar to the start time
 		if (
-			gameInfo.clock_at_end_millis !== null &&
+			gameInfo.finalClockMillis !== undefined &&
 			gameInfo.base_time_seconds !== null &&
 			gameInfo.increment_seconds !== null
 		) {
@@ -489,14 +545,14 @@ function checkClockAtEnd(
 					0.5 * gameInfo.increment_seconds * (gameInfo.move_count - 1));
 			if (
 				approximate_total_time_millis > 0 &&
-				gameInfo.clock_at_end_millis >= 0.8 * approximate_total_time_millis
+				gameInfo.finalClockMillis >= 0.8 * approximate_total_time_millis
 			) {
 				const fraction = Math.min(
 					1,
-					gameInfo.clock_at_end_millis / approximate_total_time_millis,
+					gameInfo.finalClockMillis / approximate_total_time_millis,
 				); // fraction is in the interval [0.8, 1]
 				weight += 5 * fraction - 4; // rescale to [0,1]
-				comment += `At end of game ${gameInfo.game_id} with time control ${gameInfo.base_time_seconds / 60}m+${gameInfo.increment_seconds}s, player has ${(gameInfo.clock_at_end_millis / 60_000).toFixed(2)}m left. `;
+				comment += `At end of game ${gameInfo.game_id} with time control ${gameInfo.base_time_seconds / 60}m+${gameInfo.increment_seconds}s, player has ${(gameInfo.finalClockMillis / 60_000).toFixed(2)}m left. `;
 			}
 		}
 	}

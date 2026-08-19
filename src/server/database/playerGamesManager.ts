@@ -19,7 +19,6 @@ export interface PlayerGamesRecord {
 	game_id: number;
 	player_number: number;
 	score: number | null;
-	clock_at_end_millis: number | null;
 	elo_at_game: number | null;
 	elo_change_from_game: number | null;
 	rating_deviation_at_game: number | null;
@@ -156,13 +155,13 @@ export function insertPlayerGame(record: PlayerGamesRecord): void {
 	const query = `
 		INSERT INTO player_games (
 			user_id, game_id, player_number, score,
-			clock_at_end_millis, elo_at_game, elo_change_from_game,
+			elo_at_game, elo_change_from_game,
 			rating_deviation_at_game, rating_deviation_after_game
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 	db.run(query, [
 		record.user_id, record.game_id, record.player_number, record.score,
-		record.clock_at_end_millis, record.elo_at_game, record.elo_change_from_game,
+		record.elo_at_game, record.elo_change_from_game,
 		record.rating_deviation_at_game, record.rating_deviation_after_game,
 	]); // prettier-ignore
 }

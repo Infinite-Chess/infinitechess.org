@@ -125,8 +125,9 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 /**
  * Seeds the clocks of a game loaded from an ICN with the values it ended on, read
  * from its final clock stamps, so a concluded game doesn't display its starting times.
- * @param alreadyKnown - Clock values sourced from the server, which are exact where a stamp isn't
- * (it predates any time burned before a resignation). The colors it covers are left untouched.
+ * @param alreadyKnown - Live clock values sourced from the server. Load-bearing: a live game's
+ * move packets carry no stamps, so without this its clocks would reset to the starting times.
+ * The colors it covers are left untouched.
  */
 function seedFromMoveStamps(
 	basegame: {
