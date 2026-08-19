@@ -534,9 +534,8 @@ function freeGame(servergame: ServerGame): void {
  * in which case the logged record is updated in place.
  */
 function logConcludedGame(servergame: ServerGame): void {
-	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings".
-	// The ratings are calculated during the logging of the game into the database.
 	try {
+		// The ratings are calculated during the logging of the game into the database.
 		const ratingdata = gamelogger.logGame(servergame);
 
 		if (ratingdata !== undefined) {
@@ -548,15 +547,11 @@ function logConcludedGame(servergame: ServerGame): void {
 			gameutility.broadcastToEveryone(servergame, 'gameratingchange', ratingChanges);
 		}
 	} catch {
-		// Log failure already logged.
+		// Log failure already logged. The live game row is dropped either way.
 		const message =
 			"A server error occurred while logging this game. It won't be available in your game history.";
 		gameutility.broadcastToParticipants(servergame, 'general', 'notifyerror', message);
 	}
-
-	// The result now lives in the permanent tables — drop the live game row so a restart doesn't
-	// restore (and re-log) it. The in-memory game may still linger for the rematch handshake.
-	liveGameValues.onGameLogged(servergame);
 }
 
 /** Bundles each player's rating outcome (at-game rating + delta) from the rated game's results. */

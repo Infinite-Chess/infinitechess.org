@@ -22,6 +22,7 @@ import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validlea
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
+import { deleteLiveGame } from '../../database/liveGamesManager.js';
 import { insertEngineGame } from '../../database/engineGamesManager.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { insertPlayerGame, updatePlayerGame } from '../../database/playerGamesManager.js';
@@ -41,31 +42,24 @@ import {
 // Functions -------------------------------------------------------------------------------
 
 /**
- * Logs a completed game to the database by executing an atomic transaction.
- * Adds to and updates tables: games, player_games, player_stats, and leaderboards.
- * Either all database queries succeed, or none do (rollback on error).
- * This ensures data integrity and consistency.
+ * Moves a completed game out of live storage and into permanent storage: it deletes the game's
+ * `live_games` row, then adds to and updates the games, player_games, player_stats and
+ * leaderboards tables in one atomic transaction (either all queries succeed, or none do).
  * @param servergame - The game to log
  * @returns The rating data if the game was rated and not aborted, otherwise undefined.
  * @throws If a database error occurs during the transaction. The game will be recorded to unloggedGames.txt for debugging info, it WON'T contain enough info for recovery.
  */
 function logGame(servergame: ServerGame): RatingData | undefined {
-	if (servergame.moves.length === 0) return; // Don't log games with zero moves
+	// Dropped first, and outside the transaction below, so a logged game can never outlive its
+	// live row. A failed log then merely loses the game, instead of leaving one to be revived.
+	deleteLiveGame(servergame.match.id);
+
+	if (servergame.moves.length === 0) return; // Zero-move games are not recorded permanently.
 
 	try {
-		// Create the transaction by wrapping our orchestrator function.
-		// We no longer need to pass any parameters here.
-		const transaction = db.transaction<[ServerGame], RatingData | undefined>((g) => {
-			return logGame_orchestrator(g);
-		});
-
-		// Execute the transaction. Typically takes 2-8 milliseconds when using NVME storage.
-		const ratingData = transaction(servergame);
-
-		// If we reach here, the transaction was successful.
-		return ratingData;
+		return db.transaction(() => logGame_orchestrator(servergame))();
 	} catch (error) {
-		// This block will only execute if the orchestrator throws an error, causing a rollback.
+		// This block will only execute if the transaction throws an error, causing a rollback.
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
 		void logEventsAndPrint(

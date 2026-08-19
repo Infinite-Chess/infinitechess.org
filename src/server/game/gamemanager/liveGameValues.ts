@@ -19,7 +19,7 @@ import type {
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 
 import db from '../../database/database.js';
-import { insertLiveGame, updateLiveGame, deleteLiveGame } from '../../database/liveGamesManager.js';
+import { insertLiveGame, updateLiveGame } from '../../database/liveGamesManager.js';
 import {
 	insertLivePlayerGame,
 	updateLivePlayerGame,
@@ -264,15 +264,6 @@ function onEngineClockChanged(servergame: ServerGame): void {
 	);
 }
 
-/**
- * Called when a concluded game is logged to the permanent database. Removes the row: the result
- * now lives in the permanent tables, so there's nothing left to restore across a restart. The game
- * may keep lingering in memory for the rematch handshake, but that state is never persisted.
- */
-function onGameLogged(servergame: ServerGame): void {
-	persist(() => deleteLiveGame(servergame.match.id));
-}
-
 // Exports --------------------------------------------------------------------------------------------
 
 export default {
@@ -285,5 +276,4 @@ export default {
 	onPlayerReconnected,
 	onBothDisconnectedTimerChanged,
 	onEngineClockChanged,
-	onGameLogged,
 };
