@@ -99,8 +99,8 @@
 			{# Original seek's properties — SSR-OWNED (rendered from `meta`); not re-rendered by the client. #}
 			<div class="meta-info">
 				<span class="meta-item">
-					<svg class="meta-icon svg-pawn"><use href="#svg-pawn"/></svg>
-					<span class="meta-variant">Classical</span>
+					<svg class="meta-icon {{ meta.variant.iconId }}"><use href="#{{ meta.variant.iconId }}"/></svg>
+					<span class="meta-variant">{{ meta.variant.name }}</span>
 				</span>
 				•
 				<span class="meta-item" title="{{ meta.speed.category | capitalize }}">

@@ -22,10 +22,10 @@ import metadatautil from '../../shared/chess/util/metadatautil.js';
 import variantcache from '../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../shared/chess/logic/icn/icnconverter.js';
 import gameresultutil from '../../shared/chess/util/gameresultutil.js';
+import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import variantpreviewer from '../../shared/chess/variants/variantpreviewer.js';
 import { players as p } from '../../shared/chess/util/typeutil.js';
 import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.js';
-import variantregistry, { VariantCode } from '../../shared/chess/variants/variantregistry.js';
 
 import tconfig from '../config/translationconfig.js';
 import { getManifest } from '../config/manifest.js';
@@ -222,10 +222,11 @@ function buildGameMetaViewModel(
 		setup.variant.kind === 'preset'
 			? variantregistry.getVariantGroup(setup.variant.code)
 			: 'custom';
-	const variantCode: VariantCode | null =
-		setup.variant.kind === 'preset' ? setup.variant.code : null;
 	const variant = {
-		name: variantregistry.getVariantName(variantCode, req.t.shared),
+		name:
+			setup.variant.kind === 'preset'
+				? req.t.shared.variants[setup.variant.code]
+				: req.t.shared.variant_groups.custom.display_label,
 		iconId: variantregistry.getVariantGroupIconId(variantGroup),
 	};
 
