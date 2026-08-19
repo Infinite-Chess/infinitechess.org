@@ -13,6 +13,7 @@ import type { BoardPreview } from '../../../../../shared/chess/logic/boardprevie
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
 import { players as p, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import space from '../misc/space.js';
@@ -52,7 +53,7 @@ function buildInstanceData(ctx: RenderContext, boardsim: BoardPreview): TypeGrou
 	const boardScale = ctx.boardpos.getBoardScale();
 
 	boardsim.existingTypes.forEach((type: number) => {
-		if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
+		if (pieceThemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
 		const range = boardsim.pieces.typeRanges.get(type)!;
 		if (boardutil.getPieceCountOfTypeRange(range) === 0) return; // Skip types with no pieces
 		instanceData[type] = [];

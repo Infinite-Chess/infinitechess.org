@@ -20,6 +20,7 @@ import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
+import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil.js';
@@ -605,7 +606,7 @@ function renderGhostPiece(): void {
 	)
 		return;
 	const rawType = typeutil.getRawType(pieceSelected.type);
-	if (typeutil.SVGLESS_TYPES.has(rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
+	if (pieceThemes.SVGLESS_TYPES.has(rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
 
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }

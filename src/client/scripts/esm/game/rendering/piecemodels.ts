@@ -16,6 +16,7 @@ import geometry from '../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 import meshes from './meshes.js';
@@ -344,7 +345,7 @@ function rotateAll(mesh: Mesh, newInverted: boolean): void {
 
 	for (const [stringType, meshData] of Object.entries(mesh.types)) {
 		const rawType = typeutil.getRawType(Number(stringType));
-		if (typeutil.SVGLESS_TYPES.has(rawType)) continue; // Skip voids and other non-textured pieces, currently they are symmetrical
+		if (pieceThemes.SVGLESS_TYPES.has(rawType)) continue; // Skip voids and other non-textured pieces, currently they are symmetrical
 		// Not a void, which means its guaranteed to be a piece with a texture...
 		const vertexData = meshData.model.vertexData;
 		if (vertexData.length !== newVertexData.length)

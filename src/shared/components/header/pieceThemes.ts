@@ -9,7 +9,7 @@ import type { RawType, Player } from '../../chess/util/typeutil.js';
 
 import { rawTypes as r, players as p } from '../../chess/util/typeutil.js';
 
-type PieceColorGroup = {
+export type PieceColorGroup = {
 	[_team in Player]: Color;
 };
 
@@ -79,6 +79,11 @@ const SVGConfig: {
 	[r.PAWN]: { location: 'classical' },
 };
 
+/** Raw piece types that have no SVG of their own, derived from {@link SVGConfig}. */
+const SVGLESS_TYPES: Set<RawType> = new Set(
+	Object.values(r).filter((raw) => SVGConfig[raw].location === null),
+);
+
 function getLocationsForTypes(types: Iterable<RawType>): Set<string> {
 	const locations: Set<string> = new Set();
 	for (const raw of types) {
@@ -125,9 +130,8 @@ function getSVGColorPriority(color: Player): string[] {
 	}
 }
 
-export type { PieceColorGroup };
-
 export default {
+	SVGLESS_TYPES,
 	getLocationsForTypes,
 	getLocationForType,
 	getBaseColorForType,

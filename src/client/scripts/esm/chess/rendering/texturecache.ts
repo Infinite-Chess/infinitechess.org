@@ -14,6 +14,7 @@ import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
 
 import imagecache from './imagecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
@@ -54,7 +55,7 @@ function createTextureCache(): TextureCache {
 	): Promise<void> {
 		// 1. Determine required piece types (mirroring imagecache logic, filter SVG-less)
 		const types = boardsim.existingTypes.filter(
-			(t: number) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)),
+			(t: number) => !pieceThemes.SVGLESS_TYPES.has(typeutil.getRawType(t)),
 		);
 
 		// 2. Iterate and create textures for types not already cached

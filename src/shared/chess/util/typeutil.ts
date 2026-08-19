@@ -118,9 +118,6 @@ const royals: RawType[] = [...jumpingRoyals, ...slidingRoyals];
  */
 const strcolors = ['neutral', 'white', 'black', 'red', 'blue', 'yellow', 'green'] as const;
 
-/** Raw piece types that don't have an SVG */
-const SVGLESS_TYPES: Set<RawType> = new Set([rawTypes.VOID]);
-
 // Types --------------------------------------------------------------------------------------
 
 type StrPlayer = (typeof strcolors)[number];
@@ -240,7 +237,6 @@ export default {
 	// Constants
 	jumpingRoyals,
 	royals,
-	SVGLESS_TYPES,
 	strcolors,
 	// Functions
 	getRawType,

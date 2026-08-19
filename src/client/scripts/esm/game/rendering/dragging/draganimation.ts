@@ -15,6 +15,7 @@ import bd from '@naviary/bigdecimal';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import pieceThemes from '../../../../../../shared/components/header/pieceThemes.js';
 
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
@@ -255,7 +256,7 @@ function renderPiece(): void {
 
 /** Generates the model of the dragged piece and its shadow. */
 function renderPieceModel(): void {
-	if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
+	if (pieceThemes.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreenUsed = listener_canvas.isPointerTouch(pointerId!);
