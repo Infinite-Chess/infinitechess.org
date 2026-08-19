@@ -45,8 +45,7 @@ import {
 /**
  * Potential red flags (already implemented checks are marked with an X at the start of the line):
  *
- * (X) Low move counts (games ended quickly)
- * (X) Low game time durations with a high number of close together games, or high clock values at end (indicates no thinking)
+ * (X) Games won with most of the player's own clock left unused (indicates no thinking)
  * (X) Opponents use the same IP address. OR The player has no active refresh tokens (logged out mid-game)
  * (X) Many games against always the same opponents
  * (X) Opponent accounts brand new
@@ -70,22 +69,8 @@ const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 1.0;
 /** Buffer time for sending the next email. If a user is found suspicious several times in that interval, no email is sent. */
 const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 hours
 
-/**
- * Two rated games started this close after each other have a nonzero suspicion score.
- *
- * Slightly higher than {@link SUSPICIOUS_TIME_DURATION_MILLIS} to account for time to accept a new seek.
- */
-const TOO_CLOSE_GAMES_MILLIS = 1000 * 60 * 3.5; // 3.5 minutes
-
-/**
- * Games with fewer moves than this have a nonzero suspicion score.
- *
- * Average move count per game is 38 moves.
- */
-const SUSPICIOUS_MOVE_COUNT = 25;
-
-/** Games lasting less than this time on the server have a nonzero suspicion score. */
-const SUSPICIOUS_TIME_DURATION_MILLIS = 1000 * 60 * 3; // 3 minutes
+/** Games won with at least this fraction of the player's own clock still unused have a nonzero suspicion score. */
+const SUSPICIOUS_UNUSED_CLOCK_FRACTION = 0.8;
 
 /** Opponents with a younger account age than this count as suspicious. */
 const SUSPICIOUS_ACCOUNT_AGE_MILLIS = 1000 * 60 * 60 * 24 * 5; // 5 days
@@ -114,7 +99,6 @@ type RatingAbuseRelevantGamesRecord = Pick<
 	| 'termination'
 	| 'result'
 	| 'move_count'
-	| 'time_duration_millis'
 >;
 
 /** Object containing all relevant information about a specific game, which is used for the rating abuse calculation */
@@ -136,14 +120,7 @@ type RatingAbuseRelevantMemberRecord = {
 
 /** Object containing information about analysis of suspicion level of some characteristic */
 type SuspicionLevelRecord = {
-	category:
-		| 'close_game_pairs'
-		| 'move_count'
-		| 'duration'
-		| 'clock_at_end'
-		| 'same_opponents'
-		| 'ip_addresses'
-		| 'opponent_account_age';
+	category: 'think_time' | 'same_opponents' | 'ip_addresses' | 'opponent_account_age';
 	weight: number;
 	comment?: string;
 };
@@ -240,7 +217,6 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		'increment_seconds',
 		'termination',
 		'move_count',
-		'time_duration_millis',
 		'icn',
 		'result',
 	]);
@@ -336,10 +312,7 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 	const suspicion_level_record_list: SuspicionLevelRecord[] = [];
 
 	// Run various checks and add entries to suspicion_level_record_list, if necessary
-	checkCloseGamePairs(gameInfoList, suspicion_level_record_list);
-	checkMoveCounts(gameInfoList, suspicion_level_record_list);
-	checkDurations(gameInfoList, suspicion_level_record_list);
-	checkClockAtEnd(gameInfoList, suspicion_level_record_list);
+	checkThinkTime(gameInfoList, suspicion_level_record_list);
 	checkOpponentSameness(user_id_list, user_id_frequency, suspicion_level_record_list);
 	checkIPAddresses(
 		user_id_list,
@@ -435,37 +408,13 @@ function deriveFinalClockOfPlayer(
 }
 
 /**
- * Check if the game dates are too close in proximity to each other
+ * Check if the player won the games in gameInfoList without spending their own clock.
+ * Low move counts, short server durations and games played back-to-back are all
+ * proxies for this same fact, so measuring the clock directly covers all of them,
+ * and unlike them it is normalized by the game's time control.
  * If yes, append entry to suspicion_level_record_list.
  */
-function checkCloseGamePairs(
-	gameInfoList: RatingAbuseRelevantGameInfo[],
-	suspicion_level_record_list: SuspicionLevelRecord[],
-): void {
-	const sorted_timestamp_list = gameInfoList
-		.map((game_info) => timeutil.sqliteToTimestamp(game_info.date))
-		.sort();
-	const timestamp_differences: number[] = [];
-	for (let i = 1; i < sorted_timestamp_list.length; i++) {
-		timestamp_differences.push(sorted_timestamp_list[i]! - sorted_timestamp_list[i - 1]!);
-	}
-	const close_game_pairs_amount = timestamp_differences.filter(
-		(diff) => diff < TOO_CLOSE_GAMES_MILLIS,
-	).length;
-	if (close_game_pairs_amount > 0) {
-		suspicion_level_record_list.push({
-			category: 'close_game_pairs',
-			weight: (close_game_pairs_amount / timestamp_differences.length) * 0.5, // rescale to [0, 0.5]
-			comment: `Amount: ${close_game_pairs_amount}`,
-		});
-	}
-}
-
-/**
- * Check if the move counts of the games in gameInfoList are too low.
- * If yes, append entry to suspicion_level_record_list.
- */
-function checkMoveCounts(
+function checkThinkTime(
 	gameInfoList: RatingAbuseRelevantGameInfo[],
 	suspicion_level_record_list: SuspicionLevelRecord[],
 ): void {
@@ -474,92 +423,26 @@ function checkMoveCounts(
 	for (const gameInfo of gameInfoList) {
 		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
 
-		// Game is suspicious if it contains too few moves
-		if (gameInfo.move_count <= SUSPICIOUS_MOVE_COUNT) {
-			const fraction = Math.max(0, (gameInfo.move_count - 2) / (SUSPICIOUS_MOVE_COUNT - 2)); // fraction is in the interval [0, 1]
-			weight += 1 - fraction;
-			comment += `Game ${gameInfo.game_id} lasted ${gameInfo.move_count} moves. `;
+		/** The player's own clock budget: their base time, plus the increment earned on their share of the moves. */
+		const available_clock_millis =
+			1000 *
+			(gameInfo.base_time_seconds! +
+				0.5 * gameInfo.increment_seconds! * (gameInfo.move_count - 1));
+		// Capped, since the halved increment is an average — whoever moved more than their share earns above it.
+		const unused_fraction = Math.min(1, gameInfo.finalClockMillis! / available_clock_millis);
+
+		// Game is suspicious if the player barely touched their clock
+		if (unused_fraction >= SUSPICIOUS_UNUSED_CLOCK_FRACTION) {
+			weight +=
+				(unused_fraction - SUSPICIOUS_UNUSED_CLOCK_FRACTION) /
+				(1 - SUSPICIOUS_UNUSED_CLOCK_FRACTION); // rescale to [0, 1]
+			comment += `In game ${gameInfo.game_id} with time control ${gameInfo.base_time_seconds! / 60}m+${gameInfo.increment_seconds}s, player left ${(100 * unused_fraction).toFixed(0)}% of their clock unused. `;
 		}
 	}
 	if (weight > 0)
 		suspicion_level_record_list.push({
-			category: 'move_count',
-			weight: (weight / gameInfoList.length) * 0.5, // rescale to [0,0.5]
-			comment,
-		});
-}
-
-/**
- * Check if the durations on the server of the games in gameInfoList are too low.
- * If yes, append entry to suspicion_level_record_list.
- */
-function checkDurations(
-	gameInfoList: RatingAbuseRelevantGameInfo[],
-	suspicion_level_record_list: SuspicionLevelRecord[],
-): void {
-	let weight = 0;
-	let comment = '';
-	for (const gameInfo of gameInfoList) {
-		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
-
-		// Game is suspicious if it lasted too briefly on the server
-		if (
-			gameInfo.time_duration_millis !== null &&
-			gameInfo.time_duration_millis <= SUSPICIOUS_TIME_DURATION_MILLIS
-		) {
-			const fraction = gameInfo.time_duration_millis / SUSPICIOUS_TIME_DURATION_MILLIS; // fraction is in the interval [0, 1]
-			weight += 1 - fraction;
-			comment += `Game ${gameInfo.game_id} lasted ${Math.round(gameInfo.time_duration_millis / 1000)}s. `;
-		}
-	}
-	if (weight > 0)
-		suspicion_level_record_list.push({
-			category: 'duration',
-			weight: (weight / gameInfoList.length) * 0.8, // rescale to [0,0.8]
-			comment,
-		});
-}
-
-/**
- * Check if the clock at the end of the games in gameInfoList are too low.
- * If yes, append entry to suspicion_level_record_list.
- */
-function checkClockAtEnd(
-	gameInfoList: RatingAbuseRelevantGameInfo[],
-	suspicion_level_record_list: SuspicionLevelRecord[],
-): void {
-	let weight = 0;
-	let comment = '';
-	for (const gameInfo of gameInfoList) {
-		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
-
-		// Game is suspicious if the clock at the end is still similar to the start time
-		if (
-			gameInfo.finalClockMillis !== undefined &&
-			gameInfo.base_time_seconds !== null &&
-			gameInfo.increment_seconds !== null
-		) {
-			const approximate_total_time_millis =
-				1000 *
-				(gameInfo.base_time_seconds +
-					0.5 * gameInfo.increment_seconds * (gameInfo.move_count - 1));
-			if (
-				approximate_total_time_millis > 0 &&
-				gameInfo.finalClockMillis >= 0.8 * approximate_total_time_millis
-			) {
-				const fraction = Math.min(
-					1,
-					gameInfo.finalClockMillis / approximate_total_time_millis,
-				); // fraction is in the interval [0.8, 1]
-				weight += 5 * fraction - 4; // rescale to [0,1]
-				comment += `At end of game ${gameInfo.game_id} with time control ${gameInfo.base_time_seconds / 60}m+${gameInfo.increment_seconds}s, player has ${(gameInfo.finalClockMillis / 60_000).toFixed(2)}m left. `;
-			}
-		}
-	}
-	if (weight > 0)
-		suspicion_level_record_list.push({
-			category: 'clock_at_end',
-			weight: (weight / gameInfoList.length) * 0.4, // rescale to [0, 0.4]
+			category: 'think_time',
+			weight: (weight / gameInfoList.length) * 0.8, // Rescale to [0, 0.8]
 			comment,
 		});
 }
