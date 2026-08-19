@@ -536,7 +536,7 @@ function freeGame(servergame: ServerGame): void {
 function logConcludedGame(servergame: ServerGame): void {
 	try {
 		// The ratings are calculated during the logging of the game into the database.
-		const ratingdata = gamelogger.logGame(servergame);
+		const ratingdata = gamelogger.logGame(servergame); // Also drops its live-game row.
 
 		if (ratingdata !== undefined) {
 			// Retain the rating results on the game so a client that resyncs after this (but
