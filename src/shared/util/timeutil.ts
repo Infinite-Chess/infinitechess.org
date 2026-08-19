@@ -99,27 +99,6 @@ function getTotalMilliseconds(options: {
 }
 
 /**
- * Gets the current month in 'yyyy-mm' format.
- */
-function getCurrentMonth(): string {
-	const date = new Date();
-	const year = date.getFullYear();
-	const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Add 1 because getMonth() returns 0-11
-	return `${year}-${month}`;
-}
-
-/**
- * Gets the current day in 'yyyy-mm-dd' format.
- */
-function getCurrentDay(): string {
-	const date = new Date();
-	const year = date.getFullYear();
-	const month = (date.getMonth() + 1).toString().padStart(2, '0');
-	const day = date.getDate().toString().padStart(2, '0');
-	return `${year}-${month}-${day}`;
-}
-
-/**
  * Checks if the current date is within a specified date range.
  * @param startMonth - The starting month of the range (1-12).
  * @param startDay - The starting day of the range (1-31).
@@ -262,8 +241,6 @@ export default {
 	convertTimestampToUTCDateUTCTime,
 	convertUTCDateUTCTimeToTimeStamp,
 	getTotalMilliseconds,
-	getCurrentMonth,
-	getCurrentDay,
 	isCurrentDateWithinRange,
 	timestampToISO,
 	isoToTimestamp,

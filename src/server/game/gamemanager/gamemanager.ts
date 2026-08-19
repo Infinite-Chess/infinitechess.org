@@ -16,13 +16,11 @@ import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 
-import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
 import gameutility from './gameutility.js';
 import ratingabuse from './ratingabuse.js';
 import liveGameValues from './liveGameValues.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
-import { executeSafely } from '../../utility/errorGuard.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -534,13 +532,6 @@ function freeGame(servergame: ServerGame): void {
  * in which case the logged record is updated in place.
  */
 function logConcludedGame(servergame: ServerGame): void {
-	// Mostly deprecated:
-	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
-	executeSafely(
-		() => statlogger.logGame(servergame),
-		`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
-	);
-
 	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings".
 	// The ratings are calculated during the logging of the game into the database.
 	try {

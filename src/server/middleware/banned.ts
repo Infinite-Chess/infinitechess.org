@@ -7,8 +7,6 @@
 import fs from 'fs';
 import path from 'path';
 
-import { readFile } from '../utility/lockFile.js';
-
 const bannedPath = path.resolve('database/banned.json');
 
 ensureBannedFileExists: {
@@ -16,7 +14,6 @@ ensureBannedFileExists: {
 
 	const content = JSON.stringify(
 		{
-			emails: {},
 			IPs: {},
 			'browser-ids': {},
 		},
@@ -30,19 +27,18 @@ ensureBannedFileExists: {
 	console.log('Generated banned file');
 }
 
+/** Each entry's value is a free-form note on the ban; only the key's presence is ever tested. */
 let bannedJSON: {
-	IPs: Record<string, any>;
-	emails: Record<string, any>;
-	'browser-ids': Record<string, any>;
+	IPs: Record<string, unknown>;
+	'browser-ids': Record<string, unknown>;
 };
 try {
-	bannedJSON = await readFile(bannedPath);
+	bannedJSON = JSON.parse(fs.readFileSync(bannedPath, 'utf-8'));
 } catch (error: unknown) {
 	if (process.env['VITEST']) {
 		console.warn('Mocking banned.json for test environment');
 		bannedJSON = {
 			IPs: {},
-			emails: {},
 			'browser-ids': {},
 		};
 	} else {
@@ -50,11 +46,6 @@ try {
 		throw new Error('Unable to read banned.json on startup: ' + message);
 	}
 }
-// EMAIL BANS are now handled in the email_blacklist database table!
-// function isEmailBanned(email: string): boolean {
-// 	const emailLowercase = email.toLowerCase();
-// 	return bannedJSON.emails[emailLowercase] !== undefined;
-// }
 
 function isIPBanned(ip: string): boolean {
 	return bannedJSON.IPs[ip] !== undefined;
