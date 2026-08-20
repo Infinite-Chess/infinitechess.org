@@ -17,18 +17,8 @@
 {# ── Macros ────────────────────────────────────────────#}
 {% from "components/user.njk" import usernameEmbed %}
 
-{# ════════════════════════════════════════════════════════════════════════
-   NOTE FOR T9 (client wiring): regions tagged "SSR-OWNED" are rendered
-   server-side from the `meta` view-model + `gamePageData` (game-meta info,
-   participant list, player-bar names/ratings/orientation) and must NOT be
-   re-rendered by the client — it only writes live deltas into them (clock
-   values, `tempo`, `eloChange`). Blocks tagged "EXAMPLE" are static sample
-   structure only; the client REPLACES their contents (and toggles `.hidden`)
-   once real game data loads. Static "skeleton" blocks (result-banner,
-   draw-offer, disconnect-status, self-disconnect-status) are SSR'd with a
-   fixed structure and start `.hidden` (unless already true at load); the client
-   only toggles `.hidden` + writes their text — it must never rebuild their markup.
-   ════════════════════════════════════════════════════════════════════════ #}
+{# Regions tagged "SSR-OWNED" are rendered from `meta` + `gamePageData` and must never be
+   re-rendered by the client — it only writes live deltas into them (clocks, `tempo`, `eloChange`). #}
 <main class="game">
 
 	{# ── Left side bar ─────────────────────────────────────────────────── #}
@@ -96,7 +86,7 @@
 		{# Game metadata — all static information about a game #}
 		<div class="game-meta panel">
 
-			{# Original seek's properties — SSR-OWNED (rendered from `meta`); not re-rendered by the client. #}
+			{# Original seek's properties — SSR-OWNED. #}
 			<div class="meta-info">
 				<span class="meta-item">
 					<svg class="meta-icon {{ meta.variant.iconId }}"><use href="#{{ meta.variant.iconId }}"/></svg>
@@ -111,7 +101,7 @@
 				<span>{{ "Rated" if meta.rated else "Casual" }}</span>
 			</div>
 
-			{# Gamerule modifications. Omitted entirely when the game plays by the standard rules.
+			{# Gamerule modifications. Omitted when the game plays by the standard rules.
 			   Matches the gamerule modifications variant preview tooltips show on the seek. #}
 			{% if meta.rules.length %}
 			<p class="meta-rules">
@@ -125,10 +115,8 @@
 			</p>
 			{% endif %}
 
-			{# Started X ago + live spectator count.
-			   `#meta-started` is SSR-OWNED: rendered with the relative string for first paint + the
-			   creation epoch, so the client re-derives the ticking string (same shared helper).
-			   The spectator count stays dynamic (the client sets + hides if none). #}
+			{# Started X ago + live spectator count. `#meta-started` carries the creation epoch so the
+			   client can re-derive the ticking string. The client sets the spectator count, hiding it if none. #}
 			<div class="meta-foot">
 				<time id="meta-started" data-created="{{ meta.timeCreated }}">{{ meta.startedAgo }}</time>
 				<span class="meta-spectators hidden" title="Spectators">
@@ -137,7 +125,7 @@
 				</span>
 			</div>
 
-			{# Participants — SSR-OWNED (white row then black row, fixed order); not re-rendered by the client. #}
+			{# Participants — SSR-OWNED (white row, then black row). #}
 			<div class="meta-players">
 				{% for color in [p.WHITE, p.BLACK] %}
 				{% set player = meta.players[color] %}
@@ -148,10 +136,8 @@
 				{% endfor %}
 			</div>
 
-			{# Result banner — static skeleton, always SSR'd. Visible + filled when the game is
-			   already concluded at load; otherwise `.hidden` and empty, and the client reveals it +
-			   sets the score/text the moment the game ends live. Structure is fixed, so the
-			   client only toggles `.hidden` and writes text — never rebuilds it. #}
+			{# Result banner — filled when the game is already concluded at load, otherwise empty and
+			   `.hidden` until the client reveals it and writes the score/text on game end. #}
 			<div class="result-banner{{ '' if meta.result else ' hidden' }}">
 				<span class="result-score">{{ meta.result.score if meta.result }}</span>
 				<span class="result-text">{{ meta.result.text if meta.result }}</span>
@@ -161,9 +147,8 @@
 		{# Material bars + match panel #}
 		<div class="play-group">
 
-			{# Top side's captured material
-			Top = the opponent (player view) or black (spectator view).
-			The client injects one <svg> per surplus piece via svgcache.getSilhouetteSVG(). #}
+			{# Top side's captured material. Top = the opponent (player view) or black (spectator view).
+			   The client injects one <svg> per surplus piece via svgcache.getSilhouetteSVG(). #}
 			<div class="material" id="material-top">
 				{# EXAMPLE #}
 				{# <svg class="material-piece"><use href="#svg-pawn"/></svg>
@@ -175,13 +160,10 @@
 			{# Match panel - Clocks, moves list, game actions #}
 			<div class="match-panel panel">
 
-				{# Top username container — SSR-OWNED (far side: the opponent, or black for spectators).
-				   Username/rating + clock are SSR'd; guiclock.ts writes the live clock value + `tempo`,
-				   and appends the `eloChange` delta on game end #}
+				{# Top username container — SSR-OWNED (far side: the opponent, or black for spectators). #}
 				<div class="player-bar" id="player-bar-top">
 					{{ usernameEmbed(meta.players[meta.bars.top].name, meta.players[meta.bars.top].elo) }}
-					{# Clock — SSR'd present (hidden for untimed games); the client only toggles `.hidden`
-					   and writes the ticking value. #}
+					{# Clock — hidden for untimed games. guiclock.ts writes the ticking value. #}
 					<span class="clock{{ '' if meta.timed else ' hidden' }}"></span>
 				</div>
 
@@ -206,7 +188,6 @@
 				<div class="game-actions unselectable">
 					{# Live-only actions (actions-live + the incoming draw-offer prompt) #}
 					{% if not meta.result and gamePageData.role is defined %}
-					{# Default live-game actions: offer draw + resign/abort. Visible during live play. #}
 					<div class="actions-live{{ '' if gamePageData.isLive else ' hidden' }}">
 						{% if not gamePageData.engineGame %}
 						<button class="action-btn tooltip-d" id="btn-offer-draw" data-tooltip="Offer draw"{% if not meta.resignable %} disabled{% endif %}>
@@ -240,17 +221,14 @@
 						<button class="action-btn" id="btn-rematch">Rematch</button>
 						{% endif %}
 						{# A link, not a button, so ctrl/cmd/middle-click opens it in a new tab.
-						   Nothing to analyze with zero moves. A live game can still gain
-						   moves — guigameactions.ts reveals it at conclusion. #}
+						   Hidden with zero moves — guigameactions.ts reveals it at conclusion. #}
 						<a class="action-btn{{ ' hidden' if meta.moveCount == 0 }}" id="btn-analysis" href="{{ analysisUrl }}">Analysis</a>
 					</div>
 				</div>
 
-				{# Opponent-disconnect status — live-only static skeleton; omitted entirely once the game
-				   is over (an opponent can't disconnect or be claimed against in a concluded game), so
-				   it won't be found on a game that loaded concluded. Starts empty and `.hidden`: the client
-				   reveals/hides the block as the opponent drops/returns and writes the live countdown into
-				   `.disconnect-text`, then reveals `.disconnect-buttons` (also `.hidden`) on expiry. #}
+				{# Opponent-disconnect status — omitted once the game is over, as nobody can be claimed
+				   against in a concluded game. The client writes the countdown into `.disconnect-text`,
+				   then reveals `.disconnect-buttons` on expiry. #}
 				{% if not meta.result and not gamePageData.engineGame %}
 				<div class="disconnect-status hidden">
 					<span class="disconnect-text"></span>
@@ -261,16 +239,13 @@
 				</div>
 				{% endif %}
 
-				{# Our OWN connection-loss notice. Starts empty and `.hidden`; the client writes the
-				   text and reveals it while we're disconnected, then swaps in a brief "Reconnected."
-				   (`.reconnected`) once we're back in sync before hiding it. #}
+				{# Our OWN connection-loss notice. The client writes the text and reveals it while we're
+				   disconnected, then swaps in a brief "Reconnected." (`.reconnected`) before hiding it. #}
 				{% if gamePageData.isLive %}
 				<div class="self-disconnect-status hidden"></div>
 				{% endif %}
 
-				{# Bottom username container — SSR-OWNED (near side: you, or white for spectators).
-				   Username/rating + clock are SSR'd; the client writes the live clock value, `tempo`,
-				   and `eloChange`. #}
+				{# Bottom username container — SSR-OWNED (near side: you, or white for spectators). #}
 				<div class="player-bar" id="player-bar-bottom">
 					{{ usernameEmbed(meta.players[meta.bars.bottom].name, meta.players[meta.bars.bottom].elo) }}
 					<span class="clock{{ '' if meta.timed else ' hidden' }}"></span>
@@ -278,8 +253,7 @@
 
 			</div>{# .match-panel #}
 
-			{# Bottom side's captured material
-			   Bottom = you (player view) or white (spectator view). #}
+			{# Bottom side's captured material. Bottom = you (player view) or white (spectator view). #}
 			<div class="material" id="material-bottom">
 				{# EXAMPLE #}
 				{# <svg class="material-piece"><use href="#svg-pawn"/></svg> #}
@@ -302,8 +276,7 @@
 				</button>
 			</div>
 			<div class="chat-log scrollbar-thin">
-				{# EXAMPLE — the client renders chat messages and static event notifications here.
-				   The two notices below show the static-notification shape (draw/rematch offers & rejections, no buttons). #}
+				{# EXAMPLE — the client renders chat messages and event notices here. #}
 				{# <div class="chat-notice">Opponent offered a draw.</div>
 				<div class="chat-notice">Draw offer declined.</div> #}
 			</div>
