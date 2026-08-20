@@ -228,7 +228,7 @@ function readGameRules(): void {
 		const runningpromotionPieces: RawType[] = [];
 
 		for (const code of promotionPiecesRaw.split(',')) {
-			const typeStr: string | undefined = icnconverter.piece_codes_inverted[code];
+			const typeStr: string | undefined = icnconverter.pieceCodesInverted[code];
 			if (typeStr === undefined) {
 				element_promotionpieces.classList.add('invalid-input');
 				break pa;
@@ -262,7 +262,7 @@ function readGameRules(): void {
 	if (element_royalcapture.checked) winConditions.push('royalcapture');
 	if (element_allroyalscaptured.checked) winConditions.push('allroyalscaptured');
 	if (element_allpiecescaptured.checked) winConditions.push('allpiecescaptured');
-	if (winConditions.length === 0) winConditions.push(icnconverter.default_win_condition);
+	if (winConditions.length === 0) winConditions.push(icnconverter.defaultWinCondition);
 
 	// pawn double push
 	let pawnDoublePush: boolean | undefined = undefined;
@@ -447,7 +447,7 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 
 	if (gamerulesGUIinfo.promotionPieces !== undefined) {
 		element_promotionpieces.value = gamerulesGUIinfo.promotionPieces
-			.map((type) => icnconverter.piece_codes_raw[type])
+			.map((type) => icnconverter.pieceCodesRaw[type])
 			.join(',')
 			.toUpperCase();
 	} else element_promotionpieces.value = '';

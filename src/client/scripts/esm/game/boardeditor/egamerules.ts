@@ -61,7 +61,7 @@ const castlingTypes: RawType[] = [r.ROOK, r.KING, r.ROYALCENTAUR];
 /** Virtual game rules object for the position */
 let gamerulesGUIinfo: GameRulesGUIinfo = {
 	playerToMove: 'white',
-	winConditions: [icnconverter.default_win_condition],
+	winConditions: [icnconverter.defaultWinCondition],
 };
 
 // Getting & Setting -------------------------------------------------------------
@@ -176,8 +176,8 @@ function setGamerulesGUIinfo(
 
 	gamerulesGUIinfo.winConditions = [
 		...new Set([
-			...(gameRules.winConditions[p.WHITE] || [icnconverter.default_win_condition]),
-			...(gameRules.winConditions[p.BLACK] || [icnconverter.default_win_condition]),
+			...(gameRules.winConditions[p.WHITE] || [icnconverter.defaultWinCondition]),
+			...(gameRules.winConditions[p.BLACK] || [icnconverter.defaultWinCondition]),
 		]),
 	];
 

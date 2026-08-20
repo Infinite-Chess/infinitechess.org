@@ -19,7 +19,7 @@ export function getPosition(): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
-	return icnconverter.generatePositionFromShortForm(POSITION_STRING);
+	return icnconverter.parseShortFormPosition(POSITION_STRING);
 }
 
 export function gameruleModifications(): GameRuleModifications {

@@ -14,7 +14,7 @@ export function getPosition(): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
-	return icnconverter.generatePositionFromShortForm(CLASSICAL_POSITION_STRING);
+	return icnconverter.parseShortFormPosition(CLASSICAL_POSITION_STRING);
 }
 
 export function getPositionStringLength(): number {

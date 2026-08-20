@@ -55,7 +55,7 @@ function gen(
 	// position is string and should identically populate all 2D boards
 	if (typeof input_position === 'string') {
 		const input_position_long: Map<CoordsKey, number> =
-			icnconverter.generatePositionFromShortForm(input_position).position;
+			icnconverter.parseShortFormPosition(input_position).position;
 
 		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
 			for (let j = dim.MIN_Y; j <= dim.MAX_Y; j++) {
@@ -105,8 +105,7 @@ function gen(
 						const sub_position_short =
 							input_position[`${i / dim.BOARD_SPACING},${j / dim.BOARD_SPACING}`];
 						const sub_position_long: Map<CoordsKey, number> = sub_position_short
-							? icnconverter.generatePositionFromShortForm(sub_position_short)
-									.position
+							? icnconverter.parseShortFormPosition(sub_position_short).position
 							: new Map<CoordsKey, number>();
 						for (const [key, value] of sub_position_long) {
 							const coords = coordutil.getCoordsFromKey(key);

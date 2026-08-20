@@ -1780,7 +1780,7 @@ function move_to_gamefile_move(target_square: DoubleCoords): string {
 		endCoords: [BigInt(endCoords[0]!), BigInt(endCoords[1]!)],
 	};
 	// Now convert to most compact string notation: "x,y>x,y=Q" that the engine API accepts.
-	return icnconverter.getCompactMoveFromDraft(moveCoords);
+	return icnconverter.getTokenFromMoveCoords(moveCoords);
 }
 
 function doesTypeExist(boardsim: EngineBoard, type: number): boolean {

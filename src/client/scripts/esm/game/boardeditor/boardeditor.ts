@@ -75,8 +75,8 @@ async function initBoardEditor(
 		const gamefile = gameslot.getGamefile()!;
 		// Set gamerulesGUIinfo object according to loaded Classical variant
 		const gameRules = jsutil.deepCopyObject(gamefile.gameRules);
-		gameRules.winConditions[p.WHITE] = [icnconverter.default_win_condition];
-		gameRules.winConditions[p.BLACK] = [icnconverter.default_win_condition];
+		gameRules.winConditions[p.WHITE] = [icnconverter.defaultWinCondition];
+		gameRules.winConditions[p.BLACK] = [icnconverter.defaultWinCondition];
 		const globalState = jsutil.deepCopyObject(gamefile.state.global);
 		initial_pawnDoublePush = true;
 		initial_castling = true;

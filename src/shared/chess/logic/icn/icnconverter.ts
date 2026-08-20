@@ -143,7 +143,7 @@ type PresetAnnotes = {
  * 1-2 letter codes for each player number.
  * This is used for specifying the turn order in ICN.
  */
-const player_codes = {
+const playerCodes = {
 	[p.NEUTRAL]: 'n', // I dont think we need this, good to have in case
 	[p.WHITE]: 'w',
 	[p.BLACK]: 'b',
@@ -153,13 +153,13 @@ const player_codes = {
 	[p.YELLOW]: 'y',
 	[p.GREEN]: 'g',
 } as const;
-const player_codes_inverted = jsutil.invertObj(player_codes);
+const playerCodesInverted = jsutil.invertObj(playerCodes);
 
-type PlayerCode = (typeof player_codes)[keyof typeof player_codes];
+type PlayerCode = (typeof playerCodes)[keyof typeof playerCodes];
 
 /** 1-2 letter codes for the standard white, black, and neutral pieces. */
 // prettier-ignore
-const piece_codes = {
+const pieceCodes = {
 	[r.KING + e.W]: 'K',          [r.KING + e.B]: 'k',
 	[r.PAWN + e.W]: 'P',          [r.PAWN + e.B]: 'p',
 	[r.KNIGHT + e.W]: 'N',        [r.KNIGHT + e.B]: 'n',
@@ -184,10 +184,10 @@ const piece_codes = {
 	[r.OBSTACLE + e.N]: 'ob',
 	[r.VOID + e.N]: 'vo',
 };
-const piece_codes_inverted = jsutil.invertObj(piece_codes);
+const pieceCodesInverted = jsutil.invertObj(pieceCodes);
 
 /** The codes for raw, color-less piece types. */
-const piece_codes_raw = {
+const pieceCodesRaw = {
 	[r.KING]: 'k',
 	[r.PAWN]: 'p',
 	[r.KNIGHT]: 'n',
@@ -212,12 +212,12 @@ const piece_codes_raw = {
 	[r.OBSTACLE]: 'ob',
 	[r.VOID]: 'vo',
 };
-const piece_codes_raw_inverted = jsutil.invertObj(piece_codes_raw);
+const pieceCodesRawInverted = jsutil.invertObj(pieceCodesRaw);
 
 // Variables ------------------------------------------------------------------
 
 /** The desired ordering metadata should be placed in the ICN */
-const metadata_ordering: (keyof MetaData)[] = [
+const metadataOrdering: (keyof MetaData)[] = [
 	'Event',
 	'Site',
 	'GameId',
@@ -252,7 +252,7 @@ const COMPACT_FORMAT_OPTIONS = {
 	move_numbers: false,
 } as const;
 
-// Defaults when pasting an ICN ----------------------------------------------------------
+// Defaults ----------------------------------------------------------
 
 /** Tests if the provided array of legal promotions is the default set of promotions. */
 function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
@@ -261,7 +261,7 @@ function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
 }
 
 /** The default win condition for each player, if none specified in the ICN. */
-const default_win_condition = 'checkmate' as const;
+const defaultWinCondition = 'checkmate' as const;
 /** The default turn order, if none specified in the ICN. */
 const defaultTurnOrder = [p.WHITE, p.BLACK];
 /** The default full move, if none specified in the ICN. */
@@ -297,8 +297,8 @@ const unboundedIntegerSource = String.raw`(?:_|${integerSource})`; // Allows _ a
 
 const coordsKeyRegexSource = `${integerSource},${integerSource}`; // '-1,2'
 
-const piece_code_regex_source = '[a-zA-Z]{1,2}';
-const raw_piece_code_regex_source = '[a-z]{1,2}';
+const pieceCodeRegexSource = '[a-zA-Z]{1,2}';
+const rawPieceCodeRegexSource = '[a-z]{1,2}';
 
 /**
  * Returns a regex for matching a piece abbreviation like '3Q' or 'nr'. '3Q' => Player-3 queen (red)
@@ -313,7 +313,7 @@ const raw_piece_code_regex_source = '[a-z]{1,2}';
 function getPieceAbbrevRegexSource(capturing: boolean): string {
 	const player = capturing ? '<player>' : ':';
 	const abbrev = capturing ? '<abbrev>' : ':';
-	const result = `(?${player}${wholeNumberSource})?(?${abbrev}${piece_code_regex_source})`;
+	const result = `(?${player}${wholeNumberSource})?(?${abbrev}${pieceCodeRegexSource})`;
 	// console.log("Generated PieceAbbrev Regex Source:", result);
 	return result;
 }
@@ -340,7 +340,7 @@ function getPromotionRegexSource(capturing: boolean): string {
  * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q'
  * The start coords, end coords, and promotion abbrev are all captured into named groups.
  */
-const moveRegexCompact = new RegExp(
+const moveTokenRegex = new RegExp(
 	`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${getPromotionRegexSource(true)}$`,
 );
 /**
@@ -397,7 +397,7 @@ const metadataRegex = new RegExp(
 ); // 'y' flag for sticky matching (only matches at the regex's lastIndex property, not after)
 
 const turnOrderRegex = new RegExp(
-	String.raw`(?<turnOrder>${raw_piece_code_regex_source}(?::${raw_piece_code_regex_source})*)${whiteSpaceOrEnd}`,
+	String.raw`(?<turnOrder>${rawPieceCodeRegexSource}(?::${rawPieceCodeRegexSource})*)${whiteSpaceOrEnd}`,
 	'y',
 );
 
@@ -417,7 +417,7 @@ const fullMoveRegex = new RegExp(
 );
 
 const promotionRanksSource = `${integerSource}(?:,${integerSource})*`; // '8,16,24,32'
-const promotionsPiecesSource = `${piece_code_regex_source}(?:,${piece_code_regex_source})*`; // 'q,r,b,n'
+const promotionsPiecesSource = `${pieceCodeRegexSource}(?:,${pieceCodeRegexSource})*`; // 'q,r,b,n'
 // FUTURE TODO: Drop support for old way of specifying promotions in ICN.
 // Change a single player promotion source to just the rank numbers, no promotion pieces,
 // and add a new regex for detecting custom promotion pieces after all player ranks and before the closing parenthesis.
@@ -499,10 +499,10 @@ const movesRegex = new RegExp(String.raw`(?<moves>${movesRegexSource})${whiteSpa
  * [68] king(red) => '3k'
  */
 function getAbbrFromType(type: number): string {
-	let short = piece_codes[type];
+	let short = pieceCodes[type];
 	if (!short) {
 		const [r, p] = typeutil.splitType(type);
-		short = String(p) + piece_codes_raw[r];
+		short = String(p) + pieceCodesRaw[r];
 	}
 	return short;
 }
@@ -527,12 +527,12 @@ function getTypeFromAbbr(pieceAbbr: string): number {
 
 	if (playerStr === undefined) {
 		// No player number override is present
-		typeStr = piece_codes_inverted[abbrev];
+		typeStr = pieceCodesInverted[abbrev];
 		if (typeStr === undefined) throw Error(`Unknown piece abbreviation: (${pieceAbbr})`);
 		return Number(typeStr);
 	} else {
 		// Player number override present   '3Q'
-		const rawTypeStr = piece_codes_raw_inverted[abbrev.toLowerCase()];
+		const rawTypeStr = pieceCodesRawInverted[abbrev.toLowerCase()];
 		if (rawTypeStr === undefined) throw Error(`Unknown raw piece abbreviation: (${pieceAbbr})`);
 		return typeutil.buildType(Number(rawTypeStr) as RawType, Number(playerStr) as Player);
 	}
@@ -579,7 +579,7 @@ function LongToShort_Format(
 
 	// Appended in the correct order given by metadata_key_ordering
 	const metadataCopy = jsutil.deepCopyObject(longformat.metadata);
-	for (const metadata_name of metadata_ordering) {
+	for (const metadata_name of metadataOrdering) {
 		if (metadataCopy[metadata_name] === undefined) {
 			delete metadataCopy[metadata_name]; // Delete it (sometimes its DECLARED as undefined). Prevents it from increasing the key count
 			continue; // Skip to the next metadata
@@ -590,7 +590,7 @@ function LongToShort_Format(
 	// Are there any remaining we missed?
 	if (Object.keys(metadataCopy).length > 0)
 		throw Error(
-			`metadata_ordering is missing metadata keys (${Object.keys(metadataCopy).join(', ')})`,
+			`metadataOrdering is missing metadata keys (${Object.keys(metadataCopy).join(', ')})`,
 		);
 
 	if (metadataSegments.length > 0) {
@@ -625,9 +625,9 @@ function LongToShort_Format(
 
 	// Turn order
 	const turnOrderArray: PlayerCode[] = longformat.gameRules.turnOrder.map((player) => {
-		if (!(player in player_codes))
+		if (!(player in playerCodes))
 			throw new Error(`No player code found for player (${player})!`);
-		return player_codes[player];
+		return playerCodes[player];
 	});
 	let turn_order = turnOrderArray.join(':'); // 'w:b'
 	if (turn_order === 'w:b')
@@ -700,7 +700,7 @@ function LongToShort_Format(
 		}
 
 		const promotionPiecesString = !isPromotionListDefaultPromotions(promotionPieces)
-			? ';' + promotionPieces.map((type) => piece_codes_raw[type]).join(',') // ';N,R,B,Q,AM'
+			? ';' + promotionPieces.map((type) => pieceCodesRaw[type]).join(',') // ';n,r,b,q,am'
 			: '';
 
 		positionSegments.push('(' + playerSegments.join('|') + promotionPiecesString + ')'); // '(8,17|1,10)'
@@ -732,7 +732,7 @@ function LongToShort_Format(
 		(segment) => segment === playerWinConSegments[0],
 	);
 	if (allPlayersMatchWinConditions) {
-		if (playerWinConSegments[0]! !== default_win_condition)
+		if (playerWinConSegments[0]! !== defaultWinCondition)
 			positionSegments.push(playerWinConSegments[0]!); // Don't include parenthesis => 'royalcapture' | 'checkmate,koth'
 		// Else all players have checkmate, no need to specify!
 	} else {
@@ -812,8 +812,7 @@ function LongToShort_Format(
 
 /**
  * Converts a string in Infinite Chess Notation to game in JSON format.
- *
- * Throws an error if the ICN is invalid.
+ * @throws If the ICN is invalid.
  */
 function ShortToLong_Format(icn: string): LongFormatOut {
 	// console.log("====== Parsing ICN ======");
@@ -891,11 +890,11 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		const turnOrderArray = turnOrderString.split(':'); // ['w','b']
 		turnOrder = [
 			...turnOrderArray.map((p_code) => {
-				if (!(p_code in player_codes_inverted))
+				if (!(p_code in playerCodesInverted))
 					throw Error(
 						`Unknown player code (${p_code}) when parsing turn order of ICN! Turn order (${turnOrderResults.groups!['turnOrder']})`,
 					);
-				return Number(player_codes_inverted[p_code]);
+				return Number(playerCodesInverted[p_code]);
 			}),
 		] as Player[]; // [1,2]
 
@@ -985,7 +984,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			if (allowed) {
 				// prettier-ignore
 				lastSpecifiedPromotions = [...new Set(allowed.split(',').map(raw => {
-					const rawPieceCode = piece_codes_raw_inverted[raw.toLowerCase()];
+					const rawPieceCode = pieceCodesRawInverted[raw.toLowerCase()];
 					if (rawPieceCode === undefined) throw new Error(`Unknown raw piece code (${raw}) when parsing promotion pieces!`);
 					return Number(rawPieceCode) as RawType;
 				}))];
@@ -1052,7 +1051,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	} else {
 		// Set default win conditions
 		for (const player of turnOrder) {
-			winConditions[player] = [default_win_condition];
+			winConditions[player] = [defaultWinCondition];
 		}
 	}
 
@@ -1229,15 +1228,15 @@ function ShortToLong_Format(icn: string): LongFormatOut {
  *
  * {@link getShortFormMoveFromMove} is also capable of this, but less efficient.
  */
-function getCompactMoveFromDraft(moveCoords: MoveCoords): string {
+function getTokenFromMoveCoords(moveCoords: MoveCoords): string {
 	const startCoordsKey = coordutil.getKeyFromCoords(moveCoords.startCoords);
 	const endCoordsKey = coordutil.getKeyFromCoords(moveCoords.endCoords);
 	const promotionAbbr =
 		moveCoords.promotion !== undefined ? getAbbrFromType(moveCoords.promotion) : undefined;
-	return getCompactMoveFromParts(startCoordsKey, endCoordsKey, promotionAbbr);
+	return getTokenFromParts(startCoordsKey, endCoordsKey, promotionAbbr);
 }
 
-function getCompactMoveFromParts(
+function getTokenFromParts(
 	startCoordsKey: string,
 	endCoordsKey: string,
 	promotionAbbr?: string,
@@ -1267,9 +1266,7 @@ function getShortFormMoveFromMove(
 	// console.log("Options for getShortFormMoveFromMove:", options);
 
 	if (options.compact && !options.spaces && !options.comments)
-		console.warn(
-			'getCompactMoveFromDraft() is more efficient to get the most-compact form of a move.',
-		);
+		console.warn('getTokenFromMoveCoords() is more efficient to get the most-compact form of a move.'); // prettier-ignore
 	if (!options.compact) {
 		if (move.type === undefined)
 			throw Error(`move.type must be present when compact = false! (${move.token})`);
@@ -1337,24 +1334,14 @@ function getShortFormMoveFromMove(
  * `comment` and `clockStamp` will NOT be present.
  */
 function parseTokenMove(tokenMove: string): MoveParsed {
-	const match = moveRegexCompact.exec(tokenMove);
+	const match = moveTokenRegex.exec(tokenMove);
 	if (match === null) throw Error('Invalid compact move: ' + tokenMove);
 	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
 }
 
-// /** Parses a shortform move in any dynamic format to a readable json. */
-// function parseMoveFromShortFormMove(shortFormMove: string): MoveParsed {
-// 	const moveRegex = new RegExp(`^${getMoveRegexSource(true)}$`);
-// 	const match = moveRegex.exec(shortFormMove);
-// 	if (match === null) throw Error('Invalid shortform move: ' + shortFormMove);
-// 	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
-// }
-
 /**
  * Takes the result.groups of a regex match and parses them into a move.
- *
- * Throws an error if the coordinates would become Infinity when cast to
- * a javascript number, or if the promoted piece abbreviation is invalid.
+ * @throws If the promoted piece abbreviation is invalid.
  */
 function getParsedMoveFromNamedCapturedMoveGroups(
 	capturedGroups: NamedCaptureMoveGroups,
@@ -1370,7 +1357,7 @@ function getParsedMoveFromNamedCapturedMoveGroups(
 	const parsedMove: MoveParsed = {
 		startCoords,
 		endCoords,
-		token: getCompactMoveFromParts(startCoordsKey, endCoordsKey, promotionAbbr),
+		token: getTokenFromParts(startCoordsKey, endCoordsKey, promotionAbbr),
 	};
 	if (promotionAbbr) parsedMove.promotion = getTypeFromAbbr(promotionAbbr);
 	if (comment) {
@@ -1600,7 +1587,7 @@ function generateSpecialRights(
  * Takes the position in compressed short form and returns the position and specialRights properties of the gamefile
  * @param shortposition - The compressed position of the gamefile (e.g., "K5,4+|P1,2|r500,25389")
  */
-function generatePositionFromShortForm(shortposition: string): {
+function parseShortFormPosition(shortposition: string): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
@@ -1630,7 +1617,7 @@ function generatePositionFromShortForm(shortposition: string): {
 	return { position, specialRights };
 }
 
-// Other --------------------------------------------------------------------------------------------------
+// Preset Annotation Parsing -------------------------------------------------------------
 
 /**
  * Parses the preset squares from a compacted string form.
@@ -1675,13 +1662,13 @@ export default {
 
 	getAbbrFromType,
 	getTypeFromAbbr,
-	getCompactMoveFromDraft,
+	getTokenFromMoveCoords,
 
 	parseTokenMove,
 
 	getShortFormPosition,
 	generateSpecialRights,
-	generatePositionFromShortForm,
+	parseShortFormPosition,
 
 	getShortFormMoveFromMove,
 	getShortFormMovesFromMoves,
@@ -1695,9 +1682,9 @@ export default {
 	integerSource,
 	promotionRanksSource,
 	promotionsPiecesSource,
-	default_win_condition,
-	piece_codes_inverted,
-	piece_codes_raw,
+	defaultWinCondition,
+	pieceCodesInverted,
+	pieceCodesRaw,
 };
 
 export type { LongFormatIn, LongFormatOut, MovePreprint, MoveParsed, MoveCoords, PresetAnnotes };

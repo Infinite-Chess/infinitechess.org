@@ -26,7 +26,7 @@ export function getPosition(timestamp: number = Date.now()): {
 	specialRights: Set<CoordsKey>;
 } {
 	const positionString = variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
-	return icnconverter.generatePositionFromShortForm(positionString);
+	return icnconverter.parseShortFormPosition(positionString);
 }
 
 export function gameruleModifications(): GameRuleModifications {

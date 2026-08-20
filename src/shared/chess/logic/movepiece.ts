@@ -128,7 +128,7 @@ function generateMove(boardsim: Board, moveTagged: MoveTagged): MoveFull {
 		changes: [],
 		generateIndex: boardsim.state.local.moveIndex + 1,
 		state: [],
-		token: icnconverter.getCompactMoveFromDraft(moveTagged),
+		token: icnconverter.getTokenFromMoveCoords(moveTagged),
 		flags: {
 			// These will be set later, but we need a default value
 			check: false,

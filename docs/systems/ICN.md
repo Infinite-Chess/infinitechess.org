@@ -38,7 +38,7 @@ match, and parsing ends with `Unexpected characters remaining in the ICN after p
 may not contain `"`. The 200 cap is deliberate to prevent a forgotten closing quote letting the
 regex swallow the whole ICN.
 
-Recognized keys, and the exact order the writer emits them in (`metadata_ordering`): `Event`,
+Recognized keys, and the exact order the writer emits them in (`metadataOrdering`): `Event`,
 `Site`, `GameId`, `Variant`, `Round`, `UTCDate`, `UTCTime`, `TimeControl`, `White`, `Black`,
 `WhiteID`, `BlackID`, `WhiteElo`, `BlackElo`, `WhiteRatingDiff`, `BlackRatingDiff`, `Result`,
 `Termination`. Field meanings live on the `MetaData` interface in [domain.ts](/src/shared/domain.ts).
@@ -49,7 +49,7 @@ variant code names the position, the date/time picks which historical revision o
 three are **required** when writing with `skipPosition: true`, `LongToShort_Format` otherwise throws
 without them.
 
-Writing an ICN with a metadata key absent from `metadata_ordering` throws. Parsing one on the way in
+Writing an ICN with a metadata key absent from `metadataOrdering` throws. Parsing one on the way in
 keeps it.
 
 ## Section 2 — Rules and position
@@ -321,10 +321,10 @@ Piecewise helpers, for when you hold one segment rather than a whole ICN:
 
 | Segment            | Write                          | Read                                         |
 | ------------------ | ------------------------------ | -------------------------------------------- |
-| One compact move   | `getCompactMoveFromDraft()`    | `parseTokenMove()`                           |
+| One compact move   | `getTokenFromMoveCoords()`     | `parseTokenMove()`                           |
 | One dressed move   | `getShortFormMoveFromMove()`   | — (only via the whole list)                  |
 | A move list        | `getShortFormMovesFromMoves()` | `parseShortFormMoves()`                      |
-| A position         | `getShortFormPosition()`       | `generatePositionFromShortForm()`            |
+| A position         | `getShortFormPosition()`       | `parseShortFormPosition()`                   |
 | Preset annotations | —                              | `parsePresetSquares()` / `parsePresetRays()` |
 
 `generateSpecialRights(position, pawnDoublePush, castleWith?)` derives the `+` marks from a bare
