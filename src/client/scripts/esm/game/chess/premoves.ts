@@ -22,7 +22,7 @@ import movepiece, {
 	MoveTagged,
 } from '../../../../../shared/chess/logic/movepiece.js';
 
-import mouse from '../../util/mouse.js';
+import mouse from '../mouse.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import gameslot from './gameslot.js';
 import selection from './selection.js';

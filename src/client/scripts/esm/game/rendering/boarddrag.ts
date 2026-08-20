@@ -13,7 +13,7 @@ import vectors from '../../../../../shared/util/math/vectors.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 
-import mouse from '../../util/mouse.js';
+import mouse from '../mouse.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import keybinds from '../misc/keybinds.js';
 import Transition from './transitions/Transition.js';

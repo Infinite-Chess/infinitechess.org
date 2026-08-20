@@ -19,7 +19,7 @@ import coordutil, {
 } from '../../../../../../../shared/chess/util/coordutil.js';
 
 import space from '../../../../board/space.js';
-import mouse from '../../../../util/mouse.js';
+import mouse from '../../../mouse.js';
 import meshes from '../../../../board/rendering/meshes.js';
 import snapping from '../snapping.js';
 import gameslot from '../../../chess/gameslot.js';

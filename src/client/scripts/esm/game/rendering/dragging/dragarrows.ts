@@ -28,7 +28,7 @@ import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 
 import space from '../../../board/space.js';
-import mouse from '../../../util/mouse.js';
+import mouse from '../../mouse.js';
 import camera from '../../../board/rendering/camera.js';
 import meshes from '../../../board/rendering/meshes.js';
 import arrows from '../arrows/arrows.js';

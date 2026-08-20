@@ -6,7 +6,7 @@
  * (copies the current game's ICN to the clipboard).
  */
 
-import type { ModalMode } from '../../../components/gameSetupModalHandoff.js';
+import type { ModalMode } from '../../../handoffs/gamesetuphandoff.js';
 import type { GameFile, VariantOptions } from '../../../../../../shared/chess/logic/gamefile.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -15,12 +15,12 @@ import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import view from './guianalysisview.js';
 import toast from '../../../components/toast.js';
 import docutil from '../../../util/docutil.js';
-import handoff from '../../../savedpositions/handoff.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
+import editorhandoff from '../../../handoffs/editorhandoff.js';
 import gamecompressor from '../../../chess/gamecompressor.js';
-import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
+import gamesetuphandoff from '../../../handoffs/gamesetuphandoff.js';
 
 // The "More actions" menu ==========================================================
 
@@ -141,7 +141,7 @@ async function openCurrentPositionInEditor(): Promise<void> {
 	const position = exportCurrentPosition();
 	if (!position) return;
 
-	await handoff.save({ variantOptions: position.variantOptions });
+	await editorhandoff.save({ variantOptions: position.variantOptions });
 	window.location.assign('/editor');
 }
 
@@ -176,7 +176,7 @@ async function continueFromHereInLobby(mode: ModalMode): Promise<void> {
 	const position = exportCurrentPosition();
 	if (!position) return;
 
-	await gameSetupModalHandoff.save({ icn: position.icn, mode });
+	await gamesetuphandoff.save({ icn: position.icn, mode });
 	window.location.assign('/');
 }
 

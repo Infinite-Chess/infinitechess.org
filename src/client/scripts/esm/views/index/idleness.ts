@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/idleness.ts
+// src/client/scripts/esm/views/index/idleness.ts
 
 /**
  * Utility for detecting user idleness on the page.

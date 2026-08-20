@@ -16,7 +16,7 @@ import type {
 import bimath from '../../../../../../../shared/util/math/bimath';
 import boardutil from '../../../../../../../shared/chess/util/boardutil';
 
-import mouse from '../../../../util/mouse';
+import mouse from '../../../../game/mouse';
 import sfill from './sfill';
 import sdrag from './sdrag';
 import arrows from '../../../../game/rendering/arrows/arrows';

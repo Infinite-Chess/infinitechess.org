@@ -12,7 +12,7 @@ import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js
 import jsutil from '../../../../../shared/util/jsutil.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
 
-import mouse from '../../util/mouse.js';
+import mouse from '../mouse.js';
 import camera from '../../board/rendering/camera.js';
 import docutil from '../../util/docutil.js';
 import boardpos from '../../board/rendering/boardpos.js';

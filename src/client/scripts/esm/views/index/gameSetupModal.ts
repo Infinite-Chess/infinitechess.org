@@ -4,7 +4,7 @@
  * This script manages the game setup invite/seek creation modal.
  */
 
-import type { ModalMode } from '../../components/gameSetupModalHandoff.js';
+import type { ModalMode } from '../../handoffs/gamesetuphandoff.js';
 import type { GameMode, TimeControl } from '../../../../../shared/domain.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
@@ -15,7 +15,7 @@ import toast from '../../components/toast.js';
 import timeControls from './timeControls.js';
 import variantSelector from '../../components/variantselector/variantSelector.js';
 import modifierSelector from '../../components/variantselector/modifierSelector.js';
-import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
+import gamesetuphandoff from '../../handoffs/gamesetuphandoff.js';
 
 // Types ----------------------------------------------
 
@@ -223,7 +223,7 @@ function close(): void {
  * surface via the modal's own validation.
  */
 async function consumePendingHandoff(): Promise<void> {
-	const handoff = await gameSetupModalHandoff.take();
+	const handoff = await gamesetuphandoff.take();
 	if (handoff === undefined) return;
 	openModal(handoff.mode);
 	await variantSelector.applyIcn(handoff.icn);

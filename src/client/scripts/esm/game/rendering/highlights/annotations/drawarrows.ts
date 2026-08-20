@@ -25,7 +25,7 @@ import coordutil, {
 } from '../../../../../../../shared/chess/util/coordutil.js';
 
 import space from '../../../../board/space.js';
-import mouse from '../../../../util/mouse.js';
+import mouse from '../../../mouse.js';
 import camera from '../../../../board/rendering/camera.js';
 import snapping from '../snapping.js';
 import boardpos from '../../../../board/rendering/boardpos.js';

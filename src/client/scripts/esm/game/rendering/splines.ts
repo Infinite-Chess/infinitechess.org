@@ -1,17 +1,17 @@
-// src/client/scripts/esm/util/splines.ts
+// src/client/scripts/esm/game/rendering/splines.ts
 
 /**
  * This script contains utility methods for working with splines.
  */
 
-import type { Color } from '../../../../shared/util/math/math.js';
-import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import space from '../board/space.js';
-import boardpos from '../board/rendering/boardpos.js';
-import { createRenderable } from '../webgl/Renderable.js';
+import space from '../../board/space.js';
+import boardpos from '../../board/rendering/boardpos.js';
+import { createRenderable } from '../../webgl/Renderable.js';
 
 // Constants ------------------------------------------------------
 

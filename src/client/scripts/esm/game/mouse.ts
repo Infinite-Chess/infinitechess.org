@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/mouse.ts
+// src/client/scripts/esm/game/mouse.ts
 
 /**
  * This script contains several wrappers for getting the
@@ -10,9 +10,9 @@ import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/ut
 
 import space from '../board/space.js';
 import camera from '../board/rendering/camera.js';
-import perspective from '../game/rendering/perspective.js';
-import { listener_document, listener_canvas } from '../game/chess/gamecore.js';
-import input, { InputListener, Mouse, MouseButton } from '../game/input.js';
+import perspective from './rendering/perspective.js';
+import { listener_document, listener_canvas } from './chess/gamecore.js';
+import input, { InputListener, Mouse, MouseButton } from './input.js';
 
 /**
  * This is capable of getting the mouse position, EVEN IF

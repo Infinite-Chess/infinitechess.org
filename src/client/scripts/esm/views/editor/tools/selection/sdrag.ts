@@ -14,7 +14,7 @@ import bounds, {
 	DoubleBoundingBox,
 } from '../../../../../../../shared/util/math/bounds';
 
-import mouse from '../../../../util/mouse';
+import mouse from '../../../../game/mouse';
 import space from '../../../../board/space';
 import arrows from '../../../../game/rendering/arrows/arrows';
 import docutil from '../../../../util/docutil.js';

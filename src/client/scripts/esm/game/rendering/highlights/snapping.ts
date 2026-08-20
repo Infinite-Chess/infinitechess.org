@@ -26,7 +26,7 @@ import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.js';
 
 import space from '../../../board/space.js';
-import mouse from '../../../util/mouse.js';
+import mouse from '../../mouse.js';
 import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';

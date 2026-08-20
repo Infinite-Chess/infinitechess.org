@@ -20,7 +20,7 @@ import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/t
 
 import meshes from '../../board/rendering/meshes.js';
 import camera from '../../board/rendering/camera.js';
-import splines from '../../util/splines.js';
+import splines from './splines.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import movesound from '../misc/movesound.js';
 import arrowshifts from './arrows/arrowshifts.js';

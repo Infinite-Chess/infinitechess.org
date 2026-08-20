@@ -18,7 +18,7 @@ import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 
 import toast from '../../components/toast.js';
-import mouse from '../../util/mouse.js';
+import mouse from '../mouse.js';
 import space from '../../board/space.js';
 import arrows from '../rendering/arrows/arrows.js';
 import gameslot from '../chess/gameslot.js';

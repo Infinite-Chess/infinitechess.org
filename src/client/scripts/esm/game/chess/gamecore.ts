@@ -11,7 +11,7 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
 
-import mouse from '../../util/mouse.js';
+import mouse from '../mouse.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
 import border from '../../board/rendering/border.js';

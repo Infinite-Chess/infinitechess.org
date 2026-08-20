@@ -16,7 +16,7 @@ import bounds, {
 	DoubleBoundingBox,
 } from '../../../../../../../shared/util/math/bounds';
 
-import mouse from '../../../../util/mouse';
+import mouse from '../../../../game/mouse';
 import space from '../../../../board/space';
 import sdrag from './sdrag';
 import arrows from '../../../../game/rendering/arrows/arrows';

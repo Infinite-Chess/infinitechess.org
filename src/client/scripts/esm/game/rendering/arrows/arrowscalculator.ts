@@ -41,7 +41,7 @@ import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vecto
 import organizedpieces, { LineKey } from '../../../../../../shared/chess/logic/organizedpieces.js';
 
 import space from '../../../board/space.js';
-import mouse from '../../../util/mouse.js';
+import mouse from '../../mouse.js';
 import arrows from './arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../../../board/rendering/boardpos.js';

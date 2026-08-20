@@ -7,7 +7,6 @@
 
 import esave from '../actions/esave.js';
 import ecloud from '../actions/ecloud.js';
-import handoff from '../../../savedpositions/handoff.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import eactions from '../actions/eactions.js';
 import eautosave from '../actions/eautosave.js';
@@ -16,6 +15,7 @@ import guitoolbar from './guitoolbar.js';
 import guipalette from './guipalette.js';
 import boardeditor from '../boardeditor.js';
 import guigamerules from './actions/guigamerules.js';
+import editorhandoff from '../../../handoffs/editorhandoff.js';
 import selectiontool from '../tools/selection/selectiontool.js';
 import guiloadposition from './actions/loadposition/guiloadposition.js';
 import stransformations from '../tools/selection/stransformations.js';
@@ -69,7 +69,7 @@ async function open(): Promise<void> {
 
 	// A position handed off from another page takes precedence over the autosave.
 	// Failing that, read in the autosave; failing that, load the Classical position.
-	const pendingHandoff = await handoff.take();
+	const pendingHandoff = await editorhandoff.take();
 	const autoSaveState = pendingHandoff === undefined ? await eautosave.loadAutosave() : undefined;
 
 	if (pendingHandoff !== undefined) {

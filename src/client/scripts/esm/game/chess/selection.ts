@@ -26,7 +26,7 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import { rawTypes as r, players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-import mouse from '../../util/mouse.js';
+import mouse from '../mouse.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
 import config from '../../board/config.js';

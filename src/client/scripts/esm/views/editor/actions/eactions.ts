@@ -56,8 +56,8 @@ import validatorama from '../../../util/validatorama';
 import selectiontool from '../tools/selection/selectiontool';
 import gamecompressor from '../../../chess/gamecompressor';
 import guiboardcontrols from '../../../game/gui/guiboardcontrols';
+import gamesetuphandoff from '../../../handoffs/gamesetuphandoff.js';
 import clientmetadatautil from '../../../chess/clientmetadatautil';
-import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
 
 // Constants ----------------------------------------------------------------------
 
@@ -185,7 +185,7 @@ async function startEngineGame(): Promise<void> {
 		{ metadata: {} as MetaData, ...variantOptions },
 		icnconverter.COMPACT_FORMAT_OPTIONS,
 	);
-	await gameSetupModalHandoff.save({ icn, mode: 'computer' });
+	await gamesetuphandoff.save({ icn, mode: 'computer' });
 	window.location.assign('/');
 }
 

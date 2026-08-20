@@ -29,7 +29,7 @@ import boardutil from '../../../../../../shared/chess/util/boardutil.js';
 import boardchanges from '../../../../../../shared/chess/logic/boardchanges.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 
-import mouse from '../../../util/mouse.js';
+import mouse from '../../mouse.js';
 import arrows from './arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import arrowscalculator from './arrowscalculator.js';

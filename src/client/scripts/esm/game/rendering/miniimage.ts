@@ -24,7 +24,7 @@ import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js'
 
 import toast from '../../components/toast.js';
 import space from '../../board/space.js';
-import mouse from '../../util/mouse.js';
+import mouse from '../mouse.js';
 import camera from '../../board/rendering/camera.js';
 import gamecore from '../chess/gamecore.js';
 import gameslot from '../chess/gameslot.js';

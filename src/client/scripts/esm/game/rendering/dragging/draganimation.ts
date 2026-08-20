@@ -18,7 +18,7 @@ import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import pieceThemes from '../../../../../../shared/components/header/pieceThemes.js';
 
 import space from '../../../board/space.js';
-import mouse from '../../../util/mouse.js';
+import mouse from '../../mouse.js';
 import meshes from '../../../board/rendering/meshes.js';
 import camera from '../../../board/rendering/camera.js';
 import boardpos from '../../../board/rendering/boardpos.js';

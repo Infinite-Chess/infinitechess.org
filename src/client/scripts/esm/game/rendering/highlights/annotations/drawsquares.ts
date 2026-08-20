@@ -16,7 +16,7 @@ import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
 import variantpreviewer from '../../../../../../../shared/chess/variants/variantpreviewer.js';
 
 import space from '../../../../board/space.js';
-import mouse from '../../../../util/mouse.js';
+import mouse from '../../../mouse.js';
 import snapping from '../snapping.js';
 import boardpos from '../../../../board/rendering/boardpos.js';
 import gameslot from '../../../chess/gameslot.js';

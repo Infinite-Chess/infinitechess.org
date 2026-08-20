@@ -28,7 +28,7 @@ import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
 import docutil from '../../util/docutil.js';
-import idleness from '../../util/idleness.js';
+import idleness from './idleness.js';
 import gamesound from '../../board/gamesound.js';
 import socketsubs from '../../socket/socketsubs.js';
 import socketsend from '../../socket/socketsend.js';

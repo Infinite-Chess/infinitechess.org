@@ -20,7 +20,7 @@ import typeutil, {
 	rawTypes as r,
 } from '../../../../../../shared/chess/util/typeutil';
 
-import mouse from '../../../util/mouse';
+import mouse from '../../../game/mouse';
 import arrows from '../../../game/rendering/arrows/arrows';
 import gameslot from '../../../game/chess/gameslot';
 import selection from '../../../game/chess/selection';
