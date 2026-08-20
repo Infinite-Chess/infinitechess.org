@@ -5,7 +5,8 @@
  * It autosaves periodically, but only if the position is dirty, aka if it has changed since last time.
  */
 
-import type { EditorAutosaveState } from '../../../editorstores/estoretypes';
+import type { ActivePosition } from '../boardeditor';
+import type { EditorPositionData } from '../../../editorstores/estoretypes';
 
 import z from 'zod';
 
@@ -16,7 +17,22 @@ import boardeditor from '../boardeditor';
 import estoretypes from '../../../editorstores/estoretypes';
 import validatorama from '../../../util/validatorama';
 
+// Types -----------------------------------------------------------------
+
+/**
+ * Complete save state as written by the autosave.
+ * active_position is optional because the user may not have a named/saved position open.
+ */
+export interface EditorAutosaveState extends EditorPositionData {
+	active_position?: ActivePosition;
+	/** Whether the position has unsaved changes. */
+	dirty: boolean;
+}
+
 // Constants -------------------------------------------------------------
+
+/** Name of the IndexedDB key for the board editor autosave. */
+const EDITOR_AUTOSAVE_NAME = 'infinitechess-boardeditor-autosave';
 
 /** Schema for validating an AutosaveState */
 const AutosaveStateSchema = z.strictObject({
@@ -28,7 +44,7 @@ const AutosaveStateSchema = z.strictObject({
 		.optional(),
 	dirty: z.boolean(),
 	...estoretypes.positionDataFields,
-});
+}) satisfies z.ZodType<EditorAutosaveState>;
 
 // Variables --------------------------------------------------------------
 
@@ -74,7 +90,7 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 		const variantOptions = eactions.getCurrentPositionInformation(false);
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 
-		await IndexedDB.saveItem(estoretypes.EDITOR_AUTOSAVE_NAME, {
+		await IndexedDB.saveItem(EDITOR_AUTOSAVE_NAME, {
 			active_position: boardeditor.getActivePosition(),
 			dirty: boardeditor.isPositionDirty(),
 			timestamp: Date.now(),
@@ -125,7 +141,7 @@ function stopPositionAutosave(): void {
 }
 
 function clearAutosave(): void {
-	IndexedDB.deleteItem(estoretypes.EDITOR_AUTOSAVE_NAME).catch((err) => {
+	IndexedDB.deleteItem(EDITOR_AUTOSAVE_NAME).catch((err) => {
 		console.error('Failed to clear board editor autosave:', err);
 	});
 }
@@ -138,7 +154,7 @@ function clearAutosave(): void {
  * account switch).
  */
 async function loadAutosave(): Promise<EditorAutosaveState | undefined> {
-	const raw = await IndexedDB.loadItem(estoretypes.EDITOR_AUTOSAVE_NAME);
+	const raw = await IndexedDB.loadItem(EDITOR_AUTOSAVE_NAME);
 	if (raw === undefined) return undefined;
 	const parsed = AutosaveStateSchema.safeParse(raw);
 	if (!parsed.success) {

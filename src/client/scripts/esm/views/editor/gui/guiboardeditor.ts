@@ -15,6 +15,7 @@ import guitoolbar from './guitoolbar.js';
 import guipalette from './guipalette.js';
 import boardeditor from '../boardeditor.js';
 import guigamerules from './actions/guigamerules.js';
+import editorhandoff from '../../../editorstores/editorhandoff.js';
 import selectiontool from '../tools/selection/selectiontool.js';
 import guiloadposition from './actions/loadposition/guiloadposition.js';
 import stransformations from '../tools/selection/stransformations.js';
@@ -66,11 +67,18 @@ async function open(): Promise<void> {
 	element_menu.classList.remove('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 
-	// Try to read in autosave and initialize board editor
-	// If there is no autosave, initialize board editor with Classical position
-	const autoSaveState = await eautosave.loadAutosave();
+	// A position handed off from another page takes precedence over the autosave.
+	// Failing that, read in the autosave; failing that, load the Classical position.
+	const handoff = await editorhandoff.take();
+	const autoSaveState = handoff === undefined ? await eautosave.loadAutosave() : undefined;
 
-	if (autoSaveState === undefined) {
+	if (handoff !== undefined) {
+		boardeditor.clearActivePosition();
+		await gameloader.startBoardEditorFromCustomPosition(
+			{ additional: { variantOptions: handoff.variantOptions } },
+			true, // Dirty position: the handed-off position isn't one of the editor's saves
+		);
+	} else if (autoSaveState === undefined) {
 		boardeditor.clearActivePosition();
 		await gameloader.startBoardEditor();
 	} else {

@@ -1,7 +1,8 @@
 // src/client/scripts/esm/editorstores/estoretypes.ts
 
 /**
- * All TypeScript types, constants, and Zod schemas for the board editor save system.
+ * The TypeScript types and Zod schemas for the board editor save system that
+ * are shared beyond the editor page itself.
  *
  * Centralized here to avoid circular-dependency issues — this file only uses
  * type-only imports from other modules, so it can never be part of a circular
@@ -14,13 +15,8 @@ import * as z from 'zod';
 
 // Types ------------------------------------------------------------------
 
-/** The identity of a saved position — its name and where it is stored. */
-export type ActivePosition =
-	| { name: string; storage_type: 'local' }
-	| { name: string; storage_type: 'cloud'; owner: string };
-
 /** Whether a position is stored locally (IndexedDB) or on the server (cloud) */
-export type StorageType = ActivePosition['storage_type'];
+export type StorageType = 'local' | 'cloud';
 
 /** Minimal information about a saved position — used for display in the saved positions list */
 export interface EditorAbridgedSaveState {
@@ -41,16 +37,6 @@ export interface EditorPositionData {
 /** Complete information about a saved position (local or cloud) */
 export interface EditorSaveState extends EditorPositionData {
 	position_name: string;
-}
-
-/**
- * Complete save state as written by the autosave.
- * active_position is optional because the user may not have a named/saved position open.
- */
-export interface EditorAutosaveState extends EditorPositionData {
-	active_position?: ActivePosition;
-	/** Whether the position has unsaved changes. */
-	dirty: boolean;
 }
 
 // Zod Schemas --------------------------------------------------------------------
@@ -75,18 +61,13 @@ const AbridgedSaveStateSchema = z.strictObject({
 	position_name: positionNameSchema,
 	timestamp: positionDataFields.timestamp,
 	piece_count: positionDataFields.piece_count,
-});
+}) satisfies z.ZodType<EditorAbridgedSaveState>;
 
 /** Schema for validating a SaveState */
 const SaveStateSchema = z.strictObject({
 	position_name: positionNameSchema,
 	...positionDataFields,
-});
-
-// Constants --------------------------------------------------------------------
-
-/** Name of the IndexedDB key for the board editor autosave */
-const EDITOR_AUTOSAVE_NAME = 'infinitechess-boardeditor-autosave';
+}) satisfies z.ZodType<EditorSaveState>;
 
 // Exports --------------------------------------------------------------------
 
@@ -94,5 +75,4 @@ export default {
 	positionDataFields,
 	AbridgedSaveStateSchema,
 	SaveStateSchema,
-	EDITOR_AUTOSAVE_NAME,
 };

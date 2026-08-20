@@ -16,13 +16,10 @@
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit';
+import type { ActivePosition } from '../boardeditor';
 import type { MetaData, MovePacket } from '../../../../../../shared/domain.js';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
-import type {
-	ActivePosition,
-	EditorSaveState,
-	StorageType,
-} from '../../../editorstores/estoretypes';
+import type { EditorSaveState, StorageType } from '../../../editorstores/estoretypes';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';

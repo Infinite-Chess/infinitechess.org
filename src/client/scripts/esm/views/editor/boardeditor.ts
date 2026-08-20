@@ -7,8 +7,8 @@
  * active position tracking, and the main update/render loop.
  */
 
+import type { StorageType } from '../../editorstores/estoretypes.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { ActivePosition, StorageType } from '../../editorstores/estoretypes.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -27,6 +27,13 @@ import EDITOR_PROFILE from './ekeybinds.js';
 import guipositionheader from './gui/guipositionheader.js';
 
 import './tools/normaltool.js'; // Self-registers its move logic with selection.ts on load
+
+// Types -------------------------------------------------------------------------
+
+/** The identity of a saved position — its name and where it is stored. */
+export type ActivePosition =
+	| { name: string; storage_type: 'local' }
+	| { name: string; storage_type: 'cloud'; owner: string };
 
 // State -------------------------------------------------------------------------
 

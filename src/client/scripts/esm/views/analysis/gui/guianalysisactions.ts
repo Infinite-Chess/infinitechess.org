@@ -7,7 +7,6 @@
  */
 
 import type { ModalMode } from '../../../components/gameSetupModalHandoff.js';
-import type { EditorAutosaveState } from '../../../editorstores/estoretypes.js';
 import type { GameFile, VariantOptions } from '../../../../../../shared/chess/logic/gamefile.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -17,10 +16,9 @@ import view from './guianalysisview.js';
 import toast from '../../../components/toast.js';
 import docutil from '../../../util/docutil.js';
 import gameslot from '../../../game/chess/gameslot.js';
-import IndexedDB from '../../../util/IndexedDB.js';
-import estoretypes from '../../../editorstores/estoretypes.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
+import editorhandoff from '../../../editorstores/editorhandoff.js';
 import gamecompressor from '../../../chess/gamecompressor.js';
 import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
 
@@ -109,9 +107,7 @@ function getGameICN(gamefile: GameFile): string {
 }
 
 /** Exports the current position as ICN plus the variant options needed to reload it, or undefined if nothing's loaded. */
-function exportCurrentPosition():
-	| { icn: string; pieceCount: number; variantOptions: VariantOptions }
-	| undefined {
+function exportCurrentPosition(): { icn: string; variantOptions: VariantOptions } | undefined {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return undefined;
 
@@ -136,21 +132,16 @@ function exportCurrentPosition():
 
 	position.metadata = metadatautil.trimToSourceVariantMetadata(position.metadata);
 	const icn = icnconverter.LongToShort_Format(position, icnconverter.COMPACT_FORMAT_OPTIONS);
-	return { icn, pieceCount: position.position.size, variantOptions };
+	return { icn, variantOptions };
 }
 
-/** Hands the current position to the board editor via autosave, then navigates there. */
+/** Hands the current position off to the board editor and navigates there. */
 async function openCurrentPositionInEditor(): Promise<void> {
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 	const position = exportCurrentPosition();
 	if (!position) return;
 
-	await IndexedDB.saveItem(estoretypes.EDITOR_AUTOSAVE_NAME, {
-		dirty: true,
-		timestamp: Date.now(),
-		piece_count: position.pieceCount,
-		variantOptions: position.variantOptions,
-	} satisfies EditorAutosaveState);
+	await editorhandoff.save({ variantOptions: position.variantOptions });
 	window.location.assign('/editor');
 }
 
