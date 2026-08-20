@@ -45,6 +45,11 @@ function start(): void {
 	if (document.getElementById('variant-selector')) {
 		void import('./analysissetup.js').then((m) => m.default.init());
 	}
+	// Mirror image of the above: the .game-meta panel exists only on /analysis/:id, and it owns
+	// the ticking "Started X ago" readout. Lazy for the same reason — its lookups need the panel.
+	if (document.getElementById('meta-started')) {
+		void import('../../game/gui/guigamemeta.js');
+	}
 
 	// Load the game named by the URL, or a fresh Classical board if there is none —
 	// from there the variant setup panel drives subsequent loads (see analysissetup.ts).
