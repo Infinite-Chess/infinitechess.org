@@ -966,9 +966,8 @@ function matchField(
 }
 
 /**
- * Tests whether the position section lies at `index` in the ICN, parsing it
- * piece by piece — a position can be too long to regex match all at once.
- * @throws If the section is malformed.
+ * Tests whether the position section lies at `index` in the ICN.
+ * @throws If the section is malformed, or isn't terminated by whitespace or end of string.
  */
 function matchPositionSection(
 	icn: string,
@@ -976,59 +975,15 @@ function matchPositionSection(
 ):
 	| { position: Map<CoordsKey, number>; specialRights: Set<CoordsKey>; nextIndex: number }
 	| undefined {
-	const pieceEntryRegex = new RegExp(icnposition.getPieceEntryRegexSource(true), 'y');
-	const delimiter = /\|/y; // The delimiter between piece entries
-
-	// Check for the presence of the first piece entry
-	pieceEntryRegex.lastIndex = index;
-	let match: RegExpExecArray | null = pieceEntryRegex.exec(icn);
+	const match = icnposition.matchShortFormPosition(icn, index);
 	if (!match) return undefined;
 
-	// The POSITION is present!
-	const position = new Map<CoordsKey, number>();
-	const specialRights = new Set<CoordsKey>();
-
-	addPieceEntry(match, position, specialRights);
-
-	// Repeatedly check for the next piece entry.
-	// EFFICIENT. Works for arbitrarily large positions!
-	while (true) {
-		// Check if the next character is a delimiter
-		delimiter.lastIndex = pieceEntryRegex.lastIndex;
-		if (!delimiter.exec(icn)) break; // No delimiter found. End of position. Exit the loop.
-		// Delimiter found
-		pieceEntryRegex.lastIndex = delimiter.lastIndex;
-		match = pieceEntryRegex.exec(icn); // Get the next match
-		if (!match)
-			throw Error(`Position section is malformed! No valid piece entry follows a "|".`);
-		addPieceEntry(match, position, specialRights);
-	}
-
-	// console.log("Parsed position:", position);
-
 	// Make sure there's whitespace or end of string immediately following
-	whiteSpaceOrEndRegex.lastIndex = pieceEntryRegex.lastIndex;
+	whiteSpaceOrEndRegex.lastIndex = match.nextIndex;
 	if (!whiteSpaceOrEndRegex.exec(icn))
 		throw Error('Position section needs to be followed by whitespace or end of string!');
 
-	return { position, specialRights, nextIndex: whiteSpaceOrEndRegex.lastIndex };
-}
-
-/** Adds a matched piece entry to the position and specialRights. */
-function addPieceEntry(
-	match: RegExpExecArray,
-	position: Map<CoordsKey, number>,
-	specialRights: Set<CoordsKey>,
-): void {
-	// named groups are: pieceAbbr, coordsKey, specialRight
-	const pieceAbbr = match.groups!['pieceAbbr']!;
-	const coordsKey = match.groups!['coordsKey']! as CoordsKey;
-	const hasSpecialRight = match.groups!['specialRight'] === '+';
-
-	const pieceType = icnposition.getTypeFromAbbr(pieceAbbr);
-
-	position.set(coordsKey, pieceType);
-	if (hasSpecialRight) specialRights.add(coordsKey);
+	return { ...match, nextIndex: whiteSpaceOrEndRegex.lastIndex };
 }
 
 /** Tests whether the moves section lies at `index` in the ICN. */

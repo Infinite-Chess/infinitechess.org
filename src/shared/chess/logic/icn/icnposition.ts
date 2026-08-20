@@ -171,12 +171,13 @@ function getTypeFromAbbr(pieceAbbr: string): number {
 // Converting Positions ---------------------------------------------------------------
 
 /**
- * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
- * @param position - A piece iterator giving us each piece's coordsKey and pieceType.
- * 					 Using an iterable (which a Map<CoordsKey, number> also is considered a valid input) allows
- * 					 optimization elsewhere in the code, allowing us to avoid creating massive intermediate maps.
- * @param specialRights - The special rights of each piece in the gamefile, a set of CoordsKeys, where the piece at that coordinate can perform their special move (pawn double push, castling rights..)
- * @returns The position of the game in compressed form, where each piece with a + has its special move ability (.e.g., "P5,6+|k15,-56|Q5000,1")
+ * Accepts a gamefile's starting position and specialRights properties, returns
+ * the position in compressed notation (e.g., "P5,6+|k15,-56|Q5000,1").
+ * @param position - A piece iterator giving us each piece's coordsKey and pieceType. An iterable
+ * (a Map<CoordsKey, number> qualifies) lets callers avoid building massive intermediate maps.
+ * @param specialRights - The pieces that can still perform their special
+ * move (pawn double push, castling rights..), as a set of CoordsKeys.
+ * @returns The position, where each piece with a + has its special move ability.
  */
 function getShortFormPosition(
 	position: Iterable<[CoordsKey, number]>,
@@ -193,8 +194,74 @@ function getShortFormPosition(
 }
 
 /**
- * Takes the position in compressed short form and returns the position and specialRights properties of the gamefile
+ * Walks the piece entries of a position starting at `index`, entry
+ * by entry — a position can be too long to regex match all at once.
+ * @returns The position, its specialRights, and the index the position ends at,
+ * or undefined if no piece entry lies at `index`.
+ * @throws If a "|" isn't followed by a valid piece entry.
+ */
+function matchShortFormPosition(
+	shortposition: string,
+	index: number,
+):
+	| {
+			position: Map<CoordsKey, number>;
+			specialRights: Set<CoordsKey>;
+			nextIndex: number;
+	  }
+	| undefined {
+	const pieceEntryRegex = new RegExp(getPieceEntryRegexSource(true), 'y');
+	const delimiter = /\|/y; // The delimiter between piece entries
+
+	// Check for the presence of the first piece entry
+	pieceEntryRegex.lastIndex = index;
+	let match: RegExpExecArray | null = pieceEntryRegex.exec(shortposition);
+	if (!match) return undefined;
+
+	const position = new Map<CoordsKey, number>();
+	const specialRights = new Set<CoordsKey>();
+
+	addPieceEntry(match, position, specialRights);
+
+	// Repeatedly check for the next piece entry.
+	// EFFICIENT. Works for arbitrarily large positions!
+	while (true) {
+		// Check if the next character is a delimiter
+		delimiter.lastIndex = pieceEntryRegex.lastIndex;
+		if (!delimiter.exec(shortposition)) break; // No delimiter found. End of position. Exit the loop.
+		// Delimiter found
+		pieceEntryRegex.lastIndex = delimiter.lastIndex;
+		match = pieceEntryRegex.exec(shortposition); // Get the next match
+		if (!match) throw Error(`Position is malformed! No valid piece entry follows a "|".`); // prettier-ignore
+		addPieceEntry(match, position, specialRights);
+	}
+
+	// console.log("Parsed position:", position);
+
+	return { position, specialRights, nextIndex: pieceEntryRegex.lastIndex };
+}
+
+/** Adds a matched piece entry to the position and specialRights. */
+function addPieceEntry(
+	match: RegExpExecArray,
+	position: Map<CoordsKey, number>,
+	specialRights: Set<CoordsKey>,
+): void {
+	// named groups are: pieceAbbr, coordsKey, specialRight
+	const pieceAbbr = match.groups!['pieceAbbr']!;
+	const coordsKey = match.groups!['coordsKey']! as CoordsKey;
+	const hasSpecialRight = match.groups!['specialRight'] === '+';
+
+	const pieceType = getTypeFromAbbr(pieceAbbr);
+
+	position.set(coordsKey, pieceType);
+	if (hasSpecialRight) specialRights.add(coordsKey);
+}
+
+/**
+ * Takes a WHOLE position in compressed short form and returns the position and specialRights properties of the gamefile
  * @param shortposition - The compressed position of the gamefile (e.g., "K5,4+|P1,2|r500,25389")
+ * @throws If the string isn't entirely consumed, so a typo can't silently drop pieces.
  */
 function parseShortFormPosition(shortposition: string): {
 	position: Map<CoordsKey, number>;
@@ -202,28 +269,11 @@ function parseShortFormPosition(shortposition: string): {
 } {
 	// console.log("Parsing shortposition:", shortposition);
 
-	const position = new Map<CoordsKey, number>();
-	const specialRights = new Set<CoordsKey>();
+	const match = matchShortFormPosition(shortposition, 0);
+	if (!match) throw Error(`Position contains no piece entries! "${shortposition.slice(0, 40)}"`); // prettier-ignore
+	if (match.nextIndex < shortposition.length) throw Error(`Position is malformed at index ${match.nextIndex}! "${shortposition.slice(match.nextIndex, match.nextIndex + 40)}"`); // prettier-ignore
 
-	const pieceRegex = new RegExp(getPieceEntryRegexSource(true), 'g'); // named groups are: pieceAbbr, coordsKey, specialRight
-
-	// Since the pieceRegex has the global flag, exec() will return the next match each time.
-	// NO STRING SPLITTING REQUIRED
-	let match: RegExpExecArray | null;
-	while ((match = pieceRegex.exec(shortposition)) !== null) {
-		const pieceAbbr = match.groups!['pieceAbbr']!;
-		const coordsKey = match.groups!['coordsKey']! as CoordsKey;
-		const hasSpecialRight = match.groups!['specialRight'] === '+';
-
-		const pieceType = getTypeFromAbbr(pieceAbbr);
-
-		position.set(coordsKey, pieceType);
-		if (hasSpecialRight) specialRights.add(coordsKey);
-	}
-
-	// console.log("Parsed position:", position);
-
-	return { position, specialRights };
+	return { position: match.position, specialRights: match.specialRights };
 }
 
 // Exports ----------------------------------------------------------------------------
@@ -245,5 +295,6 @@ export default {
 	getTypeFromAbbr,
 	// Converting Positions
 	getShortFormPosition,
+	matchShortFormPosition,
 	parseShortFormPosition,
 };
