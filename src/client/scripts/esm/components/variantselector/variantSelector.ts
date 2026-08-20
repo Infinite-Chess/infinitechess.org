@@ -8,6 +8,7 @@
 
 import type { VNode } from 'snabbdom';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
+import type { StorageType } from '../../savedpositions/storetypes.js';
 import type { CloudSaveListRecord } from '../../savedpositions/savesapi.js';
 import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MetaData, SeekVariant, GameModifier } from '../../../../../shared/domain.js';
@@ -46,8 +47,7 @@ import variantPreviewTooltip from '../../board/rendering/variantPreviewTooltip.j
 /** The current variant selection. */
 type DisplaySelection =
 	| { kind: 'preset'; code: VariantCode }
-	| { kind: 'online'; name: string }
-	| { kind: 'local'; name: string }
+	| { kind: StorageType; name: string }
 	| { kind: 'icn' };
 
 /** Callbacks a host wires to react to the selector's state. */
@@ -396,7 +396,7 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`cloud-${s.name}`,
 			s.name,
-			() => selectCustomSave( 'online', s.name, cloudPreviewCache, cloudstore.readCloud, t.shared.variant_selector.cloud_load_failed), // prettier-ignore
+			() => selectCustomSave( 'cloud', s.name, cloudPreviewCache, cloudstore.readCloud, t.shared.variant_selector.cloud_load_failed), // prettier-ignore
 			(anchor) => handleSavePreview(anchor, s.name, cloudPreviewCache, cloudstore.readCloud),
 		),
 	);
@@ -443,20 +443,20 @@ function selectVariant(code: VariantCode): void {
 
 /**
  * Selects a saved position (cloud or local) by kind and name, updating the selector display.
- * @param kind - Whether this is a cloud (`'online'`) or local (`'local'`) save.
+ * @param kind - Which storage backend the save lives in.
  * @param name - Position name used to look up and display the save.
  * @param cache - Preview cache to read from (cache hit) or write to (after fetch).
  * @param read - Async function that fetches the full save state by name.
  * @param errorMsg - Error message shown in the selector if the fetch fails.
  */
 function selectCustomSave(
-	kind: 'online' | 'local',
+	kind: StorageType,
 	name: string,
 	cache: Map<string, VariantOptions>,
 	read: (n: string) => Promise<{ variantOptions: VariantOptions }>,
 	errorMsg: string,
 ): void {
-	selection = kind === 'online' ? { kind: 'online', name } : { kind: 'local', name };
+	selection = { kind, name };
 	applyCustomToSelector(name);
 	clearSavedPositionError();
 	hideCustomSection();
@@ -765,7 +765,7 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 function handleDisplayPreviewHover(anchor: HTMLElement): void {
 	if (selection.kind === 'preset') {
 		variantPreviewTooltip.showForVariantCode(anchor, selection.code, 'left', { engineGame: engineOnly }); // prettier-ignore
-	} else if (selection.kind === 'online') {
+	} else if (selection.kind === 'cloud') {
 		handleSavePreview(anchor, selection.name, cloudPreviewCache, cloudstore.readCloud);
 	} else if (selection.kind === 'local') {
 		handleSavePreview(anchor, selection.name, localPreviewCache, savestore.readLocal);
