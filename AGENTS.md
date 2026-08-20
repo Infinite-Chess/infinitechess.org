@@ -17,6 +17,7 @@ Each non-local session (working directory contains `/home/runner/` or `/github/`
 - TypeScript indents with tabs, not spaces. Prettier enforces styling automatically.
 - `npm run lint --silent` names every unused import — use it instead of working out removals by hand.
 - Read a file's relevant lines in-session before editing it. Grep, sed or shell output doesn't count.
+- Ad-hoc scripts — anything you write to answer a question rather than ship a change — go in the gitignored `sandbox/`, run from the repo root: `npx tsx sandbox/<name>.ts`. Written outside the repo they inherit no `node_modules` and no `"type": "module"`, so top-level `await` fails.
 
 ## Agent rulebook
 
