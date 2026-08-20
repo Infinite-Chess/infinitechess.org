@@ -1,0 +1,98 @@
+// src/client/scripts/esm/editorstores/estoretypes.ts
+
+/**
+ * All TypeScript types, constants, and Zod schemas for the board editor save system.
+ *
+ * Centralized here to avoid circular-dependency issues — this file only uses
+ * type-only imports from other modules, so it can never be part of a circular
+ * dependency chain at runtime.
+ */
+
+import type { VariantOptions } from '../../../../shared/chess/logic/gamefile.js';
+
+import * as z from 'zod';
+
+// Types ------------------------------------------------------------------
+
+/** The identity of a saved position — its name and where it is stored. */
+export type ActivePosition =
+	| { name: string; storage_type: 'local' }
+	| { name: string; storage_type: 'cloud'; owner: string };
+
+/** Whether a position is stored locally (IndexedDB) or on the server (cloud) */
+export type StorageType = ActivePosition['storage_type'];
+
+/** Minimal information about a saved position — used for display in the saved positions list */
+export interface EditorAbridgedSaveState {
+	position_name: string;
+	timestamp: number;
+	piece_count: number;
+}
+
+/** Position data shared between normal saves and autosaves */
+export interface EditorPositionData {
+	timestamp: number;
+	piece_count: number;
+	variantOptions: VariantOptions;
+	pawnDoublePush?: boolean;
+	castling?: boolean;
+}
+
+/** Complete information about a saved position (local or cloud) */
+export interface EditorSaveState extends EditorPositionData {
+	position_name: string;
+}
+
+/**
+ * Complete save state as written by the autosave.
+ * active_position is optional because the user may not have a named/saved position open.
+ */
+export interface EditorAutosaveState extends EditorPositionData {
+	active_position?: ActivePosition;
+	/** Whether the position has unsaved changes. */
+	dirty: boolean;
+}
+
+// Zod Schemas --------------------------------------------------------------------
+
+/** Shared Zod fields for EditorSaveState and EditorAutosaveState */
+const positionDataFields = {
+	timestamp: z.number(),
+	piece_count: z.number().int('Piece count must be an integer'),
+	variantOptions: z
+		.object()
+		.loose()
+		.transform((v) => v as unknown as VariantOptions), // Workaround for lack of VariantOptions schema
+	pawnDoublePush: z.boolean().optional(),
+	castling: z.boolean().optional(),
+};
+
+/** Shared position_name schema */
+const positionNameSchema = z.string().min(1, 'Position name is required');
+
+/** Schema for validating an AbridgedSaveState */
+const AbridgedSaveStateSchema = z.strictObject({
+	position_name: positionNameSchema,
+	timestamp: positionDataFields.timestamp,
+	piece_count: positionDataFields.piece_count,
+});
+
+/** Schema for validating a SaveState */
+const SaveStateSchema = z.strictObject({
+	position_name: positionNameSchema,
+	...positionDataFields,
+});
+
+// Constants --------------------------------------------------------------------
+
+/** Name of the IndexedDB key for the board editor autosave */
+const EDITOR_AUTOSAVE_NAME = 'infinitechess-boardeditor-autosave';
+
+// Exports --------------------------------------------------------------------
+
+export default {
+	positionDataFields,
+	AbridgedSaveStateSchema,
+	SaveStateSchema,
+	EDITOR_AUTOSAVE_NAME,
+};

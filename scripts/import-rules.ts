@@ -55,13 +55,13 @@ const RULES: Rule[] = [
 	},
 	{
 		description: 'Board editor code is private to the board editor page.',
-		target: 'game/boardeditor/',
-		allowedEntries: ['editor'],
+		target: 'views/editor/',
+		allowedEntries: ['views/editor/'],
 	},
 	{
 		description: 'gameslot.ts is only for pages that load an interactive board.',
 		target: 'game/chess/gameslot.ts',
-		allowedEntries: ['views/game/game.ts', 'analysis', 'boardeditor'],
+		allowedEntries: ['views/game/game.ts', 'analysis', 'views/editor/'],
 	},
 ];
 

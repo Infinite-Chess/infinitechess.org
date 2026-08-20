@@ -8,7 +8,7 @@
 
 import type { VNode } from 'snabbdom';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
-import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
+import type { CloudSaveListRecord } from '../../editorstores/editorSavesAPI.js';
 import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MetaData, SeekVariant, GameModifier } from '../../../../../shared/domain.js';
 import type {
@@ -32,12 +32,12 @@ import {
 	getPlayabilityRejection,
 } from '../../../../../shared/chess/variants/positionvalidation.js';
 
-import ecloudstore from '../../game/editorstores/ecloudstore.js';
+import ecloudstore from '../../editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
-import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
+import editorSavesAPI from '../../editorstores/editorSavesAPI.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import modifierSelector from './modifierSelector.js';
-import editorpositionsdb from '../../game/editorstores/esavestore.js';
+import editorpositionsdb from '../../editorstores/esavestore.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
 import variantPreviewTooltip from '../../board/rendering/variantPreviewTooltip.js';
 

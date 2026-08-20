@@ -7,7 +7,7 @@
  */
 
 import type { ModalMode } from '../../../components/gameSetupModalHandoff.js';
-import type { EditorAutosaveState } from '../../../game/editorstores/estoretypes.js';
+import type { EditorAutosaveState } from '../../../editorstores/estoretypes.js';
 import type { GameFile, VariantOptions } from '../../../../../../shared/chess/logic/gamefile.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -18,7 +18,7 @@ import toast from '../../../components/toast.js';
 import docutil from '../../../util/docutil.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import IndexedDB from '../../../util/IndexedDB.js';
-import estoretypes from '../../../game/editorstores/estoretypes.js';
+import estoretypes from '../../../editorstores/estoretypes.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
 import gamecompressor from '../../../chess/gamecompressor.js';
