@@ -175,9 +175,7 @@ export function updateMemberColumns(
 	dbCall(() => {
 		// Validate that we have columns to update
 		if (typeof columnsAndValues !== 'object' || columnsAndValues === null)
-			throw new Error(
-				`Invalid columnsAndValues provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`,
-			);
+			throw new Error(`Invalid columnsAndValues provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`); // prettier-ignore
 
 		const columns = Object.keys(columnsAndValues);
 		const values = Object.values(columnsAndValues);
@@ -190,9 +188,7 @@ export function updateMemberColumns(
 				(val) => typeof val === 'string' || typeof val === 'number' || val === null,
 			)
 		)
-			throw new Error(
-				`Invalid columns or values provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`,
-			);
+			throw new Error(`Invalid columns or values provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`); // prettier-ignore
 
 		// Dynamically build the query
 		const setStatements = columns.map((column) => `${column} = ?`).join(', ');
@@ -201,9 +197,7 @@ export function updateMemberColumns(
 
 		// If no rows changed, the member doesn't exist.
 		if (result.changes === 0)
-			throw new Error(
-				`No member found with user_id "${user_id}" when updating columns: ${JSON.stringify(columns)}`,
-			);
+			throw new Error(`No member found with user_id "${user_id}" when updating columns: ${JSON.stringify(columns)}`); // prettier-ignore
 	}, `Error updating columns for user ID "${user_id}"`);
 }
 
@@ -223,9 +217,7 @@ export function updateLoginCountAndLastSeen(userId: number): void {
 
 		// If no rows changed, the member doesn't exist.
 		if (result.changes === 0)
-			throw new Error(
-				`No member found with user_id "${userId}" when updating login_count and last_seen`,
-			);
+			throw new Error(`No member found with user_id "${userId}" when updating login_count and last_seen`); // prettier-ignore
 	}, `Error updating login_count and last_seen for member of id "${userId}"`);
 }
 
@@ -245,7 +237,7 @@ export function updateLastSeen(userId: number): void {
 
 		// If no rows changed, the member doesn't exist.
 		if (result.changes === 0)
-			throw new Error(`No member found with user_id "${userId}" when updating last_seen`);
+			throw new Error(`No member found with user_id "${userId}" when updating last_seen`); // prettier-ignore
 	}, `Error updating last_seen for member of id "${userId}"`);
 }
 
@@ -268,7 +260,7 @@ export function deleteMember(user_id: number, reason_deleted: DeleteReason): voi
 		// If no user was deleted, they didn't exist. Throw an error to
 		// abort the transaction and prevent any further action.
 		if (deleteResult.changes === 0)
-			throw new Error(`No member found with user_id ${id} to delete`);
+			throw new Error(`No member found with user_id ${id} to delete`); // prettier-ignore
 
 		// Add their user_id to the 'deleted_members' table.
 		const insertQuery = 'INSERT INTO deleted_members (user_id, reason_deleted) VALUES (?, ?)';
@@ -410,9 +402,7 @@ function validateMemberQueryArgs(
 		columns.length === 0 ||
 		!columns.every((column) => typeof column === 'string' && allMembersColumns.includes(column))
 	)
-		throw new Error(
-			`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`,
-		);
+		throw new Error(`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
 
 	// 2. Validate Search Key
 	if (typeof searchKey !== 'string' || !uniqueMembersColumns.includes(searchKey))
@@ -424,7 +414,5 @@ function validateMemberQueryArgs(
 		searchValues.length === 0 ||
 		!searchValues.every((value) => typeof value === 'string' || typeof value === 'number')
 	)
-		throw new Error(
-			`Invalid search values for members table: ${jsutil.ensureJSONString(searchValues)}`,
-		);
+		throw new Error(`Invalid search values for members table: ${jsutil.ensureJSONString(searchValues)}`); // prettier-ignore
 }
