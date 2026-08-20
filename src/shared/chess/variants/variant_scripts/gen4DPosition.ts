@@ -3,7 +3,7 @@
 import type { CoordsKey } from '../../util/coordutil.js';
 
 import coordutil from '../../util/coordutil.js';
-import icnconverter from '../../logic/icn/icnconverter.js';
+import icnposition from '../../logic/icn/icnposition.js';
 import { rawTypes as r, ext as e } from '../../util/typeutil.js';
 
 // Types -------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ function gen(
 	// position is string and should identically populate all 2D boards
 	if (typeof input_position === 'string') {
 		const input_position_long: Map<CoordsKey, number> =
-			icnconverter.parseShortFormPosition(input_position).position;
+			icnposition.parseShortFormPosition(input_position).position;
 
 		for (let i = dim.MIN_X; i <= dim.MAX_X; i++) {
 			for (let j = dim.MIN_Y; j <= dim.MAX_Y; j++) {
@@ -105,7 +105,7 @@ function gen(
 						const sub_position_short =
 							input_position[`${i / dim.BOARD_SPACING},${j / dim.BOARD_SPACING}`];
 						const sub_position_long: Map<CoordsKey, number> = sub_position_short
-							? icnconverter.parseShortFormPosition(sub_position_short).position
+							? icnposition.parseShortFormPosition(sub_position_short).position
 							: new Map<CoordsKey, number>();
 						for (const [key, value] of sub_position_long) {
 							const coords = coordutil.getCoordsFromKey(key);

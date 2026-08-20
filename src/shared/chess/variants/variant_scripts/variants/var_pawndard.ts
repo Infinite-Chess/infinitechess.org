@@ -8,7 +8,7 @@ import type { CoordsKey } from '../../../util/coordutil.js';
 import type { BoundingBox } from '../../../../util/math/bounds.js';
 
 import variantutil from '../variantutil.js';
-import icnconverter from '../../../logic/icn/icnconverter.js';
+import icnposition from '../../../logic/icn/icnposition.js';
 
 const POSITION_STRINGS: Record<number, string> = {
 	// UTC March 31, 2026 - Kings are no longer given special rights.
@@ -23,7 +23,7 @@ export function getPosition(timestamp: number = Date.now()): {
 	specialRights: Set<CoordsKey>;
 } {
 	const positionString = variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
-	return icnconverter.parseShortFormPosition(positionString);
+	return icnposition.parseShortFormPosition(positionString);
 }
 
 export function getPositionStringLength(timestamp: number = Date.now()): number {

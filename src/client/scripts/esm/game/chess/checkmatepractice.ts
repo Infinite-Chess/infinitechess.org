@@ -13,7 +13,7 @@ import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordut
 import bimath from '../../../../../shared/util/math/bimath.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
@@ -194,7 +194,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 	for (const entry of piecelist) {
 		let amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
 		const strpiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-		const piece: number = icnconverter.getTypeFromAbbr(strpiece);
+		const piece: number = icnposition.getTypeFromAbbr(strpiece);
 
 		// place amount many pieces of type piece
 		while (amount !== 0) {

@@ -6,6 +6,7 @@
 
 // ================================ Testing Usage ================================
 
+import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import positioncompressor from './positioncompressor.js';
@@ -56,7 +57,7 @@ const compressedPosition = positioncompressor.compressPosition(
 console.log('\nBefore:');
 console.log(example_position);
 
-const newICN = icnconverter.getShortFormPosition(
+const newICN = icnposition.getShortFormPosition(
 	compressedPosition.position,
 	parsedPosition.state_global.specialRights!,
 );

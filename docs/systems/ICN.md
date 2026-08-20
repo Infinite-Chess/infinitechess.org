@@ -211,7 +211,7 @@ number prefixed to the lowercase raw code: `3k` is a red king, `4rq` a blue roya
 
 The **raw** (colorless) codes used by the promotion field are the lowercase forms of the same table.
 
-Convert with `getAbbrFromType(type)` / `getTypeFromAbbr(abbr)`.
+Convert with `icnposition.getAbbrFromType(type)` / `icnposition.getTypeFromAbbr(abbr)`.
 
 ## Section 3 — Moves
 
@@ -319,17 +319,13 @@ returns `'moves_invalid'` instead.
 
 Piecewise helpers, for when you hold one segment rather than a whole ICN:
 
-| Segment            | Write                          | Read                                         |
-| ------------------ | ------------------------------ | -------------------------------------------- |
-| One compact move   | `getTokenFromMoveCoords()`     | `parseTokenMove()`                           |
-| One dressed move   | `getShortFormMoveFromMove()`   | — (only via the whole list)                  |
-| A move list        | `getShortFormMovesFromMoves()` | `parseShortFormMoves()`                      |
-| A position         | `getShortFormPosition()`       | `parseShortFormPosition()`                   |
-| Preset annotations | —                              | `parsePresetSquares()` / `parsePresetRays()` |
-
-`generateSpecialRights(position, pawnDoublePush, castleWith?)` derives the `+` marks from a bare
-position. Only generator-based variants need it, since they build their position in code —
-string-based ones carry their `+` marks in the position string itself.
+| Segment            | Write                                | Read                                         |
+| ------------------ | ------------------------------------ | -------------------------------------------- |
+| One compact move   | `getTokenFromMoveCoords()`           | `parseTokenMove()`                           |
+| One dressed move   | `getShortFormMoveFromMove()`         | — (only via the whole list)                  |
+| A move list        | `getShortFormMovesFromMoves()`       | `parseShortFormMoves()`                      |
+| A position         | `icnposition.getShortFormPosition()` | `icnposition.parseShortFormPosition()`       |
+| Preset annotations | —                                    | `parsePresetSquares()` / `parsePresetRays()` |
 
 ## Round-trip losses
 
@@ -370,7 +366,8 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 
 | Concern                                            | File                                                                                                                                    |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| The format itself — regexes, writer, parser        | [icnconverter.ts](/src/shared/chess/logic/icn/icnconverter.ts)                                                                          |
+| The whole-game format — regexes, writer, parser    | [icnconverter.ts](/src/shared/chess/logic/icn/icnconverter.ts)                                                                          |
+| The position layer — piece codes, writer, parser   | [icnposition.ts](/src/shared/chess/logic/icn/icnposition.ts)                                                                            |
 | Comment embedded command sequences (`[%clk ...]`)  | [icncommentutils.ts](/src/shared/chess/logic/icn/icncommentutils.ts)                                                                    |
 | Parsed ICN → position / `VariantOptions` / packets | [icnimport.ts](/src/shared/chess/logic/icn/icnimport.ts)                                                                                |
 | Parsed ICN → constructed gamefile                  | [gameformulator.ts](/src/shared/chess/logic/gameformulator.ts)                                                                          |

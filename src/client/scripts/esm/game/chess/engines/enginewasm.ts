@@ -7,7 +7,7 @@
 
 import type { Player, RawType } from '../../../../../../shared/chess/util/typeutil.js';
 
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import typeutil, { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
 
 // Types ------------------------------------------------------------------
@@ -112,7 +112,7 @@ const ENGINE_PROMOTION_RAWTYPES: Record<string, RawType> = {
 function getPromotionAbbr(engineCode: string, mover: Player): string {
 	const rawType = ENGINE_PROMOTION_RAWTYPES[engineCode.toLowerCase()];
 	if (rawType === undefined) throw Error(`Unknown engine promotion code: (${engineCode})`);
-	return icnconverter.getAbbrFromType(typeutil.buildType(rawType, mover));
+	return icnposition.getAbbrFromType(typeutil.buildType(rawType, mover));
 }
 
 export { BROWSER_SUPPORTS_THREADS, THREAD_CAP, maxEngineThreads, loadEngineWasm, getPromotionAbbr };

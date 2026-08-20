@@ -6,7 +6,7 @@
  */
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -150,7 +150,7 @@ function createPracticeHTML(): void {
 			for (const entry of piecelist) {
 				const amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
 				const shortPiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-				const longPiece = icnconverter.getTypeFromAbbr(shortPiece);
+				const longPiece = icnposition.getTypeFromAbbr(shortPiece);
 
 				for (let j = 0; j < amount; j++) {
 					const pieceDiv = document.createElement('div');

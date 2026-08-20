@@ -8,7 +8,7 @@
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import gamerules from '../../../../../../shared/chess/util/gamerules.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import typeutil, {
 	rawTypes as r,
 	players as p,
@@ -100,7 +100,7 @@ async function initUI(): Promise<void> {
 			const localized_piece_name =
 				// @ts-ignore
 				translations.piecenames[typeutil.getRawTypeStr(coloredTypes[i]!)!];
-			const piece_abbreviation = icnconverter.pieceCodesRaw[coloredTypes[i]!];
+			const piece_abbreviation = icnposition.pieceCodesRaw[coloredTypes[i]!];
 			const modified_piece_abbreviation =
 				player === p.WHITE
 					? piece_abbreviation.toUpperCase()
@@ -134,7 +134,7 @@ async function initUI(): Promise<void> {
 	element_void.classList.add('tooltip-ur');
 	// @ts-ignore
 	const localized_void_name = translations.piecenames[typeutil.getRawTypeStr(r.VOID)!];
-	const void_abbreviation = icnconverter.pieceCodesRaw[r.VOID];
+	const void_abbreviation = icnposition.pieceCodesRaw[r.VOID];
 	element_void.setAttribute('data-tooltip', `${localized_void_name} (${void_abbreviation})`);
 
 	element_neutralTypes.push(element_void);
@@ -152,7 +152,7 @@ async function initUI(): Promise<void> {
 		const localized_piece_name =
 			// @ts-ignore
 			translations.piecenames[typeutil.getRawTypeStr(neutralTypes[i]!)!];
-		const piece_abbreviation = icnconverter.pieceCodesRaw[neutralTypes[i]!];
+		const piece_abbreviation = icnposition.pieceCodesRaw[neutralTypes[i]!];
 		const modified_piece_abbreviation = piece_abbreviation.toLowerCase();
 		pieceContainer.setAttribute(
 			'data-tooltip',

@@ -8,7 +8,7 @@ import type { CoordsKey } from '../../../util/coordutil.js';
 import type { GameRuleModifications } from '../variantutil.js';
 
 import variantutil from '../variantutil.js';
-import icnconverter from '../../../logic/icn/icnconverter.js';
+import icnposition from '../../../logic/icn/icnposition.js';
 import { rawTypes as r } from '../../../util/typeutil.js';
 
 const POSITION_STRINGS: Record<number, string> = {
@@ -24,7 +24,7 @@ export function getPosition(timestamp: number = Date.now()): {
 	specialRights: Set<CoordsKey>;
 } {
 	const positionString = variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
-	return icnconverter.parseShortFormPosition(positionString);
+	return icnposition.parseShortFormPosition(positionString);
 }
 
 export function gameruleModifications(): GameRuleModifications {

@@ -7,14 +7,14 @@
 import type { CoordsKey } from '../../../util/coordutil.js';
 import type { BoundingBox } from '../../../../util/math/bounds.js';
 
-import icnconverter from '../../../logic/icn/icnconverter.js';
+import icnposition from '../../../logic/icn/icnposition.js';
 import { CLASSICAL_POSITION_STRING } from '../classicalPositionString.js';
 
 export function getPosition(): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
-	return icnconverter.parseShortFormPosition(CLASSICAL_POSITION_STRING);
+	return icnposition.parseShortFormPosition(CLASSICAL_POSITION_STRING);
 }
 
 export function getPositionStringLength(): number {

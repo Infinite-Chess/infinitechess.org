@@ -16,7 +16,10 @@
  * walks the string left to right with sticky regexes, matching each field where it stands.
  *
  * This script is both directions: {@link LongToShort_Format} writes an ICN,
- * {@link ShortToLong_Format} reads one, plus per-segment helpers for moves and positions.
+ * {@link ShortToLong_Format} reads one, plus per-segment helpers for moves.
+ *
+ * The position segment — the piece abbreviation vocabulary, its regex sources, and the
+ * position writer/parser — is in icnposition.ts.
  *
  * See docs/systems/ICN.md for the full format reference: every field, the piece
  * abbreviations, the defaults, the round-trip losses, and which helper to reach for.
@@ -34,21 +37,13 @@ import type { EnPassant, GlobalGameState } from '../state.js';
 
 import jsutil from '../../../util/jsutil.js';
 import bimath from '../../../util/math/bimath.js';
-import typeutil from '../../util/typeutil.js';
 import gamerules from '../../util/gamerules.js';
 import winconutil from '../../util/winconutil.js';
-import castlingutil from '../castlingutil.js';
+import icnposition from './icnposition.js';
 import { DEFAULT_PROMOTION_PIECES } from '../../variants/variant_scripts/defaultPromotions.js';
 import coordutil, { Coords, CoordsKey } from '../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
-import {
-	rawTypes as r,
-	ext as e,
-	players as p,
-	RawType,
-	Player,
-	PlayerGroup,
-} from '../../util/typeutil.js';
+import { players as p, RawType, Player, PlayerGroup } from '../../util/typeutil.js';
 
 // Types ------------------------------------------------------------------------------
 
@@ -157,63 +152,6 @@ const playerCodesInverted = jsutil.invertObj(playerCodes);
 
 type PlayerCode = (typeof playerCodes)[keyof typeof playerCodes];
 
-/** 1-2 letter codes for the standard white, black, and neutral pieces. */
-// prettier-ignore
-const pieceCodes = {
-	[r.KING + e.W]: 'K',          [r.KING + e.B]: 'k',
-	[r.PAWN + e.W]: 'P',          [r.PAWN + e.B]: 'p',
-	[r.KNIGHT + e.W]: 'N',        [r.KNIGHT + e.B]: 'n',
-	[r.BISHOP + e.W]: 'B',        [r.BISHOP + e.B]: 'b',
-	[r.ROOK + e.W]: 'R',          [r.ROOK + e.B]: 'r',
-	[r.QUEEN + e.W]: 'Q',         [r.QUEEN + e.B]: 'q',
-	[r.AMAZON + e.W]: 'AM',       [r.AMAZON + e.B]: 'am',
-	[r.HAWK + e.W]: 'HA',         [r.HAWK + e.B]: 'ha',
-	[r.CHANCELLOR + e.W]: 'CH',   [r.CHANCELLOR + e.B]: 'ch',
-	[r.ARCHBISHOP + e.W]: 'AR',   [r.ARCHBISHOP + e.B]: 'ar',
-	[r.GUARD + e.W]: 'GU',        [r.GUARD + e.B]: 'gu',
-	[r.CAMEL + e.W]: 'CA',        [r.CAMEL + e.B]: 'ca',
-	[r.GIRAFFE + e.W]: 'GI',      [r.GIRAFFE + e.B]: 'gi',
-	[r.ZEBRA + e.W]: 'ZE',        [r.ZEBRA + e.B]: 'ze',
-	[r.CENTAUR + e.W]: 'CE',      [r.CENTAUR + e.B]: 'ce',
-	[r.ROYALQUEEN + e.W]: 'RQ',   [r.ROYALQUEEN + e.B]: 'rq',
-	[r.ROYALCENTAUR + e.W]: 'RC', [r.ROYALCENTAUR + e.B]: 'rc',
-	[r.KNIGHTRIDER + e.W]: 'NR',  [r.KNIGHTRIDER + e.B]: 'nr',
-	[r.HUYGEN + e.W]: 'HU',       [r.HUYGEN + e.B]: 'hu',
-	[r.ROSE + e.W]: 'RO',         [r.ROSE + e.B]: 'ro',
-	// Neutrals
-	[r.OBSTACLE + e.N]: 'ob',
-	[r.VOID + e.N]: 'vo',
-};
-const pieceCodesInverted = jsutil.invertObj(pieceCodes);
-
-/** The codes for raw, color-less piece types. */
-const pieceCodesRaw = {
-	[r.KING]: 'k',
-	[r.PAWN]: 'p',
-	[r.KNIGHT]: 'n',
-	[r.BISHOP]: 'b',
-	[r.ROOK]: 'r',
-	[r.QUEEN]: 'q',
-	[r.AMAZON]: 'am',
-	[r.HAWK]: 'ha',
-	[r.CHANCELLOR]: 'ch',
-	[r.ARCHBISHOP]: 'ar',
-	[r.GUARD]: 'gu',
-	[r.CAMEL]: 'ca',
-	[r.GIRAFFE]: 'gi',
-	[r.ZEBRA]: 'ze',
-	[r.CENTAUR]: 'ce',
-	[r.ROYALQUEEN]: 'rq',
-	[r.ROYALCENTAUR]: 'rc',
-	[r.KNIGHTRIDER]: 'nr',
-	[r.HUYGEN]: 'hu',
-	[r.ROSE]: 'ro',
-	// Neutrals
-	[r.OBSTACLE]: 'ob',
-	[r.VOID]: 'vo',
-};
-const pieceCodesRawInverted = jsutil.invertObj(pieceCodesRaw);
-
 // Variables ------------------------------------------------------------------
 
 /** The desired ordering metadata should be placed in the ICN */
@@ -291,57 +229,21 @@ const possessive = (() => {
 })();
 
 const countingNumberSource = String.raw`[1-9]\d*`; // 1+   Positive. Disallows leading 0's
-const wholeNumberSource = String.raw`(?:0|[1-9]\d*)`; // 0+   Positive. Disallows leading 0's unless it's 0
-const integerSource = String.raw`(?:0|-?[1-9]\d*)`; // Prevents "-0", or numbers with leading 0's like "000005"
-const unboundedIntegerSource = String.raw`(?:_|${integerSource})`; // Allows _ as a placeholder for infinity
+const unboundedIntegerSource = String.raw`(?:_|${icnposition.integerSource})`; // Allows _ as a placeholder for infinity
 
-const coordsKeyRegexSource = `${integerSource},${integerSource}`; // '-1,2'
-
-const pieceCodeRegexSource = '[a-zA-Z]{1,2}';
-const rawPieceCodeRegexSource = '[a-z]{1,2}';
-
-/**
- * Returns a regex for matching a piece abbreviation like '3Q' or 'nr'. '3Q' => Player-3 queen (red)
- * Optionally captures the piece abbreviation, and the player
- * number if present, using custom capture group names.
- * Disallows negatives, or leading 0's
- *
- * This prevents duplicate capture group names when a bigger regex contains
- * multiple smaller pieceAbbrev regexes, as we can make them different.
- * @param capturing - Whether to capture the player number and piece abbreviation.
- */
-function getPieceAbbrevRegexSource(capturing: boolean): string {
-	const player = capturing ? '<player>' : ':';
-	const abbrev = capturing ? '<abbrev>' : ':';
-	const result = `(?${player}${wholeNumberSource})?(?${abbrev}${pieceCodeRegexSource})`;
-	// console.log("Generated PieceAbbrev Regex Source:", result);
-	return result;
-}
-
-/**
- * A regex for matching a single piece entry in a shortform position in ICN.
- * For example, 'P1,2+' => Pawn at 1,2 with special right.
- * It optionally captures the piece abbreviation, coords key, and special right into named groups.
- */
-function getPieceEntryRegexSource(capturing: boolean): string {
-	const pieceAbbr = capturing ? '<pieceAbbr>' : ':';
-	const coordsKey = capturing ? '<coordsKey>' : ':';
-	const specialRight = capturing ? '<specialRight>' : ':';
-
-	return String.raw`(?${pieceAbbr}${getPieceAbbrevRegexSource(false)})(?${coordsKey}${coordsKeyRegexSource})(?${specialRight}\+)?`; // 'P1,2+' => Pawn at 1,2 with special right
-}
+const playerCodeRegexSource = '[a-z]{1,2}'; // 'w' | 'bu'
 
 /** Returns a regex source for matching the promotion segment in a move, optionally capturing  */
 function getPromotionRegexSource(capturing: boolean): string {
 	const promotionAbbr = capturing ? '<promotionAbbr>' : ':';
-	return `(?:=(?${promotionAbbr}${getPieceAbbrevRegexSource(false)}))?`; // '=Q' => Promotion to queen
+	return `(?:=(?${promotionAbbr}${icnposition.getPieceAbbrevRegexSource(false)}))?`; // '=Q' => Promotion to queen
 }
 /**
  * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q'
  * The start coords, end coords, and promotion abbrev are all captured into named groups.
  */
 const moveTokenRegex = new RegExp(
-	`^(?<startCoordsKey>${coordsKeyRegexSource})>(?<endCoordsKey>${coordsKeyRegexSource})${getPromotionRegexSource(true)}$`,
+	`^(?<startCoordsKey>${icnposition.coordsKeyRegexSource})>(?<endCoordsKey>${icnposition.coordsKeyRegexSource})${getPromotionRegexSource(true)}$`,
 );
 /**
  * A regex for dynamically matching all forms of a move in ICN.
@@ -356,12 +258,12 @@ function getMoveRegexSource(capturing: boolean): string {
 	const endCoordsKey = capturing ? '<endCoordsKey>' : ':';
 	const comment = capturing ? '<comment>' : ':';
 	const result =
-		possessive(`(?:${getPieceAbbrevRegexSource(false)})?`) + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
-		`(?${startCoordsKey}${coordsKeyRegexSource})` + // Starting coordinates
+		possessive(`(?:${icnposition.getPieceAbbrevRegexSource(false)})?`) + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
+		`(?${startCoordsKey}${icnposition.coordsKeyRegexSource})` + // Starting coordinates
 		possessive(` ?`) + // Optional space
 		`[>x]` + // Separator
 		possessive(` ?`) + // Optional space
-		`(?${endCoordsKey}${coordsKeyRegexSource})` + // Ending coordinates
+		`(?${endCoordsKey}${icnposition.coordsKeyRegexSource})` + // Ending coordinates
 		possessive(` ?`) + // Optional space
 		possessive(getPromotionRegexSource(capturing)) + // Optional promotion ("=" REQUIRED)
 		possessive(` ?`) + // Optional space
@@ -397,17 +299,17 @@ const metadataRegex = new RegExp(
 ); // 'y' flag for sticky matching (only matches at the regex's lastIndex property, not after)
 
 const turnOrderRegex = new RegExp(
-	String.raw`(?<turnOrder>${rawPieceCodeRegexSource}(?::${rawPieceCodeRegexSource})*)${whiteSpaceOrEnd}`,
+	String.raw`(?<turnOrder>${playerCodeRegexSource}(?::${playerCodeRegexSource})*)${whiteSpaceOrEnd}`,
 	'y',
 );
 
 const enpassantRegex = new RegExp(
-	String.raw`(?<enpassant>${coordsKeyRegexSource})${whiteSpaceOrEnd}`,
+	String.raw`(?<enpassant>${icnposition.coordsKeyRegexSource})${whiteSpaceOrEnd}`,
 	'y',
 );
 
 const moveRuleRegex = new RegExp(
-	String.raw`(?<moveRule>${wholeNumberSource}/${countingNumberSource})${whiteSpaceOrEnd}`,
+	String.raw`(?<moveRule>${icnposition.wholeNumberSource}/${countingNumberSource})${whiteSpaceOrEnd}`,
 	'y',
 );
 
@@ -416,8 +318,8 @@ const fullMoveRegex = new RegExp(
 	'y',
 );
 
-const promotionRanksSource = `${integerSource}(?:,${integerSource})*`; // '8,16,24,32'
-const promotionsPiecesSource = `${pieceCodeRegexSource}(?:,${pieceCodeRegexSource})*`; // 'q,r,b,n'
+const promotionRanksSource = `${icnposition.integerSource}(?:,${icnposition.integerSource})*`; // '8,16,24,32'
+const promotionsPiecesSource = `${icnposition.pieceCodeRegexSource}(?:,${icnposition.pieceCodeRegexSource})*`; // 'q,r,b,n'
 // FUTURE TODO: Drop support for old way of specifying promotions in ICN.
 // Change a single player promotion source to just the rank numbers, no promotion pieces,
 // and add a new regex for detecting custom promotion pieces after all player ranks and before the closing parenthesis.
@@ -451,12 +353,12 @@ const winConditionRegex = new RegExp(
  * 'Squares:x,y|x,y'
  */
 const presetSquaresRegex = new RegExp(
-	String.raw`Squares:(?<squarePresets>${coordsKeyRegexSource}(?:\|${coordsKeyRegexSource})*)${whiteSpaceOrEnd}`,
+	String.raw`Squares:(?<squarePresets>${icnposition.coordsKeyRegexSource}(?:\|${icnposition.coordsKeyRegexSource})*)${whiteSpaceOrEnd}`,
 	'y',
 ); // 'Squares:x,y|x,y'
 
 /** Matches a single preset ray, optionally capturing its properties. */
-const singleRaySource = `${coordsKeyRegexSource}>${coordsKeyRegexSource}`; // 'x,y>dx,dy'
+const singleRaySource = `${icnposition.coordsKeyRegexSource}>${icnposition.coordsKeyRegexSource}`; // 'x,y>dx,dy'
 /**
  * Matches the preset rays segment in ICN
  * 'Rays:x,y>dx,dy|x,y>dx,dy'
@@ -485,58 +387,6 @@ const movesRegex = new RegExp(String.raw`(?<moves>${movesRegexSource})${whiteSpa
 //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //										 END OF REGULAR EXPRESSIONS
 //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-// Getting & Parsing Abbreviations --------------------------------------------------------------------------------
-
-/**
- * Gets the 1-2 letter abbreviation of the given piece type.
- * White pieces are capitalized, black pieces are lowercase.
- * If a piece is neither white nor black, its player number
- * will be placed before its abbreviation, overriding the color.
- *
- * [43] pawn(white) => 'P'
- * [52] queen(black) => 'q'
- * [68] king(red) => '3k'
- */
-function getAbbrFromType(type: number): string {
-	let short = pieceCodes[type];
-	if (!short) {
-		const [r, p] = typeutil.splitType(type);
-		short = String(p) + pieceCodesRaw[r];
-	}
-	return short;
-}
-
-/**
- * Gets the integer piece type from a 1-2 letter piece abbreviation.
- * Capitolized abbrev's are white, lowercase are black, or neutral.
- * It may contain a proceeding number, overriding the player color.
- *
- * 'P' => [43] pawn(white)
- * 'q' => [52] queen(black)
- * '3k' => [68] king(red)
- */
-function getTypeFromAbbr(pieceAbbr: string): number {
-	const results = new RegExp(`^${getPieceAbbrevRegexSource(true)}$`).exec(pieceAbbr);
-	if (results === null) throw Error(`Piece abbreviation is in invalid form: (${pieceAbbr})`);
-
-	const playerStr = results.groups!['player'];
-	const abbrev = results.groups!['abbrev']!;
-
-	let typeStr: string | undefined;
-
-	if (playerStr === undefined) {
-		// No player number override is present
-		typeStr = pieceCodesInverted[abbrev];
-		if (typeStr === undefined) throw Error(`Unknown piece abbreviation: (${pieceAbbr})`);
-		return Number(typeStr);
-	} else {
-		// Player number override present   '3Q'
-		const rawTypeStr = pieceCodesRawInverted[abbrev.toLowerCase()];
-		if (rawTypeStr === undefined) throw Error(`Unknown raw piece abbreviation: (${pieceAbbr})`);
-		return typeutil.buildType(Number(rawTypeStr) as RawType, Number(playerStr) as Player);
-	}
-}
 
 // Main Functions Converting Games To and From ICN -----------------------------------------------------------------
 
@@ -700,7 +550,7 @@ function LongToShort_Format(
 		}
 
 		const promotionPiecesString = !isPromotionListDefaultPromotions(promotionPieces)
-			? ';' + promotionPieces.map((type) => pieceCodesRaw[type]).join(',') // ';n,r,b,q,am'
+			? ';' + promotionPieces.map((type) => icnposition.pieceCodesRaw[type]).join(',') // ';n,r,b,q,am'
 			: '';
 
 		positionSegments.push('(' + playerSegments.join('|') + promotionPiecesString + ')'); // '(8,17|1,10)'
@@ -772,7 +622,10 @@ function LongToShort_Format(
 		// Position can be empty in the editor. This avoids a trailing space in the ICN
 		if (longformat.position.size > 0)
 			positionSegments.push(
-				getShortFormPosition(longformat.position, longformat.state_global.specialRights),
+				icnposition.getShortFormPosition(
+					longformat.position,
+					longformat.state_global.specialRights,
+				),
 			);
 	} else if (
 		!longformat.metadata.Variant ||
@@ -984,7 +837,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			if (allowed) {
 				// prettier-ignore
 				lastSpecifiedPromotions = [...new Set(allowed.split(',').map(raw => {
-					const rawPieceCode = pieceCodesRawInverted[raw.toLowerCase()];
+					const rawPieceCode = icnposition.pieceCodesRawInverted[raw.toLowerCase()];
 					if (rawPieceCode === undefined) throw new Error(`Unknown raw piece code (${raw}) when parsing promotion pieces!`);
 					return Number(rawPieceCode) as RawType;
 				}))];
@@ -1097,7 +950,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		// This next section GUARANTEED to not be the moves section
 		// Test if this next section is the position section
 
-		const pieceEntryRegex = new RegExp(getPieceEntryRegexSource(true), 'y');
+		const pieceEntryRegex = new RegExp(icnposition.getPieceEntryRegexSource(true), 'y');
 		const delimiter = /\|/y; // The delimiter between piece entries
 
 		// Set the lastIndex to the current index being observed in the ICN
@@ -1151,7 +1004,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			const coordsKey = match.groups!['coordsKey']! as CoordsKey;
 			const hasSpecialRight = match.groups!['specialRight'] === '+';
 
-			const pieceType = getTypeFromAbbr(pieceAbbr);
+			const pieceType = icnposition.getTypeFromAbbr(pieceAbbr);
 
 			position!.set(coordsKey, pieceType);
 			if (hasSpecialRight) specialRights!.add(coordsKey);
@@ -1232,7 +1085,9 @@ function getTokenFromMoveCoords(moveCoords: MoveCoords): string {
 	const startCoordsKey = coordutil.getKeyFromCoords(moveCoords.startCoords);
 	const endCoordsKey = coordutil.getKeyFromCoords(moveCoords.endCoords);
 	const promotionAbbr =
-		moveCoords.promotion !== undefined ? getAbbrFromType(moveCoords.promotion) : undefined;
+		moveCoords.promotion !== undefined
+			? icnposition.getAbbrFromType(moveCoords.promotion)
+			: undefined;
 	return getTokenFromParts(startCoordsKey, endCoordsKey, promotionAbbr);
 }
 
@@ -1287,7 +1142,7 @@ function getShortFormMoveFromMove(
 		segments.push(startCoordsKey); // '1,2'
 	else {
 		// Default to including the piece abbreviation unless explicitly disabled.
-		const pieceAbbr = options.abbrev === false ? '' : getAbbrFromType(move.type!);
+		const pieceAbbr = options.abbrev === false ? '' : icnposition.getAbbrFromType(move.type!);
 		segments.push(pieceAbbr + startCoordsKey); // 'P1,2' | '1,2'
 	}
 
@@ -1300,7 +1155,7 @@ function getShortFormMoveFromMove(
 
 	// 4th segment: Specify the promoted piece, if present
 	if (move.promotion !== undefined) {
-		const promotedPieceAbbr = getAbbrFromType(move.promotion);
+		const promotedPieceAbbr = icnposition.getAbbrFromType(move.promotion);
 		segments.push('=' + promotedPieceAbbr); // =Q  "=" REQUIRED
 	}
 
@@ -1359,7 +1214,7 @@ function getParsedMoveFromNamedCapturedMoveGroups(
 		endCoords,
 		token: getTokenFromParts(startCoordsKey, endCoordsKey, promotionAbbr),
 	};
-	if (promotionAbbr) parsedMove.promotion = getTypeFromAbbr(promotionAbbr);
+	if (promotionAbbr) parsedMove.promotion = icnposition.getTypeFromAbbr(promotionAbbr);
 	if (comment) {
 		// Parse the human readable comment from the embeded command sequences
 		const parsedComment = icncommentutils.extractCommandsFromComment(comment);
@@ -1497,126 +1352,6 @@ function parseShortFormMoves(shortformMoves: string): MoveParsed[] {
 	return moves;
 }
 
-// Converting Positions ------------------------------------------------------------------------------------------
-
-/**
- * Accepts a gamefile's starting position and specialRights properties, returns the position in compressed notation (.e.g., "P5,6+|k15,-56|Q5000,1")
- * @param position - A piece iterator giving us each piece's coordsKey and pieceType.
- * 					 Using an iterable (which a Map<CoordsKey, number> also is considered a valid input) allows
- * 					 optimization elsewhere in the code, allowing us to avoid creating massive intermediate maps.
- * @param specialRights - The special rights of each piece in the gamefile, a set of CoordsKeys, where the piece at that coordinate can perform their special move (pawn double push, castling rights..)
- * @returns The position of the game in compressed form, where each piece with a + has its special move ability (.e.g., "P5,6+|k15,-56|Q5000,1")
- */
-function getShortFormPosition(
-	position: Iterable<[CoordsKey, number]>,
-	specialRights: Set<CoordsKey>,
-): string {
-	const pieces: string[] = []; // ['P1,2+','P2,2+', ...]
-	for (const [coordsKey, type] of position) {
-		const pieceAbbr = getAbbrFromType(type);
-		const specialRightsString = specialRights.has(coordsKey) ? '+' : '';
-		pieces.push(pieceAbbr + coordsKey + specialRightsString);
-	}
-	// Using join avoids overhead of repeatedly creating and copying large intermediate strings.
-	return pieces.join('|');
-}
-
-/**
- * Generates the specialRights property of a gamefile, given the provided position and gamerules.
- * Only gives pieces that can castle their right if they are on the same rank, and color, as the king, and at least 3 squares away
- *
- * This can be manually used to compress the starting position of variants of InfiniteChess.org to shrink the size of the code
- * @param position - The starting position of the gamefile, in the form 'x,y':'pawnsW'
- * @param pawnDoublePush - Whether pawns are allowed to double push
- * @param castleWith - If castling is allowed, this is what piece the king can castle with (e.g., "rooks"), otherwise leave it undefined
- * @returns The specialRights gamefile property, a set where entries are coordsKeys 'x,y', where the piece at that location has their special move ability (pawn double push, castling rights..)
- */
-function generateSpecialRights(
-	position: Map<CoordsKey, number>,
-	pawnDoublePush: boolean,
-	castleWith?: RawType,
-): Set<CoordsKey> {
-	// Make sure castleWith is with a valid piece to castle with
-	if (castleWith !== undefined && castleWith !== r.ROOK && castleWith !== r.GUARD)
-		throw Error(`Cannot allow castling with ${typeutil.debugType(castleWith)}!.`);
-
-	const specialRights = new Set<CoordsKey>();
-	if (pawnDoublePush === false && castleWith === undefined) return specialRights; // Early exit
-
-	/** Running list of kings discovered, 'x,y': player */
-	const kingsFound: Record<CoordsKey, Player> = {};
-	/** Running list of pieces found that are able to castle (e.g. rooks), 'x,y': Player */
-	const castleWithsFound: Record<CoordsKey, Player> = {};
-
-	for (const [key, thisPiece] of position.entries()) {
-		const [rawType, player] = typeutil.splitType(thisPiece);
-		if (pawnDoublePush && rawType === r.PAWN) {
-			specialRights.add(key);
-		} else if (castleWith && typeutil.jumpingRoyals.includes(rawType)) {
-			specialRights.add(key);
-			kingsFound[key] = player;
-		} else if (castleWith && rawType === castleWith) {
-			castleWithsFound[key] = player;
-		}
-	}
-
-	// Only give the pieces that can castle their special move ability
-	// if they are the same row and color as a king!
-	if (Object.keys(kingsFound).length === 0) return specialRights; // Nothing can castle, return now.
-	outerFor: for (const coord in castleWithsFound) {
-		// 'x,y': player
-		const coords = coordutil.getCoordsFromKey(coord as CoordsKey); // [x,y]
-		for (const kingCoord in kingsFound) {
-			// 'x,y': player
-			const kingCoords = coordutil.getCoordsFromKey(kingCoord as CoordsKey); // [x,y]
-			if (coords[1] !== kingCoords[1]) continue; // Not the same y level
-			if (castleWithsFound[coord as CoordsKey] !== kingsFound[kingCoord as CoordsKey])
-				continue; // Their players don't match
-			const xDist = bimath.abs(coords[0] - kingCoords[0]);
-			if (xDist < castlingutil.MIN_DISTANCE) continue; // Not at least minimum distance away
-			specialRights.add(coord as CoordsKey); // Same row and color as the king! This piece can castle.
-			// We already know this piece can castle, we don't
-			// need to see if it's on the same rank as any other king
-			continue outerFor;
-		}
-	}
-	return specialRights;
-}
-
-/**
- * Takes the position in compressed short form and returns the position and specialRights properties of the gamefile
- * @param shortposition - The compressed position of the gamefile (e.g., "K5,4+|P1,2|r500,25389")
- */
-function parseShortFormPosition(shortposition: string): {
-	position: Map<CoordsKey, number>;
-	specialRights: Set<CoordsKey>;
-} {
-	// console.log("Parsing shortposition:", shortposition);
-
-	const position = new Map<CoordsKey, number>();
-	const specialRights = new Set<CoordsKey>();
-
-	const pieceRegex = new RegExp(getPieceEntryRegexSource(true), 'g'); // named groups are: pieceAbbr, coordsKey, specialRight
-
-	// Since the moveRegex has the global flag, exec() will return the next match each time.
-	// NO STRING SPLITTING REQUIRED
-	let match: RegExpExecArray | null;
-	while ((match = pieceRegex.exec(shortposition)) !== null) {
-		const pieceAbbr = match.groups!['pieceAbbr']!;
-		const coordsKey = match.groups!['coordsKey']! as CoordsKey;
-		const hasSpecialRight = match.groups!['specialRight'] === '+';
-
-		const pieceType = getTypeFromAbbr(pieceAbbr);
-
-		position.set(coordsKey, pieceType);
-		if (hasSpecialRight) specialRights.add(coordsKey);
-	}
-
-	// console.log("Parsed position:", position);
-
-	return { position, specialRights };
-}
-
 // Preset Annotation Parsing -------------------------------------------------------------
 
 /**
@@ -1655,36 +1390,26 @@ function parsePresetRays(presetRays: string): BaseRay[] {
 // Exports --------------------------------------------------------------------------------------------------------
 
 export default {
+	// Variables
 	COMPACT_FORMAT_OPTIONS,
-
-	LongToShort_Format,
-	ShortToLong_Format,
-
-	getAbbrFromType,
-	getTypeFromAbbr,
-	getTokenFromMoveCoords,
-
-	parseTokenMove,
-
-	getShortFormPosition,
-	generateSpecialRights,
-	parseShortFormPosition,
-
-	getShortFormMoveFromMove,
-	getShortFormMovesFromMoves,
-	parseShortFormMoves,
-
-	parsePresetSquares,
-	parsePresetRays,
-
-	// Regex sources & objects
-	wholeNumberSource,
-	integerSource,
+	// Defaults
+	defaultWinCondition,
+	// Regular Expressions
 	promotionRanksSource,
 	promotionsPiecesSource,
-	defaultWinCondition,
-	pieceCodesInverted,
-	pieceCodesRaw,
+	// Main Functions Converting Games To and From ICN
+	LongToShort_Format,
+	ShortToLong_Format,
+	// Compacting & Parsing Single Moves
+	getTokenFromMoveCoords,
+	getShortFormMoveFromMove,
+	parseTokenMove,
+	// Compacting & Parsing Move Lists
+	getShortFormMovesFromMoves,
+	parseShortFormMoves,
+	// Preset Annotation Parsing
+	parsePresetSquares,
+	parsePresetRays,
 };
 
 export type { LongFormatIn, LongFormatOut, MovePreprint, MoveParsed, MoveCoords, PresetAnnotes };

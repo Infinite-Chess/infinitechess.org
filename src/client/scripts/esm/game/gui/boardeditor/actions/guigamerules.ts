@@ -11,6 +11,7 @@ import type { GameruleWinCondition } from '../../../../../../../shared/chess/uti
 
 import bounds from '../../../../../../../shared/util/math/bounds';
 import boardutil from '../../../../../../../shared/chess/util/boardutil';
+import icnposition from '../../../../../../../shared/chess/logic/icn/icnposition';
 import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
 import typeutil, { RawType } from '../../../../../../../shared/chess/util/typeutil';
 import { isValidPromotionPiece } from '../../../../../../../shared/chess/variants/positionvalidation';
@@ -89,7 +90,7 @@ const elements_selectionList: HTMLInputElement[] = [
 // Constants --------------------------------------------------------------
 
 /** Regexes for validating game rules input fields */
-const integerRegex = new RegExp(String.raw`^${icnconverter.integerSource}$`);
+const integerRegex = new RegExp(String.raw`^${icnposition.integerSource}$`);
 const promotionRanksRegex = new RegExp(String.raw`^${icnconverter.promotionRanksSource}$`);
 const promotionPiecesRegex = new RegExp(String.raw`^${icnconverter.promotionsPiecesSource}$`);
 
@@ -228,7 +229,7 @@ function readGameRules(): void {
 		const runningpromotionPieces: RawType[] = [];
 
 		for (const code of promotionPiecesRaw.split(',')) {
-			const typeStr: string | undefined = icnconverter.pieceCodesInverted[code];
+			const typeStr: string | undefined = icnposition.pieceCodesInverted[code];
 			if (typeStr === undefined) {
 				element_promotionpieces.classList.add('invalid-input');
 				break pa;
@@ -447,7 +448,7 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 
 	if (gamerulesGUIinfo.promotionPieces !== undefined) {
 		element_promotionpieces.value = gamerulesGUIinfo.promotionPieces
-			.map((type) => icnconverter.pieceCodesRaw[type])
+			.map((type) => icnposition.pieceCodesRaw[type])
 			.join(',')
 			.toUpperCase();
 	} else element_promotionpieces.value = '';
