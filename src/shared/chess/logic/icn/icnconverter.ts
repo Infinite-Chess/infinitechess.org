@@ -3,9 +3,23 @@
 /**
  * Universal Infinite Chess Notation [Converter] and Interface
  *
- * This script converts games from a JSON notation to a
- * compact ICN (Infinite Chess Noation) and back,
- * still human-readable, but taking less space to describe positions.
+ * ICN stores an entire game — metadata, gamerules, starting position and moves — in one
+ * dense, human-readable string. It is modelled on PGN, borrowing its `[Key "Value"]` tags,
+ * `{...}` move comments and `[%clk ...]` embedded command sequences.
+ *
+ * Three whitespace-separated sections, always in this order:
+ *   1. Metadata     [Variant "Classical"] [UTCDate "2025.08.19"] ...
+ *   2. Rules + position     w 0/100 1 (8|1) P1,2+|R1,1+|K5,1+|k5,8+
+ *   3. Moves        4,2>4,4|4,7>4,5|1,7>2,8=Q{[%clk 0:09:56.7]}
+ *
+ * Every field is optional and defaults when absent, but the ORDER IS STRICT — the parser
+ * walks the string left to right with sticky regexes, matching each field where it stands.
+ *
+ * This script is both directions: {@link LongToShort_Format} writes an ICN,
+ * {@link ShortToLong_Format} reads one, plus per-segment helpers for moves and positions.
+ *
+ * See docs/systems/ICN.md for the full format reference: every field, the piece
+ * abbreviations, the defaults, the round-trip losses, and which helper to reach for.
  *
  * Old github version:
  * https://github.com/tsevasa/infinite-chess-notation
