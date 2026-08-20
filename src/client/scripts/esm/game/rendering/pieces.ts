@@ -14,7 +14,7 @@ import boardpos from '../../board/rendering/boardpos.js';
 import miniimage from './miniimage.js';
 import piecemodels from '../../board/rendering/piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import { createRenderable } from '../../webgl/Renderable.js';
+import { createRenderable } from '../../board/rendering/renderable.js';
 
 // Variables ---------------------------------------------------------------------
 

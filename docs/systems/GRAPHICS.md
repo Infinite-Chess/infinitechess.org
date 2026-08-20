@@ -30,7 +30,7 @@ The center of the screen is always `[0, 0]` in world space. The bounding box of 
 - `convertWorldSpaceToCoords(worldCoords)` — World → Grid (includes decimal precision).
 - `convertWorldSpaceToCoords_Rounded(worldCoords)` — World → Grid, returning the integer tile coordinates the world space position is over.
 
-[`mouse.ts`](../src/client/scripts/esm/game/misc/mouse.ts) can be used to locate the mouse position in either coordinate space.
+[`mouse.ts`](../src/client/scripts/esm/game/mouse.ts) can be used to locate the mouse position in either coordinate space.
 
 - `getMouseWorld()` — Mouse position in world space.
 - `getTileMouseOver_Float()` — Mouse position in grid space (with decimal precision).

@@ -1,4 +1,4 @@
-// src/client/scripts/esm/board/rendering/gl-matrix.js
+// src/client/scripts/esm/webgl/gl-matrix.js
 
 /* eslint-disable */
 /*!

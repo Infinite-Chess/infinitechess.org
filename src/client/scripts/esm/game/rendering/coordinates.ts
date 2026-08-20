@@ -32,7 +32,7 @@ import preferences from '../../components/header/preferences.js';
 import textrenderer from './text/textrenderer.js';
 import boardgeometry from '../../board/rendering/boardgeometry.js';
 import arrowscalculator from './arrows/arrowscalculator.js';
-import { createRenderable } from '../../webgl/Renderable.js';
+import { createRenderable } from '../../board/rendering/renderable.js';
 import { ATLAS_DESCENDER_FRACTION } from './text/glyphatlas.js';
 
 // Constants -------------------------------------------------------------------------

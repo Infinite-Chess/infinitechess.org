@@ -13,8 +13,8 @@ import docutil from '../../util/docutil.js';
 import gamesession from '../../game/chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
 import analysisloader from './analysisloader.js';
-import variantSelector from '../../components/variantselector/variantSelector.js';
-import modifierSelector from '../../components/variantselector/modifierSelector.js';
+import variantSelector from '../../board/variantselector/variantSelector.js';
+import modifierSelector from '../../board/variantselector/modifierSelector.js';
 
 /** Wires the widget's commit callbacks to load the selection onto the board. */
 function init(): void {

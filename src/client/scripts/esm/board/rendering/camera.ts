@@ -17,6 +17,7 @@
  */
 
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
+import type { Mat4 } from '../../webgl/Renderable.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
 
@@ -24,17 +25,14 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
-import mat4 from './gl-matrix.js';
+import mat4 from '../../webgl/gl-matrix.js';
 import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
 import screenshake from './screenshake.js';
 import frametracker from './frametracker.js';
-import { createRenderable } from '../../webgl/Renderable.js';
+import { createRenderable } from './renderable.js';
 
 // Types --------------------------------------------------------------
-
-/** A 4x4 matrix, represented as a 16-element Float32Array */
-export type Mat4 = Float32Array;
 
 /** One independent camera instance, as returned by {@link createCamera}. */
 export interface Camera {

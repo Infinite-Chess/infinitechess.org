@@ -30,7 +30,10 @@ import frametracker from '../../board/rendering/frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import WaterRipples from './WaterRipples.js';
 import instancedshapes from '../../board/rendering/instancedshapes.js';
-import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
+import {
+	createRenderable,
+	createRenderable_Instanced_GivenInfo,
+} from '../../board/rendering/renderable.js';
 
 // Types ----------------------------------------------------------------------------------
 

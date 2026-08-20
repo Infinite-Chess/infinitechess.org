@@ -20,10 +20,8 @@ import preferences from '../../components/header/preferences.js';
 import perspective from './perspective.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import boardgeometry from '../../board/rendering/boardgeometry.js';
-import {
-	AttributeInfoInstanced,
-	createRenderable_Instanced_GivenInfo,
-} from '../../webgl/Renderable.js';
+import { AttributeInfoInstanced } from '../../webgl/Renderable.js';
+import { createRenderable_Instanced_GivenInfo } from '../../board/rendering/renderable.js';
 
 /** A sigle star particle. */
 type Star = {

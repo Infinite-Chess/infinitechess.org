@@ -6,7 +6,8 @@
  * It assumes that `initImagesForGame` is called before any
  * attempt to retrieve an image using `getPieceImage`.
  *
- * If no game is loaded, the cache should be empty.
+ * Images depend only on piece type and theme, never the loaded game,
+ * so the cache persists across games. Only a theme change invalidates it.
  */
 
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
@@ -16,7 +17,6 @@ import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
 
 import svgcache from './svgcache.js';
-import { GameBus } from '../../board/GameBus.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 
 // Variables ---------------------------------------------------------------------------
@@ -26,12 +26,6 @@ import svgtoimageconverter from '../../util/svgtoimageconverter.js';
  * Keys are the numeric piece types.
  */
 let cachedImages: TypeGroup<HTMLImageElement> = {};
-
-// Events ---------------------------------------------------------------------------
-
-GameBus.addEventListener('game-unloaded', () => {
-	deleteImageCache();
-});
 
 // Functions ---------------------------------------------------------------------------
 
@@ -116,9 +110,7 @@ function getPieceImage(type: number): HTMLImageElement {
 	return image;
 }
 
-/**
- * Clears the image cache. Call this when the game unloads.
- */
+/** Clears the image cache. Call this when the piece theme changes. */
 function deleteImageCache(): void {
 	// console.log("Deleting image cache.");
 	cachedImages = {};

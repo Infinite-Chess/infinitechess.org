@@ -10,7 +10,7 @@
 import socketutil from '../../../../shared/util/socketutil.js';
 
 import toast from '../components/toast.js';
-import config from '../board/config.js';
+import docutil from '../util/docutil.js';
 import socketsubs from './socketsubs.js';
 import socketsend from './socketsend.js';
 import validatorama from '../util/validatorama.js';
@@ -41,7 +41,7 @@ function isInTimeout(): boolean {
  * @param reason - The reason given for the closure.
  */
 function onclose(code: number, reason: string): void {
-	if (config.DEV_BUILD) console.log('WebSocket connection closed:', code, reason);
+	if (docutil.DEV_BUILD) console.log('WebSocket connection closed:', code, reason);
 
 	socketsend.clearPendingState();
 

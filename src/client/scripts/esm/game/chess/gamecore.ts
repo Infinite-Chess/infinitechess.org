@@ -33,7 +33,7 @@ import droparrows from '../rendering/dragging/droparrows.js';
 import dragarrows from '../rendering/dragging/dragarrows.js';
 import Transition from '../rendering/transitions/Transition.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
-import Renderable from '../../webgl/Renderable.js';
+import Renderable from '../../board/rendering/renderable.js';
 import gamesession from './gamesession.js';
 import arrowshifts from '../rendering/arrows/arrowshifts.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';

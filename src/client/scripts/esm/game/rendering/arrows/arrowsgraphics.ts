@@ -23,7 +23,7 @@ import arrowscalculator from './arrowscalculator.js';
 import {
 	createRenderable_Instanced,
 	createRenderable_Instanced_GivenInfo,
-} from '../../../webgl/Renderable.js';
+} from '../../../board/rendering/renderable.js';
 
 // Constants ---------------------------------------------------------------------------
 

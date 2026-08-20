@@ -8,8 +8,8 @@
 
 import socketutil from '../../../../shared/util/socketutil.js';
 
-import config from '../board/config.js';
 import thread from '../util/thread.js';
+import docutil from '../util/docutil.js';
 import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
 import socketreceive from './socketreceive.js';
@@ -103,7 +103,7 @@ async function establishSocket(): Promise<boolean> {
 		reconnectTimerId !== undefined ||
 		(socket && socket.readyState !== WebSocket.OPEN)
 	) {
-		if (config.DEV_BUILD) console.log('Waiting for the socket to be established or closed..');
+		if (docutil.DEV_BUILD) console.log('Waiting for the socket to be established or closed..');
 		await thread.sleep(100);
 	}
 	if (socket && socket.readyState === WebSocket.OPEN) return true;
@@ -204,7 +204,7 @@ function dropSocket(): void {
  * Then socketsend.send() lazily reopens the socket.
  */
 function resubAll(): void {
-	if (config.DEV_BUILD) console.log('Resubbing all..');
+	if (docutil.DEV_BUILD) console.log('Resubbing all..');
 	SocketBus.dispatch('reconnect');
 }
 

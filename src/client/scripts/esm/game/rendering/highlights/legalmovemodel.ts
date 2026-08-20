@@ -44,13 +44,12 @@ import perspective from '../perspective.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
+import { AttributeInfoInstanced, RenderableInstanced } from '../../../webgl/Renderable.js';
 import {
-	AttributeInfoInstanced,
-	RenderableInstanced,
 	createRenderable,
 	createRenderable_Instanced,
 	createRenderable_Instanced_GivenInfo,
-} from '../../../webgl/Renderable.js';
+} from '../../../board/rendering/renderable.js';
 
 // Types -----------------------------------------------------------------------
 

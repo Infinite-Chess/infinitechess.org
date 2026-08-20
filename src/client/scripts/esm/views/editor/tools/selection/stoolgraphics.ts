@@ -18,7 +18,7 @@ import space from '../../../../board/space';
 import camera from '../../../../board/rendering/camera';
 import meshes from '../../../../board/rendering/meshes';
 import primitives from '../../../../board/rendering/primitives';
-import { createRenderable } from '../../../../webgl/Renderable';
+import { createRenderable } from '../../../../board/rendering/renderable';
 
 // Constants ---------------------------------------------------
 

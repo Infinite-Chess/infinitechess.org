@@ -15,7 +15,7 @@ import gameslot from '../../../game/chess/gameslot.js';
 import { GameBus } from '../../../board/GameBus.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
-import { createRenderable } from '../../../webgl/Renderable.js';
+import { createRenderable } from '../../../board/rendering/renderable.js';
 import analysisenginebounds from '../analysisenginebounds.js';
 
 const BORDER_COLOR: Color = [1, 0.05, 0.05, 0.9];

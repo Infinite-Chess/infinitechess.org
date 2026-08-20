@@ -29,7 +29,7 @@ import { rawTypes as r, players as p } from '../../../../../shared/chess/util/ty
 import mouse from '../mouse.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
-import config from '../../board/config.js';
+import config from '../config.js';
 import camera from '../../board/rendering/camera.js';
 import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';

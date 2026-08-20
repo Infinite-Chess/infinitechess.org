@@ -37,7 +37,10 @@ import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import { listener_canvas } from '../../chess/gamecore.js';
-import { createRenderable, createRenderable_Instanced } from '../../../webgl/Renderable.js';
+import {
+	createRenderable,
+	createRenderable_Instanced,
+} from '../../../board/rendering/renderable.js';
 
 // Variables --------------------------------------------------------------------------------------
 

@@ -41,8 +41,9 @@ import drawsquares from './annotations/drawsquares.js';
 import annotations from './annotations/annotations.js';
 import preferences from '../../../components/header/preferences.js';
 import texturecache from '../../../chess/rendering/texturecache.js';
+import { Renderable } from '../../../webgl/Renderable.js';
+import { createRenderable } from '../../../board/rendering/renderable.js';
 import selectedpiecehighlightline from './selectedpiecehighlightline.js';
-import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------
 

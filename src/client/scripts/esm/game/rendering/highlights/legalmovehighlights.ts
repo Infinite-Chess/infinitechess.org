@@ -24,8 +24,9 @@ import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
 import specialrighthighlights from './specialrighthighlights.js';
+import { RenderableInstanced } from '../../../webgl/Renderable.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
-import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
+import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
 
 // Variables -----------------------------------------------------------------------------
 

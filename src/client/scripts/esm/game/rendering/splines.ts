@@ -11,7 +11,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import space from '../../board/space.js';
 import boardpos from '../../board/rendering/boardpos.js';
-import { createRenderable } from '../../webgl/Renderable.js';
+import { createRenderable } from '../../board/rendering/renderable.js';
 
 // Constants ------------------------------------------------------
 

@@ -16,7 +16,8 @@ import space from '../../../board/space.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import primitives from '../../../board/rendering/primitives.js';
 import preferences from '../../../components/header/preferences.js';
-import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
+import { Renderable } from '../../../webgl/Renderable.js';
+import { createRenderable } from '../../../board/rendering/renderable.js';
 
 // Functions -----------------------------------------------------------------------
 

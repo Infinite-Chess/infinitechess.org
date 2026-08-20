@@ -1,4 +1,4 @@
-// src/client/scripts/esm/components/variantselector/modifierSelector.ts
+// src/client/scripts/esm/board/variantselector/modifierSelector.ts
 
 /**
  * Manages game modifier selection in the variant selector widget:

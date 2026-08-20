@@ -1,12 +1,12 @@
-// src/client/scripts/esm/views/news/news.ts
+// src/client/scripts/esm/views/news.ts
 
 /**
  * This script runs on the news page.
  * It marks news as read when the page is visited and adds "NEW" badges to unread posts.
  */
 
-import validatorama from '../../util/validatorama.js';
-import { serverFetch } from '../../util/serverFetch.js';
+import validatorama from '../util/validatorama.js';
+import { serverFetch } from '../util/serverFetch.js';
 
 /**
  * Marks all news as read for the current user

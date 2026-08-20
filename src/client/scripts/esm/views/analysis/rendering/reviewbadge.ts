@@ -27,7 +27,7 @@ import { GameBus } from '../../../board/GameBus.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import TextureLoader from '../../../webgl/TextureLoader.js';
 import svgtoimageconverter from '../../../util/svgtoimageconverter.js';
-import { createRenderable } from '../../../webgl/Renderable.js';
+import { createRenderable } from '../../../board/rendering/renderable.js';
 
 // Constants -----------------------------------------------------------------
 

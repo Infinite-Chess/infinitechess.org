@@ -16,7 +16,8 @@ import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 import space from '../../../board/space.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
-import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
+import { RenderableInstanced } from '../../../webgl/Renderable.js';
+import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
 
 /**
  * Generates a renderable buffer model for square highlights from given coordinates.

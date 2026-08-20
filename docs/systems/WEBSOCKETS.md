@@ -138,7 +138,7 @@ Two different questions, two different receipts. **Neither is ever echoed back**
 
 The client's echo round-trip time is what feeds the ping meter
 ([pingmeter.ts](/src/client/scripts/esm/components/header/pingmeter.ts)) and the clock ping
-adjustment ([pingManager.ts](/src/client/scripts/esm/util/pingManager.ts)).
+adjustment ([pingManager.ts](/src/client/scripts/esm/views/game/pingManager.ts)).
 
 **Echoes are deliberately unlogged and unmetered server-side.** An echo isn't traffic the client
 chose to send — we oblige one per message _we_ send — so charging their rate budget for our own
@@ -321,7 +321,7 @@ and navigates home.
 
 ### Game (re)subscription: `subscribe` vs. `subscriberematch`
 
-The client's [onlinegame.ts](/src/client/scripts/esm/game/misc/onlinegame/onlinegame.ts) tracks a
+The client's [onlinegame.ts](/src/client/scripts/esm/views/game/onlinegame.ts) tracks a
 monotonic `stage`, which decides what a reconnect asks for:
 
 | Stage         | Meaning                                        | Reconnect sends                    |
@@ -338,12 +338,12 @@ a 404. [onSubscribeRematch.ts](/src/server/game/gamemanager/onSubscribeRematch.t
 `rematchstate`, or `unsub` if the game has since been evicted.
 
 A dead game is loaded over **HTTP**, not the socket
-([deadgameloader.ts](/src/client/scripts/esm/game/misc/onlinegame/deadgameloader.ts)) — it
+([deadgameloader.ts](/src/client/scripts/esm/views/game/deadgameloader.ts)) — it
 normalizes the fetched state into the same `gamestate` shape and no socket is opened at all.
 
 ## Resync and desync
 
-`gamestate` is the universal repair message. [resyncer.ts](/src/client/scripts/esm/game/misc/onlinegame/resyncer.ts)
+`gamestate` is the universal repair message. [resyncer.ts](/src/client/scripts/esm/views/game/resyncer.ts)
 rewinds and forwards our board until it matches the server's move list, validates each opponent
 move as it goes (reporting cheating where the game permits it), and applies the conclusion.
 
@@ -484,5 +484,5 @@ makes no difference whether they were one version behind or two.
 | Local subscription record                          | [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts)                                                                                                                                                                                 |
 | Intent hold/lock layer                             | [socketintents.ts](/src/client/scripts/esm/socket/socketintents.ts)                                                                                                                                                                           |
 | Event bus                                          | [SocketBus.ts](/src/client/scripts/esm/socket/SocketBus.ts)                                                                                                                                                                                   |
-| Game-route handling, stage machine, resync         | [onlinegamerouter.ts](/src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts), [onlinegame.ts](/src/client/scripts/esm/game/misc/onlinegame/onlinegame.ts), [resyncer.ts](/src/client/scripts/esm/game/misc/onlinegame/resyncer.ts) |
+| Game-route handling, stage machine, resync         | [onlinegamerouter.ts](/src/client/scripts/esm/views/game/onlinegamerouter.ts), [onlinegame.ts](/src/client/scripts/esm/views/game/onlinegame.ts), [resyncer.ts](/src/client/scripts/esm/views/game/resyncer.ts)                               |
 | Lobby-route handling                               | [index.ts](/src/client/scripts/esm/views/index/index.ts), [lobby.ts](/src/client/scripts/esm/views/index/lobby.ts)                                                                                                                            |

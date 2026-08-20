@@ -46,7 +46,7 @@ import draganimation from './draganimation.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrowscalculator from '../arrows/arrowscalculator.js';
 import { ARROW_SIZE_RATIO } from '../arrows/arrowsgraphics.js';
-import { createRenderable } from '../../../webgl/Renderable.js';
+import { createRenderable } from '../../../board/rendering/renderable.js';
 
 // Types ---------------------------------------------------------------------------------
 

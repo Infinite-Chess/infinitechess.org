@@ -20,7 +20,8 @@ import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
 import squarerendering from './squarerendering.js';
-import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
+import { RenderableInstanced } from '../../../webgl/Renderable.js';
+import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
 
 // Variables -------------------------------------------------------------------------------------
 

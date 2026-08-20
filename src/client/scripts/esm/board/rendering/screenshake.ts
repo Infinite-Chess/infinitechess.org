@@ -4,9 +4,9 @@
  * This module can apply a screen shake effect to the camera when requested.
  */
 
-import type { Mat4 } from './camera';
+import type { Mat4 } from '../../webgl/Renderable.js';
 
-import mat4 from './gl-matrix.js';
+import mat4 from '../../webgl/gl-matrix.js';
 import camera from './camera';
 import deltatime from '../deltatime.js';
 import { GameBus } from '../GameBus.js';

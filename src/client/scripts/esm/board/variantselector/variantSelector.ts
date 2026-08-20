@@ -1,4 +1,4 @@
-// src/client/scripts/esm/components/variantselector/variantSelector.ts
+// src/client/scripts/esm/board/variantselector/variantSelector.ts
 
 /**
  * The variant selector widget shared by the home page's game-options modal and the
@@ -40,7 +40,7 @@ import validatorama from '../../util/validatorama.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import modifierSelector from './modifierSelector.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
-import variantPreviewTooltip from '../../board/rendering/variantPreviewTooltip.js';
+import variantPreviewTooltip from '../rendering/variantPreviewTooltip.js';
 
 // Types -------------------------------------------------
 

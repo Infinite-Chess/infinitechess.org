@@ -17,7 +17,8 @@ import camera from '../../../board/rendering/camera.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import perspective from '../perspective.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
-import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
+import { Renderable } from '../../../webgl/Renderable.js';
+import { createRenderable } from '../../../board/rendering/renderable.js';
 
 /**
  * A single highlight line.

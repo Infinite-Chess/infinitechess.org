@@ -17,7 +17,7 @@ import icnconverter, { MoveCoords } from '../../../../../../shared/chess/logic/i
 import gameslot from '../../../game/chess/gameslot.js';
 import drawarrows from '../../../game/rendering/highlights/annotations/drawarrows.js';
 import frametracker from '../../../board/rendering/frametracker.js';
-import { createRenderable } from '../../../webgl/Renderable.js';
+import { createRenderable } from '../../../board/rendering/renderable.js';
 
 // Types --------------------------------------------------------------------
 

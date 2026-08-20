@@ -10,20 +10,29 @@
  * It is also capable of instanced rendering.
  *
  * {@link createRenderableFactory} builds a set of create-functions bound to one WebGL
- * context + ProgramManager + camera. The module free exports delegate to the interactive
- * game's factory (set at runtime via {@link init}); the variant-preview tooltip builds its
- * own factory so its models render into its own context.
+ * context + ProgramManager + view source. Each caller owns its factory, so its models
+ * render into its own context.
  */
 
 import type { Vec3 } from '../../../../shared/util/math/vectors.js';
 
-import mat4 from '../board/rendering/gl-matrix.js';
+import mat4 from './gl-matrix.js';
 import { ShaderProgram } from './ShaderProgram.js';
-import camera, { Mat4, Camera } from '../board/rendering/camera.js';
 import { createBufferFromData, updateBufferIndices } from './BufferUtil.js';
 import { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js';
 
 // Types ----------------------------------------------------------------------------------
+
+/** A 4x4 matrix, represented as a 16-element Float32Array */
+export type Mat4 = Float32Array;
+
+/**
+ * The minimum a camera must provide for a factory to render with it. Kept narrow so
+ * this layer stays free of the board's camera, which satisfies it structurally.
+ */
+export interface ViewSource {
+	getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 };
+}
 
 /**
  * Any kind of array that may be passed to the constructors
@@ -35,7 +44,7 @@ import { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js'
  *
  * number[] => Double precision (64-bit). Max safe integer of 9,007,199,254,740,991 (9 quadrillion). Max value of 1.8e+308.
  */
-type InputArray = number[] | TypedArray;
+export type InputArray = number[] | TypedArray;
 
 /**
  * All signed type arrays compatible with WebGL, that can be used as vertex data.
@@ -48,7 +57,7 @@ type InputArray = number[] | TypedArray;
 export type TypedArray = Float32Array | Int32Array | Int16Array | Int8Array;
 
 /** All valid primitive shapes we can render with */
-type PrimitiveType =
+export type PrimitiveType =
 	| 'TRIANGLES'
 	| 'TRIANGLE_STRIP'
 	| 'TRIANGLE_FAN'
@@ -183,7 +192,7 @@ export interface RenderableFactory {
 function createRenderableFactory(
 	gl: WebGL2RenderingContext,
 	programManager: ProgramManager,
-	cam: Camera,
+	cam: ViewSource,
 ): RenderableFactory {
 	function createRenderable(
 		/** The array of vertex data of the mesh to be rendered. */
@@ -674,69 +683,4 @@ function genModelMatrix(position: Vec3, scale: Vec3): Mat4 {
 	return modelMatrix;
 }
 
-// Game default factory & free exports ----------------------------------------------------
-
-/** The interactive game's renderable factory, created at runtime by {@link init}. */
-let gameFactory: RenderableFactory;
-
-/** Initializes the game's factory with the game's WebGL context and ProgramManager. */
-function init(context: WebGL2RenderingContext, program_manager: ProgramManager): void {
-	gameFactory = createRenderableFactory(context, program_manager, camera);
-}
-
-/** Creates a renderable model in the game's context. See {@link RenderableFactory}. */
-function createRenderable(
-	data: InputArray,
-	numPositionComponents: 2 | 3,
-	mode: PrimitiveType,
-	shader: keyof ProgramMap,
-	usingColor: boolean,
-	texture?: WebGLTexture,
-): Renderable {
-	return gameFactory.createRenderable(data, numPositionComponents, mode, shader, usingColor, texture); // prettier-ignore
-}
-
-/** Creates an instanced renderable model in the game's context. */
-function createRenderable_Instanced(
-	vertexData: InputArray,
-	instanceData: InputArray,
-	mode: PrimitiveType,
-	shader: keyof ProgramMap,
-	usingColor: boolean,
-	texture?: WebGLTexture,
-): RenderableInstanced {
-	return gameFactory.createRenderable_Instanced(vertexData, instanceData, mode, shader, usingColor, texture); // prettier-ignore
-}
-
-/** Creates a renderable model in the game's context, given explicit attribute info. */
-function createRenderable_GivenInfo<K extends keyof ProgramMap>(
-	data: InputArray,
-	attribInfo: AttributeInfo,
-	mode: PrimitiveType,
-	shader: K,
-	textures: TextureInfo[] = [],
-): Renderable {
-	return gameFactory.createRenderable_GivenInfo(data, attribInfo, mode, shader, textures);
-}
-
-/** Creates an instanced renderable model in the game's context, given explicit attribute info. */
-function createRenderable_Instanced_GivenInfo<K extends keyof ProgramMap>(
-	vertexData: InputArray,
-	instanceData: InputArray,
-	attribInfoInstanced: AttributeInfoInstanced,
-	mode: PrimitiveType,
-	shader: K,
-	textures: TextureInfo[] = [],
-): RenderableInstanced {
-	return gameFactory.createRenderable_Instanced_GivenInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, textures); // prettier-ignore
-}
-
-export {
-	createRenderableFactory,
-	createRenderable,
-	createRenderable_GivenInfo,
-	createRenderable_Instanced,
-	createRenderable_Instanced_GivenInfo,
-};
-
-export default { init };
+export { createRenderableFactory };

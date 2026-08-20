@@ -13,8 +13,8 @@ import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalid
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
 import timeControls from './timeControls.js';
-import variantSelector from '../../components/variantselector/variantSelector.js';
-import modifierSelector from '../../components/variantselector/modifierSelector.js';
+import variantSelector from '../../board/variantselector/variantSelector.js';
+import modifierSelector from '../../board/variantselector/modifierSelector.js';
 import gamesetuphandoff from '../../handoffs/gamesetuphandoff.js';
 
 // Types ----------------------------------------------

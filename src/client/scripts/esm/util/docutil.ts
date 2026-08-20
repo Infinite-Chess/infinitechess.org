@@ -10,6 +10,12 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
+ * True if the page is running on a local environment, which enables some dev/debugging
+ * features. Read once at load — the hostname cannot change without a navigation.
+ */
+const DEV_BUILD: boolean = isLocalEnvironment();
+
+/**
  * Determines if the current page is running on a local environment (localhost or local IP).
  * @returns *true* if the page is running locally, *false* otherwise.
  */
@@ -193,7 +199,7 @@ function createSvgElementFromString(svgText: string): SVGElement {
 
 export default {
 	SVG_NS,
-	isLocalEnvironment,
+	DEV_BUILD,
 	copyToClipboard,
 	readFromClipboard,
 	isTypingInTextField,
