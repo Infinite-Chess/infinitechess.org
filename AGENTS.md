@@ -13,7 +13,7 @@ Each non-local session (working directory contains `/home/runner/` or `/github/`
 ## Useful notes
 
 - The shell is zsh locally, bash on runners: always quote glob patterns in command args (e.g. `grep --include='*.ts'`), or zsh's nomatch aborts the command before it runs.
-- Line 1 of every script is its file path, written automatically by a hook — don't maintain it. Lines 3-7+ usually hold a brief description of the script's purpose, enough to understand it without reading the whole thing.
+- Line 1 of every script is its file path, written automatically by a hook when committing — don't maintain it. Lines 3-7+ usually hold a brief description of the script's purpose, enough to understand it without reading the whole thing.
 - TypeScript indents with tabs, not spaces. Prettier enforces styling automatically.
 - `npm run lint --silent` names every unused import — use it instead of working out removals by hand.
 - Read a file's relevant lines in-session before editing it. Grep, sed or shell output doesn't count.
