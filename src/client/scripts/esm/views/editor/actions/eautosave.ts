@@ -6,15 +6,15 @@
  */
 
 import type { ActivePosition } from '../boardeditor';
-import type { EditorPositionData } from '../../../editorstores/estoretypes';
+import type { EditorPositionData } from '../../../savedpositions/storetypes';
 
 import z from 'zod';
 
 import eactions from './eactions';
 import IndexedDB from '../../../util/IndexedDB';
 import egamerules from '../egamerules';
+import storetypes from '../../../savedpositions/storetypes';
 import boardeditor from '../boardeditor';
-import estoretypes from '../../../editorstores/estoretypes';
 import validatorama from '../../../util/validatorama';
 
 // Types -----------------------------------------------------------------
@@ -43,7 +43,7 @@ const AutosaveStateSchema = z.strictObject({
 		])
 		.optional(),
 	dirty: z.boolean(),
-	...estoretypes.positionDataFields,
+	...storetypes.positionDataFields,
 }) satisfies z.ZodType<EditorAutosaveState>;
 
 // Variables --------------------------------------------------------------

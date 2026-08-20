@@ -1,4 +1,4 @@
-// src/client/scripts/esm/editorstores/editorhandoff.ts
+// src/client/scripts/esm/savedpositions/handoff.ts
 
 /**
  * Cross-page handoff for opening a position in the board editor.

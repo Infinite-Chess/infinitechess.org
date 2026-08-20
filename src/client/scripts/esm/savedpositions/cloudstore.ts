@@ -1,19 +1,19 @@
-// src/client/scripts/esm/editorstores/ecloudstore.ts
+// src/client/scripts/esm/savedpositions/cloudstore.ts
 
 /**
  * Low-level cloud read/write operations for board editor saves.
  */
 
 import type { LongFormatIn } from '../../../../shared/chess/logic/icn/icnconverter';
-import type { EditorSaveState } from './estoretypes';
-import type { CloudPositionRecord, CloudSaveListRecord } from './editorSavesAPI';
+import type { EditorSaveState } from './storetypes';
+import type { CloudPositionRecord, CloudSaveListRecord } from './savesapi';
 
 import icnimport from '../../../../shared/chess/logic/icn/icnimport.js';
 import editorutil from '../../../../shared/util/editorutil';
 import compression from '../../../../shared/util/compression';
 import icnconverter from '../../../../shared/chess/logic/icn/icnconverter';
 
-import editorSavesAPI from './editorSavesAPI';
+import savesapi from './savesapi';
 
 // Error classes --------------------------------------------------------------
 
@@ -74,7 +74,7 @@ export async function parseCloudPosition(
  * @throws On network error or parse failure.
  */
 async function readCloud(position_name: string): Promise<EditorSaveState> {
-	const cloudPosition = await editorSavesAPI.getPosition(position_name);
+	const cloudPosition = await savesapi.getPosition(position_name);
 	return parseCloudPosition(position_name, cloudPosition);
 }
 
@@ -108,7 +108,7 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<CloudSa
 
 	if (compressedICN.length > editorutil.MAX_ICN_LENGTH) throw new PositionTooLargeError();
 
-	return editorSavesAPI.savePosition(
+	return savesapi.savePosition(
 		editorSaveState.position_name,
 		editorSaveState.piece_count,
 		editorSaveState.timestamp,

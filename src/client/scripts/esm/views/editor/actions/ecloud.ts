@@ -5,24 +5,24 @@
  * Mirrors esave.ts for cloud storage.
  */
 
-import type { EditorSaveState } from '../../../editorstores/estoretypes';
-import type { CloudSaveListRecord } from '../../../editorstores/editorSavesAPI';
+import type { EditorSaveState } from '../../../savedpositions/storetypes';
+import type { CloudSaveListRecord } from '../../../savedpositions/savesapi';
 
 import toast from '../../../components/toast.js';
 import esave from './esave';
 import eactions from './eactions';
+import savesapi from '../../../savedpositions/savesapi';
 import eautosave from './eautosave';
-import esavestore from '../../../editorstores/esavestore';
+import savestore from '../../../savedpositions/savestore';
 import egamerules from '../egamerules';
 import boardeditor from '../boardeditor';
 import validatorama from '../../../util/validatorama';
-import editorSavesAPI from '../../../editorstores/editorSavesAPI';
-import ecloudstore, {
+import cloudstore, {
 	ICNConversionError,
 	ICNDecompressionError,
 	ICNParseError,
 	PositionTooLargeError,
-} from '../../../editorstores/ecloudstore';
+} from '../../../savedpositions/cloudstore';
 
 // Actions ----------------------------------------------------------------------
 
@@ -64,7 +64,7 @@ async function saveCloud(position_name: string): Promise<void> {
 	};
 
 	try {
-		await ecloudstore.saveCloudState(editorSaveState);
+		await cloudstore.saveCloudState(editorSaveState);
 	} catch (err) {
 		console.error('Failed to save cloud position:', err);
 		toastSaveCloudError(err);
@@ -84,7 +84,7 @@ async function saveCloud(position_name: string): Promise<void> {
  */
 async function readCloud(position_name: string): Promise<EditorSaveState | undefined> {
 	try {
-		return await ecloudstore.readCloud(position_name);
+		return await cloudstore.readCloud(position_name);
 	} catch (err) {
 		if (err instanceof ICNDecompressionError) {
 			console.error('Failed to decompress cloud position ICN:', err);
@@ -108,7 +108,7 @@ async function readCloud(position_name: string): Promise<EditorSaveState | undef
  */
 async function deleteCloud(position_name: string): Promise<CloudSaveListRecord[] | undefined> {
 	try {
-		return await editorSavesAPI.deletePosition(position_name);
+		return await savesapi.deletePosition(position_name);
 	} catch (err) {
 		console.error('Failed to delete cloud position:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
@@ -129,7 +129,7 @@ async function transferPositionToCloud(
 
 	let saves: CloudSaveListRecord[];
 	try {
-		saves = await ecloudstore.saveCloudState(editorSaveState);
+		saves = await cloudstore.saveCloudState(editorSaveState);
 	} catch (err) {
 		console.error('Failed to upload position to cloud during transfer:', err);
 		toastSaveCloudError(err);
@@ -139,7 +139,7 @@ async function transferPositionToCloud(
 	toast.show(translations.editor.saved_to_cloud);
 
 	// Success! Delete local copy now.
-	await esavestore.deleteLocal(position_name);
+	await savestore.deleteLocal(position_name);
 
 	if (boardeditor.isActivePosition(position_name, 'local'))
 		boardeditor.setActivePosition({
@@ -164,7 +164,7 @@ async function removePositionFromCloud(
 	// Delete from server (returns the updated list)
 	let saves: CloudSaveListRecord[];
 	try {
-		saves = await editorSavesAPI.deletePosition(position_name);
+		saves = await savesapi.deletePosition(position_name);
 	} catch (err) {
 		console.error('Failed to delete cloud position after download:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
@@ -173,7 +173,7 @@ async function removePositionFromCloud(
 	}
 
 	// Success! Save locally now.
-	await esavestore.saveState(editorSaveState);
+	await savestore.saveState(editorSaveState);
 
 	if (boardeditor.isActivePosition(position_name, 'cloud'))
 		boardeditor.setActivePosition({ name: position_name, storage_type: 'local' });
@@ -184,12 +184,12 @@ async function removePositionFromCloud(
 
 /**
  * Fetches all cloud saves for the current user.
- * Mirrors esavestore.getAllLocalSaveInfos() for cloud storage.
+ * Mirrors savestore.getAllLocalSaveInfos() for cloud storage.
  * @returns An array of cloud save records, or an empty array on failure.
  */
 async function getAllCloudSaveInfos(): Promise<CloudSaveListRecord[]> {
 	try {
-		return await editorSavesAPI.getSavedPositions();
+		return await savesapi.getSavedPositions();
 	} catch (err) {
 		console.error('Failed to fetch cloud saves:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);

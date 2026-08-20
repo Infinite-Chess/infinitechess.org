@@ -1,13 +1,13 @@
-// src/client/scripts/esm/editorstores/esavestore.ts
+// src/client/scripts/esm/savedpositions/savestore.ts
 
 /**
  * Low-level IndexedDB read/write operations for board editor saves.
  */
 
-import type { EditorAbridgedSaveState, EditorSaveState } from './estoretypes.js';
+import type { EditorAbridgedSaveState, EditorSaveState } from './storetypes.js';
 
 import IndexedDB from '../util/IndexedDB.js';
-import editortypes from './estoretypes.js';
+import storetypes from './storetypes.js';
 
 // Constants ----------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ async function deleteLocal(position_name: string): Promise<void> {
 /** Returns true if a local save exists for the given position name. */
 async function localSaveExists(position_name: string): Promise<boolean> {
 	const raw = await IndexedDB.loadItem(saveinfoKey(position_name));
-	return editortypes.AbridgedSaveStateSchema.safeParse(raw).success;
+	return storetypes.AbridgedSaveStateSchema.safeParse(raw).success;
 }
 
 /**
@@ -74,7 +74,7 @@ async function getAllLocalSaveInfos(): Promise<EditorAbridgedSaveState[]> {
 	const results = await Promise.all(
 		saveinfo_keys.map(async (key) => {
 			const raw = await IndexedDB.loadItem(key);
-			const parsed = editortypes.AbridgedSaveStateSchema.safeParse(raw);
+			const parsed = storetypes.AbridgedSaveStateSchema.safeParse(raw);
 			if (!parsed.success) {
 				const position_name = key.slice(EDITOR_SAVEINFO_PREFIX.length);
 				console.error(
@@ -98,7 +98,7 @@ async function readLocal(position_name: string): Promise<EditorSaveState> {
 	const editorSaveStateRaw = await IndexedDB.loadItem(saveKey(position_name));
 	if (editorSaveStateRaw === undefined)
 		throw new Error(`Local save "${position_name}" not found`);
-	const editorSaveStateParsed = editortypes.SaveStateSchema.safeParse(editorSaveStateRaw);
+	const editorSaveStateParsed = storetypes.SaveStateSchema.safeParse(editorSaveStateRaw);
 	if (!editorSaveStateParsed.success) {
 		console.error(
 			`Corrupted local save "${position_name}" found. Error: ${editorSaveStateParsed.error}`,

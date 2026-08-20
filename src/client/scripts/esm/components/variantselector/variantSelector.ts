@@ -8,7 +8,7 @@
 
 import type { VNode } from 'snabbdom';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
-import type { CloudSaveListRecord } from '../../editorstores/editorSavesAPI.js';
+import type { CloudSaveListRecord } from '../../savedpositions/savesapi.js';
 import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MetaData, SeekVariant, GameModifier } from '../../../../../shared/domain.js';
 import type {
@@ -32,12 +32,12 @@ import {
 	getPlayabilityRejection,
 } from '../../../../../shared/chess/variants/positionvalidation.js';
 
-import ecloudstore from '../../editorstores/ecloudstore.js';
+import savesapi from '../../savedpositions/savesapi.js';
+import savestore from '../../savedpositions/savestore.js';
+import cloudstore from '../../savedpositions/cloudstore.js';
 import validatorama from '../../util/validatorama.js';
-import editorSavesAPI from '../../editorstores/editorSavesAPI.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import modifierSelector from './modifierSelector.js';
-import editorpositionsdb from '../../editorstores/esavestore.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
 import variantPreviewTooltip from '../../board/rendering/variantPreviewTooltip.js';
 
@@ -319,8 +319,8 @@ async function openCustomVariantList(): Promise<void> {
 	element_variantListPanelByGroup.get('custom')!.classList.add('open');
 
 	const [cloudResult, localResult] = await Promise.allSettled([
-		validatorama.areWeLoggedIn() ? editorSavesAPI.getSavedPositions() : Promise.resolve([]),
-		editorpositionsdb.getAllLocalSaveInfos(),
+		validatorama.areWeLoggedIn() ? savesapi.getSavedPositions() : Promise.resolve([]),
+		savestore.getAllLocalSaveInfos(),
 	]);
 
 	const cloudSaves = cloudResult.status === 'fulfilled' ? cloudResult.value : [];
@@ -396,8 +396,8 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`cloud-${s.name}`,
 			s.name,
-			() => selectCustomSave( 'online', s.name, cloudPreviewCache, ecloudstore.readCloud, t.shared.variant_selector.cloud_load_failed), // prettier-ignore
-			(anchor) => handleSavePreview(anchor, s.name, cloudPreviewCache, ecloudstore.readCloud),
+			() => selectCustomSave( 'online', s.name, cloudPreviewCache, cloudstore.readCloud, t.shared.variant_selector.cloud_load_failed), // prettier-ignore
+			(anchor) => handleSavePreview(anchor, s.name, cloudPreviewCache, cloudstore.readCloud),
 		),
 	);
 
@@ -405,8 +405,8 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`local-${s.position_name}`,
 			s.position_name,
-			() => selectCustomSave('local', s.position_name, localPreviewCache, editorpositionsdb.readLocal, t.shared.variant_selector.local_load_failed), // prettier-ignore
-			(anchor) => handleSavePreview(anchor, s.position_name,  localPreviewCache, editorpositionsdb.readLocal), // prettier-ignore
+			() => selectCustomSave('local', s.position_name, localPreviewCache, savestore.readLocal, t.shared.variant_selector.local_load_failed), // prettier-ignore
+			(anchor) => handleSavePreview(anchor, s.position_name,  localPreviewCache, savestore.readLocal), // prettier-ignore
 		),
 	);
 
@@ -766,9 +766,9 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 	if (selection.kind === 'preset') {
 		variantPreviewTooltip.showForVariantCode(anchor, selection.code, 'left', { engineGame: engineOnly }); // prettier-ignore
 	} else if (selection.kind === 'online') {
-		handleSavePreview(anchor, selection.name, cloudPreviewCache, ecloudstore.readCloud);
+		handleSavePreview(anchor, selection.name, cloudPreviewCache, cloudstore.readCloud);
 	} else if (selection.kind === 'local') {
-		handleSavePreview(anchor, selection.name, localPreviewCache, editorpositionsdb.readLocal);
+		handleSavePreview(anchor, selection.name, localPreviewCache, savestore.readLocal);
 	} else if (selection.kind === 'icn') {
 		void variantPreviewTooltip.showForPosition(
 			anchor,

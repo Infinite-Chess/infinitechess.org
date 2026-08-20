@@ -7,7 +7,7 @@
  * active position tracking, and the main update/render loop.
  */
 
-import type { StorageType } from '../../editorstores/estoretypes.js';
+import type { StorageType } from '../../savedpositions/storetypes.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';

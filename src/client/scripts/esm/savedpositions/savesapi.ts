@@ -1,4 +1,4 @@
-// src/client/scripts/esm/editorstores/editorSavesAPI.ts
+// src/client/scripts/esm/savedpositions/savesapi.ts
 
 /**
  * Client-side wrappers for the editor saves server API endpoints.

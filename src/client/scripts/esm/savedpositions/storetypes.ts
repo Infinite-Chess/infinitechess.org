@@ -1,4 +1,4 @@
-// src/client/scripts/esm/editorstores/estoretypes.ts
+// src/client/scripts/esm/savedpositions/storetypes.ts
 
 /**
  * The TypeScript types and Zod schemas for the board editor save system that

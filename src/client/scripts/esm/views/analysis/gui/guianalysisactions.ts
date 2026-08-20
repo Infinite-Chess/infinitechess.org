@@ -15,10 +15,10 @@ import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import view from './guianalysisview.js';
 import toast from '../../../components/toast.js';
 import docutil from '../../../util/docutil.js';
+import handoff from '../../../savedpositions/handoff.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
-import editorhandoff from '../../../editorstores/editorhandoff.js';
 import gamecompressor from '../../../chess/gamecompressor.js';
 import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
 
@@ -141,7 +141,7 @@ async function openCurrentPositionInEditor(): Promise<void> {
 	const position = exportCurrentPosition();
 	if (!position) return;
 
-	await editorhandoff.save({ variantOptions: position.variantOptions });
+	await handoff.save({ variantOptions: position.variantOptions });
 	window.location.assign('/editor');
 }
 

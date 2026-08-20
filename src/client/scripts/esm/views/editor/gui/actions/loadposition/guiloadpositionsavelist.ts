@@ -6,14 +6,17 @@
  * and refreshing the list from local and cloud storage.
  */
 
-import type { CloudSaveListRecord } from '../../../../../editorstores/editorSavesAPI';
-import type { EditorAbridgedSaveState, StorageType } from '../../../../../editorstores/estoretypes';
+import type { CloudSaveListRecord } from '../../../../../savedpositions/savesapi';
+import type {
+	EditorAbridgedSaveState,
+	StorageType,
+} from '../../../../../savedpositions/storetypes';
 
 import esave from '../../../actions/esave';
 import ecloud from '../../../actions/ecloud';
 import docutil from '../../../../../util/docutil';
 import eactions from '../../../actions/eactions';
-import esavestore from '../../../../../editorstores/esavestore';
+import savestore from '../../../../../savedpositions/savestore';
 import boardeditor from '../../../boardeditor';
 import { GameBus } from '../../../../../board/GameBus';
 import validatorama from '../../../../../util/validatorama';
@@ -156,7 +159,7 @@ async function performDelete(position_name: string, storage_type: StorageType): 
 	if (storage_type === 'cloud') {
 		preloadedCloudSaves = await withRequest(() => ecloud.deleteCloud(position_name));
 	} else {
-		await esavestore.deleteLocal(position_name);
+		await savestore.deleteLocal(position_name);
 	}
 	// Clear active position name if the deleted position was active
 	if (boardeditor.isActivePosition(position_name, storage_type))
@@ -195,7 +198,7 @@ async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSav
 	}
 
 	// Load all local saves
-	const localSaveList = await esavestore.getAllLocalSaveInfos();
+	const localSaveList = await savestore.getAllLocalSaveInfos();
 
 	// Add local saves
 	for (const abridged of localSaveList) {

@@ -4,13 +4,13 @@
  * Handles the saving of positions in boardeditor
  */
 
-import type { EditorSaveState } from '../../../editorstores/estoretypes';
+import type { EditorSaveState } from '../../../savedpositions/storetypes';
 
 import toast from '../../../components/toast.js';
 import eactions from './eactions';
 import eautosave from './eautosave';
+import savestore from '../../../savedpositions/savestore';
 import egamerules from '../egamerules';
-import esavestore from '../../../editorstores/esavestore';
 import boardeditor from '../boardeditor';
 
 // State --------------------------------------------------------------------
@@ -39,7 +39,7 @@ async function saveLocal(position_name: string): Promise<void> {
 		const timestamp = Date.now();
 		const piece_count = variantOptions.position.size;
 
-		await esavestore.saveState({
+		await savestore.saveState({
 			position_name,
 			timestamp,
 			piece_count,
@@ -73,7 +73,7 @@ async function saveLocal(position_name: string): Promise<void> {
  */
 async function readLocal(position_name: string): Promise<EditorSaveState | undefined> {
 	try {
-		return await esavestore.readLocal(position_name);
+		return await savestore.readLocal(position_name);
 	} catch {
 		toast.show(translations.editor.position_corrupted, { error: true });
 		return undefined;
