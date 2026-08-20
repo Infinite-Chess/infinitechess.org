@@ -112,7 +112,7 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 38. Before touching the websocket system at all — client or server — read `docs/systems/WEBSOCKETS.md` first.
 
-39. To learn anything about ICN (Infinite Chess Notation), read `docs/systems/ICN.md` first — before `icnconverter.ts`, which the doc may save you from reading at all.
+39. To learn anything about ICN (Infinite Chess Notation), read `docs/systems/ICN.md` first — before `icnconverter.ts` or `icnposition.ts`, which the doc may save you from reading at all.
 
 ### Permanent and structural consequences
 
