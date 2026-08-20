@@ -2,7 +2,7 @@
 
 import themes from '../../../../../../shared/components/header/themes.js';
 
-import style from '../../../game/gui/style.js';
+import colorutil from '../../../util/colorutil.js';
 import preferences from '../preferences.js';
 import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerator.js';
 
@@ -102,8 +102,8 @@ async function addBoardThemesToDropdown(): Promise<void> {
 
 		// Create the checkerboard image for the board theme
 		const checkerboardImage = await checkerboardgenerator.createCheckerboardIMG(
-			style.arrayToCssColor(lightTiles), // Convert to CSS color format
-			style.arrayToCssColor(darkTiles), // Convert to CSS color format
+			colorutil.arrayToCssColor(lightTiles), // Convert to CSS color format
+			colorutil.arrayToCssColor(darkTiles), // Convert to CSS color format
 			2, // Width
 		);
 		checkerboardImage.setAttribute('data-board-color', themeName);

@@ -20,7 +20,7 @@ import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
 import gamesession from '../../game/chess/gamesession.js';
 import guianalysisview from './gui/guianalysisview.js';
-import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
+import clientmetadatautil from '../../chess/clientmetadatautil.js';
 
 // State -----------------------------------------------------------------------
 

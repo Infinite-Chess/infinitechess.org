@@ -20,8 +20,8 @@ import type {
 
 import gameslot from '../../chess/gameslot.js';
 import arrowshifts from './arrowshifts.js';
-import { GameBus } from '../../GameBus.js';
-import frametracker from '../frametracker.js';
+import { GameBus } from '../../../board/GameBus.js';
+import frametracker from '../../../board/rendering/frametracker.js';
 import arrowscalculator from './arrowscalculator.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 

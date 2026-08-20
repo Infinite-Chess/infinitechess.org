@@ -24,7 +24,7 @@ The center of the screen is always `[0, 0]` in world space. The bounding box of 
 
 ### Converting Between Spaces
 
-[`space.ts`](../src/client/scripts/esm/game/misc/space.ts) provides key conversion functions for converting from one coordinate space to the other.
+[`space.ts`](../src/client/scripts/esm/board/space.ts) provides key conversion functions for converting from one coordinate space to the other.
 
 - `convertCoordToWorldSpace(coords)` — Grid → World. You may first have to cast BigInt coords to BigDecimal coords via `bdcoords.FromCoords(coords)`.
 - `convertWorldSpaceToCoords(worldCoords)` — World → Grid (includes decimal precision).
@@ -53,17 +53,17 @@ The exact attributes you include in the vertex data depends on the shader you pl
 
 ### Primitives
 
-[`primitives.ts`](../src/client/scripts/esm/game/rendering/primitives.ts) provides many helpers for calculating the vertex data of various shapes: squares, rectangles, circles, etc. from just their dimensions and color.
+[`primitives.ts`](../src/client/scripts/esm/board/rendering/primitives.ts) provides many helpers for calculating the vertex data of various shapes: squares, rectangles, circles, etc. from just their dimensions and color.
 
 ### Instanced Shape Data
 
-[`instancedshapes.ts`](../src/client/scripts/esm/game/rendering/instancedshapes.ts), if you're using instanced rendering (which is a lot simpler to create vertex & instance data for, if you're rendering many copies of the same shape), provides helpers for obtaining the vertex data of the shape you want to render: legal move square, dot, special rights plus sign, etc.
+[`instancedshapes.ts`](../src/client/scripts/esm/board/rendering/instancedshapes.ts), if you're using instanced rendering (which is a lot simpler to create vertex & instance data for, if you're rendering many copies of the same shape), provides helpers for obtaining the vertex data of the shape you want to render: legal move square, dot, special rights plus sign, etc.
 
-If you use instanced rendering, you bypass the need to calculate instance-specific vertex data, often only needing to specify the position offset of each of your objects in the instance data. This is used by piece rendering inside [`piecemodels.ts`](../src/client/scripts/esm/game/rendering/piecemodels.ts) (that example renders textures), and by legal move model generation inside [`legalmovemodel.ts`](../src/client/scripts/esm/game/rendering/highlights/legalmovemodel.ts).
+If you use instanced rendering, you bypass the need to calculate instance-specific vertex data, often only needing to specify the position offset of each of your objects in the instance data. This is used by piece rendering inside [`piecemodels.ts`](../src/client/scripts/esm/board/rendering/piecemodels.ts) (that example renders textures), and by legal move model generation inside [`legalmovemodel.ts`](../src/client/scripts/esm/game/rendering/highlights/legalmovemodel.ts).
 
 ### Mesh Helpers
 
-[`meshes.ts`](../src/client/scripts/esm/game/rendering/meshes.ts) provides higher-level helpers for automatically generating the vertex data for you if all you have is the integer coordinate and color of the square you want vertex data for. It can also convert a grid space bounding box into world space for you.
+[`meshes.ts`](../src/client/scripts/esm/board/rendering/meshes.ts) provides higher-level helpers for automatically generating the vertex data for you if all you have is the integer coordinate and color of the square you want vertex data for. It can also convert a grid space bounding box into world space for you.
 
 ### Square Highlights
 
@@ -78,7 +78,7 @@ They accept arguments for vertex data, instance data (if using instanced renderi
 
 The returned `Renderable` object has a `render()` property for instantly rendering it. If you generated your vertex data in world space, you don't have to specify transformation arguments when rendering for the item to appear in the correct place. If however your vertex data is in grid space (which is common for instance rendering), you should provide the `position` and `scale` arguments when rendering. Position is dependent on the board position (`meshes.getModelPosition()`), and scale is dependant on the board scale (`boardpos.getBoardScaleAsNumber()`). The render method uses these to automatically transform the points to world space when rendering.
 
-The `Renderable` object also has properties for updating its vertex/instance data internally, allowing you the option to skip generating a whole new Renderable every single frame. This is optimal when you have arbitrarily many objects to render, and their positions change infrequently. [`piecemodels.ts`](../src/client/scripts/esm/game/rendering/piecemodels.ts) for example does this when updating the model of the piece sprites.
+The `Renderable` object also has properties for updating its vertex/instance data internally, allowing you the option to skip generating a whole new Renderable every single frame. This is optimal when you have arbitrarily many objects to render, and their positions change infrequently. [`piecemodels.ts`](../src/client/scripts/esm/board/rendering/piecemodels.ts) for example does this when updating the model of the piece sprites.
 
 ## Shader Picking
 
@@ -107,9 +107,9 @@ Call your script's render method in the appropriate section.
 
 ## Rendering Architecture: Render Contexts
 
-The game can draw two independent boards at the same time: the interactive game, and the small board inside the variant-preview hover tooltip ([`variantPreviewTooltip.ts`](../src/client/scripts/esm/game/rendering/variantPreviewTooltip.ts)). Each lives on its own `<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs, textures, buffers/VAOs) can **never** be shared across contexts.
+The game can draw two independent boards at the same time: the interactive game, and the small board inside the variant-preview hover tooltip ([`variantPreviewTooltip.ts`](../src/client/scripts/esm/board/rendering/variantPreviewTooltip.ts)). Each lives on its own `<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs, textures, buffers/VAOs) can **never** be shared across contexts.
 
-A [`RenderContext`](../src/client/scripts/esm/game/rendering/RenderContext.ts) bundles everything bound to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale), piece `textures`, stencil `maskedDraw`, tile renderer (`boardtiles`), and a `renderable` factory for creating models in that context. The interactive game builds one in `gamecore.init()`; the preview builds its own in `ensureGLReady()`. Shared drawing code is handed a `RenderContext` and draws for whichever board it's told, instead of reaching for a process-wide singleton.
+A [`RenderContext`](../src/client/scripts/esm/board/rendering/RenderContext.ts) bundles everything bound to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale), piece `textures`, stencil `maskedDraw`, tile renderer (`boardtiles`), and a `renderable` factory for creating models in that context. The interactive game builds one in `gamecore.init()`; the preview builds its own in `ensureGLReady()`. Shared drawing code is handed a `RenderContext` and draws for whichever board it's told, instead of reaching for a process-wide singleton.
 
 ### Choosing a shape for a new render module
 

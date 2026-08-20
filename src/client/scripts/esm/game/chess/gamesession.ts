@@ -10,16 +10,16 @@ import type { LoadOptions } from './gameslot.js';
 
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
-import area from '../rendering/area.js';
+import area from '../../board/rendering/area.js';
 import toast from '../../components/toast.js';
 import thread from '../../util/thread.js';
-import meshes from '../rendering/meshes.js';
+import meshes from '../../board/rendering/meshes.js';
 import gameslot from './gameslot.js';
-import boardpos from '../rendering/boardpos.js';
+import boardpos from '../../board/rendering/boardpos.js';
 import gamecore from './gamecore.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 
 // Types ------------------------------------------------------------------------
 

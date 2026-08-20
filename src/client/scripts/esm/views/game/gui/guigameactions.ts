@@ -25,7 +25,7 @@ import gamefileutility from '../../../../../../shared/chess/util/gamefileutility
 
 import gameslot from '../../../game/chess/gameslot.js';
 import drawoffers from '../drawoffers.js';
-import { GameBus } from '../../../game/GameBus.js';
+import { GameBus } from '../../../board/GameBus.js';
 import { SocketBus } from '../../../socket/SocketBus.js';
 import socketintents from '../../../socket/socketintents.js';
 

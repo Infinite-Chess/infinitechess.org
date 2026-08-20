@@ -30,8 +30,8 @@ import animation from '../rendering/animation.js';
 import holdrepeat from '../../util/holdrepeat.js';
 import Transition from '../rendering/transitions/Transition.js';
 import gamesession from '../chess/gamesession.js';
-import { GameBus } from '../GameBus.js';
-import frametracker from '../rendering/frametracker.js';
+import { GameBus } from '../../board/GameBus.js';
+import frametracker from '../../board/rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import { listener_document } from '../chess/gamecore.js';
 

@@ -35,11 +35,11 @@ import {
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
-import gamecompressor from '../../game/chess/gamecompressor.js';
+import gamecompressor from '../../chess/gamecompressor.js';
 import modifierSelector from './modifierSelector.js';
 import editorpositionsdb from '../../game/editorstores/esavestore.js';
-import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
-import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
+import clientmetadatautil from '../../chess/clientmetadatautil.js';
+import variantPreviewTooltip from '../../board/rendering/variantPreviewTooltip.js';
 
 // Types -------------------------------------------------
 

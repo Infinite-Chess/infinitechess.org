@@ -54,9 +54,9 @@ import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
 import validatorama from '../../../util/validatorama';
 import selectiontool from '../tools/selection/selectiontool';
-import gamecompressor from '../../chess/gamecompressor';
+import gamecompressor from '../../../chess/gamecompressor';
 import guiboardcontrols from '../../gui/guiboardcontrols';
-import clientmetadatautil from '../../chess/clientmetadatautil';
+import clientmetadatautil from '../../../chess/clientmetadatautil';
 import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
 
 // Constants ----------------------------------------------------------------------

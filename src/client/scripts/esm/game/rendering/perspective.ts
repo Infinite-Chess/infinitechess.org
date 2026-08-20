@@ -7,13 +7,13 @@
 
 import type { Color } from '../../../../../shared/util/math/math.js';
 
-import webgl from './webgl.js';
-import config from '../config.js';
-import camera from './camera.js';
+import webgl from '../../board/rendering/webgl.js';
+import config from '../../board/config.js';
+import camera from '../../board/rendering/camera.js';
 import gameslot from '../chess/gameslot.js';
 import preferences from '../../components/header/preferences.js';
-import { GameBus } from '../GameBus.js';
-import frametracker from './frametracker.js';
+import { GameBus } from '../../board/GameBus.js';
+import frametracker from '../../board/rendering/frametracker.js';
 import { Renderable, createRenderable } from '../../webgl/Renderable.js';
 
 /** Whether perspective mode is enabled. */

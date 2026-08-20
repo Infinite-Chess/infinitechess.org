@@ -18,18 +18,18 @@ import pieceThemes from '../../../../../shared/components/header/pieceThemes.js'
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
-import meshes from './meshes.js';
-import camera from './camera.js';
+import meshes from '../../board/rendering/meshes.js';
+import camera from '../../board/rendering/camera.js';
 import splines from '../../util/splines.js';
-import boardpos from './boardpos.js';
+import boardpos from '../../board/rendering/boardpos.js';
 import movesound from '../misc/movesound.js';
 import arrowshifts from './arrows/arrowshifts.js';
-import piecemodels from './piecemodels.js';
-import { GameBus } from '../GameBus.js';
-import frametracker from './frametracker.js';
+import piecemodels from '../../board/rendering/piecemodels.js';
+import { GameBus } from '../../board/GameBus.js';
+import frametracker from '../../board/rendering/frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import WaterRipples from './WaterRipples.js';
-import instancedshapes from './instancedshapes.js';
+import instancedshapes from '../../board/rendering/instancedshapes.js';
 import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 
 // Types ----------------------------------------------------------------------------------

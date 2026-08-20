@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/config.ts
+// src/client/scripts/esm/board/config.ts
 
 /** This script contains our game configurations. */
 

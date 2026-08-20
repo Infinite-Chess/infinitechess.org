@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/frametracker.ts
+// src/client/scripts/esm/board/rendering/frametracker.ts
 
 /**
  * This script stores an internal variable that keeps track of whether

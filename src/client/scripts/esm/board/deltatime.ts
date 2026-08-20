@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/misc/deltatime.ts
+// src/client/scripts/esm/board/deltatime.ts
 
 /**
  * Owns frame delta-time calculation and storage.

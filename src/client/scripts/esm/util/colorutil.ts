@@ -1,13 +1,11 @@
-// src/client/scripts/esm/game/gui/style.ts
+// src/client/scripts/esm/util/colorutil.ts
 
 /**
- * Utility function for html elements and styles.
- *
- * It also keeps track of our javascript-inserted css in the style element of the html document
- * for things like the color of the navigation bar when theme changes.
+ * Utility methods for converting colors between representations,
+ * and into the CSS color strings the document expects.
  */
 
-import type { Color } from '../../../../../shared/util/math/math';
+import type { Color } from '../../../../shared/util/math/math';
 
 // Types -------------------------------------------------------------
 
@@ -21,41 +19,7 @@ interface HSLColor {
 	l: number;
 }
 
-// Constants -------------------------------------------------------------
-
-/** SVG default namespace */
-const SVG_NS = 'http://www.w3.org/2000/svg';
-
 // Functions -------------------------------------------------------------
-
-/**
- * Finds the index of an element within its parent.
- * @param element - The element to find the index of.
- * @returns - The index of the element within its parent, or -1 if not found.
- */
-function getElementIndexWithinItsParent(element: Element): number {
-	if (!element || !element.parentNode) return -1;
-
-	// Get the parent node
-	const parent = element.parentNode;
-
-	// Convert the parent's children to an array and find the index of the element
-	const children = Array.prototype.slice.call(parent.children);
-	return children.indexOf(element);
-}
-
-/**
- * Gets the child element at the specified index of a parent element.
- * @param parent - The parent element.
- * @param index - The index of the child element.
- * @returns The child element at the specified index, or null if not found.
- */
-function getChildByIndexInParent(parent: Element, index: number): Element | null {
-	if (parent && parent.children && index >= 0 && index < parent.children.length) {
-		return parent.children[index]!;
-	}
-	return null;
-}
 
 /**
  * Converts an array of [r, g, b, a], range 0-1, into a valid CSS rgba color string.
@@ -143,11 +107,7 @@ function hslToCssString(hsl: HSLColor): string {
 }
 
 export default {
-	SVG_NS,
-
 	arrayToCssColor,
-	getElementIndexWithinItsParent,
-	getChildByIndexInParent,
 	rgbToHsl,
 	rgbToCssString,
 	hslToCssString,

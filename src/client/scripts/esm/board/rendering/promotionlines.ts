@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/promotionlines.ts
+// src/client/scripts/esm/board/rendering/promotionlines.ts
 
 /**
  * This script handles the rendering of our promotion lines.

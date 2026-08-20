@@ -10,11 +10,11 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bimath from '../../../../../../shared/util/math/bimath.js';
 
-import boardpos from '../../../game/rendering/boardpos.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import gameslot from '../../../game/chess/gameslot.js';
-import { GameBus } from '../../../game/GameBus.js';
-import frametracker from '../../../game/rendering/frametracker.js';
-import boardgeometry from '../../../game/rendering/boardgeometry.js';
+import { GameBus } from '../../../board/GameBus.js';
+import frametracker from '../../../board/rendering/frametracker.js';
+import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
 import analysisenginebounds from '../analysisenginebounds.js';
 

@@ -28,7 +28,7 @@ import { Mouse } from '../../input';
 import egamerules from '../egamerules';
 import guipalette from '../../gui/boardeditor/guipalette';
 import edithistory from '../edithistory';
-import { GameBus } from '../../GameBus';
+import { GameBus } from '../../../board/GameBus';
 import specialrighthighlights from '../../rendering/highlights/specialrighthighlights';
 
 // Events ----------------------------------------------------------

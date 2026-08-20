@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/misc/space.ts
+// src/client/scripts/esm/board/space.ts
 
 /**
  * This script converts world-space coordinates to square coordinates, and vice verca.
@@ -11,14 +11,14 @@
  * Grid space: 1 unit = width of 1 square
  */
 
-import type { Camera } from '../rendering/camera.js';
-import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { Camera } from './rendering/camera.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import camera from '../rendering/camera.js';
-import boardpos from '../rendering/boardpos.js';
-import boardgeometry from '../rendering/boardgeometry.js';
+import camera from './rendering/camera.js';
+import boardpos from './rendering/boardpos.js';
+import boardgeometry from './rendering/boardgeometry.js';
 
 const HALF: BigDecimal = bd.fromNumber(0.5);
 

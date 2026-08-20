@@ -20,9 +20,9 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import engineicn from '../../game/chess/engines/engineicn.js';
-import { GameBus } from '../../game/GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
-import gamecompressor from '../../game/chess/gamecompressor.js';
+import gamecompressor from '../../chess/gamecompressor.js';
 import analysisworker from './analysisworker.js';
 import analysisenginebounds from './analysisenginebounds.js';
 import { maxEngineThreads, THREAD_CAP } from '../../game/chess/engines/enginewasm.js';

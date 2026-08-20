@@ -12,8 +12,8 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../shared/util/math/math.js';
 
-import gamesound from './gamesound.js';
-import screenshake from '../rendering/screenshake.js';
+import gamesound from '../../board/gamesound.js';
+import screenshake from '../../board/rendering/screenshake.js';
 import WaterRipples from '../rendering/WaterRipples.js';
 
 // Move Configs --------------------------------------------------------------------------

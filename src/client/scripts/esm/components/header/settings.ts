@@ -5,7 +5,7 @@
 import math from '../../../../../shared/util/math/math.js';
 import themes from '../../../../../shared/components/header/themes.js';
 
-import style from '../../game/gui/style.js';
+import colorutil from '../../util/colorutil.js';
 import preferences from './preferences.js';
 import sounddropdown from './dropdowns/sounddropdown.js';
 import languagedropdown from './dropdowns/languagedropdown.js';
@@ -159,13 +159,13 @@ function updateBackgroundColor(): void {
 	const switchG = AvgG * 255;
 	const switchB = AvgB * 255;
 
-	const cssSwitch = style.rgbToCssString(switchR, switchG, switchB);
+	const cssSwitch = colorutil.rgbToCssString(switchR, switchG, switchB);
 
 	// Also set the --c-tile-2 property, which is just a slightly brightened version!
 	// The board editor uses this for the background of selected tools.
 
 	// Convert to HSL Color
-	const backgroundHSL = style.rgbToHsl(switchR, switchG, switchB);
+	const backgroundHSL = colorutil.rgbToHsl(switchR, switchG, switchB);
 
 	// Brighten by 5%
 	backgroundHSL.l += 0.05;
@@ -173,7 +173,7 @@ function updateBackgroundColor(): void {
 	backgroundHSL.l = math.clamp(backgroundHSL.l, 0.6, 1);
 
 	// Create CSS string
-	const cssBackground = style.hslToCssString(backgroundHSL);
+	const cssBackground = colorutil.hslToCssString(backgroundHSL);
 
 	// Set CSS properties
 

@@ -8,7 +8,7 @@
 
 import socketutil from '../../../../shared/util/socketutil.js';
 
-import config from '../game/config.js';
+import config from '../board/config.js';
 import thread from '../util/thread.js';
 import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';

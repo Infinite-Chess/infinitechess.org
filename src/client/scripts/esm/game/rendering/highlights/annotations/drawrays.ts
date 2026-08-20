@@ -18,16 +18,16 @@ import coordutil, {
 	DoubleCoords,
 } from '../../../../../../../shared/chess/util/coordutil.js';
 
-import space from '../../../misc/space.js';
+import space from '../../../../board/space.js';
 import mouse from '../../../../util/mouse.js';
-import meshes from '../../meshes.js';
+import meshes from '../../../../board/rendering/meshes.js';
 import snapping from '../snapping.js';
 import gameslot from '../../../chess/gameslot.js';
-import boardpos from '../../boardpos.js';
+import boardpos from '../../../../board/rendering/boardpos.js';
 import { Mouse } from '../../../input.js';
 import preferences from '../../../../components/header/preferences.js';
 import annotations from './annotations.js';
-import { GameBus } from '../../../GameBus.js';
+import { GameBus } from '../../../../board/GameBus.js';
 import legalmovemodel from '../legalmovemodel.js';
 import highlightline, { Line } from '../highlightline.js';
 import selectedpiecehighlightline from '../selectedpiecehighlightline.js';

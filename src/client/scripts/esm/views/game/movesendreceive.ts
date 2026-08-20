@@ -5,7 +5,7 @@
  * and receiving moves from our opponent.
  */
 
-import type { Mesh } from '../../game/rendering/piecemodels.js';
+import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 import type { ClockValues } from '../../../../../shared/domain.js';
@@ -25,7 +25,7 @@ import premoves from '../../game/chess/premoves.js';
 import selection from '../../game/chess/selection.js';
 import onlinegame from './onlinegame.js';
 import socketsend from '../../socket/socketsend.js';
-import { GameBus } from '../../game/GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import gamesession from '../../game/chess/gamesession.js';
 import movesequence from '../../game/chess/movesequence.js';
 

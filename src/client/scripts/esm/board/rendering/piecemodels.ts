@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/piecemodels.ts
+// src/client/scripts/esm/board/rendering/piecemodels.ts
 
 /**
  * This generates and renders the meshes of each individual piece type in the game.

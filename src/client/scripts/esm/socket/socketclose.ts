@@ -10,7 +10,7 @@
 import socketutil from '../../../../shared/util/socketutil.js';
 
 import toast from '../components/toast.js';
-import config from '../game/config.js';
+import config from '../board/config.js';
 import socketsubs from './socketsubs.js';
 import socketsend from './socketsend.js';
 import validatorama from '../util/validatorama.js';

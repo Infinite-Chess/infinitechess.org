@@ -8,7 +8,7 @@
 
 import ceval from './ceval.js';
 import movetree from './movetree.js';
-import { GameBus } from '../../game/GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 
 export interface MoveEvalLabel {
 	cp?: number;

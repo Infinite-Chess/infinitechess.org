@@ -14,9 +14,9 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
-import gamesound from '../../game/misc/gamesound.js';
+import gamesound from '../../board/gamesound.js';
 import gameactions from './gui/guigameactions.js';
-import { GameBus } from '../../game/GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import socketintents from '../../socket/socketintents.js';
 
 // Variables ---------------------------------------------------

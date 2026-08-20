@@ -12,9 +12,9 @@ import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coord
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 
-import space from '../../misc/space.js';
-import boardpos from '../boardpos.js';
-import primitives from '../primitives.js';
+import space from '../../../board/space.js';
+import boardpos from '../../../board/rendering/boardpos.js';
+import primitives from '../../../board/rendering/primitives.js';
 import preferences from '../../../components/header/preferences.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 

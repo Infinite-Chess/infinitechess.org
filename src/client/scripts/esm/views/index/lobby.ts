@@ -29,13 +29,13 @@ import variantregistry from '../../../../../shared/chess/variants/variantregistr
 
 import docutil from '../../util/docutil.js';
 import idleness from '../../util/idleness.js';
-import gamesound from '../../game/misc/gamesound.js';
+import gamesound from '../../board/gamesound.js';
 import socketsubs from '../../socket/socketsubs.js';
 import socketsend from '../../socket/socketsend.js';
 import socketintents from '../../socket/socketintents.js';
 import gameSetupModal from './gameSetupModal.js';
 import seekPreviewCache from './seekPreviewCache.js';
-import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
+import variantPreviewTooltip from '../../board/rendering/variantPreviewTooltip.js';
 
 const patch = init([attributesModule, classModule]);
 

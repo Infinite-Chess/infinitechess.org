@@ -18,13 +18,13 @@ import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 
 import snapping from './snapping.js';
-import boardpos from '../boardpos.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
 import gamesession from '../../chess/gamesession.js';
 import drawsquares from './annotations/drawsquares.js';
 import preferences from '../../../components/header/preferences.js';
-import { GameBus } from '../../GameBus.js';
+import { GameBus } from '../../../board/GameBus.js';
 import squarerendering from './squarerendering.js';
 
 // Variables -----------------------------------------------------------------------

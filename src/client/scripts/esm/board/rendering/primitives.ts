@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/primitives.ts
+// src/client/scripts/esm/board/rendering/primitives.ts
 
 /**
  * This script contains methods for obtaining the vertex array data

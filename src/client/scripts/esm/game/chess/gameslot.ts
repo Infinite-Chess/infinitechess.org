@@ -7,7 +7,7 @@
  * It also has the loader and unloader methods for the gamefile.
  */
 
-import type { Mesh } from '../rendering/piecemodels.js';
+import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, GameFile } from '../../../../../shared/chess/logic/gamefile.js';
@@ -24,24 +24,24 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import arrows from '../rendering/arrows/arrows.js';
-import { gl } from '../rendering/webgl.js';
-import camera from '../rendering/camera.js';
+import { gl } from '../../board/rendering/webgl.js';
+import camera from '../../board/rendering/camera.js';
 import gamecore from './gamecore.js';
 import guiclock from '../gui/guiclock.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import miniimage from '../rendering/miniimage.js';
 import starfield from '../rendering/starfield.js';
-import gamesound from '../misc/gamesound.js';
+import gamesound from '../../board/gamesound.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import gamesession from './gamesession.js';
-import piecemodels from '../rendering/piecemodels.js';
+import piecemodels from '../../board/rendering/piecemodels.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import perspective from '../rendering/perspective.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import miniimagerenderer from '../rendering/miniimagerenderer.js';
+import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 // Types ---------------------------------------------------------------------
 

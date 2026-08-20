@@ -2,8 +2,8 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-import camera from '../../camera';
-import deltatime from '../../../misc/deltatime.js';
+import camera from '../../../../board/rendering/camera';
+import deltatime from '../../../../board/deltatime.js';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';

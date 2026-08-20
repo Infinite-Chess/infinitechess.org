@@ -19,16 +19,16 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 
 import toast from '../../components/toast.js';
 import mouse from '../../util/mouse.js';
-import space from '../misc/space.js';
+import space from '../../board/space.js';
 import arrows from '../rendering/arrows/arrows.js';
 import gameslot from '../chess/gameslot.js';
-import boardpos from '../rendering/boardpos.js';
+import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
 import { Mouse } from '../input.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import { listener_document, listener_canvas } from '../chess/gamecore.js';
 
 // Elements ----------------------------------------------------------------------------------

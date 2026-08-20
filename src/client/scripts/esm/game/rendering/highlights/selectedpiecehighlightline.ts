@@ -19,7 +19,7 @@ import coordutil, {
 	CoordsKey,
 } from '../../../../../../shared/chess/util/coordutil.js';
 
-import boardpos from '../boardpos.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import selection from '../../chess/selection.js';
 import preferences from '../../../components/header/preferences.js';
 import highlightline from './highlightline.js';

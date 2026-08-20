@@ -15,12 +15,12 @@ import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
-import meshes from '../meshes.js';
+import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
 import gamesession from '../../chess/gamesession.js';
 import preferences from '../../../components/header/preferences.js';
-import { GameBus } from '../../GameBus.js';
+import { GameBus } from '../../../board/GameBus.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrows, { ArrowPiece } from './arrows.js';
 

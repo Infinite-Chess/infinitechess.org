@@ -2,7 +2,7 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-import gamesound from '../../../misc/gamesound';
+import gamesound from '../../../../board/gamesound';
 import PerlinNoise from '../../../../util/PerlinNoise';
 import preferences from '../../../../components/header/preferences';
 import AudioManager from '../../../../audio/AudioManager';

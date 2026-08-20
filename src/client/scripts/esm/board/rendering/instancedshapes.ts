@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/instancedshapes.ts
+// src/client/scripts/esm/board/rendering/instancedshapes.ts
 
 /**
  * This script calculates the vertex data of a single instance

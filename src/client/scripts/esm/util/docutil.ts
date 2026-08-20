@@ -6,6 +6,9 @@
  * ZERO dependancies.
  */
 
+/** SVG default namespace */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 /**
  * Determines if the current page is running on a local environment (localhost or local IP).
  * @returns *true* if the page is running locally, *false* otherwise.
@@ -162,6 +165,20 @@ function deleteCookie(cookieName: string): void {
 }
 
 /**
+ * Finds the index of an element within its parent.
+ * @param element - The element to find the index of.
+ * @returns - The index of the element within its parent, or -1 if not found.
+ */
+function getElementIndexWithinItsParent(element: Element): number {
+	if (!element || !element.parentNode) return -1;
+	// Get the parent node
+	const parent = element.parentNode;
+	// Convert the parent's children to an array and find the index of the element
+	const children = Array.prototype.slice.call(parent.children);
+	return children.indexOf(element);
+}
+
+/**
  * Parse an SVG string into a live SVGElement.
  * @param svgText — a string containing valid `<svg>…</svg>` markup
  * @returns the newly created SVG element
@@ -175,6 +192,7 @@ function createSvgElementFromString(svgText: string): SVGElement {
 }
 
 export default {
+	SVG_NS,
 	isLocalEnvironment,
 	copyToClipboard,
 	readFromClipboard,
@@ -187,5 +205,6 @@ export default {
 	getCookieValue,
 	updateCookie,
 	deleteCookie,
+	getElementIndexWithinItsParent,
 	createSvgElementFromString,
 };

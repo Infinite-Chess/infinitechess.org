@@ -10,13 +10,13 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 import gameslot from '../chess/gameslot.js';
-import boardpos from '../rendering/boardpos.js';
+import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
 import engineicn from '../chess/engines/engineicn.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
-import { GameBus } from '../GameBus.js';
-import frametracker from '../rendering/frametracker.js';
-import gamecompressor from '../chess/gamecompressor.js';
+import { GameBus } from '../../board/GameBus.js';
+import frametracker from '../../board/rendering/frametracker.js';
+import gamecompressor from '../../chess/gamecompressor.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 
 /** A move request dispatched to the engine worker for a specific position. */

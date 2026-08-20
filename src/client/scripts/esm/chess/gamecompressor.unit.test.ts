@@ -1,11 +1,11 @@
-// src/client/scripts/esm/game/chess/gamecompressor.unit.test.ts
+// src/client/scripts/esm/chess/gamecompressor.unit.test.ts
 
-import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
-import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { GameRules } from '../../../../shared/chess/util/gamerules.js';
+import type { GameFile, VariantOptions } from '../../../../shared/chess/logic/gamefile.js';
 
 import { describe, it, expect } from 'vitest';
 
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../shared/chess/util/typeutil.js';
 
 import gamecompressor from './gamecompressor.js';
 

@@ -17,9 +17,9 @@
 
 import type { Vec3 } from '../../../../shared/util/math/vectors.js';
 
-import mat4 from '../game/rendering/gl-matrix.js';
+import mat4 from '../board/rendering/gl-matrix.js';
 import { ShaderProgram } from './ShaderProgram.js';
-import camera, { Mat4, Camera } from '../game/rendering/camera.js';
+import camera, { Mat4, Camera } from '../board/rendering/camera.js';
 import { createBufferFromData, updateBufferIndices } from './BufferUtil.js';
 import { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js';
 

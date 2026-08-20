@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/RenderContext.ts
+// src/client/scripts/esm/board/rendering/RenderContext.ts
 
 /**
  * A RenderContext bundles everything needed to draw a board onto ONE canvas: its WebGL

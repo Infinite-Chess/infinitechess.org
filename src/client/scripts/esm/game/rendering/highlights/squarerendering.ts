@@ -14,8 +14,8 @@ import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
-import space from '../../misc/space.js';
-import instancedshapes from '../instancedshapes.js';
+import space from '../../../board/space.js';
+import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 /**

@@ -18,13 +18,13 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 
 import gamecore from './gamecore.js';
 import gameslot from './gameslot.js';
-import { Mesh } from '../rendering/piecemodels.js';
+import { Mesh } from '../../board/rendering/piecemodels.js';
 import premoves from './premoves.js';
 import animation from '../rendering/animation.js';
-import piecemodels from '../rendering/piecemodels.js';
-import { GameBus } from '../GameBus.js';
+import piecemodels from '../../board/rendering/piecemodels.js';
+import { GameBus } from '../../board/GameBus.js';
 import gamesession from './gamesession.js';
-import frametracker from '../rendering/frametracker.js';
+import frametracker from '../../board/rendering/frametracker.js';
 import { animateMove, meshChanges } from './graphicalchanges.js';
 
 // Global Moving ----------------------------------------------------------------------------------------------------------

@@ -23,7 +23,7 @@ import typeutil, { rawTypes, players as p } from '../../../../../shared/chess/ut
 import gameslot from '../chess/gameslot.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import gamesession from '../chess/gamesession.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 
 // Point values --------------------------------------------------------------------------------
 

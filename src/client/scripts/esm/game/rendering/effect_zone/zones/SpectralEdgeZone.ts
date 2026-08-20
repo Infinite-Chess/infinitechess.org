@@ -2,7 +2,7 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-import deltatime from '../../../misc/deltatime.js';
+import deltatime from '../../../../board/deltatime.js';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';

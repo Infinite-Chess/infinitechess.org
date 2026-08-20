@@ -18,7 +18,7 @@ import type { DisconnectInfo } from '../../../../../../shared/clientbound.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import gameslot from '../../../game/chess/gameslot.js';
-import { GameBus } from '../../../game/GameBus.js';
+import { GameBus } from '../../../board/GameBus.js';
 import { SocketBus } from '../../../socket/SocketBus.js';
 import socketintents from '../../../socket/socketintents.js';
 

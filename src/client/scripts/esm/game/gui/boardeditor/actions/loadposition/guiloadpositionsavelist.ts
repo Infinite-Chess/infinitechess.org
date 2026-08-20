@@ -10,13 +10,13 @@ import type { StorageType } from '../../../../boardeditor/boardeditor';
 import type { CloudSaveListRecord } from '../../../../editorstores/editorSavesAPI';
 import type { EditorAbridgedSaveState } from '../../../../editorstores/estoretypes';
 
-import style from '../../../style';
 import esave from '../../../../boardeditor/actions/esave';
 import ecloud from '../../../../boardeditor/actions/ecloud';
+import docutil from '../../../../../util/docutil';
 import eactions from '../../../../boardeditor/actions/eactions';
 import esavestore from '../../../../editorstores/esavestore';
 import boardeditor from '../../../../boardeditor/boardeditor';
-import { GameBus } from '../../../../GameBus';
+import { GameBus } from '../../../../../board/GameBus';
 import validatorama from '../../../../../util/validatorama';
 import guiloadposition from './guiloadposition';
 import guiloadpositionmodal from './guiloadpositionmodal';
@@ -333,8 +333,8 @@ function generateRowForSavedPositionsElement(
 /** Create a button element for one position row, with given SVG href. */
 function createButtonElement(svgHref: string): HTMLButtonElement {
 	const button = document.createElement('button');
-	const svg = document.createElementNS(style.SVG_NS, 'svg');
-	const use = document.createElementNS(style.SVG_NS, 'use');
+	const svg = document.createElementNS(docutil.SVG_NS, 'svg');
+	const use = document.createElementNS(docutil.SVG_NS, 'use');
 	use.setAttribute('href', svgHref);
 	svg.appendChild(use);
 	button.appendChild(svg);

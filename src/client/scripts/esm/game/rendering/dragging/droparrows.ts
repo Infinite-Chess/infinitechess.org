@@ -14,12 +14,12 @@ import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 
-import space from '../../misc/space.js';
+import space from '../../../board/space.js';
 import arrows from '../arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
 import arrowshifts from '../arrows/arrowshifts.js';
-import frametracker from '../frametracker.js';
+import frametracker from '../../../board/rendering/frametracker.js';
 import draganimation from './draganimation.js';
 
 // Constants -------------------------------------------------------------------------------

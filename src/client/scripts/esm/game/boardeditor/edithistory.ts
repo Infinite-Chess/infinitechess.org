@@ -8,7 +8,7 @@
  */
 
 import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
-import type { Mesh } from '../rendering/piecemodels.js';
+import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
@@ -25,11 +25,11 @@ import miniimage from '../rendering/miniimage.js';
 import selection from '../chess/selection.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import boardeditor from './boardeditor.js';
 import movesequence from '../chess/movesequence.js';
 import guinavigation from '../gui/guinavigation.js';
-import miniimagerenderer from '../rendering/miniimagerenderer.js';
+import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 // Types ----------------------------------------------------------------------
 

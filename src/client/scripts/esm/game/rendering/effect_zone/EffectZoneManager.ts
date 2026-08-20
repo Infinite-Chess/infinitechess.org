@@ -1,10 +1,10 @@
 // src/client/scripts/esm/game/rendering/effect_zone/EffectZoneManager.ts
 
-import type { BoardTiles } from '../boardtiles';
+import type { BoardTiles } from '../../../board/rendering/boardtiles';
 
 import ImageLoader from '../../../util/ImageLoader';
 import preferences from '../../../components/header/preferences';
-import frametracker from '../frametracker';
+import frametracker from '../../../board/rendering/frametracker';
 import TextureLoader from '../../../webgl/TextureLoader';
 import { OceanZone } from './zones/OceanZone';
 import { StaticZone } from './zones/StaticZone';

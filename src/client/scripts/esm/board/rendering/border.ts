@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/border.ts
+// src/client/scripts/esm/board/rendering/border.ts
 
 /**
  * This script renders the border, and star field

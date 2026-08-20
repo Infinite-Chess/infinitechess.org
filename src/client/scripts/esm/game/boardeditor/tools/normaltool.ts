@@ -6,7 +6,7 @@
  * This tool can drag pieces around.
  */
 
-import type { Mesh } from '../../rendering/piecemodels';
+import type { Mesh } from '../../../board/rendering/piecemodels';
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile';
@@ -19,7 +19,7 @@ import coordutil from '../../../../../../shared/chess/util/coordutil';
 
 import selection from '../../chess/selection';
 import edithistory from '../edithistory';
-import { GameBus } from '../../GameBus';
+import { GameBus } from '../../../board/GameBus';
 import movesequence from '../../chess/movesequence';
 
 // Making Move Edits in the Game ---------------------------------------------

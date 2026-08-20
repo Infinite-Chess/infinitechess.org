@@ -5,14 +5,14 @@
  * including voids, and mini images.
  */
 
-import type { Mesh } from './piecemodels.js';
+import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type RenderContext from './RenderContext.js';
+import type RenderContext from '../../board/rendering/RenderContext.js';
 
-import meshes from './meshes.js';
-import boardpos from './boardpos.js';
+import meshes from '../../board/rendering/meshes.js';
+import boardpos from '../../board/rendering/boardpos.js';
 import miniimage from './miniimage.js';
-import piecemodels from './piecemodels.js';
+import piecemodels from '../../board/rendering/piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 

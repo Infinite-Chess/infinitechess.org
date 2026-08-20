@@ -2,7 +2,7 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-import deltatime from '../../../misc/deltatime.js';
+import deltatime from '../../../../board/deltatime.js';
 import { GlitchPass } from '../../../../webgl/post_processing/passes/GlitchPass';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
 import { ProgramManager } from '../../../../webgl/ProgramManager';

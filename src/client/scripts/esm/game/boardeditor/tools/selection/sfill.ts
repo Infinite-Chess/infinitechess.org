@@ -17,7 +17,7 @@ import bounds, {
 } from '../../../../../../../shared/util/math/bounds';
 
 import mouse from '../../../../util/mouse';
-import space from '../../../misc/space';
+import space from '../../../../board/space';
 import sdrag from './sdrag';
 import arrows from '../../../rendering/arrows/arrows';
 import scursor from './scursor';

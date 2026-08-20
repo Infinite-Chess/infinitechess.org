@@ -10,7 +10,7 @@ import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-import style from './style.js';
+import docutil from '../../util/docutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import validatorama from '../../util/validatorama.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
@@ -289,7 +289,7 @@ function callback_mouseUp(event: MouseEvent): void {
 		return;
 	}
 	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
-	indexSelected = style.getElementIndexWithinItsParent(event.currentTarget as HTMLElement);
+	indexSelected = docutil.getElementIndexWithinItsParent(event.currentTarget as HTMLElement);
 }
 
 function callback_mouseMove(event: MouseEvent): void {

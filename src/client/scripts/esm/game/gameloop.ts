@@ -8,17 +8,17 @@
  * page-specific setup, then calls {@link start} to run the update+render loop.
  */
 
-import webgl from './rendering/webgl.js';
-import camera from './rendering/camera.js';
-import boardpos from './rendering/boardpos.js';
+import webgl from '../board/rendering/webgl.js';
+import camera from '../board/rendering/camera.js';
+import boardpos from '../board/rendering/boardpos.js';
 import gamecore from './chess/gamecore.js';
 import gameslot from './chess/gameslot.js';
 import IndexedDB from '../util/IndexedDB.js';
 import maskedDraw from '../webgl/maskedDraw.js';
 import gamesession from './chess/gamesession.js';
 import LocalStorage from '../util/LocalStorage.js';
-import frametracker from './rendering/frametracker.js';
-import boardgeometry from './rendering/boardgeometry.js';
+import frametracker from '../board/rendering/frametracker.js';
+import boardgeometry from '../board/rendering/boardgeometry.js';
 import frameprofiler from './misc/frameprofiler.js';
 
 /** Optional per-frame page logic, run each frame after the game core updates. */

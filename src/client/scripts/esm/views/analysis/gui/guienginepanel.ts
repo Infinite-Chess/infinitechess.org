@@ -23,7 +23,7 @@ import selection from '../../../game/chess/selection.js';
 import animation from '../../../game/rendering/animation.js';
 import guimovetree from './guimovetree.js';
 import gamesession from '../../../game/chess/gamesession.js';
-import { GameBus } from '../../../game/GameBus.js';
+import { GameBus } from '../../../board/GameBus.js';
 import enginearrows from '../rendering/enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
 import { listener_document } from '../../../game/chess/gamecore.js';

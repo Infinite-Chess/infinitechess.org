@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/camera.ts
+// src/client/scripts/esm/board/rendering/camera.ts
 
 /**
  * This script handles and stores the matrixes of our shader programs, which

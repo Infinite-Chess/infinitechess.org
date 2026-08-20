@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/screenshake.ts
+// src/client/scripts/esm/board/rendering/screenshake.ts
 
 /**
  * This module can apply a screen shake effect to the camera when requested.
@@ -8,7 +8,7 @@ import type { Mat4 } from './camera';
 
 import mat4 from './gl-matrix.js';
 import camera from './camera';
-import deltatime from '../misc/deltatime.js';
+import deltatime from '../deltatime.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
 

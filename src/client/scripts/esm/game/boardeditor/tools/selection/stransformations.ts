@@ -7,7 +7,7 @@
  * selection from the Selection Tool in the Board Editor
  */
 
-import type { Mesh } from '../../../rendering/piecemodels';
+import type { Mesh } from '../../../../board/rendering/piecemodels';
 import type { Edit } from '../../../../../../../shared/chess/logic/movepiece';
 import type { GameFile } from '../../../../../../../shared/chess/logic/gamefile';
 import type { BoundingBox } from '../../../../../../../shared/util/math/bounds';

@@ -8,7 +8,7 @@
  * live reconnect (socket reopened), or a live push (e.g. the game concluded the instant we moved).
  */
 
-import type { Mesh } from '../../game/rendering/piecemodels.js';
+import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MovePacket } from '../../../../../shared/domain.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
@@ -26,7 +26,7 @@ import selection from '../../game/chess/selection.js';
 import onlinegame from './onlinegame.js';
 import gamesession from '../../game/chess/gamesession.js';
 import guigamemeta from '../../game/gui/guigamemeta.js';
-import { GameBus } from '../../game/GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import movesequence from '../../game/chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
 

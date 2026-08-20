@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/GameBus.ts
+// src/client/scripts/esm/board/GameBus.ts
 
 import type { Piece } from '../../../../shared/chess/util/boardutil';
 import type { LegalMoves } from '../../../../shared/chess/logic/legalmoves';

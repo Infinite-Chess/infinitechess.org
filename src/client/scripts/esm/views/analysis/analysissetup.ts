@@ -11,7 +11,7 @@
 
 import docutil from '../../util/docutil.js';
 import gamesession from '../../game/chess/gamesession.js';
-import { GameBus } from '../../game/GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import analysisloader from './analysisloader.js';
 import variantSelector from '../../components/variantselector/variantSelector.js';
 import modifierSelector from '../../components/variantselector/modifierSelector.js';

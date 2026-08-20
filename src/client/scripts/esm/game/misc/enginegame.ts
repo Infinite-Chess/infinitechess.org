@@ -24,11 +24,11 @@ import gameslot from '../chess/gameslot.js';
 import premoves from '../chess/premoves.js';
 import selection from '../chess/selection.js';
 import engineicn from '../chess/engines/engineicn.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import gamesession from '../chess/gamesession.js';
 import movesequence from '../chess/movesequence.js';
 import socketintents from '../../socket/socketintents.js';
-import gamecompressor from '../chess/gamecompressor.js';
+import gamecompressor from '../../chess/gamecompressor.js';
 import enginelegalmovesdebug from './enginelegalmovesdebug.js';
 import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';
 

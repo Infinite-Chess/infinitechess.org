@@ -27,13 +27,13 @@ import {
 import toast from '../../components/toast.js';
 import docutil from '../../util/docutil.js';
 import gameslot from './gameslot.js';
-import selection from '../chess/selection.js';
+import selection from './selection.js';
 import enginegame from '../misc/enginegame.js';
 import gamesession from './gamesession.js';
 import guipractice from '../gui/guipractice.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
-import movesequence from '../chess/movesequence.js';
+import movesequence from './movesequence.js';
 import validatorama from '../../util/validatorama.js';
 import { retryFetch, RetryFetchOptions } from '../../util/fetchRetrier.js';
 

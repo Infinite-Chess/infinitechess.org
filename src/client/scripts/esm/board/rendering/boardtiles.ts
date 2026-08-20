@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/boardtiles.ts
+// src/client/scripts/esm/board/rendering/boardtiles.ts
 
 /**
  * This script renders the board tiles, and changes their color.
@@ -19,7 +19,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../shared/util/math/math.js';
 
-import style from '../gui/style.js';
+import colorutil from '../../util/colorutil.js';
 import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
 import frametracker from './frametracker.js';
@@ -108,8 +108,8 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 	}
 
 	async function initTextures(): Promise<void> {
-		const lightTilesCssColor = style.arrayToCssColor(lightTiles);
-		const darkTilesCssColor = style.arrayToCssColor(darkTiles);
+		const lightTilesCssColor = colorutil.arrayToCssColor(lightTiles);
+		const darkTilesCssColor = colorutil.arrayToCssColor(darkTiles);
 
 		// Generate both images in parallel
 		const [tilesTexture_2_IMG, tilesTexture_256mips_IMG] = await Promise.all([

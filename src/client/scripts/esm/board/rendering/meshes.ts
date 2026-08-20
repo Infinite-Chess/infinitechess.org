@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/meshes.ts
+// src/client/scripts/esm/board/rendering/meshes.ts
 
 /**
  * This script can generate mesh vertex data for common shapes,

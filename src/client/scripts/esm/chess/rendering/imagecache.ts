@@ -15,8 +15,8 @@ import type { BoardPreview } from '../../../../../shared/chess/logic/boardprevie
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
 
-import svgcache from '../../chess/rendering/svgcache.js';
-import { GameBus } from '../../game/GameBus.js';
+import svgcache from './svgcache.js';
+import { GameBus } from '../../board/GameBus.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 
 // Variables ---------------------------------------------------------------------------

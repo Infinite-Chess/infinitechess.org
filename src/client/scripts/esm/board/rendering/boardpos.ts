@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/boardpos.ts
+// src/client/scripts/esm/board/rendering/boardpos.ts
 
 /**
  * This script stores the board position and scale,
@@ -20,7 +20,7 @@ import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 
 import camera from './camera.js';
-import deltatime from '../misc/deltatime.js';
+import deltatime from '../deltatime.js';
 import frametracker from './frametracker.js';
 
 // Types -------------------------------------------------------------

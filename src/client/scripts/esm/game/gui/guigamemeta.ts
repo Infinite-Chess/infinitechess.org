@@ -18,7 +18,7 @@ import gameresultutil from '../../../../../shared/chess/util/gameresultutil.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 
 // Elements ----------------------------------------------------------------------------------
 

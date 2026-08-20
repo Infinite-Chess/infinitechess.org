@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/miniimagerenderer.ts
+// src/client/scripts/esm/board/rendering/miniimagerenderer.ts
 
 /**
  * The core mini image rendering pipeline.
@@ -16,7 +16,7 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
 import { players as p, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
-import space from '../misc/space.js';
+import space from '../space.js';
 import instancedshapes from './instancedshapes.js';
 import { RenderableInstanced, AttributeInfoInstanced } from '../../webgl/Renderable.js';
 

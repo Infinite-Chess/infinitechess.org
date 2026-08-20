@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/variantPreviewTooltip.ts
+// src/client/scripts/esm/board/rendering/variantPreviewTooltip.ts
 
 /**
  * Renders a floating tooltip containing a small WebGL board preview and
@@ -6,7 +6,7 @@
  * Supports both preset variant codes and custom saved positions.
  */
 
-import type { Mesh } from '../../game/rendering/piecemodels.js';
+import type { Mesh } from './piecemodels.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type { GameModifier } from '../../../../../shared/domain.js';
@@ -22,18 +22,18 @@ import {
 	type RuleSummaryItem,
 } from '../../../../../shared/chess/variants/gamerulesummary.js';
 
-import area from '../../game/rendering/area.js';
-import webgl from '../../game/rendering/webgl.js';
-import meshes from '../../game/rendering/meshes.js';
-import border from '../../game/rendering/border.js';
+import area from './area.js';
+import webgl from './webgl.js';
+import meshes from './meshes.js';
+import border from './border.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import imagecache from '../../chess/rendering/imagecache.js';
-import piecemodels from '../../game/rendering/piecemodels.js';
+import piecemodels from './piecemodels.js';
 import RenderContext from './RenderContext.js';
-import promotionlines from '../../game/rendering/promotionlines.js';
-import { createCamera } from '../../game/rendering/camera.js';
-import miniimagerenderer from '../../game/rendering/miniimagerenderer.js';
-import { createBoardPos } from '../../game/rendering/boardpos.js';
+import promotionlines from './promotionlines.js';
+import { createCamera } from './camera.js';
+import miniimagerenderer from './miniimagerenderer.js';
+import { createBoardPos } from './boardpos.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { createMaskedDraw } from '../../webgl/maskedDraw.js';
 import { createTextureCache } from '../../chess/rendering/texturecache.js';

@@ -11,9 +11,9 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
-import gamesound from '../misc/gamesound.js';
+import gamesound from '../../board/gamesound.js';
 import gamesession from '../chess/gamesession.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 
 /** A player bar and the `.clock` it hosts. SSR'd by the game page, keyed by board POV. */
 type BarElements = { bar: HTMLElement; timer: HTMLElement };

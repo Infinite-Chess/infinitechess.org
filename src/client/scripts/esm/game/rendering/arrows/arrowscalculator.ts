@@ -40,15 +40,15 @@ import { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import organizedpieces, { LineKey } from '../../../../../../shared/chess/logic/organizedpieces.js';
 
-import space from '../../misc/space.js';
+import space from '../../../board/space.js';
 import mouse from '../../../util/mouse.js';
 import arrows from './arrows.js';
 import gameslot from '../../chess/gameslot.js';
-import boardpos from '../boardpos.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import movehints from '../highlights/movehints.js';
 import Transition from '../transitions/Transition.js';
 import perspective from '../perspective.js';
-import boardgeometry from '../boardgeometry.js';
+import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import { listener_canvas } from '../../chess/gamecore.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 

@@ -5,7 +5,7 @@
  * Shared across multiple pages (game, analysis, editor...).
  */
 
-import type { Mesh } from '../rendering/piecemodels.js';
+import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
@@ -14,10 +14,10 @@ import bimath from '../../../../../shared/util/math/bimath.js';
 import mouse from '../../util/mouse.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
-import border from '../rendering/border.js';
-import camera from '../rendering/camera.js';
+import border from '../../board/rendering/border.js';
+import camera from '../../board/rendering/camera.js';
 import gameslot from './gameslot.js';
-import boardpos from '../rendering/boardpos.js';
+import boardpos from '../../board/rendering/boardpos.js';
 import controls from '../misc/controls.js';
 import snapping from '../rendering/highlights/snapping.js';
 import guiclock from '../gui/guiclock.js';
@@ -27,7 +27,7 @@ import animation from '../rendering/animation.js';
 import selection from './selection.js';
 import boarddrag from '../rendering/boarddrag.js';
 import starfield from '../rendering/starfield.js';
-import gamesound from '../misc/gamesound.js';
+import gamesound from '../../board/gamesound.js';
 import highlights from '../rendering/highlights/highlights.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import dragarrows from '../rendering/dragging/dragarrows.js';
@@ -38,18 +38,18 @@ import gamesession from './gamesession.js';
 import arrowshifts from '../rendering/arrows/arrowshifts.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import perspective from '../rendering/perspective.js';
-import piecemodels from '../rendering/piecemodels.js';
-import screenshake from '../rendering/screenshake.js';
-import { GameBus } from '../GameBus.js';
+import piecemodels from '../../board/rendering/piecemodels.js';
+import screenshake from '../../board/rendering/screenshake.js';
+import { GameBus } from '../../board/GameBus.js';
 import coordinates from '../rendering/coordinates.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import frametracker from '../rendering/frametracker.js';
+import frametracker from '../../board/rendering/frametracker.js';
 import WaterRipples from '../rendering/WaterRipples.js';
-import boardgeometry from '../rendering/boardgeometry.js';
-import RenderContext from '../rendering/RenderContext.js';
+import boardgeometry from '../../board/rendering/boardgeometry.js';
+import RenderContext from '../../board/rendering/RenderContext.js';
 import draganimation from '../rendering/dragging/draganimation.js';
-import webgl, { gl } from '../rendering/webgl.js';
-import promotionlines from '../rendering/promotionlines.js';
+import webgl, { gl } from '../../board/rendering/webgl.js';
+import promotionlines from '../../board/rendering/promotionlines.js';
 import arrowsgraphics from '../rendering/arrows/arrowsgraphics.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';

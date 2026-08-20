@@ -11,14 +11,14 @@ import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 
-import meshes from '../meshes.js';
+import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';
-import boardpos from '../boardpos.js';
-import piecemodels from '../piecemodels.js';
-import { GameBus } from '../../GameBus.js';
-import frametracker from '../frametracker.js';
+import boardpos from '../../../board/rendering/boardpos.js';
+import piecemodels from '../../../board/rendering/piecemodels.js';
+import { GameBus } from '../../../board/GameBus.js';
+import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
-import legalmoveshapes from '../instancedshapes.js';
+import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
 import squarerendering from './squarerendering.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 

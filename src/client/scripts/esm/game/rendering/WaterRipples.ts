@@ -11,13 +11,13 @@ import bounds from '../../../../../shared/util/math/bounds';
 import bdcoords from '../../../../../shared/chess/util/bdcoords';
 import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
 
-import space from '../misc/space';
-import camera from './camera';
-import boardpos from './boardpos';
+import space from '../../board/space';
+import camera from '../../board/rendering/camera';
+import boardpos from '../../board/rendering/boardpos';
 import drawrays from './highlights/annotations/drawrays';
 import gameslot from '../chess/gameslot';
 import perspective from './perspective';
-import frametracker from './frametracker';
+import frametracker from '../../board/rendering/frametracker';
 import { RippleState, WaterRipplePass } from '../../webgl/post_processing/passes/WaterRipplePass';
 
 // Constants --------------------------------------------------------------------------------

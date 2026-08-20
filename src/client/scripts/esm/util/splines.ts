@@ -9,8 +9,8 @@ import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/ut
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import space from '../game/misc/space.js';
-import boardpos from '../game/rendering/boardpos.js';
+import space from '../board/space.js';
+import boardpos from '../board/rendering/boardpos.js';
 import { createRenderable } from '../webgl/Renderable.js';
 
 // Constants ------------------------------------------------------

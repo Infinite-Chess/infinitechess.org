@@ -12,11 +12,11 @@ import type { LineCoefficients } from '../../../../../../shared/util/math/vector
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import space from '../../misc/space.js';
-import camera from '../camera.js';
-import boardpos from '../boardpos.js';
+import space from '../../../board/space.js';
+import camera from '../../../board/rendering/camera.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import perspective from '../perspective.js';
-import boardgeometry from '../boardgeometry.js';
+import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 /**

@@ -5,7 +5,7 @@
  * including the legal moves it has available.
  */
 
-import type { Mesh } from '../rendering/piecemodels.js';
+import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
@@ -29,11 +29,11 @@ import { rawTypes as r, players as p } from '../../../../../shared/chess/util/ty
 import mouse from '../../util/mouse.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
-import config from '../config.js';
-import camera from '../rendering/camera.js';
+import config from '../../board/config.js';
+import camera from '../../board/rendering/camera.js';
 import gameslot from './gameslot.js';
-import boardpos from '../rendering/boardpos.js';
-import premoves from '../chess/premoves.js';
+import boardpos from '../../board/rendering/boardpos.js';
+import premoves from './premoves.js';
 import keybinds from '../misc/keybinds.js';
 import { Mouse } from '../input.js';
 import droparrows from '../rendering/dragging/droparrows.js';
@@ -41,9 +41,9 @@ import Transition from '../rendering/transitions/Transition.js';
 import gamesession from './gamesession.js';
 import preferences from '../../components/header/preferences.js';
 import perspective from '../rendering/perspective.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import movesequence from './movesequence.js';
-import frametracker from '../rendering/frametracker.js';
+import frametracker from '../../board/rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { animateMove } from './graphicalchanges.js';

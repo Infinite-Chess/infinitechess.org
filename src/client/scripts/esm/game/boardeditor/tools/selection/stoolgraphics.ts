@@ -14,10 +14,10 @@ import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/uti
 import bounds from '../../../../../../../shared/util/math/bounds';
 
 import mouse from '../../../../util/mouse';
-import space from '../../../misc/space';
-import camera from '../../../rendering/camera';
-import meshes from '../../../rendering/meshes';
-import primitives from '../../../rendering/primitives';
+import space from '../../../../board/space';
+import camera from '../../../../board/rendering/camera';
+import meshes from '../../../../board/rendering/meshes';
+import primitives from '../../../../board/rendering/primitives';
 import { createRenderable } from '../../../../webgl/Renderable';
 
 // Constants ---------------------------------------------------

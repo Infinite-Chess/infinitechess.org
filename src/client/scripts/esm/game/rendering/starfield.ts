@@ -11,15 +11,15 @@ import bounds from '../../../../../shared/util/math/bounds.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
-import camera from './camera.js';
+import camera from '../../board/rendering/camera.js';
 import docutil from '../../util/docutil.js';
 import gameslot from '../chess/gameslot.js';
-import deltatime from '../misc/deltatime.js';
-import primitives from './primitives.js';
+import deltatime from '../../board/deltatime.js';
+import primitives from '../../board/rendering/primitives.js';
 import preferences from '../../components/header/preferences.js';
 import perspective from './perspective.js';
-import frametracker from './frametracker.js';
-import boardgeometry from './boardgeometry.js';
+import frametracker from '../../board/rendering/frametracker.js';
+import boardgeometry from '../../board/rendering/boardgeometry.js';
 import {
 	AttributeInfoInstanced,
 	createRenderable_Instanced_GivenInfo,

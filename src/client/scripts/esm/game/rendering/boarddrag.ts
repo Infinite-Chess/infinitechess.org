@@ -14,11 +14,11 @@ import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 
 import mouse from '../../util/mouse.js';
-import boardpos from './boardpos.js';
+import boardpos from '../../board/rendering/boardpos.js';
 import keybinds from '../misc/keybinds.js';
 import Transition from './transitions/Transition.js';
 import perspective from './perspective.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import guipromotion from '../gui/guipromotion.js';
 import { listener_canvas } from '../chess/gamecore.js';
 

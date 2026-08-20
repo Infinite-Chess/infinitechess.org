@@ -2,7 +2,7 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-import deltatime from '../../../misc/deltatime.js';
+import deltatime from '../../../../board/deltatime.js';
 import { SineWavePass } from '../../../../webgl/post_processing/passes/SineWavePass';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';

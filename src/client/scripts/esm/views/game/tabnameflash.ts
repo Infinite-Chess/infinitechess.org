@@ -11,7 +11,7 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import movesound from '../../game/misc/movesound.js';
-import { GameBus } from '../../game/GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import gamesession from '../../game/chess/gamesession.js';
 
 /** Number of millis to wait before reminding us a 2nd time it's our move by playing a sound effect. */

@@ -299,7 +299,7 @@ preset variants, and live-game persistence writes moves alone with clock comment
 
 Feeding it a gamefile takes one step first —
 `gamecompressor.compressGamefile(gamefile, copySinglePosition?, presetAnnotes?)`
-([gamecompressor.ts](/src/client/scripts/esm/game/chess/gamecompressor.ts)) snapshots a gamefile
+([gamecompressor.ts](/src/client/scripts/esm/chess/gamecompressor.ts)) snapshots a gamefile
 into the `LongFormatIn` shape the converter wants.
 
 ## Reading an ICN
@@ -371,7 +371,7 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 | Comment embedded command sequences (`[%clk ...]`)  | [icncommentutils.ts](/src/shared/chess/logic/icn/icncommentutils.ts)                                                                    |
 | Parsed ICN → position / `VariantOptions` / packets | [icnimport.ts](/src/shared/chess/logic/icn/icnimport.ts)                                                                                |
 | Parsed ICN → constructed gamefile                  | [gameformulator.ts](/src/shared/chess/logic/gameformulator.ts)                                                                          |
-| Gamefile → the converter's input shape             | [gamecompressor.ts](/src/client/scripts/esm/game/chess/gamecompressor.ts)                                                               |
+| Gamefile → the converter's input shape             | [gamecompressor.ts](/src/client/scripts/esm/chess/gamecompressor.ts)                                                                    |
 | Gamerule + win-condition vocabularies              | [gamerules.ts](/src/shared/chess/util/gamerules.ts), [winconutil.ts](/src/shared/chess/util/winconutil.ts)                              |
 | Piece types and player numbers                     | [typeutil.ts](/src/shared/chess/util/typeutil.ts)                                                                                       |
 | Metadata tag definitions                           | [domain.ts](/src/shared/domain.ts)                                                                                                      |

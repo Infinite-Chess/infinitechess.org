@@ -8,8 +8,8 @@
 
 import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
 
-import space from '../game/misc/space.js';
-import camera from '../game/rendering/camera.js';
+import space from '../board/space.js';
+import camera from '../board/rendering/camera.js';
 import perspective from '../game/rendering/perspective.js';
 import { listener_document, listener_canvas } from '../game/chess/gamecore.js';
 import input, { InputListener, Mouse, MouseButton } from '../game/input.js';

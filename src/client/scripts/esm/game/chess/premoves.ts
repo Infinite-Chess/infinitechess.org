@@ -7,7 +7,7 @@
  * Premoves are handled client-side, not server side.
  */
 
-import type { Mesh } from '../rendering/piecemodels.js';
+import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
@@ -23,13 +23,13 @@ import movepiece, {
 } from '../../../../../shared/chess/logic/movepiece.js';
 
 import mouse from '../../util/mouse.js';
-import boardpos from '../rendering/boardpos.js';
+import boardpos from '../../board/rendering/boardpos.js';
 import gameslot from './gameslot.js';
 import selection from './selection.js';
 import animation from '../rendering/animation.js';
 import { Mouse } from '../input.js';
 import preferences from '../../components/header/preferences.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../../board/GameBus.js';
 import movesequence from './movesequence.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import { animateMove } from './graphicalchanges.js';

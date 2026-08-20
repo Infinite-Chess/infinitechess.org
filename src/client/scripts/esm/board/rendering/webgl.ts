@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/webgl.ts
+// src/client/scripts/esm/board/rendering/webgl.ts
 
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 

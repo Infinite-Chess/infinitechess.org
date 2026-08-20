@@ -1,14 +1,14 @@
-// src/client/scripts/esm/game/misc/gamesound.ts
+// src/client/scripts/esm/board/gamesound.ts
 
 /**
  * Manages individual game sound files: lazy-fetches and caches each AudioBuffer
  * on first play, then plays it via AudioManager.
  */
 
-import type { SoundObject } from '../../audio/AudioManager.js';
-import type { EffectConfig } from '../../audio/AudioEffects.js';
+import type { SoundObject } from '../audio/AudioManager.js';
+import type { EffectConfig } from '../audio/AudioEffects.js';
 
-import AudioManager from '../../audio/AudioManager.js';
+import AudioManager from '../audio/AudioManager.js';
 
 // Types --------------------------------------------------------------------------
 

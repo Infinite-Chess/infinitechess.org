@@ -13,7 +13,7 @@
  * advance width (rounded up, with some specified padding on each side to prevent UV bleeding).
  */
 
-import { gl } from '../webgl.js';
+import { gl } from '../../../board/rendering/webgl.js';
 
 // Types -------------------------------------------------------------------------
 

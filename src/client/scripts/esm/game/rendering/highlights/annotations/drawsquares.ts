@@ -15,10 +15,10 @@ import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
 import variantpreviewer from '../../../../../../../shared/chess/variants/variantpreviewer.js';
 
-import space from '../../../misc/space.js';
+import space from '../../../../board/space.js';
 import mouse from '../../../../util/mouse.js';
 import snapping from '../snapping.js';
-import boardpos from '../../boardpos.js';
+import boardpos from '../../../../board/rendering/boardpos.js';
 import gameslot from '../../../chess/gameslot.js';
 import { Mouse } from '../../../input.js';
 import preferences from '../../../../components/header/preferences.js';

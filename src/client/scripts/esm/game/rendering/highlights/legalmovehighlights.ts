@@ -14,15 +14,15 @@ import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 
-import camera from '../camera.js';
-import meshes from '../meshes.js';
+import camera from '../../../board/rendering/camera.js';
+import meshes from '../../../board/rendering/meshes.js';
 import selection from '../../chess/selection.js';
 import preferences from '../../../components/header/preferences.js';
-import piecemodels from '../piecemodels.js';
-import { GameBus } from '../../GameBus.js';
-import frametracker from '../frametracker.js';
+import piecemodels from '../../../board/rendering/piecemodels.js';
+import { GameBus } from '../../../board/GameBus.js';
+import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
-import legalmoveshapes from '../instancedshapes.js';
+import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
 import specialrighthighlights from './specialrighthighlights.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';

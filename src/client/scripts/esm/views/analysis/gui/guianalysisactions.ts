@@ -21,7 +21,7 @@ import IndexedDB from '../../../util/IndexedDB.js';
 import estoretypes from '../../../game/editorstores/estoretypes.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
-import gamecompressor from '../../../game/chess/gamecompressor.js';
+import gamecompressor from '../../../chess/gamecompressor.js';
 import gameSetupModalHandoff from '../../../components/gameSetupModalHandoff.js';
 
 // The "More actions" menu ==========================================================

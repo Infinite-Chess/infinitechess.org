@@ -13,7 +13,7 @@ import type { Color } from '../../../../../../shared/util/math/math.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
-import boardpos from '../boardpos.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import premoves from '../../chess/premoves.js';
 import movehints from './movehints.js';
 import annotations from './annotations/annotations.js';

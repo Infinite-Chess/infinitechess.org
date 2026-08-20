@@ -16,15 +16,15 @@ import type { LapseKey } from '../gamereview.js';
 
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
-import space from '../../../game/misc/space.js';
-import { gl } from '../../../game/rendering/webgl.js';
-import boardpos from '../../../game/rendering/boardpos.js';
+import space from '../../../board/space.js';
+import { gl } from '../../../board/rendering/webgl.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
-import primitives from '../../../game/rendering/primitives.js';
+import primitives from '../../../board/rendering/primitives.js';
 import gamereview from '../gamereview.js';
-import { GameBus } from '../../../game/GameBus.js';
-import frametracker from '../../../game/rendering/frametracker.js';
+import { GameBus } from '../../../board/GameBus.js';
+import frametracker from '../../../board/rendering/frametracker.js';
 import TextureLoader from '../../../webgl/TextureLoader.js';
 import svgtoimageconverter from '../../../util/svgtoimageconverter.js';
 import { createRenderable } from '../../../webgl/Renderable.js';

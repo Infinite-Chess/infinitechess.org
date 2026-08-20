@@ -5,7 +5,7 @@
  * via the WASD keys, space/shift, and mouse wheel.
  */
 
-import type { Mesh } from '../rendering/piecemodels.js';
+import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
@@ -13,10 +13,10 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
 
 import mouse from '../../util/mouse.js';
-import camera from '../rendering/camera.js';
+import camera from '../../board/rendering/camera.js';
 import docutil from '../../util/docutil.js';
-import boardpos from '../rendering/boardpos.js';
-import deltatime from '../misc/deltatime.js';
+import boardpos from '../../board/rendering/boardpos.js';
+import deltatime from '../../board/deltatime.js';
 import boarddrag from '../rendering/boarddrag.js';
 import selection from '../chess/selection.js';
 import animation from '../rendering/animation.js';
@@ -24,8 +24,8 @@ import miniimage from '../rendering/miniimage.js';
 import { Mouse } from '../input.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
-import piecemodels from '../rendering/piecemodels.js';
-import { GameBus } from '../GameBus.js';
+import piecemodels from '../../board/rendering/piecemodels.js';
+import { GameBus } from '../../board/GameBus.js';
 import socketlogger from '../../socket/socketlogger.js';
 import guipromotion from '../gui/guipromotion.js';
 import guimoveslist from '../gui/guimoveslist.js';

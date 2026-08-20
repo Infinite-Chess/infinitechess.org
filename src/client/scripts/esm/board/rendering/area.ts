@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/area.ts
+// src/client/scripts/esm/board/rendering/area.ts
 
 /**
  * This script handles the calculation of the "Area"s on screen that
@@ -15,7 +15,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
-import space from '../misc/space.js';
+import space from '../space.js';
 import camera from './camera.js';
 import meshes from './meshes.js';
 import boardgeometry from './boardgeometry.js';

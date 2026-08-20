@@ -1,22 +1,22 @@
-// src/client/scripts/esm/game/chess/gamecompressor.ts
+// src/client/scripts/esm/chess/gamecompressor.ts
 
 /**
  * This script handles the compression of a gamefile into a more simple json format,
  * suitable for the icnconverter to turn it into ICN (Infinite Chess Notation).
  */
 
-import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
-import type { GlobalGameState } from '../../../../../shared/chess/logic/state.js';
-import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MoveFull } from '../../../../shared/chess/logic/movepiece.js';
+import type { GlobalGameState } from '../../../../shared/chess/logic/state.js';
+import type { GameFile, VariantOptions } from '../../../../shared/chess/logic/gamefile.js';
 
-import state from '../../../../../shared/chess/logic/state.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
-import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
+import state from '../../../../shared/chess/logic/state.js';
+import jsutil from '../../../../shared/util/jsutil.js';
+import boardchanges from '../../../../shared/chess/logic/boardchanges.js';
 import {
 	MovePreprint,
 	LongFormatIn,
 	PresetAnnotes,
-} from '../../../../../shared/chess/logic/icn/icnconverter.js';
+} from '../../../../shared/chess/logic/icn/icnconverter.js';
 
 import clientmetadatautil from './clientmetadatautil.js';
 

@@ -6,7 +6,7 @@
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
-import deltatime from './deltatime.js';
+import deltatime from '../../board/deltatime.js';
 
 // Variables -------------------------------------------------------------
 

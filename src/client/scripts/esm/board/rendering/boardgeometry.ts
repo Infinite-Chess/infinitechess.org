@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/boardgeometry.ts
+// src/client/scripts/esm/board/rendering/boardgeometry.ts
 
 /**
  * Board geometry queries: the bounding box of the board currently visible on the

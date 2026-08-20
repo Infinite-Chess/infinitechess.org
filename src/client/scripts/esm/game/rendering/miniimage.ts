@@ -23,20 +23,20 @@ import pieceThemes from '../../../../../shared/components/header/pieceThemes.js'
 import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
 
 import toast from '../../components/toast.js';
-import space from '../misc/space.js';
+import space from '../../board/space.js';
 import mouse from '../../util/mouse.js';
-import camera from './camera.js';
+import camera from '../../board/rendering/camera.js';
 import gamecore from '../chess/gamecore.js';
 import gameslot from '../chess/gameslot.js';
-import boardpos from './boardpos.js';
+import boardpos from '../../board/rendering/boardpos.js';
 import premoves from '../chess/premoves.js';
 import animation from './animation.js';
 import selection from '../chess/selection.js';
 import perspective from './perspective.js';
-import { GameBus } from '../GameBus.js';
-import frametracker from './frametracker.js';
-import boardgeometry from './boardgeometry.js';
-import miniimagerenderer from './miniimagerenderer.js';
+import { GameBus } from '../../board/GameBus.js';
+import frametracker from '../../board/rendering/frametracker.js';
+import boardgeometry from '../../board/rendering/boardgeometry.js';
+import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 import snapping, { ENTITY_WIDTH_VPIXELS } from './highlights/snapping.js';
 
 // Variables --------------------------------------------------------------
