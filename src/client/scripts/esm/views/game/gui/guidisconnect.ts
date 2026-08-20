@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/gui/guidisconnect.ts
+// src/client/scripts/esm/views/game/gui/guidisconnect.ts
 
 /**
  * Manages the two disconnect blocks in the game page's side bar: the live status of an
@@ -13,14 +13,14 @@
  * for one that loaded memory-evicted, so every element here may be absent.
  */
 
-import type { DisconnectInfo } from '../../../../../shared/clientbound.js';
+import type { DisconnectInfo } from '../../../../../../shared/clientbound.js';
 
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
-import gameslot from '../chess/gameslot.js';
-import { GameBus } from '../GameBus.js';
-import { SocketBus } from '../../socket/SocketBus.js';
-import socketintents from '../../socket/socketintents.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import { GameBus } from '../../../game/GameBus.js';
+import { SocketBus } from '../../../socket/SocketBus.js';
+import socketintents from '../../../socket/socketintents.js';
 
 // Constants ---------------------------------------------------------------------------------
 

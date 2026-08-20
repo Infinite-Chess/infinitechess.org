@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/pingManager.ts
+// src/client/scripts/esm/views/game/pingManager.ts
 
 /**
  * PingManager
@@ -7,7 +7,7 @@
  * This script is only used for subtracting the ping value from the clock values the server reported.
  */
 
-import { SocketBus } from '../socket/SocketBus.js';
+import { SocketBus } from '../../socket/SocketBus.js';
 
 // Variables -------------------------------------------------------------
 

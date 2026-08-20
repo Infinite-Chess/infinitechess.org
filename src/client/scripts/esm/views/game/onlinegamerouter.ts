@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
+// src/client/scripts/esm/views/game/onlinegamerouter.ts
 
 /**
  * Routes every incoming `game`-route message to its handler.
@@ -10,35 +10,31 @@
  * Counterpart of the server's gamerouter.
  */
 
-import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
-import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { ClockValues } from '../../../../../../shared/domain.js';
-import type { GameConclusionMessage } from '../../../../../../shared/clientbound.js';
-import type {
-	ClientboundGameMessage,
-	GameNavigation,
-} from '../../../../../../shared/clientbound.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { ClockValues } from '../../../../../shared/domain.js';
+import type { GameConclusionMessage } from '../../../../../shared/clientbound.js';
+import type { ClientboundGameMessage, GameNavigation } from '../../../../../shared/clientbound.js';
 
-import gameurl from '../../../../../../shared/util/gameurl.js';
-import typeutil from '../../../../../../shared/chess/util/typeutil.js';
+import gameurl from '../../../../../shared/util/gameurl.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 
-import docutil from '../../../util/docutil.js';
+import docutil from '../../util/docutil.js';
 import resyncer from './resyncer.js';
-import gameslot from '../../chess/gameslot.js';
-import gamesound from '../gamesound.js';
+import gameslot from '../../game/chess/gameslot.js';
+import gamesound from '../../game/misc/gamesound.js';
 import drawoffers from './drawoffers.js';
 import onlinegame from './onlinegame.js';
-import socketsubs from '../../../socket/socketsubs.js';
-import flashToast from '../../../util/flashToast.js';
-import gameactions from '../../gui/guigameactions.js';
-import gamesession from '../../chess/gamesession.js';
-import { GameBus } from '../../GameBus.js';
-import pingManager from '../../../util/pingManager.js';
-import guigamemeta from '../../gui/guigamemeta.js';
-import guidisconnect from '../../gui/guidisconnect.js';
-import { SocketBus } from '../../../socket/SocketBus.js';
-import socketintents from '../../../socket/socketintents.js';
-import guigameactions from '../../gui/guigameactions.js';
+import flashToast from '../../util/flashToast.js';
+import socketsubs from '../../socket/socketsubs.js';
+import pingManager from './pingManager.js';
+import gameactions from './gui/guigameactions.js';
+import gamesession from '../../game/chess/gamesession.js';
+import guigamemeta from '../../game/gui/guigamemeta.js';
+import { GameBus } from '../../game/GameBus.js';
+import { SocketBus } from '../../socket/SocketBus.js';
+import socketintents from '../../socket/socketintents.js';
+import guidisconnect from './gui/guidisconnect.js';
 import movesendreceive from './movesendreceive.js';
 
 // Types ------------------------------------------------------------
@@ -250,7 +246,7 @@ function handleGameConclusion(gamefile: GameFile, message: GameConclusionMessage
 function handleUnsubbing(): void {
 	socketsubs.deleteSub('game');
 	onlinegame.onEvicted(); // Prevents a reconnect from trying to re-subscribe to the now-deleted game.
-	guigameactions.onUnsub();
+	gameactions.onUnsub();
 }
 
 /**

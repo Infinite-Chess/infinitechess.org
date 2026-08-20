@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/misc/onlinegame/deadgameloader.ts
+// src/client/scripts/esm/views/game/deadgameloader.ts
 
 /**
  * The dead/review load path: fetches a concluded game's {@link DeadGameState} over HTTP, parses its
@@ -6,15 +6,15 @@
  * hands it to the shared loader — no socket opened.
  */
 
-import type { DeadGameState } from '../../../../../../shared/domain.js';
-import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameStateMessage } from '../../../../../../shared/clientbound.js';
+import type { DeadGameState } from '../../../../../shared/domain.js';
+import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { GameStateMessage } from '../../../../../shared/clientbound.js';
 
-import uuid from '../../../../../../shared/util/uuid.js';
-import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import uuid from '../../../../../shared/util/uuid.js';
+import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
-import toast from '../../../components/toast.js';
+import toast from '../../components/toast.js';
 import onlinegame from './onlinegame.js';
 
 /** Fetches and loads the dead game named by the page URL. */

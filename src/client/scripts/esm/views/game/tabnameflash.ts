@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/misc/onlinegame/tabnameflash.ts
+// src/client/scripts/esm/views/game/tabnameflash.ts
 
 /**
  * This script controls the flashing of the tab name "YOUR MOVE"
@@ -7,12 +7,12 @@
 
 import bd from '@naviary/bigdecimal';
 
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
 
-import gameslot from '../../chess/gameslot.js';
-import movesound from '../movesound.js';
-import { GameBus } from '../../GameBus.js';
-import gamesession from '../../chess/gamesession.js';
+import gameslot from '../../game/chess/gameslot.js';
+import movesound from '../../game/misc/movesound.js';
+import { GameBus } from '../../game/GameBus.js';
+import gamesession from '../../game/chess/gamesession.js';
 
 /** Number of millis to wait before reminding us a 2nd time it's our move by playing a sound effect. */
 const MOVE_SOUND_REMINDER_MS: number = 1000 * 20; // 20 seconds

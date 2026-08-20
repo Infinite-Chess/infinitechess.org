@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/misc/onlinegame/resyncer.ts
+// src/client/scripts/esm/views/game/resyncer.ts
 
 /**
  * Reconciles our board against the server's authoritative state — rewinding/forwarding moves until
@@ -8,26 +8,26 @@
  * live reconnect (socket reopened), or a live push (e.g. the game concluded the instant we moved).
  */
 
-import type { Mesh } from '../../rendering/piecemodels.js';
-import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { MovePacket } from '../../../../../../shared/domain.js';
-import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
-import type { GameStateMessage } from '../../../../../../shared/clientbound.js';
-import type { MoveRecord, MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { Mesh } from '../../game/rendering/piecemodels.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MovePacket } from '../../../../../shared/domain.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { GameStateMessage } from '../../../../../shared/clientbound.js';
+import type { MoveRecord, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
-import gameslot from '../../chess/gameslot.js';
-import premoves from '../../chess/premoves.js';
-import selection from '../../chess/selection.js';
+import gameslot from '../../game/chess/gameslot.js';
+import premoves from '../../game/chess/premoves.js';
+import selection from '../../game/chess/selection.js';
 import onlinegame from './onlinegame.js';
-import gamesession from '../../chess/gamesession.js';
-import guigamemeta from '../../gui/guigamemeta.js';
-import { GameBus } from '../../GameBus.js';
-import movesequence from '../../chess/movesequence.js';
+import gamesession from '../../game/chess/gamesession.js';
+import guigamemeta from '../../game/gui/guigamemeta.js';
+import { GameBus } from '../../game/GameBus.js';
+import movesequence from '../../game/chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
 
 // Functions -----------------------------------------------------------------------------

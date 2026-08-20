@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/misc/onlinegame/drawoffers.ts
+// src/client/scripts/esm/views/game/drawoffers.ts
 
 /**
  * This script stores the logic surrounding draw extending and acceptance
@@ -8,16 +8,16 @@
  * if we have done so, in the current online game.
  */
 
-import type { DrawOfferInfo } from '../../../../../../shared/clientbound.js';
+import type { DrawOfferInfo } from '../../../../../shared/clientbound.js';
 
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
 
-import toast from '../../../components/toast.js';
-import gameslot from '../../chess/gameslot.js';
-import gamesound from '../gamesound.js';
-import gameactions from '../../gui/guigameactions.js';
-import { GameBus } from '../../GameBus.js';
-import socketintents from '../../../socket/socketintents.js';
+import toast from '../../components/toast.js';
+import gameslot from '../../game/chess/gameslot.js';
+import gamesound from '../../game/misc/gamesound.js';
+import gameactions from './gui/guigameactions.js';
+import { GameBus } from '../../game/GameBus.js';
+import socketintents from '../../socket/socketintents.js';
 
 // Variables ---------------------------------------------------
 

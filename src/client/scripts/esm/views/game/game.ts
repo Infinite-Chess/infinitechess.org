@@ -5,16 +5,16 @@
  */
 
 import gameloop from '../../game/gameloop.js';
-import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
+import onlinegame from './onlinegame.js';
 import gamesession from '../../game/chess/gamesession.js';
-import deadgameloader from '../../game/misc/onlinegame/deadgameloader.js';
+import deadgameloader from './deadgameloader.js';
 
+import './onlinegamerouter.js';
+import './gui/guigameactions.js';
 import '../../game/gui/guigamemeta.js';
 import '../../game/gui/guimaterial.js';
 import '../../game/gui/guimoveslist.js';
-import '../../game/gui/guigameactions.js';
 import '../../game/gui/guiboardcontrols.js';
-import '../../game/misc/onlinegame/onlinegamerouter.js';
 
 /** The game-page board canvas WebGL renders onto. */
 const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;

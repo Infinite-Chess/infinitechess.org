@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/gui/guigameactions.ts
+// src/client/scripts/esm/views/game/gui/guigameactions.ts
 
 /**
  * Manages the `.game-actions` panel on the game page, where exactly one block
@@ -18,16 +18,16 @@
  * after.
  */
 
-import type { RematchOfferInfo } from '../../../../../shared/clientbound.js';
+import type { RematchOfferInfo } from '../../../../../../shared/clientbound.js';
 
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 
-import gameslot from '../chess/gameslot.js';
-import drawoffers from '../misc/onlinegame/drawoffers.js';
-import { GameBus } from '../GameBus.js';
-import { SocketBus } from '../../socket/SocketBus.js';
-import socketintents from '../../socket/socketintents.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import drawoffers from '../drawoffers.js';
+import { GameBus } from '../../../game/GameBus.js';
+import { SocketBus } from '../../../socket/SocketBus.js';
+import socketintents from '../../../socket/socketintents.js';
 
 // Elements ----------------------------------------------------------------------------------
 

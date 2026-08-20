@@ -1,33 +1,33 @@
-// src/client/scripts/esm/game/misc/onlinegame/movesendreceive.ts
+// src/client/scripts/esm/views/game/movesendreceive.ts
 
 /**
  * This script handles sending our move in online games to the server,
  * and receiving moves from our opponent.
  */
 
-import type { Mesh } from '../../rendering/piecemodels.js';
-import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
-import type { ClockValues } from '../../../../../../shared/domain.js';
-import type { MoveValidationResult } from '../../../../../../shared/chess/logic/movevalidation.js';
-import type { OpponentsMoveMessage } from '../../../../../../shared/clientbound.js';
+import type { Mesh } from '../../game/rendering/piecemodels.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
+import type { ClockValues } from '../../../../../shared/domain.js';
+import type { MoveValidationResult } from '../../../../../shared/chess/logic/movevalidation.js';
+import type { OpponentsMoveMessage } from '../../../../../shared/clientbound.js';
 
-import clock from '../../../../../../shared/chess/logic/clock.js';
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
-import { isGameServerValidated } from '../../../../../../shared/chess/variants/servervalidation.js';
+import clock from '../../../../../shared/chess/logic/clock.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import { isGameServerValidated } from '../../../../../shared/chess/variants/servervalidation.js';
 
-import gameslot from '../../chess/gameslot.js';
-import guiclock from '../../gui/guiclock.js';
-import premoves from '../../chess/premoves.js';
-import selection from '../../chess/selection.js';
+import gameslot from '../../game/chess/gameslot.js';
+import guiclock from '../../game/gui/guiclock.js';
+import premoves from '../../game/chess/premoves.js';
+import selection from '../../game/chess/selection.js';
 import onlinegame from './onlinegame.js';
-import socketsend from '../../../socket/socketsend.js';
-import { GameBus } from '../../GameBus.js';
-import gamesession from '../../chess/gamesession.js';
-import movesequence from '../../chess/movesequence.js';
+import socketsend from '../../socket/socketsend.js';
+import { GameBus } from '../../game/GameBus.js';
+import gamesession from '../../game/chess/gamesession.js';
+import movesequence from '../../game/chess/movesequence.js';
 
 // Events ---------------------------------------------------------------------
 

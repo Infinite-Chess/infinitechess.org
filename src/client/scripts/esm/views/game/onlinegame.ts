@@ -1,28 +1,28 @@
-// src/client/scripts/esm/game/misc/onlinegame/onlinegame.ts
+// src/client/scripts/esm/views/game/onlinegame.ts
 
 /**
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
-import type { Additional, DatedVariant } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { LongFormatOut, PresetAnnotes } from '../../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
-import type { GameStateMessage, ParticipantState } from '../../../../../../shared/clientbound.js';
+import type { Additional, DatedVariant } from '../../../../../shared/chess/logic/gamefile.js';
+import type { LongFormatOut, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
+import type { GameStateMessage, ParticipantState } from '../../../../../shared/clientbound.js';
 
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import gameformulator from '../../../../../../shared/chess/logic/gameformulator.js';
-import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
-import { engineDictionary } from '../../../../../../shared/chess/engine.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import gameformulator from '../../../../../shared/chess/logic/gameformulator.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import { engineDictionary } from '../../../../../shared/chess/engine.js';
 
-import gameslot from '../../chess/gameslot.js';
-import socketsubs from '../../../socket/socketsubs.js';
+import gameslot from '../../game/chess/gameslot.js';
 import drawoffers from './drawoffers.js';
-import enginegame from '../enginegame.js';
-import socketsend from '../../../socket/socketsend.js';
-import gameactions from '../../gui/guigameactions.js';
-import gamesession from '../../chess/gamesession.js';
-import guigamemeta from '../../gui/guigamemeta.js';
-import guidisconnect from '../../gui/guidisconnect.js';
-import { SocketBus } from '../../../socket/SocketBus.js';
+import socketsubs from '../../socket/socketsubs.js';
+import socketsend from '../../socket/socketsend.js';
+import enginegame from '../../game/misc/enginegame.js';
+import gameactions from './gui/guigameactions.js';
+import gamesession from '../../game/chess/gamesession.js';
+import guigamemeta from '../../game/gui/guigamemeta.js';
+import { SocketBus } from '../../socket/SocketBus.js';
+import guidisconnect from './gui/guidisconnect.js';
 
 import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 
