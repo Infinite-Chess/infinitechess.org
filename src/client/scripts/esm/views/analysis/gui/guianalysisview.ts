@@ -52,10 +52,10 @@ function syncEvalGaugeOrientation(): void {
 
 /** Swaps the two player bars' name nodes (leaving their clocks) to match a flipped board. */
 function swapPlayerBarNames(): void {
-	const top = document.getElementById('player-bar-top');
-	const bottom = document.getElementById('player-bar-bottom');
-	if (!top || !bottom || top.classList.contains('hidden') || bottom.classList.contains('hidden'))
-		return;
+	const top = document.getElementById('player-bar-top')!;
+	const bottom = document.getElementById('player-bar-bottom')!;
+	// The bare /analysis page SSRs both bars `hidden`, having no participants to swap.
+	if (top.classList.contains('hidden') || bottom.classList.contains('hidden')) return;
 
 	const topNodes = detachPlayerBarNameNodes(top);
 	const bottomNodes = detachPlayerBarNameNodes(bottom);
