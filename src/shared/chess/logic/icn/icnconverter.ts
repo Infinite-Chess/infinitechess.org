@@ -439,9 +439,7 @@ function LongToShort_Format(
 	}
 	// Are there any remaining we missed?
 	if (Object.keys(metadataCopy).length > 0)
-		throw Error(
-			`metadataOrdering is missing metadata keys (${Object.keys(metadataCopy).join(', ')})`,
-		);
+		throw Error(`metadataOrdering is missing metadata keys (${Object.keys(metadataCopy).join(', ')})`); // prettier-ignore
 
 	if (metadataSegments.length > 0) {
 		const metadataDelimiter = options.make_new_lines ? '\n' : ' ';
@@ -497,10 +495,7 @@ function LongToShort_Format(
 			);
 		// '1,3'
 		else
-			console.warn(
-				'Enpassant distance is more than 1 square, not specifying it in the ICN. Enpassant:',
-				longformat.state_global.enpassant,
-			);
+			console.warn('Enpassant distance is more than 1 square, not specifying it in the ICN. Enpassant:', longformat.state_global.enpassant); // prettier-ignore
 	}
 
 	// 50 Move Rule
@@ -510,13 +505,9 @@ function LongToShort_Format(
 	) {
 		// Make sure both moveRule and moveRuleState are present
 		if (longformat.state_global.moveRuleState === undefined)
-			throw Error(
-				'moveRuleState must be present when convering a game with moveRule to shortform!',
-			);
+			throw Error('moveRuleState must be present when convering a game with moveRule to shortform!'); // prettier-ignore
 		if (longformat.gameRules.moveRule === undefined)
-			throw Error(
-				'moveRule must be present when convering a game with moveRuleState to shortform!',
-			);
+			throw Error('moveRule must be present when convering a game with moveRuleState to shortform!'); // prettier-ignore
 
 		positionSegments.push(
 			`${longformat.state_global.moveRuleState}/${longformat.gameRules.moveRule}`,
@@ -557,10 +548,7 @@ function LongToShort_Format(
 
 		// Check if there are any remaining players not accounted for
 		if (Object.keys(promotionRanksCopy).length > 0)
-			throw Error(
-				'Not all players with promotion ranks had a turn in the turn order! ' +
-					Object.keys(promotionRanksCopy).join(', '),
-			);
+			throw Error('Not all players with promotion ranks had a turn in the turn order! ' + Object.keys(promotionRanksCopy).join(', ')); // prettier-ignore
 	}
 
 	// World Border
@@ -632,9 +620,7 @@ function LongToShort_Format(
 		!longformat.metadata.UTCDate ||
 		!longformat.metadata.UTCTime
 	)
-		throw Error(
-			"longformat.metadata's Variant, UTCDate, and UTCTime must be specified when skipPosition = true",
-		);
+		throw Error("longformat.metadata's Variant, UTCDate, and UTCTime must be specified when skipPosition = true"); // prettier-ignore
 
 	segments.push(positionSegments.join(' ')); // 'w 0/100 1 (8,17|1,10) (checkmate|checkmate,allpiecescaptured) P1,2+|P2,2+|P3,2+|P4,2+|P5,2+'
 
@@ -701,57 +687,44 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	// ==================================== BEGIN ===================================
 
 	// Metadata
-	// Test if the metadata lies at our current index being observed
-	metadataRegex.lastIndex = lastIndex;
-
-	const metadataResults = metadataRegex.exec(icn);
-	if (metadataResults) {
-		const blockEnd = metadataRegex.lastIndex; // First character index after the metadata block
-
+	const metadataMatch = matchField(metadataRegex, icn, lastIndex);
+	if (metadataMatch) {
 		const singleMetadataRegex = new RegExp(singleMetadataSource, 'g');
 		singleMetadataRegex.lastIndex = lastIndex;
 
-		// Since the moveRegex has the global flag, exec() will return the next match each time.
+		// Since the singleMetadataRegex has the global flag, exec() will return the next match each time.
 		// NO STRING SPLITTING REQUIRED
 		let match: RegExpExecArray | null;
 		while (
-			singleMetadataRegex.lastIndex < blockEnd &&
+			singleMetadataRegex.lastIndex < metadataMatch.nextIndex &&
 			(match = singleMetadataRegex.exec(icn)) !== null
 		) {
-			const key = match[1]!;
-			const value = match[2]!;
-			metadata[key] = value;
+			metadata[match[1]!] = match[2]!;
 		}
 
 		// console.log("Parsed metadata:", jsutil.deepCopyObject(metadata));
 
-		lastIndex = blockEnd; // Update the ICN index being observed
+		lastIndex = metadataMatch.nextIndex;
 	}
 
 	// Turn order
-	// Test if the turn order lies at our current index being observed
-	turnOrderRegex.lastIndex = lastIndex;
-
-	const turnOrderResults = turnOrderRegex.exec(icn);
-	if (turnOrderResults) {
-		let turnOrderString = turnOrderResults.groups!['turnOrder']!; // 'w:b'
-		// console.log(`Turn Order: "${turnOrderString}"`);
+	const turnOrderMatch = matchField(turnOrderRegex, icn, lastIndex);
+	if (turnOrderMatch) {
+		const turnOrderGroup = turnOrderMatch.groups['turnOrder']!; // 'w:b'
+		// console.log(`Turn Order: "${turnOrderGroup}"`);
 		// Substitues
+		let turnOrderString = turnOrderGroup;
 		if (turnOrderString === 'w')
 			turnOrderString = 'w:b'; // 'w' is short for 'w:b'
 		else if (turnOrderString === 'b') turnOrderString = 'b:w'; // 'b' is short for 'b:w'
 		const turnOrderArray = turnOrderString.split(':'); // ['w','b']
-		turnOrder = [
-			...turnOrderArray.map((p_code) => {
-				if (!(p_code in playerCodesInverted))
-					throw Error(
-						`Unknown player code (${p_code}) when parsing turn order of ICN! Turn order (${turnOrderResults.groups!['turnOrder']})`,
-					);
-				return Number(playerCodesInverted[p_code]);
-			}),
-		] as Player[]; // [1,2]
+		turnOrder = turnOrderArray.map((p_code) => {
+			if (!(p_code in playerCodesInverted))
+				throw Error(`Unknown player code (${p_code}) when parsing turn order of ICN! Turn order (${turnOrderGroup})`); // prettier-ignore
+			return Number(playerCodesInverted[p_code]);
+		}) as Player[]; // [1,2]
 
-		lastIndex = turnOrderRegex.lastIndex; // Update the ICN index being observed
+		lastIndex = turnOrderMatch.nextIndex;
 	} else {
 		// Set default turn order
 		turnOrder = jsutil.deepCopyObject(defaultTurnOrder);
@@ -761,12 +734,9 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(turnOrder).sort((a, b) => a - b);
 
 	// Enpassant
-	// Test if the enpassant square lies at our current index being observed
-	enpassantRegex.lastIndex = lastIndex;
-
-	const enpassantResults = enpassantRegex.exec(icn);
-	if (enpassantResults) {
-		const enpassantString = enpassantResults.groups!['enpassant']! as CoordsKey;
+	const enpassantMatch = matchField(enpassantRegex, icn, lastIndex);
+	if (enpassantMatch) {
+		const enpassantString = enpassantMatch.groups['enpassant']! as CoordsKey;
 
 		const coords = coordutil.getCoordsFromKey(enpassantString);
 		const lastTurn = turnOrder[turnOrder.length - 1];
@@ -774,54 +744,42 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		const yParity = lastTurn === p.WHITE ? 1n : lastTurn === p.BLACK ? -1n : (() => { throw new Error(`Invalid last turn (${lastTurn}) when parsing enpassant in ICN!`); })();
 		enpassant = { square: coords, pawn: [coords[0], coords[1] + yParity] };
 
-		lastIndex = enpassantRegex.lastIndex; // Update the ICN index being observed
+		lastIndex = enpassantMatch.nextIndex;
 	}
 
 	// Move rule
-	// Test if the move rule lies at our current index being observed
-	moveRuleRegex.lastIndex = lastIndex;
-
-	const moveRuleResults = moveRuleRegex.exec(icn);
-	if (moveRuleResults) {
-		const moveRuleGroup = moveRuleResults.groups!['moveRule']!;
+	const moveRuleMatch = matchField(moveRuleRegex, icn, lastIndex);
+	if (moveRuleMatch) {
+		const moveRuleGroup = moveRuleMatch.groups['moveRule']!;
 
 		[moveRuleState, moveRule] = moveRuleGroup.split('/').map(Number);
 		if (moveRuleState! > moveRule!)
 			throw Error(`Invalid move rule "${moveRuleGroup}" when parsing ICN!`);
 
-		lastIndex = moveRuleRegex.lastIndex; // Update the ICN index being observed
+		lastIndex = moveRuleMatch.nextIndex;
 	}
 
 	// Full move
-	// Test if the full move counter lies at our current index being observed
-	fullMoveRegex.lastIndex = lastIndex;
+	const fullMoveMatch = matchField(fullMoveRegex, icn, lastIndex);
+	if (fullMoveMatch) {
+		fullMove = Number(fullMoveMatch.groups['fullMove']!);
 
-	const fullMoveResults = fullMoveRegex.exec(icn);
-	if (fullMoveResults) {
-		fullMove = Number(fullMoveResults.groups!['fullMove']!);
-
-		lastIndex = fullMoveRegex.lastIndex; // Update the ICN index being observed
+		lastIndex = fullMoveMatch.nextIndex;
 	} else {
 		// Set default full move
 		fullMove = defaultFullMove;
 	}
 
 	// Promotions ranks + allowed
-	// Test if the promotions information lies at our current index being observed
-	promotionsRegex.lastIndex = lastIndex;
-
-	const promotionsResults = promotionsRegex.exec(icn);
-	if (promotionsResults) {
-		// console.log("Results of promotions regex:", promotionsResults);
-		const promotionsString = promotionsResults.groups!['promotions']!;
+	const promotionsMatch = matchField(promotionsRegex, icn, lastIndex);
+	if (promotionsMatch) {
+		const promotionsString = promotionsMatch.groups['promotions']!;
 
 		const promotionRanks: PlayerGroup<bigint[]> = {};
 		const promotions = promotionsString.split('|'); // ['8,16,24,32;q,r,b,n','1,9,17,25;q,r,b,n']
 		// Make sure the number of promotions matches the number of players
 		if (promotions.length !== uniquePlayers.length)
-			throw new Error(
-				`Number of promotions (${promotions.length}) does not match number of unique players (${uniquePlayers.length})! Received promotions: "${promotionsString}"`,
-			);
+			throw new Error(`Number of promotions (${promotions.length}) does not match number of unique players (${uniquePlayers.length})! Received promotions: "${promotionsString}"`); // prettier-ignore
 		// TODO: Stop supporting old formats.
 		// OLD FORMAT COMPAT: Old ICN wrote a per-player promotion list (e.g. "(8;q,r,b,n,am|1;q,r,b,n,am)").
 		// New ICN writes the shared list only after the rank definitions (e.g. "(8|1;q,r,b,n,am)").
@@ -848,35 +806,24 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			pieces: lastSpecifiedPromotions ?? jsutil.deepCopyObject(DEFAULT_PROMOTION_PIECES),
 		};
 
-		lastIndex = promotionsRegex.lastIndex; // Update the ICN index being observed
+		lastIndex = promotionsMatch.nextIndex;
 	}
 
 	// World Border
-	// Test if the world border lies at our current index being observed
-	worldBorderRegex.lastIndex = lastIndex;
-
-	const borderResult = worldBorderRegex.exec(icn);
-	if (borderResult) {
-		const [left, right, bottom, top] = borderResult
-			.groups!['worldBorder']!.split(',')
-			.map((value) => (value === '_' ? null : BigInt(value))) as [
-			bigint | null,
-			bigint | null,
-			bigint | null,
-			bigint | null,
-		];
+	const worldBorderMatch = matchField(worldBorderRegex, icn, lastIndex);
+	if (worldBorderMatch) {
+		const [left, right, bottom, top] = worldBorderMatch.groups['worldBorder']!.split(',').map(
+			(value) => (value === '_' ? null : BigInt(value)),
+		) as [bigint | null, bigint | null, bigint | null, bigint | null];
 		worldBorder = { left, right, bottom, top };
 
-		lastIndex = worldBorderRegex.lastIndex; // Update the ICN index being observed
+		lastIndex = worldBorderMatch.nextIndex;
 	}
 
 	// Win conditions
-	// Test if the win conditions lie at our current index being observed
-	winConditionRegex.lastIndex = lastIndex;
-
-	const winConditionResults = winConditionRegex.exec(icn);
-	if (winConditionResults) {
-		const winConditionsString = winConditionResults.groups!['winConditions']!;
+	const winConditionMatch = matchField(winConditionRegex, icn, lastIndex);
+	if (winConditionMatch) {
+		const winConditionsString = winConditionMatch.groups['winConditions']!;
 		const winConStrings = winConditionsString.split('|'); // ['checkmate','checkmate,allpiecescaptured']
 		winConditions = {};
 		// If winConStrings.length is 1, all players have the same win conditions
@@ -890,9 +837,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			// Each player has their own win conditions
 			// Make sure the number of win conditions matches the number of unique players
 			if (winConStrings.length !== uniquePlayers.length)
-				throw new Error(
-					`Number of win conditions (${winConStrings.length}) does not match number of players (${uniquePlayers.length})!`,
-				);
+				throw new Error(`Number of win conditions (${winConStrings.length}) does not match number of players (${uniquePlayers.length})!`); // prettier-ignore
 			for (const player of uniquePlayers) {
 				const winConString = winConStrings.shift()!;
 				// The regex guarantees that the win conditions are valid
@@ -900,7 +845,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			}
 		}
 
-		lastIndex = winConditionRegex.lastIndex; // Update the ICN index being observed
+		lastIndex = winConditionMatch.nextIndex;
 	} else {
 		// Set default win conditions
 		for (const player of turnOrder) {
@@ -909,25 +854,19 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 	// Preset Squares
-	// Test if the preset squares lie at our current index being observed
-	presetSquaresRegex.lastIndex = lastIndex;
+	const presetSquaresMatch = matchField(presetSquaresRegex, icn, lastIndex);
+	if (presetSquaresMatch) {
+		presetSquares = parsePresetSquares(presetSquaresMatch.groups['squarePresets']!);
 
-	const squaresResult = presetSquaresRegex.exec(icn);
-	if (squaresResult) {
-		presetSquares = parsePresetSquares(squaresResult.groups!['squarePresets']!);
-
-		lastIndex = presetSquaresRegex.lastIndex; // Update the ICN index being observed
+		lastIndex = presetSquaresMatch.nextIndex;
 	}
 
 	// Preset Rays
-	// Test if the preset rays lie at our current index being observed
-	presetRaysRegex.lastIndex = lastIndex;
+	const presetRaysMatch = matchField(presetRaysRegex, icn, lastIndex);
+	if (presetRaysMatch) {
+		presetRays = parsePresetRays(presetRaysMatch.groups['rayPresets']!);
 
-	const raysResult = presetRaysRegex.exec(icn);
-	if (raysResult) {
-		presetRays = parsePresetRays(raysResult.groups!['rayPresets']!);
-
-		lastIndex = presetRaysRegex.lastIndex; // Update the ICN index being observed
+		lastIndex = presetRaysMatch.nextIndex;
 	}
 
 	/**
@@ -937,94 +876,32 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	 * wrongfully think the moves section is the start of the position,
 	 * since the start of a move can look like a piece entry.
 	 */
-	testNextSectionForMoves();
+	let movesMatch = matchMovesSection(icn, lastIndex);
 
 	/**
 	 * Position
 	 *
-	 * SPECIAL HANDLING FOR THE POSITION (It can be too long to regex match all at once)
 	 * MUST BE TESTED AFTER THE MOVES, as this may wrongfully interpret the
 	 * start of the moves section as the start of the position, if the position isn't present.
 	 */
-	if (!moves) {
+	if (!movesMatch) {
 		// This next section GUARANTEED to not be the moves section
-		// Test if this next section is the position section
+		const positionMatch = matchPositionSection(icn, lastIndex);
+		if (positionMatch) {
+			position = positionMatch.position;
+			specialRights = positionMatch.specialRights;
 
-		const pieceEntryRegex = new RegExp(icnposition.getPieceEntryRegexSource(true), 'y');
-		const delimiter = /\|/y; // The delimiter between piece entries
-
-		// Set the lastIndex to the current index being observed in the ICN
-		pieceEntryRegex.lastIndex = lastIndex;
-
-		// Check for the present of the first piece entry
-		let match: RegExpExecArray | null = pieceEntryRegex.exec(icn);
-		if (match) {
-			// The POSITION is present!
-			// Initialize
-			position = new Map<CoordsKey, number>();
-			specialRights = new Set<CoordsKey>();
-
-			processPieceEntry(match);
-
-			// Repeatedly check for the next piece entry.
-			// EFFICIENT. Works for arbitrarily large positions!
-			while (true) {
-				// Check if the next character is a delimiter
-				delimiter.lastIndex = pieceEntryRegex.lastIndex; // Set the lastIndex to the current index being observed
-				if (delimiter.exec(icn)) {
-					// Delimiter found
-					pieceEntryRegex.lastIndex = delimiter.lastIndex; // Set the lastIndex to the current index being observed
-					match = pieceEntryRegex.exec(icn); // Get the next match
-					if (match) processPieceEntry(match);
-					else
-						throw Error(
-							`Position section is malformed! No valid piece entry follows a "|".`,
-						);
-				} else {
-					break; // No delimiter found. End of position. Exit the loop.
-				}
-			}
-
-			// console.log("Parsed position:", position);
-
-			// Make sure there's whitespace or end of string immediately following
-			whiteSpaceOrEndRegex.lastIndex = pieceEntryRegex.lastIndex;
-			if (!whiteSpaceOrEndRegex.exec(icn))
-				throw Error(
-					'Position section needs to be followed by whitespace or end of string!',
-				);
-
-			lastIndex = whiteSpaceOrEndRegex.lastIndex; // Update the ICN index being observed
+			lastIndex = positionMatch.nextIndex;
 		}
 
-		/** Adds the matched piece entry to the position and specialRights. */
-		function processPieceEntry(match: RegExpExecArray): void {
-			// named groups are: pieceAbbr, coordsKey, specialRight
-			const pieceAbbr = match.groups!['pieceAbbr']!;
-			const coordsKey = match.groups!['coordsKey']! as CoordsKey;
-			const hasSpecialRight = match.groups!['specialRight'] === '+';
-
-			const pieceType = icnposition.getTypeFromAbbr(pieceAbbr);
-
-			position!.set(coordsKey, pieceType);
-			if (hasSpecialRight) specialRights!.add(coordsKey);
-		}
+		// Now we can test if the moves section came *after* the positon section.
+		movesMatch = matchMovesSection(icn, lastIndex);
 	}
 
-	// Now we can test if the moves section came *after* the positon section.
-	if (!moves) testNextSectionForMoves();
+	if (movesMatch) {
+		moves = movesMatch.moves;
 
-	function testNextSectionForMoves(): void {
-		// Test if the beginning of the string matches the moves regex
-		movesRegex.lastIndex = lastIndex;
-
-		const movesResults = movesRegex.exec(icn);
-		if (movesResults) {
-			const movesString = movesResults.groups!['moves']!;
-			moves = parseShortFormMoves(movesString);
-
-			lastIndex = movesRegex.lastIndex; // Update the ICN index being observed
-		}
+		lastIndex = movesMatch.nextIndex;
 	}
 
 	// =================================== END ===================================
@@ -1068,6 +945,100 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	// console.log("Parsed longformat:", jsutil.deepCopyObject(longFormatOut));
 
 	return longFormatOut;
+}
+
+// Parsing ICN Sections -------------------------------------------------------------------------------------------
+
+/**
+ * Tests one sticky field regex against the ICN at `index`.
+ * @returns Its named capture groups (empty if it declares none) and where the
+ * next field begins, or undefined if the field isn't here.
+ */
+function matchField(
+	regex: RegExp,
+	icn: string,
+	index: number,
+): { groups: Record<string, string>; nextIndex: number } | undefined {
+	regex.lastIndex = index;
+	const results = regex.exec(icn);
+	if (!results) return undefined;
+	return { groups: results.groups ?? {}, nextIndex: regex.lastIndex };
+}
+
+/**
+ * Tests whether the position section lies at `index` in the ICN, parsing it
+ * piece by piece — a position can be too long to regex match all at once.
+ * @throws If the section is malformed.
+ */
+function matchPositionSection(
+	icn: string,
+	index: number,
+):
+	| { position: Map<CoordsKey, number>; specialRights: Set<CoordsKey>; nextIndex: number }
+	| undefined {
+	const pieceEntryRegex = new RegExp(icnposition.getPieceEntryRegexSource(true), 'y');
+	const delimiter = /\|/y; // The delimiter between piece entries
+
+	// Check for the presence of the first piece entry
+	pieceEntryRegex.lastIndex = index;
+	let match: RegExpExecArray | null = pieceEntryRegex.exec(icn);
+	if (!match) return undefined;
+
+	// The POSITION is present!
+	const position = new Map<CoordsKey, number>();
+	const specialRights = new Set<CoordsKey>();
+
+	addPieceEntry(match, position, specialRights);
+
+	// Repeatedly check for the next piece entry.
+	// EFFICIENT. Works for arbitrarily large positions!
+	while (true) {
+		// Check if the next character is a delimiter
+		delimiter.lastIndex = pieceEntryRegex.lastIndex;
+		if (!delimiter.exec(icn)) break; // No delimiter found. End of position. Exit the loop.
+		// Delimiter found
+		pieceEntryRegex.lastIndex = delimiter.lastIndex;
+		match = pieceEntryRegex.exec(icn); // Get the next match
+		if (!match)
+			throw Error(`Position section is malformed! No valid piece entry follows a "|".`);
+		addPieceEntry(match, position, specialRights);
+	}
+
+	// console.log("Parsed position:", position);
+
+	// Make sure there's whitespace or end of string immediately following
+	whiteSpaceOrEndRegex.lastIndex = pieceEntryRegex.lastIndex;
+	if (!whiteSpaceOrEndRegex.exec(icn))
+		throw Error('Position section needs to be followed by whitespace or end of string!');
+
+	return { position, specialRights, nextIndex: whiteSpaceOrEndRegex.lastIndex };
+}
+
+/** Adds a matched piece entry to the position and specialRights. */
+function addPieceEntry(
+	match: RegExpExecArray,
+	position: Map<CoordsKey, number>,
+	specialRights: Set<CoordsKey>,
+): void {
+	// named groups are: pieceAbbr, coordsKey, specialRight
+	const pieceAbbr = match.groups!['pieceAbbr']!;
+	const coordsKey = match.groups!['coordsKey']! as CoordsKey;
+	const hasSpecialRight = match.groups!['specialRight'] === '+';
+
+	const pieceType = icnposition.getTypeFromAbbr(pieceAbbr);
+
+	position.set(coordsKey, pieceType);
+	if (hasSpecialRight) specialRights.add(coordsKey);
+}
+
+/** Tests whether the moves section lies at `index` in the ICN. */
+function matchMovesSection(
+	icn: string,
+	index: number,
+): { moves: MoveParsed[]; nextIndex: number } | undefined {
+	const match = matchField(movesRegex, icn, index);
+	if (!match) return undefined;
+	return { moves: parseShortFormMoves(match.groups['moves']!), nextIndex: match.nextIndex };
 }
 
 // Compacting & Parsing Single Moves -------------------------------------------------------------------------------
