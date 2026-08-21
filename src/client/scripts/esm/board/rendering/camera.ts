@@ -92,7 +92,7 @@ export interface Camera {
 	 * @returns The view matrix
 	 */
 	getViewMatrix(): Mat4;
-	/** Returns a copy of both the projMatrix and viewMatrix */
+	/** Returns the live projMatrix and viewMatrix. Callers must not mutate them. */
 	getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 };
 	init(_glContext: WebGL2RenderingContext, _canvasElement: HTMLCanvasElement): void;
 	/**
@@ -364,10 +364,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	}
 
 	function getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 } {
-		return {
-			projMatrix: jsutil.deepCopyObject(projMatrix),
-			viewMatrix: jsutil.deepCopyObject(viewMatrix),
-		};
+		return { projMatrix, viewMatrix };
 	}
 
 	// Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
