@@ -6,6 +6,7 @@
  */
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
@@ -33,7 +34,7 @@ import droparrows from '../rendering/dragging/droparrows.js';
 import dragarrows from '../rendering/dragging/dragarrows.js';
 import Transition from '../rendering/transitions/Transition.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
-import Renderable from '../../board/rendering/renderable.js';
+import primitives from '../../board/rendering/primitives.js';
 import gamesession from './gamesession.js';
 import arrowshifts from '../rendering/arrows/arrowshifts.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
@@ -56,6 +57,7 @@ import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
+import Renderable, { createRenderable } from '../../board/rendering/renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import {
 	PostProcessingPipeline,
@@ -91,7 +93,6 @@ function init(canvas: HTMLCanvasElement): void {
 	element_canvas = canvas;
 	programManager = new ProgramManager(gl);
 	const gameMasker = maskedDraw.init(gl, programManager);
-	Renderable.init(gl, programManager);
 	gameContext = new RenderContext({
 		gl,
 		canvas,
@@ -101,6 +102,7 @@ function init(canvas: HTMLCanvasElement): void {
 		textures: texturecache,
 		maskedDraw: gameMasker,
 	});
+	Renderable.init(gameContext.renderable); // Point the free create-functions at this context's factory
 	gameContext.boardtiles.init();
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
@@ -273,7 +275,7 @@ function renderScene(): void {
 		'and', // Intersection Mode: Draw where the inclusion and inversion of exclusion regions intersect.
 	);
 
-	camera.renderOutlineofScreenBox();
+	renderOutlineofScreenBox();
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
@@ -322,6 +324,23 @@ function getFurthestTileVisible(): bigint {
 	furthest = bimath.max(furthest, bimath.abs(tileBox.bottom));
 	furthest = bimath.max(furthest, bimath.abs(tileBox.top));
 	return furthest;
+}
+
+/**
+ * [DEBUG] Renders an outline of the game camera's screen bounding box.
+ * Only visible while camera debug mode is on, which pulls the camera back far
+ * enough for the true screen edge to be inside the view.
+ */
+function renderOutlineofScreenBox(): void {
+	if (!camera.getDebug() || camera.isCameraRotated()) return;
+
+	const { left, right, bottom, top } = camera.getScreenBoundingBox(false);
+
+	// const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
+	const color: Color = [0, 0, 0, 0.5]; // Transparent Black
+	const data = primitives.Rect(left, bottom, right, top, color);
+
+	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
 /** Returns the overlay element covering the entire canvas. */

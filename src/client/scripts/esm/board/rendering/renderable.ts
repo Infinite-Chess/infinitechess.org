@@ -1,14 +1,15 @@
 // src/client/scripts/esm/board/rendering/renderable.ts
 
 /**
- * The board's renderable factory, and the free create-functions that delegate to it.
+ * Free create-functions that delegate to the interactive game's renderable factory.
  *
- * Every board page shares one WebGL context and one camera, so it shares one factory,
- * built at runtime by {@link init}. Callers needing their own context (the variant-preview
- * tooltip) build their own factory from webgl/Renderable directly.
+ * The game's factory is owned by its RenderContext; {@link init} points these functions at
+ * it, so game-only callers write `createRenderable(...)` without threading a context.
+ * Callers rendering into a different context (the variant-preview tooltip) go through their
+ * own `ctx.renderable` instead.
  */
 
-import type { ProgramManager, ProgramMap } from '../../webgl/ProgramManager.js';
+import type { ProgramMap } from '../../webgl/ProgramManager.js';
 import type {
 	AttributeInfo,
 	AttributeInfoInstanced,
@@ -20,15 +21,12 @@ import type {
 	TextureInfo,
 } from '../../webgl/Renderable.js';
 
-import camera from './camera.js';
-import { createRenderableFactory } from '../../webgl/Renderable.js';
-
-/** The interactive game's renderable factory, created at runtime by {@link init}. */
+/** The interactive game's renderable factory, supplied at runtime by {@link init}. */
 let gameFactory: RenderableFactory;
 
-/** Initializes the game's factory with the game's WebGL context and ProgramManager. */
-function init(context: WebGL2RenderingContext, program_manager: ProgramManager): void {
-	gameFactory = createRenderableFactory(context, program_manager, camera);
+/** Points the free create-functions at the interactive game's factory. */
+function init(factory: RenderableFactory): void {
+	gameFactory = factory;
 }
 
 /** Creates a renderable model in the game's context. See {@link RenderableFactory}. */

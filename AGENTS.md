@@ -109,7 +109,7 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 36. The build process does **not** change unless there's a very good reason and the existing system genuinely can't accommodate it.
 
-37. Before implementing any new graphics on the game canvas (WebGL), read `docs/systems/GRAPHICS.md` first.
+37. Before touching _any render-context architecture_, or before adding new graphics, read `docs/systems/GRAPHICS.md` first.
 
 38. Before touching the websocket system at all — client or server — read `docs/systems/WEBSOCKETS.md` first.
 

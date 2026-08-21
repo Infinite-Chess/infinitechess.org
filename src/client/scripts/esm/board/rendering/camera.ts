@@ -18,7 +18,6 @@
 
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import type { Mat4 } from '../../webgl/Renderable.js';
-import type { Color } from '../../../../../shared/util/math/math.js';
 import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -26,11 +25,9 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from '../../webgl/gl-matrix.js';
-import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
 import screenshake from './screenshake.js';
 import frametracker from './frametracker.js';
-import { createRenderable } from './renderable.js';
 
 // Types --------------------------------------------------------------
 
@@ -124,11 +121,6 @@ export interface Camera {
 	 * screen bounding box, projection matrix, and frame tracker.
 	 */
 	syncCanvasDimensions(): void;
-	/**
-	 * [DEBUG] Renders an outline of the viewing screen bounding box.
-	 * Will only be visible if camera debug mode is on.
-	 */
-	renderOutlineofScreenBox(): void;
 }
 
 /** Optional integration hooks a camera fires into. */
@@ -534,18 +526,6 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		return canvas;
 	}
 
-	function renderOutlineofScreenBox(): void {
-		if (!DEBUG || isCameraRotated()) return;
-
-		const { left, right, bottom, top } = getScreenBoundingBox(false);
-
-		// const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
-		const color: Color = [0, 0, 0, 0.5]; // Transparent Black
-		const data = primitives.Rect(left, bottom, right, top, color);
-
-		createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
-	}
-
 	return {
 		DIST_TO_RENDER_BOARD,
 		getRotX,
@@ -577,7 +557,6 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		getCanvas,
 		resyncCanvasBuffer,
 		syncCanvasDimensions,
-		renderOutlineofScreenBox,
 	};
 }
 
