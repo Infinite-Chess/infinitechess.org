@@ -40,7 +40,6 @@ import arrowshifts from '../rendering/arrows/arrowshifts.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import perspective from '../rendering/perspective.js';
 import piecemodels from '../../board/rendering/piecemodels.js';
-import screenshake from '../../board/rendering/screenshake.js';
 import { GameBus } from '../../board/GameBus.js';
 import coordinates from '../rendering/coordinates.js';
 import texturecache from '../../chess/rendering/texturecache.js';
@@ -135,7 +134,7 @@ function preloadSounds(): void {
 
 // Update the game every single frame
 function update(): void {
-	screenshake.update();
+	camera.shake.update();
 	controls.testOutGameToggles();
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile || gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the background.

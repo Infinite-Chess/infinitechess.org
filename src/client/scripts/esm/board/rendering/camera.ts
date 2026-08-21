@@ -18,6 +18,7 @@
 
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import type { Mat4 } from '../../webgl/Renderable.js';
+import type { ScreenShake } from './screenshake.js';
 import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -26,8 +27,8 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from '../../webgl/gl-matrix.js';
 import preferences from '../../components/header/preferences.js';
-import screenshake from './screenshake.js';
 import frametracker from './frametracker.js';
+import { createScreenShake } from './screenshake.js';
 
 // Types --------------------------------------------------------------
 
@@ -121,6 +122,8 @@ export interface Camera {
 	 * screen bounding box, projection matrix, and frame tracker.
 	 */
 	syncCanvasDimensions(): void;
+	/** This camera's screen shake. */
+	readonly shake: ScreenShake;
 }
 
 /** Optional integration hooks a camera fires into. */
@@ -197,6 +200,14 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	let rotX = 0;
 	/** Perspective camera rotation around the Z axis. Positive looks right. Range 0–360. */
 	let rotZ = 0;
+
+	/** This camera's own screen shake, folded into the view matrix by {@link initViewMatrix}. */
+	const shake = createScreenShake({
+		onTraumaChange: (): void => {
+			onVisualChange?.(); // Request an animation frame
+			onPositionChange(); // Rebuild the view matrix with the new shake offset
+		},
+	});
 
 	// Functions -----------------------------------------------------------------------
 
@@ -370,6 +381,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	function wireGlobalListeners(): void {
 		document.addEventListener('fov-change', () => onFOVChange());
 		window.addEventListener('resize', () => syncCanvasDimensions());
+		shake.wireGlobalListeners();
 	}
 
 	// Inits the matrix uniforms: viewMatrix (camera) & projMatrix
@@ -440,7 +452,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		mat4.lookAt(newViewMatrix, cameraPos, [0, 0, 0], [0, 1, 0]);
 
 		// Screen Shake Integration
-		const shakeMatrix = screenshake.getShakeMatrix();
+		const shakeMatrix = shake.getShakeMatrix();
 		// Apply to our view matrix to shake the camera
 		mat4.multiply(newViewMatrix, newViewMatrix, shakeMatrix);
 
@@ -557,6 +569,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		getCanvas,
 		resyncCanvasBuffer,
 		syncCanvasDimensions,
+		shake,
 	};
 }
 

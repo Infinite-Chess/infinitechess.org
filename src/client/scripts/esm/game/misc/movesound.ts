@@ -12,8 +12,8 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../shared/util/math/math.js';
 
+import camera from '../../board/rendering/camera.js';
 import gamesound from '../../board/gamesound.js';
-import screenshake from '../../board/rendering/screenshake.js';
 import WaterRipples from '../rendering/WaterRipples.js';
 
 // Move Configs --------------------------------------------------------------------------
@@ -161,13 +161,13 @@ function playMove(
 			playbackRate: ripplePlayrate,
 		});
 		WaterRipples.addRipple(destination);
-		screenshake.trigger(0.25);
+		camera.shake.trigger(0.25);
 	} else {
 		// Apply screen shake for very large moves
 		const rawTrauma =
 			(bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
 		const trauma = math.clamp(rawTrauma, 0, 1);
-		if (trauma > 0) screenshake.trigger(trauma);
+		if (trauma > 0) camera.shake.trigger(trauma);
 
 		if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
 			// Move is large enough to play the bell sound too
