@@ -789,22 +789,21 @@ function restoreLiveGames(): void {
 //--------------------------------------------------------------------------------------------------------
 
 export {
-	activeGames,
 	createGame,
 	onGameCreationError,
 	isMemberInSomeActiveGame,
 	unsubSocketParticipantFromGame,
 	unsubSocketSpectatorFromGame,
+	getGameByID,
+	produceStaticGameState,
 	getGameBySocket,
+	pushGameClock,
+	freezeEngineClock,
+	resumeEngineClock,
 	onGameConclusion,
 	applyConclusion,
 	freeGame,
 	evictGame,
-	pushGameClock,
-	freezeEngineClock,
-	resumeEngineClock,
-	getGameByID,
-	produceStaticGameState,
 	// Shutdown Preparation & Startup Restoration
 	prepGamesForShutdown,
 	restoreLiveGames,
