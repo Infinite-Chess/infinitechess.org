@@ -6,36 +6,33 @@
  * and broadcasts changes out to the clients.
  */
 
+import type { AuthSeek } from './seekutility.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { OutSeek, SeekId } from '../../../shared/domain.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { LobbyStateMessage } from '../../../shared/clientbound.js';
 
+import seekutility from './seekutility.js';
 import activeplayers from '../gamemanager/activeplayers.js';
+import lobbysubscribers from './lobbysubscribers.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
-import { makeSeekSafe, AuthSeek } from './seekutility.js';
-import {
-	getLobbySubscribers,
-	getSubscriberCount,
-	addSocketToLobbySubs,
-	removeSocketFromLobbySubs,
-	doesUserHaveActiveConnection,
-} from './lobbysubscribers.js';
 
-//-------------------------------------------------------------------------------------------
-
-/** Whether to log new seek creations/deletions to the console */
-const printNewSeekCreationsAndDeletions = true;
-
-/** The list of all active seeks. */
-const seeks: AuthSeek[] = [];
+// Constants -------------------------------------------------------------------------------------
 
 /**
  * Time to allow the client to reconnect after an UNEXPECTED (not purposeful)
  * socket closure before any seek of theirs is deleted!
  */
-const cushionToDisconnectMillis = 5000; // 5 seconds
+const DISCONNECT_CUSHION_MILLIS = 5000; // 5 seconds
+
+/** Whether to log new seek creations/deletions to the console */
+const PRINT_SEEK_CHANGES = true;
+
+// State -----------------------------------------------------------------------------------------
+
+/** The list of all active seeks. */
+const seeks: AuthSeek[] = [];
 
 /**
  * An object containing usernames for the keys, and setTimeout timer ID's for the values,
@@ -50,11 +47,11 @@ const timersMember: Record<number, ReturnType<typeof setTimeout>> = {};
  */
 const timersBrowser: Record<string, ReturnType<typeof setTimeout>> = {};
 
-//-------------------------------------------------------------------------------------------
+// Broadcasts ------------------------------------------------------------------------------------
 
 /** Gets the list of seeks with sensitive information REMOVED (such as browser-ids) */
 function getSeeksListSafe(): OutSeek[] {
-	return seeks.map((seek) => makeSeekSafe(seek));
+	return seeks.map((seek) => seekutility.makeSafe(seek));
 }
 
 /**
@@ -63,7 +60,7 @@ function getSeeksListSafe(): OutSeek[] {
  */
 function broadcastSeeks(): void {
 	const seekslist = getSeeksListSafe();
-	for (const subbedSocket of getLobbySubscribers()) {
+	for (const subbedSocket of lobbysubscribers.getAll()) {
 		sendSocketMessage(subbedSocket, 'lobby', 'seekslist', {
 			seekslist,
 			ourseekid: getUsersSeekId(subbedSocket.metadata.memberInfo),
@@ -84,7 +81,7 @@ function broadcastMemberInGameStatus(
 ): void {
 	const gameID = activeplayers.getGameID(user);
 	const role = activeplayers.getRole(user);
-	for (const ws of getLobbySubscribers()) {
+	for (const ws of lobbysubscribers.getAll()) {
 		if (!memberInfoEq(user, ws.metadata.memberInfo)) continue;
 		if (gameID !== undefined)
 			sendSocketMessage(ws, 'lobby', 'ingame', {
@@ -104,7 +101,7 @@ function broadcastMemberInGameStatus(
  */
 function sendClientLobbyState(ws: CustomWebSocket): void {
 	const seekslist = getSeeksListSafe();
-	const viewercount = getSubscriberCount();
+	const viewercount = lobbysubscribers.getCount();
 
 	// If they're already in a game, tell them. They're only taken into it if we still owe them
 	// the notice (their seek was accepted during a disconnect cushion, so they never got the
@@ -134,12 +131,14 @@ function sendClientLobbyState(ws: CustomWebSocket): void {
  * @param skipWs - Optional socket to exclude from the broadcast (e.g. the socket that just subscribed, who already received the count in their lobbystate).
  */
 function broadcastViewerCount(skipWs?: CustomWebSocket): void {
-	const count = getSubscriberCount();
-	for (const ws of getLobbySubscribers()) {
+	const count = lobbysubscribers.getCount();
+	for (const ws of lobbysubscribers.getAll()) {
 		if (ws === skipWs) continue;
 		sendSocketMessage(ws, 'lobby', 'viewercount', count);
 	}
 }
+
+// Seek List -------------------------------------------------------------------------------------
 
 /**
  * Adds a new seek to the list of active seeks.
@@ -151,8 +150,7 @@ function addSeek(seek: AuthSeek): void {
 
 	broadcastSeeks();
 
-	if (printNewSeekCreationsAndDeletions)
-		console.log(`Created seek for user ${JSON.stringify(seek.owner)}`);
+	if (PRINT_SEEK_CHANGES) console.log(`Created seek for user ${JSON.stringify(seek.owner)}`);
 }
 
 /**
@@ -176,8 +174,7 @@ function deleteSeekByIndex(
 
 	if (!dontBroadcast) broadcastSeeks();
 
-	if (printNewSeekCreationsAndDeletions)
-		console.log(`Deleted seek for user ${JSON.stringify(seek.owner)}`);
+	if (PRINT_SEEK_CHANGES) console.log(`Deleted seek for user ${JSON.stringify(seek.owner)}`);
 
 	return true;
 }
@@ -208,7 +205,7 @@ function getSeekAndIndexByID(id: string): { seek: AuthSeek; index: number } | un
 	return undefined;
 }
 
-//-------------------------------------------------------------------------------------------
+// Subscribing -----------------------------------------------------------------------------------
 
 /**
  * Returns the first socket subscribed to the seeks list that matches the member/browser property.
@@ -217,7 +214,7 @@ function getSeekAndIndexByID(id: string): { seek: AuthSeek; index: number } | un
  */
 function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined {
 	// Iterate through all sockets, until you find one that matches the authentication of our seek owner
-	for (const ws of getLobbySubscribers()) {
+	for (const ws of lobbysubscribers.getAll()) {
 		if (memberInfoEq(owner, ws.metadata.memberInfo)) return ws;
 	}
 	// They must have disconnected involuntarily, and be within
@@ -230,10 +227,10 @@ function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined
  * and cancels any active timers to delete their seeks if their
  * socket was previously closed by a network interruption.
  */
-function subToLobby(ws: CustomWebSocket): void {
+function subscribe(ws: CustomWebSocket): void {
 	if (ws.metadata.subscriptions.lobby) return; // Already subscribed. Happens occasionally
 
-	addSocketToLobbySubs(ws);
+	lobbysubscribers.add(ws);
 
 	sendClientLobbyState(ws);
 	broadcastViewerCount(ws); // Notify all existing subscribers of the incremented count
@@ -241,8 +238,8 @@ function subToLobby(ws: CustomWebSocket): void {
 }
 
 // Set involuntary to true if you don't immediately want to delete their seek, but say after 5 seconds.
-function unsubFromLobby(ws: CustomWebSocket, involuntary?: boolean): void {
-	removeSocketFromLobbySubs(ws);
+function unsubscribe(ws: CustomWebSocket, involuntary?: boolean): void {
+	lobbysubscribers.remove(ws);
 	broadcastViewerCount(); // Notify remaining subscribers of the decremented count
 
 	const owner = ws.metadata.memberInfo;
@@ -253,7 +250,7 @@ function unsubFromLobby(ws: CustomWebSocket, involuntary?: boolean): void {
 	// console.log("Setting a 5-second timer to delete a user's seek!");
 	const timeout = setTimeout(
 		() => deleteUserSeeksIfNotConnected(owner),
-		cushionToDisconnectMillis,
+		DISCONNECT_CUSHION_MILLIS,
 	);
 	if (owner.signedIn) timersMember[owner.user_id] = timeout;
 	else timersBrowser[owner.browser_id] = timeout;
@@ -273,7 +270,7 @@ function cancelTimerToDeleteUsersSeeksFromNetworkInterruption(ws: CustomWebSocke
 	}
 }
 
-//-------------------------------------------------------------------------------------------
+// Seek Deletion ---------------------------------------------------------------------------------
 
 /**
  * Deletes the seek associated with a specific member or browser ID,
@@ -286,7 +283,7 @@ function cancelTimerToDeleteUsersSeeksFromNetworkInterruption(ws: CustomWebSocke
  */
 function deleteUserSeeksIfNotConnected(info: AuthMemberInfo): void {
 	// Don't delete seek if there is an active connection
-	const hasActiveConnection = doesUserHaveActiveConnection(info);
+	const hasActiveConnection = lobbysubscribers.hasUser(info);
 	if (hasActiveConnection) {
 		// console.log(`${signedIn ? `Member "${identifier}"` : `Browser "${identifier}"`} is still connected, not deleting seek.`);
 		return;
@@ -311,7 +308,7 @@ function deleteUsersExistingSeek(info: AuthMemberInfo, { broadCastNewSeeks = tru
 		// Match! Delete
 		seeks.splice(i, 1); // Delete the seek
 		deletedSeek = true;
-		if (printNewSeekCreationsAndDeletions)
+		if (PRINT_SEEK_CHANGES)
 			console.log(`${info.signedIn ? `Deleted member's seek. Username: ${info.username}` : `Deleted browser's seek. Browser: ${info.browser_id}`}`); // prettier-ignore
 	}
 
@@ -319,18 +316,22 @@ function deleteUsersExistingSeek(info: AuthMemberInfo, { broadCastNewSeeks = tru
 	return deletedSeek;
 }
 
-//-------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
-export {
-	subToLobby,
-	unsubFromLobby,
+export default {
+	// Broadcasts
+	broadcastSeeks,
+	broadcastMemberInGameStatus,
 	broadcastViewerCount,
-	existingSeekHasID,
+	// Seek List
 	addSeek,
 	deleteSeekByIndex,
+	existingSeekHasID,
 	getSeekAndIndexByID,
-	deleteUsersExistingSeek,
+	// Subscribing
 	findSocketFromOwner,
-	broadcastMemberInGameStatus,
-	broadcastSeeks,
+	subscribe,
+	unsubscribe,
+	// Seek Deletion
+	deleteUsersExistingSeek,
 };

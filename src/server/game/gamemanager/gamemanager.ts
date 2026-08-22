@@ -23,6 +23,7 @@ import disconnect from './disconnect.js';
 import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
 import activegames from './activegames.js';
+import lobbymanager from '../seeksmanager/lobbymanager.js';
 import activeplayers from './activeplayers.js';
 import gamelifecycle from './gamelifecycle.js';
 import deadgamestate from './deadgamestate.js';
@@ -32,7 +33,6 @@ import gamestatebuilder from './gamestatebuilder.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
-import { broadcastMemberInGameStatus } from '../seeksmanager/lobbymanager.js';
 
 // Creation --------------------------------------------------------------------------------------
 
@@ -86,7 +86,7 @@ function createGame(
 		const player = Number(strcolor) as Player;
 		// Alert all their lobby-subscribed clients they are in a game. Only the socket that
 		// asked for this game is taken into it; their other tabs get the rejoin banner.
-		broadcastMemberInGameStatus(identifier, socket);
+		lobbymanager.broadcastMemberInGameStatus(identifier, socket);
 		// Give them 5 seconds to navigate to the game page and re-connect
 		// before they're considered disconnected.
 		disconnect.startCushionTimer(servergame, player);

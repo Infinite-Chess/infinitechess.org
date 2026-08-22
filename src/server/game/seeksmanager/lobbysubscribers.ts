@@ -15,15 +15,21 @@ import type { OutAction, OutValue } from '../../socket/socketSend.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 
+// Constants -------------------------------------------------------------------------------------
+
+const PRINT_SUBSCRIBER_COUNT = false;
+
+// State -----------------------------------------------------------------------------------------
+
 /** Set of clients currently subscribed to the lobby. */
 const subscribedClients: Set<CustomWebSocket> = new Set();
 
-const printSubscriberCount = false;
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Returns an iterator over all sockets currently subscribed to the lobby.
  */
-function getLobbySubscribers(): SetIterator<CustomWebSocket> {
+function getAll(): SetIterator<CustomWebSocket> {
 	return subscribedClients.values();
 }
 
@@ -33,7 +39,7 @@ function getLobbySubscribers(): SetIterator<CustomWebSocket> {
  * @param action - The action of the socket message
  * @param message - The message contents
  */
-function broadcastToAllLobbySubs<A extends OutAction<'lobby'>, V extends OutValue<'lobby', A>>(
+function broadcastToAll<A extends OutAction<'lobby'>, V extends OutValue<'lobby', A>>(
 	action: A,
 	message: Exact<V, OutValue<'lobby', A>>,
 ): void {
@@ -45,21 +51,21 @@ function broadcastToAllLobbySubs<A extends OutAction<'lobby'>, V extends OutValu
 /**
  * Adds a new socket to the lobby subscriber list.
  */
-function addSocketToLobbySubs(ws: CustomWebSocket): void {
+function add(ws: CustomWebSocket): void {
 	if (subscribedClients.has(ws))
 		return console.error('Cannot sub socket to lobby because they already are!');
 
 	subscribedClients.add(ws);
 	ws.metadata.subscriptions.lobby = true;
 
-	if (printSubscriberCount) console.log(`Lobby subscriber count: ${subscribedClients.size}`);
+	if (PRINT_SUBSCRIBER_COUNT) console.log(`Lobby subscriber count: ${subscribedClients.size}`);
 }
 
 /**
  * Removes a socket from the lobby subscriber list.
  * DOES NOT delete any of their existing seeks! That should be done before.
  */
-function removeSocketFromLobbySubs(ws: CustomWebSocket): void {
+function remove(ws: CustomWebSocket): void {
 	if (!ws)
 		return console.error("Can't remove socket from lobby subs list because it's undefined!");
 
@@ -68,11 +74,11 @@ function removeSocketFromLobbySubs(ws: CustomWebSocket): void {
 	subscribedClients.delete(ws);
 	delete ws.metadata.subscriptions.lobby;
 
-	if (printSubscriberCount) console.log(`Lobby subscriber count: ${subscribedClients.size}`);
+	if (PRINT_SUBSCRIBER_COUNT) console.log(`Lobby subscriber count: ${subscribedClients.size}`);
 }
 
 /** Returns the number of sockets currently subscribed to the lobby. */
-function getSubscriberCount(): number {
+function getCount(): number {
 	return subscribedClients.size;
 }
 
@@ -80,18 +86,20 @@ function getSubscriberCount(): number {
  * Checks if a member or browser ID has at least one active connection.
  * @returns true if the member or browser ID has at least one active connection, false otherwise.
  */
-function doesUserHaveActiveConnection(info: AuthMemberInfo): boolean {
+function hasUser(info: AuthMemberInfo): boolean {
 	for (const ws of subscribedClients) {
 		if (memberInfoEq(ws.metadata.memberInfo, info)) return true;
 	}
 	return false;
 }
 
-export {
-	getLobbySubscribers,
-	getSubscriberCount,
-	broadcastToAllLobbySubs,
-	addSocketToLobbySubs,
-	removeSocketFromLobbySubs,
-	doesUserHaveActiveConnection,
+// Exports ---------------------------------------------------------------------------------------
+
+export default {
+	getAll,
+	broadcastToAll,
+	add,
+	remove,
+	getCount,
+	hasUser,
 };

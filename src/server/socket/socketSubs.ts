@@ -10,7 +10,7 @@
 import type { CustomWebSocket } from './socketTypes.js';
 
 import gamemanager from '../game/gamemanager/gamemanager.js';
-import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
+import lobbymanager from '../game/seeksmanager/lobbymanager.js';
 
 // Types -------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ function handleSubbing(ws: CustomWebSocket, value: 'lobby'): void {
 	// What are they wanting to subscribe to for updates?
 	switch (value) {
 		case 'lobby':
-			subToLobby(ws);
+			lobbymanager.subscribe(ws);
 			break;
 		default:
 			console.error('UNKNOWN subscription list to subscribe client to!', value satisfies never); // prettier-ignore
@@ -44,7 +44,7 @@ function handleUnsubbing(ws: CustomWebSocket, key: SubscriptionKey, involuntary:
 	// What are they wanting to unsubscribe from updates from?
 	switch (key) {
 		case 'lobby':
-			unsubFromLobby(ws, involuntary);
+			lobbymanager.unsubscribe(ws, involuntary);
 			break;
 		case 'game':
 			gamemanager.unsubscribeParticipant(ws, involuntary);

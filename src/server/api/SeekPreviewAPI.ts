@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 
 import { SeekIdSchema } from '../../shared/domain.js';
 
-import { getSeekAndIndexByID } from '../game/seeksmanager/lobbymanager.js';
+import lobbymanager from '../game/seeksmanager/lobbymanager.js';
 
 /** `GET /api/seek-preview/:seekId` — returns `{ icn }` of a custom (ICN) lobby seek for hover previews. */
 function getSeekPreview(req: Request, res: Response): void {
@@ -20,7 +20,7 @@ function getSeekPreview(req: Request, res: Response): void {
 		return;
 	}
 
-	const result = getSeekAndIndexByID(seekId);
+	const result = lobbymanager.getSeekAndIndexByID(seekId);
 	if (result === undefined) {
 		res.status(404).send('Seek not found.');
 		return;

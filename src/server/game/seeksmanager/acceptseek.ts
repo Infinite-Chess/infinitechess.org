@@ -12,32 +12,25 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 
 import gameutility from '../gamemanager/gameutility.js';
 import gamemanager from '../gamemanager/gamemanager.js';
+import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
+import lobbysubscribers from './lobbysubscribers.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
-import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
-import {
-	getSeekAndIndexByID,
-	deleteSeekByIndex,
-	deleteUsersExistingSeek,
-	findSocketFromOwner,
-	broadcastSeeks,
-	broadcastViewerCount,
-} from './lobbymanager.js';
 
 /**
  * Attempts to accept a seek of given id.
  * @param ws - The socket performing this action
  * @param messageContents - The incoming socket message containing the seek id
  */
-function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
+function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 	if (activeplayers.hasSocket(ws)) {
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 	}
 
 	// Does the seek still exist?
-	const seekAndIndex = getSeekAndIndexByID(messageContents);
+	const seekAndIndex = lobbymanager.getSeekAndIndexByID(messageContents);
 	if (!seekAndIndex) {
 		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.game_aborted);
 		return;
@@ -67,13 +60,14 @@ function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	let deletedAnySeek = false;
 	// Delete the seek accepted.
-	if (deleteSeekByIndex(seek, index, { dontBroadcast: true })) deletedAnySeek = true;
+	if (lobbymanager.deleteSeekByIndex(seek, index, { dontBroadcast: true })) deletedAnySeek = true;
 	// Delete their existing seeks
-	if (deleteUsersExistingSeek(user, { broadCastNewSeeks: false })) deletedAnySeek = true;
+	if (lobbymanager.deleteUsersExistingSeek(user, { broadCastNewSeeks: false }))
+		deletedAnySeek = true;
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 
-	const player1Socket = findSocketFromOwner(seek.owner); // Could be undefined occasionally
+	const player1Socket = lobbymanager.findSocketFromOwner(seek.owner); // Could be undefined occasionally
 	const player2Socket = ws;
 
 	// Assign each player a color based on their seek info. Add their socket just encase
@@ -113,12 +107,16 @@ function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 	}
 
 	// Unsubscribe them both from the lobby.
-	if (player1Socket) removeSocketFromLobbySubs(player1Socket); // Could be undefined occasionally
-	removeSocketFromLobbySubs(player2Socket);
-	broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
+	if (player1Socket) lobbysubscribers.remove(player1Socket); // Could be undefined occasionally
+	lobbysubscribers.remove(player2Socket);
+	lobbymanager.broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
 
 	// Both deletions above were silenced so they collapse into this single broadcast.
-	if (deletedAnySeek) broadcastSeeks();
+	if (deletedAnySeek) lobbymanager.broadcastSeeks();
 }
 
-export { acceptSeek };
+// Exports ---------------------------------------------------------------------------------------
+
+export default {
+	accept,
+};

@@ -4,6 +4,7 @@
  * This script handles seek creation, making sure that the seeks have valid properties.
  */
 
+import type { AuthSeek } from './seekutility.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { CreateSeekMessage } from '../../../shared/serverbound.js';
 import type { MetaData, Rating, SeekVariant } from '../../../shared/domain.js';
@@ -29,20 +30,20 @@ import {
 	getPlayabilityRejection,
 } from '../../../shared/chess/variants/positionvalidation.js';
 
+import seekutility from './seekutility.js';
+import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { AuthSeek, buildServerUsernameContainer } from './seekutility.js';
-import { existingSeekHasID, deleteUsersExistingSeek, addSeek } from './lobbymanager.js';
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Creates a new seek from their websocket message.
  * @param ws - Their socket
  * @param messageContents - The incoming socket message that SHOULD contain the seek properties!
  */
-function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
+function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 	if (activeplayers.hasSocket(ws)) {
 		// Can't create seek because they are already in a game
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
@@ -59,9 +60,9 @@ function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessage): vo
 		if (!seek) return; // Message contained invalid seek parameters. Error already sent to the client.
 
 		// Replace any existing seek this user owns — the subsequent addSeek() broadcasts the new state.
-		deleteUsersExistingSeek(ws.metadata.memberInfo, { broadCastNewSeeks: false });
+		lobbymanager.deleteUsersExistingSeek(ws.metadata.memberInfo, { broadCastNewSeeks: false });
 
-		addSeek(seek);
+		lobbymanager.addSeek(seek);
 	} catch {
 		// DB error (already logged)
 		sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
@@ -82,7 +83,7 @@ function getSeekFromWebsocketMessageContents(
 	let id: string;
 	do {
 		id = uuid.generateID_Base36(IDLengthOfSeeks);
-	} while (existingSeekHasID(id));
+	} while (lobbymanager.existingSeekHasID(id));
 
 	const owner = ws.metadata.memberInfo;
 
@@ -94,10 +95,10 @@ function getSeekFromWebsocketMessageContents(
 		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 
-	const player = buildServerUsernameContainer(owner, rating);
+	const player = seekutility.buildServerUsernameContainer(owner, rating);
 
 	// Invalid variant; error already sent to the client.
-	if (!validateSeekVariant(ws, messageContents.variant, false)) return;
+	if (!validateVariant(ws, messageContents.variant, false)) return;
 
 	return {
 		id,
@@ -117,11 +118,7 @@ function getSeekFromWebsocketMessageContents(
  * @param engineGame - Whether the engine will be the opponent. Its position is then judged on
  * the engine's board, and additionally on whether the engine can play it at all.
  */
-export function validateSeekVariant(
-	ws: CustomWebSocket,
-	variant: SeekVariant,
-	engineGame: boolean,
-): boolean {
+function validateVariant(ws: CustomWebSocket, variant: SeekVariant, engineGame: boolean): boolean {
 	if (variant.kind !== 'custom') return true;
 	const rejection = validateIcnSeekContent(variant.position, engineGame);
 	if (rejection === null) return true;
@@ -131,7 +128,7 @@ export function validateSeekVariant(
 
 /**
  * Parses an ICN seek's content and runs the position legality and playability checks.
- * @param engineGame - See {@link validateSeekVariant}.
+ * @param engineGame - See {@link validateVariant}.
  * @returns `null` if the ICN may be played, or the {@link PositionRejection} refusing it.
  */
 function validateIcnSeekContent(content: string, engineGame: boolean): PositionRejection | null {
@@ -185,4 +182,9 @@ function validateSeekMetadata(metadata: MetaData): PositionRejection | null {
 	return null;
 }
 
-export { createSeek };
+// Exports ---------------------------------------------------------------------------------------
+
+export default {
+	create,
+	validateVariant,
+};

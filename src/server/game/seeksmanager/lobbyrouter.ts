@@ -8,30 +8,34 @@
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { ServerboundLobbyMessage } from '../../../shared/serverbound.js';
 
-import { createSeek } from './createseek.js';
-import { cancelSeek } from './cancelseek.js';
-import { acceptSeek } from './acceptseek.js';
-import { createEngineGame } from './createenginegame.js';
+import createseek from './createseek.js';
+import cancelseek from './cancelseek.js';
+import acceptseek from './acceptseek.js';
+import createenginegame from './createenginegame.js';
 
 /** Routes all incoming websocket messages related to the lobby. */
-function routeLobbyMessage(ws: CustomWebSocket, contents: ServerboundLobbyMessage): void {
+function route(ws: CustomWebSocket, contents: ServerboundLobbyMessage): void {
 	// Route them according to their action
 	switch (contents.action) {
 		case 'createseek':
-			createSeek(ws, contents.value);
+			createseek.create(ws, contents.value);
 			break;
 		case 'cancelseek':
-			cancelSeek(ws, contents.value);
+			cancelseek.cancel(ws, contents.value);
 			break;
 		case 'acceptseek':
-			acceptSeek(ws, contents.value);
+			acceptseek.accept(ws, contents.value);
 			break;
 		case 'createengine':
-			createEngineGame(ws, contents.value);
+			createenginegame.create(ws, contents.value);
 			break;
 		default:
 			console.error('UNKNOWN web socket action received in lobby route!', contents satisfies never); // prettier-ignore
 	}
 }
 
-export { routeLobbyMessage };
+// Exports ---------------------------------------------------------------------------------------
+
+export default {
+	route,
+};

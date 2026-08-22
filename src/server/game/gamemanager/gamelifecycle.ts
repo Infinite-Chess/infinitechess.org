@@ -25,11 +25,11 @@ import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
 import ratingabuse from './ratingabuse.js';
 import activegames from './activegames.js';
+import lobbymanager from '../seeksmanager/lobbymanager.js';
 import activeplayers from './activeplayers.js';
 import liveGameValues from './liveGameValues.js';
 import gamestatebuilder from './gamestatebuilder.js';
 import ratingcalculation from './ratingcalculation.js';
-import { broadcastMemberInGameStatus } from '../seeksmanager/lobbymanager.js';
 
 // Constants -------------------------------------------------------------------------------------
 
@@ -118,7 +118,7 @@ function free(servergame: ServerGame): void {
 	for (const data of Object.values(servergame.match.playerData)) {
 		activeplayers.remove(data.identifier, servergame.match.id);
 		// Their lobby-subscribed clients may now hide their "in game" banner, if shown.
-		broadcastMemberInGameStatus(data.identifier);
+		lobbymanager.broadcastMemberInGameStatus(data.identifier);
 	}
 
 	// Log the game into the database the instant it concludes.

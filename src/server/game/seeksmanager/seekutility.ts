@@ -17,7 +17,7 @@ import type {
 
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 
-// Type Definitions
+// Type Definitions ------------------------------------------------------------------------------
 
 /** A lobby game seek, WITH the owner's sensitive information. */
 export interface AuthSeek extends BaseSeek {
@@ -26,7 +26,7 @@ export interface AuthSeek extends BaseSeek {
 	variant: SeekVariant;
 }
 
-//-------------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Projects a seek into the form broadcast to lobby viewers, dropping the owner's
@@ -36,7 +36,7 @@ export interface AuthSeek extends BaseSeek {
  * The result is serialized straight to the wire and never mutated, so
  * nested values are shared with the source seek instead of copied.
  */
-function makeSeekSafe(seek: AuthSeek): OutSeek {
+function makeSafe(seek: AuthSeek): OutSeek {
 	const variant: OutSeekVariant =
 		seek.variant.kind === 'preset' ? seek.variant : { kind: 'custom' };
 
@@ -66,6 +66,9 @@ function buildServerUsernameContainer(
 	};
 }
 
-//-------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
-export { makeSeekSafe, buildServerUsernameContainer };
+export default {
+	makeSafe,
+	buildServerUsernameContainer,
+};

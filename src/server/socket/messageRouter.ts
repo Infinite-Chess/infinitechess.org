@@ -8,7 +8,7 @@ import type { CustomWebSocket } from './socketTypes.js';
 import type { ServerboundRoutedMessage } from '../../shared/serverbound.js';
 
 import gamerouter from '../game/gamemanager/gamerouter.js';
-import { routeLobbyMessage } from '../game/seeksmanager/lobbyrouter.js';
+import lobbyrouter from '../game/seeksmanager/lobbyrouter.js';
 import { routeGeneralMessage } from './generalRouter.js';
 
 // Functions ---------------------------------------------------------------------------
@@ -21,7 +21,7 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: ServerboundRou
 			routeGeneralMessage(ws, message.contents);
 			break;
 		case 'lobby':
-			routeLobbyMessage(ws, message.contents);
+			lobbyrouter.route(ws, message.contents);
 			break;
 		case 'game':
 			gamerouter.route(ws, message.contents);

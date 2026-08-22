@@ -49,10 +49,10 @@ import {
 import tconfig from '../../config/translationconfig.js';
 import drawoffers from './drawoffers.js';
 import gameutility from './gameutility.js';
+import seekutility from '../seeksmanager/seekutility.js';
 import ratingcalculation from './ratingcalculation.js';
 import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { buildServerUsernameContainer } from '../seeksmanager/seekutility.js';
 
 // Ratings ---------------------------------------------------------------------------------------
 
@@ -116,7 +116,7 @@ function buildStaticState(servergame: ServerGame): StaticGameState {
 	const players: PlayerGroup<ServerUsernameContainer> = {};
 	for (const [p, data] of Object.entries(match.playerData)) {
 		const color = Number(p) as Player;
-		players[color] = buildServerUsernameContainer(data.identifier, ratings[color]);
+		players[color] = seekutility.buildServerUsernameContainer(data.identifier, ratings[color]);
 	}
 	if (match.engineParticipant) {
 		const { color, engine, strengthLevel } = match.engineParticipant;

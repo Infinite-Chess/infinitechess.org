@@ -11,27 +11,27 @@ import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import typeutil, { players } from '../../../shared/chess/util/typeutil.js';
 import { engineDictionary, ValidEngine } from '../../../shared/chess/engine.js';
 
+import createseek from './createseek.js';
 import gamemanager from '../gamemanager/gamemanager.js';
+import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
+import lobbysubscribers from './lobbysubscribers.js';
 import { getEngineVersion } from '../../config/manifest.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { validateSeekVariant } from './createseek.js';
-import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
-import { deleteUsersExistingSeek, broadcastViewerCount } from './lobbymanager.js';
 
-// Constants ---------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------------------------
 
 /** The engine used for online computer games. */
 const ONLINE_ENGINE: ValidEngine = 'apeiron';
 
-// Functions ---------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Creates an engine game from the owner's websocket message. On success, createGame's
  * 'ingame' push navigates the client; on failure, notifies the client with the reason.
  */
-function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
+function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	if (activeplayers.hasSocket(ws))
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 
@@ -47,10 +47,10 @@ function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): v
 
 	try {
 		// Invalid variant; error already sent to the client.
-		if (!validateSeekVariant(ws, body.variant, true)) return;
+		if (!createseek.validateVariant(ws, body.variant, true)) return;
 
 		// Delete their existing seeks
-		deleteUsersExistingSeek(ws.metadata.memberInfo);
+		lobbymanager.deleteUsersExistingSeek(ws.metadata.memberInfo);
 
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
 		const engineColor = typeutil.invertPlayer(humanColor);
@@ -70,11 +70,15 @@ function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): v
 		);
 
 		// Unsubscribe them from the lobby.
-		removeSocketFromLobbySubs(ws);
-		broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
+		lobbysubscribers.remove(ws);
+		lobbymanager.broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
 	} catch (error: unknown) {
 		gamemanager.onGameCreationError(error, [ws]);
 	}
 }
 
-export { createEngineGame };
+// Exports ---------------------------------------------------------------------------------------
+
+export default {
+	create,
+};
