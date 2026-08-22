@@ -1,8 +1,13 @@
 // src/server/game/gamemanager/movesubmission.ts
 
 /**
- * The script handles when a user submits a move in
- * the game they are in, and does basic checks to make sure it's valid.
+ * Handles the `submitmove` game action: the trust boundary a client's move crosses before
+ * it joins the game — format, turn, move number and distance cap, then either full
+ * server-side validation or the client's own reported conclusion.
+ *
+ * Which of the two applies is the game's `validateMoves` flag; games without server-side
+ * validation are the ones `cheatreport.ts` exists for. As there, a move-triggered
+ * conclusion is broadcast from here rather than through `gamelifecycle.ts`.
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';

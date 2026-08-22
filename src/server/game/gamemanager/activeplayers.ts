@@ -3,6 +3,10 @@
 /**
  * This script keeps track of the ID's of games members and browsers are currently in,
  * and whether they've yet been told to navigate to them.
+ *
+ * The reverse index (user -> game id) of `activegames.ts`, which owns the games
+ * themselves. Holds no game state beyond the id: an entry exists to forbid the user
+ * from joining a second game, and to point them back at the one they're in.
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';

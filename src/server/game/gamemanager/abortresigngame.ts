@@ -1,7 +1,11 @@
 // src/server/game/gamemanager/abortresigngame.ts
 
 /**
- * This script handles the abortings and resignations of online games
+ * Handles the `abort`, `resign` and `engineresign` game actions: a player ending a live
+ * game of their own accord, once the number of moves played says they may.
+ *
+ * Legality checks only — the ending itself is `gamelifecycle.ts`'s conclude().
+ * Ending a game against an absent opponent lives in `claimdisconnect.ts`.
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';

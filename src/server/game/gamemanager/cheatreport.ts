@@ -1,7 +1,12 @@
 // src/server/game/gamemanager/cheatreport.ts
 
 /**
- * This script handles cheat reports, aborting games when they come in.
+ * Handles the `report` game action: a player claiming their opponent's
+ * last move was illegal, which overturns the game to an abort.
+ *
+ * Runs its own conclusion instead of `gamelifecycle.ts`'s, because a report accepted
+ * after the game was already logged must overturn the database record too. Finalizing
+ * the game — stage 3 of the life cycle — is what closes the reporting window.
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';

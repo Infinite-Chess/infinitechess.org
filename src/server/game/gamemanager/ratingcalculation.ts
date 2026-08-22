@@ -1,7 +1,8 @@
 // src/server/game/gamemanager/ratingcalculation.ts
 
 /**
- * Implementation of Glicko-1 algorithm for calculating rating changes arising from ranked games
+ * Implementation of the Glicko-1 algorithm: the rating and rating-deviation changes
+ * arising from a ranked game, and how a deviation grows again over an idle rating period.
  */
 
 import timeutil from '../../../shared/util/timeutil.js';
