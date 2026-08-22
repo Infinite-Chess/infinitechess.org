@@ -193,7 +193,7 @@ function restoreSingleGame(
 	return { servergame, pendingTimers };
 }
 
-// Helper functions ------------------------------------------------------------------------------
+// Reconstruction --------------------------------------------------------------------------------
 
 /** Reconstructs AuthMemberInfo for each player from the database rows. */
 function reconstructPlayerIdentities(
@@ -353,6 +353,8 @@ function parseMoves(movesString: string): MoveRecord[] {
 	if (movesString === '') return [];
 	return icnconverter.parseShortFormMoves(movesString);
 }
+
+// Pending Timers --------------------------------------------------------------------------------
 
 /** Computes which timers need to be started after restoration. */
 function computePendingTimers(

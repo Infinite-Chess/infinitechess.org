@@ -1,7 +1,11 @@
 // src/server/game/seeksmanager/createenginegame.ts
 
 /**
- * Handles engine-game creation through the normal live-game pipeline.
+ * Handles the `createengine` lobby action: starting a game against the server's
+ * engine at once, with no seek posted and no opponent to wait for.
+ *
+ * Bypasses the lobby, but shares `createseek.ts`'s variant validation and
+ * `gamemanager.ts`'s creation pipeline — an engine game is a live game like any other.
  */
 
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
@@ -13,6 +17,7 @@ import { engineDictionary, ValidEngine } from '../../../shared/chess/engine.js';
 
 import createseek from './createseek.js';
 import gamemanager from '../gamemanager/gamemanager.js';
+import activeseeks from './activeseeks.js';
 import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
 import lobbysubscribers from './lobbysubscribers.js';
@@ -50,7 +55,7 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 		if (!createseek.validateVariant(ws, body.variant, true)) return;
 
 		// Delete their existing seeks
-		lobbymanager.deleteUsersExistingSeek(ws.metadata.memberInfo);
+		activeseeks.deleteOfUser(ws.metadata.memberInfo);
 
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
 		const engineColor = typeutil.invertPlayer(humanColor);

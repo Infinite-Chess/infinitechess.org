@@ -1,21 +1,15 @@
 // src/server/game/seeksmanager/seekutility.ts
 
-/*
- * This script stores utility methods for working
- * with single seeks, not multiple
+/**
+ * The shape of a seek as the server holds it, and the projection that strips
+ * it of sensitive data for the wire.
+ *
+ * Pure vocabulary — no state, no side effects. `createseek.ts` builds these,
+ * and `activeseeks.ts` owns the collection of them.
  */
 
 import type { AuthMemberInfo } from '../../types.js';
-import type {
-	SeekVariant,
-	BaseSeek,
-	OutSeek,
-	OutSeekVariant,
-	Rating,
-	ServerUsernameContainer,
-} from '../../../shared/domain.js';
-
-import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import type { SeekVariant, BaseSeek, OutSeek, OutSeekVariant } from '../../../shared/domain.js';
 
 // Type Definitions ------------------------------------------------------------------------------
 
@@ -51,24 +45,8 @@ function makeSafe(seek: AuthSeek): OutSeek {
 	};
 }
 
-/**
- * Builds the public {@link ServerUsernameContainer} for a player from their auth identity.
- * Guests get the generic ICN guest name. Never exposes `browser_id`.
- */
-function buildServerUsernameContainer(
-	identifier: AuthMemberInfo,
-	rating?: Rating,
-): ServerUsernameContainer {
-	return {
-		type: identifier.signedIn ? 'player' : 'guest',
-		username: identifier.signedIn ? identifier.username : metadatautil.GUEST_NAME_ICN_METADATA,
-		rating,
-	};
-}
-
 // Exports ---------------------------------------------------------------------------------------
 
 export default {
 	makeSafe,
-	buildServerUsernameContainer,
 };

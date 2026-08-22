@@ -15,8 +15,8 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { MatchInfo, ServerGame } from './servergametypes.js';
 import type { OutAction, OutRoute, OutValue } from '../../socket/socketSend.js';
 
+import memberinfoutil from '../../utility/memberinfoutil.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 
 // Attaching & Detaching -------------------------------------------------------------------------
@@ -54,7 +54,7 @@ function getRole(servergame: ServerGame, ws: CustomWebSocket): Player | undefine
 	const identity = ws.metadata.memberInfo;
 	for (const [splayer, data] of Object.entries(match.playerData)) {
 		const playercolor = Number(splayer) as Player;
-		if (memberInfoEq(identity, data.identifier)) return playercolor;
+		if (memberinfoutil.eq(identity, data.identifier)) return playercolor;
 	}
 	return undefined;
 }

@@ -30,10 +30,10 @@ import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.
 import tconfig from '../config/translationconfig.js';
 import gamemanager from '../game/gamemanager/gamemanager.js';
 import deadgamestate from '../game/gamemanager/deadgamestate.js';
+import memberinfoutil from '../utility/memberinfoutil.js';
 import { getManifest } from '../config/manifest.js';
 import { getPieceSVG } from '../config/piecesvgcache.js';
 import { decodeGameId } from '../database/gamesManager.js';
-import { memberInfoEqPartial } from '../utility/memberInfoUtil.js';
 
 // Types -----------------------------------------------------------------------------
 
@@ -120,7 +120,7 @@ function getGamePageState(req: Request): GamePageState | undefined {
 	let role: Player | undefined;
 	if (game) {
 		for (const [strColor, { identifier }] of Object.entries(game.match.playerData)) {
-			if (memberInfoEqPartial(identifier, memberInfo)) {
+			if (memberinfoutil.eqPartial(identifier, memberInfo)) {
 				role = Number(strColor) as Player;
 				break;
 			}

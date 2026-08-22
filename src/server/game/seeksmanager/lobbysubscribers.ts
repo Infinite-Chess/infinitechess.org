@@ -1,10 +1,11 @@
 // src/server/game/seeksmanager/lobbysubscribers.ts
 
-/*
- * This script stores the list of websockets currently subscribed
- * to the lobby.
+/**
+ * Owns the set of sockets currently subscribed to the lobby.
  *
- * On demand, it broadcasts stuff out to the players.
+ * A dependency-free leaf: it knows sockets, not seeks. `lobbymanager.ts` drives
+ * subscription and reads this set to address its broadcasts, and `activeseeks.ts`
+ * reads it to push the live seek list.
  */
 
 import type { Exact } from '../../../shared/util/socketutil.js';
@@ -12,7 +13,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { OutAction, OutValue } from '../../socket/socketSend.js';
 
-import { memberInfoEq } from '../../utility/memberInfoUtil.js';
+import memberinfoutil from '../../utility/memberinfoutil.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 
 // Constants -------------------------------------------------------------------------------------
@@ -88,7 +89,7 @@ function getCount(): number {
  */
 function hasUser(info: AuthMemberInfo): boolean {
 	for (const ws of subscribedClients) {
-		if (memberInfoEq(ws.metadata.memberInfo, info)) return true;
+		if (memberinfoutil.eq(ws.metadata.memberInfo, info)) return true;
 	}
 	return false;
 }

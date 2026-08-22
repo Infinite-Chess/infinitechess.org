@@ -28,9 +28,9 @@ import activeplayers from './activeplayers.js';
 import gamelifecycle from './gamelifecycle.js';
 import deadgamestate from './deadgamestate.js';
 import liveGameValues from './liveGameValues.js';
+import memberinfoutil from '../../utility/memberinfoutil.js';
 import liveGameRestore from './liveGameRestore.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 
@@ -108,7 +108,7 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 	for (const servergame of activegames.getAll()) {
 		if (!gameutility.isGameOver(servergame)) continue; // Only concluded games linger for a rematch.
 		for (const [c, data] of Object.entries(servergame.match.playerData)) {
-			if (!memberInfoEq(data.identifier, identifier)) continue;
+			if (!memberinfoutil.eq(data.identifier, identifier)) continue;
 			if (data.socket) {
 				sendSocketMessage(data.socket, 'game', 'unsub', undefined); // Unsub the game on their old tab.
 				gamesockets.detachParticipant(servergame.match, data.socket);

@@ -1,8 +1,11 @@
 // src/server/game/seeksmanager/acceptseek.ts
 
 /**
- * This script handles seek acceptance,
- * creating a new game if successful.
+ * Handles the `acceptseek` lobby action: turning an open seek into a live game,
+ * deleting both players' seeks and dropping them out of the lobby.
+ *
+ * The seek's terms become the game's — `gamemanager.ts` builds it from there.
+ * Withdrawing a seek instead of accepting it lives in `cancelseek.ts`.
  */
 
 import type { SeekId } from '../../../shared/domain.js';
@@ -12,10 +15,11 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 
 import gameutility from '../gamemanager/gameutility.js';
 import gamemanager from '../gamemanager/gamemanager.js';
+import activeseeks from './activeseeks.js';
 import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
+import memberinfoutil from '../../utility/memberinfoutil.js';
 import lobbysubscribers from './lobbysubscribers.js';
-import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 
@@ -30,7 +34,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 	}
 
 	// Does the seek still exist?
-	const seekAndIndex = lobbymanager.getSeekAndIndexByID(messageContents);
+	const seekAndIndex = activeseeks.getByID(messageContents);
 	if (!seekAndIndex) {
 		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.game_aborted);
 		return;
@@ -41,7 +45,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 	const user = ws.metadata.memberInfo;
 
 	// Make sure they are not accepting their own.
-	if (memberInfoEq(user, seek.owner)) {
+	if (memberinfoutil.eq(user, seek.owner)) {
 		logEventsAndPrint('Player tried to accept their own seek!', 'errLog');
 		return;
 	}
@@ -60,10 +64,9 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	let deletedAnySeek = false;
 	// Delete the seek accepted.
-	if (lobbymanager.deleteSeekByIndex(seek, index, { dontBroadcast: true })) deletedAnySeek = true;
+	if (activeseeks.deleteByIndex(seek, index, { dontBroadcast: true })) deletedAnySeek = true;
 	// Delete their existing seeks
-	if (lobbymanager.deleteUsersExistingSeek(user, { broadCastNewSeeks: false }))
-		deletedAnySeek = true;
+	if (activeseeks.deleteOfUser(user, { broadCastNewSeeks: false })) deletedAnySeek = true;
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 
@@ -77,7 +80,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 		gameutility.assignWhiteBlackPlayersFromSeek(seek.color, seek.owner, ws.metadata.memberInfo),
 	)) {
 		const player = Number(strcolor) as Player;
-		const is_seek_accepter = memberInfoEq(identifier, player2Socket.metadata.memberInfo);
+		const is_seek_accepter = memberinfoutil.eq(identifier, player2Socket.metadata.memberInfo);
 		if (is_seek_accepter) seek_accepter = player;
 		assignments[player] = {
 			identifier,
@@ -112,7 +115,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 	lobbymanager.broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
 
 	// Both deletions above were silenced so they collapse into this single broadcast.
-	if (deletedAnySeek) lobbymanager.broadcastSeeks();
+	if (deletedAnySeek) activeseeks.broadcast();
 }
 
 // Exports ---------------------------------------------------------------------------------------

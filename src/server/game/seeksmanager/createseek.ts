@@ -1,7 +1,11 @@
 // src/server/game/seeksmanager/createseek.ts
 
 /**
- * This script handles seek creation, making sure that the seeks have valid properties.
+ * Handles the `createseek` lobby action: validating a client's proposed terms
+ * — variant, position, time control — before their seek is offered to the lobby.
+ *
+ * The gatekeeper for what may be played: a custom ICN position is parsed and judged
+ * here, for engine games too. Accepted seeks are handed to `activeseeks.ts`.
  */
 
 import type { AuthSeek } from './seekutility.js';
@@ -30,9 +34,9 @@ import {
 	getPlayabilityRejection,
 } from '../../../shared/chess/variants/positionvalidation.js';
 
-import seekutility from './seekutility.js';
-import lobbymanager from './lobbymanager.js';
+import activeseeks from './activeseeks.js';
 import activeplayers from '../gamemanager/activeplayers.js';
+import memberinfoutil from '../../utility/memberinfoutil.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
@@ -59,10 +63,10 @@ function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 		const seek = getSeekFromWebsocketMessageContents(ws, messageContents);
 		if (!seek) return; // Message contained invalid seek parameters. Error already sent to the client.
 
-		// Replace any existing seek this user owns — the subsequent addSeek() broadcasts the new state.
-		lobbymanager.deleteUsersExistingSeek(ws.metadata.memberInfo, { broadCastNewSeeks: false });
+		// Replace any existing seek this user owns — the subsequent add() broadcasts the new state.
+		activeseeks.deleteOfUser(ws.metadata.memberInfo, { broadCastNewSeeks: false });
 
-		lobbymanager.addSeek(seek);
+		activeseeks.add(seek);
 	} catch {
 		// DB error (already logged)
 		sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
@@ -83,7 +87,7 @@ function getSeekFromWebsocketMessageContents(
 	let id: string;
 	do {
 		id = uuid.generateID_Base36(IDLengthOfSeeks);
-	} while (lobbymanager.existingSeekHasID(id));
+	} while (activeseeks.hasID(id));
 
 	const owner = ws.metadata.memberInfo;
 
@@ -95,7 +99,7 @@ function getSeekFromWebsocketMessageContents(
 		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 
-	const player = seekutility.buildServerUsernameContainer(owner, rating);
+	const player = memberinfoutil.buildServerUsernameContainer(owner, rating);
 
 	// Invalid variant; error already sent to the client.
 	if (!validateVariant(ws, messageContents.variant, false)) return;

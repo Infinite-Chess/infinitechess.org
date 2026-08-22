@@ -23,7 +23,7 @@ import disconnect from './disconnect.js';
 import gamelogger from './gamelogger.js';
 import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
-import ratingabuse from './ratingabuse.js';
+import ratingabuse from '../ratingabuse/ratingabuse.js';
 import activegames from './activegames.js';
 import lobbymanager from '../seeksmanager/lobbymanager.js';
 import activeplayers from './activeplayers.js';
