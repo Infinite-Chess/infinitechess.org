@@ -30,6 +30,7 @@ function cancel(ws: CustomWebSocket, messageContents: SeekId): void {
 	// Make sure they are the owner.
 	if (!memberinfoutil.eq(ws.metadata.memberInfo, seek.owner)) {
 		logEventsAndPrint(`Player tried to delete a seek that wasn't theirs!`, 'errLog');
+		return;
 	}
 
 	activeseeks.deleteByID(id);
