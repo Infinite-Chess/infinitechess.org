@@ -8,16 +8,19 @@
 
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
+import gamemanager from './gamemanager.js';
+import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
-import { getGameByID } from './gamemanager.js';
+import activegames from './activegames.js';
+import gamestatebuilder from './gamestatebuilder.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 
 /**
  * A lean reconnect for a game the client already knows is finalized:
  * its result is locked in, so only rematch-offer state can still change.
  */
-function onSubscribeToRematch(ws: CustomWebSocket, game_id: number): void {
-	const game = getGameByID(game_id);
+function handle(ws: CustomWebSocket, game_id: number): void {
+	const game = activegames.getByID(game_id);
 
 	if (game !== undefined) {
 		// Live game
@@ -26,16 +29,16 @@ function onSubscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 			console.error(`Client requested a rematch subscription for a game that is not over (game_id ${game_id}).`); // prettier-ignore
 			return;
 		}
-		const ourRole = gameutility.getSocketRoleInGame(game, ws);
+		const ourRole = gamesockets.getRole(game, ws);
 		if (ourRole !== undefined) {
 			// Participant path: attach, then send the current rematch state.
-			gameutility.subscribeClientToGame(game, ws, ourRole);
-			const value = gameutility.getRematchOfferInfo(game, ourRole)!; // Guaranteed because above we confirm the game is over
+			gamemanager.subscribeParticipant(game, ws, ourRole);
+			const value = gamestatebuilder.getRematchOfferInfo(game, ourRole)!; // Guaranteed because above we confirm the game is over
 			sendSocketMessage(ws, 'game', 'rematchstate', value);
 		} else {
 			// Spectator path: attach, but send no rematch state (they only
 			// stay connected for the 'ingame' message when a rematch is agreed).
-			gameutility.subscribeSpectatorToGame(game, ws);
+			gamesockets.attachSpectator(game, ws);
 		}
 	} else {
 		// Dead game
@@ -46,4 +49,8 @@ function onSubscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 	}
 }
 
-export { onSubscribeToRematch };
+// Exports ---------------------------------------------------------------------------------------
+
+export default {
+	handle,
+};

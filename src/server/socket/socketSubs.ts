@@ -9,11 +9,8 @@
 
 import type { CustomWebSocket } from './socketTypes.js';
 
+import gamemanager from '../game/gamemanager/gamemanager.js';
 import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
-import {
-	unsubSocketParticipantFromGame,
-	unsubSocketSpectatorFromGame,
-} from '../game/gamemanager/gamemanager.js';
 
 // Types -------------------------------------------------------------------
 
@@ -50,11 +47,11 @@ function handleUnsubbing(ws: CustomWebSocket, key: SubscriptionKey, involuntary:
 			unsubFromLobby(ws, involuntary);
 			break;
 		case 'game':
-			unsubSocketParticipantFromGame(ws, involuntary);
+			gamemanager.unsubscribeParticipant(ws, involuntary);
 			break;
 		case 'spectating':
 			// Read-only spectator: no cushion/auto-resign, just detach.
-			unsubSocketSpectatorFromGame(ws);
+			gamemanager.unsubscribeSpectator(ws);
 			break;
 		default:
 			console.error('UNKNOWN subscription list to unsubscribe client from!', key satisfies never); // prettier-ignore

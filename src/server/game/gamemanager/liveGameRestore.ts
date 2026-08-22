@@ -23,7 +23,7 @@ import type { SlideLimitValue } from '../../../shared/util/gameconfig.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
-import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
+import type { MatchInfo, PlayerData, ServerGame } from './servergametypes.js';
 import type { SeekVariant, ClockValues, TimeControl } from '../../../shared/domain.js';
 
 import gamefile from '../../../shared/chess/logic/gamefile.js';
@@ -77,7 +77,7 @@ interface DisconnectTimerState {
 	voluntary: boolean;
 }
 
-// Restoration ------------------------------------------------------------------------------------
+// Restoration -----------------------------------------------------------------------------------
 
 /**
  * Restores all live games from the database.
@@ -86,7 +86,7 @@ interface DisconnectTimerState {
  * @returns An array of restored ServerGame objects with their pending timers.
  * The caller is responsible for integrating these into the active game system.
  */
-function restoreAllLiveGames(): RestoredGame[] {
+function restoreAll(): RestoredGame[] {
 	let liveGameRows: LiveGamesRecord[];
 	let playerRowsByGame: Map<number, LivePlayerGamesRecord[]>;
 	let engineRowsByGame: Map<number, LiveEngineGamesRecord[]>;
@@ -193,7 +193,7 @@ function restoreSingleGame(
 	return { servergame, pendingTimers };
 }
 
-// Helper functions ---------------------------------------------------------------------------------
+// Helper functions ------------------------------------------------------------------------------
 
 /** Reconstructs AuthMemberInfo for each player from the database rows. */
 function reconstructPlayerIdentities(
@@ -411,6 +411,8 @@ function computePendingTimers(
 	return timers;
 }
 
-// Exports --------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
-export { restoreAllLiveGames };
+export default {
+	restoreAll,
+};

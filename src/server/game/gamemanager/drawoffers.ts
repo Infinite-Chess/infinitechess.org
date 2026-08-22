@@ -10,11 +10,11 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { MatchInfo, ServerGame } from './gameutility.js';
+import type { MatchInfo, ServerGame } from './servergametypes.js';
 
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
-//--------------------------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------------------------
 
 /**
  * Minimum number of plies (half-moves) that
@@ -23,15 +23,15 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
  *
  * THIS MUST ALWAYS MATCH THE CLIENT-SIDE!!!!
  */
-const movesBetweenDrawOffers = 2;
+const MIN_PLIES_BETWEEN_OFFERS = 2;
 
-//--------------------------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Returns true if the game currently has an open draw offer.
  * If so, players are not allowed to extend another.
  */
-function isDrawOfferOpen(match: MatchInfo): boolean {
+function isOpen(match: MatchInfo): boolean {
 	return match.drawOfferState !== undefined;
 }
 
@@ -39,7 +39,7 @@ function isDrawOfferOpen(match: MatchInfo): boolean {
  * Returns true if the given color has extended a draw offer that's not confirmed yet.
  * @param color - The color who extended the draw offer
  */
-function doesColorHaveExtendedDrawOffer(match: MatchInfo, color: Player): boolean {
+function isExtendedBy(match: MatchInfo, color: Player): boolean {
 	return match.drawOfferState === color;
 }
 
@@ -47,13 +47,13 @@ function doesColorHaveExtendedDrawOffer(match: MatchInfo, color: Player): boolea
  * Returns true if they given color has extended a draw offer
  * too recently for them to extend another, yet.
  */
-function hasColorOfferedDrawTooFast(servergame: ServerGame, color: Player): boolean {
-	const lastPlyDrawOffered = getLastDrawOfferPlyOfColor(servergame.match, color); // number | undefined
+function offeredTooRecently(servergame: ServerGame, color: Player): boolean {
+	const lastPlyDrawOffered = getLastOfferPly(servergame.match, color); // number | undefined
 	if (lastPlyDrawOffered !== undefined) {
 		// They have made at least 1 offer this game
 		// console.log("Last ply offered:", lastPlyDrawOffered);
 		const movesSinceLastOffer = servergame.moves.length - lastPlyDrawOffered;
-		if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
+		if (movesSinceLastOffer < MIN_PLIES_BETWEEN_OFFERS) return true;
 	}
 	return false;
 }
@@ -63,8 +63,8 @@ function hasColorOfferedDrawTooFast(servergame: ServerGame, color: Player): bool
  * DOES NOT INFORM the opponent.
  * @param color - The color of the player extending the offer
  */
-function openDrawOffer(servergame: ServerGame, color: Player): void {
-	if (isDrawOfferOpen(servergame.match)) {
+function open(servergame: ServerGame, color: Player): void {
+	if (isOpen(servergame.match)) {
 		logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", 'errLog');
 		return;
 	}
@@ -78,7 +78,7 @@ function openDrawOffer(servergame: ServerGame, color: Player): void {
  * Closes any open draw offer.
  * DOES NOT INFORM the opponent.
  */
-function closeDrawOffer(match: MatchInfo): void {
+function close(match: MatchInfo): void {
 	match.drawOfferState = undefined;
 }
 
@@ -86,17 +86,17 @@ function closeDrawOffer(match: MatchInfo): void {
  * Returns the last ply move the provided color has offered a draw,
  * if they have, otherwise undefined.
  */
-function getLastDrawOfferPlyOfColor(match: MatchInfo, color: Player): number | undefined {
+function getLastOfferPly(match: MatchInfo, color: Player): number | undefined {
 	return match.playerData[color]?.lastOfferPly;
 }
 
-//--------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
-export {
-	isDrawOfferOpen,
-	doesColorHaveExtendedDrawOffer,
-	hasColorOfferedDrawTooFast,
-	openDrawOffer,
-	closeDrawOffer,
-	getLastDrawOfferPlyOfColor,
+export default {
+	isOpen,
+	isExtendedBy,
+	offeredTooRecently,
+	open,
+	close,
+	getLastOfferPly,
 };

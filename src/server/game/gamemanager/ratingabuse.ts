@@ -11,7 +11,7 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { ServerGame } from './gameutility.js';
+import type { ServerGame } from './servergametypes.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
@@ -58,7 +58,7 @@ import {
  * Cheat reports against them
  */
 
-// Constants -----------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------------------------
 
 /** How many games played to measure a player's rating abuse probability at once. */
 const GAME_INTERVAL_TO_MEASURE = 5;
@@ -75,7 +75,7 @@ const SUSPICIOUS_UNUSED_CLOCK_FRACTION = 0.8;
 /** Opponents with a younger account age than this count as suspicious. */
 const SUSPICIOUS_ACCOUNT_AGE_MILLIS = 1000 * 60 * 60 * 24 * 5; // 5 days
 
-// Types Definitions ---------------------------------------------------------------------
+// Types Definitions -----------------------------------------------------------------------------
 
 /**
  * Relevant entries of a PlayerGamesRecord object,
@@ -125,12 +125,12 @@ type SuspicionLevelRecord = {
 	comment?: string;
 };
 
-// Functions -----------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Monitor suspicion levels for all players who played a particular game in a particular leaderboard
  */
-function measureRatingAbuseAfterGame(servergame: ServerGame): void {
+function measureAfterGame(servergame: ServerGame): void {
 	// Do not monitor suspicion levels, if game was unrated
 	if (!servergame.match.rated) return;
 	// Skip if the game was aborted (this also covers 0 moves),
@@ -344,9 +344,7 @@ OpponentInfoList: ${JSON.stringify(opponentInfoList, undefined, 2)}.
 Game_id_list: ${JSON.stringify(game_id_list)}.
 \nGameInfo list: ${JSON.stringify(gameInfoList, undefined, 2)}.
 		`;
-		console.log(
-			`User ${username} is under suspicion of rating abuse (weight: ${suspicion_total_weight})! - Check ratingAbuseLog.txt for more details.`,
-		);
+		console.log(`User ${username} is under suspicion of rating abuse (weight: ${suspicion_total_weight})! - Check ratingAbuseLog.txt for more details.`); // prettier-ignore
 		void logEvents('\n' + messageText, 'ratingAbuseLog');
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
@@ -547,6 +545,8 @@ function checkOpponentAccountAge(
 		});
 }
 
+// Exports ---------------------------------------------------------------------------------------
+
 export default {
-	measureRatingAbuseAfterGame,
+	measureAfterGame,
 };

@@ -6,53 +6,48 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { ServerGame } from './gameutility.js';
+import type { ServerGame } from './servergametypes.js';
 
 import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
+import drawoffers from './drawoffers.js';
+import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
+import gamelifecycle from './gamelifecycle.js';
 import liveGameValues from './liveGameValues.js';
-import { onGameConclusion } from './gamemanager.js';
-import {
-	isDrawOfferOpen,
-	hasColorOfferedDrawTooFast,
-	openDrawOffer,
-	doesColorHaveExtendedDrawOffer,
-	closeDrawOffer,
-} from './drawoffers.js';
 
-//--------------------------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Called when client wants to offer a draw. Sends confirmation to opponent.
  * @param servergame - The game they are in.
  * @param ourRole - The color the socket is playing as.
  */
-function offerDraw(servergame: ServerGame, ourRole: Player): void {
+function offer(servergame: ServerGame, ourRole: Player): void {
 	if (gameutility.isEngineGame(servergame)) return;
 	// console.log('Client offers a draw.');
 	const match = servergame.match;
 
 	if (gameutility.isGameOver(servergame))
 		return console.error('Client offered a draw when the game is already over. Ignoring.');
-	if (isDrawOfferOpen(match))
+	if (drawoffers.isOpen(match))
 		return console.error(
 			`${ourRole} tried to offer a draw when the game already has a draw offer!`,
 		);
-	if (hasColorOfferedDrawTooFast(servergame, ourRole))
+	if (drawoffers.offeredTooRecently(servergame, ourRole))
 		return console.error('Client tried to offer a draw too fast.');
 	if (!moveutil.isGameResignable(servergame))
 		return console.error('Client tried to offer a draw on the first 2 moves');
 
 	// Extend the draw offer!
 
-	openDrawOffer(servergame, ourRole);
+	drawoffers.open(servergame, ourRole);
 	liveGameValues.onDrawOfferExtended(servergame, ourRole);
 
 	// Alert their opponent
 	const opponentColor = typeutil.invertPlayer(ourRole);
-	gameutility.sendMessageToColor(match, opponentColor, 'game', 'drawoffer', undefined);
+	gamesockets.sendToColor(match, opponentColor, 'game', 'drawoffer', undefined);
 }
 
 /**
@@ -60,20 +55,20 @@ function offerDraw(servergame: ServerGame, ourRole: Player): void {
  * @param servergame - The game they are in.
  * @param ourRole - The color the socket is playing as.
  */
-function acceptDraw(servergame: ServerGame, ourRole: Player): void {
+function accept(servergame: ServerGame, ourRole: Player): void {
 	// console.log('Client accepts a draw.');
 
 	if (gameutility.isGameOver(servergame))
 		return console.error('Client accepted a draw when the game is already over. Ignoring.');
-	if (!isDrawOfferOpen(servergame.match))
+	if (!drawoffers.isOpen(servergame.match))
 		return console.error("Client tried to accept a draw offer when there isn't one.");
-	if (doesColorHaveExtendedDrawOffer(servergame.match, ourRole))
+	if (drawoffers.isExtendedBy(servergame.match, ourRole))
 		return console.error('Client tried to accept their own draw offer, silly!');
 
 	// Accept draw offer!
 
-	closeDrawOffer(servergame.match);
-	onGameConclusion(servergame, { victor: null, condition: 'agreement' });
+	drawoffers.close(servergame.match);
+	gamelifecycle.conclude(servergame, { victor: null, condition: 'agreement' });
 }
 
 /**
@@ -81,12 +76,12 @@ function acceptDraw(servergame: ServerGame, ourRole: Player): void {
  * @param servergame - The game they are in.
  * @param ourRole - The color the socket is playing as.
  */
-function declineDraw(servergame: ServerGame, ourRole: Player): void {
+function decline(servergame: ServerGame, ourRole: Player): void {
 	const opponentColor = typeutil.invertPlayer(ourRole);
 
 	// Since this method is run every time a move is submitted, we have to early exit
 	// if their opponent doesn't have an open draw offer.
-	if (!doesColorHaveExtendedDrawOffer(servergame.match, opponentColor)) return;
+	if (!drawoffers.isExtendedBy(servergame.match, opponentColor)) return;
 
 	// console.log('Client declines a draw.');
 
@@ -95,13 +90,17 @@ function declineDraw(servergame: ServerGame, ourRole: Player): void {
 
 	// Decline the draw!
 
-	closeDrawOffer(servergame.match);
+	drawoffers.close(servergame.match);
 
 	// Alert their opponent
-	gameutility.sendMessageToColor(servergame.match, opponentColor, 'game', 'declinedraw', undefined); // prettier-ignore
+	gamesockets.sendToColor(servergame.match, opponentColor, 'game', 'declinedraw', undefined); // prettier-ignore
 	liveGameValues.onDrawOfferDeclined(servergame);
 }
 
-//--------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
-export { offerDraw, acceptDraw, declineDraw };
+export default {
+	offer,
+	accept,
+	decline,
+};

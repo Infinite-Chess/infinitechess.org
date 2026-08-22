@@ -9,7 +9,7 @@ import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
-//--------------------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------------------------
 
 /** What we track about a single user currently in an active game. */
 interface ActiveGameEntry {
@@ -26,10 +26,12 @@ interface ActiveGameEntry {
 	awaitingNavigateNotice: boolean;
 }
 
+// State -----------------------------------------------------------------------------------------
+
 /**
  * Contains what members are currently in a game: `{ member: entry }`
  * Users that are present in this list are not allowed to join another game until they're
- * deleted from here. As soon as a game is over, we can {@link removeUserFromActiveGame()},
+ * deleted from here. As soon as a game is over, we can {@link remove()},
  * even though the game may not be finalized or evicted yet.
  */
 const membersInActiveGames: Record<number, ActiveGameEntry> = {};
@@ -37,12 +39,12 @@ const membersInActiveGames: Record<number, ActiveGameEntry> = {};
 /**
  * Contains what browsers are currently in a game: `{ browser: entry }`
  * Users that are present in this list are not allowed to join another game until they're
- * deleted from here. As soon as a game is over, we can {@link removeUserFromActiveGame()}
+ * deleted from here. As soon as a game is over, we can {@link remove()}
  * even though the game may not be finalized or evicted yet.
  */
 const browsersInActiveGames: Record<string, ActiveGameEntry> = {};
 
-//--------------------------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Adds the user to the list of users currently in an active game.
@@ -51,7 +53,7 @@ const browsersInActiveGames: Record<string, ActiveGameEntry> = {};
  * @param role - The color they are playing as.
  * @param awaitingNavigateNotice - Whether they still have to be told to navigate to the game.
  */
-function addUserToActiveGames(
+function add(
 	user: AuthMemberInfo,
 	id: number,
 	role: Player,
@@ -69,7 +71,7 @@ function addUserToActiveGames(
  * @param user - An object containing either the `member` or `browser` property.
  * @param gameID - The id of the game they are in.
  */
-function removeUserFromActiveGame(user: AuthMemberInfo, gameID: number): void {
+function remove(user: AuthMemberInfo, gameID: number): void {
 	// Only removes them from the game if they belong to a game of that ID.
 	// If they DON'T belong to that game, that means they speedily
 	// resigned and started a new game, so don't modify this!
@@ -77,16 +79,12 @@ function removeUserFromActiveGame(user: AuthMemberInfo, gameID: number): void {
 		if (membersInActiveGames[user.user_id]?.gameID === gameID)
 			delete membersInActiveGames[user.user_id];
 		else if (membersInActiveGames[user.user_id] !== undefined)
-			console.log(
-				'Not removing member from active games because they speedily joined a new game!',
-			);
+			console.log('Not removing member from active games because they speedily joined a new game!'); // prettier-ignore
 	} else {
 		if (browsersInActiveGames[user.browser_id]?.gameID === gameID)
 			delete browsersInActiveGames[user.browser_id];
 		else if (browsersInActiveGames[user.browser_id] !== undefined)
-			console.log(
-				'Not removing browser from active games because they speedily joined a new game!',
-			);
+			console.log('Not removing browser from active games because they speedily joined a new game!'); // prettier-ignore
 	}
 }
 
@@ -95,7 +93,7 @@ function removeUserFromActiveGame(user: AuthMemberInfo, gameID: number): void {
  * active game, which means they're not allowed to join a new one.
  * @param ws - The websocket
  */
-function isSocketInAnActiveGame(ws: CustomWebSocket): boolean {
+function hasSocket(ws: CustomWebSocket): boolean {
 	const player = ws.metadata.memberInfo;
 	// Allow a member to still join a new game, even if they're browser may be connected to one already.
 	if (player.signedIn) {
@@ -115,12 +113,12 @@ function getEntry(player: AuthMemberInfo): ActiveGameEntry | undefined {
  * @param player - The player object containing all the memberinfo
  * @returns The game they are in, if they belong in one, otherwise undefined.
  */
-function getIDOfGamePlayerIsIn(player: AuthMemberInfo): number | undefined {
+function getGameID(player: AuthMemberInfo): number | undefined {
 	return getEntry(player)?.gameID;
 }
 
 /** The color a player is playing as in their active game, if they're in one. */
-function getRoleOfGamePlayerIsIn(player: AuthMemberInfo): Player | undefined {
+function getRole(player: AuthMemberInfo): Player | undefined {
 	return getEntry(player)?.role;
 }
 
@@ -135,13 +133,13 @@ function consumeNavigateNotice(player: AuthMemberInfo): boolean {
 	return true;
 }
 
-//--------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
-export {
-	addUserToActiveGames,
-	removeUserFromActiveGame,
-	isSocketInAnActiveGame,
-	getIDOfGamePlayerIsIn,
-	getRoleOfGamePlayerIsIn,
+export default {
+	add,
+	remove,
+	hasSocket,
+	getGameID,
+	getRole,
 	consumeNavigateNotice,
 };

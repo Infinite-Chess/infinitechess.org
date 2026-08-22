@@ -11,17 +11,19 @@
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { GameSetup, ServerGame } from './gameutility.js';
+import type { GameSetup, ServerGame } from './servergametypes.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
+import gamemanager from './gamemanager.js';
+import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
+import activeplayers from './activeplayers.js';
+import gamelifecycle from './gamelifecycle.js';
 import { getEngineVersion } from '../../config/manifest.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
-import { getIDOfGamePlayerIsIn } from './activeplayers.js';
-import { createGame, evictGame, onGameCreationError } from './gamemanager.js';
 
-//--------------------------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Called when a client offers a rematch of a concluded game. Relays the offer to the
@@ -29,7 +31,7 @@ import { createGame, evictGame, onGameCreationError } from './gamemanager.js';
  * @param servergame - The game they are in.
  * @param ourRole - The color the socket is playing as.
  */
-function offerRematch(servergame: ServerGame, ourRole: Player): void {
+function offer(servergame: ServerGame, ourRole: Player): void {
 	if (!gameutility.isGameOver(servergame))
 		return console.error('Client offered a rematch when the game is not over. Ignoring.');
 
@@ -51,7 +53,7 @@ function offerRematch(servergame: ServerGame, ourRole: Player): void {
 		createRematchGame(servergame);
 	} else {
 		// Relay the offer to the opponent (their rematch button starts glowing).
-		gameutility.sendMessageToColor(match, opponentColor, 'game', 'rematchoffer', undefined);
+		gamesockets.sendToColor(match, opponentColor, 'game', 'rematchoffer', undefined);
 	}
 }
 
@@ -69,7 +71,7 @@ function createRematchGame(oldGame: ServerGame): void {
 	// game frees its players from the active-players list, so a lingering participant reads as
 	// `undefined` here; only a genuine new game they've joined (a different id) blocks the rematch.
 	for (const data of Object.values(oldMatch.playerData)) {
-		const inGameID = getIDOfGamePlayerIsIn(data.identifier);
+		const inGameID = activeplayers.getGameID(data.identifier);
 		if (inGameID !== undefined && inGameID !== oldMatch.id) return; // Buttons just stay disabled.
 	}
 
@@ -104,14 +106,14 @@ function createRematchGame(oldGame: ServerGame): void {
 		}),
 	};
 
-	evictGame(oldGame); // Removes the old game from memory (and unsubscribes its sockets).
+	gamelifecycle.evict(oldGame); // Removes the old game from memory (and unsubscribes its sockets).
 
 	let newGameID: number;
 	try {
-		newGameID = createGame(setup, swapped);
+		newGameID = gamemanager.createGame(setup, swapped);
 	} catch (error: unknown) {
 		// The old game is already evicted, so there's nothing left to navigate anyone back to.
-		onGameCreationError(
+		gamemanager.onGameCreationError(
 			error,
 			toNavigate.map((n) => n.socket),
 		);
@@ -123,6 +125,8 @@ function createRematchGame(oldGame: ServerGame): void {
 		sendSocketMessage(socket, 'game', 'ingame', { id: newGameID, role });
 }
 
-//--------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
-export { offerRematch };
+export default {
+	offer,
+};

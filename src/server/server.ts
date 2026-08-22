@@ -36,7 +36,7 @@ import https from 'https';
 import app from './app.js';
 import db from './database/database.js';
 import socketServer from './socket/socketServer.js';
-import { prepGamesForShutdown, restoreLiveGames } from './game/gamemanager/gamemanager.js';
+import gamemanager from './game/gamemanager/gamemanager.js';
 import { getCertOptions } from './config/certOptions.js';
 import { logServerStarted, logServerStopped } from './utility/startupLogger.js';
 import variantcache from '../shared/chess/variants/variantcache.js';
@@ -53,7 +53,7 @@ httpsServer.keepAliveTimeout = 95000;
 await variantcache.loadAllVariants();
 
 // Restore live games from the database into memory before accepting new connections.
-restoreLiveGames();
+gamemanager.restoreLiveGames();
 
 // Start the server
 const DEV_BUILD = process.env['NODE_ENV'] === 'development';
@@ -82,7 +82,7 @@ function handleCleanup(signal: string): void {
 
 	logServerStopped(signal);
 
-	prepGamesForShutdown();
+	gamemanager.prepForShutdown();
 
 	db.close(); // Close the database when the server is shutting down.
 

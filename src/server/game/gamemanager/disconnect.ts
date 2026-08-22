@@ -11,47 +11,46 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { MatchInfo, ServerGame } from './gameutility.js';
+import type { MatchInfo, ServerGame } from './servergametypes.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
-import gameutility from './gameutility.js';
+import gamesockets from './gamesockets.js';
 import liveGameValues from './liveGameValues.js';
 
-//--------------------------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------------------------
 
 /**
  * The time to give players who disconnected not by choice
  * (network interruption) to reconnect to the game before
  * we tell their opponent they've disconnected, and open the claim window.
  */
-const timeToGiveDisconnectedBeforeOpeningClaimWindowMillis = 5_000; // 5 seconds
+const RECONNECT_CUSHION_MILLIS = 5_000; // 5 seconds
 
 /**
  * How long after disconnection, when the player intentionally left the page,
  * before their opponent may claim victory / a draw against them.
  */
-const timeBeforeClaimableByDisconnectMillis = 10_000; // 10 seconds
+const CLAIM_DELAY_VOLUNTARY_MILLIS = 10_000; // 10 seconds
 /**
  * How long after disconnection, when the player's internet cuts out (more forgiving),
  * before their opponent may claim victory / a draw against them.
  */
-const timeBeforeClaimableByDisconnectMillis_Involuntary = 60_000; // 60 seconds
+const CLAIM_DELAY_INVOLUNTARY_MILLIS = 60_000; // 60 seconds
 
-//--------------------------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Starts the 5-second cushion timer for a player who disconnected involuntarily
  * (network interruption). After the cushion elapses, if they have not yet reconnected,
  * their disconnect claim timer is started and opponent notified.
  */
-function startDisconnectCushionTimer(servergame: ServerGame, role: Player): void {
+function startCushionTimer(servergame: ServerGame, role: Player): void {
 	servergame.match.playerData[role]!.disconnect.startID = setTimeout(
-		() => startDisconnectClaimTimer(servergame, role, true),
-		timeToGiveDisconnectedBeforeOpeningClaimWindowMillis,
+		() => startClaimTimer(servergame, role, true),
+		RECONNECT_CUSHION_MILLIS,
 	);
-	servergame.match.playerData[role]!.disconnect.startTime =
-		Date.now() + timeToGiveDisconnectedBeforeOpeningClaimWindowMillis;
+	servergame.match.playerData[role]!.disconnect.startTime = Date.now() + RECONNECT_CUSHION_MILLIS;
 	liveGameValues.onPlayerDisconnected(servergame, role); // Persist the state to the db
 }
 
@@ -59,16 +58,12 @@ function startDisconnectCushionTimer(servergame: ServerGame, role: Player): void
  * Confirmed disconnected player: Informs the opponent how long until they may
  * claim victory against this player.
  */
-function startDisconnectClaimTimer(
-	servergame: ServerGame,
-	role: Player,
-	involuntary: boolean,
-): void {
+function startClaimTimer(servergame: ServerGame, role: Player, involuntary: boolean): void {
 	const now = Date.now();
 
 	const timeUntilClaimable = involuntary
-		? timeBeforeClaimableByDisconnectMillis_Involuntary
-		: timeBeforeClaimableByDisconnectMillis;
+		? CLAIM_DELAY_INVOLUNTARY_MILLIS
+		: CLAIM_DELAY_VOLUNTARY_MILLIS;
 
 	const playerdata = servergame.match.playerData[role]!;
 	const opponentRole = typeutil.invertPlayer(role);
@@ -84,7 +79,7 @@ function startDisconnectClaimTimer(
 		millisUntilClaimable: timeUntilClaimable,
 		voluntary: !involuntary,
 	};
-	gameutility.sendMessageToColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value); // prettier-ignore
+	gamesockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value); // prettier-ignore
 
 	liveGameValues.onPlayerDisconnected(servergame, role); // Persist the state to the db
 }
@@ -94,9 +89,9 @@ function startDisconnectClaimTimer(
  * Typically called when a game ends.
  * @param match - The match
  */
-function cancelDisconnectTimers(match: MatchInfo): void {
+function cancelAllTimers(match: MatchInfo): void {
 	for (const color of Object.keys(match.playerData)) {
-		cancelDisconnectTimer(match, Number(color) as Player);
+		cancelTimer(match, Number(color) as Player);
 	}
 }
 
@@ -105,7 +100,7 @@ function cancelDisconnectTimers(match: MatchInfo): void {
  * disconnected. Also cancels the game-level both-disconnected timer, since a reconnect
  * means the two players are no longer both gone. Called when they reconnect/refresh.
  */
-function cancelDisconnectTimer(match: MatchInfo, ourRole: Player): void {
+function cancelTimer(match: MatchInfo, ourRole: Player): void {
 	const playerdata = match.playerData[ourRole]!;
 
 	clearTimeout(playerdata.disconnect.startID);
@@ -120,13 +115,14 @@ function cancelDisconnectTimer(match: MatchInfo, ourRole: Player): void {
 	delete match.bothDisconnectedEndTime;
 }
 
-//--------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
-export {
-	timeToGiveDisconnectedBeforeOpeningClaimWindowMillis,
-	timeBeforeClaimableByDisconnectMillis_Involuntary,
-	startDisconnectCushionTimer,
-	startDisconnectClaimTimer,
-	cancelDisconnectTimers,
-	cancelDisconnectTimer,
+export default {
+	// Constants
+	RECONNECT_CUSHION_MILLIS,
+	// Functions
+	startCushionTimer,
+	startClaimTimer,
+	cancelAllTimers,
+	cancelTimer,
 };

@@ -11,14 +11,10 @@ import type { OutSeek, SeekId } from '../../../shared/domain.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { LobbyStateMessage } from '../../../shared/clientbound.js';
 
+import activeplayers from '../gamemanager/activeplayers.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 import { makeSeekSafe, AuthSeek } from './seekutility.js';
-import {
-	consumeNavigateNotice,
-	getIDOfGamePlayerIsIn,
-	getRoleOfGamePlayerIsIn,
-} from '../gamemanager/activeplayers.js';
 import {
 	getLobbySubscribers,
 	getSubscriberCount,
@@ -86,8 +82,8 @@ function broadcastMemberInGameStatus(
 	user: AuthMemberInfo,
 	navigatingSocket?: CustomWebSocket,
 ): void {
-	const gameID = getIDOfGamePlayerIsIn(user);
-	const role = getRoleOfGamePlayerIsIn(user);
+	const gameID = activeplayers.getGameID(user);
+	const role = activeplayers.getRole(user);
 	for (const ws of getLobbySubscribers()) {
 		if (!memberInfoEq(user, ws.metadata.memberInfo)) continue;
 		if (gameID !== undefined)
@@ -113,13 +109,13 @@ function sendClientLobbyState(ws: CustomWebSocket): void {
 	// If they're already in a game, tell them. They're only taken into it if we still owe them
 	// the notice (their seek was accepted during a disconnect cushion, so they never got the
 	// push at creation) — otherwise they just get the banner to rejoin it.
-	const gameID = getIDOfGamePlayerIsIn(ws.metadata.memberInfo);
+	const gameID = activeplayers.getGameID(ws.metadata.memberInfo);
 	const ingame =
 		gameID !== undefined
 			? {
 					id: gameID,
-					role: getRoleOfGamePlayerIsIn(ws.metadata.memberInfo),
-					navigate: consumeNavigateNotice(ws.metadata.memberInfo),
+					role: activeplayers.getRole(ws.metadata.memberInfo),
+					navigate: activeplayers.consumeNavigateNotice(ws.metadata.memberInfo),
 				}
 			: undefined;
 
@@ -173,9 +169,7 @@ function deleteSeekByIndex(
 	{ dontBroadcast = false }: { dontBroadcast?: boolean } = {},
 ): boolean {
 	if (index > seeks.length - 1) {
-		console.error(
-			`Cannot delete seek of index ${index} when the length of our seeks list is ${seeks.length}!`,
-		);
+		console.error(`Cannot delete seek of index ${index} when the length of our seeks list is ${seeks.length}!`); // prettier-ignore
 		return false; // No seek change
 	}
 	seeks.splice(index, 1); // Delete the seek
@@ -318,9 +312,7 @@ function deleteUsersExistingSeek(info: AuthMemberInfo, { broadCastNewSeeks = tru
 		seeks.splice(i, 1); // Delete the seek
 		deletedSeek = true;
 		if (printNewSeekCreationsAndDeletions)
-			console.log(
-				`${info.signedIn ? `Deleted member's seek. Username: ${info.username}` : `Deleted browser's seek. Browser: ${info.browser_id}`}`,
-			);
+			console.log(`${info.signedIn ? `Deleted member's seek. Username: ${info.username}` : `Deleted browser's seek. Browser: ${info.browser_id}`}`); // prettier-ignore
 	}
 
 	if (deletedSeek && broadCastNewSeeks) broadcastSeeks(); // Broadcast the change if an seek was deleted

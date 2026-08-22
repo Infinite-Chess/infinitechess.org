@@ -8,34 +8,34 @@
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { ServerboundGameMessage } from '../../../shared/serverbound.js';
 
-import gameutility from './gameutility.js';
-import { onReport } from './cheatreport.js';
-import { submitMove } from './movesubmission.js';
-import { offerRematch } from './onRematch.js';
-import { getGameBySocket } from './gamemanager.js';
-import { onSubscribeToGame } from './onSubscribe.js';
-import { onSubscribeToRematch } from './onSubscribeRematch.js';
-import { claimVictory, claimDraw } from './claimdisconnect.js';
-import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
-import { abortGame, resignGame, resignEngine } from './abortresigngame.js';
+import onRematch from './onRematch.js';
+import onSubscribe from './onSubscribe.js';
+import onOfferDraw from './onOfferDraw.js';
+import cheatreport from './cheatreport.js';
+import gamesockets from './gamesockets.js';
+import activegames from './activegames.js';
+import movesubmission from './movesubmission.js';
+import claimdisconnect from './claimdisconnect.js';
+import abortresigngame from './abortresigngame.js';
+import onSubscribeRematch from './onSubscribeRematch.js';
 
 /**
  * Handles all incoming websocket messages related to active games.
  * The actions needing no game are routed first; the rest resolve
  * the game the socket belongs to, and its color in it.
  */
-function routeGameMessage(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
+function route(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
 	// All actions that don't require a game
 	switch (contents.action) {
 		case 'subscribe':
-			onSubscribeToGame(ws, contents.value);
+			onSubscribe.handle(ws, contents.value);
 			return;
 		case 'subscriberematch':
-			onSubscribeToRematch(ws, contents.value);
+			onSubscribeRematch.handle(ws, contents.value);
 			return;
 	}
 
-	const servergame = getGameBySocket(ws); // The game they belong in, if they belong in one.
+	const servergame = activegames.getBySocket(ws); // The game they belong in, if they belong in one.
 	if (!servergame) {
 		// Benign: the game was torn down between the client sending this and the
 		// server receiving it (it just concluded). The message is simply stale — drop it.
@@ -45,47 +45,49 @@ function routeGameMessage(ws: CustomWebSocket, contents: ServerboundGameMessage)
 
 	// The socket's color in this game. Guaranteed defined since getGameBySocket resolved the game
 	// for this same socket; treat undefined as a guard against the (impossible) non-participant case.
-	const color = gameutility.getSocketRoleInGame(servergame, ws);
+	const color = gamesockets.getRole(servergame, ws);
 	if (color === undefined) return;
 
 	// All remaining actions requiring the game they're in
 	switch (contents.action) {
 		case 'submitmove':
-			submitMove(ws, servergame, contents.value);
+			movesubmission.submitMove(ws, servergame, contents.value);
 			break;
 		case 'abort':
-			abortGame(servergame);
+			abortresigngame.abort(servergame);
 			break;
 		case 'resign':
-			resignGame(servergame, color);
+			abortresigngame.resign(servergame, color);
 			break;
 		case 'engineresign':
-			resignEngine(servergame);
+			abortresigngame.resignEngine(servergame);
 			break;
 		case 'claimvictory':
-			claimVictory(servergame, color);
+			claimdisconnect.claimVictory(servergame, color);
 			break;
 		case 'claimdraw':
-			claimDraw(servergame, color);
+			claimdisconnect.claimDraw(servergame, color);
 			break;
 		case 'offerdraw':
-			offerDraw(servergame, color);
+			onOfferDraw.offer(servergame, color);
 			break;
 		case 'acceptdraw':
-			acceptDraw(servergame, color);
+			onOfferDraw.accept(servergame, color);
 			break;
 		case 'declinedraw':
-			declineDraw(servergame, color);
+			onOfferDraw.decline(servergame, color);
 			break;
 		case 'offerrematch':
-			offerRematch(servergame, color);
+			onRematch.offer(servergame, color);
 			break;
 		case 'report':
-			onReport(servergame, color, contents.value);
+			cheatreport.onReport(servergame, color, contents.value);
 			break;
 		default:
 			console.error('UNKNOWN web socket action received in game route!', contents satisfies never); // prettier-ignore
 	}
 }
 
-export { routeGameMessage };
+export default {
+	route,
+};

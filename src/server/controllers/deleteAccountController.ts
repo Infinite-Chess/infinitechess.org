@@ -8,12 +8,12 @@ import type { Request, Response } from 'express';
 
 import socketutil from '../../shared/util/socketutil.js';
 
+import activegames from '../game/gamemanager/activegames.js';
 import { deleteMember } from '../database/memberManager.js';
 import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
 import { closeAllSocketsOfMember } from '../socket/socketRegistry.js';
-import { isMemberInSomeActiveGame } from '../game/gamemanager/gamemanager.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Constants -------------------------------------------------------------------------
@@ -52,7 +52,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 	// THIS DOES NOT PREVENT AN ADMIN MANUALLY DELETING THEIR ACCOUNT
 	// If that is done while they are in the middle of a rated game,
 	// errors will happen when the game is deleted.
-	if (isMemberInSomeActiveGame(identity.username)) {
+	if (activegames.hasMember(identity.username)) {
 		logEventsAndPrint(
 			`User ${identity.username} requested account deletion while being listed in some active game.`,
 			'deletedAccounts.txt',

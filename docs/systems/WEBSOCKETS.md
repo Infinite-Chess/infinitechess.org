@@ -446,7 +446,7 @@ makes no difference whether they were one version behind or two.
   non-OPEN socket rather than log a phantom send and arm an echo timer for a reply that can't come.
 - **Never send from outside the send functions.** They own the echo timer, heartbeat reschedule,
   logging, and id — bypassing them breaks liveness detection. To reach a game's players, use
-  [gameutility.ts](/src/server/game/gamemanager/gameutility.ts)'s `sendMessageToColor` /
+  [gamesockets.ts](/src/server/game/gamemanager/gamesockets.ts)'s `sendMessageToColor` /
   `broadcastToSpectators` / `broadcastToEveryone`, which resolve the sockets and call through.
 - **`ws.t`, not raw strings.** `notify`/`notifyerror` values are user-facing and must already be
   translated server-side from the socket's bound translations.
@@ -474,7 +474,7 @@ makes no difference whether they were one version behind or two.
 | Subscription attach/detach                         | [socketSubs.ts](/src/server/socket/socketSubs.ts)                                                                                                                                                                                             |
 | Routers                                            | [messageRouter.ts](/src/server/socket/messageRouter.ts), [generalRouter.ts](/src/server/socket/generalRouter.ts), [lobbyrouter.ts](/src/server/game/seeksmanager/lobbyrouter.ts), [gamerouter.ts](/src/server/game/gamemanager/gamerouter.ts) |
 | `CustomWebSocket` shape                            | [socketTypes.ts](/src/server/socket/socketTypes.ts)                                                                                                                                                                                           |
-| Game subscribe / send helpers / broadcast          | [gameutility.ts](/src/server/game/gamemanager/gameutility.ts)                                                                                                                                                                                 |
+| Game socket attach/detach, send helpers, broadcast | [gamesockets.ts](/src/server/game/gamemanager/gamesockets.ts)                                                                                                                                                                                 |
 | Disconnect cushion + claim windows                 | [disconnect.ts](/src/server/game/gamemanager/disconnect.ts), [claimdisconnect.ts](/src/server/game/gamemanager/claimdisconnect.ts)                                                                                                            |
 | Lobby subscriber set + broadcasts                  | [lobbysubscribers.ts](/src/server/game/seeksmanager/lobbysubscribers.ts), [lobbymanager.ts](/src/server/game/seeksmanager/lobbymanager.ts)                                                                                                    |
 | **Client** — connection lifecycle, reconnect       | [socketconnection.ts](/src/client/scripts/esm/socket/socketconnection.ts)                                                                                                                                                                     |

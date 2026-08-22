@@ -11,12 +11,12 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from '../gamemanager/gameutility.js';
+import gamemanager from '../gamemanager/gamemanager.js';
+import activeplayers from '../gamemanager/activeplayers.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
-import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
-import { createGame, onGameCreationError } from '../gamemanager/gamemanager.js';
 import {
 	getSeekAndIndexByID,
 	deleteSeekByIndex,
@@ -32,7 +32,7 @@ import {
  * @param messageContents - The incoming socket message containing the seek id
  */
 function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
-	if (isSocketInAnActiveGame(ws)) {
+	if (activeplayers.hasSocket(ws)) {
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 	}
 
@@ -95,7 +95,7 @@ function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 		throw Error("Seek accepter doesn't exist on accepted 2 player seek");
 
 	try {
-		createGame(
+		gamemanager.createGame(
 			{
 				variant: seek.variant,
 				time: seek.time,
@@ -105,7 +105,7 @@ function acceptSeek(ws: CustomWebSocket, messageContents: SeekId): void {
 			assignments,
 		);
 	} catch (error: unknown) {
-		onGameCreationError(
+		gamemanager.onGameCreationError(
 			error,
 			Object.values(assignments).map(({ socket }) => socket),
 		);

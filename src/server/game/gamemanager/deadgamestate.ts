@@ -27,12 +27,12 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { getFormattedEngineName, ValidEngine } from '../../../shared/chess/engine.js';
 
 import { getGameData } from '../../database/gamesManager.js';
+import ratingcalculation from './ratingcalculation.js';
 import { getPlayerGamesOfGame } from '../../database/playerGamesManager.js';
 import { getEngineGamesOfGame } from '../../database/engineGamesManager.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
-import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 
-// Types --------------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------------------------
 
 /** The engine participant of a concluded engine game, as stored in `engine_games`. */
 type EngineParticipant = {
@@ -42,7 +42,7 @@ type EngineParticipant = {
 	container: ServerUsernameContainer;
 };
 
-// Constants ----------------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------------------------
 
 /** Display name for a player whose account was deleted (their `player_games` row remains, but no `members` row). */
 const DELETED_USER_DISPLAY_NAME = '(Deleted User)';
@@ -52,14 +52,14 @@ const STATIC_GAME_COLUMNS = ['variant', 'rated', 'date', 'base_time_seconds', 'i
 /** The `player_games` columns needed to assemble a {@link StaticGameState}. */
 const STATIC_PLAYER_COLUMNS = ['player_number', 'user_id', 'elo_at_game', 'rating_deviation_at_game'] as const; // prettier-ignore
 
-// Methods ------------------------------------------------------------------------------------------------
+// Methods ---------------------------------------------------------------------------------------
 
 /**
  * Returns the color a signed-in user played in a concluded game, or `undefined` if they
  * weren't a participant. Dead guests aren't identifiable (their browser-id isn't stored).
  * @throws If a database error occurs.
  */
-export function resolveDeadParticipantColor(game_id: number, user_id: number): Player | undefined {
+function resolveParticipantColor(game_id: number, user_id: number): Player | undefined {
 	const rows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id']);
 	return rows.find((r) => r.user_id === user_id)?.player_number as Player | undefined;
 }
@@ -70,7 +70,7 @@ export function resolveDeadParticipantColor(game_id: number, user_id: number): P
  * @returns The state (+ deltas), or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */
-export function produceDeadStaticGameState(game_id: number):
+function produceStaticState(game_id: number):
 	| {
 			state: StaticGameState;
 			moveCount: number;
@@ -111,11 +111,11 @@ export function produceDeadStaticGameState(game_id: number):
 /**
  * Builds the full {@link DeadGameState} for a concluded game from the database — the static base
  * plus the `icn`, which the client also reads the final clocks off of. Rating deltas are NOT included:
- * the client displays them from SSR (see {@link produceDeadStaticGameState}), never from this HTTP payload.
+ * the client displays them from SSR (see {@link produceStaticState}), never from this HTTP payload.
  * @returns The state, or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */
-export function produceDeadGameState(game_id: number): DeadGameState | undefined {
+function produceGameState(game_id: number): DeadGameState | undefined {
 	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS, 'icn']);
 	if (game === undefined) return undefined;
 
@@ -217,5 +217,15 @@ function getEngineParticipant(game_id: number): EngineParticipant | undefined {
  * Pre-migration rows have no stored RD (null) -> fall back to confident (unrecoverable).
  */
 function isRatingConfident(rating_deviation: number | null): boolean {
-	return rating_deviation === null || rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
+	return (
+		rating_deviation === null || rating_deviation <= ratingcalculation.UNCERTAIN_LEADERBOARD_RD
+	);
 }
+
+// Exports ---------------------------------------------------------------------------------------
+
+export default {
+	resolveParticipantColor,
+	produceStaticState,
+	produceGameState,
+};

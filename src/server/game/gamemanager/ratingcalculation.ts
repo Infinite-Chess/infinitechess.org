@@ -7,7 +7,7 @@
 import timeutil from '../../../shared/util/timeutil.js';
 import { PlayerGroup, type Player, players as p } from '../../../shared/chess/util/typeutil.js';
 
-// Default variables, shared across all leaderboards ------------------------------------------------------------------
+// Constants -------------------------------------------------------------------------------------
 
 /** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
 const DEFAULT_LEADERBOARD_ELO = 1500.0;
@@ -44,7 +44,7 @@ const RATING_PERIOD_DURATION = 1000 * 60 * 60 * 24 * 15; // 15 days
 const RD_UPDATE_FREQUENCY = 1000 * 60 * 60 * 24; // 24 hours
 // const RD_UPDATE_FREQUENCY = 1000 * 30; // 30s for dev testing
 
-// Types -------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------------------------
 
 /** Type containing all relevant rating calculation quantities for a specific player */
 type PlayerRatingData = {
@@ -57,9 +57,9 @@ type PlayerRatingData = {
 };
 
 /** A dictionary type with Players as keys, containing PlayerRatingData for each player */
-type RatingData = PlayerGroup<PlayerRatingData>;
+export type RatingData = PlayerGroup<PlayerRatingData>;
 
-// Functions -------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Computes the effective rating deviation for the current rating period, as for Glicko-1 algorithm
@@ -132,7 +132,7 @@ function new_RD(r: number, RD: number, r_opp: number, RD_opp: number): number {
  * Computes rating data changes and returns ratingdata object by overwriting entries: elo_after_game, rating_deviation_after_game and elo_change_from_game.
  * MUTATING. Modifies original ratingdata object.
  */
-function computeRatingDataChanges(ratingdata: RatingData, victor: Player | null): RatingData {
+function computeChanges(ratingdata: RatingData, victor: Player | null): RatingData {
 	// Currently, only rating calculations for 2-player games with White vs Black are supported
 	const playerCount = Object.keys(ratingdata).length;
 	if (playerCount !== 2) throw Error('Rating changes are only supported in two player games!');
@@ -215,7 +215,7 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player | null)
 // 	console.log(`P2 (Black) Current: ELO ${player2CurrentStats.elo.toFixed(2)}, RD ${player2CurrentStats.rd.toFixed(2)}, Last Update: ${player2CurrentStats.lastUpdateDate || 'Never'}`);
 
 // 	// RD values that will actually be used in calculation (after getTrueRD applies time decay)
-// 	// Note: getTrueRD is called internally by computeRatingDataChanges. We can also call it here for display.
+// 	// Note: getTrueRD is called internally by computeChanges. We can also call it here for display.
 // 	const rd1ForCalc = getTrueRD(ratingDataForThisGame[players.WHITE].rating_deviation_at_game, ratingDataForThisGame[players.WHITE].rd_last_update_date);
 // 	const rd2ForCalc = getTrueRD(ratingDataForThisGame[players.BLACK].rating_deviation_at_game, ratingDataForThisGame[players.BLACK].rd_last_update_date);
 // 	console.log(`P1 RD for this game (after time decay): ${rd1ForCalc.toFixed(2)}`);
@@ -233,13 +233,13 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player | null)
 // 		victorId = players.BLACK;
 // 		outcomeDescription = "Player 2 (Black) wins";
 // 	} else { // Draw
-// 		victorId = null; // `computeRatingDataChanges` handles this as a draw
+// 		victorId = null; // `computeChanges` handles this as a draw
 // 		outcomeDescription = "Draw";
 // 	}
 // 	console.log(`Game Outcome: ${outcomeDescription}`);
 
 // 	// Calculate new ratings using Glicko-1
-// 	const GlickoResults = computeRatingDataChanges(ratingDataForThisGame, victorId);
+// 	const GlickoResults = computeChanges(ratingDataForThisGame, victorId);
 
 // 	// Update player stats for the next simulated game
 // 	// 2 Days
@@ -310,15 +310,15 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player | null)
 // 	}
 // }, SIMULATION_DURATION_MS);
 
-// ================================================================================
+// Exports ---------------------------------------------------------------------------------------
 
-export {
+export default {
+	// Constants
 	DEFAULT_LEADERBOARD_ELO,
 	DEFAULT_LEADERBOARD_RD,
 	UNCERTAIN_LEADERBOARD_RD,
 	RD_UPDATE_FREQUENCY,
+	// Functions
 	getTrueRD,
-	computeRatingDataChanges,
+	computeChanges,
 };
-
-export type { RatingData };

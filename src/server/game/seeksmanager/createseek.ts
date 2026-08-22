@@ -29,8 +29,8 @@ import {
 	getPlayabilityRejection,
 } from '../../../shared/chess/variants/positionvalidation.js';
 
+import activeplayers from '../gamemanager/activeplayers.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
-import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { AuthSeek, buildServerUsernameContainer } from './seekutility.js';
 import { existingSeekHasID, deleteUsersExistingSeek, addSeek } from './lobbymanager.js';
@@ -43,7 +43,7 @@ import { existingSeekHasID, deleteUsersExistingSeek, addSeek } from './lobbymana
  * @param messageContents - The incoming socket message that SHOULD contain the seek properties!
  */
 function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
-	if (isSocketInAnActiveGame(ws)) {
+	if (activeplayers.hasSocket(ws)) {
 		// Can't create seek because they are already in a game
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 	}

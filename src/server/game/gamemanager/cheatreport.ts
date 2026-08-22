@@ -5,7 +5,7 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { ServerGame } from './gameutility.js';
+import type { ServerGame } from './servergametypes.js';
 import type { ReportMessage } from '../../../shared/serverbound.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { GameStateMessage } from '../../../shared/clientbound.js';
@@ -13,13 +13,16 @@ import type { GameStateMessage } from '../../../shared/clientbound.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gamelogger from './gamelogger.js';
+import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
+import gamelifecycle from './gamelifecycle.js';
 import { logEvents } from '../../middleware/logEvents.js';
+import gamestatebuilder from './gamestatebuilder.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
-import { applyConclusion, freeGame } from './gamemanager.js';
 
 /**
- *
+ * A client reports their opponent's last move as illegal. A valid report pops
+ * that move and aborts the game; an invalid one is refused and logged to hackLog.
  * @param servergame - The game they belong in.
  * @param ourRole - The color the socket is playing as.
  * @param messageContents - The contents of the socket report message
@@ -32,7 +35,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 
 	// Once the game is finalized its result is locked in and can no longer be overturned.
 	if (servergame.match.finalized) {
-		gameutility.sendMessageToColor(
+		gamesockets.sendToColor(
 			servergame.match,
 			ourRole,
 			'general',
@@ -47,7 +50,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	if (servergame.validateMoves) {
 		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${gameutility.getVariantCode(servergame.match.variant) ?? 'Custom'}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourRole}. Game ID: ${servergame.match.id}`;
 		logEvents(errString, 'hackLog');
-		gameutility.sendMessageToColor(
+		gamesockets.sendToColor(
 			servergame.match,
 			ourRole,
 			'general',
@@ -65,7 +68,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	if (colorThatPlayedPerpetratingMove === ourRole) {
 		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourRole}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 		logEvents(errString, 'hackLog');
-		gameutility.sendMessageToColor(
+		gamesockets.sendToColor(
 			servergame.match,
 			ourRole,
 			'general',
@@ -104,7 +107,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 
 /**
  * Concludes a game after a valid cheat report.
- * Custom version of gamemanager.onGameConclusion
+ * Custom version of gamelifecycle.conclude
  * @param cheaterColor - The color whose (now-popped) perpetrating move triggered the report.
  */
 function concludeReportedGame(
@@ -117,29 +120,36 @@ function concludeReportedGame(
 	const wasLogged = servergame.match.freed;
 	const originalConclusion = servergame.gameConclusion;
 
-	applyConclusion(servergame, conclusion);
+	gamelifecycle.applyConclusion(servergame, conclusion);
 
 	// Everyone gets the full state, not just the conclusion, because the popped move may still be
 	// sitting on their board: the cheater played it, so they're a move ahead of the server (whosTurn
 	// included), and any spectator who joined after it was played has it too — an initial load
 	// replays the move list unvalidated, so they never ran the check that refuses it live.
-	const base = gameutility.buildGameStateBase(servergame);
+	const base = gamestatebuilder.buildStateBase(servergame);
 	for (const [color, data] of Object.entries(servergame.match.playerData)) {
 		if (data.socket === undefined) continue; // Not connected, can't send message
 		const message: GameStateMessage = {
 			...base,
-			participantState: gameutility.getParticipantState(servergame, Number(color) as Player),
+			participantState: gamestatebuilder.getParticipantState(
+				servergame,
+				Number(color) as Player,
+			),
 		};
 		sendSocketMessage(data.socket, 'game', 'gamestate', message);
 	}
 
 	// Spectators get the same state, minus the participant overlay.
-	gameutility.broadcastToSpectators(servergame, 'gamestate', base);
+	gamesockets.broadcastToSpectators(servergame, 'gamestate', base);
 
-	freeGame(servergame);
+	gamelifecycle.free(servergame);
 
 	// Update the already-logged game record to reflect the overturn (aborted, one fewer move...).
-	if (wasLogged) gamelogger.updateOverturnedGame(servergame, originalConclusion!, cheaterColor);
+	if (wasLogged) gamelogger.updateOverturned(servergame, originalConclusion!, cheaterColor);
 }
 
-export { onReport };
+// Exports ---------------------------------------------------------------------------------------
+
+export default {
+	onReport,
+};

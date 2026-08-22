@@ -28,15 +28,12 @@ import { players as p } from '../../shared/chess/util/typeutil.js';
 import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.js';
 
 import tconfig from '../config/translationconfig.js';
+import gamemanager from '../game/gamemanager/gamemanager.js';
+import deadgamestate from '../game/gamemanager/deadgamestate.js';
 import { getManifest } from '../config/manifest.js';
 import { getPieceSVG } from '../config/piecesvgcache.js';
 import { decodeGameId } from '../database/gamesManager.js';
 import { memberInfoEqPartial } from '../utility/memberInfoUtil.js';
-import { produceStaticGameState } from '../game/gamemanager/gamemanager.js';
-import {
-	produceDeadStaticGameState,
-	resolveDeadParticipantColor,
-} from '../game/gamemanager/deadgamestate.js';
 
 // Types -----------------------------------------------------------------------------
 
@@ -114,7 +111,7 @@ function getGamePageState(req: Request): GamePageState | undefined {
 
 	const memberInfo = req.memberInfo!;
 
-	const resolved = produceStaticGameState(id);
+	const resolved = gamemanager.produceStaticGameState(id);
 	if (resolved === undefined) return undefined; // Game doesn't exist
 	const { state, game, ratingChanges, moveCount } = resolved; // game is defined if live
 	let { engineGame } = resolved; // Gains the client's engine asset URLs below, if live
@@ -130,7 +127,7 @@ function getGamePageState(req: Request): GamePageState | undefined {
 		}
 	} else if (memberInfo.signedIn) {
 		// Dead games match members only; dead guests aren't identifiable.
-		role = resolveDeadParticipantColor(id, memberInfo.user_id);
+		role = deadgamestate.resolveParticipantColor(id, memberInfo.user_id);
 	}
 
 	// Only a live engine game still needs the assets to run the engine client-side.
@@ -183,13 +180,13 @@ function getDeadGameViewState(
 			meta: GameMetaViewModel;
 	  }
 	| undefined {
-	const dead = produceDeadStaticGameState(id);
+	const dead = deadgamestate.produceStaticState(id);
 	if (dead === undefined) return undefined; // Game not in the database
 
 	// Dead guests aren't identifiable.
 	const memberInfo = req.memberInfo!;
 	const role = memberInfo.signedIn
-		? resolveDeadParticipantColor(id, memberInfo.user_id)
+		? deadgamestate.resolveParticipantColor(id, memberInfo.user_id)
 		: undefined;
 	const viewColor = resolveViewColor(req, role);
 

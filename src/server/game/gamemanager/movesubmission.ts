@@ -8,6 +8,7 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
+import type { ServerGame } from './servergametypes.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { SubmitMoveMessage } from '../../../shared/serverbound.js';
@@ -22,17 +23,24 @@ import wincondition from '../../../shared/chess/logic/wincondition.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 
+import onOfferDraw from './onOfferDraw.js';
+import gamemanager from './gamemanager.js';
+import gamesockets from './gamesockets.js';
+import gameutility from './gameutility.js';
+import gamelifecycle from './gamelifecycle.js';
 import liveGameValues from './liveGameValues.js';
-import { declineDraw } from './onOfferDraw.js';
+import gamestatebuilder from './gamestatebuilder.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
-import gameutility, { ServerGame } from './gameutility.js';
-import { pushGameClock, applyConclusion, freeGame } from './gamemanager.js';
+
+// Constants -------------------------------------------------------------------------------------
 
 /** The number of additional coordinate digits allowed per second of game duration. */
 const DIGITS_PER_SECOND = 4.5;
 /** The number of digits in the maximum teleport coordinate. */
 const TELEPORT_LIMIT_DIGITS = bimath.countDigits(gameconfig.TELEPORT_LIMIT);
+
+// Functions -------------------------------------------------------------------------------------
 
 /**
  *
@@ -50,9 +58,7 @@ function submitMove(
 ): void {
 	// They can't submit a move if they aren't subscribed to a game
 	if (!ws.metadata.subscriptions.game) {
-		console.error(
-			'Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.',
-		);
+		console.error('Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.'); // prettier-ignore
 		sendSocketMessage(
 			ws,
 			'general',
@@ -74,7 +80,7 @@ function submitMove(
 		// Can occasionally happen if they in rapid succession reconnect ('subscribe') and
 		// submit a move, then when they receive 'gamestate' their client re-submits their move.
 		// Discard this submission and push them the current state just in case they're desynced.
-		gameutility.sendGameStateToColor(servergame, role, false);
+		gamesockets.sendGameState(servergame, role, false);
 		return;
 	}
 
@@ -83,7 +89,7 @@ function submitMove(
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog');
-		gameutility.sendGameStateToColor(servergame, role, false);
+		gamesockets.sendGameState(servergame, role, false);
 		return;
 	}
 
@@ -102,7 +108,7 @@ function submitMove(
 		logEventsAndPrint(errString, 'hackLog');
 		// Force their move list to match ours, else they keep the rejected move
 		// and resubmit it on every resync, desynced for the rest of the game.
-		gameutility.sendGameStateToColor(servergame, role, true);
+		gamesockets.sendGameState(servergame, role, true);
 		// Send notifyerror last to override any previous toasts
 		sendSocketMessage(
 			ws,
@@ -124,7 +130,7 @@ function submitMove(
 	// console.log("New move list:")
 	// console.log(game.moves);
 
-	declineDraw(servergame, role); // Auto-decline any open draw offer on move submissions
+	onOfferDraw.decline(servergame, role); // Auto-decline any open draw offer on move submissions
 
 	// Persist the move and updated game state to the database.
 	liveGameValues.onMoveSubmitted(servergame);
@@ -135,7 +141,7 @@ function submitMove(
 /**
  * Applies any move-triggered conclusion, broadcasts the
  * move to all clients, then frees the game if it concluded.
- * Custom version of gamemanager.onGameConclusion()
+ * Custom version of gamelifecycle.conclude()
  */
 function broadcastMove(
 	servergame: ServerGame,
@@ -146,25 +152,25 @@ function broadcastMove(
 	if (servergame.gameConclusion === undefined) {
 		// Game not over: send the move-submitter only the updated clocks.
 		if (!servergame.untimed) {
-			const message = gameutility.getGameClockValues(servergame);
+			const message = gameutility.getClockValues(servergame);
 			sendSocketMessage(ws, 'game', 'clock', message);
 		}
 	} else {
 		// The game ended: apply the conclusion (stops the clocks),
 		// then send the submitter the conclusion message.
-		applyConclusion(servergame, servergame.gameConclusion);
-		const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
+		gamelifecycle.applyConclusion(servergame, servergame.gameConclusion);
+		const conclusionMessage = gamestatebuilder.buildConclusionMessage(servergame);
 		sendSocketMessage(ws, 'game', 'gameconclusion', conclusionMessage);
 	}
 
 	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
 	const moveMessage = buildMoveMessage(servergame, moveRecord);
 	if (!gameutility.isEngineGame(servergame))
-		gameutility.sendMessageToColor(servergame.match, typeutil.invertPlayer(role), 'game', 'move', moveMessage); // prettier-ignore
-	gameutility.broadcastToSpectators(servergame, 'move', moveMessage);
+		gamesockets.sendToColor(servergame.match, typeutil.invertPlayer(role), 'game', 'move', moveMessage); // prettier-ignore
+	gamesockets.broadcastToSpectators(servergame, 'move', moveMessage);
 
 	// Free, finalize, and evict the game if it's concluded.
-	if (servergame.gameConclusion !== undefined) freeGame(servergame);
+	if (servergame.gameConclusion !== undefined) gamelifecycle.free(servergame);
 }
 
 /**
@@ -183,7 +189,7 @@ function applyServerValidatedMove(
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog');
 		// Send the sender the current game state to correct their board if a bug somehow caused this
-		gameutility.sendGameStateToColor(servergame, role, true); // forceSync true to force their move list to match ours
+		gamesockets.sendGameState(servergame, role, true); // forceSync true to force their move list to match ours
 		// Send notifyerror last to override any previous toasts
 		sendSocketMessage(
 			ws,
@@ -198,7 +204,7 @@ function applyServerValidatedMove(
 	const moveRecord = movepiece.generateAndMakeMove(servergame, validationResult.tagged);
 
 	// Push the clock after the move has been added to servergame.moves.
-	const clockStamp = pushGameClock(servergame);
+	const clockStamp = gamemanager.pushClock(servergame);
 	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp;
 
 	// The server determines the game conclusion; discard any client-claimed conclusion.
@@ -233,10 +239,10 @@ function applyClientReportedMove(
 		// clockStamp added below
 	};
 	if (moveParsed.promotion !== undefined) moveRecord.promotion = moveParsed.promotion;
-	// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
+	// Must be BEFORE pushing the clock, because gamemanager.pushClock() depends on the length of the moves.
 	servergame.moves.push(moveRecord); // Add the move to the list!
-	// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
-	const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
+	// Must be AFTER pushing the move, because gamemanager.pushClock() depends on the length of the moves.
+	const clockStamp = gamemanager.pushClock(servergame); // Flip whos turn and adjust the game properties
 	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
 
 	// Manually set gameConclusion to client-reported conclusion
@@ -325,12 +331,16 @@ function doesGameConclusionCheckOut(
  */
 function buildMoveMessage(servergame: ServerGame, move: MoveRecord): OpponentsMoveMessage {
 	const message: OpponentsMoveMessage = {
-		move: gameutility.simplifyMove(move),
+		move: gamestatebuilder.simplifyMove(move),
 		gameConclusion: servergame.gameConclusion,
 		moveNumber: servergame.moves.length,
 	};
-	if (!servergame.untimed) message.clockValues = gameutility.getGameClockValues(servergame);
+	if (!servergame.untimed) message.clockValues = gameutility.getClockValues(servergame);
 	return message;
 }
 
-export { submitMove };
+// Exports ---------------------------------------------------------------------------------------
+
+export default {
+	submitMove,
+};

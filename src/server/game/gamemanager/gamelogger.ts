@@ -12,7 +12,7 @@
 import type { MetaData } from '../../../shared/domain.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
-import type { MatchInfo, ServerGame } from './gameutility.js';
+import type { MatchInfo, ServerGame } from './servergametypes.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
@@ -22,16 +22,13 @@ import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validlea
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
+import gamestatebuilder from './gamestatebuilder.js';
+import ratingcalculation from './ratingcalculation.js';
 import { deleteLiveGame } from '../../database/liveGamesManager.js';
 import { insertEngineGame } from '../../database/engineGamesManager.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { insertPlayerGame, updatePlayerGame } from '../../database/playerGamesManager.js';
 import { insertGame, updateGame, deleteGame } from '../../database/gamesManager.js';
-import {
-	computeRatingDataChanges,
-	DEFAULT_LEADERBOARD_ELO,
-	DEFAULT_LEADERBOARD_RD,
-} from './ratingcalculation.js';
 import {
 	addUserToLeaderboard,
 	getPlayerLeaderboardRating,
@@ -39,7 +36,7 @@ import {
 	updatePlayerLeaderboardRating,
 } from '../../database/leaderboardsManager.js';
 
-// Functions -------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Moves a completed game out of live storage and into permanent storage: it deletes the game's
@@ -49,7 +46,7 @@ import {
  * @returns The rating data if the game was rated and not aborted, otherwise undefined.
  * @throws If a database error occurs during the transaction. The game will be recorded to unloggedGames.txt for debugging info, it WON'T contain enough info for recovery.
  */
-function logGame(servergame: ServerGame): RatingData | undefined {
+function log(servergame: ServerGame): RatingData | undefined {
 	// Dropped first, and outside the transaction below, so a logged game can never outlive its
 	// live row. A failed log then merely loses the game, instead of leaving one to be revived.
 	deleteLiveGame(servergame.match.id);
@@ -118,9 +115,7 @@ function updateLeaderboardsInTransaction(
 			? match.playerData[player].identifier.user_id
 			: undefined;
 		if (user_id === undefined)
-			throw new Error(
-				`Attempted to process rating for player ${playerStr} in rated game ${match.id} without a user_id.`,
-			);
+			throw new Error(`Attempted to process rating for player ${playerStr} in rated game ${match.id} without a user_id.`); // prettier-ignore
 
 		// If a player isn't on the leaderboard, add them first.
 		// We use the _core (error-throwing) version because we are inside a transaction.
@@ -128,17 +123,15 @@ function updateLeaderboardsInTransaction(
 			addUserToLeaderboard(
 				user_id,
 				leaderboard_id,
-				DEFAULT_LEADERBOARD_ELO,
-				DEFAULT_LEADERBOARD_RD,
+				ratingcalculation.DEFAULT_LEADERBOARD_ELO,
+				ratingcalculation.DEFAULT_LEADERBOARD_RD,
 			);
 		}
 
 		// We can now safely assume the player has a rating record.
 		const leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
 		if (leaderboard_data === undefined)
-			throw Error(
-				`Unable to read leaderboard data for user_id ${user_id} in leaderboard ${leaderboard_id}. This should never happen, they should have been added!`,
-			);
+			throw Error(`Unable to read leaderboard data for user_id ${user_id} in leaderboard ${leaderboard_id}. This should never happen, they should have been added!`); // prettier-ignore
 
 		ratingdata[player] = {
 			elo_at_game: leaderboard_data.elo,
@@ -148,7 +141,7 @@ function updateLeaderboardsInTransaction(
 	}
 
 	// 2. Calculate the new ratings.
-	ratingdata = computeRatingDataChanges(ratingdata, victor);
+	ratingdata = ratingcalculation.computeChanges(ratingdata, victor);
 
 	// 3. Write the new ratings to the database.
 	for (const playerStr in ratingdata) {
@@ -180,7 +173,7 @@ function addGameRecordsInTransaction(
 	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(match.clock);
 
 	// Assemble the ICN metadata once on demand from the game's source-of-truth props.
-	const metadata = gameutility.buildMetadataOfGame(servergame, ratingData);
+	const metadata = gamestatebuilder.buildMetadata(servergame, ratingData);
 
 	// --- Prepare ICN ---
 	const icn = getICNOfGame(servergame, metadata); // This will throw on failure.
@@ -304,13 +297,11 @@ function updateSinglePlayerStatsInTransaction(
 
 	if (result.changes === 0) {
 		// This should be impossible. If it happens, it's a critical error.
-		throw new Error(
-			`CRITICAL: User ${user_id} not found in player_stats during a stats update. This should not be possible. Did we allow them to delete their account mid-game?`,
-		);
+		throw new Error(`CRITICAL: User ${user_id} not found in player_stats during a stats update. This should not be possible. Did we allow them to delete their account mid-game?`); // prettier-ignore
 	}
 }
 
-// Helpers ---------------------------------------------------------------------------------
+// Helpers ---------------------------------------------------------------------------------------
 
 /** A single player's outcome in a game, from that player's perspective. */
 type PlayerOutcome = 'wins' | 'losses' | 'draws' | 'aborted';
@@ -396,7 +387,7 @@ function getPlayerMoveCountsInGame(servergame: ServerGame): PlayerGroup<number> 
 	return playerMoveCounts;
 }
 
-// Cheat-report overturn ---------------------------------------------------------------------
+// Cheat-report overturn -------------------------------------------------------------------------
 
 /**
  * Re-logs an already-logged game after a cheat report overturns its result to an abort.
@@ -412,7 +403,7 @@ function getPlayerMoveCountsInGame(servergame: ServerGame): PlayerGroup<number> 
  * @param originalConclusion - The conclusion that was logged, needed to reverse the right `player_stats` counters.
  * @param cheaterColor - The color whose now-popped move triggered the report; loses one from `moves_played`.
  */
-function updateOverturnedGame(
+function updateOverturned(
 	servergame: ServerGame,
 	originalConclusion: GameConclusion,
 	cheaterColor: Player,
@@ -449,7 +440,7 @@ function updateGameRecordForOverturn(servergame: ServerGame): void {
 	const match = servergame.match;
 
 	// Regenerate the ICN from the now-popped move list and the aborted metadata.
-	const metadata = gameutility.buildMetadataOfGame(servergame); // Unrated (no ratingData).
+	const metadata = gamestatebuilder.buildMetadata(servergame); // Unrated (no ratingData).
 	const icn = getICNOfGame(servergame, metadata);
 
 	updateGame(match.id, {
@@ -516,7 +507,11 @@ function reversePlayerStatsForOverturn(
 	}
 }
 
+// Exports ---------------------------------------------------------------------------------------
+
 export default {
-	logGame,
-	updateOverturnedGame,
+	// Functions
+	log,
+	// Cheat-report overturn
+	updateOverturned,
 };

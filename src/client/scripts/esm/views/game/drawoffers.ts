@@ -28,7 +28,7 @@ import socketintents from '../../socket/socketintents.js';
  *
  * THIS MUST ALWAYS MATCH THE SERVER-SIDE!!!!
  */
-const movesBetweenDrawOffers: number = 2;
+const MIN_PLIES_BETWEEN_OFFERS: number = 2;
 
 /** The last move we extended a draw, if we have, otherwise undefined. */
 let plyOfLastOfferedDraw: number | undefined;
@@ -69,7 +69,7 @@ function isTooSoonToOfferDraw(): boolean {
 	if (plyOfLastOfferedDraw === undefined) return false; // We have made zero offers so far this game
 
 	const movesSinceLastOffer = gamefile.moves.length - plyOfLastOfferedDraw;
-	if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
+	if (movesSinceLastOffer < MIN_PLIES_BETWEEN_OFFERS) return true;
 	return false;
 }
 

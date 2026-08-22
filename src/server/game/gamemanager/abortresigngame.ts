@@ -5,42 +5,36 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { ServerGame } from './gameutility.js';
+import type { ServerGame } from './servergametypes.js';
 
 import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
-import { onGameConclusion } from './gamemanager.js';
+import gamelifecycle from './gamelifecycle.js';
 
-//--------------------------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /** Called when a client tries to abort a game. */
-function abortGame(servergame: ServerGame): void {
+function abort(servergame: ServerGame): void {
 	// Is it legal?...
 
 	if (gameutility.isGameOver(servergame)) {
 		// Return if game is already over
-		console.log(
-			`Player tried to abort game ${servergame.match.id} when the game is already over!`,
-		);
+		console.log(`Player tried to abort game ${servergame.match.id} when the game is already over!`); // prettier-ignore
 		return;
 	} else if (gameutility.isGameBorderlineResignable(servergame)) {
 		// A player might try to abort a game after his opponent has just played the second move due to latency issues...
 		// In doubt, be lenient and allow him to abort here. DO NOT RETURN
-		console.log(
-			`Player tried to abort game ${servergame.match.id} when there's been exactly 2 moves played! Aborting game anyways...`,
-		);
+		console.log(`Player tried to abort game ${servergame.match.id} when there's been exactly 2 moves played! Aborting game anyways...`); // prettier-ignore
 	} else if (moveutil.isGameResignable(servergame)) {
 		// Return if player tries to abort when he does not have the right
-		console.error(
-			`Player tried to abort game ${servergame.match.id} when there's been at least 3 moves played!`,
-		);
+		console.error(`Player tried to abort game ${servergame.match.id} when there's been at least 3 moves played!`); // prettier-ignore
 		return;
 	}
 
 	// Abort
-	onGameConclusion(servergame, { condition: 'aborted' });
+	gamelifecycle.conclude(servergame, { condition: 'aborted' });
 }
 
 /**
@@ -48,26 +42,22 @@ function abortGame(servergame: ServerGame): void {
  * @param servergame - The game they are in.
  * @param ourRole - The color the socket is playing as.
  */
-function resignGame(servergame: ServerGame, ourRole: Player): void {
+function resign(servergame: ServerGame, ourRole: Player): void {
 	// Is it legal?...
 
 	if (gameutility.isGameOver(servergame)) {
 		// Return if game is already over
-		console.log(
-			`Player resign to resign game ${servergame.match.id} when the game is already over!`,
-		);
+		console.log(`Player resign to resign game ${servergame.match.id} when the game is already over!`); // prettier-ignore
 		return;
 	} else if (!moveutil.isGameResignable(servergame)) {
 		// Return if player tries to resign when he does not have the right
-		console.error(
-			`Player tried to resign game ${servergame.match.id} when there's less than 2 moves played! Ignoring..`,
-		);
+		console.error(`Player tried to resign game ${servergame.match.id} when there's less than 2 moves played! Ignoring..`); // prettier-ignore
 		return;
 	}
 
 	// Resign
 	const opponentColor = typeutil.invertPlayer(ourRole);
-	onGameConclusion(servergame, { victor: opponentColor, condition: 'resignation' });
+	gamelifecycle.conclude(servergame, { victor: opponentColor, condition: 'resignation' });
 }
 
 /**
@@ -78,8 +68,14 @@ function resignEngine(servergame: ServerGame): void {
 	const engineParticipant = servergame.match.engineParticipant;
 	if (!engineParticipant) return; // Not an engine game
 
-	if (moveutil.isGameResignable(servergame)) resignGame(servergame, engineParticipant.color);
-	else abortGame(servergame);
+	if (moveutil.isGameResignable(servergame)) resign(servergame, engineParticipant.color);
+	else abort(servergame);
 }
 
-export { abortGame, resignGame, resignEngine };
+// Exports ---------------------------------------------------------------------------------------
+
+export default {
+	abort,
+	resign,
+	resignEngine,
+};

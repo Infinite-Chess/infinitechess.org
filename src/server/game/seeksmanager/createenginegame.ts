@@ -11,13 +11,13 @@ import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import typeutil, { players } from '../../../shared/chess/util/typeutil.js';
 import { engineDictionary, ValidEngine } from '../../../shared/chess/engine.js';
 
+import gamemanager from '../gamemanager/gamemanager.js';
+import activeplayers from '../gamemanager/activeplayers.js';
 import { getEngineVersion } from '../../config/manifest.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { validateSeekVariant } from './createseek.js';
-import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
-import { createGame, onGameCreationError } from '../gamemanager/gamemanager.js';
 import { deleteUsersExistingSeek, broadcastViewerCount } from './lobbymanager.js';
 
 // Constants ---------------------------------------------------------------------------
@@ -32,7 +32,7 @@ const ONLINE_ENGINE: ValidEngine = 'apeiron';
  * 'ingame' push navigates the client; on failure, notifies the client with the reason.
  */
 function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
-	if (isSocketInAnActiveGame(ws))
+	if (activeplayers.hasSocket(ws))
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 
 	// The properties zod can't constrain, since they depend on the engine's capabilities.
@@ -54,7 +54,7 @@ function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): v
 
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
 		const engineColor = typeutil.invertPlayer(humanColor);
-		createGame(
+		gamemanager.createGame(
 			{
 				variant: body.variant,
 				time: body.time,
@@ -73,7 +73,7 @@ function createEngineGame(ws: CustomWebSocket, body: CreateEngineGameMessage): v
 		removeSocketFromLobbySubs(ws);
 		broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
 	} catch (error: unknown) {
-		onGameCreationError(error, [ws]);
+		gamemanager.onGameCreationError(error, [ws]);
 	}
 }
 

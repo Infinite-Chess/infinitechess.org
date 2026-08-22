@@ -9,16 +9,16 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { ServerGame } from './gameutility.js';
+import type { ServerGame } from './servergametypes.js';
 
 import moveutil from '../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
-import { onGameConclusion } from './gamemanager.js';
+import gamelifecycle from './gamelifecycle.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
-//--------------------------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------------
 
 /**
  * Whether `ourColor` may currently claim victory / a draw against their opponent:
@@ -47,7 +47,7 @@ function claimVictory(servergame: ServerGame, ourRole: Player): void {
 		);
 		return;
 	}
-	onGameConclusion(servergame, { victor: ourRole, condition: 'disconnect' });
+	gamelifecycle.conclude(servergame, { victor: ourRole, condition: 'disconnect' });
 }
 
 /**
@@ -63,9 +63,12 @@ function claimDraw(servergame: ServerGame, ourRole: Player): void {
 		);
 		return;
 	}
-	onGameConclusion(servergame, { victor: null, condition: 'abandonment' });
+	gamelifecycle.conclude(servergame, { victor: null, condition: 'abandonment' });
 }
 
-//--------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
-export { claimVictory, claimDraw };
+export default {
+	claimVictory,
+	claimDraw,
+};

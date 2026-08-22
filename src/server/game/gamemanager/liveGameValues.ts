@@ -10,7 +10,7 @@
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { LiveGameData, LiveGamesRecord } from '../../database/liveGamesManager.js';
-import type { ServerGame, PlayerData, PlayerDisconnect } from './gameutility.js';
+import type { ServerGame, PlayerData, PlayerDisconnect } from './servergametypes.js';
 import type {
 	LivePlayerDisconnectData,
 	LivePlayerGamesRecord,
@@ -29,7 +29,7 @@ import {
 	updateLiveEngineGame,
 } from '../../database/liveEngineGamesManager.js';
 
-// Value Computation ----------------------------------------------------------------------------------
+// Value Computation -----------------------------------------------------------------------------
 
 /**
  * Computes the moves string from a ServerGame's move list, including embedded clock stamps.
@@ -102,7 +102,7 @@ function buildPlayerRecord(
 	};
 }
 
-// Persistence Events ---------------------------------------------------------------------------------
+// Persistence Events ----------------------------------------------------------------------------
 
 /**
  * Runs a best-effort live-game persistence write, swallowing any database error (already
@@ -264,10 +264,9 @@ function onEngineClockChanged(servergame: ServerGame): void {
 	);
 }
 
-// Exports --------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
 export default {
-	// Persistence Events
 	onGameCreated,
 	onMoveSubmitted,
 	onDrawOfferExtended,

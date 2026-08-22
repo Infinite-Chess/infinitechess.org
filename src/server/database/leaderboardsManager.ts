@@ -7,14 +7,9 @@
 import type { Rating } from '../../shared/domain.js';
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
-import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 import db, { dbCall } from './database.js';
+import ratingcalculation from '../game/gamemanager/ratingcalculation.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import {
-	DEFAULT_LEADERBOARD_ELO,
-	UNCERTAIN_LEADERBOARD_RD,
-	RD_UPDATE_FREQUENCY,
-} from '../game/gamemanager/ratingcalculation.js';
 
 // Types ----------------------------------------------------------------------------------------------
 
@@ -176,7 +171,7 @@ export function getTopPlayersForLeaderboard(
 		() =>
 			db.all<LeaderboardEntry>(query, [
 				leaderboard_id,
-				UNCERTAIN_LEADERBOARD_RD,
+				ratingcalculation.UNCERTAIN_LEADERBOARD_RD,
 				n_players,
 				offset,
 			]),
@@ -215,7 +210,7 @@ export function getPlayerRankInLeaderboard(
 		() =>
 			db.get<{ rank: number }>(query, [
 				leaderboard_id,
-				UNCERTAIN_LEADERBOARD_RD,
+				ratingcalculation.UNCERTAIN_LEADERBOARD_RD,
 				user_id,
 				user_id,
 			]),
@@ -236,9 +231,10 @@ export function getPlayerRankInLeaderboard(
  */
 export function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): Rating {
 	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id);
-	if (!rating_values) return { value: DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
+	if (!rating_values)
+		return { value: ratingcalculation.DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
-	const confident = rating_values.rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
+	const confident = rating_values.rating_deviation <= ratingcalculation.UNCERTAIN_LEADERBOARD_RD;
 	return { value: rating_values.elo, confident };
 }
 
@@ -255,9 +251,12 @@ function getAllLeaderboardEntries(): LeaderboardEntry[] {
 
 // Regular Table Utility Functions -------------------------------------------------------------------
 
-/** Calls updateAllRatingDeviationsofLeaderboardTable() every {@link RD_UPDATE_FREQUENCY} milliseconds */
+/** Calls updateAllRatingDeviationsofLeaderboardTable() every {@link ratingcalculation.RD_UPDATE_FREQUENCY} milliseconds */
 export function startPeriodicLeaderboardRatingDeviationUpdate(): void {
-	setInterval(() => updateAllRatingDeviationsofLeaderboardTable(), RD_UPDATE_FREQUENCY);
+	setInterval(
+		() => updateAllRatingDeviationsofLeaderboardTable(),
+		ratingcalculation.RD_UPDATE_FREQUENCY,
+	);
 }
 
 /** Retrieves all entries of the leaderboards table and updates their RD */
@@ -265,7 +264,10 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 	try {
 		const entries = getAllLeaderboardEntries();
 		for (const entry of entries) {
-			const updatedRD = getTrueRD(entry.rating_deviation, entry.rd_last_update_date);
+			const updatedRD = ratingcalculation.getTrueRD(
+				entry.rating_deviation,
+				entry.rd_last_update_date,
+			);
 			updatePlayerLeaderboardRating(
 				entry.user_id,
 				entry.leaderboard_id as Leaderboard,
