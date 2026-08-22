@@ -14,5 +14,9 @@
     "allowJs": true // Allows TypeScript to import JavaScript modules.
   },
   "files": [],
-  "references": [{ "path": "src/client/tsconfig.json" }, { "path": "src/server/tsconfig.json" }]
+  "references": [
+    { "path": "src/shared/tsconfig.json" },
+    { "path": "src/client/tsconfig.json" },
+    { "path": "src/server/tsconfig.json" }
+  ]
 }

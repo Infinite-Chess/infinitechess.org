@@ -4,8 +4,9 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "noEmit": true, // Prevents error in this file
+    "noEmit": true, // esbuild does the emitting; this project only type-checks.
     "tsBuildInfoFile": "../../dist/tsconfig.client.tsbuildinfo"
   },
-  "include": ["./**/*", "../shared/**/*", "../types/**/*"]
+  "include": ["./**/*"],
+  "references": [{ "path": "../shared/tsconfig.json" }]
 }

@@ -25,10 +25,14 @@ Two modes, chosen by the `--dev` flag on `build/index.ts`:
 
 esbuild **transpiles only — it does not type-check.** Type safety comes from `tsc -b`
 (`npm run type-check`), driven by project references in [tsconfig.json](/tsconfig.json) →
-`src/client/tsconfig.json` + `src/server/tsconfig.json` (both `composite`). The client config
-includes `client/ + shared/ + types/`; the server config includes `server/ + shared/ + types/ +
-tests/ + scripts/ + build/`. This split is what enforces the client/server/shared import rules.
-A build can succeed while `type-check` fails, and vice-versa — always run both.
+[src/shared/tsconfig.json](/src/shared/tsconfig.json), [src/client/tsconfig.json](/src/client/tsconfig.json)
+and [src/server/tsconfig.json](/src/server/tsconfig.json). Shared is type-checked once; client and server
+reference it instead of re-including it, so its errors are never reported twice. Client includes `client/`;
+server includes `server/ + tests/ + scripts/ + build/`; both reach `shared/ + types/` through the reference.
+Every project is `composite`, so an import reaching outside a project's `include` (or its references') is an
+error — this split is what enforces the client/server/shared import rules. Shared is the only project that
+emits — declaration files alone, into `dist/tsc/shared/` (a referenced project may not be `noEmit`); client
+and server are `noEmit`.
 
 ## Client build — [build/client.ts](/build/client.ts)
 

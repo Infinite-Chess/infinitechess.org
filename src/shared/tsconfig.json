@@ -1,0 +1,15 @@
+// src/shared/tsconfig.json
+
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    // The only project that emits: declaration files alone, which client and
+    // server consume through their references. Type-checking stays emit-free.
+    "emitDeclarationOnly": true,
+    "rootDir": "../..",
+    "outDir": "../../dist/tsc/shared",
+    "tsBuildInfoFile": "../../dist/tsconfig.shared.tsbuildinfo"
+  },
+  "include": ["./**/*", "../types/**/*"]
+}

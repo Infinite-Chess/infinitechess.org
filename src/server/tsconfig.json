@@ -4,17 +4,18 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "composite": true,
+    "noEmit": true, // esbuild does the emitting; this project only type-checks.
     "tsBuildInfoFile": "../../dist/tsconfig.server.tsbuildinfo"
   },
 
   "include": [
     "./**/*",
     "../tests/**/*",
-    "../shared/**/*",
-    "../types/**/*",
     // scripts/ and build/ directories were chosen to be included here because
     // they import server scripts, and otherwise wouldn't be type-checked.
     "../../scripts/**/*",
     "../../build/**/*"
-  ]
+  ],
+
+  "references": [{ "path": "../shared/tsconfig.json" }]
 }
