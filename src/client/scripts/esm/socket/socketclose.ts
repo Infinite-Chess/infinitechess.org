@@ -49,7 +49,7 @@ function onclose(code: number, reason: string): void {
 	const involuntary = socketutil.wasSocketClosureInvoluntary(code, trimmedReason);
 
 	SocketBus.dispatch('closed');
-	// An unintentional close (with subs to reconnect for) means we lost the connection and
+	// An involuntary close (with subs to reconnect for) means we lost the connection and
 	// will retry. Dispatched after `closed` so its handlers — e.g. the ping meter's loading
 	// state — override the generic close behavior.
 	if (involuntary && !socketsubs.zeroSubs()) SocketBus.dispatch('connection-lost');

@@ -25,7 +25,7 @@ function initEventListeners(): void {
 	SocketBus.addEventListener('ping', updatePing);
 	SocketBus.addEventListener('opening', openMeterAndDisplayLoading);
 	SocketBus.addEventListener('closed', closeMeter);
-	// Fires right after `closed` on an unintentional close, overriding closeMeter()
+	// Fires right after `closed` on an involuntary close, overriding closeMeter()
 	// above so a reconnecting socket shows the loading animation instead.
 	SocketBus.addEventListener('connection-lost', openMeterAndDisplayLoading);
 }
