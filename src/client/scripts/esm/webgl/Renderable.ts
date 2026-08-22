@@ -250,9 +250,7 @@ function createRenderableFactory(
 	): Renderable {
 		const stride = getStrideFromAttributeInfo(attribInfo);
 		if (data.length % stride !== 0)
-			throw new Error(
-				'Data length is not divisible by stride when creating a buffer model. Check to make sure the specified attribInfo is correct.',
-			);
+			throw new Error('Data length is not divisible by stride when creating a buffer model. Check to make sure the specified attribInfo is correct.'); // prettier-ignore
 
 		data = ensureTypedArray(data); // Ensure the data is a Float32Array
 		const BYTES_PER_ELEMENT = data.BYTES_PER_ELEMENT;
@@ -309,13 +307,9 @@ function createRenderableFactory(
 			attribInfoInstanced.instanceDataAttribInfo,
 		);
 		if (vertexData.length % vertexDataStride !== 0)
-			throw new Error(
-				'Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.',
-			);
+			throw new Error('Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.'); // prettier-ignore
 		if (instanceData.length % instanceDataStride !== 0)
-			throw new Error(
-				`Instance data length (${instanceData.length}) is not divisible by stride (${instanceDataStride}) when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.`,
-			);
+			throw new Error(`Instance data length (${instanceData.length}) is not divisible by stride (${instanceDataStride}) when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.`); // prettier-ignore
 
 		vertexData = ensureTypedArray(vertexData);
 		instanceData = ensureTypedArray(instanceData);
@@ -514,9 +508,7 @@ function createRenderableFactory(
 			const uLoc = shaderProgram.getUniformLocation(texInfo.uniformName as U);
 			// Skip if the shader doesn't use this uniform. Useful for using the same model with different shaders?
 			if (uLoc === null) {
-				console.warn(
-					`Uniform "${texInfo.uniformName}" not found in shader when trying to set texture. Skipping...`,
-				);
+				console.warn(`Uniform "${texInfo.uniformName}" not found in shader when trying to set texture. Skipping...`); // prettier-ignore
 				return;
 			}
 
@@ -534,9 +526,7 @@ function createRenderableFactory(
 
 			// It's common for game logic to pass uniforms that a specific shader might not use, so we just skip them.
 			if (uLoc === null) {
-				console.warn(
-					`Uniform "${name}" not found in shader when trying to set custom uniform. Skipping...`,
-				);
+				console.warn(`Uniform "${name}" not found in shader when trying to set custom uniform. Skipping...`); // prettier-ignore
 				continue;
 			}
 
@@ -554,9 +544,7 @@ function createRenderableFactory(
 						gl.uniform4fv(uLoc, value);
 						break;
 					default:
-						console.warn(
-							`Unsupported array length for uniform "${name}". Expected 2, 3, or 4.`,
-						);
+						console.warn(`Unsupported array length for uniform "${name}". Expected 2, 3, or 4.`); // prettier-ignore
 				}
 			} else if (typeof value === 'number') {
 				// Value is a number, treat it as a float
@@ -664,9 +652,7 @@ function ensureTypedArray(data: InputArray): TypedArray {
 	if (!Array.isArray(data)) return data; // If it's already a TypedArray, return it.
 
 	if (data.length > 1_000_000) {
-		console.warn(
-			'Performance Warning: Float32Array generated from a very large number array (over 1 million in length). It is suggested to start with a Float32Array when computing your data!',
-		);
+		console.warn('Performance Warning: Float32Array generated from a very large number array (over 1 million in length). It is suggested to start with a Float32Array when computing your data!'); // prettier-ignore
 	}
 	return new Float32Array(data);
 }

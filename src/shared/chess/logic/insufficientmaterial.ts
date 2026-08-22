@@ -167,9 +167,7 @@ const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
 					isSubsumedBy(scenarios[i]!, scenarios[j]!) ||
 					isSubsumedBy(invertScenario(scenarios[i]!), scenarios[j]!)
 				) {
-					throw new Error(
-						`Redundant insuffmat scenario:\n${makeScenReadable(scenarios[i]!)}   IS A SUBSET OF:\n${makeScenReadable(scenarios[j]!)}.`,
-					);
+					throw new Error(`Redundant insuffmat scenario:\n${makeScenReadable(scenarios[i]!)}   IS A SUBSET OF:\n${makeScenReadable(scenarios[j]!)}.`); // prettier-ignore
 				}
 			}
 		}

@@ -356,9 +356,7 @@ function slide_CalcLegalLimit(
 		 */
 		const blockResult = blockingFunc(color, thisPiece, coords, premove);
 		if (blockResult !== 0 && blockResult !== 1 && blockResult !== 2)
-			throw new Error(
-				`slide_CalcLegalLimit() not built to handle block result of "${blockResult}"!`,
-			);
+			throw new Error(`slide_CalcLegalLimit() not built to handle block result of "${blockResult}"!`); // prettier-ignore
 
 		if (blockResult === 0) continue; // Not blocked.
 

@@ -72,9 +72,7 @@ function createTextureCache(): TextureCache {
 		if (cachedTexture) return cachedTexture;
 		// If not found, it implies initTexturesForGame wasn't called or failed for this type.
 		else
-			throw new Error(
-				`TextureCache: Texture for type ${typeutil.debugType(type)} not found in cache. Was initTexturesForGame() called?`,
-			);
+			throw new Error(`TextureCache: Texture for type ${typeutil.debugType(type)} not found in cache. Was initTexturesForGame() called?`); // prettier-ignore
 	}
 
 	return {

@@ -80,25 +80,19 @@ export function getRatingAbuseData<K extends RatingAbuseColumn>(
 	return dbCall(() => {
 		// Validate the arguments...
 		if (!Array.isArray(columns))
-			throw new Error(
-				`When getting rating_abuse data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
-			);
+			throw new Error(`When getting rating_abuse data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
 		if (
 			!columns.every(
 				(column) => typeof column === 'string' && allRatingAbuseColumns.includes(column),
 			)
 		)
-			throw new Error(
-				`Invalid columns requested from rating_abuse table: ${jsutil.ensureJSONString(columns)}`,
-			);
+			throw new Error(`Invalid columns requested from rating_abuse table: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
 
 		// Move onto the SQL query
 		const query = `SELECT ${columns.join(', ')} FROM rating_abuse WHERE user_id = ? AND leaderboard_id = ?`;
 		const row = db.get<Pick<RatingAbuseRecord, K>>(query, [user_id, leaderboard_id]);
 		if (!row)
-			throw new Error(
-				`No matches found in rating_abuse table for user_id = ${user_id} and leaderboard_id = ${leaderboard_id}.`,
-			);
+			throw new Error(`No matches found in rating_abuse table for user_id = ${user_id} and leaderboard_id = ${leaderboard_id}.`); // prettier-ignore
 		return row;
 	}, `Error when getting rating_abuse entry of user_id ${user_id} and leaderboard_id = ${leaderboard_id}`);
 }
@@ -120,15 +114,11 @@ export function updateRatingAbuseColumns(
 	dbCall(() => {
 		// Validate the arguments...
 		if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0)
-			throw new Error(
-				`Invalid or empty columns and values provided for user ID "${user_id}" and leaderboard ID "${leaderboard_id}" when updating rating_abuse columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
-			);
+			throw new Error(`Invalid or empty columns and values provided for user ID "${user_id}" and leaderboard ID "${leaderboard_id}" when updating rating_abuse columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`); // prettier-ignore
 		for (const column in columnsAndValues) {
 			// Validate all provided columns
 			if (!allRatingAbuseColumns.includes(column))
-				throw new Error(
-					`Invalid column "${column}" provided for user ID "${user_id}" and leaderboard ID "${leaderboard_id}" when updating rating_abuse columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
-				);
+				throw new Error(`Invalid column "${column}" provided for user ID "${user_id}" and leaderboard ID "${leaderboard_id}" when updating rating_abuse columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`); // prettier-ignore
 		}
 
 		// Move on to the SQL query
@@ -140,8 +130,6 @@ export function updateRatingAbuseColumns(
 		const updateQuery = `UPDATE rating_abuse SET ${setStatements} WHERE user_id = ? AND leaderboard_id = ?`;
 		const result = db.run(updateQuery, values);
 		if (result.changes === 0)
-			throw new Error(
-				`No changes made when updating rating_abuse table columns ${JSON.stringify(columnsAndValues)} for entry with user ID "${user_id}" and leaderboard ID "${leaderboard_id}".`,
-			);
+			throw new Error(`No changes made when updating rating_abuse table columns ${JSON.stringify(columnsAndValues)} for entry with user ID "${user_id}" and leaderboard ID "${leaderboard_id}".`); // prettier-ignore
 	}, `Error updating rating_abuse table columns for user ID "${user_id}" and leaderboard ID "${leaderboard_id}"`);
 }

@@ -153,9 +153,7 @@ function update(rays: Ray[]): void {
 
 function getPointerId(): string {
 	if (!pointerId)
-		throw Error(
-			"Pointer ID is undefined. Don't call drawrays.getPointerId() if not drawing a ray.",
-		);
+		throw Error("Pointer ID is undefined. Don't call drawrays.getPointerId() if not drawing a ray."); // prettier-ignore
 	return pointerId;
 }
 
@@ -263,9 +261,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 					// Skip adding the new one (it already exists contained in this comparing one)
 					// console.log("Ray is already contained in another.");
 					if (deletedRays.length > 0)
-						throw Error(
-							'Should not be any rays deleted if ray to be added is contained within another!',
-						);
+						throw Error('Should not be any rays deleted if ray to be added is contained within another!'); // prettier-ignore
 					return { added: false };
 				}
 			} else {

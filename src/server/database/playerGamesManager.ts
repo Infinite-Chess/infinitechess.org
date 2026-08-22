@@ -66,9 +66,7 @@ export function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
 
 			// Every requested game should have at least one opponent row.
 			if (rows.length < game_id_list.length)
-				throw new Error(
-					`Not enough matches found in player_games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}. Expected at least ${game_id_list.length}, found ${rows.length}. Was one of them a guest?`,
-				);
+				throw new Error(`Not enough matches found in player_games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}. Expected at least ${game_id_list.length}, found ${rows.length}. Was one of them a guest?`); // prettier-ignore
 
 			return rows;
 		},

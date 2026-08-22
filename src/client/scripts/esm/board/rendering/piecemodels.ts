@@ -348,10 +348,9 @@ function rotateAll(mesh: Mesh, newInverted: boolean): void {
 		if (pieceThemes.SVGLESS_TYPES.has(rawType)) continue; // Skip voids and other non-textured pieces, currently they are symmetrical
 		// Not a void, which means its guaranteed to be a piece with a texture...
 		const vertexData = meshData.model.vertexData;
+		// Safety net
 		if (vertexData.length !== newVertexData.length)
-			throw Error(
-				'New vertex data must be the same length as the existing! Cannot update buffer indices.',
-			); // Safety net
+			throw Error('New vertex data must be the same length as the existing! Cannot update buffer indices.'); // prettier-ignore
 		vertexData.set(newVertexData); // Copies the values over without changing the memory location
 		meshData.model.updateBufferIndices_VertexBuffer(0, vertexData.length); // Send those changes off to the gpu
 	}

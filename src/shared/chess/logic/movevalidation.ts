@@ -237,9 +237,7 @@ function validateConclusion(
 		simulatedConclusion?.condition !== claimedGameConclusion?.condition ||
 		simulatedConclusion?.victor !== claimedGameConclusion?.victor
 	) {
-		console.error(
-			`Conclusion mismatch! Simulated: ${JSON.stringify(simulatedConclusion)}, Claimed: ${JSON.stringify(claimedGameConclusion)}`,
-		);
+		console.error(`Conclusion mismatch! Simulated: ${JSON.stringify(simulatedConclusion)}, Claimed: ${JSON.stringify(claimedGameConclusion)}`); // prettier-ignore
 		return { valid: false, reason: 'Wrong conclusion.' };
 	}
 

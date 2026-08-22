@@ -81,9 +81,7 @@ function getGameConclusionFromResultAndTermination(
 	// Make sure it's type safe
 	const parseResult = winconutil.gameConclusionSchema.safeParse(gameConclusion);
 	if (!parseResult.success)
-		throw new Error(
-			`When parsing GameConclusion from metadata, condition "${termination}" and victor "${victor}" is an invalid combination. ZodError: ${z.prettifyError(parseResult.error)}`,
-		);
+		throw new Error(`When parsing GameConclusion from metadata, condition "${termination}" and victor "${victor}" is an invalid combination. ZodError: ${z.prettifyError(parseResult.error)}`); // prettier-ignore
 	return parseResult.data;
 }
 

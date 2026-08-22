@@ -147,9 +147,7 @@ export function getMultipleGameData<K extends GamesColumn>(
 			const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id IN (${placeholders})`;
 			const rows = db.all<Pick<GamesRecord, K>>(query, game_id_list);
 			if (rows.length < game_id_list.length)
-				throw new Error(
-					`At least one missing game in games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}.`,
-				);
+				throw new Error(`At least one missing game in games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}.`); // prettier-ignore
 			return rows;
 		},
 		`Error when getting game data of game_ids ${jsutil.ensureJSONString(game_id_list)}`,

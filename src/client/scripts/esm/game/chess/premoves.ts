@@ -144,9 +144,7 @@ function applyPremove(
 function generatePremove(gamefile: GameFile, moveTagged: MoveTagged): Premove {
 	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveTagged.startCoords);
 	if (!piece)
-		throw Error(
-			`Cannot generate premove because no piece exists at coords ${JSON.stringify(moveTagged.startCoords)}.`,
-		);
+		throw Error(`Cannot generate premove because no piece exists at coords ${JSON.stringify(moveTagged.startCoords)}.`); // prettier-ignore
 
 	// Initialize the state, and change list, as empty for now.
 	const premove: Premove = {
@@ -282,9 +280,7 @@ function processPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	// console.error("Processing premoves");
 
 	if (applied)
-		throw Error(
-			"Don't processPremoves when other premoves are still applied! rewindPremoves() first.",
-		);
+		throw Error("Don't processPremoves when other premoves are still applied! rewindPremoves() first."); // prettier-ignore
 
 	const premove: Premove | undefined = premoves[0];
 	// CAN'T EARLY EXIT if there are no premoves, as

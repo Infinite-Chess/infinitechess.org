@@ -70,10 +70,7 @@ async function initImagesForGame(boardsim: BoardPreview): Promise<void> {
 					// console.log(`Cached normalized image for type ${typeutil.debugType(Number(img.id))}`);
 				})
 				.catch((error) => {
-					console.error(
-						`Failed to normalize or cache image for type ${typeutil.debugType(Number(img.id))}:`,
-						error,
-					);
+					console.error(`Failed to normalize or cache image for type ${typeutil.debugType(Number(img.id))}:`, error); // prettier-ignore
 					// Decide how to handle normalization failures - potentially throw?
 				});
 			normalizationPromises.push(promise);
@@ -100,9 +97,7 @@ async function initImagesForGame(boardsim: BoardPreview): Promise<void> {
 function getPieceImage(type: number): HTMLImageElement {
 	const image = cachedImages[type];
 	if (!image)
-		throw new Error(
-			`Image for piece type ${typeutil.debugType(type)} not found in cache. Was initImagesForGame() called?`,
-		);
+		throw new Error(`Image for piece type ${typeutil.debugType(type)} not found in cache. Was initImagesForGame() called?`); // prettier-ignore
 	// Optional: Return a clone to prevent external modification of the cached element?
 	// For simple display, returning the direct reference is usually fine and more performant.
 	// If you plan to modify the image attributes (like style) elsewhere, cloning might be safer:

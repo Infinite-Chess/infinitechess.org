@@ -297,9 +297,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		// SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
 		const lastMovedPiece = boardutil.getPieceFromCoords(pieces, lastMove.endCoords)!;
 		if (!lastMovedPiece)
-			throw new Error(
-				'Could not find last moved piece at its destination coords: ' + lastMove.endCoords,
-			);
+			throw new Error('Could not find last moved piece at its destination coords: ' + lastMove.endCoords); // prettier-ignore
 		pushPieceNoDuplicatesOrVoids(lastMovedPiece);
 	}
 	// Next move's starting piece
@@ -313,9 +311,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		// SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
 		const nextToMovePiece = boardutil.getPieceFromCoords(pieces, nextMove.startCoords)!;
 		if (!nextToMovePiece)
-			throw new Error(
-				'Could not find next to move piece at its starting coords: ' + nextMove.startCoords,
-			);
+			throw new Error('Could not find next to move piece at its starting coords: ' + nextMove.startCoords); // prettier-ignore
 		pushPieceNoDuplicatesOrVoids(nextToMovePiece);
 	}
 

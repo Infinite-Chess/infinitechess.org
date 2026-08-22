@@ -118,9 +118,7 @@ async function onSaveButtonPress(): Promise<void> {
 	const positionname = element_saveAsPositionName.value.trim(); // Disallow pure whitespace names
 	if (positionname === '') return;
 	if (positionname.length > editorutil.MAX_POSITION_NAME_LENGTH) {
-		console.error(
-			`This should not happen, position name input box is restricted to ${editorutil.MAX_POSITION_NAME_LENGTH} chars, you submitted ${positionname.length} chars.`,
-		);
+		console.error(`This should not happen, position name input box is restricted to ${editorutil.MAX_POSITION_NAME_LENGTH} chars, you submitted ${positionname.length} chars.`); // prettier-ignore
 		return;
 	}
 

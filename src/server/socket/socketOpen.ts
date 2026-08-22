@@ -66,9 +66,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 		ws.metadata.memberInfo.signedIn &&
 		doesSessionHaveMaxSocketCount(ws.metadata.cookies.jwt!)
 	) {
-		console.log(
-			`Member "${ws.metadata.memberInfo.username}" has too many sockets for this session! Not connecting this one.`,
-		);
+		console.log(`Member "${ws.metadata.memberInfo.username}" has too many sockets for this session! Not connecting this one.`); // prettier-ignore
 		return ws.close(1009, socketutil.ClosureReasons.TOO_MANY_SOCKETS);
 	}
 

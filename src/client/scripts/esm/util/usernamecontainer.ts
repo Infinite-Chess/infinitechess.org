@@ -166,9 +166,7 @@ function extractPropertiesFromUsernameContainerElement(
 	const usernameElem = containerDiv.querySelector('.username')!;
 	const type = usernameElem.getAttribute('user-type') as 'player' | 'guest';
 	if (!type)
-		throw Error(
-			'Cannot extract username container from element that does not have a user-type attribute!',
-		);
+		throw Error('Cannot extract username container from element that does not have a user-type attribute!'); // prettier-ignore
 	const result: ServerUsernameContainer = {
 		type,
 		username: usernameElem.textContent!,

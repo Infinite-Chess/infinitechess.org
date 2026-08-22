@@ -124,11 +124,7 @@ async function populateTable(n_players: number): Promise<void> {
 		);
 
 		if (response.status === 404 || response.status === 500 || !response.ok) {
-			console.error(
-				'Failed to fetch leaderboard data:',
-				response.status,
-				response.statusText,
-			);
+			console.error('Failed to fetch leaderboard data:', response.status, response.statusText); // prettier-ignore
 			return;
 		}
 

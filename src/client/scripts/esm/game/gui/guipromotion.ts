@@ -79,9 +79,7 @@ async function initUI(
 	if (promotionPieces === undefined) return;
 
 	if (Object.values(PromotionGUI.players).some((element) => element.childElementCount > 0)) {
-		throw new Error(
-			'Must reset promotion UI before initiating it, or promotions leftover from the previous game will bleed through.',
-		);
+		throw new Error('Must reset promotion UI before initiating it, or promotions leftover from the previous game will bleed through.'); // prettier-ignore
 	}
 
 	for (const player of uniquePlayers) {

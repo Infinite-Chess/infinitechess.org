@@ -69,9 +69,7 @@ ${properties.join('\n')}
 	fs.mkdirSync(path.dirname(SCRIPT_OUTPUT_FILE), { recursive: true });
 	fs.writeFileSync(SCRIPT_OUTPUT_FILE, output, 'utf-8');
 
-	console.log(
-		`[generate-component-translation-types] Generated ScriptTranslations with ${properties.length} component(s).`,
-	);
+	console.log(`[generate-component-translation-types] Generated ScriptTranslations with ${properties.length} component(s).`); // prettier-ignore
 }
 
 /**

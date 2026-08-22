@@ -107,9 +107,7 @@ async function retryFetch(
 	// This line should be theoretically unreachable if options.maxAttempts >= 1,
 	// as the loop will always return or throw on its final iteration.
 	// It's included for defensive programming in case of unexpected state.
-	throw new Error(
-		`retryFetch: Exited retry loop unexpectedly for ${urlString}. This should not happen if maxAttempts >= 1.`,
-	);
+	throw new Error(`retryFetch: Exited retry loop unexpectedly for ${urlString}. This should not happen if maxAttempts >= 1.`); // prettier-ignore
 }
 
 export { retryFetch };

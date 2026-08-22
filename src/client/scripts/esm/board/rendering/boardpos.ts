@@ -137,13 +137,9 @@ function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
 	function setBoardPos(newPos: BDCoords): void {
 		// Enforce fixed point model. Catches bugs during development.
 		if (!bd.hasDefaultPrecision(newPos[0]))
-			throw Error(
-				`Cannot set board position X to [${newPos[0].divex}] ${bd.toApproximateString(newPos[0])}. Does not have default precision.`,
-			);
+			throw Error(`Cannot set board position X to [${newPos[0].divex}] ${bd.toApproximateString(newPos[0])}. Does not have default precision.`); // prettier-ignore
 		if (!bd.hasDefaultPrecision(newPos[1]))
-			throw Error(
-				`Cannot set board position Y to [${newPos[1].divex}] ${bd.toApproximateString(newPos[1])}. Does not have default precision.`,
-			);
+			throw Error(`Cannot set board position Y to [${newPos[1].divex}] ${bd.toApproximateString(newPos[1])}. Does not have default precision.`); // prettier-ignore
 
 		// console.log(`New board position [${(boardPos[0].divex)},${boardPos[1].divex}]`, coordutil.stringifyBDCoords(boardPos));
 		boardPos = jsutil.deepCopyObject(newPos); // Copy

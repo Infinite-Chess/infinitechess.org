@@ -77,9 +77,7 @@ async function getAllLocalSaveInfos(): Promise<EditorAbridgedSaveState[]> {
 			const parsed = storetypes.AbridgedSaveStateSchema.safeParse(raw);
 			if (!parsed.success) {
 				const position_name = key.slice(EDITOR_SAVEINFO_PREFIX.length);
-				console.error(
-					`Corrupted local save "${position_name}" found, deleting it. Error: ${parsed.error}`,
-				);
+				console.error(`Corrupted local save "${position_name}" found, deleting it. Error: ${parsed.error}`); // prettier-ignore
 				await deleteLocal(position_name);
 				return;
 			}
@@ -100,9 +98,7 @@ async function readLocal(position_name: string): Promise<EditorSaveState> {
 		throw new Error(`Local save "${position_name}" not found`);
 	const editorSaveStateParsed = storetypes.SaveStateSchema.safeParse(editorSaveStateRaw);
 	if (!editorSaveStateParsed.success) {
-		console.error(
-			`Corrupted local save "${position_name}" found. Error: ${editorSaveStateParsed.error}`,
-		);
+		console.error(`Corrupted local save "${position_name}" found. Error: ${editorSaveStateParsed.error}`); // prettier-ignore
 		throw new Error(`Corrupted local save "${position_name}"`);
 	}
 	return editorSaveStateParsed.data;

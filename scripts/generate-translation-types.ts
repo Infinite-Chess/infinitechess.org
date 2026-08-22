@@ -108,9 +108,7 @@ ${nestedType}
 
 	fs.writeFileSync(outputFile, output, 'utf-8');
 
-	console.log(
-		`[generate-translation-types] Generated translation types (${dotPaths.length} keys).`,
-	);
+	console.log(`[generate-translation-types] Generated translation types (${dotPaths.length} keys).`); // prettier-ignore
 }
 
 // Run the generator

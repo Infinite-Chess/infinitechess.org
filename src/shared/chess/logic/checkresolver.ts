@@ -304,9 +304,7 @@ function addressPins(
 		if (!check.slidingCheck) {
 			// Case 1: Individual jumping `path` check was exposed (Rose).
 			if (!check.path)
-				throw Error(
-					`Attacker giving non-sliding check has no path! It's impossible for a sliding move to expose a pathless jumping check. Either the position is illegal, or this check was pre-existing and was not correctly filtered out. Color: ${typeutil.strcolors[color]}`,
-				);
+				throw Error(`Attacker giving non-sliding check has no path! It's impossible for a sliding move to expose a pathless jumping check. Either the position is illegal, or this check was pre-existing and was not correctly filtered out. Color: ${typeutil.strcolors[color]}`); // prettier-ignore
 			// Append any legal blocking squares on the path, then collapse all slides.
 			// Guaranteed non-arbitrary interpose squares.
 			appendPathBlockingMoves(check.path, moves, pieceSelected.coords);
@@ -383,9 +381,7 @@ function restrictSlideBetweenSquares(
 		return;
 	}
 	const currentLimits = sliding[slideDir]!;
-	// console.log(
-	// 	`For slide ${slideDir}, intersecting current limits [${currentLimits[0]}, ${currentLimits[1]}] with blocking zone between royal ${royal} and attacker ${attacker} at steps [${zoneMin}, ${zoneMax}]`,
-	// );
+	// console.log(`For slide ${slideDir}, intersecting current limits [${currentLimits[0]}, ${currentLimits[1]}] with blocking zone between royal ${royal} and attacker ${attacker} at steps [${zoneMin}, ${zoneMax}]`); // prettier-ignore
 	const newMin = currentLimits[0] === null ? zoneMin : bimath.max(currentLimits[0], zoneMin);
 	const newMax = currentLimits[1] === null ? zoneMax : bimath.min(currentLimits[1], zoneMax);
 	if (newMin > newMax) {
@@ -394,9 +390,7 @@ function restrictSlideBetweenSquares(
 		return;
 	}
 	sliding[slideDir] = [newMin, newMax];
-	// console.log(
-	// 	`Narrowing slide to steps [${newMin}, ${newMax}] to only include the blocking zone.`,
-	// );
+	// console.log(`Narrowing slide to steps [${newMin}, ${newMax}] to only include the blocking zone.`); // prettier-ignore
 	if (colinear) moves.brute = true;
 }
 

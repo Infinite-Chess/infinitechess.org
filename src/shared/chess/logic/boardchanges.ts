@@ -198,9 +198,7 @@ function applyChanges<T>(
 		// Iterate forwards through the changes array
 		for (const change of changes) {
 			if (!(change.action in funcs))
-				throw Error(
-					`Missing change function for likely-invalid change action "${change.action}"!`,
-				);
+				throw Error(`Missing change function for likely-invalid change action "${change.action}"!`); // prettier-ignore
 			funcs[change.action]!(actiondata, change);
 		}
 	} else {
@@ -208,9 +206,7 @@ function applyChanges<T>(
 		for (let i = changes.length - 1; i >= 0; i--) {
 			const change = changes[i]!;
 			if (!(change.action in funcs))
-				throw Error(
-					`Missing change function for likely-invalid change action "${change.action}"!`,
-				);
+				throw Error(`Missing change function for likely-invalid change action "${change.action}"!`); // prettier-ignore
 			funcs[change.action]!(actiondata, change);
 		}
 	}
@@ -227,9 +223,7 @@ function addPiece(boardsim: Board, change: Change): void {
 	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined)
-		throw Error(
-			`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`,
-		);
+		throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`); // prettier-ignore
 	let idx: number;
 	if (change.piece.index === -1) {
 		// Does not have an index yet, assign it one from undefined list
@@ -241,9 +235,7 @@ function addPiece(boardsim: Board, change: Change): void {
 					boardsim.gameRules.promotion,
 				) === 0
 			)
-				throw Error(
-					`Type: ${typeutil.debugType(change.piece.type)} is not expected to be added after initial position!`,
-				);
+				throw Error(`Type: ${typeutil.debugType(change.piece.type)} is not expected to be added after initial position!`); // prettier-ignore
 			organizedpieces.regenerateLists(
 				boardsim.pieces,
 				boardsim.editor,
@@ -257,9 +249,7 @@ function addPiece(boardsim: Board, change: Change): void {
 		idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
 		const { found, index } = jsutil.binarySearch(typedata.undefineds, idx);
 		if (!found)
-			throw Error(
-				`Newly added piece ${JSON.stringify(change.piece)} attemped to overwrite an occupied index`,
-			);
+			throw Error(`Newly added piece ${JSON.stringify(change.piece)} attemped to overwrite an occupied index`); // prettier-ignore
 		typedata.undefineds.splice(index, 1);
 	}
 	pieces.XPositions[idx] = change.piece.coords[0];
@@ -278,9 +268,7 @@ function deletePiece(boardsim: Board, change: Change): void {
 	const typedata = pieces.typeRanges.get(change.piece.type);
 
 	if (typedata === undefined)
-		throw Error(
-			`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`,
-		);
+		throw Error(`Type: "${typeutil.debugType(change.piece.type)}" is not expected to be in the game`); // prettier-ignore
 	if (change.piece.index === -1) throw Error('Piece has not been allocated in organizedPieces');
 
 	const idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range

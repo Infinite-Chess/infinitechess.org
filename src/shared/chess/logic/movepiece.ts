@@ -116,9 +116,7 @@ function generateAndMakeMove(boardsim: Board, moveTagged: MoveTagged): MoveFull 
 function generateMove(boardsim: Board, moveTagged: MoveTagged): MoveFull {
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveTagged.startCoords);
 	if (!piece)
-		throw Error(
-			`Cannot make move because no piece exists at coords ${coordutil.stringifyCoords(moveTagged.startCoords)}.`,
-		);
+		throw Error(`Cannot make move because no piece exists at coords ${coordutil.stringifyCoords(moveTagged.startCoords)}.`); // prettier-ignore
 
 	// Construct the full MoveFull object
 	// Initialize the state, and change list, as empty for now.
@@ -332,9 +330,7 @@ function applyMove(boardsim: Board, move: MoveFull, forward: boolean, updateTurn
 	// Stops stupid missing piece errors
 	const indexToApply = boardsim.state.local.moveIndex + Number(!forward);
 	if (indexToApply !== move.generateIndex)
-		throw new Error(
-			`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`,
-		);
+		throw new Error(`Move was expected at index ${move.generateIndex} but applied at ${indexToApply} (forward: ${forward}).`); // prettier-ignore
 
 	applyEdit(boardsim, move, forward); // Apply the board changes
 }
@@ -401,9 +397,7 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 		if (validateMoves) {
 			const validationResult = movevalidation.isTokenMoveLegal(boardsim, shortmove.token);
 			if (!validationResult.valid) {
-				throw new IllegalMoveError(
-					`Move ${i + 1} is illegal: ${shortmove.token}. Reason: ${validationResult.reason}`,
-				);
+				throw new IllegalMoveError(`Move ${i + 1} is illegal: ${shortmove.token}. Reason: ${validationResult.reason}`); // prettier-ignore
 			}
 		}
 
@@ -416,9 +410,7 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 		if (validateMoves && !isLastIteration) {
 			const conclusion = wincondition.getGameConclusion(boardsim);
 			if (conclusion)
-				throw new IllegalMoveError(
-					`Moves cannot come after game ends. Move ${i + 1} should have concluded game by ${JSON.stringify(conclusion)}.`,
-				);
+				throw new IllegalMoveError(`Moves cannot come after game ends. Move ${i + 1} should have concluded game by ${JSON.stringify(conclusion)}.`); // prettier-ignore
 		}
 	}
 }
@@ -434,9 +426,7 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
  */
 function calculateMoveFromPacket(boardsim: Board, movePacket: MovePacket): MoveFull {
 	if (!moveutil.areWeViewingLatestMove(boardsim))
-		throw Error(
-			"Cannot calculate MoveFull object from shortmove when we're not viewing the most recently played move.",
-		);
+		throw Error("Cannot calculate MoveFull object from shortmove when we're not viewing the most recently played move."); // prettier-ignore
 
 	// Reconstruct the startCoords, endCoords, and special move properties of the MoveTagged
 
@@ -445,9 +435,7 @@ function calculateMoveFromPacket(boardsim: Board, movePacket: MovePacket): MoveF
 		moveTagged = icnconverter.parseTokenMove(movePacket.token);
 	} catch (error) {
 		console.error(error);
-		throw Error(
-			`Failed to calculate Move from shortmove because it's in an incorrect format: ${movePacket.token}`,
-		);
+		throw Error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${movePacket.token}`); // prettier-ignore
 	}
 
 	// Reconstruct the special move properties by calculating what legal

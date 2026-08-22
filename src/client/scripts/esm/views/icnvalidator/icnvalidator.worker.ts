@@ -157,16 +157,12 @@ function validateTermination(
 ): void {
 	if (termination === 'Maximum moves reached') {
 		if (gameConclusion !== undefined)
-			throw new Error(
-				`Termination is "Maximum moves reached" but game is over: ${JSON.stringify(gameConclusion)}`,
-			);
+			throw new Error(`Termination is "Maximum moves reached" but game is over: ${JSON.stringify(gameConclusion)}`); // prettier-ignore
 		return;
 	}
 	if (termination && termination.startsWith('Material adjudication')) {
 		if (gameConclusion !== undefined)
-			throw new Error(
-				`Termination is Material Adjudication, but game is over: ${JSON.stringify(gameConclusion)}`,
-			);
+			throw new Error(`Termination is Material Adjudication, but game is over: ${JSON.stringify(gameConclusion)}`); // prettier-ignore
 		return;
 	}
 	if (gameConclusion === undefined) {

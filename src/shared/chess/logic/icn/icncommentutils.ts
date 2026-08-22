@@ -123,9 +123,7 @@ function createClkCommandObject(timeMillis: number): CommandObject {
 	let formattedValue: string;
 
 	if (typeof timeMillis !== 'number')
-		throw Error(
-			`Invalid typeof for timeMillis when constructing clk comment embeded command sequence: expected number, got ${typeof timeMillis}`,
-		);
+		throw Error(`Invalid typeof for timeMillis when constructing clk comment embeded command sequence: expected number, got ${typeof timeMillis}`); // prettier-ignore
 	if (isNaN(timeMillis))
 		throw Error(`timeMillis is NaN when constructing clk comment embeded command sequence!`);
 
@@ -173,9 +171,7 @@ function getMillisFromClkTimeValue(clkValueString: string): number {
 	const match = clkValueString.match(regex);
 
 	if (!match)
-		throw new Error(
-			`Clock time value string is not in the required H:MM:SS.D format! (${clkValueString})`,
-		);
+		throw new Error(`Clock time value string is not in the required H:MM:SS.D format! (${clkValueString})`); // prettier-ignore
 
 	// Extract the captured groups. match[0] is the full string.
 	// Groups are 1-indexed.

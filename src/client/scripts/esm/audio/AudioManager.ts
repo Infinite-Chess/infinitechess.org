@@ -136,10 +136,7 @@ limiter.connect(audioContext.destination);
 
 		// console.log('Global downsampler effect initialized successfully.');
 	} catch (error) {
-		console.error(
-			'Failed to initialize global downsampler effect. Audio will remain clean.',
-			error,
-		);
+		console.error('Failed to initialize global downsampler effect. Audio will remain clean.', error); // prettier-ignore
 		// If it fails, the initial bypass connection from effectsBus to masterGain remains active.
 	}
 })();

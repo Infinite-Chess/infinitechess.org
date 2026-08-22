@@ -626,9 +626,7 @@ function generateVariationMoves(
 	for (const token of pv) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, token);
 		if (!result.valid) {
-			console.warn(
-				`Analysis: illegal move "${token}" when adding variation, stopping at ply ${parent.ply + moves.length + 1}`,
-			);
+			console.warn(`Analysis: illegal move "${token}" when adding variation, stopping at ply ${parent.ply + moves.length + 1}`); // prettier-ignore
 			console.warn('Entire pv:', pv);
 			break;
 		}

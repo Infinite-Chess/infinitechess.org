@@ -152,9 +152,7 @@ if (violations === 0) {
 
 console.log(lines.join('\n'));
 console.error(`${violations} violation(s) across ${RULES.length} rule(s).`);
-console.error(
-	"\nTo trace how a target gets pulled in, view the offending page's full import chain:",
-);
+console.error("\nTo trace how a target gets pulled in, view the offending page's full import chain:"); // prettier-ignore
 for (const entry of offendingEntries) {
 	console.error(`  npx tsx scripts/import-chain.ts ${entry}`);
 }

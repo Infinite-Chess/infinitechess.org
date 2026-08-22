@@ -98,9 +98,7 @@ function update(): void {
 function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 	// SHOULD WE JUST RETURN HERE INSTEAD OF ERROR???
 	if (!bdcoords.areCoordsIntegers(arrowPiece.coords))
-		throw Error(
-			'We should not be calculating legal moves for a hovered arrow pointing to a piece at floating point coordinates!',
-		);
+		throw Error('We should not be calculating legal moves for a hovered arrow pointing to a piece at floating point coordinates!'); // prettier-ignore
 
 	// Check if their legal moves and mesh have already been stored
 	if (

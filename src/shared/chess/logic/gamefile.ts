@@ -157,9 +157,7 @@ function initGame(
 
 	if (clockValues) {
 		if (game.untimed)
-			throw Error(
-				'Cannot set clock values for untimed game. Should not have specified clockValues.',
-			);
+			throw Error('Cannot set clock values for untimed game. Should not have specified clockValues.'); // prettier-ignore
 		clock.edit(game.clocks, clockValues);
 	}
 

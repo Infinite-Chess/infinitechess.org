@@ -1722,9 +1722,7 @@ function runIterativeDeepening(
 		// If engine suggests illegal move for black, choose it randomly, else abort with currently best move
 		if (!tuplelist_contains_tuple(black_moves, globallyBestVariation[0]![1]!))
 			globallyBestVariation[0] = [NaN, black_moves[Math.floor(rand() * black_moves.length)]!];
-		console.error(
-			'Something went wrong with the iterative deepening calculation, aborting early...',
-		);
+		console.error('Something went wrong with the iterative deepening calculation, aborting early...'); // prettier-ignore
 		console.error(error);
 	}
 }

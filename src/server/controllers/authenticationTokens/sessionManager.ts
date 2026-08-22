@@ -44,9 +44,7 @@ export function freshenSession(
 	const timeSinceCreated = Date.now() - tokenRecord.created_at;
 	if (timeSinceCreated < minTimeToWaitToRenewRefreshTokensMillis) return;
 
-	// console.log(
-	// 	`Renewing member "${username}"s session by issuing them new login cookies! -------`,
-	// );
+	// console.log(`Renewing member "${username}"s session by issuing them new login cookies! -------`); // prettier-ignore
 
 	// Renew with the same session type the user originally chose
 	const keepLoggedIn = Boolean(tokenRecord.is_persistent);

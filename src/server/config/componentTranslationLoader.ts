@@ -142,9 +142,7 @@ export function loadComponentTranslations(): void {
 	languageOptions = supportedLanguages.map((code) => {
 		const meta = tconfig.LANGUAGE_METADATA[code];
 		if (!meta)
-			throw new Error(
-				`Supported language "${code}" has no LANGUAGE_METADATA entry in translationconfig.ts.`,
-			);
+			throw new Error(`Supported language "${code}" has no LANGUAGE_METADATA entry in translationconfig.ts.`); // prettier-ignore
 		return { code, name: meta.name, englishName: meta.englishName };
 	});
 }

@@ -44,9 +44,7 @@ class TextureLoader {
 		const settings: Required<Options> = { ...this.defaultOptions, ...options };
 
 		if (!isPowerOfTwo(img.naturalWidth) || !isPowerOfTwo(img.naturalHeight)) {
-			throw new Error(
-				`Image dimensions are not a power of two! Cannot use REPEAT wrapping mode. ${img.naturalWidth}x${img.naturalHeight}`,
-			);
+			throw new Error(`Image dimensions are not a power of two! Cannot use REPEAT wrapping mode. ${img.naturalWidth}x${img.naturalHeight}`); // prettier-ignore
 		}
 
 		const texture = gl.createTexture();

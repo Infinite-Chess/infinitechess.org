@@ -93,9 +93,7 @@ function binarySearch(sortedArray: number[], value: number): { found: boolean; i
 function addElementToOrganizedArray(sortedArray: number[], value: number): number[] {
 	const { found, index } = binarySearch(sortedArray, value);
 	if (found)
-		throw Error(
-			`Cannot add element to sorted array when it already contains the value! ${value}. List: ${JSON.stringify(sortedArray)}`,
-		);
+		throw Error(`Cannot add element to sorted array when it already contains the value! ${value}. List: ${JSON.stringify(sortedArray)}`); // prettier-ignore
 	sortedArray.splice(index, 0, value);
 	return sortedArray;
 }

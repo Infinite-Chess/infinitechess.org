@@ -337,9 +337,7 @@ function recoverFromEngineFault(): void {
 			restartWorkerForSearch();
 			return;
 		}
-		console.error(
-			'[ceval] Analysis engine crashed repeatedly on this position; giving up on it.',
-		);
+		console.error('[ceval] Analysis engine crashed repeatedly on this position; giving up on it.'); // prettier-ignore
 	} else console.error('[ceval] Analysis worker crashed while idle; not respawning.');
 
 	terminateWorker();

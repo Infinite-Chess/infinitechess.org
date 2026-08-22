@@ -171,9 +171,8 @@ export function executeArrowShifts(): void {
 		} else if (shift.kind === 'move') {
 			const type = deletePiece(shift.start);
 			if (type === undefined)
-				throw Error(
-					"Arrow shift: When moving arrow, no piece found at its start coords. Don't know what type of piece to add at the end coords!",
-				); // If this ever happens, maybe give movePiece a type argument along just as animateArrow() has.
+				// If this ever happens, maybe give movePiece a type argument along just as animateArrow() has.
+				throw Error("Arrow shift: When moving arrow, no piece found at its start coords. Don't know what type of piece to add at the end coords!"); // prettier-ignore
 			addPiece(type, shift.end);
 		} else if (shift.kind === 'animate') {
 			deletePiece(shift.start); // Delete the piece if it is present (may not be if in Atomic Chess it blew itself up)

@@ -81,9 +81,7 @@ function handleMove(
 	const expectedMoveNumber = gamefile.moves.length + 1;
 	if (message.moveNumber !== expectedMoveNumber) {
 		// A desync happened
-		console.error(
-			`We have desynced from the game. Resyncing. Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`,
-		);
+		console.error(`We have desynced from the game. Resyncing. Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`); // prettier-ignore
 		onlinegame.setInSync(false);
 		onlinegame.subscribeToGame(); // Naturally requests the full game state and resyncs
 		return;

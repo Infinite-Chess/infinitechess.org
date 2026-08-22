@@ -555,9 +555,7 @@ function clearSpamReportBlacklistEntries(): void {
 		removeFromBlacklist(row.email); // Logs each removal to blacklistLog for auditability.
 	}
 	if (spamRows.length > 0)
-		console.log(
-			`Temporary DB migration: cleared ${spamRows.length} 'spam_report' blacklist entries.`,
-		);
+		console.log(`Temporary DB migration: cleared ${spamRows.length} 'spam_report' blacklist entries.`); // prettier-ignore
 }
 
 /**
@@ -611,9 +609,7 @@ function renameDisconnectResignTimeColumnIfNeeded(): void {
 	db.run(
 		'ALTER TABLE live_player_games RENAME COLUMN disconnect_resign_time TO disconnect_claim_time',
 	);
-	console.log(
-		'Temporary DB migration: renamed live_player_games.disconnect_resign_time to disconnect_claim_time.',
-	);
+	console.log('Temporary DB migration: renamed live_player_games.disconnect_resign_time to disconnect_claim_time.'); // prettier-ignore
 }
 
 /**
@@ -628,9 +624,7 @@ function renameDisconnectByChoiceColumnIfNeeded(): void {
 	db.run(
 		'ALTER TABLE live_player_games RENAME COLUMN disconnect_by_choice TO disconnect_voluntary',
 	);
-	console.log(
-		'Temporary DB migration: renamed live_player_games.disconnect_by_choice to disconnect_voluntary.',
-	);
+	console.log('Temporary DB migration: renamed live_player_games.disconnect_by_choice to disconnect_voluntary.'); // prettier-ignore
 }
 
 /**

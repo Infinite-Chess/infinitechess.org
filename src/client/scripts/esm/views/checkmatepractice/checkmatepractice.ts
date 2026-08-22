@@ -358,17 +358,11 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 			// This means retries were exhausted on a 500, or it was a non-retryable response (e.g., 400, 401)
 			// that the retryFetch logic didn't retry.
 			const errorData = await response.json();
-			console.error(
-				`Failed to update checkmate list on the server (final status ${response.status}) after all attempts:`,
-				errorData.message || errorData,
-			);
+			console.error(`Failed to update checkmate list on the server (final status ${response.status}) after all attempts:`, errorData.message || errorData); // prettier-ignore
 		}
 	} catch (error) {
 		// This catch block handles cases where retries were exhausted on network errors.
-		console.error(
-			'Error sending checkmate list to the server after all attempts (network/unhandled error):',
-			error,
-		);
+		console.error('Error sending checkmate list to the server after all attempts (network/unhandled error):', error); // prettier-ignore
 	}
 }
 

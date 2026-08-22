@@ -235,9 +235,7 @@ function initGlyphAtlas(): void {
 	metricsTable = table;
 
 	// DEBUG: Uncomment to log atlas dimensions and append the canvas to the document for visual inspection.
-	// console.log(
-	// 	`[glyphatlas] Atlas generated: ${ATLAS_WIDTH} × ${atlasHeight} px, ${numRows} row(s), ${SUPPORTED_CHARS.length} glyphs.`,
-	// );
+	// console.log(`[glyphatlas] Atlas generated: ${ATLAS_WIDTH} × ${atlasHeight} px, ${numRows} row(s), ${SUPPORTED_CHARS.length} glyphs.`); // prettier-ignore
 	// atlasCanvas.style.cssText =
 	// 	'position:fixed;bottom:0;right:0;background:#888;z-index:9999;border:2px solid red;';
 	// document.body.appendChild(atlasCanvas);

@@ -50,9 +50,7 @@ function makeMoveEdit(gamefile: GameFile, mesh: Mesh | undefined, moveCoords: Mo
 function generateMoveEdit(boardsim: Board, moveCoords: MoveCoords): Edit {
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveCoords.startCoords);
 	if (!piece)
-		throw Error(
-			`Cannot generate move edit because no piece exists at coords ${JSON.stringify(moveCoords.startCoords)}.`,
-		);
+		throw Error(`Cannot generate move edit because no piece exists at coords ${JSON.stringify(moveCoords.startCoords)}.`); // prettier-ignore
 
 	// Initialize the state, and change list, as empty for now.
 	const edit: Edit = {

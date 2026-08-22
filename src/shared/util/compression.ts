@@ -83,9 +83,7 @@ async function compressString(
 		if (DEBUG_COMPRESSION) {
 			console.timeEnd(label);
 			const ratio = ((base64.length * 100) / str.length).toFixed(1);
-			console.log(
-				`Before: ${str.length} characters. After: ${base64.length} characters. (${ratio}% of original)`,
-			);
+			console.log(`Before: ${str.length} characters. After: ${base64.length} characters. (${ratio}% of original)`); // prettier-ignore
 		}
 
 		// Only use compression if it actually reduces size

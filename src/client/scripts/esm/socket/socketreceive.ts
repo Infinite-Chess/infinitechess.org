@@ -42,10 +42,7 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	const zod_result = ClientboundSchema.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
-		console.error(
-			'Received malformed websocket message from the server:',
-			parsedUnvalidatedMessage,
-		);
+		console.error('Received malformed websocket message from the server:', parsedUnvalidatedMessage); // prettier-ignore
 		console.error('Error:', z.prettifyError(zod_result.error));
 		// Don't echo, accept that the server's echo timer may close the socket.
 		// We can't even know whether this message is something we SHOULD echo.

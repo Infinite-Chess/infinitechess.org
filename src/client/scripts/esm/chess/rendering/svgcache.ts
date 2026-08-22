@@ -71,9 +71,7 @@ async function fetchLocation(location: string): Promise<void> {
 			try {
 				const response = await fetch(url);
 				if (!response.ok)
-					throw new Error(
-						`HTTP error when fetching piece svgs from location "${location}"! status: ${response.status}`,
-					);
+					throw new Error(`HTTP error when fetching piece svgs from location "${location}"! status: ${response.status}`); // prettier-ignore
 				const svgText = await response.text();
 				const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
 
@@ -213,9 +211,7 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 			svgs.push(cloned);
 			continue l;
 		}
-		console.error(
-			`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${colorExts} for ${baseId}`,
-		);
+		console.error(`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${colorExts} for ${baseId}`); // prettier-ignore
 		failed = true;
 	}
 	if (failed) throw Error('SVG theme is missing ids for pieces');

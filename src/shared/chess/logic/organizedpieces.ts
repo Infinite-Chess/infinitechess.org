@@ -287,9 +287,7 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotion?: Promot
 		return; // Return (no type ranges modified)
 	}
 
-	console.log(
-		`Regenerating lists: Adding ${totalAdditionalSlots} more total slots for types: ${modifiedTypes.map(typeutil.debugType).join(', ')}.`,
-	);
+	console.log(`Regenerating lists: Adding ${totalAdditionalSlots} more total slots for types: ${modifiedTypes.map(typeutil.debugType).join(', ')}.`); // prettier-ignore
 
 	// --- Prepare for copy ---
 	const oldSize = o.XPositions.length;
@@ -430,9 +428,7 @@ function registerPieceInCoords(
 	if (idx === undefined) throw Error('Undefined idx');
 	const key = coordutil.getKeyFromCoords(coords);
 	if (o.coords.has(key))
-		throw Error(
-			`While organizing a piece, there was already an existing piece there!! ${key} idx ${idx}`,
-		);
+		throw Error(`While organizing a piece, there was already an existing piece there!! ${key} idx ${idx}`); // prettier-ignore
 	o.coords.set(key, idx);
 }
 
@@ -475,9 +471,7 @@ function removePieceFromSpace(
 	// console.log("Removing piece from space: " + idx + " coords: " + coords);
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key))
-		throw Error(
-			`While removing a piece, there was no existing piece there!! ${key} idx ${idx}`,
-		);
+		throw Error(`While removing a piece, there was no existing piece there!! ${key} idx ${idx}`); // prettier-ignore
 	o.coords.delete(key);
 	const lines = o.lines;
 	for (const [strline, linegroup] of lines) {

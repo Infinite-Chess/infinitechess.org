@@ -284,9 +284,7 @@ function calcCenterOfBoundingBox(box: BoundingBoxBD): BDCoords {
 /** [DEBUG] Prints a box of BigDecimal floating point edges, with their exact representations. SLOW. */
 function printBDBox(box: BoundingBoxBD): void {
 	// console.log(`Box: left=${bd.toNumber(box.left)}, right=${bd.toNumber(box.right)}, bottom=${bd.toNumber(box.bottom)}, top=${bd.toNumber(box.top)}`);
-	console.log(
-		`Box: left=${bd.toExactString(box.left)}, right=${bd.toExactString(box.right)}, bottom=${bd.toExactString(box.bottom)}, top=${bd.toExactString(box.top)}`,
-	);
+	console.log(`Box: left=${bd.toExactString(box.left)}, right=${bd.toExactString(box.right)}, bottom=${bd.toExactString(box.bottom)}, top=${bd.toExactString(box.top)}`); // prettier-ignore
 }
 
 // Exports ----------------------------------------------------------

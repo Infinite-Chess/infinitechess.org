@@ -78,9 +78,7 @@ export function updatePlayerLeaderboardRating(
 		// If the UPDATE affected no rows, it's a critical failure for a transaction.
 		// We must throw an error to trigger a rollback.
 		if (result.changes === 0)
-			throw new Error(
-				`User with ID "${user_id}" not found on leaderboard "${leaderboard_id}" for update.`,
-			);
+			throw new Error(`User with ID "${user_id}" not found on leaderboard "${leaderboard_id}" for update.`); // prettier-ignore
 	}, `Error updating leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}"`);
 }
 

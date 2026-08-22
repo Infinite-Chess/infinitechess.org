@@ -122,9 +122,7 @@ function update(highlights: Square[]): void {
 					coordutil.areCoordsEqual(coords, snapCoords),
 				);
 				if (index !== -1)
-					throw Error(
-						'Snap is present, but the highlight already exists. If it exists than it should have been snapped to.',
-					);
+					throw Error('Snap is present, but the highlight already exists. If it exists than it should have been snapped to.'); // prettier-ignore
 				highlights.push(snapCoords); // Add
 			}
 		} else {
@@ -147,9 +145,7 @@ function update(highlights: Square[]): void {
  */
 function setPresetOverrides(pss: Coords[]): void {
 	if (preset_squares)
-		throw Error(
-			'Preset squares already initialized. Did you forget to clearPresetOverrides()?',
-		);
+		throw Error('Preset squares already initialized. Did you forget to clearPresetOverrides()?'); // prettier-ignore
 	preset_squares = pss;
 }
 

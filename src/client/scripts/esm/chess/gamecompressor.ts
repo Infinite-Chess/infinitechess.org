@@ -142,9 +142,7 @@ function GameToPosition(
 ): VariantOptions {
 	if (halfmoves === Infinity) halfmoves = moves.length; // If we want the final position, set halfmoves to the length of the moves array
 	if (moves.length < halfmoves)
-		throw Error(
-			`Cannot convert game to position. Moves length (${moves.length}) is less than desired halfmoves (${halfmoves}).`,
-		);
+		throw Error(`Cannot convert game to position. Moves length (${moves.length}) is less than desired halfmoves (${halfmoves}).`); // prettier-ignore
 	if (halfmoves === 0) return gamestate; // No changes needed
 
 	// console.log('Before converting gamestate to single position:', jsutil.deepCopyObject(gamestate));

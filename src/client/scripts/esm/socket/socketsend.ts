@@ -135,9 +135,7 @@ function clearPendingState(): void {
 /** Called when no message has been received within the expected time frame. Drops the socket. */
 function onHeartbeatTimeout(): void {
 	heartbeatTimerID = undefined;
-	console.log(
-		`No message received for ${socketutil.HEARTBEAT_INTERVAL_MS + socketutil.ECHO_TIMEOUT}ms. Assuming connection lost.`,
-	);
+	console.log(`No message received for ${socketutil.HEARTBEAT_INTERVAL_MS + socketutil.ECHO_TIMEOUT}ms. Assuming connection lost.`); // prettier-ignore
 	socketconnection.dropSocket();
 }
 

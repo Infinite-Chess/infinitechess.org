@@ -105,9 +105,7 @@ const total_images = imagesToProcess.length * 3;
 function logProgress(imageName: string, format: string): void {
 	finished_images += 1;
 	const percentage = Math.round((finished_images / total_images) * 100);
-	console.log(
-		`[${percentage}%] Optimized ${path.basename(imageName)} to ${format.toUpperCase()}`,
-	);
+	console.log(`[${percentage}%] Optimized ${path.basename(imageName)} to ${format.toUpperCase()}`); // prettier-ignore
 
 	if (finished_images === total_images) {
 		console.log('\nDone. All images have been processed.');

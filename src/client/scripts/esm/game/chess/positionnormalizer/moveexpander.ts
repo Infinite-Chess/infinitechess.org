@@ -43,9 +43,7 @@ function expandMove(
 		coordutil.areCoordsEqual(startCoordsBigInt, pt.transformedCoords as Coords),
 	);
 	if (originalPiece === undefined)
-		throw Error(
-			`Compressed position's pieces doesn't include the moved piece on coords ${String(move.startCoords)}! Were we sure to choose a move based on the compressed position and not the original?`,
-		);
+		throw Error(`Compressed position's pieces doesn't include the moved piece on coords ${String(move.startCoords)}! Were we sure to choose a move based on the compressed position and not the original?`); // prettier-ignore
 
 	/** The true start coordinates of the piece they moved. */
 	const originalStartCoords: Coords = originalPiece.coords; // EASY! This is already given
@@ -131,9 +129,7 @@ function expandMove(
 					axisGroup.transformedRange![1]
 			) {
 				// We found the group of interest this piece is targetting!
-				console.log(
-					`Moved piece is interested in group on the ${axis} axis with range ${axisGroup.transformedRange}.   Original range ${axisGroup.range}`,
-				);
+				console.log(`Moved piece is interested in group on the ${axis} axis with range ${axisGroup.transformedRange}.   Original range ${axisGroup.range}`); // prettier-ignore
 
 				// The piece is on the same file as this axis group, so connect it to this axis group
 				// so its position remains relative to them when the position is expanded back out.
@@ -160,9 +156,7 @@ function expandMove(
 				axisOrder[0]!.transformedRange![0]
 			) {
 				// They moved left of the leftmost group
-				console.log(
-					`Moved piece wants to move left of the leftmost group on the ${axis} axis.`,
-				);
+				console.log(`Moved piece wants to move left of the leftmost group on the ${axis} axis.`); // prettier-ignore
 
 				const distToLeftMostGroup =
 					compressedEndCoordsAxisValue - axisOrder[0]!.transformedRange![0];
@@ -178,9 +172,7 @@ function expandMove(
 				axisOrder[axisOrder.length - 1]!.transformedRange![1]
 			) {
 				// They moved right of the rightmost group
-				console.log(
-					`Moved piece wants to move right of the rightmost group on the ${axis} axis.`,
-				);
+				console.log(`Moved piece wants to move right of the rightmost group on the ${axis} axis.`); // prettier-ignore
 
 				const distToRightMostGroup =
 					compressedEndCoordsAxisValue -
@@ -254,13 +246,9 @@ function trueEndCoordsDeterminer(
 		...intersectionLine,
 	);
 	if (!intersectionPoint)
-		throw Error(
-			`Unable to find intersection point between movement line and group of interest!`,
-		);
+		throw Error(`Unable to find intersection point between movement line and group of interest!`); // prettier-ignore
 	if (!bdcoords.areCoordsIntegers(intersectionPoint))
-		throw Error(
-			`Intersection point between movement line and group of interest is not an integer coordinate!`,
-		);
+		throw Error(`Intersection point between movement line and group of interest is not an integer coordinate!`); // prettier-ignore
 
 	return bdcoords.coordsToBigInt(intersectionPoint);
 }
