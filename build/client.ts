@@ -59,14 +59,13 @@ export const ESMEntryPoints = [
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
 
-	// 'src/client/scripts/esm/game/main.ts',
-	// 'src/client/scripts/esm/components/header/header.ts',
+	// Dormant — pages whose code is not yet repurposed for the redesign.
 	// 'src/client/scripts/esm/views/leaderboard.ts',
 	// 'src/client/scripts/esm/views/news.ts',
 	// 'src/client/scripts/esm/views/guide.ts',
 	// 'src/client/scripts/esm/views/admin.ts',
 	// 'src/client/scripts/esm/views/icnvalidator/icnvalidator.ts',
-	// 'src/client/scripts/esm/workers/icnvalidator.worker.ts',
+	// 'src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts',
 ];
 
 /** CommonJS modules imported by html pages. */

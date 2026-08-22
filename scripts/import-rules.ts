@@ -1,89 +1,152 @@
 // scripts/import-rules.ts
 
 /**
- * Enforces import-boundary rules across every page entry point.
+ * Enforces the client's import-boundary model.
  *
- * Each rule names a restricted target (a module or directory) and the entry
- * points allowed to pull it in. The checker builds each entry's full transitive
- * graph (via esbuild's metafile — the SAME resolution as the real build) and
- * reports any DISALLOWED entry that reaches the target anywhere in its tree.
+ * Usage:
+ *   npx tsx scripts/import-rules.ts     Exits non-zero on any problem.
  *
- * Run manually:
- *   npx tsx scripts/import-rules.ts
+ * THE LADDER — a directory encodes its AUDIENCE, and imports only ever go DOWN
+ * it: never up, and never sideways between two page islands.
  *
- * Exits non-zero if any rule is violated.
+ *   (everything else)  any page — util/, webgl/, chess/, components/, shared/ …
+ *   board/             pages that render a board at all, home page included
+ *   game/              pages with an interactive board
+ *   views/<page>/      that one page alone
  *
- * ============================ EDITING RULES ============================
- * Add/edit/remove entries in the RULES array below.
- *   target         A module's short path. A trailing "/" matches a whole
- *                  directory (prefix); otherwise it's an exact file.
- *   allowedEntries Entry points permitted to reach the target. Matched as a
- *                  SUBSTRING of an entry's short path.
- * ALL paths are "short form" — the front of the real path is chopped off:
- *   - client scripts: drop "src/client/scripts/esm/"
- *       src/client/scripts/esm/views/index/index.ts  ->  views/index/index.ts
- *       src/client/scripts/esm/components/header/header.ts  ->  components/header/header.ts
- *   - shared/server:  drop only "src/"
- *       src/shared/chess/util/typeutil.ts  ->  shared/chess/util/typeutil.ts
+ * A file's home is its WIDEST CONSUMER, not its subject matter. `deltatime.ts`
+ * reads like game code but lives in `board/` because `boardpos.ts` needs it,
+ * and the home page reaches boardpos through variant preview tooltips.
+ *
+ * TWO CHECKS, neither subsuming the other. Reachability asks "which pages may
+ * descend this far", so it wants the shipped bundle. The ladder asks "which
+ * direction may an import go", so it wants the source — esbuild erases
+ * `import type` edges, over a third of the client's real coupling and exactly
+ * what the ladder exists to catch. Never re-point the ladder at the metafile.
+ *
+ * Only rungs get a reachability rule. `chess/` and its floor-mates are usable by
+ * anything, so they need none — do not add one.
+ *
+ * The ladder resolves RELATIVE specifiers only, safe while tsconfig.json
+ * declares no `paths`. Add path aliases and the scan must learn to resolve them.
+ *
+ * All paths are "short form": "src/client/scripts/esm/" or "src/" chopped off
+ * the front, giving views/index/index.ts and shared/chess/util/typeutil.ts.
  */
 
-import esbuild from 'esbuild';
+import fs from 'node:fs';
+import ts from 'typescript';
+import path from 'node:path';
+import esbuild, { Metafile } from 'esbuild';
 
 import { ESMEntryPoints } from '../build/client';
 
-// ================================= RULES =====================================
+// Types -------------------------------------------------------------------
 
 interface Rule {
-	/** Human-readable purpose, shown in the report. */
-	description: string;
 	/** Restricted module's short path. Trailing "/" = directory prefix; else exact file. */
 	target: string;
-	/** Entry points allowed to reach the target (substring match on the entry's short path). */
+	/**
+	 * Entry points allowed to reach the target, matched as a SUBSTRING of an
+	 * entry's short path. An entry INSIDE the target needs no listing — a bundle
+	 * rooted there cannot avoid containing it (e.g. the engine workers in game/).
+	 */
 	allowedEntries: string[];
 }
 
-const RULES: Rule[] = [
-	{
-		description: 'Game page code is private to the game page.',
-		target: 'views/game/',
-		allowedEntries: ['views/game/'],
-	},
-	{
-		description: 'Analysis page code is private to the analysis page.',
-		target: 'views/analysis/',
-		allowedEntries: ['views/analysis/'],
-	},
-	{
-		description: 'Board editor code is private to the board editor page.',
-		target: 'views/editor/',
-		allowedEntries: ['views/editor/'],
-	},
-	{
-		description: 'gameslot.ts is only for pages that load an interactive board.',
-		target: 'game/chess/gameslot.ts',
-		allowedEntries: ['views/game/game.ts', 'analysis', 'views/editor/'],
-	},
-];
+/** One rung of the ladder: a directory, and who it is usable by. */
+interface Layer {
+	dir: string;
+	audience: string;
+}
 
-// ================================= HELPERS ===================================
+// Constants ---------------------------------------------------------------
 
 const SRC_PREFIX = 'src/';
 
-/** Trims the noisy common prefix so paths read cleanly (matches import-chain.ts). */
+/** Root the ladder scan walks — every first-party client script. */
+const CLIENT_ESM = 'src/client/scripts/esm/';
+
+/** How many edges one group lists before truncating, so a mass breakage stays readable. */
+const MAX_LISTED = 20;
+
+/** The per-page island rung — the only one that also forbids SIDEWAYS imports. */
+const VIEWS = 'views/';
+
+/** What a directory not on a rung is usable by — the floor of the ladder. */
+const FLOOR_AUDIENCE = 'any page';
+
+/**
+ * The rungs in ASCENDING order — later means a smaller audience. Anything
+ * unlisted sits at the floor. Each audience is the single source of its wording:
+ * findings quote it, and reachability headings are built from it.
+ */
+const LAYERS: Layer[] = [
+	{ dir: 'board/', audience: 'pages that render a board' },
+	{ dir: 'game/', audience: 'pages with an interactive board' },
+	{ dir: VIEWS, audience: 'one page only' },
+];
+
+/** The page islands with an interactive board — the base of both rules. */
+const INTERACTIVE_BOARD_PAGES = [
+	'views/game/',
+	'views/analysis/',
+	'views/editor/',
+	'views/checkmatepractice/',
+];
+
+const RULES: Rule[] = [
+	{ target: 'game/', allowedEntries: INTERACTIVE_BOARD_PAGES },
+	{ target: 'board/', allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/'] },
+];
+
+/** Only script entry points — the bundled CSS entries are skipped. */
+const ENTRIES = ESMEntryPoints.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
+
+// Helper Functions --------------------------------------------------------
+
+/** Trims the noisy common prefix so paths read cleanly. */
 function short(file: string): string {
 	return file.replace(/^src\/client\/scripts\/esm\//, '').replace(/^src\//, '');
 }
 
-function matchesTarget(moduleShort: string, target: string): boolean {
-	return target.endsWith('/') ? moduleShort.startsWith(target) : moduleShort === target;
+/** A module's top-level directory, slash included: "util/thread.ts" -> "util/". */
+function topDirOf(moduleShort: string): string {
+	return `${moduleShort.split('/')[0]!}/`;
 }
 
-function entryAllowed(entryShort: string, allowed: string[]): boolean {
-	return allowed.some((a) => entryShort.includes(a));
+/** A module's rung on the ladder. Unlisted top-level directories are the floor, 0. */
+function rankOf(moduleShort: string): number {
+	return LAYERS.findIndex((l) => l.dir === topDirOf(moduleShort)) + 1;
 }
 
-/** Every first-party module reachable from an entry point. */
-async function reachableModules(entry: string): Promise<string[]> {
+/** Who a module's directory is usable by, in words. */
+function audienceOf(moduleShort: string): string {
+	return LAYERS.find((l) => l.dir === topDirOf(moduleShort))?.audience ?? FLOOR_AUDIENCE;
+}
+
+/** The page a views/ module belongs to: "views/game/gui/x.ts" -> "game", "views/news.ts" -> "news". */
+function pageOf(moduleShort: string): string {
+	return moduleShort.split('/')[1]!.replace(/\.[^.]+$/, '');
+}
+
+/** Up to three hit names with the target prefix trimmed, then a count of the rest. */
+function namesOf(hits: string[], target: string): string {
+	const shown = hits.slice(0, 3).map((h) => h.slice(target.length));
+	const rest = hits.length - shown.length;
+	return shown.join(', ') + (rest > 0 ? `, +${rest}` : '');
+}
+
+/** Truncates a long edge list down to MAX_LISTED, noting how many were dropped. */
+function cap(edges: string[]): string[] {
+	if (edges.length <= MAX_LISTED) return edges;
+	return [...edges.slice(0, MAX_LISTED), `- (+${edges.length - MAX_LISTED} more)`];
+}
+
+// Reachability Check ------------------------------------------------------
+
+/** An entry point's full transitive graph: every module it pulls in, and what each imports. */
+async function bundleGraph(entry: string): Promise<Metafile['inputs']> {
 	const result = await esbuild.build({
 		entryPoints: [entry],
 		bundle: true,
@@ -95,65 +158,190 @@ async function reachableModules(entry: string): Promise<string[]> {
 		external: ['/fonts/*'],
 		outdir: 'import-rules-virtual-out', // Never written (write: false).
 	});
-	return Object.keys(result.metafile.inputs).filter((f) => f.startsWith(SRC_PREFIX));
+	return result.metafile.inputs;
 }
 
-// ================================= CHECK =====================================
+/**
+ * The shortest import chain from an entry to the first module the target matches,
+ * as short paths with the entry itself dropped — it is already named in the finding.
+ * Callers must have confirmed a hit exists.
+ */
+function chainToTarget(
+	graph: Metafile['inputs'],
+	entry: string,
+	matches: (moduleShort: string) => boolean,
+): string[] {
+	const importedBy = new Map<string, string>();
+	const queue = [entry];
+	const seen = new Set([entry]);
 
-// Only script entry points — skip the bundled CSS entries.
-const entries = ESMEntryPoints.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
+	while (queue.length > 0) {
+		const current = queue.shift()!;
+		for (const imported of graph[current]!.imports) {
+			const dep = imported.path;
+			if (imported.external || !dep.startsWith(SRC_PREFIX) || !(dep in graph)) continue;
+			if (seen.has(dep)) continue;
+			seen.add(dep);
+			importedBy.set(dep, current);
+			if (!matches(short(dep))) {
+				queue.push(dep);
+				continue;
+			}
+			// Walk the breadcrumbs back up, stopping before the entry itself.
+			const chain: string[] = [];
+			for (let hop = dep; hop !== entry; hop = importedBy.get(hop)!)
+				chain.unshift(short(hop));
+			return chain;
+		}
+	}
+	return [];
+}
 
-// Compute each entry's reachable set once, then evaluate all rules against it.
-const reachByEntry = new Map<string, string[]>();
-await Promise.all(
-	entries.map(async (entry) => reachByEntry.set(entry, await reachableModules(entry))),
-);
+/**
+ * Asks "which pages may descend this far": builds each entry's full transitive
+ * graph (via esbuild's metafile — the SAME resolution as the real build) and
+ * reports any DISALLOWED entry that reaches a restricted target in its tree.
+ */
+async function checkReachability(): Promise<{ lines: string[]; problems: number }> {
+	// Build each entry's graph once, then evaluate all rules against it.
+	const graphByEntry = new Map<string, Metafile['inputs']>();
+	await Promise.all(
+		ENTRIES.map(async (entry) => graphByEntry.set(entry, await bundleGraph(entry))),
+	);
 
-const lines: string[] = ['# Import rule check', ''];
-let violations = 0;
-/** Full paths of entry points that broke at least one rule — for the import-chain tip. */
-const offendingEntries = new Set<string>();
+	const lines: string[] = [];
+	let problems = 0;
 
-for (const rule of RULES) {
-	const offenders: { entry: string; hits: string[] }[] = [];
-	for (const entry of entries) {
-		const entryShort = short(entry);
-		if (entryAllowed(entryShort, rule.allowedEntries)) continue;
-		const hits = reachByEntry
-			.get(entry)!
-			.map(short)
-			.filter((m) => matchesTarget(m, rule.target));
-		if (hits.length > 0) {
-			offenders.push({ entry: entryShort, hits });
-			offendingEntries.add(entry);
+	for (const rule of RULES) {
+		// A trailing "/" matches a whole directory; otherwise the target is one exact file.
+		const matches = (moduleShort: string): boolean =>
+			rule.target.endsWith('/')
+				? moduleShort.startsWith(rule.target)
+				: moduleShort === rule.target;
+
+		const findings: string[] = [];
+		for (const entry of ENTRIES) {
+			const entryShort = short(entry);
+			// A bundle rooted inside the target cannot avoid containing it.
+			if (matches(entryShort)) continue;
+			if (rule.allowedEntries.some((a) => entryShort.includes(a))) continue;
+
+			const graph = graphByEntry.get(entry)!;
+			const hits = Object.keys(graph)
+				.filter((f) => f.startsWith(SRC_PREFIX)) // First-party only; skip node_modules.
+				.map(short)
+				.filter(matches);
+			if (hits.length === 0) continue;
+
+			// A directory target names its hits without repeating the prefix; a file target IS the hit.
+			const detail = rule.target.endsWith('/')
+				? `${hits.length} ${rule.target} modules: ${namesOf(hits, rule.target)}`
+				: rule.target;
+			findings.push(`- ${entryShort} bundles ${detail}`);
+			// The offending import often sits many hops below the page, so name the path to it.
+			findings.push(`    via ${chainToTarget(graph, entry, matches).join(' → ')}`);
+			problems++;
+		}
+
+		if (findings.length === 0) continue; // Only failures are logged.
+		lines.push(
+			`### ${rule.target} is only for ${audienceOf(rule.target)}.`,
+			'',
+			...findings,
+			'',
+		);
+	}
+
+	return { lines, problems };
+}
+
+// Ladder Check ------------------------------------------------------------
+
+/** Every .ts/.js file under a directory, as cwd-relative forward-slash paths. */
+function walkScripts(dir: string, out: string[] = []): string[] {
+	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+		const child = path.posix.join(dir, entry.name);
+		if (entry.isDirectory()) walkScripts(child, out);
+		else if (/\.(ts|js)$/.test(entry.name)) out.push(child);
+	}
+	return out;
+}
+
+/** Resolves a relative specifier to the file it means — ".js" specifiers point at ".ts" sources. */
+function resolveRelative(fromFile: string, specifier: string): string | undefined {
+	const base = path.posix.join(path.posix.dirname(fromFile), specifier);
+	const candidates = [base.replace(/\.js$/, '.ts'), base, `${base}.ts`];
+	return candidates.find((c) => fs.existsSync(c) && fs.statSync(c).isFile());
+}
+
+/**
+ * Asks "which direction may an import go": a pure source scan of every
+ * first-party client file, counting `import type` edges that never reach a
+ * bundle. Needs no entry points, so it also covers pages that have none yet.
+ */
+function checkLadder(): { lines: string[]; problems: number } {
+	/**
+	 * Directory-pair sentence -> the offending edges under it. An audience belongs
+	 * to the DIRECTORY, so it is stated once per pair, not repeated on every edge.
+	 */
+	const upward = new Map<string, string[]>();
+	const crossPage: string[] = [];
+
+	for (const file of walkScripts(CLIENT_ESM)) {
+		const from = short(file);
+		const fromRank = rankOf(from);
+		const source = fs.readFileSync(file, 'utf8');
+		// TypeScript's own preprocessor: every import form, type-only included, comments excluded.
+		for (const { fileName } of ts.preProcessFile(source, true, true).importedFiles) {
+			if (!fileName.startsWith('.')) continue; // Bare specifiers are npm packages.
+			const resolved = resolveRelative(file, fileName);
+			if (resolved === undefined) continue; // No source file behind it — nothing to rank.
+			const to = short(resolved);
+
+			if (rankOf(to) > fromRank) {
+				const pair =
+					`${topDirOf(from)} (usable by ${audienceOf(from)})` +
+					` must not import ${topDirOf(to)} (usable by ${audienceOf(to)})`;
+				if (!upward.has(pair)) upward.set(pair, []);
+				upward.get(pair)!.push(`- ${from} → ${to}`);
+			} else if (
+				from.startsWith(VIEWS) &&
+				to.startsWith(VIEWS) &&
+				pageOf(from) !== pageOf(to)
+			) {
+				crossPage.push(`- ${from} → ${to}`);
+			}
 		}
 	}
 
-	if (offenders.length === 0) continue; // Only failures are logged.
+	const lines: string[] = [];
+	let problems = crossPage.length;
 
-	violations += offenders.length;
-	lines.push(`## ❌ ${rule.description}`);
-	lines.push(`Allowed: [${rule.allowedEntries.join(', ')}] · Target: \`${rule.target}\``);
-	for (const { entry, hits } of offenders) {
-		const sample = hits
-			.slice(0, 3)
-			.map((h) => `\`${h}\``)
-			.join(', ');
-		const extra = hits.length > 3 ? ` (+${hits.length - 3} more)` : '';
-		lines.push(`- \`${entry}\` reaches ${sample}${extra}`);
+	if (upward.size > 0) {
+		lines.push('### Files importing code with a smaller audience', '');
+		for (const [pair, edges] of upward) {
+			problems += edges.length;
+			lines.push(pair, ...cap(edges), '');
+		}
 	}
-	lines.push('');
+	if (crossPage.length > 0) {
+		lines.push("### One page importing another page's code", '', ...cap(crossPage), '');
+	}
+	return { lines, problems };
 }
 
-if (violations === 0) {
-	console.log(`✅ All ${RULES.length} import rules pass.`);
+// Report ------------------------------------------------------------------
+
+const reachability = await checkReachability();
+const ladder = checkLadder();
+const problems = reachability.problems + ladder.problems;
+
+if (problems === 0) {
+	console.log('Import rules: no problems.');
 	process.exit(0);
 }
 
-console.log(lines.join('\n'));
-console.error(`${violations} violation(s) across ${RULES.length} rule(s).`);
-console.error("\nTo trace how a target gets pulled in, view the offending page's full import chain:"); // prettier-ignore
-for (const entry of offendingEntries) {
-	console.error(`  npx tsx scripts/import-chain.ts ${entry}`);
-}
+// Ladder findings lead: one bad edge often causes several reachability findings below it.
+console.log(['## Import rules', '', ...ladder.lines, ...reachability.lines].join('\n'));
+console.error(`✗ ${problems} problem${problems === 1 ? '' : 's'}`);
 process.exit(1);

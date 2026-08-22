@@ -23,7 +23,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import esbuild from 'esbuild';
 
-// ================================= ARGS ======================================
+// Arguments ---------------------------------------------------------------
 
 const entryArg = process.argv[2];
 
@@ -35,7 +35,7 @@ if (!entryArg) {
 /** The entry point as a cwd-relative, forward-slash path — matching esbuild metafile keys. */
 const entry = path.relative(process.cwd(), path.resolve(entryArg)).split(path.sep).join('/');
 
-// ============================= BUILD THE GRAPH ===============================
+// Graph Construction ------------------------------------------------------
 
 /** Only modules under this prefix are studied; node_modules and assets elsewhere are ignored. */
 const SRC_PREFIX = 'src/';
@@ -70,7 +70,7 @@ for (const [file, data] of Object.entries(inputs)) {
 	adjacency.set(file, [...new Set(deps)]);
 }
 
-// ===================== BREADTH-FIRST SHORTEST-DEPTH WALK =====================
+// Shortest-Depth Walk -----------------------------------------------------
 
 /** module → shortest distance from the entry point. */
 const depth = new Map<string, number>([[entry, 0]]);
@@ -100,7 +100,7 @@ for (const list of levels.values()) list.sort();
 
 const maxDepth = Math.max(...levels.keys());
 
-// =============================== MARKDOWN REPORT =============================
+// Markdown Report ---------------------------------------------------------
 
 /** Trims the noisy common prefix so paths read cleanly while still showing src boundaries. */
 function short(file: string): string {

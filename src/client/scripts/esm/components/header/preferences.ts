@@ -427,13 +427,12 @@ function getTintColorOfType(type: number): Color {
  * modifying of theme players using the keyboard keys!
  */
 
-// import { listener_document } from "../../game/chess/game.js";
+// import { listener_document } from '../../game/chess/gamecore.js';
 
 // const allProperties = Object.keys(themes.themes[themes.defaultTheme]!);
 // let currPropertyIndex = 0;
 // let currProperty = allProperties[currPropertyIndex]!;
-// function update() {
-
+// function update(): void {
 // 	const themeProperties = themes.themes[preferences.theme]!;
 
 // 	if (listener_document.isKeyDown('KeyU')) {
@@ -530,10 +529,9 @@ function getTintColorOfType(type: number): Color {
 // 	if (listener_document.isKeyDown('Backslash')) {
 // 		console.log(JSON.stringify(themes.themes[preferences.theme]));
 // 	}
-
 // }
 
-// function dispatchThemeChangeEvent() {
+// function dispatchThemeChangeEvent(): void {
 // 	document.dispatchEvent(new Event('theme-change'));
 // }
 // setInterval(dispatchThemeChangeEvent, 1000);
