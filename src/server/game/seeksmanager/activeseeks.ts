@@ -40,22 +40,18 @@ function add(seek: AuthSeek): void {
 }
 
 /**
- * Deletes a seek from the collection by its index, typically when it is cancelled or accepted.
- * @param seek - The seek being deleted. Contains details about the seek and its owner.
- * @param index - The seek's index in the collection, found with {@link getByID}.
+ * Deletes a seek from the collection by its id, typically when it is cancelled or accepted.
  * @param options.dontBroadcast - If true, prevents broadcasting the changes to all clients. [false]
- * @returns true if there was a seek change
+ * @returns Whether a seek was deleted.
  */
-function deleteByIndex(
-	seek: AuthSeek,
-	index: number,
+function deleteByID(
+	id: string,
 	{ dontBroadcast = false }: { dontBroadcast?: boolean } = {},
 ): boolean {
-	if (index > seeks.length - 1) {
-		console.error(`Cannot delete seek of index ${index} when the length of our seeks list is ${seeks.length}!`); // prettier-ignore
-		return false; // No seek change
-	}
-	seeks.splice(index, 1); // Delete the seek
+	const index = seeks.findIndex((seek) => seek.id === id);
+	if (index === -1) return false; // No seek change
+
+	const seek = seeks.splice(index, 1)[0]!; // Delete the seek
 
 	if (!dontBroadcast) broadcast();
 
@@ -66,10 +62,10 @@ function deleteByIndex(
 
 /**
  * Deletes every seek owned by the given user, whether a member or a browser.
- * @param options.broadCastNewSeeks - Whether to broadcast the new seeks list after deleting. [true]
+ * @param options.dontBroadcast - If true, prevents broadcasting the changes to all clients. [false]
  * @returns Whether any seek was deleted.
  */
-function deleteOfUser(info: AuthMemberInfo, { broadCastNewSeeks = true } = {}): boolean {
+function deleteOfUser(info: AuthMemberInfo, { dontBroadcast = false } = {}): boolean {
 	let deletedSeek = false;
 	for (let i = seeks.length - 1; i >= 0; i--) {
 		const seek = seeks[i]!;
@@ -81,7 +77,7 @@ function deleteOfUser(info: AuthMemberInfo, { broadCastNewSeeks = true } = {}): 
 			console.log(`${info.signedIn ? `Deleted member's seek. Username: ${info.username}` : `Deleted browser's seek. Browser: ${info.browser_id}`}`); // prettier-ignore
 	}
 
-	if (deletedSeek && broadCastNewSeeks) broadcast(); // Broadcast the change if an seek was deleted
+	if (deletedSeek && !dontBroadcast) broadcast(); // Broadcast the change if an seek was deleted
 	return deletedSeek;
 }
 
@@ -93,16 +89,12 @@ function deleteOfUser(info: AuthMemberInfo, { broadCastNewSeeks = true } = {}): 
  * @returns true if the ID is already in use, false if it's available
  */
 function hasID(id: string): boolean {
-	for (const seek of seeks) if (seek.id === id) return true;
-	return false;
+	return getByID(id) !== undefined;
 }
 
-/** Finds a seek by ID, and returns an object: `{ seek, index }`, otherwise undefined. */
-function getByID(id: string): { seek: AuthSeek; index: number } | undefined {
-	for (let i = 0; i < seeks.length; i++) {
-		if (id === seeks[i]!.id) return { seek: seeks[i]!, index: i };
-	}
-	return undefined;
+/** Finds the seek with the given ID, if it exists. */
+function getByID(id: string): AuthSeek | undefined {
+	return seeks.find((seek) => seek.id === id);
 }
 
 /**
@@ -139,7 +131,7 @@ function broadcast(): void {
 export default {
 	// Membership
 	add,
-	deleteByIndex,
+	deleteByID,
 	deleteOfUser,
 	// Lookups
 	hasID,

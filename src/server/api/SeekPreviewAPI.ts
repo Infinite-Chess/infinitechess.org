@@ -20,13 +20,11 @@ function getSeekPreview(req: Request, res: Response): void {
 		return;
 	}
 
-	const result = activeseeks.getByID(seekId);
-	if (result === undefined) {
+	const seek = activeseeks.getByID(seekId);
+	if (seek === undefined) {
 		res.status(404).send('Seek not found.');
 		return;
 	}
-
-	const { seek } = result;
 
 	if (seek.variant.kind !== 'custom') {
 		// Preset seeks don't have a custom ICN to preview

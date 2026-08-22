@@ -34,13 +34,11 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 	}
 
 	// Does the seek still exist?
-	const seekAndIndex = activeseeks.getByID(messageContents);
-	if (!seekAndIndex) {
+	const seek = activeseeks.getByID(messageContents);
+	if (!seek) {
 		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.game_aborted);
 		return;
 	}
-
-	const { seek, index } = seekAndIndex;
 
 	const user = ws.metadata.memberInfo;
 
@@ -64,9 +62,9 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	let deletedAnySeek = false;
 	// Delete the seek accepted.
-	if (activeseeks.deleteByIndex(seek, index, { dontBroadcast: true })) deletedAnySeek = true;
+	if (activeseeks.deleteByID(messageContents, { dontBroadcast: true })) deletedAnySeek = true;
 	// Delete their existing seeks
-	if (activeseeks.deleteOfUser(user, { broadCastNewSeeks: false })) deletedAnySeek = true;
+	if (activeseeks.deleteOfUser(user, { dontBroadcast: true })) deletedAnySeek = true;
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 

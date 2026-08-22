@@ -64,7 +64,7 @@ function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 		if (!seek) return; // Message contained invalid seek parameters. Error already sent to the client.
 
 		// Replace any existing seek this user owns — the subsequent add() broadcasts the new state.
-		activeseeks.deleteOfUser(ws.metadata.memberInfo, { broadCastNewSeeks: false });
+		activeseeks.deleteOfUser(ws.metadata.memberInfo, { dontBroadcast: true });
 
 		activeseeks.add(seek);
 	} catch {

@@ -23,18 +23,16 @@ function cancel(ws: CustomWebSocket, messageContents: SeekId): void {
 	// Value should be the ID of the seek to cancel!
 	const id = messageContents; // id of seek to delete
 
-	const seekAndIndex = activeseeks.getByID(id); // { seek, index } | undefined
+	const seek = activeseeks.getByID(id);
 	// Already cancelled, they must have joined a game, OR CANCELLED on a different tab!
-	if (!seekAndIndex) return;
-
-	const { seek, index } = seekAndIndex;
+	if (!seek) return;
 
 	// Make sure they are the owner.
 	if (!memberinfoutil.eq(ws.metadata.memberInfo, seek.owner)) {
 		logEventsAndPrint(`Player tried to delete a seek that wasn't theirs!`, 'errLog');
 	}
 
-	activeseeks.deleteByIndex(seek, index);
+	activeseeks.deleteByID(id);
 }
 
 // Exports ---------------------------------------------------------------------------------------
