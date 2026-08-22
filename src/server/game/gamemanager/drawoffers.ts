@@ -12,18 +12,9 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { MatchInfo, ServerGame } from './servergametypes.js';
 
+import gameconfig from '../../../shared/util/gameconfig.js';
+
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-
-// Constants -------------------------------------------------------------------------------------
-
-/**
- * Minimum number of plies (half-moves) that
- * must span between 2 consecutive draw offers
- * by the same player!
- *
- * THIS MUST ALWAYS MATCH THE CLIENT-SIDE!!!!
- */
-const MIN_PLIES_BETWEEN_OFFERS = 2;
 
 // Functions -------------------------------------------------------------------------------------
 
@@ -53,7 +44,7 @@ function offeredTooRecently(servergame: ServerGame, color: Player): boolean {
 		// They have made at least 1 offer this game
 		// console.log("Last ply offered:", lastPlyDrawOffered);
 		const movesSinceLastOffer = servergame.moves.length - lastPlyDrawOffered;
-		if (movesSinceLastOffer < MIN_PLIES_BETWEEN_OFFERS) return true;
+		if (movesSinceLastOffer < gameconfig.MIN_PLIES_BETWEEN_DRAW_OFFERS) return true;
 	}
 	return false;
 }

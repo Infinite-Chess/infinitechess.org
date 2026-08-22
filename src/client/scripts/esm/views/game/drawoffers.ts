@@ -11,6 +11,7 @@
 import type { DrawOfferInfo } from '../../../../../shared/clientbound.js';
 
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import gameconfig from '../../../../../shared/util/gameconfig.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
@@ -20,15 +21,6 @@ import { GameBus } from '../../board/GameBus.js';
 import socketintents from '../../socket/socketintents.js';
 
 // Variables ---------------------------------------------------
-
-/**
- * Minimum number of plies (half-moves) that
- * must span between 2 consecutive draw offers
- * by the same player!
- *
- * THIS MUST ALWAYS MATCH THE SERVER-SIDE!!!!
- */
-const MIN_PLIES_BETWEEN_OFFERS: number = 2;
 
 /** The last move we extended a draw, if we have, otherwise undefined. */
 let plyOfLastOfferedDraw: number | undefined;
@@ -69,7 +61,7 @@ function isTooSoonToOfferDraw(): boolean {
 	if (plyOfLastOfferedDraw === undefined) return false; // We have made zero offers so far this game
 
 	const movesSinceLastOffer = gamefile.moves.length - plyOfLastOfferedDraw;
-	if (movesSinceLastOffer < MIN_PLIES_BETWEEN_OFFERS) return true;
+	if (movesSinceLastOffer < gameconfig.MIN_PLIES_BETWEEN_DRAW_OFFERS) return true;
 	return false;
 }
 

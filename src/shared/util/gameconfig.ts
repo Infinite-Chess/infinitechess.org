@@ -5,6 +5,14 @@
  */
 
 /**
+ * Minimum number of plies (half-moves) that must span between 2 consecutive
+ * draw offers by the same player.
+ *
+ * The server enforces it; the client reads it only to grey out its offer button.
+ */
+const MIN_PLIES_BETWEEN_DRAW_OFFERS = 2;
+
+/**
  * A limit posed against teleporting too far.
  *
  * Don't want players to discover new zones quickly
@@ -32,6 +40,7 @@ const SLIDE_LIMIT_VALUES = [
 export type SlideLimitValue = (typeof SLIDE_LIMIT_VALUES)[number];
 
 export default {
+	MIN_PLIES_BETWEEN_DRAW_OFFERS,
 	TELEPORT_LIMIT,
 	SLIDE_LIMIT_VALUES,
 };
