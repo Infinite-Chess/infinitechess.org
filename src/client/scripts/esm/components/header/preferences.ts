@@ -424,7 +424,7 @@ function getTintColorOfType(type: number): Color {
 
 /*
  * The commented stuff below is ONLY used for fast
- * modifying of theme players using the keyboard keys!
+ * modifying of theme players using the keyboard keys
  */
 
 // import { listener_document } from '../../game/chess/gamecore.js';
