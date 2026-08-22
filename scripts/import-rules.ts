@@ -17,6 +17,7 @@
  * A file's home is its WIDEST CONSUMER, not its subject matter. `deltatime.ts`
  * reads like game code but lives in `board/` because `boardpos.ts` needs it,
  * and the home page reaches boardpos through variant preview tooltips.
+ * `scripts/import-consumers.ts` computes each module's widest consumer directly.
  *
  * TWO CHECKS, neither subsuming the other. Reachability asks "which pages may
  * descend this far", so it wants the shipped bundle. The ladder asks "which
