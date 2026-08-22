@@ -4,7 +4,7 @@
  * Enforces the client's import-boundary model.
  *
  * Usage:
- *   npx tsx scripts/import-rules.ts     Exits non-zero on any problem.
+ *   npm run import-rules     Exits non-zero on any problem.
  *
  * THE LADDER — a directory encodes its AUDIENCE, and imports only ever go DOWN
  * it: never up, and never sideways between two page islands.

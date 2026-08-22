@@ -102,10 +102,13 @@
     "optimize-images": "tsx scripts/optimize-images.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "format": "prettier . --write",
-    "format:check": "prettier . --check",
+    "test:quiet": "o=$(npm test --silent 2>&1) || { printf '%s\\n' \"$o\"; exit 1; }",
+    "format": "prettier . --write --cache",
+    "format:check": "prettier . --check --cache",
     "lint": "eslint . --max-warnings=0",
     "type-check": "tsc -b --noEmit",
+    "import-rules": "tsx scripts/import-rules.ts",
+    "check": "concurrently --names format,types,lint,imports,test --prefix-colors \"grey,blue,magenta,cyan,green\" \"npm run format:check --silent\" \"npm run type-check --silent\" \"npm run lint --silent\" \"npm run import-rules --silent\" \"npm run test:quiet --silent\"",
     "prepare": "husky || true"
   },
   "lint-staged": {

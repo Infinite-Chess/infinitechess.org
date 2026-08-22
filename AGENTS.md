@@ -135,7 +135,7 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 ### Verification and commits
 
-47. After finishing up some changes that modified at least one script, run `npm run type-check --silent && npm run lint --silent` and get it passing. Repeat after every subsequent fix, unless all you edited was a comment. If you can't get it passing, show me the actual error output rather than your summary of it.
+47. After finishing up some changes that modified at least one script, run `npm run check --silent` — format, types, lint, import rules, and tests, in parallel — and get it passing. Repeat after every subsequent fix, unless all you edited was a comment. Fix a formatting-only failure with `npm run format`. If you can't get it passing, show me the actual error output rather than your summary of it.
 
 48. Fix every pre-existing lint warning you come across, related to our work or not. Do not tell me it existed, do not list it afterward. I don't need to know about it, that would expend more of my time reading. The exception is when you're only reviewing — a review changes nothing unless I say otherwise.
 

@@ -94,7 +94,7 @@ jobs:
       # script's exit code with tee's 0 and a failing check passes silently.
       - name: Check import rules
         shell: bash
-        run: npx tsx scripts/import-rules.ts 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+        run: npm run import-rules --silent 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
 
   test:
     name: Tests
