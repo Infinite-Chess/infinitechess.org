@@ -1,11 +1,11 @@
-// src/server/controllers/browserIDManager.ts
+// src/server/middleware/browserIDManager.ts
 
 import type { CookieOptions, Request, Response, NextFunction } from 'express';
 
 import crypto from 'crypto';
 
-import { isBrowserIDBanned } from '../middleware/banned.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { isBrowserIDBanned } from './banned.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 
 const expireOfBrowserIDCookieMillis = 1000 * 60 * 60 * 24 * 7; // 7 days
 

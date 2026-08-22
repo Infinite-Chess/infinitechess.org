@@ -1,4 +1,4 @@
-// src/server/middleware/reqLogger.ts
+// src/server/utility/reqLogger.ts
 
 /**
  * Logs each incoming HTTP request or websocket upgrade into `reqLog/`,
@@ -9,7 +9,7 @@ import type { IncomingMessage } from 'node:http';
 import type { Request, Response } from 'express';
 
 import { logEvents } from './logEvents.js';
-import { getClientIP } from '../utility/IP.js';
+import { getClientIP } from './IP.js';
 
 /** Logs one incoming request or websocket upgrade into `reqLog`. */
 function logIncomingRequest(req: IncomingMessage): void {

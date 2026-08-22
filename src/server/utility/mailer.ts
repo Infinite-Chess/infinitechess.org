@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer';
 import { fromEnv } from '@aws-sdk/credential-providers';
 import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
 
-import { logEvents } from '../middleware/logEvents.js';
+import { logEvents } from './logEvents.js';
 
 // --- Types ---
 

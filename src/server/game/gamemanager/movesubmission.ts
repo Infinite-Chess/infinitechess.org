@@ -35,7 +35,7 @@ import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
 import liveGameValues from './liveGameValues.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 
 // Constants -------------------------------------------------------------------------------------

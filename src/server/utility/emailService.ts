@@ -10,7 +10,7 @@ import { interpolate } from '../../shared/util/interpolate.js';
 import mailer from './mailer.js';
 import { getAppBaseUrl } from './urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from './logEvents.js';
 import { getScriptTranslations } from '../config/componentTranslationLoader.js';
 import {
 	EMAIL_ACCENT_COLOR,

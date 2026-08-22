@@ -12,7 +12,7 @@ import type { AbuseReportContext, SuspicionVerdict } from './ratingabusetypes.js
 
 import timeutil from '../../../shared/util/timeutil.js';
 
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEvents } from '../../utility/logEvents.js';
 import { sendRatingAbuseEmail } from '../../utility/emailService.js';
 import { updateRatingAbuseColumns } from '../../database/ratingAbuseManager.js';
 

@@ -17,7 +17,7 @@ import type { MemberInfoCookie } from '../../../shared/types/memberInfo.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 /**
  * Sets the `memberInfo` cookie (readable by JavaScript, not HTTP-only).

@@ -11,7 +11,7 @@
 import type { Request, Response, NextFunction } from 'express';
 
 import { setPrefsCookie } from '../api/Prefs.js';
-import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
+import { assignOrRenewBrowserID } from './browserIDManager.js';
 import { setPracticeProgressCookie } from '../api/PracticeProgress.js';
 
 /**

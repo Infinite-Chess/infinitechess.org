@@ -16,7 +16,7 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Functions -------------------------------------------------------------------------------------
 

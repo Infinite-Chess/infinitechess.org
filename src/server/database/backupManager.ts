@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { fileURLToPath } from 'url';
 
 import db from './database.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

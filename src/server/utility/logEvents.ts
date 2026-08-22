@@ -1,4 +1,4 @@
-// src/server/middleware/logEvents.ts
+// src/server/utility/logEvents.ts
 
 /**
  * Core log writer: appends one timestamped line per event to the right file,

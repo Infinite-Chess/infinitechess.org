@@ -14,7 +14,7 @@ import { logZodError } from '../utility/zodlogger.js';
 import { logSocketIn } from './socketLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './messageRouter.js';
-import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
 import { cancelEchoTimer, rescheduleHeartbeatTimer, sendReceipt } from './socketSend.js';
 
 // Functions ---------------------------------------------------------------------------

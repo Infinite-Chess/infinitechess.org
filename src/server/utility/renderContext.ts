@@ -10,7 +10,7 @@ import type { Request } from 'express';
 import type { LanguageOption } from '../config/componentTranslationLoader.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from './logEvents.js';
 import {
 	getLanguageOptions,
 	getScriptTranslations,

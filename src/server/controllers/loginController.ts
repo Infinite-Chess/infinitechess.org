@@ -16,7 +16,7 @@ import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { testPasswordForRequest } from './authController.js';
 import { updateLoginCountAndLastSeen } from '../database/memberManager.js';
-import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 /**
  * `POST /api/auth` — verifies the submitted username/password and, on success, logs the user

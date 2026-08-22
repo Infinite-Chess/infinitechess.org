@@ -3,7 +3,7 @@
 import type { Request, Response } from 'express';
 
 import { resolveAuth } from './resolveAuth.js';
-import { logEventsAndPrint } from './logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 import { getErrorPageContext } from '../utility/renderContext.js';
 
 /**

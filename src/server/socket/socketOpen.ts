@@ -17,14 +17,14 @@ import { onmessage } from './socketReceive.js';
 import { getClientIP } from '../utility/IP.js';
 import { logSocketOpen } from './socketLogger.js';
 import { executeSafely } from '../utility/errorGuard.js';
-import { runWithRequestID } from '../middleware/requestContext.js';
-import { buildTranslations } from '../middleware/reqTranslations.js';
+import { runWithRequestID } from '../utility/requestContext.js';
+import { buildTranslations } from '../config/reqTranslations.js';
 import { sendSocketMessage } from './socketSend.js';
-import { logIncomingRequest } from '../middleware/reqLogger.js';
+import { logIncomingRequest } from '../utility/reqLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
-import { resolveLanguageForRequest } from '../middleware/reqLanguage.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { resolveLanguageForRequest } from '../config/reqLanguage.js';
+import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 import {
 	addConnectionToConnectionLists,
 	doesClientHaveMaxSocketCount,

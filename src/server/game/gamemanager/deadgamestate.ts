@@ -27,7 +27,7 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { getFormattedEngineName, ValidEngine } from '../../../shared/chess/engine.js';
 
 import { getGameData } from '../../database/gamesManager.js';
-import ratingcalculation from './ratingcalculation.js';
+import ratingcalculation from '../../utility/ratingcalculation.js';
 import { getPlayerGamesOfGame } from '../../database/playerGamesManager.js';
 import { getEngineGamesOfGame } from '../../database/engineGamesManager.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';

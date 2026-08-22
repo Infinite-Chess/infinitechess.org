@@ -30,7 +30,7 @@ import gamefile from '../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 
 import gameutility from './gameutility.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 import { getAllLivePlayerGames } from '../../database/livePlayerGamesManager.js';
 import { getAllLiveEngineGames } from '../../database/liveEngineGamesManager.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';

@@ -21,7 +21,7 @@ import gamelogger from './gamelogger.js';
 import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
-import { logEvents } from '../../middleware/logEvents.js';
+import { logEvents } from '../../utility/logEvents.js';
 import gamestatebuilder from './gamestatebuilder.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 

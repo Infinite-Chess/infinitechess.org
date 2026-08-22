@@ -3,7 +3,7 @@
 import type { Request, Response, NextFunction } from 'express';
 
 import { renderErrorPage } from './renderErrorPage.js';
-import { logEventsAndPrint } from './logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 
 /**
  * Express error handler. Reached by uncaught server errors (statusless or 5xx) and by errors that

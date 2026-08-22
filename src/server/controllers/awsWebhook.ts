@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 import MessageValidator from 'sns-validator';
 
 import { addToBlacklist } from '../database/blacklistManager.js';
-import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 const validator = new MessageValidator();
 

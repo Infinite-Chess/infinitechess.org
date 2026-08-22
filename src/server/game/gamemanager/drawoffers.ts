@@ -14,7 +14,7 @@ import type { MatchInfo, ServerGame } from './servergametypes.js';
 
 import gameconfig from '../../../shared/util/gameconfig.js';
 
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Functions -------------------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-// src/server/controllers/authenticationTokens/tokenSigner.ts
+// src/server/utility/tokenSigner.ts
 
 /**
  * Tokens can be signed with the payload that includes any information we want!
@@ -10,7 +10,7 @@
  * Sessions are sliding: as long as the token is used before it expires, it gets renewed.
  */
 
-import type { Role } from '../roles.js';
+import type { Role } from '../controllers/roles.js';
 
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';

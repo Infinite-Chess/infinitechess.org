@@ -18,7 +18,7 @@ import {
 	DEFAULT_SESSION_EXPIRY_MILLIS,
 	EXTENDED_SESSION_EXPIRY_MILLIS,
 	signRefreshToken,
-} from './tokenSigner.js';
+} from '../../utility/tokenSigner.js';
 
 const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 // const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 10; // 10s

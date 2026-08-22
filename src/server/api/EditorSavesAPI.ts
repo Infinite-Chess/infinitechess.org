@@ -11,7 +11,7 @@ import * as z from 'zod';
 import editorutil from '../../shared/util/editorutil.js';
 
 import { logZodError } from '../utility/zodlogger.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 import {
 	getAllSavedPositionsForUser,
 	getSavedPositionCount,

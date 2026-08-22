@@ -2,7 +2,7 @@
 
 import * as z from 'zod';
 
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from './logEvents.js';
 
 /**
  * A consistent way of logging all malformed incoming messages,

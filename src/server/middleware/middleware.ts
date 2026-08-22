@@ -14,13 +14,13 @@ import apiRouter from '../routes/api.js';
 import htmlCookies from './htmlCookies.js';
 import staticAssets from './staticAssets.js';
 import errorHandler from './errorHandler.js';
-import { reqLogger } from './reqLogger.js';
+import { reqLogger } from '../utility/reqLogger.js';
 import { rateLimit } from './rateLimit.js';
 import webhooksRouter from '../routes/webhooks.js';
 import requestParsers from './requestParsers.js';
 import { rootRouter } from '../routes/root.js';
 import htmlCacheControl from './htmlCacheControl.js';
-import { assignRequestID } from './requestContext.js';
+import { assignRequestID } from '../utility/requestContext.js';
 
 /**
  * Assembles the request pipeline onto the app, in order.

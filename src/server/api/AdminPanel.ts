@@ -10,7 +10,7 @@ import type { Request, Response } from 'express';
 import validators from '../../shared/util/validators.js';
 
 import { deleteAccount } from '../controllers/deleteAccountController.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { areRolesHigherInPriority } from '../controllers/roles.js';
 import { refreshGitHubContributorsList } from './GitHub.js';

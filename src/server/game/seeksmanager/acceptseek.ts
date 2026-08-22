@@ -20,7 +20,7 @@ import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
 import lobbysubscribers from './lobbysubscribers.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 
 /**

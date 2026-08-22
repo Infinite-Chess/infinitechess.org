@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 
 import { readMemberInfoCookie } from '../controllers/authenticationTokens/memberInfoCookie.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 // Functions -------------------------------------------------------------

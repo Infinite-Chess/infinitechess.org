@@ -13,7 +13,7 @@ import type { MemberRecord } from '../database/memberManager.js';
 import bcrypt from 'bcrypt';
 
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
 import {
 	getBrowserAgent,
 	onCorrectPassword,

@@ -9,8 +9,8 @@ import express from 'express';
 import { initTranslations } from './config/i18n.js';
 import { configureNunjucks } from './config/nunjucks.js';
 import { configurePipeline } from './middleware/middleware.js';
-import { installReqTranslations } from './middleware/reqTranslations.js';
-import { initLanguageResolution, installReqLanguage } from './middleware/reqLanguage.js';
+import { installReqTranslations } from './config/reqTranslations.js';
+import { initLanguageResolution, installReqLanguage } from './config/reqLanguage.js';
 
 const app = express();
 

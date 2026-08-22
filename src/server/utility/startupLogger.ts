@@ -8,7 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { format } from 'date-fns';
 
-import { LOGS_DIR } from '../middleware/logEvents.js';
+import { LOGS_DIR } from './logEvents.js';
 
 // Helpers -------------------------------------------------------------------------------
 

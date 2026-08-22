@@ -23,7 +23,7 @@ import activeplayers from '../gamemanager/activeplayers.js';
 import lobbysubscribers from './lobbysubscribers.js';
 import { getEngineVersion } from '../../config/manifest.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------------------
 

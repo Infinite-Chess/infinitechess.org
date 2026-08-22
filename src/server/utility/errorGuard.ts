@@ -5,7 +5,7 @@
  * catching any errors that may occur, logging them to the error log.
  */
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from './logEvents.js';
 
 /**
  * Executes a callback function with provided arguments and catches any errors that occur.

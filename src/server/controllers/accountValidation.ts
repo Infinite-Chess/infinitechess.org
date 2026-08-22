@@ -14,7 +14,7 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 import validators from '../../shared/util/validators.js';
 
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------
 

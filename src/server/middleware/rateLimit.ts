@@ -9,7 +9,7 @@ import socketutil from '../../shared/util/socketutil.js';
 import { isIPBanned } from './banned.js';
 import { getClientIP } from '../utility/IP.js';
 import { getErrorPageContext } from '../utility/renderContext.js';
-import { logEvents, logEventsAndPrint } from './logEvents.js';
+import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 

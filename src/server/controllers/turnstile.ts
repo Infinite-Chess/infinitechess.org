@@ -10,7 +10,7 @@
 import type { IncomingMessage } from 'http';
 
 import { getClientIP } from '../utility/IP.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 
 // Types -------------------------------------------------------------------------
 

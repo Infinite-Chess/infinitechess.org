@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { request, RequestOptions } from 'node:https';
 
 import { logZodError } from '../utility/zodlogger.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

@@ -15,7 +15,7 @@ import { isBlacklisted } from '../database/blacklistManager.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { closeAllSocketsOfMember } from '../socket/socketRegistry.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './accountValidation.js';
-import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 import { sendPasswordResetEmail, sendPasswordChangedEmail } from '../utility/emailService.js';
 
 /**

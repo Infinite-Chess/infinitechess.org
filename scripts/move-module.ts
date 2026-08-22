@@ -2,9 +2,10 @@
 
 /**
  * `git mv`s one or more modules and rewrites every relative import specifier pointing
- * at them, plus the specifiers inside the moved files. Paths are recomputed from each
- * file's NEW home, so no hand-counting "../". Pass all moves in ONE run so they resolve
- * against each other. Preserves each specifier's .js/extensionless style.
+ * at them, plus the specifiers inside the moved files (vi.mock/vi.doMock module ids
+ * included). Paths are recomputed from each file's NEW home, so no hand-counting "../".
+ * Pass all moves in ONE run so they resolve against each other. Preserves each
+ * specifier's .js/extensionless style.
  *
  * It moves FILES only. Renaming a module's import identifier, and re-sorting the import
  * block, are yours — though the precommit hook re-sorts anyway.
@@ -68,7 +69,7 @@ for (const file of files) {
 	const src = fs.readFileSync(home, 'utf8');
 
 	const out = src.replace(
-		/(from\s+|import\s+|import\()(['"])(\.[^'"]*)\2/g,
+		/(from\s+|import\s+|import\(|vi\.mock\(|vi\.doMock\()(['"])(\.[^'"]*)\2/g,
 		(m, lead, q, spec) => {
 			const target = resolveSpec(oldDir, spec);
 			if (target === null) return m;

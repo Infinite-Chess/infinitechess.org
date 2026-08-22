@@ -10,7 +10,7 @@
 import type { Request, Response } from 'express';
 
 import { performBackup } from '../database/backupManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 
 /**
  * `POST /api/prepare-restart` — called by the GitHub Actions deploy workflow before `pm2 reload`.

@@ -10,7 +10,7 @@
  */
 
 import type { MetaData } from '../../../shared/domain.js';
-import type { RatingData } from './ratingcalculation.js';
+import type { RatingData } from '../../utility/ratingcalculation.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { MatchInfo, ServerGame } from './servergametypes.js';
 
@@ -23,10 +23,10 @@ import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validlea
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import ratingcalculation from './ratingcalculation.js';
+import ratingcalculation from '../../utility/ratingcalculation.js';
 import { deleteLiveGame } from '../../database/liveGamesManager.js';
 import { insertEngineGame } from '../../database/engineGamesManager.js';
-import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../../utility/logEvents.js';
 import { insertPlayerGame, updatePlayerGame } from '../../database/playerGamesManager.js';
 import { insertGame, updateGame, deleteGame } from '../../database/gamesManager.js';
 import {

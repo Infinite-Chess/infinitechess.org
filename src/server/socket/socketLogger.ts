@@ -7,7 +7,7 @@
 
 import type { CustomWebSocket } from './socketTypes.js';
 
-import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
 
 /** Message beyond this length will be truncated in the logs to prevent log bloat.  */
 const MAX_LOGGED_MESSAGE_LENGTH = 2048;

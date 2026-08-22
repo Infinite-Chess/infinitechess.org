@@ -12,7 +12,7 @@ import z from 'zod';
 import themes from '../../shared/components/header/themes.js';
 
 import { logZodError } from '../utility/zodlogger.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 import { readMemberInfoCookie } from '../controllers/authenticationTokens/memberInfoCookie.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 

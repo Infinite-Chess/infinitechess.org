@@ -9,7 +9,7 @@
  * 4. **Evicted** — both players have left the rematch window, so it drops out of memory.
  */
 
-import type { RatingData } from './ratingcalculation.js';
+import type { RatingData } from '../../utility/ratingcalculation.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { MatchInfo, PlayerRatingResult, ServerGame } from './servergametypes.js';
@@ -29,7 +29,7 @@ import lobbymanager from '../seeksmanager/lobbymanager.js';
 import activeplayers from './activeplayers.js';
 import liveGameValues from './liveGameValues.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import ratingcalculation from './ratingcalculation.js';
+import ratingcalculation from '../../utility/ratingcalculation.js';
 
 // Constants -------------------------------------------------------------------------------------
 

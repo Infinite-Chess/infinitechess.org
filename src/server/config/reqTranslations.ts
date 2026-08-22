@@ -1,4 +1,4 @@
-// src/server/middleware/reqTranslations.ts
+// src/server/config/reqTranslations.ts
 
 /**
  * Installs the request-bound translations `req.t` — a per-request, fully-typed
@@ -15,7 +15,7 @@
 import type { Express, Request } from 'express';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
-import { getScriptTranslations } from '../config/componentTranslationLoader.js';
+import { getScriptTranslations } from './componentTranslationLoader.js';
 
 /**
  * Builds a translations accessor for a resolved language: a Proxy that resolves each

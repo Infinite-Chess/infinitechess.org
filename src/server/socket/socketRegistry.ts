@@ -13,7 +13,7 @@ import type { CustomWebSocket } from './socketTypes.js';
 import uuid from '../../shared/util/uuid.js';
 import socketutil from '../../shared/util/socketutil.js';
 
-import { ID_LENGTH } from '../middleware/requestContext.js';
+import { ID_LENGTH } from '../utility/requestContext.js';
 
 // Variables ---------------------------------------------------------------------------
 

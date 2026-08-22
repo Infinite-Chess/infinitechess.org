@@ -10,7 +10,7 @@
 import jwt from 'jsonwebtoken';
 
 import { updateLastSeen } from '../../database/memberManager.js';
-import { refreshTokenGracePeriodMillis, TokenPayload } from './tokenSigner.js';
+import { refreshTokenGracePeriodMillis, TokenPayload } from '../../utility/tokenSigner.js';
 import {
 	deleteRefreshToken,
 	findRefreshToken,

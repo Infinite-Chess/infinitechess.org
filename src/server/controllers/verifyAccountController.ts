@@ -9,7 +9,7 @@
 import type { Request, Response } from 'express';
 import type { PendingRegistrationRecord } from '../database/pendingRegistrationManager.js';
 
-import { logEvents } from '../middleware/logEvents.js';
+import { logEvents } from '../utility/logEvents.js';
 import { promotePendingRegistration } from '../database/memberManager.js';
 import { getPendingRegistrationByVerificationToken } from '../database/pendingRegistrationManager.js';
 

@@ -30,7 +30,7 @@ import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validlea
 import abusechecks from './abusechecks.js';
 import abusereport from './abusereport.js';
 import gameutility from '../gamemanager/gameutility.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 import { getMultipleGameData } from '../../database/gamesManager.js';
 import { findRefreshTokensForUsers } from '../../database/refreshTokenManager.js';
 import { getMultipleMemberDataByCriteria } from '../../database/memberManager.js';

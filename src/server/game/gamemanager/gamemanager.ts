@@ -31,7 +31,7 @@ import liveGameValues from './liveGameValues.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
 import liveGameRestore from './liveGameRestore.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 import { sendSocketMessage } from '../../socket/socketSend.js';
 
 // Creation --------------------------------------------------------------------------------------

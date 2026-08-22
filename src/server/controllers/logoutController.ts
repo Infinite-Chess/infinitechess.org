@@ -4,7 +4,7 @@ import type { Request, Response } from 'express';
 
 import socketutil from '../../shared/util/socketutil.js';
 
-import { logEvents } from '../middleware/logEvents.js';
+import { logEvents } from '../utility/logEvents.js';
 import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { closeAllSocketsOfSession } from '../socket/socketRegistry.js';

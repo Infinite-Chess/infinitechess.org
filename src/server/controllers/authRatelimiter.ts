@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 import { interpolate } from '../../shared/util/interpolate.js';
 
 import { getClientIP } from '../utility/IP.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 
 // Types ----------------------------------------------------------------------------
 

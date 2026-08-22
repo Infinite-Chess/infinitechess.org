@@ -14,7 +14,7 @@ import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
 import { closeAllSocketsOfMember } from '../socket/socketRegistry.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------
 

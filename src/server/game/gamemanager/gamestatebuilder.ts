@@ -8,7 +8,7 @@
  * `deadgamestate.ts` builds the same page state for games that only exist in the DB.
  */
 
-import type { RatingData } from './ratingcalculation.js';
+import type { RatingData } from '../../utility/ratingcalculation.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { ServerGame } from './servergametypes.js';
 import type { AuthMemberInfo } from '../../types.js';
@@ -50,7 +50,7 @@ import tconfig from '../../config/translationconfig.js';
 import drawoffers from './drawoffers.js';
 import gameutility from './gameutility.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
-import ratingcalculation from './ratingcalculation.js';
+import ratingcalculation from '../../utility/ratingcalculation.js';
 import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 

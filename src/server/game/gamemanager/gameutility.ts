@@ -37,7 +37,7 @@ import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import { isGameServerValidated } from '../../../shared/chess/variants/servervalidation.js';
 
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Construction ----------------------------------------------------------------------------------
 

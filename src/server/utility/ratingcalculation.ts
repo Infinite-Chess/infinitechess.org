@@ -1,12 +1,12 @@
-// src/server/game/gamemanager/ratingcalculation.ts
+// src/server/utility/ratingcalculation.ts
 
 /**
  * Implementation of the Glicko-1 algorithm: the rating and rating-deviation changes
  * arising from a ranked game, and how a deviation grows again over an idle rating period.
  */
 
-import timeutil from '../../../shared/util/timeutil.js';
-import { PlayerGroup, type Player, players as p } from '../../../shared/chess/util/typeutil.js';
+import timeutil from '../../shared/util/timeutil.js';
+import { PlayerGroup, type Player, players as p } from '../../shared/chess/util/typeutil.js';
 
 // Constants -------------------------------------------------------------------------------------
 

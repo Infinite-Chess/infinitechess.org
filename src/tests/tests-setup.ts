@@ -20,8 +20,8 @@ console.warn = vi.fn();
 
 // Mock Logger to prevent file writes. Stub only the
 // file-writing log functions; keep real pure helpers.
-vi.mock('../server/middleware/logEvents.js', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('../server/middleware/logEvents.js')>();
+vi.mock('../server/utility/logEvents.js', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('../server/utility/logEvents.js')>();
 	return {
 		...actual,
 		logEvents: vi.fn(), // Do nothing

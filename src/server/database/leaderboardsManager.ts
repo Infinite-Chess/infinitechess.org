@@ -8,8 +8,8 @@ import type { Rating } from '../../shared/domain.js';
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
 import db, { dbCall } from './database.js';
-import ratingcalculation from '../game/gamemanager/ratingcalculation.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import ratingcalculation from '../utility/ratingcalculation.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
 
 // Types ----------------------------------------------------------------------------------------------
 

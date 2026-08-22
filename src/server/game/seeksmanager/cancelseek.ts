@@ -12,7 +12,7 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
 import activeseeks from './activeseeks.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 /**
  * Cancels/deletes the specified seek.

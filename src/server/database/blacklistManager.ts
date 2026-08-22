@@ -1,7 +1,7 @@
 // src/server/database/blacklistManager.ts
 
 import db, { dbCall } from './database.js';
-import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
 
 /**
  * Adds an email to the blacklist, if it isn't already.

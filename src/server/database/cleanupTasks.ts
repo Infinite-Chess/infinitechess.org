@@ -6,8 +6,8 @@
  */
 
 import db from './database.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { refreshTokenGracePeriodMillis } from '../controllers/authenticationTokens/tokenSigner.js';
+import { logEventsAndPrint } from '../utility/logEvents.js';
+import { refreshTokenGracePeriodMillis } from '../utility/tokenSigner.js';
 import { deleteExpiredPendingRegistrations } from './pendingRegistrationManager.js';
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
