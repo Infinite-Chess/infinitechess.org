@@ -13,6 +13,7 @@ import { parse as parseCookie } from 'cookie';
 import socketutil from '../../shared/util/socketutil.js';
 
 import { onclose } from './socketClose.js';
+import requestMeter from '../utility/requestMeter.js';
 import { onmessage } from './socketReceive.js';
 import { getClientIP } from '../utility/IP.js';
 import { logSocketOpen } from './socketLogger.js';
@@ -21,8 +22,7 @@ import { runWithRequestID } from '../utility/requestContext.js';
 import { buildTranslations } from '../config/reqTranslations.js';
 import { sendSocketMessage } from './socketSend.js';
 import { logIncomingRequest } from '../utility/reqLogger.js';
-import { rateLimitWebSocket } from '../middleware/rateLimit.js';
-import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
+import { validateRefreshToken } from '../database/refreshTokenManager.js';
 import { resolveLanguageForRequest } from '../config/reqLanguage.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 import {
@@ -32,8 +32,6 @@ import {
 	generateUniqueIDForSocket,
 	terminateAllIPSockets,
 } from './socketRegistry.js';
-
-// Variables ---------------------------------------------------------------------------
 
 // Functions ---------------------------------------------------------------------------
 
@@ -45,11 +43,11 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	const ws = closeIfInvalidAndAddMetadata(socket, req);
 	if (ws === undefined) return; // We will have already closed the socket
 
-	// Rate Limit Here
-	// A false means too many requests, in which case
-	// we are terminating all the IP's sockets for now!
-	if (!rateLimitWebSocket(ws)) {
-		// Connection not allowed
+	// Rate limit here. If they're over the cap, close their
+	// socket and terminate all the IP's sockets for now!
+	requestMeter.recordRecent();
+	if (requestMeter.meter(ws.metadata.IP, ws.metadata.userAgent) !== undefined) {
+		ws.close(1009, socketutil.ClosureReasons.TOO_MANY_REQUESTS);
 		return terminateAllIPSockets(ws.metadata.IP);
 	}
 
@@ -60,7 +58,19 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	}
 
 	// Initialize who they are. Member? Browser ID?...
-	resolveAuth_WebSocket(ws); // Modifies ws.metadata.memberInfo if they are signed in to add the user_id, username, and roles properties.
+	// Validates their refresh-token cookie against the database. If they are signed
+	// in, adds their user_id, username, and roles to the socket metadata's memberInfo.
+	const refreshToken = ws.metadata.cookies.jwt;
+	if (refreshToken !== undefined) {
+		const result = validateRefreshToken(refreshToken, ws.metadata.IP);
+		if (result) {
+			ws.metadata.memberInfo = {
+				...ws.metadata.memberInfo,
+				signedIn: true,
+				...result.payload,
+			};
+		}
+	}
 
 	if (
 		ws.metadata.memberInfo.signedIn &&

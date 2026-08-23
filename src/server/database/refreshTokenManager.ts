@@ -2,13 +2,18 @@
 
 /**
  * This module manages refresh tokens in the database, providing functions
- * to add, find, delete, and update them in the `refresh_tokens` table.
+ * to add, find, delete, and update them in the `refresh_tokens` table,
+ * and to validate a presented refresh token against it.
  */
 
 import type { Request } from 'express';
 
 import db, { dbCall } from './database.js';
 import { getClientIP } from '../utility/IP.js';
+import { updateLastSeen } from './memberManager.js';
+import { verifyTokenPayload, type TokenPayload } from '../utility/tokenSigner.js';
+
+// Types ------------------------------------------------------------------------------------------
 
 /**
  * Represents a record in the `refresh_tokens` database table.
@@ -30,6 +35,16 @@ export type RefreshTokenRecord = {
 	/** 1 if this is a persistent ("keep me logged in") session. */
 	is_persistent: 0 | 1;
 };
+
+// Constants --------------------------------------------------------------------------------------
+
+/**
+ * The window where a "consumed" token is still accepted, allowing a
+ * short grace period for concurrent requests during session renewal.
+ */
+export const TOKEN_GRACE_PERIOD_MS = 1000 * 10; // 10 seconds
+
+// Finding ----------------------------------------------------------------------------------------
 
 /**
  * Finds a refresh token in the database.
@@ -68,6 +83,8 @@ export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenR
 	);
 }
 
+// Adding & Updating ------------------------------------------------------------------------------
+
 /**
  * Adds a new refresh token record to the database.
  * @param req - The Express request object to get the IP address.
@@ -105,6 +122,34 @@ export function addRefreshToken(
 }
 
 /**
+ * Updates the IP address for a given token.
+ * @param token - The token to update.
+ * @param ip - The new IP address to record.
+ * @throws If a database error occurs.
+ */
+export function updateRefreshTokenIP(token: string, ip: string | null): void {
+	const query = `UPDATE refresh_tokens SET ip_address = ? WHERE token = ?`;
+	dbCall(() => db.run(query, [ip, token]), 'Database error while updating refresh token IP');
+}
+
+/**
+ * Marks a token as consumed (soft delete).
+ * Used during rotation to allow a short grace period for concurrent requests.
+ * @param token - The token to mark as consumed.
+ * @throws If a database error occurs.
+ */
+export function markRefreshTokenAsConsumed(token: string): void {
+	const now = Date.now();
+	const query = `UPDATE refresh_tokens SET consumed_at = ? WHERE token = ?`;
+	dbCall(
+		() => db.run(query, [now, token]),
+		'Database error while marking refresh token as consumed',
+	);
+}
+
+// Deleting ---------------------------------------------------------------------------------------
+
+/**
  * Deletes a specific refresh token from the database.
  * No-ops if the token doesn't exist.
  * @param token - The token to delete.
@@ -129,28 +174,76 @@ export function deleteAllRefreshTokensForUser(userId: number): void {
 	);
 }
 
+// Validating presented tokens ---------------------------------------------------------------------
+
 /**
- * Updates the IP address for a given token.
- * @param token - The token to update.
- * @param ip - The new IP address to record.
- * @throws If a database error occurs.
+ * Checks if a presented refresh token is valid: not expired, nor tampered, and it's
+ * still in the database (not manually invalidated by logging out, or deleting the account).
+ * As side effects, deletes dead tokens found, updates the stored IP if it changed,
+ * and updates the member's last_seen.
+ * @param IP - Has a chance to not be defined on HTTP requests.
  */
-export function updateRefreshTokenIP(token: string, ip: string | null): void {
-	const query = `UPDATE refresh_tokens SET ip_address = ? WHERE token = ?`;
-	dbCall(() => db.run(query, [ip, token]), 'Database error while updating refresh token IP');
+export function validateRefreshToken(
+	token: string,
+	IP?: string,
+): { payload: TokenPayload; tokenRecord: RefreshTokenRecord } | undefined {
+	// Decode the token
+	const payload = verifyTokenPayload(token);
+	if (!payload) return undefined; // Expired or tampered
+
+	let tokenRecord: RefreshTokenRecord | undefined;
+	try {
+		// Check against the database
+		tokenRecord = resolveValidTokenRecord(token, IP);
+		if (!tokenRecord) return undefined; // Not in the database (logged out, account deleted, or rotated past its grace period)
+	} catch {
+		// DB error (already logged)
+		return undefined;
+	}
+
+	try {
+		updateLastSeen(payload.user_id);
+	} catch {
+		// DB error (already logged). Token is still valid
+	}
+	return { payload, tokenRecord };
 }
 
 /**
- * Marks a token as consumed (soft delete).
- * Used during rotation to allow a short grace period for concurrent requests.
- * @param token - The token to mark as consumed.
- * @throws If a database error occurs.
+ * Checks if a specific refresh token is present in the database, and has not expired,
+ * deleting it if it has expired, and updating its last used IP address if it has changed.
+ * If not present, it means it has either expired, been manually invalidated by the user logging out, or deleting their account.
+ *
+ * Returns the token record if found and valid, otherwise undefined.
+ * @throws If any database error occurs during the process.
  */
-export function markRefreshTokenAsConsumed(token: string): void {
+function resolveValidTokenRecord(token: string, IP?: string): RefreshTokenRecord | undefined {
+	// Find the token in the database.
+	const tokenRecord = findRefreshToken(token);
+
+	if (!tokenRecord) return; // Token must have been manually invalidated by the user logging out, or deleting their account.
+
 	const now = Date.now();
-	const query = `UPDATE refresh_tokens SET consumed_at = ? WHERE token = ?`;
-	dbCall(
-		() => db.run(query, [now, token]),
-		'Database error while marking refresh token as consumed',
-	);
+
+	// Check if it is naturally expired.
+	if (tokenRecord.expires_at < now) {
+		// The token is expired, remove it from the database for cleanup.
+		deleteRefreshToken(token);
+		return;
+	}
+
+	// Check if it was consumed (replaced) and the grace period has ended.
+	if (tokenRecord.consumed_at !== null && now - tokenRecord.consumed_at > TOKEN_GRACE_PERIOD_MS) {
+		// The token is "dead" (grace period over). Remove it from the database.
+		deleteRefreshToken(token);
+		return;
+	}
+
+	// Update the IP address if it has changed.
+	const IP_New: string | null = IP || null;
+	if (IP_New !== tokenRecord.ip_address) {
+		updateRefreshTokenIP(token, IP_New);
+	}
+
+	return tokenRecord;
 }

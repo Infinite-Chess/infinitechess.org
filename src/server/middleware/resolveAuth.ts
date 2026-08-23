@@ -1,17 +1,16 @@
 // src/server/middleware/resolveAuth.ts
 
-/*
- * Reads a request's refresh-token cookie, validates it, and sets `req.memberInfo`
- * (or the websocket metadata's memberInfo) with the signed-in user's identity.
+/**
+ * Reads a request's refresh-token cookie, validates it against the database,
+ * and sets `req.memberInfo` with the signed-in user's identity.
  */
 
 import type { Request, Response, NextFunction } from 'express';
 
 import { getClientIP } from '../utility/IP.js';
 import { ParsedCookies } from '../types.js';
-import { CustomWebSocket } from '../socket/socketTypes.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
-import { validateRefreshToken } from '../controllers/authenticationTokens/tokenValidator.js';
+import { validateRefreshToken } from '../database/refreshTokenManager.js';
 import {
 	freshenSession,
 	revokeSession,
@@ -74,32 +73,4 @@ function tryRefreshToken(req: Request, res: Response): void {
 	req.memberInfo = { ...req.memberInfo, signedIn: true, ...result.payload }; // Username was our payload when we generated the access token
 }
 
-/**
- * [WebSocket] Reads the refresh cookie token,
- * Modifies ws.metadata.memberInfo if they are signed in
- * to add the user_id, username, and roles properties.
- * @param req
- * @param ws - The websocket object
- */
-function resolveAuth_WebSocket(ws: CustomWebSocket): void {
-	tryRefreshToken_WebSocket(ws);
-}
-
-/**
- * [WebSocket] If they have a valid refresh token cookie (http-only), set's
- * the socket metadata's `user` property, ands returns true.
- * @param ws - The websocket object
- * @returns true if a valid token was found.
- */
-function tryRefreshToken_WebSocket(ws: CustomWebSocket): void {
-	const refreshToken = ws.metadata.cookies.jwt;
-	if (!refreshToken) return; // Not logged in, don't set their user property
-
-	const ip = ws.metadata.IP;
-	const result = validateRefreshToken(refreshToken, ip); // True for refresh token
-	if (!result) return;
-
-	ws.metadata.memberInfo = { ...ws.metadata.memberInfo, signedIn: true, ...result.payload };
-}
-
-export { resolveAuth, resolveAuth_WebSocket };
+export { resolveAuth };

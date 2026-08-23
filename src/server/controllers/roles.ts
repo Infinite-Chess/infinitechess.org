@@ -10,16 +10,8 @@
  * sessions/sockets on change.
  */
 
+import { VALID_ROLES, Role } from '../types.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
-
-/**
- * All possible roles, IN ORDER FROM LEAST TO MOST IMPORTANCE!
- * The ordering determines admin's capabilities in the admin console.
- */
-const validRoles = ['patron', 'admin', 'owner'] as const;
-
-/** A valid role of a user. */
-export type Role = (typeof validRoles)[number];
 
 /**
  * Adds a specified role to a member's roles list.
@@ -58,13 +50,13 @@ function areRolesHigherInPriority(roles1: Role[] | null, roles2: Role[] | null):
 
 	let roles1HighestPriority = -1; // -1 is the same as someone with zero roles
 	r1.forEach((role) => {
-		const priorityOfRole = validRoles.indexOf(role);
+		const priorityOfRole = VALID_ROLES.indexOf(role);
 		if (priorityOfRole > roles1HighestPriority) roles1HighestPriority = priorityOfRole;
 	});
 
 	let roles2HighestPriority = -1; // -1 is the same as someone with zero roles
 	r2.forEach((role) => {
-		const priorityOfRole = validRoles.indexOf(role);
+		const priorityOfRole = VALID_ROLES.indexOf(role);
 		if (priorityOfRole > roles2HighestPriority) roles2HighestPriority = priorityOfRole;
 	});
 

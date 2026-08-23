@@ -9,30 +9,12 @@ import type { Request, Response } from 'express';
 import socketutil from '../../shared/util/socketutil.js';
 
 import activegames from '../game/gamemanager/activegames.js';
-import { deleteMember } from '../database/memberManager.js';
 import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
 import { closeAllSocketsOfMember } from '../socket/socketRegistry.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
-
-// Constants -------------------------------------------------------------------------
-
-/**
- * A list of all valid reasons to delete an account.
- * These reasons are stored in the deleted_members table in the database.
- */
-const validDeleteReasons = [
-	'unverified', // They failed to verify after 3 days
-	'user request', // They deleted their own account, or requested it to be deleted.
-	'security', // A choice by server admins, for security purpose.
-	'rating abuse', // Unfairly boosted their own elo with a throwaway account
-] as const;
-
-/** A valid account deletion reason. */
-export type DeleteReason = (typeof validDeleteReasons)[number];
-
-// Functions -------------------------------------------------------------------------
+import { deleteMember, type DeleteReason } from '../database/memberManager.js';
 
 /** `DELETE /api/members/:member` — deletes the caller's own account after re-verifying their password. */
 async function removeAccount(req: Request, res: Response): Promise<void> {
@@ -90,17 +72,11 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 }
 
 /**
- * Deletes a user's account by user_id,
- * terminates all their login session,
- * and closes all their open websockets.
- *
- * @throws If the delete reason is invalid, or if a database error occurs during the deletion process.
+ * Deletes a user's account by user_id, terminates all their
+ * login session, and closes all their open websockets.
+ * @throws If a database error occurs during the deletion process.
  */
-function deleteAccount(user_id: number, reason_deleted: string): void {
-	if (!isValidDeleteReason(reason_deleted)) {
-		throw Error(`Delete reason (${reason_deleted}) is invalid.`);
-	}
-
+function deleteAccount(user_id: number, reason_deleted: DeleteReason): void {
 	deleteMember(user_id, reason_deleted);
 
 	// Close their sockets, delete their seeks...
@@ -109,11 +85,6 @@ function deleteAccount(user_id: number, reason_deleted: string): void {
 	// Account deleting automatically invalidates all their sessions,
 	// because their refresh tokens are deleted.
 	// However, they will have to refresh the page for their page and navigation links to update.
-}
-
-/** Type Guard: Checks if a string is a valid DeleteReason. */
-function isValidDeleteReason(reason: string): reason is DeleteReason {
-	return validDeleteReasons.some((r) => r === reason);
 }
 
 export { removeAccount, deleteAccount };

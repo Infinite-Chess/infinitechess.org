@@ -1,6 +1,6 @@
 // src/server/controllers/passwordResetController.ts
 
-import type { Role } from './roles.js';
+import type { Role } from '../types.js';
 
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';

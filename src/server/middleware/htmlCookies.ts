@@ -10,9 +10,9 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
-import { setPrefsCookie } from '../api/Prefs.js';
-import { assignOrRenewBrowserID } from './browserIDManager.js';
-import { setPracticeProgressCookie } from '../api/PracticeProgress.js';
+import prefsCookie from '../controllers/prefsCookie.js';
+import browserIDManager from './browserIDManager.js';
+import practiceProgressCookie from '../controllers/practiceProgressCookie.js';
 
 /**
  * LEGACY: clears the old `i18next` language cookie, superseded by the `lang` cookie.
@@ -24,9 +24,9 @@ function clearLegacyLangCookie(req: Request, res: Response, next: NextFunction):
 }
 
 const htmlCookies = [
-	assignOrRenewBrowserID, // Sets the 'browser-id' cookie
-	setPrefsCookie, // Sets the user 'preferences' cookie
-	setPracticeProgressCookie, // Sets the user 'checkmates_beaten' cookie
+	browserIDManager.assignOrRenew, // Sets the 'browser-id' cookie
+	prefsCookie.set, // Sets the user 'preferences' cookie
+	practiceProgressCookie.set, // Sets the user 'checkmates_beaten' cookie
 	clearLegacyLangCookie, // LEGACY: clears the old 'i18next' cookie
 ];
 

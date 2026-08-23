@@ -1,7 +1,5 @@
 // src/tests/tests-setup.ts
 
-import type { NextFunction, Request, Response } from 'express';
-
 import { vi, afterAll } from 'vitest';
 
 // Set up environment variables for testing.
@@ -26,10 +24,6 @@ vi.mock('../server/utility/logEvents.js', async (importOriginal) => {
 		...actual,
 		logEvents: vi.fn(), // Do nothing
 		logEventsAndPrint: vi.fn(), // Do nothing
-		reqLogger: (_req: Request, _res: Response, next: NextFunction) => next(), // Continue to next middleware
-		logSocketOpen: vi.fn(), // Do nothing
-		logSocketIn: vi.fn(), // Do nothing
-		logSocketOut: vi.fn(), // Do nothing
 	};
 });
 

@@ -8,11 +8,12 @@
 import type { CustomWebSocket } from './socketTypes.js';
 import type { ServerboundMessage } from '../../shared/serverbound.js';
 
+import socketutil from '../../shared/util/socketutil.js';
 import { ServerboundSchema } from '../../shared/serverbound.js';
 
+import requestMeter from '../utility/requestMeter.js';
 import { logZodError } from '../utility/zodlogger.js';
 import { logSocketIn } from './socketLogger.js';
-import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './messageRouter.js';
 import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
 import { cancelEchoTimer, rescheduleHeartbeatTimer, sendReceipt } from './socketSend.js';
@@ -99,7 +100,12 @@ function parseAndValidateMessage(messageStr: string): ServerboundMessage | null 
  */
 function logAndRateLimitMessage(ws: CustomWebSocket, rawMessage: string): boolean {
 	logSocketIn(ws, rawMessage); // Log every incoming message, even rate-limited ones.
-	if (!rateLimitWebSocket(ws)) return false; // Rate limited; the socket will have already been closed.
+	requestMeter.recordRecent();
+	if (requestMeter.meter(ws.metadata.IP, ws.metadata.userAgent) !== undefined) {
+		// Rate limited; close the socket.
+		ws.close(1009, socketutil.ClosureReasons.TOO_MANY_REQUESTS);
+		return false;
+	}
 	return true;
 }
 

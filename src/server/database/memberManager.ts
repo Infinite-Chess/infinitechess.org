@@ -4,8 +4,6 @@
  * This script handles almost all of the queries we use to interact with the members table!
  */
 
-import type { DeleteReason } from '../controllers/deleteAccountController.js';
-
 import jsutil from '../../shared/util/jsutil.js';
 
 import db, { dbCall } from './database.js';
@@ -36,6 +34,22 @@ export interface MemberRecord {
 }
 
 type MembersColumn = keyof MemberRecord;
+
+/** A valid account deletion reason, stored in the deleted_members table. */
+export type DeleteReason = (typeof validDeleteReasons)[number];
+
+// Constants ----------------------------------------------------------------
+
+/**
+ * A list of all valid reasons to delete an account.
+ * These reasons are stored in the deleted_members table in the database.
+ */
+const validDeleteReasons = [
+	'unverified', // They failed to verify after 3 days
+	'user request', // They deleted their own account, or requested it to be deleted.
+	'security', // A choice by server admins, for security purpose.
+	'rating abuse', // Unfairly boosted their own elo with a throwaway account
+] as const;
 
 // Creation ----------------------------------------------------------------
 
@@ -242,6 +256,11 @@ export function updateLastSeen(userId: number): void {
 }
 
 // Deletion ----------------------------------------------------------------
+
+/** Type Guard: Checks if a string is a valid DeleteReason. */
+export function isValidDeleteReason(reason: string): reason is DeleteReason {
+	return validDeleteReasons.some((r) => r === reason);
+}
 
 /**
  * Deletes a user from the members table and adds them to the deleted_members table.

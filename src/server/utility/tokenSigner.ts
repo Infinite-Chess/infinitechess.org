@@ -1,8 +1,8 @@
 // src/server/utility/tokenSigner.ts
 
 /**
- * Tokens can be signed with the payload that includes any information we want!
- * We like to use user ID, username and roles.
+ * Signs and verifies refresh tokens: JWTs whose payload carries the
+ * member's identity (user ID, username and roles).
  *
  * The benefit of signing access tokens with information is when we verify the tokens,
  * we don't have to do a database lookup to know who they are!
@@ -10,12 +10,14 @@
  * Sessions are sliding: as long as the token is used before it expires, it gets renewed.
  */
 
-import type { Role } from '../controllers/roles.js';
+import type { Role } from '../types.js';
 
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
+// Types ------------------------------------------------------------------------------------------
 
 /** The payload of the JWT token, containing user information. */
 interface TokenPayload {
@@ -24,10 +26,10 @@ interface TokenPayload {
 	roles: Role[] | null;
 }
 
+// Constants --------------------------------------------------------------------------------------
+
 if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN_SECRET');
 const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
-
-// Session tokens expiry times ------------------------------------------------------
 
 /** The lifetime of a standard session refresh token, if never renewed. */
 const DEFAULT_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 2; // 48 hours
@@ -38,9 +40,6 @@ const DEFAULT_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 2; // 48 hours
  * when "keep me logged in" is checked, if never renewed.
  */
 const EXTENDED_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 180; // 180 days (~6 months)
-
-/** The window where a "consumed" token is still accepted. */
-const refreshTokenGracePeriodMillis = 1000 * 10; // 10 seconds
 
 // Signing Tokens ------------------------------------------------------------------------------------
 
@@ -72,11 +71,36 @@ function generatePayload(user_id: number, username: string, roles: Role[] | null
 	return { user_id, username, roles };
 }
 
+// Verifying Tokens ------------------------------------------------------------------------------------
+
+/**
+ * Extracts and decodes the payload from a refresh token, verifying its signature and expiry.
+ * @returns The decoded payload, or null if verification failed — expired, tampered, or malformed.
+ */
+function verifyTokenPayload(token: string): TokenPayload | null {
+	try {
+		// Can cast because we know we originally signed it as an object, not a string.
+		const jwtPayload = jwt.verify(token, REFRESH_TOKEN_SECRET) as jwt.JwtPayload;
+		return {
+			user_id: jwtPayload['user_id'],
+			username: jwtPayload['username'],
+			roles: jwtPayload['roles'],
+		};
+	} catch {
+		// Verification failed. Not logged: every cause is expected — an expired token
+		// (commonly a backgrounded/sleeping tab reusing a stale token), or a malformed/tampered
+		// token (typically bots & scanners probing endpoints with junk bearer tokens).
+		return null;
+	}
+}
+
+// Exports ------------------------------------------------------------------------------------------------
+
 export {
 	DEFAULT_SESSION_EXPIRY_MILLIS,
 	EXTENDED_SESSION_EXPIRY_MILLIS,
-	refreshTokenGracePeriodMillis,
 	signRefreshToken,
+	verifyTokenPayload,
 };
 
 export type { TokenPayload };

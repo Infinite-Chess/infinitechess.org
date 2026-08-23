@@ -7,7 +7,7 @@
 
 import db from './database.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
-import { refreshTokenGracePeriodMillis } from '../utility/tokenSigner.js';
+import { TOKEN_GRACE_PERIOD_MS } from './refreshTokenManager.js';
 import { deleteExpiredPendingRegistrations } from './pendingRegistrationManager.js';
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
@@ -74,7 +74,7 @@ function deleteExpiredPasswordResetTokens(): void {
 function cleanUpExpiredRefreshTokens(): void {
 	try {
 		const now = Date.now();
-		const consumptionThreshold = now - refreshTokenGracePeriodMillis;
+		const consumptionThreshold = now - TOKEN_GRACE_PERIOD_MS;
 
 		const query = `
             DELETE FROM refresh_tokens

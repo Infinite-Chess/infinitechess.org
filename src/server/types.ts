@@ -1,8 +1,20 @@
 // src/server/types.ts
 
 import type { IncomingMessage } from 'http';
-import type { Role } from './controllers/roles';
 import type { ScriptTranslations } from '../shared/types/script-translations.js';
+
+// Roles ------------------------------------------------------------------------------------------
+
+/**
+ * All possible roles, IN ORDER FROM LEAST TO MOST IMPORTANCE!
+ * The ordering determines admin's capabilities in the admin console.
+ */
+export const VALID_ROLES = ['patron', 'admin', 'owner'] as const;
+
+/** A valid role of a user. */
+export type Role = (typeof VALID_ROLES)[number];
+
+// Module augmentations ---------------------------------------------------------------------------
 
 declare global {
 	namespace Express {
@@ -41,6 +53,8 @@ declare module 'ws' {
 	}
 }
 
+// Member identity --------------------------------------------------------------------------------
+
 /** Information to identify a specific user, logged in or not. */
 export type MemberInfo = SignedInMemberInfo | SignedOutMemberInfo;
 
@@ -63,6 +77,8 @@ type SignedOutMemberInfo = {
  * identifier to identify them.
  */
 export type AuthMemberInfo = MemberInfo & { browser_id: string };
+
+// Cookies ----------------------------------------------------------------------------------------
 
 /** All possible cookies we set on the client. */
 export interface ParsedCookies {

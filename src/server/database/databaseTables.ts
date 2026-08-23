@@ -5,7 +5,7 @@
  */
 
 import db from './database.js';
-import { deleteAccount } from '../controllers/deleteAccountController.js';
+import { deleteMember } from './memberManager.js';
 import { startDailyBackups } from './backupManager.js';
 import { removeFromBlacklist } from './blacklistManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
@@ -529,7 +529,7 @@ function dropLegacyVerificationColumnsIfPresent(): void {
 		`SELECT user_id FROM members WHERE is_verified = 0`,
 	);
 	for (const member of membersToDelete) {
-		deleteAccount(member.user_id, 'unverified');
+		deleteMember(member.user_id, 'unverified');
 	}
 	console.log(`Temporary DB migration: purged ${membersToDelete.length} unverified member(s).`);
 

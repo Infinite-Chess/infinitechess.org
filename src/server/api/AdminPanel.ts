@@ -11,11 +11,11 @@ import validators from '../../shared/util/validators.js';
 
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { areRolesHigherInPriority } from '../controllers/roles.js';
 import { refreshGitHubContributorsList } from './GitHub.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { addToBlacklist, removeFromBlacklist } from '../database/blacklistManager.js';
+import { getMemberDataByCriteria, isValidDeleteReason } from '../database/memberManager.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -161,7 +161,9 @@ function deleteCommand(
 	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser))
 		return sendAndLogResponse(res, 403, 'Forbidden to delete ' + record.username + '.');
 
+	if (!isValidDeleteReason(reason)) throw Error(`Delete reason (${reason}) is invalid.`);
 	deleteAccount(record.user_id, reason);
+
 	sendAndLogResponse(res, 200, 'Successfully deleted user ' + record.username + '.');
 }
 

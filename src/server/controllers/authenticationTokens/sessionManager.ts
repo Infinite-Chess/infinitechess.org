@@ -6,11 +6,11 @@
  */
 
 import type { Request, Response } from 'express';
-import type { Role } from '../roles.js';
+import type { Role } from '../../types.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
-import { deletePreferencesCookie } from '../../api/Prefs.js';
-import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
+import prefsCookie from '../prefsCookie.js';
+import practiceProgressCookie from '../practiceProgressCookie.js';
 import { addRefreshToken, markRefreshTokenAsConsumed } from '../../database/refreshTokenManager.js';
 import { createMemberInfoCookie, deleteMemberInfoCookie } from './memberInfoCookie.js';
 import { createRefreshTokenCookie, deleteRefreshTokenCookie } from './refreshTokenCookie.js';
@@ -106,8 +106,8 @@ export function createNewSession(
  */
 export function revokeSession(res: Response): void {
 	deleteSessionCookies(res);
-	deletePreferencesCookie(res); // Even though this cookie expires after 10 seconds, it's good to delete it here anyway.
-	deletePracticeProgressCookie(res);
+	prefsCookie.remove(res); // Even though this cookie expires after 10 seconds, it's good to delete it here anyway.
+	practiceProgressCookie.remove(res);
 }
 
 // Cookies storing session information --------------------------------------------------------------------
