@@ -9,7 +9,7 @@
 import type { GameConclusion } from './winconutil.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 
-import { players } from './typeutil.js';
+import { players } from '../../util/typeutil.js';
 import { interpolate } from '../../util/interpolate.js';
 
 /** A concluded game's display result: the score and a one-line sentence. */

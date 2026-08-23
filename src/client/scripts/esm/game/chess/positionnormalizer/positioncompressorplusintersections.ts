@@ -16,17 +16,10 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import { solve, Model, Constraint } from 'yalps'; // Linear Programming Solver!
 
 import vectors from '../../../../../../shared/util/math/vectors.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
-import typeutil, {
-	players as p,
-	rawTypes as r,
-} from '../../../../../../shared/chess/util/typeutil.js';
-import coordutil, {
-	BDCoords,
-	Coords,
-	CoordsKey,
-} from '../../../../../../shared/chess/util/coordutil.js';
+import typeutil, { players as p, rawTypes as r } from '../../../../../../shared/util/typeutil.js';
+import coordutil, { BDCoords, Coords, CoordsKey } from '../../../../../../shared/util/coordutil.js';
 
 // ============================== Type Definitions ==============================
 

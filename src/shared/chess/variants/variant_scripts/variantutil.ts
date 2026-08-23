@@ -1,12 +1,12 @@
 // src/shared/chess/variants/variant_scripts/variantutil.ts
 
 import type { Movesets } from '../../logic/movesets.js';
-import type { CoordsKey } from '../../util/coordutil.js';
+import type { CoordsKey } from '../../../util/coordutil.js';
 import type { Promotion } from '../../util/gamerules.js';
 import type { GameruleWinCondition } from '../../util/winconutil.js';
 import type { BoundingBox, UnboundedRectangle } from '../../../util/math/bounds.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../../logic/specialmove.js';
-import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../../util/typeutil.js';
+import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../../../util/typeutil.js';
 
 /**
  * The shape of a dynamically imported variant script module.

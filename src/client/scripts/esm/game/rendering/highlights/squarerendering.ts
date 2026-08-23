@@ -10,9 +10,9 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { Coords } from '../../../../../../shared/util/coordutil.js';
 
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
 
 import space from '../../../board/space.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';

@@ -5,14 +5,14 @@
  */
 
 import type { Board } from '../logic/boardinit.js';
-import type { Coords } from './coordutil.js';
-import type { Player } from './typeutil.js';
+import type { Coords } from '../../util/coordutil.js';
+import type { Player } from '../../util/typeutil.js';
 import type { GameRules } from './gamerules.js';
 import type { EnPassant } from '../logic/state.js';
 import type { MoveCoords } from '../logic/icn/icnconverter.js';
 import type { MoveFull, CoordsTagged, MoveRecord } from '../logic/movepiece.js';
 
-import coordutil from './coordutil.js';
+import coordutil from '../../util/coordutil.js';
 
 // Types ------------------------------------------------------------------
 

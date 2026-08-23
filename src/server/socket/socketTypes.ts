@@ -6,7 +6,7 @@
  */
 
 import type WebSocket from 'ws';
-import type { Player } from '../../shared/chess/util/typeutil.js';
+import type { Player } from '../../shared/util/typeutil.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 import type { AuthMemberInfo, ParsedCookies } from '../types.js';
 

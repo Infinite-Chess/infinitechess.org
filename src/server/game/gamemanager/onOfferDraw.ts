@@ -5,11 +5,11 @@
  * draw offers in online games.
  */
 
-import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../shared/util/typeutil.js';
 import type { ServerGame } from './servergametypes.js';
 
 import moveutil from '../../../shared/chess/util/moveutil.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
+import typeutil from '../../../shared/util/typeutil.js';
 
 import drawoffers from './drawoffers.js';
 import gamesockets from './gamesockets.js';

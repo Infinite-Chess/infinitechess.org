@@ -11,7 +11,7 @@ import type { Request } from 'express';
 import type { GameRules } from '../../shared/chess/util/gamerules.js';
 import type { SpeedCategory } from '../../shared/chess/util/clockutil.js';
 import type { GlobalGameState } from '../../shared/chess/logic/state.js';
-import type { Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../shared/util/typeutil.js';
 import type { GamePageData, StaticGameSetup, StaticGameState } from '../../shared/domain.js';
 
 import gameurl from '../../shared/util/gameurl.js';
@@ -24,7 +24,7 @@ import icnconverter from '../../shared/chess/logic/icn/icnconverter.js';
 import gameresultutil from '../../shared/chess/util/gameresultutil.js';
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import variantpreviewer from '../../shared/chess/variants/variantpreviewer.js';
-import { players as p } from '../../shared/chess/util/typeutil.js';
+import { players as p } from '../../shared/util/typeutil.js';
 import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.js';
 
 import tconfig from '../config/translationconfig.js';

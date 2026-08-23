@@ -12,7 +12,7 @@
  */
 
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import meshes from './meshes.js';
 import primitives from './primitives.js';

@@ -5,13 +5,13 @@
  * and throwing it after letting go.
  */
 
-import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import vectors from '../../../../../shared/util/math/vectors.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import bdcoords from '../../../../../shared/util/bdcoords.js';
+import coordutil from '../../../../../shared/util/coordutil.js';
 
 import mouse from '../mouse.js';
 import boardpos from '../../board/rendering/boardpos.js';

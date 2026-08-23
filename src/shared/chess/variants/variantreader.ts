@@ -8,7 +8,7 @@
  */
 
 import type { VariantModule } from './variant_scripts/variantutil.js';
-import type { RawType, RawTypeGroup } from '../util/typeutil.js';
+import type { RawType, RawTypeGroup } from '../../util/typeutil.js';
 import type { Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
 

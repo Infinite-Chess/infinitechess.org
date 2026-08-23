@@ -7,7 +7,7 @@
 import type { ModalMode } from '../../handoffs/gamesetuphandoff.js';
 import type { GameMode, TimeControl } from '../../../../../shared/domain.js';
 
-import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { players } from '../../../../../shared/util/typeutil.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
 
 import lobby from './lobby.js';

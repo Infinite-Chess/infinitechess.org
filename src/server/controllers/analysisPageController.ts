@@ -7,12 +7,12 @@
  */
 
 import type { Request } from 'express';
-import type { Player } from '../../shared/chess/util/typeutil.js';
+import type { Player } from '../../shared/util/typeutil.js';
 import type { GameMetaViewModel } from './gamePageController.js';
 import type { VariantGroup, VariantCode } from '../../shared/chess/variants/variantregistry.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
-import { players as p } from '../../shared/chess/util/typeutil.js';
+import { players as p } from '../../shared/util/typeutil.js';
 
 import { decodeGameId } from '../database/gamesManager.js';
 import { getDeadGameViewState } from './gamePageController.js';

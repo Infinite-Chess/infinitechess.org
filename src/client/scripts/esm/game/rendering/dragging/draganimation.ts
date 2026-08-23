@@ -8,13 +8,13 @@
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
-import type { Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import bd from '@naviary/bigdecimal';
 
-import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import typeutil from '../../../../../../shared/util/typeutil.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
 import pieceThemes from '../../../../../../shared/components/header/pieceThemes.js';
 
 import space from '../../../board/space.js';

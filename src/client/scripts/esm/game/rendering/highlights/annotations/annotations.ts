@@ -9,11 +9,11 @@
 
 import type { Ray } from '../../../../../../../shared/util/math/vectors.js';
 import type { PresetAnnotes } from '../../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords, Coords } from '../../../../../../../shared/util/coordutil.js';
 
 import jsutil from '../../../../../../../shared/util/jsutil.js';
-import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
-import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
+import bdcoords from '../../../../../../../shared/util/bdcoords.js';
+import coordutil from '../../../../../../../shared/util/coordutil.js';
 
 import gameslot from '../../../chess/gameslot.js';
 import drawrays from './drawrays.js';

@@ -9,7 +9,7 @@
  * and simulated double click drags!
  */
 
-import type { DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
+import type { DoubleCoords } from '../../../../shared/util/coordutil.js';
 
 import docutil from '../util/docutil.js';
 

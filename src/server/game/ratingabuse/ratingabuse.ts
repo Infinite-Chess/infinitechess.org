@@ -8,7 +8,7 @@
  * evidence. `abusechecks.ts` weighs that evidence, and `abusereport.ts` reports the verdict.
  */
 
-import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../shared/util/typeutil.js';
 import type { ServerGame } from '../gamemanager/servergametypes.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';

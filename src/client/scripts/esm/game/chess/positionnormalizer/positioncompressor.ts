@@ -12,7 +12,7 @@ import type { Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import { solve, Model, Constraint } from 'yalps'; // Linear Programming Solver!
 
 import bimath from '../../../../../../shared/util/math/bimath.js';
-import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil.js';
+import coordutil, { Coords, CoordsKey } from '../../../../../../shared/util/coordutil.js';
 
 // ============================== Type Definitions ==============================
 

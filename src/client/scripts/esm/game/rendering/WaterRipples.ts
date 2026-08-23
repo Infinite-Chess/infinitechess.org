@@ -8,8 +8,8 @@ import type { ProgramManager } from '../../webgl/ProgramManager';
 import type { PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline';
 
 import bounds from '../../../../../shared/util/math/bounds';
-import bdcoords from '../../../../../shared/chess/util/bdcoords';
-import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
+import bdcoords from '../../../../../shared/util/bdcoords';
+import coordutil, { Coords } from '../../../../../shared/util/coordutil';
 
 import space from '../../board/space';
 import camera from '../../board/rendering/camera';

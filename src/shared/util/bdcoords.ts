@@ -1,4 +1,4 @@
-// src/shared/chess/util/bdcoords.ts
+// src/shared/util/bdcoords.ts
 
 import type { BDCoords, Coords, DoubleCoords } from './coordutil';
 

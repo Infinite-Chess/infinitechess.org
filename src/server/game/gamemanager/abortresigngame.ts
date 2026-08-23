@@ -8,11 +8,11 @@
  * Ending a game against an absent opponent lives in `claimdisconnect.ts`.
  */
 
-import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../shared/util/typeutil.js';
 import type { ServerGame } from './servergametypes.js';
 
 import moveutil from '../../../shared/chess/util/moveutil.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
+import typeutil from '../../../shared/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';

@@ -4,7 +4,7 @@
  * "Confined Classical" standard variant.
  */
 
-import type { CoordsKey } from '../../../util/coordutil.js';
+import type { CoordsKey } from '../../../../util/coordutil.js';
 import type { BoundingBox } from '../../../../util/math/bounds.js';
 
 import icnposition from '../../../logic/icn/icnposition.js';

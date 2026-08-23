@@ -11,7 +11,7 @@
  */
 
 import type { Camera } from './camera.js';
-import type { BDCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords } from '../../../../../shared/util/coordutil.js';
 import type { BoundingBox, BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';

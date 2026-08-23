@@ -4,7 +4,7 @@
  * This script contains methods for constructing and operating on bounding boxes.
  */
 
-import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 

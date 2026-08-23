@@ -7,15 +7,15 @@
  * if somebody loses on time.
  */
 
-import type { Player } from '../util/typeutil.js';
+import type { Player } from '../../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { MoveRecord } from './movepiece.js';
-import type { PlayerGroup } from '../util/typeutil.js';
+import type { PlayerGroup } from '../../util/typeutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { ClockDependant } from './gamefile.js';
 import type { ClockValues, TimeControl } from '../../domain.js';
 
-import typeutil from '../util/typeutil.js';
+import typeutil from '../../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamerules from '../util/gamerules.js';

@@ -6,17 +6,17 @@
 
 import type { Piece } from '../util/boardutil.js';
 import type { Board } from './boardinit.js';
-import type { Coords } from '../util/coordutil.js';
+import type { Coords } from '../../util/coordutil.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
-import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
+import type { RawTypeGroup, Player, RawType } from '../../util/typeutil.js';
 
 import bimath from '../../util/math/bimath.js';
 import vectors from '../../util/math/vectors.js';
 import legalmoves from './legalmoves.js';
 import specialdetect from './specialdetect.js';
 import { primalityTest } from '../../util/isprime.js';
-import { rawTypes as r } from '../util/typeutil.js';
+import { rawTypes as r } from '../../util/typeutil.js';
 
 /** A Movesets object containing the movesets for every piece type in a game */
 type Movesets = RawTypeGroup<PieceMoveset>;

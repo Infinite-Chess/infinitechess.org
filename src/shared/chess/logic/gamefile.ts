@@ -1,7 +1,7 @@
 // src/shared/chess/logic/gamefile.ts
 
 import type { Board } from './boardinit.js';
-import type { CoordsKey } from '../util/coordutil.js';
+import type { CoordsKey } from '../../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../domain.js';

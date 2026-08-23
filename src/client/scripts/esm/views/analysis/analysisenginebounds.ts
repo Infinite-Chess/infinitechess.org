@@ -13,7 +13,7 @@ import bounds from '../../../../../shared/util/math/bounds.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
-import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import coordutil, { CoordsKey } from '../../../../../shared/util/coordutil.js';
 
 /**
  * The world border Apeiron evaluates the position within: the position's own

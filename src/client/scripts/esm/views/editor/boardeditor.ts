@@ -12,7 +12,7 @@ import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import keybinds from '../../game/misc/keybinds.js';

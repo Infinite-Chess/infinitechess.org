@@ -6,7 +6,7 @@
  * asking for it can actually play it. Also the single place their error codes become text.
  */
 
-import type { RawType } from '../util/typeutil.js';
+import type { RawType } from '../../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { EngineSupportCode } from '../engines/apeiron_card.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
@@ -16,14 +16,14 @@ import bounds from '../../util/math/bounds.js';
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../util/gamerules.js';
-import coordutil from '../util/coordutil.js';
+import coordutil from '../../util/coordutil.js';
 import winconutil from '../util/winconutil.js';
 import apeiron_card from '../engines/apeiron_card.js';
 import variantreader from './variantreader.js';
 import checkdetection from '../logic/checkdetection.js';
 import gamefileutility from '../util/gamefileutility.js';
 import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from './servervalidation.js';
-import typeutil, { neutralRawTypes, players as p, rawTypes as r } from '../util/typeutil.js';
+import typeutil, { neutralRawTypes, players as p, rawTypes as r } from '../../util/typeutil.js';
 
 // Constants -------------------------------------------------------------------------
 

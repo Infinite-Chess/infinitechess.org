@@ -1,10 +1,10 @@
 // src/shared/chess/variants/variant_scripts/gen4DPosition.ts
 
-import type { CoordsKey } from '../../util/coordutil.js';
+import type { CoordsKey } from '../../../util/coordutil.js';
 
-import coordutil from '../../util/coordutil.js';
+import coordutil from '../../../util/coordutil.js';
 import icnposition from '../../logic/icn/icnposition.js';
-import { rawTypes as r, ext as e } from '../../util/typeutil.js';
+import { rawTypes as r, ext as e } from '../../../util/typeutil.js';
 
 // Types -------------------------------------------------------------------------------
 

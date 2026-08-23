@@ -7,7 +7,7 @@
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import vectors from '../../../../../shared/util/math/vectors.js';

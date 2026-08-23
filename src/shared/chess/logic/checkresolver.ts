@@ -10,8 +10,8 @@
 
 import type { Piece } from '../util/boardutil.js';
 import type { Board } from './boardinit.js';
-import type { Coords } from '../util/coordutil.js';
-import type { Player } from '../util/typeutil.js';
+import type { Coords } from '../../util/coordutil.js';
+import type { Player } from '../../util/typeutil.js';
 import type { CheckInfo } from './state.js';
 import type { LegalMoves } from './legalmoves.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
@@ -23,19 +23,19 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
 import vectors from '../../util/math/vectors.js';
-import typeutil from '../util/typeutil.js';
+import typeutil from '../../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import geometry from '../../util/math/geometry.js';
-import bdcoords from '../util/bdcoords.js';
+import bdcoords from '../../util/bdcoords.js';
 import boardutil from '../util/boardutil.js';
-import coordutil from '../util/coordutil.js';
+import coordutil from '../../util/coordutil.js';
 import movepiece from './movepiece.js';
 import legalmoves from './legalmoves.js';
 import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from '../util/gamefileutility.js';
-import { players as p } from '../util/typeutil.js';
+import { players as p } from '../../util/typeutil.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
 
 // Functions ------------------------------------------------------------------------------

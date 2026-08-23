@@ -5,9 +5,9 @@
  */
 
 import type { Color } from '../../util/math/math.js';
-import type { RawType, Player } from '../../chess/util/typeutil.js';
+import type { RawType, Player } from '../../util/typeutil.js';
 
-import { rawTypes as r, players as p } from '../../chess/util/typeutil.js';
+import { rawTypes as r, players as p } from '../../util/typeutil.js';
 
 export type PieceColorGroup = {
 	[_team in Player]: Color;

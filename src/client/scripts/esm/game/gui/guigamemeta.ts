@@ -10,12 +10,12 @@
  * never touched here.
  */
 
-import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../../../shared/util/typeutil.js';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gameresultutil from '../../../../../shared/chess/util/gameresultutil.js';
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import { GameBus } from '../../board/GameBus.js';

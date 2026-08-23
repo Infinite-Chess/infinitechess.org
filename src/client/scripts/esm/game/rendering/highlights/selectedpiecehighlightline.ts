@@ -11,13 +11,9 @@ import type { Line } from './highlightline.js';
 import bd from '@naviary/bigdecimal';
 
 import geometry from '../../../../../../shared/util/math/geometry.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
-import coordutil, {
-	BDCoords,
-	Coords,
-	CoordsKey,
-} from '../../../../../../shared/chess/util/coordutil.js';
+import coordutil, { BDCoords, Coords, CoordsKey } from '../../../../../../shared/util/coordutil.js';
 
 import boardpos from '../../../board/rendering/boardpos.js';
 import selection from '../../chess/selection.js';

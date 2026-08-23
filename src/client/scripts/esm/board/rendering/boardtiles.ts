@@ -12,7 +12,7 @@
 
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type RenderContext from './RenderContext.js';
-import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 import type { AttributeInfo, Renderable, TextureInfo } from '../../webgl/Renderable.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';

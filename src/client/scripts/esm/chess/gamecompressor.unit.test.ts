@@ -5,7 +5,7 @@ import type { GameFile, VariantOptions } from '../../../../shared/chess/logic/ga
 
 import { describe, it, expect } from 'vitest';
 
-import { players as p } from '../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../shared/util/typeutil.js';
 
 import gamecompressor from './gamecompressor.js';
 

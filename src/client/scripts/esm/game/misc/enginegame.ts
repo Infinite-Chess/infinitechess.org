@@ -2,7 +2,7 @@
 
 // This module keeps track of the data of the engine game we are currently in.
 
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../../../shared/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { EngineAndConfig } from '../../../../../shared/chess/engine.js';
 import type {
@@ -17,7 +17,7 @@ import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import { engineDictionary } from '../../../../../shared/chess/engine.js';
-import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { players as p } from '../../../../../shared/util/typeutil.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';

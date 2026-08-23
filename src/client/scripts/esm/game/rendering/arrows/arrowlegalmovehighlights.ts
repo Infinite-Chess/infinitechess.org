@@ -10,10 +10,10 @@ import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { RenderableInstanced } from '../../../webgl/Renderable.js';
 
-import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import typeutil from '../../../../../../shared/util/typeutil.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
-import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import coordutil, { Coords } from '../../../../../../shared/util/coordutil.js';
 
 import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';

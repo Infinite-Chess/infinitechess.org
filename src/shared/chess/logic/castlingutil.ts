@@ -5,11 +5,11 @@
  * so that the structural rules for castling live in exactly one place.
  */
 
-import type { Coords } from '../util/coordutil.js';
+import type { Coords } from '../../util/coordutil.js';
 
 import bimath from '../../util/math/bimath.js';
-import typeutil from '../util/typeutil.js';
-import { rawTypes as r } from '../util/typeutil.js';
+import typeutil from '../../util/typeutil.js';
+import { rawTypes as r } from '../../util/typeutil.js';
 
 // Constants ---------------------------------------------------------------------------
 

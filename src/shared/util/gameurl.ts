@@ -7,10 +7,10 @@
  * the board is viewed from, taking priority over the viewer's own role in the game.
  */
 
-import type { Player } from '../chess/util/typeutil.js';
+import type { Player } from './typeutil.js';
 
 import uuid from './uuid.js';
-import { players as p } from '../chess/util/typeutil.js';
+import { players as p } from './typeutil.js';
 
 /** A perspective override as it appears in a URL. Only two sides are expressible. */
 type ViewColorCode = 'w' | 'b';

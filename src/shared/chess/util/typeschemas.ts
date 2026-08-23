@@ -4,11 +4,11 @@
  * General zod schemas derived from the plain type constants.
  */
 
-import type { Player } from './typeutil.js';
+import type { Player } from '../../util/typeutil.js';
 
 import * as z from 'zod';
 
-import { players } from './typeutil.js';
+import { players } from '../../util/typeutil.js';
 
 /** Zod schema for a player color. */
 const PlayerSchema = z.literal(Object.values(players));

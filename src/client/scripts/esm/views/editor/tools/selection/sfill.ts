@@ -7,7 +7,7 @@
  * on the bottom-right corner of the selection box.
  */
 
-import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil';
+import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coordutil';
 
 import bimath from '../../../../../../../shared/util/math/bimath';
 import vectors from '../../../../../../../shared/util/math/vectors';

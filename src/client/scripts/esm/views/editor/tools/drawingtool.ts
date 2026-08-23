@@ -13,12 +13,12 @@ import type { GameFile } from '../../../../../../shared/chess/logic/gamefile';
 import state from '../../../../../../shared/chess/logic/state';
 import bounds from '../../../../../../shared/util/math/bounds';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
-import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil';
+import coordutil, { Coords } from '../../../../../../shared/util/coordutil';
 import typeutil, {
 	Player,
 	players as p,
 	rawTypes as r,
-} from '../../../../../../shared/chess/util/typeutil';
+} from '../../../../../../shared/util/typeutil';
 
 import mouse from '../../../game/mouse';
 import arrows from '../../../game/rendering/arrows/arrows';

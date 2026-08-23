@@ -7,9 +7,9 @@
 
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords, Coords } from '../../../../../../shared/util/coordutil.js';
 
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 
 import space from '../../../board/space.js';

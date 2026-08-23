@@ -41,9 +41,9 @@ import gamerules from '../../util/gamerules.js';
 import winconutil from '../../util/winconutil.js';
 import icnposition from './icnposition.js';
 import { DEFAULT_PROMOTION_PIECES } from '../../variants/variant_scripts/defaultPromotions.js';
-import coordutil, { Coords, CoordsKey } from '../../util/coordutil.js';
+import coordutil, { Coords, CoordsKey } from '../../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
-import { players as p, RawType, Player, PlayerGroup } from '../../util/typeutil.js';
+import { players as p, RawType, Player, PlayerGroup } from '../../../util/typeutil.js';
 
 // Types ------------------------------------------------------------------------------
 

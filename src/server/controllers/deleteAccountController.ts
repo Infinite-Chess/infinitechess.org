@@ -13,8 +13,8 @@ import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
 import { closeAllSocketsOfMember } from '../socket/socketRegistry.js';
+import { deleteMember, DeleteReason } from '../database/memberManager.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
-import { deleteMember, type DeleteReason } from '../database/memberManager.js';
 
 /** `DELETE /api/members/:member` — deletes the caller's own account after re-verifying their password. */
 async function removeAccount(req: Request, res: Response): Promise<void> {

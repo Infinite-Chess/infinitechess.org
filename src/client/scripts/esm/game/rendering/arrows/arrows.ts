@@ -12,11 +12,7 @@
  */
 
 import type { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
-import type {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import gameslot from '../../chess/gameslot.js';
 import arrowshifts from './arrowshifts.js';

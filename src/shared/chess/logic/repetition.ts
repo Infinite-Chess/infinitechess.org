@@ -14,9 +14,9 @@ import type { MoveFull } from './movepiece.js';
 import type { StateChange } from './state.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
-import typeutil from '../util/typeutil.js';
+import typeutil from '../../util/typeutil.js';
 import boardchanges from './boardchanges.js';
-import { rawTypes as r } from '../util/typeutil.js';
+import { rawTypes as r } from '../../util/typeutil.js';
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
 type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassant`

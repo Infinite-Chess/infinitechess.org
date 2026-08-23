@@ -8,7 +8,7 @@
  */
 
 import type { Camera } from './camera.js';
-import type { BDCoords, Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords, Coords } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 

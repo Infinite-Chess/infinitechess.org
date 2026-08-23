@@ -6,7 +6,7 @@
  */
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type RenderContext from '../../board/rendering/RenderContext.js';
 
 import meshes from '../../board/rendering/meshes.js';

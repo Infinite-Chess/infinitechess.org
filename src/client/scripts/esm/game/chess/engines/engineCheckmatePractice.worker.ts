@@ -10,11 +10,7 @@
 
 import type { GameRules } from '../../../../../../shared/chess/util/gamerules.js';
 import type { OrganizedPiecesBase } from '../../../../../../shared/chess/logic/organizedpieces.js';
-import type {
-	Coords,
-	CoordsKey,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
+import type { Coords, CoordsKey, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 import type {
 	CheckmatePracticeMoveRequest,
 	EngineInitResponse,
@@ -33,7 +29,7 @@ import {
 	ext as e,
 	players as p,
 	numTypes,
-} from '../../../../../../shared/chess/util/typeutil.js';
+} from '../../../../../../shared/util/typeutil.js';
 
 /**
  * The subset of the game this engine reads, rebuilt from the compressed position the

@@ -10,10 +10,10 @@
  * the disconnected player reconnects.
  */
 
-import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../shared/util/typeutil.js';
 import type { MatchInfo, ServerGame } from './servergametypes.js';
 
-import typeutil from '../../../shared/chess/util/typeutil.js';
+import typeutil from '../../../shared/util/typeutil.js';
 
 import gamesockets from './gamesockets.js';
 import liveGameValues from './liveGameValues.js';

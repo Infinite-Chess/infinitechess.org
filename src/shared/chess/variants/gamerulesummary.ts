@@ -10,7 +10,7 @@
 
 import type { GameRules } from '../util/gamerules.js';
 import type { VariantCode } from './variantregistry.js';
-import type { GameModifier } from '../../domain.js';
+import type { GameModifier } from '../../util/modutil.js';
 import type { GlobalGameState } from '../logic/state.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
@@ -18,7 +18,7 @@ import type { GameruleWinCondition } from '../util/winconutil.js';
 import modutil from '../../util/modutil.js';
 import pieceThemes from '../../components/header/pieceThemes.js';
 import variantregistry from './variantregistry.js';
-import typeutil, { Player, RawType, players } from '../util/typeutil.js';
+import typeutil, { Player, RawType, players } from '../../util/typeutil.js';
 import { interpolate, splitAroundPlaceholder } from '../../util/interpolate.js';
 
 // Types --------------------------------------------------------------------

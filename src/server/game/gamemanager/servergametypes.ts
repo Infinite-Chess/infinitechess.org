@@ -12,11 +12,12 @@ import type { Board } from '../../../shared/chess/logic/boardinit.js';
 import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { ValidEngine } from '../../../shared/chess/engine.js';
+import type { GameModifier } from '../../../shared/util/modutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { SeekVariant, Rating, TimeControl } from '../../../shared/domain.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
-import type { SeekVariant, GameModifier, Rating, TimeControl } from '../../../shared/domain.js';
 
 // Types -----------------------------------------------------------------------------------------
 

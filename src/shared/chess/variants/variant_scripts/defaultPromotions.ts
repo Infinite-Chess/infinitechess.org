@@ -1,6 +1,6 @@
 // src/shared/chess/variants/variant_scripts/defaultPromotions.ts
 
-import { rawTypes as r } from '../../util/typeutil.js';
+import { rawTypes as r } from '../../../util/typeutil.js';
 
 /**
  * The default promotion pieces allowed, if the ICN does not specify.

@@ -6,7 +6,7 @@
  * delegating playback to gamesound.
  */
 
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { Coords } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 

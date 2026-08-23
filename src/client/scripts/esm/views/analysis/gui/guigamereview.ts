@@ -14,13 +14,13 @@
  * The move list's per-ply glyphs are guimovetree's job (it owns that DOM).
  */
 
-import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../../../../shared/util/typeutil.js';
 import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { LapseKey, MoveReview, ReviewOutcome } from '../gamereview.js';
 
 import math from '../../../../../../shared/util/math/math.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../../shared/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
 import ceval from '../ceval.js';

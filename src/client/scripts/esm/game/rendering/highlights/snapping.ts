@@ -10,19 +10,15 @@
 
 import type { Line } from './highlightline.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import boardutil from '../../../../../../shared/chess/util/boardutil.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
 import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.js';
 
 import space from '../../../board/space.js';

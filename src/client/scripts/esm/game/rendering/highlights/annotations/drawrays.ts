@@ -8,7 +8,7 @@
 
 import type { Color } from '../../../../../../../shared/util/math/math.js';
 
-import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import bdcoords from '../../../../../../../shared/util/bdcoords.js';
 import variantpreviewer from '../../../../../../../shared/chess/variants/variantpreviewer.js';
 import vectors, { Ray } from '../../../../../../../shared/util/math/vectors.js';
 import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
@@ -16,7 +16,7 @@ import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
-} from '../../../../../../../shared/chess/util/coordutil.js';
+} from '../../../../../../../shared/util/coordutil.js';
 
 import space from '../../../../board/space.js';
 import mouse from '../../../mouse.js';

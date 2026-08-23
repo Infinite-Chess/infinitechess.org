@@ -8,7 +8,7 @@
  * See docs/systems/LIVE_GAME_PERSISTENCE.md for the schema and event matrix.
  */
 
-import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../shared/util/typeutil.js';
 import type { LiveGameData, LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { ServerGame, PlayerData, PlayerDisconnect } from './servergametypes.js';
 import type {

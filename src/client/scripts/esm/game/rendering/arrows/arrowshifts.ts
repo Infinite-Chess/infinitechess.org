@@ -13,18 +13,14 @@ import type { Change } from '../../../../../../shared/chess/logic/boardchanges.j
 import type { Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Arrow, ArrowPiece, SlideArrows } from './arrows.js';
-import type {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import bd from '@naviary/bigdecimal';
 
 import bounds from '../../../../../../shared/util/math/bounds.js';
 import vectors from '../../../../../../shared/util/math/vectors.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
 import boardutil from '../../../../../../shared/chess/util/boardutil.js';
 import boardchanges from '../../../../../../shared/chess/logic/boardchanges.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';

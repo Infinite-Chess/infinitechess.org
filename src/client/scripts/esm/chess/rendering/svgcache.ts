@@ -15,10 +15,10 @@
  */
 
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { RawType } from '../../../../../shared/chess/util/typeutil.js';
+import type { RawType } from '../../../../../shared/util/typeutil.js';
 
 import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
-import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { players } from '../../../../../shared/util/typeutil.js';
 
 import preferences from '../../components/header/preferences.js';
 

@@ -9,9 +9,20 @@
  * Obstocean (infinite obstacles), Drawback Chess, Progressive Chess.
  */
 
-import type { GameModifier } from '../domain.js';
+import * as z from 'zod';
+
+import gameconfig from './gameconfig.js';
 
 // Types -----------------------------------------------------------------------
+
+/** The full configuration for a single game modifier, chosen on a seek and carried onto its game. */
+export type GameModifier = z.infer<typeof GameModifierSchema>;
+export const GameModifierSchema = z.discriminatedUnion('kind', [
+	z.strictObject({
+		kind: z.literal('slide-limit'),
+		value: z.literal(gameconfig.SLIDE_LIMIT_VALUES),
+	}),
+]);
 
 /** Union of all valid modifier kind strings, derived from the keys of {@link MODIFIER_ICONS}. */
 export type ModifierCode = keyof typeof MODIFIER_ICONS;

@@ -14,7 +14,7 @@
 
 import type { LapseKey } from '../gamereview.js';
 
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
 
 import space from '../../../board/space.js';
 import { gl } from '../../../board/rendering/webgl.js';

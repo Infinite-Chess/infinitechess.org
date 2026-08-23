@@ -5,12 +5,12 @@
  * such as calculating angles, distances, and other operations.
  */
 
-import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bimath from './bimath.js';
-import bdcoords from '../../chess/util/bdcoords.js';
+import bdcoords from '../bdcoords.js';
 
 // Types ----------------------------------------------------------------------
 

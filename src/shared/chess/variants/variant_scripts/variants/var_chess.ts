@@ -4,7 +4,7 @@
  * "Chess" standard variant.
  */
 
-import type { CoordsKey } from '../../../util/coordutil.js';
+import type { CoordsKey } from '../../../../util/coordutil.js';
 import type { GameRuleModifications } from '../variantutil.js';
 
 import icnposition from '../../../logic/icn/icnposition.js';

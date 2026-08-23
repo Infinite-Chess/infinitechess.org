@@ -7,17 +7,17 @@
  */
 
 import type { Board } from './boardinit.js';
-import type { Player } from '../util/typeutil.js';
+import type { Player } from '../../util/typeutil.js';
 import type { CheckInfo } from './state.js';
 import type { CoordsTagged } from './movepiece.js';
-import type { Coords, CoordsKey } from '../util/coordutil.js';
+import type { Coords, CoordsKey } from '../../util/coordutil.js';
 
-import typeutil from '../util/typeutil.js';
+import typeutil from '../../util/typeutil.js';
 import boardutil from '../util/boardutil.js';
-import coordutil from '../util/coordutil.js';
+import coordutil from '../../util/coordutil.js';
 import legalmoves from './legalmoves.js';
 import organizedpieces from './organizedpieces.js';
-import { players as p } from '../util/typeutil.js';
+import { players as p } from '../../util/typeutil.js';
 import vectors, { Vec2 } from '../../util/math/vectors.js';
 
 // Functions ----------------------------------------------------------------

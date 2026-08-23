@@ -8,25 +8,21 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../../../../shared/util/typeutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
 import type { OrganizedPieces } from '../../../../../../shared/chess/logic/organizedpieces.js';
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
-import type {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bimath from '../../../../../../shared/util/math/bimath.js';
 import vectors from '../../../../../../shared/util/math/vectors.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
 import boardutil from '../../../../../../shared/chess/util/boardutil.js';
 import checkresolver from '../../../../../../shared/chess/logic/checkresolver.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';

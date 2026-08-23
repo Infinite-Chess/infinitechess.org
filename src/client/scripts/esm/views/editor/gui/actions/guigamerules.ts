@@ -5,7 +5,7 @@
  */
 
 import type { Edit } from '../../../../../../../shared/chess/logic/movepiece';
-import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
+import type { Coords } from '../../../../../../../shared/util/coordutil';
 import type { UnboundedRectangle } from '../../../../../../../shared/util/math/bounds';
 import type { GameruleWinCondition } from '../../../../../../../shared/chess/util/winconutil';
 
@@ -13,7 +13,7 @@ import bounds from '../../../../../../../shared/util/math/bounds';
 import boardutil from '../../../../../../../shared/chess/util/boardutil';
 import icnposition from '../../../../../../../shared/chess/logic/icn/icnposition';
 import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
-import typeutil, { RawType } from '../../../../../../../shared/chess/util/typeutil';
+import typeutil, { RawType } from '../../../../../../../shared/util/typeutil';
 import { isValidPromotionPiece } from '../../../../../../../shared/chess/variants/positionvalidation';
 
 import gameslot from '../../../../game/chess/gameslot';

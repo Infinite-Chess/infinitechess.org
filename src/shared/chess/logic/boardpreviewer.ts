@@ -9,9 +9,9 @@
  * or movesets, keeping the dependency tree light for preview contexts.
  */
 
-import type { RawType } from '../util/typeutil.js';
+import type { RawType } from '../../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
-import type { CoordsKey } from '../util/coordutil.js';
+import type { CoordsKey } from '../../util/coordutil.js';
 import type { OrganizedPiecesBase } from './organizedpieces.js';
 import type { GameState, GlobalGameState } from './state.js';
 import type { Snapshot, VariantOptions, LoadedVariant } from './gamefile.js';

@@ -10,7 +10,7 @@
  * conclusion is broadcast from here rather than through `gamelifecycle.ts`.
  */
 
-import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../shared/util/typeutil.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { ServerGame } from './servergametypes.js';
@@ -20,7 +20,7 @@ import type { SubmitMoveMessage } from '../../../shared/serverbound.js';
 import type { OpponentsMoveMessage } from '../../../shared/clientbound.js';
 
 import bimath from '../../../shared/util/math/bimath.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
+import typeutil from '../../../shared/util/typeutil.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import gameconfig from '../../../shared/util/gameconfig.js';

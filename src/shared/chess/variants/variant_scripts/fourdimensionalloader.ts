@@ -6,14 +6,14 @@
  * board sizes, and positions on each board.
  */
 
-import type { Coords } from '../../util/coordutil.js';
+import type { Coords } from '../../../util/coordutil.js';
 import type { Movesets, RawMovesets } from '../../logic/movesets.js';
 
 import bimath from '../../../util/math/bimath.js';
 import movesets from '../../logic/movesets.js';
-import coordutil from '../../util/coordutil.js';
+import coordutil from '../../../util/coordutil.js';
 import gen4DPosition from './gen4DPosition.js';
-import { rawTypes as r } from '../../util/typeutil.js';
+import { rawTypes as r } from '../../../util/typeutil.js';
 import fourdimensionalmoves from '../../logic/fourdimensionalmoves.js';
 
 // Moveset Overrides --------------------------------------------------------------------------------------------------

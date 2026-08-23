@@ -6,7 +6,7 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords } from '../../../../../../shared/util/coordutil.js';
 import type { BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type { LineCoefficients } from '../../../../../../shared/util/math/vectors.js';
 

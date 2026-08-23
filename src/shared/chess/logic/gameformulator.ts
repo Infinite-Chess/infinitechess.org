@@ -5,7 +5,7 @@
  * used by both ends — the client to load a game, the server to inspect one.
  */
 
-import type { CoordsKey } from '../util/coordutil.js';
+import type { CoordsKey } from '../../util/coordutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { ClockValues, TimeControl } from '../../domain.js';
 import type { LongFormatOut, PresetAnnotes } from './icn/icnconverter.js';

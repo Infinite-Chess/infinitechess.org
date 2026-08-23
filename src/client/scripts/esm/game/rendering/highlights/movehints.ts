@@ -9,11 +9,11 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { Coords } from '../../../../../../shared/util/coordutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 
 import vectors from '../../../../../../shared/util/math/vectors.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 

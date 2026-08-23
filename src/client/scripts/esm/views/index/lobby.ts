@@ -23,7 +23,7 @@ import { attributesModule, classModule, h, init } from 'snabbdom';
 import modutil from '../../../../../shared/util/modutil.js';
 import gameurl from '../../../../../shared/util/gameurl.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { players } from '../../../../../shared/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 

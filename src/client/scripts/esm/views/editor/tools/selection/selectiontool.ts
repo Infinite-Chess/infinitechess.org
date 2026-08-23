@@ -6,7 +6,7 @@
  * Acts similarly to that of Google Sheets
  */
 
-import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
+import type { Coords } from '../../../../../../../shared/util/coordutil';
 import type {
 	BoundingBox,
 	BoundingBoxBD,

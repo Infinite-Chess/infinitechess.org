@@ -11,8 +11,8 @@ import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 
-import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import typeutil from '../../../../../../shared/util/typeutil.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
 
 import camera from '../../../board/rendering/camera.js';
 import meshes from '../../../board/rendering/meshes.js';

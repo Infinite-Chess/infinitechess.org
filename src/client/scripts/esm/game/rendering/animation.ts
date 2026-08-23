@@ -7,16 +7,16 @@
 
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../shared/util/math/math.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import bdcoords from '../../../../../shared/util/bdcoords.js';
+import coordutil from '../../../../../shared/util/coordutil.js';
 import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
-import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { RawType, TypeGroup } from '../../../../../shared/util/typeutil.js';
 
 import meshes from '../../board/rendering/meshes.js';
 import camera from '../../board/rendering/camera.js';

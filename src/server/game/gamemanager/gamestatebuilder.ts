@@ -12,7 +12,7 @@ import type { RatingData } from '../../utility/ratingcalculation.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { ServerGame } from './servergametypes.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type { SourceVariantMetaData } from '../../../shared/chess/util/metadatautil.js';
 import type {
 	GameConclusionMessage,
@@ -34,12 +34,12 @@ import type {
 import uuid from '../../../shared/util/uuid.js';
 import gameurl from '../../../shared/util/gameurl.js';
 import timeutil from '../../../shared/util/timeutil.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
+import typeutil from '../../../shared/util/typeutil.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
-import { players as p } from '../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../shared/util/typeutil.js';
 import { getFormattedEngineName } from '../../../shared/chess/engine.js';
 import {
 	Leaderboards,

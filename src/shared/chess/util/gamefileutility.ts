@@ -5,12 +5,12 @@
  */
 
 import type { Board } from '../logic/boardinit.js';
-import type { Coords } from './coordutil.js';
-import type { Player } from './typeutil.js';
+import type { Coords } from '../../util/coordutil.js';
+import type { Player } from '../../util/typeutil.js';
 import type { GameRules } from './gamerules.js';
 import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
 
-import typeutil from './typeutil.js';
+import typeutil from '../../util/typeutil.js';
 import gamerules from './gamerules.js';
 
 // Methods -------------------------------------------------------------

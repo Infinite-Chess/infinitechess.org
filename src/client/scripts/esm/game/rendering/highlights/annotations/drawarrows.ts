@@ -17,12 +17,12 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import vectors from '../../../../../../../shared/util/math/vectors.js';
 import geometry from '../../../../../../../shared/util/math/geometry.js';
-import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import bdcoords from '../../../../../../../shared/util/bdcoords.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
-} from '../../../../../../../shared/chess/util/coordutil.js';
+} from '../../../../../../../shared/util/coordutil.js';
 
 import space from '../../../../board/space.js';
 import mouse from '../../../mouse.js';

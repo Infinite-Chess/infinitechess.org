@@ -4,13 +4,13 @@
  * "Omega" showcase variant.
  */
 
-import type { CoordsKey } from '../../../util/coordutil.js';
+import type { CoordsKey } from '../../../../util/coordutil.js';
 import type { BoundingBox } from '../../../../util/math/bounds.js';
 import type { GameRuleModifications } from '../variantutil.js';
 
 import variantutil from '../variantutil.js';
 import icnposition from '../../../logic/icn/icnposition.js';
-import { players as p } from '../../../util/typeutil.js';
+import { players as p } from '../../../../util/typeutil.js';
 
 const POSITION_STRINGS: Record<number, string> = {
 	// May 15, 2024, 12:00AM - Pawns could no longer double push, that was a bug.

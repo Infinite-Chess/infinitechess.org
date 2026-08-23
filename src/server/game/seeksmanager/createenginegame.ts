@@ -12,7 +12,7 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { CreateEngineGameMessage } from '../../../shared/serverbound.js';
 
 import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
-import typeutil, { players } from '../../../shared/chess/util/typeutil.js';
+import typeutil, { players } from '../../../shared/util/typeutil.js';
 import { engineDictionary, ValidEngine } from '../../../shared/chess/engine.js';
 
 import createseek from './createseek.js';

@@ -4,7 +4,7 @@
  * This script detects draws by insufficient material.
  */
 
-import type { Coords } from '../util/coordutil.js';
+import type { Coords } from '../../util/coordutil.js';
 import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { GameConclusion } from '../util/winconutil.js';
@@ -15,9 +15,9 @@ import jsutil from '../../util/jsutil.js';
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../util/gamerules.js';
-import coordutil from '../util/coordutil.js';
-import typeutil, { Player } from '../util/typeutil.js';
-import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
+import coordutil from '../../util/coordutil.js';
+import typeutil, { Player } from '../../util/typeutil.js';
+import { rawTypes as r, ext as e, players as p, TypeGroup } from '../../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

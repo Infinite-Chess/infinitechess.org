@@ -9,7 +9,7 @@
  * NOR does it send any websocket messages.
  */
 
-import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../shared/util/typeutil.js';
 import type { MatchInfo, ServerGame } from './servergametypes.js';
 
 import gameconfig from '../../../shared/util/gameconfig.js';

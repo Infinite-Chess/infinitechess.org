@@ -8,11 +8,11 @@
 
 import type { Color } from '../../../../../../../shared/util/math/math.js';
 import type { Square } from './annotations.js';
-import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil.js';
+import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coordutil.js';
 
 import vectors from '../../../../../../../shared/util/math/vectors.js';
-import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
-import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
+import bdcoords from '../../../../../../../shared/util/bdcoords.js';
+import coordutil from '../../../../../../../shared/util/coordutil.js';
 import variantpreviewer from '../../../../../../../shared/chess/variants/variantpreviewer.js';
 
 import space from '../../../../board/space.js';

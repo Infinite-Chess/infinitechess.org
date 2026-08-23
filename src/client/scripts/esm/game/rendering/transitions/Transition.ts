@@ -23,7 +23,7 @@ import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
+} from '../../../../../../shared/util/coordutil.js';
 
 import space from '../../../board/space.js';
 import meshes from '../../../board/rendering/meshes.js';

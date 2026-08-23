@@ -6,7 +6,7 @@
  */
 
 import type { ModifierCode } from '../../../../../shared/util/modutil.js';
-import type { GameModifier } from '../../../../../shared/domain.js';
+import type { GameModifier } from '../../../../../shared/util/modutil.js';
 
 import modutil from '../../../../../shared/util/modutil.js';
 import gameconfig from '../../../../../shared/util/gameconfig.js';

@@ -10,11 +10,11 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import typeutil from '../../../../../shared/util/typeutil.js';
+import bdcoords from '../../../../../shared/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
-import { players as p, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p, TypeGroup } from '../../../../../shared/util/typeutil.js';
 
 import space from '../space.js';
 import instancedshapes from './instancedshapes.js';

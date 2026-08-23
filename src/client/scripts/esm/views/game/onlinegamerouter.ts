@@ -10,14 +10,14 @@
  * Counterpart of the server's gamerouter.
  */
 
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../../../shared/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ClockValues } from '../../../../../shared/domain.js';
 import type { GameConclusionMessage } from '../../../../../shared/clientbound.js';
 import type { ClientboundGameMessage, GameNavigation } from '../../../../../shared/clientbound.js';
 
 import gameurl from '../../../../../shared/util/gameurl.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import typeutil from '../../../../../shared/util/typeutil.js';
 
 import docutil from '../../util/docutil.js';
 import resyncer from './resyncer.js';

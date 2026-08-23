@@ -17,7 +17,7 @@ import type { MatchInfo, ServerGame } from './servergametypes.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
+import { PlayerGroup, Player } from '../../../shared/util/typeutil.js';
 import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validleaderboard.js';
 
 import db from '../../database/database.js';

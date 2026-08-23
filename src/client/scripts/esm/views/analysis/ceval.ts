@@ -16,7 +16,7 @@ import math from '../../../../../shared/util/math/math.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import engineicn from '../../game/chess/engines/engineicn.js';

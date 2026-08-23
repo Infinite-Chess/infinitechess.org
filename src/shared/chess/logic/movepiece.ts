@@ -8,7 +8,7 @@
 
 import type { Piece } from '../util/boardutil.js';
 import type { Board } from './boardinit.js';
-import type { Coords } from '../util/coordutil.js';
+import type { Coords } from '../../util/coordutil.js';
 import type { Change } from './boardchanges.js';
 import type { MoveState } from './state.js';
 import type { MoveCoords } from './icn/icnconverter.js';
@@ -16,9 +16,9 @@ import type { MovePacket } from '../../domain.js';
 import type { MoveSpecialTags, SpecialTags } from '../util/moveutil.js';
 
 import state from './state.js';
-import typeutil from '../util/typeutil.js';
+import typeutil from '../../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
-import coordutil from '../util/coordutil.js';
+import coordutil from '../../util/coordutil.js';
 import boardutil from '../util/boardutil.js';
 import legalmoves from './legalmoves.js';
 import castlingutil from './castlingutil.js';
@@ -29,7 +29,7 @@ import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
 import movevalidation from './movevalidation.js';
 import organizedpieces from './organizedpieces.js';
-import { rawTypes as r } from '../util/typeutil.js';
+import { rawTypes as r } from '../../util/typeutil.js';
 
 // Types --------------------------------------------------------------------------------------------------------------------------
 

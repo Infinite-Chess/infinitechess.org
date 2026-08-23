@@ -11,8 +11,8 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bounds from './bounds.js';
 import bimath from './bimath.js';
-import bdcoords from '../../chess/util/bdcoords.js';
-import coordutil, { BDCoords, Coords } from '../../chess/util/coordutil.js';
+import bdcoords from '../bdcoords.js';
+import coordutil, { BDCoords, Coords } from '../coordutil.js';
 import vectors, { LineCoefficients, LineCoefficientsBD, Ray, Vec2 } from './vectors.js';
 
 // ================================ Type Definitions =================================

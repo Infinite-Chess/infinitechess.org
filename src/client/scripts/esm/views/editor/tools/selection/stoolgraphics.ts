@@ -9,7 +9,7 @@
 
 import type { Color } from '../../../../../../../shared/util/math/math';
 import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
-import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil';
+import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coordutil';
 
 import bounds from '../../../../../../../shared/util/math/bounds';
 

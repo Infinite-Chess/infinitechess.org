@@ -8,7 +8,7 @@
  */
 
 import bimath from '../../../../../../../shared/util/math/bimath';
-import coordutil, { Coords } from '../../../../../../../shared/chess/util/coordutil';
+import coordutil, { Coords } from '../../../../../../../shared/util/coordutil';
 import bounds, {
 	BoundingBox,
 	DoubleBoundingBox,

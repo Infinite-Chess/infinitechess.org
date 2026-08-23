@@ -9,9 +9,10 @@
 import type { VNode } from 'snabbdom';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 import type { StorageType } from '../../savedpositions/storetypes.js';
+import type { GameModifier } from '../../../../../shared/util/modutil.js';
 import type { CloudSaveListRecord } from '../../savedpositions/savesapi.js';
+import type { MetaData, SeekVariant } from '../../../../../shared/domain.js';
 import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MetaData, SeekVariant, GameModifier } from '../../../../../shared/domain.js';
 import type {
 	VariantGroup,
 	VariantCode,
@@ -21,7 +22,7 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import coordutil from '../../../../../shared/util/coordutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import gameformulator from '../../../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';

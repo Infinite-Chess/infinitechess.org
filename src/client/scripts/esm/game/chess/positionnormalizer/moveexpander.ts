@@ -8,9 +8,9 @@
 
 import type { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
-import coordutil, { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import coordutil, { BDCoords, Coords } from '../../../../../../shared/util/coordutil.js';
 import vectors, {
 	LineCoefficients,
 	Vec2,

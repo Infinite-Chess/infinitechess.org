@@ -6,7 +6,7 @@
  * reading the correct listener depending on whether we're in perspective mode or not.
  */
 
-import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/util/coordutil.js';
 
 import space from '../board/space.js';
 import camera from '../board/rendering/camera.js';

@@ -9,7 +9,7 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 import type { DoubleBoundingBox } from '../../../../../../shared/util/math/bounds.js';
 
 import primitives from '../../../board/rendering/primitives.js';

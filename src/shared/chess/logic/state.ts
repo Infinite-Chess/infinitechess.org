@@ -6,8 +6,8 @@
  */
 
 import type { Edit } from './movepiece.js';
-import type { Coords } from '../util/coordutil.js';
-import type { CoordsKey } from '../util/coordutil.js';
+import type { Coords } from '../../util/coordutil.js';
+import type { CoordsKey } from '../../util/coordutil.js';
 import type { MoveSpecialTags } from '../util/moveutil.js';
 
 // Types -----------------------------------------------------------------------------------------------

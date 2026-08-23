@@ -14,7 +14,7 @@ import * as z from 'zod';
 import timeutil from '../../../../shared/util/timeutil.js';
 import winconutil from '../../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../../shared/chess/util/metadatautil.js';
-import { players as p } from '../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../shared/util/typeutil.js';
 import variantregistry, { VariantCode } from '../../../../shared/chess/variants/variantregistry.js';
 
 // Functions -----------------------------------------------------------------------

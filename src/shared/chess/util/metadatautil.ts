@@ -7,11 +7,11 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import type { Player } from './typeutil.js';
+import type { Player } from '../../util/typeutil.js';
 import type { MetaData, Rating } from '../../domain.js';
 
 import timeutil from '../../util/timeutil.js';
-import { players as p } from './typeutil.js';
+import { players as p } from '../../util/typeutil.js';
 
 // Types --------------------------------------------------------------------------
 

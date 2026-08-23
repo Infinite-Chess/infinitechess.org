@@ -10,19 +10,19 @@
 import type { BaseRay } from '../../util/math/geometry.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
-import type { CoordsKey, Coords } from '../util/coordutil.js';
+import type { CoordsKey, Coords } from '../../util/coordutil.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
-import type { Player, PlayerGroup, RawType } from '../util/typeutil.js';
+import type { Player, PlayerGroup, RawType } from '../../util/typeutil.js';
 import type { VariantModule, GameRuleModifications } from './variant_scripts/variantutil.js';
 
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
-import typeutil from '../util/typeutil.js';
-import coordutil from '../util/coordutil.js';
+import typeutil from '../../util/typeutil.js';
+import coordutil from '../../util/coordutil.js';
 import castlingutil from '../logic/castlingutil.js';
 import icnconverter from '../logic/icn/icnconverter.js';
 import { DEFAULT_PROMOTION_PIECES } from './variant_scripts/defaultPromotions.js';
-import { rawTypes as r, players as p } from '../util/typeutil.js';
+import { rawTypes as r, players as p } from '../../util/typeutil.js';
 
 // Constants ------------------------------------------------------------------
 

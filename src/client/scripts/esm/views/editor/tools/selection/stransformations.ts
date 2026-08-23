@@ -16,12 +16,12 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bounds from '../../../../../../../shared/util/math/bounds';
 import bimath from '../../../../../../../shared/util/math/bimath';
-import typeutil from '../../../../../../../shared/chess/util/typeutil';
-import bdcoords from '../../../../../../../shared/chess/util/bdcoords';
+import typeutil from '../../../../../../../shared/util/typeutil';
+import bdcoords from '../../../../../../../shared/util/bdcoords';
 import organizedpieces from '../../../../../../../shared/chess/logic/organizedpieces';
 import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors';
 import boardutil, { Piece } from '../../../../../../../shared/chess/util/boardutil';
-import coordutil, { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil';
+import coordutil, { BDCoords, Coords } from '../../../../../../../shared/util/coordutil';
 
 import edithistory from '../../edithistory';
 import selectiontool from './selectiontool';

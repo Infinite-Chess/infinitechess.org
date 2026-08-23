@@ -7,7 +7,7 @@
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type {
 	ChangeApplication,
 	Change,

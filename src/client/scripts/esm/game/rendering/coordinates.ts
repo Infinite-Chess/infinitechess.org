@@ -14,13 +14,13 @@
  */
 
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal, toNumber } from '@naviary/bigdecimal';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import bdcoords from '../../../../../shared/util/bdcoords.js';
 
 import space from '../../board/space.js';
 import camera from '../../board/rendering/camera.js';

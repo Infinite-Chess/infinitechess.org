@@ -17,12 +17,12 @@ import * as z from 'zod';
 
 import clockutil from './chess/util/clockutil.js';
 import winconutil from './chess/util/winconutil.js';
-import { players } from './chess/util/typeutil.js';
+import { players } from './util/typeutil.js';
 import { isRatedAllowed } from './chess/variants/servervalidation.js';
+import { GameModifierSchema } from './util/modutil.js';
 import {
 	GameIDSchema,
 	GameModeSchema,
-	GameModifierSchema,
 	SeekIdSchema,
 	SeekVariantSchema,
 	TimeControlSchema,

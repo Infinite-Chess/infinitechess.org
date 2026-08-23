@@ -12,7 +12,7 @@ import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type { ClockValues, SeekVariant } from '../../../shared/domain.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 import type {
@@ -34,7 +34,7 @@ import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import gameformulator from '../../../shared/chess/logic/gameformulator.js';
 import variantpreviewer from '../../../shared/chess/variants/variantpreviewer.js';
-import { players as p } from '../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../shared/util/typeutil.js';
 import { isGameServerValidated } from '../../../shared/chess/variants/servervalidation.js';
 
 import { logEventsAndPrint } from '../../utility/logEvents.js';

@@ -7,7 +7,7 @@
 
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
 import type { GameruleWinCondition } from './winconutil.js';
-import type { Player, RawType, PlayerGroup } from './typeutil.js';
+import type { Player, RawType, PlayerGroup } from '../../util/typeutil.js';
 
 export interface GameRules {
 	/** An object containing lists of what win conditions each color can win by. */

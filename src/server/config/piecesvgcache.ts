@@ -10,14 +10,14 @@
  * silhouettes, recolored by CSS, so no tint or other player color is ever wanted.
  */
 
-import type { RawType } from '../../shared/chess/util/typeutil.js';
+import type { RawType } from '../../shared/util/typeutil.js';
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
 
 import pieceThemes from '../../shared/components/header/pieceThemes.js';
-import typeutil, { players, rawTypes } from '../../shared/chess/util/typeutil.js';
+import typeutil, { players, rawTypes } from '../../shared/util/typeutil.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

@@ -12,8 +12,9 @@ import path from 'path';
 import nunjucks from 'nunjucks';
 import { fileURLToPath } from 'node:url';
 
-import { players as p } from '../../shared/chess/util/typeutil.js';
+import { players as p } from '../../shared/util/typeutil.js';
 import { getVersionedEngineName } from '../../shared/chess/engine.js';
+
 import { MANIFEST_PATH, getEngineVersion, loadManifest } from './manifest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

@@ -7,9 +7,9 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { Coords } from '../../../../../../shared/util/coordutil.js';
 
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
 
 import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';

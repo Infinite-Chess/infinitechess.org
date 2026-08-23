@@ -8,10 +8,11 @@
  * generator-based variants are excluded to avoid server hitches on legal move gen.
  */
 
-import type { Player } from '../util/typeutil.js';
+import type { Player } from '../../util/typeutil.js';
 import type { VariantCode } from './variantregistry.js';
+import type { GameModifier } from '../../util/modutil.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
-import type { GameStateVariant, SeekVariant, TimeControl, GameModifier } from '../../domain.js';
+import type { GameStateVariant, SeekVariant, TimeControl } from '../../domain.js';
 
 import variantpreviewer from './variantpreviewer.js';
 import { VariantLeaderboards } from './validleaderboard.js';

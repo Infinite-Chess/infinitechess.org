@@ -8,10 +8,10 @@
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Arrow } from '../../../game/rendering/highlights/annotations/annotations.js';
-import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { Coords } from '../../../../../../shared/util/coordutil.js';
 import type { CevalLine, CevalUpdate } from '../ceval.js';
 
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
 import icnconverter, { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import gameslot from '../../../game/chess/gameslot.js';

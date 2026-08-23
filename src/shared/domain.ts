@@ -15,13 +15,13 @@
 import type { ValidEngine } from './chess/engine.js';
 import type { VariantCode } from './chess/variants/variantregistry.js';
 import type { GameConclusion } from './chess/util/winconutil.js';
-import type { Player, PlayerGroup } from './chess/util/typeutil.js';
+import type { Player, PlayerGroup } from './util/typeutil.js';
 
 import * as z from 'zod';
 
-import gameconfig from './util/gameconfig.js';
 import typeschemas from './chess/util/typeschemas.js';
 import variantregistry from './chess/variants/variantregistry.js';
+import { GameModifierSchema, GameModifier } from './util/modutil.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
 
@@ -91,15 +91,6 @@ export const MovePacketSchema = z.strictObject({
 	/** Only ever set by the ICN parser, for the analysis page's per-move clocks. Never sent over the wire. */
 	clockStamp: z.number().optional(),
 });
-
-/** The full configuration for a single game modifier, chosen on a seek and carried onto its game. */
-export type GameModifier = z.infer<typeof GameModifierSchema>;
-export const GameModifierSchema = z.discriminatedUnion('kind', [
-	z.strictObject({
-		kind: z.literal('slide-limit'),
-		value: z.literal(gameconfig.SLIDE_LIMIT_VALUES),
-	}),
-]);
 
 /**
  * ICN (Infinite Chess Notation) metadata for a game, inspired by PGN notation.

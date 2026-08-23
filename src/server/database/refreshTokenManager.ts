@@ -11,7 +11,7 @@ import type { Request } from 'express';
 import db, { dbCall } from './database.js';
 import { getClientIP } from '../utility/IP.js';
 import { updateLastSeen } from './memberManager.js';
-import { verifyTokenPayload, type TokenPayload } from '../utility/tokenSigner.js';
+import { verifyTokenPayload, TokenPayload } from '../utility/tokenSigner.js';
 
 // Types ------------------------------------------------------------------------------------------
 

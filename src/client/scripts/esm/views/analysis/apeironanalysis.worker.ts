@@ -25,7 +25,7 @@
  * when the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
  */
 
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../../../shared/util/typeutil.js';
 import type { EvaluateResult } from './gamereview.js';
 import type {
 	EngineWasmModule,

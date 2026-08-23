@@ -8,7 +8,7 @@
  * protocol, declared in apeironanalysis.worker.ts.
  */
 
-import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
+import type { Player } from '../../../../../../shared/util/typeutil.js';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type {
 	ApeironEngineConfig,

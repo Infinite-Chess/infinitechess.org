@@ -10,7 +10,7 @@ import type { GameStateMessage, ParticipantState } from '../../../../../shared/c
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/logic/gameformulator.js';
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/util/typeutil.js';
 import { engineDictionary } from '../../../../../shared/chess/engine.js';
 
 import gameslot from '../../game/chess/gameslot.js';

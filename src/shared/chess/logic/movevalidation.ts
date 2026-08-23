@@ -12,7 +12,7 @@ import specialdetect from './specialdetect.js';
 import boardutil, { Piece } from '../util/boardutil.js';
 import icnconverter, { MoveCoords } from './icn/icnconverter.js';
 import movepiece, { CoordsTagged, MoveTagged } from './movepiece.js';
-import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
+import typeutil, { Player, RawType, rawTypes as r } from '../../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

@@ -6,8 +6,8 @@
  */
 
 import type { Board } from './boardinit.js';
-import type { Coords } from '../util/coordutil.js';
-import type { Player } from '../util/typeutil.js';
+import type { Coords } from '../../util/coordutil.js';
+import type { Player } from '../../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { MoveTagged } from './movepiece.js';
 import type { CoordsTagged } from './movepiece.js';
@@ -20,18 +20,18 @@ import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
 import vectors from '../../util/math/vectors.js';
-import typeutil from '../util/typeutil.js';
-import bdcoords from '../util/bdcoords.js';
+import typeutil from '../../util/typeutil.js';
+import bdcoords from '../../util/bdcoords.js';
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
-import coordutil from '../util/coordutil.js';
+import coordutil from '../../util/coordutil.js';
 import gamerules from '../util/gamerules.js';
 import legalmoves from './legalmoves.js';
 import castlingutil from './castlingutil.js';
 import checkresolver from './checkresolver.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
-import { players as p, rawTypes as r } from '../util/typeutil.js';
+import { players as p, rawTypes as r } from '../../util/typeutil.js';
 
 // Functions -----------------------------------------------------------------------
 
