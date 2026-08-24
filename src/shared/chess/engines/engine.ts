@@ -1,4 +1,4 @@
-// src/shared/chess/engine.ts
+// src/shared/chess/engines/engine.ts
 
 /*
  * This module contains the centralized data structure for all engines.

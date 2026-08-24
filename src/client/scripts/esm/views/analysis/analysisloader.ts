@@ -12,7 +12,7 @@ import type { Additional, VariantOptions } from '../../../../../shared/chess/log
 
 import uuid from '../../../../../shared/util/uuid.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import gameformulator from '../../../../../shared/chess/logic/gameformulator.js';
+import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import { players as p } from '../../../../../shared/util/typeutil.js';
 import { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 

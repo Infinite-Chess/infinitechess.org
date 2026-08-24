@@ -1,4 +1,4 @@
-// src/shared/chess/logic/gameformulator.ts
+// src/shared/chess/game/gameformulator.ts
 
 /**
  * The single path from a parsed ICN (longformat) to a constructed gamefile,
@@ -7,12 +7,18 @@
 
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';
-import type { LongFormatOut, PresetAnnotes } from './icn/icnconverter.js';
-import type { Additional, DatedVariant, GameFile, VariantOptions } from './gamefile.js';
+import type { ClockValues, TimeControl } from '../util/clockutil.js';
+import type { LongFormatOut, PresetAnnotes } from '../logic/icn/icnconverter.js';
+import type {
+	Additional,
+	DatedVariant,
+	GameFile,
+	LoadedVariant,
+	VariantOptions,
+} from '../logic/gamefile.js';
 
-import gamefile from './gamefile.js';
-import icnimport from './icn/icnimport.js';
+import gamefile from '../logic/gamefile.js';
+import icnimport from '../logic/icn/icnimport.js';
 import metadatautil from '../util/metadatautil.js';
 import variantcache from '../variants/variantcache.js';
 import variantregistry from '../variants/variantregistry.js';
@@ -117,11 +123,24 @@ async function resolveConstructionOptions(
 	longFormat: LongFormatOut,
 	overrides?: ConstructionOverrides,
 ): Promise<GameConstructionOptions> {
-	const code = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
-	if (code !== undefined) await variantcache.ensureVariantLoaded(code);
+	const variant = await loadVariantOfLongFormat(longFormat);
 
-	const positionSource = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, code);
+	const positionSource = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant);
 	return constructionOptionsFromLongFormat(longFormat, overrides, positionSource);
+}
+
+/**
+ * Loads the module of the variant an ICN declares, so the position can be read off
+ * it when the ICN carries none. Undefined if the ICN names no recognized variant.
+ */
+async function loadVariantOfLongFormat(
+	longFormat: LongFormatOut,
+): Promise<LoadedVariant | undefined> {
+	const code = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
+	if (code === undefined) return undefined;
+	await variantcache.ensureVariantLoaded(code);
+	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
+	return { code, dateTimestamp, mod: variantcache.getModule(code) };
 }
 
 /**
@@ -162,10 +181,14 @@ function constructionOptionsFromLongFormat(
  * @param validateMoves - If true, we'll throws an IllegalMoveError if any move played is illegal.
  */
 function constructGame(options: GameConstructionOptions, validateMoves?: true): GameFile {
+	const variant = options.variant && {
+		...options.variant,
+		mod: variantcache.getModule(options.variant.code),
+	};
 	return gamefile.initGameFile(
 		options.timeControl,
 		options.dateTimestamp,
-		options.variant,
+		variant,
 		options.additional,
 		validateMoves,
 	);

@@ -32,8 +32,8 @@ import moveutil from '../../../shared/chess/logic/moveutil.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
-import gameformulator from '../../../shared/chess/logic/gameformulator.js';
+import apeironborder from '../../../shared/chess/logic/apeironborder.js';
+import gameformulator from '../../../shared/chess/game/gameformulator.js';
 import variantpreviewer from '../../../shared/chess/logic/variantpreviewer.js';
 import { players as p } from '../../../shared/util/typeutil.js';
 import { isGameServerValidated } from '../../../shared/chess/variants/servervalidation.js';
@@ -80,7 +80,7 @@ function resolveGameConstruction(
 		gameRules = variantpreviewer.getGameRulesOfVariant(loaded); // Already a fresh copy
 		// The board an engine game is played on.
 		if (engineGame && gameRules.worldBorder === undefined) {
-			gameRules.worldBorder = apeiron_card.worldBorderForVariant(loaded);
+			gameRules.worldBorder = apeironborder.forVariant(loaded);
 		}
 	} else {
 		// The ICN is the source of truth for the position, the gamerules, and which variant

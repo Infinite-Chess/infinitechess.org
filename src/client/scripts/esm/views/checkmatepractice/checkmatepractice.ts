@@ -7,7 +7,7 @@
 import type { Player } from '../../../../../shared/util/typeutil.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineAndConfig } from '../../../../../shared/chess/engine.js';
+import type { EngineAndConfig } from '../../../../../shared/chess/engines/engine.js';
 import type { Coords, CoordsKey } from '../../../../../shared/util/coordutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
@@ -17,7 +17,7 @@ import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import variantpreviewer from '../../../../../shared/chess/logic/variantpreviewer.js';
-import { engineDictionary } from '../../../../../shared/chess/engine.js';
+import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
 import { players as p, ext as e, rawTypes as r } from '../../../../../shared/util/typeutil.js';
 
 import toast from '../../components/toast.js';

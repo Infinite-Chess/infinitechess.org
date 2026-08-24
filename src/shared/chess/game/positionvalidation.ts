@@ -1,4 +1,4 @@
-// src/shared/chess/variants/positionvalidation.ts
+// src/shared/chess/game/positionvalidation.ts
 
 /**
  * This script decides whether a position may be used where it's being used: whether it's
@@ -22,7 +22,7 @@ import apeiron_card from '../engines/apeiron_card.js';
 import variantreader from '../logic/variantreader.js';
 import checkdetection from '../logic/checkdetection.js';
 import gamefileutility from '../logic/gamefileutility.js';
-import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from './servervalidation.js';
+import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from '../variants/servervalidation.js';
 import typeutil, { neutralRawTypes, players as p, rawTypes as r } from '../../util/typeutil.js';
 
 // Constants -------------------------------------------------------------------------

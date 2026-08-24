@@ -6,17 +6,15 @@
  * (local eval + Game Review) must agree on when the engine may run.
  */
 
+import type { GameFile } from '../logic/gamefile.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { VariantCode } from '../util/variantcodes.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
-import type { GameFile, LoadedVariant } from '../logic/gamefile.js';
-import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js';
 
 import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
-import timeutil from '../../util/timeutil.js';
 import boardutil from '../logic/boardutil.js';
-import { I64_MAX } from '../engine.js';
+import apeironborder from '../logic/apeironborder.js';
 import typeutil, { RawType, rawTypes as r, players as p } from '../../util/typeutil.js';
 
 /** Why the engine can't handle a game. Keys into `position_errors.engine` in the shared translations. */
@@ -48,68 +46,6 @@ const SUPPORTED_WIN_CONDITIONS: GameruleWinCondition[] = ['checkmate', 'royalcap
 
 /** Piece types the engine can move. Neutrals (void/obstacle) are inert blockers, so allowed. */
 const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GIRAFFE, r.CAMEL, r.ZEBRA, r.KNIGHTRIDER, r.AMAZON, r.QUEEN, r.HAWK, r.CHANCELLOR, r.ARCHBISHOP, r.CENTAUR, r.ROYALCENTAUR, r.ROSE, r.KNIGHT, r.GUARD, r.HUYGEN, r.ROOK, r.BISHOP, r.PAWN]); // prettier-ignore
-
-// The board engine games are played on -------------------------------------
-
-/**
- * The engine's board geometry, time-versioned like a variant's position: `dist` spaces the border
- * out from the starting position's box, `cap` hard-limits any edge to i64 with a cushion. The 1000
- * between them keeps every preset's border evenly spaced; only pieces beyond that trip the cap.
- *
- * NEVER edit an entry — a game must stay on the board it began on. Add one keyed at the change.
- */
-const PLAY_BORDER: Record<number, { dist: bigint; cap: bigint }> = {
-	0: { dist: I64_MAX - 2000n, cap: I64_MAX - 1000n },
-};
-
-/**
- * The world border an engine game is played inside: spaced evenly around the starting position,
- * clamped to what the engine can evaluate. The single source of every engine game's border.
- * @param timestamp - The game's creation time, pinning its {@link PLAY_BORDER} revision.
- */
-function worldBorderForBox(positionBox: BoundingBox, timestamp: number): BoundingBox {
-	const { dist, cap } = timeutil.resolveAtTimestamp(PLAY_BORDER, timestamp);
-	return {
-		left: bimath.max(positionBox.left - dist, -cap),
-		right: bimath.min(positionBox.right + dist, cap),
-		bottom: bimath.max(positionBox.bottom - dist, -cap),
-		top: bimath.min(positionBox.top + dist, cap),
-	};
-}
-
-/**
- * {@link worldBorderForBox} for a preset variant, whose starting position
- * is never built just to measure it — the module declares its box outright.
- */
-function worldBorderForVariant(variant: LoadedVariant): BoundingBox {
-	const box = variant.mod.getPositionBox?.(variant.dateTimestamp);
-	if (box === undefined)
-		throw new Error(`Engine-supported variant "${variant.code}" declares no position box.`);
-	return worldBorderForBox(box, variant.dateTimestamp);
-}
-
-/** {@link PLAY_BORDER}'s `cap` alone, for callers bounding a position rather than spacing a border. */
-function worldBorderCap(timestamp: number): bigint {
-	return timeutil.resolveAtTimestamp(PLAY_BORDER, timestamp).cap;
-}
-
-/**
- * An explicit world border reduced to what the engine can evaluate: every
- * edge pulled inside the cap, and an unbounded (or absent) edge becoming it.
- * @param timestamp - Pins the {@link PLAY_BORDER} revision.
- */
-function clampBorderToCap(
-	worldBorder: UnboundedRectangle | undefined,
-	timestamp: number,
-): BoundingBox {
-	const cap = worldBorderCap(timestamp);
-	return {
-		left: bimath.max(worldBorder?.left ?? -cap, -cap),
-		right: bimath.min(worldBorder?.right ?? cap, cap),
-		bottom: bimath.max(worldBorder?.bottom ?? -cap, -cap),
-		top: bimath.min(worldBorder?.top ?? cap, cap),
-	};
-}
 
 // Individual rule checks (shared by both entry points) --------------------
 
@@ -174,7 +110,7 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 	if (!winConsResult.supported) return winConsResult;
 
 	// World border larger than i64, or absent, is unsupported.
-	const cap = worldBorderCap(gamefile.dateTimestamp);
+	const cap = apeironborder.cap(gamefile.dateTimestamp);
 	const worldBorder = gamefile.gameRules.worldBorder;
 	if (
 		!worldBorder ||
@@ -277,10 +213,6 @@ export default {
 	// Constants
 	SUPPORTED_VARIANTS,
 	// Functions
-	worldBorderForBox,
-	worldBorderForVariant,
-	worldBorderCap,
-	clampBorderToCap,
 	isPlaySupported,
 	isAnalysisSupported,
 	isGameReviewSupported,

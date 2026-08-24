@@ -9,9 +9,9 @@ import type { LongFormatOut, PresetAnnotes } from '../../../../../shared/chess/l
 import type { GameStateMessage, ParticipantState } from '../../../../../shared/clientbound.js';
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import gameformulator from '../../../../../shared/chess/logic/gameformulator.js';
+import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import { players as p } from '../../../../../shared/util/typeutil.js';
-import { engineDictionary } from '../../../../../shared/chess/engine.js';
+import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import drawoffers from './drawoffers.js';

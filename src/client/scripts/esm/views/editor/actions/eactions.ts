@@ -28,22 +28,23 @@ import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../../../../shared/chess/variants/variantcache';
 import variantpreviewer from '../../../../../../shared/chess/logic/variantpreviewer';
-import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
+import { validatePosition } from '../../../../../../shared/chess/game/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/logic/boardutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
 } from '../../../../../../shared/chess/logic/organizedpieces';
-import gamefile, {
-	Additional,
-	GameFile,
-	VariantOptions,
-} from '../../../../../../shared/chess/logic/gamefile';
 import icnconverter, {
 	MoveParsed,
 	LongFormatIn,
 	LongFormatOut,
 } from '../../../../../../shared/chess/logic/icn/icnconverter';
+import gamefile, {
+	Additional,
+	GameFile,
+	LoadedVariant,
+	VariantOptions,
+} from '../../../../../../shared/chess/logic/gamefile';
 
 import toast from '../../../components/toast.js';
 import docutil from '../../../util/docutil';
@@ -296,9 +297,16 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 
 	// Preload the variant module up front: getPositionAndSpecialRights reads the position
 	// off it when the ICN omits one, and initGameFile below requires it too.
-	if (resolvedVariantCode !== undefined)
+	let variant: LoadedVariant | undefined;
+	if (resolvedVariantCode !== undefined) {
 		await variantcache.ensureVariantLoaded(resolvedVariantCode);
-	let { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, resolvedVariantCode); // prettier-ignore
+		variant = {
+			code: resolvedVariantCode,
+			dateTimestamp: timestamp,
+			mod: variantcache.getModule(resolvedVariantCode),
+		};
+	}
+	let { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, variant); // prettier-ignore
 	let stateGlobal = longformOut.state_global;
 
 	// If longformat contains moves, then we construct a GameFile object and use it to fast forward to the final position
@@ -318,9 +326,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		const loadedGamefile = gamefile.initGameFile(
 			longformOut.metadata.TimeControl ?? '-',
 			timestamp,
-			resolvedVariantCode !== undefined
-				? { code: resolvedVariantCode, dateTimestamp: timestamp }
-				: undefined,
+			variant,
 			additional,
 		);
 		const new_gamestate = gamecompressor.GameToPosition(

@@ -12,7 +12,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
-import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
+import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
 import coordutil, { CoordsKey } from '../../../../../shared/util/coordutil.js';
 
 /**
@@ -20,7 +20,7 @@ import coordutil, { CoordsKey } from '../../../../../shared/util/coordutil.js';
  * `worldBorder` gamerule, held to the furthest coordinate today's engine can evaluate.
  */
 function getEngineWorldBorder(gamefile: GameFile): BoundingBox {
-	return apeiron_card.clampBorderToCap(gamefile.gameRules.worldBorder, Date.now());
+	return apeironborder.clampToCap(gamefile.gameRules.worldBorder, Date.now());
 }
 
 /** Returns whether all pieces in the gamefile are within the engine's safe evaluation bounds. */

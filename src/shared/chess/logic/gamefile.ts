@@ -18,8 +18,7 @@ import gamerules from '../util/gamerules.js';
 import boardinit from './boardinit.js';
 import checkmate from './checkmate.js';
 import wincondition from './wincondition.js';
-import variantcache from '../variants/variantcache.js';
-import apeiron_card from '../engines/apeiron_card.js';
+import apeironborder from './apeironborder.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from './gamefileutility.js';
 import variantpreviewer from './variantpreviewer.js';
@@ -206,8 +205,7 @@ function loadGameWithBoard(
 
 /**
  * Initiates both the base game and board of the GameFile at the same time.
- * REQUIRES THE VARIANT MODULE TO BE PRELOADED via {@link variantcache.ensureVariantLoaded}
- * if a variant is specified.
+ * @param variant - The variant with its module already resolved, or undefined for a custom position.
  * @param validateMoves - During game construction, throws an error if any move played is illegal,
  *   such as no piece on the start coords, or promotion to a piece with no space in the piece lists
  *   for (not a promotion piece).
@@ -215,15 +213,10 @@ function loadGameWithBoard(
 function initGameFile(
 	timeControl: TimeControl,
 	dateTimestamp: number,
-	datedVariant: DatedVariant | undefined,
+	variant: LoadedVariant | undefined,
 	additional: Additional = {},
 	validateMoves?: true,
 ): GameFile {
-	const variant: LoadedVariant | undefined =
-		datedVariant !== undefined
-			? { ...datedVariant, mod: variantcache.getModule(datedVariant.code) }
-			: undefined;
-
 	let gameRules: GameRules =
 		additional.variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
 
@@ -243,7 +236,7 @@ function initGameFile(
 			// without a variant has nowhere left to get one — never hand the engine an open board.
 			if (variant === undefined)
 				throw Error('Engine game on a custom position must supply its own world border.');
-			worldBorder = apeiron_card.worldBorderForVariant(variant);
+			worldBorder = apeironborder.forVariant(variant);
 		}
 		if (worldBorder !== undefined) gameRules = { ...gameRules, worldBorder };
 	}

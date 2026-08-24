@@ -24,7 +24,7 @@ import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import { players } from '../../../shared/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
-import { getFormattedEngineName, ValidEngine } from '../../../shared/chess/engine.js';
+import { getFormattedEngineName, ValidEngine } from '../../../shared/chess/engines/engine.js';
 
 import { getGameData } from '../../database/gamesManager.js';
 import ratingcalculation from '../../utility/ratingcalculation.js';

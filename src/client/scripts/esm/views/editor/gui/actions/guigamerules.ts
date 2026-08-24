@@ -15,7 +15,7 @@ import gamerules from '../../../../../../../shared/chess/util/gamerules';
 import icnposition from '../../../../../../../shared/chess/logic/icn/icnposition';
 import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
 import typeutil, { RawType } from '../../../../../../../shared/util/typeutil';
-import { isValidPromotionPiece } from '../../../../../../../shared/chess/variants/positionvalidation';
+import { isValidPromotionPiece } from '../../../../../../../shared/chess/game/positionvalidation';
 
 import gameslot from '../../../../game/chess/gameslot';
 import boardeditor from '../../boardeditor';

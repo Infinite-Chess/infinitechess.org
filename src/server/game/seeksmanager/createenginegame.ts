@@ -13,7 +13,7 @@ import type { CreateEngineGameMessage } from '../../../shared/serverbound.js';
 
 import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import typeutil, { players } from '../../../shared/util/typeutil.js';
-import { engineDictionary, ValidEngine } from '../../../shared/chess/engine.js';
+import { engineDictionary, ValidEngine } from '../../../shared/chess/engines/engine.js';
 
 import createseek from './createseek.js';
 import gamemanager from '../gamemanager/gamemanager.js';

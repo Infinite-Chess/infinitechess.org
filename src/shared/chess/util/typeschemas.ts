@@ -2,6 +2,10 @@
 
 /**
  * General zod schemas derived from the plain type constants.
+ *
+ * Deliberately NOT folded into typeutil.ts: that module is reached by the header
+ * bundle every page loads, and by the analysis worker, none of which carry zod today.
+ * Keeping the schemas here is what stops zod reaching them.
  */
 
 import type { Player } from '../../util/typeutil.js';

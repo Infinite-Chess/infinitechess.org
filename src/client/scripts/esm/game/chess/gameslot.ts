@@ -10,8 +10,12 @@
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/util/typeutil.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { Additional, GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { GameConstructionOptions } from '../../../../../shared/chess/logic/gameformulator.js';
+import type { GameConstructionOptions } from '../../../../../shared/chess/game/gameformulator.js';
+import type {
+	Additional,
+	GameFile,
+	LoadedVariant,
+} from '../../../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
@@ -155,12 +159,15 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 
 /** Loads all of the logical components of a game */
 async function loadLogical(loadOptions: LoadOptions): Promise<void> {
-	if (loadOptions.variant !== undefined)
+	let variant: LoadedVariant | undefined;
+	if (loadOptions.variant !== undefined) {
 		await variantcache.ensureVariantLoaded(loadOptions.variant.code);
+		variant = { ...loadOptions.variant, mod: variantcache.getModule(loadOptions.variant.code) };
+	}
 	loadedGamefile = gamefile.initGameFile(
 		loadOptions.timeControl,
 		loadOptions.dateTimestamp,
-		loadOptions.variant,
+		variant,
 		loadOptions.additional,
 	);
 

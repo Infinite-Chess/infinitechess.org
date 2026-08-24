@@ -12,7 +12,7 @@ import type { Board } from '../../../shared/chess/logic/boardinit.js';
 import type { Rating } from '../../../shared/chess/util/metadatautil.js';
 import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
-import type { ValidEngine } from '../../../shared/chess/engine.js';
+import type { ValidEngine } from '../../../shared/chess/engines/engine.js';
 import type { SeekVariant } from '../../../shared/domain.js';
 import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
 import type { GameModifier } from '../../../shared/util/modutil.js';

@@ -13,7 +13,7 @@
  * needs is owned down there instead, beside the vocabulary it describes.
  */
 
-import type { ValidEngine } from './chess/engine.js';
+import type { ValidEngine } from './chess/engines/engine.js';
 import type { TimeControl } from './chess/util/clockutil.js';
 import type { VariantCode } from './chess/util/variantcodes.js';
 import type { GameConclusion } from './chess/util/winconutil.js';

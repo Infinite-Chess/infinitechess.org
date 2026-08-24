@@ -8,24 +8,21 @@
 
 import type { CoordsKey } from '../../../util/coordutil.js';
 import type { MovePacket } from '../../../chess/logic/icn/icnconverter.js';
-import type { VariantCode } from '../../util/variantcodes.js';
 import type { LongFormatOut, MoveParsed } from './icnconverter.js';
 import type { LoadedVariant, VariantOptions } from '../gamefile.js';
 
 import jsutil from '../../../util/jsutil.js';
-import metadatautil from '../../util/metadatautil.js';
-import variantcache from '../../variants/variantcache.js';
 import variantpreviewer from '../variantpreviewer.js';
 
 /**
  * Resolves the starting position and specialRights from a parsed ICN long format.
  * Uses the explicit position if present, otherwise reads it from the variant.
- * @param variantCode - The pre-resolved variant code (avoids re-resolving from metadata).
- *   If defined, REQUIRES the variant module preloaded when the ICN omits a position.
+ * @param variant - The variant the ICN declares, module already resolved. Only consulted
+ *   when the ICN carries no position of its own; pass undefined to resolve to an empty one.
  */
 function getPositionAndSpecialRightsFromLongFormat(
 	longFormat: LongFormatOut,
-	variantCode: VariantCode | undefined,
+	variant: LoadedVariant | undefined,
 ): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
@@ -35,11 +32,8 @@ function getPositionAndSpecialRightsFromLongFormat(
 			position: longFormat.position,
 			specialRights: longFormat.state_global.specialRights,
 		};
-	} else if (variantCode !== undefined) {
+	} else if (variant !== undefined) {
 		// No position specified in the ICN, extract from the variant
-		const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
-		const mod = variantcache.getModule(variantCode);
-		const variant: LoadedVariant = { code: variantCode, mod, dateTimestamp };
 		return variantpreviewer.getStartingPositionOfVariant(variant);
 	} else {
 		return { position: new Map(), specialRights: new Set() };

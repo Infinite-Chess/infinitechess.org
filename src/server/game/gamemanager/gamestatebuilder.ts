@@ -42,7 +42,7 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../shared/util/typeutil.js';
-import { getFormattedEngineName } from '../../../shared/chess/engine.js';
+import { getFormattedEngineName } from '../../../shared/chess/engines/engine.js';
 import {
 	Leaderboards,
 	getLeaderboardOfVariant,

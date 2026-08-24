@@ -14,7 +14,7 @@ import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/
 
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
-import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
+import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
 import variantpreviewer from '../../../../../shared/chess/logic/variantpreviewer.js';
 import {
@@ -207,7 +207,7 @@ async function showForVariantCode(
 	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant);
 	// The board an engine game would be played on — the same one game construction resolves.
 	if (options.engineGame && gameRules.worldBorder === undefined) {
-		gameRules.worldBorder = apeiron_card.worldBorderForVariant(loadedVariant);
+		gameRules.worldBorder = apeironborder.forVariant(loadedVariant);
 	}
 	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant);
 	await showForBoard(anchor, variantName, boardsim, token, placement, code, options.modifiers);

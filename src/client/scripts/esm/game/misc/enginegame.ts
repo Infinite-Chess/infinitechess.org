@@ -4,7 +4,7 @@
 
 import type { Player } from '../../../../../shared/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineAndConfig } from '../../../../../shared/chess/engine.js';
+import type { EngineAndConfig } from '../../../../../shared/chess/engines/engine.js';
 import type {
 	ApeironMoveRequest,
 	CheckmatePracticeMoveRequest,
@@ -16,7 +16,7 @@ import type {
 import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-import { engineDictionary } from '../../../../../shared/chess/engine.js';
+import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
 import typeutil, { players as p } from '../../../../../shared/util/typeutil.js';
 
 import toast from '../../components/toast.js';

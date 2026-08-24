@@ -23,7 +23,8 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
-import gameformulator from '../../../../../shared/chess/logic/gameformulator.js';
+import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
+import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import {
@@ -31,7 +32,7 @@ import {
 	validatePosition,
 	localizeRejection,
 	getPlayabilityRejection,
-} from '../../../../../shared/chess/variants/positionvalidation.js';
+} from '../../../../../shared/chess/game/positionvalidation.js';
 
 import savesapi from '../../savedpositions/savesapi.js';
 import savestore from '../../savedpositions/savestore.js';
@@ -654,11 +655,11 @@ function withEngineBorder(options: VariantOptions): VariantOptions {
 	// An empty position has no box to space a border around; validation rejects it regardless.
 	if (declared === undefined && options.position.size === 0) return options;
 	let worldBorder: BoundingBox;
-	if (declared !== undefined) worldBorder = apeiron_card.clampBorderToCap(declared, Date.now());
+	if (declared !== undefined) worldBorder = apeironborder.clampToCap(declared, Date.now());
 	else {
 		const coords = [...options.position.keys()].map((key) => coordutil.getCoordsFromKey(key));
 		const box = bounds.getBoxFromCoordsList(coords);
-		worldBorder = apeiron_card.worldBorderForBox(box, Date.now());
+		worldBorder = apeironborder.forBox(box, Date.now());
 	}
 	return { ...options, gameRules: { ...options.gameRules, worldBorder } };
 }

@@ -20,7 +20,7 @@ import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantreader from '../../../shared/chess/logic/variantreader.js';
-import gameformulator from '../../../shared/chess/logic/gameformulator.js';
+import gameformulator from '../../../shared/chess/game/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { IDLengthOfSeeks } from '../../../shared/domain.js';
 import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from '../../../shared/chess/variants/servervalidation.js';
@@ -33,7 +33,7 @@ import {
 	validatePosition,
 	localizeRejection,
 	getPlayabilityRejection,
-} from '../../../shared/chess/variants/positionvalidation.js';
+} from '../../../shared/chess/game/positionvalidation.js';
 
 import activeseeks from './activeseeks.js';
 import activeplayers from '../gamemanager/activeplayers.js';

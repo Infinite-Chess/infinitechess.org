@@ -10,7 +10,7 @@ import type { GameConclusion } from '../../../../../shared/chess/util/winconutil
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
-import gameformulator from '../../../../../shared/chess/logic/gameformulator.js';
+import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import { IllegalMoveError } from '../../../../../shared/chess/logic/movepiece.js';
 
 // Define types
