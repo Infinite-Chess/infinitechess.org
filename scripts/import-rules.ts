@@ -14,7 +14,7 @@
  *   game/              pages with an interactive board
  *   views/<page>/      that one page alone
  *
- * A file's home is its WIDEST CONSUMER, not its subject matter. `deltatime.ts`
+ * Here a file's home is its WIDEST CONSUMER, not its subject matter. `deltatime.ts`
  * reads like game code but lives in `board/` because `boardpos.ts` needs it,
  * and the home page reaches boardpos through variant preview tooltips.
  * `scripts/import-consumers.ts` computes each module's widest consumer directly.
@@ -52,6 +52,11 @@
  *   middleware/                    what wraps a request before it reaches the above
  *   routes/                        the URL table
  *   app.ts, server.ts, setupDev.ts the process entry points
+ *
+ * Subject picks the directory here. A client rung names an AUDIENCE, so subject is
+ * rightly ignored there; every server directory names a KIND of thing instead. So the
+ * widest-consumer rule does not apply: by it, loginController.ts (reached only from
+ * routes/) would live in routes/. The ladder only vetoes which way imports may point.
  *
  * src/shared (bottom -> top), every rank strict — no ties:
  *

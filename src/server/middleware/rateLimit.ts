@@ -7,7 +7,7 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
-import banned from './banned.js';
+import banned from '../database/banned.js';
 import requestMeter from '../utility/requestMeter.js';
 import renderContext from '../utility/renderContext.js';
 import { getClientIP } from '../utility/IP.js';

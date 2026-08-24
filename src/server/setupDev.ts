@@ -8,7 +8,7 @@
 import validcheckmates from '../shared/chess/util/validcheckmates.js';
 
 import roles from './controllers/roles.js';
-import { generateAccount } from './controllers/registerController.js';
+import { generateAccount } from './controllers/accountSeeder.js';
 import { isUsernameTaken, updateMemberColumns } from './database/memberManager.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists

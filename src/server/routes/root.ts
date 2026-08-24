@@ -11,8 +11,8 @@ import { resolveAuth } from '../middleware/resolveAuth.js';
 import { getGamePageState } from '../controllers/gamePageController.js';
 import analysisPageController from '../controllers/analysisPageController.js';
 import verifyAccountController from '../controllers/verifyAccountController.js';
-import { getRandomSplashText } from './splashTexts.js';
 import { getAwaitingPageState } from '../controllers/registerController.js';
+import componentTranslationLoader from '../config/componentTranslationLoader.js';
 import { getResetPasswordPageState } from '../controllers/passwordResetController.js';
 
 const router = express.Router();
@@ -46,6 +46,16 @@ function crossOriginIsolation(_req: Request, res: Response, next: NextFunction):
  */
 function page(path: string, handler: RequestHandler, ...before: RequestHandler[]): void {
 	router.get(path, resolveAuth, attachRenderContext, ...before, handler);
+}
+
+/** Picks the home page's hero tagline at random, in the request's resolved language. */
+function getRandomSplashText(req: Request): string {
+	const splashes = componentTranslationLoader.getTemplate('splashes', req.lang) as Record<
+		string,
+		string
+	>;
+	const values = Object.values(splashes);
+	return values[Math.floor(Math.random() * values.length)]!;
 }
 
 /** Cache all variant groups and their variants. */

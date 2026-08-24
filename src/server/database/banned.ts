@@ -1,4 +1,4 @@
-// src/server/middleware/banned.ts
+// src/server/database/banned.ts
 
 /**
  * Legacy JSON-backed ban store for IPs and browser-ids, consulted at startup of each request.
@@ -52,11 +52,13 @@ try {
 	}
 }
 
-export function isIP(ip: string): boolean {
+/** Whether the IP address is banned. */
+function isIP(ip: string): boolean {
 	return bannedJSON.IPs[ip] !== undefined;
 }
 
-export function isBrowserID(browserID: string): boolean {
+/** Whether the browser-id is banned. */
+function isBrowserID(browserID: string): boolean {
 	return bannedJSON['browser-ids'][browserID] !== undefined;
 }
 

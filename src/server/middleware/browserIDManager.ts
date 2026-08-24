@@ -13,7 +13,7 @@ import type { CookieOptions, Request, Response } from 'express';
 
 import crypto from 'crypto';
 
-import banned from './banned.js';
+import banned from '../database/banned.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
 // Constants ----------------------------------------------------------------------------------

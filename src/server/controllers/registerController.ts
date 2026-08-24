@@ -4,9 +4,6 @@
  * Handles the register form: validates the submission, then stages a pending
  * registration and emails a verification link (no member is created until the
  * link is verified). Also answers username/email availability checks.
- *
- * generateAccount() additionally creates a verified member directly, for dev
- * seeding and tests.
  */
 
 import crypto from 'crypto';
@@ -22,7 +19,6 @@ import { isBlacklisted } from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 import {
-	addMember,
 	getMemberDataByCriteria,
 	isEmailTaken,
 	isEmailTakenOrPending,
@@ -368,29 +364,6 @@ function pollPendingRegistration(req: Request, res: Response): void {
 }
 
 /**
- * Generate an account only from the provided username, email, and password.
- * Regex tests are skipped.
- * @returns If it was a success, the row ID of where the member was inserted (same as their user_id).
- *
- * @throws If account creation fails for any reason.
- */
-async function generateAccount({
-	username,
-	email,
-	password,
-}: {
-	username: string;
-	email: string;
-	password: string;
-}): Promise<number> {
-	// Use bcrypt to hash & salt password
-	const hashedPassword = await bcrypt.hash(password, accountValidation.PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
-	const user_id = addMember(username, email, hashedPassword);
-	logEvents(`Manually generated new member: ${username}`, 'newMemberLog');
-	return user_id;
-}
-
-/**
  * `GET /api/register/availability` — checks whether the `?username=` is free (not taken,
  * reserved, or profane). Responds `{ available: true } | { available: false, reason: string }`.
  */
@@ -430,5 +403,4 @@ export {
 	changePendingEmail,
 	pollPendingRegistration,
 	checkUsernameAvailable,
-	generateAccount,
 };
