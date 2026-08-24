@@ -25,6 +25,8 @@ import { logEventsAndPrint } from '../utility/logEvents.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Types -------------------------------------------------------------------------------------
+
 /** A GitHub contributor on the infinitechess.org repository. */
 interface Contributor {
 	name: string;
@@ -33,9 +35,10 @@ interface Contributor {
 	contributionCount: number;
 }
 
-// State ---------------------------------------------------------------------------------------
+// Schemas -----------------------------------------------------------------------------------
 
-const GITHUB_CONTRIBUTOR_SCHEMA = z.array(
+/** The raw contributor shape GitHub's API returns. */
+const GitHubContributorSchema = z.array(
 	z.object({
 		login: z.string(),
 		avatar_url: z.string(),
@@ -44,11 +47,18 @@ const GITHUB_CONTRIBUTOR_SCHEMA = z.array(
 	}),
 );
 
+// Constants ---------------------------------------------------------------------------------
+
 const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
+
+/** The interval to use GitHub's API to refresh the contributor list. */
+const INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS = 1000 * 60 * 60 * 3; // 3 hours
+
+// State -------------------------------------------------------------------------------------
 
 /** A list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org).
  * This should be periodically refreshed.
- * 
+ *
  * example contributor:
  * ```js
  * {
@@ -59,15 +69,7 @@ const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contri
   }
   ```
  */
-let contributors: Contributor[] = (() => {
-	if (!fs.existsSync(PATH_TO_CONTRIBUTORS_FILE)) return [];
-	const file = fs.readFileSync(PATH_TO_CONTRIBUTORS_FILE).toString();
-	return JSON.parse(file);
-})();
-
-/** The interval, in milliseconds, to use GitHub's API to refresh the contributor list. */
-const INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS = 1000 * 60 * 60 * 3; // 3 hours
-// const INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS = 1000 * 5; // Debug: 5 seconds
+let contributors: Contributor[] = loadContributorsSnapshot();
 
 /** The id of the interval to update contributors. Can be used to cancel it if the API token isn't specified. */
 const intervalId = setInterval(
@@ -75,7 +77,22 @@ const intervalId = setInterval(
 	INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS,
 );
 
-// Functions ---------------------------------------------------------------------------
+// Functions ---------------------------------------------------------------------------------
+
+/**
+ * Reads the contributor snapshot off disk, so the site has a list before the first refresh.
+ * No shape check: we wrote it from a validated response, so only a truncated file can fail.
+ */
+function loadContributorsSnapshot(): Contributor[] {
+	if (!fs.existsSync(PATH_TO_CONTRIBUTORS_FILE)) return [];
+	try {
+		return JSON.parse(fs.readFileSync(PATH_TO_CONTRIBUTORS_FILE).toString());
+	} catch (error: unknown) {
+		const errMsg = jsutil.getErrorMessage(error);
+		logEventsAndPrint(`Error parsing the contributors snapshot: ${errMsg}`, 'errLog');
+		return [];
+	}
+}
 
 /**
  * Uses GitHub's API to fetch all contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
@@ -137,26 +154,24 @@ function refreshGitHubContributorsList(): void {
 				return;
 			}
 
-			const zod_result = GITHUB_CONTRIBUTOR_SCHEMA.safeParse(unvalidatedJson);
-			if (!zod_result.success) {
+			const parseResult = GitHubContributorSchema.safeParse(unvalidatedJson);
+			if (!parseResult.success) {
 				logZodError(
 					unvalidatedJson,
-					zod_result.error,
+					parseResult.error,
 					'Invalid GitHub API response for contributors.',
 				);
 				return;
 			}
 
-			const currentContributors: Contributor[] = zod_result.data.map((c) => ({
+			contributors = parseResult.data.map((c) => ({
 				name: c.login,
 				iconUrl: c.avatar_url,
 				linkUrl: c.html_url,
 				contributionCount: c.contributions,
 			}));
 
-			contributors = currentContributors;
 			await writeFile(PATH_TO_CONTRIBUTORS_FILE, JSON.stringify(contributors, null, 2));
-			// console.log('Contributors updated!');
 		});
 	});
 
