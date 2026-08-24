@@ -102,7 +102,9 @@ function rateLimitLogin(req: Request, res: Response, browserAgent: string): bool
  */
 function getBrowserAgent(req: Request, username: string): string {
 	const clientIP = getClientIP(req);
-	return `${username}${clientIP}`;
+	// The colon separates username from IP; usernames are strictly alphanumeric,
+	// so no concatenation of two different pairs can collide.
+	return `${username}:${clientIP}`;
 }
 
 /**

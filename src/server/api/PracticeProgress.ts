@@ -47,7 +47,7 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 
 		if (checkmates_beaten_array.includes(new_checkmate_beaten)) {
 			// Already beaten
-			res.status(204).json({ message: 'Checkmate already beaten' });
+			res.sendStatus(204);
 			return;
 		}
 
