@@ -38,7 +38,7 @@ import db from './database/database.js';
 import socketServer from './socket/socketServer.js';
 import gamemanager from './game/gamemanager/gamemanager.js';
 import { getCertOptions } from './config/certOptions.js';
-import { logServerStarted, logServerStopped } from './utility/startupLogger.js';
+import startupLogger from './utility/startupLogger.js';
 import variantcache from '../shared/chess/variants/variantcache.js';
 
 const httpsServer = https.createServer(getCertOptions(), app);
@@ -62,7 +62,7 @@ const HTTPSPORT = DEV_BUILD ? process.env['HTTPSPORT_LOCAL'] : process.env['HTTP
 app.listen(HTTPPORT, () => console.log(`HTTP listening on port ${HTTPPORT}`));
 httpsServer.listen(HTTPSPORT, () => {
 	console.log(`HTTPS listening on port ${HTTPSPORT}`);
-	logServerStarted();
+	startupLogger.started();
 });
 
 // WebSocket server
@@ -80,7 +80,7 @@ function handleCleanup(signal: string): void {
 	// console.log(`\nReceived ${signal}. Cleaning up...`);
 	console.log('Closing...');
 
-	logServerStopped(signal);
+	startupLogger.stopped(signal);
 
 	gamemanager.prepForShutdown();
 

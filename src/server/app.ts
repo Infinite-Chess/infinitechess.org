@@ -14,10 +14,10 @@ import send404 from './middleware/send404.js';
 import security from './middleware/security.js';
 import apiRouter from './routes/api.js';
 import rateLimit from './middleware/rateLimit.js';
+import reqLogger from './utility/reqLogger.js';
 import htmlCookies from './middleware/htmlCookies.js';
 import staticAssets from './middleware/staticAssets.js';
 import errorHandler from './middleware/errorHandler.js';
-import { reqLogger } from './utility/reqLogger.js';
 import webhooksRouter from './routes/webhooks.js';
 import requestParsers from './middleware/requestParsers.js';
 import { rootRouter } from './routes/root.js';
@@ -37,7 +37,7 @@ function configurePipeline(app: Express): void {
 	app.use(assignRequestID);
 
 	// Log all incoming requests
-	app.use(reqLogger);
+	app.use(reqLogger.middleware);
 
 	// Ensure every SSR HTML page is revalidated before reuse (never served stale).
 	app.use(htmlCacheControl);

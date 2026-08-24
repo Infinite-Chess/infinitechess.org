@@ -4,7 +4,7 @@
  * Signs and verifies refresh tokens: JWTs whose payload carries the
  * member's identity (user ID, username and roles).
  *
- * The benefit of signing access tokens with information is when we verify the tokens,
+ * The benefit of signing tokens with information is when we verify the tokens,
  * we don't have to do a database lookup to know who they are!
  *
  * Sessions are sliding: as long as the token is used before it expires, it gets renewed.

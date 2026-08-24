@@ -5,6 +5,7 @@ import express, { NextFunction, Request, RequestHandler, Response } from 'expres
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import send404 from '../middleware/send404.js';
+import renderContext from '../utility/renderContext.js';
 import { resolveAuth } from '../middleware/resolveAuth.js';
 import { getGamePageState } from '../controllers/gamePageController.js';
 import { getVerifyPageState } from '../controllers/verifyAccountController.js';
@@ -12,7 +13,6 @@ import { TURNSTILE_SITE_KEY } from '../controllers/turnstile.js';
 import { getRandomSplashText } from './splashTexts.js';
 import { getAnalysisPageState } from '../controllers/analysisPageController.js';
 import { getAwaitingPageState } from '../controllers/registerController.js';
-import { getBaseRenderContext } from '../utility/renderContext.js';
 import { getResetPasswordPageState } from '../controllers/passwordResetController.js';
 
 const router = express.Router();
@@ -23,7 +23,7 @@ const router = express.Router();
  * Reads req.memberInfo, so resolveAuth must run first (see `page`).
  */
 function attachRenderContext(req: Request, res: Response, next: NextFunction): void {
-	Object.assign(res.locals, getBaseRenderContext(req));
+	Object.assign(res.locals, renderContext.getBaseRenderContext(req));
 	next();
 }
 

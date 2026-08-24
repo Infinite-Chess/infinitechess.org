@@ -16,8 +16,7 @@ import tconfig from '../config/translationconfig.js';
  * Retrieves the translation for a given key and language.
  * @param key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
  * @param language - The language code for the translation. Default: `"en-US"`
- * @param options - Additional i18next options (e.g., returnObjects for array translations)
- * @returns The translated string or object.
+ * @returns The translated string.
  */
 function getTranslation(key: TranslationKeys, language: string = tconfig.DEFAULT_LANGUAGE): string {
 	const options = { lng: language };

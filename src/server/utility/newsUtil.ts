@@ -9,32 +9,9 @@ import path from 'path';
 
 import tconfig from '../config/translationconfig.js';
 
-/**
- * Gets the date of the latest news post by reading filenames from the news directory.
- * News posts are named with dates like "2025-11-01.md"
- * @returns The date string of the latest news post (e.g., '2025-11-01'), or null if no news posts exist
- */
-function getLatestNewsDate(): string | null {
-	const newsPath = path.join(tconfig.NEWS_FOLDER, tconfig.DEFAULT_LANGUAGE);
-
-	if (!fs.existsSync(newsPath)) {
-		console.error(`News directory ${tconfig.DEFAULT_LANGUAGE} not found`);
-		return null;
-	}
-
-	const files = fs.readdirSync(newsPath);
-	const newsFiles = files.filter((file) => file.endsWith('.md'));
-
-	if (newsFiles.length === 0) {
-		return null;
-	}
-
-	// Extract dates from filenames (format: YYYY-MM-DD.md)
-	const dates = newsFiles.map((file) => file.replace('.md', '')).sort();
-
-	// Return the most recent date
-	const latestDate = dates[dates.length - 1];
-	return latestDate !== undefined ? latestDate : null;
+/** The directory containing the news posts, which are files named like "2025-11-01.md". */
+function getNewsDir(): string {
+	return path.join(tconfig.NEWS_FOLDER, tconfig.DEFAULT_LANGUAGE);
 }
 
 /**
@@ -42,13 +19,9 @@ function getLatestNewsDate(): string | null {
  * @returns Array of date strings sorted from oldest to newest
  */
 function getAllNewsDates(): string[] {
-	const newsPath = path.join(tconfig.NEWS_FOLDER, tconfig.DEFAULT_LANGUAGE);
+	if (!fs.existsSync(getNewsDir())) return [];
 
-	if (!fs.existsSync(newsPath)) {
-		return [];
-	}
-
-	const files = fs.readdirSync(newsPath);
+	const files = fs.readdirSync(getNewsDir());
 	const newsFiles = files.filter((file) => file.endsWith('.md'));
 
 	// Extract dates and sort
@@ -57,25 +30,17 @@ function getAllNewsDates(): string[] {
 }
 
 /**
- * Counts the number of unread news posts for a user.
- * @param lastReadDate - The date of the last news post the user read (format: 'YYYY-MM-DD'), or null if never read
- * @returns The number of unread news posts
+ * Gets the date of the latest news post.
+ * @returns The date string of the latest news post (e.g., '2025-11-01'), or null if no news posts exist
  */
-function countUnreadNews(lastReadDate: string | null): number {
-	const allDates = getAllNewsDates();
-
-	if (allDates.length === 0) {
-		return 0;
+function getLatestNewsDate(): string | null {
+	const newsDir = getNewsDir();
+	if (!fs.existsSync(newsDir)) {
+		console.error(`News directory ${newsDir} not found`);
+		return null;
 	}
 
-	// If user has never read news, all posts are unread
-	if (!lastReadDate) {
-		return allDates.length;
-	}
-
-	// Count posts newer than the last read date
-	const unreadCount = allDates.filter((date) => date > lastReadDate).length;
-	return unreadCount;
+	return getAllNewsDates().at(-1) ?? null;
 }
 
 /**
@@ -86,17 +51,24 @@ function countUnreadNews(lastReadDate: string | null): number {
 function getUnreadNewsDates(lastReadDate: string | null): string[] {
 	const allDates = getAllNewsDates();
 
-	if (allDates.length === 0) {
-		return [];
-	}
+	if (allDates.length === 0) return [];
 
 	// If user has never read news, all posts are unread
-	if (!lastReadDate) {
-		return allDates;
-	}
+	if (!lastReadDate) return allDates;
 
 	// Return posts newer than the last read date
 	return allDates.filter((date) => date > lastReadDate);
 }
 
-export { getLatestNewsDate, countUnreadNews, getUnreadNewsDates };
+/**
+ * Counts the number of unread news posts for a user.
+ * @param lastReadDate - The date of the last news post the user read (format: 'YYYY-MM-DD'), or null if never read
+ * @returns The number of unread news posts
+ */
+function countUnreadNews(lastReadDate: string | null): number {
+	return getUnreadNewsDates(lastReadDate).length;
+}
+
+// Exports ------------------------------------------------------------------------------------------
+
+export default { getLatestNewsDate, countUnreadNews, getUnreadNewsDates };

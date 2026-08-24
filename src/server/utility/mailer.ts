@@ -11,7 +11,7 @@ import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
 
 import { logEvents } from './logEvents.js';
 
-// --- Types ---
+// Types ------------------------------------------------------------------------------------------
 
 /**
  * The category of an outgoing email, recorded in the sent-email log.
@@ -25,17 +25,13 @@ type SendMailOptions = {
 	subject: string;
 } & ({ html: string } | { text: string });
 
-// --- Module Setup ---
+// Module Setup -----------------------------------------------------------------------------------
 
 const AWS_REGION = process.env['AWS_REGION'];
+/** Who our sent emails will appear as if they're from. */
 const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
 const AWS_ACCESS_KEY_ID = process.env['AWS_ACCESS_KEY_ID'];
 const AWS_SECRET_ACCESS_KEY = process.env['AWS_SECRET_ACCESS_KEY'];
-
-/**
- * Who our sent emails will appear as if they're from.
- */
-const FROM = EMAIL_FROM_ADDRESS;
 
 // Create SES client
 const sesClient =
@@ -53,7 +49,7 @@ const transporter = sesClient
 		} as nodemailer.TransportOptions)
 	: null;
 
-// --- Functions ---
+// Functions --------------------------------------------------------------------------------------
 
 /**
  * Sends a prepared email via the transporter.
@@ -70,7 +66,7 @@ async function send(type: EmailType, options: SendMailOptions): Promise<boolean>
 	}
 
 	const info = await transporter.sendMail({
-		from: `"Infinite Chess" <${FROM}>`,
+		from: `"Infinite Chess" <${EMAIL_FROM_ADDRESS}>`,
 		...options,
 	});
 
@@ -80,6 +76,6 @@ async function send(type: EmailType, options: SendMailOptions): Promise<boolean>
 	return true;
 }
 
-// --- Exports ---
+// Exports ----------------------------------------------------------------------------------------
 
-export default { FROM, send };
+export default { EMAIL_FROM_ADDRESS, send };

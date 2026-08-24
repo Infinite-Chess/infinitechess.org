@@ -1,5 +1,10 @@
 // src/server/utility/urlUtils.ts
 
+/**
+ * Utility for constructing URLs that point back at this application,
+ * respecting the current environment (development vs production).
+ */
+
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 /**

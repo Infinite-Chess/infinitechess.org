@@ -1,6 +1,6 @@
 // src/server/utility/emailTemplates.ts
 
-/*
+/**
  * Renders application emails into HTML and plain-text from already-resolved,
  * localized content. The presentation layer behind emailService; knows
  * the on-brand layout.
@@ -23,7 +23,7 @@ type ActionEmailContent = {
 // Constants ---------------------------------------------
 
 /** Header/button accent color: a dark neutral grey. */
-export const EMAIL_ACCENT_COLOR = '#383838';
+const ACCENT_COLOR = '#383838';
 /** Page background behind the email card: a warm off-white. */
 const PAGE_BG_COLOR = '#f1eeea';
 /** Sign-off appended to every email's plain-text alternative. */
@@ -48,7 +48,7 @@ function buildEmailShell(preheader: string, tagline: string, bodyHtml: string): 
 					<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;font-family:Arial,Helvetica,sans-serif;">
 						<!-- Header -->
 						<tr>
-							<td align="center" style="background-color:${EMAIL_ACCENT_COLOR};border-radius:12px 12px 0 0;padding:28px 24px;">
+							<td align="center" style="background-color:${ACCENT_COLOR};border-radius:12px 12px 0 0;padding:28px 24px;">
 								<div style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:0.5px;"><span style="font-size:26px;">&#937;</span> InfiniteChess.org</div>
 							</td>
 						</tr>
@@ -84,13 +84,13 @@ function buildActionEmailHtml(opts: ActionEmailContent): string {
 		<!-- Bulletproof button -->
 		<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;">
 			<tr>
-				<td bgcolor="${EMAIL_ACCENT_COLOR}" style="border-radius:6px;">
+				<td bgcolor="${ACCENT_COLOR}" style="border-radius:6px;">
 					<a href="${opts.url}" target="_blank" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:16px;font-weight:bold;text-decoration:none;">${opts.buttonLabel}</a>
 				</td>
 			</tr>
 		</table>
 		<p style="margin:0 0 8px;color:#777777;font-size:13px;line-height:1.6;">${opts.fallbackText}</p>
-		<p style="margin:0 0 24px;font-size:13px;line-height:1.6;word-break:break-all;"><a href="${opts.url}" target="_blank" style="color:${EMAIL_ACCENT_COLOR};text-decoration:underline;">${opts.url}</a></p>
+		<p style="margin:0 0 24px;font-size:13px;line-height:1.6;word-break:break-all;"><a href="${opts.url}" target="_blank" style="color:${ACCENT_COLOR};text-decoration:underline;">${opts.url}</a></p>
 		<p style="margin:0;color:#999999;font-size:13px;line-height:1.6;">${opts.footnote}</p>
 	`;
 	return buildEmailShell(opts.preheader, opts.tagline, body);
@@ -100,7 +100,7 @@ function buildActionEmailHtml(opts: ActionEmailContent): string {
  * Builds the HTML for the password-changed security receipt — heading, confirmation
  * line, and a warning whose `{resetLink}` placeholder is already resolved to an anchor.
  */
-export function buildReceiptEmailHtml(opts: {
+function buildReceiptEmailHtml(opts: {
 	preheader: string;
 	heading: string;
 	body: string;
@@ -121,7 +121,7 @@ export function buildReceiptEmailHtml(opts: {
  * Builds an email's plain-text alternative from its content blocks, joined by blank lines
  * with the signature appended. Inline tags are stripped so HTML emphasis doesn't leak in.
  */
-export function buildPlainText(blocks: string[]): string {
+function buildPlainText(blocks: string[]): string {
 	return stripInlineTags([...blocks, SIGNATURE].join('\n\n'));
 }
 
@@ -133,9 +133,22 @@ function stripInlineTags(html: string): string {
 // Renderers (HTML + text) ---------------------------------------------
 
 /** Renders an action email (verification, password reset) in both HTML and plain-text. */
-export function renderActionEmail(opts: ActionEmailContent): { html: string; text: string } {
+function renderActionEmail(opts: ActionEmailContent): { html: string; text: string } {
 	return {
 		html: buildActionEmailHtml(opts),
 		text: buildPlainText([opts.heading, opts.intro, opts.url, opts.footnote]),
 	};
 }
+
+// Exports ---------------------------------------------
+
+export default {
+	// Constants
+	ACCENT_COLOR,
+	// HTML Builders
+	buildReceiptEmailHtml,
+	// Plain-Text
+	buildPlainText,
+	// Renderers (HTML + text)
+	renderActionEmail,
+};

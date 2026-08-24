@@ -2,9 +2,9 @@
 
 import type { Request, Response } from 'express';
 
+import renderContext from '../utility/renderContext.js';
 import { resolveAuth } from './resolveAuth.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
-import { getErrorPageContext } from '../utility/renderContext.js';
 
 /**
  * Renders the styled SSR error page for `status`. Only call once HTML is wanted — it always renders.
@@ -15,7 +15,7 @@ import { getErrorPageContext } from '../utility/renderContext.js';
  */
 function renderErrorPage(req: Request, res: Response, status: number): void {
 	resolveAuth(req, res, () => {
-		const context = getErrorPageContext(req, status);
+		const context = renderContext.getErrorPageContext(req, status);
 		res.status(context.code).render(
 			'error.njk',
 			context,

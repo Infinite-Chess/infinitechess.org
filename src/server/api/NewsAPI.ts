@@ -6,8 +6,8 @@
 
 import type { Request, Response } from 'express';
 
+import newsUtil from '../utility/newsUtil.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
-import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
 
 /** `GET /api/news/unread-count` — returns `{ count }` of the signed-in user's unread news posts. */
 function getUnreadNewsCount(req: Request, res: Response): void {
@@ -31,7 +31,7 @@ function getUnreadNewsCount(req: Request, res: Response): void {
 		}
 
 		// Count unread news posts
-		res.json({ count: countUnreadNews(record.last_read_news_date) });
+		res.json({ count: newsUtil.countUnreadNews(record.last_read_news_date) });
 	} catch {
 		// DB error (already logged)
 		res.sendStatus(500);
@@ -59,7 +59,7 @@ function getUnreadNewsDatesEndpoint(req: Request, res: Response): void {
 		}
 
 		// Get unread news dates
-		res.json({ dates: getUnreadNewsDates(record.last_read_news_date) });
+		res.json({ dates: newsUtil.getUnreadNewsDates(record.last_read_news_date) });
 	} catch {
 		// DB error (already logged)
 		res.sendStatus(500);
@@ -76,7 +76,7 @@ function markNewsAsRead(req: Request, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	const latestNewsDate = getLatestNewsDate();
+	const latestNewsDate = newsUtil.getLatestNewsDate();
 
 	try {
 		updateMemberColumns(userId, { last_read_news_date: latestNewsDate });

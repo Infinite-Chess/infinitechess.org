@@ -341,12 +341,13 @@ function parseReviver(_key: string, value: any): any {
  * If there's a provided error message, it will log any ocurred error.
  * @param input - The input to stringify.
  * @param [errorMessage] - If specified, then this message will be printed if an error occurs.
+ * @param [spaces] - If specified, the number of spaces to indent the output with (pretty-printing).
  * @returns - The JSON stringified input or the original string if input was a string. Or, if an error occurred, 'Error: Input could not be JSON stringified'.
  */
-function ensureJSONString(input: any, errorMessage?: string): string {
+function ensureJSONString(input: any, errorMessage?: string, spaces?: number): string {
 	if (typeof input === 'string') return input;
 	try {
-		return JSON.stringify(input, stringifyReplacer);
+		return JSON.stringify(input, stringifyReplacer, spaces);
 	} catch (error) {
 		// Handle cases where input cannot be stringified
 		if (errorMessage) {

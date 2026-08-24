@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 
 import { LOGS_DIR } from './logEvents.js';
 
-// Helpers -------------------------------------------------------------------------------
+// Helpers -----------------------------------------------------------------------------------------
 
 /** Writes a log entry to logs/startupLog.txt with the provided message and a timestamp. */
 function writeStartupLog(message: string): void {
@@ -24,10 +24,10 @@ function writeStartupLog(message: string): void {
 	}
 }
 
-// API -----------------------------------------------------------------------------------
+// API ------------------------------------------------------------------------------------------
 
 /** Logs a server startup entry to logs/startupLog.txt. */
-function logServerStarted(): void {
+function started(): void {
 	writeStartupLog('🟢 Server started');
 }
 
@@ -36,10 +36,10 @@ function logServerStarted(): void {
  * Uses synchronous I/O so the write completes before process.exit().
  * @param signal - The signal that triggered the shutdown (e.g. 'SIGTERM').
  */
-function logServerStopped(signal: string): void {
+function stopped(signal: string): void {
 	writeStartupLog(`🔴 Server stopped (${signal})`);
 }
 
-// Exports -------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------------
 
-export { logServerStarted, logServerStopped };
+export default { started, stopped };

@@ -15,11 +15,11 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
+import emailService from '../utility/emailService.js';
 import { getClientIP } from '../utility/IP.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { verifyTurnstileToken } from './turnstile.js';
-import { sendEmailConfirmation } from '../utility/emailService.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 import {
 	addMember,
@@ -158,7 +158,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	}
 
 	// Email the verification link. No `members` row will be created until they verify.
-	sendEmailConfirmation(email, username, verificationToken, req.lang);
+	emailService.sendEmailConfirmation(email, username, verificationToken, req.lang);
 
 	// Scope later poll/change-email requests to this pending registration.
 	res.cookie(PENDING_REGISTRATION_COOKIE_NAME, claimToken, {
@@ -299,7 +299,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 		deleteExpiredPendingRegistrationsFor(pending.username, email);
 		updatePendingRegistrationEmail(pending.claim_token, email, verificationToken);
 
-		sendEmailConfirmation(email, pending.username, verificationToken, req.lang);
+		emailService.sendEmailConfirmation(email, pending.username, verificationToken, req.lang);
 		res.sendStatus(200);
 	} catch {
 		res.status(500).json({

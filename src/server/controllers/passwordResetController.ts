@@ -10,13 +10,13 @@ import validators from '../../shared/util/validators.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import db from '../database/database.js';
+import emailService from '../utility/emailService.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { closeAllSocketsOfMember } from '../socket/socketRegistry.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './accountValidation.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
-import { sendPasswordResetEmail, sendPasswordChangedEmail } from '../utility/emailService.js';
 
 /**
  * How long a password-reset token stays valid, in milliseconds.
@@ -72,7 +72,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 					`Sending password reset email to user_id (${userId})...`,
 					'loginAttempts',
 				);
-				sendPasswordResetEmail(email, resetUrl, req.lang); // Fire-and-forget
+				emailService.sendPasswordResetEmail(email, resetUrl, req.lang); // Fire-and-forget
 			}
 		} else {
 			logEventsAndPrint(
@@ -222,7 +222,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		createNewSession(req, res, member.user_id, member.username, roles, false);
 
 		// Fire-and-forget security receipt.
-		sendPasswordChangedEmail(member.email, req.lang);
+		emailService.sendPasswordChangedEmail(member.email, req.lang);
 
 		// Send Success Response. The session cookie is now set, so the client redirects home.
 		res.sendStatus(200);

@@ -12,8 +12,8 @@ import type { AbuseReportContext, SuspicionVerdict } from './ratingabusetypes.js
 
 import timeutil from '../../../shared/util/timeutil.js';
 
+import emailService from '../../utility/emailService.js';
 import { logEvents } from '../../utility/logEvents.js';
-import { sendRatingAbuseEmail } from '../../utility/emailService.js';
 import { updateRatingAbuseColumns } from '../../database/ratingAbuseManager.js';
 
 // Constants -------------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ ${buildBody(ctx, verdict, true)}
 			SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS
 	) {
 		const messageSubject = `Rating Abuse Warning: user ${ctx.username}, user_id ${ctx.user_id}`;
-		void sendRatingAbuseEmail(messageSubject, messageText);
+		void emailService.sendRatingAbuseEmail(messageSubject, messageText);
 		// Update RatingAbuse table with last_alerted_at value
 		const last_alerted_at = timeutil.timestampToSqlite(Date.now());
 		updateRatingAbuseColumns(ctx.user_id, ctx.leaderboard_id, { last_alerted_at });

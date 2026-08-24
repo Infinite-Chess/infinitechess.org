@@ -8,9 +8,9 @@
 import type { Request, Response, NextFunction } from 'express';
 
 import requestMeter from '../utility/requestMeter.js';
+import renderContext from '../utility/renderContext.js';
 import { isIPBanned } from './banned.js';
 import { getClientIP } from '../utility/IP.js';
-import { getErrorPageContext } from '../utility/renderContext.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
@@ -95,7 +95,7 @@ function respondRateLimited(req: Request, res: Response, retryAfterSec: number):
 		// (not parsed yet at this point in the stack) and does DB work we must avoid for throttled clients.
 		res.render(
 			'error.njk',
-			getErrorPageContext(req, 429, retryAfterSec),
+			renderContext.getErrorPageContext(req, 429, retryAfterSec),
 			// Handle render errors manually instead of next(err), so a failure here doesn't bubble
 			// into the error handler (which would itself try to render and could loop).
 			(renderErr: Error | null, html: string) => {

@@ -11,8 +11,10 @@ import type { Request, Response } from 'express';
 import { logEvents } from './logEvents.js';
 import { getClientIP } from './IP.js';
 
+// Functions --------------------------------------------------------------------------------------
+
 /** Logs one incoming request or websocket upgrade into `reqLog`. */
-function logIncomingRequest(req: IncomingMessage): void {
+function incoming(req: IncomingMessage): void {
 	const clientIP = getClientIP(req) || 'Unknown ip';
 	const origin = req.headers.origin || 'Unknown origin';
 	const agent = req.headers['user-agent'] || 'Unknown agent';
@@ -32,9 +34,11 @@ function logIncomingRequest(req: IncomingMessage): void {
 }
 
 /** Middleware that logs the incoming HTTP request. */
-function reqLogger(req: Request, _res: Response, next: () => void): void {
-	logIncomingRequest(req);
+function middleware(req: Request, _res: Response, next: () => void): void {
+	incoming(req);
 	next(); // Continue to next middleware
 }
 
-export { reqLogger, logIncomingRequest };
+// Exports ------------------------------------------------------------------------------------------
+
+export default { incoming, middleware };

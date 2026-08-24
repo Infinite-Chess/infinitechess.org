@@ -8,6 +8,22 @@
 import timeutil from '../../shared/util/timeutil.js';
 import { PlayerGroup, Player, players as p } from '../../shared/util/typeutil.js';
 
+// Types -----------------------------------------------------------------------------------------
+
+/** Type containing all relevant rating calculation quantities for a specific player */
+type PlayerRatingData = {
+	elo_at_game: number;
+	rating_deviation_at_game: number;
+	/** A date in string format, as used in the database. Can be null if no games played yet */
+	rd_last_update_date: string | null;
+	elo_after_game?: number;
+	rating_deviation_after_game?: number;
+	elo_change_from_game?: number;
+};
+
+/** A dictionary type with Players as keys, containing PlayerRatingData for each player */
+export type RatingData = PlayerGroup<PlayerRatingData>;
+
 // Constants -------------------------------------------------------------------------------------
 
 /** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
@@ -44,21 +60,6 @@ const RATING_PERIOD_DURATION = 1000 * 60 * 60 * 24 * 15; // 15 days
 /** Frequency of automatic RD update in database, in milliseconds */
 const RD_UPDATE_FREQUENCY = 1000 * 60 * 60 * 24; // 24 hours
 // const RD_UPDATE_FREQUENCY = 1000 * 30; // 30s for dev testing
-
-// Types -----------------------------------------------------------------------------------------
-
-/** Type containing all relevant rating calculation quantities for a specific player */
-type PlayerRatingData = {
-	elo_at_game: number;
-	rating_deviation_at_game: number;
-	rd_last_update_date: string | null; // A date in string format, as used in the database. Can be null if no games played yet
-	elo_after_game?: number;
-	rating_deviation_after_game?: number;
-	elo_change_from_game?: number;
-};
-
-/** A dictionary type with Players as keys, containing PlayerRatingData for each player */
-export type RatingData = PlayerGroup<PlayerRatingData>;
 
 // Functions -------------------------------------------------------------------------------------
 
@@ -122,7 +123,6 @@ function new_rating(
 function new_RD(r: number, RD: number, r_opp: number, RD_opp: number): number {
 	return Math.max(
 		MINIMUM_LEADERBOARD_RD,
-		// p
 		// prettier-ignore
 		Math.sqrt(1 / (1 / RD ** 2 + 1 / d_squared(r, r_opp, RD_opp))),
 	);
@@ -164,7 +164,7 @@ function computeChanges(ratingdata: RatingData, victor: Player | null): RatingDa
 	return ratingdata;
 }
 
-// FOR TESTING ===================================================================
+// FOR TESTING. Keep for when we ever modify ratings in the future =========================
 
 /**
  * DISCUSSION of testing:

@@ -17,6 +17,8 @@ import {
 	getTemplateTranslations,
 } from '../config/componentTranslationLoader.js';
 
+// Types ------------------------------------------------------------------------------------------
+
 /** The locals every SSR'd page template requires to render. */
 type BaseRenderContext = {
 	/** The resolved language to serve for the request. */
@@ -28,8 +30,10 @@ type BaseRenderContext = {
 	languageOptions: LanguageOption[];
 };
 
+// Context Builders -------------------------------------------------------------------------------
+
 /** Returns the locals every SSR'd page template requires to render. */
-export function getBaseRenderContext(req: Request): BaseRenderContext {
+function getBaseRenderContext(req: Request): BaseRenderContext {
 	return {
 		lang: req.lang,
 		templateT: (component: string) => getTemplateTranslations(component, req.lang),
@@ -46,7 +50,7 @@ export function getBaseRenderContext(req: Request): BaseRenderContext {
  * @param retryAfter - Seconds until a rate-limited client may retry. Only passed for 429s; when set,
  * the page renders its "Back to home" button disabled until this many seconds have elapsed.
  */
-export function getErrorPageContext(
+function getErrorPageContext(
 	req: Request,
 	status: number,
 	retryAfter?: number,
@@ -77,3 +81,7 @@ export function getErrorPageContext(
 		retryAfter,
 	};
 }
+
+// Exports ------------------------------------------------------------------------------------------
+
+export default { getBaseRenderContext, getErrorPageContext };

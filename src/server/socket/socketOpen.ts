@@ -12,6 +12,7 @@ import { parse as parseCookie } from 'cookie';
 
 import socketutil from '../../shared/util/socketutil.js';
 
+import reqLogger from '../utility/reqLogger.js';
 import { onclose } from './socketClose.js';
 import requestMeter from '../utility/requestMeter.js';
 import { onmessage } from './socketReceive.js';
@@ -21,7 +22,6 @@ import { executeSafely } from '../utility/errorGuard.js';
 import { runWithRequestID } from '../utility/requestContext.js';
 import { buildTranslations } from '../config/reqTranslations.js';
 import { sendSocketMessage } from './socketSend.js';
-import { logIncomingRequest } from '../utility/reqLogger.js';
 import { validateRefreshToken } from '../database/refreshTokenManager.js';
 import { resolveLanguageForRequest } from '../config/reqLanguage.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
@@ -38,7 +38,7 @@ import {
 function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	// Log every upgrade attempt to reqLog — even ones we reject below.
 	// Successful upgrades are logged below to wsInLog with more metadata.
-	logIncomingRequest(req);
+	reqLogger.incoming(req);
 
 	const ws = closeIfInvalidAndAddMetadata(socket, req);
 	if (ws === undefined) return; // We will have already closed the socket
