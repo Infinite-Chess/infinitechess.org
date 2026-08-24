@@ -104,6 +104,9 @@ export default [
 					caughtErrorsIgnorePattern: '^_',
 				},
 			],
+			'no-redeclare': 'off', // Default rule flags overload signatures and declaration merging
+			// Typescript-aware redeclaration rule
+			'@typescript-eslint/no-redeclare': 'error',
 			// Disables dot-notation, as bracket notation is required by TS compiler if the keys of an object are STRINGS
 			'dot-notation': 'off',
 			'no-undef': 'off', // Prevent ESLint from flagging TypeScript types as undefined
