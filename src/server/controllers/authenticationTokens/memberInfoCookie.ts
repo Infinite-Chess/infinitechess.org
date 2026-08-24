@@ -64,7 +64,7 @@ function readMemberInfoCookie(req: Request): MemberInfoCookie | undefined {
 		if (!isMemberInfoCookie(parsed)) throw new Error('Invalid structure');
 		return parsed;
 	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.stack : String(error);
+		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(
 			`memberInfo cookie was tampered: "${jsutil.ensureJSONString(stringified)}"\n${detail}`,
 			'errLog',

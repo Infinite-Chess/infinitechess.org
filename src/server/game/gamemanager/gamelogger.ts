@@ -14,6 +14,7 @@ import type { RatingData } from '../../utility/ratingcalculation.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { MatchInfo, ServerGame } from './servergametypes.js';
 
+import jsutil from '../../../shared/util/jsutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
@@ -57,7 +58,7 @@ function log(servergame: ServerGame): RatingData | undefined {
 		return db.transaction(() => logGame_orchestrator(servergame))();
 	} catch (error) {
 		// This block will only execute if the transaction throws an error, causing a rollback.
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = jsutil.getErrorMessage(error);
 		const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
 		void logEventsAndPrint(
 			`FATAL: Game log transaction failed and was rolled back for Game ID ${servergame.match.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`,
@@ -352,7 +353,7 @@ function getICNOfGame(servergame: ServerGame, metadata: MetaData): string {
 			},
 		);
 	} catch (error: unknown) {
-		const errMessage = error instanceof Error ? error.message : String(error);
+		const errMessage = jsutil.getErrorMessage(error);
 		const errStack = error instanceof Error ? error.stack : 'No stack trace available';
 		// Re-throw error with additional context, the orchestrator will catch it and roll back the transaction.
 		throw Error(`Error converting game to ICN: ${errMessage}\n${errStack}`);
@@ -427,7 +428,7 @@ function updateOverturned(
 		});
 		transaction();
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = jsutil.getErrorMessage(error);
 		void logEventsAndPrint(
 			`Failed to update overturned game ${match.id} in the database after a cheat report. The permanent record may be inconsistent with the in-memory (aborted) result. Error: ${errorMessage}`,
 			'errLog',

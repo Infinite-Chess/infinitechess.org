@@ -12,14 +12,14 @@ import 'dotenv/config'; // Imports all properties of process.env, if it exists
 // A rejected promise with no .catch (e.g. an un-awaited async
 // fn call in a request handler). Logged, then we keep serving.
 process.on('unhandledRejection', (reason: unknown) => {
-	const detail = reason instanceof Error ? reason.stack : String(reason);
+	const detail = jsutil.getErrorStack(reason);
 	logEventsAndPrint(`Unhandled promise rejection: ${detail}`, 'errLog');
 });
 // A synchronous throw outside any try/catch (e.g. inside a setTimeout callback).
 // It leaves the process in an undefined state, so we log and exit;
 // PM2 restarts us and live games restore from the database.
 process.on('uncaughtException', (error: unknown) => {
-	const detail = error instanceof Error ? error.stack : String(error);
+	const detail = jsutil.getErrorStack(error);
 	logEventsAndPrint(`Exiting from uncaught exception: ${detail}`, 'errLog').finally(() =>
 		process.exit(1),
 	);
@@ -40,6 +40,7 @@ import gamemanager from './game/gamemanager/gamemanager.js';
 import { getCertOptions } from './config/certOptions.js';
 import startupLogger from './utility/startupLogger.js';
 import variantcache from '../shared/chess/variants/variantcache.js';
+import jsutil from '../shared/util/jsutil.js';
 
 const httpsServer = https.createServer(getCertOptions(), app);
 

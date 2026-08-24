@@ -7,6 +7,8 @@
 import type { Rating } from '../../shared/chess/util/metadatautil.js';
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import db, { dbCall } from './database.js';
 import ratingcalculation from '../utility/ratingcalculation.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
@@ -278,7 +280,7 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 			'leaderboardLog.txt',
 		);
 	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.stack : String(error);
+		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(
 			`Error updating all rating deviations in leaderboard table: ${detail}`,
 			'errLog',

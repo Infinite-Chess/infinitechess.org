@@ -24,6 +24,8 @@ import { fileURLToPath } from 'node:url';
 import { format, startOfISOWeek } from 'date-fns';
 import { promises as fsPromises } from 'fs';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import { REQUEST_ID_PLACEHOLDER, getRequestID } from './requestContext.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -136,7 +138,7 @@ function purgeOldRotatedLogs(): void {
 					fs.unlinkSync(filePath);
 				}
 			} catch (err: unknown) {
-				const detail = err instanceof Error ? err.stack : String(err);
+				const detail = jsutil.getErrorStack(err);
 				logEventsAndPrint(`Error purging old log file '${filePath}': ${detail}`, 'errLog');
 			}
 		}

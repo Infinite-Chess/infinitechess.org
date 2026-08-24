@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
+import jsutil from '../../shared/util/jsutil.js';
 import validators from '../../shared/util/validators.js';
 import socketutil from '../../shared/util/socketutil.js';
 
@@ -85,8 +86,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 		res.sendStatus(200);
 	} catch (error) {
 		const errorMessage: string =
-			'Forgot password database error: ' +
-			(error instanceof Error ? error.stack : String(error));
+			'Forgot password database error: ' + jsutil.getErrorStack(error);
 		logEventsAndPrint(errorMessage, 'errLog');
 		res.status(500).json({
 			message: req.t.responses.errors.server_error,
@@ -230,8 +230,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// Log the successful password reset
 		logEvents(`Password reset successful for user_id (${member.user_id})`, 'loginAttempts');
 	} catch (error) {
-		const errorMessage: string =
-			'Reset password error: ' + (error instanceof Error ? error.stack : String(error));
+		const errorMessage: string = 'Reset password error: ' + jsutil.getErrorStack(error);
 		logEventsAndPrint(errorMessage, 'errLog');
 		res.status(500).json({
 			message: req.t.responses.errors.server_error,

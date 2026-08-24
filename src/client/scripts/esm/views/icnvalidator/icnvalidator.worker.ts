@@ -8,6 +8,7 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
+import jsutil from '../../../../../shared/util/jsutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
@@ -58,7 +59,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 			try {
 				longFormat = icnconverter.ShortToLong_Format(gameICN);
 			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
+				const message = jsutil.getErrorMessage(error);
 				localResults.icnconverterErrors++;
 				localResults.errors.push({
 					gameIndex: index,
@@ -81,7 +82,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 			try {
 				game = await gameformulator.formulateGame(longFormat, undefined, true);
 			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
+				const message = jsutil.getErrorMessage(error);
 				const illegalMove = error instanceof IllegalMoveError;
 				if (illegalMove) localResults.illegalMoveErrors++;
 				else localResults.formulatorErrors++;
@@ -100,7 +101,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 			try {
 				validateTermination(termination, result, game.gameConclusion);
 			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
+				const message = jsutil.getErrorMessage(error);
 				localResults.terminationMismatchErrors++;
 				localResults.errors.push({
 					gameIndex: index,
@@ -120,7 +121,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 			localResults.successfulCount++;
 		} catch (error) {
 			// Unexpected
-			const message = error instanceof Error ? error.message : String(error);
+			const message = jsutil.getErrorMessage(error);
 			localResults.formulatorErrors++;
 			localResults.errors.push({
 				gameIndex: index,

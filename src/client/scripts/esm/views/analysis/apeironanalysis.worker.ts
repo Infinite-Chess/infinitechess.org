@@ -33,6 +33,8 @@ import type {
 	WasmMove,
 } from '../../game/chess/engines/enginewasm.js';
 
+import jsutil from '../../../../../shared/util/jsutil.js';
+
 import { loadEngineWasm, getPromotionAbbr } from '../../game/chess/engines/enginewasm.js';
 
 // Types ------------------------------------------------------------------------
@@ -238,7 +240,7 @@ async function init(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promise<voi
 		console.error('[Analysis Engine] Failed to initialize wasm', e);
 		postMessage({
 			type: 'initerror',
-			message: e instanceof Error ? e.message : String(e),
+			message: jsutil.getErrorMessage(e),
 		} satisfies AnalysisResponse);
 	}
 }
@@ -363,7 +365,7 @@ async function runLoop(): Promise<void> {
 		analysing = false;
 		postMessage({
 			type: 'searcherror',
-			message: e instanceof Error ? e.message : String(e),
+			message: jsutil.getErrorMessage(e),
 		} satisfies AnalysisResponse);
 	} finally {
 		loopRunning = false;
@@ -469,7 +471,7 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 		console.error('[Analysis Engine] Evaluate crashed', e);
 		postMessage({
 			type: 'searcherror',
-			message: e instanceof Error ? e.message : String(e),
+			message: jsutil.getErrorMessage(e),
 		} satisfies AnalysisResponse);
 		return;
 	}

@@ -8,6 +8,7 @@ import type { LongFormatIn } from '../../../../shared/chess/logic/icn/icnconvert
 import type { EditorSaveState } from './storetypes';
 import type { CloudPositionRecord, CloudSaveListRecord } from './savesapi';
 
+import jsutil from '../../../../shared/util/jsutil.js';
 import icnimport from '../../../../shared/chess/logic/icn/icnimport.js';
 import editorutil from '../../../../shared/util/editorutil';
 import compression from '../../../../shared/util/compression';
@@ -29,7 +30,7 @@ export class ICNParseError extends Error {}
 /** Thrown by {@link parseCloudPosition} when the compressed ICN cannot be decompressed. */
 export class ICNDecompressionError extends Error {
 	constructor(cause: unknown) {
-		super(cause instanceof Error ? cause.message : String(cause));
+		super(jsutil.getErrorMessage(cause));
 	}
 }
 

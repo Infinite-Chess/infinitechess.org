@@ -12,6 +12,8 @@
 
 import type { Request, Response } from 'express';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { testPasswordForRequest } from './authController.js';
@@ -52,7 +54,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 
 		createNewSession(req, res, identity.user_id, identity.username, parsedRoles, keepLoggedIn);
 	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.message : String(error);
+		const detail = jsutil.getErrorMessage(error);
 		// Log the detailed error for server-side debugging.
 		logEventsAndPrint(
 			`Error during handleLogin for user "${escapeLogNewlines(String(req.body.username))}": ${detail}`,

@@ -20,6 +20,8 @@ import AbortController from 'abort-controller';
 import { fileURLToPath } from 'node:url';
 import { request, RequestOptions } from 'node:https';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import { logZodError } from '../utility/zodlogger.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -134,7 +136,7 @@ function refreshGitHubContributorsList(): void {
 			try {
 				unvalidatedJson = JSON.parse(response);
 			} catch (error: unknown) {
-				const errMsg = error instanceof Error ? error.message : String(error);
+				const errMsg = jsutil.getErrorMessage(error);
 				logEventsAndPrint('Error parsing contributors JSON: ' + errMsg, 'errLog');
 				return;
 			}

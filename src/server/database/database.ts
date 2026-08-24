@@ -12,6 +12,8 @@ import path from 'path';
 import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
 // Get the current file path and derive the directory (ESM doesn't support __dirname)
@@ -99,7 +101,7 @@ export function dbCall<T>(fn: () => T, description: string): T {
 	try {
 		return fn();
 	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.stack : String(error);
+		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(`${description}: ${detail}`, 'errLog');
 		throw error;
 	}

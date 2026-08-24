@@ -8,6 +8,8 @@
 import type { EditorSaveState } from '../../../savedpositions/storetypes';
 import type { CloudSaveListRecord } from '../../../savedpositions/savesapi';
 
+import jsutil from '../../../../../../shared/util/jsutil.js';
+
 import toast from '../../../components/toast.js';
 import esave from './esave';
 import eactions from './eactions';
@@ -33,7 +35,7 @@ function toastSaveCloudError(err: unknown): void {
 	} else if (err instanceof ICNConversionError) {
 		toast.show(translations.editor.failed_to_convert_icn, { error: true });
 	} else {
-		const errMsg = err instanceof Error ? err.message : String(err);
+		const errMsg = jsutil.getErrorMessage(err);
 		toast.show(translations.editor.failed_to_upload + ' ' + errMsg, { error: true });
 	}
 }
@@ -88,14 +90,14 @@ async function readCloud(position_name: string): Promise<EditorSaveState | undef
 	} catch (err) {
 		if (err instanceof ICNDecompressionError) {
 			console.error('Failed to decompress cloud position ICN:', err);
-			const errMsg = err instanceof Error ? err.message : String(err);
+			const errMsg = jsutil.getErrorMessage(err);
 			toast.show(`${translations.editor.failed_to_load} ${errMsg}`, { error: true });
 		} else if (err instanceof ICNParseError) {
 			console.error('Failed to parse cloud position ICN:', err);
 			toast.show(translations.editor.position_corrupted, { error: true });
 		} else {
 			console.error('Failed to load cloud position:', err);
-			const errMsg = err instanceof Error ? err.message : String(err);
+			const errMsg = jsutil.getErrorMessage(err);
 			toast.show(`${translations.editor.failed_to_load_cloud} ${errMsg}`, { error: true });
 		}
 		return undefined;
@@ -111,7 +113,7 @@ async function deleteCloud(position_name: string): Promise<CloudSaveListRecord[]
 		return await savesapi.deletePosition(position_name);
 	} catch (err) {
 		console.error('Failed to delete cloud position:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
+		const errMsg = jsutil.getErrorMessage(err);
 		toast.show(translations.editor.failed_to_delete_cloud + ' ' + errMsg, { error: true });
 		return undefined;
 	}
@@ -167,7 +169,7 @@ async function removePositionFromCloud(
 		saves = await savesapi.deletePosition(position_name);
 	} catch (err) {
 		console.error('Failed to delete cloud position after download:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
+		const errMsg = jsutil.getErrorMessage(err);
 		toast.show(translations.editor.failed_to_remove_cloud + ' ' + errMsg, { error: true });
 		return;
 	}
@@ -192,7 +194,7 @@ async function getAllCloudSaveInfos(): Promise<CloudSaveListRecord[]> {
 		return await savesapi.getSavedPositions();
 	} catch (err) {
 		console.error('Failed to fetch cloud saves:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
+		const errMsg = jsutil.getErrorMessage(err);
 		toast.show(translations.editor.failed_to_fetch_cloud + ' ' + errMsg, { error: true });
 		return [];
 	}

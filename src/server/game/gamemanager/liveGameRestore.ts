@@ -27,6 +27,7 @@ import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManage
 import type { ClockValues, TimeControl } from '../../../shared/chess/util/clockutil.js';
 import type { MatchInfo, PlayerData, ServerGame } from './servergametypes.js';
 
+import jsutil from '../../../shared/util/jsutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -121,7 +122,7 @@ function restoreAll(): RestoredGame[] {
 			const result = restoreSingleGame(gameRow, playerRows, engineRows[0]);
 			restored.push(result);
 		} catch (error: unknown) {
-			const message = error instanceof Error ? error.message : String(error);
+			const message = jsutil.getErrorMessage(error);
 			logEventsAndPrint(
 				`Failed to restore live game ${gameRow.game_id}: ${message}`,
 				'errLog',

@@ -8,6 +8,8 @@
 import type { SoundObject } from '../audio/AudioManager.js';
 import type { EffectConfig } from '../audio/AudioEffects.js';
 
+import jsutil from '../../../../shared/util/jsutil.js';
+
 import AudioManager from '../audio/AudioManager.js';
 
 // Types --------------------------------------------------------------------------
@@ -35,7 +37,7 @@ async function getBuffer(soundName: SoundName): Promise<AudioBuffer | undefined>
 		audioCache.set(soundName, decoded);
 		return decoded;
 	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = jsutil.getErrorMessage(error);
 		console.error(`Failed to load sound "${soundName}": ${message}`);
 		return undefined;
 	}

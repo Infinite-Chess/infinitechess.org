@@ -2,6 +2,8 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import { renderErrorPage } from './renderErrorPage.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -54,7 +56,7 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 		}
 	} catch (error: unknown) {
 		// Last line of defense
-		const detail = error instanceof Error ? error.stack : String(error);
+		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(`Critical error in errorHandler middleware: ${detail}`, 'errLog');
 		res.status(500).send('Critical server error.');
 	}

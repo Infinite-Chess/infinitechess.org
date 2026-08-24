@@ -24,6 +24,8 @@ import type {
 	EngineResponse,
 } from './engineprotocol.js';
 
+import jsutil from '../../../../../../shared/util/jsutil.js';
+
 import engineicn from './engineicn.js';
 import { loadEngineWasm, getPromotionAbbr } from './enginewasm.js';
 
@@ -75,7 +77,7 @@ async function initWasm(msg: EngineInitRequest): Promise<void> {
 		console.error('[Engine] Failed to initialize Apeiron WASM module', err);
 		postMessage({
 			type: 'initerror',
-			message: err instanceof Error ? err.message : String(err),
+			message: jsutil.getErrorMessage(err),
 		} satisfies EngineInitResponse);
 		self.close();
 	}

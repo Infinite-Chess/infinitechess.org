@@ -83,7 +83,7 @@ function isTokenMoveLegal(boardsim: Board, tokenMove: unknown): MoveValidationRe
 	try {
 		moveCoords = icnconverter.parseTokenMove(tokenMove);
 	} catch (error: unknown) {
-		const msg = error instanceof Error ? error.message : String(error);
+		const msg = jsutil.getErrorMessage(error);
 		console.error(`Invalid format error when parsing compact move "${tokenMove}": ${msg}`);
 		// Return generic invalid reason
 		return { valid: false, reason: 'Incorrect format.' };

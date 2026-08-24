@@ -359,6 +359,22 @@ function ensureJSONString(input: any, errorMessage?: string, spaces?: number): s
 	}
 }
 
+/**
+ * Returns a caught error's message, or its String() form if it wasn't
+ * thrown as an Error.
+ */
+function getErrorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Returns a caught error's stack trace, or its String() form if it wasn't
+ * thrown as an Error, or has no stack.
+ */
+function getErrorStack(error: unknown): string {
+	return error instanceof Error ? (error.stack ?? String(error)) : String(error);
+}
+
 export default {
 	binarySearch,
 	deepCopyObject,
@@ -371,4 +387,6 @@ export default {
 	stringifyReplacer,
 	parseReviver,
 	ensureJSONString,
+	getErrorMessage,
+	getErrorStack,
 };

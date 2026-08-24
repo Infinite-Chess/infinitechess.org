@@ -8,6 +8,8 @@ import type { Request, Response } from 'express';
 
 import MessageValidator from 'sns-validator';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import { addToBlacklist } from '../database/blacklistManager.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -37,7 +39,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 			});
 		});
 	} catch (err: unknown) {
-		const msg = err instanceof Error ? err.message : String(err);
+		const msg = jsutil.getErrorMessage(err);
 		logEvents(
 			`[AWS WEBHOOK] Signature Verification Failed! Is this a hacker? Error: ${msg}`,
 			'awsNotifications',
@@ -90,7 +92,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 			// We must parse that inner string.
 			sesMessage = JSON.parse(body.Message);
 		} catch (err: unknown) {
-			const msg = err instanceof Error ? err.message : String(err);
+			const msg = jsutil.getErrorMessage(err);
 			logEventsAndPrint(`[AWS WEBHOOK] JSON Parse Error: ${msg}`, 'errLog');
 			res.status(400).send('Bad JSON');
 			return;

@@ -9,6 +9,8 @@
 
 import type { IncomingMessage } from 'http';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -86,7 +88,7 @@ async function verifyTurnstileToken(token: string, req: IncomingMessage): Promis
 		const data = (await response.json()) as { success?: boolean };
 		return data.success === true ? 'success' : 'failed';
 	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.stack : String(error);
+		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(`Turnstile siteverify request failed: ${detail}`, 'errLog');
 		return 'error';
 	}

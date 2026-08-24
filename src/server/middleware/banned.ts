@@ -7,6 +7,8 @@
 import fs from 'fs';
 import path from 'path';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 const bannedPath = path.resolve('database/banned.json');
 
 ensureBannedFileExists: {
@@ -42,7 +44,7 @@ try {
 			'browser-ids': {},
 		};
 	} else {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = jsutil.getErrorMessage(error);
 		throw new Error('Unable to read banned.json on startup: ' + message);
 	}
 }

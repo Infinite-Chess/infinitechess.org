@@ -6,6 +6,7 @@
 
 import type { Request, Response } from 'express';
 
+import jsutil from '../../shared/util/jsutil.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import activegames from '../game/gamemanager/activegames.js';
@@ -55,7 +56,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 	try {
 		deleteAccount(identity.user_id, reason_deleted);
 	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.message : String(error);
+		const detail = jsutil.getErrorMessage(error);
 		logEventsAndPrint(
 			`Can't delete account of user_id (${identity.user_id}) after a correct password entered: ${detail}`,
 			'errLog',

@@ -21,6 +21,7 @@ import type {
 } from './ratingabusetypes.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
+import jsutil from '../../../shared/util/jsutil.js';
 import gamerules from '../../../shared/chess/util/gamerules.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
@@ -220,7 +221,7 @@ function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvi
 	try {
 		refreshTokenEntries = findRefreshTokensForUsers([user_id, ...unique_user_id_list]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = jsutil.getErrorMessage(error);
 		void logEventsAndPrint(
 			`Error fetching refresh token entries for users "${JSON.stringify([user_id, ...unique_user_id_list])}": ${message}`,
 			'errLog',
@@ -253,7 +254,7 @@ function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvi
 			unique_user_id_list,
 		);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = jsutil.getErrorMessage(error);
 		void logEventsAndPrint(
 			`Error fetching records for opponents during rating abuse calculation for user_id ${user_id}: ${message}`,
 			'errLog',

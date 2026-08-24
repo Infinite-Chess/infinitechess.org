@@ -5,6 +5,7 @@
  * account verification, password resets, and rating abuse alerts.
  */
 
+import jsutil from '../../shared/util/jsutil.js';
 import { interpolate } from '../../shared/util/interpolate.js';
 
 import mailer from './mailer.js';
@@ -63,7 +64,7 @@ async function sendEmailConfirmation(
 
 		if (!sent) console.log(`Verification Link: ${verificationUrl}`);
 	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.stack : String(error);
+		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(
 			`Error during sendEmailConfirmation to ${recipientEmail}: ${detail}`,
 			'errLog',
@@ -101,7 +102,7 @@ async function sendPasswordResetEmail(
 		});
 		if (!sent) console.log(`Password Reset Link: ${resetUrl}`);
 	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.stack : String(error);
+		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(`Error sending password reset email: ${detail}`, 'errLog');
 	}
 }
@@ -138,7 +139,7 @@ async function sendPasswordChangedEmail(recipientEmail: string, language: string
 			]),
 		});
 	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.stack : String(error);
+		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(
 			`Error sending password changed email to ${recipientEmail}: ${detail}`,
 			'errLog',
@@ -160,7 +161,7 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 		});
 		if (!sent) console.log("Didn't send rating abuse email.");
 	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.stack : String(error);
+		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(
 			`Error during the sending of rating abuse email with subject "${messageSubject}": ${detail}`,
 			'errLog',

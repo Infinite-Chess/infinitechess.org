@@ -12,6 +12,8 @@ import path from 'path';
 import { format } from 'date-fns';
 import { fileURLToPath } from 'url';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import db from './database.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -33,7 +35,7 @@ export function startDailyBackups(): void {
 		try {
 			await performBackup();
 		} catch (error: unknown) {
-			const message = error instanceof Error ? error.message : String(error);
+			const message = jsutil.getErrorMessage(error);
 			logEventsAndPrint(`Daily database backup failed: ${message}`, 'errLog');
 		}
 	}, BACKUP_INTERVAL_MS);
@@ -87,7 +89,7 @@ function purgeOldBackups(): void {
 			}
 		}
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = jsutil.getErrorMessage(error);
 		void logEventsAndPrint(`Error purging old db backups: ${message}`, 'errLog');
 	}
 }

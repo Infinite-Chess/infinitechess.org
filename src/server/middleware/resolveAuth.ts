@@ -7,6 +7,8 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import { getClientIP } from '../utility/IP.js';
 import { ParsedCookies } from '../types.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
@@ -64,7 +66,7 @@ function tryRefreshToken(req: Request, res: Response): void {
 			result.tokenRecord,
 		);
 	} catch (error) {
-		const errMsg = error instanceof Error ? error.message : String(error);
+		const errMsg = jsutil.getErrorMessage(error);
 		logEventsAndPrint(`Error freshening session: ${errMsg}`, 'errLog');
 	}
 

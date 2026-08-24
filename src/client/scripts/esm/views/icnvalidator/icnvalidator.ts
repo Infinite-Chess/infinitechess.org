@@ -2,6 +2,8 @@
 
 import * as z from 'zod';
 
+import jsutil from '../../../../../shared/util/jsutil.js';
+
 interface VariantStats {
 	total: number;
 	icn: number;
@@ -125,7 +127,7 @@ function handleFileSelect(): void {
 				if (typeof result !== 'string') throw new Error('Failed to read file');
 				unvalidatedJSON = JSON.parse(result);
 			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error);
+				const message = jsutil.getErrorMessage(error);
 				addLog(`✗ Error parsing JSON: ${message}`, 'error');
 				fileName.textContent = `❌ INVALID JSON SYNTAX: ${file.name}`;
 				fileName.style.color = 'var(--danger-color)';

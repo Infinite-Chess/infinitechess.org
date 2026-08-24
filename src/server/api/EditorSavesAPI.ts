@@ -8,6 +8,7 @@ import type { Request, Response } from 'express';
 
 import * as z from 'zod';
 
+import jsutil from '../../shared/util/jsutil.js';
 import editorutil from '../../shared/util/editorutil.js';
 
 import { logZodError } from '../utility/zodlogger.js';
@@ -94,7 +95,7 @@ function getSavedPositions(req: Request, res: Response): void {
 		const saves = getAllSavedPositionsForUser(userId);
 		res.json({ saves });
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = jsutil.getErrorMessage(error);
 		logEventsAndPrint(
 			`Error retrieving saved positions for user_id ${userId}: ${message}`,
 			'errLog',
@@ -165,7 +166,7 @@ function savePosition(req: Request, res: Response): void {
 		const saves = getAllSavedPositionsForUser(userId);
 		res.status(201).json({ saves });
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = jsutil.getErrorMessage(error);
 		logEventsAndPrint(`Error saving position for user_id ${userId}: ${message}`, 'errLog');
 		res.status(500).json({
 			message: req.t.responses.editor_saves.server_error,
@@ -224,7 +225,7 @@ function getPosition(req: Request, res: Response): void {
 			castling: position.castling === -1 ? undefined : Boolean(position.castling),
 		});
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = jsutil.getErrorMessage(error);
 		logEventsAndPrint(
 			`Error retrieving position for name "${positionName}": ${message}`,
 			'errLog',
@@ -279,7 +280,7 @@ function deletePosition(req: Request, res: Response): void {
 		const saves = getAllSavedPositionsForUser(userId);
 		res.json({ saves });
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = jsutil.getErrorMessage(error);
 		logEventsAndPrint(
 			`Error deleting position "${positionName}" for user_id ${userId}: ${message}`,
 			'errLog',

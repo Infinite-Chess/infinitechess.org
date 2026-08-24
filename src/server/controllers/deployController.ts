@@ -9,6 +9,8 @@
 
 import type { Request, Response } from 'express';
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import { performBackup } from '../database/backupManager.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -35,7 +37,7 @@ async function handlePrepareRestart(req: Request, res: Response): Promise<void> 
 	try {
 		await performBackup();
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = jsutil.getErrorMessage(error);
 		logEventsAndPrint(`Pre-deploy DB backup failed: ${message}`, 'errLog');
 		res.status(500).send('Pre-deploy backup failed.');
 		return;

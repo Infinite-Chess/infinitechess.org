@@ -5,6 +5,8 @@
  * cleaning up each table in the database of stale data.
  */
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import db from './database.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 import { TOKEN_GRACE_PERIOD_MS } from './refreshTokenManager.js';
@@ -39,7 +41,7 @@ function checkDatabaseIntegrity(): void {
 			);
 		// else console.log('Database integrity check passed.');
 	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorMessage = jsutil.getErrorMessage(error);
 		logEventsAndPrint(
 			`Error performing database integrity check: ${errorMessage} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`,
 			'errLog',
@@ -60,8 +62,7 @@ function deleteExpiredPasswordResetTokens(): void {
 		}
 	} catch (error) {
 		const errorMessage =
-			'Failed to delete expired password reset tokens: ' +
-			(error instanceof Error ? error.message : String(error));
+			'Failed to delete expired password reset tokens: ' + jsutil.getErrorMessage(error);
 		logEventsAndPrint(errorMessage, 'errLog');
 	}
 }
@@ -92,8 +93,7 @@ function cleanUpExpiredRefreshTokens(): void {
 		}
 	} catch (error) {
 		const errorMessage =
-			'Failed to delete expired refresh tokens: ' +
-			(error instanceof Error ? error.message : String(error));
+			'Failed to delete expired refresh tokens: ' + jsutil.getErrorMessage(error);
 		logEventsAndPrint(errorMessage, 'errLog');
 	}
 }

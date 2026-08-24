@@ -9,6 +9,8 @@
  * for its synchronous API.
  */
 
+import jsutil from '../../../../shared/util/jsutil.js';
+
 /** An entry in IndexedDB storage */
 interface Entry {
 	/** The actual value of the entry */
@@ -27,7 +29,7 @@ let dbInitPromise: Promise<IDBDatabase> | null = null;
 // Do this on load every time
 eraseExpiredItems().catch((error: unknown) => {
 	// Can happen in testing environment where IndexedDB is not available
-	const msg = error instanceof Error ? error.message : String(error);
+	const msg = jsutil.getErrorMessage(error);
 	console.error('Error erasing expired IndexedDB items on init:', msg);
 });
 
