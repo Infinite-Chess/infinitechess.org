@@ -7,7 +7,7 @@
 
 import bd from '@naviary/bigdecimal';
 
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import movesound from '../../game/misc/movesound.js';

@@ -8,7 +8,7 @@
 import type { Player } from '../../../../../shared/util/typeutil.js';
 import type { LoadOptions } from './gameslot.js';
 
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 
 import area from '../../board/rendering/area.js';
 import toast from '../../components/toast.js';

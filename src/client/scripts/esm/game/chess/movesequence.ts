@@ -10,11 +10,11 @@
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Edit, MoveFull, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import wincondition from '../../../../../shared/chess/logic/wincondition.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 
 import gamecore from './gamecore.js';
 import gameslot from './gameslot.js';

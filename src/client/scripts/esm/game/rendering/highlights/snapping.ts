@@ -17,7 +17,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
-import boardutil from '../../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.js';
 

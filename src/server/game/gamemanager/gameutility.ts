@@ -28,7 +28,7 @@ import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import timeutil from '../../../shared/util/timeutil.js';
-import moveutil from '../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../shared/chess/logic/moveutil.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';

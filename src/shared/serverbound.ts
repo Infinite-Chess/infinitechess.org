@@ -9,18 +9,17 @@
  * compile-time checking of what it sends. The client must NEVER value-import from here —
  * a type-only import is erased at build time, keeping the schemas out of its bundle.
  *
- * A schema belongs here if it exists ONLY as websocket message contents. Domain values
- * used by HTTP or SSR as well (TimeControl, MovePacket, SeekId...) live in domain.ts.
+ * A schema belongs here if it exists ONLY as websocket message contents; anything
+ * another transport also carries is owned and imported by domain.ts or elsewhere.
  */
 
 import * as z from 'zod';
 
-import clockutil from './chess/util/clockutil.js';
 import winconutil from './chess/util/winconutil.js';
 import { players } from './util/typeutil.js';
 import { isRatedAllowed } from './chess/variants/servervalidation.js';
-import { TimeControlSchema } from './chess/util/clockutil.js';
 import { GameModifierSchema } from './util/modutil.js';
+import clockutil, { TimeControlSchema } from './chess/util/clockutil.js';
 import { GameIDSchema, GameModeSchema, SeekIdSchema, SeekVariantSchema } from './domain.js';
 
 // General Route ---------------------------------------------------------------

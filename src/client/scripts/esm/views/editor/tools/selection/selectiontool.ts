@@ -14,7 +14,7 @@ import type {
 } from '../../../../../../../shared/util/math/bounds';
 
 import bimath from '../../../../../../../shared/util/math/bimath';
-import boardutil from '../../../../../../../shared/chess/util/boardutil';
+import boardutil from '../../../../../../../shared/chess/logic/boardutil';
 
 import mouse from '../../../../game/mouse';
 import sfill from './sfill';

@@ -12,7 +12,7 @@ import type { GameFile } from '../../../../../../shared/chess/logic/gamefile';
 
 import state from '../../../../../../shared/chess/logic/state';
 import bounds from '../../../../../../shared/util/math/bounds';
-import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
+import boardutil, { Piece } from '../../../../../../shared/chess/logic/boardutil';
 import coordutil, { Coords } from '../../../../../../shared/util/coordutil';
 import typeutil, {
 	Player,

@@ -14,13 +14,13 @@ import type { Additional, GameFile } from '../../../../../shared/chess/logic/gam
 import type { GameConstructionOptions } from '../../../../../shared/chess/logic/gameformulator.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import typeutil, { players as p } from '../../../../../shared/util/typeutil.js';
 
 import arrows from '../rendering/arrows/arrows.js';

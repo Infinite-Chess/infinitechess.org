@@ -10,7 +10,7 @@
 
 import type { DrawOfferInfo } from '../../../../../shared/clientbound.js';
 
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import gameconfig from '../../../../../shared/util/gameconfig.js';
 
 import toast from '../../components/toast.js';

@@ -7,14 +7,14 @@
  */
 
 import type { Edit } from '../../../../../shared/chess/logic/movepiece';
-import type { Piece } from '../../../../../shared/chess/util/boardutil';
+import type { Piece } from '../../../../../shared/chess/logic/boardutil';
 import type { Coords } from '../../../../../shared/util/coordutil';
 import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds';
 import type { GameRules, Promotion } from '../../../../../shared/chess/util/gamerules';
 import type { PlayerGroup, RawType } from '../../../../../shared/util/typeutil';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil';
 
-import boardutil from '../../../../../shared/chess/util/boardutil';
+import boardutil from '../../../../../shared/chess/logic/boardutil';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import typeutil, { players as p, rawTypes as r } from '../../../../../shared/util/typeutil';

@@ -6,7 +6,7 @@
  */
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
-import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
 import type {
@@ -17,12 +17,12 @@ import type {
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import typeutil from '../../../../../shared/util/typeutil.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
+import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import coordutil, { Coords } from '../../../../../shared/util/coordutil.js';
 import { rawTypes as r, players as p } from '../../../../../shared/util/typeutil.js';
 

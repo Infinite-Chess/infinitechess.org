@@ -6,20 +6,20 @@
  * Both ends, client & server, should be able to use this script.
  */
 
-import type { Piece } from '../util/boardutil.js';
+import type { Piece } from './boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { Change } from './boardchanges.js';
 import type { MoveState } from './state.js';
 import type { MoveCoords } from './icn/icnconverter.js';
-import type { MovePacket } from '../../domain.js';
-import type { MoveSpecialTags, SpecialTags } from '../util/moveutil.js';
+import type { MovePacket } from '../../chess/logic/icn/icnconverter.js';
+import type { MoveSpecialTags, SpecialTags } from './moveutil.js';
 
 import state from './state.js';
 import typeutil from '../../util/typeutil.js';
-import moveutil from '../util/moveutil.js';
+import moveutil from './moveutil.js';
 import coordutil from '../../util/coordutil.js';
-import boardutil from '../util/boardutil.js';
+import boardutil from './boardutil.js';
 import legalmoves from './legalmoves.js';
 import castlingutil from './castlingutil.js';
 import boardchanges from './boardchanges.js';

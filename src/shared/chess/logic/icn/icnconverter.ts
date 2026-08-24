@@ -29,11 +29,13 @@
  */
 
 import type { BaseRay } from '../../../util/math/geometry.js';
-import type { MetaData } from '../../../chess/util/metadatautil.js';
+import type { MetaData } from '../../util/metadatautil.js';
 import type { UnboundedRectangle } from '../../../util/math/bounds.js';
 import type { GameRules, Promotion } from '../../util/gamerules.js';
 import type { GameruleWinCondition } from '../../util/winconutil.js';
 import type { EnPassant, GlobalGameState } from '../state.js';
+
+import * as z from 'zod';
 
 import jsutil from '../../../util/jsutil.js';
 import bimath from '../../../util/math/bimath.js';
@@ -47,13 +49,13 @@ import { players as p, RawType, Player, PlayerGroup } from '../../../util/typeut
 // Types ------------------------------------------------------------------------------
 
 /** Represents the game format coming IN to the converter. */
-interface LongFormatIn extends LongFormatBase {
+export interface LongFormatIn extends LongFormatBase {
 	metadata: MetaData;
 	moves?: MovePreprint[];
 }
 
 /** Represents the game format coming OUT of the converter. */
-interface LongFormatOut extends LongFormatBase {
+export interface LongFormatOut extends LongFormatBase {
 	metadata: MetaData;
 	moves?: MoveParsed[];
 }
@@ -87,7 +89,7 @@ type NamedCaptureMoveGroups = {
 };
 
 /** Input to the ICN serializer. Includes optional information for prettifying the move list. */
-interface MovePreprint extends MoveParsed {
+export interface MovePreprint extends MoveParsed {
 	/** The type of piece moved */
 	type?: number;
 	flags?: {
@@ -101,7 +103,7 @@ interface MovePreprint extends MoveParsed {
 }
 
 /** Output of the ICN parser. Includes information extractable from a shortform move. */
-interface MoveParsed extends MoveCoords {
+export interface MoveParsed extends MoveCoords {
 	token: string;
 	/**
 	 * Any human-readable comment made on the move, specified in the ICN.
@@ -112,8 +114,19 @@ interface MoveParsed extends MoveCoords {
 	clockStamp?: number;
 }
 
+/**
+ * A move as transmitted over the wire, or as parsed out of
+ * an ICN: the serialized move token (e.g. `"1,2>3,4=N"`).
+ */
+export type MovePacket = z.infer<typeof MovePacketSchema>;
+const MovePacketSchema = z.strictObject({
+	token: z.string(),
+	/** Only ever set by the ICN parser, for the analysis page's per-move clocks. Never sent over the wire. */
+	clockStamp: z.number().optional(),
+});
+
 /** The bare minimum information needed to make a move. */
-interface MoveCoords {
+export interface MoveCoords {
 	startCoords: Coords;
 	endCoords: Coords;
 	/** Present if the move was a special-move promotion. This is the integer type of the promoted piece. */
@@ -124,7 +137,7 @@ interface MoveCoords {
  * Permanent preset annotations. Can't be erased.
  * Helpful for emphasizing important lines/squares in showcasings.
  */
-type PresetAnnotes = {
+export type PresetAnnotes = {
 	/** In compacted string form: '23,94|23,76' */
 	squares?: Coords[];
 	/** In compacted string form: '23,94>-1,0|23,76>-1,0' */
@@ -151,10 +164,10 @@ const playerCodesInverted = jsutil.invertObj(playerCodes);
 
 type PlayerCode = (typeof playerCodes)[keyof typeof playerCodes];
 
-// Variables ------------------------------------------------------------------
+// Constants ------------------------------------------------------------------
 
 /** The desired ordering metadata should be placed in the ICN */
-const metadataOrdering: (keyof MetaData)[] = [
+const METADATA_ORDERING: (keyof MetaData)[] = [
 	'Event',
 	'Site',
 	'GameId',
@@ -428,7 +441,7 @@ function LongToShort_Format(
 
 	// Appended in the correct order given by metadata_key_ordering
 	const metadataCopy = jsutil.deepCopyObject(longformat.metadata);
-	for (const metadata_name of metadataOrdering) {
+	for (const metadata_name of METADATA_ORDERING) {
 		if (metadataCopy[metadata_name] === undefined) {
 			delete metadataCopy[metadata_name]; // Delete it (sometimes its DECLARED as undefined). Prevents it from increasing the key count
 			continue; // Skip to the next metadata
@@ -1315,7 +1328,9 @@ function parsePresetRays(presetRays: string): BaseRay[] {
 // Exports --------------------------------------------------------------------------------------------------------
 
 export default {
-	// Variables
+	// Schemas
+	MovePacketSchema,
+	// Constants
 	COMPACT_FORMAT_OPTIONS,
 	// Defaults
 	defaultWinCondition,
@@ -1336,5 +1351,3 @@ export default {
 	parsePresetSquares,
 	parsePresetRays,
 };
-
-export type { LongFormatIn, LongFormatOut, MovePreprint, MoveParsed, MoveCoords, PresetAnnotes };

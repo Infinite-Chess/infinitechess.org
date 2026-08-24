@@ -9,9 +9,8 @@
  * direction it travels instead: serverbound.ts (client → server) or clientbound.ts
  * (server → client), beside the route union that carries it.
  *
- * This file sits at the TOP of the shared ladder, so a schema the chess layer also needs is
- * owned down there instead, and imported from there by everyone: TimeControl and ClockValues
- * live in chess/util/clockutil.ts, MetaData and Rating in chess/util/metadatautil.ts.
+ * This file sits at the TOP of the shared ladder, so a schema the chess layer also
+ * needs is owned down there instead, beside the vocabulary it describes.
  */
 
 import type { ValidEngine } from './chess/engine.js';
@@ -47,17 +46,6 @@ const ServerUsernameContainerSchema = z.strictObject({
 
 /** The id of an online game. */
 export const GameIDSchema = z.number().int().nonnegative();
-
-/**
- * A move as transmitted over the wire, or as parsed out of
- * an ICN: the serialized move token (e.g. `"1,2>3,4=N"`).
- */
-export type MovePacket = z.infer<typeof MovePacketSchema>;
-export const MovePacketSchema = z.strictObject({
-	token: z.string(),
-	/** Only ever set by the ICN parser, for the analysis page's per-move clocks. Never sent over the wire. */
-	clockStamp: z.number().optional(),
-});
 
 // Game State Types ---------------------------------------------------------------
 

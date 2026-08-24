@@ -12,8 +12,8 @@ import type { OrganizedPiecesBase } from './organizedpieces.js';
 
 import bimath from '../../util/math/bimath.js';
 import jsutil from '../../util/jsutil.js';
-import moveutil from '../util/moveutil.js';
-import boardutil from '../util/boardutil.js';
+import moveutil from './moveutil.js';
+import boardutil from './boardutil.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
 import typeutil, { Player } from '../../util/typeutil.js';

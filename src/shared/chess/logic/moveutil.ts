@@ -1,16 +1,16 @@
-// src/shared/chess/util/moveutil.ts
+// src/shared/chess/logic/moveutil.ts
 
 /**
  * This script contains utility methods for working with the gamefile's moves list.
  */
 
-import type { Board } from '../logic/boardinit.js';
+import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { Player } from '../../util/typeutil.js';
-import type { GameRules } from './gamerules.js';
-import type { EnPassant } from '../logic/state.js';
-import type { MoveCoords } from '../logic/icn/icnconverter.js';
-import type { MoveFull, CoordsTagged, MoveRecord } from '../logic/movepiece.js';
+import type { GameRules } from '../util/gamerules.js';
+import type { EnPassant } from './state.js';
+import type { MoveCoords } from './icn/icnconverter.js';
+import type { MoveFull, CoordsTagged, MoveRecord } from './movepiece.js';
 
 import coordutil from '../../util/coordutil.js';
 

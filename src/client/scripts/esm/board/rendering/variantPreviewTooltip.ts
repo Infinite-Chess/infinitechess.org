@@ -12,7 +12,7 @@ import type { BoardPreview } from '../../../../../shared/chess/logic/boardprevie
 import type { GameModifier } from '../../../../../shared/util/modutil.js';
 import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';

@@ -13,7 +13,7 @@ import type { CoordsTagged } from './movepiece.js';
 import type { Coords, CoordsKey } from '../../util/coordutil.js';
 
 import typeutil from '../../util/typeutil.js';
-import boardutil from '../util/boardutil.js';
+import boardutil from './boardutil.js';
 import coordutil from '../../util/coordutil.js';
 import legalmoves from './legalmoves.js';
 import organizedpieces from './organizedpieces.js';

@@ -1,17 +1,17 @@
-// src/shared/chess/util/gamefileutility.ts
+// src/shared/chess/logic/gamefileutility.ts
 
 /**
  * This script contains many utility methods for working with gamefiles.
  */
 
-import type { Board } from '../logic/boardinit.js';
+import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { Player } from '../../util/typeutil.js';
-import type { GameRules } from './gamerules.js';
-import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
+import type { GameRules } from '../util/gamerules.js';
+import type { GameruleWinCondition, GameConclusion } from '../util/winconutil.js';
 
 import typeutil from '../../util/typeutil.js';
-import gamerules from './gamerules.js';
+import gamerules from '../util/gamerules.js';
 
 // Methods -------------------------------------------------------------
 

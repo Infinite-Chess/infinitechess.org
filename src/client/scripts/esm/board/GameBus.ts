@@ -1,6 +1,6 @@
 // src/client/scripts/esm/board/GameBus.ts
 
-import type { Piece } from '../../../../shared/chess/util/boardutil';
+import type { Piece } from '../../../../shared/chess/logic/boardutil';
 import type { LegalMoves } from '../../../../shared/chess/logic/legalmoves';
 
 import { EventBus } from '../../../../shared/util/EventBus';

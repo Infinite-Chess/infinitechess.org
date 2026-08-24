@@ -14,7 +14,7 @@ import type { MoveCoords } from '../../../../../../shared/chess/logic/icn/icncon
 
 import state from '../../../../../../shared/chess/logic/state';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
-import boardutil from '../../../../../../shared/chess/util/boardutil';
+import boardutil from '../../../../../../shared/chess/logic/boardutil';
 import coordutil from '../../../../../../shared/util/coordutil';
 
 import selection from '../../../game/chess/selection';

@@ -20,7 +20,7 @@ import typeutil from '../../../../../shared/util/typeutil.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
-import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import boardutil, { Piece } from '../../../../../shared/chess/logic/boardutil.js';
 
 import toast from '../../components/toast.js';
 import space from '../../board/space.js';

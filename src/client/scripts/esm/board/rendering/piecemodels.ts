@@ -4,7 +4,7 @@
  * This generates and renders the meshes of each individual piece type in the game.
  */
 
-import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
 import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type { TypeGroup } from '../../../../../shared/util/typeutil.js';
 import type RenderContext from './RenderContext.js';
@@ -15,7 +15,7 @@ import typeutil from '../../../../../shared/util/typeutil.js';
 import geometry from '../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
 import { rawTypes as r } from '../../../../../shared/util/typeutil.js';
 

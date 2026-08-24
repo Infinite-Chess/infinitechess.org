@@ -4,7 +4,7 @@
  * This script calculates legal moves
  */
 
-import type { Piece } from '../util/boardutil.js';
+import type { Piece } from './boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { Player } from '../../util/typeutil.js';
@@ -16,7 +16,7 @@ import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 
 import bimath from '../../util/math/bimath.js';
 import movesets from './movesets.js';
-import boardutil from '../util/boardutil.js';
+import boardutil from './boardutil.js';
 import coordutil from '../../util/coordutil.js';
 import specialdetect from './specialdetect.js';
 import checkresolver from './checkresolver.js';

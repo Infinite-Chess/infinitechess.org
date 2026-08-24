@@ -10,7 +10,7 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
+import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { HoveredArrow } from '../arrows/arrows.js';
 import type { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
@@ -19,7 +19,7 @@ import type { Coords, BDCoords, DoubleCoords } from '../../../../../../shared/ut
 import vectors from '../../../../../../shared/util/math/vectors.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
-import boardutil from '../../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 

@@ -10,7 +10,7 @@ import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { BDCoords, Coords } from '../../../../../../shared/util/coordutil.js';
 
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../../shared/chess/logic/gamefileutility.js';
 
 import space from '../../../board/space.js';
 import boardpos from '../../../board/rendering/boardpos.js';

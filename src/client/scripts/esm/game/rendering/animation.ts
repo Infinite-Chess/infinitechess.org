@@ -5,7 +5,7 @@
  * It also plays the sounds.
  */
 
-import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
 

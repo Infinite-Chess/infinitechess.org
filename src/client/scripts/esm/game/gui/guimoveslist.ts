@@ -17,7 +17,7 @@ import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../../../shared/util/typeutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameresultutil from '../../../../../shared/chess/util/gameresultutil.js';

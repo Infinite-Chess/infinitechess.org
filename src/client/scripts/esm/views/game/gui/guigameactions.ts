@@ -20,8 +20,8 @@
 
 import type { RematchOfferInfo } from '../../../../../../shared/clientbound.js';
 
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
+import gamefileutility from '../../../../../../shared/chess/logic/gamefileutility.js';
 
 import gameslot from '../../../game/chess/gameslot.js';
 import drawoffers from '../drawoffers.js';

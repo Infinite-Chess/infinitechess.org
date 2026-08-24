@@ -23,7 +23,7 @@ import bimath from '../../../../../../shared/util/math/bimath.js';
 import vectors from '../../../../../../shared/util/math/vectors.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
-import boardutil from '../../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import checkresolver from '../../../../../../shared/chess/logic/checkresolver.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';

@@ -8,7 +8,7 @@
 import type { Player } from '../../../shared/util/typeutil.js';
 import type { ServerGame } from './servergametypes.js';
 
-import moveutil from '../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/util/typeutil.js';
 
 import drawoffers from './drawoffers.js';

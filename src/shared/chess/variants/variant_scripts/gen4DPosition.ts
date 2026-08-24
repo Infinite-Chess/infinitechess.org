@@ -1,26 +1,11 @@
 // src/shared/chess/variants/variant_scripts/gen4DPosition.ts
 
 import type { CoordsKey } from '../../../util/coordutil.js';
+import type { Dimensions } from '../../logic/fourdimensionalmoves.js';
 
 import coordutil from '../../../util/coordutil.js';
 import icnposition from '../../logic/icn/icnposition.js';
 import { rawTypes as r, ext as e } from '../../../util/typeutil.js';
-
-// Types -------------------------------------------------------------------------------
-
-/** An object that contains all relevant quantities for the size of a single 4D chess board. */
-export type Dimensions = {
-	/** The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1 */
-	BOARD_SPACING: bigint;
-	/** Board edges on the real chessboard */
-	MIN_X: bigint;
-	/** Board edges on the real chessboard */
-	MAX_X: bigint;
-	/** Board edges on the real chessboard */
-	MIN_Y: bigint;
-	/** Board edges on the real chessboard */
-	MAX_Y: bigint;
-};
 
 // Functions -------------------------------------------------------------------------------
 

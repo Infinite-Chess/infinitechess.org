@@ -7,7 +7,7 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
+import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import bd from '@naviary/bigdecimal';

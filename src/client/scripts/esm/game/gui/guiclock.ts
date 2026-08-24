@@ -5,9 +5,9 @@ import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
 import type { Player, PlayerGroup } from '../../../../../shared/util/typeutil.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import { players as p } from '../../../../../shared/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';

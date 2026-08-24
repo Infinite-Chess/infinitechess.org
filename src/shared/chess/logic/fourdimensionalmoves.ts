@@ -8,11 +8,10 @@
  * nor can they jump out of bounds.
  */
 
-import type { Piece } from '../util/boardutil.js';
+import type { Piece } from './boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { Player } from '../../util/typeutil.js';
-import type { Dimensions } from '../variants/variant_scripts/gen4DPosition.js';
 import type { MoveRunning } from './specialmove.js';
 import type { CoordsTagged } from './movepiece.js';
 
@@ -20,13 +19,29 @@ import state from './state.js';
 import bimath from '../../util/math/bimath.js';
 import typeutil from '../../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
-import boardutil from '../util/boardutil.js';
+import boardutil from './boardutil.js';
 import legalmoves from './legalmoves.js';
 import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
 import { players as p } from '../../util/typeutil.js';
 
-// Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
+// Types ------------------------------------------------------------------------------------------
+
+/** An object that contains all relevant quantities for the size of a single 4D chess board. */
+export type Dimensions = {
+	/** The spacing of the timelike boards - should be equal to (sidelength of a 2D board) + 1 */
+	BOARD_SPACING: bigint;
+	/** Board edges on the real chessboard */
+	MIN_X: bigint;
+	/** Board edges on the real chessboard */
+	MAX_X: bigint;
+	/** Board edges on the real chessboard */
+	MIN_Y: bigint;
+	/** Board edges on the real chessboard */
+	MAX_Y: bigint;
+};
+
+// Pawn Legal Move Calculation and Execution ------------------------------------------------------
 
 /** Calculates the legal pawn moves in the four dimensional variant. */
 function fourDimensionalPawnMove(

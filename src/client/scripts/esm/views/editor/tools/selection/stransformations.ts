@@ -20,7 +20,7 @@ import typeutil from '../../../../../../../shared/util/typeutil';
 import bdcoords from '../../../../../../../shared/util/bdcoords';
 import organizedpieces from '../../../../../../../shared/chess/logic/organizedpieces';
 import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors';
-import boardutil, { Piece } from '../../../../../../../shared/chess/util/boardutil';
+import boardutil, { Piece } from '../../../../../../../shared/chess/logic/boardutil';
 import coordutil, { BDCoords, Coords } from '../../../../../../../shared/util/coordutil';
 
 import edithistory from '../../edithistory';

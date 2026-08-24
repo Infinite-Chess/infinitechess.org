@@ -11,11 +11,11 @@ import type { Coords } from '../../util/coordutil.js';
 import type { GameFile } from './gamefile.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
-import moveutil from '../util/moveutil.js';
-import boardutil from '../util/boardutil.js';
+import moveutil from './moveutil.js';
+import boardutil from './boardutil.js';
 import checkmate from './checkmate.js';
 import boardchanges from './boardchanges.js';
-import gamefileutility from '../util/gamefileutility.js';
+import gamefileutility from './gamefileutility.js';
 import typeutil, { RawType } from '../../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { rawTypes as r, Player } from '../../util/typeutil.js';

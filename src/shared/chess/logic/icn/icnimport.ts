@@ -7,7 +7,7 @@
  */
 
 import type { CoordsKey } from '../../../util/coordutil.js';
-import type { MovePacket } from '../../../domain.js';
+import type { MovePacket } from '../../../chess/logic/icn/icnconverter.js';
 import type { VariantCode } from '../../util/variantcodes.js';
 import type { LongFormatOut, MoveParsed } from './icnconverter.js';
 import type { LoadedVariant, VariantOptions } from '../gamefile.js';

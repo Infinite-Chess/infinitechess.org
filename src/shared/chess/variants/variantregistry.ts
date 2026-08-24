@@ -200,7 +200,6 @@ const VARIANT_REGISTRY = {
 		name: 'Omega^4',
 		loadVariant: () => import('./variant_scripts/variants/var_omegafourth.js'),
 	},
-	// Every code must appear exactly once: a missing entry and an unknown key are both errors here.
 } satisfies Record<VariantCode, VariantRegistryEntry>;
 
 // Functions ------------------------------------------------------------------

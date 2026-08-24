@@ -10,15 +10,15 @@
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MovePacket } from '../../../../../shared/domain.js';
+import type { MovePacket } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { GameStateMessage } from '../../../../../shared/clientbound.js';
 import type { MoveRecord, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import premoves from '../../game/chess/premoves.js';

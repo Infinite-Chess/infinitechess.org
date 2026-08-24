@@ -15,11 +15,11 @@ import type { Player, PlayerGroup } from '../../util/typeutil.js';
 import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';
 
 import typeutil from '../../util/typeutil.js';
-import moveutil from '../util/moveutil.js';
+import moveutil from './moveutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamerules from '../util/gamerules.js';
 import clockutil from '../util/clockutil.js';
-import gamefileutility from '../util/gamefileutility.js';
+import gamefileutility from './gamefileutility.js';
 
 // Types --------------------------------------------------------------------------
 

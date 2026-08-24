@@ -17,7 +17,7 @@
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit';
 import type { MetaData } from '../../../../../../shared/chess/util/metadatautil.js';
-import type { MovePacket } from '../../../../../../shared/domain.js';
+import type { MovePacket } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { ActivePosition } from '../boardeditor';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 import type { EditorSaveState, StorageType } from '../../../savedpositions/storetypes';
@@ -29,7 +29,7 @@ import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../../../../shared/chess/variants/variantcache';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
-import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
+import boardutil, { Piece } from '../../../../../../shared/chess/logic/boardutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,

@@ -15,7 +15,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 
 import toast from '../../components/toast.js';
 import mouse from '../mouse.js';

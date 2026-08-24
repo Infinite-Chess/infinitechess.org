@@ -14,7 +14,7 @@ import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeirona
 
 import math from '../../../../../shared/util/math/math.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import { players as p } from '../../../../../shared/util/typeutil.js';
 

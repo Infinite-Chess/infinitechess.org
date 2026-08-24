@@ -10,7 +10,7 @@ import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import coordutil, { CoordsKey } from '../../../../../shared/util/coordutil.js';

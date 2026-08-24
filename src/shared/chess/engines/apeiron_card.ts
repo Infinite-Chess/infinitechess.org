@@ -14,7 +14,7 @@ import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js'
 
 import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
-import boardutil from '../util/boardutil.js';
+import boardutil from '../logic/boardutil.js';
 import { I64_MAX } from '../engine.js';
 import variantutil from '../variants/variant_scripts/variantutil.js';
 import typeutil, { RawType, rawTypes as r, players as p } from '../../util/typeutil.js';

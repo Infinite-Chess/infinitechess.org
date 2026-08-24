@@ -12,7 +12,7 @@
 
 import jsutil from '../../util/jsutil.js';
 import typeutil from '../../util/typeutil.js';
-import boardutil from '../util/boardutil.js';
+import boardutil from './boardutil.js';
 import organizedpieces from './organizedpieces.js';
 import coordutil, { CoordsKey } from '../../util/coordutil.js';
 
@@ -25,7 +25,7 @@ const oneWayActions: string[] = ['capture', 'delete'];
 
 import type { MoveFull } from './movepiece.js';
 import type { Coords } from '../../util/coordutil.js';
-import type { Piece } from '../util/boardutil.js';
+import type { Piece } from './boardutil.js';
 import type { Board } from './boardinit.js';
 
 /**

@@ -14,7 +14,7 @@ import bimath from '../../../../../shared/util/math/bimath.js';
 import typeutil from '../../../../../shared/util/typeutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
 import { engineDictionary } from '../../../../../shared/chess/engine.js';

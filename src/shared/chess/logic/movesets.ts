@@ -4,7 +4,7 @@
  * This script contains the default movesets for all pieces except specials (pawns, castling)
  */
 
-import type { Piece } from '../util/boardutil.js';
+import type { Piece } from './boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { CoordsTagged } from './movepiece.js';

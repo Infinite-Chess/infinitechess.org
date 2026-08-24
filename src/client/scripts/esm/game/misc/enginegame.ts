@@ -14,7 +14,7 @@ import type {
 } from '../chess/engines/engineprotocol.js';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import { engineDictionary } from '../../../../../shared/chess/engine.js';
 import typeutil, { players as p } from '../../../../../shared/util/typeutil.js';

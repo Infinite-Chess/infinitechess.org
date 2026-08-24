@@ -11,7 +11,7 @@ import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js'
 import type { AnalysisMoveNode } from '../movetree.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import { players as p } from '../../../../../../shared/util/typeutil.js';
 

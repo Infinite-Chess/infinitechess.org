@@ -11,7 +11,7 @@
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
 
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
 
 import boardpos from '../../../board/rendering/boardpos.js';
 import premoves from '../../chess/premoves.js';

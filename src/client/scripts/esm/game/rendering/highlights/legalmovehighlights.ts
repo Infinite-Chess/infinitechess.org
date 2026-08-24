@@ -8,7 +8,7 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
+import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 
 import typeutil from '../../../../../../shared/util/typeutil.js';

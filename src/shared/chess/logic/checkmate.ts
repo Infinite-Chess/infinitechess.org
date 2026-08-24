@@ -9,11 +9,11 @@ import type { Board } from './boardinit.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
 import typeutil from '../../util/typeutil.js';
-import moveutil from '../util/moveutil.js';
-import boardutil from '../util/boardutil.js';
+import moveutil from './moveutil.js';
+import boardutil from './boardutil.js';
 import legalmoves from './legalmoves.js';
 import { rawTypes } from '../../util/typeutil.js';
-import gamefileutility from '../util/gamefileutility.js';
+import gamefileutility from './gamefileutility.js';
 
 // Constants -----------------------------------------------------------------
 

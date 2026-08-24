@@ -8,7 +8,7 @@
  * applied all at once by executeArrowShifts() before rendering.
  */
 
-import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
+import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
 import type { Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
@@ -21,7 +21,7 @@ import bounds from '../../../../../../shared/util/math/bounds.js';
 import vectors from '../../../../../../shared/util/math/vectors.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
-import boardutil from '../../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import boardchanges from '../../../../../../shared/chess/logic/boardchanges.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 

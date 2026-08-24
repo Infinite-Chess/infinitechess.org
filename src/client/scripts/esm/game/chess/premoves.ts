@@ -12,7 +12,7 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import typeutil from '../../../../../shared/util/typeutil.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';

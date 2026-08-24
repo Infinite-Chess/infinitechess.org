@@ -8,7 +8,7 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import { rawTypes as r } from '../../../../../shared/util/typeutil.js';
 
 import camera from '../../board/rendering/camera.js';

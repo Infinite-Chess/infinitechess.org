@@ -15,7 +15,7 @@ import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves
 import vectors from '../../../../../../shared/util/math/vectors.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import gamefileutility from '../../../../../../shared/chess/logic/gamefileutility.js';
 
 import snapping from './snapping.js';
 import boardpos from '../../../board/rendering/boardpos.js';

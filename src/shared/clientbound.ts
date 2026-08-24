@@ -10,16 +10,17 @@
  * directions are separate files — bundling them together would drag the serverbound
  * schemas, which the client only ever needs as types, into its bundle.
  *
- * A schema belongs here if it exists ONLY as websocket message contents. Domain values
- * used by HTTP or SSR as well (ClockValues, MovePacket, OutSeek...) live in domain.ts.
+ * A schema belongs here if it exists ONLY as websocket message contents; anything
+ * another transport also carries is owned and imported by domain.ts or elsewhere.
  */
 
 import * as z from 'zod';
 
 import winconutil from './chess/util/winconutil.js';
 import typeschemas from './chess/util/typeschemas.js';
+import icnconverter from './chess/logic/icn/icnconverter.js';
 import { ClockValuesSchema } from './chess/util/clockutil.js';
-import { GameIDSchema, MovePacketSchema, OutSeekSchema, SeekIdSchema } from './domain.js';
+import { GameIDSchema, OutSeekSchema, SeekIdSchema } from './domain.js';
 
 // Common Helper Schemas -------------------------------------------------------
 
@@ -136,7 +137,7 @@ const ParticipantStateSchema = z.strictObject({
 export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
 const GameStateBaseSchema = z.strictObject({
 	/** The full move list (reconciled against on reconnect). */
-	moves: z.array(MovePacketSchema),
+	moves: z.array(icnconverter.MovePacketSchema),
 	/**
 	 * The live ticking clocks, so a fresh load / reconnect shows
 	 * running time, not the base time. Absent for untimed games.
@@ -187,7 +188,7 @@ const GameConclusionMessageSchema = z.strictObject({
 export type OpponentsMoveMessage = z.infer<typeof OpponentsMoveMessageSchema>;
 const OpponentsMoveMessageSchema = z.strictObject({
 	/** The move our opponent played. In the most compact notation: `"5,2>5,4"`. */
-	move: MovePacketSchema,
+	move: icnconverter.MovePacketSchema,
 	gameConclusion: winconutil.gameConclusionSchema.optional(),
 	/** Our opponent's move number, 1-based. */
 	moveNumber: z.number().int().positive(),
