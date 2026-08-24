@@ -249,7 +249,7 @@ function getJumpingRoyalCoordsOfColor(o: OrganizedPiecesBase, color: Player): Co
 function iteratePiecesInTypeRange(
 	o: OrganizedPiecesBase,
 	type: number,
-	callback: (_idx: number) => void,
+	callback: (idx: number) => void,
 ): void {
 	const range = o.typeRanges.get(type)!;
 	let undefinedidx = 0;
@@ -270,7 +270,7 @@ function iteratePiecesInTypeRange(
 function iteratePiecesInTypeRange_IncludeUndefineds(
 	o: OrganizedPiecesBase,
 	type: number,
-	callback: (_idx: number, _isUndefined: boolean) => void,
+	callback: (idx: number, isUndefined: boolean) => void,
 ): void {
 	const range = o.typeRanges.get(type)!;
 	let undefinedidx = 0;

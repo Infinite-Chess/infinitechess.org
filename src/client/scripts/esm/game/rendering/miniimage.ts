@@ -79,7 +79,7 @@ function toggle(): void {
 // Updating --------------------------------------------------------------------------
 
 /** Iterate over every renderable piece (static and animated) and invoke the callback with its board coords and type. */
-function forEachRenderablePiece(callback: (_coords: BDCoords, _type: number) => void): void {
+function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => void): void {
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.pieces;
 

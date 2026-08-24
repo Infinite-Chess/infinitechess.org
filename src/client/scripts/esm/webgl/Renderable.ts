@@ -97,7 +97,7 @@ export interface TextureInfo {
  * @param changedIndicesStart - The index in the vertex data marking the first value changed.
  * @param changedIndicesCount - The number of indices in the vertex data that were changed, beginning at {@link changedIndicesStart}.
  */
-type UpdateBufferIndicesFunc = (_changedIndicesStart: number, _changedIndicesCount: number) => void;
+type UpdateBufferIndicesFunc = (changedIndicesStart: number, changedIndicesCount: number) => void;
 
 /** Contains the properties that both the {@link Renderable} and {@link RenderableInstanced} types share. */
 interface BaseRenderable {
@@ -108,7 +108,7 @@ interface BaseRenderable {
 	 * @param [scale] - The scaling transformation, default [1,1,1]
 	 * @param uniforms - Custom uniform values, for example, 'u_size'.
 	 */
-	render: (_position?: Vec3, _scale?: Vec3, _uniforms?: Record<string, any>) => void;
+	render: (position?: Vec3, scale?: Vec3, uniforms?: Record<string, any>) => void;
 }
 
 /** A renderable model. */
@@ -142,44 +142,44 @@ export interface RenderableFactory {
 	 * primitive rendering mode, and texture.
 	 */
 	createRenderable(
-		_data: InputArray,
-		_numPositionComponents: 2 | 3,
-		_mode: PrimitiveType,
-		_shader: keyof ProgramMap,
-		_usingColor: boolean,
-		_texture?: WebGLTexture,
+		data: InputArray,
+		numPositionComponents: 2 | 3,
+		mode: PrimitiveType,
+		shader: keyof ProgramMap,
+		usingColor: boolean,
+		texture?: WebGLTexture,
 	): Renderable;
 	/**
 	 * The universal function for creating a renderable model THAT USES INSTANCED RENDERING,
 	 * given the vertex data and instance data, both attribute informations, primitive rendering mode, and texture!
 	 */
 	createRenderable_Instanced(
-		_vertexData: InputArray,
-		_instanceData: InputArray,
-		_mode: PrimitiveType,
-		_shader: keyof ProgramMap,
-		_usingColor: boolean,
-		_texture?: WebGLTexture,
+		vertexData: InputArray,
+		instanceData: InputArray,
+		mode: PrimitiveType,
+		shader: keyof ProgramMap,
+		usingColor: boolean,
+		texture?: WebGLTexture,
 	): RenderableInstanced;
 	/** Creates a renderable model, given the AttributeInfo object. */
 	createRenderable_GivenInfo<K extends keyof ProgramMap>(
-		_data: InputArray,
-		_attribInfo: AttributeInfo,
-		_mode: PrimitiveType,
-		_shader: K,
-		_textures?: TextureInfo[],
+		data: InputArray,
+		attribInfo: AttributeInfo,
+		mode: PrimitiveType,
+		shader: K,
+		textures?: TextureInfo[],
 	): Renderable;
 	/**
 	 * Creates a renderable model that uses instanced rendering,
 	 * given the AttributeInfo objects of both the vertex data and instance data arrays.
 	 */
 	createRenderable_Instanced_GivenInfo<K extends keyof ProgramMap>(
-		_vertexData: InputArray,
-		_instanceData: InputArray,
-		_attribInfoInstanced: AttributeInfoInstanced,
-		_mode: PrimitiveType,
-		_shader: K,
-		_textures?: TextureInfo[],
+		vertexData: InputArray,
+		instanceData: InputArray,
+		attribInfoInstanced: AttributeInfoInstanced,
+		mode: PrimitiveType,
+		shader: K,
+		textures?: TextureInfo[],
 	): RenderableInstanced;
 }
 

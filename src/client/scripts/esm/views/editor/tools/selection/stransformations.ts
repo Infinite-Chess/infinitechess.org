@@ -455,7 +455,7 @@ function Transform(
 	destinationBox: BoundingBox,
 	newSelectionCorners: [Coords, Coords],
 	/** A function to transform an individual piece's coordinates and type. */
-	transformer: (_piece: Piece) => { coords: Coords; type: number },
+	transformer: (piece: Piece) => { coords: Coords; type: number },
 ): void {
 	const piecesInSource = getPiecesInBox(gamefile, sourceBox);
 	const piecesInDestination = getPiecesInBox(gamefile, destinationBox);

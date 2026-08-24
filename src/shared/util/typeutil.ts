@@ -168,7 +168,7 @@ function buildAllTypesForPlayers(players: Player[], rawTypes: RawType[]): number
 }
 
 function forEachPieceType(
-	callback: (_pieceType: number) => void,
+	callback: (pieceType: number) => void,
 	players: Player[],
 	includePieces: RawType[],
 ): void {

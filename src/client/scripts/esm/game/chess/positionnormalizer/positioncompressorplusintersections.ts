@@ -78,8 +78,8 @@ type AxisGroup = {
  * Takes a pair of coordinates and returns a single
  * value that is unique to the axis line that piece is on.
  */
-type AxisDeterminer = (_coords: Coords) => bigint;
-type AxisDeterminerBD = (_coords: BDCoords) => BigDecimal;
+type AxisDeterminer = (coords: Coords) => bigint;
+type AxisDeterminerBD = (coords: BDCoords) => BigDecimal;
 
 /** All orthogonal axes. */
 type OrthoAxis = '1,0' | '0,1';

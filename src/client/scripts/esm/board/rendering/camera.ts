@@ -52,9 +52,9 @@ export interface Camera {
 	 * white's perspective. ZERO perspective rotations!
 	 * Works both in 3D perspective mode and in 2D black's-perspective mode.
 	 */
-	renderWithoutPerspectiveRotations(_func: Function): void;
-	setPerspectiveRotation(_newRotX: number, _newRotZ: number): void;
-	getPosition(_ignoreDevmode?: boolean): Vec3;
+	renderWithoutPerspectiveRotations(func: Function): void;
+	setPerspectiveRotation(newRotX: number, newRotZ: number): void;
+	getPosition(ignoreDevmode?: boolean): Vec3;
 	getZFar(): number;
 	getCanvasWidthVirtualPixels(): number;
 	getCanvasHeightVirtualPixels(): number;
@@ -67,7 +67,7 @@ export interface Camera {
 	 * @param [pad] Whether to add a small padding to the box to account for screen shakes.
 	 * @returns The bounding box of the screen
 	 */
-	getScreenBoundingBox(_debugMode?: boolean, _pad?: boolean): DoubleBoundingBox;
+	getScreenBoundingBox(debugMode?: boolean, pad?: boolean): DoubleBoundingBox;
 	/**
 	 * Returns the respective world-space bounding box containing the whole screen,
 	 * depending on whether we're in perspective mode or not.
@@ -86,7 +86,7 @@ export interface Camera {
 	 * @param [debugMode] Whether developer mode is enabled. If omitted, the current debug status is used.
 	 * @returns The height of the screen in squares
 	 */
-	getScreenHeightWorld(_debugMode?: boolean): number;
+	getScreenHeightWorld(debugMode?: boolean): number;
 	/**
 	 * Returns a copy of the current view matrix.
 	 * @returns The view matrix
@@ -94,15 +94,15 @@ export interface Camera {
 	getViewMatrix(): Mat4;
 	/** Returns the live projMatrix and viewMatrix. Callers must not mutate them. */
 	getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 };
-	init(_glContext: WebGL2RenderingContext, _canvasElement: HTMLCanvasElement): void;
+	init(glContext: WebGL2RenderingContext, canvasElement: HTMLCanvasElement): void;
 	/**
 	 * Wires the window/document listeners that keep the camera synced with the
 	 * interactive game. The preview instance intentionally never calls this, so it
 	 * doesn't react to window resizes or global FOV changes.
 	 */
 	wireGlobalListeners(): void;
-	setViewMatrix(_newMatrix: Mat4): void;
-	initViewMatrix(_ignoreRotations?: boolean): void;
+	setViewMatrix(newMatrix: Mat4): void;
+	initViewMatrix(ignoreRotations?: boolean): void;
 	onPositionChange(): void;
 	/**
 	 * Returns the scale at which 1 physical pixel on the screen equals 1 tile.
@@ -131,7 +131,7 @@ interface CameraHooks {
 	/** Flags the render loop that a visual change occurred this frame. */
 	onVisualChange?: () => void;
 	/** Notifies app code that the canvas pixel buffer resized. */
-	onCanvasResize?: (_detail: { width: number; height: number }) => void;
+	onCanvasResize?: (detail: { width: number; height: number }) => void;
 }
 
 // Constants -------------------------------------------------------------

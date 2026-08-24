@@ -49,57 +49,57 @@ interface InputListener {
 	/** Whether this input listener has experience at least one input event the past frame. */
 	atleastOneInput: () => boolean;
 	/** Whether the given mouse button experienced a click-down this frame. */
-	isMouseDown(_button: MouseButton): boolean;
+	isMouseDown(button: MouseButton): boolean;
 	/** Removes the mouse down so that other scripts don't also use it. Also removes the pointer down. */
-	claimMouseDown(_button: MouseButton): void;
+	claimMouseDown(button: MouseButton): void;
 	/** Removes the pointer down so that other scripts don't also use it. */
-	claimPointerDown(_pointerId: string): void;
+	claimPointerDown(pointerId: string): void;
 	/** Removes the simulated mouse click so that other scripts don't also use it. */
-	claimMouseClick(_button: MouseButton): void;
+	claimMouseClick(button: MouseButton): void;
 	/**
 	 * Resets the simulated mouse click on mouse-down so that
 	 * when it released it DOESN'T count as a click.
 	 */
-	cancelMouseClick(_button: MouseButton): void;
+	cancelMouseClick(button: MouseButton): void;
 	/** Whether the given mouse button is currently held down. */
-	isMouseHeld(_button: MouseButton): boolean;
+	isMouseHeld(button: MouseButton): boolean;
 	/** Returns true if the most recent pointer for a specific mouse button action is a touch (not mouse). */
-	isMouseTouch(_button: MouseButton): boolean;
+	isMouseTouch(button: MouseButton): boolean;
 	/** Returns true if the given pointer is a touch (not mouse). */
-	isPointerTouch(_pointerId: string): boolean;
+	isPointerTouch(pointerId: string): boolean;
 	/** Returns the id of the LOGICAL pointer that most recently performed an action on the specified mouse button. */
-	getMouseId(_button: MouseButton): string | undefined;
+	getMouseId(button: MouseButton): string | undefined;
 	/** Returns the id of the PHYSICAL pointer that most recently performed an action on the specified mouse button. */
-	getMousePhysicalId(_button: MouseButton): string | undefined;
+	getMousePhysicalId(button: MouseButton): string | undefined;
 	/** Returns the last known pointer position that trigerred a simulated event for the given mouse button. */
-	getMousePosition(_button: MouseButton): DoubleCoords | undefined;
+	getMousePosition(button: MouseButton): DoubleCoords | undefined;
 	/** Whether the given mouse button simulated a full CLICK this frame. */
-	isMouseClicked(_button: MouseButton): boolean;
+	isMouseClicked(button: MouseButton): boolean;
 	/** Whether the given mouse button experience a double-click-down this frame. */
-	isMouseDoubleClickDragged(_button: MouseButton): boolean;
+	isMouseDoubleClickDragged(button: MouseButton): boolean;
 	/**
 	 * Toggles all-left click actions being treated as right-click actions.
 	 * This is useful for allowing fingers to right click.
 	 */
-	setTreatLeftasRight(_value: boolean): void;
+	setTreatLeftasRight(value: boolean): void;
 	/** Returns the position of the given LOGICAL pointer id, if it still exists. */
-	getPointerPos(_pointerId?: string): DoubleCoords | undefined;
+	getPointerPos(pointerId?: string): DoubleCoords | undefined;
 	/** Returns the position of the given PHYSICAL pointer id, if it still exists. */
-	getPhysicalPointerPos(_pointerId?: string): DoubleCoords | undefined;
+	getPhysicalPointerPos(pointerId?: string): DoubleCoords | undefined;
 	/** Returns the PHYSICAL pointer id this pointer is attached to. */
-	getPhysicalPointerIdOfPointer(_pointerId: string): string | undefined;
+	getPhysicalPointerIdOfPointer(pointerId: string): string | undefined;
 	/**
 	 * Returns the delta movement of the given PHYSICAL pointer id over the
 	 * past frame, if it still exists. The mouse pointer's id is 'mouse'.
 	 */
-	getPhysicalPointerDelta(_physicalPointerId: string): DoubleCoords | undefined;
+	getPhysicalPointerDelta(physicalPointerId: string): DoubleCoords | undefined;
 	/**
 	 * Returns undefined if the pointer doesn't exist (finger has since lifted), or mouse isn't supported.
 	 * The mouse pointer's id is 'mouse'.
 	 */
-	getPointerVel(_pointerId: string): DoubleCoords | undefined;
+	getPointerVel(pointerId: string): DoubleCoords | undefined;
 	/** Returns the ids of all existing LOGICAL pointers for the given button action. */
-	getAllPointers(_button: MouseButton): string[];
+	getAllPointers(button: MouseButton): string[];
 	/** Returns the ids of all existing touch LOGICAL pointers, regardless of what button action they were for. */
 	getAllTouchPointers(): string[];
 	/** Returns the ids of all existing PHYSICAL pointers. */
@@ -108,19 +108,19 @@ interface InputListener {
 	 * Whether the given LOGICAL pointer is currently being held down.
 	 * Which also happens to be true if the pointer still EXISTS.
 	 */
-	isPointerHeld(_pointerId: string): boolean;
+	isPointerHeld(pointerId: string): boolean;
 	/** Whether the given LOGICAL pointer still exists (held down). */
-	pointerExists(_pointerId: string): boolean;
+	pointerExists(pointerId: string): boolean;
 	/** Returns a list of all LOGICAL pointers that were pressed down this frame for the given button action. */
-	getPointersDown(_button: MouseButton): string[];
+	getPointersDown(button: MouseButton): string[];
 	/** Returns a list of all touch LOGICAL pointers that were pressed down this frame, regardless of what button action they were for. */
 	getTouchPointersDown(): string[];
 	/** Returns the number of pointers that were pressed down this frame. */
 	getPointersDownCount(): number;
 	/** Returns whether the provided LOGICAL pointer belongs to the provided PHYSICAL pointer. */
 	doesPointerBelongToPhysicalPointer(
-		_logicalPointerId: string,
-		_physicalPointerId: string,
+		logicalPointerId: string,
+		physicalPointerId: string,
 	): boolean;
 	/** Returns how much the wheel has scrolled this frame. */
 	getWheelDelta(): number;
@@ -130,11 +130,11 @@ interface InputListener {
 	 * @param requireMetaKey - If true, only returns true if a meta key (Ctrl/Cmd) was also held.
 	 * @param requireShiftKey - If true, only returns true if the Shift key was also held.
 	 */
-	isKeyDown(_keyCode: string, _requireMetaKey?: boolean, _requireShiftKey?: boolean): boolean;
+	isKeyDown(keyCode: string, requireMetaKey?: boolean, requireShiftKey?: boolean): boolean;
 	/** Whether the provided keyboard key is currently being held down. */
-	isKeyHeld(_keyCode: string): boolean;
+	isKeyHeld(keyCode: string): boolean;
 	/** Removes the key-down event for the given key code so that other scripts don't also use it. */
-	claimKey(_keyCode: string): void;
+	claimKey(keyCode: string): void;
 	/** Call when done with the input listener. This closes all its event listeners. */
 	removeEventListeners(): void;
 	/** The element this input listener is attached to. */

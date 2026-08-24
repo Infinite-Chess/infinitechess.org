@@ -63,7 +63,7 @@ type Change = {
  * the piece lists to reflect that move, or modifies the mesh of the pieces,
  * depending on the function, BUT NOT BOTH.
  */
-type genericChangeFunc<T> = (_actiondata: T, _change: Change) => void;
+type genericChangeFunc<T> = (actiondata: T, change: Change) => void;
 
 /**
  * An actionlist is a dictionary links actions to functions.

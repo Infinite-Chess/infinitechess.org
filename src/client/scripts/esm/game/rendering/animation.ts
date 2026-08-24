@@ -613,7 +613,7 @@ function getCurrentAnimationPosition(
 function forEachActiveKeyframe<T>(
 	keyframes: Map<number, T>,
 	segment: number,
-	callback: (_value: T) => void,
+	callback: (value: T) => void,
 ): void {
 	for (const [k, v] of keyframes) {
 		if (k < segment) continue;

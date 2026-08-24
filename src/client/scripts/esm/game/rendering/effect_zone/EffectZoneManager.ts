@@ -52,9 +52,9 @@ export interface Zone {
 	/** Returns the current post processing pass effects for this zone. */
 	readonly getPasses: () => PostProcessPass[];
 	/** Fades in the ambience. */
-	readonly fadeInAmbience: (_transitionDurationMs: number) => void;
+	readonly fadeInAmbience: (transitionDurationMs: number) => void;
 	/** Fades out the ambience, then stops the track playing. */
-	readonly fadeOutAmbience: (_transitionDurationMs: number) => void;
+	readonly fadeOutAmbience: (transitionDurationMs: number) => void;
 }
 
 /**

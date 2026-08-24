@@ -612,8 +612,8 @@ function findLineBoxIntersectionsBDHelper<T extends bigint | BigDecimal>(
 	startCoordsSum: BigDecimal,
 	box: { left: T; right: T; bottom: T; top: T },
 	boxBD: BoundingBoxBD,
-	vertIntectFunc: (_A1: T, _B1: T, _C1: T, _x: T) => BDCoords,
-	horzIntsectFunc: (_A1: T, _B1: T, _C1: T, _y: T) => BDCoords,
+	vertIntectFunc: (A1: T, B1: T, C1: T, x: T) => BDCoords,
+	horzIntsectFunc: (A1: T, B1: T, C1: T, y: T) => BDCoords,
 	log = false,
 ): { coords: BDCoords; positiveDotProduct: boolean }[] {
 	// Check for intersections with each of the four box edges

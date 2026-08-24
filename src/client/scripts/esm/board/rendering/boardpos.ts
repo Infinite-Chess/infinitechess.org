@@ -40,10 +40,10 @@ export interface BoardPos {
 	getBoardScaleAsNumber(): number;
 	getPanVel(): DoubleCoords;
 	getScaleVel(): number;
-	setBoardPos(_newPos: BDCoords): void;
-	setBoardScale(_newScale: BigDecimal): void;
-	setPanVel(_newPanVel: DoubleCoords): void;
-	setScaleVel(_newScaleVel: number): void;
+	setBoardPos(newPos: BDCoords): void;
+	setBoardScale(newScale: BigDecimal): void;
+	setPanVel(newPanVel: DoubleCoords): void;
+	setScaleVel(newScaleVel: number): void;
 	/** Erases all board pan & scale velocity. */
 	eraseMomentum(): void;
 	boardHasMomentum(): boolean;

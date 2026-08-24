@@ -193,10 +193,10 @@ const shortRangeJumpDictionary: { [key: number]: number } = {
 
 // weights for the evaluation function
 let pieceExistenceEvalDictionary: { [key: number]: number };
-let distancesEvalDictionary: { [key: number]: [number, (_square: DoubleCoords) => number][] };
+let distancesEvalDictionary: { [key: number]: [number, (square: DoubleCoords) => number][] };
 let legalMoveEvalDictionary: { [key: number]: { [key: number]: number } };
 let centerOfMassEvalDictionary: {
-	[key: string]: [number, number, number, (_square: DoubleCoords) => number][];
+	[key: string]: [number, number, number, (square: DoubleCoords) => number][];
 };
 
 // number of candidate squares for white rider pieces to consider along a certain direction (2*wiggleroom + 1)

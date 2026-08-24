@@ -16,7 +16,7 @@ import { rawTypes as r } from '../../util/typeutil.js';
 /**
  * Function that queues all of the changes a special move makes when executed.
  */
-type SpecialMoveFunction = (_boardsim: Board, _piece: Piece, _move: MoveRunning) => boolean;
+type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: MoveRunning) => boolean;
 
 /** All properties of the Move that special move functions need to access */
 interface MoveRunning extends MoveTagged, Edit {}

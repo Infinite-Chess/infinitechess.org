@@ -18,7 +18,7 @@ export interface PostProcessPass {
 	 * @param gl The WebGL2 rendering context.
 	 * @param inputTexture The texture to read from (the result of the previous pass).
 	 */
-	render(_gl: WebGL2RenderingContext, _inputTexture: WebGLTexture): void;
+	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void;
 }
 
 /**

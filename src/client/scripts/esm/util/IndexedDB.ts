@@ -84,7 +84,7 @@ function initDB(): Promise<IDBDatabase> {
 }
 
 /** Run a readonly transaction and return the request result. */
-async function withRead<T>(op: (_store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+async function withRead<T>(op: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
 	const db = await initDB();
 	return new Promise<T>((resolve, reject) => {
 		// Open a readonly transaction on the object store
@@ -101,7 +101,7 @@ async function withRead<T>(op: (_store: IDBObjectStore) => IDBRequest<T>): Promi
 }
 
 /** Run a readwrite transaction. Resolves when the transaction completes. */
-async function withWrite<R>(op: (_store: IDBObjectStore) => IDBRequest<R>): Promise<void> {
+async function withWrite<R>(op: (store: IDBObjectStore) => IDBRequest<R>): Promise<void> {
 	const db = await initDB();
 	return new Promise<void>((resolve, reject) => {
 		// Open a readwrite transaction to modify data

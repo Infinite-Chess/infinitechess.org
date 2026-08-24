@@ -27,7 +27,7 @@ export interface ScreenShake {
 	 * Adds trauma, triggering or intensifying the shake.
 	 * @param amount The amount of trauma to add (usually between 0.1 and 1.0).
 	 */
-	trigger(_amount: number): void;
+	trigger(amount: number): void;
 	/** Decays the trauma level. Call once per frame. */
 	update(): void;
 	/**

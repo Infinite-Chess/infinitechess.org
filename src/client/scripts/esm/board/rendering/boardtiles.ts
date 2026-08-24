@@ -34,7 +34,7 @@ export interface BoardTiles {
 	/** Loads and generates this context's tile textures. */
 	init(): Promise<void>;
 	/** Renders the board tiles (solid cover + fractal boards). */
-	render(_noiseTextures?: NoiseTextures, _uniforms?: Record<string, any>): void;
+	render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void;
 	/** Renders the solid grey cover behind the tiles. */
 	renderSolidCover(): void;
 }

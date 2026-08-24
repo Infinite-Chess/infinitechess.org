@@ -29,14 +29,14 @@ export interface TextureCache {
 	 * @param gl - The WebGL2 rendering context.
 	 * @param boardsim - The board containing the list of piece types used.
 	 */
-	initTexturesForGame(_gl: WebGL2RenderingContext, _boardsim: BoardPreview): Promise<void>;
+	initTexturesForGame(gl: WebGL2RenderingContext, boardsim: BoardPreview): Promise<void>;
 	/**
 	 * Retrieves a WebGLTexture from the cache.
 	 * ASSUMES `initTexturesForGame` has been called successfully for the current game.
 	 * @param type - The piece type.
 	 * @returns The cached WebGLTexture.
 	 */
-	getTexture(_type: number): WebGLTexture;
+	getTexture(type: number): WebGLTexture;
 }
 
 // Factory ----------------------------------------------------------

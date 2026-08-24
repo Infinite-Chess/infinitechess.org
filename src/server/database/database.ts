@@ -200,8 +200,8 @@ function columnIsNullable(tableName: string, columnName: string): boolean {
  * ```
  */
 function transaction<Args extends unknown[], Return>(
-	callback: (..._args: Args) => Return,
-): (..._args: Args) => Return {
+	callback: (...args: Args) => Return,
+): (...args: Args) => Return {
 	return db.transaction(callback);
 }
 
