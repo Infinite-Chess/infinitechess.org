@@ -18,9 +18,10 @@ import * as z from 'zod';
 import winconutil from './chess/util/winconutil.js';
 import { players } from './util/typeutil.js';
 import { isRatedAllowed } from './chess/variants/servervalidation.js';
+import { SeekVariantSchema } from './chess/variants/variantselection.js';
 import { GameModifierSchema } from './util/modutil.js';
 import clockutil, { TimeControlSchema } from './chess/util/clockutil.js';
-import { GameIDSchema, GameModeSchema, SeekIdSchema, SeekVariantSchema } from './domain.js';
+import { GameIDSchema, GameModeSchema, SeekIdSchema } from './domain.js';
 
 // General Route ---------------------------------------------------------------
 

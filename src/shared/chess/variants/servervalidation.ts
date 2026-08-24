@@ -13,7 +13,7 @@ import type { VariantCode } from '../util/variantcodes.js';
 import type { TimeControl } from '../../chess/util/clockutil.js';
 import type { GameModifier } from '../../util/modutil.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
-import type { GameStateVariant, SeekVariant } from '../../domain.js';
+import type { GameStateVariant, SeekVariant } from '../../chess/variants/variantselection.js';
 
 import variantpreviewer from '../logic/variantpreviewer.js';
 import { VariantLeaderboards } from './validleaderboard.js';

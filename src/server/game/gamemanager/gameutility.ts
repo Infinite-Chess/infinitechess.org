@@ -11,7 +11,7 @@
 import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
-import type { SeekVariant } from '../../../shared/domain.js';
+import type { SeekVariant } from '../../../shared/chess/variants/variantselection.js';
 import type { ClockValues } from '../../../shared/chess/util/clockutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';

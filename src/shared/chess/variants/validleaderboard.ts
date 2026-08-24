@@ -1,6 +1,6 @@
 // src/shared/chess/variants/validleaderboard.ts
 
-import type { SeekVariant } from '../../domain.js';
+import type { SeekVariant } from '../../chess/variants/variantselection.js';
 import type { VariantCode } from '../util/variantcodes.js';
 
 /**

@@ -12,6 +12,7 @@ import type { RatingData } from '../../utility/ratingcalculation.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { ServerGame } from './servergametypes.js';
 import type { MovePacket } from '../../../shared/chess/logic/icn/icnconverter.js';
+import type { SeekVariant } from '../../../shared/chess/variants/variantselection.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type {
@@ -20,7 +21,6 @@ import type {
 	Rating,
 } from '../../../shared/chess/util/metadatautil.js';
 import type {
-	SeekVariant,
 	StaticGameSetup,
 	StaticGameState,
 	ServerUsernameContainer,

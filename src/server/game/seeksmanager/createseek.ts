@@ -9,7 +9,7 @@
  */
 
 import type { AuthSeek } from './seekutility.js';
-import type { SeekVariant } from '../../../shared/domain.js';
+import type { SeekVariant } from '../../../shared/chess/variants/variantselection.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { MetaData, Rating } from '../../../shared/chess/util/metadatautil.js';
 import type { CreateSeekMessage } from '../../../shared/serverbound.js';

@@ -9,22 +9,23 @@
  * direction it travels instead: serverbound.ts (client → server) or clientbound.ts
  * (server → client), beside the route union that carries it.
  *
- * This file sits at the TOP of the shared ladder, so a schema the chess layer also
- * needs is owned down there instead, beside the vocabulary it describes.
+ * This file sits at the TOP of the shared ladder: nothing under chess/ may import from
+ * here, so a schema the chess layer also needs is owned down there instead, beside the
+ * vocabulary it describes.
  */
 
 import type { ValidEngine } from './chess/engines/engine.js';
 import type { TimeControl } from './chess/util/clockutil.js';
-import type { VariantCode } from './chess/util/variantcodes.js';
 import type { GameConclusion } from './chess/util/winconutil.js';
+import type { GameStateVariant } from './chess/variants/variantselection.js';
 import type { Player, PlayerGroup } from './util/typeutil.js';
 
 import * as z from 'zod';
 
 import typeschemas from './chess/util/typeschemas.js';
 import { RatingSchema } from './chess/util/metadatautil.js';
-import { VARIANT_CODES } from './chess/util/variantcodes.js';
 import { TimeControlSchema } from './chess/util/clockutil.js';
+import { OutSeekVariantSchema } from './chess/variants/variantselection.js';
 import { GameModifierSchema, GameModifier } from './util/modutil.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
@@ -51,22 +52,6 @@ export const GameIDSchema = z.number().int().nonnegative();
 
 // Plain types, not schemas: these travel over HTTP and SSR, which the client casts
 // rather than validates — nothing ever parses them. See the note at the top of the file.
-
-/** A game's variant: a preset `code`, or a `custom` game (position sourced from the ICN / live state). */
-export type GameStateVariant =
-	| {
-			kind: 'preset';
-			code: VariantCode;
-	  }
-	| {
-			kind: 'custom';
-			/**
-			 * The ICN the game's starting position was set from, carrying the source-variant
-			 * tags (`Variant`/`UTCDate`/`UTCTime`) that identify what it's a position of.
-			 * Present only on the live path — a dead game's comes from {@link DeadGameState.icn}.
-			 */
-			position?: string;
-	  };
 
 /**
  * The static setup of a game: how it was configured at creation — variant, clock settings,
@@ -110,29 +95,6 @@ export interface DeadGameState extends StaticGameState {
 }
 
 // Seek Schemas ---------------------------------------------------------------
-
-/**
- * The variant selection as sent by the client when creating a seek, and the form a seek stores.
- * A saved position (cloud or local) is resolved to its ICN client-side and travels as 'custom'.
- */
-export type SeekVariant = z.infer<typeof SeekVariantSchema>;
-export const SeekVariantSchema = z.discriminatedUnion('kind', [
-	z.strictObject({ kind: z.literal('preset'), code: z.enum(VARIANT_CODES) }),
-	z.strictObject({
-		kind: z.literal('custom'),
-		position: z.string().min(1),
-	}),
-]);
-
-/**
- * The variant as broadcast to lobby viewers. ICN seeks omit the content so the
- * full ICN text is not sent to every connected client.
- */
-export type OutSeekVariant = z.infer<typeof OutSeekVariantSchema>;
-const OutSeekVariantSchema = z.discriminatedUnion('kind', [
-	z.strictObject({ kind: z.literal('preset'), code: z.enum(VARIANT_CODES) }),
-	z.strictObject({ kind: z.literal('custom') }),
-]);
 
 /** The number of digits generated seek IDs are. */
 export const IDLengthOfSeeks = 5;
