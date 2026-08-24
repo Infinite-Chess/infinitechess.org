@@ -152,7 +152,7 @@ function getPositionKey(gamefile: GameFile): string {
 	// Dropping the metadata the engine ignores doubles as cache hygiene: a change to it
 	// (e.g. the Result on game end) can't miss the cache. Everything else stays — the
 	// engine reads whos turn it is, enpassant, and the game rules from this ICN.
-	engineicn.stripToEngineMetadata(longformIn);
+	engineicn.prepareForEngine(longformIn);
 	return engineicn.serialize(longformIn);
 }
 

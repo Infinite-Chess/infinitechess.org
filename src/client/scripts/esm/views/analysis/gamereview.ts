@@ -443,10 +443,7 @@ function start(): void {
 
 	// Serialize the game once; each position re-slices the move list.
 	longformIn = gamecompressor.compressGamefile(gamefile);
-	engineicn.stripToEngineMetadata(longformIn);
-	// Always hand the engine an explicit world border (its own internal fallback is only 1e15),
-	// so every reviewed position is evaluated over the full safe coordinate range. Matches ceval.
-	longformIn.gameRules.worldBorder = analysisenginebounds.getEngineWorldBorder(gamefile);
+	engineicn.prepareForEngine(longformIn);
 	division = reviewdivision.determineDivision(longformIn.position, mainlineMoves);
 
 	const totalPositions = mainlineNodes.length + 1;

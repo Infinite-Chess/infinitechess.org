@@ -8,18 +8,28 @@
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import apeironborder from '../../../../../../shared/chess/logic/apeironborder.js';
 
 /**
- * Reduces a longform's metadata to the single tag Apeiron reads. Its ICN parser skips every
- * bracketed tag but Variant, which selects variant-specific search heuristics (correction
- * history, Obstocean's quiescence generator) — kept deliberately, even though the position is
- * always given explicitly, because it measurably strengthens the engine on those variants.
+ * Conforms a freshly compressed longform to what Apeiron reads, in place.
+ * Every engine entry point must run this before handing the longform (or its ICN) over.
  *
- * Mutates in place. Safe on a freshly compressed longform, whose metadata is already a copy.
+ * 1. Metadata is reduced to Variant, the only tag Apeiron reads. Redundant beside the explicit
+ *    position, but it selects variant-specific search heuristics (correction history, Obstocean's
+ *    quiescence generator) that measurably strengthen the engine, so it stays.
+ * 2. The world border is clamped to the box Apeiron can actually evaluate in. Given none it
+ *    assumes a far narrower 1e15, and an infinite edge (ICN's `_`) it can't read at all, so every
+ *    position is handed an explicit border it can hold.
+ *
+ * Safe on a freshly compressed longform, whose metadata and gameRules are already copies.
  */
-function stripToEngineMetadata(longform: LongFormatIn): void {
+function prepareForEngine(longform: LongFormatIn): void {
 	const { Variant } = longform.metadata;
 	longform.metadata = Variant !== undefined ? { Variant } : {};
+	longform.gameRules.worldBorder = apeironborder.clampToCap(
+		longform.gameRules.worldBorder,
+		Date.now(),
+	);
 }
 
 /** Serializes an engine-bound longform to the compact ICN every engine consumes. */
@@ -28,6 +38,6 @@ function serialize(longform: LongFormatIn): string {
 }
 
 export default {
-	stripToEngineMetadata,
+	prepareForEngine,
 	serialize,
 };
