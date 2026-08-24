@@ -14,7 +14,7 @@ import type { VariantGroup } from '../../shared/chess/variants/variantregistry.j
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../shared/util/typeutil.js';
 
-import { decodeGameId } from '../database/gamesManager.js';
+import gamesManager from '../database/gamesManager.js';
 import { getDeadGameViewState, GameMetaViewModel } from './gamePageController.js';
 
 // Types --------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ function getPageState(req: Request): AnalysisPageState | undefined {
 	let meta: GameMetaViewModel | undefined;
 	if (idParam !== undefined) {
 		// A game_id was provided in the URL
-		const id = decodeGameId(idParam);
+		const id = gamesManager.decodeID(idParam);
 		if (id === undefined) return undefined; // Malformed id
 		// The analysis page loads games from the DB only, so 404 on anything not in it
 		// (unlike the game page, a still-live game not yet persisted doesn't count).

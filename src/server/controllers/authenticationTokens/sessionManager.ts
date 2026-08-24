@@ -10,8 +10,8 @@ import type { Role } from '../../types.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 import prefsCookie from '../prefsCookie.js';
+import refreshTokenManager from '../../database/refreshTokenManager.js';
 import practiceProgressCookie from '../practiceProgressCookie.js';
-import { addRefreshToken, markRefreshTokenAsConsumed } from '../../database/refreshTokenManager.js';
 import { createMemberInfoCookie, deleteMemberInfoCookie } from './memberInfoCookie.js';
 import { createRefreshTokenCookie, deleteRefreshTokenCookie } from './refreshTokenCookie.js';
 import {
@@ -55,9 +55,9 @@ function freshen(
 	const newToken = signRefreshToken(user_id, username, roles, expiryMillis);
 
 	// Mark old token as consumed so it has a short grace period before it is fully invalidated.
-	markRefreshTokenAsConsumed(tokenRecord.token);
+	refreshTokenManager.markConsumed(tokenRecord.token);
 	// Add the new token to the database.
-	addRefreshToken(req, user_id, newToken, expiryMillis, keepLoggedIn);
+	refreshTokenManager.add(req, user_id, newToken, expiryMillis, keepLoggedIn);
 
 	// Send the new token to the user in their cookies.
 	createSessionCookies(res, user_id, username, newToken, expiryMillis);
@@ -88,7 +88,7 @@ function create(
 	const refreshToken = signRefreshToken(user_id, username, roles, expiryMillis);
 
 	// Save the refresh token to the database
-	addRefreshToken(req, user_id, refreshToken, expiryMillis, keepLoggedIn);
+	refreshTokenManager.add(req, user_id, refreshToken, expiryMillis, keepLoggedIn);
 
 	createSessionCookies(res, user_id, username, refreshToken, expiryMillis);
 }
@@ -97,7 +97,7 @@ function create(
  * Terminates the session of a client by deleting their session, preferences, and practice progress cookies.
  *
  * NOTE: This only clears the cookies from the user's browser.
- * To invalidate the token on the server side, you must also call `deleteRefreshToken(token)`.
+ * To invalidate the token on the server side, you must also call `refreshTokenManager.remove(token)`.
  * This is typically done in a logout route handler.
  * @param res - The response object.
  */

@@ -428,7 +428,7 @@ function prepForShutdown(): void {
 
 /**
  * Restores all live games from the database on server startup.
- * Should be called after initDatabase() and before accepting client connections.
+ * Should be called after databaseTables.initDatabase() and before accepting client connections.
  */
 function restoreLiveGames(): void {
 	const restoredGames = liveGameRestore.restoreAll();

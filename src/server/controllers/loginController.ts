@@ -15,10 +15,10 @@ import type { Request, Response } from 'express';
 import jsutil from '../../shared/util/jsutil.js';
 
 import roles from './roles.js';
+import memberManager from '../database/memberManager.js';
 import sessionManager from './authenticationTokens/sessionManager.js';
-import { deleteRefreshToken } from '../database/refreshTokenManager.js';
+import refreshTokenManager from '../database/refreshTokenManager.js';
 import { testPasswordForRequest } from './authController.js';
-import { updateLoginCountAndLastSeen } from '../database/memberManager.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 /**
@@ -38,7 +38,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 	if (typeof oldRefreshToken === 'string' && oldRefreshToken) {
 		// string, and not empty
 		try {
-			deleteRefreshToken(oldRefreshToken);
+			refreshTokenManager.remove(oldRefreshToken);
 		} catch {
 			// DB error (already logged). Don't block the new login over this.
 		}
@@ -72,7 +72,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 
 	// These operations are "fire and forget" in terms of the client response
 	try {
-		updateLoginCountAndLastSeen(identity.user_id);
+		memberManager.updateLoginCountAndLastSeen(identity.user_id);
 	} catch {
 		// Already logged
 	}

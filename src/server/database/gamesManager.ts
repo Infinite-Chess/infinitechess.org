@@ -8,7 +8,7 @@ import uuid from '../../shared/util/uuid.js';
 import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
-import { ALL_GAMES_COLUMNS, game_id_upper_cap } from './databaseTables.js';
+import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -50,14 +50,14 @@ type GamesColumn = keyof GamesRecord;
  * @returns The numeric id, or `undefined` if the string is malformed, out of range, or
  * non-canonical (e.g. leading zeros) — ensuring each game has exactly one valid URL.
  */
-export function decodeGameId(idStr: string): number | undefined {
+function decodeID(idStr: string): number | undefined {
 	let decoded: number;
 	try {
 		decoded = uuid.base62ToBase10(idStr);
 	} catch {
 		return undefined; // Invalid base62 characters
 	}
-	if (decoded >= game_id_upper_cap) return undefined; // Out of range
+	if (decoded >= databaseTables.GAME_ID_UPPER_CAP) return undefined; // Out of range
 	// Prevents '000f6Ke' from being treated as game id 'f6Ke'
 	if (uuid.base10ToBase62(decoded) !== idStr) return undefined; // Non-canonical encoding
 	return decoded;
@@ -68,7 +68,7 @@ export function decodeGameId(idStr: string): number | undefined {
  * @returns - A unique game_id.
  * @throws If a database error occurs.
  */
-export function genUniqueGameID(): number {
+function genUniqueID(): number {
 	let id: number;
 	do {
 		id = generateRandomGameId();
@@ -81,8 +81,8 @@ export function genUniqueGameID(): number {
  * @returns - A random game_id.
  */
 function generateRandomGameId(): number {
-	// Generate a random number between 0 and game_id_upper_cap
-	return Math.floor(Math.random() * game_id_upper_cap);
+	// Generate a random number between 0 and databaseTables.GAME_ID_UPPER_CAP
+	return Math.floor(Math.random() * databaseTables.GAME_ID_UPPER_CAP);
 }
 
 /**
@@ -108,12 +108,12 @@ function isGameIdTaken(game_id: number): boolean {
  * A miss is an expected outcome (e.g. games aborted before any moves are not stored).
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
-export function getGameData<K extends GamesColumn>(
+function getData<K extends GamesColumn>(
 	game_id: number,
 	columns: K[],
 ): Pick<GamesRecord, K> | undefined {
 	return db.call(() => {
-		db.assertColumnsValid(columns, ALL_GAMES_COLUMNS, 'games');
+		db.assertColumnsValid(columns, databaseTables.ALL_GAMES_COLUMNS, 'games');
 
 		// Arguments are valid, move onto the SQL query
 		const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id = ?`;
@@ -128,13 +128,13 @@ export function getGameData<K extends GamesColumn>(
  * @returns An array of objects with the requested columns.
  * @throws If invalid arguments are provided, if no matches are found, or if a database error occurs.
  */
-export function getMultipleGameData<K extends GamesColumn>(
+function getMultipleData<K extends GamesColumn>(
 	game_id_list: number[],
 	columns: K[],
 ): Pick<GamesRecord, K>[] {
 	return db.call(
 		() => {
-			db.assertColumnsValid(columns, ALL_GAMES_COLUMNS, 'games');
+			db.assertColumnsValid(columns, databaseTables.ALL_GAMES_COLUMNS, 'games');
 
 			// Arguments are valid, move onto the SQL query
 			const placeholders = game_id_list.map(() => '?').join(', ');
@@ -157,7 +157,7 @@ export function getMultipleGameData<K extends GamesColumn>(
  * Inserts one game record.
  * @throws If a database error occurs.
  */
-export function insertGame(record: GamesRecord): void {
+function insert(record: GamesRecord): void {
 	const query = `
 		INSERT INTO games (
 			game_id, date, base_time_seconds, increment_seconds, variant, rated,
@@ -180,10 +180,10 @@ export function insertGame(record: GamesRecord): void {
  * @param updates - Only the columns to change and their new values. `game_id` is not updatable.
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
-export function updateGame(game_id: number, updates: Partial<GamesRecord>): void {
+function update(game_id: number, updates: Partial<GamesRecord>): void {
 	db.runRowUpdate({
 		tableName: 'games',
-		allowedColumns: ALL_GAMES_COLUMNS,
+		allowedColumns: databaseTables.ALL_GAMES_COLUMNS,
 		excludedColumns: ['game_id'],
 		updates,
 		errorContext: `updating game ${game_id}`,
@@ -198,6 +198,20 @@ export function updateGame(game_id: number, updates: Partial<GamesRecord>): void
  * @param game_id - The game to delete.
  * @throws If a database error occurs.
  */
-export function deleteGame(game_id: number): void {
+function remove(game_id: number): void {
 	db.run('DELETE FROM games WHERE game_id = ?', [game_id]);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default {
+	// Methods
+	decodeID,
+	genUniqueID,
+	getData,
+	getMultipleData,
+	// Writes
+	insert,
+	update,
+	remove,
+};

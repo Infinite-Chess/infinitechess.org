@@ -29,10 +29,10 @@ import { players as p, Player, PlayerGroup } from '../../shared/util/typeutil.js
 import tconfig from '../config/translationconfig.js';
 import manifest from '../config/manifest.js';
 import gamemanager from '../game/gamemanager/gamemanager.js';
+import gamesManager from '../database/gamesManager.js';
 import deadgamestate from '../game/gamemanager/deadgamestate.js';
 import memberinfoutil from '../utility/memberinfoutil.js';
 import { getPieceSVG } from '../config/piecesvgcache.js';
-import { decodeGameId } from '../database/gamesManager.js';
 
 // Types -----------------------------------------------------------------------------
 
@@ -105,7 +105,7 @@ type RuleLineViewModel =
  * @throws If a database error occurs.
  */
 function getGamePageState(req: Request): GamePageState | undefined {
-	const id = decodeGameId(req.params['id']!);
+	const id = gamesManager.decodeID(req.params['id']!);
 	if (id === undefined) return undefined; // Malformed id
 
 	const memberInfo = req.memberInfo!;

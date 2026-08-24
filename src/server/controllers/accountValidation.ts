@@ -14,7 +14,7 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 import jsutil from '../../shared/util/jsutil.js';
 import validators from '../../shared/util/validators.js';
 
-import { isBlacklisted } from '../database/blacklistManager.js';
+import blacklistManager from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------
@@ -143,7 +143,7 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 		}
 	}
 	try {
-		if (isBlacklisted(email)) {
+		if (blacklistManager.isBlacklisted(email)) {
 			logEventsAndPrint(
 				`Blacklisted email ${email} tried to create an account!`,
 				'blacklistLog',

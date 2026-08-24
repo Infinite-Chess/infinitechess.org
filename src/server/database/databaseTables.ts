@@ -5,18 +5,18 @@
  */
 
 import db from './database.js';
-import { deleteMember } from './memberManager.js';
-import { startDailyBackups } from './backupManager.js';
-import { removeFromBlacklist } from './blacklistManager.js';
+import memberManager from './memberManager.js';
+import backupManager from './backupManager.js';
+import blacklistManager from './blacklistManager.js';
+import leaderboardsManager from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
-import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 
 // Constants ----------------------------------------------------------------------------------
 
 /** 62**4: Limit of unique user id with 4-digit base-62 user ids! EXCLUSIVE. */
-const user_id_upper_cap: number = 14_776_336;
+const USER_ID_UPPER_CAP: number = 14_776_336;
 /** 62**4: Limit of unique game id with 4-digit base-62 game ids! EXCLUSIVE. */
-const game_id_upper_cap: number = 14_776_336;
+const GAME_ID_UPPER_CAP: number = 14_776_336;
 
 // Table Columns ------------------------------------------------------------------------------
 
@@ -156,8 +156,8 @@ function initDatabase(): void {
 	addModifierColumnsIfNeeded();
 	// Start periodic tasks
 	startPeriodicDatabaseCleanupTasks();
-	startPeriodicLeaderboardRatingDeviationUpdate();
-	startDailyBackups();
+	leaderboardsManager.startPeriodicRatingDeviationUpdate();
+	backupManager.startDaily();
 }
 
 /** Creates the tables in our database if they do not exist. */
@@ -529,7 +529,7 @@ function dropLegacyVerificationColumnsIfPresent(): void {
 		`SELECT user_id FROM members WHERE is_verified = 0`,
 	);
 	for (const member of membersToDelete) {
-		deleteMember(member.user_id, 'unverified');
+		memberManager.remove(member.user_id, 'unverified');
 	}
 	console.log(`Temporary DB migration: purged ${membersToDelete.length} unverified member(s).`);
 
@@ -552,7 +552,7 @@ function clearSpamReportBlacklistEntries(): void {
 		`SELECT email FROM email_blacklist WHERE reason = 'spam_report'`,
 	);
 	for (const row of spamRows) {
-		removeFromBlacklist(row.email); // Logs each removal to blacklistLog for auditability.
+		blacklistManager.remove(row.email); // Logs each removal to blacklistLog for auditability.
 	}
 	if (spamRows.length > 0)
 		console.log(`Temporary DB migration: cleared ${spamRows.length} 'spam_report' blacklist entries.`); // prettier-ignore
@@ -708,10 +708,10 @@ function addModifierColumnsIfNeeded(): void {
 
 // Exports ------------------------------------------------------------------------------------
 
-export {
+export default {
 	// Constants
-	user_id_upper_cap,
-	game_id_upper_cap,
+	USER_ID_UPPER_CAP,
+	GAME_ID_UPPER_CAP,
 	// Table Columns
 	UNIQUE_MEMBERS_COLUMNS,
 	ALL_MEMBERS_COLUMNS,

@@ -9,7 +9,7 @@ import type { Player } from '../../shared/util/typeutil.js';
 import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
-import { ALL_PLAYER_GAMES_COLUMNS } from './databaseTables.js';
+import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -38,14 +38,14 @@ type PlayerGamesColumn = keyof PlayerGamesRecord;
  * @returns An array of objects with the requested columns from player_games.
  * @throws If invalid arguments are provided, if fewer rows than expected are found, or if a database error occurs.
  */
-export function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
+function getOpponentsOfUser<K extends PlayerGamesColumn>(
 	user_id: number,
 	game_id_list: number[],
 	columns: K[],
 ): Pick<PlayerGamesRecord, K>[] {
 	return db.call(
 		() => {
-			db.assertColumnsValid(columns, ALL_PLAYER_GAMES_COLUMNS, 'player_games');
+			db.assertColumnsValid(columns, databaseTables.ALL_PLAYER_GAMES_COLUMNS, 'player_games');
 
 			// Move onto the SQL query
 			const placeholders = game_id_list.map(() => '?').join(', ');
@@ -72,12 +72,12 @@ export function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
  * @returns One row per signed-in player (guests have no row).
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
-export function getPlayerGamesOfGame<K extends PlayerGamesColumn>(
+function getOfGame<K extends PlayerGamesColumn>(
 	game_id: number,
 	columns: K[],
 ): Pick<PlayerGamesRecord, K>[] {
 	return db.call(() => {
-		db.assertColumnsValid(columns, ALL_PLAYER_GAMES_COLUMNS, 'player_games');
+		db.assertColumnsValid(columns, databaseTables.ALL_PLAYER_GAMES_COLUMNS, 'player_games');
 
 		const query = `SELECT ${columns.join(', ')} FROM player_games WHERE game_id = ?`;
 		return db.all<Pick<PlayerGamesRecord, K>>(query, [game_id]);
@@ -94,14 +94,14 @@ export function getPlayerGamesOfGame<K extends PlayerGamesColumn>(
  * @returns Array of objects containing only the requested columns.
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
-export function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
+function getRecentNRatedForUser<K extends PlayerGamesColumn>(
 	user_id: number,
 	leaderboard_id: number,
 	limit: number,
 	columns: K[],
 ): Pick<PlayerGamesRecord, K>[] {
 	return db.call(() => {
-		db.assertColumnsValid(columns, ALL_PLAYER_GAMES_COLUMNS, 'player_games');
+		db.assertColumnsValid(columns, databaseTables.ALL_PLAYER_GAMES_COLUMNS, 'player_games');
 
 		// Move on to the SQL query
 		const selectClause = columns.map((col) => `pg.${col}`).join(', ');
@@ -129,7 +129,7 @@ export function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
  * Inserts one player's row for a game. Guests have no row.
  * @throws If a database error occurs.
  */
-export function insertPlayerGame(record: PlayerGamesRecord): void {
+function insert(record: PlayerGamesRecord): void {
 	const query = `
 		INSERT INTO player_games (
 			user_id, game_id, player_number, score,
@@ -152,14 +152,10 @@ export function insertPlayerGame(record: PlayerGamesRecord): void {
  * @param updates - Only the columns to change and their new values. Keys of the primary key are not updatable.
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
-export function updatePlayerGame(
-	game_id: number,
-	player_number: Player,
-	updates: Partial<PlayerGamesRecord>,
-): void {
+function update(game_id: number, player_number: Player, updates: Partial<PlayerGamesRecord>): void {
 	db.runRowUpdate({
 		tableName: 'player_games',
-		allowedColumns: ALL_PLAYER_GAMES_COLUMNS,
+		allowedColumns: databaseTables.ALL_PLAYER_GAMES_COLUMNS,
 		excludedColumns: ['user_id', 'game_id', 'player_number'],
 		updates,
 		errorContext: `updating player_games row (game ${game_id}, player ${player_number})`,
@@ -167,3 +163,15 @@ export function updatePlayerGame(
 		whereValues: [game_id, player_number],
 	});
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default {
+	// Methods
+	getOpponentsOfUser,
+	getOfGame,
+	getRecentNRatedForUser,
+	// Writes
+	insert,
+	update,
+};

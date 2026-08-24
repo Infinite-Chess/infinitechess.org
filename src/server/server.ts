@@ -16,7 +16,7 @@ import app from './app.js';
 import gamemanager from './game/gamemanager/gamemanager.js';
 import socketServer from './socket/socketServer.js';
 import startupLogger from './utility/startupLogger.js';
-import { initDatabase } from './database/databaseTables.js';
+import databaseTables from './database/databaseTables.js';
 import { getCertOptions } from './config/certOptions.js';
 import { initDevEnvironment } from './setupDev.js';
 import { logEventsAndPrint, startPeriodicLogCleanup } from './utility/logEvents.js';
@@ -46,7 +46,7 @@ process.on('uncaughtException', (error: unknown) => {
 
 // Startup ------------------------------------------------------------------------------------
 
-initDatabase();
+databaseTables.initDatabase();
 // Ensure our workspace is ready for the dev environment
 initDevEnvironment();
 startPeriodicLogCleanup();

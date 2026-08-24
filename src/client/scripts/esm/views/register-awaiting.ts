@@ -33,7 +33,7 @@ const POLL_BACKOFF_SCHEDULE: readonly { readonly untilMs: number; readonly inter
 
 /**
  * Stop polling after this long, as a backstop. Set just past the 24h pending-registration expiry
- * (PENDING_REGISTRATION_EXPIRY_MS, server-side) — by then the poll returns 'expired' and the
+ * (EXPIRY_MS, server-side) — by then the poll returns 'expired' and the
  * page reloads, so this only catches a truly orphaned tab (e.g. clock skew) that never does.
  */
 const POLL_MAX_DURATION_MS = 1000 * 60 * 60 * 24 + 1000 * 60; // 24h 1m

@@ -53,8 +53,8 @@ import drawoffers from './drawoffers.js';
 import gameutility from './gameutility.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
 import ratingcalculation from '../../utility/ratingcalculation.js';
+import leaderboardsManager from '../../database/leaderboardsManager.js';
 import componentTranslationLoader from '../../config/componentTranslationLoader.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
 // Ratings ------------------------------------------------------------------------------------
 
@@ -62,7 +62,7 @@ import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.
  * Returns the current elo of all players in the game on the leaderboard
  * of the variant being played, or the INFINITY leaderboard if the variant does not have a leaderboard.
  * @returns An object containing the rating for non-guests in the game, and whether we are confident in that rating, IF the variant has a leaderboard.
- * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard}).
+ * @throws If a database error occurs (from {@link leaderboardsManager.getEloOfPlayer}).
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
@@ -75,7 +75,10 @@ function getRatingDataForGamePlayers(
 	for (const [color, { identifier }] of Object.entries(players)) {
 		if (!identifier.signedIn) continue; // Not a member, no rating to send
 		const user_id = identifier.user_id;
-		ratingData[Number(color) as Player] = getEloOfPlayerInLeaderboard(user_id, leaderboardId);
+		ratingData[Number(color) as Player] = leaderboardsManager.getEloOfPlayer(
+			user_id,
+			leaderboardId,
+		);
 	}
 
 	return ratingData;

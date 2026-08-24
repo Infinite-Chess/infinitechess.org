@@ -12,7 +12,7 @@ import MessageValidator from 'sns-validator';
 import jsutil from '../../shared/util/jsutil.js';
 
 import { logZodError } from '../utility/zodlogger.js';
-import { addToBlacklist } from '../database/blacklistManager.js';
+import blacklistManager from '../database/blacklistManager.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------
@@ -212,7 +212,7 @@ function blacklistRecipients(recipients: Recipients): void {
 			'awsNotifications',
 		);
 		try {
-			addToBlacklist(emailAddress, 'bounce');
+			blacklistManager.add(emailAddress, 'bounce');
 		} catch {
 			// Already logged
 		}

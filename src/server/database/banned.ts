@@ -12,10 +12,10 @@ import path from 'path';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-const bannedPath = path.resolve('database/banned.json');
+const BANNED_PATH = path.resolve('database/banned.json');
 
 ensureBannedFileExists: {
-	if (fs.existsSync(bannedPath)) break ensureBannedFileExists; // Already exists
+	if (fs.existsSync(BANNED_PATH)) break ensureBannedFileExists; // Already exists
 
 	const content = JSON.stringify(
 		{
@@ -26,8 +26,8 @@ ensureBannedFileExists: {
 		2,
 	);
 
-	fs.mkdirSync(path.dirname(bannedPath), { recursive: true });
-	fs.writeFileSync(bannedPath, content);
+	fs.mkdirSync(path.dirname(BANNED_PATH), { recursive: true });
+	fs.writeFileSync(BANNED_PATH, content);
 
 	console.log('Generated banned file');
 }
@@ -38,7 +38,7 @@ let bannedJSON: {
 	'browser-ids': Record<string, unknown>;
 };
 try {
-	bannedJSON = JSON.parse(fs.readFileSync(bannedPath, 'utf-8'));
+	bannedJSON = JSON.parse(fs.readFileSync(BANNED_PATH, 'utf-8'));
 } catch (error: unknown) {
 	if (process.env['VITEST']) {
 		console.warn('Mocking banned.json for test environment');

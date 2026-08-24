@@ -10,8 +10,8 @@ import type { Request, Response } from 'express';
 import type { PendingRegistrationRecord } from '../database/pendingRegistrationManager.js';
 
 import { logEvents } from '../utility/logEvents.js';
-import { promotePendingRegistration } from '../database/memberManager.js';
-import { getPendingRegistrationByVerificationToken } from '../database/pendingRegistrationManager.js';
+import memberManager from '../database/memberManager.js';
+import pendingRegistrationManager from '../database/pendingRegistrationManager.js';
 
 // Functions -------------------------------------------------------------------------
 
@@ -38,7 +38,7 @@ function getPageState(req: Request): { state: 'prompt' | 'verified' | 'invalid' 
 	const token = req.params['token']!;
 
 	// Any db error here propagates to errorHandler which renders a 500 error page, intentional.
-	const pending = getPendingRegistrationByVerificationToken(token);
+	const pending = pendingRegistrationManager.getByVerificationToken(token);
 	if (!isVerificationTokenLive(pending)) return { state: 'invalid' };
 	// Live: a non-null member_user_id means it was already promoted; otherwise it still awaits the click.
 	return { state: pending.member_user_id !== null ? 'verified' : 'prompt' };
@@ -50,7 +50,7 @@ function verifyPendingRegistration(req: Request, res: Response): void {
 	const token = req.params['token']!;
 
 	try {
-		const pending = getPendingRegistrationByVerificationToken(token);
+		const pending = pendingRegistrationManager.getByVerificationToken(token);
 
 		// Unknown token, or expired before it was ever promoted → dead link.
 		if (!isVerificationTokenLive(pending)) {
@@ -65,7 +65,7 @@ function verifyPendingRegistration(req: Request, res: Response): void {
 		}
 
 		// Promote: actually create the member and mark the pending row verified.
-		const user_id = promotePendingRegistration(pending);
+		const user_id = memberManager.promote(pending);
 
 		logEvents(`Created new member "${pending.username}" (ID ${user_id}).`, 'newMemberLog');
 

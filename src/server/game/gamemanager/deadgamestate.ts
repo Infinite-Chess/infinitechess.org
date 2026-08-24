@@ -27,11 +27,11 @@ import { players } from '../../../shared/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { getFormattedEngineName } from '../../../shared/chess/engines/engine.js';
 
-import { getGameData } from '../../database/gamesManager.js';
+import gamesManager from '../../database/gamesManager.js';
+import memberManager from '../../database/memberManager.js';
 import ratingcalculation from '../../utility/ratingcalculation.js';
-import { getPlayerGamesOfGame } from '../../database/playerGamesManager.js';
-import { getEngineGamesOfGame } from '../../database/engineGamesManager.js';
-import { getMemberDataByCriteria } from '../../database/memberManager.js';
+import playerGamesManager from '../../database/playerGamesManager.js';
+import engineGamesManager from '../../database/engineGamesManager.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ const STATIC_PLAYER_COLUMNS = ['player_number', 'user_id', 'elo_at_game', 'ratin
  * @throws If a database error occurs.
  */
 function resolveParticipantColor(game_id: number, user_id: number): Player | undefined {
-	const rows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id']);
+	const rows = playerGamesManager.getOfGame(game_id, ['player_number', 'user_id']);
 	return rows.find((r) => r.user_id === user_id)?.player_number as Player | undefined;
 }
 
@@ -81,9 +81,9 @@ function produceStaticState(game_id: number):
 			ratingChanges?: PlayerGroup<number>;
 	  }
 	| undefined {
-	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS, 'move_count', 'icn']);
+	const game = gamesManager.getData(game_id, [...STATIC_GAME_COLUMNS, 'move_count', 'icn']);
 	if (game === undefined) return undefined;
-	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS, 'elo_change_from_game']); // prettier-ignore
+	const playerRows = playerGamesManager.getOfGame(game_id, [...STATIC_PLAYER_COLUMNS, 'elo_change_from_game']); // prettier-ignore
 	const engineParticipant = getEngineParticipant(game_id);
 
 	const state = assembleStaticGameState(game, playerRows, engineParticipant);
@@ -117,10 +117,10 @@ function produceStaticState(game_id: number):
  * @throws If a database error occurs.
  */
 function produceGameState(game_id: number): DeadGameState | undefined {
-	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS, 'icn']);
+	const game = gamesManager.getData(game_id, [...STATIC_GAME_COLUMNS, 'icn']);
 	if (game === undefined) return undefined;
 
-	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS]);
+	const playerRows = playerGamesManager.getOfGame(game_id, [...STATIC_PLAYER_COLUMNS]);
 	const engineParticipant = getEngineParticipant(game_id);
 
 	return {
@@ -156,7 +156,7 @@ function assembleStaticGameState(
 		}
 
 		// A deleted account keeps its row but loses its members lookup.
-		const member = getMemberDataByCriteria(['username'], 'user_id', row.user_id);
+		const member = memberManager.getDataByCriteria(['username'], 'user_id', row.user_id);
 		const container: ServerUsernameContainer = {
 			type: 'player',
 			username: member?.username ?? DELETED_USER_DISPLAY_NAME,
@@ -200,7 +200,11 @@ function assembleStaticGameState(
  * @throws If a database error occurs.
  */
 function getEngineParticipant(game_id: number): EngineParticipant | undefined {
-	const row = getEngineGamesOfGame(game_id, ['player_number', 'engine', 'strength_level'])[0];
+	const row = engineGamesManager.getOfGame(game_id, [
+		'player_number',
+		'engine',
+		'strength_level',
+	])[0];
 	if (!row) return undefined;
 	return {
 		color: row.player_number as Player,

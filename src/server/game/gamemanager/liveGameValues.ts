@@ -19,15 +19,9 @@ import type {
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 
 import db from '../../database/database.js';
-import { insertLiveGame, updateLiveGame } from '../../database/liveGamesManager.js';
-import {
-	insertLivePlayerGame,
-	updateLivePlayerGame,
-} from '../../database/livePlayerGamesManager.js';
-import {
-	insertLiveEngineGame,
-	updateLiveEngineGame,
-} from '../../database/liveEngineGamesManager.js';
+import liveGamesManager from '../../database/liveGamesManager.js';
+import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
+import liveEngineGamesManager from '../../database/liveEngineGamesManager.js';
 
 // Value Computation --------------------------------------------------------------------------
 
@@ -67,13 +61,13 @@ function persistCurrentClockTimes(servergame: ServerGame): void {
 	if (servergame.untimed) return;
 	for (const playerStr of Object.keys(servergame.match.playerData)) {
 		const player = Number(playerStr) as Player;
-		updateLivePlayerGame(servergame.match.id, player, {
+		livePlayerGamesManager.update(servergame.match.id, player, {
 			time_remaining_ms: servergame.clocks.currentTime[player] ?? null,
 		});
 	}
 	const engine = servergame.match.engineParticipant;
 	if (engine)
-		updateLiveEngineGame(servergame.match.id, engine.color, {
+		liveEngineGamesManager.update(servergame.match.id, engine.color, {
 			time_remaining_ms: servergame.clocks.currentTime[engine.color] ?? null,
 		});
 }
@@ -147,11 +141,11 @@ function onGameCreated(servergame: ServerGame): void {
 	);
 
 	persist(() => {
-		insertLiveGame(record);
-		for (const playerRecord of playerRecords) insertLivePlayerGame(playerRecord);
+		liveGamesManager.insert(record);
+		for (const playerRecord of playerRecords) livePlayerGamesManager.insert(playerRecord);
 		if (match.engineParticipant) {
 			const engine = match.engineParticipant;
-			insertLiveEngineGame({
+			liveEngineGamesManager.insert({
 				game_id: match.id,
 				player_number: engine.color,
 				time_remaining_ms: servergame.clocks?.currentTime[engine.color] ?? null,
@@ -178,7 +172,7 @@ function onMoveSubmitted(servergame: ServerGame): void {
 	}
 
 	persist(() => {
-		updateLiveGame(servergame.match.id, gameUpdates);
+		liveGamesManager.update(servergame.match.id, gameUpdates);
 		persistCurrentClockTimes(servergame);
 	});
 }
@@ -188,11 +182,11 @@ function onMoveSubmitted(servergame: ServerGame): void {
  */
 function onDrawOfferExtended(servergame: ServerGame, offeringColor: Player): void {
 	persist(() => {
-		updateLiveGame(servergame.match.id, {
+		liveGamesManager.update(servergame.match.id, {
 			draw_offer_state: offeringColor,
 		});
 
-		updateLivePlayerGame(servergame.match.id, offeringColor, {
+		livePlayerGamesManager.update(servergame.match.id, offeringColor, {
 			last_draw_offer_ply: servergame.match.playerData[offeringColor]!.lastOfferPly ?? null,
 		});
 	});
@@ -203,7 +197,7 @@ function onDrawOfferExtended(servergame: ServerGame, offeringColor: Player): voi
  */
 function onDrawOfferDeclined(servergame: ServerGame): void {
 	persist(() => {
-		updateLiveGame(servergame.match.id, {
+		liveGamesManager.update(servergame.match.id, {
 			draw_offer_state: null,
 		});
 	});
@@ -216,7 +210,7 @@ function onDrawOfferDeclined(servergame: ServerGame): void {
 function onPlayerDisconnected(servergame: ServerGame, color: Player): void {
 	const playerDisconnectData = servergame.match.playerData[color]!.disconnect;
 	persist(() =>
-		updateLivePlayerGame(
+		livePlayerGamesManager.update(
 			servergame.match.id,
 			color,
 			getDisconnectColumnData(playerDisconnectData),
@@ -230,12 +224,12 @@ function onPlayerDisconnected(servergame: ServerGame, color: Player): void {
  */
 function onPlayerReconnected(servergame: ServerGame, color: Player): void {
 	persist(() => {
-		updateLivePlayerGame(servergame.match.id, color, {
+		livePlayerGamesManager.update(servergame.match.id, color, {
 			disconnect_cushion_end_time: null,
 			disconnect_claim_time: null,
 			disconnect_voluntary: null,
 		});
-		updateLiveGame(servergame.match.id, { both_disconnected_end_time: null });
+		liveGamesManager.update(servergame.match.id, { both_disconnected_end_time: null });
 	});
 }
 
@@ -245,7 +239,7 @@ function onPlayerReconnected(servergame: ServerGame, color: Player): void {
  */
 function onBothDisconnectedTimerChanged(servergame: ServerGame): void {
 	persist(() =>
-		updateLiveGame(servergame.match.id, {
+		liveGamesManager.update(servergame.match.id, {
 			both_disconnected_end_time: servergame.match.bothDisconnectedEndTime ?? null,
 		}),
 	);
@@ -257,7 +251,7 @@ function onEngineClockChanged(servergame: ServerGame): void {
 	persist(() =>
 		// Only the ticking state is written: freezing rewinds the engine's turn rather
 		// than charging it, so no player's remaining time changes across either event.
-		updateLiveGame(servergame.match.id, {
+		liveGamesManager.update(servergame.match.id, {
 			color_ticking: servergame.clocks.colorTicking ?? null,
 			clock_snapshot_time: servergame.clocks.timeAtTurnStart ?? null,
 		}),

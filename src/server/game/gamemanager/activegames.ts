@@ -12,8 +12,8 @@ import type { ServerGame } from './servergametypes.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
+import gamesManager from '../../database/gamesManager.js';
 import activeplayers from './activeplayers.js';
-import { genUniqueGameID } from '../../database/gamesManager.js';
 
 // Constants ----------------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ const activeGames: Record<number, ServerGame> = {};
 function issueUniqueId(): number {
 	let id: number;
 	do {
-		id = genUniqueGameID(); // This is already unique against all game_ids in the table.
+		id = gamesManager.genUniqueID(); // This is already unique against all game_ids in the table.
 	} while (activeGames[id] !== undefined); // Repeat until we have an id unique against all active games.
 	return id;
 }

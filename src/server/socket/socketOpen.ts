@@ -23,8 +23,8 @@ import socketRegistry from './socketRegistry.js';
 import { getClientIP } from '../utility/IP.js';
 import reqTranslations from '../config/reqTranslations.js';
 import { executeSafely } from '../utility/errorGuard.js';
+import refreshTokenManager from '../database/refreshTokenManager.js';
 import { runWithRequestID } from '../utility/requestContext.js';
-import { validateRefreshToken } from '../database/refreshTokenManager.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 // Functions ----------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	// in, adds their user_id, username, and roles to the socket metadata's memberInfo.
 	const refreshToken = ws.metadata.cookies.jwt;
 	if (refreshToken !== undefined) {
-		const result = validateRefreshToken(refreshToken, ws.metadata.IP);
+		const result = refreshTokenManager.validate(refreshToken, ws.metadata.IP);
 		if (result) {
 			ws.metadata.memberInfo = {
 				...ws.metadata.memberInfo,

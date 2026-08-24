@@ -86,7 +86,7 @@ so the token in the URL doesn't leak via `Referer` to third-party resources.
 
 Clicking the button → `POST /api/verify/:token` → looks up the pending row by
 `verification_token` and **promotes** it: atomically creates the `members` row and sets the
-pending row's `member_user_id` (see `promotePendingRegistration`). Idempotent — a second POST on
+pending row's `member_user_id` (see `memberManager.promote`). Idempotent — a second POST on
 an already-promoted token returns `200`. A dead token returns `400`. **This side does not create a
 session**; it swaps to "head back to where you signed up."
 
@@ -113,15 +113,15 @@ Schema in [databaseTables.ts](/src/server/database/databaseTables.ts); all SQL i
 | `username`                  | UNIQUE, `COLLATE NOCASE`.                                                                                              |
 | `email`                     | UNIQUE. Always stored lowercase.                                                                                       |
 | `hashed_password`           | bcrypt hash                                                                                                            |
-| `created_at` / `expires_at` | Unix ms. Valid for **24h** (`PENDING_REGISTRATION_EXPIRY_MS`).                                                         |
+| `created_at` / `expires_at` | Unix ms. Valid for **24h** (`EXPIRY_MS`).                                                                              |
 | `member_user_id`            | NULL until verified; set to the new member's id on promotion. **Doubles as the "verified" flag** (non-null = verified) |
 
 **A verified pending row is not deleted on verification.** Keeping it lets a refreshed/duplicate
 waiting tab poll again and still see `verified` (not `expired`). It's harmless because `members`
 already enforces the username/email. A periodic sweep
 ([cleanupTasks.ts](/src/server/database/cleanupTasks.ts) →
-`deleteExpiredPendingRegistrations`) deletes rows past `expires_at`. Separately,
-`deleteExpiredPendingRegistrationsFor` clears any expired row blocking a specific
+`pendingRegistrationManager.removeExpired`) deletes rows past `expires_at`. Separately,
+`pendingRegistrationManager.removeExpiredFor` clears any expired row blocking a specific
 username/email's UNIQUE constraint right before an insert/email-change.
 
 ## Recovery & deliverability
@@ -158,7 +158,7 @@ When the form is submitted and no email credentials are configured in .env (the 
 the server logs the verification URL to the console instead of sending an actual email.
 
 `generateAccount()` in [registerController.ts](/src/server/controllers/registerController.ts) can bypass
-the normal flow and create a **verified member directly** via `addMember`. It exists only for dev seeding and tests.
+the normal flow and create a **verified member directly** via `memberManager.add`. It exists only for dev seeding and tests.
 
 ## File map
 
@@ -168,7 +168,7 @@ the normal flow and create a **verified member directly** via `addMember`. It ex
 | Verify page-state + promotion                                        | [verifyAccountController.ts](/src/server/controllers/verifyAccountController.ts)                                                                                                           |
 | Pending-table SQL & TTL constant                                     | [pendingRegistrationManager.ts](/src/server/database/pendingRegistrationManager.ts)                                                                                                        |
 | Pending-table schema                                                 | [databaseTables.ts](/src/server/database/databaseTables.ts)                                                                                                                                |
-| `addMember` / `promotePendingRegistration` / availability reads      | [memberManager.ts](/src/server/database/memberManager.ts)                                                                                                                                  |
+| `add` / `promote` / availability reads                               | [memberManager.ts](/src/server/database/memberManager.ts)                                                                                                                                  |
 | Field validation (format, blacklist, MX)                             | [accountValidation.ts](/src/server/controllers/accountValidation.ts)                                                                                                                       |
 | Verification email                                                   | [emailService.ts](/src/server/utility/emailService.ts)                                                                                                                                     |
 | Turnstile verification                                               | [turnstile.ts](/src/server/controllers/turnstile.ts)                                                                                                                                       |

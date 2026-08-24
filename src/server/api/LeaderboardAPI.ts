@@ -8,16 +8,9 @@ import type { Request, Response } from 'express';
 
 import { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
+import memberManager from '../database/memberManager.js';
+import leaderboardsManager from '../database/leaderboardsManager.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
-import {
-	getMemberDataByCriteria,
-	getMultipleMemberDataByCriteria,
-} from '../database/memberManager.js';
-import {
-	getTopPlayersForLeaderboard,
-	getPlayerRankInLeaderboard,
-	getEloOfPlayerInLeaderboard,
-} from '../database/leaderboardsManager.js';
 
 // Constants -------------------------------------------------------------
 
@@ -62,7 +55,11 @@ function getLeaderboardData(req: Request, res: Response): void {
 
 	try {
 		// Query leaderboard database
-		const top_players = getTopPlayersForLeaderboard(leaderboard_id, start_rank, n_players);
+		const top_players = leaderboardsManager.getTopPlayers(
+			leaderboard_id,
+			start_rank,
+			n_players,
+		);
 
 		// Fetch every username on this page in ONE query.
 		const usernameByUserID = getUsernamesByUserID(top_players.map((player) => player.user_id));
@@ -76,7 +73,7 @@ function getLeaderboardData(req: Request, res: Response): void {
 			const username = usernameByUserID.get(player.user_id);
 			if (username === undefined) {
 				logEventsAndPrint(
-					`Username of user with user_id ${player.user_id} could not be found in members table, even though it was found in leaderboard table by getTopPlayersForLeaderboard().`,
+					`Username of user with user_id ${player.user_id} could not be found in members table, even though it was found in leaderboard table by leaderboardsManager.getTopPlayers().`,
 					'errLog',
 				);
 				continue;
@@ -119,8 +116,12 @@ function getLeaderboardData(req: Request, res: Response): void {
  * @param user_ids - May be empty, in which case no query is made.
  */
 function getUsernamesByUserID(user_ids: number[]): Map<number, string> {
-	if (user_ids.length === 0) return new Map(); // getMultipleMemberDataByCriteria rejects an empty search list
-	const records = getMultipleMemberDataByCriteria(['user_id', 'username'], 'user_id', user_ids);
+	if (user_ids.length === 0) return new Map(); // memberManager.getMultipleDataByCriteria rejects an empty search list
+	const records = memberManager.getMultipleDataByCriteria(
+		['user_id', 'username'],
+		'user_id',
+		user_ids,
+	);
 	return new Map(records.map((record) => [record.user_id, record.username]));
 }
 
@@ -137,14 +138,24 @@ function getRankStringOfRequester(
 ): string | undefined {
 	if (rank_in_page !== undefined) return `#${rank_in_page}`;
 
-	const requesterRecord = getMemberDataByCriteria(['user_id'], 'username', requester_username);
+	const requesterRecord = memberManager.getDataByCriteria(
+		['user_id'],
+		'username',
+		requester_username,
+	);
 	if (requesterRecord === undefined) return undefined;
 
-	const requester_rank = getPlayerRankInLeaderboard(requesterRecord.user_id, leaderboard_id);
+	const requester_rank = leaderboardsManager.getPlayerRank(
+		requesterRecord.user_id,
+		leaderboard_id,
+	);
 	if (requester_rank === undefined) return '?';
 
 	// If the display elo contains a ?, then the rank_string should also contain a ?
-	const requester_elo = getEloOfPlayerInLeaderboard(requesterRecord.user_id, leaderboard_id);
+	const requester_elo = leaderboardsManager.getEloOfPlayer(
+		requesterRecord.user_id,
+		leaderboard_id,
+	);
 	return requester_elo.confident ? `#${requester_rank}` : `#${requester_rank}?`;
 }
 

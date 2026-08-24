@@ -9,7 +9,7 @@
  */
 
 import db from './database.js';
-import { ALL_LIVE_ENGINE_GAMES_COLUMNS } from './databaseTables.js';
+import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ export interface LiveEngineGamesRecord extends LiveEngineGameData {
  * @param record - The complete live_engine_games record to insert.
  * @throws If a database error occurs.
  */
-export function insertLiveEngineGame(record: LiveEngineGamesRecord): void {
+function insert(record: LiveEngineGamesRecord): void {
 	const query = `
 		INSERT INTO live_engine_games (
 			game_id, player_number, time_remaining_ms,
@@ -62,7 +62,7 @@ export function insertLiveEngineGame(record: LiveEngineGamesRecord): void {
  * @param updates - An object containing only the columns to update and their new values.
  * @throws If a database error occurs.
  */
-export function updateLiveEngineGame(
+function update(
 	game_id: number,
 	player_number: number,
 	updates: Partial<LiveEngineGameData>,
@@ -70,7 +70,7 @@ export function updateLiveEngineGame(
 	db.call(() => {
 		db.runRowUpdate({
 			tableName: 'live_engine_games',
-			allowedColumns: ALL_LIVE_ENGINE_GAMES_COLUMNS,
+			allowedColumns: databaseTables.ALL_LIVE_ENGINE_GAMES_COLUMNS,
 			updates,
 			errorContext: `updating live engine participant for game ${game_id}`,
 			whereClause: 'game_id = ? AND player_number = ?',
@@ -80,9 +80,13 @@ export function updateLiveEngineGame(
 }
 
 /** Retrieves every live engine participant for startup restoration. */
-export function getAllLiveEngineGames(): LiveEngineGamesRecord[] {
+function getAll(): LiveEngineGamesRecord[] {
 	return db.call(
 		() => db.all<LiveEngineGamesRecord>('SELECT * FROM live_engine_games'),
 		'Error retrieving live engine participants',
 	);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { insert, update, getAll };

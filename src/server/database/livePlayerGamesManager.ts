@@ -8,7 +8,7 @@
  */
 
 import db from './database.js';
-import { ALL_LIVE_PLAYER_GAMES_COLUMNS } from './databaseTables.js';
+import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -19,7 +19,7 @@ export interface LivePlayerGamesRecord extends LivePlayerData {
 }
 
 /** Per-player live game data columns, excluding the composite key fields. */
-export interface LivePlayerData extends LivePlayerDisconnectData {
+interface LivePlayerData extends LivePlayerDisconnectData {
 	user_id: number | null;
 	browser_id: string;
 	last_draw_offer_ply: number | null;
@@ -42,7 +42,7 @@ export interface LivePlayerDisconnectData {
  * @param record - The complete live_player_games record to insert.
  * @throws If a database error occurs.
  */
-export function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
+function insert(record: LivePlayerGamesRecord): void {
 	const query = `
 		INSERT INTO live_player_games (
 			game_id, player_number, user_id, browser_id,
@@ -74,15 +74,11 @@ export function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
  * @param updates - An object containing only the columns to update and their new values.
  * @throws If a database error occurs.
  */
-export function updateLivePlayerGame(
-	game_id: number,
-	player_number: number,
-	updates: Partial<LivePlayerData>,
-): void {
+function update(game_id: number, player_number: number, updates: Partial<LivePlayerData>): void {
 	db.call(() => {
 		db.runRowUpdate({
 			tableName: 'live_player_games',
-			allowedColumns: ALL_LIVE_PLAYER_GAMES_COLUMNS,
+			allowedColumns: databaseTables.ALL_LIVE_PLAYER_GAMES_COLUMNS,
 			updates,
 			errorContext: `updating live player game (game_id=${game_id}, player=${player_number})`,
 			whereClause: 'game_id = ? AND player_number = ?',
@@ -92,9 +88,13 @@ export function updateLivePlayerGame(
 }
 
 /** Retrieves every live human participant for startup restoration. */
-export function getAllLivePlayerGames(): LivePlayerGamesRecord[] {
+function getAll(): LivePlayerGamesRecord[] {
 	return db.call(
 		() => db.all<LivePlayerGamesRecord>('SELECT * FROM live_player_games ORDER BY game_id, player_number'), // prettier-ignore
 		'Error retrieving all live player games',
 	);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { insert, update, getAll };

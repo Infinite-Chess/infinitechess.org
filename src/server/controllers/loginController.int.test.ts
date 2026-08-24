@@ -4,18 +4,18 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import { testRequest } from '../../tests/testRequest.js';
 
+import databaseTables from '../database/databaseTables.js';
 import { generateAccount } from './accountSeeder.js';
-import { generateTables, clearAllTables } from '../database/databaseTables.js';
 
 describe('Login Controller Integration', () => {
 	// Runs once at the very start of this file
 	beforeAll(() => {
-		generateTables();
+		databaseTables.generateTables();
 	});
 
 	// Runs before EVERY single 'it' block
 	beforeEach(() => {
-		clearAllTables();
+		databaseTables.clearAllTables();
 	});
 
 	it('should reject login with no body', async () => {

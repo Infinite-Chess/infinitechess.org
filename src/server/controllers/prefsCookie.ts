@@ -13,8 +13,8 @@ import z from 'zod';
 
 import themes from '../../shared/components/header/themes.js';
 
+import memberManager from '../database/memberManager.js';
 import { readMemberInfoCookie } from './authenticationTokens/memberInfoCookie.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
 
 // Types ------------------------------------------------------------------------------------------
 
@@ -89,7 +89,7 @@ function remove(res: Response): void {
  * @throws If there is a database error or if the stored preferences are not valid JSON.
  */
 function get(userId: number): Preferences | undefined {
-	const record = getMemberDataByCriteria(['preferences'], 'user_id', userId);
+	const record = memberManager.getDataByCriteria(['preferences'], 'user_id', userId);
 	if (record === undefined) return;
 	if (record.preferences === null) return;
 	return JSON.parse(record.preferences);

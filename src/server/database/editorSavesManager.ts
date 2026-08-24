@@ -35,7 +35,7 @@ type EditorSavesIcnRecord = {
  * Returns only name, piece_count, and timestamp columns.
  * @throws If a database error occurs.
  */
-export function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
+function getAllForUser(user_id: number): EditorSavesListRecord[] {
 	const query = `SELECT name, piece_count, timestamp FROM editor_saves WHERE user_id = ?`;
 	return db.call(
 		() => db.all<EditorSavesListRecord>(query, [user_id]),
@@ -47,7 +47,7 @@ export function getAllSavedPositionsForUser(user_id: number): EditorSavesListRec
  * Counts how many saved positions a user currently has.
  * @throws If a database error occurs.
  */
-export function getSavedPositionCount(user_id: number): number {
+function getCount(user_id: number): number {
 	const query = `SELECT COUNT(*) AS count FROM editor_saves WHERE user_id = ?`;
 	const row = db.call(
 		() => db.get<{ count: number }>(query, [user_id]),
@@ -63,7 +63,7 @@ export function getSavedPositionCount(user_id: number): number {
  * @returns True if a matching saved position exists.
  * @throws If a database error occurs.
  */
-export function doesSavedPositionExist(user_id: number, name: string): boolean {
+function doesExist(user_id: number, name: string): boolean {
 	const query = `
 		SELECT EXISTS(
 			SELECT 1 FROM editor_saves
@@ -90,7 +90,7 @@ export function doesSavedPositionExist(user_id: number, name: string): boolean {
  * @param castling - Whether the castling gamerule is enabled, or undefined if indeterminate
  * @throws If a database error occurs.
  */
-export function addSavedPosition(
+function add(
 	user_id: number,
 	name: string,
 	piece_count: number,
@@ -127,10 +127,7 @@ export function addSavedPosition(
  * @returns The ICN record if found and owned by the user, otherwise undefined.
  * @throws If a database error occurs.
  */
-export function getSavedPositionICN(
-	name: string,
-	user_id: number,
-): EditorSavesIcnRecord | undefined {
+function getICN(name: string, user_id: number): EditorSavesIcnRecord | undefined {
 	const query = `SELECT timestamp, icn, compression, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
 	return db.call(
 		() => db.get<EditorSavesIcnRecord>(query, [name, user_id]),
@@ -146,10 +143,14 @@ export function getSavedPositionICN(
  * @returns The RunResult containing the number of changes.
  * @throws If a database error occurs.
  */
-export function deleteSavedPosition(name: string, user_id: number): RunResult {
+function remove(name: string, user_id: number): RunResult {
 	const query = `DELETE FROM editor_saves WHERE name = ? AND user_id = ?`;
 	return db.call(
 		() => db.run(query, [name, user_id]),
 		`Error deleting position "${name}" for user_id ${user_id}`,
 	);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { getAllForUser, getCount, doesExist, add, getICN, remove };

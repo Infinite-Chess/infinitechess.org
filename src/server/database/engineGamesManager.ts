@@ -5,12 +5,12 @@
  */
 
 import db from './database.js';
-import { ALL_ENGINE_GAMES_COLUMNS } from './databaseTables.js';
+import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
 /** Structure of a complete engine_games record. */
-export interface EngineGamesRecord {
+interface EngineGamesRecord {
 	game_id: number;
 	player_number: number;
 	score: number | null;
@@ -30,7 +30,7 @@ type EngineGamesColumn = keyof EngineGamesRecord;
  * and rolls back the surrounding transaction — wrapping this would log the same error twice.
  * @throws If a database error occurs.
  */
-export function insertEngineGame(record: EngineGamesRecord): void {
+function insert(record: EngineGamesRecord): void {
 	const query = `
 		INSERT INTO engine_games (
 			game_id, player_number, score,
@@ -48,12 +48,12 @@ export function insertEngineGame(record: EngineGamesRecord): void {
  * @returns One row per engine participant, ordered by player_number.
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
-export function getEngineGamesOfGame<K extends EngineGamesColumn>(
+function getOfGame<K extends EngineGamesColumn>(
 	game_id: number,
 	columns: K[],
 ): Pick<EngineGamesRecord, K>[] {
 	return db.call(() => {
-		db.assertColumnsValid(columns, ALL_ENGINE_GAMES_COLUMNS, 'engine_games');
+		db.assertColumnsValid(columns, databaseTables.ALL_ENGINE_GAMES_COLUMNS, 'engine_games');
 
 		return db.all<Pick<EngineGamesRecord, K>>(
 			`SELECT ${columns.join(', ')} FROM engine_games WHERE game_id = ? ORDER BY player_number`,
@@ -61,3 +61,7 @@ export function getEngineGamesOfGame<K extends EngineGamesColumn>(
 		);
 	}, `Error getting engine participants for game ${game_id}`);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { insert, getOfGame };

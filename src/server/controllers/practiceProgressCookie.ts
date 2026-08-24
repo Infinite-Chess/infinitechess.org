@@ -9,8 +9,8 @@
 
 import type { Request, Response } from 'express';
 
+import memberManager from '../database/memberManager.js';
 import { readMemberInfoCookie } from './authenticationTokens/memberInfoCookie.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
 
 // Constants --------------------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ function remove(res: Response): void {
  * @throws If a database error occurs.
  */
 function get(userId: number): string {
-	const record = getMemberDataByCriteria(['checkmates_beaten'], 'user_id', userId);
+	const record = memberManager.getDataByCriteria(['checkmates_beaten'], 'user_id', userId);
 	return record?.checkmates_beaten ?? '';
 }
 

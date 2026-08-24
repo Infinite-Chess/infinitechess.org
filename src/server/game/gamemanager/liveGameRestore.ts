@@ -32,11 +32,11 @@ import gamefile from '../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 
 import gameutility from './gameutility.js';
+import memberManager from '../../database/memberManager.js';
+import liveGamesManager from '../../database/liveGamesManager.js';
 import { logEventsAndPrint } from '../../utility/logEvents.js';
-import { getAllLivePlayerGames } from '../../database/livePlayerGamesManager.js';
-import { getAllLiveEngineGames } from '../../database/liveEngineGamesManager.js';
-import { getMemberDataByCriteria } from '../../database/memberManager.js';
-import { getAllLiveGames, deleteLiveGame } from '../../database/liveGamesManager.js';
+import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
+import liveEngineGamesManager from '../../database/liveEngineGamesManager.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -83,7 +83,7 @@ interface DisconnectTimerState {
 
 /**
  * Restores all live games from the database.
- * Called once during server startup, after initDatabase() and before accepting connections.
+ * Called once during server startup, after databaseTables.initDatabase() and before accepting connections.
  *
  * @returns An array of restored ServerGame objects with their pending timers.
  * The caller is responsible for integrating these into the active game system.
@@ -93,9 +93,9 @@ function restoreAll(): RestoredGame[] {
 	let playerRowsByGame: Map<number, LivePlayerGamesRecord[]>;
 	let engineRowsByGame: Map<number, LiveEngineGamesRecord[]>;
 	try {
-		liveGameRows = getAllLiveGames();
-		playerRowsByGame = groupRowsByGame(getAllLivePlayerGames());
-		engineRowsByGame = groupRowsByGame(getAllLiveEngineGames());
+		liveGameRows = liveGamesManager.getAll();
+		playerRowsByGame = groupRowsByGame(livePlayerGamesManager.getAll());
+		engineRowsByGame = groupRowsByGame(liveEngineGamesManager.getAll());
 	} catch {
 		// Already logged
 		return [];
@@ -115,7 +115,7 @@ function restoreAll(): RestoredGame[] {
 					`Live game ${gameRow.game_id} has invalid participant rows. Skipping restoration.`,
 					'errLog',
 				);
-				deleteLiveGame(gameRow.game_id);
+				liveGamesManager.remove(gameRow.game_id);
 				continue;
 			}
 
@@ -128,7 +128,7 @@ function restoreAll(): RestoredGame[] {
 				'errLog',
 			);
 			// Delete the corrupt game from the database so it doesn't block future restarts.
-			deleteLiveGame(gameRow.game_id);
+			liveGamesManager.remove(gameRow.game_id);
 		}
 	}
 
@@ -208,7 +208,7 @@ function reconstructPlayerIdentities(
 
 		if (row.user_id !== null) {
 			// Signed-in player: look up username and roles from members table
-			const memberData = getMemberDataByCriteria(
+			const memberData = memberManager.getDataByCriteria(
 				['username', 'roles'],
 				'user_id',
 				row.user_id,

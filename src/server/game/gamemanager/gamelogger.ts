@@ -23,19 +23,14 @@ import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validlea
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
+import gamesManager from '../../database/gamesManager.js';
 import gamestatebuilder from './gamestatebuilder.js';
+import liveGamesManager from '../../database/liveGamesManager.js';
 import ratingcalculation from '../../utility/ratingcalculation.js';
-import { deleteLiveGame } from '../../database/liveGamesManager.js';
-import { insertEngineGame } from '../../database/engineGamesManager.js';
+import engineGamesManager from '../../database/engineGamesManager.js';
+import playerGamesManager from '../../database/playerGamesManager.js';
+import leaderboardsManager from '../../database/leaderboardsManager.js';
 import { logEvents, logEventsAndPrint } from '../../utility/logEvents.js';
-import { insertPlayerGame, updatePlayerGame } from '../../database/playerGamesManager.js';
-import { insertGame, updateGame, deleteGame } from '../../database/gamesManager.js';
-import {
-	addUserToLeaderboard,
-	getPlayerLeaderboardRating,
-	isPlayerInLeaderboard,
-	updatePlayerLeaderboardRating,
-} from '../../database/leaderboardsManager.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -55,7 +50,7 @@ type PlayerOutcome = 'wins' | 'losses' | 'draws' | 'aborted';
 function log(servergame: ServerGame): RatingData | undefined {
 	// Dropped first, and outside the transaction below, so a logged game can never outlive its
 	// live row. A failed log then merely loses the game, instead of leaving one to be revived.
-	deleteLiveGame(servergame.match.id);
+	liveGamesManager.remove(servergame.match.id);
 
 	if (servergame.moves.length === 0) return; // Zero-move games are not recorded permanently.
 
@@ -123,8 +118,8 @@ function updateLeaderboardsInTransaction(
 
 		// If a player isn't on the leaderboard, add them first.
 		// We use the _core (error-throwing) version because we are inside a transaction.
-		if (!isPlayerInLeaderboard(user_id, leaderboard_id)) {
-			addUserToLeaderboard(
+		if (!leaderboardsManager.isPlayerIn(user_id, leaderboard_id)) {
+			leaderboardsManager.addUser(
 				user_id,
 				leaderboard_id,
 				ratingcalculation.DEFAULT_LEADERBOARD_ELO,
@@ -133,7 +128,7 @@ function updateLeaderboardsInTransaction(
 		}
 
 		// We can now safely assume the player has a rating record.
-		const leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
+		const leaderboard_data = leaderboardsManager.getPlayerRating(user_id, leaderboard_id);
 		if (leaderboard_data === undefined)
 			throw Error(`Unable to read leaderboard data for user_id ${user_id} in leaderboard ${leaderboard_id}. This should never happen, they should have been added!`); // prettier-ignore
 
@@ -153,7 +148,7 @@ function updateLeaderboardsInTransaction(
 		// TS is annoying sometimes, we already know all the players have user_ids
 		const user_id = getUserID(match.playerData[player]);
 		const data = ratingdata[player]!;
-		updatePlayerLeaderboardRating(
+		leaderboardsManager.updatePlayerRating(
 			user_id!,
 			leaderboard_id,
 			data.elo_after_game!,
@@ -183,7 +178,7 @@ function addGameRecordsInTransaction(
 	const dateSqliteString = timeutil.timestampToSqlite(match.timeCreated);
 
 	// 1. Insert the main record into the 'games' table.
-	insertGame({
+	gamesManager.insert({
 		game_id: match.id,
 		date: dateSqliteString,
 		base_time_seconds,
@@ -207,7 +202,7 @@ function addGameRecordsInTransaction(
 		const user_id = getUserID(match.playerData[player]);
 		if (!user_id) continue;
 
-		insertPlayerGame({
+		playerGamesManager.insert({
 			user_id,
 			game_id: match.id,
 			player_number: player,
@@ -220,7 +215,7 @@ function addGameRecordsInTransaction(
 	}
 	if (match.engineParticipant) {
 		const engine = match.engineParticipant;
-		insertEngineGame({
+		engineGamesManager.insert({
 			game_id: match.id,
 			player_number: engine.color,
 			score: getScoreForPlayer(victor, engine.color), // prettier-ignore
@@ -421,7 +416,7 @@ function updateOverturned(
 		const transaction = db.transaction(() => {
 			// --- Part 1: games + player_games cells (or full deletion) ---
 			if (gameStillExists) updateGameRecordForOverturn(servergame);
-			else deleteGame(match.id); // Zero-move games are never stored; cascades to player_games.
+			else gamesManager.remove(match.id); // Zero-move games are never stored; cascades to player_games.
 
 			// --- Part 2: player_stats counters (kept separate from the record update above) ---
 			reversePlayerStatsForOverturn(
@@ -449,7 +444,7 @@ function updateGameRecordForOverturn(servergame: ServerGame): void {
 	const metadata = gamestatebuilder.buildMetadata(servergame); // Unrated (no ratingData).
 	const icn = getICNOfGame(servergame, metadata);
 
-	updateGame(match.id, {
+	gamesManager.update(match.id, {
 		result: metadata.Result!,
 		termination: servergame.gameConclusion!.condition,
 		move_count: servergame.moves.length,
@@ -460,7 +455,7 @@ function updateGameRecordForOverturn(servergame: ServerGame): void {
 	for (const playerStr in match.playerData) {
 		const player = Number(playerStr) as Player;
 		if (!match.playerData[player]!.identifier.signedIn) continue; // Guests have no row.
-		updatePlayerGame(match.id, player, { score: null });
+		playerGamesManager.update(match.id, player, { score: null });
 	}
 }
 

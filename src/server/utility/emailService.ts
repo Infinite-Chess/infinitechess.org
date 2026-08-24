@@ -10,8 +10,8 @@ import { interpolate } from '../../shared/util/interpolate.js';
 
 import mailer from './mailer.js';
 import emailTemplates from './emailTemplates.js';
+import blacklistManager from '../database/blacklistManager.js';
 import { getAppBaseUrl } from './urlUtils.js';
-import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from './logEvents.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
 
@@ -32,7 +32,7 @@ async function sendEmailConfirmation(
 	language: string,
 ): Promise<void> {
 	try {
-		if (isBlacklisted(recipientEmail)) {
+		if (blacklistManager.isBlacklisted(recipientEmail)) {
 			logEventsAndPrint(
 				`[BLOCKED] Skipping email confirmation to ${recipientEmail} (Blacklisted)`,
 				'blacklistLog',

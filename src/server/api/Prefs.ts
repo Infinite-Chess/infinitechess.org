@@ -8,9 +8,9 @@
 import type { Request, Response } from 'express';
 
 import prefsCookie from '../controllers/prefsCookie.js';
+import memberManager from '../database/memberManager.js';
 import { logZodError } from '../utility/zodlogger.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
-import { updateMemberColumns } from '../database/memberManager.js';
 
 /** `PUT /api/preferences` — replaces the signed-in user's preferences in the database. */
 function putPrefs(req: Request, res: Response): void {
@@ -38,7 +38,7 @@ function putPrefs(req: Request, res: Response): void {
 
 	try {
 		// Update the preferences column in the database
-		updateMemberColumns(user_id, { preferences: JSON.stringify(parseResult.data) });
+		memberManager.updateColumns(user_id, { preferences: JSON.stringify(parseResult.data) });
 
 		res.sendStatus(200);
 	} catch {

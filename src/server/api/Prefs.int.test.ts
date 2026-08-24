@@ -5,8 +5,8 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 
-import { getMemberDataByCriteria } from '../database/memberManager.js';
-import { generateTables, clearAllTables } from '../database/databaseTables.js';
+import memberManager from '../database/memberManager.js';
+import databaseTables from '../database/databaseTables.js';
 
 /** An example of valid preferences. */
 const VALID_PREFS_1 = {
@@ -27,12 +27,12 @@ const VALID_PREFS_2 = {
 describe('Preferences Integration', () => {
 	// Runs once at the very start of this file
 	beforeAll(() => {
-		generateTables();
+		databaseTables.generateTables();
 	});
 
 	// Runs before EVERY single 'it' block
 	beforeEach(() => {
-		clearAllTables();
+		databaseTables.clearAllTables();
 	});
 
 	it('should verify middleware sets preferences cookie on GET request', async () => {
@@ -116,7 +116,7 @@ describe('Preferences Integration', () => {
 		expect(response.status).toBe(200);
 
 		// Verify DB update
-		const record = getMemberDataByCriteria(['preferences'], 'username', user.username);
+		const record = memberManager.getDataByCriteria(['preferences'], 'username', user.username);
 		expect(record).toBeDefined();
 		const savedPrefs = record!.preferences === null ? null : JSON.parse(record!.preferences);
 		expect(savedPrefs).toMatchObject(VALID_PREFS_1);
@@ -140,7 +140,7 @@ describe('Preferences Integration', () => {
 		expect(response.status).toBe(200);
 
 		// Verify DB update
-		const record = getMemberDataByCriteria(['preferences'], 'username', user.username);
+		const record = memberManager.getDataByCriteria(['preferences'], 'username', user.username);
 		expect(record).toBeDefined();
 		const savedPrefs = record!.preferences === null ? null : JSON.parse(record!.preferences);
 		expect(savedPrefs).toMatchObject(VALID_PREFS_2);

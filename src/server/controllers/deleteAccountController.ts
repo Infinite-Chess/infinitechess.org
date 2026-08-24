@@ -5,16 +5,17 @@
  */
 
 import type { Request, Response } from 'express';
+import type { DeleteReason } from '../database/memberManager.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import activegames from '../game/gamemanager/activegames.js';
+import memberManager from '../database/memberManager.js';
 import sessionManager from './authenticationTokens/sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import { getTranslation } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
-import { deleteMember, DeleteReason } from '../database/memberManager.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 /** `DELETE /api/members/:member` — deletes the caller's own account after re-verifying their password. */
@@ -78,7 +79,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
  * @throws If a database error occurs during the deletion process.
  */
 function deleteAccount(user_id: number, reason_deleted: DeleteReason): void {
-	deleteMember(user_id, reason_deleted);
+	memberManager.remove(user_id, reason_deleted);
 
 	// Close their sockets, delete their seeks...
 	socketRegistry.closeAllOfMember(user_id, 1008, socketutil.ClosureReasons.LOGGED_OUT);

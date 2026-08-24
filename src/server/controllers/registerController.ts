@@ -6,6 +6,8 @@
  * link is verified). Also answers username/email availability checks.
  */
 
+import type { PendingRegistrationRecord } from '../database/pendingRegistrationManager.js';
+
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
@@ -13,26 +15,13 @@ import { Request, Response } from 'express';
 import roles from './roles.js';
 import turnstile from './turnstile.js';
 import emailService from '../utility/emailService.js';
+import memberManager from '../database/memberManager.js';
 import sessionManager from './authenticationTokens/sessionManager.js';
 import { getClientIP } from '../utility/IP.js';
-import { isBlacklisted } from '../database/blacklistManager.js';
+import blacklistManager from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';
+import pendingRegistrationManager from '../database/pendingRegistrationManager.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
-import {
-	getMemberDataByCriteria,
-	isEmailTaken,
-	isEmailTakenOrPending,
-	isUsernameTakenOrPending,
-} from '../database/memberManager.js';
-import {
-	addPendingRegistration,
-	deleteExpiredPendingRegistrationsFor,
-	getPendingRegistrationByClaimToken,
-	isEmailTakenInPendingByOther,
-	PENDING_REGISTRATION_EXPIRY_MS,
-	PendingRegistrationRecord,
-	updatePendingRegistrationEmail,
-} from '../database/pendingRegistrationManager.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -72,8 +61,8 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	let usernameTaken: boolean;
 	let emailTaken: boolean;
 	try {
-		usernameTaken = isUsernameTakenOrPending(username);
-		emailTaken = isEmailTakenOrPending(email);
+		usernameTaken = memberManager.isUsernameTakenOrPending(username);
+		emailTaken = memberManager.isEmailTakenOrPending(email);
 	} catch {
 		res.status(500).json({ message: req.t.responses.errors.server_error });
 		return;
@@ -134,8 +123,8 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 
 	try {
 		// Clear any expired rows blocking the new username/email UNIQUE constraints.
-		deleteExpiredPendingRegistrationsFor(username, email);
-		addPendingRegistration(claimToken, verificationToken, username, email, hashedPassword);
+		pendingRegistrationManager.removeExpiredFor(username, email);
+		pendingRegistrationManager.add(claimToken, verificationToken, username, email, hashedPassword); // prettier-ignore
 	} catch {
 		// The Turnstile token was already spent above; have the client re-issue a fresh one.
 		res.status(500).json({
@@ -153,7 +142,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		httpOnly: true,
 		sameSite: 'lax',
 		secure: true,
-		maxAge: PENDING_REGISTRATION_EXPIRY_MS,
+		maxAge: pendingRegistrationManager.EXPIRY_MS,
 	});
 
 	res.sendStatus(201);
@@ -215,7 +204,7 @@ function getOwnActivePendingRegistration(req: Request): PendingRegistrationRecor
 	const cookieClaimToken: unknown = req.cookies[PENDING_REGISTRATION_COOKIE_NAME];
 	if (typeof cookieClaimToken !== 'string' || cookieClaimToken.length === 0) return undefined;
 	try {
-		const row = getPendingRegistrationByClaimToken(cookieClaimToken);
+		const row = pendingRegistrationManager.getByClaimToken(cookieClaimToken);
 		if (row !== undefined && row.expires_at > Date.now() && row.member_user_id === null) {
 			return row;
 		}
@@ -235,7 +224,7 @@ function getAwaitingPageState(req: Request): { email: string; blacklisted: boole
 	const pending = getOwnActivePendingRegistration(req);
 	if (pending === undefined) return null;
 	try {
-		return { email: pending.email, blacklisted: isBlacklisted(pending.email) };
+		return { email: pending.email, blacklisted: blacklistManager.isBlacklisted(pending.email) };
 	} catch {
 		// DB read failed (already logged). Assume not blacklisted so the awaiting page still renders;
 		// a genuinely blacklisted address is re-checked in subsequent polls.
@@ -269,7 +258,8 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 		// Availability: reject a real member's email or another party's pending email. The caller's
 		// own row is excluded, so re-submitting the same address is allowed (it just re-sends).
 		const emailTaken =
-			isEmailTaken(email) || isEmailTakenInPendingByOther(email, pending.claim_token);
+			memberManager.isEmailTaken(email) ||
+			pendingRegistrationManager.isEmailTakenByOther(email, pending.claim_token);
 
 		if (emailTaken) {
 			res.status(409).json({
@@ -284,8 +274,8 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 		const verificationToken = generateRegistrationToken();
 
 		// Clear any expired row blocking the new email's UNIQUE constraint.
-		deleteExpiredPendingRegistrationsFor(pending.username, email);
-		updatePendingRegistrationEmail(pending.claim_token, email, verificationToken);
+		pendingRegistrationManager.removeExpiredFor(pending.username, email);
+		pendingRegistrationManager.updateEmail(pending.claim_token, email, verificationToken);
 
 		emailService.sendEmailConfirmation(email, pending.username, verificationToken, req.lang);
 		res.sendStatus(200);
@@ -313,7 +303,7 @@ function pollPendingRegistration(req: Request, res: Response): void {
 	}
 
 	try {
-		const pending = getPendingRegistrationByClaimToken(claimToken);
+		const pending = pendingRegistrationManager.getByClaimToken(claimToken);
 
 		// Unknown cookie (never existed, or already swept).
 		if (pending === undefined) {
@@ -324,13 +314,14 @@ function pollPendingRegistration(req: Request, res: Response): void {
 		// Not yet verified.
 		if (pending.member_user_id === null) {
 			if (pending.expires_at <= Date.now()) res.json({ status: 'expired' });
-			else if (isBlacklisted(pending.email)) res.json({ status: 'blacklisted' });
+			else if (blacklistManager.isBlacklisted(pending.email))
+				res.json({ status: 'blacklisted' });
 			else res.json({ status: 'pending' });
 			return;
 		}
 
 		// Verified and created → issue a session to THIS browser, then clear its pending cookie.
-		const member = getMemberDataByCriteria(
+		const member = memberManager.getDataByCriteria(
 			['username', 'roles'],
 			'user_id',
 			pending.member_user_id,
@@ -376,7 +367,7 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 	}
 
 	try {
-		if (isUsernameTakenOrPending(username)) {
+		if (memberManager.isUsernameTakenOrPending(username)) {
 			res.json({ available: false, reason: req.t.responses.account.username_taken });
 			return;
 		}

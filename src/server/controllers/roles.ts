@@ -10,8 +10,8 @@
  * sessions/sockets on change.
  */
 
+import memberManager from '../database/memberManager.js';
 import { VALID_ROLES, Role } from '../types.js';
-import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 /**
  * Adds a specified role to a member's roles list.
@@ -21,7 +21,7 @@ import { getMemberDataByCriteria, updateMemberColumns } from '../database/member
  */
 function add(userId: number, role: Role): void {
 	// Fetch the member's current roles from the database
-	const memberData = getMemberDataByCriteria(['roles'], 'user_id', userId);
+	const memberData = memberManager.getDataByCriteria(['roles'], 'user_id', userId);
 	if (!memberData) throw new Error(`User with ID ${userId} does not exist`);
 	const roles = parse(memberData.roles) ?? [];
 
@@ -33,7 +33,7 @@ function add(userId: number, role: Role): void {
 	roles.push(role);
 
 	// Save the updated roles back to the database
-	updateMemberColumns(userId, { roles: JSON.stringify(roles) });
+	memberManager.updateColumns(userId, { roles: JSON.stringify(roles) });
 }
 
 /**

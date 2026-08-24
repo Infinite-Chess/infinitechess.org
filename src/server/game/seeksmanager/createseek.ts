@@ -39,7 +39,7 @@ import socketsend from '../../socket/socketSend.js';
 import activeseeks from './activeseeks.js';
 import activeplayers from '../gamemanager/activeplayers.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import leaderboardsManager from '../../database/leaderboardsManager.js';
 
 // Functions -------------------------------------------------------------------------------------
 
@@ -77,7 +77,7 @@ function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 /**
  * Builds an {@link AuthSeek} from the client's createseek message, validating its position.
  * Returns `void` after sending an error to the client if any check fails.
- * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard}).
+ * @throws If a database error occurs (from {@link leaderboardsManager.getEloOfPlayer}).
  */
 function getSeekFromWebsocketMessageContents(
 	ws: CustomWebSocket,
@@ -97,7 +97,7 @@ function getSeekFromWebsocketMessageContents(
 		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
 		const leaderboardId =
 			getLeaderboardOfVariant(messageContents.variant) ?? Leaderboards.INFINITY;
-		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
+		rating = leaderboardsManager.getEloOfPlayer(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 
 	const player = memberinfoutil.buildServerUsernameContainer(owner, rating);

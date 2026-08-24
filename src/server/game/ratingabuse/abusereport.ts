@@ -14,7 +14,7 @@ import timeutil from '../../../shared/util/timeutil.js';
 
 import emailService from '../../utility/emailService.js';
 import { logEvents } from '../../utility/logEvents.js';
-import { updateRatingAbuseColumns } from '../../database/ratingAbuseManager.js';
+import ratingAbuseManager from '../../database/ratingAbuseManager.js';
 
 // Constants -------------------------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ ${buildBody(ctx, verdict, true)}
 		void emailService.sendRatingAbuseEmail(messageSubject, messageText);
 		// Update RatingAbuse table with last_alerted_at value
 		const last_alerted_at = timeutil.timestampToSqlite(Date.now());
-		updateRatingAbuseColumns(ctx.user_id, ctx.leaderboard_id, { last_alerted_at });
+		ratingAbuseManager.updateColumns(ctx.user_id, ctx.leaderboard_id, { last_alerted_at });
 	}
 }
 

@@ -7,7 +7,7 @@
 import type { Request, Response } from 'express';
 
 import newsUtil from '../utility/newsUtil.js';
-import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
+import memberManager from '../database/memberManager.js';
 
 // Functions --------------------------------------------------------------------------------------
 
@@ -20,7 +20,7 @@ function getUnreadNewsCount(req: Request, res: Response): void {
 	}
 
 	try {
-		const record = getMemberDataByCriteria(
+		const record = memberManager.getDataByCriteria(
 			['last_read_news_date'],
 			'user_id',
 			req.memberInfo.user_id,
@@ -48,7 +48,7 @@ function getUnreadNewsDates(req: Request, res: Response): void {
 	}
 
 	try {
-		const record = getMemberDataByCriteria(
+		const record = memberManager.getDataByCriteria(
 			['last_read_news_date'],
 			'user_id',
 			req.memberInfo.user_id,
@@ -78,7 +78,9 @@ function markNewsAsRead(req: Request, res: Response): void {
 	const latestNewsDate = newsUtil.getLatestNewsDate();
 
 	try {
-		updateMemberColumns(req.memberInfo.user_id, { last_read_news_date: latestNewsDate });
+		memberManager.updateColumns(req.memberInfo.user_id, {
+			last_read_news_date: latestNewsDate,
+		});
 		res.sendStatus(200);
 	} catch {
 		// DB error (already logged)

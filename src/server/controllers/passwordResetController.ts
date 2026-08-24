@@ -13,8 +13,8 @@ import roles from './roles.js';
 import emailService from '../utility/emailService.js';
 import sessionManager from './authenticationTokens/sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
+import blacklistManager from '../database/blacklistManager.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
-import { isBlacklisted } from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -65,7 +65,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 
 			// Blacklist gates only the send, never the response — a blacklisted member still
 			// falls through to the same generic 200, so it can't be told apart by the response.
-			if (isBlacklisted(email)) {
+			if (blacklistManager.isBlacklisted(email)) {
 				logEventsAndPrint(
 					`Skipping sending password reset email to blacklisted address ${email} (user_id ${userId}).`,
 					'blacklistLog',

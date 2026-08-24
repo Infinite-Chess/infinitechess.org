@@ -33,12 +33,7 @@ interface LeaderboardEntry {
  * suitable for use inside a database transaction.
  * @throws If a database error occurs.
  */
-export function addUserToLeaderboard(
-	user_id: number,
-	leaderboard_id: Leaderboard,
-	elo: number,
-	rd: number,
-): void {
+function addUser(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): void {
 	const query = `
 		INSERT INTO leaderboards (
 			user_id,
@@ -61,7 +56,7 @@ export function addUserToLeaderboard(
  * Callers outside of transactions should implement their own error handling.
  * @throws If the user is not found or if a database error occurs.
  */
-export function updatePlayerLeaderboardRating(
+function updatePlayerRating(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number,
@@ -92,7 +87,7 @@ export function updatePlayerLeaderboardRating(
  * @returns True if the player exists on the specified leaderboard, false otherwise.
  * @throws If a database error occurs.
  */
-export function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): boolean {
+function isPlayerIn(user_id: number, leaderboard_id: Leaderboard): boolean {
 	const query = `
         SELECT 1
         FROM leaderboards
@@ -111,7 +106,7 @@ export function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboa
  * @returns The player's leaderboard entry object or undefined if not found.
  * @throws If a database error occurs.
  */
-export function getPlayerLeaderboardRating(
+function getPlayerRating(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 ): Pick<LeaderboardEntry, 'elo' | 'rating_deviation' | 'rd_last_update_date'> | undefined {
@@ -134,7 +129,7 @@ export function getPlayerLeaderboardRating(
  * @returns An array of top player leaderboard entries, potentially empty.
  * @throws If the database query fails.
  */
-export function getTopPlayersForLeaderboard(
+function getTopPlayers(
 	leaderboard_id: Leaderboard,
 	start_rank: number,
 	n_players: number,
@@ -170,10 +165,7 @@ export function getTopPlayersForLeaderboard(
  *          on that leaderboard.
  * @throws If a database error occurs.
  */
-export function getPlayerRankInLeaderboard(
-	user_id: number,
-	leaderboard_id: Leaderboard,
-): number | undefined {
+function getPlayerRank(user_id: number, leaderboard_id: Leaderboard): number | undefined {
 	const query = `
 		WITH RankedPlayers AS (
 			SELECT
@@ -210,8 +202,8 @@ export function getPlayerRankInLeaderboard(
  * @returns The player's leaderboard elo and whether we are confident about it.
  * @throws If a database error occurs.
  */
-export function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): Rating {
-	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id);
+function getEloOfPlayer(user_id: number, leaderboard_id: Leaderboard): Rating {
+	const rating_values = getPlayerRating(user_id, leaderboard_id);
 	if (!rating_values)
 		return { value: ratingcalculation.DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
@@ -233,7 +225,7 @@ function getAllLeaderboardEntries(): LeaderboardEntry[] {
 // Regular Table Utility Functions ------------------------------------------------------------
 
 /** Calls updateAllRatingDeviationsOfLeaderboardTable() every {@link ratingcalculation.RD_UPDATE_FREQUENCY} milliseconds */
-export function startPeriodicLeaderboardRatingDeviationUpdate(): void {
+function startPeriodicRatingDeviationUpdate(): void {
 	setInterval(
 		() => updateAllRatingDeviationsOfLeaderboardTable(),
 		ratingcalculation.RD_UPDATE_FREQUENCY,
@@ -249,7 +241,7 @@ function updateAllRatingDeviationsOfLeaderboardTable(): void {
 				entry.rating_deviation,
 				entry.rd_last_update_date,
 			);
-			updatePlayerLeaderboardRating(
+			updatePlayerRating(
 				entry.user_id,
 				entry.leaderboard_id as Leaderboard,
 				entry.elo,
@@ -265,3 +257,19 @@ function updateAllRatingDeviationsOfLeaderboardTable(): void {
 		);
 	}
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default {
+	// Methods
+	addUser,
+	updatePlayerRating,
+	isPlayerIn,
+	getPlayerRating,
+	getTopPlayers,
+	getPlayerRank,
+	// Helper Functions
+	getEloOfPlayer,
+	// Regular Table Utility Functions
+	startPeriodicRatingDeviationUpdate,
+};

@@ -10,12 +10,12 @@ import type { Request, Response } from 'express';
 import validators from '../../shared/util/validators.js';
 
 import roles from '../controllers/roles.js';
+import memberManager from '../database/memberManager.js';
+import blacklistManager from '../database/blacklistManager.js';
 import { deleteAccount } from '../controllers/deleteAccountController.js';
+import refreshTokenManager from '../database/refreshTokenManager.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 import { refreshGitHubContributorsList } from './GitHub.js';
-import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
-import { addToBlacklist, removeFromBlacklist } from '../database/blacklistManager.js';
-import { getMemberDataByCriteria, isValidDeleteReason } from '../database/memberManager.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -147,7 +147,7 @@ function deleteCommand(
 	logCommand(command, req);
 	const reason = commandAndArgs[2]!;
 	const usernameArgument = commandAndArgs[1]!;
-	const record = getMemberDataByCriteria(
+	const record = memberManager.getDataByCriteria(
 		['user_id', 'username', 'roles'],
 		'username',
 		usernameArgument,
@@ -162,7 +162,8 @@ function deleteCommand(
 	if (!roles.areHigherInPriority(adminsRoles, rolesOfAffectedUser))
 		return sendAndLogResponse(res, 403, 'Forbidden to delete ' + record.username + '.');
 
-	if (!isValidDeleteReason(reason)) throw Error(`Delete reason (${reason}) is invalid.`);
+	if (!memberManager.isValidDeleteReason(reason))
+		throw Error(`Delete reason (${reason}) is invalid.`);
 	deleteAccount(record.user_id, reason);
 
 	sendAndLogResponse(res, 200, 'Successfully deleted user ' + record.username + '.');
@@ -191,7 +192,7 @@ function banEmailCommand(
 		return;
 	}
 
-	addToBlacklist(email, 'banned');
+	blacklistManager.add(email, 'banned');
 	sendAndLogResponse(res, 200, `Successfully banned ${email}.`);
 }
 
@@ -218,7 +219,7 @@ function unbanEmailCommand(
 		return;
 	}
 
-	removeFromBlacklist(email);
+	blacklistManager.remove(email);
 	sendAndLogResponse(res, 200, `Successfully unbanned ${email}.`);
 }
 
@@ -242,7 +243,7 @@ function usernameCommand(
 		}
 		// Valid Syntax
 		logCommand(command, req);
-		const record = getMemberDataByCriteria(['username'], 'user_id', parsedId);
+		const record = memberManager.getDataByCriteria(['username'], 'user_id', parsedId);
 		if (record === undefined)
 			sendAndLogResponse(res, 404, 'User with id ' + parsedId + ' does not exist.');
 		else sendAndLogResponse(res, 200, record.username);
@@ -263,14 +264,18 @@ function logoutUser(command: string, commandAndArgs: string[], req: Request, res
 	// Valid Syntax
 	logCommand(command, req);
 	const usernameArgument = commandAndArgs[1]!;
-	const record = getMemberDataByCriteria(['user_id', 'username'], 'username', usernameArgument);
+	const record = memberManager.getDataByCriteria(
+		['user_id', 'username'],
+		'username',
+		usernameArgument,
+	);
 	if (record === undefined) {
 		sendAndLogResponse(res, 404, 'User ' + usernameArgument + ' does not exist.');
 		return;
 	}
 
 	// Effectively terminates all login sessions of the user
-	deleteAllRefreshTokensForUser(record.user_id);
+	refreshTokenManager.removeAllForUser(record.user_id);
 	sendAndLogResponse(res, 200, 'User ' + record.username + ' successfully logged out.'); // Use their case-sensitive username
 }
 
@@ -284,7 +289,7 @@ function getUserInfo(command: string, commandAndArgs: string[], req: Request, re
 	// Valid Syntax
 	logCommand(command, req);
 	const username = commandAndArgs[1]!;
-	const record = getMemberDataByCriteria(
+	const record = memberManager.getDataByCriteria(
 		[
 			'user_id',
 			'username',

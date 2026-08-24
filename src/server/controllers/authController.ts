@@ -12,7 +12,7 @@ import type { MemberRecord } from '../database/memberManager.js';
 
 import bcrypt from 'bcrypt';
 
-import { getMemberDataByCriteria } from '../database/memberManager.js';
+import memberManager from '../database/memberManager.js';
 import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
 import {
 	getBrowserAgent,
@@ -42,7 +42,7 @@ async function testPasswordForRequest(
 	// Emails always contain '@' and are stored lowercase; usernames can never contain '@'.
 	const isEmail = claimedUsername.includes('@');
 	const searchKey = isEmail ? 'email' : 'username';
-	// Lowercased here (not by the data layer): getMemberDataByCriteria is column-agnostic, so an
+	// Lowercased here (not by the data layer): memberManager.getDataByCriteria is column-agnostic, so an
 	// email search value must be normalized by the caller to match the stored lowercase emails.
 	const searchValue = isEmail ? claimedUsername.toLowerCase() : claimedUsername;
 
@@ -53,7 +53,7 @@ async function testPasswordForRequest(
 	if (!rateLimitLogin(req, res, browserAgent)) return undefined; // They are being rate limited from entering incorrectly too many times
 
 	try {
-		const record = getMemberDataByCriteria(
+		const record = memberManager.getDataByCriteria(
 			['user_id', 'username', 'hashed_password', 'roles'],
 			searchKey,
 			searchValue,

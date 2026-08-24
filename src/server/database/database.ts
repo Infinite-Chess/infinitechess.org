@@ -27,11 +27,11 @@ const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = path.dirname(__filename);
 
 // Create or connect to the SQLite database file
-const dbLocation: string =
+const DB_LOCATION: string =
 	process.env['NODE_ENV'] === 'test'
 		? ':memory:' // For integration tests, use in-memory database
 		: path.join(__dirname, '../../../', 'database.db'); // Normal database file
-const db = new Database(dbLocation);
+const db = new Database(DB_LOCATION);
 
 // Enable WAL (Write-Ahead Logging) mode for better concurrency and crash safety.
 // Writers no longer block readers, and the main database file is never modified mid-write.

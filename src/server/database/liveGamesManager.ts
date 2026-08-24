@@ -8,7 +8,7 @@
  */
 
 import db from './database.js';
-import { ALL_LIVE_GAMES_COLUMNS } from './databaseTables.js';
+import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -51,7 +51,7 @@ export interface LiveGameData {
  * @param record - The complete live_games record to insert.
  * @throws If a database error occurs.
  */
-export function insertLiveGame(record: LiveGamesRecord): void {
+function insert(record: LiveGamesRecord): void {
 	const query = `
 			INSERT INTO live_games (
 				game_id, time_created, variant, position, clock, rated, private,
@@ -77,11 +77,11 @@ export function insertLiveGame(record: LiveGamesRecord): void {
  * @param updates - An object containing only the columns to update and their new values.
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
-export function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
+function update(game_id: number, updates: Partial<LiveGameData>): void {
 	db.call(() => {
 		db.runRowUpdate({
 			tableName: 'live_games',
-			allowedColumns: ALL_LIVE_GAMES_COLUMNS,
+			allowedColumns: databaseTables.ALL_LIVE_GAMES_COLUMNS,
 			updates,
 			errorContext: `updating live game ${game_id}`,
 			whereClause: 'game_id = ?',
@@ -95,7 +95,7 @@ export function updateLiveGame(game_id: number, updates: Partial<LiveGameData>):
  * @param game_id - The game to delete.
  * @throws If a database error occurs.
  */
-export function deleteLiveGame(game_id: number): void {
+function remove(game_id: number): void {
 	db.call(
 		() => db.run('DELETE FROM live_games WHERE game_id = ?', [game_id]),
 		`Error deleting live game ${game_id}`,
@@ -107,9 +107,13 @@ export function deleteLiveGame(game_id: number): void {
  * @returns An array of all live_games records.
  * @throws If a database error occurs.
  */
-export function getAllLiveGames(): LiveGamesRecord[] {
+function getAll(): LiveGamesRecord[] {
 	return db.call(
 		() => db.all<LiveGamesRecord>('SELECT * FROM live_games'),
 		'Error retrieving all live games',
 	);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { insert, update, remove, getAll };

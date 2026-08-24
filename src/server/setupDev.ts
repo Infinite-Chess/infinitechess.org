@@ -8,8 +8,8 @@
 import validcheckmates from '../shared/chess/util/validcheckmates.js';
 
 import roles from './controllers/roles.js';
+import memberManager from './database/memberManager.js';
 import { generateAccount } from './controllers/accountSeeder.js';
-import { isUsernameTaken, updateMemberColumns } from './database/memberManager.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
@@ -27,7 +27,7 @@ export function initDevEnvironment(): void {
 
 /** Creates the standard development accounts (idempotent). */
 async function ensureDevelopmentAccounts(): Promise<void> {
-	if (!isUsernameTaken('owner')) {
+	if (!memberManager.isUsernameTaken('owner')) {
 		const user_id = await generateAccount({
 			username: 'Owner',
 			email: '4@gmail.com',
@@ -46,9 +46,9 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 		// 	+ "," + Object.values(validcheckmates.validCheckmates.hard).toString();
 		// Gold
 		const checkmates_beaten = Object.values(validcheckmates.validCheckmates).flat().join(',');
-		updateMemberColumns(user_id, { checkmates_beaten });
+		memberManager.updateColumns(user_id, { checkmates_beaten });
 	}
-	if (!isUsernameTaken('admin')) {
+	if (!memberManager.isUsernameTaken('admin')) {
 		const user_id = await generateAccount({
 			username: 'Admin',
 			email: '3@gmail.com',
@@ -56,7 +56,7 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 		});
 		roles.add(user_id, 'admin');
 	}
-	if (!isUsernameTaken('patron')) {
+	if (!memberManager.isUsernameTaken('patron')) {
 		const user_id = await generateAccount({
 			username: 'Patron',
 			email: '2@gmail.com',
@@ -64,7 +64,7 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 		});
 		roles.add(user_id, 'patron');
 	}
-	if (!isUsernameTaken('member')) {
+	if (!memberManager.isUsernameTaken('member')) {
 		await generateAccount({
 			username: 'Member',
 			email: '1@gmail.com',

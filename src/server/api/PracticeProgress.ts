@@ -9,8 +9,8 @@ import type { Request, Response } from 'express';
 
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 
+import memberManager from '../database/memberManager.js';
 import practiceProgressCookie from '../controllers/practiceProgressCookie.js';
-import { updateMemberColumns } from '../database/memberManager.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 /** `PUT /api/checkmates-progress` — records a checkmate the signed-in user has beaten. */
@@ -58,7 +58,7 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 		checkmates_beaten = checkmates_beaten_array.join(',');
 
 		// Save the new list to the database
-		updateMemberColumns(user_id, { checkmates_beaten });
+		memberManager.updateColumns(user_id, { checkmates_beaten });
 
 		logEvents(
 			`Member "${username}" of id "${user_id}" has beaten practice checkmate ${new_checkmate_beaten}. Beaten count: ${checkmates_beaten_array.length}. New checkmates_beaten: ${checkmates_beaten}`,

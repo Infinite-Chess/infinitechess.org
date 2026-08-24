@@ -10,7 +10,7 @@ import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
  * @param email - The email to blacklist. It will automatically be lowercased.
  * @throws If a database error occurs.
  */
-export function addToBlacklist(email: string, reason: string): void {
+function add(email: string, reason: string): void {
 	// Uses INSERT OR IGNORE so it doesn't crash if the email is already blacklisted.
 	db.call(
 		() =>
@@ -32,7 +32,7 @@ export function addToBlacklist(email: string, reason: string): void {
  * @param email - The email to remove from the blacklist. Case-insensitive.
  * @throws If a database error occurs.
  */
-export function removeFromBlacklist(email: string): void {
+function remove(email: string): void {
 	db.call(
 		() => db.run(`DELETE FROM email_blacklist WHERE email = ?`, [email.toLowerCase()]), // Lowercased to match the stored (lowercase) rows.
 		`Database error when removing email ${email} from blacklist`,
@@ -46,7 +46,7 @@ export function removeFromBlacklist(email: string): void {
  * @param email - The email to check. Case-insensitive.
  * @throws If a database error occurs.
  */
-export function isBlacklisted(email: string): boolean {
+function isBlacklisted(email: string): boolean {
 	const row = db.call(
 		() =>
 			// prettier-ignore
@@ -58,3 +58,7 @@ export function isBlacklisted(email: string): boolean {
 	);
 	return Boolean(row?.found);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { add, remove, isBlacklisted };

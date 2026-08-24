@@ -5,7 +5,7 @@
  */
 
 import db from './database.js';
-import { ALL_RATING_ABUSE_COLUMNS } from './databaseTables.js';
+import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -27,7 +27,7 @@ type RatingAbuseColumn = keyof RatingAbuseRecord;
  * @param leaderboard_id - The id for the specific leaderboard
  * @throws If a database error occurs.
  */
-export function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): void {
+function addEntry(user_id: number, leaderboard_id: number): void {
 	const query = `
 		INSERT INTO rating_abuse (
 			user_id,
@@ -48,7 +48,7 @@ export function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: numb
  * @returns True if an entry for this player exists in the rating_abuse table, false otherwise.
  * @throws If a database error occurs.
  */
-export function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: number): boolean {
+function isEntryIn(user_id: number, leaderboard_id: number): boolean {
 	const query = `
         SELECT 1
         FROM rating_abuse
@@ -70,13 +70,13 @@ export function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: numbe
  * @returns An object containing the requested columns.
  * @throws If invalid arguments are provided, if no match is found, or if a database error occurs.
  */
-export function getRatingAbuseData<K extends RatingAbuseColumn>(
+function getData<K extends RatingAbuseColumn>(
 	user_id: number,
 	leaderboard_id: number,
 	columns: K[],
 ): Pick<RatingAbuseRecord, K> {
 	return db.call(() => {
-		db.assertColumnsValid(columns, ALL_RATING_ABUSE_COLUMNS, 'rating_abuse');
+		db.assertColumnsValid(columns, databaseTables.ALL_RATING_ABUSE_COLUMNS, 'rating_abuse');
 
 		const query = `SELECT ${columns.join(', ')} FROM rating_abuse WHERE user_id = ? AND leaderboard_id = ?`;
 		const row = db.get<Pick<RatingAbuseRecord, K>>(query, [user_id, leaderboard_id]);
@@ -95,7 +95,7 @@ export function getRatingAbuseData<K extends RatingAbuseColumn>(
  * @throws If no matching entry exists or a database error occurs.
  * @throws If invalid arguments are provided or if a database error occurs.
  */
-export function updateRatingAbuseColumns(
+function updateColumns(
 	user_id: number,
 	leaderboard_id: number,
 	updates: Partial<RatingAbuseRecord>,
@@ -103,7 +103,7 @@ export function updateRatingAbuseColumns(
 	db.call(() => {
 		const result = db.runRowUpdate({
 			tableName: 'rating_abuse',
-			allowedColumns: ALL_RATING_ABUSE_COLUMNS,
+			allowedColumns: databaseTables.ALL_RATING_ABUSE_COLUMNS,
 			updates: updates,
 			errorContext: `updating rating_abuse columns for user ID "${user_id}" and leaderboard ID "${leaderboard_id}"`,
 			whereClause: 'user_id = ? AND leaderboard_id = ?',
@@ -113,3 +113,7 @@ export function updateRatingAbuseColumns(
 			throw new Error(`No changes made when updating rating_abuse table columns ${JSON.stringify(updates)} for entry with user ID "${user_id}" and leaderboard ID "${leaderboard_id}".`); // prettier-ignore
 	}, `Error updating rating_abuse table columns for user ID "${user_id}" and leaderboard ID "${leaderboard_id}"`);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { addEntry, isEntryIn, getData, updateColumns };

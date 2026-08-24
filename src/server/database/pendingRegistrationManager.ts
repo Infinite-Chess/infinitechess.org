@@ -39,7 +39,7 @@ export interface PendingRegistrationRecord {
  * If changed, update register-awaiting.POLL_MAX_DURATION_MS to stay just past this,
  * AND update the "24 hours" copy in the email toml component.
  */
-export const PENDING_REGISTRATION_EXPIRY_MS = 1000 * 60 * 60 * 24; // 1 day
+const EXPIRY_MS = 1000 * 60 * 60 * 24; // 1 day
 
 // Create -------------------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ export const PENDING_REGISTRATION_EXPIRY_MS = 1000 * 60 * 60 * 24; // 1 day
  * @param hashedPassword - The already-hashed password.
  * @throws If a database error occurs (e.g. a constraint violation).
  */
-export function addPendingRegistration(
+function add(
 	claimToken: string,
 	verificationToken: string,
 	username: string,
@@ -60,7 +60,7 @@ export function addPendingRegistration(
 	hashedPassword: string,
 ): void {
 	const now = Date.now();
-	const expiresAt = now + PENDING_REGISTRATION_EXPIRY_MS;
+	const expiresAt = now + EXPIRY_MS;
 	const query = `
 		INSERT INTO pending_registrations (
 			claim_token, verification_token, username, email, hashed_password, created_at, expires_at
@@ -89,9 +89,7 @@ export function addPendingRegistration(
  * @returns The record if found, otherwise undefined.
  * @throws If a database error occurs.
  */
-export function getPendingRegistrationByClaimToken(
-	claimToken: string,
-): PendingRegistrationRecord | undefined {
+function getByClaimToken(claimToken: string): PendingRegistrationRecord | undefined {
 	const query = `SELECT * FROM pending_registrations WHERE claim_token = ?`;
 	return db.call(
 		() => db.get<PendingRegistrationRecord>(query, [claimToken]),
@@ -105,9 +103,7 @@ export function getPendingRegistrationByClaimToken(
  * @returns The record if found, otherwise undefined.
  * @throws If a database error occurs.
  */
-export function getPendingRegistrationByVerificationToken(
-	verificationToken: string,
-): PendingRegistrationRecord | undefined {
+function getByVerificationToken(verificationToken: string): PendingRegistrationRecord | undefined {
 	const query = `SELECT * FROM pending_registrations WHERE verification_token = ?`;
 	return db.call(
 		() => db.get<PendingRegistrationRecord>(query, [verificationToken]),
@@ -124,7 +120,7 @@ export function getPendingRegistrationByVerificationToken(
  * @returns True if a non-expired pending row holds this username.
  * @throws If a database error occurs.
  */
-export function isUsernameTakenInPending(username: string): boolean {
+function isUsernameTaken(username: string): boolean {
 	const query = `
 		SELECT EXISTS(
 			SELECT 1 FROM pending_registrations
@@ -144,7 +140,7 @@ export function isUsernameTakenInPending(username: string): boolean {
  * @returns True if a non-expired pending row holds this email.
  * @throws If a database error occurs.
  */
-export function isEmailTakenInPending(email: string): boolean {
+function isEmailTaken(email: string): boolean {
 	const query = `
 		SELECT EXISTS(
 			SELECT 1 FROM pending_registrations
@@ -167,7 +163,7 @@ export function isEmailTakenInPending(email: string): boolean {
  * @returns True if another non-expired pending row holds this email.
  * @throws If a database error occurs.
  */
-export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: string): boolean {
+function isEmailTakenByOther(email: string, excludeClaimToken: string): boolean {
 	const query = `
 		SELECT EXISTS(
 			SELECT 1 FROM pending_registrations
@@ -193,12 +189,8 @@ export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: s
  * @param verificationToken - A freshly generated verification token.
  * @throws If a database error occurs.
  */
-export function updatePendingRegistrationEmail(
-	claimToken: string,
-	email: string,
-	verificationToken: string,
-): void {
-	const expiresAt = Date.now() + PENDING_REGISTRATION_EXPIRY_MS;
+function updateEmail(claimToken: string, email: string, verificationToken: string): void {
+	const expiresAt = Date.now() + EXPIRY_MS;
 	const query = `
 		UPDATE pending_registrations
 		SET email = ?, verification_token = ?, expires_at = ?
@@ -217,7 +209,7 @@ export function updatePendingRegistrationEmail(
  * @param memberUserId - The user_id of the newly created member.
  * @throws If a database error occurs, or if no pending row matches the claim_token.
  */
-export function markPendingRegistrationVerified(claimToken: string, memberUserId: number): void {
+function markVerified(claimToken: string, memberUserId: number): void {
 	const query = `UPDATE pending_registrations SET member_user_id = ? WHERE claim_token = ?`;
 	db.call(() => {
 		const result = db.run(query, [memberUserId, claimToken]);
@@ -235,7 +227,7 @@ export function markPendingRegistrationVerified(claimToken: string, memberUserId
  * @param email - The email whose expired pending rows should be cleared. It will automatically be lowercased.
  * @throws If a database error occurs.
  */
-export function deleteExpiredPendingRegistrationsFor(username: string, email: string): void {
+function removeExpiredFor(username: string, email: string): void {
 	const query = `
 		DELETE FROM pending_registrations
 		WHERE (username = ? OR email = ?) AND expires_at <= ?
@@ -250,10 +242,32 @@ export function deleteExpiredPendingRegistrationsFor(username: string, email: st
  * Cleanup: deletes every pending registration whose `expires_at` is in the past.
  * @throws If a database error occurs.
  */
-export function deleteExpiredPendingRegistrations(): void {
+function removeExpired(): void {
 	const query = `DELETE FROM pending_registrations WHERE expires_at <= ?`;
 	db.call(
 		() => db.run(query, [Date.now()]),
 		'Database error while sweeping expired pending registrations',
 	);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default {
+	// Constants
+	EXPIRY_MS,
+	// Create
+	add,
+	// Lookups
+	getByClaimToken,
+	getByVerificationToken,
+	// Availability checks (non-expired rows only)
+	isUsernameTaken,
+	isEmailTaken,
+	isEmailTakenByOther,
+	// Update
+	updateEmail,
+	markVerified,
+	// Deletion
+	removeExpiredFor,
+	removeExpired,
+};

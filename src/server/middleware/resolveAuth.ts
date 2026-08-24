@@ -12,8 +12,8 @@ import jsutil from '../../shared/util/jsutil.js';
 import sessionManager from '../controllers/authenticationTokens/sessionManager.js';
 import { getClientIP } from '../utility/IP.js';
 import { ParsedCookies } from '../types.js';
+import refreshTokenManager from '../database/refreshTokenManager.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
-import { validateRefreshToken } from '../database/refreshTokenManager.js';
 
 /**
  * [HTTP] Resolves identity from the refresh-token cookie, setting `req.memberInfo` so downstream
@@ -42,7 +42,7 @@ function tryRefreshToken(req: Request, res: Response): void {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return; // No refresh token present
 
-	const result = validateRefreshToken(refreshToken, getClientIP(req));
+	const result = refreshTokenManager.validate(refreshToken, getClientIP(req));
 
 	if (!result) {
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.

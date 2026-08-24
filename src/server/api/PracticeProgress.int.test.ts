@@ -7,8 +7,8 @@ import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 
-import { getMemberDataByCriteria } from '../database/memberManager.js';
-import { generateTables, clearAllTables } from '../database/databaseTables.js';
+import memberManager from '../database/memberManager.js';
+import databaseTables from '../database/databaseTables.js';
 
 // We'll use the first easy checkmate as our valid test case
 const VALID_CHECKMATE_ID = validcheckmates.validCheckmates.easy[0];
@@ -18,12 +18,12 @@ if (!VALID_CHECKMATE_ID) throw new Error('No valid checkmate IDs found for testi
 describe('Practice Progress Integration', () => {
 	// Runs once at the very start of this file
 	beforeAll(() => {
-		generateTables();
+		databaseTables.generateTables();
 	});
 
 	// Runs before EVERY single 'it' block
 	beforeEach(() => {
-		clearAllTables();
+		databaseTables.clearAllTables();
 	});
 
 	it('should reject requests with no body', async () => {
@@ -86,7 +86,11 @@ describe('Practice Progress Integration', () => {
 		expect(response.status).toBe(200);
 
 		// Check DB Side Effect
-		const record = getMemberDataByCriteria(['checkmates_beaten'], 'username', user.username);
+		const record = memberManager.getDataByCriteria(
+			['checkmates_beaten'],
+			'username',
+			user.username,
+		);
 		expect(record?.checkmates_beaten).toBe(VALID_CHECKMATE_ID);
 
 		// Verify the response set the updated cookie
@@ -119,7 +123,11 @@ describe('Practice Progress Integration', () => {
 		expect(response.status).toBe(200);
 
 		// DB should have both IDs stored correctly
-		const record = getMemberDataByCriteria(['checkmates_beaten'], 'username', user.username);
+		const record = memberManager.getDataByCriteria(
+			['checkmates_beaten'],
+			'username',
+			user.username,
+		);
 		expect(record?.checkmates_beaten).toBe([VALID_CHECKMATE_ID, secondCheckmateId].join(','));
 	});
 
@@ -142,7 +150,11 @@ describe('Practice Progress Integration', () => {
 		expect(response.status).toBe(204);
 
 		// DB should still only have it once (no duplicates like "ID,ID")
-		const record = getMemberDataByCriteria(['checkmates_beaten'], 'username', user.username);
+		const record = memberManager.getDataByCriteria(
+			['checkmates_beaten'],
+			'username',
+			user.username,
+		);
 		expect(record?.checkmates_beaten).toBe(VALID_CHECKMATE_ID);
 	});
 });

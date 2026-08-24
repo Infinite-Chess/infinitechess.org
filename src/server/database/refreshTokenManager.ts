@@ -9,8 +9,8 @@
 import type { Request } from 'express';
 
 import db from './database.js';
+import memberManager from './memberManager.js';
 import { getClientIP } from '../utility/IP.js';
-import { updateLastSeen } from './memberManager.js';
 import { verifyTokenPayload, TokenPayload } from '../utility/tokenSigner.js';
 
 // Types --------------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ export type RefreshTokenRecord = {
  * The window where a "consumed" token is still accepted, allowing a
  * short grace period for concurrent requests during session renewal.
  */
-export const TOKEN_GRACE_PERIOD_MS = 1000 * 10; // 10 seconds
+const GRACE_PERIOD_MS = 1000 * 10; // 10 seconds
 
 // Finding ------------------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ export const TOKEN_GRACE_PERIOD_MS = 1000 * 10; // 10 seconds
  * @returns The token record if found, otherwise undefined.
  * @throws If a database error occurs.
  */
-export function findRefreshToken(token: string): RefreshTokenRecord | undefined {
+function find(token: string): RefreshTokenRecord | undefined {
 	const query = `
         SELECT token, user_id, created_at, expires_at, is_persistent, consumed_at, ip_address
         FROM refresh_tokens
@@ -70,7 +70,7 @@ export function findRefreshToken(token: string): RefreshTokenRecord | undefined 
  * @returns A list of RefreshTokenRecords connected to the users in the user_id_list
  * @throws If a database error occurs.
  */
-export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenRecord[] {
+function findAllForUsers(user_id_list: number[]): RefreshTokenRecord[] {
 	const placeholders = user_id_list.map(() => '?').join(', ');
 	const query = `
         SELECT token, user_id, created_at, expires_at, ip_address
@@ -94,7 +94,7 @@ export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenR
  * @param isPersistent - Whether this is a persistent ("keep me logged in") session.
  * @throws If a database error occurs.
  */
-export function addRefreshToken(
+function add(
 	req: Request,
 	userId: number,
 	token: string,
@@ -127,7 +127,7 @@ export function addRefreshToken(
  * @param ip - The new IP address to record.
  * @throws If a database error occurs.
  */
-export function updateRefreshTokenIP(token: string, ip: string | null): void {
+function updateIP(token: string, ip: string | null): void {
 	const query = `UPDATE refresh_tokens SET ip_address = ? WHERE token = ?`;
 	db.call(() => db.run(query, [ip, token]), 'Database error while updating refresh token IP');
 }
@@ -138,7 +138,7 @@ export function updateRefreshTokenIP(token: string, ip: string | null): void {
  * @param token - The token to mark as consumed.
  * @throws If a database error occurs.
  */
-export function markRefreshTokenAsConsumed(token: string): void {
+function markConsumed(token: string): void {
 	const now = Date.now();
 	const query = `UPDATE refresh_tokens SET consumed_at = ? WHERE token = ?`;
 	db.call(
@@ -155,7 +155,7 @@ export function markRefreshTokenAsConsumed(token: string): void {
  * @param token - The token to delete.
  * @throws If a database error occurs.
  */
-export function deleteRefreshToken(token: string): void {
+function remove(token: string): void {
 	const query = `DELETE FROM refresh_tokens WHERE token = ?`;
 	db.call(() => db.run(query, [token]), 'Database error while deleting refresh token');
 }
@@ -166,7 +166,7 @@ export function deleteRefreshToken(token: string): void {
  * @param userId - The user's ID.
  * @throws If a database error occurs.
  */
-export function deleteAllRefreshTokensForUser(userId: number): void {
+function removeAllForUser(userId: number): void {
 	const query = `DELETE FROM refresh_tokens WHERE user_id = ?`;
 	db.call(
 		() => db.run(query, [userId]),
@@ -183,7 +183,7 @@ export function deleteAllRefreshTokensForUser(userId: number): void {
  * and updates the member's last_seen.
  * @param IP - Has a chance to not be defined on HTTP requests.
  */
-export function validateRefreshToken(
+function validate(
 	token: string,
 	IP?: string,
 ): { payload: TokenPayload; tokenRecord: RefreshTokenRecord } | undefined {
@@ -202,7 +202,7 @@ export function validateRefreshToken(
 	}
 
 	try {
-		updateLastSeen(payload.user_id);
+		memberManager.updateLastSeen(payload.user_id);
 	} catch {
 		// DB error (already logged). Token is still valid
 	}
@@ -219,7 +219,7 @@ export function validateRefreshToken(
  */
 function resolveValidTokenRecord(token: string, IP?: string): RefreshTokenRecord | undefined {
 	// Find the token in the database.
-	const tokenRecord = findRefreshToken(token);
+	const tokenRecord = find(token);
 
 	if (!tokenRecord) return; // Token must have been manually invalidated by the user logging out, or deleting their account.
 
@@ -228,22 +228,41 @@ function resolveValidTokenRecord(token: string, IP?: string): RefreshTokenRecord
 	// Check if it is naturally expired.
 	if (tokenRecord.expires_at < now) {
 		// The token is expired, remove it from the database for cleanup.
-		deleteRefreshToken(token);
+		remove(token);
 		return;
 	}
 
 	// Check if it was consumed (replaced) and the grace period has ended.
-	if (tokenRecord.consumed_at !== null && now - tokenRecord.consumed_at > TOKEN_GRACE_PERIOD_MS) {
+	if (tokenRecord.consumed_at !== null && now - tokenRecord.consumed_at > GRACE_PERIOD_MS) {
 		// The token is "dead" (grace period over). Remove it from the database.
-		deleteRefreshToken(token);
+		remove(token);
 		return;
 	}
 
 	// Update the IP address if it has changed.
 	const IP_New: string | null = IP || null;
 	if (IP_New !== tokenRecord.ip_address) {
-		updateRefreshTokenIP(token, IP_New);
+		updateIP(token, IP_New);
 	}
 
 	return tokenRecord;
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default {
+	// Constants
+	GRACE_PERIOD_MS,
+	// Finding
+	find,
+	findAllForUsers,
+	// Adding & Updating
+	add,
+	updateIP,
+	markConsumed,
+	// Deleting
+	remove,
+	removeAllForUser,
+	// Validating presented tokens
+	validate,
+};

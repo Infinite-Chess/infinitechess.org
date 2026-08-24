@@ -8,9 +8,9 @@
 import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
+import refreshTokenManager from './refreshTokenManager.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
-import { TOKEN_GRACE_PERIOD_MS } from './refreshTokenManager.js';
-import { deleteExpiredPendingRegistrations } from './pendingRegistrationManager.js';
+import pendingRegistrationManager from './pendingRegistrationManager.js';
 
 // Constants ----------------------------------------------------------------------------------
 
@@ -19,7 +19,7 @@ const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 // Scheduling ----------------------------------------------------------------------------------
 
 /** Runs immediately, then once a day: every table's stale-data cleanup. */
-function startPeriodicDatabaseCleanupTasks(): void {
+export function startPeriodicDatabaseCleanupTasks(): void {
 	performCleanupTasks(); // Run immediately to clean up now.
 	setInterval(() => performCleanupTasks(), CLEANUP_INTERVAL_MS);
 }
@@ -29,7 +29,7 @@ function performCleanupTasks(): void {
 	checkDatabaseIntegrity();
 	deleteExpiredPasswordResetTokens();
 	cleanUpExpiredRefreshTokens();
-	deleteExpiredPendingRegistrations();
+	pendingRegistrationManager.removeExpired();
 }
 
 // Individual cleanups -------------------------------------------------------------------------
@@ -78,7 +78,7 @@ function deleteExpiredPasswordResetTokens(): void {
 function cleanUpExpiredRefreshTokens(): void {
 	try {
 		const now = Date.now();
-		const consumptionThreshold = now - TOKEN_GRACE_PERIOD_MS;
+		const consumptionThreshold = now - refreshTokenManager.GRACE_PERIOD_MS;
 
 		const query = `
             DELETE FROM refresh_tokens
@@ -100,7 +100,3 @@ function cleanUpExpiredRefreshTokens(): void {
 		logEventsAndPrint(errorMessage, 'errLog');
 	}
 }
-
-// Exports ------------------------------------------------------------------------------------
-
-export { startPeriodicDatabaseCleanupTasks };

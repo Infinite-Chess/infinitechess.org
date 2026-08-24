@@ -31,20 +31,12 @@ import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validlea
 import abusechecks from './abusechecks.js';
 import abusereport from './abusereport.js';
 import gameutility from '../gamemanager/gameutility.js';
+import gamesManager from '../../database/gamesManager.js';
+import memberManager from '../../database/memberManager.js';
+import playerGamesManager from '../../database/playerGamesManager.js';
+import ratingAbuseManager from '../../database/ratingAbuseManager.js';
+import refreshTokenManager from '../../database/refreshTokenManager.js';
 import { logEventsAndPrint } from '../../utility/logEvents.js';
-import { getMultipleGameData } from '../../database/gamesManager.js';
-import { findRefreshTokensForUsers } from '../../database/refreshTokenManager.js';
-import { getMultipleMemberDataByCriteria } from '../../database/memberManager.js';
-import {
-	getRecentNRatedGamesForUser,
-	getOpponentsOfUserFromGames,
-} from '../../database/playerGamesManager.js';
-import {
-	addEntryToRatingAbuseTable,
-	isEntryInRatingAbuseTable,
-	getRatingAbuseData,
-	updateRatingAbuseColumns,
-} from '../../database/ratingAbuseManager.js';
 
 // Constants -------------------------------------------------------------------------------------
 
@@ -94,7 +86,7 @@ function measurePlayer(user_id: number, username: string, leaderboard_id: number
 	if (due === undefined) return; // Not enough games played since the last check yet.
 
 	// Retrieve the most recent ranked non-aborted games from the player_games table
-	const recentPlayerGamesEntries = getRecentNRatedGamesForUser(
+	const recentPlayerGamesEntries = playerGamesManager.getRecentNRatedForUser(
 		user_id,
 		leaderboard_id,
 		GAME_INTERVAL_TO_MEASURE,
@@ -133,11 +125,11 @@ function consumeCheckInterval(
 	leaderboard_id: number,
 ): { lastAlertedAt: string | null } | undefined {
 	// If player is not in rating_abuse table, add him to it
-	if (!isEntryInRatingAbuseTable(user_id, leaderboard_id))
-		addEntryToRatingAbuseTable(user_id, leaderboard_id);
+	if (!ratingAbuseManager.isEntryIn(user_id, leaderboard_id))
+		ratingAbuseManager.addEntry(user_id, leaderboard_id);
 
 	// Access the player rating_abuse data
-	const rating_abuse_data = getRatingAbuseData(user_id, leaderboard_id, [
+	const rating_abuse_data = ratingAbuseManager.getData(user_id, leaderboard_id, [
 		'game_count_since_last_check',
 		'last_alerted_at',
 	]);
@@ -146,12 +138,12 @@ function consumeCheckInterval(
 
 	// Early exit condition if the newly incremented game_count_since_last_check is still below the GAME_INTERVAL_TO_MEASURE threshhold
 	if (game_count_since_last_check < GAME_INTERVAL_TO_MEASURE) {
-		updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
+		ratingAbuseManager.updateColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
 		return undefined;
 	}
 
 	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0 from now on
-	updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check: 0 });
+	ratingAbuseManager.updateColumns(user_id, leaderboard_id, { game_count_since_last_check: 0 });
 
 	return { lastAlertedAt: rating_abuse_data.last_alerted_at ?? null };
 }
@@ -164,7 +156,7 @@ function buildGameInfoList(
 	gameIds: number[],
 ): AbuseGameInfo[] {
 	// Retrieve these same games also from the games table.
-	const recentGamesEntries = getMultipleGameData(gameIds, [
+	const recentGamesEntries = gamesManager.getMultipleData(gameIds, [
 		'game_id',
 		'date',
 		'base_time_seconds',
@@ -206,7 +198,7 @@ function buildGameInfoList(
 /** Gathers who the player faced across those games, how often, their IP addresses, and their accounts. */
 function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvidence {
 	// Get a list of the user_ids of the previous opponents of the player
-	const opponentPlayerGamesEntries = getOpponentsOfUserFromGames(user_id, gameIds, ['user_id']);
+	const opponentPlayerGamesEntries = playerGamesManager.getOpponentsOfUser(user_id, gameIds, ['user_id']); // prettier-ignore
 	const opponentIds = opponentPlayerGamesEntries.map((entry) => entry.user_id!);
 	const unique_user_id_list = [...new Set(opponentIds)];
 
@@ -219,7 +211,10 @@ function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvi
 	// Get the refresh tokens of the user and all his opponents
 	let refreshTokenEntries: RefreshTokenRecord[];
 	try {
-		refreshTokenEntries = findRefreshTokensForUsers([user_id, ...unique_user_id_list]);
+		refreshTokenEntries = refreshTokenManager.findAllForUsers([
+			user_id,
+			...unique_user_id_list,
+		]);
 	} catch (error: unknown) {
 		const message = jsutil.getErrorMessage(error);
 		void logEventsAndPrint(
@@ -248,7 +243,7 @@ function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvi
 	// Get relevant MemberRecords of the opponents from the members table
 	let opponents: AbuseEvidence['opponents'] = [];
 	try {
-		opponents = getMultipleMemberDataByCriteria(
+		opponents = memberManager.getMultipleDataByCriteria(
 			['username', 'user_id', 'joined'],
 			'user_id',
 			unique_user_id_list,
