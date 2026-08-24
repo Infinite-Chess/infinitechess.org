@@ -87,6 +87,8 @@ scripts disagree, study more siblings before trusting either.
 ## During the refactor
 
 - Behavior-identical unless told otherwise.
+- Any script the refactor touches gets brought up to EVERY convention here, including
+  violations unrelated to the reason it was opened.
 - After mass programmatic updates (scripted renames/replacements), auto-stage ONLY the
   files whose changes are purely mechanical import updates; never sweep in files you
   hand-edited — mixed files count as hand-edited.
