@@ -9,7 +9,7 @@
  * ban can't be out-waited by simply not visiting for a while.
  */
 
-import type { CookieOptions, Request, Response, NextFunction } from 'express';
+import type { CookieOptions, Request, Response } from 'express';
 
 import crypto from 'crypto';
 
@@ -36,21 +36,10 @@ function setCookie(res: Response, id: string, maxAgeMillis: number): void {
 	res.cookie('browser-id', id, { ...COOKIE_OPTIONS, maxAge: maxAgeMillis });
 }
 
-/**
- * Assigns/renews the browser-id cookie to all requests for an html file.
- * If they have an existing browser id, it renews it for 7 more days.
- * If they don't, it gives them a new browser id for 7 day.
- */
-function assignOrRenew(req: Request, res: Response, next: NextFunction): void {
-	// We don't have to worry about the request being for a resource because those have already been served.
-	// The only scenario this request could be for now is an HTML or fetch API request.
-	if (!req.accepts('html')) return next(); // Not an HTML request (but a fetch), don't set the cookie
-
-	const cookies = req.cookies;
-	if (!cookies['browser-id']) assignNew(res);
+/** Assigns the browser-id cookie if they have none, otherwise renews the existing one for 7 more days. */
+function assignOrRenew(req: Request, res: Response): void {
+	if (!req.cookies['browser-id']) assignNew(res);
 	else renew(req, res);
-
-	next();
 }
 
 /** Assigns a fresh browser-id cookie. */
