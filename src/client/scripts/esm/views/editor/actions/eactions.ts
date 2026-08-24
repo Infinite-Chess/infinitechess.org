@@ -16,8 +16,9 @@
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit';
+import type { MetaData } from '../../../../../../shared/chess/util/metadatautil.js';
+import type { MovePacket } from '../../../../../../shared/domain.js';
 import type { ActivePosition } from '../boardeditor';
-import type { MetaData, MovePacket } from '../../../../../../shared/domain.js';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 import type { EditorSaveState, StorageType } from '../../../savedpositions/storetypes';
 

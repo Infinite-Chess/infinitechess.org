@@ -14,7 +14,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import math from '../../../../../shared/util/math/math.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
-import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
+import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/util/typeutil.js';
 

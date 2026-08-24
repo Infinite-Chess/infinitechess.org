@@ -6,8 +6,9 @@
  */
 
 import type { VNode } from 'snabbdom';
+import type { Rating } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantInfo } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { Rating, BaseSeek, OutSeek, SeekId } from '../../../../../shared/domain.js';
+import type { BaseSeek, OutSeek, SeekId } from '../../../../../shared/domain.js';
 import type {
 	CreateSeekMessage,
 	CreateEngineGameMessage,

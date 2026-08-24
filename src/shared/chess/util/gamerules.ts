@@ -9,6 +9,10 @@ import type { UnboundedRectangle } from '../../util/math/bounds.js';
 import type { GameruleWinCondition } from './winconutil.js';
 import type { Player, RawType, PlayerGroup } from '../../util/typeutil.js';
 
+import { rawTypes as r } from '../../util/typeutil.js';
+
+// Types --------------------------------------------------------------------------
+
 export interface GameRules {
 	/** An object containing lists of what win conditions each color can win by. */
 	winConditions: PlayerGroup<GameruleWinCondition[]>;
@@ -40,6 +44,16 @@ export type Promotion = {
 	/** A shared list of raw piece types any player can promote to. */
 	pieces: RawType[];
 };
+
+// Constants ----------------------------------------------------------------------
+
+/**
+ * What a game promotes to when nothing declares otherwise.
+ * Frozen: ICN omits a list matching this, so changing it reinterprets every stored one.
+ */
+export const DEFAULT_PROMOTION_PIECES = [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
+
+// Functions ----------------------------------------------------------------------
 
 /** Checks if a specified color has a given win condition. */
 function doesColorHaveWinCondition(

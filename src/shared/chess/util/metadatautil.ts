@@ -1,19 +1,69 @@
 // src/shared/chess/util/metadatautil.ts
 
 /**
- * This script stores the type definition for a game's metadata.
+ * This script stores the type definition for a game's metadata,
+ * and the helpers that format its values.
  *
  * ICN (Infinite Chess Notation) is inspired from PGN notation.
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
 import type { Player } from '../../util/typeutil.js';
-import type { MetaData, Rating } from '../../domain.js';
+import type { TimeControl } from './clockutil.js';
+
+import * as z from 'zod';
 
 import timeutil from '../../util/timeutil.js';
 import { players as p } from '../../util/typeutil.js';
 
 // Types --------------------------------------------------------------------------
+
+/** A player's rating value and whether we are confident about it. */
+export type Rating = z.infer<typeof RatingSchema>;
+export const RatingSchema = z.strictObject({
+	value: z.number(),
+	confident: z.boolean(),
+});
+
+/**
+ * ICN (Infinite Chess Notation) metadata for a game, inspired by PGN notation.
+ * A plain type, not a schema — it is parsed out of an ICN, never off the wire.
+ */
+export interface MetaData {
+	/** What kind of game (rated/casual), and variant, in spoken language. E.g. "Casual local Classical infinite chess game". */
+	Event?: string;
+	/** The website the game was played on, or the direct URL of the game. */
+	Site?: string;
+	/** The ID of the game in base 62, if applicable. */
+	GameId?: string;
+	TimeControl?: TimeControl;
+	/** The round number. A pgn-required metadata with no current application to infinitechess.org. */
+	Round?: '-';
+	/** The UTC date of the game, in the format `"YYYY.MM.DD"`. */
+	UTCDate?: string;
+	/** The UTC time the game started, in the format `"HH:MM:SS"`. */
+	UTCTime?: string;
+	/** If it's not a custom position, this must be one of the valid variants. */
+	Variant?: string;
+	White?: string;
+	Black?: string;
+	/** The ID of the white player, if they are signed in, converted to base 62. */
+	WhiteID?: string;
+	/** The ID of the black player, if they are signed in, converted to base 62. */
+	BlackID?: string;
+	/** The display elo of the white player, which may include a "?" if we're uncertain about their rating. */
+	WhiteElo?: string;
+	/** The display elo of the black player, which may include a "?" if we're uncertain about their rating. */
+	BlackElo?: string;
+	/** How much elo white gained/lost from the match. */
+	WhiteRatingDiff?: string;
+	/** How much elo black gained/lost from the match. */
+	BlackRatingDiff?: string;
+	/** How many points each side received from the game (e.g. `"1-0"` means white won, `"1/2-1/2"` means a draw). */
+	Result?: string;
+	/** What caused the game to end, in spoken language. E.g. "Time forfeit". */
+	Termination?: string;
+}
 
 /** All valid metadata names. */
 export type MetadataKey = keyof MetaData;

@@ -17,7 +17,7 @@ import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
-import winconutil from '../util/winconutil.js';
+import checkmate from '../logic/checkmate.js';
 import apeiron_card from '../engines/apeiron_card.js';
 import variantreader from './variantreader.js';
 import checkdetection from '../logic/checkdetection.js';
@@ -85,7 +85,7 @@ export type PositionRejection =
  * 5. Every non-neutral piece's color is in the turn order.
  *    In 2-player mode, no neutral gargoyle pieces are allowed.
  * 6. Checkmate incompatibility: not 4-player, and no player gets consecutive turns. Mirrors
- *    {@link winconutil.isCheckmateCompatibleWithGame}, whose remaining checks (piece count,
+ *    {@link checkmate.isCompatible}, whose remaining checks (piece count,
  *    slide-line count) only trip on positions far larger than any this ever sees.
  * 7. Every promotion target is a piece a pawn may actually become — see
  *    {@link isValidPromotionPiece}.
@@ -191,7 +191,7 @@ export function validatePosition(
  * 4. Seek: every player in the turn order has at least one piece. Having no *royal* is fine, even
  *    under a royal-requiring win condition — they simply can't win (e.g. a practice checkmate PvP).
  * 5. Seek: royal count is within what checkmate can afford. Mirrors the cap in
- *    {@link winconutil.isCheckmateCompatibleWithGame}.
+ *    {@link checkmate.isCompatible}.
  * 6. Engine: the position is one the engine can actually handle.
  *
  * A played-out position may break rule 4 while staying perfectly viewable
@@ -233,7 +233,7 @@ export function getPlayabilityRejection(
 		// --- Rule 5: Royal count is not too high for checkmate ---
 		if (
 			usesCheckmate(gamefile.gameRules) &&
-			boardutil.getRoyalCountOfGame(gamefile.pieces) > winconutil.royalCountToDisableCheckmate
+			boardutil.getRoyalCountOfGame(gamefile.pieces) > checkmate.MAX_ROYALS
 		) {
 			return { kind: 'position', code: 'too_many_royals_for_checkmate' };
 		}

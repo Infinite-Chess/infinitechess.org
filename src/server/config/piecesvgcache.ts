@@ -16,7 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
 
-import pieceThemes from '../../shared/components/header/pieceThemes.js';
+import pieceThemes from '../../shared/chess/util/pieceThemes.js';
 import typeutil, { players, rawTypes } from '../../shared/util/typeutil.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

@@ -16,7 +16,7 @@ import geometry from '../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
+import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
 import { rawTypes as r } from '../../../../../shared/util/typeutil.js';
 
 import meshes from './meshes.js';

@@ -7,7 +7,7 @@
  */
 
 import type { Mesh } from './piecemodels.js';
-import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
+import type { VariantCode } from '../../../../../shared/chess/util/variantcodes.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type { GameModifier } from '../../../../../shared/util/modutil.js';
 import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';

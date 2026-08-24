@@ -4,8 +4,9 @@
  * This script manages the game setup invite/seek creation modal.
  */
 
+import type { GameMode } from '../../../../../shared/domain.js';
 import type { ModalMode } from '../../handoffs/gamesetuphandoff.js';
-import type { GameMode, TimeControl } from '../../../../../shared/domain.js';
+import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
 
 import { players } from '../../../../../shared/util/typeutil.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';

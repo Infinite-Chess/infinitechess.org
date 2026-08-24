@@ -7,7 +7,7 @@
  * so we can display that info.
  */
 
-import type { VariantCode } from '../../../../shared/chess/variants/variantregistry.js';
+import type { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
 import type { UsernameItem } from '../util/usernamecontainer.js';
 
 import {

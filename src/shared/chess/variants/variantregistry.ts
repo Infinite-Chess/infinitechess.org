@@ -3,21 +3,22 @@
 /**
  * Master registry of all variants.
  *
- * Stores variant's code, display name, and dynamic import functions for their scripts.
+ * Pairs each {@link VariantCode} with its display name, group, and the dynamic
+ * import that loads its script.
  *
  * Existing groups are: Standard, Horde, 4D, and Showcase.
  */
 
+import type { VariantCode } from '../util/variantcodes.js';
 import type { VariantModule } from './variant_scripts/variantutil.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
+
+import { VARIANT_CODES } from '../util/variantcodes.js';
 
 // Types -------------------------------------------------------------------------------
 
 /** All valid variant group names. Does not include custom variants. */
 export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase';
-
-/** Union of all valid variant codes, derived from the keys of {@link VARIANT_REGISTRY}. */
-export type VariantCode = (typeof VARIANT_CODES)[number];
 
 export type VariantInfo = {
 	group: VariantGroup;
@@ -199,10 +200,8 @@ const VARIANT_REGISTRY = {
 		name: 'Omega^4',
 		loadVariant: () => import('./variant_scripts/variants/var_omegafourth.js'),
 	},
-} satisfies Record<string, VariantRegistryEntry>;
-
-/** An array of all valid variant codes. */
-const VARIANT_CODES = Object.keys(VARIANT_REGISTRY) as (keyof typeof VARIANT_REGISTRY)[];
+	// Every code must appear exactly once: a missing entry and an unknown key are both errors here.
+} satisfies Record<VariantCode, VariantRegistryEntry>;
 
 // Functions ------------------------------------------------------------------
 
@@ -290,9 +289,6 @@ function getVariantsForGroup(group: VariantGroup): VariantCode[] {
 // Exports ----------------------------------------------------------
 
 export default {
-	// Constants
-	VARIANT_CODES,
-	// Functions
 	getVariantGroupIconId,
 	resolveVariantCode,
 	getVariantName,

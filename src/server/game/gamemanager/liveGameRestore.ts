@@ -15,16 +15,17 @@
  */
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
-import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
+import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { ValidEngine } from '../../../shared/chess/engine.js';
+import type { SeekVariant } from '../../../shared/domain.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { SlideLimitValue } from '../../../shared/util/gameconfig.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
+import type { ClockValues, TimeControl } from '../../../shared/chess/util/clockutil.js';
 import type { MatchInfo, PlayerData, ServerGame } from './servergametypes.js';
-import type { SeekVariant, ClockValues, TimeControl } from '../../../shared/domain.js';
 
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';

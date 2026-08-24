@@ -1,8 +1,7 @@
 // src/shared/chess/variants/validleaderboard.ts
 
 import type { SeekVariant } from '../../domain.js';
-
-import { VariantCode } from './variantregistry';
+import type { VariantCode } from '../util/variantcodes.js';
 
 /**
  * This script stores all global variables related to our leaderboards.

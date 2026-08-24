@@ -18,13 +18,8 @@ import * as z from 'zod';
 
 import winconutil from './chess/util/winconutil.js';
 import typeschemas from './chess/util/typeschemas.js';
-import {
-	ClockValuesSchema,
-	GameIDSchema,
-	MovePacketSchema,
-	OutSeekSchema,
-	SeekIdSchema,
-} from './domain.js';
+import { ClockValuesSchema } from './chess/util/clockutil.js';
+import { GameIDSchema, MovePacketSchema, OutSeekSchema, SeekIdSchema } from './domain.js';
 
 // Common Helper Schemas -------------------------------------------------------
 

@@ -19,14 +19,9 @@ import clockutil from './chess/util/clockutil.js';
 import winconutil from './chess/util/winconutil.js';
 import { players } from './util/typeutil.js';
 import { isRatedAllowed } from './chess/variants/servervalidation.js';
+import { TimeControlSchema } from './chess/util/clockutil.js';
 import { GameModifierSchema } from './util/modutil.js';
-import {
-	GameIDSchema,
-	GameModeSchema,
-	SeekIdSchema,
-	SeekVariantSchema,
-	TimeControlSchema,
-} from './domain.js';
+import { GameIDSchema, GameModeSchema, SeekIdSchema, SeekVariantSchema } from './domain.js';
 
 // General Route ---------------------------------------------------------------
 

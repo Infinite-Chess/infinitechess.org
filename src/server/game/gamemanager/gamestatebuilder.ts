@@ -13,7 +13,18 @@ import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { ServerGame } from './servergametypes.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
-import type { SourceVariantMetaData } from '../../../shared/chess/util/metadatautil.js';
+import type {
+	SourceVariantMetaData,
+	MetaData,
+	Rating,
+} from '../../../shared/chess/util/metadatautil.js';
+import type {
+	SeekVariant,
+	StaticGameSetup,
+	StaticGameState,
+	MovePacket,
+	ServerUsernameContainer,
+} from '../../../shared/domain.js';
 import type {
 	GameConclusionMessage,
 	GameStateBase,
@@ -21,15 +32,6 @@ import type {
 	ParticipantState,
 	RematchOfferInfo,
 } from '../../../shared/clientbound.js';
-import type {
-	SeekVariant,
-	StaticGameSetup,
-	StaticGameState,
-	MetaData,
-	MovePacket,
-	Rating,
-	ServerUsernameContainer,
-} from '../../../shared/domain.js';
 
 import uuid from '../../../shared/util/uuid.js';
 import gameurl from '../../../shared/util/gameurl.js';
@@ -232,7 +234,7 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 	if (servergame.gameConclusion) {
 		metadata.Result = metadatautil.getResultFromVictor(servergame.gameConclusion.victor);
 		metadata.Termination = winconutil.getTerminationInEnglish(
-			servergame.gameRules,
+			servergame.gameRules.moveRule,
 			servergame.gameConclusion.condition,
 		);
 	}

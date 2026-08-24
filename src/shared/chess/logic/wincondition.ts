@@ -13,13 +13,13 @@ import type { GameConclusion } from '../util/winconutil.js';
 
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
+import checkmate from './checkmate.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from '../util/gamefileutility.js';
 import typeutil, { RawType } from '../../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { rawTypes as r, Player } from '../../util/typeutil.js';
 import { detectInsufficientMaterial } from './insufficientmaterial.js';
-import { detectCheckmateOrStalemate } from './checkmate.js';
 
 // The squares in KOTH where if you get your king to you WIN
 // prettier-ignore
@@ -58,7 +58,7 @@ function getGameConclusion(boardsim: Board): GameConclusion | undefined {
 		detectAllroyalscaptured(boardsim) ||
 		detectKoth(boardsim) ||
 		detectRepetitionDraw(boardsim) ||
-		detectCheckmateOrStalemate(boardsim) ||
+		checkmate.detect(boardsim) ||
 		// This needs to be last so that a draw isn't enforced in a true win
 		detectMoveRule(boardsim) || // 50-move-rule
 		detectInsufficientMaterial(boardsim) ||

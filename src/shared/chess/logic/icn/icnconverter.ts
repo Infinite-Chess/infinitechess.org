@@ -29,7 +29,7 @@
  */
 
 import type { BaseRay } from '../../../util/math/geometry.js';
-import type { MetaData } from '../../../domain.js';
+import type { MetaData } from '../../../chess/util/metadatautil.js';
 import type { UnboundedRectangle } from '../../../util/math/bounds.js';
 import type { GameRules, Promotion } from '../../util/gamerules.js';
 import type { GameruleWinCondition } from '../../util/winconutil.js';
@@ -37,12 +37,11 @@ import type { EnPassant, GlobalGameState } from '../state.js';
 
 import jsutil from '../../../util/jsutil.js';
 import bimath from '../../../util/math/bimath.js';
-import gamerules from '../../util/gamerules.js';
 import winconutil from '../../util/winconutil.js';
 import icnposition from './icnposition.js';
-import { DEFAULT_PROMOTION_PIECES } from '../../variants/variant_scripts/defaultPromotions.js';
 import coordutil, { Coords, CoordsKey } from '../../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
+import gamerules, { DEFAULT_PROMOTION_PIECES } from '../../util/gamerules.js';
 import { players as p, RawType, Player, PlayerGroup } from '../../../util/typeutil.js';
 
 // Types ------------------------------------------------------------------------------

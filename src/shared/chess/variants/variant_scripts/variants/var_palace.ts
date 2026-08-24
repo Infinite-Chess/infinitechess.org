@@ -9,7 +9,7 @@ import type { BoundingBox } from '../../../../util/math/bounds.js';
 import type { GameRuleModifications } from '../variantutil.js';
 
 import icnposition from '../../../logic/icn/icnposition.js';
-import { DEFAULT_PROMOTION_PIECES } from '../defaultPromotions.js';
+import { DEFAULT_PROMOTION_PIECES } from '../../../util/gamerules.js';
 import { rawTypes as r, players as p } from '../../../../util/typeutil.js';
 
 const POSITION_STRING =

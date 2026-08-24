@@ -7,10 +7,11 @@
  * them in a tooltip, or actually loading the variant in a game.
  */
 
-import type { VariantCode } from './variantregistry.js';
+import type { VariantCode } from '../util/variantcodes.js';
 import type { VariantModule } from './variant_scripts/variantutil.js';
 
 import variantregistry from './variantregistry.js';
+import { VARIANT_CODES } from '../util/variantcodes.js';
 
 // State ----------------------------------------------
 
@@ -41,7 +42,7 @@ async function ensureVariantLoaded(variantCode: VariantCode): Promise<void> {
 
 /** Loads all variant modules. Call once at startup on the server. */
 async function loadAllVariants(): Promise<void> {
-	await Promise.all(variantregistry.VARIANT_CODES.map((code) => ensureVariantLoaded(code)));
+	await Promise.all(VARIANT_CODES.map((code) => ensureVariantLoaded(code)));
 	// console.log('-- All variants loaded! --');
 }
 

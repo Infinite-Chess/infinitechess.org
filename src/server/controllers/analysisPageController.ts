@@ -8,8 +8,9 @@
 
 import type { Request } from 'express';
 import type { Player } from '../../shared/util/typeutil.js';
+import type { VariantCode } from '../../shared/chess/util/variantcodes.js';
+import type { VariantGroup } from '../../shared/chess/variants/variantregistry.js';
 import type { GameMetaViewModel } from './gamePageController.js';
-import type { VariantGroup, VariantCode } from '../../shared/chess/variants/variantregistry.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../shared/util/typeutil.js';

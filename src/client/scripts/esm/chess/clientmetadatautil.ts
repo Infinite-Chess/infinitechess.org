@@ -5,17 +5,21 @@
  */
 
 import type { GameFile } from '../../../../shared/chess/logic/gamefile.js';
-import type { MetaData, Rating } from '../../../../shared/domain.js';
-import type { SourceVariantMetaData } from '../../../../shared/chess/util/metadatautil.js';
 import type { Condition, GameConclusion } from '../../../../shared/chess/util/winconutil.js';
+import type {
+	MetaData,
+	Rating,
+	SourceVariantMetaData,
+} from '../../../../shared/chess/util/metadatautil.js';
 
 import * as z from 'zod';
 
 import timeutil from '../../../../shared/util/timeutil.js';
 import winconutil from '../../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../../shared/chess/util/metadatautil.js';
+import variantregistry from '../../../../shared/chess/variants/variantregistry.js';
+import { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
 import { players as p } from '../../../../shared/util/typeutil.js';
-import variantregistry, { VariantCode } from '../../../../shared/chess/variants/variantregistry.js';
 
 // Functions -----------------------------------------------------------------------
 
@@ -40,7 +44,7 @@ function buildMetaDataFromGamefile(gamefile: GameFile): MetaData {
 	if (gamefile.gameConclusion) {
 		metadata.Result = metadatautil.getResultFromVictor(gamefile.gameConclusion.victor);
 		metadata.Termination = winconutil.getTerminationInEnglish(
-			gamefile.gameRules,
+			gamefile.gameRules.moveRule,
 			gamefile.gameConclusion.condition,
 		);
 	}

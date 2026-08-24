@@ -9,39 +9,26 @@
  * direction it travels instead: serverbound.ts (client → server) or clientbound.ts
  * (server → client), beside the route union that carries it.
  *
- * Centralized here to avoid circular dependency issues.
+ * This file sits at the TOP of the shared ladder, so a schema the chess layer also needs is
+ * owned down there instead, and imported from there by everyone: TimeControl and ClockValues
+ * live in chess/util/clockutil.ts, MetaData and Rating in chess/util/metadatautil.ts.
  */
 
 import type { ValidEngine } from './chess/engine.js';
-import type { VariantCode } from './chess/variants/variantregistry.js';
+import type { TimeControl } from './chess/util/clockutil.js';
+import type { VariantCode } from './chess/util/variantcodes.js';
 import type { GameConclusion } from './chess/util/winconutil.js';
 import type { Player, PlayerGroup } from './util/typeutil.js';
 
 import * as z from 'zod';
 
 import typeschemas from './chess/util/typeschemas.js';
-import variantregistry from './chess/variants/variantregistry.js';
+import { RatingSchema } from './chess/util/metadatautil.js';
+import { VARIANT_CODES } from './chess/util/variantcodes.js';
+import { TimeControlSchema } from './chess/util/clockutil.js';
 import { GameModifierSchema, GameModifier } from './util/modutil.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
-
-/** A player's rating value and whether we are confident about it. */
-export type Rating = z.infer<typeof RatingSchema>;
-const RatingSchema = z.strictObject({
-	value: z.number(),
-	confident: z.boolean(),
-});
-
-/**
- * The clock value for the game, `s+s`, where the left side is
- * start time in seconds, and the right is increment in seconds.
- * Untimed = `-`
- */
-export type TimeControl = z.infer<typeof TimeControlSchema>;
-export const TimeControlSchema = z.union([
-	z.templateLiteral([z.int().positive(), '+', z.int().nonnegative()]),
-	z.literal('-'),
-]);
 
 /** Whether a game is casual or rated. */
 export type GameMode = z.infer<typeof GameModeSchema>;
@@ -61,26 +48,6 @@ const ServerUsernameContainerSchema = z.strictObject({
 /** The id of an online game. */
 export const GameIDSchema = z.number().int().nonnegative();
 
-/** The values of each color's clock, and which one is currently counting down, if any. */
-export type ClockValues = z.infer<typeof ClockValuesSchema>;
-export const ClockValuesSchema = z.strictObject({
-	/** Each color's remaining time in milliseconds, keyed by player number. */
-	clocks: typeschemas.GenPlayerGroupSchema(z.number()),
-	/**
-	 * If a player's timer is currently counting down, this should be specified.
-	 * No clock is ticking if less than 2 moves are played, or if the game is over.
-	 * The color specified should have their time immediately accommodated for ping.
-	 */
-	colorTicking: typeschemas.PlayerSchema.optional(),
-	/**
-	 * The timestamp the color ticking (if there is one) will lose by timeout.
-	 * This should be calculated AFTER we adjust the clock values for ping.
-	 * The server should NOT specify this when sending the clock information
-	 * to the client, because the server and client's clocks are not always in sync.
-	 */
-	timeColorTickingLosesAt: z.number().optional(),
-});
-
 /**
  * A move as transmitted over the wire, or as parsed out of
  * an ICN: the serialized move token (e.g. `"1,2>3,4=N"`).
@@ -91,46 +58,6 @@ export const MovePacketSchema = z.strictObject({
 	/** Only ever set by the ICN parser, for the analysis page's per-move clocks. Never sent over the wire. */
 	clockStamp: z.number().optional(),
 });
-
-/**
- * ICN (Infinite Chess Notation) metadata for a game, inspired by PGN notation.
- * A plain type, not a schema — it is parsed out of an ICN, never off the wire.
- */
-export interface MetaData {
-	/** What kind of game (rated/casual), and variant, in spoken language. E.g. "Casual local Classical infinite chess game". */
-	Event?: string;
-	/** The website the game was played on, or the direct URL of the game. */
-	Site?: string;
-	/** The ID of the game in base 62, if applicable. */
-	GameId?: string;
-	TimeControl?: TimeControl;
-	/** The round number. A pgn-required metadata with no current application to infinitechess.org. */
-	Round?: '-';
-	/** The UTC date of the game, in the format `"YYYY.MM.DD"`. */
-	UTCDate?: string;
-	/** The UTC time the game started, in the format `"HH:MM:SS"`. */
-	UTCTime?: string;
-	/** If it's not a custom position, this must be one of the valid variants. */
-	Variant?: string;
-	White?: string;
-	Black?: string;
-	/** The ID of the white player, if they are signed in, converted to base 62. */
-	WhiteID?: string;
-	/** The ID of the black player, if they are signed in, converted to base 62. */
-	BlackID?: string;
-	/** The display elo of the white player, which may include a "?" if we're uncertain about their rating. */
-	WhiteElo?: string;
-	/** The display elo of the black player, which may include a "?" if we're uncertain about their rating. */
-	BlackElo?: string;
-	/** How much elo white gained/lost from the match. */
-	WhiteRatingDiff?: string;
-	/** How much elo black gained/lost from the match. */
-	BlackRatingDiff?: string;
-	/** How many points each side received from the game (e.g. `"1-0"` means white won, `"1/2-1/2"` means a draw). */
-	Result?: string;
-	/** What caused the game to end, in spoken language. E.g. "Time forfeit". */
-	Termination?: string;
-}
 
 // Game State Types ---------------------------------------------------------------
 
@@ -202,7 +129,7 @@ export interface DeadGameState extends StaticGameState {
  */
 export type SeekVariant = z.infer<typeof SeekVariantSchema>;
 export const SeekVariantSchema = z.discriminatedUnion('kind', [
-	z.strictObject({ kind: z.literal('preset'), code: z.enum(variantregistry.VARIANT_CODES) }),
+	z.strictObject({ kind: z.literal('preset'), code: z.enum(VARIANT_CODES) }),
 	z.strictObject({
 		kind: z.literal('custom'),
 		position: z.string().min(1),
@@ -215,7 +142,7 @@ export const SeekVariantSchema = z.discriminatedUnion('kind', [
  */
 export type OutSeekVariant = z.infer<typeof OutSeekVariantSchema>;
 const OutSeekVariantSchema = z.discriminatedUnion('kind', [
-	z.strictObject({ kind: z.literal('preset'), code: z.enum(variantregistry.VARIANT_CODES) }),
+	z.strictObject({ kind: z.literal('preset'), code: z.enum(VARIANT_CODES) }),
 	z.strictObject({ kind: z.literal('custom') }),
 ]);
 

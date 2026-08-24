@@ -12,9 +12,12 @@
 
 import type { Player } from '../../../../../shared/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { ClockValues } from '../../../../../shared/domain.js';
-import type { GameConclusionMessage } from '../../../../../shared/clientbound.js';
-import type { ClientboundGameMessage, GameNavigation } from '../../../../../shared/clientbound.js';
+import type { ClockValues } from '../../../../../shared/chess/util/clockutil.js';
+import type {
+	GameConclusionMessage,
+	ClientboundGameMessage,
+	GameNavigation,
+} from '../../../../../shared/clientbound.js';
 
 import gameurl from '../../../../../shared/util/gameurl.js';
 import typeutil from '../../../../../shared/util/typeutil.js';

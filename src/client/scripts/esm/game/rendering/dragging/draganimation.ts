@@ -15,7 +15,7 @@ import bd from '@naviary/bigdecimal';
 import typeutil from '../../../../../../shared/util/typeutil.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
-import pieceThemes from '../../../../../../shared/components/header/pieceThemes.js';
+import pieceThemes from '../../../../../../shared/chess/util/pieceThemes.js';
 
 import space from '../../../board/space.js';
 import mouse from '../../mouse.js';

@@ -7,7 +7,7 @@
 
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { ClockValues, TimeControl } from '../../domain.js';
+import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';
 import type { LongFormatOut, PresetAnnotes } from './icn/icnconverter.js';
 import type { Additional, DatedVariant, GameFile, VariantOptions } from './gamefile.js';
 

@@ -8,7 +8,7 @@
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
-import type { ClockValues } from '../../../../../shared/domain.js';
+import type { ClockValues } from '../../../../../shared/chess/util/clockutil.js';
 import type { MoveValidationResult } from '../../../../../shared/chess/logic/movevalidation.js';
 import type { OpponentsMoveMessage } from '../../../../../shared/clientbound.js';
 

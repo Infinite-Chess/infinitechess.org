@@ -21,7 +21,7 @@ import typeutil from '../../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
 import castlingutil from '../logic/castlingutil.js';
 import icnconverter from '../logic/icn/icnconverter.js';
-import { DEFAULT_PROMOTION_PIECES } from './variant_scripts/defaultPromotions.js';
+import { DEFAULT_PROMOTION_PIECES } from '../util/gamerules.js';
 import { rawTypes as r, players as p } from '../../util/typeutil.js';
 
 // Constants ------------------------------------------------------------------

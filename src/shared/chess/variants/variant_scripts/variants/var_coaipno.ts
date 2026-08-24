@@ -11,7 +11,7 @@ import type { GameRuleModifications } from '../variantutil.js';
 import variantutil from '../variantutil.js';
 import icnposition from '../../../logic/icn/icnposition.js';
 import { rawTypes as r } from '../../../../util/typeutil.js';
-import { DEFAULT_PROMOTION_PIECES } from '../defaultPromotions.js';
+import { DEFAULT_PROMOTION_PIECES } from '../../../util/gamerules.js';
 
 const POSITION_STRINGS: Record<number, string> = {
 	// 6:43 PM Dec 24, 2025, MST - Knightriders can no longer give a discovered check on move one.

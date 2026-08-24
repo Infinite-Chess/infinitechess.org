@@ -5,18 +5,18 @@ import type { CoordsKey } from '../../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../domain.js';
-import type { VariantCode } from '../variants/variantregistry.js';
+import type { VariantCode } from '../util/variantcodes.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { GlobalGameState } from './state.js';
-import type { ClockValues, TimeControl } from '../../domain.js';
+import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';
 import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js';
 
 import clock from './clock.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
 import boardinit from './boardinit.js';
-import winconutil from '../util/winconutil.js';
+import checkmate from './checkmate.js';
 import wincondition from './wincondition.js';
 import variantcache from '../variants/variantcache.js';
 import apeiron_card from '../engines/apeiron_card.js';
@@ -181,7 +181,7 @@ function loadGameWithBoard(
 	// Do we need to convert any checkmate win conditions to royalcapture? Only reachable for the
 	// editor and analysis-pasted games, which must degrade rather than refuse a position — a played
 	// game's was already rejected upfront by validatePosition().
-	if (!winconutil.isCheckmateCompatibleWithGame(gamefile))
+	if (!checkmate.isCompatible(gamefile))
 		gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
 
 	{

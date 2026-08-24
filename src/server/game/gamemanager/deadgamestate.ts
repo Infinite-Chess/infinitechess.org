@@ -7,7 +7,7 @@
  * side that persists these columns when a game ends.
  */
 
-import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
+import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { SlideLimitValue } from '../../../shared/util/gameconfig.js';

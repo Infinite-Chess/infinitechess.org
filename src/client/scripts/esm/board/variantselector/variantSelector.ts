@@ -7,16 +7,15 @@
  */
 
 import type { VNode } from 'snabbdom';
+import type { MetaData } from '../../../../../shared/chess/util/metadatautil.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 import type { StorageType } from '../../savedpositions/storetypes.js';
+import type { SeekVariant } from '../../../../../shared/domain.js';
+import type { VariantCode } from '../../../../../shared/chess/util/variantcodes.js';
 import type { GameModifier } from '../../../../../shared/util/modutil.js';
+import type { VariantGroup } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { CloudSaveListRecord } from '../../savedpositions/savesapi.js';
-import type { MetaData, SeekVariant } from '../../../../../shared/domain.js';
 import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type {
-	VariantGroup,
-	VariantCode,
-} from '../../../../../shared/chess/variants/variantregistry.js';
 
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 

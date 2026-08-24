@@ -1,4 +1,4 @@
-// src/shared/components/header/pieceThemes.ts
+// src/shared/chess/util/pieceThemes.ts
 
 /**
  * This script stores the SVG locations and default tint colors for the pieces.

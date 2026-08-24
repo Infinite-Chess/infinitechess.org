@@ -4,7 +4,7 @@
  * This script handles queries to the leaderboards table.
  */
 
-import type { Rating } from '../../shared/domain.js';
+import type { Rating } from '../../shared/chess/util/metadatautil.js';
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
 import db, { dbCall } from './database.js';

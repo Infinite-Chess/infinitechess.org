@@ -7,7 +7,7 @@
  */
 
 import type { GameRules } from '../util/gamerules.js';
-import type { VariantCode } from '../variants/variantregistry.js';
+import type { VariantCode } from '../util/variantcodes.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { GameFile, LoadedVariant } from '../logic/gamefile.js';
 import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js';

@@ -5,8 +5,9 @@
  * comparing two identities, and projecting one into its public form.
  */
 
+import type { Rating } from '../../shared/chess/util/metadatautil.js';
+import type { ServerUsernameContainer } from '../../shared/domain.js';
 import type { MemberInfo, AuthMemberInfo } from '../types.js';
-import type { Rating, ServerUsernameContainer } from '../../shared/domain.js';
 
 import metadatautil from '../../shared/chess/util/metadatautil.js';
 

@@ -14,7 +14,7 @@ import type { TypeGroup } from '../../../../../shared/util/typeutil.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
 import typeutil from '../../../../../shared/util/typeutil.js';
-import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
+import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
 
 import imagecache from './imagecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';

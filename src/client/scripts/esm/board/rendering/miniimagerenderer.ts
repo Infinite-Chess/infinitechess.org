@@ -13,7 +13,7 @@ import type { BoardPreview } from '../../../../../shared/chess/logic/boardprevie
 import typeutil from '../../../../../shared/util/typeutil.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
+import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
 import { players as p, TypeGroup } from '../../../../../shared/util/typeutil.js';
 
 import space from '../space.js';
