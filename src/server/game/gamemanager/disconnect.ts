@@ -25,18 +25,18 @@ import liveGameValues from './liveGameValues.js';
  * (network interruption) to reconnect to the game before
  * we tell their opponent they've disconnected, and open the claim window.
  */
-const RECONNECT_CUSHION_MILLIS = 5_000; // 5 seconds
+const RECONNECT_CUSHION_MS = 5_000; // 5 seconds
 
 /**
  * How long after disconnection, when the player intentionally left the page,
  * before their opponent may claim victory / a draw against them.
  */
-const CLAIM_DELAY_VOLUNTARY_MILLIS = 10_000; // 10 seconds
+const CLAIM_DELAY_VOLUNTARY_MS = 10_000; // 10 seconds
 /**
  * How long after disconnection, when the player's internet cuts out (more forgiving),
  * before their opponent may claim victory / a draw against them.
  */
-const CLAIM_DELAY_INVOLUNTARY_MILLIS = 60_000; // 60 seconds
+const CLAIM_DELAY_INVOLUNTARY_MS = 60_000; // 60 seconds
 
 // Functions ----------------------------------------------------------------------------------
 
@@ -48,9 +48,9 @@ const CLAIM_DELAY_INVOLUNTARY_MILLIS = 60_000; // 60 seconds
 function startCushionTimer(servergame: ServerGame, role: Player): void {
 	servergame.match.playerData[role]!.disconnect.startID = setTimeout(
 		() => startClaimTimer(servergame, role, true),
-		RECONNECT_CUSHION_MILLIS,
+		RECONNECT_CUSHION_MS,
 	);
-	servergame.match.playerData[role]!.disconnect.startTime = Date.now() + RECONNECT_CUSHION_MILLIS;
+	servergame.match.playerData[role]!.disconnect.startTime = Date.now() + RECONNECT_CUSHION_MS;
 	liveGameValues.onPlayerDisconnected(servergame, role); // Persist the state to the db
 }
 
@@ -61,9 +61,7 @@ function startCushionTimer(servergame: ServerGame, role: Player): void {
 function startClaimTimer(servergame: ServerGame, role: Player, involuntary: boolean): void {
 	const now = Date.now();
 
-	const timeUntilClaimable = involuntary
-		? CLAIM_DELAY_INVOLUNTARY_MILLIS
-		: CLAIM_DELAY_VOLUNTARY_MILLIS;
+	const timeUntilClaimable = involuntary ? CLAIM_DELAY_INVOLUNTARY_MS : CLAIM_DELAY_VOLUNTARY_MS;
 
 	const playerdata = servergame.match.playerData[role]!;
 	const opponentRole = typeutil.invertPlayer(role);
@@ -118,7 +116,7 @@ function cancelTimer(match: MatchInfo, ourRole: Player): void {
 
 export default {
 	// Constants
-	RECONNECT_CUSHION_MILLIS,
+	RECONNECT_CUSHION_MS,
 	// Functions
 	startCushionTimer,
 	startClaimTimer,

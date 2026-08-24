@@ -74,7 +74,7 @@ const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
  * so a click aimed at the vanished seek can't fire on whatever replaces it.
  * KEEP IN SYNC with the game page's action-block grace period (guigameactions.ts).
  */
-const GRACE_MILLIS = 667;
+const GRACE_MS = 667;
 
 // State ----------------------------------------------
 
@@ -84,7 +84,7 @@ let ourSeekId: SeekId | undefined;
 const seekMap = new Map<string, OutSeek>();
 /** Seeks mid grace period, mapped to the timer that ends it. */
 const graceTimers = new Map<string, number>();
-/** When each row last lost its occupant. Its grace always ends {@link GRACE_MILLIS} after this. */
+/** When each row last lost its occupant. Its grace always ends {@link GRACE_MS} after this. */
 const rowVacatedTimes: number[] = [];
 
 /** Whether the user is currently idle (lobby unsubbed, overlay visible). */
@@ -198,7 +198,7 @@ function onSeekListUpdate(
 /**
  * Grace-periods every seek that didn't already hold its row last update, so a click aimed at
  * whatever the user last saw there can't accept or cancel it. A row's grace always ends
- * {@link GRACE_MILLIS} after its previous occupant left, so a seek taking over a row directly
+ * {@link GRACE_MS} after its previous occupant left, so a seek taking over a row directly
  * gets the full period, one filling a briefly-empty row gets the remainder, and one filling a
  * long-empty row gets none.
  * @param previousSeekIds - The seek ids by row, as of the previous update.
@@ -220,7 +220,7 @@ function armGracePeriods(
 		if (previousOurSeekId !== undefined && previousSeekIds[row] === previousOurSeekId && seek.id === ourSeekId) return; // prettier-ignore
 		const vacatedAt = rowVacatedTimes[row];
 		if (vacatedAt === undefined) return; // Row has never held a seek
-		const remaining = vacatedAt + GRACE_MILLIS - now;
+		const remaining = vacatedAt + GRACE_MS - now;
 		if (remaining <= 0) return; // Empty long enough that nothing was there to be clicked
 		// A seek moved again mid-grace gets its new row's remainder, not the old row's.
 		clearTimeout(graceTimers.get(seek.id));

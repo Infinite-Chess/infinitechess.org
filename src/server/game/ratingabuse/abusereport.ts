@@ -19,7 +19,7 @@ import { updateRatingAbuseColumns } from '../../database/ratingAbuseManager.js';
 // Constants -------------------------------------------------------------------------------------
 
 /** Buffer time for sending the next email. If a user is found suspicious several times in that interval, no email is sent. */
-const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 hours
+const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MS = 1000 * 60 * 60 * 24; // 24 hours
 
 // Reports ---------------------------------------------------------------------------------------
 
@@ -55,7 +55,7 @@ ${buildBody(ctx, verdict, true)}
 	if (
 		lastAlertedAt === null ||
 		Date.now() - timeutil.sqliteToTimestamp(lastAlertedAt) >=
-			SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS
+			SUSPICIOUS_USER_NOTIFICATION_BUFFER_MS
 	) {
 		const messageSubject = `Rating Abuse Warning: user ${ctx.username}, user_id ${ctx.user_id}`;
 		void emailService.sendRatingAbuseEmail(messageSubject, messageText);

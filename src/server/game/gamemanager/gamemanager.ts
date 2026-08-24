@@ -260,8 +260,8 @@ function onPostGameLeave(servergame: ServerGame, role: Player, involuntary: bool
 		playerdata.disconnect.startID = setTimeout(() => {
 			delete playerdata.disconnect.startTime;
 			gamelifecycle.evictIfBothLeft(servergame);
-		}, disconnect.RECONNECT_CUSHION_MILLIS);
-		playerdata.disconnect.startTime = Date.now() + disconnect.RECONNECT_CUSHION_MILLIS;
+		}, disconnect.RECONNECT_CUSHION_MS);
+		playerdata.disconnect.startTime = Date.now() + disconnect.RECONNECT_CUSHION_MS;
 	}
 }
 

@@ -38,7 +38,7 @@ type ResetTransactionResult = {
  * How long a password-reset token stays valid, in milliseconds.
  * IF CHANGED: update the "1 hour" copy in the email toml component.
  */
-const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
+const PASSWORD_RESET_TOKEN_EXPIRY_MS: number = 1000 * 60 * 60; // 1 Hour
 
 /**
  * `POST /api/forgot-password` — looks up the member by email and, unless blacklisted, issues a
@@ -74,7 +74,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 				// Generate a high-entropy token, store only its hash, and email the plain token.
 				const plainToken: string = crypto.randomBytes(32).toString('base64url');
 				const hashedTokenForDb: string = hashResetToken(plainToken);
-				const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MILLIS;
+				const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MS;
 
 				db.run(
 					'INSERT INTO password_reset_tokens (user_id, hashed_token, expires_at) VALUES (?, ?, ?)',

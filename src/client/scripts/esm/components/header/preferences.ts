@@ -114,8 +114,8 @@ function loadPreferences(): void {
 }
 
 function savePreferences(): void {
-	const oneYearInMillis: number = timeutil.getTotalMilliseconds({ years: 1 });
-	LocalStorage.saveItem('preferences', preferences, oneYearInMillis);
+	const oneYearInMs: number = timeutil.getTotalMilliseconds({ years: 1 });
+	LocalStorage.saveItem('preferences', preferences, oneYearInMs);
 
 	// After a delay, also send a post request to the server to update our preferences.
 	// Auto send it if the window is closing

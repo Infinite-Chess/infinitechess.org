@@ -100,13 +100,13 @@ export class StaticZone implements Zone {
 		return [this.colorGradePass];
 	}
 
-	public fadeInAmbience(transitionDurationMillis: number): void {
-		this.ambience.fadeIn(transitionDurationMillis);
-		AudioManager.fadeInDownsampler(transitionDurationMillis);
+	public fadeInAmbience(transitionDurationMs: number): void {
+		this.ambience.fadeIn(transitionDurationMs);
+		AudioManager.fadeInDownsampler(transitionDurationMs);
 	}
 
-	public fadeOutAmbience(transitionDurationMillis: number): void {
-		this.ambience.fadeOut(transitionDurationMillis);
-		AudioManager.fadeOutDownsampler(transitionDurationMillis);
+	public fadeOutAmbience(transitionDurationMs: number): void {
+		this.ambience.fadeOut(transitionDurationMs);
+		AudioManager.fadeOutDownsampler(transitionDurationMs);
 	}
 }

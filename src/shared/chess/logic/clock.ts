@@ -290,8 +290,8 @@ function update(
  */
 function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined {
 	if (clocks.colorTicking === undefined) return;
-	const timeElapsedSinceTurnStartMillis = Date.now() - clocks.timeAtTurnStart;
-	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
+	const timeElapsedSinceTurnStartMs = Date.now() - clocks.timeAtTurnStart;
+	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMs;
 }
 
 function printClocks(basegame: ClockDependant): void {

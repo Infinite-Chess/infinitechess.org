@@ -58,7 +58,7 @@ type Intent = {
  * assumed their click didn't register, and would be surprised to see it take effect.
  * A backstop only — correctness comes from each intent's validity check, not from this.
  */
-const INTENT_LIFETIME_MILLIS = 10000;
+const INTENT_LIFETIME_MS = 10000;
 
 // Variables -------------------------------------------------------------------
 
@@ -139,7 +139,7 @@ function submit<R extends SubscribedRoute, A extends OutAction<R>, V extends Out
 			else outstanding.set(key, messageID);
 		},
 		isStillValid,
-		expiresAt: Date.now() + INTENT_LIFETIME_MILLIS,
+		expiresAt: Date.now() + INTENT_LIFETIME_MS,
 		key,
 	};
 

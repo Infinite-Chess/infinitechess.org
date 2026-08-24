@@ -34,7 +34,7 @@ const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 1.0;
 const SUSPICIOUS_UNUSED_CLOCK_FRACTION = 0.8;
 
 /** Opponents with a younger account age than this count as suspicious. */
-const SUSPICIOUS_ACCOUNT_AGE_MILLIS = 1000 * 60 * 60 * 24 * 5; // 5 days
+const SUSPICIOUS_ACCOUNT_AGE_MS = 1000 * 60 * 60 * 24 * 5; // 5 days
 
 // Verdict ---------------------------------------------------------------------------------------
 
@@ -71,12 +71,12 @@ function checkThinkTime(evidence: AbuseEvidence, records: SuspicionRecord[]): vo
 		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
 
 		/** The player's own clock budget: their base time, plus the increment earned on their share of the moves. */
-		const available_clock_millis =
+		const available_clock_ms =
 			1000 *
 			(gameInfo.base_time_seconds! +
 				0.5 * gameInfo.increment_seconds! * (gameInfo.move_count - 1));
 		// Capped, since the halved increment is an average — whoever moved more than their share earns above it.
-		const unused_fraction = Math.min(1, gameInfo.finalClockMillis! / available_clock_millis);
+		const unused_fraction = Math.min(1, gameInfo.finalClockMs! / available_clock_ms);
 
 		// Game is suspicious if the player barely touched their clock
 		if (unused_fraction >= SUSPICIOUS_UNUSED_CLOCK_FRACTION) {
@@ -150,17 +150,17 @@ function checkIPAddresses(evidence: AbuseEvidence, records: SuspicionRecord[]): 
 function checkOpponentAccountAge(evidence: AbuseEvidence, records: SuspicionRecord[]): void {
 	if (evidence.opponentIds.length === 0) return;
 
-	const current_time_millis = Date.now();
+	const current_time_ms = Date.now();
 	let weight = 0;
 	let comment = 'Newly joined opponents: ';
 	for (const opponentInfo of evidence.opponents) {
 		// Player is suspicious if his opponent's account is less than a week old
-		const account_age_millis = Math.max(
+		const account_age_ms = Math.max(
 			0,
-			current_time_millis - timeutil.sqliteToTimestamp(opponentInfo.joined),
+			current_time_ms - timeutil.sqliteToTimestamp(opponentInfo.joined),
 		);
-		if (account_age_millis < SUSPICIOUS_ACCOUNT_AGE_MILLIS) {
-			const fraction = account_age_millis / SUSPICIOUS_ACCOUNT_AGE_MILLIS; // fraction is in the interval [0, 1]
+		if (account_age_ms < SUSPICIOUS_ACCOUNT_AGE_MS) {
+			const fraction = account_age_ms / SUSPICIOUS_ACCOUNT_AGE_MS; // fraction is in the interval [0, 1]
 			weight += (1 - fraction) * (evidence.opponentFrequency[opponentInfo.user_id] ?? 0);
 			comment += `${opponentInfo.user_id},`;
 		}

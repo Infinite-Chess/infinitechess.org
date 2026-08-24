@@ -15,8 +15,8 @@ import { addRefreshToken, markRefreshTokenAsConsumed } from '../../database/refr
 import { createMemberInfoCookie, deleteMemberInfoCookie } from './memberInfoCookie.js';
 import { createRefreshTokenCookie, deleteRefreshTokenCookie } from './refreshTokenCookie.js';
 import {
-	DEFAULT_SESSION_EXPIRY_MILLIS,
-	EXTENDED_SESSION_EXPIRY_MILLIS,
+	DEFAULT_SESSION_EXPIRY_MS,
+	EXTENDED_SESSION_EXPIRY_MS,
 	signRefreshToken,
 } from '../../utility/tokenSigner.js';
 
@@ -49,9 +49,7 @@ function freshen(
 
 	// Renew with the same session type the user originally chose
 	const keepLoggedIn = Boolean(tokenRecord.is_persistent);
-	const expiryMillis = keepLoggedIn
-		? EXTENDED_SESSION_EXPIRY_MILLIS
-		: DEFAULT_SESSION_EXPIRY_MILLIS;
+	const expiryMillis = keepLoggedIn ? EXTENDED_SESSION_EXPIRY_MS : DEFAULT_SESSION_EXPIRY_MS;
 
 	// Create the new token.
 	const newToken = signRefreshToken(user_id, username, roles, expiryMillis);
@@ -84,9 +82,7 @@ function create(
 	roles: Role[] | null,
 	keepLoggedIn: boolean,
 ): void {
-	const expiryMillis = keepLoggedIn
-		? EXTENDED_SESSION_EXPIRY_MILLIS
-		: DEFAULT_SESSION_EXPIRY_MILLIS;
+	const expiryMillis = keepLoggedIn ? EXTENDED_SESSION_EXPIRY_MS : DEFAULT_SESSION_EXPIRY_MS;
 
 	// The payload can be an object with their username and their roles.
 	const refreshToken = signRefreshToken(user_id, username, roles, expiryMillis);

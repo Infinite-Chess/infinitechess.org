@@ -190,12 +190,12 @@ const MAX_PV_PLIES = 12;
 /** How many times a crashed worker's position is retried before being skipped. */
 const MAX_POSITION_ATTEMPTS = 2;
 /** How long a worker may search without completing a depth before we cut it short. */
-const SEARCH_STALL_TIMEOUT_MILLIS = 15_000;
+const SEARCH_STALL_TIMEOUT_MS = 15_000;
 /**
  * How long a stalled search gets to honor its stop flag before the worker is killed instead.
  * The flag is polled every node batch, so a search that can see it at all stops in milliseconds.
  */
-const ABORT_GRACE_MILLIS = 2_000;
+const ABORT_GRACE_MS = 2_000;
 
 /** Fishnet-style chunk size: reported positions sharing one overlapping TT warmup. */
 const MAX_POSITIONS_PER_CHUNK = 5;
@@ -214,7 +214,7 @@ const MIN_REVIEW_DEPTH = 9;
 const REVIEW_CACHE_SCHEMA_VERSION = 2;
 const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
 /** How long a persisted review survives LocalStorage. */
-const REVIEW_CACHE_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 365; // 1 year
+const REVIEW_CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 // Schemas ----------------------------------------------------------------------------
 
@@ -542,7 +542,7 @@ function persistCompletedReview(): void {
 		results: results as EvaluateResult[],
 	};
 	try {
-		LocalStorage.saveItem(key, cached, REVIEW_CACHE_EXPIRY_MILLIS);
+		LocalStorage.saveItem(key, cached, REVIEW_CACHE_EXPIRY_MS);
 	} catch (error) {
 		console.warn('[game review] Could not save the local review cache:', error);
 	}
@@ -736,7 +736,7 @@ function serializePosition(index: number): string {
 /** (Re)arms the stall watchdog over a worker's in-flight search. */
 function armStallWatchdog(entry: ReviewWorker): void {
 	clearStallWatchdog(entry);
-	entry.watchdog = setTimeout(() => abortStalledSearch(entry), SEARCH_STALL_TIMEOUT_MILLIS);
+	entry.watchdog = setTimeout(() => abortStalledSearch(entry), SEARCH_STALL_TIMEOUT_MS);
 }
 
 function clearStallWatchdog(entry: ReviewWorker): void {
@@ -746,10 +746,10 @@ function clearStallWatchdog(entry: ReviewWorker): void {
 }
 
 /**
- * Cuts short a search that hasn't completed a depth in {@link SEARCH_STALL_TIMEOUT_MILLIS}: first by
+ * Cuts short a search that hasn't completed a depth in {@link SEARCH_STALL_TIMEOUT_MS}: first by
  * writing the shared stop flag, which lets the worker finish in place and keep its warm TT for the
  * rest of its chunk. A search wedged past the engine's poll point never sees that flag, so ignoring
- * it for {@link ABORT_GRACE_MILLIS} escalates to killing the worker — its position keeps whatever
+ * it for {@link ABORT_GRACE_MS} escalates to killing the worker — its position keeps whatever
  * depths it streamed either way.
  */
 function abortStalledSearch(entry: ReviewWorker): void {
@@ -760,7 +760,7 @@ function abortStalledSearch(entry: ReviewWorker): void {
 	if (!analysisworker.interrupt(entry.engine))
 		return handleWorkerFault(entry, 'crashed', `search at position ${index} stalled with no shared stop flag`); // prettier-ignore
 	entry.aborting = true;
-	entry.watchdog = setTimeout(() => abortStalledSearch(entry), ABORT_GRACE_MILLIS);
+	entry.watchdog = setTimeout(() => abortStalledSearch(entry), ABORT_GRACE_MS);
 }
 
 // Result processing --------------------------------------------------------------------------

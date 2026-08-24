@@ -15,7 +15,7 @@ import { listener_document } from '../../../game/chess/gamecore.js';
 const element_undoEdit = document.getElementById('undo-edit')!;
 const element_redoEdit = document.getElementById('redo-edit')!;
 
-const minimumEditIntervalMillis = 20; // Undoing and redoing can never be spammed faster than this
+const minimumEditIntervalMs = 20; // Undoing and redoing can never be spammed faster than this
 let lastEdit = 0;
 
 // =====================================================================
@@ -38,7 +38,7 @@ function _updateEditButtons(): void {
 
 function isItOkayToUndoEditOrRedoEdit(): boolean {
 	const timeSinceLastEdit = Date.now() - lastEdit;
-	return timeSinceLastEdit >= minimumEditIntervalMillis; // True if enough time has passed!
+	return timeSinceLastEdit >= minimumEditIntervalMs; // True if enough time has passed!
 }
 
 /**

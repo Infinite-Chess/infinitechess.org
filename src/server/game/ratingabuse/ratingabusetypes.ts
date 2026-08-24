@@ -38,7 +38,7 @@ type AbuseGameInfo = AbusePlayerGamesRecord &
 		 * The player's remaining millis at game end, derived from
 		 * the ICN's clock stamps. Undefined if the game was untimed.
 		 */
-		finalClockMillis: number | undefined;
+		finalClockMs: number | undefined;
 	};
 
 /** The entries of a MemberRecord the rating abuse calculation reads. */

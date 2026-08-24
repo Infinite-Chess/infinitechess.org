@@ -43,7 +43,7 @@ const loginAttemptData: Record<string, LoginAttemptData> = {};
  * The time, in milliseconds, to delete a browser agent from the
  * login attempt data, if they have stopped trying to login.
  */
-const TIME_TO_DELETE_BROWSER_AGENT_AFTER_NO_ATTEMPTS_MILLIS = 1000 * 60 * 5; // 5 minutes
+const TIME_TO_DELETE_BROWSER_AGENT_AFTER_NO_ATTEMPTS_MS = 1000 * 60 * 5; // 5 minutes
 
 // Functions ----------------------------------------------------------------------------
 
@@ -160,7 +160,7 @@ function startTimerToDeleteBrowserAgent(browserAgent: string): void {
 			`Allowing browser agent "${browserAgent}" to login without cooldown again!`,
 			'loginAttempts',
 		);
-	}, TIME_TO_DELETE_BROWSER_AGENT_AFTER_NO_ATTEMPTS_MILLIS);
+	}, TIME_TO_DELETE_BROWSER_AGENT_AFTER_NO_ATTEMPTS_MS);
 }
 
 /**

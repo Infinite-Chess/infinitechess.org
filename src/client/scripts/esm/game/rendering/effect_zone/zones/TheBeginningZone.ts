@@ -19,7 +19,7 @@ export class TheBeginningZone implements Zone {
 		return [];
 	}
 
-	public fadeInAmbience(_transitionDurationMillis: number): void {}
+	public fadeInAmbience(_transitionDurationMs: number): void {}
 
-	public fadeOutAmbience(_transitionDurationMillis: number): void {}
+	public fadeOutAmbience(_transitionDurationMs: number): void {}
 }

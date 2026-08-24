@@ -120,7 +120,7 @@ const DEFAULT_THREADS = maxThreads();
 
 const STORAGE_KEY = 'ceval';
 /** How long persisted settings live in local storage; refreshed on every save. */
-const STORAGE_EXPIRY_MILLIS = timeutil.getTotalMilliseconds({ years: 1 });
+const STORAGE_EXPIRY_MS = timeutil.getTotalMilliseconds({ years: 1 });
 const DEFAULT_SETTINGS: CevalSettings = {
 	multiPv: 1,
 	hashMb: 16,
@@ -212,7 +212,7 @@ function loadSettings(): CevalSettings {
 }
 
 function persistSettings(): void {
-	LocalStorage.saveItem(STORAGE_KEY, settings, STORAGE_EXPIRY_MILLIS);
+	LocalStorage.saveItem(STORAGE_KEY, settings, STORAGE_EXPIRY_MS);
 }
 
 // Winning chances (adjusted for infinitechess players) ------------------------------------

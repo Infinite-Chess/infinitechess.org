@@ -75,7 +75,7 @@ let animateLastMoveTimeoutID: ReturnType<typeof setTimeout> | undefined;
  * The delay, in millis, until the latest-played
  * move is animated, after rejoining a game.
  */
-const delayOfLatestMoveAnimationOnRejoinMillis = 150;
+const delayOfLatestMoveAnimationOnRejoinMs = 150;
 
 // Listeners ---------------------------------------------------------------
 
@@ -228,7 +228,7 @@ async function loadGraphical(): Promise<void> {
 			// A small delay to animate the most recently played move.
 			if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the latest move
 			movesequence.viewFront(loadedGamefile!, mesh!, true); // Ensure we are viewing the front, regardless where they navigated
-		}, delayOfLatestMoveAnimationOnRejoinMillis);
+		}, delayOfLatestMoveAnimationOnRejoinMs);
 
 	// Init the star field void animation
 	starfield.init();

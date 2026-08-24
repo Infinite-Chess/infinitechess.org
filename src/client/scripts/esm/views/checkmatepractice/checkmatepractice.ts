@@ -63,7 +63,7 @@ const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion'
  * @type {string[]}
  */
 let completedCheckmates: string[];
-const expiryOfCompletedCheckmatesMillis: number = 1000 * 60 * 60 * 24 * 365; // 1 year
+const expiryOfCompletedCheckmatesMs: number = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 /** Whether we are in a checkmate practice engine game. */
 let inCheckmatePractice: boolean = false;
@@ -312,7 +312,7 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 		LocalStorage.saveItem(
 			nameOfCompletedCheckmatesInStorage,
 			completedCheckmates,
-			expiryOfCompletedCheckmatesMillis,
+			expiryOfCompletedCheckmatesMs,
 		);
 		return;
 	}

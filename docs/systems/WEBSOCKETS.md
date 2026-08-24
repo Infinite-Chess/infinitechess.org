@@ -189,7 +189,7 @@ upgrade request. [socketOpen.ts](/src/server/socket/socketOpen.ts) gates every u
 
 Finally the socket is registered, logged, given its listeners, and sent `general/protocolversion`.
 
-**Sockets expire after 15 minutes** (`MAX_WEBSOCKET_AGE_MILLIS`, [socketRegistry.ts](/src/server/socket/socketRegistry.ts)),
+**Sockets expire after 15 minutes** (`MAX_WEBSOCKET_AGE_MS`, [socketRegistry.ts](/src/server/socket/socketRegistry.ts)),
 closing with `1000 CONNECTION_EXPIRED` — which the client treats as involuntary and immediately
 reconnects through. Users must therefore re-present authentication at least every 15 minutes.
 

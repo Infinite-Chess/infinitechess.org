@@ -38,13 +38,13 @@ import ratingcalculation from '../../utility/ratingcalculation.js';
  * (finalized). This gives the opponent a little time to overturn the conclusion with a cheat report
  * — which updates the already-logged database record. This only delays the finalized (locked) flag.
  */
-const FINALIZE_CUSHION_MILLIS = 1000 * 8;
+const FINALIZE_CUSHION_MS = 1000 * 8;
 
 /**
  * How long to keep a game alive when BOTH players are disconnected
  * before auto-concluding by abandonment/abort if neither reconnects.
  */
-const BOTH_DISCONNECTED_TIMEOUT_MILLIS = 1000 * 60 * 5; // 5 minutes
+const BOTH_DISCONNECTED_TIMEOUT_MS = 1000 * 60 * 5; // 5 minutes
 
 // 1. Conclusion ------------------------------------------------------------------------------
 
@@ -134,7 +134,7 @@ function free(servergame: ServerGame): void {
 		servergame.match.finalizeTimeoutID = setTimeout(() => {
 			finalize(servergame);
 			evictIfBothLeft(servergame);
-		}, FINALIZE_CUSHION_MILLIS);
+		}, FINALIZE_CUSHION_MS);
 	}
 
 	// If both players were already gone at conclusion (e.g. abandonment), evict right away.
@@ -270,7 +270,7 @@ function maybeStartBothDisconnectedTimer(servergame: ServerGame, explicitEndTime
 	);
 	if (!bothDisconnected) return;
 
-	const endTime = explicitEndTime ?? Date.now() + BOTH_DISCONNECTED_TIMEOUT_MILLIS;
+	const endTime = explicitEndTime ?? Date.now() + BOTH_DISCONNECTED_TIMEOUT_MS;
 	const remaining = endTime - Date.now();
 	if (remaining <= 0) return onBothPlayersDisconnected(servergame); // Already elapsed (restart).
 

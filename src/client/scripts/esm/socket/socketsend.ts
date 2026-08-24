@@ -46,7 +46,7 @@ export type OutValue<R extends OutRoute, A extends OutAction<R>> = ActionValue<O
 // Constants -------------------------------------------------------------------
 
 /** Simulated websocket latency in debug mode. */
-const DEBUG_SOCKET_LATENCY_MILLIS = 1000;
+const DEBUG_SOCKET_LATENCY_MS = 1000;
 
 // Variables -------------------------------------------------------------------
 
@@ -212,7 +212,7 @@ async function acquireSocket(): Promise<WebSocket | undefined> {
  */
 function transmit(socket: WebSocket, message: string): void {
 	if (socketlogger.isDebugEnabled()) {
-		window.setTimeout(() => socket.send(message), DEBUG_SOCKET_LATENCY_MILLIS);
+		window.setTimeout(() => socket.send(message), DEBUG_SOCKET_LATENCY_MS);
 	} else socket.send(message); // Send immediately
 }
 

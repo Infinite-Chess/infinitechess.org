@@ -113,7 +113,7 @@ Schema in [databaseTables.ts](/src/server/database/databaseTables.ts); all SQL i
 | `username`                  | UNIQUE, `COLLATE NOCASE`.                                                                                              |
 | `email`                     | UNIQUE. Always stored lowercase.                                                                                       |
 | `hashed_password`           | bcrypt hash                                                                                                            |
-| `created_at` / `expires_at` | Unix ms. Valid for **24h** (`PENDING_REGISTRATION_EXPIRY_MILLIS`).                                                     |
+| `created_at` / `expires_at` | Unix ms. Valid for **24h** (`PENDING_REGISTRATION_EXPIRY_MS`).                                                         |
 | `member_user_id`            | NULL until verified; set to the new member's id on promotion. **Doubles as the "verified" flag** (non-null = verified) |
 
 **A verified pending row is not deleted on verification.** Keeping it lets a refreshed/duplicate

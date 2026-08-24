@@ -56,7 +56,7 @@ let pointer2BoardPosGrabbed: BDCoords | undefined;
 
 /** Stores past board positions from the last few frames. Used to calculate throw velocity after dragging. */
 const positionHistory: PositionHistoryEntry[] = [];
-const positionHistoryWindowMillis: number = 80; // The amount of milliseconds to look back into for board velocity calculation.
+const positionHistoryWindowMs: number = 80; // The amount of milliseconds to look back into for board velocity calculation.
 
 // Listeners -------------------------------------------------------------
 
@@ -411,10 +411,10 @@ function addCurrentPositionToHistory(): void {
 
 /**
  * Removes all positions from the history that are older than the
- * positionHistoryWindowMillis.
+ * positionHistoryWindowMs.
  */
 function removeOldPositions(now: number): void {
-	const earliestTime = now - positionHistoryWindowMillis;
+	const earliestTime = now - positionHistoryWindowMs;
 	while (positionHistory.length > 0 && positionHistory[0]!.time < earliestTime)
 		positionHistory.shift();
 }

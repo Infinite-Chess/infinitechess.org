@@ -20,7 +20,7 @@ import socketconnection from './socketconnection.js';
 // Constants -------------------------------------------------------------------
 
 /** Time before attempting resub after too many requests. */
-const timeToResubAfterTooManyRequestsMillis = 10000;
+const timeToResubAfterTooManyRequestsMs = 10000;
 
 // Variables -------------------------------------------------------------------
 
@@ -101,10 +101,7 @@ function onclose(code: number, reason: string): void {
 			break;
 		case socketutil.ClosureReasons.TOO_MANY_SOCKETS:
 			console.error('Too many sockets when establishing socket.');
-			window.setTimeout(
-				() => socketconnection.resubAll(),
-				timeToResubAfterTooManyRequestsMillis,
-			);
+			window.setTimeout(() => socketconnection.resubAll(), timeToResubAfterTooManyRequestsMs);
 			break;
 		case socketutil.ClosureReasons.ORIGIN_ERROR:
 			console.error('Origin error when establishing socket.');
@@ -123,7 +120,7 @@ function onclose(code: number, reason: string): void {
 function enterTimeout(): void {
 	if (inTimeout) return;
 	inTimeout = true;
-	window.setTimeout(() => leaveTimeout(), timeToResubAfterTooManyRequestsMillis);
+	window.setTimeout(() => leaveTimeout(), timeToResubAfterTooManyRequestsMs);
 }
 
 /** Timeout from sending too many requests is over, try to reconnect. */

@@ -188,7 +188,7 @@ function buildGameInfoList(
 			gameInfoList.push({
 				...playerEntry,
 				...gameEntry,
-				finalClockMillis: deriveFinalClockOfPlayer(
+				finalClockMs: deriveFinalClockOfPlayer(
 					gameRow,
 					playerEntry.player_number as Player,
 				),

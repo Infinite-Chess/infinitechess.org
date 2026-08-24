@@ -18,14 +18,14 @@ import { SocketBus } from './SocketBus.js';
 // Constants -------------------------------------------------------------------
 
 /** Time to wait for HTTP connection before assuming lost connection. */
-const TIME_TO_WAIT_FOR_HTTP_MILLIS = 5000;
+const TIME_TO_WAIT_FOR_HTTP_MS = 5000;
 /** Time the websocket remains open without subscriptions, in milliseconds. */
 const AUTO_CLOSE_CUSHION = 10000;
 /**
  * Delays in milliseconds to wait before each reconnection attempt.
  * Indexed by consecutive failure count; the last element repeats indefinitely.
  */
-const RECONNECT_DELAY_MILLIS = [0, 2500, 5000] as const;
+const RECONNECT_DELAY_MS = [0, 2500, 5000] as const;
 
 // Variables -------------------------------------------------------------------
 
@@ -81,8 +81,8 @@ function getSocket(): WebSocket | undefined {
 function scheduleReconnect(): void {
 	if (reconnectTimerId !== undefined) return;
 	if (consecutiveFailures > 0) noConnection = true;
-	const cappedIndex = Math.min(consecutiveFailures, RECONNECT_DELAY_MILLIS.length - 1);
-	const delay = RECONNECT_DELAY_MILLIS[cappedIndex]!;
+	const cappedIndex = Math.min(consecutiveFailures, RECONNECT_DELAY_MS.length - 1);
+	const delay = RECONNECT_DELAY_MS[cappedIndex]!;
 	reconnectTimerId = window.setTimeout(() => {
 		reconnectTimerId = undefined;
 		resubAll();
@@ -133,7 +133,7 @@ async function openSocket(): Promise<boolean> {
 	const noResponseTimer = window.setTimeout(() => {
 		noConnection = true;
 		console.error('No connection.');
-	}, TIME_TO_WAIT_FOR_HTTP_MILLIS);
+	}, TIME_TO_WAIT_FOR_HTTP_MS);
 
 	return new Promise((resolve, _reject) => {
 		let url = `wss://${window.location.hostname}`;

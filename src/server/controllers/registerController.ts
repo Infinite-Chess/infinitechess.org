@@ -33,7 +33,7 @@ import {
 	deleteExpiredPendingRegistrationsFor,
 	getPendingRegistrationByClaimToken,
 	isEmailTakenInPendingByOther,
-	PENDING_REGISTRATION_EXPIRY_MILLIS,
+	PENDING_REGISTRATION_EXPIRY_MS,
 	PendingRegistrationRecord,
 	updatePendingRegistrationEmail,
 } from '../database/pendingRegistrationManager.js';
@@ -157,7 +157,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		httpOnly: true,
 		sameSite: 'lax',
 		secure: true,
-		maxAge: PENDING_REGISTRATION_EXPIRY_MILLIS,
+		maxAge: PENDING_REGISTRATION_EXPIRY_MS,
 	});
 
 	res.sendStatus(201);

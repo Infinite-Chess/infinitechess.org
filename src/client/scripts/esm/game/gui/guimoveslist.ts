@@ -80,7 +80,7 @@ const element_ResultText = element_GameResult.querySelector('.result-text')!;
 // Variables ---------------------------------------------------------------------------------
 
 /** Navigation can never be spammed faster than this, capping the hold-to-repeat rate. */
-const minimumNavIntervalMillis = 20;
+const minimumNavIntervalMs = 20;
 let lastNav = 0;
 
 // Events ------------------------------------------------------------------------------------
@@ -117,7 +117,7 @@ GameBus.addEventListener('game-unloaded', () => clearMovesTable());
 // =============================== Move Navigation ===============================
 
 function isOkayToNavigate(): boolean {
-	return Date.now() - lastNav >= minimumNavIntervalMillis; // True if enough time has passed!
+	return Date.now() - lastNav >= minimumNavIntervalMs; // True if enough time has passed!
 }
 
 /** Rewinds the game by 1 move, unselecting any piece. Cancels premoves first, instead of rewinding. */

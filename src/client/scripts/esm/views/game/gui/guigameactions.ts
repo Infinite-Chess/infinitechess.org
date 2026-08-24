@@ -131,7 +131,7 @@ function updateResignAbortButtons(): void {
  * a click landing the instant it appears can't accidentally fire.
  * KEEP IN SYNC with the lobby's seek grace period (lobby.ts).
  */
-const GRACE_MILLIS = 667;
+const GRACE_MS = 667;
 
 /** Buttons to briefly disable when their action block first appears. */
 const graceButtons = new Map<Element, HTMLElement[]>();
@@ -146,7 +146,7 @@ graceButtons.set(
 const graceTimers = new Map<Element, number>();
 
 /**
- * Marks `block`'s {@link graceButtons} aria-disabled for {@link GRACE_MILLIS}, then restores them.
+ * Marks `block`'s {@link graceButtons} aria-disabled for {@link GRACE_MS}, then restores them.
  * Deliberately not the `disabled` property: the Analysis action is a link, and this leaves each
  * button's genuine disabled state (e.g. rematch's) untouched.
  */
@@ -160,13 +160,13 @@ function armGracePeriod(block: Element): void {
 		window.setTimeout(() => {
 			graceTimers.delete(block);
 			for (const button of buttons) button.removeAttribute('aria-disabled');
-		}, GRACE_MILLIS),
+		}, GRACE_MS),
 	);
 }
 
 // Two-click confirmation ---------------------------------------------------------------------
 
-const CONFIRM_REVERT_MILLIS = 3000;
+const CONFIRM_REVERT_MS = 3000;
 
 /** Buttons mid-confirmation, mapped to their pending auto-revert timer. */
 const confirmTimers = new Map<HTMLElement, number>();
@@ -188,7 +188,7 @@ function withConfirmation(button: HTMLElement, action: () => void): () => void {
 		button.classList.add('confirming');
 		confirmTimers.set(
 			button,
-			window.setTimeout(() => clearConfirmation(button), CONFIRM_REVERT_MILLIS),
+			window.setTimeout(() => clearConfirmation(button), CONFIRM_REVERT_MS),
 		);
 	};
 }

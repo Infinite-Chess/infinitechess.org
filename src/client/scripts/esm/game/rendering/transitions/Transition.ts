@@ -66,7 +66,7 @@ const HISTORY_CAP = 20;
 /** Stores config for Panning Transitions. */
 const PAN_TRANSITION_CONFIG = {
 	/** Duration of ALL Panning Transitions. */
-	get DURATION_MILLIS() {
+	get DURATION_MS() {
 		return preferences.getFastTransitionsMode() ? 500 : 800;
 	},
 	/**
@@ -267,14 +267,14 @@ function startZoomTransition(
 	// natural duration (excludes base duration or capping) in order.
 
 	// C-infinity model natural duration if capped at our comfortable EDGE_ACCELERATION.
-	const natural_duration_c_inf_millis = Math.sqrt(Math.abs((6 * differenceE) / edgeAccel)) * 1000;
+	const natural_duration_c_inf_ms = Math.sqrt(Math.abs((6 * differenceE) / edgeAccel)) * 1000;
 	// C¹ 2-stage model natural duration, if capped at our comfortable EDGE_ACCELERATION.
-	const natural_duration_c_one_millis = Math.sqrt(Math.abs(differenceE / edgeAccel)) * 2 * 1000;
+	const natural_duration_c_one_ms = Math.sqrt(Math.abs(differenceE / edgeAccel)) * 2 * 1000;
 
-	if (natural_duration_c_inf_millis <= maxDuration)
-		setupCInfinityModel(natural_duration_c_inf_millis, maxDuration);
-	else if (natural_duration_c_one_millis <= maxDuration)
-		setupCOne2StageModel(natural_duration_c_one_millis, edgeAccel);
+	if (natural_duration_c_inf_ms <= maxDuration)
+		setupCInfinityModel(natural_duration_c_inf_ms, maxDuration);
+	else if (natural_duration_c_one_ms <= maxDuration)
+		setupCOne2StageModel(natural_duration_c_one_ms, edgeAccel);
 	else setupCOne3StageModel(edgeAccel, maxDuration); // Both other models would take too long. Use the fixed-duration 3-stage profile.
 
 	// console.log("Duration: " + durationMillis + "ms");
@@ -288,12 +288,12 @@ function startZoomTransition(
 }
 
 /** Sets up the C-Infinity 1-Stage Model for the current zoom transition. */
-function setupCInfinityModel(natural_duration_c_inf_millis: number, maxDuration: number): void {
+function setupCInfinityModel(natural_duration_c_inf_ms: number, maxDuration: number): void {
 	// console.log('Using C-Infinity 1-Stage Model');
 	zoomModel = 'C_INF';
 
 	// Add the base duration to the natural duration, and cap at the long zoom duration.
-	durationMillis = Math.max(ZOOM_TRANSITION_CONFIG.MIN_DURATION, natural_duration_c_inf_millis);
+	durationMillis = Math.max(ZOOM_TRANSITION_CONFIG.MIN_DURATION, natural_duration_c_inf_ms);
 	durationMillis = Math.min(durationMillis, maxDuration);
 	const T = durationMillis / 1000; // Final duration in seconds
 
@@ -308,12 +308,12 @@ function setupCInfinityModel(natural_duration_c_inf_millis: number, maxDuration:
 }
 
 /** Sets up the C¹ 2-Stage Model for the current zoom transition. */
-function setupCOne2StageModel(natural_duration_c_one_millis: number, edgeAccel: number): void {
+function setupCOne2StageModel(natural_duration_c_one_ms: number, edgeAccel: number): void {
 	// --- CASE B: C¹ 2-STAGE MODEL (Velocity Continuous) ---
 	// console.log('Using C¹ 2-Stage Model');
 	zoomModel = 'C_ONE_2_STAGE';
 
-	durationMillis = natural_duration_c_one_millis;
+	durationMillis = natural_duration_c_one_ms;
 
 	accel_stage1 = Math.sign(differenceE) * edgeAccel;
 	const t_half_secs = durationMillis / 2000;
@@ -394,7 +394,7 @@ function startPanTransition(endCoord: BDCoords, ignoreHistory: boolean): void {
 
 	isZoom = false;
 
-	durationMillis = PAN_TRANSITION_CONFIG.DURATION_MILLIS;
+	durationMillis = PAN_TRANSITION_CONFIG.DURATION_MS;
 
 	if (!ignoreHistory) pushToTelHistory({ isZoom, destinationCoords: boardpos.getBoardPos() });
 }

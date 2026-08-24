@@ -98,11 +98,11 @@ export class IridescenceZone implements Zone {
 		return [];
 	}
 
-	public fadeInAmbience(transitionDurationMillis: number): void {
-		this.ambience.fadeIn(transitionDurationMillis);
+	public fadeInAmbience(transitionDurationMs: number): void {
+		this.ambience.fadeIn(transitionDurationMs);
 	}
 
-	public fadeOutAmbience(transitionDurationMillis: number): void {
-		this.ambience.fadeOut(transitionDurationMillis);
+	public fadeOutAmbience(transitionDurationMs: number): void {
+		this.ambience.fadeOut(transitionDurationMs);
 	}
 }

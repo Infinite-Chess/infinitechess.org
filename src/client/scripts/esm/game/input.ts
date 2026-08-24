@@ -149,22 +149,22 @@ const CLICK_THRESHOLDS = {
 		/** The maximum distance the mouse can move before a click is not registered. */
 		MOVE_VPIXELS: 6, // Default: 8
 		/** The maximum time the mouse can be held down before a click is not registered. */
-		TIME_MILLIS: 400, // Default: 400
+		TIME_MS: 400, // Default: 400
 		/** The maximum time between first click down and second click up to register a double click drag. */
-		DOUBLE_CLICK_TIME_MILLIS: 450, // Default: 500
+		DOUBLE_CLICK_TIME_MS: 450, // Default: 500
 	},
 	TOUCH: {
 		/** {@link CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS}, but for fingers (less strict, the 2nd tap can be further away) */
 		MOVE_VPIXELS: 17, // Default: 20
-		/** {@link CLICK_THRESHOLDS.MOUSE.TIME_MILLIS}, but for fingers (more strict, they must lift quicker) */
-		TIME_MILLIS: 120,
-		/** {@link CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MILLIS}, but for fingers (more strict, they must lift quicker) */
-		DOUBLE_CLICK_TIME_MILLIS: 250, // Default: 220
+		/** {@link CLICK_THRESHOLDS.MOUSE.TIME_MS}, but for fingers (more strict, they must lift quicker) */
+		TIME_MS: 120,
+		/** {@link CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MS}, but for fingers (more strict, they must lift quicker) */
+		DOUBLE_CLICK_TIME_MS: 250, // Default: 220
 	},
 } as const;
 
 /** The window of milliseconds to store mouse position history for velocity calculations. */
-const MOUSE_POS_HISTORY_WINDOW_MILLIS = 80;
+const MOUSE_POS_HISTORY_WINDOW_MS = 80;
 
 /**
  * Physical Pointers are assigned one trackable POSITION.
@@ -357,7 +357,7 @@ function CreateInputListener(
 		for (const pointer of Object.values(physicalPointers)) {
 			pointer.delta = [0, 0];
 			pointer.positionHistory = pointer.positionHistory.filter(
-				(entry) => entry.time > Date.now() - MOUSE_POS_HISTORY_WINDOW_MILLIS,
+				(entry) => entry.time > Date.now() - MOUSE_POS_HISTORY_WINDOW_MS,
 			);
 			recalcPointerVel(pointer, now);
 		}
@@ -370,7 +370,7 @@ function CreateInputListener(
 	/** Calculates the mouse velocity based on recent mouse positions. */
 	function recalcPointerVel(pointer: PhysicalPointer, now: number): void {
 		// Remove old entries, stop once we encounter recent enough data
-		const timeToRemoveEntriesBefore = now - MOUSE_POS_HISTORY_WINDOW_MILLIS;
+		const timeToRemoveEntriesBefore = now - MOUSE_POS_HISTORY_WINDOW_MS;
 		while (
 			pointer.positionHistory.length > 0 &&
 			pointer.positionHistory[0]!.time < timeToRemoveEntriesBefore
@@ -382,15 +382,15 @@ function CreateInputListener(
 			const latestMousePosEntry =
 				pointer.positionHistory[pointer.positionHistory.length - 1]!;
 			const firstMousePosEntry = pointer.positionHistory[0]!; // { mousePos, time }
-			const timeDiffBetwFirstAndLastEntryMillis =
+			const timeDiffBetwFirstAndLastEntryMs =
 				latestMousePosEntry.time - firstMousePosEntry.time;
 
 			const mVX =
 				(latestMousePosEntry.pos[0] - firstMousePosEntry.pos[0]) /
-				timeDiffBetwFirstAndLastEntryMillis;
+				timeDiffBetwFirstAndLastEntryMs;
 			const mVY =
 				(latestMousePosEntry.pos[1] - firstMousePosEntry.pos[1]) /
-				timeDiffBetwFirstAndLastEntryMillis;
+				timeDiffBetwFirstAndLastEntryMs;
 
 			pointer.velocity = [mVX, mVY];
 		} else pointer.velocity = [0, 0];
@@ -438,11 +438,11 @@ function CreateInputListener(
 		const now = Date.now();
 		targetButtonInfo.timeDownMillisHistory.push(now);
 		// Update double click draw ----------
-		const DOUBLE_CLICK_TIME_MILLIS =
+		const DOUBLE_CLICK_TIME_MS =
 			e instanceof MouseEvent
-				? CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MILLIS
-				: CLICK_THRESHOLDS.TOUCH.DOUBLE_CLICK_TIME_MILLIS; // CAN'T USE instanceof Touch because it's not defined in Safari!
-		if (previousTimeDown && now - previousTimeDown < DOUBLE_CLICK_TIME_MILLIS) {
+				? CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MS
+				: CLICK_THRESHOLDS.TOUCH.DOUBLE_CLICK_TIME_MS; // CAN'T USE instanceof Touch because it's not defined in Safari!
+		if (previousTimeDown && now - previousTimeDown < DOUBLE_CLICK_TIME_MS) {
 			// Mouse has been down at least once before.
 			// Now we now posDown will be defined, so we can calculate the distance to that last click down.
 			// Works for 2D mode, desktop & mobile
@@ -502,11 +502,11 @@ function CreateInputListener(
 		// Update click --------------
 		const mouseHistory = targetButtonInfo.timeDownMillisHistory;
 		const timePassed = Date.now() - (mouseHistory[mouseHistory.length - 1] ?? 0); // Since the latest click
-		const TIME_MILLIS =
+		const TIME_MS =
 			e instanceof MouseEvent
-				? CLICK_THRESHOLDS.MOUSE.TIME_MILLIS
-				: CLICK_THRESHOLDS.TOUCH.TIME_MILLIS; // CAN'T USE instanceof Touch because it's not defined in Safari!
-		if (timePassed < TIME_MILLIS) {
+				? CLICK_THRESHOLDS.MOUSE.TIME_MS
+				: CLICK_THRESHOLDS.TOUCH.TIME_MS; // CAN'T USE instanceof Touch because it's not defined in Safari!
+		if (timePassed < TIME_MS) {
 			// Works for 2D mode, desktop & mobile
 			const posDown = targetButtonInfo.posDown;
 			const distMoved = posDown

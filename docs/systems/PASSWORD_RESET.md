@@ -29,7 +29,7 @@ One secret, 32 random bytes (`crypto.randomBytes(32)`) base64url-encoded:
 - **SHA-256, not bcrypt**, on purpose: 256 bits of entropy can't be brute-forced regardless of
   hash speed, and a fast deterministic hash lets us look the row up by indexed equality
   (`hashed_token` is the PRIMARY KEY) instead of scanning + comparing. See `hashResetToken`.
-- Valid for **1 hour** (`PASSWORD_RESET_TOKEN_EXPIRY_MILLIS`).
+- Valid for **1 hour** (`PASSWORD_RESET_TOKEN_EXPIRY_MS`).
 - **At most one live token per user**: issuing a new one first `DELETE`s any existing rows for
   that `user_id`. Consuming is atomic in the reset transaction. Expiry is enforced in live
   queries (`expires_at > ?`), not just by the sweep.

@@ -32,14 +32,14 @@ if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN
 const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 
 /** The lifetime of a standard session refresh token, if never renewed. */
-const DEFAULT_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 2; // 48 hours
-// const DEFAULT_SESSION_EXPIRY_MILLIS = 1000 * 20; // 20 seconds, for testing purposes.
+const DEFAULT_SESSION_EXPIRY_MS = 1000 * 60 * 60 * 24 * 2; // 48 hours
+// const DEFAULT_SESSION_EXPIRY_MS = 1000 * 20; // 20 seconds, for testing purposes.
 
 /**
  * The lifetime of an extended session refresh token,
  * when "keep me logged in" is checked, if never renewed.
  */
-const EXTENDED_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 180; // 180 days (~6 months)
+const EXTENDED_SESSION_EXPIRY_MS = 1000 * 60 * 60 * 24 * 180; // 180 days (~6 months)
 
 // Signing Tokens ------------------------------------------------------------------------------------
 
@@ -97,9 +97,12 @@ function verifyTokenPayload(token: string): TokenPayload | null {
 // Exports ------------------------------------------------------------------------------------------------
 
 export {
-	DEFAULT_SESSION_EXPIRY_MILLIS,
-	EXTENDED_SESSION_EXPIRY_MILLIS,
+	// Constants
+	DEFAULT_SESSION_EXPIRY_MS,
+	EXTENDED_SESSION_EXPIRY_MS,
+	// Signing Tokens
 	signRefreshToken,
+	// Verifying Tokens
 	verifyTokenPayload,
 };
 

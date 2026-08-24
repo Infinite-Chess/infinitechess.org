@@ -23,8 +23,8 @@ export interface EditorHandoff {
 // Constants --------------------------------------------------------------
 
 /** How long a stashed handoff stays valid before being auto-discarded. */
-const EXPIRY_MILLIS = 1000 * 60 * 5; // 5 minutes
+const EXPIRY_MS = 1000 * 60 * 5; // 5 minutes
 
 // Exports ----------------------------------------------------------------
 
-export default createHandoff<EditorHandoff>('board-editor-handoff', EXPIRY_MILLIS);
+export default createHandoff<EditorHandoff>('board-editor-handoff', EXPIRY_MS);

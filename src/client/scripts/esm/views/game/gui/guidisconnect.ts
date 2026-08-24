@@ -25,7 +25,7 @@ import socketintents from '../../../socket/socketintents.js';
 // Constants ---------------------------------------------------------------------------------
 
 /** How long the "Reconnected." confirmation lingers before the notice hides itself. */
-const RECONNECTED_LINGER_MILLIS = 2000;
+const RECONNECTED_LINGER_MS = 2000;
 
 // Elements ----------------------------------------------------------------------------------
 
@@ -160,7 +160,7 @@ function onSelfReturn(): void {
 	reconnectedTimeoutID = window.setTimeout(() => {
 		element_SelfDisconnectStatus.classList.add('hidden');
 		reconnectedTimeoutID = undefined;
-	}, RECONNECTED_LINGER_MILLIS);
+	}, RECONNECTED_LINGER_MS);
 }
 
 // Exports ------------------------------------------------------------

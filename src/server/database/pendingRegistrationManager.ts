@@ -39,7 +39,7 @@ export interface PendingRegistrationRecord {
  * If changed, update register-awaiting.POLL_MAX_DURATION_MS to stay just past this,
  * AND update the "24 hours" copy in the email toml component.
  */
-export const PENDING_REGISTRATION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24; // 1 day
+export const PENDING_REGISTRATION_EXPIRY_MS = 1000 * 60 * 60 * 24; // 1 day
 
 // Create -------------------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ export function addPendingRegistration(
 	hashedPassword: string,
 ): void {
 	const now = Date.now();
-	const expiresAt = now + PENDING_REGISTRATION_EXPIRY_MILLIS;
+	const expiresAt = now + PENDING_REGISTRATION_EXPIRY_MS;
 	const query = `
 		INSERT INTO pending_registrations (
 			claim_token, verification_token, username, email, hashed_password, created_at, expires_at
@@ -198,7 +198,7 @@ export function updatePendingRegistrationEmail(
 	email: string,
 	verificationToken: string,
 ): void {
-	const expiresAt = Date.now() + PENDING_REGISTRATION_EXPIRY_MILLIS;
+	const expiresAt = Date.now() + PENDING_REGISTRATION_EXPIRY_MS;
 	const query = `
 		UPDATE pending_registrations
 		SET email = ?, verification_token = ?, expires_at = ?

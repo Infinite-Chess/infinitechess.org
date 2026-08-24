@@ -45,11 +45,11 @@ const ARROW_HALF = 5;
 const FADE_OUT_REMOVE_DELAY_MS = 150;
 
 /** The delay before a tooltip appears on hover. */
-const TOOLTIP_DELAY_MILLIS: number = 500;
+const TOOLTIP_DELAY_MS: number = 500;
 /** Time after a click before the tooltip can reappear while still hovering. */
-const SUPPRESS_COOLDOWN_MILLIS: number = 2000;
+const SUPPRESS_COOLDOWN_MS: number = 2000;
 /** If no new tooltip is viewed within this window, fast-transition mode turns off. */
-const FAST_TRANSITION_COOLDOWN_MILLIS: number = 750;
+const FAST_TRANSITION_COOLDOWN_MS: number = 750;
 
 // State ---------------------------------------------------------------------------------
 
@@ -317,7 +317,7 @@ function scheduleShow(target: HTMLElement, state: TooltipState, direction: strin
 	} else {
 		state.hoveringTimer = window.setTimeout(
 			() => tryShow(target, state, direction),
-			TOOLTIP_DELAY_MILLIS,
+			TOOLTIP_DELAY_MS,
 		);
 	}
 }
@@ -338,7 +338,7 @@ function resetSuppressTimer(target: HTMLElement, state: TooltipState, direction:
 	state.suppressTimer = window.setTimeout(() => {
 		state.suppressed = false;
 		if (state.isHovering && !state.isHolding) tryShow(target, state, direction);
-	}, SUPPRESS_COOLDOWN_MILLIS);
+	}, SUPPRESS_COOLDOWN_MS);
 }
 
 // Delegated event listeners ------------------------------------------------------------
@@ -382,7 +382,7 @@ if (docutil.isMouseSupported()) {
 			enableFastTransition();
 			fastTransitionTimeoutID = window.setTimeout(
 				() => disableFastTransition(),
-				FAST_TRANSITION_COOLDOWN_MILLIS,
+				FAST_TRANSITION_COOLDOWN_MS,
 			);
 		}
 
@@ -419,7 +419,7 @@ if (docutil.isMouseSupported()) {
 		state.isHovering = true;
 		state.hoveringTimer = window.setTimeout(
 			() => tryShow(target, state, direction),
-			TOOLTIP_DELAY_MILLIS,
+			TOOLTIP_DELAY_MS,
 		);
 	});
 

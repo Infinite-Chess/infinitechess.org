@@ -24,7 +24,7 @@ const MAX_SOCKETS_ALLOWED_PER_SESSION = 5;
  * The maximum age a websocket connection will live before auto terminating, in milliseconds.
  * Users have to provide authentication whenever they open a new socket.
  */
-const MAX_WEBSOCKET_AGE_MILLIS = 1000 * 60 * 15; // 15 minutes.
+const MAX_WEBSOCKET_AGE_MS = 1000 * 60 * 15; // 15 minutes.
 
 // State --------------------------------------------------------------------------------------
 
@@ -92,7 +92,7 @@ function removeConnectionFromList(
 function startTimerToExpireSocket(ws: CustomWebSocket): void {
 	ws.metadata.clearafter = setTimeout(
 		() => ws.close(1000, socketutil.ClosureReasons.CONNECTION_EXPIRED),
-		MAX_WEBSOCKET_AGE_MILLIS,
+		MAX_WEBSOCKET_AGE_MS,
 	); // We pass in an arrow function so it doesn't lose scope of ws.
 }
 

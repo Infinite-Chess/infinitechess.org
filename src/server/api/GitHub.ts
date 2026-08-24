@@ -52,7 +52,7 @@ const GitHubContributorSchema = z.array(
 const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
 
 /** The interval to use GitHub's API to refresh the contributor list. */
-const INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS = 1000 * 60 * 60 * 3; // 3 hours
+const INTERVAL_TO_REFRESH_CONTRIBUTORS_MS = 1000 * 60 * 60 * 3; // 3 hours
 
 // State -------------------------------------------------------------------------------------
 
@@ -72,10 +72,7 @@ const INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS = 1000 * 60 * 60 * 3; // 3 hours
 let contributors: Contributor[] = loadContributorsSnapshot();
 
 /** The id of the interval to update contributors. Can be used to cancel it if the API token isn't specified. */
-const intervalId = setInterval(
-	refreshGitHubContributorsList,
-	INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS,
-);
+const intervalId = setInterval(refreshGitHubContributorsList, INTERVAL_TO_REFRESH_CONTRIBUTORS_MS);
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -202,7 +199,7 @@ function refreshGitHubContributorsList(): void {
 
 /**
  * Returns a list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
- * updated every {@link INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS}.
+ * updated every {@link INTERVAL_TO_REFRESH_CONTRIBUTORS_MS}.
  */
 function getContributors(): Contributor[] {
 	return contributors;

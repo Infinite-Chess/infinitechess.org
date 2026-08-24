@@ -21,7 +21,7 @@ const MOVE_SOUND_REMINDER_MS: number = 1000 * 20; // 20 seconds
 const originalDocumentTitle: string = document.title;
 
 /** How rapidly the tab title should flash "YOUR MOVE" */
-const periodicityMillis = 1500;
+const periodicityMs = 1500;
 
 /** The ID of the timeout that can be used to cancel the timer that flips the tab title between "YOUR MOVE" and the default title. */
 let timeoutID: ReturnType<typeof setTimeout> | undefined;
@@ -71,7 +71,7 @@ function flashTabNameYOUR_MOVE(parity: boolean): void {
 
 	document.title = parity ? 'YOUR MOVE' : originalDocumentTitle;
 	// Set a timer for the next toggle
-	timeoutID = setTimeout(flashTabNameYOUR_MOVE, periodicityMillis, !parity);
+	timeoutID = setTimeout(flashTabNameYOUR_MOVE, periodicityMs, !parity);
 }
 
 function cancelFlashTabTimer(): void {

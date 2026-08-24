@@ -47,7 +47,7 @@ export type OutValue<R extends OutRoute, A extends OutAction<R>> = ActionValue<O
  * I recommend 2 seconds of latency for testing slow networks.
  */
 const SIMULATED_WEBSOCKET_LATENCY_MS = 0;
-// const simulatedWebsocketLatencyMillis = 1000; // Debug: 1 Second
+// const SIMULATED_WEBSOCKET_LATENCY_MS = 1000; // Debug: 1 Second
 if (process.env['NODE_ENV'] !== 'development' && SIMULATED_WEBSOCKET_LATENCY_MS !== 0) {
 	throw new Error('SIMULATED_WEBSOCKET_LATENCY_MS must be 0 in production!!');
 }

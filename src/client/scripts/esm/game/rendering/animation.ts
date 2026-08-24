@@ -136,12 +136,12 @@ const MOVE_ANIMATION_DURATION = {
 	/** The base amount of duration, in millis. */
 	baseMillis: 150, // Default: 150
 	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
-	multiplierMillis: 6,
-	/** The multiplierMillis when there's at least 3+ waypoints */
+	multiplierMs: 6,
+	/** The multiplierMs when there's at least 3+ waypoints */
 	multiplierMillis_Curved: 12, // Default: 12
 	/** Replaces {@link MOVE_ANIMATION_DURATION.baseMillis} when {@link DEBUG} is true. */
 	baseMillis_Debug: 2000,
-	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis} when {@link DEBUG} is true. */
+	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMs} when {@link DEBUG} is true. */
 	multiplierMillis_Debug: 15,
 	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis_Curved} when {@link DEBUG} is true. */
 	multiplierMillis_Curved_Debug: 30,
@@ -313,10 +313,10 @@ function calculateAnimationDuration(totalDistance: BigDecimal, waypointCount: nu
 		multiplier =
 			waypointCount > 2
 				? MOVE_ANIMATION_DURATION.multiplierMillis_Curved
-				: MOVE_ANIMATION_DURATION.multiplierMillis;
-	const additionMillis = cappedDist * multiplier;
+				: MOVE_ANIMATION_DURATION.multiplierMs;
+	const additionMs = cappedDist * multiplier;
 
-	return baseMillis + additionMillis;
+	return baseMillis + additionMs;
 }
 
 /** Schedules the playback of the sound of the animation. */

@@ -28,7 +28,7 @@ import lobbysubscribers from './lobbysubscribers.js';
  * Time to allow the client to reconnect after an UNEXPECTED (not purposeful)
  * socket closure before any seek of theirs is deleted!
  */
-const DISCONNECT_CUSHION_MILLIS = 5000; // 5 seconds
+const DISCONNECT_CUSHION_MS = 5000; // 5 seconds
 
 // State -----------------------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ function unsubscribe(ws: CustomWebSocket, involuntary?: boolean): void {
 
 	// The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their seek!
 	// console.log("Setting a 5-second timer to delete a user's seek!");
-	const timeout = setTimeout(() => deleteSeeksIfNotConnected(owner), DISCONNECT_CUSHION_MILLIS);
+	const timeout = setTimeout(() => deleteSeeksIfNotConnected(owner), DISCONNECT_CUSHION_MS);
 	if (owner.signedIn) timersMember[owner.user_id] = timeout;
 	else timersBrowser[owner.browser_id] = timeout;
 }
