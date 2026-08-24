@@ -403,8 +403,6 @@ function validateMemberQueryArgs(
 ): void {
 	// 1. Validate Columns
 	db.assertColumnsValid(columns, ALL_MEMBERS_COLUMNS, 'members');
-	if (columns.length === 0)
-		throw new Error(`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
 
 	// 2. Validate Search Key
 	if (typeof searchKey !== 'string' || !UNIQUE_MEMBERS_COLUMNS.includes(searchKey))

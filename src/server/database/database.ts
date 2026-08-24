@@ -94,8 +94,8 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 // Validation & Dynamic Updates ----------------------------------------------------------------------------
 
 /**
- * Validates a column-selection argument of a read query: it must be an array of
- * strings that are all columns of the named table. Throws on the first problem.
+ * Validates a column-selection argument of a read query: it must be a non-empty array
+ * of strings that are all columns of the named table. Throws on the first problem.
  */
 function assertColumnsValid(
 	columns: unknown,
@@ -104,7 +104,7 @@ function assertColumnsValid(
 ): void {
 	if (!Array.isArray(columns))
 		throw new Error(`When getting ${tableName} data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
-	if (!columns.every((column) => typeof column === 'string' && allowedColumns.includes(column)))
+	if (columns.length === 0 || !columns.every((column) => typeof column === 'string' && allowedColumns.includes(column)))
 		throw new Error(`Invalid columns requested from ${tableName} table: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
 }
 
