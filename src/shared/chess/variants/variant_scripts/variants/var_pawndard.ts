@@ -7,7 +7,7 @@
 import type { CoordsKey } from '../../../../util/coordutil.js';
 import type { BoundingBox } from '../../../../util/math/bounds.js';
 
-import variantutil from '../variantutil.js';
+import timeutil from '../../../../util/timeutil.js';
 import icnposition from '../../../logic/icn/icnposition.js';
 
 const POSITION_STRINGS: Record<number, string> = {
@@ -22,12 +22,12 @@ export function getPosition(timestamp: number = Date.now()): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
-	const positionString = variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
+	const positionString = timeutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
 	return icnposition.parseShortFormPosition(positionString);
 }
 
 export function getPositionStringLength(timestamp: number = Date.now()): number {
-	return variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
+	return timeutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
 }
 
 export function getPositionBox(): BoundingBox {

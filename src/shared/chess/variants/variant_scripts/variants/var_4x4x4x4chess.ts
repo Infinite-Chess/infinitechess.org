@@ -6,7 +6,7 @@
 
 import type { Movesets } from '../../../logic/movesets.js';
 import type { CoordsKey } from '../../../../util/coordutil.js';
-import type { GameRuleModifications } from '../variantutil.js';
+import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 import type { RawType, RawTypeGroup } from '../../../../util/typeutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../../../logic/specialmove.js';
 

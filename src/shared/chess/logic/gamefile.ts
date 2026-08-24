@@ -6,7 +6,7 @@ import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../chess/logic/icn/icnconverter.js';
 import type { VariantCode } from '../util/variantcodes.js';
-import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
+import type { VariantModule } from './variantmodule.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { GlobalGameState } from './state.js';
 import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';
@@ -22,7 +22,7 @@ import variantcache from '../variants/variantcache.js';
 import apeiron_card from '../engines/apeiron_card.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from './gamefileutility.js';
-import variantpreviewer from '../variants/variantpreviewer.js';
+import variantpreviewer from './variantpreviewer.js';
 
 // Types ----------------------------------------------------
 

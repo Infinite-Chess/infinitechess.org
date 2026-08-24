@@ -13,7 +13,7 @@ import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coor
 import vectors from '../../../../../../../shared/util/math/vectors.js';
 import bdcoords from '../../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../../shared/util/coordutil.js';
-import variantpreviewer from '../../../../../../../shared/chess/variants/variantpreviewer.js';
+import variantpreviewer from '../../../../../../../shared/chess/logic/variantpreviewer.js';
 
 import space from '../../../../board/space.js';
 import mouse from '../../../mouse.js';

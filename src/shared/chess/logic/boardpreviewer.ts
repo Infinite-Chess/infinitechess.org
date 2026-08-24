@@ -18,7 +18,7 @@ import type { Snapshot, VariantOptions, LoadedVariant } from './gamefile.js';
 
 import jsutil from '../../util/jsutil.js';
 import organizedpieces from './organizedpieces.js';
-import variantpreviewer from '../variants/variantpreviewer.js';
+import variantpreviewer from './variantpreviewer.js';
 
 // Types ------------------------------------------------------------------
 

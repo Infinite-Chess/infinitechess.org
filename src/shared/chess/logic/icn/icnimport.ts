@@ -15,7 +15,7 @@ import type { LoadedVariant, VariantOptions } from '../gamefile.js';
 import jsutil from '../../../util/jsutil.js';
 import metadatautil from '../../util/metadatautil.js';
 import variantcache from '../../variants/variantcache.js';
-import variantpreviewer from '../../variants/variantpreviewer.js';
+import variantpreviewer from '../variantpreviewer.js';
 
 /**
  * Resolves the starting position and specialRights from a parsed ICN long format.

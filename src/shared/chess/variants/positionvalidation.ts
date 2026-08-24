@@ -19,7 +19,7 @@ import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
 import checkmate from '../logic/checkmate.js';
 import apeiron_card from '../engines/apeiron_card.js';
-import variantreader from './variantreader.js';
+import variantreader from '../logic/variantreader.js';
 import checkdetection from '../logic/checkdetection.js';
 import gamefileutility from '../logic/gamefileutility.js';
 import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from './servervalidation.js';

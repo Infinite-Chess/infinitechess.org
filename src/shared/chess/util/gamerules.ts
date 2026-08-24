@@ -9,7 +9,7 @@ import type { UnboundedRectangle } from '../../util/math/bounds.js';
 import type { GameruleWinCondition } from './winconutil.js';
 import type { Player, RawType, PlayerGroup } from '../../util/typeutil.js';
 
-import { rawTypes as r } from '../../util/typeutil.js';
+import { rawTypes as r, players as p } from '../../util/typeutil.js';
 
 // Types --------------------------------------------------------------------------
 
@@ -47,11 +47,29 @@ export type Promotion = {
 
 // Constants ----------------------------------------------------------------------
 
+// What a game plays by when nothing declares otherwise — a variant with no gamerule
+// modifications, and an ICN omitting the field. Both paths must agree on every one of
+// these, or an ICN round trip would silently change the rules it was written from.
+
 /**
  * What a game promotes to when nothing declares otherwise.
  * Frozen: ICN omits a list matching this, so changing it reinterprets every stored one.
  */
-export const DEFAULT_PROMOTION_PIECES = [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
+const DEFAULT_PROMOTION_PIECES = [r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT];
+
+/** The rank each player promotes on when nothing declares otherwise. */
+const DEFAULT_PROMOTION_RANKS: Promotion['ranks'] = { [p.WHITE]: [8n], [p.BLACK]: [1n] };
+
+/** How a player wins when nothing declares otherwise. */
+const DEFAULT_WIN_CONDITION: GameruleWinCondition = 'checkmate';
+
+/** Who moves, in what order, when nothing declares otherwise. */
+const DEFAULT_TURN_ORDER: Player[] = [p.WHITE, p.BLACK];
+
+/** {@link DEFAULT_WIN_CONDITION} for every player of the {@link DEFAULT_TURN_ORDER}. */
+const DEFAULT_WIN_CONDITIONS: PlayerGroup<GameruleWinCondition[]> = Object.fromEntries(
+	DEFAULT_TURN_ORDER.map((player) => [player, [DEFAULT_WIN_CONDITION]]),
+);
 
 // Functions ----------------------------------------------------------------------
 
@@ -99,6 +117,13 @@ function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
 }
 
 export default {
+	// Constants
+	DEFAULT_PROMOTION_PIECES,
+	DEFAULT_PROMOTION_RANKS,
+	DEFAULT_WIN_CONDITION,
+	DEFAULT_TURN_ORDER,
+	DEFAULT_WIN_CONDITIONS,
+	// Functions
 	doesColorHaveWinCondition,
 	getWinConditionCountOfColor,
 	swapCheckmateForRoyalCapture,

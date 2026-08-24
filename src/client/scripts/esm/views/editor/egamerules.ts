@@ -15,7 +15,7 @@ import type { PlayerGroup, RawType } from '../../../../../shared/util/typeutil';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil';
 
 import boardutil from '../../../../../shared/chess/logic/boardutil';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
+import gamerules from '../../../../../shared/chess/util/gamerules';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import typeutil, { players as p, rawTypes as r } from '../../../../../shared/util/typeutil';
 
@@ -61,7 +61,7 @@ const castlingTypes: RawType[] = [r.ROOK, r.KING, r.ROYALCENTAUR];
 /** Virtual game rules object for the position */
 let gamerulesGUIinfo: GameRulesGUIinfo = {
 	playerToMove: 'white',
-	winConditions: [icnconverter.defaultWinCondition],
+	winConditions: [gamerules.DEFAULT_WIN_CONDITION],
 };
 
 // Getting & Setting -------------------------------------------------------------
@@ -176,8 +176,8 @@ function setGamerulesGUIinfo(
 
 	gamerulesGUIinfo.winConditions = [
 		...new Set([
-			...(gameRules.winConditions[p.WHITE] || [icnconverter.defaultWinCondition]),
-			...(gameRules.winConditions[p.BLACK] || [icnconverter.defaultWinCondition]),
+			...(gameRules.winConditions[p.WHITE] || [gamerules.DEFAULT_WIN_CONDITION]),
+			...(gameRules.winConditions[p.BLACK] || [gamerules.DEFAULT_WIN_CONDITION]),
 		]),
 	];
 

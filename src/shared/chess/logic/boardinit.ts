@@ -12,7 +12,7 @@ import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { PieceMoveset } from './movesets.js';
-import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
+import type { VariantModule } from './variantmodule.js';
 import type { LoadedVariant } from './gamefile.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';
@@ -21,7 +21,7 @@ import type { BoardInitOptions, BoardPreview } from './boardpreviewer.js';
 
 import typeutil from '../../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
-import variantreader from '../variants/variantreader.js';
+import variantreader from './variantreader.js';
 import boardpreviewer from './boardpreviewer.js';
 import organizedpieces from './organizedpieces.js';
 

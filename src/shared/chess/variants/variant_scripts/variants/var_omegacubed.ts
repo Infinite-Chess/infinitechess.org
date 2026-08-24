@@ -5,7 +5,7 @@
  */
 
 import type { RawType } from '../../../../util/typeutil.js';
-import type { GameRuleModifications } from '../variantutil.js';
+import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
 import { BoundingBox } from '../../../../util/math/bounds.js';
 import coordutil, { Coords, CoordsKey } from '../../../../util/coordutil.js';

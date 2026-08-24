@@ -5,7 +5,7 @@
  */
 
 import type { RawType } from '../../../../util/typeutil.js';
-import type { GameRuleModifications } from '../variantutil.js';
+import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
 import coordutil, { Coords, CoordsKey } from '../../../../util/coordutil.js';
 import { ext as e, players as p, rawTypes as r } from '../../../../util/typeutil.js';

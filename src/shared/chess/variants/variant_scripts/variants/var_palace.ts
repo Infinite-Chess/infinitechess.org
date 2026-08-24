@@ -6,10 +6,10 @@
 
 import type { CoordsKey } from '../../../../util/coordutil.js';
 import type { BoundingBox } from '../../../../util/math/bounds.js';
-import type { GameRuleModifications } from '../variantutil.js';
+import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
+import gamerules from '../../../util/gamerules.js';
 import icnposition from '../../../logic/icn/icnposition.js';
-import { DEFAULT_PROMOTION_PIECES } from '../../../util/gamerules.js';
 import { rawTypes as r, players as p } from '../../../../util/typeutil.js';
 
 const POSITION_STRING =
@@ -26,7 +26,7 @@ export function gameruleModifications(): GameRuleModifications {
 	return {
 		promotion: {
 			ranks: { [p.WHITE]: [4n], [p.BLACK]: [2n] },
-			pieces: [...DEFAULT_PROMOTION_PIECES, r.AMAZON],
+			pieces: [...gamerules.DEFAULT_PROMOTION_PIECES, r.AMAZON],
 		},
 	};
 }

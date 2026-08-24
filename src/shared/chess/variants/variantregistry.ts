@@ -10,7 +10,7 @@
  */
 
 import type { VariantCode } from '../util/variantcodes.js';
-import type { VariantModule } from './variant_scripts/variantutil.js';
+import type { VariantModule } from '../logic/variantmodule.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 
 import { VARIANT_CODES } from '../util/variantcodes.js';

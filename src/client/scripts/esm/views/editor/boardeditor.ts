@@ -11,7 +11,7 @@ import type { StorageType } from '../../savedpositions/storetypes.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import { players as p } from '../../../../../shared/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
@@ -73,8 +73,8 @@ async function initBoardEditor(
 		const gamefile = gameslot.getGamefile()!;
 		// Set gamerulesGUIinfo object according to loaded Classical variant
 		const gameRules = jsutil.deepCopyObject(gamefile.gameRules);
-		gameRules.winConditions[p.WHITE] = [icnconverter.defaultWinCondition];
-		gameRules.winConditions[p.BLACK] = [icnconverter.defaultWinCondition];
+		gameRules.winConditions[p.WHITE] = [gamerules.DEFAULT_WIN_CONDITION];
+		gameRules.winConditions[p.BLACK] = [gamerules.DEFAULT_WIN_CONDITION];
 		const globalState = jsutil.deepCopyObject(gamefile.state.global);
 		initial_pawnDoublePush = true;
 		initial_castling = true;

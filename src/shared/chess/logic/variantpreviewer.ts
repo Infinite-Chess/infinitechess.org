@@ -1,4 +1,4 @@
-// src/shared/chess/variants/variantpreviewer.ts
+// src/shared/chess/logic/variantpreviewer.ts
 
 /**
  * Reads pre-loaded VariantModules to generate game rules, starting positions,
@@ -9,29 +9,19 @@
 
 import type { BaseRay } from '../../util/math/geometry.js';
 import type { GameRules } from '../util/gamerules.js';
-import type { LoadedVariant } from '../logic/gamefile.js';
+import type { LoadedVariant } from './gamefile.js';
+import type { Player, RawType } from '../../util/typeutil.js';
 import type { CoordsKey, Coords } from '../../util/coordutil.js';
-import type { GameruleWinCondition } from '../util/winconutil.js';
-import type { Player, PlayerGroup, RawType } from '../../util/typeutil.js';
-import type { VariantModule, GameRuleModifications } from './variant_scripts/variantutil.js';
+import type { VariantModule, GameRuleModifications } from './variantmodule.js';
 
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
 import typeutil from '../../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
-import castlingutil from '../logic/castlingutil.js';
-import icnconverter from '../logic/icn/icnconverter.js';
-import { DEFAULT_PROMOTION_PIECES } from '../util/gamerules.js';
-import { rawTypes as r, players as p } from '../../util/typeutil.js';
-
-// Constants ------------------------------------------------------------------
-
-const defaultWinConditions: PlayerGroup<GameruleWinCondition[]> = {
-	[p.WHITE]: ['checkmate'],
-	[p.BLACK]: ['checkmate'],
-};
-const defaultTurnOrder = [p.WHITE, p.BLACK];
-const defaultPromotionRanks = { [p.WHITE]: [8n], [p.BLACK]: [1n] };
+import gamerules from '../util/gamerules.js';
+import castlingutil from './castlingutil.js';
+import icnconverter from './icn/icnconverter.js';
+import { rawTypes as r } from '../../util/typeutil.js';
 
 // Functions ------------------------------------------------------------------
 
@@ -143,15 +133,15 @@ function getGameRules(modifications: GameRuleModifications = {}): GameRules {
 	// { slideLimit, promotionRanks, position }
 	const gameRules: GameRules = {
 		// REQUIRED gamerules
-		winConditions: modifications.winConditions ?? defaultWinConditions,
-		turnOrder: modifications.turnOrder ?? defaultTurnOrder,
+		winConditions: modifications.winConditions ?? gamerules.DEFAULT_WIN_CONDITIONS,
+		turnOrder: modifications.turnOrder ?? gamerules.DEFAULT_TURN_ORDER,
 	};
 
 	// GameRules that have a dedicated ICN spot...
 	if (modifications.promotion !== null) {
 		gameRules.promotion = {
-			ranks: modifications.promotion?.ranks ?? defaultPromotionRanks,
-			pieces: modifications.promotion?.pieces ?? DEFAULT_PROMOTION_PIECES,
+			ranks: modifications.promotion?.ranks ?? gamerules.DEFAULT_PROMOTION_RANKS,
+			pieces: modifications.promotion?.pieces ?? gamerules.DEFAULT_PROMOTION_PIECES,
 		};
 	}
 	if (modifications.moveRule !== null) gameRules.moveRule = modifications.moveRule || 100;

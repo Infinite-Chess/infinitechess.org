@@ -16,7 +16,7 @@ import coordutil from '../../../../../shared/util/coordutil.js';
 import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
-import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
+import variantpreviewer from '../../../../../shared/chess/logic/variantpreviewer.js';
 import { engineDictionary } from '../../../../../shared/chess/engine.js';
 import { players as p, ext as e, rawTypes as r } from '../../../../../shared/util/typeutil.js';
 

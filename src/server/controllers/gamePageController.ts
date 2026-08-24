@@ -23,7 +23,7 @@ import variantcache from '../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../shared/chess/logic/icn/icnconverter.js';
 import gameresultutil from '../../shared/chess/util/gameresultutil.js';
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
-import variantpreviewer from '../../shared/chess/variants/variantpreviewer.js';
+import variantpreviewer from '../../shared/chess/logic/variantpreviewer.js';
 import { players as p } from '../../shared/util/typeutil.js';
 import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.js';
 

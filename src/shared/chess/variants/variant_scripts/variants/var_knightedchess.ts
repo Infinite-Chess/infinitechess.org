@@ -5,9 +5,9 @@
  */
 
 import type { CoordsKey } from '../../../../util/coordutil.js';
-import type { GameRuleModifications } from '../variantutil.js';
+import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
-import variantutil from '../variantutil.js';
+import timeutil from '../../../../util/timeutil.js';
 import icnposition from '../../../logic/icn/icnposition.js';
 import { rawTypes as r } from '../../../../util/typeutil.js';
 
@@ -23,7 +23,7 @@ export function getPosition(timestamp: number = Date.now()): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
-	const positionString = variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
+	const positionString = timeutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
 	return icnposition.parseShortFormPosition(positionString);
 }
 
@@ -34,5 +34,5 @@ export function gameruleModifications(): GameRuleModifications {
 }
 
 export function getPositionStringLength(timestamp: number = Date.now()): number {
-	return variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
+	return timeutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
 }

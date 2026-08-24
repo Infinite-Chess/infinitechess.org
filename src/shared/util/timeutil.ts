@@ -235,6 +235,17 @@ function getRelativeTimeStringIntl(timestampMs: number, locale: string): string 
 	return ''; // Unreachable: the 'second' branch always returns.
 }
 
+/**
+ * Selects the value from a time-versioned record whose key is the highest timestamp less
+ * than or equal to the given timestamp. Falls back to the earliest entry if none apply.
+ */
+function resolveAtTimestamp<T>(entries: Record<number, T>, timestamp: number): T {
+	const keys = Object.keys(entries)
+		.map(Number)
+		.sort((a, b) => b - a);
+	return entries[keys.find((k) => timestamp >= k) ?? keys[keys.length - 1]!]!;
+}
+
 export default {
 	minutesToMillis,
 	secondsToMillis,
@@ -250,4 +261,5 @@ export default {
 	timestampToSqlite,
 	getRelativeTimeString,
 	getRelativeTimeStringIntl,
+	resolveAtTimestamp,
 };

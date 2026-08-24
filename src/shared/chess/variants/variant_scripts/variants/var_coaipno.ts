@@ -6,12 +6,12 @@
 
 import type { CoordsKey } from '../../../../util/coordutil.js';
 import type { BoundingBox } from '../../../../util/math/bounds.js';
-import type { GameRuleModifications } from '../variantutil.js';
+import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
-import variantutil from '../variantutil.js';
+import timeutil from '../../../../util/timeutil.js';
+import gamerules from '../../../util/gamerules.js';
 import icnposition from '../../../logic/icn/icnposition.js';
 import { rawTypes as r } from '../../../../util/typeutil.js';
-import { DEFAULT_PROMOTION_PIECES } from '../../../util/gamerules.js';
 
 const POSITION_STRINGS: Record<number, string> = {
 	// 6:43 PM Dec 24, 2025, MST - Knightriders can no longer give a discovered check on move one.
@@ -25,20 +25,20 @@ export function getPosition(timestamp: number = Date.now()): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
-	const positionString = variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
+	const positionString = timeutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
 	return icnposition.parseShortFormPosition(positionString);
 }
 
 export function gameruleModifications(): GameRuleModifications {
 	return {
 		promotion: {
-			pieces: [...DEFAULT_PROMOTION_PIECES, r.GUARD, r.CHANCELLOR, r.KNIGHTRIDER],
+			pieces: [...gamerules.DEFAULT_PROMOTION_PIECES, r.GUARD, r.CHANCELLOR, r.KNIGHTRIDER],
 		},
 	};
 }
 
 export function getPositionStringLength(timestamp: number = Date.now()): number {
-	return variantutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
+	return timeutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
 }
 
 const POSITION_BOXES: Record<number, BoundingBox> = {
@@ -48,5 +48,5 @@ const POSITION_BOXES: Record<number, BoundingBox> = {
 };
 
 export function getPositionBox(timestamp: number = Date.now()): BoundingBox {
-	return variantutil.resolveAtTimestamp(POSITION_BOXES, timestamp);
+	return timeutil.resolveAtTimestamp(POSITION_BOXES, timestamp);
 }

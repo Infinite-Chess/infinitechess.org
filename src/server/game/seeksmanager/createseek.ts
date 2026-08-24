@@ -19,7 +19,7 @@ import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
-import variantreader from '../../../shared/chess/variants/variantreader.js';
+import variantreader from '../../../shared/chess/logic/variantreader.js';
 import gameformulator from '../../../shared/chess/logic/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { IDLengthOfSeeks } from '../../../shared/domain.js';

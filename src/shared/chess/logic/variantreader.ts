@@ -1,4 +1,4 @@
-// src/shared/chess/variants/variantreader.ts
+// src/shared/chess/logic/variantreader.ts
 
 /**
  * Reads pre-loaded VariantModules to generate moveset and special-move
@@ -7,14 +7,14 @@
  * code paths that actually execute game logic (boardinit, server, etc.).
  */
 
-import type { VariantModule } from './variant_scripts/variantutil.js';
+import type { VariantModule } from './variantmodule.js';
 import type { RawType, RawTypeGroup } from '../../util/typeutil.js';
-import type { Movesets, PieceMoveset } from '../logic/movesets.js';
-import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
+import type { Movesets, PieceMoveset } from './movesets.js';
+import type { SpecialMoveFunction, SpecialVicinity } from './specialmove.js';
 
 import jsutil from '../../util/jsutil.js';
-import movesets from '../logic/movesets.js';
-import specialmove from '../logic/specialmove.js';
+import movesets from './movesets.js';
+import specialmove from './specialmove.js';
 
 // Functions ------------------------------------------------------------------
 

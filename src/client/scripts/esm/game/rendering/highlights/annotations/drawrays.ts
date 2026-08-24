@@ -9,7 +9,7 @@
 import type { Color } from '../../../../../../../shared/util/math/math.js';
 
 import bdcoords from '../../../../../../../shared/util/bdcoords.js';
-import variantpreviewer from '../../../../../../../shared/chess/variants/variantpreviewer.js';
+import variantpreviewer from '../../../../../../../shared/chess/logic/variantpreviewer.js';
 import vectors, { Ray } from '../../../../../../../shared/util/math/vectors.js';
 import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
 import coordutil, {

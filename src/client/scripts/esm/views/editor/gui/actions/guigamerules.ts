@@ -11,6 +11,7 @@ import type { GameruleWinCondition } from '../../../../../../../shared/chess/uti
 
 import bounds from '../../../../../../../shared/util/math/bounds';
 import boardutil from '../../../../../../../shared/chess/logic/boardutil';
+import gamerules from '../../../../../../../shared/chess/util/gamerules';
 import icnposition from '../../../../../../../shared/chess/logic/icn/icnposition';
 import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
 import typeutil, { RawType } from '../../../../../../../shared/util/typeutil';
@@ -263,7 +264,7 @@ function readGameRules(): void {
 	if (element_royalcapture.checked) winConditions.push('royalcapture');
 	if (element_allroyalscaptured.checked) winConditions.push('allroyalscaptured');
 	if (element_allpiecescaptured.checked) winConditions.push('allpiecescaptured');
-	if (winConditions.length === 0) winConditions.push(icnconverter.defaultWinCondition);
+	if (winConditions.length === 0) winConditions.push(gamerules.DEFAULT_WIN_CONDITION);
 
 	// pawn double push
 	let pawnDoublePush: boolean | undefined = undefined;

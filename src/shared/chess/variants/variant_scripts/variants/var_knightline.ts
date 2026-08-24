@@ -6,7 +6,7 @@
 
 import type { CoordsKey } from '../../../../util/coordutil.js';
 import type { BoundingBox } from '../../../../util/math/bounds.js';
-import type { GameRuleModifications } from '../variantutil.js';
+import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
 import icnposition from '../../../logic/icn/icnposition.js';
 import { rawTypes as r } from '../../../../util/typeutil.js';

@@ -15,7 +15,7 @@ import type { GameModifier } from '../../util/modutil.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
 import type { GameStateVariant, SeekVariant } from '../../domain.js';
 
-import variantpreviewer from './variantpreviewer.js';
+import variantpreviewer from '../logic/variantpreviewer.js';
 import { VariantLeaderboards } from './validleaderboard.js';
 
 // Constants -----------------------------------------------------------------

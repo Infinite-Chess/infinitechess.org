@@ -14,9 +14,9 @@ import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js'
 
 import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
+import timeutil from '../../util/timeutil.js';
 import boardutil from '../logic/boardutil.js';
 import { I64_MAX } from '../engine.js';
-import variantutil from '../variants/variant_scripts/variantutil.js';
 import typeutil, { RawType, rawTypes as r, players as p } from '../../util/typeutil.js';
 
 /** Why the engine can't handle a game. Keys into `position_errors.engine` in the shared translations. */
@@ -68,7 +68,7 @@ const PLAY_BORDER: Record<number, { dist: bigint; cap: bigint }> = {
  * @param timestamp - The game's creation time, pinning its {@link PLAY_BORDER} revision.
  */
 function worldBorderForBox(positionBox: BoundingBox, timestamp: number): BoundingBox {
-	const { dist, cap } = variantutil.resolveAtTimestamp(PLAY_BORDER, timestamp);
+	const { dist, cap } = timeutil.resolveAtTimestamp(PLAY_BORDER, timestamp);
 	return {
 		left: bimath.max(positionBox.left - dist, -cap),
 		right: bimath.min(positionBox.right + dist, cap),
@@ -90,7 +90,7 @@ function worldBorderForVariant(variant: LoadedVariant): BoundingBox {
 
 /** {@link PLAY_BORDER}'s `cap` alone, for callers bounding a position rather than spacing a border. */
 function worldBorderCap(timestamp: number): bigint {
-	return variantutil.resolveAtTimestamp(PLAY_BORDER, timestamp).cap;
+	return timeutil.resolveAtTimestamp(PLAY_BORDER, timestamp).cap;
 }
 
 /**

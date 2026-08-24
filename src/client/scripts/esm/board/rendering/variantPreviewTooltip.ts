@@ -16,7 +16,7 @@ import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
-import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
+import variantpreviewer from '../../../../../shared/chess/logic/variantpreviewer.js';
 import {
 	summarizeGameRules,
 	type RuleSummaryItem,

@@ -39,11 +39,11 @@ import * as z from 'zod';
 
 import jsutil from '../../../util/jsutil.js';
 import bimath from '../../../util/math/bimath.js';
+import gamerules from '../../util/gamerules.js';
 import winconutil from '../../util/winconutil.js';
 import icnposition from './icnposition.js';
 import coordutil, { Coords, CoordsKey } from '../../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
-import gamerules, { DEFAULT_PROMOTION_PIECES } from '../../util/gamerules.js';
 import { players as p, RawType, Player, PlayerGroup } from '../../../util/typeutil.js';
 
 // Types ------------------------------------------------------------------------------
@@ -206,14 +206,12 @@ const COMPACT_FORMAT_OPTIONS = {
 
 /** Tests if the provided array of legal promotions is the default set of promotions. */
 function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
-	if (promotionList.length !== DEFAULT_PROMOTION_PIECES.length) return false;
-	return DEFAULT_PROMOTION_PIECES.every((promotion) => promotionList.includes(promotion));
+	if (promotionList.length !== gamerules.DEFAULT_PROMOTION_PIECES.length) return false;
+	return gamerules.DEFAULT_PROMOTION_PIECES.every((promotion) =>
+		promotionList.includes(promotion),
+	);
 }
 
-/** The default win condition for each player, if none specified in the ICN. */
-const defaultWinCondition = 'checkmate' as const;
-/** The default turn order, if none specified in the ICN. */
-const defaultTurnOrder = [p.WHITE, p.BLACK];
 /** The default full move, if none specified in the ICN. */
 const defaultFullMove = 1;
 
@@ -582,7 +580,7 @@ function LongToShort_Format(
 		(segment) => segment === playerWinConSegments[0],
 	);
 	if (allPlayersMatchWinConditions) {
-		if (playerWinConSegments[0]! !== defaultWinCondition)
+		if (playerWinConSegments[0]! !== gamerules.DEFAULT_WIN_CONDITION)
 			positionSegments.push(playerWinConSegments[0]!); // Don't include parenthesis => 'royalcapture' | 'checkmate,koth'
 		// Else all players have checkmate, no need to specify!
 	} else {
@@ -739,7 +737,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		lastIndex = turnOrderMatch.nextIndex;
 	} else {
 		// Set default turn order
-		turnOrder = jsutil.deepCopyObject(defaultTurnOrder);
+		turnOrder = jsutil.deepCopyObject(gamerules.DEFAULT_TURN_ORDER);
 	}
 
 	/** A sorted list (ascending) of all unique player numbers in the game. */
@@ -796,7 +794,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		// OLD FORMAT COMPAT: Old ICN wrote a per-player promotion list (e.g. "(8;q,r,b,n,am|1;q,r,b,n,am)").
 		// New ICN writes the shared list only after the rank definitions (e.g. "(8|1;q,r,b,n,am)").
 		// We use the last explicitly-specified list to handle both formats correctly.
-		// This variable and the fallback to DEFAULT_PROMOTION_PIECES below can be removed once old-format support is dropped.
+		// This variable and the fallback to gamerules.DEFAULT_PROMOTION_PIECES below can be removed once old-format support is dropped.
 		let lastSpecifiedPromotions: RawType[] | undefined;
 		for (const player of uniquePlayers) {
 			const playerPromotions = promotions.shift()!; // '8,16,24,32;q,r,b,n'
@@ -815,7 +813,9 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		}
 		promotion = {
 			ranks: promotionRanks,
-			pieces: lastSpecifiedPromotions ?? jsutil.deepCopyObject(DEFAULT_PROMOTION_PIECES),
+			pieces:
+				lastSpecifiedPromotions ??
+				jsutil.deepCopyObject(gamerules.DEFAULT_PROMOTION_PIECES),
 		};
 
 		lastIndex = promotionsMatch.nextIndex;
@@ -861,7 +861,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	} else {
 		// Set default win conditions
 		for (const player of turnOrder) {
-			winConditions[player] = [defaultWinCondition];
+			winConditions[player] = [gamerules.DEFAULT_WIN_CONDITION];
 		}
 	}
 
@@ -1332,8 +1332,6 @@ export default {
 	MovePacketSchema,
 	// Constants
 	COMPACT_FORMAT_OPTIONS,
-	// Defaults
-	defaultWinCondition,
 	// Regular Expressions
 	promotionRanksSource,
 	promotionsPiecesSource,

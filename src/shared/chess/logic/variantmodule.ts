@@ -1,12 +1,17 @@
-// src/shared/chess/variants/variant_scripts/variantutil.ts
+// src/shared/chess/logic/variantmodule.ts
 
-import type { Movesets } from '../../logic/movesets.js';
-import type { CoordsKey } from '../../../util/coordutil.js';
-import type { Promotion } from '../../util/gamerules.js';
-import type { GameruleWinCondition } from '../../util/winconutil.js';
-import type { BoundingBox, UnboundedRectangle } from '../../../util/math/bounds.js';
-import type { SpecialMoveFunction, SpecialVicinity } from '../../logic/specialmove.js';
-import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../../../util/typeutil.js';
+/**
+ * The contract a variant script implements, declared here at the layer that consumes
+ * it: the logic reads a variant it is handed, without knowing which variants exist.
+ */
+
+import type { Movesets } from './movesets.js';
+import type { CoordsKey } from '../../util/coordutil.js';
+import type { Promotion } from '../util/gamerules.js';
+import type { GameruleWinCondition } from '../util/winconutil.js';
+import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js';
+import type { SpecialMoveFunction, SpecialVicinity } from './specialmove.js';
+import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../../util/typeutil.js';
 
 /**
  * The shape of a dynamically imported variant script module.
@@ -75,19 +80,4 @@ export type GameRuleModifications = {
 type PromotionModifications = {
 	ranks?: Promotion['ranks'];
 	pieces?: Promotion['pieces'];
-};
-
-/**
- * Selects the value from a time-versioned record whose key is the highest timestamp
- * less than or equal to the given timestamp. Falls back to the earliest entry if none apply.
- */
-function resolveAtTimestamp<T>(entries: Record<number, T>, timestamp: number): T {
-	const keys = Object.keys(entries)
-		.map(Number)
-		.sort((a, b) => b - a);
-	return entries[keys.find((k) => timestamp >= k) ?? keys[keys.length - 1]!]!;
-}
-
-export default {
-	resolveAtTimestamp,
 };
