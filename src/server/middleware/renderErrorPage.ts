@@ -29,7 +29,7 @@ function renderErrorPage(req: Request, res: Response, status: number): void {
 						`Critical error rendering ${context.code} page: ${renderErr.stack}`,
 						'errLog',
 					);
-					res.send(req.t.responses.errors.server_error);
+					res.type('txt').send(req.t.responses.errors.server_error);
 				}
 			},
 		);

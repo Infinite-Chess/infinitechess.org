@@ -1,24 +1,18 @@
 // src/server/middleware/send404.ts
 
 /**
- * Final catch-all for browser navigations that matched no route:
- * renders a localized 404 page.
+ * Sends the 404 response: the localized SSR error page for
+ * browser navigations, JSON or plain text for everyone else.
  */
 
 import type { Request, Response } from 'express';
 
+import { respondError } from './respondError.js';
 import { renderErrorPage } from './renderErrorPage.js';
 
 function send404(req: Request, res: Response): void {
 	res.status(404);
-	if (req.accepts('html') && req.get('Sec-Fetch-Mode') === 'navigate') {
-		// Request accepts html AND is likely a browser, not a bot.
-		renderErrorPage(req, res, 404);
-	} else if (req.accepts('json')) {
-		res.json({ message: req.t.responses.errors.not_found });
-	} else {
-		res.type('txt').send(req.t.responses.errors.not_found);
-	}
+	respondError(req, res, req.t.responses.errors.not_found, () => renderErrorPage(req, res, 404));
 }
 
 export default send404;

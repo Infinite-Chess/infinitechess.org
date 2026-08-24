@@ -4,6 +4,7 @@ import type { Request, Response, NextFunction } from 'express';
 
 import jsutil from '../../shared/util/jsutil.js';
 
+import { respondError } from './respondError.js';
 import { renderErrorPage } from './renderErrorPage.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -40,20 +41,14 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 	// }
 
 	try {
-		if (req.accepts('html') && req.get('Sec-Fetch-Mode') === 'navigate') {
-			// Request accepts html AND is likely a browser, not a bot.
-			renderErrorPage(req, res, status);
-		} else {
-			// Non-HTML (API) client. Echo the error's own message
-			// only when it is explicitly marked safe to expose.
-			const message =
-				'expose' in err && err.expose === true
-					? err.message
-					: req.t.responses.errors.server_error;
-			res.status(status);
-			if (req.accepts('json')) res.json({ message });
-			else res.send(message);
-		}
+		// Echo the error's own message to non-HTML (API)
+		// clients only when it is explicitly marked safe to expose.
+		const message =
+			'expose' in err && err.expose === true
+				? err.message
+				: req.t.responses.errors.server_error;
+		res.status(status);
+		respondError(req, res, message, () => renderErrorPage(req, res, status));
 	} catch (error: unknown) {
 		// Last line of defense
 		const detail = jsutil.getErrorStack(error);
