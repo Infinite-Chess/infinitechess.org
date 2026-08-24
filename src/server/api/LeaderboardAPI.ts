@@ -9,7 +9,10 @@ import type { Request, Response } from 'express';
 import { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
 import { logEventsAndPrint } from '../utility/logEvents.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
+import {
+	getMemberDataByCriteria,
+	getMultipleMemberDataByCriteria,
+} from '../database/memberManager.js';
 import {
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
@@ -61,14 +64,17 @@ function getLeaderboardData(req: Request, res: Response): void {
 		// Query leaderboard database
 		const top_players = getTopPlayersForLeaderboard(leaderboard_id, start_rank, n_players);
 
+		// Fetch every username on this page in ONE query.
+		const usernameByUserID = getUsernamesByUserID(top_players.map((player) => player.user_id));
+
 		// Populate leaderboardData object with usernames and elos of players
 		// Also look out for requester_username among usernames in order to set the value of requester_rank if possible
 		let requester_rank: number | undefined = undefined;
 		let running_rank = start_rank;
 		const leaderboardData: Object[] = [];
 		for (const player of top_players) {
-			const record = getMemberDataByCriteria(['username'], 'user_id', player.user_id!);
-			if (record === undefined) {
+			const username = usernameByUserID.get(player.user_id);
+			if (username === undefined) {
 				logEventsAndPrint(
 					`Username of user with user_id ${player.user_id} could not be found in members table, even though it was found in leaderboard table by getTopPlayersForLeaderboard().`,
 					'errLog',
@@ -76,43 +82,18 @@ function getLeaderboardData(req: Request, res: Response): void {
 				continue;
 			}
 			const playerData = {
-				username: record.username,
-				elo: String(Math.round(player.elo!)),
+				username,
+				elo: String(Math.round(player.elo)),
 			};
 			leaderboardData.push(playerData);
-			if (record.username === requester_username) requester_rank = running_rank; // We can now set requester_rank without a seperate query
+			if (username === requester_username) requester_rank = running_rank; // We can now set requester_rank without a seperate query
 			running_rank++;
 		}
 
-		// Construct rank_string of user
-		// If there is a requester_username, but requester_rank is still undefined, we need another database query
-		let rank_string: string | undefined = undefined;
-		rank_string_constructor: if (
-			requester_username !== undefined &&
-			requester_rank === undefined
-		) {
-			const requesterRecord = getMemberDataByCriteria(
-				['user_id'],
-				'username',
-				requester_username,
-			);
-			if (requesterRecord === undefined) break rank_string_constructor;
-
-			const requester_rank = getPlayerRankInLeaderboard(
-				requesterRecord.user_id,
-				leaderboard_id,
-			);
-			if (requester_rank !== undefined) {
-				rank_string = `#${requester_rank}`;
-
-				// If the display elo contains a ?, then the rank_string should also contain a ?
-				const requester_elo = getEloOfPlayerInLeaderboard(
-					requesterRecord.user_id,
-					leaderboard_id,
-				); // { value: number, confident: boolean }
-				if (!requester_elo.confident) rank_string += '?';
-			} else rank_string = '?';
-		} else if (requester_username !== undefined) rank_string = `#${requester_rank}`; // case where the requester_username was already contained in the top leaderboard ranks
+		const rank_string =
+			requester_username !== undefined
+				? getRankStringOfRequester(requester_username, requester_rank, leaderboard_id)
+				: undefined;
 
 		const requesterData = {
 			rank_string: rank_string,
@@ -131,6 +112,40 @@ function getLeaderboardData(req: Request, res: Response): void {
 			message: req.t.responses.errors.server_error,
 		});
 	}
+}
+
+/**
+ * Looks up the usernames of many members at once, keyed by their user_id.
+ * @param user_ids - May be empty, in which case no query is made.
+ */
+function getUsernamesByUserID(user_ids: number[]): Map<number, string> {
+	if (user_ids.length === 0) return new Map(); // getMultipleMemberDataByCriteria rejects an empty search list
+	const records = getMultipleMemberDataByCriteria(['user_id', 'username'], 'user_id', user_ids);
+	return new Map(records.map((record) => [record.user_id, record.username]));
+}
+
+/**
+ * Builds the requester's displayed rank string, e.g. `#42`, or `?` if they are unranked.
+ * @param rank_in_page - Their rank if they appeared in the page just fetched. If
+ *   undefined, resolving their rank costs extra queries.
+ * @returns The rank string, or undefined if they have no members table record.
+ */
+function getRankStringOfRequester(
+	requester_username: string,
+	rank_in_page: number | undefined,
+	leaderboard_id: Leaderboard,
+): string | undefined {
+	if (rank_in_page !== undefined) return `#${rank_in_page}`;
+
+	const requesterRecord = getMemberDataByCriteria(['user_id'], 'username', requester_username);
+	if (requesterRecord === undefined) return undefined;
+
+	const requester_rank = getPlayerRankInLeaderboard(requesterRecord.user_id, leaderboard_id);
+	if (requester_rank === undefined) return '?';
+
+	// If the display elo contains a ?, then the rank_string should also contain a ?
+	const requester_elo = getEloOfPlayerInLeaderboard(requesterRecord.user_id, leaderboard_id);
+	return requester_elo.confident ? `#${requester_rank}` : `#${requester_rank}?`;
 }
 
 export { getLeaderboardData };
