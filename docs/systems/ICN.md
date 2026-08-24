@@ -41,7 +41,7 @@ regex swallow the whole ICN.
 Recognized keys, and the exact order the writer emits them in (`metadataOrdering`): `Event`,
 `Site`, `GameId`, `Variant`, `Round`, `UTCDate`, `UTCTime`, `TimeControl`, `White`, `Black`,
 `WhiteID`, `BlackID`, `WhiteElo`, `BlackElo`, `WhiteRatingDiff`, `BlackRatingDiff`, `Result`,
-`Termination`. Field meanings live on the `MetaData` interface in [domain.ts](/src/shared/domain.ts).
+`Termination`. Field meanings live on the `MetaData` interface in [metadatautil.ts](/src/shared/chess/util/metadatautil.ts).
 
 **`Variant`, `UTCDate` and `UTCTime` are load-bearing** — the _source-variant
 tags_. When an ICN omits the position section, they are the only way to reconstruct it: the
@@ -370,11 +370,11 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 | The position layer — piece codes, writer, parser   | [icnposition.ts](/src/shared/chess/logic/icn/icnposition.ts)                                                                            |
 | Comment embedded command sequences (`[%clk ...]`)  | [icncommentutils.ts](/src/shared/chess/logic/icn/icncommentutils.ts)                                                                    |
 | Parsed ICN → position / `VariantOptions` / packets | [icnimport.ts](/src/shared/chess/logic/icn/icnimport.ts)                                                                                |
-| Parsed ICN → constructed gamefile                  | [gameformulator.ts](/src/shared/chess/logic/gameformulator.ts)                                                                          |
+| Parsed ICN → constructed gamefile                  | [gameformulator.ts](/src/shared/chess/game/gameformulator.ts)                                                                           |
 | Gamefile → the converter's input shape             | [gamecompressor.ts](/src/client/scripts/esm/chess/gamecompressor.ts)                                                                    |
 | Gamerule + win-condition vocabularies              | [gamerules.ts](/src/shared/chess/util/gamerules.ts), [winconutil.ts](/src/shared/chess/util/winconutil.ts)                              |
-| Piece types and player numbers                     | [typeutil.ts](/src/shared/chess/util/typeutil.ts)                                                                                       |
-| Metadata tag definitions                           | [domain.ts](/src/shared/domain.ts)                                                                                                      |
+| Piece types and player numbers                     | [typeutil.ts](/src/shared/util/typeutil.ts)                                                                                             |
+| Metadata tag definitions                           | [metadatautil.ts](/src/shared/chess/util/metadatautil.ts)                                                                               |
 | Variant starting positions (raw position strings)  | `src/shared/chess/variants/variant_scripts/variants/`                                                                                   |
 | Logged-game ICN writer                             | [gamelogger.ts](/src/server/game/gamemanager/gamelogger.ts)                                                                             |
 | Live-game moves column                             | [liveGameValues.ts](/src/server/game/gamemanager/liveGameValues.ts), [LIVE_GAME_PERSISTENCE.md](/docs/systems/LIVE_GAME_PERSISTENCE.md) |

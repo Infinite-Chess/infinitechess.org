@@ -32,7 +32,55 @@
  * declares no `paths`. Add path aliases and the scan must learn to resolve them.
  *
  * All paths are "short form": "src/client/scripts/esm/" or "src/" chopped off
- * the front, giving views/index/index.ts and shared/chess/util/typeutil.ts.
+ * the front, giving views/index/index.ts and shared/util/typeutil.ts.
+ *
+ * ---------------------------------------------------------------------------
+ * THE OTHER TWO LADDERS
+ *
+ * src/server and src/shared are layer-clean and ranked too, though only the
+ * client's is enforced here so far. Both orderings are recorded below so that
+ * placing a new file, or moving one, is a lookup rather than a re-derivation.
+ *
+ * src/server (bottom -> top). Units on ONE line share a rank and may import
+ * each other sideways; that is deliberate, not an exception:
+ *
+ *   types.ts                       the file, not a directory — everything reads it
+ *   config/, utility/, database/   process setup, generic helpers, persistence
+ *   game/, socket/                 live game state and the connections carrying it
+ *   controllers/                   request handlers that render or answer
+ *   api/                           JSON endpoints
+ *   middleware/                    what wraps a request before it reaches the above
+ *   routes/                        the URL table
+ *   app.ts, server.ts, setupDev.ts the process entry points
+ *
+ * src/shared (bottom -> top), every rank strict — no ties:
+ *
+ *   types/, util/       Vocabulary owing nothing to chess: coords, math, time,
+ *                       jsutil. A file here must make sense to a reader who has
+ *                       never heard of this game.
+ *   chess/util/         Chess vocabulary that knows nothing of a board: gamerules,
+ *                       win conditions, clock format, metadata tags, variant codes,
+ *                       piece themes. Nothing here may mention Board or Move.
+ *   chess/logic/        The data model and the rules engine: OrganizedPieces, Board,
+ *                       Move, movesets, legal moves, check, notation (ICN), and the
+ *                       VariantModule contract. Works on a variant handed to it.
+ *   chess/engines/      What an engine can handle. Needs a whole GameFile.
+ *   chess/variants/     The variant definitions and the registry/cache that load
+ *                       them, plus the policy keyed off which variant a game is.
+ *   chess/game/         Decides WHICH variant and loads it (async) before building
+ *                       or judging a game. The only rung that may reach the cache.
+ *   components/         SSR-shared UI pieces.
+ *   domain.ts,          The transport contract. Nothing under chess/ may import
+ *   clientbound.ts,     from here — a schema the chess layer also needs is owned
+ *   serverbound.ts      down the ladder, beside the vocabulary it describes.
+ *
+ * The rung that keeps catching people out is chess/logic vs chess/game: "is a
+ * variant handed to me, or do I have to go find it?" Everything that had to go
+ * find one is what forced this split.
+ *
+ * A schema carrying zod is a placement constraint of its own. chess/util/
+ * typeschemas.ts exists ONLY to keep zod out of util/typeutil.ts, which the
+ * header bundle every page loads reaches. Measure before moving one.
  */
 
 import fs from 'node:fs';

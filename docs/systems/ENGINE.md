@@ -72,7 +72,7 @@ The tag `v2.0.0+build.47` encodes both, and conflating them breaks things:
 
 Consumer side: `parseEngineVersion()` in [engine-wasm.ts](/build/engine-wasm.ts) strips the leading
 `v` and everything from `+` onward → the display semver. `getVersionedEngineName()` in
-[src/shared/chess/engine.ts](/src/shared/chess/engine.ts) trims that to major.minor for the panel.
+[src/shared/chess/engines/engine.ts](/src/shared/chess/engines/engine.ts) trims that to major.minor for the panel.
 
 ## Consumer download — [build/engine-wasm.ts](/build/engine-wasm.ts)
 
@@ -169,7 +169,7 @@ auto-reconnect). Engine download/extract time never touches users.
 | Download + extract + version parse                       | [build/engine-wasm.ts](/build/engine-wasm.ts)                                                                                       |
 | Build orchestration (engine steps before esbuild)        | [build/index.ts](/build/index.ts)                                                                                                   |
 | Manifest fold-in (`engine`, `engineVersion`)             | [build/client.ts](/build/client.ts)                                                                                                 |
-| Engine crate metadata (display name, version formatting) | [src/shared/chess/engine.ts](/src/shared/chess/engine.ts)                                                                           |
+| Engine crate metadata (display name, version formatting) | [src/shared/chess/engines/engine.ts](/src/shared/chess/engines/engine.ts)                                                           |
 | `engineNameVersioned` SSR global                         | [src/server/config/nunjucks.ts](/src/server/config/nunjucks.ts)                                                                     |
 | Analysis page SSR (engineUrl, engine name)               | [src/server/views/analysis.njk](/src/server/views/analysis.njk)                                                                     |
 | Worker: load glue, init threads                          | [src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts](/src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts) |
