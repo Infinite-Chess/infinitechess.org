@@ -18,7 +18,7 @@ import { getMemberDataByCriteria } from '../database/memberManager.js';
 
 // Types ------------------------------------------------------------------------------------------
 
-export type Preferences = z.infer<typeof prefsSchema>;
+export type Preferences = z.infer<typeof PreferencesSchema>;
 
 // Constants --------------------------------------------------------------------------------------
 
@@ -29,7 +29,7 @@ const LIFETIME_MS = 1000 * 10; // 10 seconds
 const COOKIE_OPTIONS = { httpOnly: false, sameSite: 'lax' as const, secure: true };
 
 /** Zod schema to validate preferences object structure. */
-const prefsSchema = z
+const PreferencesSchema = z
 	.strictObject({
 		theme: z.string().refine((val) => themes.isThemeValid(val)),
 		legal_moves: z.enum(['squares', 'dots']),
@@ -112,5 +112,5 @@ export default {
 	create,
 	remove,
 	get,
-	schema: prefsSchema,
+	PreferencesSchema,
 };

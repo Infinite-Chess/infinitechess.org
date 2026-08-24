@@ -143,7 +143,7 @@ const GameStateBaseSchema = z.strictObject({
 	 * running time, not the base time. Absent for untimed games.
 	 */
 	clockValues: ClockValuesSchema.optional(),
-	gameConclusion: winconutil.gameConclusionSchema.optional(),
+	gameConclusion: winconutil.GameConclusionSchema.optional(),
 	/**
 	 * Per-player rating deltas. A finalized-result fact carried as state so a late
 	 * resyncer gets it. Present only once a rated game is finalized; absent otherwise.
@@ -179,7 +179,7 @@ const GameStateMessageSchema = GameStateBaseSchema.extend({
  */
 export type GameConclusionMessage = z.infer<typeof GameConclusionMessageSchema>;
 const GameConclusionMessageSchema = z.strictObject({
-	gameConclusion: winconutil.gameConclusionSchema,
+	gameConclusion: winconutil.GameConclusionSchema,
 	/** If the game is timed, the frozen final clock values. */
 	clockValues: ClockValuesSchema.optional(),
 });
@@ -189,7 +189,7 @@ export type OpponentsMoveMessage = z.infer<typeof OpponentsMoveMessageSchema>;
 const OpponentsMoveMessageSchema = z.strictObject({
 	/** The move our opponent played. In the most compact notation: `"5,2>5,4"`. */
 	move: icnconverter.MovePacketSchema,
-	gameConclusion: winconutil.gameConclusionSchema.optional(),
+	gameConclusion: winconutil.GameConclusionSchema.optional(),
 	/** Our opponent's move number, 1-based. */
 	moveNumber: z.number().int().positive(),
 	/** If the game is timed, this will be the current clock values. */

@@ -54,18 +54,18 @@ const positionDataFields = {
 };
 
 /** Shared position_name schema */
-const positionNameSchema = z.string().min(1, 'Position name is required');
+const PositionNameSchema = z.string().min(1, 'Position name is required');
 
 /** Schema for validating an AbridgedSaveState */
 const AbridgedSaveStateSchema = z.strictObject({
-	position_name: positionNameSchema,
+	position_name: PositionNameSchema,
 	timestamp: positionDataFields.timestamp,
 	piece_count: positionDataFields.piece_count,
 }) satisfies z.ZodType<EditorAbridgedSaveState>;
 
 /** Schema for validating a SaveState */
 const SaveStateSchema = z.strictObject({
-	position_name: positionNameSchema,
+	position_name: PositionNameSchema,
 	...positionDataFields,
 }) satisfies z.ZodType<EditorSaveState>;
 

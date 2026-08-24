@@ -25,7 +25,7 @@ function putPrefs(req: Request, res: Response): void {
 	const preferences = req.body.preferences;
 
 	// Validate preferences using Zod schema
-	const parseResult = prefsCookie.schema.safeParse(preferences);
+	const parseResult = prefsCookie.PreferencesSchema.safeParse(preferences);
 	if (!parseResult.success) {
 		logZodError(
 			preferences,

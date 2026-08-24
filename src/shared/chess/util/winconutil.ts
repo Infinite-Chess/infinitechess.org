@@ -78,8 +78,8 @@ export type Condition = WinCondition | DrawCondition | AbortCondition;
 // Constants --------------------------------------------------------------------------
 
 /** Stores the results of a game, including how it was terminated, and who won. */
-export type GameConclusion = z.infer<typeof gameConclusionSchema>;
-const gameConclusionSchema = z.discriminatedUnion('condition', [
+export type GameConclusion = z.infer<typeof GameConclusionSchema>;
+const GameConclusionSchema = z.discriminatedUnion('condition', [
 	z.strictObject({
 		condition: z.enum(WIN_CONDITIONS),
 		victor: typeschemas.PlayerSchema,
@@ -147,7 +147,7 @@ function getTerminationInEnglish(moveRule: number | undefined, condition: Condit
 
 export default {
 	// Constants
-	gameConclusionSchema,
+	GameConclusionSchema,
 	GAMERULE_WIN_CONDITIONS,
 	// Functions
 

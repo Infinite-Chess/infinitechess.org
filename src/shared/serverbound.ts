@@ -98,7 +98,7 @@ export type SubmitMoveMessage = z.infer<typeof SubmitMoveMessageSchema>;
 const SubmitMoveMessageSchema = z.strictObject({
 	move: z.string(),
 	moveNumber: z.int(),
-	gameConclusion: winconutil.gameConclusionSchema.optional(),
+	gameConclusion: winconutil.GameConclusionSchema.optional(),
 });
 
 /** Every message the client may send on the 'game' route. */
