@@ -6,9 +6,9 @@
 
 import type { RunResult } from 'better-sqlite3';
 
-import db, { dbCall } from './database.js';
+import db from './database.js';
 
-// Types -------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Represents a saved position list record (name, piece_count, timestamp). */
 type EditorSavesListRecord = {
@@ -28,7 +28,7 @@ type EditorSavesIcnRecord = {
 	castling: -1 | 0 | 1;
 };
 
-// Methods -----------------------------------------------------------------------------
+// Methods ------------------------------------------------------------------------------------
 
 /**
  * Retrieves all saved positions for a given user_id.
@@ -37,7 +37,7 @@ type EditorSavesIcnRecord = {
  */
 export function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 	const query = `SELECT name, piece_count, timestamp FROM editor_saves WHERE user_id = ?`;
-	return dbCall(
+	return db.call(
 		() => db.all<EditorSavesListRecord>(query, [user_id]),
 		`Error retrieving saved positions for user_id ${user_id}`,
 	);
@@ -49,7 +49,7 @@ export function getAllSavedPositionsForUser(user_id: number): EditorSavesListRec
  */
 export function getSavedPositionCount(user_id: number): number {
 	const query = `SELECT COUNT(*) AS count FROM editor_saves WHERE user_id = ?`;
-	const row = dbCall(
+	const row = db.call(
 		() => db.get<{ count: number }>(query, [user_id]),
 		`Error counting saved positions for user_id ${user_id}`,
 	);
@@ -70,7 +70,7 @@ export function doesSavedPositionExist(user_id: number, name: string): boolean {
 			WHERE user_id = ? AND name = ?
 		) AS found
 	 `;
-	const row = dbCall(
+	const row = db.call(
 		() => db.get<{ found: 0 | 1 }>(query, [user_id, name]),
 		`Error checking existence of saved position "${name}" for user_id ${user_id}`,
 	);
@@ -88,7 +88,6 @@ export function doesSavedPositionExist(user_id: number, name: string): boolean {
  * @param compression - The compression mode used for the ICN
  * @param pawn_double_push - Whether the pawn double push gamerule is enabled, or undefined if indeterminate
  * @param castling - Whether the castling gamerule is enabled, or undefined if indeterminate
- * @returns The RunResult.
  * @throws If a database error occurs.
  */
 export function addSavedPosition(
@@ -105,7 +104,7 @@ export function addSavedPosition(
         INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, compression, pawn_double_push, castling)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
-	dbCall(
+	db.call(
 		() =>
 			db.run(insertQuery, [
 				user_id,
@@ -133,7 +132,7 @@ export function getSavedPositionICN(
 	user_id: number,
 ): EditorSavesIcnRecord | undefined {
 	const query = `SELECT timestamp, icn, compression, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
-	return dbCall(
+	return db.call(
 		() => db.get<EditorSavesIcnRecord>(query, [name, user_id]),
 		`Error retrieving ICN for name "${name}" and user_id ${user_id}`,
 	);
@@ -149,7 +148,7 @@ export function getSavedPositionICN(
  */
 export function deleteSavedPosition(name: string, user_id: number): RunResult {
 	const query = `DELETE FROM editor_saves WHERE name = ? AND user_id = ?`;
-	return dbCall(
+	return db.call(
 		() => db.run(query, [name, user_id]),
 		`Error deleting position "${name}" for user_id ${user_id}`,
 	);

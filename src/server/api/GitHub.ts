@@ -1,9 +1,8 @@
 // src/server/api/GitHub.ts
 
-/*
- * This module, in the future, where be where we connect to GitHub's API
- * to dynamically refresh a list of github contributors on the webiste,
- * probably below our patron donors.
+/**
+ * Connects to GitHub's API to periodically refresh the list of contributors
+ * shown on the website, backed by a JSON snapshot for instant reads.
  *
  * INSTRUCTIONS:
  * In ANY github account (does not need to be a maintainer of the project),
@@ -16,7 +15,6 @@ import path from 'path';
 import * as z from 'zod';
 import process from 'node:process';
 import { writeFile } from 'node:fs/promises';
-import AbortController from 'abort-controller';
 import { fileURLToPath } from 'node:url';
 import { request, RequestOptions } from 'node:https';
 
@@ -35,9 +33,9 @@ interface Contributor {
 	contributionCount: number;
 }
 
-// Variables ---------------------------------------------------------------------------
+// State ---------------------------------------------------------------------------------------
 
-const GitHubContributorSchema = z.array(
+const GITHUB_CONTRIBUTOR_SCHEMA = z.array(
 	z.object({
 		login: z.string(),
 		avatar_url: z.string(),
@@ -66,15 +64,16 @@ let contributors: Contributor[] = (() => {
 	const file = fs.readFileSync(PATH_TO_CONTRIBUTORS_FILE).toString();
 	return JSON.parse(file);
 })();
-// console.log(contributors);
 
 /** The interval, in milliseconds, to use GitHub's API to refresh the contributor list. */
-const intervalToRefreshContributorsMillis = 1000 * 60 * 60 * 3; // 3 hours
-// const intervalToRefreshContributorsMillis = 1000 * 5; // 5s for dev testing
+const INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS = 1000 * 60 * 60 * 3; // 3 hours
+// const INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS = 1000 * 5; // Debug: 5 seconds
 
 /** The id of the interval to update contributors. Can be used to cancel it if the API token isn't specified. */
-const intervalId = setInterval(refreshGitHubContributorsList, intervalToRefreshContributorsMillis);
-// refreshGitHubContributorsList(); // Initial refreshal for dev testing
+const intervalId = setInterval(
+	refreshGitHubContributorsList,
+	INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS,
+);
 
 // Functions ---------------------------------------------------------------------------
 
@@ -101,21 +100,18 @@ function refreshGitHubContributorsList(): void {
 
 	// Create an AbortController for the request
 	const controller = new AbortController();
-	const signal: AbortSignal = controller.signal as AbortSignal;
 
 	const options: RequestOptions = {
 		method: 'GET',
 		hostname: 'api.github.com',
-		// "port": null,
 		path: `/repos/${GITHUB_REPO}/contributors`,
 		headers: {
 			Accept: 'application/vnd.github+json',
 			Authorization: `Bearer ${GITHUB_API_KEY}`,
 			'X-GitHub-Api-Version': '2022-11-28',
 			'User-Agent': process.env['APP_BASE_URL'],
-			// "Content-Length": "0"
 		},
-		signal, // Pass the signal to the request options
+		signal: controller.signal, // Abort when the request takes too long
 	};
 
 	const req = request(options, function (res) {
@@ -132,7 +128,7 @@ function refreshGitHubContributorsList(): void {
 				);
 
 			const response = body.toString();
-			let unvalidatedJson: any;
+			let unvalidatedJson: unknown;
 			try {
 				unvalidatedJson = JSON.parse(response);
 			} catch (error: unknown) {
@@ -141,7 +137,7 @@ function refreshGitHubContributorsList(): void {
 				return;
 			}
 
-			const zod_result = GitHubContributorSchema.safeParse(unvalidatedJson);
+			const zod_result = GITHUB_CONTRIBUTOR_SCHEMA.safeParse(unvalidatedJson);
 			if (!zod_result.success) {
 				logZodError(
 					unvalidatedJson,
@@ -191,7 +187,7 @@ function refreshGitHubContributorsList(): void {
 
 /**
  * Returns a list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
- * updated every {@link intervalToRefreshContributorsMillis}.
+ * updated every {@link INTERVAL_TO_REFRESH_CONTRIBUTORS_MILLIS}.
  */
 function getContributors(): Contributor[] {
 	return contributors;

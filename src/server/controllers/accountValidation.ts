@@ -1,6 +1,6 @@
 // src/server/controllers/accountValidation.ts
 
-/*
+/**
  * Server-side username/email/password validation, shared by the register and password-reset flows.
  * Wraps the pure rules in shared/util/validators.ts with the server-only parts: HTTP error
  * responses, profanity matching, email blacklist lookups, and email-domain MX checks.
@@ -11,6 +11,7 @@ import emailValidator from 'node-email-verifier';
 import { Request, Response } from 'express';
 import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
 
+import jsutil from '../../shared/util/jsutil.js';
 import validators from '../../shared/util/validators.js';
 
 import { isBlacklisted } from '../database/blacklistManager.js';
@@ -28,7 +29,7 @@ const PASSWORD_SALT_ROUNDS = 10;
  * Initialize the obscenity profanity matcher.
  * Uses the English dataset with recommended transformers.
  */
-const profanityMatcher = new RegExpMatcher({
+const PROFANITY_MATCHER = new RegExpMatcher({
 	...englishDataset.build(),
 	...englishRecommendedTransformers,
 });
@@ -38,7 +39,7 @@ const profanityMatcher = new RegExpMatcher({
  * brand, generic staff/official roles, our engine, and reserved display identities like
  * the guest/deleted-account placeholders.
  */
-const reservedUsernames: ReadonlySet<string> = new Set([
+const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
 	'infinitechess', 'infinitechesssupport',
 	'admin', 'administrator', 'root', 'system',
 	'moderator', 'mod', 'staff', 'team', 'official',
@@ -100,7 +101,7 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
  */
 function checkReserved(username: string): boolean {
 	// All reserved names are in lowercase
-	return reservedUsernames.has(username.toLowerCase());
+	return RESERVED_USERNAMES.has(username.toLowerCase());
 }
 
 /**
@@ -108,7 +109,7 @@ function checkReserved(username: string): boolean {
  * Uses the obscenity package with English dataset and recommended transformers.
  */
 function checkProfanity(string: string): boolean {
-	return profanityMatcher.hasMatch(string);
+	return PROFANITY_MATCHER.hasMatch(string);
 }
 
 /**
@@ -174,15 +175,15 @@ async function isEmailDNSValid(email: string): Promise<boolean> {
 	try {
 		return await emailValidator(email, { checkMx: true });
 	} catch (error) {
-		const err = error as Error; // Type assertion
 		logEventsAndPrint(
-			`Error when validating domain for email "${email}": ${err.stack}`,
+			`Error when validating domain for email "${email}": ${jsutil.getErrorStack(error)}`,
 			'errLog',
 		);
 		return true; // Default to true to avoid blocking users.
 	}
 }
 
+/** Validates the new password's shape and rejects via an HTTP error if it's malformed. */
 function doPasswordFormatChecks(password: string, req: Request, res: Response): boolean {
 	const result = validators.validatePassword(password);
 	if (result !== validators.PasswordValidationResult.Ok) {
@@ -212,11 +213,17 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 	return true;
 }
 
-export {
+// Exports -----------------------------------------------------------------------------------------
+
+export default {
+	// Constants
 	PASSWORD_SALT_ROUNDS,
-	checkProfanity,
-	checkReserved,
+	// Username checks
 	doUsernameFormatChecks,
+	checkReserved,
+	checkProfanity,
+	// Email checks
 	doEmailFormatChecks,
+	// Password checks
 	doPasswordFormatChecks,
 };

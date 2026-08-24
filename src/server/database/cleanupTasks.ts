@@ -12,14 +12,19 @@ import { logEventsAndPrint } from '../utility/logEvents.js';
 import { TOKEN_GRACE_PERIOD_MS } from './refreshTokenManager.js';
 import { deleteExpiredPendingRegistrations } from './pendingRegistrationManager.js';
 
-const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
-// const CLEANUP_INTERVAL_MS = 1000 * 20; // 20 seconds for dev testing
+// Constants ----------------------------------------------------------------------------------
 
+const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
+
+// Scheduling ----------------------------------------------------------------------------------
+
+/** Runs immediately, then once a day: every table's stale-data cleanup. */
 function startPeriodicDatabaseCleanupTasks(): void {
 	performCleanupTasks(); // Run immediately to clean up now.
 	setInterval(() => performCleanupTasks(), CLEANUP_INTERVAL_MS);
 }
 
+/** Runs every individual cleanup task, in order. */
 function performCleanupTasks(): void {
 	checkDatabaseIntegrity();
 	deleteExpiredPasswordResetTokens();
@@ -27,7 +32,7 @@ function performCleanupTasks(): void {
 	deleteExpiredPendingRegistrations();
 }
 
-// ========================================================
+// Individual cleanups -------------------------------------------------------------------------
 
 /** Checks the integrity of the SQLite database and logs it to the error log if the check fails. */
 function checkDatabaseIntegrity(): void {
@@ -39,7 +44,6 @@ function checkDatabaseIntegrity(): void {
 				`Database integrity check failed: ${result?.integrity_check} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`,
 				'errLog',
 			);
-		// else console.log('Database integrity check passed.');
 	} catch (error: unknown) {
 		const errorMessage = jsutil.getErrorMessage(error);
 		logEventsAndPrint(
@@ -51,7 +55,6 @@ function checkDatabaseIntegrity(): void {
 
 /** Periodically deletes expired password reset tokens from the database. */
 function deleteExpiredPasswordResetTokens(): void {
-	// console.log('Running cleanup of expired password reset tokens.');
 	try {
 		const now = Date.now();
 
@@ -88,7 +91,7 @@ function cleanUpExpiredRefreshTokens(): void {
 		if (result.changes > 0) {
 			logEventsAndPrint(
 				`Cleanup: Deleted ${result.changes} expired/consumed refresh tokens.`,
-				'tokenCleanupLog.txt',
+				'tokenCleanupLog',
 			);
 		}
 	} catch (error) {
@@ -98,6 +101,6 @@ function cleanUpExpiredRefreshTokens(): void {
 	}
 }
 
-// =========================================================
+// Exports ------------------------------------------------------------------------------------
 
 export { startPeriodicDatabaseCleanupTasks };

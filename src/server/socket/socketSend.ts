@@ -20,7 +20,7 @@ import { WebSocket } from 'ws';
 import uuid from '../../shared/util/uuid.js';
 import socketutil from '../../shared/util/socketutil.js';
 
-import { logSocketOut } from './socketLogger.js';
+import socketLogger from './socketLogger.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -40,31 +40,26 @@ export type OutAction<R extends OutRoute> = RouteAction<OutMessages, R>;
 /** The value an action carries, or `undefined` for the actions that carry none. */
 export type OutValue<R extends OutRoute, A extends OutAction<R>> = ActionValue<OutMessages, R, A>;
 
-// Variables ---------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /**
  * The amount of latency to add to websocket replies, in millis. ONLY USE IN DEV!!
  * I recommend 2 seconds of latency for testing slow networks.
  */
-const simulatedWebsocketLatencyMillis = 0;
-// const simulatedWebsocketLatencyMillis = 1000; // 1 Second
-// const simulatedWebsocketLatencyMillis = 2000; // 2 Seconds
-if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis !== 0) {
-	throw new Error('simulatedWebsocketLatencyMillis must be 0 in production!!');
+const SIMULATED_WEBSOCKET_LATENCY_MS = 0;
+// const simulatedWebsocketLatencyMillis = 1000; // Debug: 1 Second
+if (process.env['NODE_ENV'] !== 'development' && SIMULATED_WEBSOCKET_LATENCY_MS !== 0) {
+	throw new Error('SIMULATED_WEBSOCKET_LATENCY_MS must be 0 in production!!');
 }
 
 // Sending Messages ---------------------------------------------------------------------------
 
 /**
  * Sends a message to this websocket's client.
- * @param ws - The websocket
- * @param route - What subscription/route this message should be forwarded to.
- * @param action - What type of action the client should take within the subscription route.
- * @param value - The contents of the message. `undefined` for actions that carry none.
- * @param [options] - Additional options for sending the message.
- * @param [options.skipLatency=false] - If true, we send the message immediately, without waiting for simulated latency again.
+ * @param [options.skipLatency=false] - If true, we send the message immediately,
+ *   without waiting for simulated latency again.
  */
-function sendSocketMessage<R extends OutRoute, A extends OutAction<R>, V extends OutValue<R, A>>(
+function send<R extends OutRoute, A extends OutAction<R>, V extends OutValue<R, A>>(
 	ws: CustomWebSocket,
 	route: R,
 	action: A,
@@ -72,10 +67,11 @@ function sendSocketMessage<R extends OutRoute, A extends OutAction<R>, V extends
 	{ skipLatency }: { skipLatency?: boolean } = {},
 ): void {
 	// If we're applying simulated latency delay, set a timer to send this message.
-	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) {
-		setTimeout(() => {
-			sendSocketMessage(ws, route, action, value, { skipLatency: true });
-		}, simulatedWebsocketLatencyMillis);
+	if (SIMULATED_WEBSOCKET_LATENCY_MS !== 0 && !skipLatency) {
+		setTimeout(
+			() => send(ws, route, action, value, { skipLatency: true }),
+			SIMULATED_WEBSOCKET_LATENCY_MS,
+		);
 		return;
 	}
 
@@ -87,10 +83,8 @@ function sendSocketMessage<R extends OutRoute, A extends OutAction<R>, V extends
 	const id = uuid.generateNumbID(10);
 	const stringifiedPayload = JSON.stringify({ route, contents: { action, value }, id });
 
-	// console.log(`Sending: ${stringifiedPayload}`);
-
-	ws.send(stringifiedPayload); // Send the message
-	logSocketOut(ws, stringifiedPayload); // Log the sent message
+	ws.send(stringifiedPayload);
+	socketLogger.logOut(ws, stringifiedPayload);
 
 	// Set a timer. At the end, if we have heard no echo, just assume they've disconnected, terminate the socket.
 	// terminate() and not close(): a closing handshake with a peer we have already concluded is
@@ -108,18 +102,18 @@ function sendSocketMessage<R extends OutRoute, A extends OutAction<R>, V extends
  * Sends a bare receipt for a message the client sent us: an `echo` the moment it arrives,
  * proving the socket is alive, and an `ack` once we've finished handling it, proving the
  * action landed. Receipts are never echoed back, so they skip the id, echo timer, and
- * out-logging {@link sendSocketMessage} attaches.
+ * out-logging {@link send} attaches.
  */
-function sendReceipt(ws: CustomWebSocket, route: 'echo' | 'ack', id: number): void {
+function receipt(ws: CustomWebSocket, route: 'echo' | 'ack', id: number): void {
 	if (ws.readyState !== WebSocket.OPEN) return; // Sends on a CLOSING/CLOSED socket are silently dropped by ws.
 
 	const stringifiedPayload = JSON.stringify({ route, contents: id });
-	if (simulatedWebsocketLatencyMillis !== 0) {
-		setTimeout(() => ws.send(stringifiedPayload), simulatedWebsocketLatencyMillis);
+	if (SIMULATED_WEBSOCKET_LATENCY_MS !== 0) {
+		setTimeout(() => ws.send(stringifiedPayload), SIMULATED_WEBSOCKET_LATENCY_MS);
 	} else ws.send(stringifiedPayload);
 }
 
-// Echo Timers ----------------------------------------------------------
+// Echo Timers --------------------------------------------------------------------------------
 
 /**
  * Cancels the timer that closes the socket when we
@@ -138,7 +132,7 @@ function cancelAllEchoTimers(ws: CustomWebSocket): void {
 	ws.metadata.echoTimers = {};
 }
 
-// Heartbeat Ping-Pong ----------------------------------------------------------
+// Heartbeat Ping-Pong ------------------------------------------------------------------------
 
 /**
  * Reschedule the timer to send an empty message to the client
@@ -147,17 +141,18 @@ function cancelAllEchoTimers(ws: CustomWebSocket): void {
 function rescheduleHeartbeatTimer(ws: CustomWebSocket): void {
 	cancelHeartbeatTimer(ws);
 	ws.metadata.heartbeatTimerID = setTimeout(
-		() => sendSocketMessage(ws, 'general', 'ping', undefined),
+		() => send(ws, 'general', 'ping', undefined),
 		socketutil.HEARTBEAT_INTERVAL_MS,
 	);
 }
 
+/** Cancels the pending heartbeat ping, if one is armed. */
 function cancelHeartbeatTimer(ws: CustomWebSocket): void {
 	clearTimeout(ws.metadata.heartbeatTimerID);
 	ws.metadata.heartbeatTimerID = undefined;
 }
 
-// Teardown ---------------------------------------------------------------------
+// Teardown -----------------------------------------------------------------------------------
 
 /** Clears all timers tied to the socket. Called when it's torn down. */
 function clearPendingState(ws: CustomWebSocket): void {
@@ -165,12 +160,16 @@ function clearPendingState(ws: CustomWebSocket): void {
 	cancelHeartbeatTimer(ws);
 }
 
-// Exports ---------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
-export {
-	sendSocketMessage,
-	sendReceipt,
+export default {
+	// Sending Messages
+	send,
+	receipt,
+	// Echo Timers
 	cancelEchoTimer,
+	// Heartbeat Ping-Pong
 	rescheduleHeartbeatTimer,
+	// Teardown
 	clearPendingState,
 };

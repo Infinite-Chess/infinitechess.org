@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { players as p } from '../../shared/util/typeutil.js';
 import { getVersionedEngineName } from '../../shared/chess/engines/engine.js';
 
-import { MANIFEST_PATH, getEngineVersion, loadManifest } from './manifest.js';
+import manifest from './manifest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -36,7 +36,7 @@ export function configureNunjucks(app: Application): void {
 		throwOnUndefined: process.env['NODE_ENV'] !== 'production',
 	});
 
-	setManifestGlobals(nunjucksEnv, loadManifest());
+	setManifestGlobals(nunjucksEnv, manifest.load());
 	nunjucksEnv.addGlobal('p', p); // Player-color constants, so templates reference WHITE/BLACK by name
 
 	// Serializes a value to JSON safe for inline <script> injection.
@@ -52,9 +52,9 @@ export function configureNunjucks(app: Application): void {
 	// server keeps running. Watch the file and refresh the Nunjucks global only when
 	// it actually changes, so rendered HTML always references the current hashed filenames.
 	if (process.env['NODE_ENV'] !== 'production') {
-		fs.watch(MANIFEST_PATH, () => {
+		fs.watch(manifest.PATH, () => {
 			try {
-				setManifestGlobals(nunjucksEnv, loadManifest());
+				setManifestGlobals(nunjucksEnv, manifest.load());
 			} catch (_err) {
 				// File may be mid-write; the next 'change' event will pick it up.
 			}
@@ -66,7 +66,10 @@ export function configureNunjucks(app: Application): void {
  * Sets the manifest-derived template globals: the raw asset manifest, plus the
  * analysis engine's display name with its build-stamped version (e.g. "Apeiron 2.1"),
  */
-function setManifestGlobals(env: nunjucks.Environment, manifest: Record<string, string>): void {
-	env.addGlobal('manifest', manifest);
-	env.addGlobal('engineNameVersioned', getVersionedEngineName('apeiron', getEngineVersion()));
+function setManifestGlobals(env: nunjucks.Environment, assets: Record<string, string>): void {
+	env.addGlobal('manifest', assets);
+	env.addGlobal(
+		'engineNameVersioned',
+		getVersionedEngineName('apeiron', manifest.getEngineVersion()),
+	);
 }

@@ -15,14 +15,14 @@ import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
 import typeutil, { players } from '../../../shared/util/typeutil.js';
 import { engineDictionary, ValidEngine } from '../../../shared/chess/engines/engine.js';
 
+import manifest from '../../config/manifest.js';
 import createseek from './createseek.js';
+import socketsend from '../../socket/socketSend.js';
 import gamemanager from '../gamemanager/gamemanager.js';
 import activeseeks from './activeseeks.js';
 import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
 import lobbysubscribers from './lobbysubscribers.js';
-import { getEngineVersion } from '../../config/manifest.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ const ONLINE_ENGINE: ValidEngine = 'apeiron';
  */
 function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	if (activeplayers.hasSocket(ws))
-		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
+		return socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 
 	// The properties zod can't constrain, since they depend on the engine's capabilities.
 	// Unreachable via the client (it validates first), so reaching here is a hand-crafted message.
@@ -67,7 +67,7 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 				engineParticipant: {
 					color: engineColor,
 					engine: ONLINE_ENGINE,
-					version: getEngineVersion(),
+					version: manifest.getEngineVersion(),
 					strengthLevel: body.strengthLevel,
 				},
 			},

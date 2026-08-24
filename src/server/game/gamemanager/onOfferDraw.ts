@@ -17,16 +17,11 @@ import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
 import liveGameValues from './liveGameValues.js';
 
-// Functions -------------------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
-/**
- * Called when client wants to offer a draw. Sends confirmation to opponent.
- * @param servergame - The game they are in.
- * @param ourRole - The color the socket is playing as.
- */
+/** Called when client wants to offer a draw. Sends confirmation to opponent. */
 function offer(servergame: ServerGame, ourRole: Player): void {
 	if (gameutility.isEngineGame(servergame)) return;
-	// console.log('Client offers a draw.');
 	const match = servergame.match;
 
 	if (gameutility.isGameOver(servergame))
@@ -50,14 +45,8 @@ function offer(servergame: ServerGame, ourRole: Player): void {
 	gamesockets.sendToColor(match, opponentColor, 'game', 'drawoffer', undefined);
 }
 
-/**
- * Called when client accepts a draw. Ends the game.
- * @param servergame - The game they are in.
- * @param ourRole - The color the socket is playing as.
- */
+/** Called when client accepts a draw. Ends the game. */
 function accept(servergame: ServerGame, ourRole: Player): void {
-	// console.log('Client accepts a draw.');
-
 	if (gameutility.isGameOver(servergame))
 		return console.error('Client accepted a draw when the game is already over. Ignoring.');
 	if (!drawoffers.isOpen(servergame.match))
@@ -71,19 +60,13 @@ function accept(servergame: ServerGame, ourRole: Player): void {
 	gamelifecycle.conclude(servergame, { victor: null, condition: 'agreement' });
 }
 
-/**
- * Called when client declines a draw. Alerts opponent.
- * @param servergame - The game they are in.
- * @param ourRole - The color the socket is playing as.
- */
+/** Called when client declines a draw. Alerts opponent. */
 function decline(servergame: ServerGame, ourRole: Player): void {
 	const opponentColor = typeutil.invertPlayer(ourRole);
 
 	// Since this method is run every time a move is submitted, we have to early exit
 	// if their opponent doesn't have an open draw offer.
 	if (!drawoffers.isExtendedBy(servergame.match, opponentColor)) return;
-
-	// console.log('Client declines a draw.');
 
 	if (gameutility.isGameOver(servergame))
 		return console.error('Client declined a draw when the game is already over. Ignoring.');
@@ -97,7 +80,7 @@ function decline(servergame: ServerGame, ourRole: Player): void {
 	liveGameValues.onDrawOfferDeclined(servergame);
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	offer,

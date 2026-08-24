@@ -21,7 +21,7 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 
-// Types -----------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /**
  * Per-player rating outcome of a finalized rated game: the rating going in (at-game) + the delta.
@@ -100,7 +100,7 @@ export interface MatchInfo {
 
 	/** The time this match was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	timeCreated: number;
-	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. The number of milliseconds that have elapsed since the Unix epoch. @type {number | undefined} */
+	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. */
 	timeEnded?: number;
 	/** Whether the match is rated. */
 	rated: boolean;

@@ -11,14 +11,14 @@ import type { ServerboundMessage } from '../../shared/serverbound.js';
 import socketutil from '../../shared/util/socketutil.js';
 import { ServerboundSchema } from '../../shared/serverbound.js';
 
+import socketsend from './socketSend.js';
 import requestMeter from '../utility/requestMeter.js';
+import socketLogger from './socketLogger.js';
 import { logZodError } from '../utility/zodlogger.js';
-import { logSocketIn } from './socketLogger.js';
 import { routeIncomingSocketMessage } from './messageRouter.js';
 import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
-import { cancelEchoTimer, rescheduleHeartbeatTimer, sendReceipt } from './socketSend.js';
 
-// Functions ---------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
 /**
  * Callback function that is executed whenever we receive an incoming websocket message.
@@ -42,24 +42,23 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 		// Deliberately unlogged and unmetered. An echo isn't traffic the client chose to send — we
 		// oblige one per message WE send — so charging their budget for our own send volume would
 		// close honest sockets. Safe: it's validated above, and handling one is an O(1) clearTimeout.
-		cancelEchoTimer(ws, message.contents);
+		socketsend.cancelEchoTimer(ws, message.contents);
 		return;
 	}
 
 	if (!logAndRateLimitMessage(ws, messageStr)) return; // Rate limited; socket already closed.
 
 	// Send our own echo
-	sendReceipt(ws, 'echo', message.id);
+	socketsend.receipt(ws, 'echo', message.id);
 	// Their message is evidence the connection is alive
-	rescheduleHeartbeatTimer(ws);
-	// console.log('Received message: ' + rawMessage);
+	socketsend.rescheduleHeartbeatTimer(ws);
 	try {
 		routeIncomingSocketMessage(ws, message);
 	} finally {
 		// Acked even if the handler threw. The client releases its lock on this action when
 		// the ack lands, and an action stuck outstanding forever is worse than one acked
 		// after failing — the ack promises the message was handled, not that it succeeded.
-		if (message.needsack) sendReceipt(ws, 'ack', message.id);
+		if (message.needsack) socketsend.receipt(ws, 'ack', message.id);
 	}
 }
 
@@ -99,7 +98,7 @@ function parseAndValidateMessage(messageStr: string): ServerboundMessage | null 
  * is being rate limited and the socket has already been closed.
  */
 function logAndRateLimitMessage(ws: CustomWebSocket, rawMessage: string): boolean {
-	logSocketIn(ws, rawMessage); // Log every incoming message, even rate-limited ones.
+	socketLogger.logIn(ws, rawMessage); // Log every incoming message, even rate-limited ones.
 	requestMeter.recordRecent();
 	if (requestMeter.meter(ws.metadata.IP, ws.metadata.userAgent) !== undefined) {
 		// Rate limited; close the socket.
@@ -109,4 +108,6 @@ function logAndRateLimitMessage(ws: CustomWebSocket, rawMessage: string): boolea
 	return true;
 }
 
-export { onmessage };
+// Exports ------------------------------------------------------------------------------------
+
+export default { onmessage };

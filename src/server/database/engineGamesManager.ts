@@ -4,12 +4,10 @@
  * Manages permanent engine participants. One row mirrors one player_games participant.
  */
 
-import jsutil from '../../shared/util/jsutil.js';
+import db from './database.js';
+import { ALL_ENGINE_GAMES_COLUMNS } from './databaseTables.js';
 
-import db, { dbCall } from './database.js';
-import { allEngineGamesColumns } from './databaseTables.js';
-
-// Types ----------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Structure of a complete engine_games record. */
 export interface EngineGamesRecord {
@@ -23,7 +21,7 @@ export interface EngineGamesRecord {
 
 type EngineGamesColumn = keyof EngineGamesRecord;
 
-// Methods --------------------------------------------------------------------------------------------
+// Methods ------------------------------------------------------------------------------------
 
 /**
  * Inserts one engine participant row for a game.
@@ -54,14 +52,8 @@ export function getEngineGamesOfGame<K extends EngineGamesColumn>(
 	game_id: number,
 	columns: K[],
 ): Pick<EngineGamesRecord, K>[] {
-	return dbCall(() => {
-		if (!Array.isArray(columns)) {
-			throw new Error(`When getting engine_games data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
-		}
-		// prettier-ignore
-		if (!columns.every((column) => typeof column === 'string' && allEngineGamesColumns.includes(column))) {
-			throw new Error(`Invalid columns requested from engine_games table: ${jsutil.ensureJSONString(columns)}`);
-		}
+	return db.call(() => {
+		db.assertColumnsValid(columns, ALL_ENGINE_GAMES_COLUMNS, 'engine_games');
 
 		return db.all<Pick<EngineGamesRecord, K>>(
 			`SELECT ${columns.join(', ')} FROM engine_games WHERE game_id = ? ORDER BY player_number`,

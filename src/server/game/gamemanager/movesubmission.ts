@@ -28,6 +28,7 @@ import wincondition from '../../../shared/chess/logic/wincondition.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 
+import socketsend from '../../socket/socketSend.js';
 import onOfferDraw from './onOfferDraw.js';
 import gamemanager from './gamemanager.js';
 import gamesockets from './gamesockets.js';
@@ -36,27 +37,22 @@ import gamelifecycle from './gamelifecycle.js';
 import liveGameValues from './liveGameValues.js';
 import gamestatebuilder from './gamestatebuilder.js';
 import { logEventsAndPrint } from '../../utility/logEvents.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /** The number of additional coordinate digits allowed per second of game duration. */
 const DIGITS_PER_SECOND = 4.5;
 /** The number of digits in the maximum teleport coordinate. */
 const TELEPORT_LIMIT_DIGITS = bimath.countDigits(gameconfig.TELEPORT_LIMIT);
 
-// Functions -------------------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
 /**
- *
  * Call when a websocket submits a move. Performs some checks,
  * adds the move to the game's move list, adjusts the game's
  * properties, and alerts their opponent of the move.
- * @param ws - The websocket submitting the move.
- * @param servergame - The game they are in.
- * @param messageContents - An object containing the properties `move`, `moveNumber`, and `gameConclusion`.
  */
-function submitMove(
+export function submitMove(
 	ws: CustomWebSocket,
 	servergame: ServerGame,
 	messageContents: SubmitMoveMessage,
@@ -64,7 +60,7 @@ function submitMove(
 	// They can't submit a move if they aren't subscribed to a game
 	if (!ws.metadata.subscriptions.game) {
 		console.error('Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.'); // prettier-ignore
-		sendSocketMessage(
+		socketsend.send(
 			ws,
 			'general',
 			'printerror',
@@ -100,10 +96,10 @@ function submitMove(
 
 	// Verify the move is in the correct format
 	const moveParsed = doesMoveCheckOut(messageContents.move);
-	if (moveParsed === false) {
+	if (moveParsed === null) {
 		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog');
-		sendSocketMessage(ws, 'general', 'printerror', 'Invalid move format.');
+		socketsend.send(ws, 'general', 'printerror', 'Invalid move format.');
 		return;
 	}
 
@@ -115,7 +111,7 @@ function submitMove(
 		// and resubmit it on every resync, desynced for the rest of the game.
 		gamesockets.sendGameState(servergame, role, true);
 		// Send notifyerror last to override any previous toasts
-		sendSocketMessage(
+		socketsend.send(
 			ws,
 			'general',
 			'notifyerror',
@@ -129,11 +125,6 @@ function submitMove(
 		? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, role)
 		: applyClientReportedMove(ws, servergame, messageContents, moveParsed, role);
 	if (moveRecord === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
-
-	// console.log(`Accepted a move! Their websocket message data:`)
-	// console.log(messageContents)
-	// console.log("New move list:")
-	// console.log(game.moves);
 
 	onOfferDraw.decline(servergame, role); // Auto-decline any open draw offer on move submissions
 
@@ -158,14 +149,14 @@ function broadcastMove(
 		// Game not over: send the move-submitter only the updated clocks.
 		if (!servergame.untimed) {
 			const message = gameutility.getClockValues(servergame);
-			sendSocketMessage(ws, 'game', 'clock', message);
+			socketsend.send(ws, 'game', 'clock', message);
 		}
 	} else {
 		// The game ended: apply the conclusion (stops the clocks),
 		// then send the submitter the conclusion message.
 		gamelifecycle.applyConclusion(servergame, servergame.gameConclusion);
 		const conclusionMessage = gamestatebuilder.buildConclusionMessage(servergame);
-		sendSocketMessage(ws, 'game', 'gameconclusion', conclusionMessage);
+		socketsend.send(ws, 'game', 'gameconclusion', conclusionMessage);
 	}
 
 	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
@@ -196,7 +187,7 @@ function applyServerValidatedMove(
 		// Send the sender the current game state to correct their board if a bug somehow caused this
 		gamesockets.sendGameState(servergame, role, true); // forceSync true to force their move list to match ours
 		// Send notifyerror last to override any previous toasts
-		sendSocketMessage(
+		socketsend.send(
 			ws,
 			'general',
 			'notifyerror',
@@ -233,7 +224,7 @@ function applyClientReportedMove(
 	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, role)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog');
-		sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
+		socketsend.send(ws, 'general', 'printerror', 'Invalid game conclusion.');
 		return;
 	}
 
@@ -292,18 +283,17 @@ function isMoveWithinDistanceCap(moveParsed: MoveParsed, gameStartTime: number):
 }
 
 /**
- * Returns true if their submitted move is in the format `x,y>x,y=3N`.
- * @param move - Their move submission.
- * @returns The move, if correctly formatted, otherwise false.
+ * Parses their submitted move token (`x,y>x,y=3N`).
+ * @returns The parsed move, or false if it's malformed.
  */
-function doesMoveCheckOut(move: string): MoveParsed | false {
+function doesMoveCheckOut(move: string): MoveParsed | null {
 	// Is the move in the correct format? "x,y>x,y=N"
 	let moveParsed: MoveParsed;
 	try {
 		moveParsed = icnconverter.parseTokenMove(move);
 	} catch {
 		// It either didn't pass the regex, or the promoted piece abbreviation was invalid.
-		return false;
+		return null;
 	}
 
 	return moveParsed;
@@ -343,9 +333,3 @@ function buildMoveMessage(servergame: ServerGame, move: MoveRecord): OpponentsMo
 	if (!servergame.untimed) message.clockValues = gameutility.getClockValues(servergame);
 	return message;
 }
-
-// Exports ---------------------------------------------------------------------------------------
-
-export default {
-	submitMove,
-};

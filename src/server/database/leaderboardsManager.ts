@@ -9,11 +9,11 @@ import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.j
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import db, { dbCall } from './database.js';
+import db from './database.js';
 import ratingcalculation from '../utility/ratingcalculation.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
-// Types ----------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Structure of a complete leaderboard entry record. */
 interface LeaderboardEntry {
@@ -25,7 +25,7 @@ interface LeaderboardEntry {
 	rd_last_update_date: string | null;
 }
 
-// Methods --------------------------------------------------------------------------------------------
+// Methods ------------------------------------------------------------------------------------
 
 /**
  * The core logic for adding a user to a leaderboard.
@@ -48,7 +48,7 @@ export function addUserToLeaderboard(
 			-- rd_last_update_date will be NULL by default
 		) VALUES (?, ?, ?, ?)
 	`;
-	dbCall(
+	db.call(
 		() => db.run(query, [user_id, leaderboard_id, elo, rd]),
 		`Error adding user "${user_id}" to leaderboard "${leaderboard_id}"`,
 	);
@@ -74,7 +74,7 @@ export function updatePlayerLeaderboardRating(
 			rd_last_update_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
 		WHERE user_id = ? AND leaderboard_id = ?
 	`;
-	dbCall(() => {
+	db.call(() => {
 		const result = db.run(query, [elo, rd, user_id, leaderboard_id]);
 
 		// If the UPDATE affected no rows, it's a critical failure for a transaction.
@@ -99,7 +99,7 @@ export function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboa
         WHERE user_id = ? AND leaderboard_id = ?
         LIMIT 1;
     `;
-	const result = dbCall(
+	const result = db.call(
 		() => db.get<{ '1': 1 }>(query, [user_id, leaderboard_id]),
 		`Error checking existence of user "${user_id}" on leaderboard "${leaderboard_id}"`,
 	);
@@ -120,28 +120,9 @@ export function getPlayerLeaderboardRating(
 		FROM leaderboards
 		WHERE user_id = ? AND leaderboard_id = ?
 	`;
-	return dbCall(
+	return db.call(
 		() => db.get(query, [user_id, leaderboard_id]),
 		`Error getting leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}"`,
-	);
-}
-
-/**
- * Gets all leaderboard entries for a specific user.
- * @param user_id - The id for the user
- * @returns An array of the user's leaderboard entries across all leaderboards, potentially empty.
- * @throws If a database error occurs.
- */
-function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
-	const query = `
-        SELECT leaderboard_id, elo, rating_deviation, rd_last_update_date
-        FROM leaderboards
-        WHERE user_id = ?
-        ORDER BY leaderboard_id ASC -- Optional: order for consistency
-    `;
-	return dbCall(
-		() => db.all(query, [user_id]) as LeaderboardEntry[],
-		`Error getting all leaderboard entries for user "${user_id}"`,
 	);
 }
 
@@ -167,7 +148,7 @@ export function getTopPlayersForLeaderboard(
 		ORDER BY elo DESC
 		LIMIT ? OFFSET ?
 	`;
-	return dbCall(
+	return db.call(
 		() =>
 			db.all<LeaderboardEntry>(query, [
 				leaderboard_id,
@@ -206,7 +187,7 @@ export function getPlayerRankInLeaderboard(
 		FROM RankedPlayers
 		WHERE user_id = ?; -- Then find the rank for the specific user
 	`;
-	const result = dbCall(
+	const result = db.call(
 		() =>
 			db.get<{ rank: number }>(query, [
 				leaderboard_id,
@@ -219,7 +200,7 @@ export function getPlayerRankInLeaderboard(
 	return result?.rank;
 }
 
-// Helper Functions ----------------------------------------------------------------------------------
+// Helper Functions ---------------------------------------------------------------------------
 
 /**
  * Returns the elo of a player on a specific leaderboard, or their elo if they were
@@ -234,7 +215,7 @@ export function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Lea
 	if (!rating_values)
 		return { value: ratingcalculation.DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
-	const confident = rating_values.rating_deviation <= ratingcalculation.UNCERTAIN_LEADERBOARD_RD;
+	const confident = ratingcalculation.isRatingConfident(rating_values.rating_deviation);
 	return { value: rating_values.elo, confident };
 }
 
@@ -243,24 +224,24 @@ export function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Lea
  * @throws If a database error occurs.
  */
 function getAllLeaderboardEntries(): LeaderboardEntry[] {
-	return dbCall(
+	return db.call(
 		() => db.all<LeaderboardEntry>('SELECT * FROM leaderboards'),
 		'Error retrieving all leaderboard entries',
 	);
 }
 
-// Regular Table Utility Functions -------------------------------------------------------------------
+// Regular Table Utility Functions ------------------------------------------------------------
 
-/** Calls updateAllRatingDeviationsofLeaderboardTable() every {@link ratingcalculation.RD_UPDATE_FREQUENCY} milliseconds */
+/** Calls updateAllRatingDeviationsOfLeaderboardTable() every {@link ratingcalculation.RD_UPDATE_FREQUENCY} milliseconds */
 export function startPeriodicLeaderboardRatingDeviationUpdate(): void {
 	setInterval(
-		() => updateAllRatingDeviationsofLeaderboardTable(),
+		() => updateAllRatingDeviationsOfLeaderboardTable(),
 		ratingcalculation.RD_UPDATE_FREQUENCY,
 	);
 }
 
 /** Retrieves all entries of the leaderboards table and updates their RD */
-function updateAllRatingDeviationsofLeaderboardTable(): void {
+function updateAllRatingDeviationsOfLeaderboardTable(): void {
 	try {
 		const entries = getAllLeaderboardEntries();
 		for (const entry of entries) {
@@ -275,10 +256,7 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 				updatedRD,
 			);
 		}
-		logEventsAndPrint(
-			`Updated all rating deviations in leaderboard table.`,
-			'leaderboardLog.txt',
-		);
+		logEventsAndPrint(`Updated all rating deviations in leaderboard table.`, 'leaderboardLog');
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(

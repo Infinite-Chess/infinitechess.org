@@ -15,23 +15,21 @@ import type { GameSetup, ServerGame } from './servergametypes.js';
 
 import typeutil from '../../../shared/util/typeutil.js';
 
+import manifest from '../../config/manifest.js';
+import socketsend from '../../socket/socketSend.js';
 import gamemanager from './gamemanager.js';
 import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
 import activeplayers from './activeplayers.js';
 import gamelifecycle from './gamelifecycle.js';
-import { getEngineVersion } from '../../config/manifest.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
-// Functions -------------------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
 /**
  * Called when a client offers a rematch of a concluded game. Relays the offer to the
  * opponent, or — if the opponent has already offered — creates the rematch game.
- * @param servergame - The game they are in.
- * @param ourRole - The color the socket is playing as.
  */
-function offer(servergame: ServerGame, ourRole: Player): void {
+export function offerRematch(servergame: ServerGame, ourRole: Player): void {
 	if (!gameutility.isGameOver(servergame))
 		return console.error('Client offered a rematch when the game is not over. Ignoring.');
 
@@ -101,7 +99,7 @@ function createRematchGame(oldGame: ServerGame): void {
 			engineParticipant: {
 				...oldMatch.engineParticipant,
 				color: typeutil.invertPlayer(oldMatch.engineParticipant.color),
-				version: getEngineVersion(),
+				version: manifest.getEngineVersion(),
 			},
 		}),
 	};
@@ -122,11 +120,5 @@ function createRematchGame(oldGame: ServerGame): void {
 
 	// Alert all connected players of the new game (they auto navigate)
 	for (const { socket, role } of toNavigate)
-		sendSocketMessage(socket, 'game', 'ingame', { id: newGameID, role });
+		socketsend.send(socket, 'game', 'ingame', { id: newGameID, role });
 }
-
-// Exports ---------------------------------------------------------------------------------------
-
-export default {
-	offer,
-};

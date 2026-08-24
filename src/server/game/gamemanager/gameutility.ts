@@ -40,7 +40,7 @@ import { isGameServerValidated } from '../../../shared/chess/variants/servervali
 
 import { logEventsAndPrint } from '../../utility/logEvents.js';
 
-// Construction ----------------------------------------------------------------------------------
+// Construction -------------------------------------------------------------------------------
 
 /**
  * The registry code of the variant a game is played with, or `null` if it's a custom position —
@@ -214,7 +214,7 @@ function assignWhiteBlackPlayersFromSeek(
 	return colorData;
 }
 
-// Predicates ------------------------------------------------------------------------------------
+// Predicates ---------------------------------------------------------------------------------
 
 /**
  * Returns *true* if the provided game has ended (gameConclusion truthy).
@@ -225,6 +225,7 @@ function isGameOver(basegame: Game): boolean {
 	return basegame.gameConclusion !== undefined;
 }
 
+/** Returns true if the game is against an engine opponent. */
 function isEngineGame(servergame: ServerGame): boolean {
 	return servergame.match.engineParticipant !== undefined;
 }
@@ -257,7 +258,7 @@ function isGameBorderlineResignable(servergame: ServerGame): boolean {
 
 /**
  * Returns the color of the player that played that moveIndex within the moves list.
- * Returns error if index -1
+ * Index -1 resolves to the last color in the turn cycle.
  */
 function getColorThatPlayedMoveIndex(servergame: ServerGame, i: number): Player {
 	const turnOrder = servergame.gameRules.turnOrder;
@@ -266,7 +267,7 @@ function getColorThatPlayedMoveIndex(servergame: ServerGame, i: number): Player 
 	return turnOrder[i % turnOrder.length]!;
 }
 
-// Clocks ----------------------------------------------------------------------------------------
+// Clocks -------------------------------------------------------------------------------------
 
 /**
  * Return the clock values of the servergame that can be sent to a client or logged.
@@ -283,7 +284,7 @@ function getClockValues(servergame: ServerGame & { untimed: false }): ClockValue
  * This is called right before we send clock information to the client, so that
  * it's as accurate as possible.
  */
-function updateClockValues(servergame: ServerGame & { untimed: false }): undefined {
+function updateClockValues(servergame: ServerGame & { untimed: false }): void {
 	const now = Date.now();
 	if (!moveutil.isGameResignable(servergame) || isGameOver(servergame)) return;
 	if (servergame.clocks.colorTicking === undefined) return;
@@ -301,10 +302,9 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): undefin
 		return;
 	}
 	playerdata[servergame.whosTurn] = newTime;
-	return;
 }
 
-// Debug Printing --------------------------------------------------------------------------------
+// Debug Printing -----------------------------------------------------------------------------
 
 /**
  * Safely prints a game to the console. Temporarily stringifies the
@@ -350,7 +350,7 @@ function getSimplifiedGameString(servergame: ServerGame): string {
 	return JSON.stringify(simplifiedGame);
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	// Construction

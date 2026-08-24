@@ -49,8 +49,6 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 		return;
 	}
 
-	// console.log('[AWS WEBHOOK] Signature verified successfully.');
-
 	// If we get here, the request is guaranteed to be from Amazon.
 	const messageType = body.Type; // Note: Validator might normalize keys, but usually Body.Type matches header
 
@@ -79,7 +77,6 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 	// CASE 2: Notification
 	// -------------------------------------------------------------------------
 	else if (messageType === 'Notification') {
-		// console.log('[AWS WEBHOOK] Processing notification...');
 		// Log entire message so we can learn unexpected structures
 		logEvents(
 			`[AWS WEBHOOK] Received Notification: ${escapeLogNewlines(String(body.Message))}`,
@@ -120,7 +117,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 				// 'Permanent' or 'Transient'
 				const recipients = bounce.bouncedRecipients;
 				if (Array.isArray(recipients)) {
-					recipients.forEach((recipient: any) => {
+					recipients.forEach((recipient: { emailAddress: string }) => {
 						const email = recipient.emailAddress;
 						logEvents(
 							`[AWS WEBHOOK] Hard Bounce: ${escapeLogNewlines(String(email))}`,
@@ -145,7 +142,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 		else if (type === 'Complaint') {
 			const recipients = sesMessage.complaint.complainedRecipients;
 			if (Array.isArray(recipients)) {
-				recipients.forEach((recipient: any) => {
+				recipients.forEach((recipient: { emailAddress: string }) => {
 					const email = recipient.emailAddress;
 					logEvents(
 						`[AWS WEBHOOK] Complaint: ${escapeLogNewlines(String(email))}`,

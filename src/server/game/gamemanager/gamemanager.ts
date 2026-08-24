@@ -20,6 +20,7 @@ import typeutil from '../../../shared/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 
 import disconnect from './disconnect.js';
+import socketsend from '../../socket/socketSend.js';
 import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
 import activegames from './activegames.js';
@@ -32,9 +33,8 @@ import memberinfoutil from '../../utility/memberinfoutil.js';
 import liveGameRestore from './liveGameRestore.js';
 import gamestatebuilder from './gamestatebuilder.js';
 import { logEventsAndPrint } from '../../utility/logEvents.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
-// Creation --------------------------------------------------------------------------------------
+// Creation -----------------------------------------------------------------------------------
 
 /**
  * Creates and persists the `ServerGame`, then signals each requesting socket to navigate to
@@ -110,7 +110,7 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 		for (const [c, data] of Object.entries(servergame.match.playerData)) {
 			if (!memberinfoutil.eq(data.identifier, identifier)) continue;
 			if (data.socket) {
-				sendSocketMessage(data.socket, 'game', 'unsub', undefined); // Unsub the game on their old tab.
+				socketsend.send(data.socket, 'game', 'unsub', undefined); // Unsub the game on their old tab.
 				gamesockets.detachParticipant(servergame.match, data.socket);
 			}
 			onPostGameLeave(servergame, Number(c) as Player, false);
@@ -130,11 +130,11 @@ function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefin
 	const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
 	logEventsAndPrint(`Error creating game: ${details}`, 'errLog');
 	for (const ws of sockets) {
-		if (ws) sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
+		if (ws) socketsend.send(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
 	}
 }
 
-// Participant Subscription ----------------------------------------------------------------------
+// Participant Subscription -------------------------------------------------------------------
 
 /**
  * Links their socket to this game and runs reconnect side-effects (cancels disconnect/claim timer).
@@ -154,7 +154,7 @@ function subscribeParticipant(
 	}
 	const previousSocket = playerData.socket;
 	if (previousSocket) {
-		sendSocketMessage(previousSocket, 'game', 'leavegame', undefined);
+		socketsend.send(previousSocket, 'game', 'leavegame', undefined);
 		gamesockets.detachParticipant(match, previousSocket);
 	}
 	playerData.socket = ws;
@@ -276,12 +276,11 @@ function unsubscribeSpectator(ws: CustomWebSocket): void {
 	gamesockets.detachSpectator(activegames.getByID(gameID)!, ws);
 }
 
-// Clocks ----------------------------------------------------------------------------------------
+// Clocks -------------------------------------------------------------------------------------
 
 /**
  * Pushes the game clock, adding increment. Resets the timer
  * to auto terminate the game when a player loses on time.
- * @param servergame - The game
  * @returns The new time (in ms) of the player that just moved after increment is added.
  */
 function pushClock(servergame: ServerGame): number | undefined {
@@ -339,9 +338,7 @@ function freezeEngineClock(servergame: ServerGame): void {
 	clock.endGame(servergame);
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	liveGameValues.onEngineClockChanged(servergame);
-
-	const clockValues = gameutility.getClockValues(servergame);
-	gamesockets.broadcastToSpectators(servergame, 'clock', clockValues);
+	gamesockets.broadcastEngineClock(servergame);
 }
 
 /** Restarts the engine's frozen clock: a client has attached to think for it. */
@@ -365,12 +362,10 @@ function resumeEngineClock(servergame: ServerGame): void {
 	});
 	armAutoTimeLoss(servergame);
 	liveGameValues.onEngineClockChanged(servergame);
-
-	const clockValues = gameutility.getClockValues(servergame);
-	gamesockets.broadcastToSpectators(servergame, 'clock', clockValues);
+	gamesockets.broadcastEngineClock(servergame);
 }
 
-// SSR Page State --------------------------------------------------------------------------------
+// SSR Page State -----------------------------------------------------------------------------
 
 /**
  * Resolves a game id's {@link StaticGameState} — live (in memory) or dead (in the DB) —
@@ -406,7 +401,7 @@ function produceStaticGameState(id: number):
 	return deadgamestate.produceStaticState(id); // undefined if the game doesn't exist
 }
 
-// Shutdown Preparation & Startup Restoration ----------------------------------------------------
+// Shutdown Preparation & Startup Restoration -------------------------------------------------
 
 /**
  * Call when server's about to restart.
@@ -514,7 +509,7 @@ function restoreLiveGames(): void {
 	}
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	// Creation

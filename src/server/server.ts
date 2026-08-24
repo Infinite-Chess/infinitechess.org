@@ -1,10 +1,29 @@
 // src/server/server.ts
 
+/**
+ * The entry point: wires up global error handlers, initializes the database and dev
+ * environment, starts the HTTP/HTTPS servers and websocket server, and handles
+ * graceful shutdown on SIGINT/SIGTERM/SIGUSR2.
+ */
+
+import https from 'https';
+
+import jsutil from '../shared/util/jsutil.js';
+import variantcache from '../shared/chess/variants/variantcache.js';
+
+import db from './database/database.js';
+import app from './app.js';
+import gamemanager from './game/gamemanager/gamemanager.js';
+import socketServer from './socket/socketServer.js';
+import startupLogger from './utility/startupLogger.js';
 import { initDatabase } from './database/databaseTables.js';
+import { getCertOptions } from './config/certOptions.js';
 import { initDevEnvironment } from './setupDev.js';
 import { logEventsAndPrint, startPeriodicLogCleanup } from './utility/logEvents.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
+// Global Error Handlers ----------------------------------------------------------------------
 
 // Last-resort global handlers for errors that slipped past every local handler.
 // By this point, state is broken. Can't ensure responses are sent.
@@ -25,22 +44,12 @@ process.on('uncaughtException', (error: unknown) => {
 	);
 });
 
+// Startup ------------------------------------------------------------------------------------
+
 initDatabase();
 // Ensure our workspace is ready for the dev environment
 initDevEnvironment();
 startPeriodicLogCleanup();
-
-// Dependancy/built-in imports
-import https from 'https';
-// Other imports
-import app from './app.js';
-import db from './database/database.js';
-import socketServer from './socket/socketServer.js';
-import gamemanager from './game/gamemanager/gamemanager.js';
-import { getCertOptions } from './config/certOptions.js';
-import startupLogger from './utility/startupLogger.js';
-import variantcache from '../shared/chess/variants/variantcache.js';
-import jsutil from '../shared/util/jsutil.js';
 
 const httpsServer = https.createServer(getCertOptions(), app);
 
@@ -69,16 +78,18 @@ httpsServer.listen(HTTPSPORT, () => {
 // WebSocket server
 socketServer.start(httpsServer);
 
-// On closing...
+// Closing ------------------------------------------------------------------------------------
 
 let cleanupDone = false;
+
 process.on('SIGUSR2', () => handleCleanup('SIGUSR2')); // A file was saved (nodemon auto restarts)
 process.on('SIGINT', () => handleCleanup('SIGINT')); // Ctrl>C was pressed (force terminates nodemon)
 process.on('SIGTERM', () => handleCleanup('SIGTERM')); // PM2 graceful shutdown
+
+/** Stops timers, persists/closes games and the database, then exits. Idempotent. */
 function handleCleanup(signal: string): void {
 	if (cleanupDone) return; // Sometimes this is called twice
 	cleanupDone = true;
-	// console.log(`\nReceived ${signal}. Cleaning up...`);
 	console.log('Closing...');
 
 	startupLogger.stopped(signal);

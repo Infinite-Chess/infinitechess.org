@@ -8,12 +8,12 @@
 
 import type { Request } from 'express';
 
-import db, { dbCall } from './database.js';
+import db from './database.js';
 import { getClientIP } from '../utility/IP.js';
 import { updateLastSeen } from './memberManager.js';
 import { verifyTokenPayload, TokenPayload } from '../utility/tokenSigner.js';
 
-// Types ------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /**
  * Represents a record in the `refresh_tokens` database table.
@@ -36,7 +36,7 @@ export type RefreshTokenRecord = {
 	is_persistent: 0 | 1;
 };
 
-// Constants --------------------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /**
  * The window where a "consumed" token is still accepted, allowing a
@@ -44,7 +44,7 @@ export type RefreshTokenRecord = {
  */
 export const TOKEN_GRACE_PERIOD_MS = 1000 * 10; // 10 seconds
 
-// Finding ----------------------------------------------------------------------------------------
+// Finding ------------------------------------------------------------------------------------
 
 /**
  * Finds a refresh token in the database.
@@ -58,7 +58,7 @@ export function findRefreshToken(token: string): RefreshTokenRecord | undefined 
         FROM refresh_tokens
         WHERE token = ?
     `;
-	return dbCall(
+	return db.call(
 		() => db.get<RefreshTokenRecord>(query, [token]),
 		'Database error while finding refresh token',
 	);
@@ -77,13 +77,13 @@ export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenR
         FROM refresh_tokens
         WHERE user_id IN (${placeholders})
     `;
-	return dbCall(
+	return db.call(
 		() => db.all<RefreshTokenRecord>(query, user_id_list),
 		`Database error while finding refresh tokens for users ${JSON.stringify(user_id_list)}`,
 	);
 }
 
-// Adding & Updating ------------------------------------------------------------------------------
+// Adding & Updating --------------------------------------------------------------------------
 
 /**
  * Adds a new refresh token record to the database.
@@ -107,7 +107,7 @@ export function addRefreshToken(
         VALUES (?, ?, ?, ?, ?, ?)
 	`;
 	const ip_address = getClientIP(req) || null;
-	dbCall(
+	db.call(
 		() =>
 			db.run(query, [
 				token,
@@ -129,7 +129,7 @@ export function addRefreshToken(
  */
 export function updateRefreshTokenIP(token: string, ip: string | null): void {
 	const query = `UPDATE refresh_tokens SET ip_address = ? WHERE token = ?`;
-	dbCall(() => db.run(query, [ip, token]), 'Database error while updating refresh token IP');
+	db.call(() => db.run(query, [ip, token]), 'Database error while updating refresh token IP');
 }
 
 /**
@@ -141,13 +141,13 @@ export function updateRefreshTokenIP(token: string, ip: string | null): void {
 export function markRefreshTokenAsConsumed(token: string): void {
 	const now = Date.now();
 	const query = `UPDATE refresh_tokens SET consumed_at = ? WHERE token = ?`;
-	dbCall(
+	db.call(
 		() => db.run(query, [now, token]),
 		'Database error while marking refresh token as consumed',
 	);
 }
 
-// Deleting ---------------------------------------------------------------------------------------
+// Deleting -----------------------------------------------------------------------------------
 
 /**
  * Deletes a specific refresh token from the database.
@@ -157,7 +157,7 @@ export function markRefreshTokenAsConsumed(token: string): void {
  */
 export function deleteRefreshToken(token: string): void {
 	const query = `DELETE FROM refresh_tokens WHERE token = ?`;
-	dbCall(() => db.run(query, [token]), 'Database error while deleting refresh token');
+	db.call(() => db.run(query, [token]), 'Database error while deleting refresh token');
 }
 
 /**
@@ -168,13 +168,13 @@ export function deleteRefreshToken(token: string): void {
  */
 export function deleteAllRefreshTokensForUser(userId: number): void {
 	const query = `DELETE FROM refresh_tokens WHERE user_id = ?`;
-	dbCall(
+	db.call(
 		() => db.run(query, [userId]),
 		`Database error while deleting all refresh tokens for userId ${userId}`,
 	);
 }
 
-// Validating presented tokens ---------------------------------------------------------------------
+// Validating presented tokens ----------------------------------------------------------------
 
 /**
  * Checks if a presented refresh token is valid: not expired, nor tampered, and it's

@@ -7,9 +7,9 @@
  * a real `members` row is created and the pending row is marked verified.
  */
 
-import db, { dbCall } from './database.js';
+import db from './database.js';
 
-// Types ---------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Structure of a complete pending_registrations record. */
 export interface PendingRegistrationRecord {
@@ -32,7 +32,7 @@ export interface PendingRegistrationRecord {
 	member_user_id: number | null;
 }
 
-// Constants -----------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /**
  * How long a pending registration stays valid before it is swept, in milliseconds.
@@ -41,7 +41,7 @@ export interface PendingRegistrationRecord {
  */
 export const PENDING_REGISTRATION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24; // 1 day
 
-// Create --------------------------------------------------------------------
+// Create -------------------------------------------------------------------------------------
 
 /**
  * Inserts a new pending registration.
@@ -66,7 +66,7 @@ export function addPendingRegistration(
 			claim_token, verification_token, username, email, hashed_password, created_at, expires_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?)
 	`;
-	dbCall(
+	db.call(
 		() =>
 			db.run(query, [
 				claimToken,
@@ -81,7 +81,7 @@ export function addPendingRegistration(
 	);
 }
 
-// Lookups -------------------------------------------------------------------
+// Lookups ------------------------------------------------------------------------------------
 
 /**
  * Looks up a pending registration by its `claim_token` (the poll/resend path).
@@ -93,7 +93,7 @@ export function getPendingRegistrationByClaimToken(
 	claimToken: string,
 ): PendingRegistrationRecord | undefined {
 	const query = `SELECT * FROM pending_registrations WHERE claim_token = ?`;
-	return dbCall(
+	return db.call(
 		() => db.get<PendingRegistrationRecord>(query, [claimToken]),
 		'Database error while finding pending registration by claim_token',
 	);
@@ -109,13 +109,13 @@ export function getPendingRegistrationByVerificationToken(
 	verificationToken: string,
 ): PendingRegistrationRecord | undefined {
 	const query = `SELECT * FROM pending_registrations WHERE verification_token = ?`;
-	return dbCall(
+	return db.call(
 		() => db.get<PendingRegistrationRecord>(query, [verificationToken]),
 		'Database error while finding pending registration by verification_token',
 	);
 }
 
-// Availability checks (non-expired rows only) -------------------------------
+// Availability checks (non-expired rows only) ------------------------------------------------
 
 /**
  * Checks whether a username is held by a non-expired pending registration
@@ -131,7 +131,7 @@ export function isUsernameTakenInPending(username: string): boolean {
 			WHERE username = ? AND expires_at > ?
 		) AS found
 	`;
-	const row = dbCall(
+	const row = db.call(
 		() => db.get<{ found: 0 | 1 }>(query, [username, Date.now()]),
 		`Database error while checking pending username "${username}"`,
 	);
@@ -151,7 +151,7 @@ export function isEmailTakenInPending(email: string): boolean {
 			WHERE email = ? AND expires_at > ?
 		) AS found
 	`;
-	const row = dbCall(
+	const row = db.call(
 		() => db.get<{ found: 0 | 1 }>(query, [email.toLowerCase(), Date.now()]), // Lowercased to match the stored (lowercase) rows
 		`Database error while checking pending email "${email}"`,
 	);
@@ -174,14 +174,14 @@ export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: s
 			WHERE email = ? AND expires_at > ? AND claim_token != ?
 		) AS found
 	`;
-	const row = dbCall(
+	const row = db.call(
 		() => db.get<{ found: 0 | 1 }>(query, [email.toLowerCase(), Date.now(), excludeClaimToken]), // Lowercased to match the stored (lowercase) rows
 		`Database error while checking pending email (by other) "${email}"`,
 	);
 	return Boolean(row?.found);
 }
 
-// Update --------------------------------------------------------------------
+// Update -------------------------------------------------------------------------------------
 
 /**
  * Changes the email of a pending registration (identified by its claim_token), rotates its
@@ -204,7 +204,7 @@ export function updatePendingRegistrationEmail(
 		SET email = ?, verification_token = ?, expires_at = ?
 		WHERE claim_token = ?
 	`;
-	dbCall(
+	db.call(
 		() => db.run(query, [email.toLowerCase(), verificationToken, expiresAt, claimToken]), // Emails are always stored lowercase.
 		'Database error while updating pending registration email',
 	);
@@ -219,14 +219,14 @@ export function updatePendingRegistrationEmail(
  */
 export function markPendingRegistrationVerified(claimToken: string, memberUserId: number): void {
 	const query = `UPDATE pending_registrations SET member_user_id = ? WHERE claim_token = ?`;
-	dbCall(() => {
+	db.call(() => {
 		const result = db.run(query, [memberUserId, claimToken]);
 		// If no rows changed, no pending row matches the claim_token.
 		if (result.changes === 0) throw new Error(`No pending registration found for claim_token`);
 	}, 'Database error while marking pending registration verified');
 }
 
-// Deletion ------------------------------------------------------------------
+// Deletion -----------------------------------------------------------------------------------
 
 /**
  * Deletes any expired pending rows holding the given username or email. Used before a fresh
@@ -240,7 +240,7 @@ export function deleteExpiredPendingRegistrationsFor(username: string, email: st
 		DELETE FROM pending_registrations
 		WHERE (username = ? OR email = ?) AND expires_at <= ?
 	`;
-	dbCall(
+	db.call(
 		() => db.run(query, [username, email.toLowerCase(), Date.now()]), // Lowercased to match the stored (lowercase) rows
 		`Database error while deleting expired pending registrations for "${username}"`,
 	);
@@ -252,7 +252,7 @@ export function deleteExpiredPendingRegistrationsFor(username: string, email: st
  */
 export function deleteExpiredPendingRegistrations(): void {
 	const query = `DELETE FROM pending_registrations WHERE expires_at <= ?`;
-	dbCall(
+	db.call(
 		() => db.run(query, [Date.now()]),
 		'Database error while sweeping expired pending registrations',
 	);

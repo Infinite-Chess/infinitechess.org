@@ -19,11 +19,11 @@ import { getMemberDataByCriteria, updateMemberColumns } from '../database/member
  * @param role - The role to add (e.g., 'owner', 'patron').
  * @throws If the user doesn't exist, already has the role, or if a database error occurs.
  */
-function giveRole(userId: number, role: Role): void {
+function add(userId: number, role: Role): void {
 	// Fetch the member's current roles from the database
 	const memberData = getMemberDataByCriteria(['roles'], 'user_id', userId);
 	if (!memberData) throw new Error(`User with ID ${userId} does not exist`);
-	const roles: Role[] = memberData.roles === null ? [] : JSON.parse(memberData.roles); // ['role1','role2', ...]
+	const roles = parse(memberData.roles) ?? [];
 
 	// If the role already exists, return early
 	if (roles.includes(role))
@@ -37,13 +37,22 @@ function giveRole(userId: number, role: Role): void {
 }
 
 /**
+ * Parses the stored `members.roles` JSON column into a role array.
+ * Returns null for a null cell (the member has no roles).
+ * @throws If the stored JSON is malformed.
+ */
+function parse(roles: string | null): Role[] | null {
+	return roles === null ? null : JSON.parse(roles);
+}
+
+/**
  * Returns true if roles1 contains at least one role that is higher in priority than the highest role in roles2.
  *
  * If so, the user with roles1 would be able to perform destructive commands on user with roles2.
  * @param roles1 - List of roles for the first user.
  * @param roles2 - List of roles for the second user.
  */
-function areRolesHigherInPriority(roles1: Role[] | null, roles2: Role[] | null): boolean {
+function areHigherInPriority(roles1: Role[] | null, roles2: Role[] | null): boolean {
 	// Make sure they are not null
 	const r1: Role[] = roles1 || [];
 	const r2: Role[] = roles2 || [];
@@ -63,4 +72,10 @@ function areRolesHigherInPriority(roles1: Role[] | null, roles2: Role[] | null):
 	return roles1HighestPriority > roles2HighestPriority;
 }
 
-export { giveRole, areRolesHigherInPriority };
+// Exports ---------------------------------------------------------------------------------
+
+export default {
+	add,
+	parse,
+	areHigherInPriority,
+};

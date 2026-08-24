@@ -12,6 +12,11 @@ import type { NextFunction, Request, Response } from 'express';
 import { readMemberInfoCookie } from './authenticationTokens/memberInfoCookie.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 
+// Constants --------------------------------------------------------------------------------------
+
+/** The options the `checkmates_beaten` cookie is created with. */
+const COOKIE_OPTIONS = { httpOnly: false, sameSite: 'lax' as const, secure: true };
+
 // Functions --------------------------------------------------------------------------------------
 
 /**
@@ -36,8 +41,6 @@ function set(req: Request, res: Response, next: NextFunction): void {
 	try {
 		const checkmates_beaten = get(memberInfoCookie.user_id); // Fetch their checkmates_beaten from the database
 		create(res, checkmates_beaten);
-
-		// console.log(`Set checkmates_beaten cookie for member "${memberInfoCookie.username}" for url: ` + req.url); // prettier-ignore
 	} catch {
 		// DB read failed (already logged). The cookie is skipped.
 	}
@@ -52,25 +55,16 @@ function set(req: Request, res: Response, next: NextFunction): void {
  */
 function create(res: Response, checkmates_beaten: string): void {
 	// Set or update the checkmates_beaten cookie
-	res.cookie('checkmates_beaten', checkmates_beaten, {
-		httpOnly: false,
-		sameSite: 'lax',
-		secure: true,
-	});
+	res.cookie('checkmates_beaten', checkmates_beaten, COOKIE_OPTIONS);
 }
 
 /**
  * Deletes the checkmates_beaten progress cookie for the user.
- * Typically called when they log out.
- * Even though the cookie only lasts 10 seconds, this is still helpful
- * @param res - The Express response object.
+ * Typically called when they log out. Clearing is still helpful even though the
+ * browser would drop it on its own eventually.
  */
 function remove(res: Response): void {
-	res.clearCookie('checkmates_beaten', {
-		httpOnly: false,
-		sameSite: 'lax',
-		secure: true,
-	});
+	res.clearCookie('checkmates_beaten', COOKIE_OPTIONS);
 }
 
 /**

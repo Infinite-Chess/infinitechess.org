@@ -11,7 +11,6 @@ import type { Request } from 'express';
 import type { GameRules } from '../../shared/chess/util/gamerules.js';
 import type { SpeedCategory } from '../../shared/chess/util/clockutil.js';
 import type { GlobalGameState } from '../../shared/chess/logic/state.js';
-import type { Player, PlayerGroup } from '../../shared/util/typeutil.js';
 import type { GamePageData, StaticGameSetup, StaticGameState } from '../../shared/domain.js';
 
 import gameurl from '../../shared/util/gameurl.js';
@@ -24,14 +23,14 @@ import icnconverter from '../../shared/chess/logic/icn/icnconverter.js';
 import gameresultutil from '../../shared/chess/util/gameresultutil.js';
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import variantpreviewer from '../../shared/chess/logic/variantpreviewer.js';
-import { players as p } from '../../shared/util/typeutil.js';
 import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.js';
+import { players as p, Player, PlayerGroup } from '../../shared/util/typeutil.js';
 
 import tconfig from '../config/translationconfig.js';
+import manifest from '../config/manifest.js';
 import gamemanager from '../game/gamemanager/gamemanager.js';
 import deadgamestate from '../game/gamemanager/deadgamestate.js';
 import memberinfoutil from '../utility/memberinfoutil.js';
-import { getManifest } from '../config/manifest.js';
 import { getPieceSVG } from '../config/piecesvgcache.js';
 import { decodeGameId } from '../database/gamesManager.js';
 
@@ -132,9 +131,9 @@ function getGamePageState(req: Request): GamePageState | undefined {
 
 	// Only a live engine game still needs the assets to run the engine client-side.
 	if (engineGame && game) {
-		const manifest = getManifest();
-		const workerUrl = manifest[`scripts/esm/game/chess/engines/${engineGame.engine}.worker.ts`];
-		const engineUrl = manifest['engine'];
+		const assets = manifest.get();
+		const workerUrl = assets[`scripts/esm/game/chess/engines/${engineGame.engine}.worker.ts`];
+		const engineUrl = assets['engine'];
 		if (!workerUrl || !engineUrl) throw new Error('Engine assets missing from asset manifest.');
 		engineGame = { ...engineGame, workerUrl, engineUrl };
 	}

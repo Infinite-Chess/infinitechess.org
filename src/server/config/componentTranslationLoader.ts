@@ -4,11 +4,11 @@
  * Loads and serves per-component translation TOML files for the new SSR system.
  *
  * Files live under translation/<component>/<lang>.toml.
- * All components are loaded once at startup by loadComponentTranslations().
+ * All components are loaded once at startup by load().
  * Retrieve them per request.
  *
  * The [script] sub-table (if present) is excluded from the server-side template object —
- * it is injected into the page separately via getScriptTranslations(). Components
+ * it is injected into the page separately via getScript(). Components
  * whose keys are entirely script-facing can opt in to the `script_only = true` shorthand
  * to skip the `script.` prefix on every subtable header.
  */
@@ -22,7 +22,7 @@ import { FilterXSS, IFilterXSSOptions } from 'xss';
 
 import tconfig from './translationconfig.js';
 
-// Types ---------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /**
  * Stores all component translations at runtime.
@@ -49,7 +49,7 @@ export type LanguageOption = {
 	englishName: string;
 };
 
-// Constants -----------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 const englishTOMLName = `${tconfig.DEFAULT_LANGUAGE}.toml`;
 
@@ -75,7 +75,7 @@ const custom_xss = new FilterXSS(xss_options);
  */
 const PSEUDO_LOC = false;
 
-// State ---------------------------------------------------------------------
+// State --------------------------------------------------------------------------------------
 
 /** Module-level store. */
 let componentStore: ComponentStore | null = null;
@@ -86,13 +86,13 @@ let supportedLanguages: string[] = [];
 /** Language-selector options (code + display names) for the header dropdown. */
 let languageOptions: LanguageOption[] = [];
 
-// Loading Translations ------------------------------------------------------------
+// Loading Translations -----------------------------------------------------------------------
 
 /**
  * Loads all component translation TOML files from translation/<component>/<lang>.toml
  * and stores them in the module-level componentStore.
  */
-export function loadComponentTranslations(): void {
+function load(): void {
 	componentStore = new Map();
 
 	const componentDirs = getComponentNames();
@@ -153,8 +153,8 @@ export function loadComponentTranslations(): void {
  * @param component - The component name, e.g. "header"
  * @param lang - The language code, e.g. "de-DE"
  */
-export function getTemplateTranslations(component: string, lang: string): Record<string, any> {
-	if (!componentStore) throw new Error('loadComponentTranslations() has not been called yet.');
+function getTemplate(component: string, lang: string): Record<string, any> {
+	if (!componentStore) throw new Error('load() has not been called yet.');
 	const langMap = componentStore.get(component);
 	if (!langMap) throw new Error(`No translation component "${component}" found.`);
 	return (langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.template ?? {};
@@ -167,11 +167,11 @@ export function getTemplateTranslations(component: string, lang: string): Record
  * @param component - The component name, e.g. "leaderboard"
  * @param lang - The language code, e.g. "de-DE"
  */
-export function getScriptTranslations<C extends keyof ScriptTranslations>(
+export function getScript<C extends keyof ScriptTranslations>(
 	component: C,
 	lang: string,
 ): ScriptTranslations[C] {
-	if (!componentStore) throw new Error('loadComponentTranslations() has not been called yet.');
+	if (!componentStore) throw new Error('load() has not been called yet.');
 	const langMap = componentStore.get(component);
 	if (!langMap) throw new Error(`No translation component "${component}" found.`);
 	return ((langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.script ??
@@ -182,7 +182,7 @@ export function getScriptTranslations<C extends keyof ScriptTranslations>(
  * Returns the list of language codes supported.
  * Those with at least one component translation available.
  */
-export function getSupportedLanguages(): string[] {
+function getSupportedLangs(): string[] {
 	return supportedLanguages;
 }
 
@@ -190,11 +190,11 @@ export function getSupportedLanguages(): string[] {
  * Returns the language-selector options — each supported language's
  * code and display names — for rendering the header language dropdown.
  */
-export function getLanguageOptions(): LanguageOption[] {
+function getLangOptions(): LanguageOption[] {
 	return languageOptions;
 }
 
-// Utility ---------------------------------------------------------------------
+// Utility ------------------------------------------------------------------------------------
 
 /** Returns the filtered list of component names from the translation folder. */
 export function getComponentNames(): string[] {
@@ -285,3 +285,13 @@ function deepMerge(source: Record<string, any>, target: Record<string, any>): Re
 	}
 	return result;
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default {
+	load,
+	getTemplate,
+	getScript,
+	getSupportedLangs,
+	getLangOptions,
+};

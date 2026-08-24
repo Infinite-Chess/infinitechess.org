@@ -7,12 +7,10 @@
  * See docs/systems/LIVE_GAME_PERSISTENCE.md for the column reference.
  */
 
-import jsutil from '../../shared/util/jsutil.js';
+import db from './database.js';
+import { ALL_LIVE_GAMES_COLUMNS } from './databaseTables.js';
 
-import db, { dbCall } from './database.js';
-import { allLiveGamesColumns } from './databaseTables.js';
-
-// Types ----------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Structure of a complete live_games record. */
 export interface LiveGamesRecord extends LiveGameData {
@@ -46,7 +44,7 @@ export interface LiveGameData {
 	mod_slide_limit: number | null;
 }
 
-// Methods --------------------------------------------------------------------------------------------
+// Methods ------------------------------------------------------------------------------------
 
 /**
  * Inserts a new live game row into the database.
@@ -61,7 +59,7 @@ export function insertLiveGame(record: LiveGamesRecord): void {
 				draw_offer_state, validate_moves, both_disconnected_end_time, mod_slide_limit
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
-	dbCall(
+	db.call(
 		() =>
 			db.run(query, [
 				record.game_id, record.time_created, record.variant, record.position,
@@ -80,19 +78,15 @@ export function insertLiveGame(record: LiveGamesRecord): void {
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
 export function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
-	dbCall(() => {
-		// Validate the input structure...
-		if (typeof updates !== 'object' || updates === null || Object.keys(updates).length === 0)
-			throw new Error(`Invalid or empty updates provided when updating live game ${game_id}! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
-		const entries = Object.entries(updates);
-		if (!entries.every(([col]) => allLiveGamesColumns.includes(col)))
-			throw new Error(`Invalid columns provided when updating live game ${game_id}! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
-
-		// Move on to the SQL query
-		const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
-		const values = entries.map(([, val]) => val);
-		const query = `UPDATE live_games SET ${setClauses} WHERE game_id = ?`;
-		db.run(query, [...values, game_id]);
+	db.call(() => {
+		db.runRowUpdate({
+			tableName: 'live_games',
+			allowedColumns: ALL_LIVE_GAMES_COLUMNS,
+			updates,
+			errorContext: `updating live game ${game_id}`,
+			whereClause: 'game_id = ?',
+			whereValues: [game_id],
+		});
 	}, `Error updating live game ${game_id}`);
 }
 
@@ -102,7 +96,7 @@ export function updateLiveGame(game_id: number, updates: Partial<LiveGameData>):
  * @throws If a database error occurs.
  */
 export function deleteLiveGame(game_id: number): void {
-	dbCall(
+	db.call(
 		() => db.run('DELETE FROM live_games WHERE game_id = ?', [game_id]),
 		`Error deleting live game ${game_id}`,
 	);
@@ -114,7 +108,7 @@ export function deleteLiveGame(game_id: number): void {
  * @throws If a database error occurs.
  */
 export function getAllLiveGames(): LiveGamesRecord[] {
-	return dbCall(
+	return db.call(
 		() => db.all<LiveGamesRecord>('SELECT * FROM live_games'),
 		'Error retrieving all live games',
 	);

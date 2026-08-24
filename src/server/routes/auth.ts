@@ -9,13 +9,13 @@
 
 import express from 'express';
 
+import rateLimiters from '../middleware/rateLimiters.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { handleLogout } from '../controllers/logoutController.js';
-import { authAttemptLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
-router.post('/auth', authAttemptLimiter, handleLogin);
+router.post('/auth', rateLimiters.authAttempt, handleLogin);
 router.post('/logout', handleLogout);
 
 export default router;

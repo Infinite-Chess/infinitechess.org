@@ -10,10 +10,10 @@ import jsutil from '../../shared/util/jsutil.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import activegames from '../game/gamemanager/activegames.js';
-import { revokeSession } from './authenticationTokens/sessionManager.js';
+import sessionManager from './authenticationTokens/sessionManager.js';
+import socketRegistry from '../socket/socketRegistry.js';
 import { getTranslation } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
-import { closeAllSocketsOfMember } from '../socket/socketRegistry.js';
 import { deleteMember, DeleteReason } from '../database/memberManager.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -29,7 +29,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 	req.body.username = claimedUsername;
 	// The resolved identity comes straight from the DB, with the canonical user_id and username.
 	const identity = await testPasswordForRequest(req, res);
-	if (!identity) return; // Reponse already sent
+	if (!identity) return; // Response already sent
 
 	// Do not allow account deletion if user is currently playing a game
 	// THIS DOES NOT PREVENT AN ADMIN MANUALLY DELETING THEIR ACCOUNT
@@ -49,7 +49,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 	// DELETE ACCOUNT..
 
 	// Close their sockets, delete their seeks, delete their session cookies...
-	revokeSession(res);
+	sessionManager.revoke(res);
 
 	const reason_deleted = 'user request';
 
@@ -81,7 +81,7 @@ function deleteAccount(user_id: number, reason_deleted: DeleteReason): void {
 	deleteMember(user_id, reason_deleted);
 
 	// Close their sockets, delete their seeks...
-	closeAllSocketsOfMember(user_id, 1008, socketutil.ClosureReasons.LOGGED_OUT);
+	socketRegistry.closeAllOfMember(user_id, 1008, socketutil.ClosureReasons.LOGGED_OUT);
 
 	// Account deleting automatically invalidates all their sessions,
 	// because their refresh tokens are deleted.

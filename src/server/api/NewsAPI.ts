@@ -9,28 +9,29 @@ import type { Request, Response } from 'express';
 import newsUtil from '../utility/newsUtil.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
+// Functions --------------------------------------------------------------------------------------
+
 /** `GET /api/news/unread-count` — returns `{ count }` of the signed-in user's unread news posts. */
 function getUnreadNewsCount(req: Request, res: Response): void {
-	// Check if user is authenticated
+	// Not logged in - return 0 unread
 	if (!req.memberInfo?.signedIn) {
-		// Not logged in - return 0 unread
 		res.json({ count: 0 });
 		return;
 	}
 
-	const userId = req.memberInfo.user_id;
-
 	try {
-		// Get user's last read news date
-		const record = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+		const record = getMemberDataByCriteria(
+			['last_read_news_date'],
+			'user_id',
+			req.memberInfo.user_id,
+		);
 
+		// Cell null or record not found - nothing read to compare against
 		if (!record?.last_read_news_date) {
-			// For some reason the cell was null or record not found
 			res.json({ count: 0 });
 			return;
 		}
 
-		// Count unread news posts
 		res.json({ count: newsUtil.countUnreadNews(record.last_read_news_date) });
 	} catch {
 		// DB error (already logged)
@@ -39,26 +40,26 @@ function getUnreadNewsCount(req: Request, res: Response): void {
 }
 
 /** `GET /api/news/unread-dates` — returns `{ dates }`, the signed-in user's unread news dates (YYYY-MM-DD). */
-function getUnreadNewsDatesEndpoint(req: Request, res: Response): void {
+function getUnreadNewsDates(req: Request, res: Response): void {
+	// Not logged in - no unread news
 	if (!req.memberInfo?.signedIn) {
-		// Not logged in - no unread news
 		res.json({ dates: [] });
 		return;
 	}
 
-	const userId = req.memberInfo.user_id;
-
 	try {
-		// Get user's last read news date
-		const record = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+		const record = getMemberDataByCriteria(
+			['last_read_news_date'],
+			'user_id',
+			req.memberInfo.user_id,
+		);
 
+		// Cell null or record not found - nothing read to compare against
 		if (!record?.last_read_news_date) {
-			// For some reason the cell was null or undefined
 			res.json({ dates: [] });
 			return;
 		}
 
-		// Get unread news dates
 		res.json({ dates: newsUtil.getUnreadNewsDates(record.last_read_news_date) });
 	} catch {
 		// DB error (already logged)
@@ -68,18 +69,16 @@ function getUnreadNewsDatesEndpoint(req: Request, res: Response): void {
 
 /** `PATCH /api/news/read` — marks news read up to the latest post for the signed-in user. */
 function markNewsAsRead(req: Request, res: Response): void {
-	if (!req.memberInfo || !req.memberInfo.signedIn) {
-		// Not logged in - nothing to update
+	// Not logged in - nothing to update
+	if (!req.memberInfo?.signedIn) {
 		res.sendStatus(200);
 		return;
 	}
 
-	const userId = req.memberInfo.user_id;
-
 	const latestNewsDate = newsUtil.getLatestNewsDate();
 
 	try {
-		updateMemberColumns(userId, { last_read_news_date: latestNewsDate });
+		updateMemberColumns(req.memberInfo.user_id, { last_read_news_date: latestNewsDate });
 		res.sendStatus(200);
 	} catch {
 		// DB error (already logged)
@@ -87,4 +86,6 @@ function markNewsAsRead(req: Request, res: Response): void {
 	}
 }
 
-export { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead };
+// Exports ----------------------------------------------------------------------------------------
+
+export { getUnreadNewsCount, getUnreadNewsDates, markNewsAsRead };

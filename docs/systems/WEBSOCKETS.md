@@ -63,7 +63,7 @@ message assembled into a variable first would smuggle extra keys onto the wire. 
 
 Each side then declares its own `OutMessages` map ([socketSend.ts](/src/server/socket/socketSend.ts),
 [socketsend.ts](/src/client/scripts/esm/socket/socketsend.ts)) for the direction it sends, which is
-what makes `sendSocketMessage(ws, 'game', 'move', …)` fully type-checked on route/action/value.
+what makes `socketsend.send(ws, 'game', 'move', …)` fully type-checked on route/action/value.
 
 ### Adding a message
 
@@ -189,7 +189,7 @@ upgrade request. [socketOpen.ts](/src/server/socket/socketOpen.ts) gates every u
 
 Finally the socket is registered, logged, given its listeners, and sent `general/protocolversion`.
 
-**Sockets expire after 15 minutes** (`maxWebSocketAgeMillis`, [socketRegistry.ts](/src/server/socket/socketRegistry.ts)),
+**Sockets expire after 15 minutes** (`MAX_WEBSOCKET_AGE_MILLIS`, [socketRegistry.ts](/src/server/socket/socketRegistry.ts)),
 closing with `1000 CONNECTION_EXPIRED` — which the client treats as involuntary and immediately
 reconnects through. Users must therefore re-present authentication at least every 15 minutes.
 
@@ -229,7 +229,7 @@ down / a terminated socket), `1001 ""` (tab closed without cleanup), `1002` / `1
 rejecting a malformed frame or bad UTF-8). **1006 is always involuntary.**
 
 `LOGGED_OUT` is pushed from outside the socket layer — logout, account deletion, and password
-reset all call `closeAllSocketsOfSession` / `closeAllSocketsOfMember`.
+reset all call `socketRegistry.closeAllOfSession` / `closeAllOfMember`.
 
 ### Voluntary vs. involuntary — what it costs you
 
@@ -307,7 +307,7 @@ and the first outgoing message lazily reopens the socket. A bfcache restore (`pa
 | `game`       | `{ id, color }` | `game`/`subscribe` (participant)     | Socket close, or server `unsub`/`leavegame` |
 | `spectating` | `{ id }`        | `game`/`subscribe` (non-participant) | Socket close, or server `unsub`             |
 
-**Clients may only ever request `lobby`.** `handleSubbing` accepts nothing else; the game keys are
+**Clients may only ever request `lobby`.** `sub` accepts nothing else; the game keys are
 attached server-side by `subscribe`, which resolves participant-vs-spectator itself from
 `getSocketRoleInGame()` (subscription metadata, falling back to identity for a fresh reconnect).
 
@@ -435,7 +435,7 @@ makes no difference whether they were one version behind or two.
   by default — press `3` on the game page ([controls.ts](/src/client/scripts/esm/game/misc/controls.ts)).
   On, it prints routed traffic and adds 1 s of simulated send latency. Echoes _we_ send are never
   printed; incoming ones only if `alsoPrintIncomingEchos` is flipped.
-- **Server-side simulated latency**: `simulatedWebsocketLatencyMillis` in
+- **Server-side simulated latency**: `SIMULATED_WEBSOCKET_LATENCY_MS` in
   [socketSend.ts](/src/server/socket/socketSend.ts). Guarded to throw if non-zero in production.
 - Malformed messages are logged (`logZodError` → errLog server-side, console client-side) and
   **not replied to**. The client also skips echoing them — it can't know whether it should.

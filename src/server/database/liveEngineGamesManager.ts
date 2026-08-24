@@ -8,12 +8,10 @@
  * See docs/systems/LIVE_GAME_PERSISTENCE.md for the column reference.
  */
 
-import jsutil from '../../shared/util/jsutil.js';
+import db from './database.js';
+import { ALL_LIVE_ENGINE_GAMES_COLUMNS } from './databaseTables.js';
 
-import db, { dbCall } from './database.js';
-import { allLiveEngineGamesColumns } from './databaseTables.js';
-
-// Types ----------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Per-engine live game data columns, excluding the composite key fields. */
 interface LiveEngineGameData {
@@ -29,7 +27,7 @@ export interface LiveEngineGamesRecord extends LiveEngineGameData {
 	player_number: number;
 }
 
-// Methods --------------------------------------------------------------------------------------------
+// Methods ------------------------------------------------------------------------------------
 
 /**
  * Inserts a new live engine game row into the database.
@@ -43,7 +41,7 @@ export function insertLiveEngineGame(record: LiveEngineGamesRecord): void {
 			engine, engine_version, strength_level
 		) VALUES (?, ?, ?, ?, ?, ?)
 	`;
-	dbCall(
+	db.call(
 		() =>
 			db.run(query, [
 				record.game_id,
@@ -69,21 +67,21 @@ export function updateLiveEngineGame(
 	player_number: number,
 	updates: Partial<LiveEngineGameData>,
 ): void {
-	dbCall(() => {
-		const entries = Object.entries(updates);
-		if (entries.length === 0 || !entries.every(([column]) => allLiveEngineGamesColumns.includes(column)))
-			throw new Error(`Invalid live engine updates: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
-		const setClauses = entries.map(([column]) => `${column} = ?`).join(', ');
-		db.run(
-			`UPDATE live_engine_games SET ${setClauses} WHERE game_id = ? AND player_number = ?`,
-			[...entries.map(([, value]) => value), game_id, player_number],
-		);
+	db.call(() => {
+		db.runRowUpdate({
+			tableName: 'live_engine_games',
+			allowedColumns: ALL_LIVE_ENGINE_GAMES_COLUMNS,
+			updates,
+			errorContext: `updating live engine participant for game ${game_id}`,
+			whereClause: 'game_id = ? AND player_number = ?',
+			whereValues: [game_id, player_number],
+		});
 	}, `Error updating live engine participant for game ${game_id}`);
 }
 
 /** Retrieves every live engine participant for startup restoration. */
 export function getAllLiveEngineGames(): LiveEngineGamesRecord[] {
-	return dbCall(
+	return db.call(
 		() => db.all<LiveEngineGamesRecord>('SELECT * FROM live_engine_games'),
 		'Error retrieving live engine participants',
 	);

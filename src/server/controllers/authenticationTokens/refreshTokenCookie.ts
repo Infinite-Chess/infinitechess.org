@@ -14,12 +14,14 @@
 import type { CookieOptions, Response } from 'express';
 
 /** The options the `jwt` cookie is created with; reused (sans `maxAge`) when clearing it. */
-const REFRESH_TOKEN_COOKIE_OPTIONS: CookieOptions = {
+const COOKIE_OPTIONS: CookieOptions = {
 	httpOnly: true,
-	// 'lax' withholds the cookie from cross-site POSTs/fetches (CSRF defense) while still
-	// sending it on same-site requests and top-level navigations to our site.
+	/**
+	 * 'lax' withholds the cookie from cross-site POSTs/fetches (CSRF defense) while
+	 *  still sending it on same-site requests and top-level navigations to our site.
+	 */
 	sameSite: 'lax',
-	// Kept so the cookie only ever travels over HTTPS, even though 'lax' doesn't require it.
+	/** Kept so the cookie only ever travels over HTTPS, even though 'lax' doesn't require it. */
 	secure: true,
 };
 
@@ -28,12 +30,12 @@ const REFRESH_TOKEN_COOKIE_OPTIONS: CookieOptions = {
  * @param expiryMillis - How long, in milliseconds, the cookie should live (match the token's expiry).
  */
 function createRefreshTokenCookie(res: Response, refreshToken: string, expiryMillis: number): void {
-	res.cookie('jwt', refreshToken, { ...REFRESH_TOKEN_COOKIE_OPTIONS, maxAge: expiryMillis });
+	res.cookie('jwt', refreshToken, { ...COOKIE_OPTIONS, maxAge: expiryMillis });
 }
 
 /** Clears the `jwt` cookie, using the same options it was created with. */
 function deleteRefreshTokenCookie(res: Response): void {
-	res.clearCookie('jwt', REFRESH_TOKEN_COOKIE_OPTIONS);
+	res.clearCookie('jwt', COOKIE_OPTIONS);
 }
 
 export { createRefreshTokenCookie, deleteRefreshTokenCookie };

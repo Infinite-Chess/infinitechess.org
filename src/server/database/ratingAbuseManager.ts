@@ -4,12 +4,10 @@
  * This script handles queries to the rating_abuse table.
  */
 
-import jsutil from '../../shared/util/jsutil.js';
+import db from './database.js';
+import { ALL_RATING_ABUSE_COLUMNS } from './databaseTables.js';
 
-import db, { dbCall } from './database.js';
-import { allRatingAbuseColumns } from './databaseTables.js';
-
-// Types ----------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Structure of a complete rating_abuse record. */
 interface RatingAbuseRecord {
@@ -21,7 +19,7 @@ interface RatingAbuseRecord {
 
 type RatingAbuseColumn = keyof RatingAbuseRecord;
 
-// Methods --------------------------------------------------------------------------------------------
+// Methods ------------------------------------------------------------------------------------
 
 /**
  * Adds an entry to the rating_abuse table.
@@ -36,7 +34,7 @@ export function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: numb
 			leaderboard_id
 		) VALUES (?, ?)
 	`;
-	dbCall(
+	db.call(
 		() => db.run(query, [user_id, leaderboard_id]),
 		`Error adding entry to rating_abuse table for user "${user_id}" and leaderboard "${leaderboard_id}"`,
 	);
@@ -47,7 +45,7 @@ export function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: numb
  * Relies on the composite primary key (user_id, leaderboard_id).
  * @param user_id - The ID of the user to check.
  * @param leaderboard_id - The ID of the leaderboard to check within.
- * @returns True if the player exists on the specified leaderboard, false otherwise.
+ * @returns True if an entry for this player exists in the rating_abuse table, false otherwise.
  * @throws If a database error occurs.
  */
 export function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: number): boolean {
@@ -57,7 +55,7 @@ export function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: numbe
         WHERE user_id = ? AND leaderboard_id = ?
         LIMIT 1;
     `;
-	const result = dbCall(
+	const result = db.call(
 		() => db.get<{ '1': 1 }>(query, [user_id, leaderboard_id]),
 		`Error checking existence of rating_abuse entry for user "${user_id}" on leaderboard "${leaderboard_id}"`,
 	);
@@ -77,18 +75,9 @@ export function getRatingAbuseData<K extends RatingAbuseColumn>(
 	leaderboard_id: number,
 	columns: K[],
 ): Pick<RatingAbuseRecord, K> {
-	return dbCall(() => {
-		// Validate the arguments...
-		if (!Array.isArray(columns))
-			throw new Error(`When getting rating_abuse data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
-		if (
-			!columns.every(
-				(column) => typeof column === 'string' && allRatingAbuseColumns.includes(column),
-			)
-		)
-			throw new Error(`Invalid columns requested from rating_abuse table: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
+	return db.call(() => {
+		db.assertColumnsValid(columns, ALL_RATING_ABUSE_COLUMNS, 'rating_abuse');
 
-		// Move onto the SQL query
 		const query = `SELECT ${columns.join(', ')} FROM rating_abuse WHERE user_id = ? AND leaderboard_id = ?`;
 		const row = db.get<Pick<RatingAbuseRecord, K>>(query, [user_id, leaderboard_id]);
 		if (!row)
@@ -102,34 +91,25 @@ export function getRatingAbuseData<K extends RatingAbuseColumn>(
  *
  * @param user_id - The user ID of the player.
  * @param leaderboard_id - The leaderboard_id
- * @param columnsAndValues - An object containing column-value pairs to update.
- * @returns A result object indicating success or failure.
+ * @param updates - An object containing column-value pairs to update.
+ * @throws If no matching entry exists or a database error occurs.
  * @throws If invalid arguments are provided or if a database error occurs.
  */
 export function updateRatingAbuseColumns(
 	user_id: number,
 	leaderboard_id: number,
-	columnsAndValues: Partial<RatingAbuseRecord>,
+	updates: Partial<RatingAbuseRecord>,
 ): void {
-	dbCall(() => {
-		// Validate the arguments...
-		if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0)
-			throw new Error(`Invalid or empty columns and values provided for user ID "${user_id}" and leaderboard ID "${leaderboard_id}" when updating rating_abuse columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`); // prettier-ignore
-		for (const column in columnsAndValues) {
-			// Validate all provided columns
-			if (!allRatingAbuseColumns.includes(column))
-				throw new Error(`Invalid column "${column}" provided for user ID "${user_id}" and leaderboard ID "${leaderboard_id}" when updating rating_abuse columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`); // prettier-ignore
-		}
-
-		// Move on to the SQL query
-		const setStatements = Object.keys(columnsAndValues)
-			.map((column) => `${column} = ?`)
-			.join(', ');
-		const values = Object.values(columnsAndValues);
-		values.push(user_id, leaderboard_id);
-		const updateQuery = `UPDATE rating_abuse SET ${setStatements} WHERE user_id = ? AND leaderboard_id = ?`;
-		const result = db.run(updateQuery, values);
+	db.call(() => {
+		const result = db.runRowUpdate({
+			tableName: 'rating_abuse',
+			allowedColumns: ALL_RATING_ABUSE_COLUMNS,
+			updates: updates,
+			errorContext: `updating rating_abuse columns for user ID "${user_id}" and leaderboard ID "${leaderboard_id}"`,
+			whereClause: 'user_id = ? AND leaderboard_id = ?',
+			whereValues: [user_id, leaderboard_id],
+		});
 		if (result.changes === 0)
-			throw new Error(`No changes made when updating rating_abuse table columns ${JSON.stringify(columnsAndValues)} for entry with user ID "${user_id}" and leaderboard ID "${leaderboard_id}".`); // prettier-ignore
+			throw new Error(`No changes made when updating rating_abuse table columns ${JSON.stringify(updates)} for entry with user ID "${user_id}" and leaderboard ID "${leaderboard_id}".`); // prettier-ignore
 	}, `Error updating rating_abuse table columns for user ID "${user_id}" and leaderboard ID "${leaderboard_id}"`);
 }

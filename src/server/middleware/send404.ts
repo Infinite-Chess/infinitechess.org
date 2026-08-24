@@ -1,5 +1,10 @@
 // src/server/middleware/send404.ts
 
+/**
+ * Final catch-all for browser navigations that matched no route:
+ * renders a localized 404 page.
+ */
+
 import type { Request, Response } from 'express';
 
 import { renderErrorPage } from './renderErrorPage.js';

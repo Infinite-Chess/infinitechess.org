@@ -1,5 +1,10 @@
 // src/server/config/certOptions.ts
 
+/**
+ * Provides the TLS key/cert pair for the HTTPS server, generating a self-signed
+ * certificate on first run if one doesn't exist.
+ */
+
 import fs from 'fs';
 import path from 'path';
 import forge from 'node-forge';
@@ -7,11 +12,15 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Constants ---------------------------------------------------------------------------------------
+
 const certDir = path.join(__dirname, '..', '..', '..', 'cert');
 
 // Paths for the self-signed key and certificate files
 const keyPath = path.join(certDir, 'cert.key');
 const certPath = path.join(certDir, 'cert.pem');
+
+// Functions --------------------------------------------------------------------------------------
 
 /**
  * Retrieves SSL/TLS certificate options (a self-signed key + cert).

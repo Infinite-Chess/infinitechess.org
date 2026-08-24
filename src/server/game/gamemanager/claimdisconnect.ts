@@ -18,7 +18,7 @@ import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
 import { logEventsAndPrint } from '../../utility/logEvents.js';
 
-// Functions -------------------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
 /**
  * Whether `ourColor` may currently claim victory / a draw against their opponent:
@@ -34,11 +34,7 @@ function mayClaimAgainstOpponent(servergame: ServerGame, ourColor: Player): bool
 	return Date.now() >= claimTime; // The window has opened.
 }
 
-/**
- * Called when a client tries to claim victory against their disconnected opponent.
- * @param servergame - The game they are in.
- * @param ourRole - The color the socket is playing as.
- */
+/** Called when a client tries to claim victory against their disconnected opponent. */
 function claimVictory(servergame: ServerGame, ourRole: Player): void {
 	if (!mayClaimAgainstOpponent(servergame, ourRole)) {
 		logEventsAndPrint(
@@ -50,11 +46,7 @@ function claimVictory(servergame: ServerGame, ourRole: Player): void {
 	gamelifecycle.conclude(servergame, { victor: ourRole, condition: 'disconnect' });
 }
 
-/**
- * Called when a client tries to claim a draw against their disconnected opponent.
- * @param servergame - The game they are in.
- * @param ourRole - The color the socket is playing as.
- */
+/** Called when a client tries to claim a draw against their disconnected opponent. */
 function claimDraw(servergame: ServerGame, ourRole: Player): void {
 	if (!mayClaimAgainstOpponent(servergame, ourRole)) {
 		logEventsAndPrint(
@@ -66,7 +58,7 @@ function claimDraw(servergame: ServerGame, ourRole: Player): void {
 	gamelifecycle.conclude(servergame, { victor: null, condition: 'abandonment' });
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	claimVictory,

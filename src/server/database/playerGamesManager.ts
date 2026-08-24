@@ -8,10 +8,10 @@ import type { Player } from '../../shared/util/typeutil.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import db, { dbCall } from './database.js';
-import { allPlayerGamesColumns } from './databaseTables.js';
+import db from './database.js';
+import { ALL_PLAYER_GAMES_COLUMNS } from './databaseTables.js';
 
-// Types ----------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Structure of a complete player_games record. */
 export interface PlayerGamesRecord {
@@ -27,7 +27,7 @@ export interface PlayerGamesRecord {
 
 type PlayerGamesColumn = keyof PlayerGamesRecord;
 
-// Methods --------------------------------------------------------------------------------------------
+// Methods ------------------------------------------------------------------------------------
 
 /**
  * Gets player_games entries for all opponents of a specific user for a list of specific games.
@@ -43,16 +43,9 @@ export function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
 	game_id_list: number[],
 	columns: K[],
 ): Pick<PlayerGamesRecord, K>[] {
-	return dbCall(
+	return db.call(
 		() => {
-			// Validate the arguments...
-			if (!Array.isArray(columns)) {
-				throw new Error(`When getting player_games data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
-			}
-			// prettier-ignore
-			if (!columns.every((column) => typeof column === 'string' && allPlayerGamesColumns.includes(column))) {
-				throw new Error(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`);
-			}
+			db.assertColumnsValid(columns, ALL_PLAYER_GAMES_COLUMNS, 'player_games');
 
 			// Move onto the SQL query
 			const placeholders = game_id_list.map(() => '?').join(', ');
@@ -83,14 +76,8 @@ export function getPlayerGamesOfGame<K extends PlayerGamesColumn>(
 	game_id: number,
 	columns: K[],
 ): Pick<PlayerGamesRecord, K>[] {
-	return dbCall(() => {
-		if (!Array.isArray(columns)) {
-			throw new Error(`When getting player_games data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
-		}
-		// prettier-ignore
-		if (!columns.every((column) => typeof column === 'string' && allPlayerGamesColumns.includes(column))) {
-			throw new Error(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`);
-		}
+	return db.call(() => {
+		db.assertColumnsValid(columns, ALL_PLAYER_GAMES_COLUMNS, 'player_games');
 
 		const query = `SELECT ${columns.join(', ')} FROM player_games WHERE game_id = ?`;
 		return db.all<Pick<PlayerGamesRecord, K>>(query, [game_id]);
@@ -113,15 +100,8 @@ export function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
 	limit: number,
 	columns: K[],
 ): Pick<PlayerGamesRecord, K>[] {
-	return dbCall(() => {
-		// Validate columns argument
-		if (!Array.isArray(columns)) {
-			throw new Error(`When fetching recent games, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
-		}
-		// prettier-ignore
-		if (!columns.every((col) => typeof col === 'string' && allPlayerGamesColumns.includes(col))) {
-			throw new Error(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`);
-		}
+	return db.call(() => {
+		db.assertColumnsValid(columns, ALL_PLAYER_GAMES_COLUMNS, 'player_games');
 
 		// Move on to the SQL query
 		const selectClause = columns.map((col) => `pg.${col}`).join(', ');
@@ -140,7 +120,7 @@ export function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
 	}, `Error fetching recent rated games for user ${user_id} on leaderboard ${leaderboard_id}`);
 }
 
-// Writes ---------------------------------------------------------------------------------------------
+// Writes -------------------------------------------------------------------------------------
 
 // These intentionally skip `dbCall`. gamelogger is their only caller, and it already logs the
 // failure and rolls back the surrounding transaction — wrapping them would log the same error twice.
@@ -177,17 +157,13 @@ export function updatePlayerGame(
 	player_number: Player,
 	updates: Partial<PlayerGamesRecord>,
 ): void {
-	const entries = Object.entries(updates);
-	if (entries.length === 0)
-		throw new Error(`Empty updates provided when updating player_games row (game ${game_id}, player ${player_number})! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
-	if (!entries.every(([col]) => col !== 'user_id' && col !== 'game_id' && col !== 'player_number' && allPlayerGamesColumns.includes(col)))
-		throw new Error(`Invalid columns provided when updating player_games row (game ${game_id}, player ${player_number})! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
-
-	const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
-	const values = entries.map(([, val]) => val);
-	db.run(`UPDATE player_games SET ${setClauses} WHERE game_id = ? AND player_number = ?`, [
-		...values,
-		game_id,
-		player_number,
-	]);
+	db.runRowUpdate({
+		tableName: 'player_games',
+		allowedColumns: ALL_PLAYER_GAMES_COLUMNS,
+		excludedColumns: ['user_id', 'game_id', 'player_number'],
+		updates,
+		errorContext: `updating player_games row (game ${game_id}, player ${player_number})`,
+		whereClause: 'game_id = ? AND player_number = ?',
+		whereValues: [game_id, player_number],
+	});
 }

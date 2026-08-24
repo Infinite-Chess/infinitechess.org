@@ -15,11 +15,12 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { MatchInfo, ServerGame } from './servergametypes.js';
 import type { OutAction, OutRoute, OutValue } from '../../socket/socketSend.js';
 
+import socketsend from '../../socket/socketSend.js';
+import gameutility from './gameutility.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
-// Attaching & Detaching -------------------------------------------------------------------------
+// Attaching & Detaching ----------------------------------------------------------------------
 
 /** Attaches a spectator's socket to a game, marking its subscription metadata. */
 function attachSpectator(servergame: ServerGame, ws: CustomWebSocket): void {
@@ -59,7 +60,7 @@ function getRole(servergame: ServerGame, ws: CustomWebSocket): Player | undefine
 	return undefined;
 }
 
-// Addressed Messages ----------------------------------------------------------------------------
+// Addressed Messages -------------------------------------------------------------------------
 
 /**
  * Sends a websocket message to the specified color in the game.
@@ -78,7 +79,7 @@ function sendToColor<R extends OutRoute, A extends OutAction<R>, V extends OutVa
 ): void {
 	const ws = match.playerData[role]?.socket;
 	if (!ws) return; // They are not connected, can't send message
-	sendSocketMessage(ws, sub, action, value);
+	socketsend.send(ws, sub, action, value);
 }
 
 /**
@@ -92,7 +93,7 @@ function sendGameState(servergame: ServerGame, role: Player, forceSync: boolean)
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message
 
 	const messageContents = gamestatebuilder.buildStateMessage(servergame, role, forceSync);
-	sendSocketMessage(playerdata.socket, 'game', 'gamestate', messageContents);
+	socketsend.send(playerdata.socket, 'game', 'gamestate', messageContents);
 }
 
 /**
@@ -111,7 +112,7 @@ function sendRematchState(servergame: ServerGame): void {
 	}
 }
 
-// Broadcasts ------------------------------------------------------------------------------------
+// Broadcasts ---------------------------------------------------------------------------------
 
 /** Broadcasts a message to every connected participant of the game. */
 function broadcastToParticipants<
@@ -130,7 +131,7 @@ function broadcastToSpectators<A extends OutAction<'game'>, V extends OutValue<'
 	value: Exact<V, OutValue<'game', A>>,
 ): void {
 	for (const ws of servergame.spectators) {
-		sendSocketMessage(ws, 'game', action, value);
+		socketsend.send(ws, 'game', action, value);
 	}
 }
 
@@ -144,7 +145,15 @@ function broadcastToEveryone<A extends OutAction<'game'>, V extends OutValue<'ga
 	broadcastToSpectators(servergame, action, value);
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Engine Clocks ------------------------------------------------------------------------------
+
+/** Broadcasts a live engine game's updated clock values to all spectators. */
+function broadcastEngineClock(servergame: ServerGame & { untimed: false }): void {
+	const clockValues = gameutility.getClockValues(servergame);
+	broadcastToSpectators(servergame, 'clock', clockValues);
+}
+
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	// Attaching & Detaching
@@ -160,4 +169,6 @@ export default {
 	broadcastToParticipants,
 	broadcastToSpectators,
 	broadcastToEveryone,
+	// Engine Clocks
+	broadcastEngineClock,
 };

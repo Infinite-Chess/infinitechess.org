@@ -16,11 +16,11 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { LobbyStateMessage } from '../../../shared/clientbound.js';
 
+import socketsend from '../../socket/socketSend.js';
 import activeseeks from './activeseeks.js';
 import activeplayers from '../gamemanager/activeplayers.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
 import lobbysubscribers from './lobbysubscribers.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
 // Constants -------------------------------------------------------------------------------------
 
@@ -162,7 +162,7 @@ function sendClientLobbyState(ws: CustomWebSocket): void {
 		viewercount,
 		ingame,
 	};
-	sendSocketMessage(ws, 'lobby', 'lobbystate', message); // In order: socket, sub, action, value
+	socketsend.send(ws, 'lobby', 'lobbystate', message); // In order: socket, sub, action, value
 }
 
 /**
@@ -174,7 +174,7 @@ function broadcastViewerCount(skipWs?: CustomWebSocket): void {
 	const count = lobbysubscribers.getCount();
 	for (const ws of lobbysubscribers.getAll()) {
 		if (ws === skipWs) continue;
-		sendSocketMessage(ws, 'lobby', 'viewercount', count);
+		socketsend.send(ws, 'lobby', 'viewercount', count);
 	}
 }
 
@@ -194,12 +194,12 @@ function broadcastMemberInGameStatus(
 	for (const ws of lobbysubscribers.getAll()) {
 		if (!memberinfoutil.eq(user, ws.metadata.memberInfo)) continue;
 		if (gameID !== undefined)
-			sendSocketMessage(ws, 'lobby', 'ingame', {
+			socketsend.send(ws, 'lobby', 'ingame', {
 				id: gameID,
 				role,
 				navigate: ws === navigatingSocket,
 			});
-		else sendSocketMessage(ws, 'lobby', 'outgame', undefined);
+		else socketsend.send(ws, 'lobby', 'outgame', undefined);
 	}
 }
 

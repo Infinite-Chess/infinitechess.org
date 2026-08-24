@@ -34,10 +34,10 @@ function isVerificationTokenLive(
  * - `'verified'` — the row is already promoted: the "Account activated" confirmation.
  * - `'invalid'` — an unknown token, or one that expired.
  */
-export function getVerifyPageState(req: Request): { state: 'prompt' | 'verified' | 'invalid' } {
+function getPageState(req: Request): { state: 'prompt' | 'verified' | 'invalid' } {
 	const token = req.params['token']!;
 
-	// Any db error here propogates to errorHanlder which renders a 500 error page, intentional.
+	// Any db error here propagates to errorHandler which renders a 500 error page, intentional.
 	const pending = getPendingRegistrationByVerificationToken(token);
 	if (!isVerificationTokenLive(pending)) return { state: 'invalid' };
 	// Live: a non-null member_user_id means it was already promoted; otherwise it still awaits the click.
@@ -45,7 +45,7 @@ export function getVerifyPageState(req: Request): { state: 'prompt' | 'verified'
 }
 
 /** `POST /api/verify/:token` — promotes a verified pending registration into a real member. */
-export function verifyPendingRegistration(req: Request, res: Response): void {
+function verifyPendingRegistration(req: Request, res: Response): void {
 	// Express only matches this route with a non-empty :token segment.
 	const token = req.params['token']!;
 
@@ -77,3 +77,7 @@ export function verifyPendingRegistration(req: Request, res: Response): void {
 		});
 	}
 }
+
+// Exports -----------------------------------------------------------------------------------------
+
+export default { getPageState, verifyPendingRegistration };

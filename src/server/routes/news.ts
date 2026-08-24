@@ -8,7 +8,7 @@
 import express from 'express';
 
 import { resolveAuth } from '../middleware/resolveAuth.js';
-import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
+import { getUnreadNewsCount, getUnreadNewsDates, markNewsAsRead } from '../api/NewsAPI.js';
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ const router = express.Router();
 router.use(resolveAuth);
 
 router.get('/unread-count', getUnreadNewsCount);
-router.get('/unread-dates', getUnreadNewsDatesEndpoint);
+router.get('/unread-dates', getUnreadNewsDates);
 router.patch('/read', markNewsAsRead);
 
 export default router;

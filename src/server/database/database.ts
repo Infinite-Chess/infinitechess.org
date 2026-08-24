@@ -1,11 +1,11 @@
 // src/server/database/database.ts
 
-/*
+/**
  * This module provides utility functions for managing SQLite database operations
  * using the `better-sqlite3` library.
  *
- * It supports executing SQL queries, retrieving  results (single or multiple rows),
- * caching prepared statements for performance,  and handling database transactions.
+ * It supports executing SQL queries, retrieving results (single or multiple rows),
+ * caching prepared statements for performance, and handling database transactions.
  */
 
 import path from 'path';
@@ -15,6 +15,12 @@ import { fileURLToPath } from 'url';
 import jsutil from '../../shared/util/jsutil.js';
 
 import { logEventsAndPrint } from '../utility/logEvents.js';
+
+// Types ---------------------------------------------------------------------------------------------------
+
+type SupportedColumnTypes = string | number | boolean | null;
+
+// Connection ----------------------------------------------------------------------------------------------
 
 // Get the current file path and derive the directory (ESM doesn't support __dirname)
 const __filename: string = fileURLToPath(import.meta.url);
@@ -26,7 +32,6 @@ const dbLocation: string =
 		? ':memory:' // For integration tests, use in-memory database
 		: path.join(__dirname, '../../../', 'database.db'); // Normal database file
 const db = new Database(dbLocation);
-// const db = new Database(dbLocation, { verbose: console.log }); // Optional for logging queries
 
 // Enable WAL (Write-Ahead Logging) mode for better concurrency and crash safety.
 // Writers no longer block readers, and the main database file is never modified mid-write.
@@ -37,23 +42,18 @@ db.pragma('synchronous = NORMAL');
 // No `foreign_keys` pragma is needed: better-sqlite3 compiles SQLite with
 // SQLITE_DEFAULT_FOREIGN_KEYS=1, so enforcement is already ON for every connection.
 
-// Variables ----------------------------------------------------------------------------------------------
+// State ---------------------------------------------------------------------------------------------------
 
-// Prepared statements cache
+/** Prepared statements cache */
 const stmtCache: Record<string, Database.Statement> = {};
 
-// Query Calls --------------------------------------------------------------------------------------------
+// Query Calls ---------------------------------------------------------------------------------------------
 
 // Utility function to retrieve or prepare statements
 function prepareStatement(query: string): Database.Statement {
-	if (!stmtCache[query]) {
-		// console.log(`Added statement to stmtCache: "${query}"`);
-		stmtCache[query] = db.prepare(query);
-	}
+	if (!stmtCache[query]) stmtCache[query] = db.prepare(query);
 	return stmtCache[query];
 }
-
-type SupportedColumnTypes = string | number | boolean | null;
 
 /**
  * Executes a given SQL query with optional parameters and returns the result.
@@ -91,40 +91,54 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 	return stmt.all(...params) as T[];
 }
 
+// Validation & Dynamic Updates ----------------------------------------------------------------------------
+
 /**
- * Wraps a db call in a try/catch: on error, logs the description + full stack to errLog, then rethrows.
- * @param fn - The db call to execute.
- * @param description - Human-readable label for the operation. Goes into errLog if it fails. Exclude ending punctation.
- * @throws Re-throws the error after logging, if a database error occurs.
+ * Validates a column-selection argument of a read query: it must be an array of
+ * strings that are all columns of the named table. Throws on the first problem.
  */
-export function dbCall<T>(fn: () => T, description: string): T {
-	try {
-		return fn();
-	} catch (error: unknown) {
-		const detail = jsutil.getErrorStack(error);
-		logEventsAndPrint(`${description}: ${detail}`, 'errLog');
-		throw error;
-	}
+function assertColumnsValid(
+	columns: unknown,
+	allowedColumns: readonly string[],
+	tableName: string,
+): void {
+	if (!Array.isArray(columns))
+		throw new Error(`When getting ${tableName} data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
+	if (!columns.every((column) => typeof column === 'string' && allowedColumns.includes(column)))
+		throw new Error(`Invalid columns requested from ${tableName} table: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
 }
 
 /**
- * Closes the database connection.
- * @throws If a database error occurs.
+ * Runs a dynamic UPDATE of exactly the provided columns against the row(s) matching `whereClause`.
+ * Validates that `updates` is non-empty and every column belongs to the table, minus any
+ * excluded (primary keys are never updatable). Normalizes undefined values to null.
+ * @returns The run result, for callers that verify a row was actually changed.
  */
-function close(): void {
-	db.close();
-	// console.log('Closed database.');
+function runRowUpdate(params: {
+	tableName: string;
+	allowedColumns: readonly string[];
+	excludedColumns?: readonly string[];
+	updates: Record<string, SupportedColumnTypes>;
+	errorContext: string;
+	whereClause: string;
+	whereValues: SupportedColumnTypes[];
+}): Database.RunResult {
+	const entries = Object.entries(params.updates);
+	if (entries.length === 0)
+		throw new Error(`Empty updates provided when ${params.errorContext}! Received: ${jsutil.ensureJSONString(params.updates)}`); // prettier-ignore
+	const excluded = params.excludedColumns ?? [];
+	if (!entries.every(([column]) => !excluded.includes(column) && params.allowedColumns.includes(column)))
+		throw new Error(`Invalid columns provided when ${params.errorContext}! Received: ${jsutil.ensureJSONString(params.updates)}`); // prettier-ignore
+
+	const setClauses = entries.map(([column]) => `${column} = ?`).join(', ');
+	const values = entries.map(([, value]) => value ?? null);
+	return run(`UPDATE ${params.tableName} SET ${setClauses} WHERE ${params.whereClause}`, [
+		...values,
+		...params.whereValues,
+	]);
 }
 
-/**
- * Creates a consistent point-in-time backup of the database to the given file path
- * using SQLite's Online Backup API. Safe to call while the database is open and being written to.
- * @param destPath - Absolute path for the destination backup file.
- * @throws If a database error occurs.
- */
-async function backup(destPath: string): Promise<void> {
-	await db.backup(destPath);
-}
+// Schema Introspection ------------------------------------------------------------------------------------
 
 /**
  * Checks if a column exists in a table.
@@ -163,6 +177,8 @@ function columnIsNullable(tableName: string, columnName: string): boolean {
 	}
 }
 
+// Transactions --------------------------------------------------------------------------------------------
+
 /**
  * Creates a transaction function that wraps the given callback in a database transaction.
  * The callback will be executed atomically - either all operations succeed or all are rolled back.
@@ -189,13 +205,59 @@ function transaction<Args extends unknown[], Return>(
 	return db.transaction(callback);
 }
 
+// Error Handling & Maintenance ----------------------------------------------------------------------------
+
+/**
+ * Wraps a db call in a try/catch: on error, logs the description + full stack to errLog, then rethrows.
+ * @param fn - The db call to execute.
+ * @param description - Human-readable label for the operation. Goes into errLog if it fails. Exclude ending punctation.
+ * @throws Re-throws the error after logging, if a database error occurs.
+ */
+function call<T>(fn: () => T, description: string): T {
+	try {
+		return fn();
+	} catch (error: unknown) {
+		const detail = jsutil.getErrorStack(error);
+		logEventsAndPrint(`${description}: ${detail}`, 'errLog');
+		throw error;
+	}
+}
+
+/**
+ * Creates a consistent point-in-time backup of the database to the given file path
+ * using SQLite's Online Backup API. Safe to call while the database is open and being written to.
+ * @param destPath - Absolute path for the destination backup file.
+ * @throws If a database error occurs.
+ */
+async function backup(destPath: string): Promise<void> {
+	await db.backup(destPath);
+}
+
+/**
+ * Closes the database connection.
+ * @throws If a database error occurs.
+ */
+function close(): void {
+	db.close();
+}
+
+// Exports -------------------------------------------------------------------------------------------------
+
 export default {
+	// Query Calls
 	run,
 	get,
 	all,
-	close,
-	backup,
+	call,
+	// Validation & Dynamic Updates
+	assertColumnsValid,
+	runRowUpdate,
+	// Schema Introspection
 	columnExists,
 	columnIsNullable,
+	// Transactions
 	transaction,
+	// Error Handling & Maintenance
+	backup,
+	close,
 };

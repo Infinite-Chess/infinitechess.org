@@ -13,7 +13,7 @@ import type { Player } from '../../../shared/util/typeutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
-// Types -----------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** What we track about a single user currently in an active game. */
 interface ActiveGameEntry {
@@ -30,7 +30,7 @@ interface ActiveGameEntry {
 	awaitingNavigateNotice: boolean;
 }
 
-// State -----------------------------------------------------------------------------------------
+// State --------------------------------------------------------------------------------------
 
 /**
  * Contains what members are currently in a game: `{ member: entry }`
@@ -48,7 +48,7 @@ const membersInActiveGames: Record<number, ActiveGameEntry> = {};
  */
 const browsersInActiveGames: Record<string, ActiveGameEntry> = {};
 
-// Functions -------------------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
 /**
  * Adds the user to the list of users currently in an active game.
@@ -137,7 +137,7 @@ function consumeNavigateNotice(player: AuthMemberInfo): boolean {
 	return true;
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	add,

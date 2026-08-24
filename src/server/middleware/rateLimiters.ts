@@ -9,7 +9,7 @@ import type { ScriptTranslations } from '../../shared/types/script-translations.
 
 import rateLimit from 'express-rate-limit';
 
-// Options -------------------------------------------------------------
+// Options ------------------------------------------------------------------------------------
 
 /** Produces a rate-limit handler that responds with the given translation key. */
 function make_handler(key: keyof ScriptTranslations['responses']['rate_limiting']) {
@@ -29,13 +29,13 @@ const default_options = {
 	handler: make_handler('generic'),
 };
 
-// Limiters -------------------------------------------------------------
+// Limiters -----------------------------------------------------------------------------------
 
 /**
  * Account Creation Limiter (successful registrations only)
  * Guards against spamming new accounts, and emails.
  */
-export const createAccountLimiter = rateLimit({
+const createAccount = rateLimit({
 	windowMs: 1000 * 60 * 60 * 24, // 1 day
 	max: 6,
 	skipFailedRequests: true, // Only counts if a pending registration was created (email sent)
@@ -47,7 +47,7 @@ export const createAccountLimiter = rateLimit({
  * Account Creation Attempt Limiter (failed registrations only)
  * Guards against email enumeration, spamming DNS/MX lookups, DB queries against.
  */
-export const createAccountAttemptLimiter = rateLimit({
+const createAccountAttempt = rateLimit({
 	windowMs: 1000 * 60 * 5, // 5 minutes
 	max: 20,
 	skipSuccessfulRequests: true, // Only counts if no pending registration was made (no email)
@@ -58,14 +58,14 @@ export const createAccountAttemptLimiter = rateLimit({
  * Username Availability Limiter (the register form's blur-triggered username check).
  * Generous. Cap only helps prevent rapid username enumeration.
  */
-export const usernameAvailabilityLimiter = rateLimit({
+const usernameAvailability = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 30,
 	...default_options,
 });
 
 /** Verification Email Limiter (pending registration email change) */
-export const verificationEmailLimiter = rateLimit({
+const verificationEmail = rateLimit({
 	windowMs: 1000 * 60 * 60, // 1 hour
 	max: 8,
 	...default_options,
@@ -77,14 +77,14 @@ export const verificationEmailLimiter = rateLimit({
  * A per-IP cap that complements the per-username+IP limiter in authRatelimiter.ts:
  * that one bounds brute-forcing a single account, this one bounds cross-account credential stuffing.
  */
-export const authAttemptLimiter = rateLimit({
+const authAttempt = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 20,
 	...default_options,
 });
 
 /** Forgot Password Email Limiter */
-export const forgotPasswordLimiter = rateLimit({
+const forgotPassword = rateLimit({
 	windowMs: 1000 * 60 * 60, // 1 hour
 	max: 8,
 	...default_options,
@@ -92,29 +92,44 @@ export const forgotPasswordLimiter = rateLimit({
 });
 
 /** Editor Save Limiter */
-export const editorSaveLimiter = rateLimit({
+const editorSave = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 10,
 	...default_options,
 });
 
 /** Editor Load Limiter */
-export const editorLoadLimiter = rateLimit({
+const editorLoad = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 30,
 	...default_options,
 });
 
 /** Seek Preview Limiter */
-export const seekPreviewLimiter = rateLimit({
+const seekPreview = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 20,
 	...default_options,
 });
 
 /** Dead-game state fetch limiter. Game states can be large. */
-export const gameStateLimiter = rateLimit({
+const gameState = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 30,
 	...default_options,
 });
+
+// Exports ------------------------------------------------------------------------------------
+
+export default {
+	createAccount,
+	createAccountAttempt,
+	usernameAvailability,
+	verificationEmail,
+	authAttempt,
+	forgotPassword,
+	editorSave,
+	editorLoad,
+	seekPreview,
+	gameState,
+};

@@ -13,28 +13,23 @@ import { parse as parseCookie } from 'cookie';
 import socketutil from '../../shared/util/socketutil.js';
 
 import reqLogger from '../utility/reqLogger.js';
+import socketsend from './socketSend.js';
 import { onclose } from './socketClose.js';
+import reqLanguage from '../config/reqLanguage.js';
 import requestMeter from '../utility/requestMeter.js';
-import { onmessage } from './socketReceive.js';
+import socketLogger from './socketLogger.js';
+import socketReceive from './socketReceive.js';
+import socketRegistry from './socketRegistry.js';
 import { getClientIP } from '../utility/IP.js';
-import { logSocketOpen } from './socketLogger.js';
+import reqTranslations from '../config/reqTranslations.js';
 import { executeSafely } from '../utility/errorGuard.js';
 import { runWithRequestID } from '../utility/requestContext.js';
-import { buildTranslations } from '../config/reqTranslations.js';
-import { sendSocketMessage } from './socketSend.js';
 import { validateRefreshToken } from '../database/refreshTokenManager.js';
-import { resolveLanguageForRequest } from '../config/reqLanguage.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
-import {
-	addConnectionToConnectionLists,
-	doesClientHaveMaxSocketCount,
-	doesSessionHaveMaxSocketCount,
-	generateUniqueIDForSocket,
-	terminateAllIPSockets,
-} from './socketRegistry.js';
 
-// Functions ---------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
+/** Gates and completes every websocket upgrade request: validation, metadata, listeners. */
 function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	// Log every upgrade attempt to reqLog — even ones we reject below.
 	// Successful upgrades are logged below to wsInLog with more metadata.
@@ -48,11 +43,11 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	requestMeter.recordRecent();
 	if (requestMeter.meter(ws.metadata.IP, ws.metadata.userAgent) !== undefined) {
 		ws.close(1009, socketutil.ClosureReasons.TOO_MANY_REQUESTS);
-		return terminateAllIPSockets(ws.metadata.IP);
+		return socketRegistry.terminateAllOfIP(ws.metadata.IP);
 	}
 
 	// Check if ip has too many connections
-	if (doesClientHaveMaxSocketCount(ws.metadata.IP)) {
+	if (socketRegistry.doesClientHaveMaxCount(ws.metadata.IP)) {
 		console.log(`Client IP ${ws.metadata.IP} has too many sockets! Not connecting this one.`);
 		return ws.close(1009, socketutil.ClosureReasons.TOO_MANY_SOCKETS);
 	}
@@ -74,22 +69,27 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 
 	if (
 		ws.metadata.memberInfo.signedIn &&
-		doesSessionHaveMaxSocketCount(ws.metadata.cookies.jwt!)
+		socketRegistry.doesSessionHaveMaxCount(ws.metadata.cookies.jwt!)
 	) {
 		console.log(`Member "${ws.metadata.memberInfo.username}" has too many sockets for this session! Not connecting this one.`); // prettier-ignore
 		return ws.close(1009, socketutil.ClosureReasons.TOO_MANY_SOCKETS);
 	}
 
-	addConnectionToConnectionLists(ws);
+	socketRegistry.add(ws);
 
-	logSocketOpen(ws); // Log the opened socket in wsInLog with more metadata.
+	socketLogger.logOpen(ws); // Log the opened socket in wsInLog with more metadata.
 
 	addListenersToSocket(ws);
 
 	// Announce our protocol version, so a client running pre-protocol-change code knows to refresh.
-	sendSocketMessage(ws, 'general', 'protocolversion', socketutil.PROTOCOL_VERSION);
+	socketsend.send(ws, 'general', 'protocolversion', socketutil.PROTOCOL_VERSION);
 }
 
+/**
+ * Validates the upgrade request, closing the socket on any failure.
+ * On success, attaches the socket's metadata (cookies, identity, id, IP) and translations.
+ * Returns the custom websocket, or undefined if the request was rejected.
+ */
 function closeIfInvalidAndAddMetadata(
 	socket: WebSocket,
 	req: IncomingMessage,
@@ -140,13 +140,13 @@ function closeIfInvalidAndAddMetadata(
 		subscriptions: {},
 		userAgent,
 		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
-		id: generateUniqueIDForSocket(), // Sets the ws.metadata.id property of the websocket
+		id: socketRegistry.generateUniqueID(), // Sets the ws.metadata.id property of the websocket
 		IP,
 		echoTimers: {},
 	};
 
 	// Bind this connection's translations
-	ws.t = buildTranslations(resolveLanguageForRequest(req));
+	ws.t = reqTranslations.build(reqLanguage.resolve(req));
 
 	return ws;
 }
@@ -162,7 +162,7 @@ function addListenersToSocket(ws: CustomWebSocket): void {
 		runWithRequestID(
 			() =>
 				executeSafely(
-					() => onmessage(ws, message),
+					() => socketReceive.onmessage(ws, message),
 					'Error caught within websocket on-message event:',
 				),
 			'W',
@@ -179,6 +179,10 @@ function addListenersToSocket(ws: CustomWebSocket): void {
 	});
 }
 
+/**
+ * Logs a websocket error. Malformed-frame errors from `ws` are swallowed — they're
+ * benign client-side issues that would flood errLog — everything else lands there.
+ */
 function onerror(error: Error): void {
 	// The `ws` library tags malformed-frame errors with a "WS_ERR_" code (e.g. WS_ERR_INVALID_CLOSE_CODE for a
 	// Close frame with reserved code 1006) and already closes the connection (status 1002). Not a
@@ -202,4 +206,6 @@ function onerror(error: Error): void {
 	logEventsAndPrint(errText, 'errLog');
 }
 
-export { onConnectionRequest };
+// Exports ------------------------------------------------------------------------------------
+
+export default { onConnectionRequest };

@@ -1,6 +1,6 @@
 // src/server/controllers/registerController.ts
 
-/*
+/**
  * Handles the register form: validates the submission, then stages a pending
  * registration and emails a verification link (no member is created until the
  * link is verified). Also answers username/email availability checks.
@@ -9,17 +9,17 @@
  * seeding and tests.
  */
 
-import type { Role } from '../types.js';
-
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
+import roles from './roles.js';
+import turnstile from './turnstile.js';
 import emailService from '../utility/emailService.js';
+import sessionManager from './authenticationTokens/sessionManager.js';
 import { getClientIP } from '../utility/IP.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { createNewSession } from './authenticationTokens/sessionManager.js';
-import { verifyTurnstileToken } from './turnstile.js';
+import accountValidation from './accountValidation.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 import {
 	addMember,
@@ -28,14 +28,6 @@ import {
 	isEmailTakenOrPending,
 	isUsernameTakenOrPending,
 } from '../database/memberManager.js';
-import {
-	PASSWORD_SALT_ROUNDS,
-	checkProfanity,
-	checkReserved,
-	doUsernameFormatChecks,
-	doEmailFormatChecks,
-	doPasswordFormatChecks,
-} from './accountValidation.js';
 import {
 	addPendingRegistration,
 	deleteExpiredPendingRegistrationsFor,
@@ -46,7 +38,7 @@ import {
 	updatePendingRegistrationEmail,
 } from '../database/pendingRegistrationManager.js';
 
-// Variables -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------------
 
 /**
  * Name of the httpOnly cookie that holds a pending registration's `claim_token`,
@@ -77,9 +69,9 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 
 	// Run field-level checks first. Consume Turnstile token last.
 	// Each of these sends its own specific response on failure.
-	if (!doUsernameFormatChecks(username, req, res)) return;
-	if (!(await doEmailFormatChecks(email, req, res))) return;
-	if (!doPasswordFormatChecks(password, req, res)) return;
+	if (!accountValidation.doUsernameFormatChecks(username, req, res)) return;
+	if (!(await accountValidation.doEmailFormatChecks(email, req, res))) return;
+	if (!accountValidation.doPasswordFormatChecks(password, req, res)) return;
 
 	let usernameTaken: boolean;
 	let emailTaken: boolean;
@@ -98,7 +90,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		});
 		return;
 	}
-	if (checkReserved(username)) {
+	if (accountValidation.checkReserved(username)) {
 		res.status(409).json({
 			field: 'username',
 			message: req.t.responses.account.username_reserved,
@@ -116,7 +108,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	// Bot gate: verify the Cloudflare Turnstile token. Stops automatic account creation.
 	// Isn't intended for strengthening email enumeration (that's already bounded by createAccountAttemptLimiter)
 	// From here on the token is spent, so these responses tell the client to re-issue a fresh one.
-	const turnstileResult = await verifyTurnstileToken(turnstileToken, req);
+	const turnstileResult = await turnstile.verify(turnstileToken, req);
 	if (turnstileResult === 'failed') {
 		logEvents(
 			`Registration rejected (turnstile failed): ${formatRegistrationLogMeta(req, username, email)}`,
@@ -137,7 +129,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	}
 
 	// Hash the password now so the plaintext never reaches the pending row.
-	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
+	const hashedPassword = await bcrypt.hash(password, accountValidation.PASSWORD_SALT_ROUNDS);
 
 	// Two deliberately-separate secrets: the claim_token lives only in the httpOnly cookie
 	// (scopes the poll), the verification_token only in the emailed link.
@@ -275,7 +267,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 	}
 
 	// Re-validate the new address (format, blacklist, MX) — same checks as registration.
-	if (!(await doEmailFormatChecks(email, req, res))) return;
+	if (!(await accountValidation.doEmailFormatChecks(email, req, res))) return;
 
 	try {
 		// Availability: reject a real member's email or another party's pending email. The caller's
@@ -358,8 +350,8 @@ function pollPendingRegistration(req: Request, res: Response): void {
 		}
 
 		// roles is a stringified JSON array in the database; parse it.
-		const roles: Role[] | null = member.roles !== null ? JSON.parse(member.roles) : null;
-		createNewSession(req, res, pending.member_user_id, member.username, roles, false);
+		const parsedRoles = roles.parse(member.roles);
+		sessionManager.create(req, res, pending.member_user_id, member.username, parsedRoles, false); // prettier-ignore
 
 		// Idempotent: do NOT delete the pending row (let the cleanup sweep handle it), so a refreshed
 		// or duplicate waiting tab that still holds the cookie and polls again resolves cleanly.
@@ -392,7 +384,7 @@ async function generateAccount({
 	password: string;
 }): Promise<number> {
 	// Use bcrypt to hash & salt password
-	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
+	const hashedPassword = await bcrypt.hash(password, accountValidation.PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
 	const user_id = addMember(username, email, hashedPassword);
 	logEvents(`Manually generated new member: ${username}`, 'newMemberLog');
 	return user_id;
@@ -420,11 +412,11 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 		res.sendStatus(500);
 		return;
 	}
-	if (checkReserved(username)) {
+	if (accountValidation.checkReserved(username)) {
 		res.json({ available: false, reason: req.t.responses.account.username_reserved });
 		return;
 	}
-	if (checkProfanity(username)) {
+	if (accountValidation.checkProfanity(username)) {
 		res.json({ available: false, reason: req.t.responses.account.username_profane });
 		return;
 	}

@@ -17,7 +17,7 @@ import typeutil from '../../../shared/util/typeutil.js';
 import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
 
-// Functions -------------------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
 /** Called when a client tries to abort a game. */
 function abort(servergame: ServerGame): void {
@@ -41,17 +41,13 @@ function abort(servergame: ServerGame): void {
 	gamelifecycle.conclude(servergame, { condition: 'aborted' });
 }
 
-/**
- * Called when a client tries to resign a game.
- * @param servergame - The game they are in.
- * @param ourRole - The color the socket is playing as.
- */
+/** Called when a client tries to resign a game. */
 function resign(servergame: ServerGame, ourRole: Player): void {
 	// Is it legal?...
 
 	if (gameutility.isGameOver(servergame)) {
 		// Return if game is already over
-		console.log(`Player resign to resign game ${servergame.match.id} when the game is already over!`); // prettier-ignore
+		console.log(`Player tried to resign game ${servergame.match.id} when the game is already over!`); // prettier-ignore
 		return;
 	} else if (!moveutil.isGameResignable(servergame)) {
 		// Return if player tries to resign when he does not have the right
@@ -76,7 +72,7 @@ function resignEngine(servergame: ServerGame): void {
 	else abort(servergame);
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	abort,

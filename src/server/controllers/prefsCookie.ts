@@ -25,6 +25,9 @@ export type Preferences = z.infer<typeof prefsSchema>;
 /** The client has this long to read the cookie and update preferences in memory. */
 const LIFETIME_MS = 1000 * 10; // 10 seconds
 
+/** The options the `preferences` cookie is created with. */
+const COOKIE_OPTIONS = { httpOnly: false, sameSite: 'lax' as const, secure: true };
+
 /** Zod schema to validate preferences object structure. */
 const prefsSchema = z
 	.strictObject({
@@ -75,9 +78,7 @@ function set(req: Request, res: Response, next: NextFunction): void {
 function create(res: Response, preferences: Preferences): void {
 	// Set or update the preferences cookie
 	res.cookie('preferences', JSON.stringify(preferences), {
-		httpOnly: false,
-		sameSite: 'lax',
-		secure: true,
+		...COOKIE_OPTIONS,
 		maxAge: LIFETIME_MS,
 	});
 }
@@ -88,11 +89,7 @@ function create(res: Response, preferences: Preferences): void {
  * Even though the cookie only lasts 10 seconds, this is still helpful
  */
 function remove(res: Response): void {
-	res.clearCookie('preferences', {
-		httpOnly: false,
-		sameSite: 'lax',
-		secure: true,
-	});
+	res.clearCookie('preferences', COOKIE_OPTIONS);
 }
 
 /**

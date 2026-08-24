@@ -7,9 +7,9 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
+import banned from './banned.js';
 import requestMeter from '../utility/requestMeter.js';
 import renderContext from '../utility/renderContext.js';
-import { isIPBanned } from './banned.js';
 import { getClientIP } from '../utility/IP.js';
 import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -48,7 +48,7 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 		return;
 	}
 
-	if (isIPBanned(clientIP)) {
+	if (banned.isIP(clientIP)) {
 		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent'] || 'Unknown agent'}`;
 		logEvents(logThis, 'bannedIPLog');
 		res.status(403).json({ message: 'You are banned' });

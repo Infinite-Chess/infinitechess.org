@@ -8,18 +8,18 @@
 
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
+import socketsend from '../../socket/socketSend.js';
 import gamemanager from './gamemanager.js';
 import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
 import activegames from './activegames.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
 /**
  * A lean reconnect for a game the client already knows is finalized:
  * its result is locked in, so only rematch-offer state can still change.
  */
-function handle(ws: CustomWebSocket, game_id: number): void {
+export function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 	const game = activegames.getByID(game_id);
 
 	if (game !== undefined) {
@@ -34,7 +34,7 @@ function handle(ws: CustomWebSocket, game_id: number): void {
 			// Participant path: attach, then send the current rematch state.
 			gamemanager.subscribeParticipant(game, ws, ourRole);
 			const value = gamestatebuilder.getRematchOfferInfo(game, ourRole)!; // Guaranteed because above we confirm the game is over
-			sendSocketMessage(ws, 'game', 'rematchstate', value);
+			socketsend.send(ws, 'game', 'rematchstate', value);
 		} else {
 			// Spectator path: attach, but send no rematch state (they only
 			// stay connected for the 'ingame' message when a rematch is agreed).
@@ -45,12 +45,6 @@ function handle(ws: CustomWebSocket, game_id: number): void {
 		// Client should already have seen the finalized conclusion (otherwise they wouldn't
 		// be requesting to 'subscriberematch'). Tell them to unsub, they should then reset
 		// rematch offer state and disable the button.
-		sendSocketMessage(ws, 'game', 'unsub', undefined);
+		socketsend.send(ws, 'game', 'unsub', undefined);
 	}
 }
-
-// Exports ---------------------------------------------------------------------------------------
-
-export default {
-	handle,
-};

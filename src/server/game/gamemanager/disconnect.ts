@@ -18,7 +18,7 @@ import typeutil from '../../../shared/util/typeutil.js';
 import gamesockets from './gamesockets.js';
 import liveGameValues from './liveGameValues.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /**
  * The time to give players who disconnected not by choice
@@ -38,7 +38,7 @@ const CLAIM_DELAY_VOLUNTARY_MILLIS = 10_000; // 10 seconds
  */
 const CLAIM_DELAY_INVOLUNTARY_MILLIS = 60_000; // 60 seconds
 
-// Functions -------------------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
 /**
  * Starts the 5-second cushion timer for a player who disconnected involuntarily
@@ -87,7 +87,6 @@ function startClaimTimer(servergame: ServerGame, role: Player, involuntary: bool
 /**
  * Cancels both players' claim windows if they were disconnected.
  * Typically called when a game ends.
- * @param match - The match
  */
 function cancelAllTimers(match: MatchInfo): void {
 	for (const color of Object.keys(match.playerData)) {
@@ -115,7 +114,7 @@ function cancelTimer(match: MatchInfo, ourRole: Player): void {
 	delete match.bothDisconnectedEndTime;
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	// Constants

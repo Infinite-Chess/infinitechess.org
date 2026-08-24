@@ -1,9 +1,7 @@
 // src/server/api/LeaderboardAPI.ts
 
 /**
- * Route
- * Fetched by leaderboard script.
- * Sends the client the information about the leaderboard they are currently profile viewing.
+ * Serves the ranked entries of a leaderboard to the client's leaderboard/profile script.
  */
 
 import type { Request, Response } from 'express';

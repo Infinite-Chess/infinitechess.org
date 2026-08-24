@@ -9,17 +9,17 @@
 
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
+import socketsend from '../../socket/socketSend.js';
 import gamemanager from './gamemanager.js';
 import gamesockets from './gamesockets.js';
 import activegames from './activegames.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
 /**
  * Fires when a client sends the 'subscribe' action with a game id, to attach to a live game and
  * receive its current state. Also the live-reconnect path (the socket reopened mid-game).
  */
-function handle(ws: CustomWebSocket, game_id: number): void {
+export function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
 	const game = activegames.getByID(game_id);
 	if (game !== undefined) {
 		// Live game
@@ -32,24 +32,18 @@ function handle(ws: CustomWebSocket, game_id: number): void {
 			if (evicted) gamemanager.freezeEngineClock(game);
 			gamemanager.resumeEngineClock(game);
 			const gameStateMessage = gamestatebuilder.buildStateMessage(game, ourRole, false);
-			sendSocketMessage(ws, 'game', 'gamestate', gameStateMessage);
+			socketsend.send(ws, 'game', 'gamestate', gameStateMessage);
 		} else {
 			// Spectator path: attach, then send the role-agnostic state (no participantState overlay).
 			gamesockets.attachSpectator(game, ws);
 			const gameStateBaseMessage = gamestatebuilder.buildStateBase(game);
-			sendSocketMessage(ws, 'game', 'gamestate', gameStateBaseMessage);
+			socketsend.send(ws, 'game', 'gamestate', gameStateBaseMessage);
 		}
 	} else {
 		// The game isn't live in server memory (concluded + evicted, or never existed). The client
 		// requested a full `subscribe`, so it may not yet have seen the conclusion — tell it to reload
 		// (`notlive`). Fresh SSR then serves the dead review page (if logged) or the 404 page, and a
 		// review client fetches the dead state over HTTP.
-		sendSocketMessage(ws, 'game', 'notlive', undefined);
+		socketsend.send(ws, 'game', 'notlive', undefined);
 	}
 }
-
-// Exports ---------------------------------------------------------------------------------------
-
-export default {
-	handle,
-};

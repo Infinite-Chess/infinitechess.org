@@ -13,10 +13,10 @@ import type { AuthSeek } from './seekutility.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { OutSeek, SeekId } from '../../../shared/domain.js';
 
+import socketsend from '../../socket/socketSend.js';
 import seekutility from './seekutility.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
 import lobbysubscribers from './lobbysubscribers.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
 // Constants -------------------------------------------------------------------------------------
 
@@ -119,7 +119,7 @@ function getAllSafe(): OutSeek[] {
 function broadcast(): void {
 	const seekslist = getAllSafe();
 	for (const subbedSocket of lobbysubscribers.getAll()) {
-		sendSocketMessage(subbedSocket, 'lobby', 'seekslist', {
+		socketsend.send(subbedSocket, 'lobby', 'seekslist', {
 			seekslist,
 			ourseekid: getIDOfUser(subbedSocket.metadata.memberInfo),
 		});

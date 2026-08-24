@@ -19,6 +19,13 @@ import jsutil from '../../../shared/util/jsutil.js';
 
 import { logEventsAndPrint } from '../../utility/logEvents.js';
 
+// Constants --------------------------------------------------------------------------------------
+
+/** The options the `memberInfo` cookie is created with. */
+const COOKIE_OPTIONS = { httpOnly: false, sameSite: 'lax' as const, secure: true };
+
+// Functions --------------------------------------------------------------------------------------
+
 /**
  * Sets the `memberInfo` cookie (readable by JavaScript, not HTTP-only).
  * @param expiryMillis - How long, in milliseconds, the cookie should live (match the refresh token's expiry).
@@ -38,16 +45,14 @@ function createMemberInfoCookie(
 	};
 
 	res.cookie('memberInfo', JSON.stringify(memberInfo), {
-		httpOnly: false,
-		sameSite: 'lax',
-		secure: true,
+		...COOKIE_OPTIONS,
 		maxAge: expiryMillis,
 	});
 }
 
 /** Clears the `memberInfo` cookie, using the same options it was created with. */
 function deleteMemberInfoCookie(res: Response): void {
-	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'lax', secure: true });
+	res.clearCookie('memberInfo', COOKIE_OPTIONS);
 }
 
 /**

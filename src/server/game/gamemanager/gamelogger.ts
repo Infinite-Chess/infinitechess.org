@@ -12,13 +12,13 @@
 import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { RatingData } from '../../utility/ratingcalculation.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
-import type { MatchInfo, ServerGame } from './servergametypes.js';
+import type { PlayerGroup, Player } from '../../../shared/util/typeutil.js';
+import type { MatchInfo, PlayerData, ServerGame } from './servergametypes.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import { PlayerGroup, Player } from '../../../shared/util/typeutil.js';
 import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validleaderboard.js';
 
 import db from '../../database/database.js';
@@ -37,15 +37,20 @@ import {
 	updatePlayerLeaderboardRating,
 } from '../../database/leaderboardsManager.js';
 
-// Functions -------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
+
+/** A single player's outcome in a game, from that player's perspective. */
+type PlayerOutcome = 'wins' | 'losses' | 'draws' | 'aborted';
+
+// Functions ----------------------------------------------------------------------------------
 
 /**
  * Moves a completed game out of live storage and into permanent storage: it deletes the game's
  * `live_games` row, then adds to and updates the games, player_games, player_stats and
  * leaderboards tables in one atomic transaction (either all queries succeed, or none do).
- * @param servergame - The game to log
  * @returns The rating data if the game was rated and not aborted, otherwise undefined.
- * @throws If a database error occurs during the transaction. The game will be recorded to unloggedGames.txt for debugging info, it WON'T contain enough info for recovery.
+ * @throws If a database error occurs during the transaction. The game will be recorded to
+ *   unloggedGames.txt for debugging info, it WON'T contain enough info for recovery.
  */
 function log(servergame: ServerGame): RatingData | undefined {
 	// Dropped first, and outside the transaction below, so a logged game can never outlive its
@@ -55,7 +60,7 @@ function log(servergame: ServerGame): RatingData | undefined {
 	if (servergame.moves.length === 0) return; // Zero-move games are not recorded permanently.
 
 	try {
-		return db.transaction(() => logGame_orchestrator(servergame))();
+		return db.transaction(() => logGameInTransaction(servergame))();
 	} catch (error) {
 		// This block will only execute if the transaction throws an error, causing a rollback.
 		const errorMessage = jsutil.getErrorMessage(error);
@@ -78,7 +83,7 @@ function log(servergame: ServerGame): RatingData | undefined {
  * It is designed to throw an error on any failure to trigger a rollback of the database.
  * Either ALL operations succeed, or NONE do.
  */
-function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
+function logGameInTransaction(servergame: ServerGame): RatingData | undefined {
 	const { victor, condition: termination } = servergame.gameConclusion!;
 
 	// --- Part 1: Handle Rating Updates ---
@@ -112,9 +117,7 @@ function updateLeaderboardsInTransaction(
 	let ratingdata: RatingData = {};
 	for (const playerStr in match.playerData) {
 		const player: Player = Number(playerStr) as Player;
-		const user_id = match.playerData[player]?.identifier.signedIn
-			? match.playerData[player].identifier.user_id
-			: undefined;
+		const user_id = getUserID(match.playerData[player]);
 		if (user_id === undefined)
 			throw new Error(`Attempted to process rating for player ${playerStr} in rated game ${match.id} without a user_id.`); // prettier-ignore
 
@@ -148,9 +151,7 @@ function updateLeaderboardsInTransaction(
 	for (const playerStr in ratingdata) {
 		const player: Player = Number(playerStr) as Player;
 		// TS is annoying sometimes, we already know all the players have user_ids
-		const user_id = match.playerData[player]!.identifier.signedIn
-			? match.playerData[player]!.identifier.user_id
-			: undefined;
+		const user_id = getUserID(match.playerData[player]);
 		const data = ratingdata[player]!;
 		updatePlayerLeaderboardRating(
 			user_id!,
@@ -203,16 +204,14 @@ function addGameRecordsInTransaction(
 	// 2. Loop through players and insert records into the 'player_games' table.
 	for (const playerStr in match.playerData) {
 		const player = Number(playerStr) as Player;
-		const user_id = match.playerData[player]!.identifier.signedIn
-			? match.playerData[player]!.identifier.user_id
-			: undefined;
+		const user_id = getUserID(match.playerData[player]);
 		if (!user_id) continue;
 
 		insertPlayerGame({
 			user_id,
 			game_id: match.id,
 			player_number: player,
-			score: victor === undefined ? null : victor === player ? 1 : victor === null ? 0.5 : 0,
+			score: getScoreForPlayer(victor, player),
 			elo_at_game: ratingData?.[player]?.elo_at_game ?? null,
 			elo_change_from_game: ratingData?.[player]?.elo_change_from_game ?? null,
 			rating_deviation_at_game: ratingData?.[player]?.rating_deviation_at_game ?? null,
@@ -224,7 +223,7 @@ function addGameRecordsInTransaction(
 		insertEngineGame({
 			game_id: match.id,
 			player_number: engine.color,
-			score: victor === undefined ? null : victor === engine.color ? 1 : victor === null ? 0.5 : 0, // prettier-ignore
+			score: getScoreForPlayer(victor, engine.color), // prettier-ignore
 			engine: engine.engine,
 			engine_version: engine.version,
 			strength_level: engine.strengthLevel,
@@ -245,10 +244,8 @@ function updateAllPlayerStatsInTransaction(
 
 	for (const playerStr in match.playerData) {
 		const player = Number(playerStr) as Player;
-		const user_id = match.playerData[player]!.identifier.signedIn
-			? match.playerData[player]!.identifier.user_id
-			: undefined;
-		if (!user_id) continue; // Guests dono't have any stats to update.
+		const user_id = getUserID(match.playerData[player]);
+		if (!user_id) continue; // Guests don't have any stats to update.
 
 		updateSinglePlayerStatsInTransaction(user_id, {
 			moves_played_increment: playerMoveCounts[player]!,
@@ -302,10 +299,18 @@ function updateSinglePlayerStatsInTransaction(
 	}
 }
 
-// Helpers ---------------------------------------------------------------------------------------
+// Helpers ------------------------------------------------------------------------------------
 
-/** A single player's outcome in a game, from that player's perspective. */
-type PlayerOutcome = 'wins' | 'losses' | 'draws' | 'aborted';
+/** A player's user_id, or undefined if they're a guest. */
+function getUserID(data: PlayerData | undefined): number | undefined {
+	if (!data) return undefined;
+	return data.identifier.signedIn ? data.identifier.user_id : undefined;
+}
+
+/** A player's score in a concluded game: `undefined` victor = aborted (null score), `null` = draw. */
+function getScoreForPlayer(victor: Player | null | undefined, player: Player): number | null {
+	return victor === undefined ? null : victor === player ? 1 : victor === null ? 0.5 : 0;
+}
 
 /** Derives a player's outcome from the game's victor: `undefined` victor = aborted, `null` = draw. */
 function getOutcomeForPlayer(victor: Player | null | undefined, player: Player): PlayerOutcome {
@@ -388,7 +393,7 @@ function getPlayerMoveCountsInGame(servergame: ServerGame): PlayerGroup<number> 
 	return playerMoveCounts;
 }
 
-// Cheat-report overturn -------------------------------------------------------------------------
+// Cheat-report overturn ----------------------------------------------------------------------
 
 /**
  * Re-logs an already-logged game after a cheat report overturns its result to an abort.
@@ -508,7 +513,7 @@ function reversePlayerStatsForOverturn(
 	}
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	// Functions

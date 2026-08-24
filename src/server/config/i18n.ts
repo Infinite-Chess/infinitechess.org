@@ -3,7 +3,7 @@
 import i18next from 'i18next';
 
 import translationLoader from './translationLoader.js';
-import { loadComponentTranslations } from './componentTranslationLoader.js';
+import componentTranslationLoader from './componentTranslationLoader.js';
 
 /** Initializes i18next for the server process, loading languages from .toml files. */
 function initTranslations(): void {
@@ -20,7 +20,7 @@ function initTranslations(): void {
 	});
 
 	// Load NEW translations
-	loadComponentTranslations();
+	componentTranslationLoader.load();
 }
 
 export { initTranslations };

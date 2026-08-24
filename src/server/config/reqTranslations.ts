@@ -15,18 +15,21 @@
 import type { Express, Request } from 'express';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
-import { getScriptTranslations } from './componentTranslationLoader.js';
+import componentTranslationLoader from './componentTranslationLoader.js';
 
 /**
  * Builds a translations accessor for a resolved language: a Proxy that resolves each
  * component's script-facing strings lazily, so only the components actually read are
  * looked up. Shared by `req.t` (here) and `ws.t` (see socketOpen.ts).
  */
-export function buildTranslations(lang: string): ScriptTranslations {
+function build(lang: string): ScriptTranslations {
 	return new Proxy({} as ScriptTranslations, {
 		get(_target, component): unknown {
 			if (typeof component !== 'string') return undefined; // ignore symbol access (inspect, etc.)
-			return getScriptTranslations(component as keyof ScriptTranslations, lang);
+			return componentTranslationLoader.getScript(
+				component as keyof ScriptTranslations,
+				lang,
+			);
 		},
 	});
 }
@@ -35,11 +38,11 @@ export function buildTranslations(lang: string): ScriptTranslations {
  * Defines the lazy `req.t` getter on the Express request prototype. Call once at app setup.
  * @param app - The express application instance.
  */
-export function installReqTranslations(app: Express): void {
+function install(app: Express): void {
 	Object.defineProperty(app.request, 't', {
 		configurable: true,
 		get(this: Request): ScriptTranslations {
-			const translations = buildTranslations(this.lang);
+			const translations = build(this.lang);
 			// Cache on the instance: an own property shadows this prototype getter,
 			// so subsequent reads on the same request skip resolution entirely.
 			Object.defineProperty(this, 't', { value: translations, configurable: true });
@@ -47,3 +50,7 @@ export function installReqTranslations(app: Express): void {
 		},
 	});
 }
+
+// Exports ---------------------------------------------------------------------------------------
+
+export default { build, install };

@@ -13,7 +13,7 @@ import emailTemplates from './emailTemplates.js';
 import { getAppBaseUrl } from './urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from './logEvents.js';
-import { getScriptTranslations } from '../config/componentTranslationLoader.js';
+import componentTranslationLoader from '../config/componentTranslationLoader.js';
 
 // Email Senders -----------------------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ async function sendEmailConfirmation(
 		const baseUrl = getAppBaseUrl();
 		const verificationUrl = new URL(`${baseUrl}/verify/${verificationToken}`).toString();
 
-		const email = getScriptTranslations('email', language);
+		const email = componentTranslationLoader.getScript('email', language);
 		const t = email.verify;
 		const { html, text } = emailTemplates.renderActionEmail({
 			preheader: t.preheader,
@@ -82,7 +82,7 @@ async function sendPasswordResetEmail(
 	language: string,
 ): Promise<void> {
 	try {
-		const email = getScriptTranslations('email', language);
+		const email = componentTranslationLoader.getScript('email', language);
 		const t = email.reset;
 		const { html, text } = emailTemplates.renderActionEmail({
 			preheader: t.preheader,
@@ -117,7 +117,7 @@ async function sendPasswordChangedEmail(recipientEmail: string, language: string
 	const forgotPassUrl = new URL(`${baseUrl}/forgot-password`).toString();
 
 	try {
-		const email = getScriptTranslations('email', language);
+		const email = componentTranslationLoader.getScript('email', language);
 		const t = email.reset_receipt;
 		const resetLink = `<a href="${forgotPassUrl}" target="_blank" style="color:${emailTemplates.ACCENT_COLOR};text-decoration:underline;">${t.reset_link_text}</a>`;
 		await mailer.send('password-changed', {

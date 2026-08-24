@@ -64,6 +64,14 @@ const RD_UPDATE_FREQUENCY = 1000 * 60 * 60 * 24; // 24 hours
 // Functions -------------------------------------------------------------------------------------
 
 /**
+ * Derives whether a stored rating deviation is low enough for the rating to be
+ * displayed as confident. A null RD (pre-migration rows) falls back to confident.
+ */
+function isRatingConfident(rating_deviation: number | null): boolean {
+	return rating_deviation === null || rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
+}
+
+/**
  * Computes the effective rating deviation for the current rating period, as for Glicko-1 algorithm
  */
 function getTrueRD(rating_deviation: number, rd_last_update_date: string | null): number {
@@ -320,6 +328,7 @@ export default {
 	UNCERTAIN_LEADERBOARD_RD,
 	RD_UPDATE_FREQUENCY,
 	// Functions
+	isRatingConfident,
 	getTrueRD,
 	computeChanges,
 };

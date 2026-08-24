@@ -7,24 +7,19 @@
 
 import express from 'express';
 
+import rateLimiters from '../middleware/rateLimiters.js';
 import {
 	checkUsernameAvailable,
 	createNewMember,
 	pollPendingRegistration,
 	changePendingEmail,
 } from '../controllers/registerController.js';
-import {
-	createAccountLimiter,
-	createAccountAttemptLimiter,
-	verificationEmailLimiter,
-	usernameAvailabilityLimiter,
-} from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
-router.get('/availability', usernameAvailabilityLimiter, checkUsernameAvailable); // Currently ONLY can check username
-router.post('/', createAccountAttemptLimiter, createAccountLimiter, createNewMember);
+router.get('/availability', rateLimiters.usernameAvailability, checkUsernameAvailable); // Currently ONLY can check username
+router.post('/', rateLimiters.createAccountAttempt, rateLimiters.createAccount, createNewMember);
 router.get('/awaiting/status', pollPendingRegistration);
-router.put('/awaiting/email', verificationEmailLimiter, changePendingEmail);
+router.put('/awaiting/email', rateLimiters.verificationEmail, changePendingEmail);
 
 export default router;

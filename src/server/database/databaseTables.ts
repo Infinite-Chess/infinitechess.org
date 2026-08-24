@@ -11,22 +11,22 @@ import { removeFromBlacklist } from './blacklistManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 
-// Constants -----------------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /** 62**4: Limit of unique user id with 4-digit base-62 user ids! EXCLUSIVE. */
 const user_id_upper_cap: number = 14_776_336;
 /** 62**4: Limit of unique game id with 4-digit base-62 game ids! EXCLUSIVE. */
 const game_id_upper_cap: number = 14_776_336;
 
-// Table Columns -------------------------------------------------------------------------------
+// Table Columns ------------------------------------------------------------------------------
 
-// --- Accounts ---
+// --- Accounts -------------------------------------------------------------------------------
 
 /** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
-const uniqueMembersColumns: string[] = ['user_id', 'username', 'email'];
+const UNIQUE_MEMBERS_COLUMNS: string[] = ['user_id', 'username', 'email'];
 
 /** All columns of the members table. */
-const allMembersColumns: string[] = [
+const ALL_MEMBERS_COLUMNS: string[] = [
 	'user_id',
 	'username',
 	'email',
@@ -42,17 +42,17 @@ const allMembersColumns: string[] = [
 ];
 
 /** All columns of the rating_abuse table. */
-const allRatingAbuseColumns: string[] = [
+const ALL_RATING_ABUSE_COLUMNS: string[] = [
 	'user_id',
 	'leaderboard_id',
 	'game_count_since_last_check',
 	'last_alerted_at',
 ];
 
-// --- Concluded Games ---
+// --- Concluded Games ------------------------------------------------------------------------
 
 /** All columns of the games table. */
-const allGamesColumns: string[] = [
+const ALL_GAMES_COLUMNS: string[] = [
 	'game_id',
 	'date',
 	'base_time_seconds',
@@ -70,7 +70,7 @@ const allGamesColumns: string[] = [
 ];
 
 /** All columns of the player_games table. */
-const allPlayerGamesColumns: string[] = [
+const ALL_PLAYER_GAMES_COLUMNS: string[] = [
 	'user_id',
 	'game_id',
 	'player_number',
@@ -82,7 +82,7 @@ const allPlayerGamesColumns: string[] = [
 ];
 
 /** All columns of the engine_games table. */
-const allEngineGamesColumns: string[] = [
+const ALL_ENGINE_GAMES_COLUMNS: string[] = [
 	'game_id',
 	'player_number',
 	'score',
@@ -91,10 +91,10 @@ const allEngineGamesColumns: string[] = [
 	'strength_level',
 ];
 
-// --- Live Games ---
+// --- Live Games -----------------------------------------------------------------------------
 
 /** All columns of the live_games table. */
-const allLiveGamesColumns: string[] = [
+const ALL_LIVE_GAMES_COLUMNS: string[] = [
 	'game_id',
 	'time_created',
 	'variant',
@@ -112,7 +112,7 @@ const allLiveGamesColumns: string[] = [
 ];
 
 /** All columns of the live_player_games table. */
-const allLivePlayerGamesColumns: string[] = [
+const ALL_LIVE_PLAYER_GAMES_COLUMNS: string[] = [
 	'game_id',
 	'player_number',
 	'user_id',
@@ -125,7 +125,7 @@ const allLivePlayerGamesColumns: string[] = [
 ];
 
 /** All columns of the live_engine_games table. */
-const allLiveEngineGamesColumns: string[] = [
+const ALL_LIVE_ENGINE_GAMES_COLUMNS: string[] = [
 	'game_id',
 	'player_number',
 	'time_remaining_ms',
@@ -134,7 +134,7 @@ const allLiveEngineGamesColumns: string[] = [
 	'strength_level',
 ];
 
-// Functions -----------------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
 /** Initializes database schema, runs temporary migrations, and starts DB-related background tasks. */
 function initDatabase(): void {
@@ -466,7 +466,7 @@ function clearAllTables(): void {
 	db.run('PRAGMA foreign_keys = ON');
 }
 
-// Migration -----------------------------------------------------------------------------------
+// Migration ----------------------------------------------------------------------------------
 
 /**
  * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
@@ -706,22 +706,22 @@ function addModifierColumnsIfNeeded(): void {
 	}
 }
 
-// Exports -------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export {
 	// Constants
 	user_id_upper_cap,
 	game_id_upper_cap,
 	// Table Columns
-	uniqueMembersColumns,
-	allMembersColumns,
-	allRatingAbuseColumns,
-	allGamesColumns,
-	allPlayerGamesColumns,
-	allEngineGamesColumns,
-	allLiveGamesColumns,
-	allLivePlayerGamesColumns,
-	allLiveEngineGamesColumns,
+	UNIQUE_MEMBERS_COLUMNS,
+	ALL_MEMBERS_COLUMNS,
+	ALL_RATING_ABUSE_COLUMNS,
+	ALL_GAMES_COLUMNS,
+	ALL_PLAYER_GAMES_COLUMNS,
+	ALL_ENGINE_GAMES_COLUMNS,
+	ALL_LIVE_GAMES_COLUMNS,
+	ALL_LIVE_PLAYER_GAMES_COLUMNS,
+	ALL_LIVE_ENGINE_GAMES_COLUMNS,
 	// Functions
 	initDatabase,
 	generateTables,

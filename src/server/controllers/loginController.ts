@@ -14,7 +14,8 @@ import type { Request, Response } from 'express';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import { createNewSession } from './authenticationTokens/sessionManager.js';
+import roles from './roles.js';
+import sessionManager from './authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { testPasswordForRequest } from './authController.js';
 import { updateLoginCountAndLastSeen } from '../database/memberManager.js';
@@ -30,8 +31,8 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 	if (!identity) return;
 	// Correct password...
 
-	// CLEANUP: If the browser already holds a session, its token is about to be
-	// become dead weight from the new session's cookie, so invalidate it server-side.
+	// CLEANUP: If the browser already holds a session, its old token is about to become
+	// dead weight once the new session's cookie replaces it, so invalidate it server-side.
 	// This can happen when a user tries to log in while already logged in.
 	const oldRefreshToken = req.cookies['jwt'];
 	if (typeof oldRefreshToken === 'string' && oldRefreshToken) {
@@ -50,9 +51,9 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 
 	try {
 		// The roles fetched from the database is a stringified json string array, parse it here!
-		const parsedRoles = identity.roles !== null ? JSON.parse(identity.roles) : null;
+		const parsedRoles = roles.parse(identity.roles);
 
-		createNewSession(req, res, identity.user_id, identity.username, parsedRoles, keepLoggedIn);
+		sessionManager.create(req, res, identity.user_id, identity.username, parsedRoles, keepLoggedIn); // prettier-ignore
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorMessage(error);
 		// Log the detailed error for server-side debugging.

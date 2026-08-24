@@ -15,12 +15,12 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import activeplayers from './activeplayers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /** Whether to log games to the console as they enter and leave this collection. */
 const PRINT_GAMES = true;
 
-// State -----------------------------------------------------------------------------------------
+// State --------------------------------------------------------------------------------------
 
 /**
  * The object containing all currently active games. Each game's id is the key: `{ id: Game }`
@@ -31,7 +31,7 @@ const PRINT_GAMES = true;
  */
 const activeGames: Record<number, ServerGame> = {};
 
-// Membership ------------------------------------------------------------------------------------
+// Membership ---------------------------------------------------------------------------------
 
 /**
  * Returns an id that is unique across BOTH the games table AND the live games in memory.
@@ -56,7 +56,7 @@ function remove(id: number): void {
 	delete activeGames[id];
 }
 
-// Lookups ---------------------------------------------------------------------------------------
+// Lookups ------------------------------------------------------------------------------------
 
 /** Returns the live game with the specified id, if it exists. */
 function getByID(id: number): ServerGame | undefined {
@@ -101,7 +101,7 @@ function hasMember(username: string): boolean {
 	return false;
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	// Constants

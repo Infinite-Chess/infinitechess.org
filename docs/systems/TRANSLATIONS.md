@@ -22,7 +22,7 @@ Config lives in [src/server/config/translationconfig.ts](/src/server/config/tran
 
 ## Boot
 
-[src/server/config/i18n.ts](/src/server/config/i18n.ts) calls `loadComponentTranslations()` once at startup. That function ([componentTranslationLoader.ts](/src/server/config/componentTranslationLoader.ts)):
+[src/server/config/i18n.ts](/src/server/config/i18n.ts) calls `componentTranslationLoader.load()` once at startup. That function ([componentTranslationLoader.ts](/src/server/config/componentTranslationLoader.ts)):
 
 1. Scans `translation/` for subdirectories (skipping `EXCLUDED_DIRS`).
 2. Parses every `<lang>.toml` and runs all string values through an XSS filter that whitelists only `em / strong / b / i / br / span[class]`.
@@ -79,7 +79,7 @@ res.status(400).send(req.t.responses.auth.invalid_token);
 
 For socket replies, the connection-bound `ws.t` is the equivalent — a `ScriptTranslations` accessor of the same shape, read the same way. It's built once when the socket connects ([socketOpen.ts](/src/server/socket/socketOpen.ts)) and lives on the `CustomWebSocket` ([socketTypes.ts](/src/server/socket/socketTypes.ts)). Unlike `req.t`, there's no lazy getter: the language is fixed at connection time, so the accessor is assigned eagerly — the Proxy still resolves each component lazily on first access.
 
-When the caller holds only a resolved language code (e.g. SSR template-render code, or a queued email sender that resolved the language from the DB), use the lower-level primitive `getScriptTranslations(component, lang)` that the bound accessors delegate to.
+When the caller holds only a resolved language code (e.g. SSR template-render code, or a queued email sender that resolved the language from the DB), use the lower-level primitive `componentTranslationLoader.getScript(component, lang)` that the bound accessors delegate to.
 
 There's nothing structurally special about `responses` — any component's script-facing strings are reachable the same way. The `responses` convention exists so server-emitted strings are visually grouped in one folder for translators.
 
@@ -100,7 +100,7 @@ Keep the whole phrase in one key with placeholders — never assemble sentences 
 
 ## Type generation
 
-`npm run generate:types` (auto-run by `build` and `dev:build`) executes [scripts/generate-component-translation-types.ts](/scripts/generate-component-translation-types.ts), which produces **[src/shared/types/script-translations.d.ts](/src/shared/types/script-translations.d.ts)** — `export interface ScriptTranslations`, one property per component with script-facing strings. Lives in `shared/` so both sides can consume it: client scripts read `t.header.x.y` via the global declared in [src/client/types/globals.d.ts](/src/client/types/globals.d.ts); the server reads it through the request-bound `req.t` (typed as `ScriptTranslations`) or the underlying `getScriptTranslations<C>(component, lang): ScriptTranslations[C]` primitive.
+`npm run generate:types` (auto-run by `build` and `dev:build`) executes [scripts/generate-component-translation-types.ts](/scripts/generate-component-translation-types.ts), which produces **[src/shared/types/script-translations.d.ts](/src/shared/types/script-translations.d.ts)** — `export interface ScriptTranslations`, one property per component with script-facing strings. Lives in `shared/` so both sides can consume it: client scripts read `t.header.x.y` via the global declared in [src/client/types/globals.d.ts](/src/client/types/globals.d.ts); the server reads it through the request-bound `req.t` (typed as `ScriptTranslations`) or the underlying `componentTranslationLoader.getScript<C>(component, lang): ScriptTranslations[C]` primitive.
 
 Re-run `npm run generate:types` whenever you add a script-facing key.
 
@@ -124,7 +124,7 @@ Re-run `npm run generate:types` whenever you add a script-facing key.
 | ---------------------------------- | ------------------------------------------------------------------------------------- |
 | Key missing in `<lang>.toml`       | Falls back to English via `deepMerge`                                                 |
 | Key stale (English source changed) | Rendered as-is (Weblate flags staleness elsewhere)                                    |
-| Whole `<lang>.toml` missing        | `getTemplateTranslations` / `getScriptTranslations` fall back to English              |
+| Whole `<lang>.toml` missing        | `componentTranslationLoader.getTemplate` / `.getScript` fall back to English          |
 | Component folder missing English   | Loader throws at startup                                                              |
 | Key absent from English source     | Compile-time error (the property doesn't exist in the generated `ScriptTranslations`) |
 
@@ -133,7 +133,7 @@ Re-run `npm run generate:types` whenever you add a script-facing key.
 The system today runs **alongside** the legacy i18next system. The redesign roadmap ([todo.md § Translation System Refactor](/dev-utils/REDESIGN/todo.md)) removes the old system entirely. Once that work lands, expect the following differences from what's documented above:
 
 - **`i18next` dependency dropped.** The package is removed from `package.json`. Language resolution is handled by the `req.lang` lazy getter ([reqLanguage.ts](/src/server/middleware/reqLanguage.ts)).
-- **Legacy `translate.ts` functions deleted.** `getTranslation(key, lang)` is removed along with i18next — they front the old monolith TOML system. Every current call site holds a `req` or a `ws`, so they migrate onto the request/connection-bound translations accessors (`req.t` / `ws.t` — see [Server-emitted response strings](#server-emitted-response-strings)); the rare future caller that holds only a bare language code (e.g. a queued email sender resolving the language from the DB) uses the exported `getScriptTranslations(component, lang)` primitive directly.
+- **Legacy `translate.ts` functions deleted.** `getTranslation(key, lang)` is removed along with i18next — they front the old monolith TOML system. Every current call site holds a `req` or a `ws`, so they migrate onto the request/connection-bound translations accessors (`req.t` / `ws.t` — see [Server-emitted response strings](#server-emitted-response-strings)); the rare future caller that holds only a bare language code (e.g. a queued email sender resolving the language from the DB) uses the exported `componentTranslationLoader.getScript(component, lang)` primitive directly.
 - **Legacy loader deleted.** `src/server/config/translationLoader.ts` is removed. `componentTranslationLoader.ts` is renamed (e.g. to `translationLoader.ts`) since it's the only one left.
 - **Legacy type generator removed.** `scripts/generate-translation-types.ts` is deleted and dropped from the `generate:types` npm script. Only `generate-component-translation-types.ts` remains.
 - **Legacy type files deleted.** `src/types/translations.ts` is removed, along with `"../types/**/*"` from the `include` of [src/shared/tsconfig.json](/src/shared/tsconfig.json) — the one place it's still listed (client and server reach `src/types/` through their project reference to shared). The `LegacyClientTranslations` type and the `translations` global declaration in [src/client/types/globals.d.ts](/src/client/types/globals.d.ts) are deleted (they only exist to type EJS-era pages still using the flat-file `translations` object); `const t: ScriptTranslations` stays.

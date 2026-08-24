@@ -15,18 +15,18 @@ import security from './middleware/security.js';
 import apiRouter from './routes/api.js';
 import rateLimit from './middleware/rateLimit.js';
 import reqLogger from './utility/reqLogger.js';
+import rootRouter from './routes/root.js';
 import htmlCookies from './middleware/htmlCookies.js';
+import reqLanguage from './config/reqLanguage.js';
 import staticAssets from './middleware/staticAssets.js';
 import errorHandler from './middleware/errorHandler.js';
 import webhooksRouter from './routes/webhooks.js';
 import requestParsers from './middleware/requestParsers.js';
-import { rootRouter } from './routes/root.js';
+import reqTranslations from './config/reqTranslations.js';
 import htmlCacheControl from './middleware/htmlCacheControl.js';
 import { assignRequestID } from './utility/requestContext.js';
 import { initTranslations } from './config/i18n.js';
 import { configureNunjucks } from './config/nunjucks.js';
-import { installReqTranslations } from './config/reqTranslations.js';
-import { initLanguageResolution, installReqLanguage } from './config/reqLanguage.js';
 
 /**
  * Assembles the request pipeline onto the app, in order.
@@ -89,12 +89,12 @@ configureNunjucks(app);
 initTranslations();
 
 // Precompute language-resolution structures from the now-loaded supported-language set.
-initLanguageResolution();
+reqLanguage.init();
 
 // Install the lazy `req.lang` (resolved language) and `req.t` (translations) getters on
 // the request prototype, so server code can read either anywhere in the pipeline.
-installReqLanguage(app);
-installReqTranslations(app);
+reqLanguage.install(app);
+reqTranslations.install(app);
 
 configurePipeline(app); // Assemble the request pipeline
 

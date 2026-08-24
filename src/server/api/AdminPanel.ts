@@ -9,9 +9,9 @@ import type { Request, Response } from 'express';
 
 import validators from '../../shared/util/validators.js';
 
+import roles from '../controllers/roles.js';
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
-import { areRolesHigherInPriority } from '../controllers/roles.js';
 import { refreshGitHubContributorsList } from './GitHub.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { addToBlacklist, removeFromBlacklist } from '../database/blacklistManager.js';
@@ -19,7 +19,7 @@ import { getMemberDataByCriteria, isValidDeleteReason } from '../database/member
 
 // Constants -------------------------------------------------------------------------
 
-const validCommands = [
+const VALID_COMMANDS = [
 	'ban',
 	'unban',
 	'delete',
@@ -106,6 +106,7 @@ function verifyBodyHasCommand(req: Request, res: Response): string | undefined {
 	return command;
 }
 
+/** Splits a raw admin command into its command word and arguments, honoring double-quoted args. */
 function parseArgumentsFromCommand(command: string): string[] {
 	// Parse command
 	const commandAndArgs: string[] = [];
@@ -156,9 +157,9 @@ function deleteCommand(
 
 	// They were found...
 	const adminsRoles = req.memberInfo?.signedIn ? req.memberInfo.roles : null;
-	const rolesOfAffectedUser = record.roles === null ? null : JSON.parse(record.roles);
+	const rolesOfAffectedUser = roles.parse(record.roles);
 	// Don't delete them if they are equal or higher than your status
-	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser))
+	if (!roles.areHigherInPriority(adminsRoles, rolesOfAffectedUser))
 		return sendAndLogResponse(res, 403, 'Forbidden to delete ' + record.username + '.');
 
 	if (!isValidDeleteReason(reason)) throw Error(`Delete reason (${reason}) is invalid.`);
@@ -311,7 +312,7 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 	if (commandAndArgs.length === 1) {
 		res.status(200).send(
 			'Commands: ' +
-				validCommands.join(', ') +
+				VALID_COMMANDS.join(', ') +
 				'\nUse help <command> to get more information about a command.',
 		);
 		return;
@@ -367,7 +368,7 @@ function logCommand(command: string, req: Request): void {
 	} else throw new Error('Admin SHOULD have been logged in by this point. DANGEROUS');
 }
 
-function sendAndLogResponse(res: Response, code: number, message: any): void {
+function sendAndLogResponse(res: Response, code: number, message: string): void {
 	res.status(code).send(message);
 	// Also log the sent response
 	logEventsAndPrint('Result:   ' + message + '\n', 'adminCommands');

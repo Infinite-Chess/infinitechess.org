@@ -5,13 +5,13 @@ import express, { NextFunction, Request, RequestHandler, Response } from 'expres
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import send404 from '../middleware/send404.js';
+import turnstile from '../controllers/turnstile.js';
 import renderContext from '../utility/renderContext.js';
 import { resolveAuth } from '../middleware/resolveAuth.js';
 import { getGamePageState } from '../controllers/gamePageController.js';
-import { getVerifyPageState } from '../controllers/verifyAccountController.js';
-import { TURNSTILE_SITE_KEY } from '../controllers/turnstile.js';
+import analysisPageController from '../controllers/analysisPageController.js';
+import verifyAccountController from '../controllers/verifyAccountController.js';
 import { getRandomSplashText } from './splashTexts.js';
-import { getAnalysisPageState } from '../controllers/analysisPageController.js';
 import { getAwaitingPageState } from '../controllers/registerController.js';
 import { getResetPasswordPageState } from '../controllers/passwordResetController.js';
 
@@ -67,7 +67,7 @@ page(
 page(
 	'/analysis(.html)?/:id?/:color(w|b)?',
 	(req: Request, res: Response) => {
-		const state = getAnalysisPageState(req);
+		const state = analysisPageController.getPageState(req);
 		if (state === undefined) return send404(req, res); // Malformed or nonexistent id
 		res.render('analysis.njk', state);
 	},
@@ -80,7 +80,7 @@ page('/forgot-password(.html)?', (_req: Request, res: Response) => res.render('f
 page('/register(.html)?', (req: Request, res: Response) => {
 	// Redirect to check-your-email page if register is pending
 	if (getAwaitingPageState(req)) res.redirect('/register/awaiting');
-	else res.render('register.njk', { turnstileSiteKey: TURNSTILE_SITE_KEY });
+	else res.render('register.njk', { turnstileSiteKey: turnstile.SITE_KEY });
 });
 page('/register/awaiting(.html)?', (req: Request, res: Response) => {
 	const state = getAwaitingPageState(req);
@@ -92,7 +92,7 @@ page('/verify/:token', (req: Request, res: Response) => {
 	// The token sits in the URL; keep it out of any Referer
 	// header sent to third-party resources to avoid leaking it.
 	res.setHeader('Referrer-Policy', 'no-referrer');
-	res.render('verify.njk', getVerifyPageState(req));
+	res.render('verify.njk', verifyAccountController.getPageState(req));
 });
 page('/reset-password/:token', (req: Request, res: Response) => {
 	// The token sits in the URL; keep it out of any Referer
@@ -113,4 +113,4 @@ page('/patron(.html)?', (_req: Request, res: Response) => res.render('patron.njk
 // Legacy URL redirects (permanent 301)
 router.get('/termsofservice(.html)?', (_req: Request, res: Response) => res.redirect(301, '/terms')); // prettier-ignore
 
-export { router as rootRouter };
+export default router;

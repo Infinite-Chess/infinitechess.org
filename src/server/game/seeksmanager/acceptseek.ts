@@ -13,6 +13,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 
+import socketsend from '../../socket/socketSend.js';
 import gameutility from '../gamemanager/gameutility.js';
 import gamemanager from '../gamemanager/gamemanager.js';
 import activeseeks from './activeseeks.js';
@@ -21,7 +22,6 @@ import activeplayers from '../gamemanager/activeplayers.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
 import lobbysubscribers from './lobbysubscribers.js';
 import { logEventsAndPrint } from '../../utility/logEvents.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
 /**
  * Attempts to accept a seek of given id.
@@ -30,13 +30,13 @@ import { sendSocketMessage } from '../../socket/socketSend.js';
  */
 function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 	if (activeplayers.hasSocket(ws)) {
-		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
+		return socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 	}
 
 	// Does the seek still exist?
 	const seek = activeseeks.getByID(messageContents);
 	if (!seek) {
-		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.game_aborted);
+		socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.game_aborted);
 		return;
 	}
 
@@ -50,12 +50,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	// Make sure it's legal for them to accept. (Not legal if they are a guest, and the seek is RATED)
 	if (seek.mode === 'rated' && !user.signedIn) {
-		return sendSocketMessage(
-			ws,
-			'general',
-			'notify',
-			ws.t.responses.seeks.rated_requires_signin,
-		);
+		return socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.rated_requires_signin);
 	}
 
 	// Accept the seek!

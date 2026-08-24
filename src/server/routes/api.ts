@@ -2,7 +2,7 @@
 
 /**
  * Aggregates every /api/* sub-router and one-off endpoint into a single apiRouter.
- * Mounted at /api in middleware.ts (which is the only place the /api prefix lives).
+ * Mounted at /api in app.ts (which is the only place the /api prefix lives).
  * Each sub-router declares its own auth model; the one-off endpoints below don't
  * form resource families of their own.
  */
@@ -14,6 +14,7 @@ import express from 'express';
 import authRouter from './auth.js';
 import newsRouter from './news.js';
 import adminRouter from './admin.js';
+import rateLimiters from '../middleware/rateLimiters.js';
 import membersRouter from './members.js';
 import registerRouter from './register.js';
 import passwordRouter from './password.js';
@@ -24,9 +25,8 @@ import leaderboardsRouter from './leaderboards.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { getContributors } from '../api/GitHub.js';
 import practiceProgressRouter from './practiceProgress.js';
+import verifyAccountController from '../controllers/verifyAccountController.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
-import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
-import { seekPreviewLimiter, gameStateLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
@@ -39,7 +39,7 @@ router.use('/members', membersRouter);
 // Password-reset router (public, pre-login)
 router.use('/', passwordRouter);
 
-// One-off endpoints that don't form resource families ----------------------------
+// One-off endpoints that don't form resource families ----------------------------------------
 
 /** `GET /api/contributors` — returns the JSON list of project contributors. */
 router.get('/contributors', (_req: Request, res: Response) => {
@@ -47,16 +47,16 @@ router.get('/contributors', (_req: Request, res: Response) => {
 	res.json(contributors);
 });
 
-router.get('/seek-preview/:seekId', seekPreviewLimiter, getSeekPreview);
+router.get('/seek-preview/:seekId', rateLimiters.seekPreview, getSeekPreview);
 
-router.get('/game/:id', gameStateLimiter, getGameState);
+router.get('/game/:id', rateLimiters.gameState, getGameState);
 
 // Endpoint called by the GitHub Actions deploy workflow before pm2 reload
 router.post('/prepare-restart', handlePrepareRestart);
 
-router.post('/verify/:token', verifyPendingRegistration);
+router.post('/verify/:token', verifyAccountController.verifyPendingRegistration);
 
-// Routers that manage their own authentication (per-router or per-route resolveAuth) -
+// Routers that manage their own authentication (per-router or per-route resolveAuth) ---------
 
 router.use('/', authRouter); // login + logout (both public)
 router.use('/editor-saves', editorSavesRouter);

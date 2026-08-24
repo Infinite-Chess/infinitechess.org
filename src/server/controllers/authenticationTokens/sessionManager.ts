@@ -20,8 +20,11 @@ import {
 	signRefreshToken,
 } from '../../utility/tokenSigner.js';
 
-const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
-// const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 10; // 10s
+// Constants ---------------------------------------------------------------------------------------
+
+/** How old a session must be before its refresh token is renewed. */
+const MIN_TIME_TO_WAIT_TO_RENEW_REFRESH_TOKENS_MS = 1000 * 60 * 60 * 24; // 1 day
+// const MIN_TIME_TO_WAIT_TO_RENEW_REFRESH_TOKENS_MS = 1000 * 10; // Debug: 10s
 
 // Renewing & Revoking Sessions --------------------------------------------------------------------
 
@@ -29,7 +32,7 @@ const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
  * Makes sure a user's session is still fresh, renewing it if it's older than a day.
  * @throws If signing the refresh token or a database operation fails.
  */
-export function freshenSession(
+function freshen(
 	req: Request,
 	res: Response,
 	user_id: number,
@@ -42,9 +45,7 @@ export function freshenSession(
 	if (tokenRecord.consumed_at) return;
 
 	const timeSinceCreated = Date.now() - tokenRecord.created_at;
-	if (timeSinceCreated < minTimeToWaitToRenewRefreshTokensMillis) return;
-
-	// console.log(`Renewing member "${username}"s session by issuing them new login cookies! -------`); // prettier-ignore
+	if (timeSinceCreated < MIN_TIME_TO_WAIT_TO_RENEW_REFRESH_TOKENS_MS) return;
 
 	// Renew with the same session type the user originally chose
 	const keepLoggedIn = Boolean(tokenRecord.is_persistent);
@@ -75,7 +76,7 @@ export function freshenSession(
  * 						 window before it logs them out due to inactivity.
  * @throws If signing the refresh token or the database write fails.
  */
-export function createNewSession(
+function create(
 	req: Request,
 	res: Response,
 	user_id: number,
@@ -104,7 +105,7 @@ export function createNewSession(
  * This is typically done in a logout route handler.
  * @param res - The response object.
  */
-export function revokeSession(res: Response): void {
+function revoke(res: Response): void {
 	deleteSessionCookies(res);
 	prefsCookie.remove(res); // Even though this cookie expires after 10 seconds, it's good to delete it here anyway.
 	practiceProgressCookie.remove(res);
@@ -141,3 +142,12 @@ function deleteSessionCookies(res: Response): void {
 	deleteRefreshTokenCookie(res);
 	deleteMemberInfoCookie(res);
 }
+
+// Exports -----------------------------------------------------------------------------------------
+
+export default {
+	// Renewing & Revoking Sessions
+	freshen,
+	create,
+	revoke,
+};

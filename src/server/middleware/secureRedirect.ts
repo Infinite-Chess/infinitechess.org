@@ -4,12 +4,7 @@ import type { Request, Response, NextFunction } from 'express';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
-/**
- * Middleware that redirects all http requests to https
- * @param req - The request object
- * @param res - The response object
- * @param next - The function to call, when finished, to continue the middleware waterfall.
- */
+/** Middleware that redirects all http requests to https, and sets HSTS on every response. */
 const secureRedirect = (req: Request, res: Response, next: NextFunction): void => {
 	// 1-year is minimum remember time with preload parameter. Preload means google will always pre-tell clickers-of-your-site to connect via https.
 	res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');

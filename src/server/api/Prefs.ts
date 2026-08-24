@@ -40,7 +40,6 @@ function putPrefs(req: Request, res: Response): void {
 		// Update the preferences column in the database
 		updateMemberColumns(user_id, { preferences: JSON.stringify(parseResult.data) });
 
-		// console.log(`Successfully saved member "${username}" of id "${user_id}"s user preferences.`); // prettier-ignore
 		res.sendStatus(200);
 	} catch {
 		// DB error (already logged)

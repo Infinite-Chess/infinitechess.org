@@ -1,7 +1,10 @@
 // src/server/middleware/banned.ts
 
 /**
- * BLACKLISTED EMAILS are now handled in the email_blacklist database table!
+ * Legacy JSON-backed ban store for IPs and browser-ids, consulted at startup of each request.
+ *
+ * Blacklisted EMAILS are handled separately in the email_blacklist database table
+ * (see blacklistManager.ts).
  */
 
 import fs from 'fs';
@@ -49,12 +52,14 @@ try {
 	}
 }
 
-function isIPBanned(ip: string): boolean {
+export function isIP(ip: string): boolean {
 	return bannedJSON.IPs[ip] !== undefined;
 }
 
-function isBrowserIDBanned(browserID: string): boolean {
+export function isBrowserID(browserID: string): boolean {
 	return bannedJSON['browser-ids'][browserID] !== undefined;
 }
 
-export { isIPBanned, isBrowserIDBanned };
+// Exports ------------------------------------------------------------------------------------
+
+export default { isIP, isBrowserID };

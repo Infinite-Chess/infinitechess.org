@@ -12,14 +12,15 @@ import type { CustomWebSocket } from './socketTypes.js';
 import gamemanager from '../game/gamemanager/gamemanager.js';
 import lobbymanager from '../game/seeksmanager/lobbymanager.js';
 
-// Types -------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Every subscription list a socket can be attached to, each with its own detach handler run on close. */
-export type SubscriptionKey = keyof CustomWebSocket['metadata']['subscriptions'];
+type SubscriptionKey = keyof CustomWebSocket['metadata']['subscriptions'];
 
-// Subbing -------------------------------------------------------------------
+// Subbing ------------------------------------------------------------------------------------
 
-function handleSubbing(ws: CustomWebSocket, value: 'lobby'): void {
+/** Subscribes a socket to a stream's updates. Only 'lobby' is client-requestable. */
+function sub(ws: CustomWebSocket, value: 'lobby'): void {
 	// What are they wanting to subscribe to for updates?
 	switch (value) {
 		case 'lobby':
@@ -30,17 +31,16 @@ function handleSubbing(ws: CustomWebSocket, value: 'lobby'): void {
 	}
 }
 
-// Unsubbing -------------------------------------------------------------------
-
-// Set involuntary to true if you don't immediately want
-// to disconnect them, but say after a short forgiveness period.
+// Unsubbing ----------------------------------------------------------------------------------
 
 /**
  * Unsubscribes a socket from a subscription list.
  * Entry points: Socket closure, or the client explicitly requested to unsub.
  * Clients may only request 'lobby' — the other keys are detached server-side.
+ * @param involuntary - True when the socket didn't choose to leave, to give
+ *   e.g. a disconnect cushion instead of an immediate teardown.
  */
-function handleUnsubbing(ws: CustomWebSocket, key: SubscriptionKey, involuntary: boolean): void {
+function unsub(ws: CustomWebSocket, key: SubscriptionKey, involuntary: boolean): void {
 	// What are they wanting to unsubscribe from updates from?
 	switch (key) {
 		case 'lobby':
@@ -59,11 +59,17 @@ function handleUnsubbing(ws: CustomWebSocket, key: SubscriptionKey, involuntary:
 }
 
 /** The socket is closing: Unsubscribe them from all subscriptions they are in. */
-function unsubSocketFromAllSubs(ws: CustomWebSocket, involuntary: boolean): void {
+function unsubFromAll(ws: CustomWebSocket, involuntary: boolean): void {
 	const subscriptionsKeys = Object.keys(ws.metadata.subscriptions) as SubscriptionKey[];
-	for (const key of subscriptionsKeys) handleUnsubbing(ws, key, involuntary);
+	for (const key of subscriptionsKeys) unsub(ws, key, involuntary);
 }
 
-// Exports ------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
-export { handleSubbing, handleUnsubbing, unsubSocketFromAllSubs };
+export default {
+	// Subbing
+	sub,
+	// Unsubbing
+	unsub,
+	unsubFromAll,
+};

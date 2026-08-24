@@ -73,22 +73,8 @@ const PositionNameParamSchema = z.strictObject({
 
 /** `GET /api/editor-saves` — returns `{ saves }` (position_id, name, size) for the signed-in user. */
 function getSavedPositions(req: Request, res: Response): void {
-	if (!req.memberInfo) {
-		res.status(500).json({
-			message: req.t.responses.editor_saves.server_error,
-		}); // `memberInfo` should have been set by auth middleware, even if not signed in
-		return;
-	}
-
-	// Check if user is authenticated
-	if (!req.memberInfo.signedIn) {
-		res.status(401).json({
-			message: req.t.responses.editor_saves.must_be_signed_in,
-		});
-		return;
-	}
-
-	const userId = req.memberInfo.user_id;
+	const userId = getSignedInUserIdOrRespond(req, res);
+	if (userId === undefined) return; // Response already sent
 
 	try {
 		// Get all saved positions for this user
@@ -111,22 +97,8 @@ function getSavedPositions(req: Request, res: Response): void {
  * same name) and returns `{ saves }`. Body: `{ name, piece_count, timestamp, icn, pawn_double_push?, castling? }`.
  */
 function savePosition(req: Request, res: Response): void {
-	if (!req.memberInfo) {
-		res.status(500).json({
-			message: req.t.responses.editor_saves.server_error,
-		}); // memberInfo should have been set by auth middleware, even if not signed in
-		return;
-	}
-
-	// Check if user is authenticated
-	if (!req.memberInfo.signedIn) {
-		res.status(401).json({
-			message: req.t.responses.editor_saves.must_be_signed_in,
-		});
-		return;
-	}
-
-	const userId = req.memberInfo.user_id;
+	const userId = getSignedInUserIdOrRespond(req, res);
+	if (userId === undefined) return; // Response already sent
 
 	// Validate request body with Zod
 	const parseResult = SavePositionBodySchema.safeParse(req.body);
@@ -176,22 +148,8 @@ function savePosition(req: Request, res: Response): void {
 
 /** `GET /api/editor-saves/:position_name` — returns the signed-in user's saved position of that name. */
 function getPosition(req: Request, res: Response): void {
-	if (!req.memberInfo) {
-		res.status(500).json({
-			message: req.t.responses.editor_saves.server_error,
-		}); // memberInfo should have been set by auth middleware, even if not signed in
-		return;
-	}
-
-	// Check if user is authenticated
-	if (!req.memberInfo.signedIn) {
-		res.status(401).json({
-			message: req.t.responses.editor_saves.must_be_signed_in,
-		});
-		return;
-	}
-
-	const userId = req.memberInfo.user_id;
+	const userId = getSignedInUserIdOrRespond(req, res);
+	if (userId === undefined) return; // Response already sent
 
 	// Validate position_name from URL params with Zod
 	const parseResult = PositionNameParamSchema.safeParse(req.params);
@@ -238,22 +196,8 @@ function getPosition(req: Request, res: Response): void {
 
 /** `DELETE /api/editor-saves/:position_name` — deletes the signed-in user's saved position of that name; returns `{ saves }`. */
 function deletePosition(req: Request, res: Response): void {
-	if (!req.memberInfo) {
-		res.status(500).json({
-			message: req.t.responses.editor_saves.server_error,
-		}); // memberInfo should have been set by auth middleware, even if not signed in
-		return;
-	}
-
-	// Check if user is authenticated
-	if (!req.memberInfo.signedIn) {
-		res.status(401).json({
-			message: req.t.responses.editor_saves.must_be_signed_in,
-		});
-		return;
-	}
-
-	const userId = req.memberInfo.user_id;
+	const userId = getSignedInUserIdOrRespond(req, res);
+	if (userId === undefined) return; // Response already sent
 
 	// Validate position_name from URL params with Zod
 	const parseResult = PositionNameParamSchema.safeParse(req.params);
@@ -289,6 +233,30 @@ function deletePosition(req: Request, res: Response): void {
 			message: req.t.responses.editor_saves.server_error,
 		});
 	}
+}
+
+/**
+ * Guards an endpoint to signed-in members only. Responds with the appropriate error
+ * (500 if auth middleware failed to set `memberInfo`, 401 if signed out) and returns
+ * undefined; otherwise returns the member's user_id.
+ */
+function getSignedInUserIdOrRespond(req: Request, res: Response): number | undefined {
+	if (!req.memberInfo) {
+		res.status(500).json({
+			message: req.t.responses.editor_saves.server_error,
+		});
+		return undefined;
+	}
+
+	// Check if user is authenticated
+	if (!req.memberInfo.signedIn) {
+		res.status(401).json({
+			message: req.t.responses.editor_saves.must_be_signed_in,
+		});
+		return undefined;
+	}
+
+	return req.memberInfo.user_id;
 }
 
 // Exports -----------------------------------------------------------------------------------

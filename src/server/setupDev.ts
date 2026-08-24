@@ -1,13 +1,21 @@
 // src/server/setupDev.ts
 
+/**
+ * Development-environment bootstrap: seeds local dev/test accounts (owner/admin/patron/member)
+ * and prints the local URL. No-ops in production.
+ */
+
 import validcheckmates from '../shared/chess/util/validcheckmates.js';
 
-import { giveRole } from './controllers/roles.js';
+import roles from './controllers/roles.js';
 import { generateAccount } from './controllers/registerController.js';
 import { isUsernameTaken, updateMemberColumns } from './database/memberManager.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
+// Functions --------------------------------------------------------------------------------------
+
+/** Seeds the dev accounts and prints the local URL. Does nothing in production. */
 export function initDevEnvironment(): void {
 	if (process.env['NODE_ENV'] === 'production') return;
 
@@ -17,6 +25,7 @@ export function initDevEnvironment(): void {
 	console.log(`Local website is hosted at https://localhost:${process.env['HTTPSPORT_LOCAL']}/`);
 }
 
+/** Creates the standard development accounts (idempotent). */
 async function ensureDevelopmentAccounts(): Promise<void> {
 	if (!isUsernameTaken('owner')) {
 		const user_id = await generateAccount({
@@ -24,8 +33,8 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 			email: '4@gmail.com',
 			password: '1',
 		});
-		giveRole(user_id, 'owner');
-		giveRole(user_id, 'admin');
+		roles.add(user_id, 'owner');
+		roles.add(user_id, 'admin');
 
 		// Give Owner checkmate progression for debugging purposes
 		// Bronze
@@ -45,7 +54,7 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 			email: '3@gmail.com',
 			password: '1',
 		});
-		giveRole(user_id, 'admin');
+		roles.add(user_id, 'admin');
 	}
 	if (!isUsernameTaken('patron')) {
 		const user_id = await generateAccount({
@@ -53,7 +62,7 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 			email: '2@gmail.com',
 			password: '1',
 		});
-		giveRole(user_id, 'patron');
+		roles.add(user_id, 'patron');
 	}
 	if (!isUsernameTaken('member')) {
 		await generateAccount({
@@ -62,13 +71,4 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 			password: '1',
 		});
 	}
-
-	// Populate leaderboard with dummy accounts for testing
-	// for (let i = 0; i < 230; i++) {
-	// 	if (!doesMemberOfUsernameExist(`Player${i}`)) {
-	// 		const user_id = (await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1" })).user_id;
-	// 		addUserToLeaderboard(user_id, Leaderboards.INFINITY);
-	// 		updatePlayerLeaderboardRating(user_id, Leaderboards.INFINITY, 1800 - 10 * i, 100 + i);
-	// 	}
-	// }
 }

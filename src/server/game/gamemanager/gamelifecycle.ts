@@ -31,7 +31,7 @@ import liveGameValues from './liveGameValues.js';
 import gamestatebuilder from './gamestatebuilder.js';
 import ratingcalculation from '../../utility/ratingcalculation.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /**
  * The cushion time, after a non-server-validated game concludes, before its result is locked in
@@ -46,7 +46,7 @@ const FINALIZE_CUSHION_MILLIS = 1000 * 8;
  */
 const BOTH_DISCONNECTED_TIMEOUT_MILLIS = 1000 * 60 * 5; // 5 minutes
 
-// 1. Conclusion ---------------------------------------------------------------------------------
+// 1. Conclusion ------------------------------------------------------------------------------
 
 /**
  * Sets the game conclusion, broadcasts it to all clients, frees -> finalizes -> evicts game.
@@ -93,7 +93,7 @@ function applyConclusion(servergame: ServerGame, conclusion: GameConclusion): vo
 function consoleLogGameOver(servergame: ServerGame): void {
 	if (!activegames.PRINT_GAMES) return;
 
-	const players: Record<string, any> = {};
+	const players: Record<string, { id: string | number; s: boolean }> = {};
 	for (const [c, data] of Object.entries(servergame.match.playerData)) {
 		players[c] = {
 			id: data.identifier.signedIn ? data.identifier.username : data.identifier.browser_id,
@@ -103,7 +103,7 @@ function consoleLogGameOver(servergame: ServerGame): void {
 	console.log(`Game ${servergame.match.id} over & logged. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.gameConclusion)}. Moves: ${servergame.moves.length}.`); // prettier-ignore
 }
 
-// 2. Freeing ------------------------------------------------------------------------------------
+// 2. Freeing ---------------------------------------------------------------------------------
 
 /**
  * The game has concluded (but not yet finalized): Release both players to join a new game,
@@ -175,9 +175,9 @@ function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingRes
 		ratingResults[Number(playerStr) as Player] = {
 			ratingAtGame: {
 				value: playerRating.elo_at_game,
-				confident:
-					playerRating.rating_deviation_at_game <=
-					ratingcalculation.UNCERTAIN_LEADERBOARD_RD,
+				confident: ratingcalculation.isRatingConfident(
+					playerRating.rating_deviation_at_game,
+				),
 			},
 			change: playerRating.elo_change_from_game!,
 		};
@@ -186,13 +186,13 @@ function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingRes
 	return ratingResults;
 }
 
-// 3. Finalizing ---------------------------------------------------------------------------------
+// 3. Finalizing ------------------------------------------------------------------------------
 
 /**
  * Finalizes a concluded game: locks in its result permanently. Afterward, cheat reports are
  * no longer accepted. Game is ALREADY logged into the db at conclusion. This only flips
  * the flag, measures rating abuse, and tells clients the result can no longer change.
- * Indempotent. Finalized !== evicted: the game may linger in memory for the rematch handshake.
+ * Idempotent. Finalized !== evicted: the game may linger in memory for the rematch handshake.
  */
 function finalize(servergame: ServerGame): void {
 	if (servergame.match.finalized) return; // Already finalized
@@ -215,7 +215,7 @@ function cancelFinalizeTimer(match: MatchInfo): void {
 	clearTimeout(match.finalizeTimeoutID);
 }
 
-// 4. Eviction -----------------------------------------------------------------------------------
+// 4. Eviction --------------------------------------------------------------------------------
 
 /**
  * Evicts a concluded, lingering game from memory once both players have left. Finalizes the
@@ -253,7 +253,7 @@ function evictIfBothLeft(servergame: ServerGame): void {
 	if (bothLeft) evict(servergame);
 }
 
-// Both-Disconnected Abandonment -----------------------------------------------------------------
+// Both-Disconnected Abandonment --------------------------------------------------------------
 
 /**
  * Starts the both-disconnected timer if BOTH players are currently disconnected and it
@@ -303,7 +303,7 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 	}
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	// 1. Conclusion

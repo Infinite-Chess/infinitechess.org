@@ -10,13 +10,14 @@ import type { Request } from 'express';
 import type { Player } from '../../shared/util/typeutil.js';
 import type { VariantCode } from '../../shared/chess/util/variantcodes.js';
 import type { VariantGroup } from '../../shared/chess/variants/variantregistry.js';
-import type { GameMetaViewModel } from './gamePageController.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../shared/util/typeutil.js';
 
 import { decodeGameId } from '../database/gamesManager.js';
-import { getDeadGameViewState } from './gamePageController.js';
+import { getDeadGameViewState, GameMetaViewModel } from './gamePageController.js';
+
+// Types --------------------------------------------------------------------------------------
 
 /** The full render context for `analysis.njk`. */
 interface AnalysisPageState {
@@ -30,15 +31,19 @@ interface AnalysisPageState {
 	meta?: GameMetaViewModel;
 }
 
+// Constants ----------------------------------------------------------------------------------
+
 /** Cache all variant groups and their variants. */
 const variantGroups = variantregistry.getVariantGroupsWithVariants();
+
+// Functions ----------------------------------------------------------------------------------
 
 /**
  * Resolves the render state for `/analysis/:id?/:color?`, or `undefined` if an id was
  * given but is malformed or names no game in the database (live-only games included).
  * @throws If a database error occurs.
  */
-export function getAnalysisPageState(req: Request): AnalysisPageState | undefined {
+function getPageState(req: Request): AnalysisPageState | undefined {
 	let gameId: number | null = null;
 	// A fresh board has no participants to orient by, and no id for a color segment to follow.
 	let viewColor: Player = p.WHITE;
@@ -63,3 +68,7 @@ export function getAnalysisPageState(req: Request): AnalysisPageState | undefine
 		...(meta && { meta }),
 	};
 }
+
+// Exports ----------------------------------------------------------------------------------
+
+export default { getPageState };

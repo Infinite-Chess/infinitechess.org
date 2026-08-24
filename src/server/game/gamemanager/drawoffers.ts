@@ -1,11 +1,9 @@
 // src/server/game/gamemanager/drawoffers.ts
 
 /**
- * This script contains utility methods for draw offers,
- * and has almost zero dependancies.
+ * State and legality of draw offers within a live game.
  *
- * It does NOT contain the routes for when a player
- * extends/accepts a draw offer!
+ * It does NOT contain the routes for when a player extends/accepts a draw offer!
  * NOR does it send any websocket messages.
  */
 
@@ -16,7 +14,7 @@ import gameconfig from '../../../shared/util/gameconfig.js';
 
 import { logEventsAndPrint } from '../../utility/logEvents.js';
 
-// Functions -------------------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
 /**
  * Returns true if the game currently has an open draw offer.
@@ -26,23 +24,19 @@ function isOpen(match: MatchInfo): boolean {
 	return match.drawOfferState !== undefined;
 }
 
-/**
- * Returns true if the given color has extended a draw offer that's not confirmed yet.
- * @param color - The color who extended the draw offer
- */
+/** Returns true if the given color has extended a draw offer that's not confirmed yet. */
 function isExtendedBy(match: MatchInfo, color: Player): boolean {
 	return match.drawOfferState === color;
 }
 
 /**
- * Returns true if they given color has extended a draw offer
+ * Returns true if the given color has extended a draw offer
  * too recently for them to extend another, yet.
  */
 function offeredTooRecently(servergame: ServerGame, color: Player): boolean {
-	const lastPlyDrawOffered = getLastOfferPly(servergame.match, color); // number | undefined
+	const lastPlyDrawOffered = getLastOfferPly(servergame.match, color);
 	if (lastPlyDrawOffered !== undefined) {
 		// They have made at least 1 offer this game
-		// console.log("Last ply offered:", lastPlyDrawOffered);
 		const movesSinceLastOffer = servergame.moves.length - lastPlyDrawOffered;
 		if (movesSinceLastOffer < gameconfig.MIN_PLIES_BETWEEN_DRAW_OFFERS) return true;
 	}
@@ -52,7 +46,6 @@ function offeredTooRecently(servergame: ServerGame, color: Player): boolean {
 /**
  * Opens a draw offer, extended by the provided color.
  * DOES NOT INFORM the opponent.
- * @param color - The color of the player extending the offer
  */
 function open(servergame: ServerGame, color: Player): void {
 	if (isOpen(servergame.match)) {
@@ -62,7 +55,6 @@ function open(servergame: ServerGame, color: Player): void {
 	const playerdata = servergame.match.playerData[color]!;
 	playerdata.lastOfferPly = servergame.moves.length;
 	servergame.match.drawOfferState = color;
-	return;
 }
 
 /**
@@ -81,7 +73,7 @@ function getLastOfferPly(match: MatchInfo, color: Player): number | undefined {
 	return match.playerData[color]?.lastOfferPly;
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	isOpen,

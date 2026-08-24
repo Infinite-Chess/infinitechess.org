@@ -1,7 +1,9 @@
 // src/server/database/blacklistManager.ts
 
-import db, { dbCall } from './database.js';
+import db from './database.js';
 import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
+
+// Functions ----------------------------------------------------------------------------------
 
 /**
  * Adds an email to the blacklist, if it isn't already.
@@ -10,7 +12,7 @@ import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
  */
 export function addToBlacklist(email: string, reason: string): void {
 	// Uses INSERT OR IGNORE so it doesn't crash if the email is already blacklisted.
-	dbCall(
+	db.call(
 		() =>
 			db.run(`INSERT OR IGNORE INTO email_blacklist (email, reason) VALUES (?, ?)`, [
 				// Stored lowercase: emails are case-insensitive, and we never keep mixed-case ones.
@@ -31,7 +33,7 @@ export function addToBlacklist(email: string, reason: string): void {
  * @throws If a database error occurs.
  */
 export function removeFromBlacklist(email: string): void {
-	dbCall(
+	db.call(
 		() => db.run(`DELETE FROM email_blacklist WHERE email = ?`, [email.toLowerCase()]), // Lowercased to match the stored (lowercase) rows.
 		`Database error when removing email ${email} from blacklist`,
 	);
@@ -45,7 +47,7 @@ export function removeFromBlacklist(email: string): void {
  * @throws If a database error occurs.
  */
 export function isBlacklisted(email: string): boolean {
-	const row = dbCall(
+	const row = db.call(
 		() =>
 			// prettier-ignore
 			db.get<{ found: 0 | 1 }>(

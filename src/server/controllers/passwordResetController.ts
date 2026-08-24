@@ -1,7 +1,5 @@
 // src/server/controllers/passwordResetController.ts
 
-import type { Role } from '../types.js';
-
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
@@ -11,13 +9,30 @@ import validators from '../../shared/util/validators.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import db from '../database/database.js';
+import roles from './roles.js';
 import emailService from '../utility/emailService.js';
+import sessionManager from './authenticationTokens/sessionManager.js';
+import socketRegistry from '../socket/socketRegistry.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { createNewSession } from './authenticationTokens/sessionManager.js';
-import { closeAllSocketsOfMember } from '../socket/socketRegistry.js';
-import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './accountValidation.js';
+import accountValidation from './accountValidation.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
+
+// Types -----------------------------------------------------------------------------------------
+
+/** The `password_reset_tokens` columns a reset-token lookup needs. */
+type TokenRecord = { user_id: number; hashed_token: string };
+
+/**
+ * The member fields read inside the reset transaction,
+ * needed to re-login the browser and email the receipt.
+ */
+type ResetTransactionResult = {
+	user_id: number;
+	username: string;
+	roles: string | null;
+	email: string;
+};
 
 /**
  * How long a password-reset token stays valid, in milliseconds.
@@ -114,8 +129,6 @@ function getResetPasswordPageState(req: Request): { state: 'valid' | 'invalid' }
 	return { state: match ? 'valid' : 'invalid' };
 }
 
-type TokenRecord = { user_id: number; hashed_token: string };
-
 /** Finds the unexpired password-reset token row matching the given plain token, or returns undefined. */
 function findUnexpiredResetTokenRecord(token: string): TokenRecord | undefined {
 	const hashed_token = hashResetToken(token);
@@ -124,13 +137,6 @@ function findUnexpiredResetTokenRecord(token: string): TokenRecord | undefined {
 		[hashed_token, Date.now()],
 	);
 }
-
-type ResetTransactionResult = {
-	user_id: number;
-	username: string;
-	roles: string | null;
-	email: string;
-};
 
 /**
  * `POST /api/reset-password` — validates the emailed token and new password, updates the
@@ -144,7 +150,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 	const { token, password } = body;
 
 	// Password strength rules (e.g., length)
-	if (!doPasswordFormatChecks(password, req, res)) return;
+	if (!accountValidation.doPasswordFormatChecks(password, req, res)) return;
 
 	try {
 		// Fast pre-check: reject clearly invalid/expired tokens before expensive bcrypt work.
@@ -158,7 +164,10 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		}
 
 		// Hash the New Password
-		const hashedNewPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
+		const hashedNewPassword = await bcrypt.hash(
+			password,
+			accountValidation.PASSWORD_SALT_ROUNDS,
+		);
 		const hashedToken = precheckTokenRecord.hashed_token;
 
 		// In one transaction: atomically consume the token, update the password, and kill all existing sessions.
@@ -212,14 +221,14 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// Every session is now dead, so close their sockets with the same reason logging
 		// out uses — the client reloads and re-auths off whatever session it has left.
-		closeAllSocketsOfMember(member.user_id, 1008, socketutil.ClosureReasons.LOGGED_OUT);
+		socketRegistry.closeAllOfMember(member.user_id, 1008, socketutil.ClosureReasons.LOGGED_OUT);
 
 		// Issue a fresh session to this browser — the device that proved control
 		// of the account by clicking the email link and setting the new password.
 		// Also, send an out-of-band security receipt notifying them of the change.
 		// roles is a stringified JSON array in the database; parse it.
-		const roles: Role[] | null = member.roles !== null ? JSON.parse(member.roles) : null;
-		createNewSession(req, res, member.user_id, member.username, roles, false);
+		const parsedRoles = roles.parse(member.roles);
+		sessionManager.create(req, res, member.user_id, member.username, parsedRoles, false);
 
 		// Fire-and-forget security receipt.
 		emailService.sendPasswordChangedEmail(member.email, req.lang);

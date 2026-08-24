@@ -1,5 +1,10 @@
 // src/server/types.ts
 
+/**
+ * Shared server-side type definitions: roles, and module augmentations that attach
+ * `memberInfo`, the resolved language, and translations onto Express's Request.
+ */
+
 import type { IncomingMessage } from 'http';
 import type { ScriptTranslations } from '../shared/types/script-translations.js';
 
@@ -22,12 +27,12 @@ declare global {
 			memberInfo?: MemberInfo;
 			/**
 			 * The resolved best-fit supported language to serve this request.
-			 * Set lazilly via reqLanguage.ts
+			 * Set lazily via reqLanguage.ts
 			 */
 			lang: string;
 			/**
 			 * Contains all translations for the request's resolved language.
-			 * Mirrors the client's global `t`. Set lazilly via reqTranslation.ts.
+			 * Mirrors the client's global `t`. Set lazily via reqTranslations.ts.
 			 */
 			t: ScriptTranslations;
 		}

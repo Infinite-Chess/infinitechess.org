@@ -9,14 +9,11 @@ import type { Request, Response, NextFunction } from 'express';
 
 import jsutil from '../../shared/util/jsutil.js';
 
+import sessionManager from '../controllers/authenticationTokens/sessionManager.js';
 import { getClientIP } from '../utility/IP.js';
 import { ParsedCookies } from '../types.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 import { validateRefreshToken } from '../database/refreshTokenManager.js';
-import {
-	freshenSession,
-	revokeSession,
-} from '../controllers/authenticationTokens/sessionManager.js';
 
 /**
  * [HTTP] Resolves identity from the refresh-token cookie, setting `req.memberInfo` so downstream
@@ -49,7 +46,7 @@ function tryRefreshToken(req: Request, res: Response): void {
 
 	if (!result) {
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
-		revokeSession(res);
+		sessionManager.revoke(res);
 		return;
 	}
 
@@ -57,7 +54,7 @@ function tryRefreshToken(req: Request, res: Response): void {
 
 	try {
 		// Renew the session if it was issued more than a day ago.
-		freshenSession(
+		sessionManager.freshen(
 			req,
 			res,
 			payload.user_id,

@@ -7,9 +7,9 @@
 
 import express from 'express';
 
+import rateLimiters from '../middleware/rateLimiters.js';
 import EditorSavesAPI from '../api/EditorSavesAPI.js';
 import { resolveAuth } from '../middleware/resolveAuth.js';
-import { editorSaveLimiter, editorLoadLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
@@ -17,8 +17,8 @@ const router = express.Router();
 router.use(resolveAuth);
 
 router.get('/', EditorSavesAPI.getSavedPositions);
-router.post('/', editorSaveLimiter, EditorSavesAPI.savePosition);
-router.get('/:position_name', editorLoadLimiter, EditorSavesAPI.getPosition);
+router.post('/', rateLimiters.editorSave, EditorSavesAPI.savePosition);
+router.get('/:position_name', rateLimiters.editorLoad, EditorSavesAPI.getPosition);
 router.delete('/:position_name', EditorSavesAPI.deletePosition);
 
 export default router;

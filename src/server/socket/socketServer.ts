@@ -8,17 +8,16 @@
  * incoming message we'll accept, and how long we wait for a peer's answering close frame.
  */
 
+import type { IncomingMessage } from 'http';
 import type { Server as HttpsServer } from 'https';
 
-import WebSocket from 'ws';
-import { IncomingMessage } from 'http';
-import { WebSocketServer as Server } from 'ws';
+import WebSocket, { WebSocketServer as Server } from 'ws';
 
+import socketOpen from './socketOpen.js';
 import { executeSafely } from '../utility/errorGuard.js';
 import { runWithRequestID } from '../utility/requestContext.js';
-import { onConnectionRequest } from './socketOpen.js';
 
-// Constants ---------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /**
  * The maximum size of an incoming websocket message, in bytes. The `ws` receiver rejects
@@ -45,12 +44,13 @@ const MAX_PAYLOAD_BYTES = 500_000; // 500 KB
  */
 const CLOSE_HANDSHAKE_TIMEOUT_MS = 2500;
 
-// Variables ---------------------------------------------------------------------------
+// State --------------------------------------------------------------------------------------
 
 let WebSocketServer: Server;
 
-// Functions ---------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
+/** Creates the WebSocketServer on top of the HTTPS server, wiring up the connection handler. */
 function start(httpsServer: HttpsServer): void {
 	// Create a WebSocket server instance
 	WebSocketServer = new Server({
@@ -58,14 +58,13 @@ function start(httpsServer: HttpsServer): void {
 		maxPayload: MAX_PAYLOAD_BYTES,
 		closeTimeout: CLOSE_HANDSHAKE_TIMEOUT_MS,
 	});
-	// WebSocketServer.on('connection', onConnectionRequest); // Event handler for new WebSocket connections
 	WebSocketServer.on('connection', (socket: WebSocket, req: IncomingMessage) => {
 		// An upgrade is an HTTP request → give the handshake a fresh 'R' correlation context,
 		// so its reqLog and wsInLog lines share an id. (Counterpart of assignRequestID for HTTP.)
 		runWithRequestID(
 			() =>
 				executeSafely(
-					() => onConnectionRequest(socket, req),
+					() => socketOpen.onConnectionRequest(socket, req),
 					'Error caught within websocket on-connection request:',
 				),
 			'R',

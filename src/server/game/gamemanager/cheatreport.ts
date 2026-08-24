@@ -18,21 +18,22 @@ import type { GameStateMessage } from '../../../shared/clientbound.js';
 import typeutil from '../../../shared/util/typeutil.js';
 
 import gamelogger from './gamelogger.js';
+import socketsend from '../../socket/socketSend.js';
 import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
 import { logEvents } from '../../utility/logEvents.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
 /**
  * A client reports their opponent's last move as illegal. A valid report pops
  * that move and aborts the game; an invalid one is refused and logged to hackLog.
- * @param servergame - The game they belong in.
- * @param ourRole - The color the socket is playing as.
- * @param messageContents - The contents of the socket report message
  */
-function onReport(servergame: ServerGame, ourRole: Player, messageContents: ReportMessage): void {
+export function onReport(
+	servergame: ServerGame,
+	ourRole: Player,
+	messageContents: ReportMessage,
+): void {
 	if (gameutility.isEngineGame(servergame)) return;
 	console.log('Received cheat report! - Check hackLog.txt for more details.');
 
@@ -91,20 +92,19 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
 	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason} Color who reported: ${ourRole}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
-	console.error(errText);
 	logEvents(errText, 'hackLog');
 
 	// Notify all players a cheat was detected
 	for (const [colorStr, { socket: ws }] of Object.entries(servergame.match.playerData)) {
 		if (!ws) continue; // Not connected, can't send message
 		if (Number(colorStr) === opponentColor) {
-			sendSocketMessage(ws, 'general', 'notifyerror', ws.t.responses.game.you_cheated);
+			socketsend.send(ws, 'general', 'notifyerror', ws.t.responses.game.you_cheated);
 		} else {
-			sendSocketMessage(ws, 'general', 'notify', ws.t.responses.game.opponent_cheated);
+			socketsend.send(ws, 'general', 'notify', ws.t.responses.game.opponent_cheated);
 		}
 	}
 	for (const ws of servergame.spectators) {
-		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.game.cheat_detected);
+		socketsend.send(ws, 'general', 'notify', ws.t.responses.game.cheat_detected);
 	}
 
 	concludeReportedGame(servergame, { condition: 'aborted' }, colorThatPlayedPerpetratingMove);
@@ -141,7 +141,7 @@ function concludeReportedGame(
 				Number(color) as Player,
 			),
 		};
-		sendSocketMessage(data.socket, 'game', 'gamestate', message);
+		socketsend.send(data.socket, 'game', 'gamestate', message);
 	}
 
 	// Spectators get the same state, minus the participant overlay.
@@ -152,9 +152,3 @@ function concludeReportedGame(
 	// Update the already-logged game record to reflect the overturn (aborted, one fewer move...).
 	if (wasLogged) gamelogger.updateOverturned(servergame, originalConclusion!, cheaterColor);
 }
-
-// Exports ---------------------------------------------------------------------------------------
-
-export default {
-	onReport,
-};

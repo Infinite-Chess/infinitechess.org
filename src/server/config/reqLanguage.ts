@@ -20,7 +20,7 @@ import accepts from 'accepts';
 import { parse as parseCookie } from 'cookie';
 
 import tconfig from './translationconfig.js';
-import { getSupportedLanguages } from './componentTranslationLoader.js';
+import componentTranslationLoader from './componentTranslationLoader.js';
 
 /** The cookie storing the user's manual language override. */
 const LANGUAGE_COOKIE = 'lang';
@@ -41,28 +41,34 @@ let baseToRegional = new Map<string, string>();
  * Precomputes the Accept-Language negotiation structures from the supported-language set.
  * Call once, after the translations have loaded.
  */
-export function initLanguageResolution(): void {
+function init(): void {
 	baseToRegional = new Map();
 	// Sort so the variant chosen per base is deterministic (not dependent on component
 	// load order) — e.g. for base "zh", "zh-CN" is picked over "zh-TW".
-	for (const tag of [...getSupportedLanguages()].sort()) {
+	for (const tag of [...componentTranslationLoader.getSupportedLangs()].sort()) {
 		const base = tag.split('-')[0]!;
 		if (!baseToRegional.has(base)) baseToRegional.set(base, tag); // first (sorted) variant per base
 	}
 	// Full tags first, then base tags: offers are ordered most- to least-specific so the
 	// negotiator favors an explicit regional match over a base fallback on a quality tie.
-	offers = [...new Set([...getSupportedLanguages(), ...baseToRegional.keys()])];
+	offers = [
+		...new Set([...componentTranslationLoader.getSupportedLangs(), ...baseToRegional.keys()]),
+	];
 }
 
 /**
  * Calculates the best language to serve a request — from the override
  * cookie (if supported), else the Accept-Language header, else the default.
  */
-export function resolveLanguageForRequest(req: IncomingMessage): string {
+function resolve(req: IncomingMessage): string {
 	// parse the cookie header manually (req.cookies isn't set for upgrade requests)
 	const override = parseCookie(req.headers.cookie ?? '')[LANGUAGE_COOKIE];
 	// The cookie is JavaScript-accessible, so don't trust it, make sure it's supported.
-	if (typeof override === 'string' && getSupportedLanguages().includes(override)) return override;
+	if (
+		typeof override === 'string' &&
+		componentTranslationLoader.getSupportedLangs().includes(override)
+	)
+		return override;
 
 	// Identical to Express's req.acceptsLanguages, but supports websocket upgrade requests.
 	const best: string | false = offers.length ? accepts(req).languages(offers) : false;
@@ -73,11 +79,11 @@ export function resolveLanguageForRequest(req: IncomingMessage): string {
  * Defines the lazy `req.lang` getter on the Express request prototype. Call once at app setup.
  * @param app - The express application instance.
  */
-export function installReqLanguage(app: Express): void {
+function install(app: Express): void {
 	Object.defineProperty(app.request, 'lang', {
 		configurable: true,
 		get(this: Request): string {
-			const lang = resolveLanguageForRequest(this);
+			const lang = resolve(this);
 			// Cache on the instance: an own property shadows this prototype getter,
 			// so subsequent reads on the same request skip resolution entirely.
 			Object.defineProperty(this, 'lang', { value: lang, configurable: true });
@@ -85,3 +91,7 @@ export function installReqLanguage(app: Express): void {
 		},
 	});
 }
+
+// Exports ---------------------------------------------------------------------------------------
+
+export default { init, resolve, install };

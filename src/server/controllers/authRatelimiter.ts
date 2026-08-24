@@ -24,9 +24,9 @@ type LoginAttemptData = {
 
 /** Maximum consecutive login attempts allowed for each username-IP
  * combination before they will be locked out temporarily. */
-const maxLoginAttempts = 3;
-/** The amount of time the cooldown is incremented by, after failing by {@link maxLoginAttempts} *again*... */
-const loginCooldownIncrementorSecs = 5;
+const MAX_LOGIN_ATTEMPTS = 3;
+/** The amount of time the cooldown is incremented by, after failing by {@link MAX_LOGIN_ATTEMPTS} *again*... */
+const LOGIN_COOLDOWN_INCREMENTOR_SECS = 5;
 /**
  * A hash that stores login attempts for each ip and user.
  * `{
@@ -43,7 +43,7 @@ const loginAttemptData: Record<string, LoginAttemptData> = {};
  * The time, in milliseconds, to delete a browser agent from the
  * login attempt data, if they have stopped trying to login.
  */
-const timeToDeleteBrowserAgentAfterNoAttemptsMillis = 1000 * 60 * 5; // 5 minutes
+const TIME_TO_DELETE_BROWSER_AGENT_AFTER_NO_ATTEMPTS_MILLIS = 1000 * 60 * 5; // 5 minutes
 
 // Functions ----------------------------------------------------------------------------
 
@@ -62,7 +62,7 @@ function rateLimitLogin(req: Request, res: Response, browserAgent: string): bool
 	const timeSinceLastAttemptsSecs =
 		(now.getTime() - loginAttemptData[browserAgent].lastAttemptTime.getTime()) / 1000;
 
-	if (loginAttemptData[browserAgent].attempts < maxLoginAttempts) {
+	if (loginAttemptData[browserAgent].attempts < MAX_LOGIN_ATTEMPTS) {
 		incrementBrowserAgentLoginAttemptCounter(browserAgent, now);
 		return true; // Attempt allowed
 	}
@@ -97,10 +97,8 @@ function rateLimitLogin(req: Request, res: Response, browserAgent: string): bool
 }
 
 /**
- * Generates a unique browser agent string using the request object and username.
- * @param req - The request object.
- * @param username - The username.
- * @returns The browser agent string, `${usernameLowercase}${clientIP}`
+ * Generates the rate-limit tracking key for a login attempt: raw username + client IP,
+ * concatenated with no separator.
  */
 function getBrowserAgent(req: Request, username: string): string {
 	const clientIP = getClientIP(req);
@@ -156,8 +154,11 @@ function cancelTimerToDeleteBrowserAgent(browserAgent: string): void {
 function startTimerToDeleteBrowserAgent(browserAgent: string): void {
 	loginAttemptData[browserAgent]!.deleteTimeoutID = setTimeout(() => {
 		delete loginAttemptData[browserAgent];
-		console.log(`Allowing browser agent "${browserAgent}" to login without cooldown again!`);
-	}, timeToDeleteBrowserAgentAfterNoAttemptsMillis);
+		logEventsAndPrint(
+			`Allowing browser agent "${browserAgent}" to login without cooldown again!`,
+			'loginAttempts',
+		);
+	}, TIME_TO_DELETE_BROWSER_AGENT_AFTER_NO_ATTEMPTS_MILLIS);
 }
 
 /**
@@ -167,9 +168,9 @@ function startTimerToDeleteBrowserAgent(browserAgent: string): void {
  * @param username - The username.
  */
 function onIncorrectPassword(browserAgent: string, username: string): void {
-	if (loginAttemptData[browserAgent]!.attempts < maxLoginAttempts) return; // Don't lock them yet
+	if (loginAttemptData[browserAgent]!.attempts < MAX_LOGIN_ATTEMPTS) return; // Don't lock them yet
 	// Lock them!
-	loginAttemptData[browserAgent]!.cooldownTimeSecs += loginCooldownIncrementorSecs;
+	loginAttemptData[browserAgent]!.cooldownTimeSecs += LOGIN_COOLDOWN_INCREMENTOR_SECS;
 	logEventsAndPrint(
 		`${username} got login locked for ${loginAttemptData[browserAgent]!.cooldownTimeSecs} seconds`,
 		'loginAttempts',

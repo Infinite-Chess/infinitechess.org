@@ -8,22 +8,16 @@ import type { CustomWebSocket } from './socketTypes.js';
 
 import socketutil from '../../shared/util/socketutil.js';
 
-import { clearPendingState } from './socketSend.js';
-import { unsubSocketFromAllSubs } from './socketSubs.js';
-import { removeConnectionFromConnectionLists } from './socketRegistry.js';
+import socketsend from './socketSend.js';
+import socketSubs from './socketSubs.js';
+import socketRegistry from './socketRegistry.js';
 
-// Functions ---------------------------------------------------------------------------
-
-function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
+/** Tears a closed websocket down: unregisters it, unsubscribes all its subscriptions, clears timers. */
+export function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	const reasonString = reason.toString();
 
 	// Delete connection from object.
-	removeConnectionFromConnectionLists(ws);
-
-	// What if the code is 1000, and reason is "Connection closed by client"?
-	// I then immediately want to delete their seek.
-	// But what other reasons could it close... ?
-	// Code 1006, Message "" is just a network failure.
+	socketRegistry.remove(ws);
 
 	// True if client had no power over the closure,
 	// DON'T COUNT this as a disconnection!
@@ -33,9 +27,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	// Unsubscribe them from all. NO LIST. It doesn't matter if they want to keep their seek or remain
 	// connected to their game, without a websocket to send updates to, there's no point in any
 	// SUBSCRIPTION service! Unsubbing them from their game will start their disconnect claim timer.
-	unsubSocketFromAllSubs(ws, involuntary);
+	socketSubs.unsubFromAll(ws, involuntary);
 
-	clearPendingState(ws);
+	socketsend.clearPendingState(ws);
 }
-
-export { onclose };

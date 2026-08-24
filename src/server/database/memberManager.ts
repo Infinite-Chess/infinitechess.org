@@ -6,8 +6,12 @@
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import db, { dbCall } from './database.js';
-import { allMembersColumns, uniqueMembersColumns, user_id_upper_cap } from './databaseTables.js';
+import db from './database.js';
+import {
+	ALL_MEMBERS_COLUMNS,
+	UNIQUE_MEMBERS_COLUMNS,
+	user_id_upper_cap,
+} from './databaseTables.js';
 import {
 	isEmailTakenInPending,
 	isUsernameTakenInPending,
@@ -15,7 +19,7 @@ import {
 	PendingRegistrationRecord,
 } from './pendingRegistrationManager.js';
 
-// Types -------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Structure of a complete member record. */
 export interface MemberRecord {
@@ -38,7 +42,7 @@ type MembersColumn = keyof MemberRecord;
 /** A valid account deletion reason, stored in the deleted_members table. */
 export type DeleteReason = (typeof validDeleteReasons)[number];
 
-// Constants ----------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /**
  * A list of all valid reasons to delete an account.
@@ -51,7 +55,7 @@ const validDeleteReasons = [
 	'rating abuse', // Unfairly boosted their own elo with a throwaway account
 ] as const;
 
-// Creation ----------------------------------------------------------------
+// Creation -----------------------------------------------------------------------------------
 
 /**
  * Creates a new account. This is the single, authoritative function for user creation.
@@ -96,7 +100,7 @@ export function addMember(username: string, email: string, hashedPassword: strin
 		return userId;
 	});
 
-	return dbCall(
+	return db.call(
 		() => createAccountTransaction({ username, email, hashedPassword }),
 		`Account creation transaction for "${username}" failed and was rolled back`,
 	);
@@ -108,7 +112,7 @@ export function addMember(username: string, email: string, hashedPassword: strin
  * verified member, and marks the pending row verified.
  * @param pending - The pending registration to promote.
  * @returns The new member's user_id.
- * @throws If a database error occurrs during member creation (e.g. CONSTRAINT violation).
+ * @throws If a database error occurs during member creation (e.g. CONSTRAINT violation).
  */
 export function promotePendingRegistration(pending: PendingRegistrationRecord): number {
 	const promoteTransaction = db.transaction<[PendingRegistrationRecord], number>((p) => {
@@ -122,7 +126,7 @@ export function promotePendingRegistration(pending: PendingRegistrationRecord): 
 	return promoteTransaction(pending);
 }
 
-// Reads -------------------------------------------------------------------
+// Reads --------------------------------------------------------------------------------------
 
 /**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.
@@ -137,7 +141,7 @@ export function getMemberDataByCriteria<K extends MembersColumn>(
 	searchKey: MembersColumn,
 	searchValue: string | number,
 ): Pick<MemberRecord, K> | undefined {
-	return dbCall(() => {
+	return db.call(() => {
 		// Runtime validation
 		validateMemberQueryArgs(columns, searchKey, [searchValue]);
 
@@ -159,7 +163,7 @@ export function getMultipleMemberDataByCriteria<K extends MembersColumn>(
 	searchKey: MembersColumn,
 	searchValueList: string[] | number[],
 ): Pick<MemberRecord, K>[] {
-	return dbCall(() => {
+	return db.call(() => {
 		// Runtime validation
 		validateMemberQueryArgs(columns, searchKey, searchValueList);
 
@@ -174,44 +178,28 @@ export function getMultipleMemberDataByCriteria<K extends MembersColumn>(
 	}, 'Error getting MULTIPLE member data by criteria');
 }
 
-// Updates -----------------------------------------------------------------
+// Updates ------------------------------------------------------------------------------------
 
 /**
  * Updates specified columns for a member based on their user ID.
  * @param user_id - The user ID of the member to update.
- * @param columnsAndValues - An object mapping column names to their new values.
+ * @param updates - An object mapping column names to their new values.
  * @throws If invalid parameters are provided, the member does not exist, or if a database error occurs.
  */
-export function updateMemberColumns(
-	user_id: number,
-	columnsAndValues: Partial<MemberRecord>,
-): void {
-	dbCall(() => {
-		// Validate that we have columns to update
-		if (typeof columnsAndValues !== 'object' || columnsAndValues === null)
-			throw new Error(`Invalid columnsAndValues provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`); // prettier-ignore
-
-		const columns = Object.keys(columnsAndValues);
-		const values = Object.values(columnsAndValues);
-
-		// Validate they are all valid database columns
-		if (
-			columns.length === 0 ||
-			!columns.every((col) => allMembersColumns.includes(col)) ||
-			!values.every(
-				(val) => typeof val === 'string' || typeof val === 'number' || val === null,
-			)
-		)
-			throw new Error(`Invalid columns or values provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`); // prettier-ignore
-
-		// Dynamically build the query
-		const setStatements = columns.map((column) => `${column} = ?`).join(', ');
-		const query = `UPDATE members SET ${setStatements} WHERE user_id = ?`;
-		const result = db.run(query, [...values, user_id]);
+export function updateMemberColumns(user_id: number, updates: Partial<MemberRecord>): void {
+	db.call(() => {
+		const result = db.runRowUpdate({
+			tableName: 'members',
+			allowedColumns: ALL_MEMBERS_COLUMNS,
+			updates,
+			errorContext: `updating member of ID "${user_id}"`,
+			whereClause: 'user_id = ?',
+			whereValues: [user_id],
+		});
 
 		// If no rows changed, the member doesn't exist.
 		if (result.changes === 0)
-			throw new Error(`No member found with user_id "${user_id}" when updating columns: ${JSON.stringify(columns)}`); // prettier-ignore
+			throw new Error(`No member found with user_id "${user_id}" when updating columns: ${JSON.stringify(Object.keys(updates))}`); // prettier-ignore
 	}, `Error updating columns for user ID "${user_id}"`);
 }
 
@@ -226,7 +214,7 @@ export function updateLoginCountAndLastSeen(userId: number): void {
 		SET login_count = login_count + 1, last_seen = CURRENT_TIMESTAMP
 		WHERE user_id = ?
 	`;
-	dbCall(() => {
+	db.call(() => {
 		const result = db.run(query, [userId]);
 
 		// If no rows changed, the member doesn't exist.
@@ -246,7 +234,7 @@ export function updateLastSeen(userId: number): void {
 		SET last_seen = CURRENT_TIMESTAMP
 		WHERE user_id = ?
 	`;
-	dbCall(() => {
+	db.call(() => {
 		const result = db.run(query, [userId]);
 
 		// If no rows changed, the member doesn't exist.
@@ -255,7 +243,7 @@ export function updateLastSeen(userId: number): void {
 	}, `Error updating last_seen for member of id "${userId}"`);
 }
 
-// Deletion ----------------------------------------------------------------
+// Deletion -----------------------------------------------------------------------------------
 
 /** Type Guard: Checks if a string is a valid DeleteReason. */
 export function isValidDeleteReason(reason: string): reason is DeleteReason {
@@ -290,14 +278,13 @@ export function deleteMember(user_id: number, reason_deleted: DeleteReason): voi
 		db.run('DELETE FROM pending_registrations WHERE member_user_id = ?', [id]);
 	});
 
-	dbCall(
+	db.call(
 		() => deleteTransaction(user_id, reason_deleted),
 		`Deletion transaction for user_id "${user_id}" failed and was rolled back`,
 	);
 }
-// console.log(deleteMember(3887110, 'security'));
 
-// Existence & Availability Checks -----------------------------------------
+// Existence & Availability Checks ------------------------------------------------------------
 
 /**
  * Checks if a member of a given id exists in the members table.
@@ -309,7 +296,7 @@ export function deleteMember(user_id: number, reason_deleted: DeleteReason): voi
  */
 export function doesMemberOfIDExist(user_id: number): boolean {
 	const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE user_id = ?) AS found';
-	const row = dbCall(
+	const row = db.call(
 		() => db.get<{ found: 0 | 1 }>(query, [user_id]),
 		`Error checking if member of user_id (${user_id}) exists`,
 	);
@@ -331,13 +318,12 @@ function isUserIdTaken(userId: number): boolean {
 			EXISTS(SELECT 1 FROM deleted_members WHERE user_id = ?)
 		AS found
 	`;
-	const row = dbCall(
+	const row = db.call(
 		() => db.get<{ found: 0 | 1 }>(query, [userId, userId]),
 		`Error checking if user_id (${userId}) has been used`,
 	);
 	return Boolean(row?.found);
 }
-// console.log("taken? " + isUserIdTaken(14443702));
 
 /**
  * Checks if a member with the given username exists in the members table (case-insensitive,
@@ -348,7 +334,7 @@ function isUserIdTaken(userId: number): boolean {
  */
 export function isUsernameTaken(username: string): boolean {
 	const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE username = ?) AS found';
-	const row = dbCall(
+	const row = db.call(
 		() => db.get<{ found: 0 | 1 }>(query, [username]),
 		`Error checking if username "${username}" is taken`,
 	);
@@ -363,7 +349,7 @@ export function isUsernameTaken(username: string): boolean {
  */
 export function isEmailTaken(email: string): boolean {
 	const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE email = ?) AS found';
-	const row = dbCall(
+	const row = db.call(
 		() => db.get<{ found: 0 | 1 }>(query, [email.toLowerCase()]), // Lowercased to match the stored (lowercase) rows
 		`Error checking if email "${email}" exists`,
 	);
@@ -389,7 +375,7 @@ export function isEmailTakenOrPending(email: string): boolean {
 	return isEmailTaken(email) || isEmailTakenInPending(email);
 }
 
-// Internal Helpers --------------------------------------------------------
+// Internal Helpers ---------------------------------------------------------------------------
 
 /**
  * Generates a unique user_id that no other member has ever used.
@@ -416,16 +402,13 @@ function validateMemberQueryArgs(
 	searchValues: (string | number)[],
 ): void {
 	// 1. Validate Columns
-	if (
-		!Array.isArray(columns) ||
-		columns.length === 0 ||
-		!columns.every((column) => typeof column === 'string' && allMembersColumns.includes(column))
-	)
+	db.assertColumnsValid(columns, ALL_MEMBERS_COLUMNS, 'members');
+	if (columns.length === 0)
 		throw new Error(`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
 
 	// 2. Validate Search Key
-	if (typeof searchKey !== 'string' || !uniqueMembersColumns.includes(searchKey))
-		throw new Error(`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMembersColumns.join(', ')}`); // prettier-ignore
+	if (typeof searchKey !== 'string' || !UNIQUE_MEMBERS_COLUMNS.includes(searchKey))
+		throw new Error(`Invalid search key for members table "${searchKey}". Must be one of: ${UNIQUE_MEMBERS_COLUMNS.join(', ')}`); // prettier-ignore
 
 	// 3. Validate Search Values
 	if (

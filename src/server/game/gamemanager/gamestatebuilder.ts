@@ -53,10 +53,10 @@ import drawoffers from './drawoffers.js';
 import gameutility from './gameutility.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
 import ratingcalculation from '../../utility/ratingcalculation.js';
-import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
+import componentTranslationLoader from '../../config/componentTranslationLoader.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 
-// Ratings ---------------------------------------------------------------------------------------
+// Ratings ------------------------------------------------------------------------------------
 
 /**
  * Returns the current elo of all players in the game on the leaderboard
@@ -94,7 +94,7 @@ function getRatingChanges(servergame: ServerGame): PlayerGroup<number> | undefin
 	return ratingChanges;
 }
 
-// SSR Page State --------------------------------------------------------------------------------
+// SSR Page State -----------------------------------------------------------------------------
 
 /**
  * Assembles the role-agnostic {@link StaticGameState} of a live game (the static side-bar and game info).
@@ -154,7 +154,7 @@ function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 	};
 }
 
-// ICN Metadata ----------------------------------------------------------------------------------
+// ICN Metadata -------------------------------------------------------------------------------
 
 /**
  * Assembles the ICN {@link MetaData} of a game on demand from its properties
@@ -174,15 +174,14 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 		for (const [color, rd] of Object.entries(ratingData)) {
 			ratings[Number(color) as Player] = {
 				value: rd.elo_at_game,
-				confident:
-					rd.rating_deviation_at_game <= ratingcalculation.UNCERTAIN_LEADERBOARD_RD,
+				confident: ratingcalculation.isRatingConfident(rd.rating_deviation_at_game),
 			};
 		}
 	} else {
 		Object.assign(ratings, getRatingDataForGamePlayers(match.playerData, match.variant));
 	}
 
-	const scriptT = getScriptTranslations('shared', tconfig.DEFAULT_LANGUAGE); // Game metadata should only ever be in English
+	const scriptT = componentTranslationLoader.getScript('shared', tconfig.DEFAULT_LANGUAGE); // Game metadata should only ever be in English
 	const variantCode = gameutility.getVariantCode(match.variant);
 	// Names the GAME: a custom game is a "Custom Variant" game no matter what it's a position of.
 	const variantEnglishName = variantregistry.getVariantName(variantCode, scriptT);
@@ -250,7 +249,7 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 	return metadata;
 }
 
-// Wire Messages ---------------------------------------------------------------------------------
+// Wire Messages ------------------------------------------------------------------------------
 
 /**
  * Builds the recipient-agnostic {@link GameStateBase} — the live move list, clocks, conclusion, and
@@ -305,8 +304,9 @@ function simplifyMove(move: MoveRecord): MovePacket {
 	return { token: move.token };
 }
 
-// Participant Overlay ---------------------------------------------------------------------------
+// Participant Overlay ------------------------------------------------------------------------
 
+/** Builds a participant's private state overlay (clocks, rematch offers) for their resyncs. */
 function getParticipantState(servergame: ServerGame, role: Player): ParticipantState {
 	const opponentRole = typeutil.invertPlayer(role);
 	const now = Date.now();
@@ -354,7 +354,7 @@ function getRematchOfferInfo(servergame: ServerGame, role: Player): RematchOffer
 	};
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	// Ratings

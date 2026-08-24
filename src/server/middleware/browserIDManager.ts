@@ -13,10 +13,10 @@ import type { CookieOptions, Request, Response, NextFunction } from 'express';
 
 import crypto from 'crypto';
 
-import { isBrowserIDBanned } from './banned.js';
+import banned from './banned.js';
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
-// Constants --------------------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /** How long a browser-id lives before it must be renewed by another visit. */
 const LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
@@ -29,7 +29,7 @@ const COOKIE_OPTIONS: CookieOptions = {
 	secure: true,
 };
 
-// Functions --------------------------------------------------------------------------------------
+// Functions ----------------------------------------------------------------------------------
 
 /** Sets the `browser-id` cookie to the given id, living for `maxAgeMillis` milliseconds. */
 function setCookie(res: Response, id: string, maxAgeMillis: number): void {
@@ -66,7 +66,7 @@ function assignNew(res: Response): void {
 function renew(req: Request, res: Response): void {
 	const id = req.cookies['browser-id']!;
 
-	if (isBrowserIDBanned(id)) return makePermanent(req, res, id);
+	if (banned.isBrowserID(id)) return makePermanent(req, res, id);
 
 	setCookie(res, id, LIFETIME_MS);
 }

@@ -7,12 +7,10 @@
  * See docs/systems/LIVE_GAME_PERSISTENCE.md for the column reference.
  */
 
-import jsutil from '../../shared/util/jsutil.js';
+import db from './database.js';
+import { ALL_LIVE_PLAYER_GAMES_COLUMNS } from './databaseTables.js';
 
-import db, { dbCall } from './database.js';
-import { allLivePlayerGamesColumns } from './databaseTables.js';
-
-// Types ----------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Structure of a complete live_player_games record. */
 export interface LivePlayerGamesRecord extends LivePlayerData {
@@ -37,7 +35,7 @@ export interface LivePlayerDisconnectData {
 	disconnect_voluntary: 0 | 1 | null;
 }
 
-// Methods --------------------------------------------------------------------------------------------
+// Methods ------------------------------------------------------------------------------------
 
 /**
  * Inserts a new live player game row into the database.
@@ -52,7 +50,7 @@ export function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 			disconnect_cushion_end_time, disconnect_claim_time, disconnect_voluntary
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
-	dbCall(
+	db.call(
 		() =>
 			db.run(query, [
 				record.game_id,
@@ -81,25 +79,21 @@ export function updateLivePlayerGame(
 	player_number: number,
 	updates: Partial<LivePlayerData>,
 ): void {
-	dbCall(() => {
-		// Validate the input structure...
-		if (typeof updates !== 'object' || updates === null || Object.keys(updates).length === 0)
-			throw new Error(`Invalid or empty updates provided when updating live player game (game_id=${game_id}, player=${player_number})! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
-		const entries = Object.entries(updates);
-		if (!entries.every(([col]) => allLivePlayerGamesColumns.includes(col)))
-			throw new Error(`Invalid columns provided when updating live player game (game_id=${game_id}, player=${player_number})! Received: ${jsutil.ensureJSONString(updates)}`); // prettier-ignore
-
-		// Move on to the SQL query
-		const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
-		const values = entries.map(([, val]) => val ?? null);
-		const query = `UPDATE live_player_games SET ${setClauses} WHERE game_id = ? AND player_number = ?`;
-		db.run(query, [...values, game_id, player_number]);
+	db.call(() => {
+		db.runRowUpdate({
+			tableName: 'live_player_games',
+			allowedColumns: ALL_LIVE_PLAYER_GAMES_COLUMNS,
+			updates,
+			errorContext: `updating live player game (game_id=${game_id}, player=${player_number})`,
+			whereClause: 'game_id = ? AND player_number = ?',
+			whereValues: [game_id, player_number],
+		});
 	}, `Error updating live player game (game_id=${game_id}, player=${player_number})`);
 }
 
 /** Retrieves every live human participant for startup restoration. */
 export function getAllLivePlayerGames(): LivePlayerGamesRecord[] {
-	return dbCall(
+	return db.call(
 		() => db.all<LivePlayerGamesRecord>('SELECT * FROM live_player_games ORDER BY game_id, player_number'), // prettier-ignore
 		'Error retrieving all live player games',
 	);

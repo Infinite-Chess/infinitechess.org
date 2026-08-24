@@ -9,6 +9,7 @@
 
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
+import type { ValidEngine } from '../../../shared/chess/engines/engine.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { SlideLimitValue } from '../../../shared/util/gameconfig.js';
 import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
@@ -24,7 +25,7 @@ import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import { players } from '../../../shared/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
-import { getFormattedEngineName, ValidEngine } from '../../../shared/chess/engines/engine.js';
+import { getFormattedEngineName } from '../../../shared/chess/engines/engine.js';
 
 import { getGameData } from '../../database/gamesManager.js';
 import ratingcalculation from '../../utility/ratingcalculation.js';
@@ -32,7 +33,7 @@ import { getPlayerGamesOfGame } from '../../database/playerGamesManager.js';
 import { getEngineGamesOfGame } from '../../database/engineGamesManager.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
 
-// Types -----------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** The engine participant of a concluded engine game, as stored in `engine_games`. */
 type EngineParticipant = {
@@ -42,7 +43,7 @@ type EngineParticipant = {
 	container: ServerUsernameContainer;
 };
 
-// Constants -------------------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
 
 /** Display name for a player whose account was deleted (their `player_games` row remains, but no `members` row). */
 const DELETED_USER_DISPLAY_NAME = '(Deleted User)';
@@ -52,7 +53,7 @@ const STATIC_GAME_COLUMNS = ['variant', 'rated', 'date', 'base_time_seconds', 'i
 /** The `player_games` columns needed to assemble a {@link StaticGameState}. */
 const STATIC_PLAYER_COLUMNS = ['player_number', 'user_id', 'elo_at_game', 'rating_deviation_at_game'] as const; // prettier-ignore
 
-// Methods ---------------------------------------------------------------------------------------
+// Building the game states -------------------------------------------------------------------
 
 /**
  * Returns the color a signed-in user played in a concluded game, or `undefined` if they
@@ -163,7 +164,7 @@ function assembleStaticGameState(
 		if (row.elo_at_game !== null)
 			container.rating = {
 				value: row.elo_at_game,
-				confident: isRatingConfident(row.rating_deviation_at_game),
+				confident: ratingcalculation.isRatingConfident(row.rating_deviation_at_game),
 			};
 		playerContainers[color] = container;
 	}
@@ -212,17 +213,7 @@ function getEngineParticipant(game_id: number): EngineParticipant | undefined {
 	};
 }
 
-/**
- * Derives a stored rating's confidence from its Glicko RD, mirroring the live path.
- * Pre-migration rows have no stored RD (null) -> fall back to confident (unrecoverable).
- */
-function isRatingConfident(rating_deviation: number | null): boolean {
-	return (
-		rating_deviation === null || rating_deviation <= ratingcalculation.UNCERTAIN_LEADERBOARD_RD
-	);
-}
-
-// Exports ---------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
 export default {
 	resolveParticipantColor,

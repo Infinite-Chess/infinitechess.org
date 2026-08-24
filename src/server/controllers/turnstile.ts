@@ -4,7 +4,7 @@
  * Cloudflare Turnstile verification helper.
  *
  * Verifies a Turnstile token server-side via Cloudflare's siteverify
- * endpoint, so forms an reject submissions that lack a valid bot-check token.
+ * endpoint, so forms can reject submissions that lack a valid bot-check token.
  */
 
 import type { IncomingMessage } from 'http';
@@ -25,7 +25,7 @@ import { logEventsAndPrint } from '../utility/logEvents.js';
  */
 type TurnstileResult = 'success' | 'failed' | 'error';
 
-// Variables -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------------
 
 /**
  * Cloudflare's documented dummy keys, used in development when real keys are unset
@@ -51,12 +51,12 @@ if (process.env['NODE_ENV'] === 'production') {
  * The public Turnstile site key, rendered into the widget. Pulled from the env in
  * production (asserted present above); falls back to the always-pass test key otherwise.
  */
-const TURNSTILE_SITE_KEY: string = process.env['TURNSTILE_SITE_KEY'] || TEST_SITE_KEY;
+const SITE_KEY: string = process.env['TURNSTILE_SITE_KEY'] || TEST_SITE_KEY;
 /**
  * The server-only Turnstile secret key, used to verify tokens. Pulled from the env in
  * production (asserted present above); falls back to the always-pass test secret otherwise.
  */
-const TURNSTILE_SECRET_KEY: string = process.env['TURNSTILE_SECRET_KEY'] || TEST_SECRET_KEY;
+const SECRET_KEY: string = process.env['TURNSTILE_SECRET_KEY'] || TEST_SECRET_KEY;
 
 /** Cloudflare's token verification endpoint. */
 const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
@@ -69,8 +69,8 @@ const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverif
  * @param req - The incoming request, used to forward the real client IP (`remoteip`).
  * @returns The verification outcome. Callers must reject on both `'failed'` and `'error'`.
  */
-async function verifyTurnstileToken(token: string, req: IncomingMessage): Promise<TurnstileResult> {
-	const body = new URLSearchParams({ secret: TURNSTILE_SECRET_KEY, response: token });
+async function verify(token: string, req: IncomingMessage): Promise<TurnstileResult> {
+	const body = new URLSearchParams({ secret: SECRET_KEY, response: token });
 	const remoteip = getClientIP(req);
 	if (remoteip !== undefined) body.append('remoteip', remoteip);
 
@@ -94,6 +94,6 @@ async function verifyTurnstileToken(token: string, req: IncomingMessage): Promis
 	}
 }
 
-// Exports ------------------------------------------------
+// Exports ---------------------------------------------------------------------------------------
 
-export { TURNSTILE_SITE_KEY, verifyTurnstileToken };
+export default { SITE_KEY, verify };

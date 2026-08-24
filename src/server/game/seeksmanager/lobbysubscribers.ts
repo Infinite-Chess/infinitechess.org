@@ -13,8 +13,8 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { OutAction, OutValue } from '../../socket/socketSend.js';
 
+import socketsend from '../../socket/socketSend.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
-import { sendSocketMessage } from '../../socket/socketSend.js';
 
 // Constants -------------------------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ function broadcastToAll<A extends OutAction<'lobby'>, V extends OutValue<'lobby'
 	message: Exact<V, OutValue<'lobby', A>>,
 ): void {
 	for (const ws of subscribedClients) {
-		sendSocketMessage(ws, 'lobby', action, message); // In order: socket, sub, action, value
+		socketsend.send(ws, 'lobby', action, message); // In order: socket, sub, action, value
 	}
 }
 

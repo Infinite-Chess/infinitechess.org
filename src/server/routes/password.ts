@@ -7,7 +7,7 @@
 
 import express from 'express';
 
-import { forgotPasswordLimiter } from '../middleware/rateLimiters.js';
+import rateLimiters from '../middleware/rateLimiters.js';
 import {
 	handleForgotPasswordRequest,
 	handleResetPassword,
@@ -15,7 +15,7 @@ import {
 
 const router = express.Router();
 
-router.post('/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
+router.post('/forgot-password', rateLimiters.forgotPassword, handleForgotPasswordRequest);
 router.post('/reset-password', handleResetPassword);
 
 export default router;

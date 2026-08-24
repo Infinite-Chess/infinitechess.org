@@ -1,6 +1,6 @@
 // src/server/game/seeksmanager/lobbyrouter.ts
 
-/*
+/**
  * This script routes all incoming websocket messages
  * with the "lobby" route to where they need to go.
  */
@@ -14,7 +14,7 @@ import acceptseek from './acceptseek.js';
 import createenginegame from './createenginegame.js';
 
 /** Routes all incoming websocket messages related to the lobby. */
-function route(ws: CustomWebSocket, contents: ServerboundLobbyMessage): void {
+export function routeLobbyMessage(ws: CustomWebSocket, contents: ServerboundLobbyMessage): void {
 	// Route them according to their action
 	switch (contents.action) {
 		case 'createseek':
@@ -33,9 +33,3 @@ function route(ws: CustomWebSocket, contents: ServerboundLobbyMessage): void {
 			console.error('UNKNOWN web socket action received in lobby route!', contents satisfies never); // prettier-ignore
 	}
 }
-
-// Exports ---------------------------------------------------------------------------------------
-
-export default {
-	route,
-};
