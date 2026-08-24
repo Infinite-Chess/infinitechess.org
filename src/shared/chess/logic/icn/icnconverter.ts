@@ -212,9 +212,6 @@ function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
 	);
 }
 
-/** The default full move, if none specified in the ICN. */
-const defaultFullMove = 1;
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //											REGULAR EXPRESSIONS												//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -776,8 +773,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 
 		lastIndex = fullMoveMatch.nextIndex;
 	} else {
-		// Set default full move
-		fullMove = defaultFullMove;
+		fullMove = gamerules.DEFAULT_FULL_MOVE;
 	}
 
 	// Promotions ranks + allowed

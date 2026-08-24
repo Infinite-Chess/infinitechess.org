@@ -71,6 +71,9 @@ const DEFAULT_WIN_CONDITIONS: PlayerGroup<GameruleWinCondition[]> = Object.fromE
 	DEFAULT_TURN_ORDER.map((player) => [player, [DEFAULT_WIN_CONDITION]]),
 );
 
+/** The full-move number a game starts at when nothing declares otherwise. */
+const DEFAULT_FULL_MOVE = 1;
+
 // Functions ----------------------------------------------------------------------
 
 /** Checks if a specified color has a given win condition. */
@@ -123,6 +126,7 @@ export default {
 	DEFAULT_WIN_CONDITION,
 	DEFAULT_TURN_ORDER,
 	DEFAULT_WIN_CONDITIONS,
+	DEFAULT_FULL_MOVE,
 	// Functions
 	doesColorHaveWinCondition,
 	getWinConditionCountOfColor,

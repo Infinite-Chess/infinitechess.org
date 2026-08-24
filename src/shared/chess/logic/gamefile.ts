@@ -58,7 +58,7 @@ export interface Snapshot {
  */
 export interface VariantOptions {
 	/**
-	 * The full move number of the turn at the provided position. Default: 1.
+	 * The full move number of the turn at the provided position.
 	 * Can be higher if you copy just the positional information in a game with some moves played already.
 	 */
 	fullMove: number;

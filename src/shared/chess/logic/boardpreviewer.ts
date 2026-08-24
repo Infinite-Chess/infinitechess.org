@@ -17,6 +17,7 @@ import type { GameState, GlobalGameState } from './state.js';
 import type { Snapshot, VariantOptions, LoadedVariant } from './gamefile.js';
 
 import jsutil from '../../util/jsutil.js';
+import gamerules from '../util/gamerules.js';
 import organizedpieces from './organizedpieces.js';
 import variantpreviewer from './variantpreviewer.js';
 
@@ -89,7 +90,7 @@ function initBoardPreview(
 	)
 		throw new Error('If moveRule is specified, moveRuleState must also be specified.');
 
-	const fullMove = variantOptions?.fullMove ?? 1;
+	const fullMove = variantOptions?.fullMove ?? gamerules.DEFAULT_FULL_MOVE;
 	const enpassant = variantOptions?.state_global.enpassant;
 	const moveRuleState =
 		variantOptions?.state_global.moveRuleState ??
