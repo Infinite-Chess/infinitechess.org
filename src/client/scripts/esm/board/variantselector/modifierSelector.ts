@@ -5,11 +5,9 @@
  * the modifier dropdown, selected modifiers display, and per-modifier settings (e.g. Slide Limit).
  */
 
-import type { ModifierCode } from '../../../../../shared/util/modutil.js';
-import type { GameModifier } from '../../../../../shared/util/modutil.js';
+import type { ModifierCode, GameModifier } from '../../../../../shared/chess/util/modutil.js';
 
-import modutil from '../../../../../shared/util/modutil.js';
-import gameconfig from '../../../../../shared/util/gameconfig.js';
+import modutil from '../../../../../shared/chess/util/modutil.js';
 
 import variantSelector from './variantSelector.js';
 
@@ -71,14 +69,14 @@ function initModifierSelector(hostConfig: ModifierSelectorConfig = {}): void {
 	// input updates the live display (onChange); change (drag release) is a commit.
 	element_slideLimitSlider.addEventListener('input', () => {
 		const idx = parseInt(element_slideLimitSlider.value, 10);
-		const value = gameconfig.SLIDE_LIMIT_VALUES[idx]!;
+		const value = modutil.SLIDE_LIMIT_VALUES[idx]!;
 		element_slideLimitDisplay.textContent = String(value);
 		config.onChange?.();
 	});
 	element_slideLimitSlider.addEventListener('change', () => config.onCommit?.());
 
 	// Initialize slider display
-	const defaultIdx = gameconfig.SLIDE_LIMIT_VALUES.indexOf(SLIDE_LIMIT_DEFAULT);
+	const defaultIdx = modutil.SLIDE_LIMIT_VALUES.indexOf(SLIDE_LIMIT_DEFAULT);
 	element_slideLimitSlider.value = String(defaultIdx);
 	element_slideLimitDisplay.textContent = String(SLIDE_LIMIT_DEFAULT);
 }
@@ -160,7 +158,7 @@ function applyModifiers(modifiers: GameModifier[]): void {
 	for (const modifier of modifiers) {
 		selectedModifiers.add(modifier.kind);
 		if (modifier.kind === 'slide-limit') {
-			const idx = gameconfig.SLIDE_LIMIT_VALUES.indexOf(modifier.value);
+			const idx = modutil.SLIDE_LIMIT_VALUES.indexOf(modifier.value);
 			element_slideLimitSlider.value = String(idx);
 			element_slideLimitDisplay.textContent = String(modifier.value);
 		}
@@ -179,7 +177,7 @@ function getGameModifiers(): GameModifier[] {
 	const configs: GameModifier[] = [];
 	if (selectedModifiers.has('slide-limit')) {
 		const idx = parseInt(element_slideLimitSlider.value, 10);
-		const slideLimit = gameconfig.SLIDE_LIMIT_VALUES[idx]!;
+		const slideLimit = modutil.SLIDE_LIMIT_VALUES[idx]!;
 		configs.push({ kind: 'slide-limit', value: slideLimit });
 	}
 	return configs;

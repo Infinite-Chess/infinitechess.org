@@ -319,13 +319,13 @@ returns `'moves_invalid'` instead.
 
 Piecewise helpers, for when you hold one segment rather than a whole ICN:
 
-| Segment            | Write                                | Read                                         |
-| ------------------ | ------------------------------------ | -------------------------------------------- |
-| One compact move   | `getTokenFromMoveCoords()`           | `parseTokenMove()`                           |
-| One dressed move   | `getShortFormMoveFromMove()`         | — (only via the whole list)                  |
-| A move list        | `getShortFormMovesFromMoves()`       | `parseShortFormMoves()`                      |
-| A position         | `icnposition.getShortFormPosition()` | `icnposition.parseShortFormPosition()`       |
-| Preset annotations | —                                    | `parsePresetSquares()` / `parsePresetRays()` |
+| Segment            | Write                                   | Read                                         |
+| ------------------ | --------------------------------------- | -------------------------------------------- |
+| One compact move   | `icnmoves.getTokenFromMoveCoords()`     | `icnmoves.parseTokenMove()`                  |
+| One dressed move   | `icnmoves.getShortFormMoveFromMove()`   | — (only via the whole list)                  |
+| A move list        | `icnmoves.getShortFormMovesFromMoves()` | `icnmoves.parseShortFormMoves()`             |
+| A position         | `icnposition.getShortFormPosition()`    | `icnposition.parseShortFormPosition()`       |
+| Preset annotations | —                                       | `parsePresetSquares()` / `parsePresetRays()` |
 
 ## Round-trip losses
 
@@ -367,6 +367,7 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 | Concern                                            | File                                                                                                                                    |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | The whole-game format — regexes, writer, parser    | [icnconverter.ts](/src/shared/chess/logic/icn/icnconverter.ts)                                                                          |
+| The move layer — move tokens, move lists, styling  | [icnmoves.ts](/src/shared/chess/logic/icn/icnmoves.ts)                                                                                  |
 | The position layer — piece codes, writer, parser   | [icnposition.ts](/src/shared/chess/logic/icn/icnposition.ts)                                                                            |
 | Comment embedded command sequences (`[%clk ...]`)  | [icncommentutils.ts](/src/shared/chess/logic/icn/icncommentutils.ts)                                                                    |
 | Parsed ICN → position / `VariantOptions` / packets | [icnimport.ts](/src/shared/chess/logic/icn/icnimport.ts)                                                                                |

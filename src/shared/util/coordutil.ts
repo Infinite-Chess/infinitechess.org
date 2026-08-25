@@ -131,7 +131,12 @@ function stringifyCoords(coords: Coords): string {
 	return `(${coords[0]}, ${coords[1]})`;
 }
 
-/** [DEBUG] Stringifies a pair of BigDecimal coordinates into their exact representation. SLOW. */
+/**
+ * [DEBUG] Stringifies a pair of BigDecimal coordinates into their exact representation. SLOW.
+ *
+ * The two commented-out lines are deliberate: swapping which one is live is how you switch
+ * the debug format. Leave all three in place.
+ */
 function stringifyBDCoords(coords: BDCoords): string {
 	// return `(${bd.toNumber(coords[0])}, ${bd.toNumber(coords[1])})`;
 	return `(${bd.toExactString(coords[0])}, ${bd.toExactString(coords[1])})`;
@@ -141,6 +146,7 @@ function stringifyBDCoords(coords: BDCoords): string {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Functions
 	getKeyFromCoords,
 	getCoordsFromKey,
 	areCoordsEqual,

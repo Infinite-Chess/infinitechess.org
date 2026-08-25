@@ -13,6 +13,7 @@ import type { ServerGame } from './servergametypes.js';
 
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/util/typeutil.js';
+import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
@@ -23,7 +24,7 @@ import gamelifecycle from './gamelifecycle.js';
 function abort(servergame: ServerGame): void {
 	// Is it legal?...
 
-	if (gameutility.isGameOver(servergame)) {
+	if (gamefileutility.isGameOver(servergame)) {
 		// Return if game is already over
 		console.log(`Player tried to abort game ${servergame.match.id} when the game is already over!`); // prettier-ignore
 		return;
@@ -45,7 +46,7 @@ function abort(servergame: ServerGame): void {
 function resign(servergame: ServerGame, ourRole: Player): void {
 	// Is it legal?...
 
-	if (gameutility.isGameOver(servergame)) {
+	if (gamefileutility.isGameOver(servergame)) {
 		// Return if game is already over
 		console.log(`Player tried to resign game ${servergame.match.id} when the game is already over!`); // prettier-ignore
 		return;

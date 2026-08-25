@@ -13,6 +13,7 @@ import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 
 import jsutil from '../../shared/util/jsutil.js';
+import jsonutil from '../../shared/util/jsonutil.js';
 
 import { logEventsAndPrint } from '../utility/logEvents.js';
 
@@ -103,9 +104,9 @@ function assertColumnsValid(
 	tableName: string,
 ): void {
 	if (!Array.isArray(columns))
-		throw new Error(`When getting ${tableName} data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
+		throw new Error(`When getting ${tableName} data, columns must be an array of strings! Received: ${jsonutil.ensureJSONString(columns)}`); // prettier-ignore
 	if (columns.length === 0 || !columns.every((column) => typeof column === 'string' && allowedColumns.includes(column)))
-		throw new Error(`Invalid columns requested from ${tableName} table: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
+		throw new Error(`Invalid columns requested from ${tableName} table: ${jsonutil.ensureJSONString(columns)}`); // prettier-ignore
 }
 
 /**
@@ -125,10 +126,10 @@ function runRowUpdate(params: {
 }): Database.RunResult {
 	const entries = Object.entries(params.updates);
 	if (entries.length === 0)
-		throw new Error(`Empty updates provided when ${params.errorContext}! Received: ${jsutil.ensureJSONString(params.updates)}`); // prettier-ignore
+		throw new Error(`Empty updates provided when ${params.errorContext}! Received: ${jsonutil.ensureJSONString(params.updates)}`); // prettier-ignore
 	const excluded = params.excludedColumns ?? [];
 	if (!entries.every(([column]) => !excluded.includes(column) && params.allowedColumns.includes(column)))
-		throw new Error(`Invalid columns provided when ${params.errorContext}! Received: ${jsutil.ensureJSONString(params.updates)}`); // prettier-ignore
+		throw new Error(`Invalid columns provided when ${params.errorContext}! Received: ${jsonutil.ensureJSONString(params.updates)}`); // prettier-ignore
 
 	const setClauses = entries.map(([column]) => `${column} = ?`).join(', ');
 	const values = entries.map(([, value]) => value ?? null);

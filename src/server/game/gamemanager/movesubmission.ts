@@ -12,21 +12,22 @@
 
 import type { Player } from '../../../shared/util/typeutil.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
-import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
+import type { MoveParsed } from '../../../shared/chess/logic/icn/icnmoves.js';
 import type { ServerGame } from './servergametypes.js';
-import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
+import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { SubmitMoveMessage } from '../../../shared/serverbound.js';
-import type { OpponentsMoveMessage } from '../../../shared/clientbound.js';
+import type { SubmitMoveMessage } from '../../../shared/transport/serverbound.js';
+import type { OpponentsMoveMessage } from '../../../shared/transport/clientbound.js';
 
 import bimath from '../../../shared/util/math/bimath.js';
 import typeutil from '../../../shared/util/typeutil.js';
+import icnmoves from '../../../shared/chess/logic/icn/icnmoves.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
-import gameconfig from '../../../shared/util/gameconfig.js';
+import gamelimits from '../../../shared/chess/util/gamelimits.js';
 import wincondition from '../../../shared/chess/logic/wincondition.js';
-import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import socketsend from '../../socket/socketSend.js';
 import onOfferDraw from './onOfferDraw.js';
@@ -43,7 +44,7 @@ import { logEventsAndPrint } from '../../utility/logEvents.js';
 /** The number of additional coordinate digits allowed per second of game duration. */
 const DIGITS_PER_SECOND = 4.5;
 /** The number of digits in the maximum teleport coordinate. */
-const TELEPORT_LIMIT_DIGITS = bimath.countDigits(gameconfig.TELEPORT_LIMIT);
+const TELEPORT_LIMIT_DIGITS = bimath.countDigits(gamelimits.TELEPORT_LIMIT);
 
 // Functions ----------------------------------------------------------------------------------
 
@@ -74,7 +75,7 @@ export function submitMove(
 	const role = engineParticipant ? servergame.whosTurn : ws.metadata.subscriptions.game.color;
 
 	// If the game is already over, don't accept it.
-	if (gameutility.isGameOver(servergame)) return;
+	if (gamefileutility.isGameOver(servergame)) return;
 
 	// Make sure it's their turn
 	if (!engineParticipant && servergame.whosTurn !== role) {
@@ -290,7 +291,7 @@ function doesMoveCheckOut(move: string): MoveParsed | null {
 	// Is the move in the correct format? "x,y>x,y=N"
 	let moveParsed: MoveParsed;
 	try {
-		moveParsed = icnconverter.parseTokenMove(move);
+		moveParsed = icnmoves.parseTokenMove(move);
 	} catch {
 		// It either didn't pass the regex, or the promoted piece abbreviation was invalid.
 		return null;

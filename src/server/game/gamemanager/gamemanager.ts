@@ -12,12 +12,13 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type { GameSetup, ServerGame } from './servergametypes.js';
-import type { EngineGamePageInfo, StaticGameState } from '../../../shared/domain.js';
+import type { EngineGamePageInfo, StaticGameState } from '../../../shared/transport/domain.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
+import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import disconnect from './disconnect.js';
 import socketsend from '../../socket/socketSend.js';
@@ -106,7 +107,7 @@ function createGame(
  */
 function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 	for (const servergame of activegames.getAll()) {
-		if (!gameutility.isGameOver(servergame)) continue; // Only concluded games linger for a rematch.
+		if (!gamefileutility.isGameOver(servergame)) continue; // Only concluded games linger for a rematch.
 		for (const [c, data] of Object.entries(servergame.match.playerData)) {
 			if (!memberinfoutil.eq(data.identifier, identifier)) continue;
 			if (data.socket) {
@@ -186,7 +187,7 @@ function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void 
 	disconnect.cancelTimer(servergame.match, ourRole);
 
 	const opponentRole = typeutil.invertPlayer(ourRole);
-	if (!gameutility.isGameOver(servergame)) {
+	if (!gamefileutility.isGameOver(servergame)) {
 		liveGameValues.onPlayerReconnected(servergame, ourRole);
 		// Alert their opponent we have returned, if they were informed of the disconnect
 		if (claimWindowWasSet) {
@@ -212,7 +213,7 @@ function unsubscribeParticipant(ws: CustomWebSocket, involuntary: boolean): void
 	const role = gamesockets.getRole(servergame, ws)!;
 	gamesockets.detachParticipant(servergame.match, ws);
 
-	if (!gameutility.isGameOver(servergame)) {
+	if (!gamefileutility.isGameOver(servergame)) {
 		// Game is ongoing: inform the opponent they disconnected.
 		if (involuntary) {
 			// Internet interruption. Give them 5 seconds before opening the opponent's claim window.
@@ -302,7 +303,7 @@ function pushClock(servergame: ServerGame): number | undefined {
 function armAutoTimeLoss(servergame: ServerGame): void {
 	if (
 		servergame.untimed ||
-		gameutility.isGameOver(servergame) ||
+		gamefileutility.isGameOver(servergame) ||
 		!moveutil.isGameResignable(servergame) ||
 		servergame.clocks.colorTicking === undefined
 	)
@@ -330,7 +331,7 @@ function freezeEngineClock(servergame: ServerGame): void {
 		servergame.untimed || // No clocks
 		servergame.clocks.colorTicking === undefined || // Already frozen
 		servergame.whosTurn !== engine.color || // Not the engine's turn
-		gameutility.isGameOver(servergame)
+		gamefileutility.isGameOver(servergame)
 	)
 		return;
 
@@ -349,7 +350,7 @@ function resumeEngineClock(servergame: ServerGame): void {
 		servergame.untimed || // No clocks
 		servergame.clocks.colorTicking !== undefined || // Already ticking
 		servergame.whosTurn !== engine.color || // Not the engine's turn
-		gameutility.isGameOver(servergame) ||
+		gamefileutility.isGameOver(servergame) ||
 		!moveutil.isGameResignable(servergame)
 	)
 		return;

@@ -8,7 +8,7 @@
  * Withdrawing a seek instead of accepting it lives in `cancelseek.ts`.
  */
 
-import type { SeekId } from '../../../shared/domain.js';
+import type { SeekId } from '../../../shared/transport/domain.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';

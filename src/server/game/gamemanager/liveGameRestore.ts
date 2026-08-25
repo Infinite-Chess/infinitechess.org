@@ -16,11 +16,11 @@
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
-import type { ValidEngine } from '../../../shared/chess/engines/engine.js';
-import type { SeekVariant } from '../../../shared/chess/variants/variantselection.js';
+import type { ValidEngine } from '../../../shared/chess/util/engine.js';
+import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
-import type { SlideLimitValue } from '../../../shared/util/gameconfig.js';
+import type { SlideLimitValue } from '../../../shared/chess/util/modutil.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
@@ -29,7 +29,7 @@ import type { MatchInfo, PlayerData, ServerGame } from './servergametypes.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
-import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import icnmoves from '../../../shared/chess/logic/icn/icnmoves.js';
 
 import gameutility from './gameutility.js';
 import memberManager from '../../database/memberManager.js';
@@ -353,7 +353,7 @@ function reconstructMatchInfo(
 /** Parses the moves string back into move objects. */
 function parseMoves(movesString: string): MoveRecord[] {
 	if (movesString === '') return [];
-	return icnconverter.parseShortFormMoves(movesString);
+	return icnmoves.parseShortFormMoves(movesString);
 }
 
 // Pending Timers -----------------------------------------------------------------------------

@@ -8,10 +8,11 @@
 
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
+import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
+
 import socketsend from '../../socket/socketSend.js';
 import gamemanager from './gamemanager.js';
 import gamesockets from './gamesockets.js';
-import gameutility from './gameutility.js';
 import activegames from './activegames.js';
 import gamestatebuilder from './gamestatebuilder.js';
 
@@ -24,7 +25,7 @@ export function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 
 	if (game !== undefined) {
 		// Live game
-		if (!gameutility.isGameOver(game)) {
+		if (!gamefileutility.isGameOver(game)) {
 			// Only concluded games have a rematch state
 			console.error(`Client requested a rematch subscription for a game that is not over (game_id ${game_id}).`); // prettier-ignore
 			return;

@@ -6,7 +6,7 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { ServerboundGameMessage } from '../../../shared/serverbound.js';
+import type { ServerboundGameMessage } from '../../../shared/transport/serverbound.js';
 
 import onOfferDraw from './onOfferDraw.js';
 import gamesockets from './gamesockets.js';

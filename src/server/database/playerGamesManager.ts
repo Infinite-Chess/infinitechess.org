@@ -6,7 +6,7 @@
 
 import type { Player } from '../../shared/util/typeutil.js';
 
-import jsutil from '../../shared/util/jsutil.js';
+import jsonutil from '../../shared/util/jsonutil.js';
 
 import db from './database.js';
 import databaseTables from './databaseTables.js';
@@ -59,11 +59,11 @@ function getOpponentsOfUser<K extends PlayerGamesColumn>(
 
 			// Every requested game should have at least one opponent row.
 			if (rows.length < game_id_list.length)
-				throw new Error(`Not enough matches found in player_games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}. Expected at least ${game_id_list.length}, found ${rows.length}. Was one of them a guest?`); // prettier-ignore
+				throw new Error(`Not enough matches found in player_games table for game_ids: ${jsonutil.ensureJSONString(game_id_list)}. Expected at least ${game_id_list.length}, found ${rows.length}. Was one of them a guest?`); // prettier-ignore
 
 			return rows;
 		},
-		`Error getting all player_games entries for game_id_list "${jsutil.ensureJSONString(game_id_list)}"`,
+		`Error getting all player_games entries for game_id_list "${jsonutil.ensureJSONString(game_id_list)}"`,
 	);
 }
 

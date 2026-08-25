@@ -13,9 +13,10 @@
 
 import type { Request, Response } from 'express';
 import type { ParsedCookies } from '../../types.js';
-import type { MemberInfoCookie } from '../../../shared/types/memberInfo.js';
+import type { MemberInfoCookie } from '../../../shared/types/memberinfo.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
+import jsonutil from '../../../shared/util/jsonutil.js';
 
 import { logEventsAndPrint } from '../../utility/logEvents.js';
 
@@ -71,7 +72,7 @@ function readMemberInfoCookie(req: Request): MemberInfoCookie | undefined {
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
 		logEventsAndPrint(
-			`memberInfo cookie was tampered: "${jsutil.ensureJSONString(stringified)}"\n${detail}`,
+			`memberInfo cookie was tampered: "${jsonutil.ensureJSONString(stringified)}"\n${detail}`,
 			'errLog',
 		);
 		return undefined;

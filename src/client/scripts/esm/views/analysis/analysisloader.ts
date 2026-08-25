@@ -6,15 +6,15 @@
  */
 
 import type { VariantCode } from '../../../../../shared/chess/util/variantcodes.js';
-import type { DeadGameState } from '../../../../../shared/domain.js';
+import type { DeadGameState } from '../../../../../shared/transport/domain.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import { players as p } from '../../../../../shared/util/typeutil.js';
-import { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';

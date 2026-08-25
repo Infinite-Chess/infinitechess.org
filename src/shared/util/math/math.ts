@@ -6,11 +6,6 @@
  * Most of what used to live here has moved to bounds.ts, vectors.ts, or geometry.ts.
  */
 
-// Types -----------------------------------------------------------------------
-
-/** A color in a length-4 array: `[r,g,b,a]` */
-export type Color = [number, number, number, number];
-
 // Operations ------------------------------------------------------------------
 
 /** Clamps a value between an inclusive minimum and maximum. */

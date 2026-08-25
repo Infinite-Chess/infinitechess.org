@@ -1,4 +1,4 @@
-// scripts/import-chain.ts
+// scripts/imports/import-chain.ts
 
 /**
  * Studies the entire import chain of a single script, grouped by depth.

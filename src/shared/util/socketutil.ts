@@ -23,7 +23,7 @@ export type Exact<V, Shape> = V & { [K in keyof V]: K extends keyof Shape ? V[K]
  * A map of route name → the union of messages that route carries.
  * Each side declares its own for the direction it sends.
  */
-export type MessageMap = Record<string, { action: string }>;
+type MessageMap = Record<string, { action: string }>;
 
 /** The actions valid on a given route of `M`. */
 export type RouteAction<M extends MessageMap, R extends keyof M> = M[R]['action'];

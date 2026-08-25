@@ -6,7 +6,7 @@
 
 import type { PendingRegistrationRecord } from './pendingRegistrationManager.js';
 
-import jsutil from '../../shared/util/jsutil.js';
+import jsonutil from '../../shared/util/jsonutil.js';
 
 import db from './database.js';
 import databaseTables from './databaseTables.js';
@@ -389,7 +389,7 @@ function validateMemberQueryArgs(
 		searchValues.length === 0 ||
 		!searchValues.every((value) => typeof value === 'string' || typeof value === 'number')
 	)
-		throw new Error(`Invalid search values for members table: ${jsutil.ensureJSONString(searchValues)}`); // prettier-ignore
+		throw new Error(`Invalid search values for members table: ${jsonutil.ensureJSONString(searchValues)}`); // prettier-ignore
 }
 
 // Exports ------------------------------------------------------------------------------------

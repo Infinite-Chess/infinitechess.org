@@ -10,6 +10,7 @@ import type { ServerGame } from './servergametypes.js';
 
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/util/typeutil.js';
+import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import drawoffers from './drawoffers.js';
 import gamesockets from './gamesockets.js';
@@ -24,7 +25,7 @@ function offer(servergame: ServerGame, ourRole: Player): void {
 	if (gameutility.isEngineGame(servergame)) return;
 	const match = servergame.match;
 
-	if (gameutility.isGameOver(servergame))
+	if (gamefileutility.isGameOver(servergame))
 		return console.error('Client offered a draw when the game is already over. Ignoring.');
 	if (drawoffers.isOpen(match))
 		return console.error(
@@ -47,7 +48,7 @@ function offer(servergame: ServerGame, ourRole: Player): void {
 
 /** Called when client accepts a draw. Ends the game. */
 function accept(servergame: ServerGame, ourRole: Player): void {
-	if (gameutility.isGameOver(servergame))
+	if (gamefileutility.isGameOver(servergame))
 		return console.error('Client accepted a draw when the game is already over. Ignoring.');
 	if (!drawoffers.isOpen(servergame.match))
 		return console.error("Client tried to accept a draw offer when there isn't one.");
@@ -68,7 +69,7 @@ function decline(servergame: ServerGame, ourRole: Player): void {
 	// if their opponent doesn't have an open draw offer.
 	if (!drawoffers.isExtendedBy(servergame.match, opponentColor)) return;
 
-	if (gameutility.isGameOver(servergame))
+	if (gamefileutility.isGameOver(servergame))
 		return console.error('Client declined a draw when the game is already over. Ignoring.');
 
 	// Decline the draw!

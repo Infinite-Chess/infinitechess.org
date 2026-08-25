@@ -10,9 +10,9 @@ import type { VNode } from 'snabbdom';
 import type { MetaData } from '../../../../../shared/chess/util/metadatautil.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 import type { StorageType } from '../../savedpositions/storetypes.js';
-import type { SeekVariant } from '../../../../../shared/chess/variants/variantselection.js';
+import type { SeekVariant } from '../../../../../shared/chess/util/variantselection.js';
 import type { VariantCode } from '../../../../../shared/chess/util/variantcodes.js';
-import type { GameModifier } from '../../../../../shared/util/modutil.js';
+import type { GameModifier } from '../../../../../shared/chess/util/modutil.js';
 import type { VariantGroup } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { CloudSaveListRecord } from '../../savedpositions/savesapi.js';
 import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
@@ -26,13 +26,13 @@ import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
+import { validatePosition } from '../../../../../shared/chess/logic/positionlegality.js';
 import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import {
 	PositionRejection,
-	validatePosition,
 	localizeRejection,
-	getPlayabilityRejection,
-} from '../../../../../shared/chess/game/positionvalidation.js';
+	getRejection,
+} from '../../../../../shared/chess/game/playability.js';
 
 import savesapi from '../../savedpositions/savesapi.js';
 import savestore from '../../savedpositions/savestore.js';
@@ -664,9 +664,9 @@ function withEngineBorder(options: VariantOptions): VariantOptions {
 	return { ...options, gameRules: { ...options.gameRules, worldBorder } };
 }
 
-/** {@link getPlayabilityRejection} under the contexts this selector is currently in. */
+/** {@link getRejection} under the contexts this selector is currently in. */
 function playabilityRejection(constructed: GameFile): PositionRejection | null {
-	return getPlayabilityRejection(constructed, {
+	return getRejection(constructed, {
 		seek: config.isSeekContext,
 		engine: engineOnly,
 	});

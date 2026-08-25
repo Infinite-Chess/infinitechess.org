@@ -13,7 +13,7 @@
  * for one that loaded memory-evicted, so every element here may be absent.
  */
 
-import type { DisconnectInfo } from '../../../../../../shared/clientbound.js';
+import type { DisconnectInfo } from '../../../../../../shared/transport/clientbound.js';
 
 import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
 

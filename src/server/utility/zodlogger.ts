@@ -7,7 +7,7 @@
 
 import * as z from 'zod';
 
-import jsutil from '../../shared/util/jsutil.js';
+import jsonutil from '../../shared/util/jsonutil.js';
 
 import { logEvents, logEventsAndPrint } from './logEvents.js';
 
@@ -22,7 +22,7 @@ import { logEvents, logEventsAndPrint } from './logEvents.js';
 export function logZodError(json: unknown, zodError: z.ZodError, contextMessage: string): void {
 	const treeifiedErrors = JSON.stringify(z.treeifyError(zodError), null, 2);
 	const logText = `${contextMessage} - Message contents:
-${jsutil.ensureJSONString(json, 2)}
+${jsonutil.ensureJSONString(json, 2)}
 
 Zod treeified errors:
 ${treeifiedErrors}

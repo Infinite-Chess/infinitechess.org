@@ -10,7 +10,7 @@
  */
 
 import type { Board } from './boardinit.js';
-import type { GameConclusion } from '../util/winconutil.js';
+import type { GameConclusion } from '../util/typeschemas.js';
 
 import jsutil from '../../util/jsutil.js';
 import winconutil from '../util/winconutil.js';
@@ -19,7 +19,7 @@ import wincondition from './wincondition.js';
 import checkresolver from './checkresolver.js';
 import specialdetect from './specialdetect.js';
 import boardutil, { Piece } from './boardutil.js';
-import icnconverter, { MoveCoords } from './icn/icnconverter.js';
+import icnmoves, { MoveCoords } from './icn/icnmoves.js';
 import movepiece, { CoordsTagged, MoveTagged } from './movepiece.js';
 import typeutil, { Player, RawType, rawTypes as r } from '../../util/typeutil.js';
 
@@ -90,7 +90,7 @@ function isTokenMoveLegal(boardsim: Board, tokenMove: unknown): MoveValidationRe
 	// Convert the move from compact short format "x,y>x,y=N" to JSON format
 	let moveCoords: MoveCoords;
 	try {
-		moveCoords = icnconverter.parseTokenMove(tokenMove);
+		moveCoords = icnmoves.parseTokenMove(tokenMove);
 	} catch (error: unknown) {
 		const msg = jsutil.getErrorMessage(error);
 		console.error(`Invalid format error when parsing compact move "${tokenMove}": ${msg}`);

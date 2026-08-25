@@ -10,11 +10,11 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 import type { ClockValues } from '../../../../../shared/chess/util/clockutil.js';
 import type { MoveValidationResult } from '../../../../../shared/chess/logic/movevalidation.js';
-import type { OpponentsMoveMessage } from '../../../../../shared/clientbound.js';
+import type { OpponentsMoveMessage } from '../../../../../shared/transport/clientbound.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import { isGameServerValidated } from '../../../../../shared/chess/variants/servervalidation.js';
@@ -89,7 +89,7 @@ function handleMove(
 
 	// Convert the move from compact short format "x,y>x,y=N" to JSON.
 	// Gauranteed by the server to be parsable.
-	const moveTagged: MoveTagged = icnconverter.parseTokenMove(message.move.token);
+	const moveTagged: MoveTagged = icnmoves.parseTokenMove(message.move.token);
 
 	premoves.performWithUnapplied(gamefile, mesh, () => {
 		// If not legal, this will be a string for why it is illegal.

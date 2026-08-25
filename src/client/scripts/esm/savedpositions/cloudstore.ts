@@ -10,7 +10,7 @@ import type { CloudPositionRecord, CloudSaveListRecord } from './savesapi';
 
 import jsutil from '../../../../shared/util/jsutil.js';
 import icnimport from '../../../../shared/chess/logic/icn/icnimport.js';
-import editorutil from '../../../../shared/util/editorutil';
+import gamelimits from '../../../../shared/chess/util/gamelimits';
 import compression from '../../../../shared/util/compression';
 import icnconverter from '../../../../shared/chess/logic/icn/icnconverter';
 
@@ -107,7 +107,7 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<CloudSa
 	const { data: compressedICN, compression: compressionMode } =
 		await compression.compressString(icn);
 
-	if (compressedICN.length > editorutil.MAX_ICN_LENGTH) throw new PositionTooLargeError();
+	if (compressedICN.length > gamelimits.MAX_ICN_LENGTH) throw new PositionTooLargeError();
 
 	return savesapi.savePosition(
 		editorSaveState.position_name,

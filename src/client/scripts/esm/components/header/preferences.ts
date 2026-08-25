@@ -1,12 +1,12 @@
 // src/client/scripts/esm/components/header/preferences.ts
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 
 import themes from '../../../../../shared/components/header/themes.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import typeutil from '../../../../../shared/util/typeutil.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
-import pieceThemes, { PieceColorGroup } from '../../../../../shared/chess/util/pieceThemes.js';
+import piecethemes, { PieceColorGroup } from '../../../../../shared/chess/util/piecethemes.js';
 
 import docutil from '../../util/docutil.js';
 import LocalStorage from '../../util/LocalStorage.js';
@@ -391,7 +391,7 @@ function getAnnoteArrowColor(): Color {
 function getTintColorOfType(type: number): Color {
 	const [r, p] = typeutil.splitType(type);
 
-	const baseColor: Color = pieceThemes.getBaseColorForType(r, p);
+	const baseColor: Color = piecethemes.getBaseColorForType(r, p);
 
 	const boardColorName: string = getBoardColor();
 	const themePieceColors: Partial<PieceColorGroup> = themes.getPropertyOfTheme(

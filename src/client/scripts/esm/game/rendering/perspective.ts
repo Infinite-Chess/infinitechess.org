@@ -5,7 +5,7 @@
  * Also rendering our crosshair
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 
 import webgl from '../../board/rendering/webgl.js';
 import config from '../config.js';

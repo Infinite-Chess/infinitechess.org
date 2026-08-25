@@ -6,14 +6,14 @@
  * Has no dependency on live game state.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
 import typeutil from '../../../../../shared/util/typeutil.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
-import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
+import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import { players as p, TypeGroup } from '../../../../../shared/util/typeutil.js';
 
 import space from '../space.js';
@@ -53,7 +53,7 @@ function buildInstanceData(ctx: RenderContext, boardsim: BoardPreview): TypeGrou
 	const boardScale = ctx.boardpos.getBoardScale();
 
 	boardsim.existingTypes.forEach((type: number) => {
-		if (pieceThemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
+		if (piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
 		const range = boardsim.pieces.typeRanges.get(type)!;
 		if (boardutil.getPieceCountOfTypeRange(range) === 0) return; // Skip types with no pieces
 		instanceData[type] = [];

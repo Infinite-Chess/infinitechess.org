@@ -14,10 +14,10 @@
  * files off disk as markup for SSR'd piece icons.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 import type { RawType } from '../../../../../shared/util/typeutil.js';
 
-import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
+import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import typeutil, { players } from '../../../../../shared/util/typeutil.js';
 
 import preferences from '../../components/header/preferences.js';
@@ -166,7 +166,7 @@ function getNeededSVGLocations(types: number[]): Set<string> {
 	typeloop: for (const type of types) {
 		const [raw, c] = typeutil.splitType(type);
 		const baseId = `${typeutil.getRawTypeStr(raw)}`;
-		const checks: string[] = pieceThemes.getSVGColorPriority(c);
+		const checks: string[] = piecethemes.getSVGColorPriority(c);
 		for (const c of checks) {
 			const id = baseId + c;
 			if (id in cachedPieceSVGs) continue typeloop;
@@ -174,7 +174,7 @@ function getNeededSVGLocations(types: number[]): Set<string> {
 		locations.add(raw);
 	}
 
-	return pieceThemes.getLocationsForTypes(locations);
+	return piecethemes.getLocationsForTypes(locations);
 }
 
 /**
@@ -192,7 +192,7 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 		const tint = preferences.getTintColorOfType(type);
 		const [raw, c] = typeutil.splitType(type);
 		const baseId = `${typeutil.getRawTypeStr(raw)}`;
-		const colorExts: string[] = pieceThemes.getSVGColorPriority(c);
+		const colorExts: string[] = piecethemes.getSVGColorPriority(c);
 		for (const c of colorExts) {
 			const id = baseId + c;
 			if (!(id in cachedPieceSVGs)) continue;
@@ -211,7 +211,7 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 			svgs.push(cloned);
 			continue l;
 		}
-		console.error(`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${colorExts} for ${baseId}`); // prettier-ignore
+		console.error(`SVG at path "${piecethemes.getLocationForType(raw)}" does not contain an svg with extensions ${colorExts} for ${baseId}`); // prettier-ignore
 		failed = true;
 	}
 	if (failed) throw Error('SVG theme is missing ids for pieces');
@@ -239,7 +239,7 @@ async function getSilhouetteSVG(rawType: RawType): Promise<SVGElement> {
  */
 function getCachedSilhouetteSVG(rawType: RawType): SVGElement {
 	const baseId = typeutil.getRawTypeStr(rawType);
-	const colorExts = pieceThemes.getSVGColorPriority(players.BLACK);
+	const colorExts = piecethemes.getSVGColorPriority(players.BLACK);
 	let source: SVGElement | undefined;
 	for (const ext of colorExts) {
 		const id = baseId + ext;

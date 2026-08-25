@@ -9,31 +9,28 @@
  */
 
 import type { AuthSeek } from './seekutility.js';
-import type { SeekVariant } from '../../../shared/chess/variants/variantselection.js';
+import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { MetaData, Rating } from '../../../shared/chess/util/metadatautil.js';
-import type { CreateSeekMessage } from '../../../shared/serverbound.js';
+import type { CreateSeekMessage } from '../../../shared/transport/serverbound.js';
 
 import uuid from '../../../shared/util/uuid.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
+import gamelimits from '../../../shared/chess/util/gamelimits.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
-import variantreader from '../../../shared/chess/logic/variantreader.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
+import variantmovement from '../../../shared/chess/logic/variantmovement.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
-import { SEEK_ID_LENGTH } from '../../../shared/domain.js';
-import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from '../../../shared/chess/variants/servervalidation.js';
-import {
-	Leaderboards,
-	getLeaderboardOfVariant,
-} from '../../../shared/chess/variants/validleaderboard.js';
+import { SEEK_ID_LENGTH } from '../../../shared/transport/domain.js';
+import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
+import { validatePosition } from '../../../shared/chess/logic/positionlegality.js';
 import {
 	PositionRejection,
-	validatePosition,
 	localizeRejection,
-	getPlayabilityRejection,
-} from '../../../shared/chess/game/positionvalidation.js';
+	getRejection,
+} from '../../../shared/chess/game/playability.js';
 
 import socketsend from '../../socket/socketSend.js';
 import activeseeks from './activeseeks.js';
@@ -96,7 +93,8 @@ function getSeekFromWebsocketMessageContents(
 	if (ws.metadata.memberInfo.signedIn) {
 		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
 		const leaderboardId =
-			getLeaderboardOfVariant(messageContents.variant) ?? Leaderboards.INFINITY;
+			leaderboardregistry.ofVariant(messageContents.variant) ??
+			leaderboardregistry.IDS.INFINITY;
 		rating = leaderboardsManager.getEloOfPlayer(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 
@@ -138,7 +136,7 @@ function validateVariant(ws: CustomWebSocket, variant: SeekVariant, engineGame: 
  */
 function validateIcnSeekContent(content: string, engineGame: boolean): PositionRejection | null {
 	// Cheap pre-filter that bounds the parsing work. validatePosition re-checks below.
-	if (content.length > MAX_SERVER_VALIDATABLE_POSITION_LENGTH) {
+	if (content.length > gamelimits.MAX_SERVER_VALIDATABLE_POSITION_LENGTH) {
 		return { kind: 'position', code: 'position_too_large' };
 	}
 	let longFormat;
@@ -163,7 +161,7 @@ function validateIcnSeekContent(content: string, engineGame: boolean): PositionR
 	// Legal, but the game still has to be playable from here. Built on the board the real game
 	// gets — the ICN's own world border, which an engine game must carry — then discarded.
 	const constructed = gameformulator.constructPosition(variantOptions);
-	return getPlayabilityRejection(constructed, { seek: true, engine: engineGame });
+	return getRejection(constructed, { seek: true, engine: engineGame });
 }
 
 /**
@@ -181,7 +179,7 @@ function validateSeekMetadata(metadata: MetaData): PositionRejection | null {
 	const code = variantregistry.resolveVariantCode(metadata.Variant);
 	if (code === undefined) return { kind: 'position', code: 'invalid_icn' };
 	// Every variant module is preloaded at server startup.
-	if (variantreader.hasCustomMovement(variantcache.getModule(code))) {
+	if (variantmovement.hasCustomMovement(variantcache.getModule(code))) {
 		return { kind: 'position', code: 'no_4d_movement' };
 	}
 	return null;

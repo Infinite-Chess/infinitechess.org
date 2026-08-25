@@ -26,7 +26,7 @@ export type VariantInfo = {
 };
 
 /** Entry in the variant registry. */
-export type VariantRegistryEntry = {
+type VariantRegistryEntry = {
 	/** The variant's group categorization. */
 	group: VariantGroup;
 	/**

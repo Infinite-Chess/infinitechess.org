@@ -8,10 +8,10 @@
  * if we have done so, in the current online game.
  */
 
-import type { DrawOfferInfo } from '../../../../../shared/clientbound.js';
+import type { DrawOfferInfo } from '../../../../../shared/transport/clientbound.js';
 
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
-import gameconfig from '../../../../../shared/util/gameconfig.js';
+import gamelimits from '../../../../../shared/chess/util/gamelimits.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
@@ -61,7 +61,7 @@ function isTooSoonToOfferDraw(): boolean {
 	if (plyOfLastOfferedDraw === undefined) return false; // We have made zero offers so far this game
 
 	const movesSinceLastOffer = gamefile.moves.length - plyOfLastOfferedDraw;
-	if (movesSinceLastOffer < gameconfig.MIN_PLIES_BETWEEN_DRAW_OFFERS) return true;
+	if (movesSinceLastOffer < gamelimits.MIN_PLIES_BETWEEN_DRAW_OFFERS) return true;
 	return false;
 }
 

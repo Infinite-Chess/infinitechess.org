@@ -17,7 +17,7 @@ import type {
 	GameConclusionMessage,
 	ClientboundGameMessage,
 	GameNavigation,
-} from '../../../../../shared/clientbound.js';
+} from '../../../../../shared/transport/clientbound.js';
 
 import gameurl from '../../../../../shared/util/gameurl.js';
 import typeutil from '../../../../../shared/util/typeutil.js';

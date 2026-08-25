@@ -9,14 +9,14 @@
 import type { Mesh } from './piecemodels.js';
 import type { VariantCode } from '../../../../../shared/chess/util/variantcodes.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
-import type { GameModifier } from '../../../../../shared/util/modutil.js';
+import type { GameModifier } from '../../../../../shared/chess/util/modutil.js';
 import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
+import variantrules from '../../../../../shared/chess/logic/variantrules.js';
 import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
-import variantpreviewer from '../../../../../shared/chess/logic/variantpreviewer.js';
 import {
 	summarizeGameRules,
 	type RuleSummaryItem,
@@ -204,7 +204,7 @@ async function showForVariantCode(
 		mod: variantcache.getModule(code),
 		dateTimestamp: Date.now(),
 	};
-	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant);
+	const gameRules = variantrules.getGameRulesOfVariant(loadedVariant);
 	// The board an engine game would be played on — the same one game construction resolves.
 	if (options.engineGame && gameRules.worldBorder === undefined) {
 		gameRules.worldBorder = apeironborder.forVariant(loadedVariant);

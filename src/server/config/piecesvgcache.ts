@@ -16,7 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
 
-import pieceThemes from '../../shared/chess/util/pieceThemes.js';
+import piecethemes from '../../shared/chess/util/piecethemes.js';
 import typeutil, { players, rawTypes } from '../../shared/util/typeutil.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -59,7 +59,7 @@ function loadPieceSVGs(): Map<RawType, string> {
 
 	const allRawTypes = Object.values(rawTypes);
 
-	for (const location of pieceThemes.getLocationsForTypes(allRawTypes)) {
+	for (const location of piecethemes.getLocationsForTypes(allRawTypes)) {
 		const file = fs.readFileSync(path.join(PIECE_SVG_FOLDER, `${location}.svg`), 'utf8');
 
 		// Reading fewer elements than there are opening tags means one of them is nested or
@@ -82,9 +82,9 @@ function loadPieceSVGs(): Map<RawType, string> {
 	}
 
 	for (const rawType of allRawTypes) {
-		if (pieceThemes.getLocationForType(rawType) === null) continue; // Has no svg (VOID)
+		if (piecethemes.getLocationForType(rawType) === null) continue; // Has no svg (VOID)
 		const baseId = typeutil.getRawTypeStr(rawType);
-		const markup = pieceThemes
+		const markup = piecethemes
 			.getSVGColorPriority(players.BLACK)
 			.map((ext) => svgsById.get(baseId + ext))
 			.find((found) => found !== undefined);

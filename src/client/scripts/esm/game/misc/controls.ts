@@ -31,6 +31,7 @@ import guipromotion from '../gui/guipromotion.js';
 import guimoveslist from '../gui/guimoveslist.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import { estimateMemorySizeOf } from './memoryestimator.js';
 import gamecore, { listener_document, listener_canvas } from '../chess/gamecore.js';
 
 // Constants -------------------------------------------------------------------
@@ -245,7 +246,7 @@ function testOutGameToggles(): void {
 function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Digit1')) {
 		console.log(jsutil.deepCopyObject(gamefile));
-		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
+		console.log('Estimated gamefile memory usage: ' + estimateMemorySizeOf(gamefile));
 	}
 	if (listener_document.isKeyDown('Digit2')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
 	if (listener_document.isKeyDown('Digit4')) specialrighthighlights.toggle(); // Highlights special rights and en passant

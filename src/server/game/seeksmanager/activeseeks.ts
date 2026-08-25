@@ -11,7 +11,7 @@
 
 import type { AuthSeek } from './seekutility.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { OutSeek, SeekId } from '../../../shared/domain.js';
+import type { OutSeek, SeekId } from '../../../shared/transport/domain.js';
 
 import socketsend from '../../socket/socketSend.js';
 import seekutility from './seekutility.js';

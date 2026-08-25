@@ -6,7 +6,7 @@
  * result banner and reusable by the client for live conclusions.
  */
 
-import type { GameConclusion } from './winconutil.js';
+import type { GameConclusion } from './typeschemas.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 
 import { players } from '../../util/typeutil.js';

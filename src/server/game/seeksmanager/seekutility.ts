@@ -9,11 +9,8 @@
  */
 
 import type { AuthMemberInfo } from '../../types.js';
-import type { BaseSeek, OutSeek } from '../../../shared/domain.js';
-import type {
-	SeekVariant,
-	OutSeekVariant,
-} from '../../../shared/chess/variants/variantselection.js';
+import type { BaseSeek, OutSeek } from '../../../shared/transport/domain.js';
+import type { SeekVariant, OutSeekVariant } from '../../../shared/chess/util/variantselection.js';
 
 // Type Definitions ------------------------------------------------------------------------------
 

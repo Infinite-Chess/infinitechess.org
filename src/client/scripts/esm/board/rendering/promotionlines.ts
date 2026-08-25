@@ -4,7 +4,7 @@
  * This script handles the rendering of our promotion lines.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 import type { Promotion } from '../../../../../shared/chess/util/gamerules.js';
 import type RenderContext from './RenderContext.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';

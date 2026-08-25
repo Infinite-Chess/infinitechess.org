@@ -5,7 +5,7 @@
  */
 
 import type { Rating } from '../../shared/chess/util/metadatautil.js';
-import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
+import type { Leaderboard } from '../../shared/chess/variants/leaderboardregistry.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 

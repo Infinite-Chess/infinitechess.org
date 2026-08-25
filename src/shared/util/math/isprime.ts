@@ -1,4 +1,4 @@
-// src/shared/util/isprime.ts
+// src/shared/util/math/isprime.ts
 
 /*
 Source: https://github.com/latonv/MillerRabinPrimality
@@ -39,7 +39,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * to do more checks.
  */
 
-import bimath from './math/bimath.js';
+import bimath from './bimath.js';
 
 /**
  * A type containing precalculated values needed to efficiently reduce numbers to/from their Montgomery forms

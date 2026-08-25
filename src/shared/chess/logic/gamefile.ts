@@ -9,10 +9,10 @@ import type { Board } from './boardinit.js';
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
-import type { MovePacket } from '../../chess/logic/icn/icnconverter.js';
+import type { MovePacket } from '../../chess/util/typeschemas.js';
 import type { VariantCode } from '../util/variantcodes.js';
 import type { VariantModule } from './variantmodule.js';
-import type { GameConclusion } from '../util/winconutil.js';
+import type { GameConclusion } from '../util/typeschemas.js';
 import type { GlobalGameState } from './state.js';
 import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';
 import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js';
@@ -23,10 +23,10 @@ import gamerules from '../util/gamerules.js';
 import boardinit from './boardinit.js';
 import checkmate from './checkmate.js';
 import wincondition from './wincondition.js';
+import variantrules from './variantrules.js';
 import apeironborder from './apeironborder.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from './gamefileutility.js';
-import variantpreviewer from './variantpreviewer.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -223,7 +223,7 @@ function initGameFile(
 	validateMoves?: true,
 ): GameFile {
 	let gameRules: GameRules =
-		additional.variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(variant); // Already a fresh copy
+		additional.variantOptions?.gameRules ?? variantrules.getGameRulesOfVariant(variant); // Already a fresh copy
 
 	// Slide Limit modifier override. Onto a shallow copy, so the caller's rules stay untouched —
 	// initBoard deep-copies from here, so the gamefile shares no nested objects with them either.

@@ -8,7 +8,8 @@ import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { Player } from '../../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
-import type { GameruleWinCondition, GameConclusion } from '../util/winconutil.js';
+import type { GameConclusion } from '../util/typeschemas.js';
+import type { GameruleWinCondition } from '../util/winconutil.js';
 
 import typeutil from '../../util/typeutil.js';
 import gamerules from '../util/gamerules.js';
@@ -23,9 +24,7 @@ function isGameOver(basegame: { gameConclusion?: GameConclusion }): boolean {
 	return basegame.gameConclusion !== undefined;
 }
 
-/**
- * Returns true if the currently-viewed position of the game file is in check
- */
+/** Returns true if the currently-viewed position of the game file is in check. */
 function isCurrentViewedPositionInCheck(boardsim: Board): boolean {
 	return boardsim.state.local.inCheck !== false;
 }

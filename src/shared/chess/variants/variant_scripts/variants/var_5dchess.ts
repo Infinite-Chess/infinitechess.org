@@ -10,14 +10,14 @@ import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 import type { RawType, RawTypeGroup } from '../../../../util/typeutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../../../logic/specialmove.js';
 
-import gen4DPosition from '../gen4DPosition.js';
+import gen4dposition from '../gen4dposition.js';
 import fourdimensionalmoves from '../../../logic/fourdimensionalmoves.js';
 import fourdimensionalloader from '../fourdimensionalloader.js';
-import { CLASSICAL_POSITION_STRING } from '../classicalPositionString.js';
+import { CLASSICAL_POSITION_STRING } from '../classicalposition.js';
 import { players as p, rawTypes as r } from '../../../../util/typeutil.js';
 
 export function getPosition(): { position: Map<CoordsKey, number> } {
-	return { position: gen4DPosition.gen(8n, 8n, 9n, CLASSICAL_POSITION_STRING) };
+	return { position: gen4dposition.gen(8n, 8n, 9n, CLASSICAL_POSITION_STRING) };
 }
 
 export function gameruleModifications(): GameRuleModifications {

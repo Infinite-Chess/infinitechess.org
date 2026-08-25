@@ -8,7 +8,7 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 
 /** A single position in the analysis tree: one move plus its continuations. */
 export interface AnalysisMoveNode {

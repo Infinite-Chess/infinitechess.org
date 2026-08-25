@@ -13,7 +13,7 @@ import type {
 	ServerboundGameMessage,
 	ServerboundGeneralMessage,
 	ServerboundLobbyMessage,
-} from '../../../../shared/serverbound.js';
+} from '../../../../shared/transport/serverbound.js';
 
 import uuid from '../../../../shared/util/uuid.js';
 import socketutil from '../../../../shared/util/socketutil.js';

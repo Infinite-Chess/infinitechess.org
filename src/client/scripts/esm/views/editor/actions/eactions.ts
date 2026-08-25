@@ -17,7 +17,8 @@
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit';
 import type { MetaData } from '../../../../../../shared/chess/util/metadatautil.js';
-import type { MovePacket } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { MovePacket } from '../../../../../../shared/chess/util/typeschemas.js';
+import type { MoveParsed } from '../../../../../../shared/chess/logic/icn/icnmoves';
 import type { ActivePosition } from '../boardeditor';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 import type { EditorSaveState, StorageType } from '../../../savedpositions/storetypes';
@@ -27,15 +28,14 @@ import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../../../../shared/chess/variants/variantcache';
-import variantpreviewer from '../../../../../../shared/chess/logic/variantpreviewer';
-import { validatePosition } from '../../../../../../shared/chess/game/positionvalidation';
+import variantrules from '../../../../../../shared/chess/logic/variantrules';
+import { validatePosition } from '../../../../../../shared/chess/logic/positionlegality';
 import boardutil, { Piece } from '../../../../../../shared/chess/logic/boardutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
 } from '../../../../../../shared/chess/logic/organizedpieces';
 import icnconverter, {
-	MoveParsed,
 	LongFormatIn,
 	LongFormatOut,
 } from '../../../../../../shared/chess/logic/icn/icnconverter';
@@ -86,7 +86,7 @@ async function reset(): Promise<void> {
 /** Clears the entire board editor position. */
 async function clearAll(): Promise<void> {
 	// Initialize board editor with empty position and bare minimum game rules
-	const gameRules = variantpreviewer.getBareMinimumGameRules();
+	const gameRules = variantrules.getBareMinimumGameRules();
 	const position: Map<CoordsKey, number> = new Map();
 	const specialRights: Set<CoordsKey> = new Set();
 	const state_global: GlobalGameState = { specialRights };

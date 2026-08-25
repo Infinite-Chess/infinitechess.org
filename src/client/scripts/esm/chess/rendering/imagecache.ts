@@ -14,7 +14,7 @@ import type { TypeGroup } from '../../../../../shared/util/typeutil.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
 import typeutil from '../../../../../shared/util/typeutil.js';
-import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
+import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 
 import svgcache from './svgcache.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
@@ -37,7 +37,7 @@ let cachedImages: TypeGroup<HTMLImageElement> = {};
 async function initImagesForGame(boardsim: BoardPreview): Promise<void> {
 	// 1. Determine required piece types (excluding already-cached and SVG-less ones)
 	const types = boardsim.existingTypes.filter(
-		(t: number) => !cachedImages[t] && !pieceThemes.SVGLESS_TYPES.has(typeutil.getRawType(t)),
+		(t: number) => !cachedImages[t] && !piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(t)),
 	);
 	if (types.length === 0) return;
 

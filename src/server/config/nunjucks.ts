@@ -13,7 +13,7 @@ import nunjucks from 'nunjucks';
 import { fileURLToPath } from 'node:url';
 
 import { players as p } from '../../shared/util/typeutil.js';
-import { getVersionedEngineName } from '../../shared/chess/engines/engine.js';
+import { getVersionedEngineName } from '../../shared/chess/util/engine.js';
 
 import manifest from './manifest.js';
 

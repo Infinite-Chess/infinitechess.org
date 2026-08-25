@@ -14,6 +14,7 @@ import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type { GameSetup, ServerGame } from './servergametypes.js';
 
 import typeutil from '../../../shared/util/typeutil.js';
+import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import manifest from '../../config/manifest.js';
 import socketsend from '../../socket/socketSend.js';
@@ -30,7 +31,7 @@ import gamelifecycle from './gamelifecycle.js';
  * opponent, or — if the opponent has already offered — creates the rematch game.
  */
 export function offerRematch(servergame: ServerGame, ourRole: Player): void {
-	if (!gameutility.isGameOver(servergame))
+	if (!gamefileutility.isGameOver(servergame))
 		return console.error('Client offered a rematch when the game is not over. Ignoring.');
 
 	// There's no engine to await an acceptance from — start the rematch immediately.

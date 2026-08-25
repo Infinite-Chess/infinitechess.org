@@ -11,7 +11,11 @@ import type { Request } from 'express';
 import type { GameRules } from '../../shared/chess/util/gamerules.js';
 import type { SpeedCategory } from '../../shared/chess/util/clockutil.js';
 import type { GlobalGameState } from '../../shared/chess/logic/state.js';
-import type { GamePageData, StaticGameSetup, StaticGameState } from '../../shared/domain.js';
+import type {
+	GamePageData,
+	StaticGameSetup,
+	StaticGameState,
+} from '../../shared/transport/domain.js';
 
 import gameurl from '../../shared/util/gameurl.js';
 import timeutil from '../../shared/util/timeutil.js';
@@ -20,9 +24,9 @@ import icnimport from '../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../shared/chess/util/metadatautil.js';
 import variantcache from '../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../shared/chess/logic/icn/icnconverter.js';
+import variantrules from '../../shared/chess/logic/variantrules.js';
 import gameresultutil from '../../shared/chess/util/gameresultutil.js';
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
-import variantpreviewer from '../../shared/chess/logic/variantpreviewer.js';
 import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.js';
 import { players as p, Player, PlayerGroup } from '../../shared/util/typeutil.js';
 
@@ -310,7 +314,7 @@ function resolveGameRules(
 		};
 		// A preset always starts clean, so it has no global state worth summarizing.
 		return {
-			gameRules: variantpreviewer.getGameRulesOfVariant(loaded),
+			gameRules: variantrules.getGameRulesOfVariant(loaded),
 			state_global: undefined,
 		};
 	}

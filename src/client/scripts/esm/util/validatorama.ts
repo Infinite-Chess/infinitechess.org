@@ -5,7 +5,7 @@
  * rides on the httpOnly refresh-token cookie (auto-sent same-site).
  */
 
-import type { MemberInfoCookie } from '../../../../shared/types/memberInfo.js';
+import type { MemberInfoCookie } from '../../../../shared/types/memberinfo.js';
 
 import docutil from './docutil.js';
 

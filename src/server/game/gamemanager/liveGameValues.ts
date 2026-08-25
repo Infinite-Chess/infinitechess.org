@@ -16,7 +16,7 @@ import type {
 	LivePlayerGamesRecord,
 } from '../../database/livePlayerGamesManager.js';
 
-import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import icnmoves from '../../../shared/chess/logic/icn/icnmoves.js';
 
 import db from '../../database/database.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
@@ -32,7 +32,7 @@ import liveEngineGamesManager from '../../database/liveEngineGamesManager.js';
 function getMovesString(servergame: ServerGame): string {
 	if (servergame.moves.length === 0) return '';
 
-	return icnconverter.getShortFormMovesFromMoves(servergame.moves, {
+	return icnmoves.getShortFormMovesFromMoves(servergame.moves, {
 		compact: true,
 		spaces: false,
 		comments: !servergame.untimed,

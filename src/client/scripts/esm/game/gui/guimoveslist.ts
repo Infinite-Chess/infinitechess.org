@@ -19,7 +19,7 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../../../shared/util/typeutil.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
 import gameresultutil from '../../../../../shared/chess/util/gameresultutil.js';
 
 import gameslot from '../chess/gameslot.js';
@@ -333,7 +333,7 @@ function appendPly(move: MoveFull, index: number): void {
  * the shortform + truncation so both the real-DOM and vnode ply builders stay in sync.
  */
 function getPlyDisplay(move: MoveFull): { title: string; coord: string; rawType: RawType } {
-	const shortform = icnconverter.getShortFormMoveFromMove(move, {
+	const shortform = icnmoves.getShortFormMoveFromMove(move, {
 		compact: false,
 		spaces: false,
 		comments: false,

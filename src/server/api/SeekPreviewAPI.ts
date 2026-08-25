@@ -7,7 +7,7 @@
 
 import type { Request, Response } from 'express';
 
-import { SeekIdSchema } from '../../shared/domain.js';
+import { SeekIdSchema } from '../../shared/transport/domain.js';
 
 import activeseeks from '../game/seeksmanager/activeseeks.js';
 

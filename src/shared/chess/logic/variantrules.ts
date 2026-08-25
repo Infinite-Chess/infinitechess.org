@@ -1,10 +1,11 @@
-// src/shared/chess/logic/variantpreviewer.ts
+// src/shared/chess/logic/variantrules.ts
 
 /**
- * Reads pre-loaded VariantModules to generate game rules, starting positions,
- * and annotation presets. Contains only the lightweight subset of variant
- * reading needed for preview and server validation — no moveset or special-move
- * logic is imported here.
+ * Reads a pre-loaded VariantModule for what a game is set UP with: its gamerules,
+ * starting position, and annotation presets.
+ *
+ * The light half of variant reading. variantmovement.ts is the other half, and stays
+ * separate so a caller wanting only these can skip movesets and special moves entirely.
  */
 
 import type { BaseRay } from '../../util/math/geometry.js';

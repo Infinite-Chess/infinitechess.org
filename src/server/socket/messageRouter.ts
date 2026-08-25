@@ -5,7 +5,7 @@
  */
 
 import type { CustomWebSocket } from './socketTypes.js';
-import type { ServerboundRoutedMessage } from '../../shared/serverbound.js';
+import type { ServerboundRoutedMessage } from '../../shared/transport/serverbound.js';
 
 import { routeGameMessage } from '../game/gamemanager/gamerouter.js';
 import { routeLobbyMessage } from '../game/seeksmanager/lobbyrouter.js';

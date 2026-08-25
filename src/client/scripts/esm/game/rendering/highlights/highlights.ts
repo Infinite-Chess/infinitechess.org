@@ -9,7 +9,7 @@
  */
 
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
-import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/types/color.js';
 
 import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
 

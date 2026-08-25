@@ -6,7 +6,7 @@
  */
 
 import type { Board } from './boardinit.js';
-import type { GameConclusion } from '../util/winconutil.js';
+import type { GameConclusion } from '../util/typeschemas.js';
 
 import typeutil from '../../util/typeutil.js';
 import moveutil from './moveutil.js';

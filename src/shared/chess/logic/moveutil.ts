@@ -9,7 +9,7 @@ import type { Coords } from '../../util/coordutil.js';
 import type { Player } from '../../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { EnPassant } from './state.js';
-import type { MoveCoords } from './icn/icnconverter.js';
+import type { MoveCoords } from './icn/icnmoves.js';
 import type { MoveFull, CoordsTagged, MoveRecord } from './movepiece.js';
 
 import coordutil from '../../util/coordutil.js';

@@ -5,7 +5,7 @@
  */
 
 import type { CustomWebSocket } from './socketTypes.js';
-import type { ServerboundGeneralMessage } from '../../shared/serverbound.js';
+import type { ServerboundGeneralMessage } from '../../shared/transport/serverbound.js';
 
 import socketSubs from './socketSubs.js';
 

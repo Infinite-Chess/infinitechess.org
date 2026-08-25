@@ -6,7 +6,7 @@
  * and plays the sound when the piece is dropped.
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/types/color.js';
 import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
@@ -15,7 +15,7 @@ import bd from '@naviary/bigdecimal';
 import typeutil from '../../../../../../shared/util/typeutil.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
-import pieceThemes from '../../../../../../shared/chess/util/pieceThemes.js';
+import piecethemes from '../../../../../../shared/chess/util/piecethemes.js';
 
 import space from '../../../board/space.js';
 import mouse from '../../mouse.js';
@@ -259,7 +259,7 @@ function renderPiece(): void {
 
 /** Generates the model of the dragged piece and its shadow. */
 function renderPieceModel(): void {
-	if (pieceThemes.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
+	if (piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreenUsed = listener_canvas.isPointerTouch(pointerId!);

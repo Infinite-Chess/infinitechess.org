@@ -9,7 +9,7 @@
  * * Premove highlights
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/types/color.js';
 import type { Coords } from '../../../../../../shared/util/coordutil.js';
 
 import bdcoords from '../../../../../../shared/util/bdcoords.js';

@@ -13,7 +13,7 @@ import type {
 	ClientboundGameMessage,
 	ClientboundGeneralMessage,
 	ClientboundLobbyMessage,
-} from '../../shared/clientbound.js';
+} from '../../shared/transport/clientbound.js';
 
 import { WebSocket } from 'ws';
 

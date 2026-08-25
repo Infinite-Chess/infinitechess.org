@@ -7,7 +7,7 @@
  * This vertex data can then be used to pass into a buffer model for rendering.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 
 // =========================================== Quads ==================================================
 

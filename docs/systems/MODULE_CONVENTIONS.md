@@ -8,10 +8,15 @@ scripts disagree, study more siblings before trusting either.
 ## Choosing homes
 
 - A module's permanent home must satisfy the ladder rules encoded in the header of
-  `scripts/import-rules.ts` (imports point down), also checked by
-  `npm run check --silent`.
+  `scripts/imports/import-rules.ts` (imports point down), also checked by
+  `npm run check --silent`. That header carries all three roots' ladders, so placing a
+  file is a lookup rather than a re-derivation.
+- Answer it with the tools in `scripts/imports/`, not by grep —
+  `ladder.ts <root> consumers <path>` for who imports a module (type-only edges
+  included), `pagereach.ts` for which client pages would then ship it, `pkg-cost.ts`
+  when a heavy package is what makes the placement matter.
 - One responsibility per script. Splitting a script might also make it easier to
-  deduce their correct home.
+  deduce their correct home. A file that fits no rung's subject is usually carrying two.
 - Script names: lowercase when repo-specific (`editorsave.ts`), PascalCase only when
   reusable outside this project (`AudioManager.ts`).
 
@@ -42,6 +47,8 @@ scripts disagree, study more siblings before trusting either.
   Sibling symmetry overrides this: if the surrounding family all reads `<module>.<fn>`,
   keep the default object. Match the callers' neighborhood.
 - Nothing gets exported — including types — without a consumer outside the module.
+  `scripts/orphan-exports.ts <root>` lists the ones that break this; it matches
+  textually, so confirm each hit before deleting.
 - Import identifiers match the script's basename; if a local name collides, rename the
   local, don't alias the import.
 
@@ -97,4 +104,5 @@ scripts disagree, study more siblings before trusting either.
 - The user may edit files on disk mid-session as they are reviewing, you may have to
   re-read a file before editing it.
 - `scripts/move-module.ts` `git mv`s modules and rewrites every relative specifier from
-  each file's NEW home for you.
+  each file's NEW home for you. Pass every move in ONE run so they resolve against each
+  other; renaming an import identifier afterwards is yours.

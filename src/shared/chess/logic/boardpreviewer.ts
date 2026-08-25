@@ -5,7 +5,7 @@
  * renderers and other consumers that do not need move-execution machinery
  * (pieceMovesets, specialMoves, vicinity, specialVicinity, moves).
  *
- * initBoardPreview() constructs a BoardPreview without importing variantreader
+ * initBoardPreview() constructs a BoardPreview without importing variantmovement
  * or movesets, keeping the dependency tree light for preview contexts.
  */
 
@@ -18,8 +18,8 @@ import type { Snapshot, VariantOptions, LoadedVariant } from './gamefile.js';
 
 import jsutil from '../../util/jsutil.js';
 import gamerules from '../util/gamerules.js';
+import variantrules from './variantrules.js';
 import organizedpieces from './organizedpieces.js';
-import variantpreviewer from './variantpreviewer.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ function initBoardPreview(
 		position = variantOptions.position;
 		specialRights = variantOptions.state_global.specialRights;
 	} else if (variant !== undefined) {
-		({ position, specialRights } = variantpreviewer.getStartingPositionOfVariant(variant));
+		({ position, specialRights } = variantrules.getStartingPositionOfVariant(variant));
 	} else throw Error('Cannot get starting position without a variant module or variantOptions.');
 
 	const state_global: GlobalGameState = { specialRights };

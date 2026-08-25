@@ -1,22 +1,22 @@
 // src/shared/chess/util/winconutil.ts
 
 /**
- * This script contains lists of compatible win conditions in the game.
- * And contains a few utility methods for them.
+ * The vocabulary of how a game can end: every win, draw and abort condition, and the
+ * English wording each one is written with.
+ *
+ * Deliberately zod-free. The GameConclusion SCHEMA built from these lists lives in
+ * typeschemas.ts, so that icnconverter.ts — and through it both engine workers — can read
+ * the condition names without bundling zod.
  */
-
-import * as z from 'zod';
-
-import typeschemas from './typeschemas.js';
 
 // Types -----------------------------------------------------------------------
 
 /** Condition where one player wins. victor will be a Player. */
-export type WinCondition = (typeof WIN_CONDITIONS)[number];
+type WinCondition = (typeof WIN_CONDITIONS)[number];
 /** Win condition that is a valid gamerule option for either color. */
 export type GameruleWinCondition = (typeof GAMERULE_WIN_CONDITIONS)[number];
 /** Condition that results in a draw. victor will be null. */
-export type DrawCondition = (typeof DRAW_CONDITIONS)[number];
+type DrawCondition = (typeof DRAW_CONDITIONS)[number];
 /** Condition that aborts the game. victor will be undefined. */
 type AbortCondition = 'aborted';
 type MoveTriggeredCondition = (typeof MOVE_TRIGGERED_CONCLUSIONS)[number];
@@ -98,25 +98,6 @@ const TERMINATION_IN_ENGLISH = {
 	abandonment: 'Abandoned',
 } as const;
 
-// Schemas ---------------------------------------------------------------------
-
-/** Stores the results of a game, including how it was terminated, and who won. */
-export type GameConclusion = z.infer<typeof GameConclusionSchema>;
-const GameConclusionSchema = z.discriminatedUnion('condition', [
-	z.strictObject({
-		condition: z.enum(WIN_CONDITIONS),
-		victor: typeschemas.PlayerSchema,
-	}),
-	z.strictObject({
-		condition: z.enum(DRAW_CONDITIONS),
-		victor: z.literal(null),
-	}),
-	z.strictObject({
-		condition: z.literal('aborted'),
-		victor: z.undefined().optional(), // Allows accidental inclusion of undefined victor
-	}),
-]);
-
 // Functions -------------------------------------------------------------------
 
 /**
@@ -147,8 +128,8 @@ function getTerminationInEnglish(moveRule: number | undefined, condition: Condit
 export default {
 	// Constants
 	GAMERULE_WIN_CONDITIONS,
-	// Schemas
-	GameConclusionSchema,
+	WIN_CONDITIONS,
+	DRAW_CONDITIONS,
 	// Functions
 	isConclusionMoveTriggered,
 	getTerminationInEnglish,

@@ -304,6 +304,11 @@ function manhattanDistance(point1: Coords, point2: Coords): bigint {
 	return bimath.abs(point2[0] - point1[0]) + bimath.abs(point2[1] - point1[1]);
 }
 
+/** {@link manhattanDistance} but for javascript double coordinates. */
+function manhattanDistanceDoubles(point1: DoubleCoords, point2: DoubleCoords): number {
+	return Math.abs(point2[0] - point1[0]) + Math.abs(point2[1] - point1[1]);
+}
+
 /**
  * Returns the chebyshev distance between 2 points.
  * This is the maximum between the points' x distance and y distance.
@@ -365,6 +370,7 @@ export default {
 	euclideanDistanceBD,
 	euclideanDistanceDoubles,
 	manhattanDistance,
+	manhattanDistanceDoubles,
 	chebyshevDistance,
 	chebyshevDistanceBD,
 	chebyshevDistanceDoubles,

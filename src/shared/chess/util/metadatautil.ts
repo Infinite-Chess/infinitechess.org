@@ -66,7 +66,7 @@ export interface MetaData {
 }
 
 /** All valid metadata names. */
-export type MetadataKey = keyof MetaData;
+type MetadataKey = keyof MetaData;
 
 /** {@link MetaData} narrowed to the {@link SOURCE_VARIANT_METADATA} tags. */
 export type SourceVariantMetaData = Pick<MetaData, (typeof SOURCE_VARIANT_METADATA)[number]>;

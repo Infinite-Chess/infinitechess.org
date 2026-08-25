@@ -9,7 +9,7 @@ import type { UnboundedRectangle } from '../../util/math/bounds.js';
 import type { GameruleWinCondition } from './winconutil.js';
 import type { Player, RawType, PlayerGroup } from '../../util/typeutil.js';
 
-import { rawTypes as r, players as p } from '../../util/typeutil.js';
+import typeutil, { rawTypes as r, players as p, neutralRawTypes } from '../../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -120,6 +120,22 @@ function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
 	return [...new Set(turnOrder)];
 }
 
+/** Whether any player in the turn order wins by checkmate. */
+function usesCheckmate(gameRules: GameRules): boolean {
+	return getUniquePlayersInTurnOrder(gameRules.turnOrder).some((player) =>
+		doesColorHaveWinCondition(gameRules, player, 'checkmate'),
+	);
+}
+
+/** Whether a pawn may EVER promote into the given piece. */
+function isValidPromotionPiece(rawType: RawType): boolean {
+	return (
+		!neutralRawTypes.includes(rawType) &&
+		!typeutil.royals.includes(rawType) &&
+		rawType !== r.PAWN
+	);
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -135,4 +151,6 @@ export default {
 	getWinConditionCountOfColor,
 	swapCheckmateForRoyalCapture,
 	getUniquePlayersInTurnOrder,
+	usesCheckmate,
+	isValidPromotionPiece,
 };

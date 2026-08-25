@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 import * as z from 'zod';
 
 import jsutil from '../../shared/util/jsutil.js';
-import editorutil from '../../shared/util/editorutil.js';
+import gamelimits from '../../shared/chess/util/gamelimits.js';
 
 import { logZodError } from '../utility/zodlogger.js';
 import editorSavesManager from '../database/editorSavesManager.js';
@@ -29,8 +29,8 @@ const SavePositionBodySchema = z.strictObject({
 		.trim()
 		.min(1, 'Name is required')
 		.max(
-			editorutil.MAX_POSITION_NAME_LENGTH,
-			`Name must be ${editorutil.MAX_POSITION_NAME_LENGTH} characters or less`,
+			gamelimits.MAX_POSITION_NAME_LENGTH,
+			`Name must be ${gamelimits.MAX_POSITION_NAME_LENGTH} characters or less`,
 		),
 	piece_count: z
 		.number()
@@ -41,8 +41,8 @@ const SavePositionBodySchema = z.strictObject({
 		.string()
 		.min(1, 'ICN is required')
 		.max(
-			editorutil.MAX_ICN_LENGTH,
-			`ICN must be ${editorutil.MAX_ICN_LENGTH} characters or less`,
+			gamelimits.MAX_ICN_LENGTH,
+			`ICN must be ${gamelimits.MAX_ICN_LENGTH} characters or less`,
 		),
 	compression: z.enum(['none', 'deflate-raw']),
 	// undefined represents the indeterminate (third) state
@@ -57,8 +57,8 @@ const PositionNameParamSchema = z.strictObject({
 		.trim()
 		.min(1, 'Position name is required')
 		.max(
-			editorutil.MAX_POSITION_NAME_LENGTH,
-			`Position name must be ${editorutil.MAX_POSITION_NAME_LENGTH} characters or less`,
+			gamelimits.MAX_POSITION_NAME_LENGTH,
+			`Position name must be ${gamelimits.MAX_POSITION_NAME_LENGTH} characters or less`,
 		),
 });
 

@@ -4,12 +4,12 @@
  * This script manages the game setup invite/seek creation modal.
  */
 
-import type { GameMode } from '../../../../../shared/domain.js';
+import type { GameMode } from '../../../../../shared/transport/domain.js';
 import type { ModalMode } from '../../handoffs/gamesetuphandoff.js';
 import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
 
 import { players } from '../../../../../shared/util/typeutil.js';
-import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
+import leaderboardregistry from '../../../../../shared/chess/variants/leaderboardregistry.js';
 
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
@@ -138,7 +138,7 @@ export function syncRatedButton(): void {
 	const color = getSelectedColor();
 	const modifiers = modifierSelector.getGameModifiers();
 
-	const allowed = isRatedAllowed(variant, time, color, modifiers);
+	const allowed = leaderboardregistry.isRatedAllowed(variant, time, color, modifiers);
 	element_ratedButton.disabled = !allowed;
 	if (!allowed && element_ratedButton.classList.contains('active')) {
 		element_ratedButton.classList.remove('active');

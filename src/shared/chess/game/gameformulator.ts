@@ -6,7 +6,7 @@
  */
 
 import type { CoordsKey } from '../../util/coordutil.js';
-import type { GameConclusion } from '../util/winconutil.js';
+import type { GameConclusion } from '../util/typeschemas.js';
 import type { ClockValues, TimeControl } from '../util/clockutil.js';
 import type { LongFormatOut, PresetAnnotes } from '../logic/icn/icnconverter.js';
 import type {

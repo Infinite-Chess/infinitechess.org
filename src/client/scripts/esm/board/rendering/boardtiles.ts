@@ -10,7 +10,7 @@
  * own one, with their own tile textures in their own gl context.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 import type RenderContext from './RenderContext.js';
 import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 import type { AttributeInfo, Renderable, TextureInfo } from '../../webgl/Renderable.js';

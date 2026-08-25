@@ -1,10 +1,11 @@
-// src/shared/chess/logic/variantreader.ts
+// src/shared/chess/logic/variantmovement.ts
 
 /**
- * Reads pre-loaded VariantModules to generate moveset and special-move
- * properties. This is the heavyweight counterpart to variantpreviewer —
- * it imports movesets and specialmove and should only be pulled in by
- * code paths that actually execute game logic (boardinit, server, etc.).
+ * Reads a pre-loaded VariantModule for how its pieces MOVE: movesets, special-move
+ * functions, and special vicinity.
+ *
+ * The heavy half of variant reading, pulling in movesets and specialmove. Only code
+ * that actually executes game logic should reach here; variantrules.ts covers the rest.
  */
 
 import type { VariantModule } from './variantmodule.js';

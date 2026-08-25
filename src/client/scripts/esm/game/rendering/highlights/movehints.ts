@@ -8,7 +8,7 @@
  * [Zoomed in]  Arrow indicators (via arrows.ts) for off-screen individual legal moves.
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/types/color.js';
 import type { Coords } from '../../../../../../shared/util/coordutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 

@@ -6,7 +6,7 @@
  */
 
 import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -14,7 +14,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import math from '../../../../../shared/util/math/math.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
-import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
+import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/util/typeutil.js';
 
@@ -201,8 +201,8 @@ function animatePiece(
 	const typesInvolved: Set<RawType> = new Set([typeutil.getRawType(type)]);
 	showKeyframes.forEach((w) => w.forEach((p) => typesInvolved.add(typeutil.getRawType(p.type))));
 	if (
-		new Set([...typesInvolved, ...pieceThemes.SVGLESS_TYPES]).size <
-		typesInvolved.size + pieceThemes.SVGLESS_TYPES.size
+		new Set([...typesInvolved, ...piecethemes.SVGLESS_TYPES]).size <
+		typesInvolved.size + piecethemes.SVGLESS_TYPES.size
 	)
 		instant = true; // Instant animations still play the sound
 

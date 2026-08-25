@@ -6,13 +6,13 @@
  * Helpful for analysis, and requested by many.
  */
 
-import type { Color } from '../../../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../../shared/types/color.js';
 import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coordutil.js';
 
 import vectors from '../../../../../../../shared/util/math/vectors.js';
 import bdcoords from '../../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../../shared/util/coordutil.js';
-import variantpreviewer from '../../../../../../../shared/chess/logic/variantpreviewer.js';
+import variantrules from '../../../../../../../shared/chess/logic/variantrules.js';
 
 import space from '../../../../board/space.js';
 import mouse from '../../../mouse.js';
@@ -162,7 +162,7 @@ function clearPresetOverrides(): void {
 
 function render(highlights: Coords[]): void {
 	const presetSquares =
-		preset_squares ?? variantpreviewer.getSquarePresets(gameslot.getGamefile()!.variant?.mod);
+		preset_squares ?? variantrules.getSquarePresets(gameslot.getGamefile()!.variant?.mod);
 
 	// If we're zoomed out, then the size of the highlights is constant.
 	const u_size = boardpos.areZoomedOut()

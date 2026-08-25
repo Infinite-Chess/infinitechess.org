@@ -38,17 +38,17 @@ server command. Leaving a game is a page navigation, so there is no in-place gam
 
 Both contracts live in `shared/`, split by direction:
 
-| File                                         | Declares                       | Server                                      | Client                                                           |
-| -------------------------------------------- | ------------------------------ | ------------------------------------------- | ---------------------------------------------------------------- |
-| [serverbound.ts](/src/shared/serverbound.ts) | everything the client may send | **value-imports** and validates at the edge | **type-imports only** (erased at build; stays out of the bundle) |
-| [clientbound.ts](/src/shared/clientbound.ts) | everything the server may send | type-imports only                           | **value-imports** and validates at the edge                      |
+| File                                                   | Declares                       | Server                                      | Client                                                           |
+| ------------------------------------------------------ | ------------------------------ | ------------------------------------------- | ---------------------------------------------------------------- |
+| [serverbound.ts](/src/shared/transport/serverbound.ts) | everything the client may send | **value-imports** and validates at the edge | **type-imports only** (erased at build; stays out of the bundle) |
+| [clientbound.ts](/src/shared/transport/clientbound.ts) | everything the server may send | type-imports only                           | **value-imports** and validates at the edge                      |
 
 That split is the whole reason the two directions aren't one file: bundling them together would
 drag zod schemas the client only needs as _types_ into its bundle.
 
 A schema belongs in these files only if it exists **solely** as websocket message contents.
 Domain values also used by HTTP or SSR (`TimeControl`, `MovePacket`, `OutSeek`, `ClockValues`,
-`SeekId`…) live in [domain.ts](/src/shared/domain.ts) and are imported by both.
+`SeekId`…) live in [domain.ts](/src/shared/transport/domain.ts) and are imported by both.
 
 Everything is a `z.discriminatedUnion` of `z.strictObject`s, so an unknown action or an extra
 property is a validation failure, not silently-ignored data.
@@ -464,7 +464,7 @@ makes no difference whether they were one version behind or two.
 | Concern                                            | File                                                                                                                                                                                                                                          |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Shared constants, closure taxonomy, type helpers   | [socketutil.ts](/src/shared/util/socketutil.ts)                                                                                                                                                                                               |
-| Contracts                                          | [serverbound.ts](/src/shared/serverbound.ts), [clientbound.ts](/src/shared/clientbound.ts), [domain.ts](/src/shared/domain.ts)                                                                                                                |
+| Contracts                                          | [serverbound.ts](/src/shared/transport/serverbound.ts), [clientbound.ts](/src/shared/transport/clientbound.ts), [domain.ts](/src/shared/transport/domain.ts)                                                                                  |
 | **Server** — stand up server, payload/close limits | [socketServer.ts](/src/server/socket/socketServer.ts)                                                                                                                                                                                         |
 | Upgrade gating, metadata, listeners                | [socketOpen.ts](/src/server/socket/socketOpen.ts)                                                                                                                                                                                             |
 | Registry, caps, expiry, mass-closure               | [socketRegistry.ts](/src/server/socket/socketRegistry.ts)                                                                                                                                                                                     |

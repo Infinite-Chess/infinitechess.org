@@ -10,7 +10,7 @@
  * belongs in IndexedDB.ts instead (e.g. full infinite-chess board positions).
  */
 
-import jsutil from '../../../../shared/util/jsutil.js';
+import jsonutil from '../../../../shared/util/jsonutil.js';
 
 /** An entry in local storage */
 interface Entry {
@@ -40,7 +40,7 @@ function saveItem(key: string, value: any, expiryMillis: number = defaultExpiryT
 	if (printSavesAndDeletes) console.log(`Saving key to local storage: ${key}`);
 	const timeExpires = Date.now() + expiryMillis;
 	const save: Entry = { value, expires: timeExpires };
-	const stringifiedSave = JSON.stringify(save, jsutil.stringifyReplacer);
+	const stringifiedSave = JSON.stringify(save, jsonutil.stringifyReplacer);
 	localStorage.setItem(key, stringifiedSave);
 }
 
@@ -54,7 +54,7 @@ function loadItem(key: string): any {
 	if (stringifiedSave === null) return;
 	let save: Entry | any;
 	try {
-		save = JSON.parse(stringifiedSave, jsutil.parseReviver); // { value, expires }
+		save = JSON.parse(stringifiedSave, jsonutil.parseReviver); // { value, expires }
 	} catch (_e) {
 		// Not JSON — not an entry we wrote, so leave it alone.
 		// This protects the 'color-scheme' entry which the browser needs available before the

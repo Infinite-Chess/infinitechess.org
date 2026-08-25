@@ -13,8 +13,8 @@ import type { ServerGame } from './servergametypes.js';
 
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/util/typeutil.js';
+import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
-import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
 import { logEventsAndPrint } from '../../utility/logEvents.js';
 
@@ -25,7 +25,7 @@ import { logEventsAndPrint } from '../../utility/logEvents.js';
  * the game is resignable and ongoing, and the opponent's claim window has opened.
  */
 function mayClaimAgainstOpponent(servergame: ServerGame, ourColor: Player): boolean {
-	if (gameutility.isGameOver(servergame)) return false;
+	if (gamefileutility.isGameOver(servergame)) return false;
 	if (!moveutil.isGameResignable(servergame)) return false; // Nothing to claim before resignable.
 
 	const opponentColor = typeutil.invertPlayer(ourColor);

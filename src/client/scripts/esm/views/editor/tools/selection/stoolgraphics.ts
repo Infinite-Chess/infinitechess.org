@@ -7,7 +7,7 @@
  * of the Selection Tool in the Board Editor
  */
 
-import type { Color } from '../../../../../../../shared/util/math/math';
+import type { Color } from '../../../../../../../shared/types/color';
 import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
 import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coordutil';
 

@@ -97,5 +97,5 @@ export interface ParsedCookies {
 	 * Information about the session for the user to read.
 	 * The server must NOT trust this information as it can be tampered!
 	 */
-	memberInfo?: string; // Stringified MemberInfoCookie (src/shared/types/memberInfo.ts)
+	memberInfo?: string; // Stringified MemberInfoCookie (src/shared/types/memberinfo.ts)
 }

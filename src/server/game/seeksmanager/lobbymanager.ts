@@ -14,7 +14,7 @@
 
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { LobbyStateMessage } from '../../../shared/clientbound.js';
+import type { LobbyStateMessage } from '../../../shared/transport/clientbound.js';
 
 import socketsend from '../../socket/socketSend.js';
 import activeseeks from './activeseeks.js';

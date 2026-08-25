@@ -6,7 +6,7 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';

@@ -19,7 +19,7 @@ import vectors from '../../../../../shared/util/math/vectors.js';
 import typeutil from '../../../../../shared/util/typeutil.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
-import pieceThemes from '../../../../../shared/chess/util/pieceThemes.js';
+import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import boardutil, { Piece } from '../../../../../shared/chess/logic/boardutil.js';
 
 import toast from '../../components/toast.js';
@@ -111,7 +111,7 @@ function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => vo
 
 	// Static pieces
 	gamefile.existingTypes.forEach((type: number) => {
-		if (pieceThemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
+		if (piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
 
 		const range = pieces.typeRanges.get(type)!;
 		// Skip types with no pieces
@@ -145,7 +145,7 @@ function getImageInstanceData(): {
 
 	// Prepare empty arrays by type
 	boardsim.existingTypes.forEach((type: number) => {
-		if (pieceThemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
+		if (piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
 
 		instanceData[type] = [];
 		instanceData_hovered[type] = [];
@@ -226,7 +226,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const piecesToRender: Piece[] = [];
 
 	function pushPieceNoDuplicatesOrVoids(piece: Piece): void {
-		if (pieceThemes.SVGLESS_TYPES.has(typeutil.getRawType(piece.type))) return; // Skip voids
+		if (piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(piece.type))) return; // Skip voids
 		if (!piecesToRender.some((p) => coordutil.areCoordsEqual(p.coords, piece.coords))) {
 			piecesToRender.push(piece);
 		}

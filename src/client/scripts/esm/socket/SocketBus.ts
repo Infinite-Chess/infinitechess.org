@@ -9,7 +9,7 @@
 import type {
 	ClientboundLobbyMessage,
 	ClientboundGameMessage,
-} from '../../../../shared/clientbound.js';
+} from '../../../../shared/transport/clientbound.js';
 
 import { EventBus } from '../../../../shared/util/EventBus.js';
 

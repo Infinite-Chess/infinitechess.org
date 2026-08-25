@@ -11,8 +11,8 @@
 import type { RatingData } from '../../utility/ratingcalculation.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { ServerGame } from './servergametypes.js';
-import type { MovePacket } from '../../../shared/chess/logic/icn/icnconverter.js';
-import type { SeekVariant } from '../../../shared/chess/variants/variantselection.js';
+import type { MovePacket } from '../../../shared/chess/util/typeschemas.js';
+import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type {
@@ -24,14 +24,14 @@ import type {
 	StaticGameSetup,
 	StaticGameState,
 	ServerUsernameContainer,
-} from '../../../shared/domain.js';
+} from '../../../shared/transport/domain.js';
 import type {
 	GameConclusionMessage,
 	GameStateBase,
 	GameStateMessage,
 	ParticipantState,
 	RematchOfferInfo,
-} from '../../../shared/clientbound.js';
+} from '../../../shared/transport/clientbound.js';
 
 import uuid from '../../../shared/util/uuid.js';
 import gameurl from '../../../shared/util/gameurl.js';
@@ -41,12 +41,10 @@ import winconutil from '../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
+import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import { players as p } from '../../../shared/util/typeutil.js';
-import { getFormattedEngineName } from '../../../shared/chess/engines/engine.js';
-import {
-	Leaderboards,
-	getLeaderboardOfVariant,
-} from '../../../shared/chess/variants/validleaderboard.js';
+import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
+import { getFormattedEngineName } from '../../../shared/chess/util/engine.js';
 
 import tconfig from '../../config/translationconfig.js';
 import drawoffers from './drawoffers.js';
@@ -69,7 +67,8 @@ function getRatingDataForGamePlayers(
 	variant: SeekVariant,
 ): PlayerGroup<Rating> {
 	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
-	const leaderboardId = getLeaderboardOfVariant(variant) ?? Leaderboards.INFINITY;
+	const leaderboardId =
+		leaderboardregistry.ofVariant(variant) ?? leaderboardregistry.IDS.INFINITY;
 
 	const ratingData: PlayerGroup<Rating> = {};
 	for (const [color, { identifier }] of Object.entries(players)) {
@@ -346,7 +345,7 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
  * offer (glow) and whether they're connected (button enabled). Undefined while the game is live.
  */
 function getRematchOfferInfo(servergame: ServerGame, role: Player): RematchOfferInfo | undefined {
-	if (!gameutility.isGameOver(servergame)) return undefined;
+	if (!gamefileutility.isGameOver(servergame)) return undefined;
 	// An engine is always present, and never offers first — it accepts ours the instant we send it.
 	if (gameutility.isEngineGame(servergame)) return { offered: false, present: true };
 	const opponentRole = typeutil.invertPlayer(role);

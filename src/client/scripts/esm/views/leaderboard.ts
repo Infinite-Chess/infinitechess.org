@@ -10,10 +10,7 @@
 import type { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
 import type { UsernameItem } from '../util/usernamecontainer.js';
 
-import {
-	Leaderboards,
-	VariantLeaderboards,
-} from '../../../../shared/chess/variants/validleaderboard.js';
+import leaderboardregistry from '../../../../shared/chess/variants/leaderboardregistry.js';
 
 import validatorama from '../util/validatorama.js';
 import { serverFetch } from '../util/serverFetch.js';
@@ -35,7 +32,7 @@ const LEADERBOARD_LENGTH_ON_LOAD = 50;
 /** Number of players to be added on show more button press */
 const LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT = 50;
 /** Leaderboard to be displayed */
-const leaderboard_id = Leaderboards.INFINITY;
+const leaderboard_id = leaderboardregistry.IDS.INFINITY;
 
 /** Body of leaderboard table, as created in createEmptyLeaderboardTable() */
 let element_LeaderboardTableBody: HTMLTableSectionElement;
@@ -70,7 +67,7 @@ let initialized = false;
  */
 function setSupportedVariantsDisplay(): void {
 	const variantslist: string[] = [];
-	Object.entries(VariantLeaderboards).forEach(([variant, leaderboard]) => {
+	Object.entries(leaderboardregistry.BY_VARIANT).forEach(([variant, leaderboard]) => {
 		if (leaderboard !== leaderboard_id) return;
 		variantslist.push(variant in translations ? translations[variant as VariantCode] : variant);
 	});

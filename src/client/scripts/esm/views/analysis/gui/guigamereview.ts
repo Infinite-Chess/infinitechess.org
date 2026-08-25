@@ -19,7 +19,7 @@ import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js
 import type { LapseKey, MoveReview, ReviewOutcome } from '../gamereview.js';
 
 import math from '../../../../../../shared/util/math/math.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import { players as p } from '../../../../../../shared/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
@@ -145,7 +145,7 @@ function closeReview(): void {
 
 /** Serializes a move list to bar-joined tokens, for cheap comparison. */
 function mainlineTokens(moves: MoveFull[]): string {
-	return icnconverter.getShortFormMovesFromMoves(moves, { compact: true, spaces: false, comments: false, abbrev: false, move_numbers: false }); // prettier-ignore
+	return icnmoves.getShortFormMovesFromMoves(moves, { compact: true, spaces: false, comments: false, abbrev: false, move_numbers: false }); // prettier-ignore
 }
 
 /** Returns the current mainline as bar-joined move tokens, for cheap comparison. */
@@ -648,7 +648,7 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 	const moveNumber = index > 0 ? Math.floor((index - 1) / 2) + 1 : 0;
 	const prefix = index === 0 ? '' : `${moveNumber}${(index - 1) % 2 === 0 ? '.' : '...'} `;
 	const move = node?.move
-		? icnconverter.getShortFormMoveFromMove(node.move, {
+		? icnmoves.getShortFormMoveFromMove(node.move, {
 				compact: false,
 				spaces: false,
 				comments: false,

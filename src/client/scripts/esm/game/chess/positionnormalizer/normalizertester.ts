@@ -46,7 +46,6 @@ const example_position =
 // const example_position = "q0,50|k80,0";
 
 const parsedPosition = icnconverter.ShortToLong_Format(example_position);
-// console.log("parsedPosition:", JSON.stringify(parsedPosition.position, jsutil.stringifyReplacer));
 
 // const compressedPosition = positioncompressor.compressPosition(parsedPosition.position!, 'orthogonals');
 const compressedPosition = positioncompressor.compressPosition(

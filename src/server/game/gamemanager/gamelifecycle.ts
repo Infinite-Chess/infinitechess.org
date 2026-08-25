@@ -10,13 +10,14 @@
  */
 
 import type { RatingData } from '../../utility/ratingcalculation.js';
-import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
+import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type { MatchInfo, PlayerRatingResult, ServerGame } from './servergametypes.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/util/typeutil.js';
+import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import drawoffers from './drawoffers.js';
 import disconnect from './disconnect.js';
@@ -243,7 +244,7 @@ function evict(servergame: ServerGame): void {
 
 /** Evicts a concluded lingering game if BOTH players have now left its rematch window. */
 function evictIfBothLeft(servergame: ServerGame): void {
-	if (!gameutility.isGameOver(servergame)) return; // Live game — the abandonment path handles it.
+	if (!gamefileutility.isGameOver(servergame)) return; // Live game — the abandonment path handles it.
 	const bothLeft = Object.keys(servergame.match.playerData).every((c) => {
 		// Whether they left the game's rematch window: their socket
 		// is detached and they aren't within the reconnection cushion.
@@ -290,7 +291,7 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 	servergame.match.bothDisconnectedTimeoutID = undefined;
 	servergame.match.bothDisconnectedEndTime = undefined;
 
-	if (gameutility.isGameOver(servergame)) return;
+	if (gamefileutility.isGameOver(servergame)) return;
 
 	if (!moveutil.isGameResignable(servergame)) {
 		conclude(servergame, { condition: 'aborted' });

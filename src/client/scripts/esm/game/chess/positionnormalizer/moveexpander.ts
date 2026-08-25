@@ -6,7 +6,7 @@
  * and expands the move out so it can be applied to the original UNCOMPRESSED position.
  */
 
-import type { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';

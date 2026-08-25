@@ -10,7 +10,7 @@
 import type { Player } from '../../../shared/util/typeutil.js';
 import type { MatchInfo, ServerGame } from './servergametypes.js';
 
-import gameconfig from '../../../shared/util/gameconfig.js';
+import gamelimits from '../../../shared/chess/util/gamelimits.js';
 
 import { logEventsAndPrint } from '../../utility/logEvents.js';
 
@@ -38,7 +38,7 @@ function offeredTooRecently(servergame: ServerGame, color: Player): boolean {
 	if (lastPlyDrawOffered !== undefined) {
 		// They have made at least 1 offer this game
 		const movesSinceLastOffer = servergame.moves.length - lastPlyDrawOffered;
-		if (movesSinceLastOffer < gameconfig.MIN_PLIES_BETWEEN_DRAW_OFFERS) return true;
+		if (movesSinceLastOffer < gamelimits.MIN_PLIES_BETWEEN_DRAW_OFFERS) return true;
 	}
 	return false;
 }

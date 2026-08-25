@@ -5,7 +5,7 @@
  * Coordinates the floating window, save-as form, confirmation modal, and position list.
  */
 
-import editorutil from '../../../../../../../../shared/util/editorutil';
+import gamelimits from '../../../../../../../../shared/chess/util/gamelimits';
 
 import esave from '../../../actions/esave';
 import savestore from '../../../../../savedpositions/savestore';
@@ -117,8 +117,8 @@ function onSaveKeyDown(e: KeyboardEvent): void {
 async function onSaveButtonPress(): Promise<void> {
 	const positionname = element_saveAsPositionName.value.trim(); // Disallow pure whitespace names
 	if (positionname === '') return;
-	if (positionname.length > editorutil.MAX_POSITION_NAME_LENGTH) {
-		console.error(`This should not happen, position name input box is restricted to ${editorutil.MAX_POSITION_NAME_LENGTH} chars, you submitted ${positionname.length} chars.`); // prettier-ignore
+	if (positionname.length > gamelimits.MAX_POSITION_NAME_LENGTH) {
+		console.error(`This should not happen, position name input box is restricted to ${gamelimits.MAX_POSITION_NAME_LENGTH} chars, you submitted ${positionname.length} chars.`); // prettier-ignore
 		return;
 	}
 

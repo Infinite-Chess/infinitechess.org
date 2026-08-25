@@ -6,7 +6,7 @@
  * Subscribes to lobby updates and resubscribes after socket reconnections.
  */
 
-import type { ClientboundLobbyMessage } from '../../../../../shared/clientbound.js';
+import type { ClientboundLobbyMessage } from '../../../../../shared/transport/clientbound.js';
 
 import lobby from './lobby.js';
 import flashToast from '../../util/flashToast.js';

@@ -11,7 +11,7 @@
 
 import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { RatingData } from '../../utility/ratingcalculation.js';
-import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
+import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type { PlayerGroup, Player } from '../../../shared/util/typeutil.js';
 import type { MatchInfo, PlayerData, ServerGame } from './servergametypes.js';
 
@@ -19,7 +19,7 @@ import jsutil from '../../../shared/util/jsutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validleaderboard.js';
+import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
@@ -106,7 +106,7 @@ function updateLeaderboardsInTransaction(
 ): RatingData | undefined {
 	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
-	const leaderboard_id = getLeaderboardOfVariant(match.variant)!; // Will always be defined if the game is rated.
+	const leaderboard_id = leaderboardregistry.ofVariant(match.variant)!; // Will always be defined if the game is rated.
 
 	// 1. Build initial rating data by reading from the DB.
 	let ratingdata: RatingData = {};
@@ -187,7 +187,7 @@ function addGameRecordsInTransaction(
 		// NULL marks a custom game, whose start position is in the ICN instead.
 		variant: gameutility.getVariantCode(match.variant),
 		rated: match.rated ? 1 : 0,
-		leaderboard_id: getLeaderboardOfVariant(match.variant) ?? null,
+		leaderboard_id: leaderboardregistry.ofVariant(match.variant) ?? null,
 		private: 0, // All matches are considered public for now, even "Challenge a friend" games.
 		result: metadata.Result!,
 		termination,
@@ -397,7 +397,7 @@ function getPlayerMoveCountsInGame(servergame: ServerGame): PlayerGroup<number> 
  * report popped the game down to zero moves (never stored) — and reverses the `player_stats`
  * counters the original conclusion incremented. Runs as one atomic transaction.
  *
- * Leaderboards/ratings are never touched: only non-server-validated games can be reported,
+ * leaderboardregistry.IDS/ratings are never touched: only non-server-validated games can be reported,
  * and those are never rated. Errors are logged (not thrown): the overturn already happened
  * in memory and was broadcast, so a DB failure here can't be undone, only flagged.
  *

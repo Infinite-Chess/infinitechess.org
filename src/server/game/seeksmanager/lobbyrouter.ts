@@ -6,7 +6,7 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { ServerboundLobbyMessage } from '../../../shared/serverbound.js';
+import type { ServerboundLobbyMessage } from '../../../shared/transport/serverbound.js';
 
 import createseek from './createseek.js';
 import cancelseek from './cancelseek.js';

@@ -1,7 +1,7 @@
 // src/client/types/globals.d.ts
 
 import type { Player } from '../../shared/util/typeutil.js';
-import type { GamePageData } from '../../shared/domain.js';
+import type { GamePageData } from '../../shared/transport/domain.js';
 import type { TranslationsObject } from '../../types/translations.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 

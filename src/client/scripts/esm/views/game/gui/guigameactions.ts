@@ -18,7 +18,7 @@
  * after.
  */
 
-import type { RematchOfferInfo } from '../../../../../../shared/clientbound.js';
+import type { RematchOfferInfo } from '../../../../../../shared/transport/clientbound.js';
 
 import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
 import gamefileutility from '../../../../../../shared/chess/logic/gamefileutility.js';

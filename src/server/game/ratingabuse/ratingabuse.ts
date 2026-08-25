@@ -11,7 +11,7 @@
 import type { Player } from '../../../shared/util/typeutil.js';
 import type { ServerGame } from '../gamemanager/servergametypes.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
-import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
+import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 import type {
 	AbuseEvidence,
@@ -26,7 +26,7 @@ import gamerules from '../../../shared/chess/util/gamerules.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import { getLeaderboardOfVariant } from '../../../shared/chess/variants/validleaderboard.js';
+import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
 import abusechecks from './abusechecks.js';
 import abusereport from './abusereport.js';
@@ -54,7 +54,7 @@ function measureAfterGame(servergame: ServerGame): void {
 	if (servergame.gameConclusion!.victor === undefined) return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
-	const leaderboard_id = getLeaderboardOfVariant(servergame.match.variant);
+	const leaderboard_id = leaderboardregistry.ofVariant(servergame.match.variant);
 	if (leaderboard_id === undefined) return;
 
 	for (const [playerStr, player] of Object.entries(servergame.match.playerData)) {

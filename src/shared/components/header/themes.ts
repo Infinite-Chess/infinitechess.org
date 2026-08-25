@@ -5,8 +5,8 @@
  * theme inherits for any property it doesn't set itself.
  */
 
-import type { Color } from '../../util/math/math.js';
-import type { PieceColorGroup } from '../../chess/util/pieceThemes.js';
+import type { Color } from '../../types/color.js';
+import type { PieceColorGroup } from '../../chess/util/piecethemes.js';
 
 import jsutil from '../../util/jsutil.js';
 

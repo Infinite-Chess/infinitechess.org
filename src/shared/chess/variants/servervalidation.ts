@@ -3,30 +3,19 @@
 /**
  * This script defines which variants support server-side move legality validation.
  *
- * Variants with a position string length <= MAX_SERVER_VALIDATABLE_POSITION_LENGTH are
+ * Variants with a position string length <= gamelimits's MAX_SERVER_VALIDATABLE_POSITION_LENGTH are
  * considered supported. Variants with large position strings (like Omega Squared and above) or
  * generator-based variants are excluded to avoid server hitches on legal move gen.
  */
 
-import type { Player } from '../../util/typeutil.js';
 import type { VariantCode } from '../util/variantcodes.js';
-import type { TimeControl } from '../../chess/util/clockutil.js';
-import type { GameModifier } from '../../util/modutil.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
-import type { GameStateVariant, SeekVariant } from '../../chess/variants/variantselection.js';
+import type { GameStateVariant } from '../util/variantselection.js';
 
-import variantpreviewer from '../logic/variantpreviewer.js';
-import { VariantLeaderboards } from './validleaderboard.js';
+import gamelimits from '../util/gamelimits.js';
+import variantrules from '../logic/variantrules.js';
 
 // Constants -------------------------------------------------------------------
-
-/**
- * The maximum position string length (in characters) for a
- * position to be eligible for server-side move validation.
- * Obstocean (length 2425) is the largest supported variant.
- * Omega Squared and above (length > 2500) are excluded.
- */
-const MAX_SERVER_VALIDATABLE_POSITION_LENGTH = 2500;
 
 /**
  * Variants whose starting position is too large to
@@ -44,15 +33,15 @@ const VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION: VariantCode[] = [
 
 /**
  * Returns `true` if the given variant supports server-side move legality validation.
- * Variants whose position string exceeds {@link MAX_SERVER_VALIDATABLE_POSITION_LENGTH}
+ * Variants whose position string exceeds {@link gamelimits.MAX_SERVER_VALIDATABLE_POSITION_LENGTH}
  * characters, or that use position generators, are not supported.
  * @param variant - The loaded variant, if available.
  */
 function doesVariantSupportServerValidation(variant: LoadedVariant | undefined): boolean {
 	if (variant === undefined) return false;
-	const positionStringLength = variantpreviewer.getVariantPositionStringLength(variant);
+	const positionStringLength = variantrules.getVariantPositionStringLength(variant);
 	if (positionStringLength === undefined) return false; // Generator-based variant
-	return positionStringLength <= MAX_SERVER_VALIDATABLE_POSITION_LENGTH;
+	return positionStringLength <= gamelimits.MAX_SERVER_VALIDATABLE_POSITION_LENGTH;
 }
 
 /**
@@ -68,34 +57,13 @@ function isGameServerValidated(
 	loaded: LoadedVariant | undefined,
 ): boolean {
 	// Always true, never measured: validatePosition() holds custom positions to
-	// MAX_SERVER_VALIDATABLE_POSITION_LENGTH — the preset bound — before a seek exists.
+	// gamelimits.MAX_SERVER_VALIDATABLE_POSITION_LENGTH — the preset bound — before a seek exists.
 	if (variant.kind === 'custom') return true;
 	return doesVariantSupportServerValidation(loaded);
 }
 
-/**
- * Returns `true` if the given seek options are eligible for a rated game.
- * Mirrors the server-side seek validation logic to avoid redundant checks.
- */
-function isRatedAllowed(
-	variant: SeekVariant | null,
-	time: TimeControl,
-	color: Player | null,
-	modifiers: GameModifier[] | undefined,
-): boolean {
-	if (variant === null) return false;
-	if (variant.kind !== 'preset') return false; // Custom variants are never rated
-	if (!(variant.code in VariantLeaderboards)) return false; // Variant needs a leaderboard
-	if (time === '-') return false; // Must be timed
-	if (color !== null) return false; // No specific color for rated **public** games
-	if ((modifiers?.length ?? 0) > 0) return false; // No modifiers for rated
-	return true;
-}
-
 export {
-	MAX_SERVER_VALIDATABLE_POSITION_LENGTH,
 	VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION,
 	doesVariantSupportServerValidation,
 	isGameServerValidated,
-	isRatedAllowed,
 };

@@ -13,7 +13,7 @@
  * automatically ensures rank labels also won't overlap.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
 

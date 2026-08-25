@@ -15,7 +15,6 @@ import gamerules from '../../../../../../../shared/chess/util/gamerules';
 import icnposition from '../../../../../../../shared/chess/logic/icn/icnposition';
 import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
 import typeutil, { RawType } from '../../../../../../../shared/util/typeutil';
-import { isValidPromotionPiece } from '../../../../../../../shared/chess/game/positionvalidation';
 
 import gameslot from '../../../../game/chess/gameslot';
 import boardeditor from '../../boardeditor';
@@ -239,7 +238,7 @@ function readGameRules(): void {
 			const rawType = typeutil.getRawType(type);
 
 			if (
-				!isValidPromotionPiece(rawType) ||
+				!gamerules.isValidPromotionPiece(rawType) ||
 				runningpromotionPieces.includes(rawType) // No duplicates
 			) {
 				element_promotionpieces.classList.add('invalid-input');

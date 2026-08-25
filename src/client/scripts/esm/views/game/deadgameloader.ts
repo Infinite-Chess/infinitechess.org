@@ -6,9 +6,9 @@
  * hands it to the shared loader — no socket opened.
  */
 
-import type { DeadGameState } from '../../../../../shared/domain.js';
+import type { DeadGameState } from '../../../../../shared/transport/domain.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameStateMessage } from '../../../../../shared/clientbound.js';
+import type { GameStateMessage } from '../../../../../shared/transport/clientbound.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';

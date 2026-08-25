@@ -320,8 +320,8 @@ function callback_CoordsChange(index: 0 | 1): void {
 	}
 
 	// TODO: Implement dynamic teleport limit based on the furthest the user has ever been.
-	// WHEN we do that, we can then delete gameconfig.TELEPORT_LIMIT.
-	// if (bimath.abs(proposed) > gameconfig.TELEPORT_LIMIT) {
+	// WHEN we do that, we can then delete gamelimits.TELEPORT_LIMIT.
+	// if (bimath.abs(proposed) > gamelimits.TELEPORT_LIMIT) {
 	// 	toast.show("You can't teleport that far! That would be too easy ;)", { error: true });
 	// 	return;
 	// }

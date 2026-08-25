@@ -7,7 +7,7 @@
  * dropped offline goes through `lobbymanager.ts`'s cushion instead.
  */
 
-import type { SeekId } from '../../../shared/domain.js';
+import type { SeekId } from '../../../shared/transport/domain.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
 import activeseeks from './activeseeks.js';

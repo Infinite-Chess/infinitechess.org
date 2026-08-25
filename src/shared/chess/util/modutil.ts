@@ -1,7 +1,7 @@
-// src/shared/util/modutil.ts
+// src/shared/chess/util/modutil.ts
 
 /**
- * Registry of all fun game modifiers.
+ * Registry of all fun game modifiers, and the values each one may be set to.
  *
  * Current: Slide Limit.
  *
@@ -11,21 +11,13 @@
 
 import * as z from 'zod';
 
-import gameconfig from './gameconfig.js';
-
 // Types -----------------------------------------------------------------------
-
-/** The full configuration for a single game modifier, chosen on a seek and carried onto its game. */
-export type GameModifier = z.infer<typeof GameModifierSchema>;
-export const GameModifierSchema = z.discriminatedUnion('kind', [
-	z.strictObject({
-		kind: z.literal('slide-limit'),
-		value: z.literal(gameconfig.SLIDE_LIMIT_VALUES),
-	}),
-]);
 
 /** Union of all valid modifier kind strings, derived from the keys of {@link MODIFIER_ICONS}. */
 export type ModifierCode = keyof typeof MODIFIER_ICONS;
+
+/** A valid Slide Limit modifier value: max squares a sliding piece may travel. */
+export type SlideLimitValue = (typeof SLIDE_LIMIT_VALUES)[number];
 
 /**
  * Variables used to interpolate a modifier's parameterized rule-list phrasing
@@ -39,6 +31,26 @@ type ModifierDescriptionVars = Record<string, string | number>;
 const MODIFIER_ICONS: Record<GameModifier['kind'], string> = {
 	'slide-limit': 'svg-slide-limit',
 };
+
+/** Valid slide-limit distances in squares, matching the game setup modal's slider ticks. */
+const SLIDE_LIMIT_VALUES = [
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	25, 30,
+	40, 50,
+	70,
+	100,
+] as const; // prettier-ignore
+
+// Schemas ---------------------------------------------------------------------
+
+/** The full configuration for a single game modifier, chosen on a seek and carried onto its game. */
+export type GameModifier = z.infer<typeof GameModifierSchema>;
+export const GameModifierSchema = z.discriminatedUnion('kind', [
+	z.strictObject({
+		kind: z.literal('slide-limit'),
+		value: z.literal(SLIDE_LIMIT_VALUES),
+	}),
+]);
 
 // Functions -------------------------------------------------------------------
 
@@ -64,6 +76,9 @@ function getModifierDescriptionVars(modifier: GameModifier): ModifierDescription
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
+	SLIDE_LIMIT_VALUES,
+	// Functions
 	getModifierIconId,
 	getModifierDescriptionVars,
 };

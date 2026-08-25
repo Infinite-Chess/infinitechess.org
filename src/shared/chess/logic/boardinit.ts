@@ -21,8 +21,8 @@ import type { BoardInitOptions, BoardPreview } from './boardpreviewer.js';
 
 import typeutil from '../../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
-import variantreader from './variantreader.js';
 import boardpreviewer from './boardpreviewer.js';
+import variantmovement from './variantmovement.js';
 import organizedpieces from './organizedpieces.js';
 
 // Types -----------------------------------------------------------------------
@@ -58,8 +58,8 @@ function initBoard(
 	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, options);
 
 	// Calculate movesets
-	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, boardPreview.gameRules.slideLimit); // prettier-ignore
-	const specialMoves = variantreader.getSpecialMovesOfVariant(variant?.mod);
+	const pieceMovesets = variantmovement.getMovesetsOfVariant(variant?.mod, boardPreview.gameRules.slideLimit); // prettier-ignore
+	const specialMoves = variantmovement.getSpecialMovesOfVariant(variant?.mod);
 
 	// Trim both groups to only include types actually present in the game
 	typeutil.deleteUnusedFromRawTypeGroup(boardPreview.existingRawTypes, pieceMovesets);
@@ -124,7 +124,7 @@ function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity 
  * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
  */
 function genSpecialVicinity(mod: VariantModule | undefined, existingRawTypes: RawType[]): Vicinity {
-	const specialVicinityByPiece = variantreader.getSpecialVicinityOfVariant(mod);
+	const specialVicinityByPiece = variantmovement.getSpecialVicinityOfVariant(mod);
 	const vicinity: Vicinity = {};
 	// Object keys are strings, so we need to cast the type to a number
 	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {

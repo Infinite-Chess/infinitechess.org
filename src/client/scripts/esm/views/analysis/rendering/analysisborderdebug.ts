@@ -4,7 +4,7 @@
  * DEBUG: Draws the Apeiron analysis-safe coordinate border on the board.
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/types/color.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 

@@ -9,9 +9,9 @@
 
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
-import type { ValidEngine } from '../../../shared/chess/engines/engine.js';
-import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
-import type { SlideLimitValue } from '../../../shared/util/gameconfig.js';
+import type { ValidEngine } from '../../../shared/chess/util/engine.js';
+import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
+import type { SlideLimitValue } from '../../../shared/chess/util/modutil.js';
 import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type {
@@ -19,13 +19,13 @@ import type {
 	EngineGamePageInfo,
 	ServerUsernameContainer,
 	StaticGameState,
-} from '../../../shared/domain.js';
+} from '../../../shared/transport/domain.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import { players } from '../../../shared/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
-import { getFormattedEngineName } from '../../../shared/chess/engines/engine.js';
+import { getFormattedEngineName } from '../../../shared/chess/util/engine.js';
 
 import gamesManager from '../../database/gamesManager.js';
 import memberManager from '../../database/memberManager.js';

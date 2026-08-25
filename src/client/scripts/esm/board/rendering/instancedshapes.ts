@@ -11,7 +11,7 @@
  * ALWAYS has a stride length of 6 (x,y, r,g,b,a)
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import meshes from './meshes.js';

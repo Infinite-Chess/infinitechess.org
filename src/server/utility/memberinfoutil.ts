@@ -6,7 +6,7 @@
  */
 
 import type { Rating } from '../../shared/chess/util/metadatautil.js';
-import type { ServerUsernameContainer } from '../../shared/domain.js';
+import type { ServerUsernameContainer } from '../../shared/transport/domain.js';
 import type { MemberInfo, AuthMemberInfo } from '../types.js';
 
 import metadatautil from '../../shared/chess/util/metadatautil.js';

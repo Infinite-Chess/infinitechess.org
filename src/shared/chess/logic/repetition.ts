@@ -12,7 +12,7 @@
 import type { Board } from './boardinit.js';
 import type { MoveFull } from './movepiece.js';
 import type { StateChange } from './state.js';
-import type { GameConclusion } from '../util/winconutil.js';
+import type { GameConclusion } from '../util/typeschemas.js';
 
 import typeutil from '../../util/typeutil.js';
 import boardchanges from './boardchanges.js';

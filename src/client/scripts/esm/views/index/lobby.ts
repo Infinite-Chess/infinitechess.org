@@ -8,20 +8,20 @@
 import type { VNode } from 'snabbdom';
 import type { Rating } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantInfo } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { BaseSeek, OutSeek, SeekId } from '../../../../../shared/domain.js';
+import type { BaseSeek, OutSeek, SeekId } from '../../../../../shared/transport/domain.js';
 import type {
 	CreateSeekMessage,
 	CreateEngineGameMessage,
-} from '../../../../../shared/serverbound.js';
+} from '../../../../../shared/transport/serverbound.js';
 import type {
 	InGameMessage,
 	LobbyStateMessage,
 	SeeksMessage,
-} from '../../../../../shared/clientbound.js';
+} from '../../../../../shared/transport/clientbound.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
 
-import modutil from '../../../../../shared/util/modutil.js';
+import modutil from '../../../../../shared/chess/util/modutil.js';
 import gameurl from '../../../../../shared/util/gameurl.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import { players } from '../../../../../shared/util/typeutil.js';

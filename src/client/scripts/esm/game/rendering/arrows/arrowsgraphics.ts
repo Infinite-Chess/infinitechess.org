@@ -6,7 +6,7 @@
  * and hint arrows (pointing to off-screen legal move squares).
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/types/color.js';
 import type { Arrow, ArrowsLine } from './arrows.js';
 import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
 

@@ -1,4 +1,4 @@
-// src/shared/serverbound.ts
+// src/shared/transport/serverbound.ts
 
 /**
  * The SERVERBOUND websocket contract: every action the client may send on each route,
@@ -15,12 +15,12 @@
 
 import * as z from 'zod';
 
-import winconutil from './chess/util/winconutil.js';
-import { players } from './util/typeutil.js';
-import { isRatedAllowed } from './chess/variants/servervalidation.js';
-import { SeekVariantSchema } from './chess/variants/variantselection.js';
-import { GameModifierSchema } from './util/modutil.js';
-import clockutil, { TimeControlSchema } from './chess/util/clockutil.js';
+import typeschemas from '../chess/util/typeschemas.js';
+import { players } from '../util/typeutil.js';
+import leaderboardregistry from '../chess/variants/leaderboardregistry.js';
+import { SeekVariantSchema } from '../chess/util/variantselection.js';
+import { GameModifierSchema } from '../chess/util/modutil.js';
+import clockutil, { TimeControlSchema } from '../chess/util/clockutil.js';
 import { GameIDSchema, GameModeSchema, SeekIdSchema } from './domain.js';
 
 // General Route ---------------------------------------------------------------
@@ -57,7 +57,8 @@ const CreateSeekMessageSchema = z
 	})
 	.refine(
 		(val) =>
-			val.mode !== 'rated' || isRatedAllowed(val.variant, val.time, val.color, val.modifiers),
+			val.mode !== 'rated' ||
+			leaderboardregistry.isRatedAllowed(val.variant, val.time, val.color, val.modifiers),
 		{ error: 'Invalid seek parameters for a rated game.' },
 	);
 
@@ -98,7 +99,7 @@ export type SubmitMoveMessage = z.infer<typeof SubmitMoveMessageSchema>;
 const SubmitMoveMessageSchema = z.strictObject({
 	move: z.string(),
 	moveNumber: z.int(),
-	gameConclusion: winconutil.GameConclusionSchema.optional(),
+	gameConclusion: typeschemas.GameConclusionSchema.optional(),
 });
 
 /** Every message the client may send on the 'game' route. */

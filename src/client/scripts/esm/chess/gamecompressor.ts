@@ -6,17 +6,14 @@
  */
 
 import type { MoveFull } from '../../../../shared/chess/logic/movepiece.js';
+import type { MovePreprint } from '../../../../shared/chess/logic/icn/icnmoves.js';
 import type { GlobalGameState } from '../../../../shared/chess/logic/state.js';
 import type { GameFile, VariantOptions } from '../../../../shared/chess/logic/gamefile.js';
 
 import state from '../../../../shared/chess/logic/state.js';
 import jsutil from '../../../../shared/util/jsutil.js';
 import boardchanges from '../../../../shared/chess/logic/boardchanges.js';
-import {
-	MovePreprint,
-	LongFormatIn,
-	PresetAnnotes,
-} from '../../../../shared/chess/logic/icn/icnconverter.js';
+import { LongFormatIn, PresetAnnotes } from '../../../../shared/chess/logic/icn/icnconverter.js';
 
 import clientmetadatautil from './clientmetadatautil.js';
 

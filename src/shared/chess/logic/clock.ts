@@ -9,7 +9,7 @@
 
 import type { GameRules } from '../util/gamerules.js';
 import type { MoveRecord } from './movepiece.js';
-import type { GameConclusion } from '../util/winconutil.js';
+import type { GameConclusion } from '../util/typeschemas.js';
 import type { ClockDependant } from './gamefile.js';
 import type { Player, PlayerGroup } from '../../util/typeutil.js';
 import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';

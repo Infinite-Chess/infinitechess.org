@@ -6,13 +6,13 @@
  * fade out), like lichess' analysis arrows.
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/types/color.js';
 import type { Arrow } from '../../../game/rendering/highlights/annotations/annotations.js';
 import type { Coords } from '../../../../../../shared/util/coordutil.js';
 import type { CevalLine, CevalUpdate } from '../ceval.js';
 
 import coordutil from '../../../../../../shared/util/coordutil.js';
-import icnconverter, { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnmoves, { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 
 import gameslot from '../../../game/chess/gameslot.js';
 import drawarrows from '../../../game/rendering/highlights/annotations/drawarrows.js';
@@ -70,7 +70,7 @@ function parseFirstMove(line: CevalLine): MoveCoords | undefined {
 	const token = line.moves[0];
 	if (!token) return undefined;
 	try {
-		return icnconverter.parseTokenMove(token);
+		return icnmoves.parseTokenMove(token);
 	} catch (e) {
 		console.error('Failed to parse engine move token', token, e);
 		return undefined;

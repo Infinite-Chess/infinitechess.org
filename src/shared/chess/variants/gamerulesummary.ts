@@ -10,13 +10,13 @@
 
 import type { GameRules } from '../util/gamerules.js';
 import type { VariantCode } from '../util/variantcodes.js';
-import type { GameModifier } from '../../util/modutil.js';
+import type { GameModifier } from '../util/modutil.js';
 import type { GlobalGameState } from '../logic/state.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 
-import modutil from '../../util/modutil.js';
-import pieceThemes from '../util/pieceThemes.js';
+import modutil from '../util/modutil.js';
+import piecethemes from '../util/piecethemes.js';
 import variantregistry from './variantregistry.js';
 import typeutil, { Player, RawType, players } from '../../util/typeutil.js';
 import { interpolate, splitAroundPlaceholder } from '../../util/interpolate.js';
@@ -114,7 +114,7 @@ export function summarizeGameRules(
 		// Only pieces that have an svg can be drawn. A promotion list may still name one that doesn't
 		// (a void): validation refuses such a position, but it is previewed anyway while being typed.
 		const pieces = gameRules.promotion.pieces.filter(
-			(raw) => !pieceThemes.SVGLESS_TYPES.has(raw),
+			(raw) => !piecethemes.SVGLESS_TYPES.has(raw),
 		);
 		if (pieces.length > 0) {
 			// The icons sit mid-sentence, so the line is split around the

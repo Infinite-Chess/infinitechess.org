@@ -1,10 +1,10 @@
-// src/shared/chess/util/pieceThemes.ts
+// src/shared/chess/util/piecethemes.ts
 
 /**
  * This script stores the SVG locations and default tint colors for the pieces.
  */
 
-import type { Color } from '../../util/math/math.js';
+import type { Color } from '../../types/color.js';
 import type { RawType, Player } from '../../util/typeutil.js';
 
 import { rawTypes as r, players as p } from '../../util/typeutil.js';

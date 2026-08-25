@@ -1,4 +1,4 @@
-// src/shared/clientbound.ts
+// src/shared/transport/clientbound.ts
 
 /**
  * The CLIENTBOUND websocket contract: every action the server may send on each route,
@@ -16,10 +16,8 @@
 
 import * as z from 'zod';
 
-import winconutil from './chess/util/winconutil.js';
-import typeschemas from './chess/util/typeschemas.js';
-import icnconverter from './chess/logic/icn/icnconverter.js';
-import { ClockValuesSchema } from './chess/util/clockutil.js';
+import typeschemas from '../chess/util/typeschemas.js';
+import { ClockValuesSchema } from '../chess/util/clockutil.js';
 import { GameIDSchema, OutSeekSchema, SeekIdSchema } from './domain.js';
 
 // Common Helper Schemas -------------------------------------------------------
@@ -137,13 +135,13 @@ const ParticipantStateSchema = z.strictObject({
 export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
 const GameStateBaseSchema = z.strictObject({
 	/** The full move list (reconciled against on reconnect). */
-	moves: z.array(icnconverter.MovePacketSchema),
+	moves: z.array(typeschemas.MovePacketSchema),
 	/**
 	 * The live ticking clocks, so a fresh load / reconnect shows
 	 * running time, not the base time. Absent for untimed games.
 	 */
 	clockValues: ClockValuesSchema.optional(),
-	gameConclusion: winconutil.GameConclusionSchema.optional(),
+	gameConclusion: typeschemas.GameConclusionSchema.optional(),
 	/**
 	 * Per-player rating deltas. A finalized-result fact carried as state so a late
 	 * resyncer gets it. Present only once a rated game is finalized; absent otherwise.
@@ -179,7 +177,7 @@ const GameStateMessageSchema = GameStateBaseSchema.extend({
  */
 export type GameConclusionMessage = z.infer<typeof GameConclusionMessageSchema>;
 const GameConclusionMessageSchema = z.strictObject({
-	gameConclusion: winconutil.GameConclusionSchema,
+	gameConclusion: typeschemas.GameConclusionSchema,
 	/** If the game is timed, the frozen final clock values. */
 	clockValues: ClockValuesSchema.optional(),
 });
@@ -188,8 +186,8 @@ const GameConclusionMessageSchema = z.strictObject({
 export type OpponentsMoveMessage = z.infer<typeof OpponentsMoveMessageSchema>;
 const OpponentsMoveMessageSchema = z.strictObject({
 	/** The move our opponent played. In the most compact notation: `"5,2>5,4"`. */
-	move: icnconverter.MovePacketSchema,
-	gameConclusion: winconutil.GameConclusionSchema.optional(),
+	move: typeschemas.MovePacketSchema,
+	gameConclusion: typeschemas.GameConclusionSchema.optional(),
 	/** Our opponent's move number, 1-based. */
 	moveNumber: z.number().int().positive(),
 	/** If the game is timed, this will be the current clock values. */

@@ -6,10 +6,10 @@
  */
 
 import type { CustomWebSocket } from './socketTypes.js';
-import type { ServerboundMessage } from '../../shared/serverbound.js';
+import type { ServerboundMessage } from '../../shared/transport/serverbound.js';
 
 import socketutil from '../../shared/util/socketutil.js';
-import { ServerboundSchema } from '../../shared/serverbound.js';
+import { ServerboundSchema } from '../../shared/transport/serverbound.js';
 
 import socketsend from './socketSend.js';
 import requestMeter from '../utility/requestMeter.js';

@@ -78,6 +78,7 @@ const PIECE_CODES_RAW_INVERTED = jsutil.invertObj(PIECE_CODES_RAW);
 
 // Regular Expressions ---------------------------------------------------------
 
+const COUNTING_NUMBER_SOURCE = String.raw`[1-9]\d*`; // 1+   Positive. Disallows leading 0's
 const WHOLE_NUMBER_SOURCE = String.raw`(?:0|[1-9]\d*)`; // 0+   Positive. Disallows leading 0's unless it's 0
 const INTEGER_SOURCE = String.raw`(?:0|-?[1-9]\d*)`; // Prevents "-0", or numbers with leading 0's like "000005"
 
@@ -285,6 +286,7 @@ export default {
 	PIECE_CODES_RAW_INVERTED,
 	// Regular Expressions
 	WHOLE_NUMBER_SOURCE,
+	COUNTING_NUMBER_SOURCE,
 	INTEGER_SOURCE,
 	COORDS_KEY_REGEX_SOURCE,
 	PIECE_CODE_REGEX_SOURCE,

@@ -7,7 +7,7 @@
 import type { Coords } from '../../util/coordutil.js';
 import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
-import type { GameConclusion } from '../util/winconutil.js';
+import type { GameConclusion } from '../util/typeschemas.js';
 import type { OrganizedPiecesBase } from './organizedpieces.js';
 
 import bimath from '../../util/math/bimath.js';

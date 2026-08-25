@@ -8,7 +8,7 @@
  * [World Space] - DOES NOT require positional or scale transformations when rendering.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 import type { BoardPos } from './boardpos.js';
 import type {
 	BoundingBox,

@@ -7,7 +7,7 @@
  * Ours is a dev toggle: off, nothing is printed and no latency is simulated.
  */
 
-import type { ClientboundMessage } from '../../../../shared/clientbound.js';
+import type { ClientboundMessage } from '../../../../shared/transport/clientbound.js';
 
 // Constants -------------------------------------------------------------------
 

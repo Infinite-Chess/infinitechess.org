@@ -10,13 +10,13 @@
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MovePacket } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
-import type { GameStateMessage } from '../../../../../shared/clientbound.js';
+import type { MovePacket } from '../../../../../shared/chess/util/typeschemas.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
+import type { GameStateMessage } from '../../../../../shared/transport/clientbound.js';
 import type { MoveRecord, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 
@@ -141,7 +141,7 @@ function synchronizeMovesList(
 			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
 			// Convert the move from compact short format "x,y>x,y=N" to JSON.
 			// Gauranteed by the server to be parsable.
-			const moveTagged: MoveTagged = icnconverter.parseTokenMove(thisShortmove.token);
+			const moveTagged: MoveTagged = icnmoves.parseTokenMove(thisShortmove.token);
 
 			if (isOpponentMove) {
 				// Perform legality checks

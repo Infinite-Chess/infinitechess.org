@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
-import editorutil from '../../shared/util/editorutil.js';
+import gamelimits from '../../shared/chess/util/gamelimits.js';
 
 import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
@@ -184,7 +184,7 @@ describe('EditorSavesAPI Integration', () => {
 
 		it('should return 400 if name exceeds max length', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const longName = 'a'.repeat(editorutil.MAX_POSITION_NAME_LENGTH + 1);
+			const longName = 'a'.repeat(gamelimits.MAX_POSITION_NAME_LENGTH + 1);
 
 			const response = await testRequest()
 				.post('/api/editor-saves')
@@ -239,7 +239,7 @@ describe('EditorSavesAPI Integration', () => {
 
 		it('should return 400 if icn exceeds max length', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const longIcn = 'a'.repeat(editorutil.MAX_ICN_LENGTH + 1);
+			const longIcn = 'a'.repeat(gamelimits.MAX_ICN_LENGTH + 1);
 
 			const response = await testRequest()
 				.post('/api/editor-saves')
@@ -599,7 +599,7 @@ describe('EditorSavesAPI Integration', () => {
 		it('should handle very long ICN within limit', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 
-			const maxLengthIcn = 'a'.repeat(editorutil.MAX_ICN_LENGTH);
+			const maxLengthIcn = 'a'.repeat(gamelimits.MAX_ICN_LENGTH);
 
 			const response = await testRequest()
 				.post('/api/editor-saves')
@@ -624,7 +624,7 @@ describe('EditorSavesAPI Integration', () => {
 		it('should handle name at max length', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 
-			const maxLengthName = 'a'.repeat(editorutil.MAX_POSITION_NAME_LENGTH);
+			const maxLengthName = 'a'.repeat(gamelimits.MAX_POSITION_NAME_LENGTH);
 
 			const response = await testRequest()
 				.post('/api/editor-saves')

@@ -7,12 +7,13 @@
  */
 
 import type { CoordsKey } from '../../../util/coordutil.js';
-import type { MovePacket } from '../../../chess/logic/icn/icnconverter.js';
-import type { LongFormatOut, MoveParsed } from './icnconverter.js';
+import type { MovePacket } from '../../../chess/util/typeschemas.js';
+import type { MoveParsed } from './icnmoves.js';
+import type { LongFormatOut } from './icnconverter.js';
 import type { LoadedVariant, VariantOptions } from '../gamefile.js';
 
 import jsutil from '../../../util/jsutil.js';
-import variantpreviewer from '../variantpreviewer.js';
+import variantrules from '../variantrules.js';
 
 /**
  * Resolves the starting position and specialRights from a parsed ICN long format.
@@ -34,7 +35,7 @@ function getPositionAndSpecialRightsFromLongFormat(
 		};
 	} else if (variant !== undefined) {
 		// No position specified in the ICN, extract from the variant
-		return variantpreviewer.getStartingPositionOfVariant(variant);
+		return variantrules.getStartingPositionOfVariant(variant);
 	} else {
 		return { position: new Map(), specialRights: new Set() };
 	}

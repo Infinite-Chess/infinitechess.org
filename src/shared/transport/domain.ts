@@ -1,4 +1,4 @@
-// src/shared/domain.ts
+// src/shared/transport/domain.ts
 
 /**
  * Shared domain types and schemas between server and client: the vocabulary of games,
@@ -14,19 +14,19 @@
  * vocabulary it describes.
  */
 
-import type { ValidEngine } from './chess/engines/engine.js';
-import type { TimeControl } from './chess/util/clockutil.js';
-import type { GameConclusion } from './chess/util/winconutil.js';
-import type { GameStateVariant } from './chess/variants/variantselection.js';
-import type { Player, PlayerGroup } from './util/typeutil.js';
+import type { ValidEngine } from '../chess/util/engine.js';
+import type { TimeControl } from '../chess/util/clockutil.js';
+import type { GameConclusion } from '../chess/util/typeschemas.js';
+import type { GameStateVariant } from '../chess/util/variantselection.js';
+import type { Player, PlayerGroup } from '../util/typeutil.js';
 
 import * as z from 'zod';
 
-import typeschemas from './chess/util/typeschemas.js';
-import { RatingSchema } from './chess/util/metadatautil.js';
-import { TimeControlSchema } from './chess/util/clockutil.js';
-import { OutSeekVariantSchema } from './chess/variants/variantselection.js';
-import { GameModifierSchema, GameModifier } from './util/modutil.js';
+import typeschemas from '../chess/util/typeschemas.js';
+import { RatingSchema } from '../chess/util/metadatautil.js';
+import { TimeControlSchema } from '../chess/util/clockutil.js';
+import { OutSeekVariantSchema } from '../chess/util/variantselection.js';
+import { GameModifierSchema, GameModifier } from '../chess/util/modutil.js';
 
 // Common Helper Schemas -------------------------------------------------------
 

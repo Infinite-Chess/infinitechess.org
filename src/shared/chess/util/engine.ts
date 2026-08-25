@@ -1,4 +1,4 @@
-// src/shared/chess/engines/engine.ts
+// src/shared/chess/util/engine.ts
 
 /**
  * The centralized data structure for all engines, and the config shape each one's
@@ -57,9 +57,6 @@ export type EngineAndConfig =
 	| { name: 'apeiron'; config: ApeironEngineConfig };
 
 // Constants -------------------------------------------------------------------
-
-/** Maximum signed 64-bit integer value (2^63 - 1). Used in Rust. */
-export const I64_MAX = 2n ** 63n - 1n;
 
 /**
  * Centralized data structure for all engine properties.

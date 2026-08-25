@@ -5,8 +5,7 @@
  */
 
 import type { Request, Response } from 'express';
-
-import { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
+import type { Leaderboard } from '../../shared/chess/variants/leaderboardregistry.js';
 
 import memberManager from '../database/memberManager.js';
 import leaderboardsManager from '../database/leaderboardsManager.js';

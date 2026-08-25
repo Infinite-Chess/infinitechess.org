@@ -8,7 +8,7 @@ import type { CoordsKey } from '../../../../util/coordutil.js';
 import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
 import icnposition from '../../../logic/icn/icnposition.js';
-import { CLASSICAL_POSITION_STRING } from '../classicalPositionString.js';
+import { CLASSICAL_POSITION_STRING } from '../classicalposition.js';
 
 export function getPosition(): {
 	position: Map<CoordsKey, number>;

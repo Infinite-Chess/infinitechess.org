@@ -1,4 +1,4 @@
-// src/shared/types/memberInfo.ts
+// src/shared/types/memberinfo.ts
 
 /**
  * The shape of the JavaScript-readable `memberInfo` cookie: who the client is signed in as.

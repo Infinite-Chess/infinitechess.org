@@ -5,7 +5,7 @@
  */
 
 import uuid from '../../shared/util/uuid.js';
-import jsutil from '../../shared/util/jsutil.js';
+import jsonutil from '../../shared/util/jsonutil.js';
 
 import db from './database.js';
 import databaseTables from './databaseTables.js';
@@ -141,10 +141,10 @@ function getMultipleData<K extends GamesColumn>(
 			const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id IN (${placeholders})`;
 			const rows = db.all<Pick<GamesRecord, K>>(query, game_id_list);
 			if (rows.length < game_id_list.length)
-				throw new Error(`At least one missing game in games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}.`); // prettier-ignore
+				throw new Error(`At least one missing game in games table for game_ids: ${jsonutil.ensureJSONString(game_id_list)}.`); // prettier-ignore
 			return rows;
 		},
-		`Error when getting game data of game_ids ${jsutil.ensureJSONString(game_id_list)}`,
+		`Error when getting game data of game_ids ${jsonutil.ensureJSONString(game_id_list)}`,
 	);
 }
 

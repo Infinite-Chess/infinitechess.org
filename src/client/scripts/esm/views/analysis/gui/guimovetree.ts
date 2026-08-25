@@ -13,13 +13,13 @@ import type { VNode } from 'snabbdom';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { MoveEvalLabel } from '../moveevals.js';
-import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
+import type { GameConclusion } from '../../../../../../shared/chess/util/typeschemas.js';
 import type { AnalysisMoveNode } from '../movetree.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
 
+import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import movepiece from '../../../../../../shared/chess/logic/movepiece.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import wincondition from '../../../../../../shared/chess/logic/wincondition.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 
@@ -365,7 +365,7 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 	const title = document.createElement('div');
 	title.classList.add('analysis-context-title');
 	const moveIndex = formatMoveIndex(node.ply);
-	const moveText = icnconverter.getShortFormMoveFromMove(node.move!, {
+	const moveText = icnmoves.getShortFormMoveFromMove(node.move!, {
 		compact: false,
 		spaces: false,
 		comments: false,

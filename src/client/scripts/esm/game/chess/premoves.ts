@@ -8,7 +8,7 @@
  */
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import typeutil from '../../../../../shared/util/typeutil.js';

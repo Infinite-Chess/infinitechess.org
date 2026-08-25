@@ -12,7 +12,7 @@ import type { Movesets, RawMovesets } from '../../logic/movesets.js';
 import bimath from '../../../util/math/bimath.js';
 import movesets from '../../logic/movesets.js';
 import coordutil from '../../../util/coordutil.js';
-import gen4DPosition from './gen4DPosition.js';
+import gen4dposition from './gen4dposition.js';
 import { rawTypes as r } from '../../../util/typeutil.js';
 import fourdimensionalmoves from '../../logic/fourdimensionalmoves.js';
 
@@ -33,7 +33,7 @@ function gen4DMoveset(
 	strong_kings_and_queens: boolean,
 	strong_pawns: boolean,
 ): Movesets {
-	const dim = gen4DPosition.getDimensions(boards_x, boards_y, board_spacing);
+	const dim = gen4dposition.getDimensions(boards_x, boards_y, board_spacing);
 
 	const rawMovesets: RawMovesets = {
 		[r.QUEEN]: {

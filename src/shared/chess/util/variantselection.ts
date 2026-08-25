@@ -1,4 +1,4 @@
-// src/shared/chess/variants/variantselection.ts
+// src/shared/chess/util/variantselection.ts
 
 /**
  * How a variant is chosen: a preset code, or a custom position given as an ICN.
@@ -9,7 +9,7 @@
 
 import * as z from 'zod';
 
-import { VARIANT_CODES } from '../util/variantcodes.js';
+import { VARIANT_CODES } from './variantcodes.js';
 
 // Schemas ---------------------------------------------------------------------
 

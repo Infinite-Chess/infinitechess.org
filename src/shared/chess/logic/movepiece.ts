@@ -11,19 +11,19 @@ import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { Change } from './boardchanges.js';
 import type { MoveState } from './state.js';
-import type { MoveCoords } from './icn/icnconverter.js';
-import type { MovePacket } from '../../chess/logic/icn/icnconverter.js';
+import type { MoveCoords } from './icn/icnmoves.js';
+import type { MovePacket } from '../../chess/util/typeschemas.js';
 import type { MoveSpecialTags, SpecialTags } from './moveutil.js';
 
 import state from './state.js';
 import typeutil from '../../util/typeutil.js';
 import moveutil from './moveutil.js';
+import icnmoves from './icn/icnmoves.js';
 import coordutil from '../../util/coordutil.js';
 import boardutil from './boardutil.js';
 import legalmoves from './legalmoves.js';
 import castlingutil from './castlingutil.js';
 import boardchanges from './boardchanges.js';
-import icnconverter from './icn/icnconverter.js';
 import wincondition from './wincondition.js';
 import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
@@ -126,7 +126,7 @@ function generateMove(boardsim: Board, moveTagged: MoveTagged): MoveFull {
 		changes: [],
 		generateIndex: boardsim.state.local.moveIndex + 1,
 		state: [],
-		token: icnconverter.getTokenFromMoveCoords(moveTagged),
+		token: icnmoves.getTokenFromMoveCoords(moveTagged),
 		flags: {
 			// These will be set later, but we need a default value
 			check: false,
@@ -433,7 +433,7 @@ function calculateMoveFromPacket(boardsim: Board, movePacket: MovePacket): MoveF
 
 	let moveTagged: MoveTagged;
 	try {
-		moveTagged = icnconverter.parseTokenMove(movePacket.token);
+		moveTagged = icnmoves.parseTokenMove(movePacket.token);
 	} catch (error) {
 		console.error(error);
 		throw Error(`Failed to calculate Move from shortmove because it's in an incorrect format: ${movePacket.token}`); // prettier-ignore

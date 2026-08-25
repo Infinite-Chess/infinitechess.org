@@ -4,7 +4,7 @@
  * Renders a starfield background inside voids and the world border
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../shared/types/color.js';
 import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';

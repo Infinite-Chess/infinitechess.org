@@ -9,6 +9,8 @@
  */
 
 import type { GameRules } from '../../../../../../shared/chess/util/gamerules.js';
+import type { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnmoves.js';
+import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { OrganizedPiecesBase } from '../../../../../../shared/chess/logic/organizedpieces.js';
 import type { Coords, CoordsKey, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 import type {
@@ -17,13 +19,11 @@ import type {
 	EngineResponse,
 } from './engineprotocol.js';
 
+import vectors from '../../../../../../shared/util/math/vectors.js';
+import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
-import { primalityTest } from '../../../../../../shared/util/isprime.js';
+import { primalityTest } from '../../../../../../shared/util/math/isprime.js';
 import { detectInsufficientMaterial } from '../../../../../../shared/chess/logic/insufficientmaterial.js';
-import icnconverter, {
-	LongFormatIn,
-	MoveCoords,
-} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import {
 	rawTypes as r,
 	ext as e,
@@ -586,11 +586,6 @@ function manhattanNorm(square: DoubleCoords): number {
 	return Math.abs(square[0]) + Math.abs(square[1]);
 }
 
-// computes the manhattan distance of two squares
-function manhattanDistance(square1: DoubleCoords, square2: DoubleCoords): number {
-	return Math.abs(square1[0] - square2[0]) + Math.abs(square1[1] - square2[1]);
-}
-
 // special norm = manhattan + diagonal
 function specialNorm(square: DoubleCoords): number {
 	return diagonalNorm(square) + manhattanNorm(square);
@@ -863,7 +858,8 @@ function isBlackNearProtectedRider(piecelist: number[], coordlist: DoubleCoords[
 					if (
 						j !== i &&
 						piecelist[j] !== 0 &&
-						manhattanDistance(coordlist[i]!, coordlist[j]!) <= maxDistanceForProtector
+						vectors.manhattanDistanceDoubles(coordlist[i]!, coordlist[j]!) <=
+							maxDistanceForProtector
 					) {
 						return true;
 					}
@@ -1018,7 +1014,7 @@ function add_suitable_squares_to_candidate_list(
 		// if piece is huygens, discard all nonprime candidate squares or squares already covered by jump moves
 		const is_huygen = pieceTypeDictionary[piecelist[piece_index]!]!.is_huygen ? true : false;
 		if (is_huygen) {
-			const distance = manhattanDistance(piece_square, target_square);
+			const distance = vectors.manhattanDistanceDoubles(piece_square, target_square);
 			if (!primalityTest(distance)) continue candidates_loop;
 		}
 
@@ -1774,7 +1770,7 @@ function move_to_gamefile_move(target_square: DoubleCoords): string {
 		endCoords: [BigInt(endCoords[0]!), BigInt(endCoords[1]!)],
 	};
 	// Now convert to most compact string notation: "x,y>x,y=Q" that the engine API accepts.
-	return icnconverter.getTokenFromMoveCoords(moveCoords);
+	return icnmoves.getTokenFromMoveCoords(moveCoords);
 }
 
 function doesTypeExist(boardsim: EngineBoard, type: number): boolean {

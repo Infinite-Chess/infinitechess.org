@@ -1,10 +1,20 @@
-// scripts/import-rules.ts
+// scripts/imports/import-rules.ts
 
 /**
  * Enforces the client's import-boundary model.
  *
  * Usage:
  *   npm run import-rules     Exits non-zero on any problem.
+ *
+ * SISTER TOOLS in this directory — reach for these rather than re-deriving by grep. Each
+ * one's own header carries its usage:
+ *
+ *   ladder.ts        Direction, cycles, a module's consumers, and a per-directory survey,
+ *                    for any root. Counts `import type` edges, which the checks below do not.
+ *   pagereach.ts     Which client pages ship a module, and with --why the chain that drags
+ *                    it in. Bundle truth, from the esbuild metafile.
+ *   pkg-cost.ts      Which pages bundle an npm package, and what it costs them in KB.
+ *   import-chain.ts  Everything one page pulls in, grouped by depth.
  *
  * THE LADDER — a directory encodes its AUDIENCE, and imports only ever go DOWN
  * it: never up, and never sideways between two page islands.
@@ -17,7 +27,7 @@
  * Here a file's home is its WIDEST CONSUMER, not its subject matter. `deltatime.ts`
  * reads like game code but lives in `board/` because `boardpos.ts` needs it,
  * and the home page reaches boardpos through variant preview tooltips.
- * `scripts/import-consumers.ts` computes each module's widest consumer directly.
+ * `pagereach.ts` computes each module's widest consumer directly.
  *
  * TWO CHECKS, neither subsuming the other. Reachability asks "which pages may
  * descend this far", so it wants the shipped bundle. The ladder asks "which
@@ -53,19 +63,24 @@
  *   routes/                        the URL table
  *   app.ts, server.ts, setupDev.ts the process entry points
  *
- * Subject picks the directory here. A client rung names an AUDIENCE, so subject is
- * rightly ignored there; every server directory names a KIND of thing instead. So the
- * widest-consumer rule does not apply: by it, loginController.ts (reached only from
- * routes/) would live in routes/. The ladder only vetoes which way imports may point.
+ * Subject picks the directory here, and the widest-consumer rule does not apply: by it,
+ * loginController.ts (reached only from routes/) would live in routes/. The ladder only
+ * vetoes which way imports may point.
+ *
+ * The client differs because it ships ONE BUNDLE PER PAGE: a module's directory decides
+ * which pages download it, so audience is the only thing worth naming, and two rules then
+ * cover hundreds of files. The server ships unbundled and src/shared has no entry points,
+ * so placement there costs no bytes and subject wins.
  *
  * src/shared (bottom -> top), every rank strict — no ties:
  *
  *   types/, util/       Vocabulary owing nothing to chess: coords, math, time,
- *                       jsutil. A file here must make sense to a reader who has
- *                       never heard of this game.
+ *                       color, JSON, jsutil. A file here must make sense to a
+ *                       reader who has never heard of this game.
  *   chess/util/         Chess vocabulary that knows nothing of a board: gamerules,
  *                       win conditions, clock format, metadata tags, variant codes,
- *                       piece themes. Nothing here may mention Board or Move.
+ *                       piece themes, game modifiers, the engine roster. Nothing
+ *                       here may mention Board or Move.
  *   chess/logic/        The data model and the rules engine: OrganizedPieces, Board,
  *                       Move, movesets, legal moves, check, notation (ICN), and the
  *                       VariantModule contract. Works on a variant handed to it.
@@ -75,17 +90,27 @@
  *   chess/game/         Decides WHICH variant and loads it (async) before building
  *                       or judging a game. The only rung that may reach the cache.
  *   components/         SSR-shared UI pieces.
- *   domain.ts,          The transport contract. Nothing under chess/ may import
- *   clientbound.ts,     from here — a schema the chess layer also needs is owned
- *   serverbound.ts      down the ladder, beside the vocabulary it describes.
+ *   transport/          The transport contract — domain.ts and the two websocket
+ *                       directions. Nothing under chess/ may import from here; a
+ *                       schema the chess layer also needs is owned down the ladder,
+ *                       beside the vocabulary it describes.
+ *
+ * Subject picks the directory here too, as on the server — every shared rung names a
+ * KIND of thing, not an audience. So the widest-consumer rule does not apply, and a
+ * file does NOT slide down a rung just because its lowest consumer allows it. The
+ * ladder only vetoes which way imports may point. A file that fits no rung's subject
+ * is carrying more than one responsibility; split it rather than picking the least
+ * bad rung.
  *
  * The rung that keeps catching people out is chess/logic vs chess/game: "is a
  * variant handed to me, or do I have to go find it?" Everything that had to go
  * find one is what forced this split.
  *
- * A schema carrying zod is a placement constraint of its own. chess/util/
- * typeschemas.ts exists ONLY to keep zod out of util/typeutil.ts, which the
- * header bundle every page loads reaches. Measure before moving one.
+ * A schema carrying zod is a placement constraint of its own — zod is ~60 KB
+ * minified. chess/util/typeschemas.ts exists ONLY to hold schemas away from the
+ * modules whose types they describe, so those modules stay zod-free: typeutil.ts,
+ * which the header bundle every page loads reaches, and winconutil.ts, which
+ * icnconverter.ts and through it both engine workers read. Measure before moving one.
  */
 
 import fs from 'node:fs';
@@ -93,7 +118,7 @@ import ts from 'typescript';
 import path from 'node:path';
 import esbuild, { Metafile } from 'esbuild';
 
-import { ESMEntryPoints } from '../build/client';
+import { ESMEntryPoints } from '../../build/client';
 
 // Types -------------------------------------------------------------------
 

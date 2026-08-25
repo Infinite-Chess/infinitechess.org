@@ -11,11 +11,12 @@
 
 import type { Player } from '../../../shared/util/typeutil.js';
 import type { ServerGame } from './servergametypes.js';
-import type { ReportMessage } from '../../../shared/serverbound.js';
-import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
-import type { GameStateMessage } from '../../../shared/clientbound.js';
+import type { ReportMessage } from '../../../shared/transport/serverbound.js';
+import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
+import type { GameStateMessage } from '../../../shared/transport/clientbound.js';
 
 import typeutil from '../../../shared/util/typeutil.js';
+import moveutil from '../../../shared/chess/logic/moveutil.js';
 
 import gamelogger from './gamelogger.js';
 import socketsend from '../../socket/socketSend.js';
@@ -67,7 +68,7 @@ export function onReport(
 	}
 
 	const perpetratingMoveIndex = servergame.moves.length - 1;
-	const colorThatPlayedPerpetratingMove = gameutility.getColorThatPlayedMoveIndex(
+	const colorThatPlayedPerpetratingMove = moveutil.getColorThatPlayedMoveIndex(
 		servergame,
 		perpetratingMoveIndex,
 	);

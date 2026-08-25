@@ -8,12 +8,12 @@
  * Counterpart of the server's socketReceive.
  */
 
-import type { ClientboundGeneralMessage } from '../../../../shared/clientbound.js';
+import type { ClientboundGeneralMessage } from '../../../../shared/transport/clientbound.js';
 
 import * as z from 'zod';
 
 import socketutil from '../../../../shared/util/socketutil.js';
-import { ClientboundSchema } from '../../../../shared/clientbound.js';
+import { ClientboundSchema } from '../../../../shared/transport/clientbound.js';
 
 import toast from '../components/toast.js';
 import socketsend from './socketsend.js';

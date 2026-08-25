@@ -1,4 +1,4 @@
-// src/shared/chess/variants/variant_scripts/classicalPositionString.ts
+// src/shared/chess/variants/variant_scripts/classicalposition.ts
 
 /**
  * The classical starting position in ICN, shared by every variant that builds on it.

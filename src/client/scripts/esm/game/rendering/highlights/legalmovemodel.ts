@@ -7,7 +7,7 @@
  * That also includes Rays.
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/types/color.js';
 import type { Player } from '../../../../../../shared/util/typeutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';

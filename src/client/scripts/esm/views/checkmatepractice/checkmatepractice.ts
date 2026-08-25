@@ -5,19 +5,19 @@
  */
 
 import type { Player } from '../../../../../shared/util/typeutil.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineAndConfig } from '../../../../../shared/chess/engines/engine.js';
+import type { EngineAndConfig } from '../../../../../shared/chess/util/engine.js';
 import type { Coords, CoordsKey } from '../../../../../shared/util/coordutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
 import typeutil from '../../../../../shared/util/typeutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
+import variantrules from '../../../../../shared/chess/logic/variantrules.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
-import variantpreviewer from '../../../../../shared/chess/logic/variantpreviewer.js';
-import { ENGINE_DICTIONARY } from '../../../../../shared/chess/engines/engine.js';
+import { ENGINE_DICTIONARY } from '../../../../../shared/chess/util/engine.js';
 import { players as p, ext as e, rawTypes as r } from '../../../../../shared/util/typeutil.js';
 
 import toast from '../../components/toast.js';
@@ -97,7 +97,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		fullMove: 1,
 		position,
 		state_global: { specialRights },
-		gameRules: variantpreviewer.getBareMinimumGameRules(),
+		gameRules: variantrules.getBareMinimumGameRules(),
 	};
 	const engine = {
 		name: 'engineCheckmatePractice',

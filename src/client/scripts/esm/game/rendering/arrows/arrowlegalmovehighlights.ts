@@ -5,7 +5,7 @@
  * legal moves of all arrow indicators being hovered over.
  */
 
-import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Color } from '../../../../../../shared/types/color.js';
 import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { RenderableInstanced } from '../../../webgl/Renderable.js';

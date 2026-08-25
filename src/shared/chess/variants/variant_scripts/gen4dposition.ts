@@ -1,4 +1,4 @@
-// src/shared/chess/variants/variant_scripts/gen4DPosition.ts
+// src/shared/chess/variants/variant_scripts/gen4dposition.ts
 
 /**
  * Generates the starting position of a 4D variant: a grid of 2D boards, each
