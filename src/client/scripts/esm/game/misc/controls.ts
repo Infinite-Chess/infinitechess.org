@@ -152,7 +152,7 @@ function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
 	const baseAngle = -camera.getRotZ();
 	const dirOfTravel = baseAngle + angleDegs;
 	const angleRad = vectors.degreesToRadians(dirOfTravel);
-	const XYComponents: DoubleCoords = vectors.getXYComponents_FromAngle(angleRad);
+	const XYComponents: DoubleCoords = vectors.getXYComponentsFromAngle(angleRad);
 	const accelToUse = perspective.getEnabled() ? panAccel3D : panAccel2D;
 	panVel[0] += deltatime.get() * accelToUse * XYComponents[0];
 	panVel[1] += deltatime.get() * accelToUse * XYComponents[1];

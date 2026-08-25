@@ -91,9 +91,9 @@ const elements_selectionList: HTMLInputElement[] = [
 // Constants --------------------------------------------------------------
 
 /** Regexes for validating game rules input fields */
-const integerRegex = new RegExp(String.raw`^${icnposition.integerSource}$`);
-const promotionRanksRegex = new RegExp(String.raw`^${icnconverter.promotionRanksSource}$`);
-const promotionPiecesRegex = new RegExp(String.raw`^${icnconverter.promotionsPiecesSource}$`);
+const integerRegex = new RegExp(String.raw`^${icnposition.INTEGER_SOURCE}$`);
+const promotionRanksRegex = new RegExp(String.raw`^${icnconverter.PROMOTION_RANKS_SOURCE}$`);
+const promotionPiecesRegex = new RegExp(String.raw`^${icnconverter.PROMOTIONS_PIECES_SOURCE}$`);
 
 // Create floating window -------------------------------------
 
@@ -230,7 +230,7 @@ function readGameRules(): void {
 		const runningpromotionPieces: RawType[] = [];
 
 		for (const code of promotionPiecesRaw.split(',')) {
-			const typeStr: string | undefined = icnposition.pieceCodesInverted[code];
+			const typeStr: string | undefined = icnposition.PIECE_CODES_INVERTED[code];
 			if (typeStr === undefined) {
 				element_promotionpieces.classList.add('invalid-input');
 				break pa;
@@ -449,7 +449,7 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 
 	if (gamerulesGUIinfo.promotionPieces !== undefined) {
 		element_promotionpieces.value = gamerulesGUIinfo.promotionPieces
-			.map((type) => icnposition.pieceCodesRaw[type])
+			.map((type) => icnposition.PIECE_CODES_RAW[type])
 			.join(',')
 			.toUpperCase();
 	} else element_promotionpieces.value = '';

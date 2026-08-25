@@ -87,7 +87,7 @@ function cancelTimerOfMessageID(ID: number): void {
  */
 function onEchoTimeout(messageID: MessageID): void {
 	if (messageID) delete echoTimers[messageID];
-	console.log(`Renewing connection after we haven't received an echo for ${socketutil.ECHO_TIMEOUT} ms...`); // prettier-ignore
+	console.log(`Renewing connection after we haven't received an echo for ${socketutil.ECHO_TIMEOUT_MS} ms...`); // prettier-ignore
 	socketconnection.dropSocket();
 }
 
@@ -114,7 +114,7 @@ function rescheduleHeartbeatTimer(): void {
 	if (socketsubs.zeroSubs()) return;
 	heartbeatTimerID = window.setTimeout(
 		onHeartbeatTimeout,
-		socketutil.HEARTBEAT_INTERVAL_MS + socketutil.ECHO_TIMEOUT,
+		socketutil.HEARTBEAT_INTERVAL_MS + socketutil.ECHO_TIMEOUT_MS,
 	);
 }
 
@@ -135,7 +135,7 @@ function clearPendingState(): void {
 /** Called when no message has been received within the expected time frame. Drops the socket. */
 function onHeartbeatTimeout(): void {
 	heartbeatTimerID = undefined;
-	console.log(`No message received for ${socketutil.HEARTBEAT_INTERVAL_MS + socketutil.ECHO_TIMEOUT}ms. Assuming connection lost.`); // prettier-ignore
+	console.log(`No message received for ${socketutil.HEARTBEAT_INTERVAL_MS + socketutil.ECHO_TIMEOUT_MS}ms. Assuming connection lost.`); // prettier-ignore
 	socketconnection.dropSocket();
 }
 
@@ -174,7 +174,7 @@ async function send<R extends OutRoute, A extends OutAction<R>, V extends OutVal
 	// Set a timer to assume disconnection if echo not received
 	echoTimers[payload.id] = {
 		timeSent: Date.now(),
-		timeoutID: window.setTimeout(() => onEchoTimeout(payload.id), socketutil.ECHO_TIMEOUT),
+		timeoutID: window.setTimeout(() => onEchoTimeout(payload.id), socketutil.ECHO_TIMEOUT_MS),
 	};
 
 	transmit(socket, message);

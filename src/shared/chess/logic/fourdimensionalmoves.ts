@@ -25,7 +25,7 @@ import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
 import { players as p } from '../../util/typeutil.js';
 
-// Types ------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** An object that contains all relevant quantities for the size of a single 4D chess board. */
 export type Dimensions = {
@@ -41,7 +41,7 @@ export type Dimensions = {
 	MAX_Y: bigint;
 };
 
-// Pawn Legal Move Calculation and Execution ------------------------------------------------------
+// Pawn Legal Move Calculation and Execution -----------------------------------
 
 /** Calculates the legal pawn moves in the four dimensional variant. */
 function fourDimensionalPawnMove(
@@ -239,6 +239,7 @@ function appendPawnMoveAndAttachPromoteTag(
 	individualMoves.push(landCoords);
 }
 
+/** Whether the piece on these coords still holds its special right. */
 function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
 	const key = coordutil.getKeyFromCoords(coords);
 	return boardsim.state.global.specialRights.has(key);
@@ -277,7 +278,7 @@ function doFourDimensionalPawnMove(boardsim: Board, piece: Piece, move: MoveRunn
 	return true; // Special move was executed!
 }
 
-// Knight Legal Move Calculation --------------------------------------------------------------------------------
+// Knight Legal Move Calculation -----------------------------------------------
 
 /**
  * Calculates the legal knight moves in the current four dimensional variant
@@ -348,7 +349,7 @@ function fourDimensionalKnightMove(
 	return individualMoves;
 }
 
-// King Legal Move Calculation ------------------------------------------------------------------------------
+// King Legal Move Calculation -------------------------------------------------
 
 /** Calculates the legal king moves in the four dimensional variant. */
 function fourDimensionalKingMove(

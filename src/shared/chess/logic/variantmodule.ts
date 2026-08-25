@@ -13,6 +13,8 @@ import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js'
 import type { SpecialMoveFunction, SpecialVicinity } from './specialmove.js';
 import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../../util/typeutil.js';
 
+// Types -----------------------------------------------------------------------
+
 /**
  * The shape of a dynamically imported variant script module.
  *

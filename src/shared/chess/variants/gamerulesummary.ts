@@ -21,7 +21,7 @@ import variantregistry from './variantregistry.js';
 import typeutil, { Player, RawType, players } from '../../util/typeutil.js';
 import { interpolate, splitAroundPlaceholder } from '../../util/interpolate.js';
 
-// Types --------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** One line of a rule summary. */
 export type RuleSummaryItem =
@@ -33,7 +33,7 @@ export type RuleSummaryItem =
 	 */
 	| { kind: 'promotion'; prefix: string; pieces: RawType[]; suffix: string };
 
-// Functions ----------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Lists every way a game's rules depart from the standard ones, in reading order.

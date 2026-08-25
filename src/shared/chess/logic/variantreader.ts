@@ -16,7 +16,7 @@ import jsutil from '../../util/jsutil.js';
 import movesets from './movesets.js';
 import specialmove from './specialmove.js';
 
-// Functions ------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Gets the piece movesets for the given variant module.
@@ -45,7 +45,7 @@ function getMovesetsOfVariant(
  * Any piece type present in the modifications will replace the default move that for that piece.
  * The slidelimit gamerule will only be applied to default movesets, not modified ones.
  * @param movesetModifications - The modifications to the default movesets.
- * @param [defaultSlideLimitForOldVariants] Optional. The slidelimit to use for default movesets, if applicable.
+ * @param defaultSlideLimitForOldVariants - Optional. The slidelimit to use for default movesets, if applicable.
  * @returns The pieceMovesets property of the gamefile.
  */
 function getMovesets(
@@ -73,14 +73,14 @@ function getMovesets(
 function getSpecialMovesOfVariant(
 	mod: VariantModule | undefined,
 ): RawTypeGroup<SpecialMoveFunction> {
-	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
+	const DEFAULT_SPECIAL_MOVES = jsutil.deepCopyObject(specialmove.DEFAULT_SPECIAL_MOVES);
 	// Pasted games with no variant specified use the default
-	if (mod === undefined) return defaultSpecialMoves;
+	if (mod === undefined) return DEFAULT_SPECIAL_MOVES;
 
 	const overrides = mod.getSpecialMoves?.();
-	if (overrides === undefined) return defaultSpecialMoves;
-	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
-	return defaultSpecialMoves;
+	if (overrides === undefined) return DEFAULT_SPECIAL_MOVES;
+	jsutil.copyPropertiesToObject(overrides, DEFAULT_SPECIAL_MOVES);
+	return DEFAULT_SPECIAL_MOVES;
 }
 
 /**
@@ -112,7 +112,7 @@ function hasCustomMovement(mod: VariantModule | undefined): boolean {
 	);
 }
 
-// Exports ------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getMovesetsOfVariant,

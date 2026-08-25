@@ -349,7 +349,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	if (boardutil.getPieceCountOfGame(gamefile.pieces) < THRESHOLD_TO_SNAP_PIECES) {
 		const pieces: BDCoords[] = boardutil
 			.getCoordsOfAllPieces(gamefile.pieces)
-			.map((c) => bdcoords.FromCoords(c)); // Convert to BDCoords
+			.map((c) => bdcoords.fromCoords(c)); // Convert to BDCoords
 		const closestPieceSnap = findClosestEntityOfGroup(
 			pieces,
 			closeLines,
@@ -518,7 +518,7 @@ function getAllLinesSegmented(drawnRays: Ray[], presetRays: Ray[]): Line[] {
  */
 function getAnnoteSnapPoints(trimDecimals: boolean): BDCoords[] {
 	return [
-		...annotations.getSquares().map((s) => bdcoords.FromCoords(s)), // Cast square annotations to BDCoords
+		...annotations.getSquares().map((s) => bdcoords.fromCoords(s)), // Cast square annotations to BDCoords
 		...drawrays.collapseRays(annotations.getRays(), trimDecimals),
 	];
 }

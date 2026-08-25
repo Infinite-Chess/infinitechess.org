@@ -17,11 +17,11 @@ import jsutil from '../../../util/jsutil.js';
 import typeutil from '../../../util/typeutil.js';
 import { rawTypes as r, ext as e, RawType, Player } from '../../../util/typeutil.js';
 
-// Dictionaries -----------------------------------------------------------------------
+// Dictionaries ----------------------------------------------------------------
 
 /** 1-2 letter codes for the standard white, black, and neutral pieces. */
 // prettier-ignore
-const pieceCodes = {
+const PIECE_CODES = {
 	[r.KING + e.W]: 'K',          [r.KING + e.B]: 'k',
 	[r.PAWN + e.W]: 'P',          [r.PAWN + e.B]: 'p',
 	[r.KNIGHT + e.W]: 'N',        [r.KNIGHT + e.B]: 'n',
@@ -46,10 +46,10 @@ const pieceCodes = {
 	[r.OBSTACLE + e.N]: 'ob',
 	[r.VOID + e.N]: 'vo',
 };
-const pieceCodesInverted = jsutil.invertObj(pieceCodes);
+const PIECE_CODES_INVERTED = jsutil.invertObj(PIECE_CODES);
 
 /** The codes for raw, color-less piece types. */
-const pieceCodesRaw = {
+const PIECE_CODES_RAW = {
 	[r.KING]: 'k',
 	[r.PAWN]: 'p',
 	[r.KNIGHT]: 'n',
@@ -74,16 +74,16 @@ const pieceCodesRaw = {
 	[r.OBSTACLE]: 'ob',
 	[r.VOID]: 'vo',
 };
-const pieceCodesRawInverted = jsutil.invertObj(pieceCodesRaw);
+const PIECE_CODES_RAW_INVERTED = jsutil.invertObj(PIECE_CODES_RAW);
 
-// Regular Expressions ----------------------------------------------------------------
+// Regular Expressions ---------------------------------------------------------
 
-const wholeNumberSource = String.raw`(?:0|[1-9]\d*)`; // 0+   Positive. Disallows leading 0's unless it's 0
-const integerSource = String.raw`(?:0|-?[1-9]\d*)`; // Prevents "-0", or numbers with leading 0's like "000005"
+const WHOLE_NUMBER_SOURCE = String.raw`(?:0|[1-9]\d*)`; // 0+   Positive. Disallows leading 0's unless it's 0
+const INTEGER_SOURCE = String.raw`(?:0|-?[1-9]\d*)`; // Prevents "-0", or numbers with leading 0's like "000005"
 
-const coordsKeyRegexSource = `${integerSource},${integerSource}`; // '-1,2'
+const COORDS_KEY_REGEX_SOURCE = `${INTEGER_SOURCE},${INTEGER_SOURCE}`; // '-1,2'
 
-const pieceCodeRegexSource = '[a-zA-Z]{1,2}';
+const PIECE_CODE_REGEX_SOURCE = '[a-zA-Z]{1,2}';
 
 /**
  * Returns a regex for matching a piece abbreviation like '3Q' or 'nr'. '3Q' => Player-3 queen (red)
@@ -98,7 +98,7 @@ const pieceCodeRegexSource = '[a-zA-Z]{1,2}';
 function getPieceAbbrevRegexSource(capturing: boolean): string {
 	const player = capturing ? '<player>' : ':';
 	const abbrev = capturing ? '<abbrev>' : ':';
-	const result = `(?${player}${wholeNumberSource})?(?${abbrev}${pieceCodeRegexSource})`;
+	const result = `(?${player}${WHOLE_NUMBER_SOURCE})?(?${abbrev}${PIECE_CODE_REGEX_SOURCE})`;
 	// console.log("Generated PieceAbbrev Regex Source:", result);
 	return result;
 }
@@ -113,10 +113,10 @@ function getPieceEntryRegexSource(capturing: boolean): string {
 	const coordsKey = capturing ? '<coordsKey>' : ':';
 	const specialRight = capturing ? '<specialRight>' : ':';
 
-	return String.raw`(?${pieceAbbr}${getPieceAbbrevRegexSource(false)})(?${coordsKey}${coordsKeyRegexSource})(?${specialRight}\+)?`; // 'P1,2+' => Pawn at 1,2 with special right
+	return String.raw`(?${pieceAbbr}${getPieceAbbrevRegexSource(false)})(?${coordsKey}${COORDS_KEY_REGEX_SOURCE})(?${specialRight}\+)?`; // 'P1,2+' => Pawn at 1,2 with special right
 }
 
-// Getting & Parsing Abbreviations ----------------------------------------------------
+// Getting & Parsing Abbreviations ---------------------------------------------
 
 /**
  * Gets the 1-2 letter abbreviation of the given piece type.
@@ -129,10 +129,10 @@ function getPieceEntryRegexSource(capturing: boolean): string {
  * [68] king(red) => '3k'
  */
 function getAbbrFromType(type: number): string {
-	let short = pieceCodes[type];
+	let short = PIECE_CODES[type];
 	if (!short) {
 		const [rawType, player] = typeutil.splitType(type);
-		short = String(player) + pieceCodesRaw[rawType];
+		short = String(player) + PIECE_CODES_RAW[rawType];
 	}
 	return short;
 }
@@ -157,18 +157,18 @@ function getTypeFromAbbr(pieceAbbr: string): number {
 
 	if (playerStr === undefined) {
 		// No player number override is present
-		typeStr = pieceCodesInverted[abbrev];
+		typeStr = PIECE_CODES_INVERTED[abbrev];
 		if (typeStr === undefined) throw Error(`Unknown piece abbreviation: (${pieceAbbr})`);
 		return Number(typeStr);
 	} else {
 		// Player number override present   '3Q'
-		const rawTypeStr = pieceCodesRawInverted[abbrev.toLowerCase()];
+		const rawTypeStr = PIECE_CODES_RAW_INVERTED[abbrev.toLowerCase()];
 		if (rawTypeStr === undefined) throw Error(`Unknown raw piece abbreviation: (${pieceAbbr})`);
 		return typeutil.buildType(Number(rawTypeStr) as RawType, Number(playerStr) as Player);
 	}
 }
 
-// Converting Positions ---------------------------------------------------------------
+// Converting Positions --------------------------------------------------------
 
 /**
  * Accepts a gamefile's starting position and specialRights properties, returns
@@ -276,18 +276,18 @@ function parseShortFormPosition(shortposition: string): {
 	return { position: match.position, specialRights: match.specialRights };
 }
 
-// Exports ----------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Dictionaries
-	pieceCodesInverted,
-	pieceCodesRaw,
-	pieceCodesRawInverted,
+	PIECE_CODES_INVERTED,
+	PIECE_CODES_RAW,
+	PIECE_CODES_RAW_INVERTED,
 	// Regular Expressions
-	wholeNumberSource,
-	integerSource,
-	coordsKeyRegexSource,
-	pieceCodeRegexSource,
+	WHOLE_NUMBER_SOURCE,
+	INTEGER_SOURCE,
+	COORDS_KEY_REGEX_SOURCE,
+	PIECE_CODE_REGEX_SOURCE,
 	getPieceAbbrevRegexSource,
 	getPieceEntryRegexSource,
 	// Getting & Parsing Abbreviations

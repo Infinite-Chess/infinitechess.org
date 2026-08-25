@@ -284,7 +284,7 @@ function updateSlideZoneDrag(mouseWorld: DoubleCoords): void {
 	if (droparrows.getCaptureCoords() !== undefined) return;
 
 	const mouseBDCoords: BDCoords = space.convertWorldSpaceToCoords(mouseWorld);
-	const pieceBDCoords: BDCoords = bdcoords.FromCoords(candidate!.pieceCoords);
+	const pieceBDCoords: BDCoords = bdcoords.fromCoords(candidate!.pieceCoords);
 	const arrowDir = candidate!.direction;
 	const perpDir = vectors.getPerpendicularVector(arrowDir);
 

@@ -1,11 +1,14 @@
 // src/shared/chess/util/validcheckmates.ts
 
 /**
- * This script stores the list of valid checkmates for the practice mode, and is used for verification clientside and serverside
- * It should have no dependencies at all.
+ * The list of valid checkmates for the practice mode, verified against both clientside
+ * and serverside.
  */
 
-const validCheckmates = {
+// Constants -------------------------------------------------------------------
+
+/** Every practice-mode checkmate, grouped by difficulty. */
+const VALID_CHECKMATES = {
 	easy: [
 		'2Q-1k',
 		'3R-1k',
@@ -49,8 +52,8 @@ const validCheckmates = {
 	// "2B60N-1k" (fewer knights suffice but exact amount unknown, see proof in https://chess.stackexchange.com/q/45998/35006 )
 };
 
-// Export ------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
-	validCheckmates,
+	VALID_CHECKMATES,
 };

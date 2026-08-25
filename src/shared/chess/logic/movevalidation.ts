@@ -1,5 +1,14 @@
 // src/shared/chess/logic/movevalidation.ts
 
+/**
+ * Validation of a move arriving from an untrusted source: that it is legal in the
+ * position, that the promotion it claims is legal, and that the conclusion it
+ * reports matches what the board actually reaches.
+ *
+ * Promotion is the only special move sent over the wire. Castling and en passant
+ * are inferred from the destination coords and attached to the validated move.
+ */
+
 import type { Board } from './boardinit.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
@@ -244,6 +253,8 @@ function validateConclusion(
 	// If we reach here, the claimed conclusion is valid!
 	return { valid: true };
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	isTokenMoveLegal,

@@ -21,7 +21,7 @@ import gamerules from '../util/gamerules.js';
 import organizedpieces from './organizedpieces.js';
 import variantpreviewer from './variantpreviewer.js';
 
-// Types ------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Shared setup options for board and board-preview initialization. */
 export interface BoardInitOptions {
@@ -68,7 +68,7 @@ export type BoardPreview = {
 	startSnapshot: Snapshot;
 };
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Creates a new {@link BoardPreview} from the provided arguments. */
 function initBoardPreview(
@@ -145,7 +145,7 @@ function initBoardPreview(
 	};
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	initBoardPreview,

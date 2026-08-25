@@ -4,6 +4,13 @@
  * Shared game configuration constants used by both the client and server.
  */
 
+// Types -----------------------------------------------------------------------
+
+/** A valid Slide Limit modifier value: max squares a sliding piece may travel. */
+export type SlideLimitValue = (typeof SLIDE_LIMIT_VALUES)[number];
+
+// Constants -------------------------------------------------------------------
+
 /**
  * Minimum number of plies (half-moves) that must span between 2 consecutive
  * draw offers by the same player.
@@ -36,8 +43,7 @@ const SLIDE_LIMIT_VALUES = [
 	100,
 ] as const; // prettier-ignore
 
-/** A valid Slide Limit modifier value: max squares a sliding piece may travel. */
-export type SlideLimitValue = (typeof SLIDE_LIMIT_VALUES)[number];
+// Exports ---------------------------------------------------------------------
 
 export default {
 	MIN_PLIES_BETWEEN_DRAW_OFFERS,

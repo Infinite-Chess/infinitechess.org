@@ -14,7 +14,7 @@ import type { MoveFull, CoordsTagged, MoveRecord } from './movepiece.js';
 
 import coordutil from '../../util/coordutil.js';
 
-// Types ------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A special move tag on {@link CoordsTagged}, both move tags and UI tags. */
 export interface SpecialTags extends MoveSpecialTags, UISpecialTags {}
@@ -67,7 +67,7 @@ interface UISpecialTags {
 	promoteTrigger: boolean;
 }
 
-// Constants ------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * All special move tag names that are retained when transferring from {@link CoordsTagged}
@@ -93,7 +93,7 @@ const SPECIAL_TAGS = [...MOVE_SPECIAL_TAGS, ...UI_SPECIAL_TAGS] satisfies Readon
 	keyof SpecialTags
 >;
 
-// Functions ------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Returns *true* if it is legal to forward the provided gamefile by 1 move, *false* if we're at the front of the game.
@@ -219,7 +219,7 @@ function stripSpecialMoveTagsFromCoords(coords: CoordsTagged): Coords {
 	return coordutil.copyCoords(coords); // Does not copy non-enumerable properties
 }
 
-// ------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

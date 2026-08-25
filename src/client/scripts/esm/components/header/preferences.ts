@@ -86,7 +86,7 @@ let changeWasMade: boolean = false;
 
 function loadPreferences(): void {
 	const browserStoragePrefs: Preferences = LocalStorage.loadItem('preferences') || {
-		theme: themes.defaultTheme,
+		theme: themes.DEFAULT_THEME,
 		legal_moves: default_legal_moves,
 		perspective_sensitivity: default_perspective_sensitivity,
 		perspective_fov: default_perspective_fov,
@@ -114,7 +114,7 @@ function loadPreferences(): void {
 }
 
 function savePreferences(): void {
-	const oneYearInMs: number = timeutil.getTotalMilliseconds({ years: 1 });
+	const oneYearInMs: number = timeutil.toMillis(1, 'years');
 	LocalStorage.saveItem('preferences', preferences, oneYearInMs);
 
 	// After a delay, also send a post request to the server to update our preferences.
@@ -167,7 +167,7 @@ function preparePrefs(): ServerSidePreferences {
 }
 
 function getBoardColor(): string {
-	return preferences.theme || themes.defaultTheme;
+	return preferences.theme || themes.DEFAULT_THEME;
 }
 
 function setBoardColor(boardColor: string): void {
@@ -417,7 +417,7 @@ function getTintColorOfType(type: number): Color {
 // 	if (timeutil.isCurrentDateWithinRange(10, 25, 10, 31)) return 'halloween'; // Halloween week (October 25 to 31)
 // 	// if (timeutil.isCurrentDateWithinRange(11, 23, 11, 29)) return 'thanksgiving'; // Thanksgiving week (November 23 to 29)
 // 	if (timeutil.isCurrentDateWithinRange(12, 19, 12, 25)) return 'christmas'; // Christmas week (December 19 to 25)
-// 	return themes.defaultTheme; // Default theme if not in a holiday week
+// 	return themes.DEFAULT_THEME; // Default theme if not in a holiday week
 // }
 
 /*
@@ -427,11 +427,11 @@ function getTintColorOfType(type: number): Color {
 
 // import { listener_document } from '../../game/chess/gamecore.js';
 
-// const allProperties = Object.keys(themes.themes[themes.defaultTheme]!);
+// const allProperties = Object.keys(themes.THEMES[themes.DEFAULT_THEME]!);
 // let currPropertyIndex = 0;
 // let currProperty = allProperties[currPropertyIndex]!;
 // function update(): void {
-// 	const themeProperties = themes.themes[preferences.theme]!;
+// 	const themeProperties = themes.THEMES[preferences.theme]!;
 
 // 	if (listener_document.isKeyDown('KeyU')) {
 // 		currPropertyIndex--;
@@ -525,7 +525,7 @@ function getTintColorOfType(type: number): Color {
 // 	}
 
 // 	if (listener_document.isKeyDown('Backslash')) {
-// 		console.log(JSON.stringify(themes.themes[preferences.theme]));
+// 		console.log(JSON.stringify(themes.THEMES[preferences.theme]));
 // 	}
 // }
 

@@ -1,5 +1,10 @@
 // src/shared/chess/logic/gamefile.ts
 
+/**
+ * The GameFile: a full game in memory — its board, gamerules, clocks, metadata and
+ * conclusion — and the constructor that assembles one from a variant or explicit position.
+ */
+
 import type { Board } from './boardinit.js';
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
@@ -23,7 +28,7 @@ import checkdetection from './checkdetection.js';
 import gamefileutility from './gamefileutility.js';
 import variantpreviewer from './variantpreviewer.js';
 
-// Types ----------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A variant, paired with the timestamp pinning which revision of it applies. */
 export interface DatedVariant {
@@ -131,7 +136,7 @@ export interface Additional {
 	editor?: boolean;
 }
 
-// Functions -------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Creates a new {@link Game} object from provided arguments.
@@ -259,6 +264,8 @@ function initGameFile(
 
 	return gamefile;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	initGame,

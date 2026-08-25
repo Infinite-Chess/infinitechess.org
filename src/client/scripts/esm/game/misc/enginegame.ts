@@ -16,7 +16,7 @@ import type {
 import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
+import { ENGINE_DICTIONARY } from '../../../../../shared/chess/engines/engine.js';
 import typeutil, { players as p } from '../../../../../shared/util/typeutil.js';
 
 import toast from '../../components/toast.js';
@@ -36,7 +36,7 @@ import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';
 
 /**
  * The engine worker of the game we're in, if any.
- * `name` keys its {@link engineDictionary} entry, for the properties that vary per engine.
+ * `name` keys its {@link ENGINE_DICTIONARY} entry, for the properties that vary per engine.
  * `ready` flips true on its 'readyok' message; until then it answers nothing.
  * `config` is sent to the worker with every move request.
  * `color` is the side the engine plays — ours inverted.
@@ -105,7 +105,7 @@ function initEngineGame(options: {
 	worker.onerror = (e: ErrorEvent): void => {
 		failEngineLoad(new Error('Worker failed to load: ' + e.message));
 	};
-	if (engineDictionary[options.engine.name].hasGlue)
+	if (ENGINE_DICTIONARY[options.engine.name].hasGlue)
 		worker.postMessage({
 			engineUrl: options.engineUrl,
 			threads: getEngineThreadCount(),
@@ -155,7 +155,7 @@ function onMovePlayed(): void {
 	// plus every move to replay onto it.
 	const longformIn = gamecompressor.compressGamefile(
 		gamefile,
-		!engineDictionary[engine.name].needsMoveHistory,
+		!ENGINE_DICTIONARY[engine.name].needsMoveHistory,
 	);
 
 	if (gamefile.gameConclusion) return;
@@ -164,7 +164,7 @@ function onMovePlayed(): void {
 		engineicn.prepareForEngine(longformIn);
 		// UCI-style clock values, in millis. Untimed games (no clocks) send none.
 		const clocks = gamefile.clocks;
-		const incrementMillis = clocks && timeutil.secondsToMillis(clocks.startTime.increment);
+		const incrementMillis = clocks && timeutil.toMillis(clocks.startTime.increment, 'seconds');
 		engine.worker.postMessage({
 			lf: longformIn,
 			engineConfig: engine.config,

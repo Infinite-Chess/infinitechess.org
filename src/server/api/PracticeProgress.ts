@@ -33,7 +33,7 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 		res.status(400).json({ message: 'Invalid checkmate ID' });
 		return;
 	}
-	if (!Object.values(validcheckmates.validCheckmates).flat().includes(new_checkmate_beaten)) {
+	if (!Object.values(validcheckmates.VALID_CHECKMATES).flat().includes(new_checkmate_beaten)) {
 		// Not a valid checkmate
 		res.status(400).json({ message: 'Invalid checkmate ID' });
 		return;

@@ -10,27 +10,20 @@
  * know how to change the mesh, or what to animate.
  */
 
+import type { Board } from './boardinit.js';
+import type { Piece } from './boardutil.js';
+import type { Coords } from '../../util/coordutil.js';
+import type { MoveFull } from './movepiece.js';
+
 import jsutil from '../../util/jsutil.js';
 import typeutil from '../../util/typeutil.js';
 import boardutil from './boardutil.js';
 import organizedpieces from './organizedpieces.js';
 import coordutil, { CoordsKey } from '../../util/coordutil.js';
 
-// Variables -------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
-/** All Change actions that cannot be undone to return to the same board position later in the game, unless in the future it's possible to add pieces mid-game. */
-const oneWayActions: string[] = ['capture', 'delete'];
-
-// Type Definitions-------------------------------------------------------------------------
-
-import type { MoveFull } from './movepiece.js';
-import type { Coords } from '../../util/coordutil.js';
-import type { Piece } from './boardutil.js';
-import type { Board } from './boardinit.js';
-
-/**
- * Generic type to describe any changes to the board
- */
+/** Generic type to describe any changes to the board. */
 type Change = {
 	/** Whether this change affects the main piece moved.
 	 * This would be true if the change was for moving the king during castling, but false for moving the rook. */
@@ -83,10 +76,16 @@ interface ChangeApplication<F extends CallableFunction> {
 	backward: ActionList<F>;
 }
 
+// Constants -------------------------------------------------------------------
+
 /**
- * An object mapping move changes to a function that performs the piece list changes for that action.
+ * All Change actions that cannot be undone to return to the same board position later in
+ * the game, unless in the future it's possible to add pieces mid-game.
  */
-const changeFuncs: ChangeApplication<genericChangeFunc<Board>> = {
+const ONE_WAY_ACTIONS: string[] = ['capture', 'delete'];
+
+/** Maps each move change to the function that performs its piece list changes. */
+const CHANGE_FUNCS: ChangeApplication<genericChangeFunc<Board>> = {
 	forward: {
 		add: addPiece,
 		delete: deletePiece,
@@ -101,18 +100,18 @@ const changeFuncs: ChangeApplication<genericChangeFunc<Board>> = {
 	},
 };
 
-// Adding changes to a Move ----------------------------------------------------------------------------------------
+// Adding changes to a Move ----------------------------------------------------
 
 /**
- * Queues a move with catpure
- * Need to differentiate this from move so animations can work and so that royal capture can be recognised
- * @param changes
- * @param piece The piece captured.
- * @param main Whether this change is affecting the main piece moved, not a secondary piece.
- * @param order This is used by animations to tell when this piece was captured. `-1` implies the end of the path the piece moved along
+ * Queues a move with capture. Distinct from a plain move so animations can work,
+ * and so that royal capture can be recognised.
+ * @param changes - The running list of Changes for the move.
+ * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
+ * @param piece - The piece captured.
+ * @param order - Tells animations when this piece was captured. `-1` implies the end of the path the piece moved along.
  */
 function queueCapture(
-	changes: Array<Change>,
+	changes: Change[],
 	main: boolean,
 	piece: Piece,
 	order: number = -1,
@@ -123,12 +122,11 @@ function queueCapture(
 }
 
 /**
- * Queues the addition of a piece to the board
- * @param changes
- * @param piece the piece to add
- * the pieces index is optional and will get assigned one if none is present
+ * Queues the addition of a piece to the board.
+ * @param changes - The running list of Changes for the move.
+ * @param piece - The piece to add. Its index is optional, and is assigned one if absent.
  */
-function queueAddPiece(changes: Array<Change>, piece: Piece): Change[] {
+function queueAddPiece(changes: Change[], piece: Piece): Change[] {
 	changes.push({ action: 'add', main: false, piece }); // It's impossible for an 'add' change to affect the main piece moved, because before this move this piece didn't exist.
 	return changes;
 }
@@ -136,23 +134,24 @@ function queueAddPiece(changes: Array<Change>, piece: Piece): Change[] {
 /**
  * Queues the removal of a piece by adding that Change to the Changes list.
  * @param changes - The running list of Changes for the move.
- * @param piece - The piece this change affects
  * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
+ * @param piece - The piece this change affects.
  */
-function queueDeletePiece(changes: Array<Change>, main: boolean, piece: Piece): Change[] {
+function queueDeletePiece(changes: Change[], main: boolean, piece: Piece): Change[] {
 	changes.push({ action: 'delete', main, piece });
 	return changes;
 }
 
 /**
- * Moves a piece without capture
- * @param changes
- * @param piece The piece moved. Its coords are used as starting coords
+ * Moves a piece without capture.
+ * @param changes - The running list of Changes for the move.
  * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
- * @param endCoords
+ * @param piece - The piece moved. Its coords are used as the starting coords.
+ * @param endCoords - Where the piece lands.
+ * @param path - The waypoints the piece travels through, for animation.
  */
 function queueMovePiece(
-	changes: Array<Change>,
+	changes: Change[],
 	main: boolean,
 	piece: Piece,
 	endCoords: Coords,
@@ -164,7 +163,7 @@ function queueMovePiece(
 	return changes;
 }
 
-// Executing changes of a Move ----------------------------------------------------------------------------------------
+// Executing changes of a Move -------------------------------------------------
 
 /**
  * Applies the board changes of a move either forward or backward,
@@ -183,14 +182,14 @@ function runChanges<T>(
 
 /**
  * Applies the logical board changes of a change list in the provided order, modifying the piece lists.
- * @param actiondata the data to apply the changes to
- * @param changes the changes to apply
- * @param funcs the object contain change funcs
- * @param forward whether to apply changes in forward order (true) or reverse order (false)
+ * @param actiondata - The data to apply the changes to.
+ * @param changes - The changes to apply.
+ * @param funcs - The object containing the change funcs.
+ * @param forward - Whether to apply changes in forward order (true) or reverse order (false).
  */
 function applyChanges<T>(
 	actiondata: T,
-	changes: Array<Change>,
+	changes: Change[],
 	funcs: ActionList<genericChangeFunc<T>>,
 	forward: boolean,
 ): void {
@@ -212,11 +211,11 @@ function applyChanges<T>(
 	}
 }
 
-// Standard Chagne Functions --------------------------------------------------------------------------------------
+// Standard Change Functions ---------------------------------------------------
 
 /**
- * Most basic add-a-piece method. Adds it the gamefile's piece list,
- * organizes the piece in the organized lists
+ * Most basic add-a-piece method. Adds it to the board's piece list,
+ * and organizes the piece in the organized lists.
  */
 function addPiece(boardsim: Board, change: Change): void {
 	// desiredIndex optional
@@ -283,12 +282,10 @@ function deletePiece(boardsim: Board, change: Change): void {
 }
 
 /**
- * Most basic move-a-piece method. Adjusts its coordinates in the gamefile's piece lists,
+ * Most basic move-a-piece method. Adjusts its coordinates in the board's piece lists,
  * reorganizes the piece in the organized lists, and updates its mesh data.
  *
  * If the move is a capture, then use capturePiece() instead, so that we can animate it.
- * @param gamefile - The gamefile
- * @param change - the move data
  */
 function movePiece(boardsim: Board, change: Change): void {
 	if (change.action !== 'move')
@@ -322,7 +319,7 @@ function returnPiece(boardsim: Board, change: Change): void {
 	organizedpieces.registerPieceInSpace(idx, pieces);
 }
 
-// Other Change Functions -----------------------------------------------------------------------------------
+// Other Change Functions ------------------------------------------------------
 
 /**
  * This modifies only a Position Map<CoordsKey, number> where number is the type of piece.
@@ -352,7 +349,7 @@ function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]
 	}
 }
 
-// Helper Functions ----------------------------------------------------------------------------------------
+// Helper Functions ------------------------------------------------------------
 
 /**
  * Gets every captured piece in changes
@@ -376,21 +373,24 @@ function wasACapture(move: MoveFull): boolean {
 	return move.changes.some((change) => change.action === 'capture');
 }
 
-// Exports ----------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export type { genericChangeFunc, ChangeApplication, Change };
 
 export default {
-	changeFuncs,
+	// Constants
+	ONE_WAY_ACTIONS,
+	CHANGE_FUNCS,
+	// Adding changes to a Move
 	queueCapture,
 	queueAddPiece,
 	queueDeletePiece,
 	queueMovePiece,
+	// Executing changes of a Move
 	runChanges,
+	applyChanges,
 	runChanges_Position,
-
+	// Helper Functions
 	getCapturedPieceTypes,
 	wasACapture,
-	oneWayActions,
-	applyChanges,
 };

@@ -169,7 +169,7 @@ function Fill(
 
 	// Update the selection area to be the box containing both the original selection and the filled area
 
-	const newBox: BoundingBox = bounds.mergeBoundingBoxDoubles(selectionBox, fillBox);
+	const newBox: BoundingBox = bounds.mergeBoundingBoxes(selectionBox, fillBox);
 	selectiontool.setSelection([newBox.left, newBox.top], [newBox.right, newBox.bottom]);
 }
 
@@ -400,7 +400,7 @@ function Rotate(gamefile: GameFile, mesh: Mesh, box: BoundingBox, clockwise: boo
  */
 function rotatePoint(point: Coords, pivot: BDCoords, clockwise: Boolean): Coords {
 	// Represent coord as BDCoords for high precision
-	const pointBD = bdcoords.FromCoords(point, 1);
+	const pointBD = bdcoords.fromCoords(point, 1);
 
 	// 1. Translate to origin to get relative coordinates
 	const relativeX = bd.subtract(pointBD[0], pivot[0]);

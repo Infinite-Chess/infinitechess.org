@@ -21,7 +21,7 @@ import gamerules from '../util/gamerules.js';
 import clockutil from '../util/clockutil.js';
 import gamefileutility from './gamefileutility.js';
 
-// Types --------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 export type ClockData = {
 	/** The time each player has remaining, in milliseconds.*/
@@ -61,7 +61,7 @@ export type ClockData = {
 	  }
 );
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Sets the clocks. If no current clock values are specified, clocks will
@@ -75,7 +75,7 @@ function init(players: Iterable<Player>, time_control: TimeControl): ClockDepend
 	const clocks: ClockData = {
 		startTime: {
 			minutes: clockPartsSplit.minutes,
-			millis: timeutil.minutesToMillis(clockPartsSplit.minutes),
+			millis: timeutil.toMillis(clockPartsSplit.minutes, 'minutes'),
 			increment: clockPartsSplit.increment,
 		},
 		currentTime: {},
@@ -94,8 +94,8 @@ function init(players: Iterable<Player>, time_control: TimeControl): ClockDepend
 }
 
 /**
- * Updates the gamefile with new clock information received from the server.
- * @param basegame - The game to update the clocks of.
+ * Updates the clocks with new information received from the server.
+ * @param currentClocks - The clocks to update, modified in place.
  * @param clockValues - The new clock values to set.
  */
 function edit(currentClocks: ClockData, clockValues: ClockValues): void {
@@ -212,7 +212,7 @@ function push(gamefile: {
 		clocks.currentTime[clocks.colorTicking] =
 			clocks.timeRemainAtTurnStart - timePassedSinceTurnStart;
 		// 3+ moves
-		clocks.currentTime[prevcolor]! += timeutil.secondsToMillis(clocks.startTime.increment!);
+		clocks.currentTime[prevcolor]! += timeutil.toMillis(clocks.startTime.increment!, 'seconds');
 	}
 
 	// Set up clocksticking for the new turn.
@@ -236,6 +236,7 @@ function stop(basegame: ClockDependant): void {
 	endGame(basegame);
 }
 
+/** Stops the ticking clock, freezing both players' remaining time. */
 function endGame(basegame: ClockDependant): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
@@ -294,6 +295,7 @@ function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined
 	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMs;
 }
 
+/** [DEBUG] Logs both players' clocks and the current turn's timestamps. */
 function printClocks(basegame: ClockDependant): void {
 	if (basegame.untimed) return console.log('Game is untimed.');
 	const clocks = basegame.clocks!;
@@ -304,6 +306,7 @@ function printClocks(basegame: ClockDependant): void {
 	console.log(`timeAtTurnStart: ${clocks.timeAtTurnStart}`);
 }
 
+/** Snapshots the clocks into the {@link ClockValues} shape sent to clients. */
 function createEdit(clocks: ClockData): ClockValues {
 	const tickingData: Omit<ClockValues, 'clocks'> = {};
 	if (clocks.colorTicking !== undefined) {
@@ -316,6 +319,8 @@ function createEdit(clocks: ClockData): ClockValues {
 		...tickingData,
 	};
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	init,

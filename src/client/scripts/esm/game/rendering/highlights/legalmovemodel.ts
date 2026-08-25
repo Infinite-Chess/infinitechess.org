@@ -594,8 +594,8 @@ function getRayIterationInfo(
 	isRay: boolean,
 	startStep: bigint = 1n,
 ): RayIterationInfo | undefined {
-	const coordsBD: BDCoords = bdcoords.FromCoords(coords);
-	const stepBD: BDCoords = bdcoords.FromCoords(step);
+	const coordsBD: BDCoords = bdcoords.fromCoords(coords);
+	const stepBD: BDCoords = bdcoords.fromCoords(step);
 
 	const axis: 0 | 1 = step[0] === 0n ? 1 : 0; // Use the y axis if the x movement vector is zero
 
@@ -644,7 +644,7 @@ function getRayIterationInfo(
 			coords[0] + step[0] * limit,
 			coords[1] + step[1] * limit,
 		];
-		const furthestSquareWeCanSlideBD: BDCoords = bdcoords.FromCoords(furthestSquareWeCanSlide);
+		const furthestSquareWeCanSlideBD: BDCoords = bdcoords.fromCoords(furthestSquareWeCanSlide);
 
 		const vectorFromFurthestSquareTowardsIntsect = coordutil.subtractBDCoords(
 			intsect2.coords,

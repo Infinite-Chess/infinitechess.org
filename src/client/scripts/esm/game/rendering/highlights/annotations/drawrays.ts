@@ -169,7 +169,7 @@ function getLines(rays: Ray[], color: Color): Line[] {
 
 	const lines: Line[] = [];
 	for (const ray of rays) {
-		const rayStartBD = bdcoords.FromCoords(ray.start);
+		const rayStartBD = bdcoords.fromCoords(ray.start);
 
 		// Find the points it intersects the screen
 		const intersectionPoints = geometry.findLineBoxIntersectionsBD(
@@ -218,7 +218,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 	const mouseTileCoords = space.convertWorldSpaceToCoords(pointerWorld);
 	const vector_unnormalized = coordutil.subtractBDCoords(
 		mouseTileCoords,
-		bdcoords.FromCoords(drag_start!),
+		bdcoords.fromCoords(drag_start!),
 	);
 	const vector = findClosestPredefinedVector(
 		vector_unnormalized,
@@ -349,7 +349,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 	if (rays_all.length === 0) return intersections;
 
 	// First add the start coords of all rays to the list of intersections
-	for (const ray of rays_drawn) addSquare_NoDuplicates(bdcoords.FromCoords(ray.start));
+	for (const ray of rays_drawn) addSquare_NoDuplicates(bdcoords.fromCoords(ray.start));
 
 	// Then add all the intersection points of the rays (drawn against drawn + preset, SKIP preset against preset)
 	for (let a = 0; a < rays_drawn.length; a++) {

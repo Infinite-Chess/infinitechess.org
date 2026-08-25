@@ -76,7 +76,7 @@ function getSquaresBelowWorld(
 
 	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
 	highlights.forEach((coords) => {
-		const coordsWorld = space.convertCoordToWorldSpace(bdcoords.FromCoords(coords));
+		const coordsWorld = space.convertCoordToWorldSpace(bdcoords.fromCoords(coords));
 		const dist_cheby = vectors.chebyshevDistanceDoubles(coordsWorld, world);
 		if (dist_cheby < entityHalfWidthWorld) {
 			squares.push(coords);

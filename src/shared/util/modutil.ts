@@ -33,8 +33,9 @@ export type ModifierCode = keyof typeof MODIFIER_ICONS;
  */
 type ModifierDescriptionVars = Record<string, string | number>;
 
-// ================================ MODIFIER REGISTRY ================================
+// Constants -------------------------------------------------------------------
 
+/** The SVG symbol each modifier is shown by. Its keys are the modifier registry. */
 const MODIFIER_ICONS: Record<GameModifier['kind'], string> = {
 	'slide-limit': 'svg-slide-limit',
 };

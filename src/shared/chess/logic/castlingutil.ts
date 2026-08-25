@@ -11,12 +11,12 @@ import bimath from '../../util/math/bimath.js';
 import typeutil from '../../util/typeutil.js';
 import { rawTypes as r } from '../../util/typeutil.js';
 
-// Constants ---------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The minimum horizontal distance required between two pieces for castling. */
 const MIN_DISTANCE = 3n;
 
-// Functions ---------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Whether two pieces form a structurally valid castling pair,
@@ -44,5 +44,7 @@ function isValidPair(aCoords: Coords, aType: number, bCoords: Coords, bType: num
 	// Must be at least the minimum distance apart horizontally
 	return bimath.abs(aCoords[0] - bCoords[0]) >= MIN_DISTANCE;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { MIN_DISTANCE, isValidPair };

@@ -15,7 +15,7 @@ import legalmoves from './legalmoves.js';
 import { rawTypes } from '../../util/typeutil.js';
 import gamefileutility from './gamefileutility.js';
 
-// Constants -----------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The most pieces in-game that still affords the checkmate algorithm. Above this uses "royalcapture". */
 const MAX_PIECES = 50_000;
@@ -23,7 +23,7 @@ const MAX_PIECES = 50_000;
 /** The most royals in-game that still affords the checkmate algorithm. Above this uses "royalcapture". */
 const MAX_ROYALS = 6;
 
-// Functions -----------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * If the game is multiplayer, or if anyone gets multiple turns in a row, then that allows capturing
@@ -84,7 +84,7 @@ function detect(boardsim: Board): GameConclusion | undefined {
 	} else return { victor: null, condition: 'stalemate' };
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

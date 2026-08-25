@@ -23,7 +23,7 @@ import castlingutil from './castlingutil.js';
 import icnconverter from './icn/icnconverter.js';
 import { rawTypes as r } from '../../util/typeutil.js';
 
-// Functions ------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Calculates the starting position and specialRights of a loaded variant. */
 function getStartingPositionOfVariant(variant: LoadedVariant): {
@@ -178,7 +178,7 @@ function getRayPresets(mod: VariantModule | undefined): BaseRay[] {
 	return rayPresets ? icnconverter.parsePresetRays(rayPresets) : [];
 }
 
-// Exports ------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getStartingPositionOfVariant,

@@ -96,7 +96,7 @@ function render(): void {
 
 	const scale = boardpos.getBoardScaleAsNumber();
 	const [centerX, centerY] = space.convertCoordToWorldSpace(
-		bdcoords.FromCoords(node.move.endCoords),
+		bdcoords.fromCoords(node.move.endCoords),
 	);
 
 	// Black's perspective rotates the whole board 180°, so counter-rotate the badge to keep it at

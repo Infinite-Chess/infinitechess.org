@@ -10,6 +10,8 @@ import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 import coordutil, { Coords, CoordsKey } from '../../../../util/coordutil.js';
 import { ext as e, players as p, rawTypes as r } from '../../../../util/typeutil.js';
 
+// Variant Contract ------------------------------------------------------------
+
 export function getPosition(): { position: Map<CoordsKey, number> } {
 	return { position: genPositionOfOmegaFourth() };
 }
@@ -28,7 +30,7 @@ export function getGeneratorRules(): { pawnDoublePush: boolean; castleWith?: Raw
 	return { pawnDoublePush: false };
 }
 
-// ================================== GENERATOR ===================================
+// Generator -------------------------------------------------------------------
 
 /**
  * Generates the Omega^4 position example

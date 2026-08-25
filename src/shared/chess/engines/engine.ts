@@ -1,11 +1,11 @@
 // src/shared/chess/engines/engine.ts
 
-/*
- * This module contains the centralized data structure for all engines.
- * Add a new entry to engineDictionary when adding a new engine.
+/**
+ * The centralized data structure for all engines, and the config shape each one's
+ * worker expects.
  */
 
-// Types ------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A single engine entry object in the engine dictionary. */
 export interface Engine {
@@ -28,10 +28,10 @@ export interface Engine {
 	needsMoveHistory: boolean;
 }
 
-/** Union of all valid engine names, derived from the keys of engineDictionary. */
-export type ValidEngine = keyof typeof engineDictionary;
+/** Union of all valid engine names, derived from the keys of {@link ENGINE_DICTIONARY}. */
+export type ValidEngine = keyof typeof ENGINE_DICTIONARY;
 
-// Engine Config -----------------------------------------------------------------
+// Engine Config ---------------------------------------------------------------
 
 /** What every engine's worker is configured with when the page asks it for a move. */
 export interface BaseEngineConfig {
@@ -56,7 +56,7 @@ export type EngineAndConfig =
 	| { name: 'engineCheckmatePractice'; config: CheckmatePracticeEngineConfig }
 	| { name: 'apeiron'; config: ApeironEngineConfig };
 
-// Constants --------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Maximum signed 64-bit integer value (2^63 - 1). Used in Rust. */
 export const I64_MAX = 2n ** 63n - 1n;
@@ -65,7 +65,7 @@ export const I64_MAX = 2n ** 63n - 1n;
  * Centralized data structure for all engine properties.
  * Add a new entry here when adding a new engine.
  */
-export const engineDictionary = {
+export const ENGINE_DICTIONARY = {
 	engineCheckmatePractice: {
 		defaultTimeLimitPerMoveMillis: 500,
 		displayName: 'Practice Bot',
@@ -82,15 +82,15 @@ export const engineDictionary = {
 	},
 } satisfies { [key: string]: Engine };
 
-// Functions --------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Returns a formatted engine name string (e.g. "Apeiron (Level 3)").
  * If the provided strength level is the maximum for the engine, it is omitted.
  */
 export function getFormattedEngineName(engineName: ValidEngine, strengthLevel?: number): string {
-	const name = engineDictionary[engineName].displayName;
-	const maxLevel = engineDictionary[engineName].maxStrengthLevel;
+	const name = ENGINE_DICTIONARY[engineName].displayName;
+	const maxLevel = ENGINE_DICTIONARY[engineName].maxStrengthLevel;
 	return strengthLevel !== undefined && strengthLevel !== maxLevel
 		? `${name} (Level ${strengthLevel})`
 		: name;
@@ -102,7 +102,7 @@ export function getFormattedEngineName(engineName: ValidEngine, strengthLevel?: 
  * (e.g. an engine-release fetch failed at build time).
  */
 export function getVersionedEngineName(engineName: ValidEngine, version: string): string {
-	const name = engineDictionary[engineName].displayName;
+	const name = ENGINE_DICTIONARY[engineName].displayName;
 	return version ? `${name} ${formatEngineVersionMajorMinor(version)}` : name;
 }
 

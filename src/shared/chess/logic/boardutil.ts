@@ -15,7 +15,7 @@ import coordutil from '../../util/coordutil.js';
 import organizedpieces from './organizedpieces.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
 
-// Types ----------------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 export interface Piece {
 	type: number;
@@ -30,15 +30,11 @@ export interface Piece {
 	index: number;
 }
 
-// Counting Pieces ----------------------------------------------------------------------------------------------
+// Counting Pieces -------------------------------------------------------------
 
 /**
- * Counts the number of pieces in the gamefile. Doesn't count undefined placeholders.
- * @param o - The pieces
- * @param [options] - Optional settings.
- * @param [options.ignoreColors] - Whether to ignore certain colors eg p.NEUTRAL.
- * @param [options.ignoreTypes] - Whether to ignore certain types pieces.
- * @returns The number of pieces in the gamefile.
+ * Counts the number of pieces on the board. Doesn't count undefined placeholders.
+ * `ignoreColors` and `ignoreRawTypes` leave the colors/raw types they name out of the count.
  */
 function getPieceCountOfGame(
 	o: OrganizedPiecesBase,
@@ -100,7 +96,7 @@ function getPieceCountOfColor(o: OrganizedPiecesBase, color: Player): number {
 /**
  * Returns the number of pieces in a given type list (e.g. "pawnsW"),
  * EXCLUDING undefined placeholders
- * @param o the piece data for the game
+ * @param o - the piece data for the game
  * @param type
  */
 function getPieceCountOfType(o: OrganizedPiecesBase, type: number): number {
@@ -121,7 +117,7 @@ function getPieceCount_IncludingUndefineds(o: OrganizedPiecesBase): number {
 	return o.types.length;
 }
 
-// Getting All Pieces -------------------------------------------------------------------------------------------------
+// Getting All Pieces ----------------------------------------------------------
 
 /**
  * Retrieves the coordinates of all pieces.
@@ -220,7 +216,7 @@ function getBoundingBoxOfAllPieces(o: OrganizedPieces): BoundingBox | undefined 
 
 /**
  * Returns a list of all the jumping royal pieces of a specific color.
- * @param o the piece lists
+ * @param o - the piece lists
  * @param color - The color of the jumping royals to look for.
  * @returns A list of coordinates where all the jumping royals of the provided color are at.
  */
@@ -281,6 +277,7 @@ function iteratePiecesInTypeRange_IncludeUndefineds(
 	}
 }
 
+/** Appends every occupied coordinate in a type's range onto `coords`. */
 function getCoordsOfTypeRange(o: OrganizedPiecesBase, coords: Coords[], range: TypeRange): void {
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
@@ -293,16 +290,19 @@ function getCoordsOfTypeRange(o: OrganizedPiecesBase, coords: Coords[], range: T
 	}
 }
 
-// Getting A Single Piece -------------------------------------------------------------------------------------------------
+// Getting A Single Piece ------------------------------------------------------
 
+/** The coordinates of the piece at an absolute index. */
 function getCoordsFromIdx(o: OrganizedPiecesBase, idx: number): Coords {
 	return [o.XPositions[idx]!, o.YPositions[idx]!];
 }
 
+/** Whether an absolute index holds an undefined placeholder rather than a real piece. */
 function isIdxUndefinedPiece(o: OrganizedPiecesBase, idx: number): boolean {
 	return jsutil.binarySearch(o.typeRanges.get(o.types[idx]!)!.undefineds, idx).found;
 }
 
+/** The type of the piece on these coords, or undefined if the square is empty. */
 function getTypeFromCoords(o: OrganizedPiecesBase, coords: Coords): number | undefined {
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
@@ -310,6 +310,7 @@ function getTypeFromCoords(o: OrganizedPiecesBase, coords: Coords): number | und
 	return o.types[idx]!;
 }
 
+/** The absolute index of the piece on these coords, or undefined if the square is empty. */
 function getIdxFromCoords(o: OrganizedPiecesBase, coords: Coords): number | undefined {
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
@@ -317,6 +318,7 @@ function getIdxFromCoords(o: OrganizedPiecesBase, coords: Coords): number | unde
 	return idx;
 }
 
+/** The piece on these coords, or undefined if the square is empty. */
 function getPieceFromCoords(o: OrganizedPiecesBase, coords: Coords): Piece | undefined {
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
@@ -329,6 +331,7 @@ function getPieceFromCoords(o: OrganizedPiecesBase, coords: Coords): Piece | und
 	};
 }
 
+/** The piece on this coords key, or undefined if the square is empty. */
 function getPieceFromCoordsKey(o: OrganizedPiecesBase, coordsKey: CoordsKey): Piece | undefined {
 	if (!o.coords.has(coordsKey)) return undefined;
 	const idx = o.coords.get(coordsKey)!;
@@ -373,6 +376,10 @@ function getDefinedPieceFromIdx(o: OrganizedPiecesBase, idx: number): Piece {
 	};
 }
 
+/**
+ * The type range the given absolute index falls inside.
+ * @throws If the index is out of the piece lists, or its type has no range.
+ */
 function getTypeRangeFromIdx(o: OrganizedPiecesBase, idx: number): TypeRange {
 	const type = o.types[idx];
 	if (type === undefined) throw Error('Index is out of piece lists');
@@ -385,6 +392,8 @@ function getTypeRangeFromIdx(o: OrganizedPiecesBase, idx: number): TypeRange {
 function isPieceOnCoords(o: OrganizedPiecesBase, coords: Coords): boolean {
 	return o.coords.has(coordutil.getKeyFromCoords(coords));
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getPieceCountOfGame,

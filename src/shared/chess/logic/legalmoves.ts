@@ -24,7 +24,7 @@ import organizedpieces from './organizedpieces.js';
 import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
 import typeutil, { players as p, rawTypes as r } from '../../util/typeutil.js';
 
-// Types ---------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * The step-count limits of a sliding direction.
@@ -50,7 +50,7 @@ interface LegalMoves {
 	colinear: boolean;
 }
 
-// Constants -----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * When testing a `brute` flagged slide to see if at least one square on it is legal,
@@ -59,7 +59,7 @@ interface LegalMoves {
  */
 const MAX_BRUTE_SIMULATIONS = 200n;
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Gets the moveset of the type of piece specified.
@@ -89,7 +89,7 @@ function getIgnoreFuncFromPieceMoveset(pieceMoveset: PieceMoveset): IgnoreFuncti
 /**
  * Creates an empty LegalMoves object for a piece.
  * Should only be used outside of {@link calculateAll} when check doesn't matter or when you don't want special or calculated moves.
- * @param moveset the moveset belonging to the piece of the legalmoves
+ * @param moveset - the moveset belonging to the piece of the legalmoves
  * @returns the legal moves object
  */
 function getEmptyLegalMoves(moveset: PieceMoveset): LegalMoves {
@@ -392,11 +392,8 @@ function enforceWorldBorderOnSlideLimit(
 ): void {
 	if (!worldBorder) return; // No world border, skip
 
-	if (!bounds.boxContainsSquare(worldBorder, coords)) {
-		// This can legitimately happen when using the drag arrows feature
-		// to drag an arrow's piece outside of the world border.
-		// console.warn('Piece outside world border.'); // Doesn't crash game, but does yield strange legal move results.
-	}
+	// A piece outside the world border yields strange legal move results, but doesn't crash.
+	// It happens legitimately when the drag-arrows feature drags a piece past the border.
 
 	// Helper to apply logic for a single border
 	const checkBound = (border: bigint | null, axis: 0 | 1, isMaxBound: boolean): void => {
@@ -422,8 +419,6 @@ function enforceWorldBorderOnSlideLimit(
 	// Y Axis
 	checkBound(worldBorder.bottom, 1, false); // Min bound
 	checkBound(worldBorder.top, 1, true); // Max bound
-
-	// console.log('New limit for step ', step, 'after blocked by world border:', limit);
 }
 
 /**
@@ -627,7 +622,7 @@ function hasAtleast1Move(moves: LegalMoves, boardsim: Board, piece: Piece): bool
 	}
 }
 
-// Exports ----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export type { LegalMoves, SlideLimits };
 

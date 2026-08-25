@@ -33,7 +33,7 @@ import gamefileutility from './gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
 import { players as p, rawTypes as r } from '../../util/typeutil.js';
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 // EVERY one of these functions needs to include enough information in the special move tag
 // to be able to undo any of them!
@@ -385,9 +385,9 @@ function roses(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 				// Path are equal length
 				// Pick the one that curves towards the center of play,
 				// as that's more likely to stay within the window during animation.
-				const coordsBD = bdcoords.FromCoords(coords);
-				const coordPathBD = bdcoords.FromCoords(coord.path![1]!);
-				const newCoordPathBD = bdcoords.FromCoords(newCoord.path[1]!);
+				const coordsBD = bdcoords.fromCoords(coords);
+				const coordPathBD = bdcoords.fromCoords(coord.path![1]!);
+				const newCoordPathBD = bdcoords.fromCoords(newCoord.path[1]!);
 
 				const startingBoxBD = bounds.castBoundingBoxToBigDecimal(
 					boardsim.startSnapshot.box,
@@ -492,7 +492,7 @@ function transferSpecialTag<K extends keyof SpecialTags>(
 	if (src[key] !== undefined) dest[key] = jsutil.deepCopyObject(src[key]); // SpecialTag[K] → SpecialTag[K] | undefined ✓
 }
 
-// Exports -----------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	kings,

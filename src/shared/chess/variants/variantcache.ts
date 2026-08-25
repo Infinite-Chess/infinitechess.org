@@ -13,11 +13,11 @@ import type { VariantModule } from '../logic/variantmodule.js';
 import variantregistry from './variantregistry.js';
 import { VARIANT_CODES } from '../util/variantcodes.js';
 
-// State ----------------------------------------------
+// State -----------------------------------------------------------------------
 
 const moduleCache = new Map<VariantCode, VariantModule>();
 
-// Functions -------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Ensures the module for the given variant is cached.
@@ -58,7 +58,7 @@ function getModule(code: VariantCode): VariantModule {
 	return mod;
 }
 
-// Exports -----------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	ensureVariantLoaded,

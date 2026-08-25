@@ -445,7 +445,7 @@ function renderAnimations(): void {
 		forEachActiveKeyframe(animation.showKeyframes, segmentInfo.segmentNum, (pieces) => {
 			// Render all captured pieces in place
 			pieces.forEach((p) => {
-				const coordsBD = bdcoords.FromCoords(p.coords);
+				const coordsBD = bdcoords.fromCoords(p.coords);
 				processPiece(p.type, coordsBD, capturedPiecesInstanceData);
 			});
 		});

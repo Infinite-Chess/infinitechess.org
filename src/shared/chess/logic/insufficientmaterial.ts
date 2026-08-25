@@ -45,7 +45,7 @@ type PieceCount = number | [number, number];
  *
  * Chosen to be as small as possible yet realistically never actually be reached in practice.
  */
-const boundForWorldBorderConsideration = 1_000_000n;
+const BOUND_FOR_WORLD_BORDER_CONSIDERATION = 1_000_000n;
 
 /**
  * List of scenarios that are a draw by insufficient material (checkmate and helpmate impossible).
@@ -173,6 +173,7 @@ const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
 		}
 	}
 }
+/** [DEBUG] Renders a scenario with english piece names instead of numeric types. */
 function makeScenReadable(scen: Scenario): string {
 	const transformed = Object.fromEntries(
 		Object.entries(scen).map(([key, val]) => [typeutil.debugType(Number(key)), val]),
@@ -180,7 +181,7 @@ function makeScenReadable(scen: Scenario): string {
 	return JSON.stringify(transformed);
 }
 
-// Helpers ----------------------------------------------------------------------
+// Helpers ---------------------------------------------------------------------
 
 /**
  * Merges a set of additional pieces into every scenario in the list.
@@ -239,10 +240,12 @@ function getCoordsParity(coords: Coords): 0 | 1 {
 	return Number(bimath.abs(coords[0] + coords[1]) % 2n) as 0 | 1;
 }
 
+/** The total count across both halves of a tuple. */
 function sumTupleCount(tuple: [number, number]): number {
 	return tuple[0] + tuple[1];
 }
 
+/** The tuple with its larger half first. */
 function orderTupleDescending(tuple: [number, number]): [number, number] {
 	if (tuple[0] < tuple[1]) return [tuple[1], tuple[0]];
 	else return tuple;
@@ -284,7 +287,7 @@ function normalizeBishopParities(scen: Scenario): void {
 	}
 }
 
-// Main Logic ---------------------------------------------------------------
+// Main Logic ------------------------------------------------------------------
 
 /** Whether the position supports insufficient material checks. */
 function doesPositionSupportInsuffmat(boardsim: InsuffmatBoard): boolean {
@@ -389,18 +392,16 @@ export function detectInsufficientMaterial(boardsim: InsuffmatBoard): GameConclu
 	const boardScenariosToCheck = buildBoardScenarios(gameRules, boardsim);
 	if (boardScenariosToCheck === false) return undefined; // Too many promotable pawns, skip insuffmat check entirely to avoid exponential blowup.
 
-	// console.log('Checking insuffmat scenarios:', boardScenariosToCheck.map(makeScenReadable));
-
 	const invertedBoardScenariosToCheck = boardScenariosToCheck.map((scen) => invertScenario(scen));
 
 	// Is the world border close enough to assist checkmate?
 	// prettier-ignore
 	const boardIsFinite =
 		gameRules.worldBorder === undefined ? false
-			: (gameRules.worldBorder.bottom !== null && -gameRules.worldBorder.bottom <= boundForWorldBorderConsideration) ||
-			  (gameRules.worldBorder.left !== null && -gameRules.worldBorder.left <= boundForWorldBorderConsideration) ||
-			  (gameRules.worldBorder.right !== null && gameRules.worldBorder.right <= boundForWorldBorderConsideration) ||
-			  (gameRules.worldBorder.top !== null && gameRules.worldBorder.top <= boundForWorldBorderConsideration);
+			: (gameRules.worldBorder.bottom !== null && -gameRules.worldBorder.bottom <= BOUND_FOR_WORLD_BORDER_CONSIDERATION) ||
+			  (gameRules.worldBorder.left !== null && -gameRules.worldBorder.left <= BOUND_FOR_WORLD_BORDER_CONSIDERATION) ||
+			  (gameRules.worldBorder.right !== null && gameRules.worldBorder.right <= BOUND_FOR_WORLD_BORDER_CONSIDERATION) ||
+			  (gameRules.worldBorder.top !== null && gameRules.worldBorder.top <= BOUND_FOR_WORLD_BORDER_CONSIDERATION);
 
 	// It is draw by insuffmat if EVERY board scenario pair is insuffmat.
 	// A pair is insuffmat if itself OR its invert is insuffmat.
@@ -411,7 +412,6 @@ export function detectInsufficientMaterial(boardsim: InsuffmatBoard): GameConclu
 			!isScenarioInsuffMat(scenario, boardIsFinite) &&
 			!isScenarioInsuffMat(invertedScenario, boardIsFinite)
 		) {
-			// console.log('Scenario is not insuffmat:', makeScenReadable(scenario));
 			return undefined; // At least one scenario pair is not insuffmat
 		}
 	}

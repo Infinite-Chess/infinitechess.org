@@ -21,9 +21,12 @@ import { detectRepetitionDraw } from './repetition.js';
 import { rawTypes as r, Player } from '../../util/typeutil.js';
 import { detectInsufficientMaterial } from './insufficientmaterial.js';
 
-// The squares in KOTH where if you get your king to you WIN
-// prettier-ignore
-const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
+// Constants -------------------------------------------------------------------
+
+/** The squares in KOTH where if you get your king to you WIN. */
+const KOTH_CENTER_SQUARES: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]]; // prettier-ignore
+
+// Game Conclusion -------------------------------------------------------------
 
 /**
  * Tests if the game is over by the used win condition, and if so,
@@ -35,19 +38,7 @@ function doGameOverChecks(gamefile: GameFile): void {
 	setGameConclusion(gamefile, gameConclusion);
 }
 
-/** Sets the game's conclusion, adding the mate flag to the last move played if it was checkmate. */
-function setGameConclusion(gamefile: GameFile, conclusion: GameConclusion | undefined): void {
-	gamefile.gameConclusion = conclusion;
-	if (conclusion?.condition === 'checkmate') moveutil.flagLastMoveAsMate(gamefile);
-}
-
-/**
- * Tests if the game is over by the win condition used, and if so,
- * returns the `gameConclusion` property of the boardsim.
- * For example, `{ victor: 1, condition: 'checkmate' }`, or `{ victor: 0, condition: 'stalemate' }`.
- * @param boardsim - The boardsim
- * @returns The conclusion object, if the game is over. For example, `{ victor: 1, condition: 'checkmate' }`, or `{ victor: 0, condition: 'stalemate' }`. If the game isn't over, this returns *undefined*.
- */
+/** The conclusion the position has reached, or undefined if the game isn't over. */
 function getGameConclusion(boardsim: Board): GameConclusion | undefined {
 	if (!moveutil.areWeViewingLatestMove(boardsim))
 		throw new Error("Cannot perform game over checks when we're not on the last move.");
@@ -66,6 +57,15 @@ function getGameConclusion(boardsim: Board): GameConclusion | undefined {
 	); // No win condition passed. No game conclusion!
 }
 
+/** Sets the game's conclusion, adding the mate flag to the last move played if it was checkmate. */
+function setGameConclusion(gamefile: GameFile, conclusion: GameConclusion | undefined): void {
+	gamefile.gameConclusion = conclusion;
+	if (conclusion?.condition === 'checkmate') moveutil.flagLastMoveAsMate(gamefile);
+}
+
+// Win Condition Detection -----------------------------------------------------
+
+/** Win by capturing any one royal piece. */
 function detectRoyalCapture(boardsim: Board): GameConclusion | undefined {
 	if (!gamefileutility.isOpponentUsingWinCondition(boardsim, boardsim.whosTurn, 'royalcapture'))
 		return undefined; // Not using this gamerule
@@ -82,6 +82,7 @@ function detectRoyalCapture(boardsim: Board): GameConclusion | undefined {
 	return undefined;
 }
 
+/** Win by capturing the opponent's last remaining royal. */
 function detectAllroyalscaptured(boardsim: Board): GameConclusion | undefined {
 	if (
 		!gamefileutility.isOpponentUsingWinCondition(
@@ -111,6 +112,7 @@ function detectAllroyalscaptured(boardsim: Board): GameConclusion | undefined {
 	return undefined;
 }
 
+/** Win by leaving the opponent with no pieces at all. */
 function detectAllpiecescaptured(boardsim: Board): GameConclusion | undefined {
 	if (
 		!gamefileutility.isOpponentUsingWinCondition(
@@ -135,6 +137,7 @@ function detectAllpiecescaptured(boardsim: Board): GameConclusion | undefined {
 	return undefined;
 }
 
+/** Win by landing a king on one of the {@link KOTH_CENTER_SQUARES}. */
 function detectKoth(boardsim: Board): GameConclusion | undefined {
 	if (!gamefileutility.isOpponentUsingWinCondition(boardsim, boardsim.whosTurn, 'koth'))
 		return undefined; // Not using this gamerule
@@ -151,7 +154,7 @@ function detectKoth(boardsim: Board): GameConclusion | undefined {
 		boardsim.moves.length - 1,
 	);
 
-	const kingInCenter = kothCenterSquares.some((square) => {
+	const kingInCenter = KOTH_CENTER_SQUARES.some((square) => {
 		const typeAtSquare = boardutil.getTypeFromCoords(boardsim.pieces, square);
 		if (typeAtSquare === undefined) return false;
 		const [rawType, color] = typeutil.splitType(typeAtSquare);
@@ -162,11 +165,7 @@ function detectKoth(boardsim: Board): GameConclusion | undefined {
 	else return undefined;
 }
 
-/**
- * Detects if the game is over by, for example, the 50-move rule.
- * @param boardsim - The boardsim
- * @returns `{ victor: 0, condition: 'moverule' }`, if the game is over by the move-rule, otherwise *undefined*.
- */
+/** Draw by the move rule (e.g. the 50-move rule), once its ply count is reached. */
 function detectMoveRule(boardsim: Board): GameConclusion | undefined {
 	if (boardsim.gameRules.moveRule === undefined) return undefined; // No move-rule being used
 	if (boardsim.state.global.moveRuleState === boardsim.gameRules.moveRule) {
@@ -175,7 +174,9 @@ function detectMoveRule(boardsim: Board): GameConclusion | undefined {
 	return undefined;
 }
 
-// Returns true if the very last move captured a royal piece.
+// Helpers ---------------------------------------------------------------------
+
+/** Whether the very last move captured a royal piece. Undefined if there was no capture. */
 function wasLastMoveARoyalCapture(boardsim: Board): boolean | undefined {
 	const lastMove = moveutil.getLastMove(boardsim.moves);
 	if (!lastMove) return undefined;
@@ -188,9 +189,7 @@ function wasLastMoveARoyalCapture(boardsim: Board): boolean | undefined {
 
 	if (capturedTypes.size === 0) return undefined; // Last move not a capture
 
-	// Vscode or the Node.js environment does NOT have set methods!
-	// return !capturedTypes.isDisjointFrom(new Set(typeutil.royals)); // disjoint if they share nothing in common
-	// Check if any captured type is a royal piece.
+	// Checked by hand rather than with Set.isDisjointFrom — our Node/VSCode target lacks it.
 	const royalSet = new Set<RawType>(typeutil.royals);
 	for (const capturedType of capturedTypes) {
 		if (royalSet.has(capturedType)) return true;
@@ -199,8 +198,11 @@ function wasLastMoveARoyalCapture(boardsim: Board): boolean | undefined {
 	return false;
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
-	getGameConclusion,
+	// Game Conclusion
 	doGameOverChecks,
+	getGameConclusion,
 	setGameConclusion,
 };

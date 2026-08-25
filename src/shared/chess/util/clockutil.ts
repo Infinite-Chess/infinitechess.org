@@ -9,7 +9,7 @@ import * as z from 'zod';
 
 import typeschemas from './typeschemas.js';
 
-// Types --------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * The clock value for the game, `s+s`, where the left side is
@@ -45,7 +45,7 @@ export const ClockValuesSchema = z.strictObject({
 /** The speed category of a game, based on its time control. */
 export type SpeedCategory = 'bullet' | 'blitz' | 'rapid' | 'classical' | 'infinite';
 
-// Constants -----------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Valid base time values in minutes, matching the game setup modal's base-time slider ticks. */
 const VALID_BASE_MINUTES = [
@@ -61,7 +61,7 @@ export const VALID_INCREMENT_SECS = [
 	60,
 ]; // prettier-ignore
 
-// Functions -----------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Returns true if the time control string is valid for a lobby seek.
@@ -81,6 +81,10 @@ function isTimedControlValid(time: TimeControl): boolean {
 	);
 }
 
+/**
+ * Formats remaining milliseconds for display: `H:MM:SS` from an hour up, `MM:SS` below,
+ * and `M:SS:t` (tenths) under 10 seconds, for precision in time scrambles.
+ */
 function getTextContentFromTimeRemain(time: number): string {
 	const clampedTime = Math.max(0, time);
 
@@ -98,20 +102,14 @@ function getTextContentFromTimeRemain(time: number): string {
 	return `${minutes.toString().padStart(2, '0')}:${ss}`;
 }
 
-/**
- * Returns true if the clock value is infinite. Internally, untimed games are represented with a "-".
- * @param clock - The clock value (e.g. "10+5").
- * @returns *true* if it's infinite.
- */
+/** Whether the game is untimed, which is represented internally with a `"-"`. */
 function isClockValueInfinite(clock: TimeControl): boolean {
 	return clock === '-';
 }
 
 /**
- * Splits the clock from the form `10+5` into the `minutes` and `increment` properties.
- * If it is an untimed game (represented by `-`), then this will return null.
- * @param clock - The string representing the clock value: `10+5`
- * @returns An object with 2 properties: `minutes`, `increment`, or `null` if the clock is infinite.
+ * Splits a time control into its `minutes` and `increment` properties.
+ * Null for an untimed game.
  */
 function getMinutesAndIncrementFromClock(
 	clock: TimeControl,
@@ -133,9 +131,9 @@ function getTimeControlLabel(clock: TimeControl): string {
 }
 
 /**
- * Splits the clock from the form `s+s` into the `base_time_seconds` and `increment_seconds` properties.
- * @param time_control
- * @returns
+ * Splits a time control of the form `s+s` into its base time and increment, both in
+ * seconds. Both null for an untimed game.
+ * @throws If either half is NaN, the base time is not positive, or the increment is negative.
  */
 function splitTimeControl(time_control: TimeControl): {
 	base_time_seconds: number | null;
@@ -179,19 +177,21 @@ function getSpeedCategory(time_control: TimeControl): SpeedCategory {
 	if (isClockValueInfinite(time_control)) return 'infinite';
 	const { base_time_seconds, increment_seconds } = splitTimeControl(time_control);
 	const estimate = base_time_seconds! + 40 * increment_seconds!;
-	// if (estimate < 30) return 'ultra-bullet'; // For now we don't have time controls < 1m
+	// if (estimate < 30) return 'ultra-bullet'; // For now our shortest offered base time is 1 minute.
 	if (estimate < 180) return 'bullet';
 	if (estimate < 480) return 'blitz';
 	if (estimate < 1500) return 'rapid';
 	if (estimate < 21600) return 'classical';
-	// return 'correspondence';
-	return 'classical'; // This is the max for now
+	// return 'correspondence'; // No correspondence games offered
+	return 'classical'; // Classical is the top band
 }
 
 /** Returns the SVG symbol ID of the speed icon for the given time control. */
 function getSpeedIconId(time_control: TimeControl): string {
 	return `svg-speed-${getSpeedCategory(time_control)}`;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

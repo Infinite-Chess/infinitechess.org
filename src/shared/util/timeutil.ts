@@ -8,25 +8,48 @@ import type { Locale } from 'date-fns';
 
 import { formatDistanceToNow } from 'date-fns';
 
+// Types -----------------------------------------------------------------------
+
+/** A time unit convertible to milliseconds. */
+type TimeUnit = keyof typeof MS_PER_UNIT;
+
+// Constants -------------------------------------------------------------------
+
 /**
- * Converts minutes to milliseconds.
+ * The length of each time unit in milliseconds.
+ * Months/years use the conventional 30- and 365-day approximations.
  */
-function minutesToMillis(minutes: number): number {
-	return minutes * 60 * 1000;
+const MS_PER_UNIT = {
+	milliseconds: 1,
+	seconds: 1000,
+	minutes: 1000 * 60,
+	hours: 1000 * 60 * 60,
+	days: 1000 * 60 * 60 * 24,
+	weeks: 1000 * 60 * 60 * 24 * 7,
+	months: 1000 * 60 * 60 * 24 * 30,
+	years: 1000 * 60 * 60 * 24 * 365,
+};
+
+/** Largest-first relative-time units with their length in ms. */
+const RELATIVE_UNITS: readonly [Intl.RelativeTimeFormatUnit, number][] = [
+	['year', MS_PER_UNIT.years],
+	['month', MS_PER_UNIT.months],
+	['day', MS_PER_UNIT.days],
+	['hour', MS_PER_UNIT.hours],
+	['minute', MS_PER_UNIT.minutes],
+	['second', MS_PER_UNIT.seconds],
+];
+
+// Functions -------------------------------------------------------------------
+
+/** Converts an amount of a time unit into milliseconds. */
+function toMillis(amount: number, unit: TimeUnit): number {
+	return amount * MS_PER_UNIT[unit];
 }
 
 /**
- * Converts seconds to milliseconds.
- */
-function secondsToMillis(seconds: number): number {
-	return seconds * 1000;
-}
-
-/**
- * Converts a timestamp to an object with UTCDate and UTCTime.
- * This time format is used for ICN metadata notation.
+ * Converts a timestamp to the `UTCDate` / `UTCTime` pair ICN metadata notation uses.
  * @param timestamp - The timestamp in milliseconds since the Unix Epoch.
- * @returns An object with the properties `UTCDate` and `UTCTime`.
  */
 function convertTimestampToUTCDateUTCTime(timestamp: number): { UTCDate: string; UTCTime: string } {
 	const date = new Date(timestamp);
@@ -48,8 +71,7 @@ function convertTimestampToUTCDateUTCTime(timestamp: number): { UTCDate: string;
 /**
  * Converts a UTCDate and optional UTCTime to a UTC timestamp in milliseconds since the Unix Epoch.
  * @param UTCDate - The date in the format "YYYY.MM.DD".
- * @param [UTCTime] The time in the format "HH:MM:SS". Defaults to "00:00:00".
- * @returns The UTC timestamp in milliseconds since the Unix Epoch.
+ * @param UTCTime - The time in the format "HH:MM:SS". Defaults to "00:00:00".
  */
 function convertUTCDateUTCTimeToTimeStamp(UTCDate: string, UTCTime: string = '00:00:00'): number {
 	const [year, month, day] = UTCDate.split('.').map(Number) as [number, number, number];
@@ -60,51 +82,11 @@ function convertUTCDateUTCTimeToTimeStamp(UTCDate: string, UTCTime: string = '00
 }
 
 /**
- * Calculates the total milliseconds based on the provided options.
- * @param options - An object containing time units and their values.
- * @returns The total milliseconds calculated from the provided options.
- */
-function getTotalMilliseconds(options: {
-	milliseconds?: number;
-	seconds?: number;
-	minutes?: number;
-	hours?: number;
-	days?: number;
-	weeks?: number;
-	months?: number;
-	years?: number;
-}): number {
-	const millisecondsIn = {
-		milliseconds: 1,
-		seconds: 1000,
-		minutes: 1000 * 60,
-		hours: 1000 * 60 * 60,
-		days: 1000 * 60 * 60 * 24,
-		weeks: 1000 * 60 * 60 * 24 * 7,
-		months: 1000 * 60 * 60 * 24 * 30, // Approximation, not precise
-		years: 1000 * 60 * 60 * 24 * 365, // Approximation, not precise
-	};
-
-	let totalMilliseconds = 0;
-
-	for (const option in options) {
-		if (millisecondsIn[option as keyof typeof millisecondsIn]) {
-			totalMilliseconds +=
-				(options[option as keyof typeof options] || 0) *
-				millisecondsIn[option as keyof typeof millisecondsIn];
-		}
-	}
-
-	return totalMilliseconds;
-}
-
-/**
- * Checks if the current date is within a specified date range.
+ * Whether today falls inside the given month/day range of the current year.
  * @param startMonth - The starting month of the range (1-12).
  * @param startDay - The starting day of the range (1-31).
  * @param endMonth - The ending month of the range (1-12).
  * @param endDay - The ending day of the range (1-31).
- * @returns True if the current date is within the specified range; otherwise, false.
  */
 function isCurrentDateWithinRange(
 	startMonth: number,
@@ -132,18 +114,8 @@ function timestampToISO(timestamp: number): string {
 }
 
 /**
- * Converts an ISO 8601 string from `2026-06-23T14:30:07.000Z`
+ * Converts a SQLite DATETIME string ("YYYY-MM-DD HH:MM:SS", assumed UTC)
  * to a timestamp in milliseconds since the UNIX epoch.
- */
-function isoToTimestamp(isoString: string): number {
-	return new Date(isoString).getTime();
-}
-
-/**
- * Converts a SQLite DATETIME string (in "YYYY-MM-DD HH:MM:SS" format) to a UTC timestamp in milliseconds.
- * Assumes the SQLite timestamp is in UTC.
- * @param sqliteString - The DATETIME string from SQLite in the format "YYYY-MM-DD HH:MM:SS".
- * @returns The corresponding UTC timestamp in milliseconds since the UNIX epoch.
  */
 function sqliteToTimestamp(sqliteString: string): number {
 	const isoString = sqliteToISO(sqliteString);
@@ -151,45 +123,24 @@ function sqliteToTimestamp(sqliteString: string): number {
 }
 
 /**
- * Converts a SQLite DATETIME string (in "YYYY-MM-DD HH:MM:SS" format) to an ISO 8601 string.
- * Assumes the SQLite timestamp is in UTC.
- * @param sqliteString - The DATETIME string from SQLite in the format "YYYY-MM-DD HH:MM:SS".
- * @returns The corresponding ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
+ * Converts a SQLite DATETIME string ("YYYY-MM-DD HH:MM:SS", assumed UTC)
+ * to an ISO 8601 string.
  */
 function sqliteToISO(sqliteString: string): string {
 	return sqliteString.replace(' ', 'T') + 'Z';
 }
 
 /**
- * Converts an ISO 8601 string to SQLite's DATETIME format ("YYYY-MM-DD HH:MM:SS").
- * @param isoString - The ISO 8601 formatted string (e.g., "YYYY-MM-DDTHH:MM:SSZ").
- * @returns The corresponding SQLite DATETIME string (e.g., "YYYY-MM-DD HH:MM:SS").
- */
-function isoToSQLite(isoString: string): string {
-	const date = new Date(isoString);
-	if (isNaN(date.getTime())) throw new Error('Invalid ISO 8601 string provided.');
-
-	return date.toISOString().replace('T', ' ').split('.')[0]!;
-}
-
-/**
- * Converts a timestamp (milliseconds since the UNIX epoch) to SQLite's DATETIME format ("YYYY-MM-DD HH:MM:SS").
- * The output string represents the timestamp in UTC.
- * @param timestamp - The timestamp in milliseconds since the UNIX epoch.
- * @returns The corresponding SQLite DATETIME string (e.g., "YYYY-MM-DD HH:MM:SS").
+ * Converts a timestamp (milliseconds since the UNIX epoch) to SQLite's UTC
+ * DATETIME format ("YYYY-MM-DD HH:MM:SS").
+ * @throws If the timestamp is not a valid date.
  */
 function timestampToSqlite(timestamp: number): string {
 	const date = new Date(timestamp);
-
-	// Check if the timestamp resulted in a valid date
 	if (isNaN(date.getTime())) throw new Error('Invalid timestamp provided.');
 
-	// toISOString() returns in UTC format "YYYY-MM-DDTHH:MM:SS.sssZ"
-	// We need to format it to "YYYY-MM-DD HH:MM:SS"
-	const isoString = date.toISOString();
-
-	// Extract the date and time part, replace 'T' with space
-	return isoString.slice(0, 19).replace('T', ' ');
+	// toISOString() gives "YYYY-MM-DDTHH:MM:SS.sssZ"; trim to "YYYY-MM-DD HH:MM:SS".
+	return date.toISOString().slice(0, 19).replace('T', ' ');
 }
 
 /**
@@ -200,19 +151,6 @@ function timestampToSqlite(timestamp: number): string {
 function getRelativeTimeString(timestampMs: number, locale: Locale): string {
 	return formatDistanceToNow(timestampMs, { addSuffix: true, locale });
 }
-
-/**
- * Largest-first relative-time units with their length in ms.
- * Months/years use the conventional 30- and 365-day approximations.
- */
-const RELATIVE_UNITS: readonly [Intl.RelativeTimeFormatUnit, number][] = [
-	['year', 1000 * 60 * 60 * 24 * 365],
-	['month', 1000 * 60 * 60 * 24 * 30],
-	['day', 1000 * 60 * 60 * 24],
-	['hour', 1000 * 60 * 60],
-	['minute', 1000 * 60],
-	['second', 1000],
-];
 
 /**
  * Formats an epoch-ms timestamp as a localized relative "time ago" string (e.g. "2 minutes ago")
@@ -246,18 +184,16 @@ function resolveAtTimestamp<T>(entries: Record<number, T>, timestamp: number): T
 	return entries[keys.find((k) => timestamp >= k) ?? keys[keys.length - 1]!]!;
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
-	minutesToMillis,
-	secondsToMillis,
+	toMillis,
 	convertTimestampToUTCDateUTCTime,
 	convertUTCDateUTCTimeToTimeStamp,
-	getTotalMilliseconds,
 	isCurrentDateWithinRange,
 	timestampToISO,
-	isoToTimestamp,
 	sqliteToTimestamp,
 	sqliteToISO,
-	isoToSQLite,
 	timestampToSqlite,
 	getRelativeTimeString,
 	getRelativeTimeStringIntl,

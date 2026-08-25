@@ -8,7 +8,7 @@
  * The message contracts themselves live in clientbound.ts / serverbound.ts.
  */
 
-// Types -------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Constrains a value to EXACTLY `Shape`, rejecting undeclared properties.
@@ -32,7 +32,7 @@ export type RouteAction<M extends MessageMap, R extends keyof M> = M[R]['action'
 export type ActionValue<M extends MessageMap, R extends keyof M, A extends RouteAction<M, R>> =
 	Extract<M[R], { action: A }> extends { value: infer V } ? V : undefined;
 
-// Constants ---------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The version of the websocket protocol the server and client speak.
@@ -46,7 +46,7 @@ const PROTOCOL_VERSION = 1;
 /** How long the server waits without sending a message before sending a heartbeat ping. */
 const HEARTBEAT_INTERVAL_MS = 10000;
 /** How long to wait for an echo before assuming the connection is dead. */
-const ECHO_TIMEOUT = 5000;
+const ECHO_TIMEOUT_MS = 5000;
 
 /**
  * Every closure reason that can go on the wire, and the code each is sent with.
@@ -54,7 +54,7 @@ const ECHO_TIMEOUT = 5000;
  * BOTH sides see BOTH groups. `ws` populates the server's 'close' event purely from the
  * PEER's close frame — but a browser answers a close frame by echoing back the code and reason
  * it received, so a reason the server sent still comes back to it. Don't strike the
- * server-sent reasons from {@link involuntaryClosureReasons} as unreachable server-side; they aren't.
+ * server-sent reasons from {@link INVOLUNTARY_CLOSURE_REASONS} as unreachable server-side; they aren't.
  */
 const ClosureReasons = {
 	// Sent by the server:
@@ -88,7 +88,7 @@ const ClosureReasons = {
 export type ClosureReason = (typeof ClosureReasons)[keyof typeof ClosureReasons];
 
 /** The reason values, for {@link isClosureReason} to test membership against. */
-const closureReasonValues: ReadonlySet<string> = new Set(Object.values(ClosureReasons));
+const CLOSURE_REASON_VALUES: ReadonlySet<string> = new Set(Object.values(ClosureReasons));
 
 // Closures that carry no reason at all:
 // 1009 ""  Message exceeded MAX_PAYLOAD_BYTES (see socketServer.ts). The `ws` library
@@ -112,42 +112,41 @@ const closureReasonValues: ReadonlySet<string> = new Set(Object.values(ClosureRe
 // We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
 // If the closure code is NOT one of the ones below, it means they purposefully closed the socket (like closed the tab),
 // so IMMEDIATELY tell their opponent they disconnected!
-const involuntaryClosureCodes: number[] = [1006];
-const involuntaryClosureReasons: ClosureReason[] = [
+const INVOLUNTARY_CLOSURE_CODES: number[] = [1006];
+const INVOLUNTARY_CLOSURE_REASONS: ClosureReason[] = [
 	ClosureReasons.CONNECTION_EXPIRED,
 	ClosureReasons.TOO_MANY_SOCKETS,
 	ClosureReasons.CLOSED_BY_CLIENT_RENEW,
 ];
 
-// Functions ---------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Tests whether an incoming closure reason is one we declare.
  * Acts as a type guard, narrowing the input to {@link ClosureReason}.
  */
 function isClosureReason(reason: string): reason is ClosureReason {
-	return closureReasonValues.has(reason);
+	return CLOSURE_REASON_VALUES.has(reason);
 }
 
 /**
- * Determines if the WebSocket closure was not initiated by the client (i.e., they had no control over the closure).
- * If this returns `true`, the client is allowed 5 seconds to reconnect before notifying their opponent of the disconnection.
+ * Whether the closure was outside the client's control, rather than something they chose.
+ * If so, they are allowed 5 seconds to reconnect before their opponent is told they disconnected.
  * @param code - The WebSocket closure code.
  * @param reason - The reason provided for the WebSocket closure.
- * @returns `true` if the closure was not initiated by the client, otherwise `false`.
  */
 function wasSocketClosureInvoluntary(code: number, reason: string): boolean {
-	if (involuntaryClosureCodes.includes(code)) return true;
+	if (INVOLUNTARY_CLOSURE_CODES.includes(code)) return true;
 	const trimmedReason = reason.trim();
-	return isClosureReason(trimmedReason) && involuntaryClosureReasons.includes(trimmedReason);
+	return isClosureReason(trimmedReason) && INVOLUNTARY_CLOSURE_REASONS.includes(trimmedReason);
 }
 
-// -----------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	PROTOCOL_VERSION,
 	HEARTBEAT_INTERVAL_MS,
-	ECHO_TIMEOUT,
+	ECHO_TIMEOUT_MS,
 	ClosureReasons,
 	isClosureReason,
 	wasSocketClosureInvoluntary,

@@ -99,7 +99,7 @@ function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => vo
 		callback(currentAnimationPosition, a.type);
 		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, (pieces) =>
 			pieces.forEach((p) => {
-				const pieceBDCoords = bdcoords.FromCoords(p.coords);
+				const pieceBDCoords = bdcoords.fromCoords(p.coords);
 				callback(pieceBDCoords, p.type);
 			}),
 		);
@@ -121,7 +121,7 @@ function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => vo
 			const coords = boardutil.getCoordsFromIdx(pieces, idx);
 			const coordsKey = coordutil.getKeyFromCoords(coords);
 			if (activeHides.has(coordsKey)) return; // Skip pieces that are being hidden due to animations
-			const coordsBD = bdcoords.FromCoords(coords);
+			const coordsBD = bdcoords.fromCoords(coords);
 			callback(coordsBD, type);
 		});
 	});
@@ -158,7 +158,7 @@ function getImageInstanceData(): {
 		// Disabled (too many pieces) => Only process pieces on highlights or being animated
 		const piecesToRender = getAllPiecesBelowAnnotePoints();
 		piecesToRender.forEach((p) => {
-			const coordsBD = bdcoords.FromCoords(p.coords);
+			const coordsBD = bdcoords.fromCoords(p.coords);
 			processPiece(coordsBD, p.type);
 		}); // Calculate their instance data
 	}
@@ -198,7 +198,7 @@ function getImagesBelowWorld(
 		// Disabled (too many pieces) => Only process pieces on highlights or being animated
 		const piecesToConsider = getAllPiecesBelowAnnotePoints();
 		piecesToConsider.forEach((p) => {
-			const coordsBD = bdcoords.FromCoords(p.coords);
+			const coordsBD = bdcoords.fromCoords(p.coords);
 			processPiece(coordsBD);
 		}); // Calculate if their underneath the world coords
 	}

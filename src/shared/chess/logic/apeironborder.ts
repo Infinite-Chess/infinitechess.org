@@ -15,7 +15,7 @@ import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js'
 import bimath from '../../util/math/bimath.js';
 import timeutil from '../../util/timeutil.js';
 
-// Constants -------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Maximum signed 64-bit integer value (2^63 - 1). The widest coordinate the Rust engine holds. */
 const I64_MAX = 2n ** 63n - 1n;
@@ -31,7 +31,7 @@ const PLAY_BORDER: Record<number, { dist: bigint; cap: bigint }> = {
 	0: { dist: I64_MAX - 2000n, cap: I64_MAX - 1000n },
 };
 
-// Functions -------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * The world border an engine game is played inside: spaced evenly around the starting position,
@@ -79,7 +79,7 @@ function clampToCap(worldBorder: UnboundedRectangle | undefined, timestamp: numb
 	};
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	forBox,

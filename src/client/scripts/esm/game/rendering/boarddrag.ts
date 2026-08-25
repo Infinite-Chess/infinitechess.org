@@ -325,7 +325,7 @@ function dragBoard(): void {
 	if (pointer2Id === undefined) {
 		// 1 Finger drag
 
-		const mouseWorld = bdcoords.FromDoubleCoords(mouse.getPointerWorld(pointer1Id!)!);
+		const mouseWorld = bdcoords.fromDoubleCoords(mouse.getPointerWorld(pointer1Id!)!);
 		// console.log('Mouse world', mousePos);
 
 		/**
@@ -366,7 +366,7 @@ function dragBoard(): void {
 		const newScale = bd.multiplyFloating(scale_WhenBoardPinched!, ratio);
 		boardpos.setBoardScale(newScale);
 
-		/**
+		/*
 		 * For calculating the new board position, treat the two fingers
 		 * as one finger dragging from the midpoint between them.
 		 */
@@ -377,7 +377,7 @@ function dragBoard(): void {
 			0.5,
 		);
 
-		const midPosWorld: BDCoords = bdcoords.FromDoubleCoords(
+		const midPosWorld: BDCoords = bdcoords.fromDoubleCoords(
 			coordutil.lerpCoordsDouble(pointer1World, pointer2World, 0.5),
 		);
 

@@ -28,7 +28,7 @@ import { TimeControlSchema } from './chess/util/clockutil.js';
 import { OutSeekVariantSchema } from './chess/variants/variantselection.js';
 import { GameModifierSchema, GameModifier } from './util/modutil.js';
 
-// Common Helper Schemas ---------------------------------------------------------------
+// Common Helper Schemas -------------------------------------------------------
 
 /** Whether a game is casual or rated. */
 export type GameMode = z.infer<typeof GameModeSchema>;
@@ -43,12 +43,12 @@ const ServerUsernameContainerSchema = z.strictObject({
 	rating: RatingSchema.optional(),
 });
 
-// Game Helper Schemas ---------------------------------------------------------------
+// Game Helper Schemas ---------------------------------------------------------
 
 /** The id of an online game. */
 export const GameIDSchema = z.number().int().nonnegative();
 
-// Game State Types ---------------------------------------------------------------
+// Game State Types ------------------------------------------------------------
 
 // Plain types, not schemas: these travel over HTTP and SSR, which the client casts
 // rather than validates — nothing ever parses them. See the note at the top of the file.
@@ -94,15 +94,15 @@ export interface DeadGameState extends StaticGameState {
 	icn: string;
 }
 
-// Seek Schemas ---------------------------------------------------------------
+// Seek Schemas ----------------------------------------------------------------
 
 /** The number of digits generated seek IDs are. */
-export const IDLengthOfSeeks = 5;
+export const SEEK_ID_LENGTH = 5;
 /** Seek ID: Base36 alphanumeric, fixed length of 5. */
 export type SeekId = z.infer<typeof SeekIdSchema>;
 export const SeekIdSchema = z
 	.string()
-	.length(IDLengthOfSeeks)
+	.length(SEEK_ID_LENGTH)
 	.regex(/^[0-9a-z]+$/);
 
 /** Shared info for all lobby game seek types. (excludes variant) */

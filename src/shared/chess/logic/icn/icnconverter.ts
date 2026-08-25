@@ -46,7 +46,7 @@ import coordutil, { Coords, CoordsKey } from '../../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
 import { players as p, RawType, Player, PlayerGroup } from '../../../util/typeutil.js';
 
-// Types ------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Represents the game format coming IN to the converter. */
 export interface LongFormatIn extends LongFormatBase {
@@ -144,13 +144,13 @@ export type PresetAnnotes = {
 	rays?: BaseRay[];
 };
 
-// Dictionaries -----------------------------------------------------------------------
+// Dictionaries ----------------------------------------------------------------
 
 /**
  * 1-2 letter codes for each player number.
  * This is used for specifying the turn order in ICN.
  */
-const playerCodes = {
+const PLAYER_CODES = {
 	[p.NEUTRAL]: 'n', // I dont think we need this, good to have in case
 	[p.WHITE]: 'w',
 	[p.BLACK]: 'b',
@@ -160,11 +160,11 @@ const playerCodes = {
 	[p.YELLOW]: 'y',
 	[p.GREEN]: 'g',
 } as const;
-const playerCodesInverted = jsutil.invertObj(playerCodes);
+const PLAYER_CODES_INVERTED = jsutil.invertObj(PLAYER_CODES);
 
-type PlayerCode = (typeof playerCodes)[keyof typeof playerCodes];
+type PlayerCode = (typeof PLAYER_CODES)[keyof typeof PLAYER_CODES];
 
-// Constants ------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The desired ordering metadata should be placed in the ICN */
 const METADATA_ORDERING: (keyof MetaData)[] = [
@@ -202,7 +202,7 @@ const COMPACT_FORMAT_OPTIONS = {
 	move_numbers: false,
 } as const;
 
-// Defaults ----------------------------------------------------------
+// Defaults --------------------------------------------------------------------
 
 /** Tests if the provided array of legal promotions is the default set of promotions. */
 function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
@@ -235,10 +235,10 @@ const possessive = (() => {
 	};
 })();
 
-const countingNumberSource = String.raw`[1-9]\d*`; // 1+   Positive. Disallows leading 0's
-const unboundedIntegerSource = String.raw`(?:_|${icnposition.integerSource})`; // Allows _ as a placeholder for infinity
+const COUNTING_NUMBER_SOURCE = String.raw`[1-9]\d*`; // 1+   Positive. Disallows leading 0's
+const UNBOUNDED_INTEGER_SOURCE = String.raw`(?:_|${icnposition.INTEGER_SOURCE})`; // Allows _ as a placeholder for infinity
 
-const playerCodeRegexSource = '[a-z]{1,2}'; // 'w' | 'bu'
+const PLAYER_CODE_REGEX_SOURCE = '[a-z]{1,2}'; // 'w' | 'bu'
 
 /** Returns a regex source for matching the promotion segment in a move, optionally capturing  */
 function getPromotionRegexSource(capturing: boolean): string {
@@ -249,8 +249,8 @@ function getPromotionRegexSource(capturing: boolean): string {
  * A regex for matching a move in the MOST COMPACT form: '1,7>2,8=Q'
  * The start coords, end coords, and promotion abbrev are all captured into named groups.
  */
-const moveTokenRegex = new RegExp(
-	`^(?<startCoordsKey>${icnposition.coordsKeyRegexSource})>(?<endCoordsKey>${icnposition.coordsKeyRegexSource})${getPromotionRegexSource(true)}$`,
+const MOVE_TOKEN_REGEX = new RegExp(
+	`^(?<startCoordsKey>${icnposition.COORDS_KEY_REGEX_SOURCE})>(?<endCoordsKey>${icnposition.COORDS_KEY_REGEX_SOURCE})${getPromotionRegexSource(true)}$`,
 );
 /**
  * A regex for dynamically matching all forms of a move in ICN.
@@ -266,11 +266,11 @@ function getMoveRegexSource(capturing: boolean): string {
 	const comment = capturing ? '<comment>' : ':';
 	const result =
 		possessive(`(?:${icnposition.getPieceAbbrevRegexSource(false)})?`) + // Optional starting piece abbreviation "P"   DOESN'T NEED TO BE CAPTURED, this avoids a crash cause of duplicate capture group names
-		`(?${startCoordsKey}${icnposition.coordsKeyRegexSource})` + // Starting coordinates
+		`(?${startCoordsKey}${icnposition.COORDS_KEY_REGEX_SOURCE})` + // Starting coordinates
 		possessive(` ?`) + // Optional space
 		`[>x]` + // Separator
 		possessive(` ?`) + // Optional space
-		`(?${endCoordsKey}${icnposition.coordsKeyRegexSource})` + // Ending coordinates
+		`(?${endCoordsKey}${icnposition.COORDS_KEY_REGEX_SOURCE})` + // Ending coordinates
 		possessive(` ?`) + // Optional space
 		possessive(getPromotionRegexSource(capturing)) + // Optional promotion ("=" REQUIRED)
 		possessive(` ?`) + // Optional space
@@ -295,45 +295,45 @@ function getMoveRegexSource(capturing: boolean): string {
  * Adding this to many of the section regexes prevents them from
  * confusing other sections with similar starts.
  */
-const whiteSpaceOrEnd = String.raw`(?:\s+|$)`; // Matches whitespace or end of string
-const whiteSpaceOrEndRegex = new RegExp(whiteSpaceOrEnd, 'y');
+const WHITE_SPACE_OR_END = String.raw`(?:\s+|$)`; // Matches whitespace or end of string
+const WHITE_SPACE_OR_END_REGEX = new RegExp(WHITE_SPACE_OR_END, 'y');
 
 /** Regex source that matches and captures a single metadata entry. */
-const singleMetadataSource = String.raw`\[([a-zA-Z]+)\s+"([^"]{1,200})"\]`; // Max metadata value length of 200 chars for safety. This prevents, if we forget a closing ", the regex consuming the entirity of the ICN
-const metadataRegex = new RegExp(
-	String.raw`${singleMetadataSource}(?:\s+${singleMetadataSource})*${whiteSpaceOrEnd}`,
+const SINGLE_METADATA_SOURCE = String.raw`\[([a-zA-Z]+)\s+"([^"]{1,200})"\]`; // Max metadata value length of 200 chars for safety. This prevents, if we forget a closing ", the regex consuming the entirity of the ICN
+const METADATA_REGEX = new RegExp(
+	String.raw`${SINGLE_METADATA_SOURCE}(?:\s+${SINGLE_METADATA_SOURCE})*${WHITE_SPACE_OR_END}`,
 	'y',
 ); // 'y' flag for sticky matching (only matches at the regex's lastIndex property, not after)
 
-const turnOrderRegex = new RegExp(
-	String.raw`(?<turnOrder>${playerCodeRegexSource}(?::${playerCodeRegexSource})*)${whiteSpaceOrEnd}`,
+const TURN_ORDER_REGEX = new RegExp(
+	String.raw`(?<turnOrder>${PLAYER_CODE_REGEX_SOURCE}(?::${PLAYER_CODE_REGEX_SOURCE})*)${WHITE_SPACE_OR_END}`,
 	'y',
 );
 
-const enpassantRegex = new RegExp(
-	String.raw`(?<enpassant>${icnposition.coordsKeyRegexSource})${whiteSpaceOrEnd}`,
+const ENPASSANT_REGEX = new RegExp(
+	String.raw`(?<enpassant>${icnposition.COORDS_KEY_REGEX_SOURCE})${WHITE_SPACE_OR_END}`,
 	'y',
 );
 
-const moveRuleRegex = new RegExp(
-	String.raw`(?<moveRule>${icnposition.wholeNumberSource}/${countingNumberSource})${whiteSpaceOrEnd}`,
+const MOVE_RULE_REGEX = new RegExp(
+	String.raw`(?<moveRule>${icnposition.WHOLE_NUMBER_SOURCE}/${COUNTING_NUMBER_SOURCE})${WHITE_SPACE_OR_END}`,
 	'y',
 );
 
-const fullMoveRegex = new RegExp(
-	String.raw`(?<fullMove>${countingNumberSource})${whiteSpaceOrEnd}`,
+const FULL_MOVE_REGEX = new RegExp(
+	String.raw`(?<fullMove>${COUNTING_NUMBER_SOURCE})${WHITE_SPACE_OR_END}`,
 	'y',
 );
 
-const promotionRanksSource = `${icnposition.integerSource}(?:,${icnposition.integerSource})*`; // '8,16,24,32'
-const promotionsPiecesSource = `${icnposition.pieceCodeRegexSource}(?:,${icnposition.pieceCodeRegexSource})*`; // 'q,r,b,n'
+const PROMOTION_RANKS_SOURCE = `${icnposition.INTEGER_SOURCE}(?:,${icnposition.INTEGER_SOURCE})*`; // '8,16,24,32'
+const PROMOTIONS_PIECES_SOURCE = `${icnposition.PIECE_CODE_REGEX_SOURCE}(?:,${icnposition.PIECE_CODE_REGEX_SOURCE})*`; // 'q,r,b,n'
 // FUTURE TODO: Drop support for old way of specifying promotions in ICN.
 // Change a single player promotion source to just the rank numbers, no promotion pieces,
 // and add a new regex for detecting custom promotion pieces after all player ranks and before the closing parenthesis.
-const singlePlayerPromotionSource = `(?:${promotionRanksSource})?(?:;${promotionsPiecesSource})?`; // '8,16,24,32;q,r,b,n' | '8' | ';q,r,b,n' | ''
+const SINGLE_PLAYER_PROMOTION_SOURCE = `(?:${PROMOTION_RANKS_SOURCE})?(?:;${PROMOTIONS_PIECES_SOURCE})?`; // '8,16,24,32;q,r,b,n' | '8' | ';q,r,b,n' | ''
 /** Captures the promotion ranks and promotion pieces section in the ICN. */
-const promotionsRegex = new RegExp(
-	String.raw`\((?<promotions>${singlePlayerPromotionSource}(?:\|${singlePlayerPromotionSource})*)\)${whiteSpaceOrEnd}`,
+const PROMOTIONS_REGEX = new RegExp(
+	String.raw`\((?<promotions>${SINGLE_PLAYER_PROMOTION_SOURCE}(?:\|${SINGLE_PLAYER_PROMOTION_SOURCE})*)\)${WHITE_SPACE_OR_END}`,
 	'y',
 );
 
@@ -342,16 +342,16 @@ const promotionsRegex = new RegExp(
  * Example: '-7,16,-7,16'
  * `_` can be used to represent infinity.
  */
-const worldBorderRegex = new RegExp(
-	String.raw`(?<worldBorder>${unboundedIntegerSource},${unboundedIntegerSource},${unboundedIntegerSource},${unboundedIntegerSource})${whiteSpaceOrEnd}`,
+const WORLD_BORDER_REGEX = new RegExp(
+	String.raw`(?<worldBorder>${UNBOUNDED_INTEGER_SOURCE},${UNBOUNDED_INTEGER_SOURCE},${UNBOUNDED_INTEGER_SOURCE},${UNBOUNDED_INTEGER_SOURCE})${WHITE_SPACE_OR_END}`,
 	'y',
 );
 
-const singleWinConSource = `(?:${winconutil.GAMERULE_WIN_CONDITIONS.join('|')})`; // 'royalcapture'
-const singlePlayerWinConSource = `${singleWinConSource}(?:,${singleWinConSource})*`; // 'royalcapture,koth'
+const SINGLE_WIN_CON_SOURCE = `(?:${winconutil.GAMERULE_WIN_CONDITIONS.join('|')})`; // 'royalcapture'
+const SINGLE_PLAYER_WIN_CON_SOURCE = `${SINGLE_WIN_CON_SOURCE}(?:,${SINGLE_WIN_CON_SOURCE})*`; // 'royalcapture,koth'
 /** Captures the win conditions section in the ICN. */
-const winConditionRegex = new RegExp(
-	String.raw`\(?(?<winConditions>${singlePlayerWinConSource}(?:\|${singlePlayerWinConSource})*)\)?${whiteSpaceOrEnd}`,
+const WIN_CONDITION_REGEX = new RegExp(
+	String.raw`\(?(?<winConditions>${SINGLE_PLAYER_WIN_CON_SOURCE}(?:\|${SINGLE_PLAYER_WIN_CON_SOURCE})*)\)?${WHITE_SPACE_OR_END}`,
 	'y',
 );
 
@@ -359,19 +359,19 @@ const winConditionRegex = new RegExp(
  * Matches the preset squares segment in ICN
  * 'Squares:x,y|x,y'
  */
-const presetSquaresRegex = new RegExp(
-	String.raw`Squares:(?<squarePresets>${icnposition.coordsKeyRegexSource}(?:\|${icnposition.coordsKeyRegexSource})*)${whiteSpaceOrEnd}`,
+const PRESET_SQUARES_REGEX = new RegExp(
+	String.raw`Squares:(?<squarePresets>${icnposition.COORDS_KEY_REGEX_SOURCE}(?:\|${icnposition.COORDS_KEY_REGEX_SOURCE})*)${WHITE_SPACE_OR_END}`,
 	'y',
 ); // 'Squares:x,y|x,y'
 
 /** Matches a single preset ray, optionally capturing its properties. */
-const singleRaySource = `${icnposition.coordsKeyRegexSource}>${icnposition.coordsKeyRegexSource}`; // 'x,y>dx,dy'
+const SINGLE_RAY_SOURCE = `${icnposition.COORDS_KEY_REGEX_SOURCE}>${icnposition.COORDS_KEY_REGEX_SOURCE}`; // 'x,y>dx,dy'
 /**
  * Matches the preset rays segment in ICN
  * 'Rays:x,y>dx,dy|x,y>dx,dy'
  */
-const presetRaysRegex = new RegExp(
-	String.raw`Rays:(?<rayPresets>${singleRaySource}(\|${singleRaySource})*)${whiteSpaceOrEnd}`,
+const PRESET_RAYS_REGEX = new RegExp(
+	String.raw`Rays:(?<rayPresets>${SINGLE_RAY_SOURCE}(\|${SINGLE_RAY_SOURCE})*)${WHITE_SPACE_OR_END}`,
 	'y',
 ); // 'Rays:x,y>dx,dy|x,y>dx,dy'
 
@@ -381,31 +381,34 @@ const presetRaysRegex = new RegExp(
  * Matches any possible delimiter between moves in the moves section of an ICN.
  * This could be a pipe "|", or the move number "14."
  */
-const movesDelimiter = String.raw`(?:\s?${countingNumberSource}\. | ?\| ?)`; // " 14. " or " | "
+const MOVES_DELIMITER = String.raw`(?:\s?${COUNTING_NUMBER_SOURCE}\. | ?\| ?)`; // " 14. " or " | "
 /** Matches an entire moves list in an ICN, no matter its styling. */
-const movesRegexSource =
-	possessive(String.raw`(?:${countingNumberSource}\. )?`) + // The first move number, if present
+const MOVES_REGEX_SOURCE =
+	possessive(String.raw`(?:${COUNTING_NUMBER_SOURCE}\. )?`) + // The first move number, if present
 	getMoveRegexSource(false) +
-	possessive(`(?:${movesDelimiter}${getMoveRegexSource(false)})*`);
-// console.log("MovesRegexSource:", movesRegexSource);
+	possessive(`(?:${MOVES_DELIMITER}${getMoveRegexSource(false)})*`);
+// console.log("MovesRegexSource:", MOVES_REGEX_SOURCE);
 /** Captures the moes list  */
-const movesRegex = new RegExp(String.raw`(?<moves>${movesRegexSource})${whiteSpaceOrEnd}`, 'y');
+const MOVES_REGEX = new RegExp(
+	String.raw`(?<moves>${MOVES_REGEX_SOURCE})${WHITE_SPACE_OR_END}`,
+	'y',
+);
 
 //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //										 END OF REGULAR EXPRESSIONS
 //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-// Main Functions Converting Games To and From ICN -----------------------------------------------------------------
+// Main Functions Converting Games To and From ICN -----------------------------
 
 /**
  * Converts a game in JSON format to Infinite Chess Notation.
  * @param longformat - The game in JSON format. Required properties below.
  * @param longformat.metadata - The metadata of the game. Variant, UTCDate, and UTCTime are required if options.skipPosition = true
- * @param [longformat.position] The position of the game, where the values is the integer piece type at that coordsKey. Required if options.skipPosition = false
+ * @param longformat.position - The position of the game, whose values are the integer piece type at that coordsKey. Required if options.skipPosition = false
  * @param longformat.gameRules - The required gameRules to create the ICN
  * @param longformat.fullMove - The fullMove property of the gamefile (usually 1)
  * @param longformat.state_global - The game's global state. This contains the following properties which change over the duration of a game: `specialRights`, `enpassant`, `moveRuleState`.
- * @param [longformat.moves] - If provided, they will be placed into the ICN
+ * @param longformat.moves - If provided, they will be placed into the ICN
  * @param options - Various styling options for the resulting ICN, mostly affecting the moves section. Descriptions are below.
  * * compact => Exclude piece abbreviations, 'x', '+' or '#' markers => '1,7>2,8=Q'
  *     IF FALSE THEN THE MOVES must have their `type` and `flags` properties!!!
@@ -446,7 +449,7 @@ function LongToShort_Format(
 	}
 	// Are there any remaining we missed?
 	if (Object.keys(metadataCopy).length > 0)
-		throw Error(`metadataOrdering is missing metadata keys (${Object.keys(metadataCopy).join(', ')})`); // prettier-ignore
+		throw Error(`METADATA_ORDERING is missing metadata keys (${Object.keys(metadataCopy).join(', ')})`); // prettier-ignore
 
 	if (metadataSegments.length > 0) {
 		const metadataDelimiter = options.make_new_lines ? '\n' : ' ';
@@ -480,9 +483,9 @@ function LongToShort_Format(
 
 	// Turn order
 	const turnOrderArray: PlayerCode[] = longformat.gameRules.turnOrder.map((player) => {
-		if (!(player in playerCodes))
+		if (!(player in PLAYER_CODES))
 			throw new Error(`No player code found for player (${player})!`);
-		return playerCodes[player];
+		return PLAYER_CODES[player];
 	});
 	let turn_order = turnOrderArray.join(':'); // 'w:b'
 	if (turn_order === 'w:b')
@@ -548,7 +551,7 @@ function LongToShort_Format(
 		}
 
 		const promotionPiecesString = !isPromotionListDefaultPromotions(promotionPieces)
-			? ';' + promotionPieces.map((type) => icnposition.pieceCodesRaw[type]).join(',') // ';n,r,b,q,am'
+			? ';' + promotionPieces.map((type) => icnposition.PIECE_CODES_RAW[type]).join(',') // ';n,r,b,q,am'
 			: '';
 
 		positionSegments.push('(' + playerSegments.join('|') + promotionPiecesString + ')'); // '(8,17|1,10)'
@@ -694,9 +697,9 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	// ==================================== BEGIN ===================================
 
 	// Metadata
-	const metadataMatch = matchField(metadataRegex, icn, lastIndex);
+	const metadataMatch = matchField(METADATA_REGEX, icn, lastIndex);
 	if (metadataMatch) {
-		const singleMetadataRegex = new RegExp(singleMetadataSource, 'g');
+		const singleMetadataRegex = new RegExp(SINGLE_METADATA_SOURCE, 'g');
 		singleMetadataRegex.lastIndex = lastIndex;
 
 		// Since the singleMetadataRegex has the global flag, exec() will return the next match each time.
@@ -715,7 +718,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 	// Turn order
-	const turnOrderMatch = matchField(turnOrderRegex, icn, lastIndex);
+	const turnOrderMatch = matchField(TURN_ORDER_REGEX, icn, lastIndex);
 	if (turnOrderMatch) {
 		const turnOrderGroup = turnOrderMatch.groups['turnOrder']!; // 'w:b'
 		// console.log(`Turn Order: "${turnOrderGroup}"`);
@@ -726,9 +729,9 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		else if (turnOrderString === 'b') turnOrderString = 'b:w'; // 'b' is short for 'b:w'
 		const turnOrderArray = turnOrderString.split(':'); // ['w','b']
 		turnOrder = turnOrderArray.map((p_code) => {
-			if (!(p_code in playerCodesInverted))
+			if (!(p_code in PLAYER_CODES_INVERTED))
 				throw Error(`Unknown player code (${p_code}) when parsing turn order of ICN! Turn order (${turnOrderGroup})`); // prettier-ignore
-			return Number(playerCodesInverted[p_code]);
+			return Number(PLAYER_CODES_INVERTED[p_code]);
 		}) as Player[]; // [1,2]
 
 		lastIndex = turnOrderMatch.nextIndex;
@@ -741,7 +744,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(turnOrder).sort((a, b) => a - b);
 
 	// Enpassant
-	const enpassantMatch = matchField(enpassantRegex, icn, lastIndex);
+	const enpassantMatch = matchField(ENPASSANT_REGEX, icn, lastIndex);
 	if (enpassantMatch) {
 		const enpassantString = enpassantMatch.groups['enpassant']! as CoordsKey;
 
@@ -755,7 +758,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 	// Move rule
-	const moveRuleMatch = matchField(moveRuleRegex, icn, lastIndex);
+	const moveRuleMatch = matchField(MOVE_RULE_REGEX, icn, lastIndex);
 	if (moveRuleMatch) {
 		const moveRuleGroup = moveRuleMatch.groups['moveRule']!;
 
@@ -767,7 +770,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 	// Full move
-	const fullMoveMatch = matchField(fullMoveRegex, icn, lastIndex);
+	const fullMoveMatch = matchField(FULL_MOVE_REGEX, icn, lastIndex);
 	if (fullMoveMatch) {
 		fullMove = Number(fullMoveMatch.groups['fullMove']!);
 
@@ -777,7 +780,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 	// Promotions ranks + allowed
-	const promotionsMatch = matchField(promotionsRegex, icn, lastIndex);
+	const promotionsMatch = matchField(PROMOTIONS_REGEX, icn, lastIndex);
 	if (promotionsMatch) {
 		const promotionsString = promotionsMatch.groups['promotions']!;
 
@@ -801,7 +804,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			if (allowed) {
 				// prettier-ignore
 				lastSpecifiedPromotions = [...new Set(allowed.split(',').map(raw => {
-					const rawPieceCode = icnposition.pieceCodesRawInverted[raw.toLowerCase()];
+					const rawPieceCode = icnposition.PIECE_CODES_RAW_INVERTED[raw.toLowerCase()];
 					if (rawPieceCode === undefined) throw new Error(`Unknown raw piece code (${raw}) when parsing promotion pieces!`);
 					return Number(rawPieceCode) as RawType;
 				}))];
@@ -818,7 +821,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 	// World Border
-	const worldBorderMatch = matchField(worldBorderRegex, icn, lastIndex);
+	const worldBorderMatch = matchField(WORLD_BORDER_REGEX, icn, lastIndex);
 	if (worldBorderMatch) {
 		const [left, right, bottom, top] = worldBorderMatch.groups['worldBorder']!.split(',').map(
 			(value) => (value === '_' ? null : BigInt(value)),
@@ -829,7 +832,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 	// Win conditions
-	const winConditionMatch = matchField(winConditionRegex, icn, lastIndex);
+	const winConditionMatch = matchField(WIN_CONDITION_REGEX, icn, lastIndex);
 	if (winConditionMatch) {
 		const winConditionsString = winConditionMatch.groups['winConditions']!;
 		const winConStrings = winConditionsString.split('|'); // ['checkmate','checkmate,allpiecescaptured']
@@ -862,7 +865,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 	// Preset Squares
-	const presetSquaresMatch = matchField(presetSquaresRegex, icn, lastIndex);
+	const presetSquaresMatch = matchField(PRESET_SQUARES_REGEX, icn, lastIndex);
 	if (presetSquaresMatch) {
 		presetSquares = parsePresetSquares(presetSquaresMatch.groups['squarePresets']!);
 
@@ -870,7 +873,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 	// Preset Rays
-	const presetRaysMatch = matchField(presetRaysRegex, icn, lastIndex);
+	const presetRaysMatch = matchField(PRESET_RAYS_REGEX, icn, lastIndex);
 	if (presetRaysMatch) {
 		presetRays = parsePresetRays(presetRaysMatch.groups['rayPresets']!);
 
@@ -955,7 +958,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	return longFormatOut;
 }
 
-// Parsing ICN Sections -------------------------------------------------------------------------------------------
+// Parsing ICN Sections --------------------------------------------------------
 
 /**
  * Tests one sticky field regex against the ICN at `index`.
@@ -987,11 +990,11 @@ function matchPositionSection(
 	if (!match) return undefined;
 
 	// Make sure there's whitespace or end of string immediately following
-	whiteSpaceOrEndRegex.lastIndex = match.nextIndex;
-	if (!whiteSpaceOrEndRegex.exec(icn))
+	WHITE_SPACE_OR_END_REGEX.lastIndex = match.nextIndex;
+	if (!WHITE_SPACE_OR_END_REGEX.exec(icn))
 		throw Error('Position section needs to be followed by whitespace or end of string!');
 
-	return { ...match, nextIndex: whiteSpaceOrEndRegex.lastIndex };
+	return { ...match, nextIndex: WHITE_SPACE_OR_END_REGEX.lastIndex };
 }
 
 /** Tests whether the moves section lies at `index` in the ICN. */
@@ -999,12 +1002,12 @@ function matchMovesSection(
 	icn: string,
 	index: number,
 ): { moves: MoveParsed[]; nextIndex: number } | undefined {
-	const match = matchField(movesRegex, icn, index);
+	const match = matchField(MOVES_REGEX, icn, index);
 	if (!match) return undefined;
 	return { moves: parseShortFormMoves(match.groups['moves']!), nextIndex: match.nextIndex };
 }
 
-// Compacting & Parsing Single Moves -------------------------------------------------------------------------------
+// Compacting & Parsing Single Moves -------------------------------------------
 
 /**
  * Converts a MoveCoords into the most minimal string form: '1,7>2,8=Q'
@@ -1025,6 +1028,7 @@ function getTokenFromMoveCoords(moveCoords: MoveCoords): string {
 	return getTokenFromParts(startCoordsKey, endCoordsKey, promotionAbbr);
 }
 
+/** Assembles a compact move token from its already-stringified parts. */
 function getTokenFromParts(
 	startCoordsKey: string,
 	endCoordsKey: string,
@@ -1052,8 +1056,6 @@ function getShortFormMoveFromMove(
 		abbrev: boolean;
 	},
 ): string {
-	// console.log("Options for getShortFormMoveFromMove:", options);
-
 	if (options.compact && !options.spaces && !options.comments)
 		console.warn('getTokenFromMoveCoords() is more efficient to get the most-compact form of a move.'); // prettier-ignore
 	if (!options.compact) {
@@ -1062,10 +1064,6 @@ function getShortFormMoveFromMove(
 		if (move.flags === undefined)
 			throw Error(`move.flags must be present when compact = false! (${move.token})`);
 	}
-
-	// TESTING. Randomly give the move either a comment or a clk value.
-	// if (Math.random() < 0.3) move.comment = "Comment example";
-	// if (Math.random() < 0.3) move.clockStamp = Math.random() * 100000;
 
 	/** Each "segment" of the entire move will be separated by a space, if spaces is true */
 	const segments: string[] = [];
@@ -1123,7 +1121,7 @@ function getShortFormMoveFromMove(
  * `comment` and `clockStamp` will NOT be present.
  */
 function parseTokenMove(tokenMove: string): MoveParsed {
-	const match = moveTokenRegex.exec(tokenMove);
+	const match = MOVE_TOKEN_REGEX.exec(tokenMove);
 	if (match === null) throw Error('Invalid compact move: ' + tokenMove);
 	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
 }
@@ -1162,7 +1160,7 @@ function getParsedMoveFromNamedCapturedMoveGroups(
 	return parsedMove;
 }
 
-// Compacting & Parsing Move Lists --------------------------------------------------------------------------------
+// Compacting & Parsing Move Lists ---------------------------------------------
 
 /**
  * Converts a gamefile's moves list into shortform, ready to place into the ICN.
@@ -1286,7 +1284,7 @@ function parseShortFormMoves(shortformMoves: string): MoveParsed[] {
 	return moves;
 }
 
-// Preset Annotation Parsing -------------------------------------------------------------
+// Preset Annotation Parsing ---------------------------------------------------
 
 /**
  * Parses the preset squares from a compacted string form.
@@ -1321,7 +1319,7 @@ function parsePresetRays(presetRays: string): BaseRay[] {
 	return rays;
 }
 
-// Exports --------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Schemas
@@ -1329,8 +1327,8 @@ export default {
 	// Constants
 	COMPACT_FORMAT_OPTIONS,
 	// Regular Expressions
-	promotionRanksSource,
-	promotionsPiecesSource,
+	PROMOTION_RANKS_SOURCE,
+	PROMOTIONS_PIECES_SOURCE,
 	// Main Functions Converting Games To and From ICN
 	LongToShort_Format,
 	ShortToLong_Format,

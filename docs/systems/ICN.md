@@ -38,7 +38,7 @@ match, and parsing ends with `Unexpected characters remaining in the ICN after p
 may not contain `"`. The 200 cap is deliberate to prevent a forgotten closing quote letting the
 regex swallow the whole ICN.
 
-Recognized keys, and the exact order the writer emits them in (`metadataOrdering`): `Event`,
+Recognized keys, and the exact order the writer emits them in (`METADATA_ORDERING`): `Event`,
 `Site`, `GameId`, `Variant`, `Round`, `UTCDate`, `UTCTime`, `TimeControl`, `White`, `Black`,
 `WhiteID`, `BlackID`, `WhiteElo`, `BlackElo`, `WhiteRatingDiff`, `BlackRatingDiff`, `Result`,
 `Termination`. Field meanings live on the `MetaData` interface in [metadatautil.ts](/src/shared/chess/util/metadatautil.ts).
@@ -49,7 +49,7 @@ variant code names the position, the date/time picks which historical revision o
 three are **required** when writing with `skipPosition: true`, `LongToShort_Format` otherwise throws
 without them.
 
-Writing an ICN with a metadata key absent from `metadataOrdering` throws. Parsing one on the way in
+Writing an ICN with a metadata key absent from `METADATA_ORDERING` throws. Parsing one on the way in
 keeps it.
 
 ## Section 2 — Rules and position

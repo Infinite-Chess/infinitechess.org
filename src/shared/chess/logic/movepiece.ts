@@ -31,7 +31,7 @@ import movevalidation from './movevalidation.js';
 import organizedpieces from './organizedpieces.js';
 import { rawTypes as r } from '../../util/typeutil.js';
 
-// Types --------------------------------------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * A pair of coordinates, WITH attached special move information.
@@ -96,7 +96,7 @@ export interface MoveFull extends Edit, MoveTagged, MoveRecord {
  */
 export class IllegalMoveError extends Error {}
 
-// Move Generating --------------------------------------------------------------------------------------------------
+// Move Generating -------------------------------------------------------------
 
 /**
  * Generates a full MoveFull from a MoveTagged, then immediately applies it to the boardsim.
@@ -167,9 +167,10 @@ function generateMove(boardsim: Board, moveTagged: MoveTagged): MoveFull {
  * adding them to the move's Changes list.
  *
  * This should NOT be used if the move is a special move.
- * @param boardsim - The board
- * @param piece - The piece that's being moved
- * @param move - The move that's being made
+ * @param boardsim - The board.
+ * @param piece - The piece that's being moved.
+ * @param moveCoords - Where the piece starts and ends.
+ * @param edit - The edit the resulting changes are queued onto.
  */
 function calcMovesChanges(boardsim: Board, piece: Piece, moveCoords: MoveCoords, edit: Edit): void {
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, moveCoords.endCoords);
@@ -298,7 +299,7 @@ function queueIncrementMoveRuleStateChange(boardsim: Board, move: MoveFull): voi
 	state.createMoveRuleState(move, boardsim.state.global.moveRuleState!, newMoveRule);
 }
 
-// Forwarding -------------------------------------------------------------------------------------------------------
+// Forwarding ------------------------------------------------------------------
 
 /**
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
@@ -318,7 +319,7 @@ function makeMove(boardsim: Board, move: MoveFull): void {
  * Applies a move's board changes to the boardsim, and updates moveIndex.
  * No graphical changes.
  * @param forward - Whether the move's board changes should be applied forward or backward.
- * @param [options.updateTurn] - If true, re-derives `whosTurn` for the resulting ply. Pass true when
+ * @param updateTurn - If true, re-derives `whosTurn` for the resulting ply. Pass true when
  * making/rewinding a real move, or when the viewed ply is itself a playable position (analysis).
  * Otherwise `whosTurn` stays pinned to the front, as online/engine turn detection requires.
  */
@@ -343,7 +344,7 @@ function applyMove(boardsim: Board, move: MoveFull, forward: boolean, updateTurn
  */
 function applyEdit(boardsim: Board, edit: Edit, forward: boolean): void {
 	state.applyMove(boardsim.state, edit.state, forward); // Apply the State of the move
-	boardchanges.runChanges(boardsim, edit.changes, boardchanges.changeFuncs, forward); // Logical board changes
+	boardchanges.runChanges(boardsim, edit.changes, boardchanges.CHANGE_FUNCS, forward); // Logical board changes
 }
 
 /**
@@ -463,13 +464,12 @@ function calculateMoveFromPacket(boardsim: Board, movePacket: MovePacket): MoveF
 	return move;
 }
 
-// Rewinding -------------------------------------------------------------------------------------------------------
+// Rewinding -------------------------------------------------------------------
 
 /**
  * Executes all the logical board changes of a global REWIND move in the game, no graphical changes.
  */
 function rewindMove(boardsim: Board): void {
-	// console.error("Rewinding move");
 	const move = moveutil.getMoveFromIndex(boardsim.moves, boardsim.state.local.moveIndex);
 
 	applyMove(boardsim, move, false, true);
@@ -478,7 +478,7 @@ function rewindMove(boardsim: Board): void {
 	boardsim.moves.pop();
 }
 
-// Dynamic -------------------------------------------------------------------------------------------------------
+// Dynamic ---------------------------------------------------------------------
 
 /**
  * Iterates to a certain move index, performing a callback function on each move.
@@ -530,7 +530,7 @@ function runActionAtGameFront<T>(boardsim: Board, action: () => T): T {
 	return result;
 }
 
-// Move Wrappers ----------------------------------------------------------------------------------------------------
+// Move Wrappers ---------------------------------------------------------------
 
 /**
  * Simulates a move's board changes WITHOUT appending it to the move history, runs the callback,
@@ -562,7 +562,7 @@ function simulateMoveWrapper<R>(boardsim: Board, moveTagged: MoveTagged, callbac
 	return info;
 }
 
-// ---------------------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	generateMove,

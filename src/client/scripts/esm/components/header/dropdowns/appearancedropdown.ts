@@ -92,7 +92,7 @@ function showCheckmarkOnSelectedOptions(): void {
 }
 
 async function addBoardThemesToDropdown(): Promise<void> {
-	const themeDictionary = themes.themes;
+	const themeDictionary = themes.THEMES;
 
 	// Loop through each theme in the dictionary
 	for (const themeName in themeDictionary) {

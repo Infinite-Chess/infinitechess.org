@@ -5,20 +5,16 @@
  * for working with bigints.
  */
 
-// Constants =========================================================
+// Constants -------------------------------------------------------------------
 
 const ZERO: bigint = 0n;
 const ONE: bigint = 1n;
 
 const LOG10_2 = Math.log10(2); // 0.3010299956639812
 
-// Mathematical Operations ===========================================
+// Mathematical Operations -----------------------------------------------------
 
-/**
- * Calculates the absolute value of a bigint
- * @param bigint - The BigInt
- * @returns The absolute value
- */
+/** Calculates the absolute value of a bigint. */
 function abs(bigint: bigint): bigint {
 	return bigint < ZERO ? -bigint : bigint;
 }
@@ -26,8 +22,6 @@ function abs(bigint: bigint): bigint {
 /**
  * Estimates the number of base-10 digits in a bigint, excluding the sign.
  * Accurate most of the time. 100% of the time within 1 digit.
- * @param bigint - The BigInt to count digits for
- * @returns The number of base-10 digits (excluding sign)
  */
 function countDigits(bigint: bigint): number {
 	// Make it positive for digit counting
@@ -39,14 +33,39 @@ function countDigits(bigint: bigint): number {
 	return Math.floor(bitLen * LOG10_2) + 1;
 }
 
-// Big Length Algorithms =============================================================
+/** Computes the positive modulus of two BigInts. `b` must be positive. */
+function posMod(a: bigint, b: bigint): bigint {
+	return ((a % b) + b) % b;
+}
 
-// Global state for the bisection algorithm so it's not re-computed every call
+/** Finds the smaller of two BigInts. */
+function min(a: bigint, b: bigint): bigint {
+	return a < b ? a : b;
+}
+
+/** Finds the larger of two BigInts. */
+function max(a: bigint, b: bigint): bigint {
+	return a > b ? a : b;
+}
+
+/** Compares two BigInts: -1 if a < b, 0 if a === b, and 1 if a > b. */
+function compare(a: bigint, b: bigint): -1 | 0 | 1 {
+	return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/** Clamps a BigInt value between an inclusive minimum and maximum. */
+function clamp(value: bigint, low: bigint, high: bigint): bigint {
+	return value < low ? low : value > high ? high : value;
+}
+
+// Bit Length Algorithms -------------------------------------------------------
+
+// Lazily grown lookup tables for the bisection algorithm, so each rung of
+// powers-of-two is computed once across all calls instead of every call.
 const testersCoeff: number[] = [];
 const testersBigCoeff: bigint[] = [];
 const testers: bigint[] = [];
 let testersN = 0;
-
 /**
  * Calculates the bit length of a bigint using a highly optimized dynamic bisection algorithm.
  * Complexity O(log n), where n is the number of bits.
@@ -92,10 +111,6 @@ function bitLength_bisection(x: bigint): number {
  * On a 64‑bit build, each BigInt is represented as a small heap object:
  * - Two pointer‑sized fields (object header)
  * - A sequence of 64‑bit “words” holding the integer’s bits, rounded up
- *
- * Total size = headerBytes + dataBytes
- * @param bi - The BigInt to measure.
- * @returns The estimated number of bytes occupied by the bigint in memory.
  */
 function estimateBigIntSize(bi: bigint): number {
 	// Compute bit length (number of binary digits)
@@ -113,52 +128,7 @@ function estimateBigIntSize(bi: bigint): number {
 	return headerBytes + dataBytes;
 }
 
-// /**
-//  * Performs integer division of two BigInts, rounding up towards positive infinity.
-//  * @param a - The dividend.
-//  * @param b - The divisor (must be a positive BigInt).
-//  * @returns The result of the division, rounded up.
-//  */
-// function roundUpDiv(a: bigint, b: bigint): bigint {
-// 	return a / b + ((a % b) * b > ZERO ? ONE : ZERO);
-// }
-
-/**
- * Computes the positive modulus of two BigInts.
- * @param a - The dividend.
- * @param b - The divisor (must be a positive BigInt).
- * @returns The positive remainder of the division as a BigInt.
- */
-function posMod(a: bigint, b: bigint): bigint {
-	return ((a % b) + b) % b;
-}
-
-/** Finds the smaller of two BigInts. */
-function min(a: bigint, b: bigint): bigint {
-	return a < b ? a : b;
-}
-
-/** Finds the larger of two BigInts. */
-function max(a: bigint, b: bigint): bigint {
-	return a > b ? a : b;
-}
-
-/**
- * Compares two BigInts.
- * @param a The first BigInt.
- * @param b The second BigInt.
- * @returns -1 if a < b, 0 if a === b, and 1 if a > b.
- */
-function compare(a: bigint, b: bigint): -1 | 0 | 1 {
-	return a < b ? -1 : a > b ? 1 : 0;
-}
-
-/** Clamps a BigInt value between an inclusive minimum and maximum. */
-function clamp(value: bigint, min: bigint, max: bigint): bigint {
-	return value < min ? min : value > max ? max : value;
-}
-
-// Number-Theoretic Algorithms -----------------------------------------------------------------------------------------------
+// Number-Theoretic Algorithms -------------------------------------------------
 
 /**
  * Calculates the gcd of two bigints using the binary GCD (or Stein's) algorithm.
@@ -197,27 +167,7 @@ function GCD(a: bigint, b: bigint): bigint {
 	return b << sharedTwoFactors;
 }
 
-// /**
-//  * Calculates the least common multiple (LCM) between all BigInts in an array.
-//  * @param array An array of BigInts.
-//  * @returns The LCM of the numbers in the array.
-//  */
-// function LCM(array: bigint[]): bigint {
-// 	if (array.length === 0)
-// 		throw new Error('Array must contain at least one number to calculate the LCM.');
-
-// 	let answer: bigint = array[0]!;
-// 	for (let i = 1; i < array.length; i++) {
-// 		const currentNumber = array[i]!;
-
-// 		if (currentNumber === ZERO || answer === ZERO) answer = ZERO;
-// 		else answer = abs(currentNumber * answer) / GCD(currentNumber, answer);
-// 	}
-
-// 	return answer;
-// }
-
-// Displat Formatting -------------------------------------------------------------------------
+// Display Formatting ----------------------------------------------------------
 
 /**
  * Formats a bigint in scientific notation with the given number of significant figures.
@@ -278,21 +228,20 @@ function formatBigIntExponential(bigint: bigint, precision: number): string {
 	return `${isNegative ? '-' : ''}${mantissa}e${exponent}`;
 }
 
-// Exports ============================================================
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Mathematical Operations
 	abs,
 	countDigits,
-	// Bit Length Algorithms
-	bitLength_bisection,
-	estimateBigIntSize,
-	// roundUpDiv,
 	posMod,
 	min,
 	max,
 	compare,
 	clamp,
+	// Bit Length Algorithms
+	bitLength_bisection,
+	estimateBigIntSize,
 	// Number-Theoretic Algorithms
 	GCD,
 	// Display Formatting

@@ -1,17 +1,21 @@
 // src/shared/components/header/themes.ts
 
-// This module stores our themes. Straight forward :P
+/**
+ * The board color themes the user may pick between, and the fallback values a
+ * theme inherits for any property it doesn't set itself.
+ */
 
 import type { Color } from '../../util/math/math.js';
 import type { PieceColorGroup } from '../../chess/util/pieceThemes.js';
 
 import jsutil from '../../util/jsutil.js';
 
+// Property Name Aliases -------------------------------------------------------
+
 /*
- * Strings for computed property names.
- *
- * By using computed property names, we greatly compact this script,
- * as our bundler changes the symbols to a single letter.
+ * Each alias holds the property name it is named after. Referencing the themes'
+ * keys through them as computed property names greatly compacts this script,
+ * since the bundler shortens each symbol to a single letter.
  */
 const lightTiles = 'lightTiles';
 const darkTiles = 'darkTiles';
@@ -24,6 +28,8 @@ const boxOutlineColor = 'boxOutlineColor';
 const annoteSquareColor = 'annoteSquareColor';
 const annoteArrowColor = 'annoteArrowColor';
 const pieceTheme = 'pieceTheme';
+
+// Types -----------------------------------------------------------------------
 
 interface ThemeProperties {
 	[lightTiles]: Color;
@@ -39,27 +45,23 @@ interface ThemeProperties {
 	[pieceTheme]?: Partial<PieceColorGroup>;
 }
 
-/**
- * Fallback properties for a themes properties
- * to use if it doesn't have them present
- */
-const defaults: Partial<ThemeProperties> = {
+// Constants -------------------------------------------------------------------
+
+/** The values a theme inherits for every property it does not set itself. */
+const DEFAULTS: Partial<ThemeProperties> = {
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
-	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
+	[checkHighlightColor]: [1, 0, 0, 0.7],
 	[boxOutlineColor]: [1, 1, 1, 0.45],
 	[annoteSquareColor]: [1, 0, 0, 0.35], // .43 with no .08 offset to squares.   This matches the Ray color exactly, though
 	[annoteArrowColor]: [1, 0.65, 0.15, 0.8],
 	[pieceTheme]: {},
 };
 
-const defaultTheme = 'wood_light';
+/** The theme a user is given until they pick another. */
+const DEFAULT_THEME = 'wood_light';
 
-const themeDictionary: { [themeName: string]: ThemeProperties } = {
-	/*
-	 * By using computed property names, we greatly compact this script,
-	 * as our bundler changes the symbols to a single letter.
-	 */
-
+/** Every selectable theme, keyed by the name the user picks it by. */
+const THEMES: { [themeName: string]: ThemeProperties } = {
 	wood_light: {
 		// 5D Chess
 		[lightTiles]: [1, 0.85, 0.66, 1],
@@ -286,29 +288,26 @@ const themeDictionary: { [themeName: string]: ThemeProperties } = {
 	// }
 };
 
-/**
- * Returns the specified property of the provided theme.
- * @param themeName - The name of the theme, e.g., "sandstone".
- * @param property - The property to retrieve, e.g., "legalMovesHighlightColor_Friendly".
- * @returns - The property of the theme or the default value.
- */
+// Functions -------------------------------------------------------------------
+
+/** Returns a theme's property, falling back to {@link DEFAULTS}. Deep-copied, so callers may mutate it. */
 function getPropertyOfTheme(themeName: string, property: keyof ThemeProperties): any {
-	const value = themeDictionary[themeName]?.[property] ?? defaults[property]!;
-	return jsutil.deepCopyObject(value); // Return a deep copy to avoid modifying the original.
+	const value = THEMES[themeName]?.[property] ?? DEFAULTS[property]!;
+	return jsutil.deepCopyObject(value);
 }
 
-/**
- * Checks if a theme name is valid.
- * @param themeName - The name of the theme to check.
- * @returns - True if the theme exists, false otherwise.
- */
+/** Whether a theme by that name exists. */
 function isThemeValid(themeName: string): boolean {
-	return themeDictionary[themeName] !== undefined;
+	return THEMES[themeName] !== undefined;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
-	defaultTheme,
-	themes: themeDictionary,
+	// Constants
+	DEFAULT_THEME,
+	THEMES,
+	// Functions
 	getPropertyOfTheme,
 	isThemeValid,
 };

@@ -14,10 +14,17 @@ import * as z from 'zod';
 
 import { players } from '../../util/typeutil.js';
 
+// Constants -------------------------------------------------------------------
+
 /** Zod schema for a player color. */
 const PlayerSchema = z.literal(Object.values(players));
 
-/** Returns the Zod schema corresponding to {@link PlayerGroup}, accepting the schema of the values as an argument. */
+// Functions -------------------------------------------------------------------
+
+/**
+ * Builds the Zod schema for typeutil's `PlayerGroup<T>`.
+ * @param valueSchema - The schema each player's value must satisfy.
+ */
 function GenPlayerGroupSchema<T extends z.ZodTypeAny>(
 	valueSchema: T,
 ): z.ZodObject<{ [K in Player]: z.ZodOptional<T> }> {
@@ -26,5 +33,7 @@ function GenPlayerGroupSchema<T extends z.ZodTypeAny>(
 	);
 	return z.strictObject(shape as { [K in Player]: z.ZodOptional<T> });
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { PlayerSchema, GenPlayerGroupSchema };

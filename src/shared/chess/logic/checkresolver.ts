@@ -38,7 +38,7 @@ import gamefileutility from './gamefileutility.js';
 import { players as p } from '../../util/typeutil.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
 
-// Functions ------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Deletes individual and sliding moves from the provided LegalMoves object that,
@@ -50,9 +50,8 @@ import bounds, { BoundingBox } from '../../util/math/bounds.js';
  *
  * If only a finite number of squares of a slide are legal, the whole slide is
  * still deleted, and those finite number of squares added as new individual moves.
- * @param moves - The LegalMoves object
- * @param pieceSelected - The piece of which the legalMoves were calculated for
- * @param color - The color of the player owning the piece
+ * @param pieceSelected - The piece the legalMoves were calculated for.
+ * @param moves - The LegalMoves object, modified in place.
  */
 function removeCheckInvalidMoves(boardsim: Board, pieceSelected: Piece, moves: LegalMoves): void {
 	const color = typeutil.getColorFromType(pieceSelected.type);
@@ -68,9 +67,6 @@ function removeCheckInvalidMoves(boardsim: Board, pieceSelected: Piece, moves: L
 
 	// 2. Individual moves. We can iterate through these and use detectCheck() to test them.
 	removeCheckInvalidMoves_Individual(boardsim, moves.individual, pieceSelected, color);
-
-	// console.log("Legal moves after removing check invalid:");
-	// console.log(moves);
 }
 
 /**
@@ -136,7 +132,6 @@ function removeCheckInvalidMoves_Sliding(
  * the checks, replacing them with individual moves to be simulated later.
  * @param moves - The legal moves object of which to delete moves that don't address check.
  * @param selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
- * @param color - The color of friendlies
  * @param isRoyal - Whether the provided legal moves are for a royal piece.
  */
 function addressChecks(
@@ -263,7 +258,7 @@ function addressPins(
 	 * Any check that surfaces and is NOT in preExistingChecks resulted from breaking the pin.
 	 */
 	const deleteChange = boardchanges.queueDeletePiece([], true, pieceSelected);
-	boardchanges.runChanges(boardsim, deleteChange, boardchanges.changeFuncs, true);
+	boardchanges.runChanges(boardsim, deleteChange, boardchanges.CHANGE_FUNCS, true);
 
 	const checkResults = checkdetection.detectCheck(boardsim, color, true); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
 
@@ -275,7 +270,6 @@ function addressPins(
 				coordutil.areCoordsEqual(p.attacker, c.attacker),
 		);
 	});
-	// console.log('New checks:', newChecks);
 
 	/**
 	 * Iterate through all newly-exposed check pairs.
@@ -339,10 +333,7 @@ function addressPins(
 		}
 	}
 
-	boardchanges.runChanges(boardsim, deleteChange, boardchanges.changeFuncs, false); // Add the piece back
-
-	// console.log("Legal moves after removing sliding moves that open discovered:");
-	// console.log(moves);
+	boardchanges.runChanges(boardsim, deleteChange, boardchanges.CHANGE_FUNCS, false); // Add the piece back
 }
 
 /**
@@ -377,20 +368,16 @@ function restrictSlideBetweenSquares(
 	const zoneMax = bd.toBigInt(bd.ceil(bd.max(stepsToRoyal, stepsToAttacker))) - 1n;
 	if (zoneMin > zoneMax) {
 		delete sliding[slideDir]; // Zone is empty.
-		// console.log('Deleting slide: No squares between the royal and the attacker.');
 		return;
 	}
 	const currentLimits = sliding[slideDir]!;
-	// console.log(`For slide ${slideDir}, intersecting current limits [${currentLimits[0]}, ${currentLimits[1]}] with blocking zone between royal ${royal} and attacker ${attacker} at steps [${zoneMin}, ${zoneMax}]`); // prettier-ignore
 	const newMin = currentLimits[0] === null ? zoneMin : bimath.max(currentLimits[0], zoneMin);
 	const newMax = currentLimits[1] === null ? zoneMax : bimath.min(currentLimits[1], zoneMax);
 	if (newMin > newMax) {
 		delete sliding[slideDir]; // Slide can't reach the zone.
-		// console.log("Deleting slide because it can't reach the blocking zone.");
 		return;
 	}
 	sliding[slideDir] = [newMin, newMax];
-	// console.log(`Narrowing slide to steps [${newMin}, ${newMax}] to only include the blocking zone.`); // prettier-ignore
 	if (colinear) moves.brute = true;
 }
 
@@ -464,7 +451,6 @@ function appendBlockingMoves(
 			// -> Restrict the slide to the blocking zone (strictly between the royal and checker),
 			// and add the `brute` flag if the check is colinear.
 			// DON'T collapse the slide.
-			// console.log('Entered coincident blocking case.');
 			// prettier-ignore
 			restrictSlideBetweenSquares(moves, lineKey as Vec2Key, line, coords, square1, square2, attackerColinear);
 		}
@@ -564,7 +550,7 @@ function getSimulatedCheck(
 	);
 }
 
-// Exports --------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	removeCheckInvalidMoves,

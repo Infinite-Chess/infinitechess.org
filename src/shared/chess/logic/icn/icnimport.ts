@@ -77,6 +77,8 @@ function movePacketsFromParsed(moves: MoveParsed[]): MovePacket[] {
 	});
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
 	getPositionAndSpecialRightsFromLongFormat,
 	variantOptionsFromLongFormat,

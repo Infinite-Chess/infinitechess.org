@@ -10,7 +10,7 @@ import type { Coords } from '../../util/coordutil.js';
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { MoveSpecialTags } from './moveutil.js';
 
-// Types -----------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The state of a game holds variables that change over the duration of it. */
 interface GameState {
@@ -137,7 +137,7 @@ interface EnPassant {
 	pawn: Coords;
 }
 
-// Creating Local State Changes --------------------------------------------------------------------
+// Creating Local State Changes ------------------------------------------------
 
 /** Creates a check local StateChange, adding it to the Move and immediately applying it to the gamefile. */
 function createCheckState(
@@ -165,7 +165,7 @@ function createChecksState(
 	applyState(gamestate, newStateChange, true);
 }
 
-// Creating Global State Changes --------------------------------------------------------------------
+// Creating Global State Changes -----------------------------------------------
 
 /** Creates an enpassant global StateChange, queueing it by adding it to the Move. */
 function createEnPassantState(move: Edit, current?: EnPassant, future?: EnPassant): void {
@@ -202,7 +202,7 @@ function createMoveRuleState(move: Edit, current: number, future: number): void 
 	move.state.push(newStateChange);
 }
 
-// Applying State Changes ----------------------------------------------------------------------------
+// Applying State Changes ------------------------------------------------------
 
 /**
  * Applies all the StateChanges of a Move, in order, to the gamefile, whether forward
@@ -259,7 +259,7 @@ function applyGlobalState(gamestate: GlobalGameState, state: StateChange, forwar
 	}
 }
 
-// Exports --------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	applyMove,

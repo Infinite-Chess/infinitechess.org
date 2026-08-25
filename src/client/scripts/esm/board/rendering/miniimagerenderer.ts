@@ -59,7 +59,7 @@ function buildInstanceData(ctx: RenderContext, boardsim: BoardPreview): TypeGrou
 		instanceData[type] = [];
 		boardutil.iteratePiecesInTypeRange(boardsim.pieces, type, (idx) => {
 			const coords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
-			const coordsBD = bdcoords.FromCoords(coords);
+			const coordsBD = bdcoords.fromCoords(coords);
 			const coordsWorld = space.convertCoordToWorldSpace(coordsBD, boardPos, boardScale);
 			instanceData[type]!.push(...coordsWorld);
 		});

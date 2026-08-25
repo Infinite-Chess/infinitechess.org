@@ -114,7 +114,7 @@ function shiftArrows(): void {
 	if (capturedPieceThisFrame !== undefined) {
 		// Reflect the dragged piece's new location in draganimation.ts
 		const worldCoords = space.convertCoordToWorldSpace(
-			bdcoords.FromCoords(capturedPieceThisFrame.coords),
+			bdcoords.fromCoords(capturedPieceThisFrame.coords),
 		);
 		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
 		// Delete the captured piece arrow

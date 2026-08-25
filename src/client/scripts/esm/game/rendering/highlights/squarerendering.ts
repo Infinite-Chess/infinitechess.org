@@ -33,7 +33,7 @@ function genModel(highlights: Coords[], color: Color): RenderableInstanced {
 
 	highlights.forEach((coords) => {
 		// const worldLoc = space.convertCoordToWorldSpace_IgnoreSquareCenter(bd.FromCoords(coords));
-		const worldLoc = space.convertCoordToWorldSpace(bdcoords.FromCoords(coords));
+		const worldLoc = space.convertCoordToWorldSpace(bdcoords.fromCoords(coords));
 		instanceData.push(...worldLoc);
 	});
 

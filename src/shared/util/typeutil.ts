@@ -1,13 +1,11 @@
 // src/shared/util/typeutil.ts
 
-import jsutil from './jsutil.js';
-
 /**
  * This script contains lists of all piece types and players,
  * and utility methods for working with them.
  */
 
-// Constants --------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Every raw type of piece supported in the game.
@@ -69,7 +67,6 @@ const ext = {
 	Y: players.YELLOW * numTypes,
 	G: players.GREEN * numTypes,
 } as const;
-const ext_inverted = jsutil.invertObj(ext);
 
 /**
  * The string representations of each raw type.
@@ -118,35 +115,38 @@ const royals: RawType[] = [...jumpingRoyals, ...slidingRoyals];
  */
 const strcolors = ['neutral', 'white', 'black', 'red', 'blue', 'yellow', 'green'] as const;
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 type StrPlayer = (typeof strcolors)[number];
-type RawType = (typeof rawTypes)[keyof typeof rawTypes];
-type Player = (typeof players)[keyof typeof players];
+export type RawType = (typeof rawTypes)[keyof typeof rawTypes];
+export type Player = (typeof players)[keyof typeof players];
 
 /** A dictionary type with raw types for keys */
-type RawTypeGroup<T> = {
+export type RawTypeGroup<T> = {
 	[_t in RawType]?: T;
 };
 
 /** A dictionary type with all types for keys */
-type TypeGroup<T> = { [t: number]: T };
+export type TypeGroup<T> = { [t: number]: T };
 
 /** A dictionary type with player colors for keys */
-type PlayerGroup<T> = {
+export type PlayerGroup<T> = {
 	[_p in Player]?: T;
 };
 
-// Functions --------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
+/** Strips the color off a colored type, leaving the raw piece kind. */
 function getRawType(type: number): RawType {
 	return (type % numTypes) as RawType;
 }
 
+/** The player a colored type belongs to. */
 function getColorFromType(type: number): Player {
 	return Math.floor(type / numTypes) as Player;
 }
 
+/** Combines a raw piece kind and a player into the colored type that encodes both. */
 function buildType(type: RawType, color: Player): number {
 	return type + color * numTypes;
 }
@@ -156,25 +156,26 @@ function splitType(type: number): [RawType, Player] {
 	return [getRawType(type), getColorFromType(type)];
 }
 
-/** Repeats each rawTypes for player color provided. */
-function buildAllTypesForPlayers(players: Player[], rawTypes: RawType[]): number[] {
+/** Builds every combination of the given raw types and players, last player first. */
+function buildAllTypesForPlayers(forPlayers: Player[], forRawTypes: RawType[]): number[] {
 	const builtTypes: number[] = [];
-	for (let i = players.length - 1; i >= 0; i--) {
-		for (const r of rawTypes) {
-			builtTypes.push(buildType(r, players[i]!));
+	for (let i = forPlayers.length - 1; i >= 0; i--) {
+		for (const r of forRawTypes) {
+			builtTypes.push(buildType(r, forPlayers[i]!));
 		}
 	}
 	return builtTypes;
 }
 
+/** Runs the callback over every combination of the given raw types and players, last player first. */
 function forEachPieceType(
 	callback: (pieceType: number) => void,
-	players: Player[],
+	forPlayers: Player[],
 	includePieces: RawType[],
 ): void {
-	for (let i = players.length - 1; i >= 0; i--) {
+	for (let i = forPlayers.length - 1; i >= 0; i--) {
 		for (const r of includePieces) {
-			callback(buildType(r, players[i]!));
+			callback(buildType(r, forPlayers[i]!));
 		}
 	}
 }
@@ -187,8 +188,7 @@ function invertType(type: number): number {
 }
 
 /**
- * Inverts the player id.
- * Neutral gets inverted to neutral.
+ * Inverts the player id. Neutral gets inverted to neutral.
  * @throws If any 4 Player color is provided.
  */
 function invertPlayer(player: Player): Player {
@@ -199,24 +199,24 @@ function invertPlayer(player: Player): Player {
 		((): never => { throw Error(`Cannot invert player ${player}!`); })(); // No downsides to adding this, only more protection.
 }
 
+/** The english name of a raw piece kind, e.g. `"knightrider"`. */
 function getRawTypeStr(type: RawType): string {
 	return strtypes[type];
 }
 
+/** The player a color name like `"white"` refers to. */
 function getPlayerFromString(string: StrPlayer): Player {
 	return strcolors.indexOf(string) as Player;
 }
 
-/**
- * Deletes for pieces that aren't included in this game.
- */
+/** Prunes, IN PLACE, every entry of a raw-type group whose piece this game doesn't use. */
 function deleteUnusedFromRawTypeGroup<T>(
 	existingRawTypes: RawType[],
-	exclude: RawTypeGroup<T>,
+	group: RawTypeGroup<T>,
 ): void {
-	for (const key in exclude) {
+	for (const key in group) {
 		const rawType = Number(key) as RawType;
-		if (!existingRawTypes.includes(rawType)) delete exclude[rawType];
+		if (!existingRawTypes.includes(rawType)) delete group[rawType];
 	}
 }
 
@@ -229,9 +229,9 @@ function debugType(type: number): string {
 	return `[${type}] ${getRawTypeStr(raw)}(${strcolors[c]})`;
 }
 
-export type { RawType, Player, RawTypeGroup, TypeGroup, PlayerGroup };
+// Exports ---------------------------------------------------------------------
 
-export { rawTypes, neutralRawTypes, ext, ext_inverted, numTypes, players };
+export { rawTypes, neutralRawTypes, players, numTypes, ext };
 
 export default {
 	// Constants
@@ -243,12 +243,12 @@ export default {
 	getColorFromType,
 	buildType,
 	splitType,
-	invertType,
 	buildAllTypesForPlayers,
 	forEachPieceType,
-	getRawTypeStr,
+	invertType,
 	invertPlayer,
+	getRawTypeStr,
 	getPlayerFromString,
-	debugType,
 	deleteUnusedFromRawTypeGroup,
+	debugType,
 };

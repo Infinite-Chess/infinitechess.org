@@ -1,34 +1,34 @@
 // src/shared/util/bdcoords.ts
 
-import type { BDCoords, Coords, DoubleCoords } from './coordutil';
+/**
+ * Constructing, comparing and converting BDCoords — coordinate pairs held as
+ * BigDecimals, so they carry decimal precision at arbitrary magnitude.
+ */
+
+import type { BDCoords, Coords, DoubleCoords } from './coordutil.js';
 
 import { fromBigInt, fromNumber, isInteger, toBigInt, toNumber } from '@naviary/bigdecimal';
 
-// Constructors --------------------------------------------------------------------
+// Constructors ----------------------------------------------------------------
 
 /** Converts BigInt Coords to BDCoords (BigDecimal), capable of decimal arithmetic. */
-function FromCoords(coords: Coords, precision?: number): BDCoords {
+function fromCoords(coords: Coords, precision?: number): BDCoords {
 	return [fromBigInt(coords[0], precision), fromBigInt(coords[1], precision)];
 }
 
-/** Converts coordinates of javascript doubles to BDCoords (BigDecimal) */
-function FromDoubleCoords(coords: DoubleCoords): BDCoords {
+/** Converts coordinates of javascript doubles to BDCoords (BigDecimal). */
+function fromDoubleCoords(coords: DoubleCoords): BDCoords {
 	return [fromNumber(coords[0]), fromNumber(coords[1])];
 }
 
-// Comparisons ------------------------------------------------------------------------
+// Comparisons -----------------------------------------------------------------
 
-/**
- * Checks if both coordinates in a BDCoords tuple represent perfect integers.
- * This is useful for determining if a point lies exactly on an integer grid.
- * @param coords The BDCoords tuple [x, y] to check.
- * @returns True if both the x and y coordinates are whole numbers.
- */
+/** Whether both coordinates are perfect integers — i.e. the point lies exactly on the grid. */
 function areCoordsIntegers(coords: BDCoords): boolean {
 	return isInteger(coords[0]) && isInteger(coords[1]);
 }
 
-// Conversion ------------------------------------------------------------------------
+// Conversion ------------------------------------------------------------------
 
 /**
  * Converts a pair of bigdecimal coords into normal bigint Coords.
@@ -36,23 +36,23 @@ function areCoordsIntegers(coords: BDCoords): boolean {
  * coordinates are integers!
  */
 function coordsToBigInt(coords: BDCoords): Coords {
-	// Convert each coordinate to a BigInt using the toBigInt function.
 	return [toBigInt(coords[0]), toBigInt(coords[1])];
 }
 
 /**
  * Converts a pair of bigdecimal coords into DoubleCoords.
- * Only call if you are CONFIDENT all both coordinates won't overflow or underflow!
+ * Only call if you are CONFIDENT both coordinates won't overflow or underflow!
  */
 function coordsToDoubles(coords: BDCoords): DoubleCoords {
-	// Convert each coordinate to a BigInt using the toBigInt function.
 	return [toNumber(coords[0]), toNumber(coords[1])];
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
 	// Constructors
-	FromCoords,
-	FromDoubleCoords,
+	fromCoords,
+	fromDoubleCoords,
 	// Comparisons
 	areCoordsIntegers,
 	// Conversion

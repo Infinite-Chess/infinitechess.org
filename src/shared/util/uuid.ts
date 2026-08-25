@@ -1,10 +1,10 @@
 // src/shared/util/uuid.ts
 
 /**
- * This script generates unique identifiers for us.
- *
- * ZERO dependancies.
+ * Random identifier generation, and conversion of numeric ids to and from base 62.
  */
+
+// Constants -------------------------------------------------------------------
 
 const BASE_36_CHARSET: string = '0123456789abcdefghijklmnopqrstuvwxyz';
 /**
@@ -13,16 +13,14 @@ const BASE_36_CHARSET: string = '0123456789abcdefghijklmnopqrstuvwxyz';
  */
 const BASE_62_CHARSET: string = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-/**
- * Generates a random ID of the provided length, with the characters 0-9, a-z, and A-Z.
- */
+// Functions -------------------------------------------------------------------
+
+/** Generates a random ID of the provided length, with the characters 0-9, a-z, and A-Z. */
 function generateID_Base62(length: number): string {
 	return generateIDWithCharset(length, BASE_62_CHARSET);
 }
 
-/**
- * Generates a random ID of the provided length, with the characters 0-9, a-z.
- */
+/** Generates a random ID of the provided length, with the characters 0-9, a-z. */
 function generateID_Base36(length: number): string {
 	return generateIDWithCharset(length, BASE_36_CHARSET);
 }
@@ -47,7 +45,7 @@ function generateIDWithCharset(length: number, characters: string): string {
  * @param length - The length of the desired ID
  * @param object - The object that contains keys of the existing IDs.
  */
-function genUniqueID(length: number, object: Record<string, any>): string {
+function genUniqueID(length: number, object: Record<string, unknown>): string {
 	let id: string;
 	do {
 		id = generateID_Base62(length);
@@ -111,6 +109,8 @@ function base62ToBase10(base62Str: string): number {
 
 	return result;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	generateID_Base62,

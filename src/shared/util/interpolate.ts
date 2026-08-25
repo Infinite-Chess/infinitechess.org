@@ -1,6 +1,13 @@
 // src/shared/util/interpolate.ts
 
 /**
+ * Filling `{key}` placeholders in translation strings, either by substituting text
+ * straight in, or by splitting the string so non-text content can be placed between.
+ */
+
+// Functions -------------------------------------------------------------------
+
+/**
  * Substitutes `{key}` placeholders in a template string with values from `vars`.
  * Used to interpolate values into translation strings without locking word order.
  */

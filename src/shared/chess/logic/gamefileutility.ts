@@ -13,7 +13,7 @@ import type { GameruleWinCondition, GameConclusion } from '../util/winconutil.js
 import typeutil from '../../util/typeutil.js';
 import gamerules from '../util/gamerules.js';
 
-// Methods -------------------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /**
  * Returns true if the game is over.
@@ -59,7 +59,7 @@ function getPlayerCount(game: { gameRules: GameRules }): number {
 	return new Set(game.gameRules.turnOrder).size;
 }
 
-// Exports -------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	isGameOver,

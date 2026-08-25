@@ -18,15 +18,17 @@ import typeutil from '../../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import { rawTypes as r } from '../../util/typeutil.js';
 
+// Types -----------------------------------------------------------------------
+
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
 type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassant`
 
+// Functions -------------------------------------------------------------------
+
 /**
- * Tests if the provided boardsim has had a repetition draw.
+ * The threefold-repetition draw the position has reached, if any.
  *
  * Complexity O(m) where m is the move count since the last pawn push or capture or special right loss!
- * @param boardsim - The boardsim
- * @returns Whether there is a three fold repetition present.
  */
 function detectRepetitionDraw(boardsim: Board): GameConclusion | undefined {
 	const moveList = boardsim.moves;
@@ -63,7 +65,7 @@ function detectRepetitionDraw(boardsim: Board): GameConclusion | undefined {
 		// Iterate through all move changes, adding the fluxes.
 		for (const change of move.changes) {
 			// Did this move change include a one-way action? (capture/deletion) If so, no further equal positions, terminate the loop.
-			if (boardchanges.oneWayActions.includes(change.action)) break outer; // One-way action, can't be undone, no further equal positions.
+			if (boardchanges.ONE_WAY_ACTIONS.includes(change.action)) break outer; // One-way action, can't be undone, no further equal positions.
 			// The remaining actions are two-way, so we need to create fluxes for them..
 			if (change.action === 'move') {
 				// If this change was undo'd, there would be a DEFICIT on its endCoords
@@ -133,9 +135,6 @@ function detectRepetitionDraw(boardsim: Board): GameConclusion | undefined {
 				if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
 			}
 		}
-
-		// console.log('Surplus:', surplus);
-		// console.log('Deficit:', deficit);
 	}
 
 	// Loop is finished. How many equal positions did we find?

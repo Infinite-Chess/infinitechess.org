@@ -3,7 +3,7 @@
 /**
  * The shape of the JavaScript-readable `memberInfo` cookie: who the client is signed in as.
  * The server writes it when issuing a session; the client reads it to know its own identity.
- * It is NOT a source of session-validity truth (tamperable) — only he httpOnly refresh token is.
+ * It is NOT a source of session-validity truth (tamperable) — only the httpOnly refresh token is.
  */
 export type MemberInfoCookie = {
 	user_id: number;

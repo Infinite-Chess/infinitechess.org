@@ -77,7 +77,7 @@ function updateRippleLifetime(width: number, height: number): void {
  */
 function addRipple(sourceCoords: Coords): void {
 	// Convert coords to world space
-	const sourceWorldSpace = space.convertCoordToWorldSpace(bdcoords.FromCoords(sourceCoords));
+	const sourceWorldSpace = space.convertCoordToWorldSpace(bdcoords.fromCoords(sourceCoords));
 
 	const screenHeight = camera.getCanvas().height / window.devicePixelRatio;
 	const pixelPadding = RIPPLE_DIST_FROM_EDGE * screenHeight;
@@ -99,7 +99,7 @@ function addRipple(sourceCoords: Coords): void {
 	if (!bounds.boxContainsSquareDouble(paddedScreenBox, sourceWorldSpace)) {
 		// console.log("Ripple source outside of padded screen.");
 		const vectorToSource = coordutil.subtractBDCoords(
-			bdcoords.FromCoords(sourceCoords),
+			bdcoords.fromCoords(sourceCoords),
 			boardpos.getBoardPos(),
 		);
 		const closestVector = drawrays.findClosestPredefinedVector(vectorToSource, false); // [-1-1, -1-1]

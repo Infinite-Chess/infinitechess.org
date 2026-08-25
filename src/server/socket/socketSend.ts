@@ -93,7 +93,7 @@ function send<R extends OutRoute, A extends OutAction<R>, V extends OutValue<R, 
 	ws.metadata.echoTimers[id] = setTimeout(() => {
 		delete ws.metadata.echoTimers[id];
 		ws.terminate();
-	}, socketutil.ECHO_TIMEOUT); // We pass in an arrow function so it doesn't lose scope of ws.
+	}, socketutil.ECHO_TIMEOUT_MS); // We pass in an arrow function so it doesn't lose scope of ws.
 
 	rescheduleHeartbeatTimer(ws);
 }
@@ -120,7 +120,7 @@ function receipt(ws: CustomWebSocket, route: 'echo' | 'ack', id: number): void {
  * don't hear the expected echo for a message we sent it.
  */
 function cancelEchoTimer(ws: CustomWebSocket, messageID: number): void {
-	// An echo can occasionally arrive after ECHO_TIMEOUT has elapsed — the timer
+	// An echo can occasionally arrive after ECHO_TIMEOUT_MS has elapsed — the timer
 	// has already fired and deleted itself, so there's nothing left to cancel.
 	clearTimeout(ws.metadata.echoTimers[messageID]);
 	delete ws.metadata.echoTimers[messageID];

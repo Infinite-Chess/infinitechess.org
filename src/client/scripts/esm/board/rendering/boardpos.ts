@@ -92,7 +92,7 @@ function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
 	 * The camera never moves, only the board beneath it.
 	 * A positon of [0,0] places the [0,0] square in the center of the screen.
 	 */
-	let boardPos: BDCoords = bdcoords.FromCoords([0n, 0n]); // Coordinates
+	let boardPos: BDCoords = bdcoords.fromCoords([0n, 0n]); // Coordinates
 	/** The current board panning velocity. */
 	let panVel: DoubleCoords = [0, 0];
 	/**
@@ -209,7 +209,7 @@ function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
 	function panBoard(): void {
 		if (panVel[0] === 0 && panVel[1] === 0) return; // Exit if we're not moving
 
-		const panVelBD: BDCoords = bdcoords.FromDoubleCoords(panVel);
+		const panVelBD: BDCoords = bdcoords.fromDoubleCoords(panVel);
 
 		// What the change would be if all frames were the exact same time length.
 		const baseXChange = bd.divide(panVelBD[0], boardScale);

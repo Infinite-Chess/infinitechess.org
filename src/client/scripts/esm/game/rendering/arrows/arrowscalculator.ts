@@ -290,7 +290,7 @@ export function calcArrowsLineDraft(
 	 */
 	const intersections = geometry
 		.findLineBoxIntersectionsBD(
-			bdcoords.FromCoords(firstPiece.coords),
+			bdcoords.fromCoords(firstPiece.coords),
 			slideDir,
 			boundingBoxFloat!,
 		)
@@ -303,7 +303,7 @@ export function calcArrowsLineDraft(
 		const piece = boardutil.getPieceFromIdx(gamefile.pieces, idx)!;
 		const arrowPiece: ArrowPiece = {
 			type: piece.type,
-			coords: bdcoords.FromCoords(piece.coords),
+			coords: bdcoords.fromCoords(piece.coords),
 			index: piece.index,
 			floating: false,
 		};
@@ -739,7 +739,7 @@ function updateHintArrows(): HintArrow[] {
 	const newHintArrows: HintArrow[] = [];
 
 	for (const hintSquare of hintSquares) {
-		const hintSquareBD = bdcoords.FromCoords(hintSquare);
+		const hintSquareBD = bdcoords.fromCoords(hintSquare);
 
 		// Skip if the hint square is already visible on screen
 		if (bounds.boxContainsSquare(boundingBoxInt!, hintSquare)) continue;

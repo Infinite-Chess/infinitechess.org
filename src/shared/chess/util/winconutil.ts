@@ -9,7 +9,25 @@ import * as z from 'zod';
 
 import typeschemas from './typeschemas.js';
 
-// Constants -----------------------------------------------------------------
+// Types -----------------------------------------------------------------------
+
+/** Condition where one player wins. victor will be a Player. */
+export type WinCondition = (typeof WIN_CONDITIONS)[number];
+/** Win condition that is a valid gamerule option for either color. */
+export type GameruleWinCondition = (typeof GAMERULE_WIN_CONDITIONS)[number];
+/** Condition that results in a draw. victor will be null. */
+export type DrawCondition = (typeof DRAW_CONDITIONS)[number];
+/** Condition that aborts the game. victor will be undefined. */
+type AbortCondition = 'aborted';
+type MoveTriggeredCondition = (typeof MOVE_TRIGGERED_CONCLUSIONS)[number];
+
+/**
+ * Union type of all possible game conclusion conditions.
+ * Represents how a game can be terminated.
+ */
+export type Condition = WinCondition | DrawCondition | AbortCondition;
+
+// Constants -------------------------------------------------------------------
 
 /**
  * Win conditions that are valid gamerule options for either color.
@@ -57,43 +75,6 @@ const MOVE_TRIGGERED_CONCLUSIONS = [
 	...MOVE_TRIGGERED_DRAW_CONDITIONS,
 ] as const;
 
-// Types --------------------------------------------------------------------------
-
-/** Condition where one player wins. victor will be a Player. */
-export type WinCondition = (typeof WIN_CONDITIONS)[number];
-/** Win condition that is a valid gamerule option for either color. */
-export type GameruleWinCondition = (typeof GAMERULE_WIN_CONDITIONS)[number];
-/** Condition that results in a draw. victor will be null. */
-export type DrawCondition = (typeof DRAW_CONDITIONS)[number];
-/** Condition that aborts the game. victor will be undefined. */
-type AbortCondition = 'aborted';
-type MoveTriggeredCondition = (typeof MOVE_TRIGGERED_CONCLUSIONS)[number];
-
-/**
- * Union type of all possible game conclusion conditions.
- * Represents how a game can be terminated.
- */
-export type Condition = WinCondition | DrawCondition | AbortCondition;
-
-// Constants --------------------------------------------------------------------------
-
-/** Stores the results of a game, including how it was terminated, and who won. */
-export type GameConclusion = z.infer<typeof GameConclusionSchema>;
-const GameConclusionSchema = z.discriminatedUnion('condition', [
-	z.strictObject({
-		condition: z.enum(WIN_CONDITIONS),
-		victor: typeschemas.PlayerSchema,
-	}),
-	z.strictObject({
-		condition: z.enum(DRAW_CONDITIONS),
-		victor: z.literal(null),
-	}),
-	z.strictObject({
-		condition: z.literal('aborted'),
-		victor: z.undefined().optional(), // Allows accidental inclusion of undefined victor
-	}),
-]);
-
 /**
  * Maps each game conclusion condition to its English termination string.
  * Always English by convention, since ICN metadata should only ever be in English.
@@ -117,15 +98,31 @@ const TERMINATION_IN_ENGLISH = {
 	abandonment: 'Abandoned',
 } as const;
 
-// Functions --------------------------------------------------------------------------
+// Schemas ---------------------------------------------------------------------
+
+/** Stores the results of a game, including how it was terminated, and who won. */
+export type GameConclusion = z.infer<typeof GameConclusionSchema>;
+const GameConclusionSchema = z.discriminatedUnion('condition', [
+	z.strictObject({
+		condition: z.enum(WIN_CONDITIONS),
+		victor: typeschemas.PlayerSchema,
+	}),
+	z.strictObject({
+		condition: z.enum(DRAW_CONDITIONS),
+		victor: z.literal(null),
+	}),
+	z.strictObject({
+		condition: z.literal('aborted'),
+		victor: z.undefined().optional(), // Allows accidental inclusion of undefined victor
+	}),
+]);
+
+// Functions -------------------------------------------------------------------
 
 /**
- * Calculates if the provided condition is move-triggered.
- * This is any conclusion that can happen after a move is made.
+ * Whether the provided condition is one a move can trigger.
  * Excludes conclusions like resignation, time, aborted, disconnect,
  * and agreement, which can happen at any point in time.
- * @param condition - The `condition` property of a `GameConclusion` object.
- * @returns *true* if the condition is move-triggered.
  */
 function isConclusionMoveTriggered(condition: Condition): boolean {
 	return MOVE_TRIGGERED_CONCLUSIONS.includes(condition as MoveTriggeredCondition);
@@ -145,12 +142,14 @@ function getTerminationInEnglish(moveRule: number | undefined, condition: Condit
 	return TERMINATION_IN_ENGLISH[condition];
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
 	// Constants
-	GameConclusionSchema,
 	GAMERULE_WIN_CONDITIONS,
+	// Schemas
+	GameConclusionSchema,
 	// Functions
-
 	isConclusionMoveTriggered,
 	getTerminationInEnglish,
 };

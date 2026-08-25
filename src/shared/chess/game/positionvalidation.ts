@@ -25,12 +25,7 @@ import gamefileutility from '../logic/gamefileutility.js';
 import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from '../variants/servervalidation.js';
 import typeutil, { neutralRawTypes, players as p, rawTypes as r } from '../../util/typeutil.js';
 
-// Constants -------------------------------------------------------------------------
-
-/** All colored players required in a complete 4-player game's turn order. */
-const FOUR_PLAYER_COLORS: number[] = [p.RED, p.BLUE, p.YELLOW, p.GREEN];
-
-// Types -------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Codes returned by {@link validatePosition} when a position is illegal.
@@ -72,7 +67,12 @@ export type PositionRejection =
 	| { kind: 'position'; code: PositionRejectionCode }
 	| { kind: 'engine'; code: EngineSupportCode };
 
-// Functions -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
+
+/** All colored players required in a complete 4-player game's turn order. */
+const FOUR_PLAYER_COLORS: number[] = [p.RED, p.BLUE, p.YELLOW, p.GREEN];
+
+// Functions -------------------------------------------------------------------
 
 /**
  * Validates a VariantOptions object for semantic legality.
@@ -195,10 +195,10 @@ export function validatePosition(
  * 6. Engine: the position is one the engine can actually handle.
  *
  * A played-out position may break rule 4 while staying perfectly viewable
- * — pieces get captured. So it live heres, not in {@link validatePosition}.
+ * — pieces get captured. So it lives here, not in {@link validatePosition}.
  *
  * @param gamefile - MUST be the exact board the game will load: moveless, carrying the real game's
- * world border ({@link apeiron_card.PLAY_BORDER} for engine games). Anything else judges a
+ * world border (apeironborder's play border for engine games). Anything else judges a
  * different game.
  * @param context - Which play contexts to judge it by beyond rule 1. Analysis is neither: it
  * loads finished and engine-unplayable games fine.
@@ -254,7 +254,7 @@ export function localizeRejection(t: ScriptTranslations, rejection: PositionReje
 		: t.shared.position_errors[rejection.code];
 }
 
-// Helpers -----------------------------------------------------------------------------
+// Helpers ---------------------------------------------------------------------
 
 /** Whether any player in the turn order wins by checkmate. */
 function usesCheckmate(gameRules: GameRules): boolean {

@@ -241,7 +241,7 @@ export function executeArrowShifts(): void {
 	}
 
 	// Apply the board changes
-	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, true);
+	boardchanges.runChanges(gamefile, changes, boardchanges.CHANGE_FUNCS, true);
 
 	// Recalculate the arrow lines for each shift
 	shifts.forEach((shift) => {
@@ -256,7 +256,7 @@ export function executeArrowShifts(): void {
 	});
 
 	// Restore the board state
-	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, false);
+	boardchanges.runChanges(gamefile, changes, boardchanges.CHANGE_FUNCS, false);
 }
 
 /**

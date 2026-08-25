@@ -11,7 +11,7 @@ import type { GameStateMessage, ParticipantState } from '../../../../../shared/c
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import { players as p } from '../../../../../shared/util/typeutil.js';
-import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
+import { ENGINE_DICTIONARY } from '../../../../../shared/chess/engines/engine.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import drawoffers from './drawoffers.js';
@@ -166,7 +166,7 @@ function loadGameFromState(
 							name: engineGame.engine,
 							config: {
 								engineTimeLimitPerMoveMillis:
-									engineDictionary[engineGame.engine]
+									ENGINE_DICTIONARY[engineGame.engine]
 										.defaultTimeLimitPerMoveMillis,
 								strengthLevel: engineGame.strengthLevel,
 							},

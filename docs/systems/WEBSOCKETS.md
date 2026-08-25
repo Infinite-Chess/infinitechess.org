@@ -147,7 +147,7 @@ send volume would close honest sockets.
 ## Liveness: heartbeat + echo timers
 
 Constants are shared in [socketutil.ts](/src/shared/util/socketutil.ts):
-`HEARTBEAT_INTERVAL_MS = 10 000`, `ECHO_TIMEOUT = 5 000`.
+`HEARTBEAT_INTERVAL_MS = 10 000`, `ECHO_TIMEOUT_MS = 5 000`.
 
 | Mechanism               | Server                                                                                    | Client                                                                                  |
 | ----------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |

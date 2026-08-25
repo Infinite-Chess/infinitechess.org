@@ -161,7 +161,7 @@ function updateDragLocation(): void {
 	const squarePawnPromotingOn = selection.getSquarePawnIsCurrentlyPromotingOn();
 	if (squarePawnPromotingOn !== undefined) {
 		const worldCoords = space.convertCoordToWorldSpace(
-			bdcoords.FromCoords(squarePawnPromotingOn),
+			bdcoords.fromCoords(squarePawnPromotingOn),
 		);
 		worldLocation = worldCoords;
 		hoveredCoords = squarePawnPromotingOn;

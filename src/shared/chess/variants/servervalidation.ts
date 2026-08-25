@@ -18,7 +18,7 @@ import type { GameStateVariant, SeekVariant } from '../../chess/variants/variant
 import variantpreviewer from '../logic/variantpreviewer.js';
 import { VariantLeaderboards } from './validleaderboard.js';
 
-// Constants -----------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The maximum position string length (in characters) for a
@@ -40,7 +40,7 @@ const VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION: VariantCode[] = [
 	'5D_Chess',
 ];
 
-// Functions -----------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Returns `true` if the given variant supports server-side move legality validation.

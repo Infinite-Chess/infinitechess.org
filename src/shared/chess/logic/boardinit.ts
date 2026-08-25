@@ -25,7 +25,7 @@ import variantreader from './variantreader.js';
 import boardpreviewer from './boardpreviewer.js';
 import organizedpieces from './organizedpieces.js';
 
-// Types ------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Game data used for simulating game logic and board state.
@@ -46,7 +46,7 @@ export interface Board extends BoardPreview {
 
 type Vicinity = Record<CoordsKey, RawType[]>;
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Creates a new {@link Board} object from provided arguments */
 function initBoard(
@@ -141,7 +141,7 @@ function genSpecialVicinity(mod: VariantModule | undefined, existingRawTypes: Ra
 	return vicinity;
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	initBoard,

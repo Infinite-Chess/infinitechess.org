@@ -13,7 +13,7 @@
 /** The compression algorithm used when storing a compressed string. */
 export type CompressionMode = 'none' | 'deflate-raw';
 
-// Constants -----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Set to `true` to enable verbose compression/decompression diagnostics:
@@ -45,7 +45,7 @@ async function decompressStringBase64(compressedBase64: string): Promise<string>
 	return await new Response(stream).text();
 }
 
-// API ---------------------------------------------------------------------
+// API -------------------------------------------------------------------------
 
 /**
  * Attempts to compress a string using `CompressionStream('deflate-raw')`.

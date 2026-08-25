@@ -23,7 +23,7 @@ import coordutil from '../../util/coordutil.js';
 import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import typeutil, { ext, players as p, rawTypes, neutralRawTypes } from '../../util/typeutil.js';
 
-// Types ---------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * An object that stores the pieces on the board organized for fast lookup by
@@ -100,15 +100,15 @@ export interface TypeRange {
 /** A unique identifier for a single line of pieces. `C|X` */
 export type LineKey = `${bigint}|${bigint}`;
 
-// Constants ---------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** How many extra undefined placeholders each type range should have.
  * When these are all exhausted, the large piece lists must be regenerated. */
-const listExtras = 10;
-/** EDITOR-MODE-SPECIFIC {@link listExtras} */
-const listExtras_Editor = 50;
+const LIST_EXTRAS = 10;
+/** EDITOR-MODE-SPECIFIC {@link LIST_EXTRAS} */
+const LIST_EXTRAS_EDITOR = 50;
 
-// Main Functions ---------------------------------------------------------------------
+// Main Functions --------------------------------------------------------------
 
 /**
  * Takes the source Position for the variant and constructs the organized pieces object base.
@@ -172,15 +172,10 @@ function processInitialPosition(
 		listExtrasByType[type] = getListExtrasOfType(type, numOfPieceInStartingPos, editor, promotion); // prettier-ignore
 	}
 
-	// console.log("List extras by type:");
-	// console.log(listExtrasByType);
-
 	// Allocate the space needed for the XPositions, YPositions, and types arrays
 
 	const totalSlotsNeeded =
 		position.size + Object.values(listExtrasByType).reduce((a, b) => a + b, 0);
-	// console.log("Total piece count: " + pieceCount);
-	// console.log(`Total slots needed: ${totalSlotsNeeded}`);
 
 	// This way we save on RAM since we don't have to construct normal arrays first and transfer the data after.
 	const XPositions = new Array<bigint>(totalSlotsNeeded).fill(0n);
@@ -227,9 +222,6 @@ function processInitialPosition(
 			undefineds,
 		});
 
-		// console.log("Set type range for type " + typeutil.debugType(type) + ":");
-		// console.log(ranges.get(type));
-
 		start = pointer;
 	}
 
@@ -263,7 +255,6 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotion?: Promot
 	let currentCumulativeOffset = 0;
 
 	// 1. Calculate needed slots, offsets, and track modified types
-	// for (const [type, range] of typesAndRanges) {
 	for (const [type, range] of o.typeRanges) {
 		const pieceTypeCount = range.end - range.start - range.undefineds.length; // The type of this piece, excluding undefineds
 		const targetUndefineds = getListExtrasOfType(type, pieceTypeCount, editor, promotion);
@@ -307,8 +298,6 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotion?: Promot
 		const addedSlots = additionalUndefinedsNeeded.get(type)!; // Will be 0 if not modified
 		const newStart = range.start + offset;
 		const newEnd = range.end + offset + addedSlots;
-
-		// console.log(`Copying type ${typeutil.debugType(type)}: ${range.start} -> ${newStart}, ${range.end} -> ${newEnd}`);
 
 		// Copy existing data block
 		const copyLength = range.end - range.start;
@@ -365,9 +354,6 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotion?: Promot
 	o.types = newTypes;
 
 	o.newlyRegenerated = true; // Mark as newly regenerated. Piece models should be regenerated too.
-
-	// console.log("Regenerated lists:");
-	// console.log(o);
 }
 
 /** Generates a position with the coordinates as the key, and the piece type as the value. */
@@ -392,7 +378,7 @@ function* getPieceIterable({ coords, types }: OrganizedPieces): Iterable<[Coords
 	}
 }
 
-// Processing and Removing Pieces in space -------------------------------------------------
+// Processing and Removing Pieces in space -------------------------------------
 
 /** Adds a piece to o.coords and o.lines so that it can be used for efficient collision detection. */
 function registerPieceInSpace(
@@ -410,7 +396,6 @@ function registerPieceInSpace(
 	},
 ): void {
 	const coords: Coords = [o.XPositions[idx]!, o.YPositions[idx]!];
-	// console.log("Registering piece in space: " + idx + " coords: " + coords);
 	registerPieceInCoords(idx, o, coords);
 	registerPieceInLines(idx, o, coords);
 }
@@ -468,7 +453,6 @@ function removePieceFromSpace(
 	const x = o.XPositions![idx];
 	const y = o.YPositions![idx];
 	const coords = [x, y] as Coords;
-	// console.log("Removing piece from space: " + idx + " coords: " + coords);
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key))
 		throw Error(`While removing a piece, there was no existing piece there!! ${key} idx ${idx}`); // prettier-ignore
@@ -496,7 +480,7 @@ function removePieceFromSpace(
 	}
 }
 
-// Helper Functions ------------------------------------------------------------------------
+// Helper Functions ------------------------------------------------------------
 
 /**
  * Takes a Set of all types in the STARTING POSITION and adds to it other
@@ -563,8 +547,8 @@ function getListExtrasOfType(
 	const undefinedsBehavior = getTypeUndefinedsBehavior(type, editor, promotion);
 
 	// prettier-ignore
-	return undefinedsBehavior === 2 ? Math.max(listExtras_Editor, numOfPieces) // Count of piece can increase RAPIDLY (editor)
-		 : undefinedsBehavior === 1 ? listExtras // Count of piece can increase slowly (promotion)
+	return undefinedsBehavior === 2 ? Math.max(LIST_EXTRAS_EDITOR, numOfPieces) // Count of piece can increase RAPIDLY (editor)
+		 : undefinedsBehavior === 1 ? LIST_EXTRAS // Count of piece can increase slowly (promotion)
 		 : undefinedsBehavior === 0 ? 0 // Count of piece CANNOT increase
 		 : (() => { throw Error(`Unsupported undefineds behavior" ${undefinedsBehavior} for type ${typeutil.debugType(type)}!`); })();
 }
@@ -602,7 +586,7 @@ function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
 	return false;
 }
 
-// Line Key Functions --------------------------------------------------------------
+// Line Key Functions ----------------------------------------------------------
 
 /**
  * Returns a string that is a unique identifier of a given organized line: `"C|X"`.
@@ -615,7 +599,7 @@ function areHippogonalsPresentInGame(slidingPossible: Vec2[]): boolean {
  * If the line is perfectly vertical, the axis will be flipped, so `X` in this
  * situation would be the nearest **Y**-value the line intersects on or above the x-axis.
  * @param step - Line step `[dx,dy]`
- * @param coords `[x,y]` - A point the line intersects
+ * @param coords - `[x,y]` - A point the line intersects
  * @returns the key `C|X`
  */
 function getKeyFromLine(step: Vec2, coords: Coords): LineKey {
@@ -653,7 +637,7 @@ function getXFromLine(step: Coords, coords: Coords): bigint {
 	return bimath.posMod(coordAxis, deltaAxis);
 }
 
-// Slide Line Functions -------------------------------------------------------
+// Slide Line Functions --------------------------------------------------------
 
 /**
  * Takes an {@link OrganizedPiecesBase} and computes its slide lines from the
@@ -702,7 +686,7 @@ function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec
 	return Array.from(slides, vectors.getVec2FromKey);
 }
 
-// Exports --------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	processInitialPosition,

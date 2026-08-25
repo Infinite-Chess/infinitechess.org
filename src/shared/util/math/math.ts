@@ -3,34 +3,27 @@
 /**
  * This script contains extra general math operations.
  *
- * Most of the stuff in here were moved to either bounds.ts, vectors.ts, or geometry.ts.
+ * Most of what used to live here has moved to bounds.ts, vectors.ts, or geometry.ts.
  */
 
-// Types ------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A color in a length-4 array: `[r,g,b,a]` */
 type Color = [number, number, number, number];
 
-// Operations -----------------------------------------------------------
+// Operations ------------------------------------------------------------------
 
-/**
- * Clamps a value between a minimum and a maximum value.
- */
+/** Clamps a value between an inclusive minimum and maximum. */
 function clamp(value: number, min: number, max: number): number {
 	return value < min ? min : value > max ? max : value;
 }
 
-/**
- * Computes the positive modulus of two numbers.
- * @param a - The dividend.
- * @param b - The divisor.
- * @returns The positive remainder of the division.
- */
+/** Computes the positive modulus of two numbers. */
 function posMod(a: number, b: number): number {
 	return a - Math.floor(a / b) * b;
 }
 
-// Easing Functions ---------------------------------------------------
+// Easing Functions ------------------------------------------------------------
 
 /**
  * Applies an ease-in-out interpolation.
@@ -56,14 +49,14 @@ function easeOut(t: number): number {
 	return t * (2 - t);
 }
 
-// Other -------------------------------------------------------------
+// Other -----------------------------------------------------------------------
 
 /** Returns a value smoothly oscillating between a min and max. */
 function getSineWaveVariation(time: number, min: number, max: number): number {
 	return min + (Math.sin(time) * 0.5 + 0.5) * (max - min);
 }
 
-// Exports -----------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Operations

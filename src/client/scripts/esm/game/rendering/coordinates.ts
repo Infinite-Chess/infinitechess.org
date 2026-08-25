@@ -198,13 +198,13 @@ function render(): void {
 	// In black's perspective the view matrix carries a 180° Z-rotation that would otherwise flip the text.
 	camera.renderWithoutPerspectiveRotations(() => {
 		for (let file = firstFile; file <= tileBox.right; file += stepBig) {
-			let worldX = space.convertCoordToWorldSpace(bdcoords.FromCoords([file, 0n]))[0];
+			let worldX = space.convertCoordToWorldSpace(bdcoords.fromCoords([file, 0n]))[0];
 			if (isBlackPerspective) worldX = -worldX; // Invert world coords
 			// prettier-ignore
 			renderLabel(formatCoord(file), [worldX, fileWorldY], sizeWorld, 'center', arrowHalfWidth, effectiveArrowLocations);
 		}
 		for (let rank = firstRank; rank <= tileBox.top; rank += stepBig) {
-			let worldY = space.convertCoordToWorldSpace(bdcoords.FromCoords([0n, rank]))[1];
+			let worldY = space.convertCoordToWorldSpace(bdcoords.fromCoords([0n, rank]))[1];
 			if (isBlackPerspective) worldY = -worldY; // Invert world coords
 			// prettier-ignore
 			renderLabel(formatCoord(rank), [rankWorldX, worldY], sizeWorld, 'left', arrowHalfWidth, effectiveArrowLocations);

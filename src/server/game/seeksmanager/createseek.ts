@@ -22,7 +22,7 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantreader from '../../../shared/chess/logic/variantreader.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
-import { IDLengthOfSeeks } from '../../../shared/domain.js';
+import { SEEK_ID_LENGTH } from '../../../shared/domain.js';
 import { MAX_SERVER_VALIDATABLE_POSITION_LENGTH } from '../../../shared/chess/variants/servervalidation.js';
 import {
 	Leaderboards,
@@ -87,7 +87,7 @@ function getSeekFromWebsocketMessageContents(
 
 	let id: string;
 	do {
-		id = uuid.generateID_Base36(IDLengthOfSeeks);
+		id = uuid.generateID_Base36(SEEK_ID_LENGTH);
 	} while (activeseeks.hasID(id));
 
 	const owner = ws.metadata.memberInfo;

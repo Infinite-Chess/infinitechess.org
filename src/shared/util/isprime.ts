@@ -25,12 +25,19 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// Note to myself, Naviary: ----------------------------------------------------------------------
-// Anything above 341550071728321 has an extremely low probability of returning false positives.
-// As long as both players use the same seeded RNG, then this will never break games if one
-// player's Huygen has different legal moves than the others.
-// The chance of false positives can further be reduced by modifying getAdaptiveNumRounds() to do more checks.
-// -----------------------------------------------------------------------------------------------
+/**
+ * Miller-Rabin probabilistic primality testing over BigInts, with Montgomery-reduced
+ * arithmetic. The Huygen piece's legal moves depend on it.
+ *
+ * VENDORED: adapted from an upstream project (license above).
+ *
+ * Note to myself, Naviary:
+ * Anything above 341550071728321 has an extremely low probability of returning false positives.
+ * As long as both players use the same seeded RNG, then this will never break games if one
+ * player's Huygen has different legal moves than the others.
+ * The chance of false positives can further be reduced by modifying getAdaptiveNumRounds()
+ * to do more checks.
+ */
 
 import bimath from './math/bimath.js';
 
@@ -290,8 +297,8 @@ function validateBases(
 
 /**
  * Computes (p1 * p2) mod modulus for numbers
- * @param p1 - base
- * @param p2 - base
+ * @param p1 base
+ * @param p2 base
  * @param  modulus - modulus
  * @returns (p1 * p2) % modulus
  */
@@ -303,8 +310,8 @@ function modProductNumber(p1: number, p2: number, modulus: number): number {
 
 /**
  * Computes (base ^ 2) mod modulus for numbers
- * @param base - base
- * @param modulus - modulus
+ * @param base base
+ * @param modulus modulus
  * @returns (base ** 2) % modulus
  */
 function modSquaredNumber(base: number, modulus: number): number {
@@ -314,9 +321,9 @@ function modSquaredNumber(base: number, modulus: number): number {
 
 /**
  * Computes (base ^ exponent) mod modulus for numbers, avoiding recursion because of large exponent
- * @param base - base
- * @param exponent - exponent
- * @param modulus - modulus
+ * @param base base
+ * @param exponent exponent
+ * @param modulus modulus
  * @returns (base ** exponent) % modulus
  */
 function modPowNumber(base: number, exponent: number, modulus: number): number {
@@ -335,9 +342,9 @@ function modPowNumber(base: number, exponent: number, modulus: number): number {
 
 /**
  * Computes (base ^ exponent) mod modulus for BigInts, avoiding recursion because of large exponent
- * @param base - base
- * @param exponent - exponent
- * @param modulus - modulus
+ * @param base base
+ * @param exponent exponent
+ * @param modulus modulus
  * @returns (base ** exponent) % modulus
  */
 function modPowBigint(base: bigint, exponent: bigint, modulus: bigint): bigint {
@@ -358,8 +365,8 @@ function modPowBigint(base: bigint, exponent: bigint, modulus: bigint): bigint {
  * Runs Miller-Rabin primality tests on `n` which can be a number, string, or a bigint.
  * If `n` is a number/string smaller than Number.MAX_SAFE_INTEGER, then primalityTestNumber() is called.
  * If `n` is a bigint/string larger than Number.MAX_SAFE_INTEGER, then primalityTestBigint() is called.
- * @param n - A number or bigint integer to be tested for primality.
- * @param options - optional arguments passed along to primalityTestBigint() if necessary
+ * @param n A number or bigint integer to be tested for primality.
+ * @param options optional arguments passed along to primalityTestBigint() if necessary
  * @returns true if all the primality tests passed, false otherwise
  */
 export function primalityTest(n: BigIntResolvable, options?: PrimalityTestOptions): boolean {
@@ -372,7 +379,7 @@ export function primalityTest(n: BigIntResolvable, options?: PrimalityTestOption
 
 /**
  * Runs deterministic Miller-Rabin primality test on number `n`
- * @param n - A number be tested for primality.
+ * @param n A number be tested for primality.
  * @returns true if all the primality tests passed, false otherwise
  */
 function primalityTestNumber(n: number): boolean {
@@ -571,9 +578,13 @@ function getAdaptiveNumRounds(inputBits: number): number {
 	else return 6;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Everything below this line is only for testing purposes
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Tests -----------------------------------------------------------------------
+
+/*
+ * DELIBERATELY KEPT, commented out. These are the correctness and speed checks this port
+ * was validated with. Should anyone ever modify the algorithm above, uncomment them
+ * (and `npm install mathjs`) to confirm no bugs were introduced.
+ */
 
 // Get the mathjs module via "npm install mathjs"
 /*

@@ -20,7 +20,7 @@ import organizedpieces from './organizedpieces.js';
 import { players as p } from '../../util/typeutil.js';
 import vectors, { Vec2 } from '../../util/math/vectors.js';
 
-// Functions ----------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Tests if the provided player color is in check in the current position of the boardsim.
@@ -56,7 +56,7 @@ function detectCheck(
  * Checks if an opponent player color is attacking a specific square.
  * @param coord - The square of which to check if an opponent player color is attacking.
  * @param colorOfFriendly - The color of the friendly player. All other player colors will be tested to see if they attack the square.
- * @param [checks] If provided, any opponent attacking the square will be appended to this array as a CheckInfo pair. If it is not provided, we may exit early as soon as one attacker is discovered.
+ * @param checks - If provided, any opponent attacking the square will be appended to this array as a CheckInfo pair. If it is not provided, we may exit early as soon as one attacker is discovered.
  */
 function isSquareBeingAttacked(
 	boardsim: Board,
@@ -96,7 +96,7 @@ function isSquareBeingAttacked(
  * Checks to see if any opponent jumper within the immediate vicinity of the coordinates can attack them with an individual move (discounting special movers).
  * @param square - The square to check if any opponent jumpers are attacking.
  * @param friendlyColor - The friendly player color
- * @param [checks] If provided, any opponent jumper attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
+ * @param checks - If provided, any opponent jumper attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
  * @returns true if the square is being attacked by at least one opponent jumper with an individual move (discounting special movers).
  */
 function doesVicinityAttackSquare(
@@ -132,7 +132,7 @@ function doesVicinityAttackSquare(
  * Checks to see if any piece within the immediate vicinity of the coordinates can attack them with via a special individual move (e.g. pawns, roses...)
  * @param square - The square to check if any opponent jumpers are attacking.
  * @param friendlyColor - The friendly player color
- * @param [checks] If provided, any opponent jumper attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
+ * @param checks - If provided, any opponent jumper attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
  * @returns true if the square is being attacked by at least one piece via a special individual move.
  */
 function doesSpecialAttackSquare(
@@ -169,8 +169,6 @@ function doesSpecialAttackSquare(
 				specialPiecesLegalMoves,
 				false,
 			);
-			// console.log("Calculated special pieces legal moves:");
-			// console.log(jsutil.deepCopyObject(specialPiecesLegalMoves));
 
 			if (
 				!legalmoves.checkIfMoveLegal(
@@ -182,8 +180,6 @@ function doesSpecialAttackSquare(
 				)
 			)
 				continue; // This special piece can't make the capture THIS time... oof
-
-			// console.log("SPECIAL PIECE CAN MAKE THE CAPTURE!!!!");
 
 			if (checks) {
 				/**
@@ -210,7 +206,7 @@ function doesSpecialAttackSquare(
  * Calculates if any sliding piece can attack the specified square.
  * @param square - The square to check if any opponent sliders are attacking.
  * @param friendlyColor - The friendly player color
- * @param [checks] If provided, any opponent slider attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one slider attacker is discovered.
+ * @param checks - If provided, any opponent slider attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one slider attacker is discovered.
  * @returns true if the square is being attacked by at least one opponent slider.
  */
 function doesSlideAttackSquare(
@@ -250,7 +246,7 @@ function doesSlideAttackSquare(
  * @param direction - The step of the line: [dx,dy]
  * @param coords - The coordinates of the square to test if any piece on the line can slide to. MUST be on the line!!!
  * @param color - The player color of friendlies. Friendlies can't capture us.
- * @param [checks] - If provided, any opponent slider attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one slider attacker is discovered.
+ * @param checks - If provided, any opponent slider attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one slider attacker is discovered.
  * @returns true if the square is under threat
  */
 function doesLineAttackSquare(
@@ -316,7 +312,7 @@ function doesLineAttackSquare(
 	return atleast1Attacker;
 }
 
-// Exports ----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	detectCheck,

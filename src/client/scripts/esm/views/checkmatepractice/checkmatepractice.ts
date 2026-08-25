@@ -17,7 +17,7 @@ import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import variantpreviewer from '../../../../../shared/chess/logic/variantpreviewer.js';
-import { engineDictionary } from '../../../../../shared/chess/engines/engine.js';
+import { ENGINE_DICTIONARY } from '../../../../../shared/chess/engines/engine.js';
 import { players as p, ext as e, rawTypes as r } from '../../../../../shared/util/typeutil.js';
 
 import toast from '../../components/toast.js';
@@ -104,7 +104,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		config: {
 			checkmateSelectedID,
 			engineTimeLimitPerMoveMillis:
-				engineDictionary.engineCheckmatePractice.defaultTimeLimitPerMoveMillis,
+				ENGINE_DICTIONARY.engineCheckmatePractice.defaultTimeLimitPerMoveMillis,
 		},
 	} satisfies EngineAndConfig;
 
@@ -173,7 +173,7 @@ function initListeners(): void {
  */
 function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, number> {
 	// error if user somehow submitted invalid checkmate ID
-	if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmateID))
+	if (!Object.values(validcheckmates.VALID_CHECKMATES).flat().includes(checkmateID))
 		throw Error('User tried to play invalid checkmate practice.');
 
 	// place the black king not so far away for specific variants
@@ -299,7 +299,7 @@ function updateCompletedCheckmates(): void {
 async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 	if (!completedCheckmates)
 		throw Error('Cannot mark checkmate beaten when it was never initialized!');
-	if (!Object.values(validcheckmates.validCheckmates).flat().includes(checkmatePracticeID))
+	if (!Object.values(validcheckmates.VALID_CHECKMATES).flat().includes(checkmatePracticeID))
 		throw Error('User completed invalid checkmate practice.');
 
 	// Add the checkmate ID to the beaten list

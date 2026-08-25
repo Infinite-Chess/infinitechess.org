@@ -1,12 +1,19 @@
 // src/shared/chess/variants/validleaderboard.ts
 
+/**
+ * The leaderboards a rated game can count towards, and which variants belong to each.
+ */
+
 import type { SeekVariant } from '../../chess/variants/variantselection.js';
 import type { VariantCode } from '../util/variantcodes.js';
 
-/**
- * This script stores all global variables related to our leaderboards.
- */
+// Types -----------------------------------------------------------------------
 
+type Leaderboard = (typeof Leaderboards)[keyof typeof Leaderboards];
+
+// Constants -------------------------------------------------------------------
+
+/** Every leaderboard, by name. */
 const Leaderboards = {
 	/**
 	 * The main leaderboard for all same-ish, infinity, variants.
@@ -15,8 +22,6 @@ const Leaderboards = {
 	INFINITY: 0,
 	// Add more leaderboards here as needed
 } as const;
-
-type Leaderboard = (typeof Leaderboards)[keyof typeof Leaderboards];
 
 /** Maps variants to the leaderboard they belong to, if they have one. */
 const VariantLeaderboards: Partial<Record<VariantCode, Leaderboard>> = {
@@ -37,6 +42,8 @@ const VariantLeaderboards: Partial<Record<VariantCode, Leaderboard>> = {
 	// Add more variants and their corresponding leaderboard here
 };
 
+// Functions -------------------------------------------------------------------
+
 /**
  * The leaderboard a seek or game belongs to, or `undefined` if it belongs to none.
  * Only preset variants can: a custom position is unique to its game.
@@ -44,5 +51,7 @@ const VariantLeaderboards: Partial<Record<VariantCode, Leaderboard>> = {
 function getLeaderboardOfVariant(variant: SeekVariant): Leaderboard | undefined {
 	return variant.kind === 'preset' ? VariantLeaderboards[variant.code] : undefined;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export { Leaderboard, Leaderboards, VariantLeaderboards, getLeaderboardOfVariant };

@@ -56,7 +56,7 @@ function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
 
 	const squareCenterScaled = boardgeometry.getSquareCenterAsNumber() * boardScale;
 
-	const coordsBD = bdcoords.FromCoords(coords);
+	const coordsBD = bdcoords.fromCoords(coords);
 
 	const relativeCoords: DoubleCoords = bdcoords.coordsToDoubles(
 		coordutil.subtractBDCoords(coordsBD, boardPos),

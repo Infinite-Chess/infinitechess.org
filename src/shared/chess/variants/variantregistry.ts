@@ -15,7 +15,7 @@ import type { ScriptTranslations } from '../../types/script-translations.js';
 
 import { VARIANT_CODES } from '../util/variantcodes.js';
 
-// Types -------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** All valid variant group names. Does not include custom variants. */
 export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase';
@@ -40,7 +40,7 @@ export type VariantRegistryEntry = {
 	hidden?: true;
 };
 
-// ================================ VARIANT GROUP REGISTRY ================================
+// Variant Group Registry ------------------------------------------------------
 
 const VARIANT_GROUP_ICONS: Record<VariantGroup | 'custom', string> = {
 	standard: 'svg-pawn',
@@ -53,7 +53,7 @@ const VARIANT_GROUP_ICONS: Record<VariantGroup | 'custom', string> = {
 /** An array of all valid variant groups. */
 const VARIANT_GROUPS = Object.keys(VARIANT_GROUP_ICONS) as VariantGroup[];
 
-// ================================ VARIANT REGISTRY ================================
+// Variant Registry ------------------------------------------------------------
 
 const VARIANT_REGISTRY = {
 	// ---- Standard ----
@@ -202,7 +202,7 @@ const VARIANT_REGISTRY = {
 	},
 } satisfies Record<VariantCode, VariantRegistryEntry>;
 
-// Functions ------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Returns the id for the icon of the given variant group. */
 function getVariantGroupIconId(group: VariantGroup | 'custom'): string {
@@ -285,7 +285,7 @@ function getVariantsForGroup(group: VariantGroup): VariantCode[] {
 	});
 }
 
-// Exports ----------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getVariantGroupIconId,

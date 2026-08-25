@@ -11,6 +11,8 @@ import { BoundingBox } from '../../../../util/math/bounds.js';
 import coordutil, { Coords, CoordsKey } from '../../../../util/coordutil.js';
 import { ext as e, players as p, rawTypes as r } from '../../../../util/typeutil.js';
 
+// Variant Contract ------------------------------------------------------------
+
 export function getPosition(): { position: Map<CoordsKey, number> } {
 	return { position: genPositionOfOmegaCubed() };
 }
@@ -29,7 +31,7 @@ export function getGeneratorRules(): { pawnDoublePush: boolean; castleWith?: Raw
 	return { pawnDoublePush: false };
 }
 
-// ================================== GENERATOR ===================================
+// Generator -------------------------------------------------------------------
 
 /**
  * Generates the Omega^3 position example

@@ -228,7 +228,7 @@ function compressPosition(
 		const coords = coordutil.getCoordsFromKey(coordsKey);
 		pieces.push({
 			type,
-			coords: bdcoords.FromCoords(coords),
+			coords: bdcoords.fromCoords(coords),
 			transformedCoords: [undefined, undefined], // Initially undefined
 		});
 	});

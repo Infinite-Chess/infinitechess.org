@@ -12,6 +12,8 @@ import type { ScriptTranslations } from '../../types/script-translations.js';
 import { players } from '../../util/typeutil.js';
 import { interpolate } from '../../util/interpolate.js';
 
+// Types -----------------------------------------------------------------------
+
 /** A concluded game's display result: the score and a one-line sentence. */
 interface GameResultDisplay {
 	/** PGN-style score: `"1-0"`, `"0-1"`, `"½-½"`, or `""` for an aborted game. */
@@ -19,6 +21,8 @@ interface GameResultDisplay {
 	/** Sentence describing the outcome, e.g. `"White wins by checkmate"`. */
 	text: string;
 }
+
+// Functions -------------------------------------------------------------------
 
 /** Derives the display score + sentence for a concluded game. */
 function getResultDisplay(
@@ -37,5 +41,7 @@ function getResultDisplay(
 		text: interpolate(sharedT.game_result.color_wins_by, { color, label }),
 	};
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { getResultDisplay };

@@ -120,7 +120,7 @@ const DEFAULT_THREADS = maxThreads();
 
 const STORAGE_KEY = 'ceval';
 /** How long persisted settings live in local storage; refreshed on every save. */
-const STORAGE_EXPIRY_MS = timeutil.getTotalMilliseconds({ years: 1 });
+const STORAGE_EXPIRY_MS = timeutil.toMillis(1, 'years');
 const DEFAULT_SETTINGS: CevalSettings = {
 	multiPv: 1,
 	hashMb: 16,

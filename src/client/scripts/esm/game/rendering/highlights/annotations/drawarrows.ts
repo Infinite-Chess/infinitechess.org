@@ -181,7 +181,7 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean; deletedArrow?: Arro
 /** Constructs an {@link Arrow} from start/end squares, precalculating its render properties. */
 function createArrow(start: Coords, end: Coords): Arrow {
 	const vector: Coords = coordutil.subtractCoords(end, start);
-	const difference: BDCoords = bdcoords.FromCoords(vector);
+	const difference: BDCoords = bdcoords.fromCoords(vector);
 	// Since the difference can be arbitrarily large, we need to normalize it
 	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
 	const normalizedVector: DoubleCoords = vectors.normalizeVectorBD(difference);
@@ -254,8 +254,8 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	if (bd.compare(totalLengthSquares, arrowBaseOffsetSquares) <= 0) return [];
 
 	// Calculate the base and tip world space coordinates
-	let startWorld = space.convertCoordToWorldSpace(bdcoords.FromCoords(arrow.start));
-	let endWorld = space.convertCoordToWorldSpace(bdcoords.FromCoords(arrow.end));
+	let startWorld = space.convertCoordToWorldSpace(bdcoords.fromCoords(arrow.start));
+	let endWorld = space.convertCoordToWorldSpace(bdcoords.fromCoords(arrow.end));
 	// Apply the base offset to the start world coordinates
 	// so the arrow base doesn't start exactly at the center of the square.
 	startWorld[0] += arrow.xRatio * arrowBaseOffsetWorld;
@@ -278,7 +278,7 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 
 	// Now take the arrow's vector, and calculate its intersections with this box.
 	const intersections = geometry.findLineBoxIntersectionsBD(
-		bdcoords.FromCoords(arrow.start),
+		bdcoords.fromCoords(arrow.start),
 		arrow.vector,
 		viewBoxTiles,
 	);
@@ -289,7 +289,7 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	if (!intersections[1]!.positiveDotProduct) return []; // start point lies beyond screen
 	// Also check if the first intersection dot product of the vector pointing from the END coords is positive.
 	const dotProductEndToFirstIntersection = vectors.dotProductBD(
-		coordutil.subtractBDCoords(intersections[0]!.coords!, bdcoords.FromCoords(arrow.end)),
+		coordutil.subtractBDCoords(intersections[0]!.coords!, bdcoords.fromCoords(arrow.end)),
 		vectors.negateBDVector(arrow.difference),
 	);
 	if (bd.compare(dotProductEndToFirstIntersection, ZERO) < 0) return []; // end point lies before screen

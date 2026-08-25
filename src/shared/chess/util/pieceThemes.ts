@@ -9,12 +9,17 @@ import type { RawType, Player } from '../../util/typeutil.js';
 
 import { rawTypes as r, players as p } from '../../util/typeutil.js';
 
+// Types -----------------------------------------------------------------------
+
+/** A tint colour for every player. */
 export type PieceColorGroup = {
 	[_team in Player]: Color;
 };
 
+// Constants -------------------------------------------------------------------
+
 /** The default tints for a piece, if not provided. */
-const defaultBaseColors: PieceColorGroup = {
+const DEFAULT_BASE_COLORS: PieceColorGroup = {
 	[p.NEUTRAL]: [0.5, 0.5, 0.5, 1],
 	[p.WHITE]: [1, 1, 1, 1],
 	[p.BLACK]: [1, 1, 1, 1],
@@ -25,8 +30,8 @@ const defaultBaseColors: PieceColorGroup = {
 	[p.GREEN]: [0.1, 1, 0.1, 1],
 };
 
-/** Config for the SVGs of the pieces */
-const SVGConfig: {
+/** Config for the SVGs of the pieces. */
+const SVG_CONFIG: {
 	[_type in RawType]: {
 		/** null if the raw type doesn't have an svg (VOID) */
 		location: string | null;
@@ -79,11 +84,14 @@ const SVGConfig: {
 	[r.PAWN]: { location: 'classical' },
 };
 
-/** Raw piece types that have no SVG of their own, derived from {@link SVGConfig}. */
+/** Raw piece types that have no SVG of their own, derived from {@link SVG_CONFIG}. */
 const SVGLESS_TYPES: Set<RawType> = new Set(
-	Object.values(r).filter((raw) => SVGConfig[raw].location === null),
+	Object.values(r).filter((raw) => SVG_CONFIG[raw].location === null),
 );
 
+// Functions -------------------------------------------------------------------
+
+/** The distinct SVG locations the given raw types need, skipping the SVG-less ones. */
 function getLocationsForTypes(types: Iterable<RawType>): Set<string> {
 	const locations: Set<string> = new Set();
 	for (const raw of types) {
@@ -93,12 +101,14 @@ function getLocationsForTypes(types: Iterable<RawType>): Set<string> {
 	return locations;
 }
 
+/** Where a raw type's SVG lives, or null if it has none (VOID). */
 function getLocationForType(type: RawType): string | null {
-	return SVGConfig[type].location;
+	return SVG_CONFIG[type].location;
 }
 
+/** The tint a raw type is drawn in for the given player, falling back to the defaults. */
 function getBaseColorForType(type: RawType, team: Player): Color {
-	return (SVGConfig[type].colors ?? defaultBaseColors)[team];
+	return (SVG_CONFIG[type].colors ?? DEFAULT_BASE_COLORS)[team];
 }
 
 /**
@@ -129,6 +139,8 @@ function getSVGColorPriority(color: Player): string[] {
 			throw new Error(`Invalid color code: ${color satisfies never}`);
 	}
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	SVGLESS_TYPES,

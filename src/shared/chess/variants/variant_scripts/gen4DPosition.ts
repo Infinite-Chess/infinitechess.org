@@ -1,5 +1,10 @@
 // src/shared/chess/variants/variant_scripts/gen4DPosition.ts
 
+/**
+ * Generates the starting position of a 4D variant: a grid of 2D boards, each
+ * populated from a position string or an explicit per-board dictionary.
+ */
+
 import type { CoordsKey } from '../../../util/coordutil.js';
 import type { Dimensions } from '../../logic/fourdimensionalmoves.js';
 
@@ -7,8 +12,9 @@ import coordutil from '../../../util/coordutil.js';
 import icnposition from '../../logic/icn/icnposition.js';
 import { rawTypes as r, ext as e } from '../../../util/typeutil.js';
 
-// Functions -------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
+/** The coordinate extents a grid of 2D boards spans, anchored at the origin. */
 function getDimensions(boards_x: bigint, boards_y: bigint, board_spacing: bigint): Dimensions {
 	const MIN_X = 0n;
 	const MIN_Y = 0n;
@@ -109,6 +115,6 @@ function gen(
 	return resultPos;
 }
 
-// Exports ------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getDimensions, gen };

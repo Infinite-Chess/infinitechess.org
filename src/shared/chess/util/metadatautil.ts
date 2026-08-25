@@ -16,7 +16,7 @@ import * as z from 'zod';
 import timeutil from '../../util/timeutil.js';
 import { players as p } from '../../util/typeutil.js';
 
-// Types --------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A player's rating value and whether we are confident about it. */
 export type Rating = z.infer<typeof RatingSchema>;
@@ -71,7 +71,7 @@ export type MetadataKey = keyof MetaData;
 /** {@link MetaData} narrowed to the {@link SOURCE_VARIANT_METADATA} tags. */
 export type SourceVariantMetaData = Pick<MetaData, (typeof SOURCE_VARIANT_METADATA)[number]>;
 
-// Constants -----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Canonical display name used for guest players in ICN metadata. Metadata is always in English. */
 const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
@@ -83,7 +83,7 @@ const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
  */
 const SOURCE_VARIANT_METADATA = ['Variant', 'UTCDate', 'UTCTime'] as const satisfies readonly MetadataKey[]; // prettier-ignore
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Trims metadata down to the {@link SOURCE_VARIANT_METADATA} tags.
@@ -108,9 +108,8 @@ function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): numbe
 }
 
 /**
- * Returns the value of the game's Result metadata, depending on the victor.
- * @param victor - The victor of the game, in player number. Or none if undefined.
- * @returns The result of the game in the format '1-0', '0-1', '1/2-1/2', or '*' (aborted).
+ * The game's Result metadata for a given victor: `'1-0'`, `'0-1'`,
+ * `'1/2-1/2'` (draw, `null`), or `'*'` (aborted, `undefined`).
  * @throws If the victor is not one of the four valid values.
  */
 function getResultFromVictor(victor?: Player | null): string {
@@ -149,6 +148,8 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 	eloChange = Math.round(eloChange);
 	return isPositive ? `+${eloChange}` : `${eloChange}`; // negative numbers are already negative
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	GUEST_NAME_ICN_METADATA,

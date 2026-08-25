@@ -1,9 +1,8 @@
 // src/shared/util/coordutil.ts
 
 /**
- * This script contains utility methods for working with coordinates [x,y].
- *
- * ZERO dependancies.
+ * This script contains utility methods for working with coordinates [x,y],
+ * in bigint, BigDecimal and plain-number forms.
  */
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -43,11 +42,7 @@ function getKeyFromCoords(coords: Coords): CoordsKey {
 	return `${coords[0]},${coords[1]}`;
 }
 
-/**
- * Returns a length-2 array of the provided coordinates
- * @param key - 'x,y'
- * @returns The coordinates of the piece, [x,y]
- */
+/** Returns the coordinates a key string encodes: 'x,y' => [x,y] */
 function getCoordsFromKey(key: CoordsKey): Coords {
 	return key.split(',').map(BigInt) as Coords;
 }
@@ -62,9 +57,7 @@ function areBDCoordsEqual(coord1: BDCoords, coord2: BDCoords): boolean {
 	return bd.areEqual(coord1[0], coord2[0]) && bd.areEqual(coord1[1], coord2[1]);
 }
 
-/**
- * Adds two coordinate pairs together component-wise.
- */
+/** Adds two coordinate pairs together component-wise. */
 function addCoords(coord1: Coords, coord2: Coords): Coords {
 	return [coord1[0] + coord2[0], coord1[1] + coord2[1]];
 }
@@ -74,22 +67,12 @@ function addBDCoords(coord1: BDCoords, coord2: BDCoords): BDCoords {
 	return [bd.add(coord1[0], coord2[0]), bd.add(coord1[1], coord2[1])];
 }
 
-/**
- * Subtracts two coordinate pairs together component-wise.
- * @param minuendCoord - The first coordinate pair [x1, y1] to start with.
- * @param subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
- * @returns The resulting coordinate pair after subtracting.
- */
+/** Subtracts the subtrahend from the minuend, component-wise. */
 function subtractCoords(minuendCoord: Coords, subtrahendCoord: Coords): Coords {
 	return [minuendCoord[0] - subtrahendCoord[0], minuendCoord[1] - subtrahendCoord[1]];
 }
 
-/**
- * Subtracts two coordinate pairs together component-wise.
- * @param minuendCoord - The first coordinate pair [x1, y1] to start with.
- * @param subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
- * @returns The resulting coordinate pair after subtracting.
- */
+/** {@link subtractCoords} but for BigDecimal coordinates. */
 function subtractBDCoords(minuendCoord: BDCoords, subtrahendCoord: BDCoords): BDCoords {
 	return [
 		bd.subtract(minuendCoord[0], subtrahendCoord[0]),
@@ -97,12 +80,7 @@ function subtractBDCoords(minuendCoord: BDCoords, subtrahendCoord: BDCoords): BD
 	];
 }
 
-/**
- * Subtracts two coordinate pairs together component-wise.
- * @param minuendCoord - The first coordinate pair [x1, y1] to start with.
- * @param subtrahendCoord - The second coordinate pair [x2, y2] to subtract from the minuend.
- * @returns The resulting coordinate pair after subtracting.
- */
+/** {@link subtractCoords} but for DoubleCoords. */
 function subtractDoubleCoords(
 	minuendCoord: DoubleCoords,
 	subtrahendCoord: DoubleCoords,
@@ -110,25 +88,19 @@ function subtractDoubleCoords(
 	return [minuendCoord[0] - subtrahendCoord[0], minuendCoord[1] - subtrahendCoord[1]];
 }
 
-/**
- * Makes a deep copy of the provided coordinates
- */
+/** Makes a deep copy of the provided coordinates. */
 function copyCoords(coords: Coords): Coords {
 	return [...coords] as Coords;
 }
 
-/**
- * Makes a deep copy of the provided BigDecimal coordinates
- */
+/** Makes a deep copy of the provided BigDecimal coordinates. */
 function copyBDCoords(coords: BDCoords): BDCoords {
 	return [bd.clone(coords[0]), bd.clone(coords[1])];
 }
 
 /**
- * [FLOATING] Interpolates between two coordinates.
- * Fixed mantissa bit number.
- * Doesn't work well for very large distances
- * if you also need high decimal precision.
+ * [FLOATING] Interpolates between two coordinates. Fixed mantissa bit number.
+ * Doesn't work well for very large distances if you also need high decimal precision.
  * @param start - The starting coordinate.
  * @param end - The ending coordinate.
  * @param t - The interpolation value (between 0 and 1).
@@ -136,16 +108,13 @@ function copyBDCoords(coords: BDCoords): BDCoords {
 function lerpCoords(start: BDCoords, end: BDCoords, t: number): BDCoords {
 	const bddiff: BDCoords = subtractBDCoords(end, start);
 	const bdt: BigDecimal = bd.fromNumber(t);
-	// console.log('bdt:', bd.toApproximateString(bdt), 't:', t);
 	const travelX = bd.multiplyFloating(bddiff[0], bdt);
 	const travelY = bd.multiplyFloating(bddiff[1], bdt);
 
 	return [bd.add(start[0], travelX), bd.add(start[1], travelY)];
 }
 
-/**
- * {@link lerpCoords} but for DoubleCoords.
- */
+/** {@link lerpCoords} but for DoubleCoords. */
 function lerpCoordsDouble(start: DoubleCoords, end: DoubleCoords, t: number): DoubleCoords {
 	const diffX = end[0] - start[0];
 	const diffY = end[1] - start[1];
@@ -155,7 +124,7 @@ function lerpCoordsDouble(start: DoubleCoords, end: DoubleCoords, t: number): Do
 	return [start[0] + travelX, start[1] + travelY];
 }
 
-// Debugging --------------------------------------------------------------------
+// Debugging -------------------------------------------------------------------
 
 /** [DEBUG] Stringifies a pair of bigint coordinates into a human-readable string. */
 function stringifyCoords(coords: Coords): string {
@@ -169,7 +138,7 @@ function stringifyBDCoords(coords: BDCoords): string {
 	// return `(${bd.toApproximateString(coords[0])}, ${bd.toApproximateString(coords[1])})`;
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getKeyFromCoords,

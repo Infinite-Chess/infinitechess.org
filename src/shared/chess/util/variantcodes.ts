@@ -8,6 +8,13 @@
  * plain vocabulary that a board carries around.
  */
 
+// Types -----------------------------------------------------------------------
+
+/** Union of all valid variant codes. */
+export type VariantCode = (typeof VARIANT_CODES)[number];
+
+// Constants -------------------------------------------------------------------
+
 /** Every valid variant code, in registry order. Does not include custom variants. */
 export const VARIANT_CODES = [
 	// Standard
@@ -43,6 +50,3 @@ export const VARIANT_CODES = [
 	'Omega_Cubed',
 	'Omega_Fourth',
 ] as const;
-
-/** Union of all valid variant codes. */
-export type VariantCode = (typeof VARIANT_CODES)[number];

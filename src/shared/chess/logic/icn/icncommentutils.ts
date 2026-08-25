@@ -10,12 +10,12 @@
  * https://www.enpassant.dk/chess/palview/enhancedpgn.htm
  */
 
-// Types ----------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** All valid command sequences. */
-const validCommands = ['clk'] as const;
+const VALID_COMMANDS = ['clk'] as const;
 
-type Command = (typeof validCommands)[number];
+type Command = (typeof VALID_COMMANDS)[number];
 
 /**
  * Represents a generic command ready to be embedded,
@@ -43,14 +43,14 @@ interface ExtractedCommentData {
 	commands: CommandObject[];
 }
 
-// General Command Functions --------------------------------------------------------------------
+// General Command Functions ---------------------------------------------------
 
 /**
  * Combines a comment string and a list of command objects into a single
  * string suitable for a PGN comment field (without outer curly braces "{}").
- * @param [comment] Optional. The human-readable comment string. Can be empty or contain only whitespace. (e.g. "Sacrifice!!!")
- * @param cmdObjs An array of CommandObject instances. Can be empty.
- * @returns A combined string with formatted commands followed by the comment (e.g. "[%clk 0:01:57.3] Sacrifice!!!").
+ * Commands come first, then the comment: `"[%clk 0:01:57.3] Sacrifice!!!"`.
+ * @param cmdObjs - An array of CommandObject instances. Can be empty.
+ * @param comment - The human-readable comment. Skipped if empty or only whitespace.
  */
 function combineCommentAndCommands(cmdObjs: CommandObject[], comment?: string): string {
 	/** All parts going into the comment, including command sequences and the human-readable comment. */
@@ -78,7 +78,7 @@ function formatCommandSequence(cmdObj: CommandObject): string {
  *
  * Command sequences may appear anywhere within the string.
  *
- * @param commentString The comment content string.
+ * @param commentString - The comment content string.
  * @returns An object containing the extracted commands and the cleaned comment text.
  */
 function extractCommandsFromComment(commentString: string): ExtractedCommentData {
@@ -92,7 +92,7 @@ function extractCommandsFromComment(commentString: string): ExtractedCommentData
 		const commandName = match[1]! as Command; // e.g., "clk"
 		const commandValue = match[2]!; // e.g., "0:09:56.7"
 		// Only parse valid commands, simply ignore and discard all others
-		if (validCommands.includes(commandName))
+		if (VALID_COMMANDS.includes(commandName))
 			commands.push({ command: commandName, value: commandValue });
 	}
 
@@ -110,7 +110,7 @@ function extractCommandsFromComment(commentString: string): ExtractedCommentData
 	};
 }
 
-// Parsing 'clk' Command Sequences --------------------------------------------------------------------
+// Parsing 'clk' Command Sequences ---------------------------------------------
 
 /**
  * Takes a time in milliseconds and creates a CommandObject containing
@@ -161,7 +161,7 @@ function createClkCommandObject(timeMillis: number): CommandObject {
 /**
  * Takes a clock time string value (extracted from a %clk command) and returns
  * the number of milliseconds represented by that time.
- * @param clkValueString The time string in H:MM:SS.D format (e.g., "1:23:45.6").
+ * @param clkValueString - The time string in H:MM:SS.D format (e.g., "1:23:45.6").
  * @returns The total time in milliseconds.
  */
 function getMillisFromClkTimeValue(clkValueString: string): number {
@@ -197,7 +197,7 @@ function getMillisFromClkTimeValue(clkValueString: string): number {
 	return totalMillis;
 }
 
-// Exports ----------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	combineCommentAndCommands,

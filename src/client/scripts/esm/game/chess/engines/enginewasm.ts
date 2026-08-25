@@ -94,7 +94,7 @@ function maxEngineThreads(cap: number, reserve: number = 0): number {
  * Apeiron's own single-letter piece codes (its `PieceType::to_str()`, src/board.rs), which
  * it uses for the `promotion` field of the moves it hands back. They are arbitrary engine
  * identifiers — not derivable from the site's abbreviations — so the mapping lives here,
- * while the abbreviations themselves stay owned by icnconverter's `pieceCodes`.
+ * while the abbreviations themselves stay owned by icnconverter's `PIECE_CODES`.
  */
 const ENGINE_PROMOTION_RAWTYPES: Record<string, RawType> = {
 	k: r.KING, p: r.PAWN, n: r.KNIGHT, b: r.BISHOP,

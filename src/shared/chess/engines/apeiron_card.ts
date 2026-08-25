@@ -17,6 +17,8 @@ import boardutil from '../logic/boardutil.js';
 import apeironborder from '../logic/apeironborder.js';
 import typeutil, { RawType, rawTypes as r, players as p } from '../../util/typeutil.js';
 
+// Types -----------------------------------------------------------------------
+
 /** Why the engine can't handle a game. Keys into `position_errors.engine` in the shared translations. */
 export type EngineSupportCode =
 	| 'unsupported_variant'
@@ -29,7 +31,7 @@ export type EngineSupportCode =
 
 type SupportedResult = { supported: true } | { supported: false; reason: EngineSupportCode };
 
-// Constants -------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Max non-neutral pieces the engine handles before it bogs down (excludes voids/obstacles). */
 const MAX_PIECES = 1000;
@@ -47,10 +49,7 @@ const SUPPORTED_WIN_CONDITIONS: GameruleWinCondition[] = ['checkmate', 'royalcap
 /** Piece types the engine can move. Neutrals (void/obstacle) are inert blockers, so allowed. */
 const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GIRAFFE, r.CAMEL, r.ZEBRA, r.KNIGHTRIDER, r.AMAZON, r.QUEEN, r.HAWK, r.CHANCELLOR, r.ARCHBISHOP, r.CENTAUR, r.ROYALCENTAUR, r.ROSE, r.KNIGHT, r.GUARD, r.HUYGEN, r.ROOK, r.BISHOP, r.PAWN]); // prettier-ignore
 
-// Individual rule checks (shared by both entry points) --------------------
-
-// Every reason code has both a short `label` (the engine panel's single-line, ellipsis-truncated
-// stats readout) and a full-sentence `message` (the variant selector's error text).
+// Individual rule checks (shared by both entry points) ------------------------
 
 /** Only checkmate-family win conditions are understood. */
 function checkWinConditions(gameRules: GameRules): SupportedResult {
@@ -96,12 +95,12 @@ function checkPieceTypes(rawTypes: Iterable<RawType>): SupportedResult {
 	return { supported: true };
 }
 
-// Entry points ----------------------------------------------------------
+// Entry points ----------------------------------------------------------------
 
 /**
  * Whether the engine can PLAY the given game (engine games). Requires a bounded board within the
  * engine's safe coordinate range — engine games always run inside a world border, so the gamefile
- * must be constructed from {@link PLAY_BORDER} for this to pass.
+ * must be constructed from apeironborder's play border for this to pass.
  *
  * Judged on the CURRENT position, since that's what an engine game plays on from here.
  */
@@ -208,6 +207,8 @@ function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 
 	return checkPieceTypes(gamefile.existingRawTypes);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

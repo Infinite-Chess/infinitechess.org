@@ -11,8 +11,9 @@ import type { Player, RawType, PlayerGroup } from '../../util/typeutil.js';
 
 import { rawTypes as r, players as p } from '../../util/typeutil.js';
 
-// Types --------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
+/** The rules a game is played under, beyond the movesets its pieces carry. */
 export interface GameRules {
 	/** An object containing lists of what win conditions each color can win by. */
 	winConditions: PlayerGroup<GameruleWinCondition[]>;
@@ -38,6 +39,7 @@ export interface GameRules {
 	worldBorder?: UnboundedRectangle;
 }
 
+/** Where pawns promote, and what they may promote into. */
 export type Promotion = {
 	/** Contains a list of all promotion ranks each color promotes at. */
 	ranks: PlayerGroup<bigint[]>;
@@ -45,7 +47,7 @@ export type Promotion = {
 	pieces: RawType[];
 };
 
-// Constants ----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 // What a game plays by when nothing declares otherwise — a variant with no gamerule
 // modifications, and an ICN omitting the field. Both paths must agree on every one of
@@ -74,7 +76,7 @@ const DEFAULT_WIN_CONDITIONS: PlayerGroup<GameruleWinCondition[]> = Object.fromE
 /** The full-move number a game starts at when nothing declares otherwise. */
 const DEFAULT_FULL_MOVE = 1;
 
-// Functions ----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Checks if a specified color has a given win condition. */
 function doesColorHaveWinCondition(
@@ -113,11 +115,12 @@ function swapCheckmateForRoyalCapture(gameRules: GameRules): void {
 /**
  * Returns a list of all unique players in the turn order.
  * Removes duplicates while preserving the order of first appearance.
- * @param turnOrder - The turn order array that may contain duplicate players
  */
 function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
 	return [...new Set(turnOrder)];
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

@@ -125,13 +125,6 @@ type SpecialFunction = (
 	premove: boolean,
 ) => CoordsTagged[];
 
-// /** The direction a given player color is facing (which way their pawns move). */
-// type PlayerFacingDirection = {
-// 	/** 1 -> Pawns move vertically. 0 -> Pawns move horizontally. */
-// 	axis: 0 | 1;
-// 	parity: 1n | -1n;
-// };
-
 /** The default blocking function of each piece's sliding moves, if not specified. */
 function defaultBlockingFunction(
 	friendlyColor: Player,
@@ -178,7 +171,7 @@ function generateLeaperMoves(m: bigint, n: bigint): Coords[] {
  *
  * These movesets are called as functions so that they return brand
  * new copies of each moveset so there's no risk of accidentally modifying the originals.
- * @param [slideLimit] Optional. The slideLimit gamerule value.
+ * @param slideLimit - Optional. The slideLimit gamerule value.
  * @returns Object containing the movesets of all pieces except pawns.
  */
 function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
@@ -350,22 +343,7 @@ function isVectorColinear(vector: Vec2): boolean {
 	return bimath.GCD(vector[0], vector[1]) !== 1n;
 }
 
-// /**
-//  * Returns the normalized vector direction a given player's pawns travel.
-//  * `axis` = 0 -> pawn moves horizontal. `axis` = 1 -> pawn moves vertical.
-//  *
-//  * @throws If player neutral is passed
-//  */
-// function determinePlayerFacingDirection(player: Player): PlayerFacingDirection {
-// 	if (player === p.WHITE) return { axis: 1, parity: 1n };
-// 	else if (player === p.BLACK) return { axis: 1, parity: -1n };
-// 	// 4 Player colors
-// 	else if (player === p.RED) return { axis: 1, parity: 1n };
-// 	else if (player === p.BLUE) return { axis: 0, parity: 1n };
-// 	else if (player === p.YELLOW) return { axis: 1, parity: -1n };
-// 	else if (player === p.GREEN) return { axis: 0, parity: -1n };
-// 	else throw Error(`Cannot determine player facing direction of player ${player}!`);
-// }
+// Exports ---------------------------------------------------------------------
 
 export default {
 	defaultBlockingFunction,
@@ -373,7 +351,6 @@ export default {
 	getPieceDefaultMovesets,
 	convertRawMovesetsToPieceMovesets,
 	isVectorColinear,
-	// determinePlayerFacingDirection,
 };
 
 export type { Movesets, RawMovesets, PieceMoveset, BlockingFunction, IgnoreFunction };

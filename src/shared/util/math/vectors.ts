@@ -12,7 +12,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import bimath from './bimath.js';
 import bdcoords from '../bdcoords.js';
 
-// Types ----------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A length-2 number array. Commonly used for storing directions. */
 type Vec2 = [bigint, bigint];
@@ -28,7 +28,7 @@ type Vec2Key = `${bigint},${bigint}`;
 type Vec3 = [number, number, number];
 
 /**
- * A maethematical ray, starting from a single point
+ * A mathematical ray, starting from a single point
  * and going out to infinity in one direction.
  */
 type Ray = {
@@ -46,49 +46,36 @@ type Ray = {
  */
 type LineCoefficients = [bigint, bigint, bigint];
 
-/**
- * {@link LineCoefficients} but for BigDecimal lines (requiring decimal precision).
- */
+/** {@link LineCoefficients} but for BigDecimal lines (requiring decimal precision). */
 type LineCoefficientsBD = [BigDecimal, BigDecimal, BigDecimal];
 
-// Constants ----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
-// prettier-ignore
 /** All positive/absolute orthogonal vectors. */
-const VECTORS_ORTHOGONAL: Coords[] = [[1n,0n],[0n,1n]];
-// prettier-ignore
+const VECTORS_ORTHOGONAL: Vec2[] = [[1n,0n],[0n,1n]]; // prettier-ignore
 /** All positive/absolute diagonal vectors. */
-const VECTORS_DIAGONAL: Coords[] = [[1n,1n],[1n,-1n]];
-// prettier-ignore
+const VECTORS_DIAGONAL: Vec2[] = [[1n,1n],[1n,-1n]]; // prettier-ignore
 /** The positive/absolute knightrider hippogonals. */
-const VECTORS_HIPPOGONAL: Coords[] = [[1n,2n],[1n,-2n],[2n,1n],[2n,-1n]];
+const VECTORS_HIPPOGONAL: Vec2[] = [[1n,2n],[1n,-2n],[2n,1n],[2n,-1n]]; // prettier-ignore
 
-// Construction ----------------------------------------------------------------------
+// Construction ----------------------------------------------------------------
 
-/**
- * Returns the key string of the coordinates: [dx,dy] => 'dx,dy'
- */
+/** Returns the key string of the vector: [dx,dy] => 'dx,dy' */
 function getKeyFromVec2(vec2: Vec2): Vec2Key {
 	return `${vec2[0]},${vec2[1]}`;
 }
 
-/**
- * Returns the vector from the Vec2Key: 'dx,dy' => [dx,dy]
- */
+/** Returns the vector from the Vec2Key: 'dx,dy' => [dx,dy] */
 function getVec2FromKey(vec2Key: Vec2Key): Vec2 {
 	return vec2Key.split(',').map(BigInt) as Vec2;
 }
 
-/**
- * Converts a bigint vector to javascript doubles.
- */
+/** Converts a bigint vector to javascript doubles. */
 function convertVectorToDoubles(vec2: Vec2): DoubleCoords {
 	return [Number(vec2[0]), Number(vec2[1])];
 }
 
-/**
- * Calculates the general form coefficients (A, B, C) of a line given a point and a direction vector.
- */
+/** Calculates the general form coefficients (A, B, C) of a line given a point and a direction vector. */
 function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): LineCoefficients {
 	// General form: Ax + By + C = 0
 	const A = vector[1];
@@ -98,11 +85,9 @@ function getLineGeneralFormFromCoordsAndVec(coords: Coords, vector: Vec2): LineC
 	return [A, B, C];
 }
 
-/**
- * {@link getLineGeneralFormFromCoordsAndVec} but for BigDecimal coordinates.
- */
+/** {@link getLineGeneralFormFromCoordsAndVec} but for BigDecimal coordinates. */
 function getLineGeneralFormFromCoordsAndVecBD(coords: BDCoords, vector: Vec2): LineCoefficientsBD {
-	const vectorBD = bdcoords.FromCoords(vector);
+	const vectorBD = bdcoords.fromCoords(vector);
 
 	// General form: Ax + By + C = 0
 	const A: BigDecimal = bd.clone(vectorBD[1]);
@@ -125,14 +110,6 @@ function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): LineCo
 	// The line equation is x = x1, which in general form is: 1*x + 0*y - x1 = 0
 	if (coords1[0] === coords2[0]) return [1n, 0n, -coords1[0]];
 
-	// // Calculate the slope (m)
-	// const m = (coords2[1] - coords1[1]) / (coords2[0] - coords1[0]);
-
-	// // General form coefficients: A = m, B = -1, and C = y1 - m * x1
-	// const A = m;
-	// const B = -1n;
-	// const C = coords1[1] - m * coords1[0];
-
 	// To avoid division and floating-point/truncation issues, we use the cross-multiplication method.
 	// The equation (y - y1)(x2 - x1) = (x - x1)(y2 - y1) is rearranged to Ax + By + C = 0.
 	const A = coords2[1] - coords1[1]; // y2 - y1
@@ -142,40 +119,17 @@ function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): LineCo
 	return [A, B, C];
 }
 
-// /**
-//  * {@link getLineGeneralFormFrom2Coords} but for BigDecimal coordinates.
-//  */
-// function getLineGeneralFormFrom2CoordsBD(coords1: BDCoords, coords2: BDCoords): LineCoefficientsBD {
-// 	// Handle the case of a vertical line (infinite slope)
-// 	// The line equation is x = x1, which in general form is: 1*x + 0*y - x1 = 0
-// 	if (bd.areEqual(coords1[0], coords2[0])) return [ONE, ZERO, bd.negate(coords1[0])];
-//
-// 	// To avoid division and floating-point/truncation issues, we use the cross-multiplication method.
-// 	// The equation (y - y1)(x2 - x1) = (x - x1)(y2 - y1) is rearranged to Ax + By + C = 0.
-// 	const A = bd.subtract(coords2[1], coords1[1]); // y2 - y1
-// 	const B = bd.subtract(coords1[0], coords2[0]); // x1 - x2
-// 	const C = bd.subtract(bd.multiply(coords2[0], coords1[1]), bd.multiply(coords1[0], coords2[1])); // x2*y1 - x1*y2
-//
-// 	return [A, B, C];
-// }
-
-/**
- * Upgrades bigint line coefficients [A, B, C] to BigDecimals.
- */
-function convertCoeficcientsToBD(line: LineCoefficients): LineCoefficientsBD {
+/** Upgrades bigint line coefficients [A, B, C] to BigDecimals. */
+function convertCoefficientsToBD(line: LineCoefficients): LineCoefficientsBD {
 	return [bd.fromBigInt(line[0]), bd.fromBigInt(line[1]), bd.fromBigInt(line[2])];
 }
 
-/**
- * Calculates the vector between 2 points.
- */
+/** Calculates the vector between 2 points. */
 function calculateVectorFromPoints(start: Coords, end: Coords): Vec2 {
 	return [end[0] - start[0], end[1] - start[1]];
 }
 
-/**
- * Calculates the vector between 2 points.
- */
+/** {@link calculateVectorFromPoints} but for BigDecimal points. */
 function calculateVectorFromBDPoints(start: BDCoords, end: BDCoords): BDCoords {
 	return [bd.subtract(end[0], start[0]), bd.subtract(end[1], start[1])];
 }
@@ -191,23 +145,11 @@ function getLineCFromCoordsAndVec(coords: Coords, vector: Vec2): bigint {
 	return vector[0] * coords[1] - vector[1] * coords[0];
 }
 
-// /**
-//  * {@link getLineCFromCoordsAndVec} but for BigDecimal coordinates.
-//  */
-// function getLineCFromCoordsAndVecBD(coords: BDCoords, vector: Vec2): BigDecimal {
-// 	const vectorBD = bdcoords.FromCoords(vector);
-// 	// Coords first since they are likely higher precision.
-// 	return bd.subtract(bd.multiply(coords[1], vectorBD[0]), bd.multiply(coords[0], vectorBD[1]));
-// }
-
-// Operations -----------------------------------------------------------------------------
+// Operations ------------------------------------------------------------------
 
 /**
  * Compares two lines in general form to see if they are equal/coincident.
  * Two lines are considered equal if their coefficients are proportional.
- * @param line1 - The first line in general form [A1, B1, C1]
- * @param line2 - The second line in general form [A2, B2, C2]
- * @returns true if the lines are equal, false otherwise
  */
 function areLinesInGeneralFormEqual(line1: LineCoefficients, line2: LineCoefficients): boolean {
 	const [A1, B1, C1] = line1;
@@ -220,10 +162,10 @@ function areLinesInGeneralFormEqual(line1: LineCoefficients, line2: LineCoeffici
 
 /**
  * Calculates the X and Y components of a unit vector given an angle in radians.
+ * Both components come back between -1 and 1.
  * @param theta - The angle in radians.
- * @returns A tuple containing the X and Y components, both between -1 and 1.
  */
-function getXYComponents_FromAngle(theta: number): DoubleCoords {
+function getXYComponentsFromAngle(theta: number): DoubleCoords {
 	return [Math.cos(theta), Math.sin(theta)]; // When hypotenuse is 1.0
 }
 
@@ -235,45 +177,27 @@ function dotProduct(v1: Vec2, v2: Vec2): bigint {
 	return v1[0] * v2[0] + v1[1] * v2[1];
 }
 
-/**
- * Computes the dot product of two 2D vectors.
- * WILL BE POSITIVE if they roughly point in the same direction.
- */
+/** {@link dotProduct} but for BigDecimal vectors. */
 function dotProductBD(v1: BDCoords, v2: BDCoords): BigDecimal {
 	return bd.add(bd.multiply(v1[0], v2[0]), bd.multiply(v1[1], v2[1]));
 }
 
-/**
- * Computes the dot product of two 2D vectors represented as doubles.
- * WILL BE POSITIVE if they roughly point in the same direction.
- */
+/** {@link dotProduct} but for vectors of javascript doubles. */
 function dotProductDoubles(v1: DoubleCoords, v2: DoubleCoords): number {
 	return v1[0] * v2[0] + v1[1] * v2[1];
 }
 
-/**
- * Negates the provided length-2 vector so it points in the opposite direction
- *
- * Non-mutating. Returns a new vector.
- */
+/** Returns a new vector pointing the opposite direction. Non-mutating. */
 function negateVector(vec2: Vec2): Vec2 {
 	return [-vec2[0], -vec2[1]];
 }
 
-/**
- * Negates the provided length-2 BigDecimal vector so it points in the opposite direction
- *
- * Non-mutating. Returns a new vector.
- */
+/** {@link negateVector} but for BigDecimal vectors. */
 function negateBDVector(vec2: BDCoords): BDCoords {
 	return [bd.negate(vec2[0]), bd.negate(vec2[1])];
 }
 
-/**
- * Negates the provided length-2 double vector so it points in the opposite direction
- *
- * Non-mutating. Returns a new vector.
- */
+/** {@link negateVector} but for vectors of javascript doubles. */
 function negateDoubleVector(vec2: DoubleCoords): DoubleCoords {
 	return [-vec2[0], -vec2[1]];
 }
@@ -288,9 +212,7 @@ function absVector(vec2: Vec2): Vec2 {
 	else return vec2;
 }
 
-/**
- * Normalizes a vector to its smallest possible integer components while preserving its direction.
- */
+/** Normalizes a vector to its smallest possible integer components while preserving its direction. */
 function normalizeVector(vec2: Vec2): Vec2 {
 	// Calculate the GCD of all the components in the vector.
 	const gcd = bimath.GCD(vec2[0], vec2[1]);
@@ -309,7 +231,6 @@ function normalizeVector(vec2: Vec2): Vec2 {
  */
 function normalizeVectorBD(vec2: BDCoords): DoubleCoords {
 	// Normalize it NEAR the range 0-1 (don't matter if it's not exact).
-	// const targetLength = vectors.chebyshevDistanceBD(ZERO_COORDS, targetVector);
 	const targetLength = bd.max(bd.abs(vec2[0]), bd.abs(vec2[1]));
 	return [
 		bd.toNumber(bd.divideFloating(vec2[0], targetLength)),
@@ -317,9 +238,7 @@ function normalizeVectorBD(vec2: BDCoords): DoubleCoords {
 	];
 }
 
-/**
- * Calculates the normal (perpendicular) vector of a given 2D vector.
- */
+/** Calculates the normal (perpendicular) vector of a given 2D vector. */
 function getPerpendicularVector(vec2: Vec2): Vec2 {
 	return [-vec2[1], vec2[0]];
 }
@@ -328,10 +247,9 @@ function getPerpendicularVector(vec2: Vec2): Vec2 {
  * Calculates the line that is perpendicular to a given line and passes through a specific point.
  * @param lineCoeffs - The coefficients [A,B,C] of the original line.
  * @param point - The coordinates that the new perpendicular line must pass through.
- * @returns New BigDecimal coefficients for the perpendicular line.
  */
 function getPerpendicularLine(lineCoeffs: LineCoefficients, point: BDCoords): LineCoefficientsBD {
-	const lineCoeffsBD = convertCoeficcientsToBD(lineCoeffs);
+	const lineCoeffsBD = convertCoefficientsToBD(lineCoeffs);
 	const [A1, B1] = lineCoeffsBD;
 
 	// Step 1: Determine the A and B coefficients for the new line (L2).
@@ -353,34 +271,26 @@ function getPerpendicularLine(lineCoeffs: LineCoefficients, point: BDCoords): Li
 	return [A2, B2, C2];
 }
 
-/**
- * Converts an angle in degrees to radians
- */
+/** Converts an angle in degrees to radians. */
 function degreesToRadians(angleDegrees: number): number {
 	return angleDegrees * (Math.PI / 180);
 }
 
-// Distance Calculation ----------------------------------------------------------------------------
+// Distance Calculation --------------------------------------------------------
 
-/**
- * Returns the euclidean (hypotenuse) distance between 2 bigint points.
- */
+/** Returns the euclidean (hypotenuse) distance between 2 bigint points. */
 function euclideanDistance(point1: Coords, point2: Coords): BigDecimal {
-	const point1BD: BDCoords = bdcoords.FromCoords(point1);
-	const point2BD: BDCoords = bdcoords.FromCoords(point2);
+	const point1BD: BDCoords = bdcoords.fromCoords(point1);
+	const point2BD: BDCoords = bdcoords.fromCoords(point2);
 	return euclideanDistanceBD(point1BD, point2BD);
 }
 
-/**
- * Returns the euclidean (hypotenuse) distance between 2 BigDecimal points.
- */
+/** {@link euclideanDistance} but for BigDecimal points. */
 function euclideanDistanceBD(point1: BDCoords, point2: BDCoords): BigDecimal {
 	return bd.hypot(bd.subtract(point2[0], point1[0]), bd.subtract(point2[1], point1[1]));
 }
 
-/**
- * Returns the euclidean (hypotenuse) distance between 2 javascript double coordinates.
- */
+/** {@link euclideanDistance} but for javascript double coordinates. */
 function euclideanDistanceDoubles(point1: DoubleCoords, point2: DoubleCoords): number {
 	return Math.hypot(point2[0] - point1[0], point2[1] - point1[1]);
 }
@@ -394,10 +304,6 @@ function manhattanDistance(point1: Coords, point2: Coords): bigint {
 	return bimath.abs(point2[0] - point1[0]) + bimath.abs(point2[1] - point1[1]);
 }
 
-// function manhattanDistanceBD(point1: BDCoords, point2: BDCoords): BigDecimal {
-// 	return bd.add(bd.abs(bd.subtract(point2[0], point1[0])), bd.abs(bd.subtract(point2[1], point1[1])));
-// }
-
 /**
  * Returns the chebyshev distance between 2 points.
  * This is the maximum between the points' x distance and y distance.
@@ -408,9 +314,7 @@ function chebyshevDistance(point1: Coords, point2: Coords): bigint {
 	return bimath.max(bimath.abs(point2[0] - point1[0]), bimath.abs(point2[1] - point1[1]));
 }
 
-/**
- * {@link chebyshevDistance} but for BigDecimal coordinates.
- */
+/** {@link chebyshevDistance} but for BigDecimal coordinates. */
 function chebyshevDistanceBD(point1: BDCoords, point2: BDCoords): BigDecimal {
 	return bd.max(
 		bd.abs(bd.subtract(point2[0], point1[0])),
@@ -418,21 +322,18 @@ function chebyshevDistanceBD(point1: BDCoords, point2: BDCoords): BigDecimal {
 	);
 }
 
-/**
- * {@link chebyshevDistance} but for javascript numbers (doubles).
- */
+/** {@link chebyshevDistance} but for javascript numbers (doubles). */
 function chebyshevDistanceDoubles(point1: DoubleCoords, point2: DoubleCoords): number {
 	return Math.max(Math.abs(point2[0] - point1[0]), Math.abs(point2[1] - point1[1]));
 }
 
-// Exports -------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants
 	VECTORS_ORTHOGONAL,
 	VECTORS_DIAGONAL,
 	VECTORS_HIPPOGONAL,
-
 	// Construction
 	getKeyFromVec2,
 	getVec2FromKey,
@@ -440,16 +341,13 @@ export default {
 	getLineGeneralFormFromCoordsAndVec,
 	getLineGeneralFormFromCoordsAndVecBD,
 	getLineGeneralFormFrom2Coords,
-	// getLineGeneralFormFrom2CoordsBD,
-	convertCoeficcientsToBD,
+	convertCoefficientsToBD,
 	calculateVectorFromPoints,
 	calculateVectorFromBDPoints,
 	getLineCFromCoordsAndVec,
-	// getLineCFromCoordsAndVecBD,
-
 	// Operations
 	areLinesInGeneralFormEqual,
-	getXYComponents_FromAngle,
+	getXYComponentsFromAngle,
 	dotProduct,
 	dotProductBD,
 	dotProductDoubles,
@@ -462,13 +360,11 @@ export default {
 	getPerpendicularVector,
 	getPerpendicularLine,
 	degreesToRadians,
-
 	// Distance Calculation
 	euclideanDistance,
 	euclideanDistanceBD,
 	euclideanDistanceDoubles,
 	manhattanDistance,
-	// manhattanDistanceBD,
 	chebyshevDistance,
 	chebyshevDistanceBD,
 	chebyshevDistanceDoubles,

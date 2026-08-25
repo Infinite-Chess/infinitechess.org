@@ -13,13 +13,15 @@ import boardutil from './boardutil.js';
 import boardchanges from './boardchanges.js';
 import { rawTypes as r } from '../../util/typeutil.js';
 
+// Types -----------------------------------------------------------------------
+
 /**
  * Function that queues all of the changes a special move makes when executed.
  */
-type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: MoveRunning) => boolean;
+export type SpecialMoveFunction = (boardsim: Board, piece: Piece, move: MoveRunning) => boolean;
 
 /** All properties of the Move that special move functions need to access */
-interface MoveRunning extends MoveTagged, Edit {}
+export interface MoveRunning extends MoveTagged, Edit {}
 
 /**
  * An object storing the squares in the immediate vicinity
@@ -27,31 +29,38 @@ interface MoveRunning extends MoveTagged, Edit {}
  *
  * The value is a list of coordinates that it may be possible for that raw piece type to make a special capture from that distance.
  */
-type SpecialVicinity = RawTypeGroup<Coords[]>;
+export type SpecialVicinity = RawTypeGroup<Coords[]>;
 
-// This returns the functions for executing special moves,
-// it does NOT calculate if they're legal.
-// In the future, parameters can be added if variants have
-// different special moves for pieces.
-const defaultSpecialMoves: RawTypeGroup<SpecialMoveFunction> = {
+// Constants -------------------------------------------------------------------
+
+/**
+ * The function that EXECUTES each piece type's special move. These do NOT calculate
+ * whether the move is legal — that is specialdetect's job.
+ *
+ * Each returns false when the move it was handed isn't its special move after all,
+ * so the caller falls back to moving the piece normally.
+ */
+const DEFAULT_SPECIAL_MOVES: RawTypeGroup<SpecialMoveFunction> = {
 	[r.KING]: kings,
 	[r.ROYALCENTAUR]: kings,
 	[r.PAWN]: pawns,
 	[r.ROSE]: roses,
 };
 
-// A custom special move needs to be able to:
-// * Delete a custom piece
-// * Move a custom piece
-// * Add a custom piece
+// Special Move Functions ------------------------------------------------------
 
-// ALL FUNCTIONS NEED TO:
-// * Make the move
-// * Append the move
+/*
+ * A custom special move needs to be able to:
+ * * Delete a custom piece
+ * * Move a custom piece
+ * * Add a custom piece
+ *
+ * ALL FUNCTIONS NEED TO:
+ * * Make the move
+ * * Append the move
+ */
 
-// Called when the piece moved is a king.
-// Tests if the move contains "castle" special move, if so it executes it!
-// RETURNS FALSE if special move was not executed!
+/** Executes castling, when the king's move carries a `castle` tag. */
 function kings(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	const specialTag = move.castle; // { dir: -1/1, coord }
 	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
@@ -76,6 +85,7 @@ function kings(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	return true;
 }
 
+/** Executes a pawn's en passant capture and/or promotion, and records a new en passant square. */
 function pawns(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	const moveChanges = move.changes;
 
@@ -88,7 +98,6 @@ function pawns(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	if (!enpassantTag && !promotionTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
 	const captureCoords = enpassantTag ? boardsim.state.global.enpassant!.pawn : move.endCoords;
-	// const captureCoords = enpassantTag ? getEnpassantCaptureCoords(move.endCoords, enpassantTag) : move.endCoords;
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, captureCoords);
 
 	// Delete the piece captured
@@ -115,7 +124,7 @@ function pawns(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	return true;
 }
 
-// The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
+/** Moves a rose. Custom so that it can pass the `path` special flag onto the move changes. */
 function roses(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
 
@@ -126,6 +135,8 @@ function roses(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	// Special move was executed!
 	return true;
 }
+
+// Special Vicinities ----------------------------------------------------------
 
 /**
  * Returns the coordinate distances certain piece types have a chance
@@ -140,9 +151,11 @@ function getDefaultSpecialVicinitiesByPiece(): SpecialVicinity {
 	};
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
-	defaultSpecialMoves,
+	// Constants
+	DEFAULT_SPECIAL_MOVES,
+	// Special Vicinities
 	getDefaultSpecialVicinitiesByPiece,
 };
-
-export type { MoveRunning, SpecialMoveFunction, SpecialVicinity };

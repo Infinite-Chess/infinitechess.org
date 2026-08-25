@@ -16,7 +16,7 @@ import gen4DPosition from './gen4DPosition.js';
 import { rawTypes as r } from '../../../util/typeutil.js';
 import fourdimensionalmoves from '../../logic/fourdimensionalmoves.js';
 
-// Moveset Overrides --------------------------------------------------------------------------------------------------
+// Moveset Overrides -----------------------------------------------------------
 /**
  * Generates the moveset for the sliding pieces
  * @param boards_x - Number of 2D boards in x direction
@@ -121,7 +121,7 @@ function gen4DMoveset(
 	return movesets.convertRawMovesetsToPieceMovesets(rawMovesets);
 }
 
-// Special Vicinity Overrides -----------------------------------------------------------------------------------------
+// Special Vicinity Overrides --------------------------------------------------
 
 /**
  * Sets the specialVicinity object for the pawn
@@ -232,7 +232,7 @@ function getKingVicinity(board_spacing: bigint, strong_kings_and_queens: boolean
 	return individualMoves;
 }
 
-// Exports ------------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	gen4DMoveset,

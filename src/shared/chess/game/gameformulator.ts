@@ -23,7 +23,7 @@ import metadatautil from '../util/metadatautil.js';
 import variantcache from '../variants/variantcache.js';
 import variantregistry from '../variants/variantregistry.js';
 
-// Types ----------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Everything a gamefile is constructed from. */
 export interface GameConstructionOptions {
@@ -56,7 +56,7 @@ interface ConstructionOverrides {
 	clockValues?: ClockValues;
 }
 
-// Functions ------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Constructs the gamefile a parsed ICN describes, sourcing the position
@@ -193,6 +193,8 @@ function constructGame(options: GameConstructionOptions, validateMoves?: true): 
 		validateMoves,
 	);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	formulateGame,
