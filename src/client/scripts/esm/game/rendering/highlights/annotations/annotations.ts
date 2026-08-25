@@ -39,10 +39,8 @@ interface Annotes {
 	Rays: Ray[];
 }
 
-type Square = Coords;
-
 /** Second type of annoation: An arrow draw from one square to another. */
-interface Arrow {
+export interface Arrow {
 	start: Coords;
 	end: Coords;
 
@@ -230,5 +228,3 @@ export default {
 	render_belowPieces,
 	render_abovePieces,
 };
-
-export type { Square, Arrow, Ray };

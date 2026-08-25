@@ -18,7 +18,7 @@ import vectors, { LineCoefficients, LineCoefficientsBD, Ray, Vec2 } from './vect
 // Types -----------------------------------------------------------------------
 
 /** A point where a line crosses a bounding box edge. */
-type IntersectionPoint = {
+export type IntersectionPoint = {
 	/** The actual intersection point */
 	coords: BDCoords;
 	/**
@@ -29,7 +29,7 @@ type IntersectionPoint = {
 };
 
 /** The simplest form of a ray. */
-type BaseRay = { start: Coords; vector: Vec2 };
+export type BaseRay = { start: Coords; vector: Vec2 };
 
 // Constants -------------------------------------------------------------------
 
@@ -719,5 +719,3 @@ export default {
 	// Miscellaneous Utilities
 	roundPointToNearestGridpoint,
 };
-
-export type { IntersectionPoint, BaseRay };

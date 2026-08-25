@@ -26,7 +26,7 @@ import { createRenderable } from '../../../board/rendering/renderable.js';
  * Coords are clamped to screen edge, since
  * we can't render lines out to infinity.
  */
-interface Line {
+export interface Line {
 	/** The starting point coords. May have floating point innaccuracy. */
 	start: BDCoords;
 	/** The ending point coords. May have floating point innaccuracy. */
@@ -93,5 +93,3 @@ export default {
 	getRenderRange,
 	genLinesModel,
 };
-
-export type { Line };

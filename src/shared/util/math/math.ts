@@ -9,7 +9,7 @@
 // Types -----------------------------------------------------------------------
 
 /** A color in a length-4 array: `[r,g,b,a]` */
-type Color = [number, number, number, number];
+export type Color = [number, number, number, number];
 
 // Operations ------------------------------------------------------------------
 
@@ -69,5 +69,3 @@ export default {
 	// Other
 	getSineWaveVariation,
 };
-
-export type { Color };

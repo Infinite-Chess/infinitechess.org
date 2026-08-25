@@ -13,7 +13,7 @@ import type { MoveSpecialTags } from './moveutil.js';
 // Types -----------------------------------------------------------------------
 
 /** The state of a game holds variables that change over the duration of it. */
-interface GameState {
+export interface GameState {
 	local: LocalGameState;
 	global: GlobalGameState;
 }
@@ -45,7 +45,7 @@ interface LocalGameState {
  * for that persistence boundary, NOT because it's front-only — like local state, it's applied
  * on every ply viewed, so it always reflects the position on screen.
  */
-interface GlobalGameState {
+export interface GlobalGameState {
 	/** An object containing the information if each individual piece has its special move rights. */
 	specialRights: Set<CoordsKey>;
 	/** If enpassant is allowed at the currently-viewed ply, this defines the coordinates. */
@@ -65,13 +65,13 @@ type inCheck = false | Coords[];
  * `check`/`checks` land on {@link LocalGameState}, while `enpassant`/`specialrights`/
  * `moverulestate` land on {@link GlobalGameState}.
  */
-type MoveState = Array<StateChange>;
+export type MoveState = Array<StateChange>;
 
 /**
  * A state change, local or global, that contains enough information to set the gamefile's
  * property whether the move is being rewound or replayed.
  */
-type StateChange =
+export type StateChange =
 	| {
 			/** The type of state this {@link StateChange} is */
 			type: 'check';
@@ -104,7 +104,7 @@ type StateChange =
 	  };
 
 /** A single check being delivered: the checked royal paired with its attacker. */
-type CheckInfo = {
+export type CheckInfo = {
 	/** The coordinates of the royal being checked */
 	royal: Coords;
 	/** The coordinates of the attacking piece */
@@ -124,7 +124,7 @@ type CheckInfo = {
 	  }
 );
 
-interface EnPassant {
+export interface EnPassant {
 	/** The enpassant square. */
 	square: Coords;
 	/**
@@ -270,5 +270,3 @@ export default {
 	createSpecialRightsState,
 	createMoveRuleState,
 };
-
-export type { GameState, GlobalGameState, MoveState, StateChange, CheckInfo, EnPassant };

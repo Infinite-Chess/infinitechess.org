@@ -13,17 +13,17 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
  * A length-2 array of coordinates: `[x,y]`
  * Contains infinite precision integers, represented as BigInt.
  */
-type Coords = [bigint, bigint];
+export type Coords = [bigint, bigint];
 
 /**
  * A pair of arbitrarily large coordinates WITH decimal precision included.
  * Typically used for calculating graphics on the cpu-side.
  * BD = BigDecimal
  */
-type BDCoords = [BigDecimal, BigDecimal];
+export type BDCoords = [BigDecimal, BigDecimal];
 
 /** For when we don't need arbitrary size. */
-type DoubleCoords = [number, number];
+export type DoubleCoords = [number, number];
 
 /**
  * A pair of coordinates, represented in a string, separated by a `,`.
@@ -33,7 +33,7 @@ type DoubleCoords = [number, number];
  * This will never be in scientific notation. However, moves beyond
  * Number.MAX_SAFE_INTEGER can't be expressed exactly.
  */
-type CoordsKey = `${bigint},${bigint}`;
+export type CoordsKey = `${bigint},${bigint}`;
 
 // Functions -------------------------------------------------------------------
 
@@ -158,5 +158,3 @@ export default {
 	stringifyCoords,
 	stringifyBDCoords,
 };
-
-export type { Coords, BDCoords, DoubleCoords, CoordsKey };

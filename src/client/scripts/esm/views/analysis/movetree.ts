@@ -11,7 +11,7 @@ import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 /** A single position in the analysis tree: one move plus its continuations. */
-interface AnalysisMoveNode {
+export interface AnalysisMoveNode {
 	/** Unique, monotonically-assigned identifier for this node. */
 	id: number;
 	/** Half-move number (0-based); the root is -1. */
@@ -318,5 +318,3 @@ export default {
 	getMovesToNode,
 	appendVariation,
 };
-
-export type { AnalysisMoveNode };

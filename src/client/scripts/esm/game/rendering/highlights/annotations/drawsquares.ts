@@ -7,7 +7,6 @@
  */
 
 import type { Color } from '../../../../../../../shared/util/math/math.js';
-import type { Square } from './annotations.js';
 import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coordutil.js';
 
 import vectors from '../../../../../../../shared/util/math/vectors.js';
@@ -44,13 +43,13 @@ const HOVER_OPACITY = 0.5;
  * The preset square overrides if provided from the ICN.
  * These override the variant's preset squares.
  */
-let preset_squares: Square[] | undefined;
+let preset_squares: Coords[] | undefined;
 
 // Updating -----------------------------------------------------------------
 
 /** Returns a list of all square highlights being hovered over by any pointer. */
-function getAllSquaresHovered(highlights: Square[]): Coords[] {
-	const allHovered: Square[] = [];
+function getAllSquaresHovered(highlights: Coords[]): Coords[] {
+	const allHovered: Coords[] = [];
 
 	for (const pointerWorld of mouse.getAllPointerWorlds()) {
 		const hovered = getSquaresBelowWorld(highlights, pointerWorld, false).squares;
@@ -65,11 +64,11 @@ function getAllSquaresHovered(highlights: Square[]): Coords[] {
 
 /** Returns a list of Square highlight coordinates that are all being hovered over by the provided world coords. */
 function getSquaresBelowWorld(
-	highlights: Square[],
+	highlights: Coords[],
 	world: DoubleCoords,
 	trackDists: boolean,
 ): { squares: Coords[]; dists?: number[] } {
-	const squares: Square[] = [];
+	const squares: Coords[] = [];
 	const dists: number[] = [];
 
 	const entityHalfWidthWorld = snapping.getEntityWidthWorld() / 2;
@@ -95,7 +94,7 @@ function getSquaresBelowWorld(
  * REQUIRES THE HOVERED HIGHLIGHTS to be updated prior to calling this!
  * @param highlights - All square highlights currently on the board.
  */
-function update(highlights: Square[]): void {
+function update(highlights: Coords[]): void {
 	// If the pointer simulated a right click, add a highlight!
 	if (mouse.isMouseClicked(Mouse.RIGHT)) {
 		mouse.claimMouseClick(Mouse.RIGHT); // Claim the click so other scripts don't also use it
@@ -161,7 +160,7 @@ function clearPresetOverrides(): void {
 
 // Rendering -----------------------------------------------------------------
 
-function render(highlights: Square[]): void {
+function render(highlights: Coords[]): void {
 	const presetSquares =
 		preset_squares ?? variantpreviewer.getSquarePresets(gameslot.getGamefile()!.variant?.mod);
 

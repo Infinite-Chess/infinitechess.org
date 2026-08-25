@@ -318,5 +318,3 @@ export default {
 	detectCheck,
 	doesLineAttackSquare,
 };
-
-export type {};

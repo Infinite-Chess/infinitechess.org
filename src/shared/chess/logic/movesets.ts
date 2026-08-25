@@ -19,10 +19,10 @@ import { primalityTest } from '../../util/isprime.js';
 import { rawTypes as r } from '../../util/typeutil.js';
 
 /** A Movesets object containing the movesets for every piece type in a game */
-type Movesets = RawTypeGroup<PieceMoveset>;
+export type Movesets = RawTypeGroup<PieceMoveset>;
 
 /** {@link Movesets} but without the auto-generated colinear properties. */
-type RawMovesets = RawTypeGroup<RawPieceMoveset>;
+export type RawMovesets = RawTypeGroup<RawPieceMoveset>;
 
 /** {@link PieceMoveset} but without the auto-generated colinear property. */
 interface RawPieceMoveset {
@@ -63,7 +63,7 @@ interface RawPieceMoveset {
 }
 
 /** A moveset for an single piece type in a game */
-interface PieceMoveset extends RawPieceMoveset {
+export interface PieceMoveset extends RawPieceMoveset {
 	/** Whether this moveset involves colinear sliding moves. Auto-generated property. */
 	colinear: boolean;
 }
@@ -94,7 +94,7 @@ type SlidingMoves = {
  * The gamefile and detectCheck method may be used for the Royal Queen,
  * as it can test if the squares are check for positive.
  */
-type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
+export type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
 
 /**
  * This runs once for every piece on the same line of the selected piece.
@@ -108,7 +108,7 @@ type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
  * An example of this would be the "witch", which makes all adjacent friendly
  * pieces "transparent", allowing friendly pieces to phase through them.
  */
-type BlockingFunction = (
+export type BlockingFunction = (
 	friendlyColor: Player,
 	blockingPiece: Piece,
 	coords: Coords,
@@ -352,5 +352,3 @@ export default {
 	convertRawMovesetsToPieceMovesets,
 	isVectorColinear,
 };
-
-export type { Movesets, RawMovesets, PieceMoveset, BlockingFunction, IgnoreFunction };

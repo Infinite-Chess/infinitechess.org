@@ -26,7 +26,7 @@ import guigamerules from './gui/actions/guigamerules';
 // Types -------------------------------------------------------------------------
 
 /** Type encoding information for the game rules object of the editor position */
-interface GameRulesGUIinfo {
+export interface GameRulesGUIinfo {
 	playerToMove: 'white' | 'black';
 	enPassant?: {
 		x: bigint;
@@ -337,8 +337,6 @@ function updateGamefileProperties(
 }
 
 // Exports -------------------------------------------------------------
-
-export type { GameRulesGUIinfo };
 
 export default {
 	pawnDoublePushTypes,

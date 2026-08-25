@@ -33,7 +33,7 @@ const MouseNames = {
 	[Mouse.RIGHT]: 'Right',
 } as const;
 
-type MouseButton = (typeof Mouse)[keyof typeof Mouse];
+export type MouseButton = (typeof Mouse)[keyof typeof Mouse];
 
 /** Information about a key that was pressed down this frame. */
 interface KeyDownInfo {
@@ -45,7 +45,7 @@ interface KeyDownInfo {
 	shiftKey: boolean;
 }
 
-interface InputListener {
+export interface InputListener {
 	/** Whether this input listener has experience at least one input event the past frame. */
 	atleastOneInput: () => boolean;
 	/** Whether the given mouse button experienced a click-down this frame. */
@@ -927,5 +927,3 @@ export { Mouse, CreateInputListener };
 export default {
 	getRelativeMousePosition,
 };
-
-export type { InputListener, MouseButton };

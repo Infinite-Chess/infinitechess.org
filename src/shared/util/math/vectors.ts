@@ -15,23 +15,23 @@ import bdcoords from '../bdcoords.js';
 // Types -----------------------------------------------------------------------
 
 /** A length-2 number array. Commonly used for storing directions. */
-type Vec2 = [bigint, bigint];
+export type Vec2 = [bigint, bigint];
 
 /**
  * A pair of x & y vectors, represented in a string, separated by a `,`.
  *
  * This is often used as the key for a slide direction in an object.
  */
-type Vec2Key = `${bigint},${bigint}`;
+export type Vec2Key = `${bigint},${bigint}`;
 
 /** A length-3 number array. Commonly used for storing positional and scale transformations. */
-type Vec3 = [number, number, number];
+export type Vec3 = [number, number, number];
 
 /**
  * A mathematical ray, starting from a single point
  * and going out to infinity in one direction.
  */
-type Ray = {
+export type Ray = {
 	start: Coords;
 	vector: Vec2;
 
@@ -44,10 +44,10 @@ type Ray = {
  * These can be bigints because all lines, rays, and segment
  * points inside the game are integers.
  */
-type LineCoefficients = [bigint, bigint, bigint];
+export type LineCoefficients = [bigint, bigint, bigint];
 
 /** {@link LineCoefficients} but for BigDecimal lines (requiring decimal precision). */
-type LineCoefficientsBD = [BigDecimal, BigDecimal, BigDecimal];
+export type LineCoefficientsBD = [BigDecimal, BigDecimal, BigDecimal];
 
 // Constants -------------------------------------------------------------------
 
@@ -369,5 +369,3 @@ export default {
 	chebyshevDistanceBD,
 	chebyshevDistanceDoubles,
 };
-
-export type { Vec2, Vec2Key, Vec3, Ray, LineCoefficients, LineCoefficientsBD };

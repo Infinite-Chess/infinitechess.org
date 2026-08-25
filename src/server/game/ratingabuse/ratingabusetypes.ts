@@ -14,13 +14,13 @@ import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 // Database Records ------------------------------------------------------------------------------
 
 /** The entries of a {@link PlayerGamesRecord} the rating abuse calculation reads. */
-type AbusePlayerGamesRecord = Pick<
+export type AbusePlayerGamesRecord = Pick<
 	PlayerGamesRecord,
 	'game_id' | 'score' | 'player_number' | 'elo_change_from_game'
 >;
 
 /** The entries of a {@link GamesRecord} the rating abuse calculation reads. */
-type AbuseGamesRecord = Pick<
+export type AbuseGamesRecord = Pick<
 	GamesRecord,
 	| 'game_id'
 	| 'date'
@@ -32,7 +32,7 @@ type AbuseGamesRecord = Pick<
 >;
 
 /** One of the player's recent games, joined across the `player_games` and `games` tables. */
-type AbuseGameInfo = AbusePlayerGamesRecord &
+export type AbuseGameInfo = AbusePlayerGamesRecord &
 	AbuseGamesRecord & {
 		/**
 		 * The player's remaining millis at game end, derived from
@@ -42,7 +42,7 @@ type AbuseGameInfo = AbusePlayerGamesRecord &
 	};
 
 /** The entries of a MemberRecord the rating abuse calculation reads. */
-type AbuseMemberRecord = {
+export type AbuseMemberRecord = {
 	username: string;
 	user_id: number;
 	joined: string;
@@ -51,7 +51,7 @@ type AbuseMemberRecord = {
 // Measurement -----------------------------------------------------------------------------------
 
 /** Who the player faced across the measured games, and the identities behind them. */
-type IdentityEvidence = {
+export type IdentityEvidence = {
 	/** Opponent user_ids, one entry per game played against them. */
 	opponentIds: number[];
 	/** How many of those recent games each opponent user_id accounts for. */
@@ -65,20 +65,20 @@ type IdentityEvidence = {
 };
 
 /** Everything gathered about a player's recent rated games, fed to the suspicion checks. */
-type AbuseEvidence = IdentityEvidence & {
+export type AbuseEvidence = IdentityEvidence & {
 	/** The player's recent rated games. */
 	games: AbuseGameInfo[];
 };
 
 /** One check's finding: how suspicious a single monitored characteristic looks. */
-type SuspicionRecord = {
+export type SuspicionRecord = {
 	category: 'think_time' | 'same_opponents' | 'ip_addresses' | 'opponent_account_age';
 	weight: number;
 	comment?: string;
 };
 
 /** The combined outcome of running every check over one player's evidence. */
-type SuspicionVerdict = {
+export type SuspicionVerdict = {
 	records: SuspicionRecord[];
 	/** The sum of every record's weight. */
 	totalWeight: number;
@@ -87,7 +87,7 @@ type SuspicionVerdict = {
 };
 
 /** Identifies the measurement a report is describing, alongside its evidence. */
-type AbuseReportContext = {
+export type AbuseReportContext = {
 	user_id: number;
 	username: string;
 	leaderboard_id: number;
@@ -95,16 +95,4 @@ type AbuseReportContext = {
 	netRatingChange: number;
 	gameIds: number[];
 	evidence: AbuseEvidence;
-};
-
-export type {
-	AbusePlayerGamesRecord,
-	AbuseGamesRecord,
-	AbuseGameInfo,
-	AbuseMemberRecord,
-	IdentityEvidence,
-	AbuseEvidence,
-	SuspicionRecord,
-	SuspicionVerdict,
-	AbuseReportContext,
 };

@@ -13,7 +13,7 @@ import { createEffectNode, EffectConfig, NodeChain } from './AudioEffects';
 
 type AudioBufferWithGainNode = AudioBufferSourceNode & { gainNode: GainNode };
 
-interface SoundObject {
+export interface SoundObject {
 	/** The source of the audio, with its attached `gainNode`. */
 	source: AudioBufferWithGainNode;
 	/** Whether to loop the sound indefinitely. */
@@ -380,8 +380,6 @@ function fadeOut(source: AudioBufferWithGainNode, endTime: number): void {
 }
 
 // Exports ----------------------------------------------------------------------
-
-export type { SoundObject };
 
 export default {
 	// Getters

@@ -42,7 +42,7 @@ interface MeshData {
 }
 
 /** An object that contains the buffer models to render the pieces in a game. */
-interface Mesh {
+export interface Mesh {
 	/** The amount the mesh data has been linearly shifted to make it closer to the origin, in coordinates `[x,y]`.
 	 * This helps require less severe uniform translations upon rendering when traveling massive distances.
 	 * The amount it is shifted depends on the nearest `REGEN_RANGE`. */
@@ -463,5 +463,3 @@ export default {
 	renderAll,
 	renderVoids,
 };
-
-export type { Mesh };

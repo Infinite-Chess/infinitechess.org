@@ -40,7 +40,7 @@ import { loadEngineWasm, getPromotionAbbr } from '../../game/chess/engines/engin
 // Types ------------------------------------------------------------------------
 
 /** Messages accepted by this worker. */
-type AnalysisCommand =
+export type AnalysisCommand =
 	/**
 	 * `engineUrl` is the served glue path (from the manifest). `threads` > 1 spins up
 	 * the Lazy SMP pool (the search worker); omit it for the idle legal-moves helper
@@ -71,7 +71,7 @@ type AnalysisCommand =
 	| { cmd: 'stop' };
 
 /** Search limits/settings for a `go` command. */
-interface GoOptions {
+export interface GoOptions {
 	/** How many principal variations to search in parallel. */
 	multiPv: number;
 	/** Target depth to analyze to, then stop. */
@@ -81,7 +81,7 @@ interface GoOptions {
 }
 
 /** Messages posted back to the main thread. */
-type AnalysisResponse =
+export type AnalysisResponse =
 	/** `mt` is whether this engine build supports Lazy SMP (exports `initThreadPool`). */
 	| { type: 'ready'; mt: boolean }
 	/** The wasm module failed to load; this worker is unusable. */
@@ -105,7 +105,7 @@ type AnalysisResponse =
 	| { type: 'searcherror'; message: string };
 
 /** A streamed engine info update (one per completed depth). */
-interface AnalysisInfo {
+export interface AnalysisInfo {
 	depth: number;
 	/** Deepest ply reached by any line, including quiescence extensions. */
 	seldepth: number;
@@ -118,15 +118,13 @@ interface AnalysisInfo {
 }
 
 /** One PV of an info update. Moves are compact ICN tokens ("x,y>x,y=Q"). */
-interface AnalysisLine {
+export interface AnalysisLine {
 	moves: string[];
 	/** Centipawns from the side-to-move's perspective. Absent when mating. */
 	cp?: number;
 	/** Full moves to mate from the side-to-move's perspective (negative = getting mated). */
 	mate?: number;
 }
-
-export type { AnalysisCommand, AnalysisResponse, AnalysisInfo, AnalysisLine, GoOptions }; // prettier-ignore
 
 /** The analysis engine glue's exports. */
 interface AnalysisWasmModule extends EngineWasmModule {

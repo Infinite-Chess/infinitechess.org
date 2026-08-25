@@ -13,7 +13,7 @@ import bimath from './bimath.js';
 // Types -----------------------------------------------------------------------
 
 /** An arbitrarily large rectangle object with properties for the coordinates of its sides. */
-interface BoundingBox {
+export interface BoundingBox {
 	/** The x-coordinate of the left side of the box. */
 	left: bigint;
 	/** The x-coordinate of the right side of the box. */
@@ -28,7 +28,7 @@ interface BoundingBox {
  * A {@link BoundingBox} that may be unbounded in one or more directions.
  * `null` is used as a placeholder for -infinity or infinity.
  */
-interface UnboundedRectangle {
+export interface UnboundedRectangle {
 	/** The x-coordinate of the left side of the box. */
 	left: bigint | null;
 	/** The x-coordinate of the right side of the box. */
@@ -43,7 +43,7 @@ interface UnboundedRectangle {
  * A rectangle object with properties for the coordinates of its sides, but using BigDecimal
  * instead of bigints for arbitrary decimal precision.
  */
-interface BoundingBoxBD {
+export interface BoundingBoxBD {
 	/** The x-coordinate of the left side of the box. */
 	left: BigDecimal;
 	/** The x-coordinate of the right side of the box. */
@@ -55,7 +55,7 @@ interface BoundingBoxBD {
 }
 
 /** A rectangle object with properties for the coordinates of its sides, but using numbers instead of bigints. */
-interface DoubleBoundingBox {
+export interface DoubleBoundingBox {
 	/** The x-coordinate of the left side of the box. */
 	left: number;
 	/** The x-coordinate of the right side of the box. */
@@ -283,5 +283,3 @@ export default {
 	// Debugging
 	printBDBox,
 };
-
-export type { BoundingBox, UnboundedRectangle, BoundingBoxBD, DoubleBoundingBox };

@@ -8,7 +8,7 @@
 import { serverFetch } from './serverFetch.js';
 
 /** Options for {@link retryFetch} */
-interface RetryFetchOptions {
+export interface RetryFetchOptions {
 	/**
 	 * Maximum number of fetch attempts (e.g., 1 means one attempt, no retries).
 	 * Assumed to be 1 or greater. Defaults to 3.
@@ -111,5 +111,3 @@ async function retryFetch(
 }
 
 export { retryFetch };
-
-export type { RetryFetchOptions };

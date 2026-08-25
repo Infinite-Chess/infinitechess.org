@@ -24,7 +24,7 @@ import coordutil, { CoordsKey } from '../../util/coordutil.js';
 // Types -----------------------------------------------------------------------
 
 /** Generic type to describe any changes to the board. */
-type Change = {
+export type Change = {
 	/** Whether this change affects the main piece moved.
 	 * This would be true if the change was for moving the king during castling, but false for moving the rook. */
 	main: boolean;
@@ -56,7 +56,7 @@ type Change = {
  * the piece lists to reflect that move, or modifies the mesh of the pieces,
  * depending on the function, BUT NOT BOTH.
  */
-type genericChangeFunc<T> = (actiondata: T, change: Change) => void;
+export type genericChangeFunc<T> = (actiondata: T, change: Change) => void;
 
 /**
  * An actionlist is a dictionary links actions to functions.
@@ -71,7 +71,7 @@ interface ActionList<F extends CallableFunction> {
 /**
  * A change application is used for applying the changelist of a move in both directions.
  */
-interface ChangeApplication<F extends CallableFunction> {
+export interface ChangeApplication<F extends CallableFunction> {
 	forward: ActionList<F>;
 	backward: ActionList<F>;
 }
@@ -374,8 +374,6 @@ function wasACapture(move: MoveFull): boolean {
 }
 
 // Exports ---------------------------------------------------------------------
-
-export type { genericChangeFunc, ChangeApplication, Change };
 
 export default {
 	// Constants

@@ -20,7 +20,7 @@ import 'dotenv/config'; // Imports all properties of process.env, if it exists
 // Types ------------------------------------------------------------------------------------------
 
 /** The payload of the JWT token, containing user information. */
-interface TokenPayload {
+export interface TokenPayload {
 	user_id: number;
 	username: string;
 	roles: Role[] | null;
@@ -105,5 +105,3 @@ export {
 	// Verifying Tokens
 	verifyTokenPayload,
 };
-
-export type { TokenPayload };

@@ -9,13 +9,8 @@
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/util/typeutil.js';
-import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConstructionOptions } from '../../../../../shared/chess/game/gameformulator.js';
-import type {
-	Additional,
-	GameFile,
-	LoadedVariant,
-} from '../../../../../shared/chess/logic/gamefile.js';
+import type { GameFile, LoadedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
@@ -289,5 +284,3 @@ export default {
 	unloadGame,
 	concludeGame,
 };
-
-export type { PresetAnnotes, Additional };

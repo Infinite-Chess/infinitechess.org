@@ -5,14 +5,13 @@
  * of the currently selected piece's legal moves.
  */
 
-import type { Ray } from './annotations/annotations.js';
 import type { Line } from './highlightline.js';
 
 import bd from '@naviary/bigdecimal';
 
 import geometry from '../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
-import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
+import vectors, { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import coordutil, { BDCoords, Coords, CoordsKey } from '../../../../../../shared/util/coordutil.js';
 
 import boardpos from '../../../board/rendering/boardpos.js';

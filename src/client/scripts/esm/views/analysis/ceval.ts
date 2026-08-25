@@ -30,7 +30,7 @@ import { maxEngineThreads, THREAD_CAP } from '../../game/chess/engines/enginewas
 // Types ------------------------------------------------------------------------
 
 /** Engine settings, persisted to localStorage. */
-interface CevalSettings {
+export interface CevalSettings {
 	/** Number of engine lines to search & display (1-5). */
 	multiPv: number;
 	/** Transposition table size in MB. */
@@ -42,7 +42,7 @@ interface CevalSettings {
 }
 
 /** A PV line normalized for the UI. */
-interface CevalLine {
+export interface CevalLine {
 	/** Compact ICN move tokens ("x,y>x,y=Q"), from the analyzed position. */
 	moves: string[];
 	/** Centipawns, white POV. Absent when mating. */
@@ -54,7 +54,7 @@ interface CevalLine {
 }
 
 /** A normalized engine update for the UI. */
-interface CevalUpdate {
+export interface CevalUpdate {
 	depth: number;
 	seldepth: number;
 	nodes: number;
@@ -79,11 +79,11 @@ interface CevalUpdate {
  * `crashed` = this position reliably panics the engine;
  * `blocked` carries why the engine won't touch the position.
  */
-type CevalStatus =
+export type CevalStatus =
 	| { kind: 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'crashed' }
 	| { kind: 'blocked'; reason: EngineSupportCode };
 
-interface CevalLegalMovesUpdate {
+export interface CevalLegalMovesUpdate {
 	requestId: number;
 	moves: string[];
 }
@@ -958,5 +958,3 @@ export default {
 	HASH_OPTIONS,
 	MAX_MULTI_PV,
 };
-
-export type { CevalSettings, CevalLine, CevalUpdate, CevalStatus, CevalLegalMovesUpdate };

@@ -34,10 +34,10 @@ import typeutil, { players as p, rawTypes as r } from '../../util/typeutil.js';
  * The range does NOT have to intersect the piece owning the slide (for example [8n, 12n],
  * which could be the case for colinear blocks), but limits[0] <= limits[1] is true ALWAYS.
  */
-type SlideLimits = [bigint | null, bigint | null];
+export type SlideLimits = [bigint | null, bigint | null];
 
 /** An object containing all the legal moves of a piece. */
-interface LegalMoves {
+export interface LegalMoves {
 	/** A list of the legal jumping move coordinates: `[[1,2], [2,1]]` */
 	individual: CoordsTagged[];
 	/** A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}` */
@@ -623,8 +623,6 @@ function hasAtleast1Move(moves: LegalMoves, boardsim: Board, piece: Piece): bool
 }
 
 // Exports ---------------------------------------------------------------------
-
-export type { LegalMoves, SlideLimits };
 
 export default {
 	getPieceMoveset,
