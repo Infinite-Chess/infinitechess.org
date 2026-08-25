@@ -31,24 +31,44 @@ const pieceTheme = 'pieceTheme';
 
 // Types -----------------------------------------------------------------------
 
+/** Every theme property, and the type of value it holds. */
 interface ThemeProperties {
 	[lightTiles]: Color;
 	[darkTiles]: Color;
 	[legalMovesHighlightColor_Friendly]: Color;
 	[legalMovesHighlightColor_Opponent]: Color;
 	[legalMovesHighlightColor_Premove]: Color;
-	[lastMoveHighlightColor]?: Color;
-	[checkHighlightColor]?: Color;
-	[boxOutlineColor]?: Color;
-	[annoteSquareColor]?: Color;
-	[annoteArrowColor]?: Color;
-	[pieceTheme]?: Partial<PieceColorGroup>;
+	[lastMoveHighlightColor]: Color;
+	[checkHighlightColor]: Color;
+	[boxOutlineColor]: Color;
+	[annoteSquareColor]: Color;
+	[annoteArrowColor]: Color;
+	[pieceTheme]: Partial<PieceColorGroup>;
+}
+
+/** What a theme is, and the properties it may override. */
+interface Theme extends Partial<ThemeProperties> {
+	[lightTiles]: Color;
+	[darkTiles]: Color;
+	[legalMovesHighlightColor_Friendly]: Color;
+	[legalMovesHighlightColor_Opponent]: Color;
+	[legalMovesHighlightColor_Premove]: Color;
 }
 
 // Constants -------------------------------------------------------------------
 
-/** The values a theme inherits for every property it does not set itself. */
-const DEFAULTS: Partial<ThemeProperties> = {
+/**
+ * The values a theme inherits for every property it does not set itself.
+ *
+ * The board colors are deliberately garish — no theme omits them, so they only
+ * ever surface as a bug signal if the user's stored theme name isn't one we recognize.
+ */
+const DEFAULTS: ThemeProperties = {
+	[lightTiles]: [1, 0, 1, 1],
+	[darkTiles]: [0, 0, 0, 1],
+	[legalMovesHighlightColor_Friendly]: [1, 0, 1, 0.5],
+	[legalMovesHighlightColor_Opponent]: [1, 0, 1, 0.5],
+	[legalMovesHighlightColor_Premove]: [1, 0, 1, 0.5],
 	[lastMoveHighlightColor]: [0.72, 1, 0, 0.28],
 	[checkHighlightColor]: [1, 0, 0, 0.7],
 	[boxOutlineColor]: [1, 1, 1, 0.45],
@@ -61,7 +81,7 @@ const DEFAULTS: Partial<ThemeProperties> = {
 const DEFAULT_THEME = 'wood_light';
 
 /** Every selectable theme, keyed by the name the user picks it by. */
-const THEMES: { [themeName: string]: ThemeProperties } = {
+const THEMES: { [themeName: string]: Theme } = {
 	wood_light: {
 		// 5D Chess
 		[lightTiles]: [1, 0.85, 0.66, 1],
@@ -291,8 +311,12 @@ const THEMES: { [themeName: string]: ThemeProperties } = {
 // Functions -------------------------------------------------------------------
 
 /** Returns a theme's property, falling back to {@link DEFAULTS}. Deep-copied, so callers may mutate it. */
-function getPropertyOfTheme(themeName: string, property: keyof ThemeProperties): any {
-	const value = THEMES[themeName]?.[property] ?? DEFAULTS[property]!;
+function getPropertyOfTheme<P extends keyof ThemeProperties>(
+	themeName: string,
+	property: P,
+): ThemeProperties[P] {
+	const theme: Partial<ThemeProperties> | undefined = THEMES[themeName];
+	const value: ThemeProperties[P] = theme?.[property] ?? DEFAULTS[property];
 	return jsutil.deepCopyObject(value);
 }
 
