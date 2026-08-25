@@ -167,7 +167,8 @@ function addGameRecordsInTransaction(
 	ratingData: RatingData | undefined,
 ): void {
 	const match = servergame.match;
-	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(match.clock);
+	const { baseTimeSeconds: base_time_seconds, incrementSeconds: increment_seconds } =
+		clockutil.splitTimeControl(match.clock);
 
 	// Assemble the ICN metadata once on demand from the game's source-of-truth props.
 	const metadata = gamestatebuilder.buildMetadata(servergame, ratingData);

@@ -72,12 +72,12 @@ export const VALID_INCREMENT_SECS = [
 function isTimedControlValid(time: TimeControl): boolean {
 	if (time === '-') return true;
 	const parsed = splitTimeControl(time);
-	if (parsed.base_time_seconds === null || parsed.increment_seconds === null) return false;
-	const baseTimeMinutes = parsed.base_time_seconds / 60;
+	if (parsed.baseTimeSeconds === null || parsed.incrementSeconds === null) return false;
+	const baseTimeMinutes = parsed.baseTimeSeconds / 60;
 	return (
 		Number.isInteger(baseTimeMinutes) &&
 		VALID_BASE_MINUTES.includes(baseTimeMinutes) &&
-		VALID_INCREMENT_SECS.includes(parsed.increment_seconds)
+		VALID_INCREMENT_SECS.includes(parsed.incrementSeconds)
 	);
 }
 
@@ -136,25 +136,25 @@ function getTimeControlLabel(clock: TimeControl): string {
  * @throws If either half is NaN, the base time is not positive, or the increment is negative.
  */
 function splitTimeControl(time_control: TimeControl): {
-	base_time_seconds: number | null;
-	increment_seconds: number | null;
+	baseTimeSeconds: number | null;
+	incrementSeconds: number | null;
 } {
 	// Check for the untimed indicator first
-	if (time_control === '-') return { base_time_seconds: null, increment_seconds: null };
+	if (time_control === '-') return { baseTimeSeconds: null, incrementSeconds: null };
 	// Split the time control string into base time and increment
-	const [base_time_seconds, increment_seconds] = time_control.split('+').map((part) => +part) as [
+	const [baseTimeSeconds, incrementSeconds] = time_control.split('+').map((part) => +part) as [
 		number,
 		number,
 	]; // Convert them into a number
 	// Throw error if either of them are Nan, or negative
 	if (
-		isNaN(base_time_seconds) ||
-		isNaN(increment_seconds) ||
-		base_time_seconds <= 0 ||
-		increment_seconds < 0
+		isNaN(baseTimeSeconds) ||
+		isNaN(incrementSeconds) ||
+		baseTimeSeconds <= 0 ||
+		incrementSeconds < 0
 	)
 		throw new Error(`Invalid time control: ${time_control}`);
-	return { base_time_seconds, increment_seconds };
+	return { baseTimeSeconds, incrementSeconds };
 }
 
 /**
@@ -162,11 +162,11 @@ function splitTimeControl(time_control: TimeControl): {
  * A `null` base time -> untimed (`'-'`).
  */
 function buildTimeControl(
-	base_time_seconds: number | null,
-	increment_seconds: number | null,
+	baseTimeSeconds: number | null,
+	incrementSeconds: number | null,
 ): TimeControl {
-	if (base_time_seconds === null) return '-';
-	return `${base_time_seconds}+${increment_seconds ?? 0}`;
+	if (baseTimeSeconds === null) return '-';
+	return `${baseTimeSeconds}+${incrementSeconds ?? 0}`;
 }
 
 /**
@@ -175,8 +175,8 @@ function buildTimeControl(
  */
 function getSpeedCategory(time_control: TimeControl): SpeedCategory {
 	if (isClockValueInfinite(time_control)) return 'infinite';
-	const { base_time_seconds, increment_seconds } = splitTimeControl(time_control);
-	const estimate = base_time_seconds! + 40 * increment_seconds!;
+	const { baseTimeSeconds, incrementSeconds } = splitTimeControl(time_control);
+	const estimate = baseTimeSeconds! + 40 * incrementSeconds!;
 	// if (estimate < 30) return 'ultra-bullet'; // For now our shortest offered base time is 1 minute.
 	if (estimate < 180) return 'bullet';
 	if (estimate < 480) return 'blitz';

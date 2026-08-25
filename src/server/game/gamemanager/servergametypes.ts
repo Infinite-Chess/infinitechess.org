@@ -105,7 +105,7 @@ export interface MatchInfo {
 	/** Whether the match is rated. */
 	rated: boolean;
 	/**
-	 * The time control of the game (e.g. `"600+5"` or `"-"` for untimed).
+	 * The time control `s+s` of the game (e.g. `"600+5"` or `"-"` for untimed).
 	 * Guaranteed defined here because we can't read it from MetaData since it is optional there.
 	 */
 	clock: TimeControl;
