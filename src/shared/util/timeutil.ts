@@ -193,7 +193,6 @@ export default {
 	isCurrentDateWithinRange,
 	timestampToISO,
 	sqliteToTimestamp,
-	sqliteToISO,
 	timestampToSqlite,
 	getRelativeTimeString,
 	getRelativeTimeStringIntl,
