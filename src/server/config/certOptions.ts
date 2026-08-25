@@ -30,7 +30,7 @@ const certPath = path.join(certDir, 'cert.pem');
  * the origin with `noTLSVerify`. So a self-signed cert is sufficient in every
  * environment, and its validity is never checked by anything.
  */
-export function getCertOptions(): { key: Buffer; cert: Buffer } {
+function get(): { key: Buffer; cert: Buffer } {
 	ensureSelfSignedCertificate(); // Generates cert.key/cert.pem on first run if missing
 	return {
 		key: fs.readFileSync(keyPath),
@@ -73,3 +73,7 @@ function ensureSelfSignedCertificate(): void {
 
 	console.log('Generated self-signed certificate.');
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { get };

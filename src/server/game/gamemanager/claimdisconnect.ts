@@ -15,8 +15,8 @@ import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/util/typeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import logEvents from '../../utility/logEvents.js';
 import gamelifecycle from './gamelifecycle.js';
-import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Functions ----------------------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ function mayClaimAgainstOpponent(servergame: ServerGame, ourColor: Player): bool
 /** Called when a client tries to claim victory against their disconnected opponent. */
 function claimVictory(servergame: ServerGame, ourRole: Player): void {
 	if (!mayClaimAgainstOpponent(servergame, ourRole)) {
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Player tried to claim victory in game ${servergame.match.id} when they were not allowed to! Ignoring..`,
 			'hackLog',
 		);
@@ -49,7 +49,7 @@ function claimVictory(servergame: ServerGame, ourRole: Player): void {
 /** Called when a client tries to claim a draw against their disconnected opponent. */
 function claimDraw(servergame: ServerGame, ourRole: Player): void {
 	if (!mayClaimAgainstOpponent(servergame, ourRole)) {
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Player tried to claim a draw in game ${servergame.match.id} when they were not allowed to! Ignoring..`,
 			'hackLog',
 		);

@@ -8,8 +8,8 @@
 import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
+import logEvents from '../utility/logEvents.js';
 import refreshTokenManager from './refreshTokenManager.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
 import pendingRegistrationManager from './pendingRegistrationManager.js';
 
 // Constants ----------------------------------------------------------------------------------
@@ -40,13 +40,13 @@ function checkDatabaseIntegrity(): void {
 		const result = db.get<{ integrity_check: string }>('PRAGMA integrity_check;');
 
 		if (result?.integrity_check !== 'ok')
-			logEventsAndPrint(
+			logEvents.addAndPrint(
 				`Database integrity check failed: ${result?.integrity_check} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`,
 				'errLog',
 			);
 	} catch (error: unknown) {
 		const errorMessage = jsutil.getErrorMessage(error);
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Error performing database integrity check: ${errorMessage} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`,
 			'errLog',
 		);
@@ -66,7 +66,7 @@ function deleteExpiredPasswordResetTokens(): void {
 	} catch (error) {
 		const errorMessage =
 			'Failed to delete expired password reset tokens: ' + jsutil.getErrorMessage(error);
-		logEventsAndPrint(errorMessage, 'errLog');
+		logEvents.addAndPrint(errorMessage, 'errLog');
 	}
 }
 
@@ -89,7 +89,7 @@ function cleanUpExpiredRefreshTokens(): void {
 		const result = db.run(query, [now, consumptionThreshold]);
 
 		if (result.changes > 0) {
-			logEventsAndPrint(
+			logEvents.addAndPrint(
 				`Cleanup: Deleted ${result.changes} expired/consumed refresh tokens.`,
 				'tokenCleanupLog',
 			);
@@ -97,6 +97,6 @@ function cleanUpExpiredRefreshTokens(): void {
 	} catch (error) {
 		const errorMessage =
 			'Failed to delete expired refresh tokens: ' + jsutil.getErrorMessage(error);
-		logEventsAndPrint(errorMessage, 'errLog');
+		logEvents.addAndPrint(errorMessage, 'errLog');
 	}
 }

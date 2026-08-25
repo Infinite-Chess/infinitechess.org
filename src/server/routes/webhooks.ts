@@ -7,7 +7,7 @@
 
 import express from 'express';
 
-import { handleSesWebhook } from '../controllers/awsWebhook.js';
+import awsWebhook from '../controllers/awsWebhook.js';
 
 const router = express.Router();
 
@@ -15,6 +15,6 @@ const router = express.Router();
 const awsParser = express.json({ limit: '256kb', type: ['text/plain', 'application/json'] });
 
 // AWS Simple Email Service (SES) bounce/complaint/delivery notifications.
-router.post('/ses', awsParser, handleSesWebhook);
+router.post('/ses', awsParser, awsWebhook.handle);
 
 export default router;

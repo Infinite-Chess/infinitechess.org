@@ -12,14 +12,9 @@ import type { MemberRecord } from '../database/memberManager.js';
 
 import bcrypt from 'bcrypt';
 
+import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
-import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
-import {
-	getBrowserAgent,
-	onCorrectPassword,
-	onIncorrectPassword,
-	rateLimitLogin,
-} from './authRatelimiter.js';
+import authRatelimiter from './authRatelimiter.js';
 
 /**
  * Called when any fetch request submits login form data.
@@ -49,8 +44,8 @@ async function testPasswordForRequest(
 	// Rate limit keyed on the CLAIMED identifier BEFORE the database lookup, so a real
 	// account and a nonexistent one are throttled identically. Otherwise the lockout cooldown
 	// would only ever appear for accounts that exist, becoming an enumeration oracle.
-	const browserAgent = getBrowserAgent(req, searchValue.toLowerCase());
-	if (!rateLimitLogin(req, res, browserAgent)) return undefined; // They are being rate limited from entering incorrectly too many times
+	const browserAgent = authRatelimiter.getBrowserAgent(req, searchValue.toLowerCase());
+	if (!authRatelimiter.limitLogin(req, res, browserAgent)) return undefined; // They are being rate limited from entering incorrectly too many times
 
 	try {
 		const record = memberManager.getDataByCriteria(
@@ -65,18 +60,18 @@ async function testPasswordForRequest(
 			record !== undefined && (await bcrypt.compare(claimedPassword, record.hashed_password));
 		if (!match) {
 			const attemptedIdentity = record?.username ?? searchValue;
-			logEvents(
-				`Failed login attempt for "${escapeLogNewlines(attemptedIdentity)}".`,
+			logEvents.add(
+				`Failed login attempt for "${logEvents.escapeLogNewlines(attemptedIdentity)}".`,
 				'loginAttempts',
 			);
 			res.status(401).json({
 				message: req.t.responses.auth.invalid_credentials,
 			}); // Unauthorized — generic message to avoid account enumeration
-			onIncorrectPassword(browserAgent, attemptedIdentity);
+			authRatelimiter.onIncorrectPassword(browserAgent, attemptedIdentity);
 			return undefined;
 		}
 
-		onCorrectPassword(browserAgent);
+		authRatelimiter.onCorrectPassword(browserAgent);
 
 		return { user_id: record.user_id, username: record.username, roles: record.roles };
 	} catch {
@@ -108,4 +103,6 @@ function verifyBodyHasLoginFormData(
 	return { claimedUsername: username, claimedPassword: password };
 }
 
-export { testPasswordForRequest };
+// Exports ------------------------------------------------------------------------------------
+
+export default { testPasswordForRequest };

@@ -13,7 +13,7 @@ import type { Request, Response } from 'express';
  * @param message - Localized error text, for the JSON and plain-text replies.
  * @param renderHtml - Renders the SSR error page. Omit to never render one.
  */
-function respondError(req: Request, res: Response, message: string, renderHtml?: () => void): void {
+function send(req: Request, res: Response, message: string, renderHtml?: () => void): void {
 	if (renderHtml && isBrowserNavigation(req)) renderHtml();
 	else if (req.accepts('json')) res.json({ message });
 	else res.type('txt').send(message);
@@ -24,4 +24,6 @@ function isBrowserNavigation(req: Request): boolean {
 	return req.accepts('html') !== false && req.get('Sec-Fetch-Mode') === 'navigate';
 }
 
-export { respondError };
+// Exports ------------------------------------------------------------------------------------
+
+export default { send };

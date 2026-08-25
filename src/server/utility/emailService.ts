@@ -9,10 +9,10 @@ import jsutil from '../../shared/util/jsutil.js';
 import { interpolate } from '../../shared/util/interpolate.js';
 
 import mailer from './mailer.js';
+import urlUtils from './urlUtils.js';
+import logEvents from './logEvents.js';
 import emailTemplates from './emailTemplates.js';
 import blacklistManager from '../database/blacklistManager.js';
-import { getAppBaseUrl } from './urlUtils.js';
-import { logEventsAndPrint } from './logEvents.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
 
 // Email Senders -----------------------------------------------------------------------------------
@@ -33,14 +33,14 @@ async function sendEmailConfirmation(
 ): Promise<void> {
 	try {
 		if (blacklistManager.isBlacklisted(recipientEmail)) {
-			logEventsAndPrint(
+			logEvents.addAndPrint(
 				`[BLOCKED] Skipping email confirmation to ${recipientEmail} (Blacklisted)`,
 				'blacklistLog',
 			);
 			return;
 		}
 
-		const baseUrl = getAppBaseUrl();
+		const baseUrl = urlUtils.getAppBaseUrl();
 		const verificationUrl = new URL(`${baseUrl}/verify/${verificationToken}`).toString();
 
 		const email = componentTranslationLoader.getScript('email', language);
@@ -65,7 +65,7 @@ async function sendEmailConfirmation(
 		if (!sent) console.log(`Verification Link: ${verificationUrl}`);
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Error during sendEmailConfirmation to ${recipientEmail}: ${detail}`,
 			'errLog',
 		);
@@ -103,7 +103,7 @@ async function sendPasswordResetEmail(
 		if (!sent) console.log(`Password Reset Link: ${resetUrl}`);
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
-		logEventsAndPrint(`Error sending password reset email: ${detail}`, 'errLog');
+		logEvents.addAndPrint(`Error sending password reset email: ${detail}`, 'errLog');
 	}
 }
 
@@ -113,7 +113,7 @@ async function sendPasswordResetEmail(
  * @param language - The recipient's language code (`req.lang`).
  */
 async function sendPasswordChangedEmail(recipientEmail: string, language: string): Promise<void> {
-	const baseUrl = getAppBaseUrl();
+	const baseUrl = urlUtils.getAppBaseUrl();
 	const forgotPassUrl = new URL(`${baseUrl}/forgot-password`).toString();
 
 	try {
@@ -140,7 +140,7 @@ async function sendPasswordChangedEmail(recipientEmail: string, language: string
 		});
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Error sending password changed email to ${recipientEmail}: ${detail}`,
 			'errLog',
 		);
@@ -162,7 +162,7 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 		if (!sent) console.log("Didn't send rating abuse email.");
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Error during the sending of rating abuse email with subject "${messageSubject}": ${detail}`,
 			'errLog',
 		);

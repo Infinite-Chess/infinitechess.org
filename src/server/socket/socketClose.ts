@@ -13,7 +13,7 @@ import socketSubs from './socketSubs.js';
 import socketRegistry from './socketRegistry.js';
 
 /** Tears a closed websocket down: unregisters it, unsubscribes all its subscriptions, clears timers. */
-export function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
+function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	const reasonString = reason.toString();
 
 	// Delete connection from object.
@@ -31,3 +31,7 @@ export function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void
 
 	socketsend.clearPendingState(ws);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { onclose };

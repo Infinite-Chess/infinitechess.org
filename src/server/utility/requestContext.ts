@@ -9,7 +9,7 @@
  * Built on AsyncLocalStorage: an in-memory store scoped to an async call
  * chain, synchronously readable anywhere downstream (surviving awaits)
  * without passing `req` around. Context is created at exactly two entry
- * points: assignRequestID middleware, and runWithRequestID (wrapping
+ * points: assignID middleware, and runWithID (wrapping
  * the ws upgrade handshake and each incoming ws message).
  *
  * Context follows the causal chain ONLY, so an ID is never wrong:
@@ -51,7 +51,7 @@ function generateRequestID(prefix: 'R' | 'W'): string {
 }
 
 /** Middleware that runs the rest of the request pipeline inside a context holding a fresh request ID. */
-function assignRequestID(_req: Request, _res: Response, next: NextFunction): void {
+function assignID(_req: Request, _res: Response, next: NextFunction): void {
 	storage.run({ requestID: generateRequestID('R') }, next);
 }
 
@@ -59,7 +59,7 @@ function assignRequestID(_req: Request, _res: Response, next: NextFunction): voi
  * Runs the callback inside a context holding a fresh request ID. Used for the
  * websocket upgrade handshake ('R') and each incoming websocket message ('W').
  */
-function runWithRequestID<T>(callback: () => T, prefix: 'R' | 'W'): T {
+function runWithID<T>(callback: () => T, prefix: 'R' | 'W'): T {
 	return storage.run({ requestID: generateRequestID(prefix) }, callback);
 }
 
@@ -67,8 +67,16 @@ function runWithRequestID<T>(callback: () => T, prefix: 'R' | 'W'): T {
  * Returns the request ID of the call chain we're currently executing in,
  * or undefined when not triggered by a request (startup, connection handshakes, etc.).
  */
-function getRequestID(): string | undefined {
+function getID(): string | undefined {
 	return storage.getStore()?.requestID;
 }
 
-export { REQUEST_ID_PLACEHOLDER, ID_LENGTH, assignRequestID, runWithRequestID, getRequestID };
+// Exports ------------------------------------------------------------------------------------
+
+export default {
+	REQUEST_ID_PLACEHOLDER,
+	ID_LENGTH,
+	assignID,
+	runWithID,
+	getID,
+};

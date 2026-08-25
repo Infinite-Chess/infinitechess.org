@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer';
 import { fromEnv } from '@aws-sdk/credential-providers';
 import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
 
-import { logEvents } from './logEvents.js';
+import logEvents from './logEvents.js';
 
 // Types ------------------------------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ async function send(type: EmailType, options: SendMailOptions): Promise<boolean>
 	});
 
 	// Log trail of every email sent: its category and SES messageId.
-	logEvents(`${type} | ${info.response}`, 'sentEmailsLog');
+	logEvents.add(`${type} | ${info.response}`, 'sentEmailsLog');
 
 	return true;
 }

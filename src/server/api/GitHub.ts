@@ -20,8 +20,8 @@ import { request, RequestOptions } from 'node:https';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import { logZodError } from '../utility/zodlogger.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
+import zodlogger from '../utility/zodlogger.js';
+import logEvents from '../utility/logEvents.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -72,7 +72,7 @@ const INTERVAL_TO_REFRESH_CONTRIBUTORS_MS = 1000 * 60 * 60 * 3; // 3 hours
 let contributors: Contributor[] = loadContributorsSnapshot();
 
 /** The id of the interval to update contributors. Can be used to cancel it if the API token isn't specified. */
-const intervalId = setInterval(refreshGitHubContributorsList, INTERVAL_TO_REFRESH_CONTRIBUTORS_MS);
+const intervalId = setInterval(refreshContributorsList, INTERVAL_TO_REFRESH_CONTRIBUTORS_MS);
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -86,7 +86,7 @@ function loadContributorsSnapshot(): Contributor[] {
 		return JSON.parse(fs.readFileSync(PATH_TO_CONTRIBUTORS_FILE).toString());
 	} catch (error: unknown) {
 		const errMsg = jsutil.getErrorMessage(error);
-		logEventsAndPrint(`Error parsing the contributors snapshot: ${errMsg}`, 'errLog');
+		logEvents.addAndPrint(`Error parsing the contributors snapshot: ${errMsg}`, 'errLog');
 		return [];
 	}
 }
@@ -95,7 +95,7 @@ function loadContributorsSnapshot(): Contributor[] {
  * Uses GitHub's API to fetch all contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
  * and updates our list!
  */
-function refreshGitHubContributorsList(): void {
+function refreshContributorsList(): void {
 	const { GITHUB_API_KEY, GITHUB_REPO } = process.env;
 
 	if (
@@ -104,7 +104,7 @@ function refreshGitHubContributorsList(): void {
 		GITHUB_API_KEY.length === 0 ||
 		GITHUB_REPO.length === 0
 	) {
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			'Either Github API key not detected, or repository not specified. Stopping updating contributor list.',
 			'errLog',
 		);
@@ -136,7 +136,7 @@ function refreshGitHubContributorsList(): void {
 		res.on('end', async () => {
 			const body = Buffer.concat(chunks);
 			if (res.statusCode !== 200)
-				return logEventsAndPrint(
+				return logEvents.addAndPrint(
 					`Response from GitHub when using API to get contributor list: ${body.toString()}`,
 					'errLog',
 				);
@@ -147,13 +147,13 @@ function refreshGitHubContributorsList(): void {
 				unvalidatedJson = JSON.parse(response);
 			} catch (error: unknown) {
 				const errMsg = jsutil.getErrorMessage(error);
-				logEventsAndPrint('Error parsing contributors JSON: ' + errMsg, 'errLog');
+				logEvents.addAndPrint('Error parsing contributors JSON: ' + errMsg, 'errLog');
 				return;
 			}
 
 			const parseResult = GitHubContributorSchema.safeParse(unvalidatedJson);
 			if (!parseResult.success) {
-				logZodError(
+				zodlogger.log(
 					unvalidatedJson,
 					parseResult.error,
 					'Invalid GitHub API response for contributors.',
@@ -175,9 +175,12 @@ function refreshGitHubContributorsList(): void {
 	// Handle request errors
 	req.on('error', (err) => {
 		if (err.name === 'AbortError') {
-			logEventsAndPrint('GitHub contributor request was aborted due to timeout.', 'errLog');
+			logEvents.addAndPrint(
+				'GitHub contributor request was aborted due to timeout.',
+				'errLog',
+			);
 		} else {
-			logEventsAndPrint(
+			logEvents.addAndPrint(
 				`Request error while fetching GitHub contributors: ${err.message}`,
 				'errLog',
 			);
@@ -187,7 +190,7 @@ function refreshGitHubContributorsList(): void {
 	// Add a timeout using AbortController if request takes too long
 	const abortTimeout = setTimeout(() => {
 		controller.abort();
-		logEventsAndPrint('GitHub API request timed out.', 'errLog');
+		logEvents.addAndPrint('GitHub API request timed out.', 'errLog');
 	}, 10000);
 
 	req.on('response', () => {
@@ -205,4 +208,6 @@ function getContributors(): Contributor[] {
 	return contributors;
 }
 
-export { refreshGitHubContributorsList, getContributors };
+// Exports ------------------------------------------------------------------------------------
+
+export default { refreshContributorsList, getContributors };

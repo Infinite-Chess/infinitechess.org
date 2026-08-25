@@ -8,14 +8,14 @@
 import type { IncomingMessage } from 'node:http';
 import type { Request, Response } from 'express';
 
-import { logEvents } from './logEvents.js';
-import { getClientIP } from './IP.js';
+import IP from './IP.js';
+import logEvents from './logEvents.js';
 
 // Functions --------------------------------------------------------------------------------------
 
 /** Logs one incoming request or websocket upgrade into `reqLog`. */
 function incoming(req: IncomingMessage): void {
-	const clientIP = getClientIP(req) || 'Unknown ip';
+	const clientIP = IP.get(req) || 'Unknown ip';
 	const origin = req.headers.origin || 'Unknown origin';
 	const agent = req.headers['user-agent'] || 'Unknown agent';
 
@@ -30,7 +30,7 @@ function incoming(req: IncomingMessage): void {
 
 	// Bodies are high-PII and left out
 	const logThis = `${origin}   ${clientIP}   ${method}   ${sanitizedUrl}   ${agent}`;
-	logEvents(logThis, 'reqLog');
+	logEvents.add(logThis, 'reqLog');
 }
 
 /** Middleware that logs the incoming HTTP request. */

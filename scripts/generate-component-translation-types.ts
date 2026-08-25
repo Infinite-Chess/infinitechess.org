@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { parse, TomlTable } from 'smol-toml';
 
 import tconfig from '../src/server/config/translationconfig';
-import { getComponentNames } from '../src/server/config/componentTranslationLoader';
+import componentTranslationLoader from '../src/server/config/componentTranslationLoader';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,7 +27,7 @@ const SCRIPT_OUTPUT_FILE = path.join(__dirname, '../src/shared/types/script-tran
 
 /** Generates the ScriptTranslations declaration file for components with [script] sections. */
 function generateScriptTranslations(): void {
-	const componentDirs = getComponentNames();
+	const componentDirs = componentTranslationLoader.getComponentNames();
 
 	const properties: string[] = [];
 

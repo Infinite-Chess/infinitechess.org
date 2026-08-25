@@ -26,7 +26,7 @@ import { promises as fsPromises } from 'fs';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import { REQUEST_ID_PLACEHOLDER, getRequestID } from './requestContext.js';
+import requestContext from './requestContext.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -67,11 +67,11 @@ function escapeLogNewlines(str: string): string {
  * @param message - The message to log.
  * @param logName - The base name of the log file, without the `.txt` extension.
  */
-async function logEventsAndPrint(message: string, logName: string): Promise<void> {
+async function addAndPrint(message: string, logName: string): Promise<void> {
 	if (logName === 'errLog') console.error(message);
 	else console.log(message); // Prevents non error logs from going to PM2's error logs.
 
-	await logEvents(message, logName);
+	await add(message, logName);
 }
 
 /**
@@ -79,7 +79,7 @@ async function logEventsAndPrint(message: string, logName: string): Promise<void
  * @param message - The message to log.
  * @param logName - The base name of the log file, without the `.txt` extension.
  */
-async function logEvents(message: string, logName: string): Promise<void> {
+async function add(message: string, logName: string): Promise<void> {
 	if (typeof message !== 'string')
 		return console.trace('Cannot log message when it is not a string.');
 	if (!logName) return console.trace('Log name MUST be provided when logging an event!');
@@ -87,7 +87,7 @@ async function logEvents(message: string, logName: string): Promise<void> {
 	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
 	// Tag the line with the ID of the request/socket-message that triggered
 	// it, if any, so all log lines it produced (across files) can be joined.
-	const requestID = getRequestID() ?? REQUEST_ID_PLACEHOLDER;
+	const requestID = requestContext.getID() ?? requestContext.REQUEST_ID_PLACEHOLDER;
 	const logItem = `${dateTime}  ${requestID}   ${message}\n`;
 
 	try {
@@ -139,7 +139,7 @@ function purgeOldRotatedLogs(): void {
 				}
 			} catch (err: unknown) {
 				const detail = jsutil.getErrorStack(err);
-				logEventsAndPrint(`Error purging old log file '${filePath}': ${detail}`, 'errLog');
+				addAndPrint(`Error purging old log file '${filePath}': ${detail}`, 'errLog');
 			}
 		}
 	}
@@ -147,4 +147,10 @@ function purgeOldRotatedLogs(): void {
 
 // Exports --------------------------------
 
-export { LOGS_DIR, logEvents, logEventsAndPrint, escapeLogNewlines, startPeriodicLogCleanup };
+export default {
+	LOGS_DIR,
+	add,
+	addAndPrint,
+	escapeLogNewlines,
+	startPeriodicLogCleanup,
+};

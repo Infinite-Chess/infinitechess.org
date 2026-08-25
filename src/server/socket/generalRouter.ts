@@ -12,7 +12,7 @@ import socketSubs from './socketSubs.js';
 // Functions ----------------------------------------------------------------------------------
 
 /** Routes a validated 'general' message to the handler for its action. */
-export function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGeneralMessage): void {
+function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGeneralMessage): void {
 	// Route them according to their action
 	switch (message.action) {
 		case 'sub':
@@ -25,3 +25,7 @@ export function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGen
 			console.error('UNKNOWN web socket action received in general route!', message satisfies never); // prettier-ignore
 	}
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { routeGeneralMessage };

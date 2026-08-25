@@ -20,7 +20,7 @@ import gamestatebuilder from './gamestatebuilder.js';
  * A lean reconnect for a game the client already knows is finalized:
  * its result is locked in, so only rematch-offer state can still change.
  */
-export function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
+function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 	const game = activegames.getByID(game_id);
 
 	if (game !== undefined) {
@@ -49,3 +49,7 @@ export function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 		socketsend.send(ws, 'game', 'unsub', undefined);
 	}
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { subscribeToRematch };

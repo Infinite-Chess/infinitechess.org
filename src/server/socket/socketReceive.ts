@@ -11,12 +11,12 @@ import type { ServerboundMessage } from '../../shared/transport/serverbound.js';
 import socketutil from '../../shared/util/socketutil.js';
 import { ServerboundSchema } from '../../shared/transport/serverbound.js';
 
+import zodlogger from '../utility/zodlogger.js';
+import logEvents from '../utility/logEvents.js';
 import socketsend from './socketSend.js';
 import requestMeter from '../utility/requestMeter.js';
 import socketLogger from './socketLogger.js';
-import { logZodError } from '../utility/zodlogger.js';
-import { routeIncomingSocketMessage } from './messageRouter.js';
-import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
+import messageRouter from './messageRouter.js';
 
 // Functions ----------------------------------------------------------------------------------
 
@@ -53,7 +53,7 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 	// Their message is evidence the connection is alive
 	socketsend.rescheduleHeartbeatTimer(ws);
 	try {
-		routeIncomingSocketMessage(ws, message);
+		messageRouter.routeIncomingSocketMessage(ws, message);
 	} finally {
 		// Acked even if the handler threw. The client releases its lock on this action when
 		// the ack lands, and an action stuck outstanding forever is worse than one acked
@@ -74,8 +74,8 @@ function parseAndValidateMessage(messageStr: string): ServerboundMessage | null 
 	} catch {
 		// Should only be reachable from explicitly crafted messages, but thus far
 		// no bots have exploited this. Safe to log in case it's ever a legit bug.
-		logEvents(
-			`Incoming websocket message is not JSON parseable. Message: "${escapeLogNewlines(messageStr)}"`,
+		logEvents.add(
+			`Incoming websocket message is not JSON parseable. Message: "${logEvents.escapeLogNewlines(messageStr)}"`,
 			'errLog',
 		);
 		return null;
@@ -85,7 +85,7 @@ function parseAndValidateMessage(messageStr: string): ServerboundMessage | null 
 	if (!result.success) {
 		// Should only be reachable from explicitly crafted messages, but thus far
 		// no bots have exploited this. Safe to log in case it's ever a legit bug.
-		logZodError(parsed, result.error, 'Received malformed websocket in-message.');
+		zodlogger.log(parsed, result.error, 'Received malformed websocket in-message.');
 		return null;
 	}
 

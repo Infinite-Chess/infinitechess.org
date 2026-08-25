@@ -23,7 +23,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * Configures Nunjucks as the view engine for the given Express app,
  * and injects the asset manifest as a template global.
  */
-export function configureNunjucks(app: Application): void {
+function configure(app: Application): void {
 	app.set('view engine', 'njk');
 
 	// Configure Nunjucks as the view engine.
@@ -73,3 +73,7 @@ function setManifestGlobals(env: nunjucks.Environment, assets: Record<string, st
 		getVersionedEngineName('apeiron', manifest.getEngineVersion()),
 	);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { configure };

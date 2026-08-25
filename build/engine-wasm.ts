@@ -12,7 +12,7 @@ import crypto from 'node:crypto';
 import * as z from 'zod';
 import { unzipSync } from 'fflate';
 
-import { logZodError } from '../src/server/utility/zodlogger';
+import zodlogger from '../src/server/utility/zodlogger';
 
 // Constants -------------------------------------------------------------------
 
@@ -93,7 +93,7 @@ export async function downloadEngineWasm(): Promise<void> {
 		const rawReleaseData = await response.json();
 		const parseResult = releaseDataSchema.safeParse(rawReleaseData);
 		if (!parseResult.success) {
-			logZodError(
+			zodlogger.log(
 				rawReleaseData,
 				parseResult.error,
 				`${label} GitHub API returned invalid data.`,

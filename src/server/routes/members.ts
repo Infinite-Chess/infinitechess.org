@@ -8,10 +8,10 @@
 
 import express from 'express';
 
-import { removeAccount } from '../controllers/deleteAccountController.js';
+import deleteAccountController from '../controllers/deleteAccountController.js';
 
 const router = express.Router();
 
-router.delete('/:member', removeAccount);
+router.delete('/:member', deleteAccountController.removeAccount);
 
 export default router;

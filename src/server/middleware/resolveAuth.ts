@@ -9,18 +9,18 @@ import type { Request, Response, NextFunction } from 'express';
 
 import jsutil from '../../shared/util/jsutil.js';
 
+import IP from '../utility/IP.js';
+import logEvents from '../utility/logEvents.js';
 import sessionManager from '../controllers/authenticationTokens/sessionManager.js';
-import { getClientIP } from '../utility/IP.js';
 import { ParsedCookies } from '../types.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
 
 /**
  * [HTTP] Resolves identity from the refresh-token cookie, setting `req.memberInfo` so downstream
  * middleware can gate private data. Also renews active sessions. Does DB work — only use on routes
  * that need authentication.
  */
-function resolveAuth(req: Request, res: Response, next: NextFunction): void {
+function resolve(req: Request, res: Response, next: NextFunction): void {
 	// Idempotent: skip if auth was already resolved for this request
 	if (req.memberInfo !== undefined) return next();
 
@@ -42,7 +42,7 @@ function tryRefreshToken(req: Request, res: Response): void {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return; // No refresh token present
 
-	const result = refreshTokenManager.validate(refreshToken, getClientIP(req));
+	const result = refreshTokenManager.validate(refreshToken, IP.get(req));
 
 	if (!result) {
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
@@ -64,7 +64,7 @@ function tryRefreshToken(req: Request, res: Response): void {
 		);
 	} catch (error) {
 		const errMsg = jsutil.getErrorMessage(error);
-		logEventsAndPrint(`Error freshening session: ${errMsg}`, 'errLog');
+		logEvents.addAndPrint(`Error freshening session: ${errMsg}`, 'errLog');
 	}
 
 	// Valid! Set their req.memberInfo property!
@@ -72,4 +72,6 @@ function tryRefreshToken(req: Request, res: Response): void {
 	req.memberInfo = { ...req.memberInfo, signedIn: true, ...result.payload }; // Username was our payload when we generated the access token
 }
 
-export { resolveAuth };
+// Exports ------------------------------------------------------------------------------------
+
+export default { resolve };

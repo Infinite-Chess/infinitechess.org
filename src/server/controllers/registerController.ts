@@ -12,16 +12,16 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
+import IP from '../utility/IP.js';
 import roles from './roles.js';
 import turnstile from './turnstile.js';
+import logEvents from '../utility/logEvents.js';
 import emailService from '../utility/emailService.js';
 import memberManager from '../database/memberManager.js';
 import sessionManager from './authenticationTokens/sessionManager.js';
-import { getClientIP } from '../utility/IP.js';
 import blacklistManager from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';
 import pendingRegistrationManager from '../database/pendingRegistrationManager.js';
-import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -95,7 +95,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	// From here on the token is spent, so these responses tell the client to re-issue a fresh one.
 	const turnstileResult = await turnstile.verify(turnstileToken, req);
 	if (turnstileResult === 'failed') {
-		logEvents(
+		logEvents.add(
 			`Registration rejected (turnstile failed): ${formatRegistrationLogMeta(req, username, email)}`,
 			'newMemberLog',
 		);
@@ -172,7 +172,7 @@ function verifyBodyHasRegisterFormData(
 	) {
 		// The page always sends a well-formed body, so this is a clean signal
 		// of a naive direct-POST bot that never rendered the Turnstile widget.
-		logEvents(
+		logEvents.add(
 			`Registration rejected (malformed body): ${formatRegistrationLogMeta(req, username, email)}`,
 			'newMemberLog',
 		);
@@ -186,9 +186,9 @@ function verifyBodyHasRegisterFormData(
 
 /** The metadata tail for a rejected-registration log line: `IP   username   email   userAgent`. */
 function formatRegistrationLogMeta(req: Request, username: unknown, email: unknown): string {
-	const ip = getClientIP(req) ?? 'Unknown ip';
+	const ip = IP.get(req) ?? 'Unknown ip';
 	const agent = req.headers['user-agent']!;
-	return escapeLogNewlines([ip, username ?? '', email ?? '', agent].join('   '));
+	return logEvents.escapeLogNewlines([ip, username ?? '', email ?? '', agent].join('   '));
 }
 
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */
@@ -328,7 +328,7 @@ function pollPendingRegistration(req: Request, res: Response): void {
 		);
 		if (member === undefined) {
 			// Should be unreachable: the pending row would never have been promoted if the member_user_id didn't exist.
-			logEventsAndPrint(
+			logEvents.addAndPrint(
 				`Pending registration verified to non-existent member_user_id (${pending.member_user_id})!`,
 				'errLog',
 			);
@@ -358,7 +358,7 @@ function pollPendingRegistration(req: Request, res: Response): void {
  * `GET /api/register/availability` — checks whether the `?username=` is free (not taken,
  * reserved, or profane). Responds `{ available: true } | { available: false, reason: string }`.
  */
-function checkUsernameAvailable(req: Request, res: Response): void {
+function isUsernameAvailable(req: Request, res: Response): void {
 	const username = req.query['username'];
 	if (typeof username !== 'string' || username.length === 0) {
 		// Unlocalized because the client always provides this
@@ -388,10 +388,12 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 	res.json({ available: true });
 }
 
-export {
+// Exports ------------------------------------------------------------------------------------
+
+export default {
 	createNewMember,
 	getAwaitingPageState,
 	changePendingEmail,
 	pollPendingRegistration,
-	checkUsernameAvailable,
+	isUsernameAvailable,
 };

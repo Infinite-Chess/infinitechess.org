@@ -12,8 +12,8 @@ import type { AbuseReportContext, SuspicionVerdict } from './ratingabusetypes.js
 
 import timeutil from '../../../shared/util/timeutil.js';
 
+import logEvents from '../../utility/logEvents.js';
 import emailService from '../../utility/emailService.js';
-import { logEvents } from '../../utility/logEvents.js';
 import ratingAbuseManager from '../../database/ratingAbuseManager.js';
 
 // Constants -------------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ function reportMeasurement(
 	lastAlertedAt: string | null,
 ): void {
 	if (!verdict.suspicious) {
-		void logEvents(
+		void logEvents.add(
 			`Innocent? Suspicion total weight: ${verdict.totalWeight}. ` +
 				`${describeMeasurement(ctx)}, and user seems innocent. ` +
 				buildBody(ctx, verdict, false),
@@ -49,7 +49,7 @@ ${describeMeasurement(ctx)}, and user might be cheating!
 ${buildBody(ctx, verdict, true)}
 	`;
 	console.log(`User ${ctx.username} is under suspicion of rating abuse (weight: ${verdict.totalWeight})! - Check ratingAbuseLog.txt for more details.`); // prettier-ignore
-	void logEvents('\n' + messageText, 'ratingAbuseLog');
+	void logEvents.add('\n' + messageText, 'ratingAbuseLog');
 
 	// If enough time has passed from the last alarm for that user, send an email about his rating abuse
 	if (
@@ -77,7 +77,7 @@ function reportNoRatingGain(
 	gameIds: number[],
 	gameInterval: number,
 ): void {
-	void logEvents(
+	void logEvents.add(
 		`Innocent: Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id}, but user net rating change ${netRatingChange} is not positive in the last ${gameInterval} games. Game IDs: ${JSON.stringify(gameIds)}.`,
 		'ratingAbuseLog',
 	);

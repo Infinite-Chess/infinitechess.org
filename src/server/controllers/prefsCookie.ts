@@ -14,7 +14,7 @@ import z from 'zod';
 import themes from '../../shared/components/header/themes.js';
 
 import memberManager from '../database/memberManager.js';
-import { readMemberInfoCookie } from './authenticationTokens/memberInfoCookie.js';
+import memberInfoCookie from './authenticationTokens/memberInfoCookie.js';
 
 // Types ------------------------------------------------------------------------------------------
 
@@ -51,11 +51,11 @@ function set(req: Request, res: Response): void {
 	// We give everyone this cookie as soon as they login.
 	// Since it is modifiable by JavaScript it's possible for them to
 	// grab preferences of other users this way, but there's no harm in that.
-	const memberInfoCookie = readMemberInfoCookie(req);
-	if (memberInfoCookie === undefined) return; // Not signed in, or the cookie was tampered (already logged).
+	const cookie = memberInfoCookie.read(req);
+	if (cookie === undefined) return; // Not signed in, or the cookie was tampered (already logged).
 
 	try {
-		const preferences = get(memberInfoCookie.user_id); // Fetch their preferences from the database
+		const preferences = get(cookie.user_id); // Fetch their preferences from the database
 		if (preferences) create(res, preferences);
 		// else no preferences set for this user, or the user doesn't exist.
 	} catch {

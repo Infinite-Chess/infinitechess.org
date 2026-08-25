@@ -10,12 +10,12 @@ import type { Request, Response } from 'express';
 import validators from '../../shared/util/validators.js';
 
 import roles from '../controllers/roles.js';
+import GitHub from './GitHub.js';
+import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
 import blacklistManager from '../database/blacklistManager.js';
-import { deleteAccount } from '../controllers/deleteAccountController.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
-import { refreshGitHubContributorsList } from './GitHub.js';
+import deleteAccountController from '../controllers/deleteAccountController.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -164,7 +164,7 @@ function deleteCommand(
 
 	if (!memberManager.isValidDeleteReason(reason))
 		throw Error(`Delete reason (${reason}) is invalid.`);
-	deleteAccount(record.user_id, reason);
+	deleteAccountController.deleteAccount(record.user_id, reason);
 
 	sendAndLogResponse(res, 200, 'Successfully deleted user ' + record.username + '.');
 }
@@ -309,7 +309,7 @@ function getUserInfo(command: string, commandAndArgs: string[], req: Request, re
 
 function updateContributorsCommand(command: string, req: Request, res: Response): void {
 	logCommand(command, req);
-	refreshGitHubContributorsList();
+	GitHub.refreshContributorsList();
 	sendAndLogResponse(res, 200, 'Contributors should now be updated!');
 }
 
@@ -365,7 +365,7 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 
 function logCommand(command: string, req: Request): void {
 	if (req.memberInfo?.signedIn) {
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` +
 				command,
 			'adminCommands',
@@ -376,7 +376,9 @@ function logCommand(command: string, req: Request): void {
 function sendAndLogResponse(res: Response, code: number, message: string): void {
 	res.status(code).send(message);
 	// Also log the sent response
-	logEventsAndPrint('Result:   ' + message + '\n', 'adminCommands');
+	logEvents.addAndPrint('Result:   ' + message + '\n', 'adminCommands');
 }
 
-export { processCommand };
+// Exports ------------------------------------------------------------------------------------
+
+export default { processCommand };

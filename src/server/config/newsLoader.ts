@@ -15,7 +15,7 @@ const englishNewsFolder = path.join(tconfig.NEWS_FOLDER, tconfig.DEFAULT_LANGUAG
  * @param supportedLanguages - A list of all languages with a TOML file.
  * @returns An object mapping language codes to their compiled news HTML.
  */
-export function loadNews(supportedLanguages: string[]): Record<string, string> {
+function loadNews(supportedLanguages: string[]): Record<string, string> {
 	const newsPosts: Record<string, string> = {};
 
 	/** Sorted English news posts filenames */
@@ -56,3 +56,7 @@ export function loadNews(supportedLanguages: string[]): Record<string, string> {
 
 	return newsPosts;
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { loadNews };

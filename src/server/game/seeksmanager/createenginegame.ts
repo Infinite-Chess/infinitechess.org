@@ -16,6 +16,7 @@ import typeutil, { players } from '../../../shared/util/typeutil.js';
 import { ENGINE_DICTIONARY, ValidEngine } from '../../../shared/chess/util/engine.js';
 
 import manifest from '../../config/manifest.js';
+import logEvents from '../../utility/logEvents.js';
 import createseek from './createseek.js';
 import socketsend from '../../socket/socketSend.js';
 import gamemanager from '../gamemanager/gamemanager.js';
@@ -23,7 +24,6 @@ import activeseeks from './activeseeks.js';
 import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
 import lobbysubscribers from './lobbysubscribers.js';
-import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------------------
 
@@ -46,7 +46,7 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 		body.strengthLevel > ENGINE_DICTIONARY[ONLINE_ENGINE].maxStrengthLevel ||
 		(body.variant.kind === 'preset' && !apeironcard.SUPPORTED_VARIANTS.has(body.variant.code))
 	) {
-		logEventsAndPrint('Player tried to create an engine game with invalid properties!', 'errLog'); // prettier-ignore
+		logEvents.addAndPrint('Player tried to create an engine game with invalid properties!', 'errLog'); // prettier-ignore
 		return;
 	}
 

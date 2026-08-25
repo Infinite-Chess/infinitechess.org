@@ -9,14 +9,14 @@ import type { Request, Response } from 'express';
 
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 
+import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
 import practiceProgressCookie from '../controllers/practiceProgressCookie.js';
-import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 /** `PUT /api/checkmates-progress` — records a checkmate the signed-in user has beaten. */
 function postCheckmateBeaten(req: Request, res: Response): void {
 	if (!req.memberInfo?.signedIn) {
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			"User tried to save checkmates_beaten when they weren't signed in!",
 			'errLog',
 		);
@@ -60,7 +60,7 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 		// Save the new list to the database
 		memberManager.updateColumns(user_id, { checkmates_beaten });
 
-		logEvents(
+		logEvents.add(
 			`Member "${username}" of id "${user_id}" has beaten practice checkmate ${new_checkmate_beaten}. Beaten count: ${checkmates_beaten_array.length}. New checkmates_beaten: ${checkmates_beaten}`,
 			'checkmates_beaten.txt',
 		);
@@ -72,4 +72,6 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 	}
 }
 
-export { postCheckmateBeaten };
+// Exports ------------------------------------------------------------------------------------
+
+export default { postCheckmateBeaten };

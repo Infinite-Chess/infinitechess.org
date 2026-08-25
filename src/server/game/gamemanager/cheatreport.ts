@@ -18,23 +18,19 @@ import type { GameStateMessage } from '../../../shared/transport/clientbound.js'
 import typeutil from '../../../shared/util/typeutil.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 
+import logEvents from '../../utility/logEvents.js';
 import gamelogger from './gamelogger.js';
 import socketsend from '../../socket/socketSend.js';
 import gamesockets from './gamesockets.js';
 import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
-import { logEvents } from '../../utility/logEvents.js';
 import gamestatebuilder from './gamestatebuilder.js';
 
 /**
  * A client reports their opponent's last move as illegal. A valid report pops
  * that move and aborts the game; an invalid one is refused and logged to hackLog.
  */
-export function onReport(
-	servergame: ServerGame,
-	ourRole: Player,
-	messageContents: ReportMessage,
-): void {
+function onReport(servergame: ServerGame, ourRole: Player, messageContents: ReportMessage): void {
 	if (gameutility.isEngineGame(servergame)) return;
 	console.log('Received cheat report! - Check hackLog.txt for more details.');
 
@@ -56,7 +52,7 @@ export function onReport(
 	// (i.e. games without server-side move validation AND are public)
 	if (servergame.validateMoves) {
 		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${gameutility.getVariantCode(servergame.match.variant) ?? 'Custom'}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourRole}. Game ID: ${servergame.match.id}`;
-		logEvents(errString, 'hackLog');
+		logEvents.add(errString, 'hackLog');
 		gamesockets.sendToColor(
 			servergame.match,
 			ourRole,
@@ -74,7 +70,7 @@ export function onReport(
 	);
 	if (colorThatPlayedPerpetratingMove === ourRole) {
 		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourRole}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
-		logEvents(errString, 'hackLog');
+		logEvents.add(errString, 'hackLog');
 		gamesockets.sendToColor(
 			servergame.match,
 			ourRole,
@@ -93,7 +89,7 @@ export function onReport(
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
 	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason} Color who reported: ${ourRole}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
-	logEvents(errText, 'hackLog');
+	logEvents.add(errText, 'hackLog');
 
 	// Notify all players a cheat was detected
 	for (const [colorStr, { socket: ws }] of Object.entries(servergame.match.playerData)) {
@@ -153,3 +149,7 @@ function concludeReportedGame(
 	// Update the already-logged game record to reflect the overturn (aborted, one fewer move...).
 	if (wasLogged) gamelogger.updateOverturned(servergame, originalConclusion!, cheaterColor);
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { onReport };

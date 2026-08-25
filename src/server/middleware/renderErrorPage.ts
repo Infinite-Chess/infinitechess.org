@@ -2,19 +2,19 @@
 
 import type { Request, Response } from 'express';
 
+import logEvents from '../utility/logEvents.js';
+import resolveAuth from './resolveAuth.js';
 import renderContext from '../utility/renderContext.js';
-import { resolveAuth } from './resolveAuth.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
 
 /**
  * Renders the styled SSR error page for `status`. Only call once HTML is wanted — it always renders.
  *
- * resolveAuth runs first (the header needs auth state); it's idempotent, so it covers errors that
+ * resolveAuth.resolve runs first (the header needs auth state); it's idempotent, so it covers errors that
  * reached here without passing a page route. Render errors are caught here rather than thrown, so a
  * failure can't loop back into the error handler.
  */
-function renderErrorPage(req: Request, res: Response, status: number): void {
-	resolveAuth(req, res, () => {
+function render(req: Request, res: Response, status: number): void {
+	resolveAuth.resolve(req, res, () => {
 		const context = renderContext.getErrorPageContext(req, status);
 		res.status(context.code).render(
 			'error.njk',
@@ -25,7 +25,7 @@ function renderErrorPage(req: Request, res: Response, status: number): void {
 					res.send(html);
 				} else {
 					// Log the rendering error and return the plain message
-					logEventsAndPrint(
+					logEvents.addAndPrint(
 						`Critical error rendering ${context.code} page: ${renderErr.stack}`,
 						'errLog',
 					);
@@ -36,4 +36,6 @@ function renderErrorPage(req: Request, res: Response, status: number): void {
 	});
 }
 
-export { renderErrorPage };
+// Exports ------------------------------------------------------------------------------------
+
+export default { render };

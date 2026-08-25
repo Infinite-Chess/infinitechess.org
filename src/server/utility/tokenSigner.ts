@@ -49,7 +49,7 @@ const EXTENDED_SESSION_EXPIRY_MS = 1000 * 60 * 60 * 24 * 180; // 180 days (~6 mo
  * @param expiryMillis - How long, in milliseconds, the token should remain valid.
  * @throws If the token fails to sign (payload not serializable, bad expiresIn, etc).
  */
-function signRefreshToken(
+function sign(
 	user_id: number,
 	username: string,
 	roles: Role[] | null,
@@ -77,7 +77,7 @@ function generatePayload(user_id: number, username: string, roles: Role[] | null
  * Extracts and decodes the payload from a refresh token, verifying its signature and expiry.
  * @returns The decoded payload, or null if verification failed — expired, tampered, or malformed.
  */
-function verifyTokenPayload(token: string): TokenPayload | null {
+function verify(token: string): TokenPayload | null {
 	try {
 		// Can cast because we know we originally signed it as an object, not a string.
 		const jwtPayload = jwt.verify(token, REFRESH_TOKEN_SECRET) as jwt.JwtPayload;
@@ -96,12 +96,12 @@ function verifyTokenPayload(token: string): TokenPayload | null {
 
 // Exports ------------------------------------------------------------------------------------------------
 
-export {
+export default {
 	// Constants
 	DEFAULT_SESSION_EXPIRY_MS,
 	EXTENDED_SESSION_EXPIRY_MS,
 	// Signing Tokens
-	signRefreshToken,
+	sign,
 	// Verifying Tokens
-	verifyTokenPayload,
+	verify,
 };

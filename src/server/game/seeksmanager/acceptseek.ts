@@ -13,6 +13,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 
+import logEvents from '../../utility/logEvents.js';
 import socketsend from '../../socket/socketSend.js';
 import gameutility from '../gamemanager/gameutility.js';
 import gamemanager from '../gamemanager/gamemanager.js';
@@ -21,7 +22,6 @@ import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
 import lobbysubscribers from './lobbysubscribers.js';
-import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 /**
  * Attempts to accept a seek of given id.
@@ -44,7 +44,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	// Make sure they are not accepting their own.
 	if (memberinfoutil.eq(user, seek.owner)) {
-		logEventsAndPrint('Player tried to accept their own seek!', 'errLog');
+		logEvents.addAndPrint('Player tried to accept their own seek!', 'errLog');
 		return;
 	}
 

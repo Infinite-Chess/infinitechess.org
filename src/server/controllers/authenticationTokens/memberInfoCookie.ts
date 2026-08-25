@@ -18,7 +18,7 @@ import type { MemberInfoCookie } from '../../../shared/types/memberinfo.js';
 import jsutil from '../../../shared/util/jsutil.js';
 import jsonutil from '../../../shared/util/jsonutil.js';
 
-import { logEventsAndPrint } from '../../utility/logEvents.js';
+import logEvents from '../../utility/logEvents.js';
 
 // Constants --------------------------------------------------------------------------------------
 
@@ -31,12 +31,7 @@ const COOKIE_OPTIONS = { httpOnly: false, sameSite: 'lax' as const, secure: true
  * Sets the `memberInfo` cookie (readable by JavaScript, not HTTP-only).
  * @param expiryMillis - How long, in milliseconds, the cookie should live (match the refresh token's expiry).
  */
-function createMemberInfoCookie(
-	res: Response,
-	user_id: number,
-	username: string,
-	expiryMillis: number,
-): void {
+function create(res: Response, user_id: number, username: string, expiryMillis: number): void {
 	const now = Date.now();
 	const memberInfo: MemberInfoCookie = {
 		user_id,
@@ -52,7 +47,7 @@ function createMemberInfoCookie(
 }
 
 /** Clears the `memberInfo` cookie, using the same options it was created with. */
-function deleteMemberInfoCookie(res: Response): void {
+function clear(res: Response): void {
 	res.clearCookie('memberInfo', COOKIE_OPTIONS);
 }
 
@@ -60,7 +55,7 @@ function deleteMemberInfoCookie(res: Response): void {
  * Reads, parses, and validates the `memberInfo` cookie from a request.
  * @returns The validated cookie, or `undefined` if it is absent (signed out) or tampered.
  */
-function readMemberInfoCookie(req: Request): MemberInfoCookie | undefined {
+function read(req: Request): MemberInfoCookie | undefined {
 	const cookies: ParsedCookies = req.cookies;
 	const stringified = cookies.memberInfo;
 	if (stringified === undefined) return undefined; // No cookie present, not logged in.
@@ -71,7 +66,7 @@ function readMemberInfoCookie(req: Request): MemberInfoCookie | undefined {
 		return parsed;
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`memberInfo cookie was tampered: "${jsonutil.ensureJSONString(stringified)}"\n${detail}`,
 			'errLog',
 		);
@@ -95,4 +90,6 @@ function isMemberInfoCookie(value: unknown): value is MemberInfoCookie {
 	);
 }
 
-export { createMemberInfoCookie, deleteMemberInfoCookie, readMemberInfoCookie };
+// Exports ------------------------------------------------------------------------------------
+
+export default { create, clear, read };

@@ -10,12 +10,13 @@ import type { Request } from 'express';
 import type { Player } from '../../shared/util/typeutil.js';
 import type { VariantCode } from '../../shared/chess/util/variantcodes.js';
 import type { VariantGroup } from '../../shared/chess/variants/variantregistry.js';
+import type { GameMetaViewModel } from './gamePageController.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../shared/util/typeutil.js';
 
 import gamesManager from '../database/gamesManager.js';
-import { getDeadGameViewState, GameMetaViewModel } from './gamePageController.js';
+import gamePageController from './gamePageController.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -55,7 +56,7 @@ function getPageState(req: Request): AnalysisPageState | undefined {
 		if (id === undefined) return undefined; // Malformed id
 		// The analysis page loads games from the DB only, so 404 on anything not in it
 		// (unlike the game page, a still-live game not yet persisted doesn't count).
-		const deadState = getDeadGameViewState(req, id);
+		const deadState = gamePageController.getDeadGameViewState(req, id);
 		if (deadState === undefined) return undefined; // Game not in the database
 		gameId = id;
 		({ viewColor, meta } = deadState);

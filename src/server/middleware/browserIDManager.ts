@@ -14,7 +14,7 @@ import type { CookieOptions, Request, Response } from 'express';
 import crypto from 'crypto';
 
 import banned from '../database/banned.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
+import logEvents from '../utility/logEvents.js';
 
 // Constants ----------------------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ function makePermanent(req: Request, res: Response, browserID: string): void {
 	setCookie(res, browserID, Number.MAX_SAFE_INTEGER /* FOREVER!! */);
 
 	const logThis = `Making banned browser-id PERMANENT: ${browserID} !!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']!}`;
-	logEventsAndPrint(logThis, 'bannedIPLog');
+	logEvents.addAndPrint(logThis, 'bannedIPLog');
 }
 
 export default { assignOrRenew };

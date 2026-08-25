@@ -7,11 +7,12 @@
  */
 
 import type { Request } from 'express';
+import type { TokenPayload } from '../utility/tokenSigner.js';
 
 import db from './database.js';
+import IP from '../utility/IP.js';
+import tokenSigner from '../utility/tokenSigner.js';
 import memberManager from './memberManager.js';
-import { getClientIP } from '../utility/IP.js';
-import { verifyTokenPayload, TokenPayload } from '../utility/tokenSigner.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -106,7 +107,7 @@ function add(
         INSERT INTO refresh_tokens (token, user_id, created_at, expires_at, is_persistent, ip_address)
         VALUES (?, ?, ?, ?, ?, ?)
 	`;
-	const ip_address = getClientIP(req) || null;
+	const ip_address = IP.get(req) || null;
 	db.call(
 		() =>
 			db.run(query, [
@@ -188,7 +189,7 @@ function validate(
 	IP?: string,
 ): { payload: TokenPayload; tokenRecord: RefreshTokenRecord } | undefined {
 	// Decode the token
-	const payload = verifyTokenPayload(token);
+	const payload = tokenSigner.verify(token);
 	if (!payload) return undefined; // Expired or tampered
 
 	let tokenRecord: RefreshTokenRecord | undefined;

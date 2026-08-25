@@ -30,7 +30,7 @@ import gamelifecycle from './gamelifecycle.js';
  * Called when a client offers a rematch of a concluded game. Relays the offer to the
  * opponent, or — if the opponent has already offered — creates the rematch game.
  */
-export function offerRematch(servergame: ServerGame, ourRole: Player): void {
+function offerRematch(servergame: ServerGame, ourRole: Player): void {
 	if (!gamefileutility.isGameOver(servergame))
 		return console.error('Client offered a rematch when the game is not over. Ignoring.');
 
@@ -123,3 +123,7 @@ function createRematchGame(oldGame: ServerGame): void {
 	for (const { socket, role } of toNavigate)
 		socketsend.send(socket, 'game', 'ingame', { id: newGameID, role });
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { offerRematch };

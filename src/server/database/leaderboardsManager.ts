@@ -10,8 +10,8 @@ import type { Leaderboard } from '../../shared/chess/variants/leaderboardregistr
 import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
+import logEvents from '../utility/logEvents.js';
 import ratingcalculation from '../utility/ratingcalculation.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -248,10 +248,13 @@ function updateAllRatingDeviationsOfLeaderboardTable(): void {
 				updatedRD,
 			);
 		}
-		logEventsAndPrint(`Updated all rating deviations in leaderboard table.`, 'leaderboardLog');
+		logEvents.addAndPrint(
+			`Updated all rating deviations in leaderboard table.`,
+			'leaderboardLog',
+		);
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Error updating all rating deviations in leaderboard table: ${detail}`,
 			'errLog',
 		);

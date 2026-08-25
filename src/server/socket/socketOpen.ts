@@ -12,20 +12,20 @@ import { parse as parseCookie } from 'cookie';
 
 import socketutil from '../../shared/util/socketutil.js';
 
+import IP from '../utility/IP.js';
 import reqLogger from '../utility/reqLogger.js';
+import logEvents from '../utility/logEvents.js';
 import socketsend from './socketSend.js';
-import { onclose } from './socketClose.js';
+import errorGuard from '../utility/errorGuard.js';
+import socketClose from './socketClose.js';
 import reqLanguage from '../config/reqLanguage.js';
 import requestMeter from '../utility/requestMeter.js';
 import socketLogger from './socketLogger.js';
 import socketReceive from './socketReceive.js';
 import socketRegistry from './socketRegistry.js';
-import { getClientIP } from '../utility/IP.js';
+import requestContext from '../utility/requestContext.js';
 import reqTranslations from '../config/reqTranslations.js';
-import { executeSafely } from '../utility/errorGuard.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
-import { runWithRequestID } from '../utility/requestContext.js';
-import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 // Functions ----------------------------------------------------------------------------------
 
@@ -100,7 +100,7 @@ function closeIfInvalidAndAddMetadata(
 		origin === undefined ||
 		(process.env['NODE_ENV'] !== 'development' && origin !== process.env['APP_BASE_URL'])
 	) {
-		logEvents(
+		logEvents.add(
 			`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`,
 			'hackLog',
 		);
@@ -108,9 +108,9 @@ function closeIfInvalidAndAddMetadata(
 		return;
 	}
 
-	const IP = getClientIP(req);
-	if (IP === undefined) {
-		logEvents('Unable to identify IP address from websocket connection!', 'hackLog');
+	const ip = IP.get(req);
+	if (ip === undefined) {
+		logEvents.add('Unable to identify IP address from websocket connection!', 'hackLog');
 		socket.close(1008, socketutil.ClosureReasons.UNIDENTIFIABLE_IP);
 		return;
 	}
@@ -141,7 +141,7 @@ function closeIfInvalidAndAddMetadata(
 		userAgent,
 		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
 		id: socketRegistry.generateUniqueID(), // Sets the ws.metadata.id property of the websocket
-		IP,
+		IP: ip,
 		echoTimers: {},
 	};
 
@@ -158,10 +158,10 @@ function addListenersToSocket(ws: CustomWebSocket): void {
 	ws.on('message', (message: Buffer<ArrayBufferLike>) => {
 		// Each incoming message gets its own correlation ID,
 		// tagging every log line its processing produces.
-		// (Counterpart of assignRequestID for HTTP.)
-		runWithRequestID(
+		// (Counterpart of requestContext.assignID for HTTP.)
+		requestContext.runWithID(
 			() =>
-				executeSafely(
+				errorGuard.executeSafely(
 					() => socketReceive.onmessage(ws, message),
 					'Error caught within websocket on-message event:',
 				),
@@ -169,13 +169,16 @@ function addListenersToSocket(ws: CustomWebSocket): void {
 		);
 	});
 	ws.on('close', (code, reason) => {
-		executeSafely(
-			() => onclose(ws, code, reason),
+		errorGuard.executeSafely(
+			() => socketClose.onclose(ws, code, reason),
 			'Error caught within websocket on-close event:',
 		);
 	});
 	ws.on('error', (error) => {
-		executeSafely(() => onerror(error), 'Error caught within websocket on-error event:');
+		errorGuard.executeSafely(
+			() => onerror(error),
+			'Error caught within websocket on-error event:',
+		);
 	});
 }
 
@@ -198,12 +201,12 @@ function onerror(error: Error): void {
 		// this big after ~8 hours of nonstop max-rate zooming out on mobile, so it's worth
 		// knowing if it ever happens.
 		if (error.code === 'WS_ERR_UNSUPPORTED_MESSAGE_LENGTH')
-			logEvents('Client sent too big a websocket message.', 'hackLog');
+			logEvents.add('Client sent too big a websocket message.', 'hackLog');
 		return;
 	}
 
 	const errText = `An error occurred in a websocket: ${error.stack}`;
-	logEventsAndPrint(errText, 'errLog');
+	logEvents.addAndPrint(errText, 'errLog');
 }
 
 // Exports ------------------------------------------------------------------------------------

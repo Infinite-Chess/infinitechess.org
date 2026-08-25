@@ -39,7 +39,7 @@ import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import { players as p } from '../../../shared/util/typeutil.js';
 import { isGameServerValidated } from '../../../shared/chess/variants/servervalidation.js';
 
-import { logEventsAndPrint } from '../../utility/logEvents.js';
+import logEvents from '../../utility/logEvents.js';
 
 // Construction -------------------------------------------------------------------------------
 
@@ -276,7 +276,7 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): void {
 	const newTime = servergame.clocks.timeRemainAtTurnStart! - timeElapsedSinceTurnStart;
 	const playerdata = servergame.clocks.currentTime;
 	if (playerdata[servergame.whosTurn] === undefined) {
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Cannot update games clock values when whose turn doesn't have a clock! "${servergame.whosTurn}"`,
 			'errLog',
 		);

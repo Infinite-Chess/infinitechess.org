@@ -10,12 +10,12 @@
 import express from 'express';
 
 import rateLimiters from '../middleware/rateLimiters.js';
-import { handleLogin } from '../controllers/loginController.js';
-import { handleLogout } from '../controllers/logoutController.js';
+import loginController from '../controllers/loginController.js';
+import logoutController from '../controllers/logoutController.js';
 
 const router = express.Router();
 
-router.post('/auth', rateLimiters.authAttempt, handleLogin);
-router.post('/logout', handleLogout);
+router.post('/auth', rateLimiters.authAttempt, loginController.handleLogin);
+router.post('/logout', logoutController.handleLogout);
 
 export default router;

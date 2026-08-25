@@ -29,6 +29,7 @@ import wincondition from '../../../shared/chess/logic/wincondition.js';
 import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import logEvents from '../../utility/logEvents.js';
 import socketsend from '../../socket/socketSend.js';
 import onOfferDraw from './onOfferDraw.js';
 import gamemanager from './gamemanager.js';
@@ -37,7 +38,6 @@ import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
 import liveGameValues from './liveGameValues.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Constants ----------------------------------------------------------------------------------
 
@@ -53,7 +53,7 @@ const TELEPORT_LIMIT_DIGITS = bimath.countDigits(gamelimits.TELEPORT_LIMIT);
  * adds the move to the game's move list, adjusts the game's
  * properties, and alerts their opponent of the move.
  */
-export function submitMove(
+function submitMove(
 	ws: CustomWebSocket,
 	servergame: ServerGame,
 	messageContents: SubmitMoveMessage,
@@ -90,7 +90,7 @@ export function submitMove(
 	const expectedMoveNumber = servergame.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-		logEventsAndPrint(errString, 'hackLog');
+		logEvents.addAndPrint(errString, 'hackLog');
 		gamesockets.sendGameState(servergame, role, false);
 		return;
 	}
@@ -99,7 +99,7 @@ export function submitMove(
 	const moveParsed = doesMoveCheckOut(messageContents.move);
 	if (moveParsed === null) {
 		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-		logEventsAndPrint(errString, 'hackLog');
+		logEvents.addAndPrint(errString, 'hackLog');
 		socketsend.send(ws, 'general', 'printerror', 'Invalid move format.');
 		return;
 	}
@@ -107,7 +107,7 @@ export function submitMove(
 	// Check if the move exceeds the soft distance cap based on game duration
 	if (!isMoveWithinDistanceCap(moveParsed, servergame.match.timeCreated)) {
 		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-		logEventsAndPrint(errString, 'hackLog');
+		logEvents.addAndPrint(errString, 'hackLog');
 		// Force their move list to match ours, else they keep the rejected move
 		// and resubmit it on every resync, desynced for the rest of the game.
 		gamesockets.sendGameState(servergame, role, true);
@@ -184,7 +184,7 @@ function applyServerValidatedMove(
 	const validationResult = movevalidation.validateMove(servergame, moveParsed);
 	if (!validationResult.valid) {
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-		logEventsAndPrint(errString, 'hackLog');
+		logEvents.addAndPrint(errString, 'hackLog');
 		// Send the sender the current game state to correct their board if a bug somehow caused this
 		gamesockets.sendGameState(servergame, role, true); // forceSync true to force their move list to match ours
 		// Send notifyerror last to override any previous toasts
@@ -224,7 +224,7 @@ function applyClientReportedMove(
 ): MoveRecord | undefined {
 	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, role)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-		logEventsAndPrint(errString, 'hackLog');
+		logEvents.addAndPrint(errString, 'hackLog');
 		socketsend.send(ws, 'general', 'printerror', 'Invalid game conclusion.');
 		return;
 	}
@@ -334,3 +334,7 @@ function buildMoveMessage(servergame: ServerGame, move: MoveRecord): OpponentsMo
 	if (!servergame.untimed) message.clockValues = gameutility.getClockValues(servergame);
 	return message;
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { submitMove };

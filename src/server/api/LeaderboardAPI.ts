@@ -7,9 +7,9 @@
 import type { Request, Response } from 'express';
 import type { Leaderboard } from '../../shared/chess/variants/leaderboardregistry.js';
 
+import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
 import leaderboardsManager from '../database/leaderboardsManager.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------
 
@@ -25,7 +25,7 @@ const MAX_N_PLAYERS_REQUEST_CAP = 100;
  * `GET /api/leaderboards/:leaderboard_id/top` — returns the top N (`n_players`) players from
  * `start_rank`, plus the requester's own rank when `include_requester_rank` is set.
  */
-function getLeaderboardData(req: Request, res: Response): void {
+function getData(req: Request, res: Response): void {
 	/** ID of leaderboard to be fetched (lives in the path b/c it identifies the resource) */
 	const leaderboard_id = Number(req.params['leaderboard_id']) as Leaderboard;
 
@@ -71,7 +71,7 @@ function getLeaderboardData(req: Request, res: Response): void {
 		for (const player of top_players) {
 			const username = usernameByUserID.get(player.user_id);
 			if (username === undefined) {
-				logEventsAndPrint(
+				logEvents.addAndPrint(
 					`Username of user with user_id ${player.user_id} could not be found in members table, even though it was found in leaderboard table by leaderboardsManager.getTopPlayers().`,
 					'errLog',
 				);
@@ -158,4 +158,6 @@ function getRankStringOfRequester(
 	return requester_elo.confident ? `#${requester_rank}` : `#${requester_rank}?`;
 }
 
-export { getLeaderboardData };
+// Exports ------------------------------------------------------------------------------------
+
+export default { getData };

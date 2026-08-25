@@ -8,8 +8,8 @@ import type { Request, Response } from 'express';
 
 import { interpolate } from '../../shared/util/interpolate.js';
 
-import { getClientIP } from '../utility/IP.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
+import IP from '../utility/IP.js';
+import logEvents from '../utility/logEvents.js';
 
 // Types ----------------------------------------------------------------------------
 
@@ -51,7 +51,7 @@ const TIME_TO_DELETE_BROWSER_AGENT_AFTER_NO_ATTEMPTS_MS = 1000 * 60 * 5; // 5 mi
  * Prevents a user-IP combination from entering login attempts too fast.
  * @returns true if the attempt is allowed
  */
-function rateLimitLogin(req: Request, res: Response, browserAgent: string): boolean {
+function limitLogin(req: Request, res: Response, browserAgent: string): boolean {
 	const now = new Date();
 	loginAttemptData[browserAgent] = loginAttemptData[browserAgent] || {
 		attempts: 0,
@@ -101,7 +101,7 @@ function rateLimitLogin(req: Request, res: Response, browserAgent: string): bool
  * concatenated with no separator.
  */
 function getBrowserAgent(req: Request, username: string): string {
-	const clientIP = getClientIP(req);
+	const clientIP = IP.get(req);
 	// The colon separates username from IP; usernames are strictly alphanumeric,
 	// so no concatenation of two different pairs can collide.
 	return `${username}:${clientIP}`;
@@ -156,7 +156,7 @@ function cancelTimerToDeleteBrowserAgent(browserAgent: string): void {
 function startTimerToDeleteBrowserAgent(browserAgent: string): void {
 	loginAttemptData[browserAgent]!.deleteTimeoutID = setTimeout(() => {
 		delete loginAttemptData[browserAgent];
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Allowing browser agent "${browserAgent}" to login without cooldown again!`,
 			'loginAttempts',
 		);
@@ -173,7 +173,7 @@ function onIncorrectPassword(browserAgent: string, username: string): void {
 	if (loginAttemptData[browserAgent]!.attempts < MAX_LOGIN_ATTEMPTS) return; // Don't lock them yet
 	// Lock them!
 	loginAttemptData[browserAgent]!.cooldownTimeSecs += LOGIN_COOLDOWN_INCREMENTOR_SECS;
-	logEventsAndPrint(
+	logEvents.addAndPrint(
 		`${username} got login locked for ${loginAttemptData[browserAgent]!.cooldownTimeSecs} seconds`,
 		'loginAttempts',
 	);
@@ -190,4 +190,6 @@ function onCorrectPassword(browserAgent: string): void {
 	delete loginAttemptData[browserAgent];
 }
 
-export { rateLimitLogin, onCorrectPassword, onIncorrectPassword, getBrowserAgent };
+// Exports ------------------------------------------------------------------------------------
+
+export default { limitLogin, getBrowserAgent, onIncorrectPassword, onCorrectPassword };

@@ -1,7 +1,7 @@
 // src/server/database/blacklistManager.ts
 
 import db from './database.js';
-import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
+import logEvents from '../utility/logEvents.js';
 
 // Functions ----------------------------------------------------------------------------------
 
@@ -21,8 +21,8 @@ function add(email: string, reason: string): void {
 			]),
 		`Database error when blacklisting email ${email}`,
 	);
-	logEvents(
-		`Added ${escapeLogNewlines(email)} to blacklist for reason: ${reason}`,
+	logEvents.add(
+		`Added ${logEvents.escapeLogNewlines(email)} to blacklist for reason: ${reason}`,
 		'blacklistLog',
 	);
 }
@@ -37,7 +37,7 @@ function remove(email: string): void {
 		() => db.run(`DELETE FROM email_blacklist WHERE email = ?`, [email.toLowerCase()]), // Lowercased to match the stored (lowercase) rows.
 		`Database error when removing email ${email} from blacklist`,
 	);
-	logEvents(`Removed ${escapeLogNewlines(email)} from blacklist`, 'blacklistLog');
+	logEvents.add(`Removed ${logEvents.escapeLogNewlines(email)} from blacklist`, 'blacklistLog');
 }
 
 /**

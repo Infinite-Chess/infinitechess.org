@@ -29,13 +29,15 @@ const COOKIE_OPTIONS: CookieOptions = {
  * Creates and sets the HTTP-only `jwt` cookie containing the refresh token.
  * @param expiryMillis - How long, in milliseconds, the cookie should live (match the token's expiry).
  */
-function createRefreshTokenCookie(res: Response, refreshToken: string, expiryMillis: number): void {
+function create(res: Response, refreshToken: string, expiryMillis: number): void {
 	res.cookie('jwt', refreshToken, { ...COOKIE_OPTIONS, maxAge: expiryMillis });
 }
 
 /** Clears the `jwt` cookie, using the same options it was created with. */
-function deleteRefreshTokenCookie(res: Response): void {
+function clear(res: Response): void {
 	res.clearCookie('jwt', COOKIE_OPTIONS);
 }
 
-export { createRefreshTokenCookie, deleteRefreshTokenCookie };
+// Exports ------------------------------------------------------------------------------------
+
+export default { create, clear };

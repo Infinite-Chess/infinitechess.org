@@ -10,15 +10,11 @@ import type { Role } from '../../types.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 import prefsCookie from '../prefsCookie.js';
+import tokenSigner from '../../utility/tokenSigner.js';
+import memberInfoCookie from './memberInfoCookie.js';
+import refreshTokenCookie from './refreshTokenCookie.js';
 import refreshTokenManager from '../../database/refreshTokenManager.js';
 import practiceProgressCookie from '../practiceProgressCookie.js';
-import { createMemberInfoCookie, deleteMemberInfoCookie } from './memberInfoCookie.js';
-import { createRefreshTokenCookie, deleteRefreshTokenCookie } from './refreshTokenCookie.js';
-import {
-	DEFAULT_SESSION_EXPIRY_MS,
-	EXTENDED_SESSION_EXPIRY_MS,
-	signRefreshToken,
-} from '../../utility/tokenSigner.js';
 
 // Constants ---------------------------------------------------------------------------------------
 
@@ -49,10 +45,12 @@ function freshen(
 
 	// Renew with the same session type the user originally chose
 	const keepLoggedIn = Boolean(tokenRecord.is_persistent);
-	const expiryMillis = keepLoggedIn ? EXTENDED_SESSION_EXPIRY_MS : DEFAULT_SESSION_EXPIRY_MS;
+	const expiryMillis = keepLoggedIn
+		? tokenSigner.EXTENDED_SESSION_EXPIRY_MS
+		: tokenSigner.DEFAULT_SESSION_EXPIRY_MS;
 
 	// Create the new token.
-	const newToken = signRefreshToken(user_id, username, roles, expiryMillis);
+	const newToken = tokenSigner.sign(user_id, username, roles, expiryMillis);
 
 	// Mark old token as consumed so it has a short grace period before it is fully invalidated.
 	refreshTokenManager.markConsumed(tokenRecord.token);
@@ -82,10 +80,12 @@ function create(
 	roles: Role[] | null,
 	keepLoggedIn: boolean,
 ): void {
-	const expiryMillis = keepLoggedIn ? EXTENDED_SESSION_EXPIRY_MS : DEFAULT_SESSION_EXPIRY_MS;
+	const expiryMillis = keepLoggedIn
+		? tokenSigner.EXTENDED_SESSION_EXPIRY_MS
+		: tokenSigner.DEFAULT_SESSION_EXPIRY_MS;
 
 	// The payload can be an object with their username and their roles.
-	const refreshToken = signRefreshToken(user_id, username, roles, expiryMillis);
+	const refreshToken = tokenSigner.sign(user_id, username, roles, expiryMillis);
 
 	// Save the refresh token to the database
 	refreshTokenManager.add(req, user_id, refreshToken, expiryMillis, keepLoggedIn);
@@ -126,8 +126,8 @@ function createSessionCookies(
 	refreshToken: string,
 	expiryMillis: number,
 ): void {
-	createRefreshTokenCookie(res, refreshToken, expiryMillis);
-	createMemberInfoCookie(res, userId, username, expiryMillis);
+	refreshTokenCookie.create(res, refreshToken, expiryMillis);
+	memberInfoCookie.create(res, userId, username, expiryMillis);
 }
 
 /**
@@ -135,8 +135,8 @@ function createSessionCookies(
  * @param res - The response object.
  */
 function deleteSessionCookies(res: Response): void {
-	deleteRefreshTokenCookie(res);
-	deleteMemberInfoCookie(res);
+	refreshTokenCookie.clear(res);
+	memberInfoCookie.clear(res);
 }
 
 // Exports -----------------------------------------------------------------------------------------

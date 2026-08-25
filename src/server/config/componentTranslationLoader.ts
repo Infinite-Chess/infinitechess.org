@@ -167,7 +167,7 @@ function getTemplate(component: string, lang: string): Record<string, any> {
  * @param component - The component name, e.g. "leaderboard"
  * @param lang - The language code, e.g. "de-DE"
  */
-export function getScript<C extends keyof ScriptTranslations>(
+function getScript<C extends keyof ScriptTranslations>(
 	component: C,
 	lang: string,
 ): ScriptTranslations[C] {
@@ -197,7 +197,7 @@ function getLangOptions(): LanguageOption[] {
 // Utility ------------------------------------------------------------------------------------
 
 /** Returns the filtered list of component names from the translation folder. */
-export function getComponentNames(): string[] {
+function getComponentNames(): string[] {
 	return fs
 		.readdirSync(tconfig.TRANSLATION_FOLDER, { withFileTypes: true })
 		.filter((e) => e.isDirectory() && !tconfig.EXCLUDED_DIRS.includes(e.name))
@@ -294,4 +294,5 @@ export default {
 	getScript,
 	getSupportedLangs,
 	getLangOptions,
+	getComponentNames,
 };

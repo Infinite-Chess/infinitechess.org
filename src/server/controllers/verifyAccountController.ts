@@ -9,7 +9,7 @@
 import type { Request, Response } from 'express';
 import type { PendingRegistrationRecord } from '../database/pendingRegistrationManager.js';
 
-import { logEvents } from '../utility/logEvents.js';
+import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
 import pendingRegistrationManager from '../database/pendingRegistrationManager.js';
 
@@ -67,7 +67,7 @@ function verifyPendingRegistration(req: Request, res: Response): void {
 		// Promote: actually create the member and mark the pending row verified.
 		const user_id = memberManager.promote(pending);
 
-		logEvents(`Created new member "${pending.username}" (ID ${user_id}).`, 'newMemberLog');
+		logEvents.add(`Created new member "${pending.username}" (ID ${user_id}).`, 'newMemberLog');
 
 		res.sendStatus(200);
 	} catch {

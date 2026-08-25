@@ -22,6 +22,7 @@ import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
 import db from '../../database/database.js';
+import logEvents from '../../utility/logEvents.js';
 import gameutility from './gameutility.js';
 import gamesManager from '../../database/gamesManager.js';
 import gamestatebuilder from './gamestatebuilder.js';
@@ -30,7 +31,6 @@ import ratingcalculation from '../../utility/ratingcalculation.js';
 import engineGamesManager from '../../database/engineGamesManager.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
-import { logEvents, logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -60,11 +60,11 @@ function log(servergame: ServerGame): RatingData | undefined {
 		// This block will only execute if the transaction throws an error, causing a rollback.
 		const errorMessage = jsutil.getErrorMessage(error);
 		const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
-		void logEventsAndPrint(
+		void logEvents.addAndPrint(
 			`FATAL: Game log transaction failed and was rolled back for Game ID ${servergame.match.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`,
 			'errLog',
 		);
-		void logEvents(
+		void logEvents.add(
 			`Game: ${gameutility.getSimplifiedGameString(servergame)}`,
 			'unloggedGames.txt',
 		);
@@ -430,7 +430,7 @@ function updateOverturned(
 		transaction();
 	} catch (error) {
 		const errorMessage = jsutil.getErrorMessage(error);
-		void logEventsAndPrint(
+		void logEvents.addAndPrint(
 			`Failed to update overturned game ${match.id} in the database after a cheat report. The permanent record may be inconsistent with the in-memory (aborted) result. Error: ${errorMessage}`,
 			'errLog',
 		);

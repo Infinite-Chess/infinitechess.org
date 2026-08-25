@@ -17,7 +17,7 @@ import type { IncomingMessage } from 'http';
  * @param req - The incoming HTTP request or websocket upgrade request.
  * @returns The client IP as a string, or `undefined` if it can't be determined (e.g. closed socket).
  */
-export function getClientIP(req: IncomingMessage): string | undefined {
+function get(req: IncomingMessage): string | undefined {
 	const cfConnectingIP = req.headers['cf-connecting-ip'];
 	if (typeof cfConnectingIP === 'string') return cfConnectingIP;
 
@@ -25,3 +25,7 @@ export function getClientIP(req: IncomingMessage): string | undefined {
 	// where the raw socket peer IS the client.
 	return req.socket.remoteAddress;
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { get };

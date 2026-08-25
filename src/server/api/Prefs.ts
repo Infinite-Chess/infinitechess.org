@@ -7,15 +7,18 @@
 
 import type { Request, Response } from 'express';
 
+import zodlogger from '../utility/zodlogger.js';
+import logEvents from '../utility/logEvents.js';
 import prefsCookie from '../controllers/prefsCookie.js';
 import memberManager from '../database/memberManager.js';
-import { logZodError } from '../utility/zodlogger.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
 
 /** `PUT /api/preferences` — replaces the signed-in user's preferences in the database. */
-function putPrefs(req: Request, res: Response): void {
+function put(req: Request, res: Response): void {
 	if (!req.memberInfo?.signedIn) {
-		logEventsAndPrint("User tried to save preferences when they weren't signed in!", 'errLog');
+		logEvents.addAndPrint(
+			"User tried to save preferences when they weren't signed in!",
+			'errLog',
+		);
 		res.sendStatus(401);
 		return;
 	}
@@ -27,7 +30,7 @@ function putPrefs(req: Request, res: Response): void {
 	// Validate preferences using Zod schema
 	const parseResult = prefsCookie.PreferencesSchema.safeParse(preferences);
 	if (!parseResult.success) {
-		logZodError(
+		zodlogger.log(
 			preferences,
 			parseResult.error,
 			`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database.`,
@@ -47,4 +50,6 @@ function putPrefs(req: Request, res: Response): void {
 	}
 }
 
-export { putPrefs };
+// Exports ------------------------------------------------------------------------------------
+
+export default { put };

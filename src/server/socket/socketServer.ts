@@ -14,8 +14,8 @@ import type { Server as HttpsServer } from 'https';
 import WebSocket, { WebSocketServer as Server } from 'ws';
 
 import socketOpen from './socketOpen.js';
-import { executeSafely } from '../utility/errorGuard.js';
-import { runWithRequestID } from '../utility/requestContext.js';
+import errorGuard from '../utility/errorGuard.js';
+import requestContext from '../utility/requestContext.js';
 
 // Constants ----------------------------------------------------------------------------------
 
@@ -60,10 +60,10 @@ function start(httpsServer: HttpsServer): void {
 	});
 	WebSocketServer.on('connection', (socket: WebSocket, req: IncomingMessage) => {
 		// An upgrade is an HTTP request → give the handshake a fresh 'R' correlation context,
-		// so its reqLog and wsInLog lines share an id. (Counterpart of assignRequestID for HTTP.)
-		runWithRequestID(
+		// so its reqLog and wsInLog lines share an id. (Counterpart of requestContext.assignID for HTTP.)
+		requestContext.runWithID(
 			() =>
-				executeSafely(
+				errorGuard.executeSafely(
 					() => socketOpen.onConnectionRequest(socket, req),
 					'Error caught within websocket on-connection request:',
 				),

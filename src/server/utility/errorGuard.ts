@@ -5,7 +5,7 @@
  * catching any errors that may occur, logging them to the error log.
  */
 
-import { logEventsAndPrint } from './logEvents.js';
+import logEvents from './logEvents.js';
 
 /**
  * Executes a callback function and catches any errors that occur.
@@ -19,10 +19,12 @@ function executeSafely(callback: () => void, errorMessage: string): boolean {
 	} catch (e) {
 		const stack = e instanceof Error ? e.stack : 'Exception is not of Error type!';
 		const errText = `${errorMessage}\n${stack}`;
-		logEventsAndPrint(errText, 'errLog');
+		logEvents.addAndPrint(errText, 'errLog');
 		return false;
 	}
 	return true;
 }
 
-export { executeSafely };
+// Exports ------------------------------------------------------------------------------------
+
+export default { executeSafely };

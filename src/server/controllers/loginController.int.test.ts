@@ -4,8 +4,8 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import { testRequest } from '../../tests/testRequest.js';
 
+import accountSeeder from './accountSeeder.js';
 import databaseTables from '../database/databaseTables.js';
-import { generateAccount } from './accountSeeder.js';
 
 describe('Login Controller Integration', () => {
 	// Runs once at the very start of this file
@@ -62,7 +62,7 @@ describe('Login Controller Integration', () => {
 
 	it('should reject login with incorrect password', async () => {
 		// 1. Setup
-		await generateAccount({
+		await accountSeeder.generateAccount({
 			username: 'RealUser',
 			email: 'test@example.com',
 			password: 'CorrectPassword!',
@@ -78,7 +78,7 @@ describe('Login Controller Integration', () => {
 
 	it('should login successfully with correct credentials', async () => {
 		// 1. Setup
-		await generateAccount({
+		await accountSeeder.generateAccount({
 			username: 'RealUser',
 			email: 'test@example.com',
 			password: 'CorrectPassword!',

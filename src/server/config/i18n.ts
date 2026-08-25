@@ -6,7 +6,7 @@ import translationLoader from './translationLoader.js';
 import componentTranslationLoader from './componentTranslationLoader.js';
 
 /** Initializes i18next for the server process, loading languages from .toml files. */
-function initTranslations(): void {
+function init(): void {
 	// Load OLD translations
 	const translations = translationLoader.loadTranslations();
 	const supportedLngs = Object.keys(translations);
@@ -23,4 +23,6 @@ function initTranslations(): void {
 	componentTranslationLoader.load();
 }
 
-export { initTranslations };
+// Exports ------------------------------------------------------------------------------------
+
+export default { init };

@@ -10,9 +10,9 @@
 import type { SeekId } from '../../../shared/transport/domain.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
+import logEvents from '../../utility/logEvents.js';
 import activeseeks from './activeseeks.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
-import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 /**
  * Cancels/deletes the specified seek.
@@ -29,7 +29,7 @@ function cancel(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	// Make sure they are the owner.
 	if (!memberinfoutil.eq(ws.metadata.memberInfo, seek.owner)) {
-		logEventsAndPrint(`Player tried to delete a seek that wasn't theirs!`, 'errLog');
+		logEvents.addAndPrint(`Player tried to delete a seek that wasn't theirs!`, 'errLog');
 		return;
 	}
 

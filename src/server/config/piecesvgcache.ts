@@ -100,7 +100,7 @@ function loadPieceSVGs(): Map<RawType, string> {
  * Its own fills and strokes are left untouched, for the page's CSS to override.
  * @throws If the piece has no svg of its own (VOID).
  */
-function getPieceSVG(rawType: RawType): string {
+function get(rawType: RawType): string {
 	const markup = pieceSVGs.get(rawType);
 	if (markup === undefined) {
 		throw new Error(`Piece "${typeutil.getRawTypeStr(rawType)}" has no svg.`);
@@ -110,4 +110,6 @@ function getPieceSVG(rawType: RawType): string {
 
 // Exports -----------------------------------------------------------------
 
-export { getPieceSVG };
+// Exports ------------------------------------------------------------------------------------
+
+export default { get };

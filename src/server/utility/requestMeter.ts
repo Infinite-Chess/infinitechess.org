@@ -12,7 +12,7 @@
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import { logEventsAndPrint } from './logEvents.js';
+import logEvents from './logEvents.js';
 
 // Constants -------------------------------------------------------------------------------------
 
@@ -111,7 +111,7 @@ setInterval(() => {
 		if (firstTimestamp === undefined) {
 			const logMessage =
 				'Agent recent connection timestamp list was empty. This should never happen! It should have been deleted.';
-			logEventsAndPrint(logMessage, 'errLog');
+			logEvents.addAndPrint(logMessage, 'errLog');
 			delete rateLimitHash[key];
 			continue;
 		}
@@ -173,12 +173,12 @@ setInterval(() => {
 
 function logAttackBegin(): void {
 	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
-	logEventsAndPrint(logText, 'hackLog');
+	logEvents.addAndPrint(logText, 'hackLog');
 }
 
 function logAttackEnd(): void {
 	const logText = `DDOS attack has ended.`;
-	logEventsAndPrint(logText, 'hackLog');
+	logEvents.addAndPrint(logText, 'hackLog');
 }
 
 // Exports ---------------------------------------------------------------------------------------

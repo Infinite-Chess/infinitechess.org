@@ -35,8 +35,8 @@ import manifest from '../config/manifest.js';
 import gamemanager from '../game/gamemanager/gamemanager.js';
 import gamesManager from '../database/gamesManager.js';
 import deadgamestate from '../game/gamemanager/deadgamestate.js';
+import piecesvgcache from '../config/piecesvgcache.js';
 import memberinfoutil from '../utility/memberinfoutil.js';
-import { getPieceSVG } from '../config/piecesvgcache.js';
 
 // Types -----------------------------------------------------------------------------
 
@@ -108,7 +108,7 @@ type RuleLineViewModel =
  * if the id is malformed or names no existing game.
  * @throws If a database error occurs.
  */
-function getGamePageState(req: Request): GamePageState | undefined {
+function getPageState(req: Request): GamePageState | undefined {
 	const id = gamesManager.decodeID(req.params['id']!);
 	if (id === undefined) return undefined; // Malformed id
 
@@ -293,7 +293,12 @@ function buildRuleLines(
 	return items.map((item): RuleLineViewModel => {
 		if (item.kind === 'text') return item;
 		const { prefix, pieces, suffix } = item;
-		return { kind: 'promotion', prefix, svgs: pieces.map(getPieceSVG), suffix };
+		return {
+			kind: 'promotion',
+			prefix,
+			svgs: pieces.map((piece) => piecesvgcache.get(piece)),
+			suffix,
+		};
 	});
 }
 
@@ -330,4 +335,6 @@ function resolveGameRules(
 
 // Exports ---------------------------------------------------------------------------
 
-export { getGamePageState, getDeadGameViewState };
+// Exports ------------------------------------------------------------------------------------
+
+export default { getPageState, getDeadGameViewState };

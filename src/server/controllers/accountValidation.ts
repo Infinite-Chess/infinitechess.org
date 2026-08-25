@@ -14,8 +14,8 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 import jsutil from '../../shared/util/jsutil.js';
 import validators from '../../shared/util/validators.js';
 
+import logEvents from '../utility/logEvents.js';
 import blacklistManager from '../database/blacklistManager.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -144,7 +144,7 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 	}
 	try {
 		if (blacklistManager.isBlacklisted(email)) {
-			logEventsAndPrint(
+			logEvents.addAndPrint(
 				`Blacklisted email ${email} tried to create an account!`,
 				'blacklistLog',
 			);
@@ -175,7 +175,7 @@ async function isEmailDNSValid(email: string): Promise<boolean> {
 	try {
 		return await emailValidator(email, { checkMx: true });
 	} catch (error) {
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`Error when validating domain for email "${email}": ${jsutil.getErrorStack(error)}`,
 			'errLog',
 		);

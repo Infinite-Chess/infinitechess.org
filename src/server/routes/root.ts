@@ -6,21 +6,21 @@ import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import send404 from '../middleware/send404.js';
 import turnstile from '../controllers/turnstile.js';
+import resolveAuth from '../middleware/resolveAuth.js';
 import renderContext from '../utility/renderContext.js';
-import { resolveAuth } from '../middleware/resolveAuth.js';
-import { getGamePageState } from '../controllers/gamePageController.js';
+import gamePageController from '../controllers/gamePageController.js';
+import registerController from '../controllers/registerController.js';
 import analysisPageController from '../controllers/analysisPageController.js';
 import verifyAccountController from '../controllers/verifyAccountController.js';
-import { getAwaitingPageState } from '../controllers/registerController.js';
+import passwordResetController from '../controllers/passwordResetController.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
-import { getResetPasswordPageState } from '../controllers/passwordResetController.js';
 
 const router = express.Router();
 
 /**
  * Exposes the base render context to the template. Nunjucks merges res.locals into every
  * template's render context, so {{ lang }}, {{ templateT }}, etc. become available.
- * Reads req.memberInfo, so resolveAuth must run first (see `page`).
+ * Reads req.memberInfo, so resolveAuth.resolve must run first (see `page`).
  */
 function attachRenderContext(req: Request, res: Response, next: NextFunction): void {
 	Object.assign(res.locals, renderContext.getBaseRenderContext(req));
@@ -40,12 +40,12 @@ function crossOriginIsolation(_req: Request, res: Response, next: NextFunction):
 	next();
 }
 /**
- * Registers a GET page route. Runs resolveAuth then attaches the render
+ * Registers a GET page route. Runs resolveAuth.resolve then attaches the render
  * context, before the route's own handler. Ensures auth doesn't run
  * on requests that merely pass through this catch-all ('/') mount.
  */
 function page(path: string, handler: RequestHandler, ...before: RequestHandler[]): void {
-	router.get(path, resolveAuth, attachRenderContext, ...before, handler);
+	router.get(path, resolveAuth.resolve, attachRenderContext, ...before, handler);
 }
 
 /** Picks the home page's hero tagline at random, in the request's resolved language. */
@@ -68,7 +68,7 @@ page('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.n
 page(
 	'/game/:id/:color(w|b)?',
 	(req: Request, res: Response) => {
-		const state = getGamePageState(req);
+		const state = gamePageController.getPageState(req);
 		if (state === undefined) return send404(req, res); // Malformed or nonexistent id
 		res.render('game.njk', state);
 	},
@@ -89,11 +89,11 @@ page('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk')
 page('/forgot-password(.html)?', (_req: Request, res: Response) => res.render('forgotpassword.njk')); // prettier-ignore
 page('/register(.html)?', (req: Request, res: Response) => {
 	// Redirect to check-your-email page if register is pending
-	if (getAwaitingPageState(req)) res.redirect('/register/awaiting');
+	if (registerController.getAwaitingPageState(req)) res.redirect('/register/awaiting');
 	else res.render('register.njk', { turnstileSiteKey: turnstile.SITE_KEY });
 });
 page('/register/awaiting(.html)?', (req: Request, res: Response) => {
-	const state = getAwaitingPageState(req);
+	const state = registerController.getAwaitingPageState(req);
 	// Redirect to register page if no register is pending
 	if (state === null) res.redirect('/register');
 	else res.render('register-awaiting.njk', state);
@@ -108,7 +108,7 @@ page('/reset-password/:token', (req: Request, res: Response) => {
 	// The token sits in the URL; keep it out of any Referer
 	// header sent to third-party resources to avoid leaking it.
 	res.setHeader('Referrer-Policy', 'no-referrer');
-	res.render('resetpassword.njk', getResetPasswordPageState(req));
+	res.render('resetpassword.njk', passwordResetController.getResetPasswordPageState(req));
 });
 page('/terms(.html)?', (_req: Request, res: Response) => res.render('terms.njk'));
 page('/privacy(.html)?', (_req: Request, res: Response) => res.render('privacy.njk'));

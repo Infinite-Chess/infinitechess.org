@@ -4,9 +4,9 @@ import type { Request, Response, NextFunction } from 'express';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import { respondError } from './respondError.js';
-import { renderErrorPage } from './renderErrorPage.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
+import logEvents from '../utility/logEvents.js';
+import respondError from './respondError.js';
+import renderErrorPage from './renderErrorPage.js';
 
 /**
  * Express error handler. Reached by uncaught server errors (statusless or 5xx) and by errors that
@@ -19,7 +19,7 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 	// 4xx are the client's fault (e.g. a malformed or too-large body), not ours, so keep them out of
 	// the server error log. Everything else (5xx, or a statusless uncaught error) gets logged.
 	const isClientError = status >= 400 && status < 500;
-	if (!isClientError) logEventsAndPrint(`Caught in errorHandler: ${err.stack}`, 'errLog');
+	if (!isClientError) logEvents.addAndPrint(`Caught in errorHandler: ${err.stack}`, 'errLog');
 
 	// If the response has already started we can't set a status or render our own page (it would
 	// throw "headers already sent"). It's been logged above; delegate to Express's default handler,
@@ -48,11 +48,11 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 				? err.message
 				: req.t.responses.errors.server_error;
 		res.status(status);
-		respondError(req, res, message, () => renderErrorPage(req, res, status));
+		respondError.send(req, res, message, () => renderErrorPage.render(req, res, status));
 	} catch (error: unknown) {
 		// Last line of defense
 		const detail = jsutil.getErrorStack(error);
-		logEventsAndPrint(`Critical error in errorHandler middleware: ${detail}`, 'errLog');
+		logEvents.addAndPrint(`Critical error in errorHandler middleware: ${detail}`, 'errLog');
 		res.status(500).send('Critical server error.');
 	}
 }

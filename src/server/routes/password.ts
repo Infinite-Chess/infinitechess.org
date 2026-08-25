@@ -8,14 +8,15 @@
 import express from 'express';
 
 import rateLimiters from '../middleware/rateLimiters.js';
-import {
-	handleForgotPasswordRequest,
-	handleResetPassword,
-} from '../controllers/passwordResetController.js';
+import passwordResetController from '../controllers/passwordResetController.js';
 
 const router = express.Router();
 
-router.post('/forgot-password', rateLimiters.forgotPassword, handleForgotPasswordRequest);
-router.post('/reset-password', handleResetPassword);
+router.post(
+	'/forgot-password',
+	rateLimiters.forgotPassword,
+	passwordResetController.handleForgotPasswordRequest,
+);
+router.post('/reset-password', passwordResetController.handleResetPassword);
 
 export default router;

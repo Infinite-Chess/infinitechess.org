@@ -28,6 +28,7 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
+import logEvents from '../../utility/logEvents.js';
 import abusechecks from './abusechecks.js';
 import abusereport from './abusereport.js';
 import gameutility from '../gamemanager/gameutility.js';
@@ -36,7 +37,6 @@ import memberManager from '../../database/memberManager.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
 import ratingAbuseManager from '../../database/ratingAbuseManager.js';
 import refreshTokenManager from '../../database/refreshTokenManager.js';
-import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------------------
 
@@ -59,7 +59,7 @@ function measureAfterGame(servergame: ServerGame): void {
 
 	for (const [playerStr, player] of Object.entries(servergame.match.playerData)) {
 		if (!player.identifier.signedIn) {
-			void logEventsAndPrint(
+			void logEvents.addAndPrint(
 				`Unexpected: Player "${playerStr}" is not signed in. Game: ${gameutility.getSimplifiedGameString(servergame)}`,
 				'errLog',
 			);
@@ -186,7 +186,7 @@ function buildGameInfoList(
 				),
 			});
 		} else {
-			void logEventsAndPrint(
+			void logEvents.addAndPrint(
 				`Found game_id ${gameIds[i]!} in player_games table but not it games table, during rating abuse calculation`,
 				'errLog',
 			);
@@ -217,7 +217,7 @@ function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvi
 		]);
 	} catch (error: unknown) {
 		const message = jsutil.getErrorMessage(error);
-		void logEventsAndPrint(
+		void logEvents.addAndPrint(
 			`Error fetching refresh token entries for users "${JSON.stringify([user_id, ...unique_user_id_list])}": ${message}`,
 			'errLog',
 		);
@@ -250,7 +250,7 @@ function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvi
 		);
 	} catch (error: unknown) {
 		const message = jsutil.getErrorMessage(error);
-		void logEventsAndPrint(
+		void logEvents.addAndPrint(
 			`Error fetching records for opponents during rating abuse calculation for user_id ${user_id}: ${message}`,
 			'errLog',
 		);

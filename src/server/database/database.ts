@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 import jsutil from '../../shared/util/jsutil.js';
 import jsonutil from '../../shared/util/jsonutil.js';
 
-import { logEventsAndPrint } from '../utility/logEvents.js';
+import logEvents from '../utility/logEvents.js';
 
 // Types ---------------------------------------------------------------------------------------------------
 
@@ -219,7 +219,7 @@ function call<T>(fn: () => T, description: string): T {
 		return fn();
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
-		logEventsAndPrint(`${description}: ${detail}`, 'errLog');
+		logEvents.addAndPrint(`${description}: ${detail}`, 'errLog');
 		throw error;
 	}
 }

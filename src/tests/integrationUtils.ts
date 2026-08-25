@@ -2,7 +2,7 @@
 
 import { testRequest } from './testRequest';
 
-import { generateAccount } from '../server/controllers/accountSeeder';
+import accountSeeder from '../server/controllers/accountSeeder';
 
 // Variables -------------------------------------------------------------------
 
@@ -19,7 +19,7 @@ async function createAndLoginUser(): Promise<{
 }> {
 	userCounter++;
 	const username = `ChessMaster-${userCounter}`;
-	const user_id = await generateAccount({
+	const user_id = await accountSeeder.generateAccount({
 		username,
 		email: `${username}@example.com`,
 		password: 'Password123!',

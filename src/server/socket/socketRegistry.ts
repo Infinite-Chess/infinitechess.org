@@ -13,7 +13,7 @@ import type { CustomWebSocket } from './socketTypes.js';
 import uuid from '../../shared/util/uuid.js';
 import socketutil from '../../shared/util/socketutil.js';
 
-import { ID_LENGTH } from '../utility/requestContext.js';
+import requestContext from '../utility/requestContext.js';
 
 // Constants ----------------------------------------------------------------------------------
 
@@ -152,7 +152,7 @@ function doesSessionHaveMaxCount(jwt: string): boolean {
 
 /** Generates a unique socket ID. */
 function generateUniqueID(): string {
-	return uuid.genUniqueID(ID_LENGTH, websocketConnections); // Matches request IDs' length
+	return uuid.genUniqueID(requestContext.ID_LENGTH, websocketConnections); // Matches request IDs' length
 }
 
 // Exports ------------------------------------------------------------------------------------

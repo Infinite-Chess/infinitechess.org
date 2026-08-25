@@ -19,7 +19,7 @@ import gamestatebuilder from './gamestatebuilder.js';
  * Fires when a client sends the 'subscribe' action with a game id, to attach to a live game and
  * receive its current state. Also the live-reconnect path (the socket reopened mid-game).
  */
-export function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
+function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
 	const game = activegames.getByID(game_id);
 	if (game !== undefined) {
 		// Live game
@@ -47,3 +47,7 @@ export function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
 		socketsend.send(ws, 'game', 'notlive', undefined);
 	}
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { subscribeToGame };

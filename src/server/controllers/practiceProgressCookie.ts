@@ -10,7 +10,7 @@
 import type { Request, Response } from 'express';
 
 import memberManager from '../database/memberManager.js';
-import { readMemberInfoCookie } from './authenticationTokens/memberInfoCookie.js';
+import memberInfoCookie from './authenticationTokens/memberInfoCookie.js';
 
 // Constants --------------------------------------------------------------------------------------
 
@@ -30,11 +30,11 @@ function set(req: Request, res: Response): void {
 	// We give everyone this cookie as soon as they login.
 	// Since it is modifiable by JavaScript it's possible for them to
 	// grab checkmates_beaten of other users this way, but there's no harm in that.
-	const memberInfoCookie = readMemberInfoCookie(req);
-	if (memberInfoCookie === undefined) return; // Not signed in, or the cookie was tampered (already logged).
+	const cookie = memberInfoCookie.read(req);
+	if (cookie === undefined) return; // Not signed in, or the cookie was tampered (already logged).
 
 	try {
-		const checkmates_beaten = get(memberInfoCookie.user_id); // Fetch their checkmates_beaten from the database
+		const checkmates_beaten = get(cookie.user_id); // Fetch their checkmates_beaten from the database
 		create(res, checkmates_beaten);
 	} catch {
 		// DB read failed (already logged). The cookie is skipped.

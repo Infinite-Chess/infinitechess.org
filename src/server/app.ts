@@ -10,8 +10,10 @@ import type { Express } from 'express';
 
 import express from 'express';
 
+import i18n from './config/i18n.js';
 import send404 from './middleware/send404.js';
 import security from './middleware/security.js';
+import nunjucks from './config/nunjucks.js';
 import apiRouter from './routes/api.js';
 import rateLimit from './middleware/rateLimit.js';
 import reqLogger from './utility/reqLogger.js';
@@ -22,11 +24,9 @@ import staticAssets from './middleware/staticAssets.js';
 import errorHandler from './middleware/errorHandler.js';
 import webhooksRouter from './routes/webhooks.js';
 import requestParsers from './middleware/requestParsers.js';
+import requestContext from './utility/requestContext.js';
 import reqTranslations from './config/reqTranslations.js';
 import htmlCacheControl from './middleware/htmlCacheControl.js';
-import { assignRequestID } from './utility/requestContext.js';
-import { initTranslations } from './config/i18n.js';
-import { configureNunjucks } from './config/nunjucks.js';
 
 /**
  * Assembles the request pipeline onto the app, in order.
@@ -34,7 +34,7 @@ import { configureNunjucks } from './config/nunjucks.js';
  */
 function configurePipeline(app: Express): void {
 	// Give every request a correlation ID that logEvents tags its log lines with.
-	app.use(assignRequestID);
+	app.use(requestContext.assignID);
 
 	// Log all incoming requests
 	app.use(reqLogger.middleware);
@@ -82,11 +82,11 @@ app.set('trust proxy', 1);
 app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
 
 // Configure Nunjucks as the view engine.
-configureNunjucks(app);
+nunjucks.configure(app);
 
 // This is in here so integration tests work, as otherwise if
 // this is in server.js, i18next is never initialized for tests.
-initTranslations();
+i18n.init();
 
 // Precompute language-resolution structures from the now-loaded supported-language set.
 reqLanguage.init();

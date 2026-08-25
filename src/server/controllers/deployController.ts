@@ -11,8 +11,8 @@ import type { Request, Response } from 'express';
 
 import jsutil from '../../shared/util/jsutil.js';
 
+import logEvents from '../utility/logEvents.js';
 import backupManager from '../database/backupManager.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
 
 /**
  * `POST /api/prepare-restart` — called by the GitHub Actions deploy workflow before `pm2 reload`.
@@ -21,7 +21,7 @@ import { logEventsAndPrint } from '../utility/logEvents.js';
 async function handlePrepareRestart(req: Request, res: Response): Promise<void> {
 	const secret = process.env['RESTART_SECRET'];
 	if (!secret) {
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			'POST /api/prepare-restart called but RESTART_SECRET is not set.',
 			'errLog',
 		);
@@ -38,7 +38,7 @@ async function handlePrepareRestart(req: Request, res: Response): Promise<void> 
 		await backupManager.perform();
 	} catch (error: unknown) {
 		const message = jsutil.getErrorMessage(error);
-		logEventsAndPrint(`Pre-deploy DB backup failed: ${message}`, 'errLog');
+		logEvents.addAndPrint(`Pre-deploy DB backup failed: ${message}`, 'errLog');
 		res.status(500).send('Pre-deploy backup failed.');
 		return;
 	}
@@ -46,4 +46,6 @@ async function handlePrepareRestart(req: Request, res: Response): Promise<void> 
 	res.status(200).send('Ready for restart.');
 }
 
-export { handlePrepareRestart };
+// Exports ------------------------------------------------------------------------------------
+
+export default { handlePrepareRestart };

@@ -7,27 +7,28 @@
 import type { CustomWebSocket } from './socketTypes.js';
 import type { ServerboundRoutedMessage } from '../../shared/transport/serverbound.js';
 
-import { routeGameMessage } from '../game/gamemanager/gamerouter.js';
-import { routeLobbyMessage } from '../game/seeksmanager/lobbyrouter.js';
-import { routeGeneralMessage } from './generalRouter.js';
+import gamerouter from '../game/gamemanager/gamerouter.js';
+import lobbyrouter from '../game/seeksmanager/lobbyrouter.js';
+import generalRouter from './generalRouter.js';
 
 /** Routes a validated socket message to the handler for its route. */
-export function routeIncomingSocketMessage(
-	ws: CustomWebSocket,
-	message: ServerboundRoutedMessage,
-): void {
+function routeIncomingSocketMessage(ws: CustomWebSocket, message: ServerboundRoutedMessage): void {
 	// Route them to their specified location
 	switch (message.route) {
 		case 'general':
-			routeGeneralMessage(ws, message.contents);
+			generalRouter.routeGeneralMessage(ws, message.contents);
 			break;
 		case 'lobby':
-			routeLobbyMessage(ws, message.contents);
+			lobbyrouter.routeLobbyMessage(ws, message.contents);
 			break;
 		case 'game':
-			routeGameMessage(ws, message.contents);
+			gamerouter.routeGameMessage(ws, message.contents);
 			break;
 		default:
 			console.error('UNKNOWN web socket route received!', message satisfies never);
 	}
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { routeIncomingSocketMessage };

@@ -12,7 +12,7 @@ import type { MatchInfo, ServerGame } from './servergametypes.js';
 
 import gamelimits from '../../../shared/chess/util/gamelimits.js';
 
-import { logEventsAndPrint } from '../../utility/logEvents.js';
+import logEvents from '../../utility/logEvents.js';
 
 // Functions ----------------------------------------------------------------------------------
 
@@ -49,7 +49,10 @@ function offeredTooRecently(servergame: ServerGame, color: Player): boolean {
  */
 function open(servergame: ServerGame, color: Player): void {
 	if (isOpen(servergame.match)) {
-		logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", 'errLog');
+		logEvents.addAndPrint(
+			"MUST NOT open a draw offer when there's already one open!!",
+			'errLog',
+		);
 		return;
 	}
 	const playerdata = servergame.match.playerData[color]!;

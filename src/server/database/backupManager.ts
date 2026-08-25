@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
-import { logEventsAndPrint } from '../utility/logEvents.js';
+import logEvents from '../utility/logEvents.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,7 +38,7 @@ function startDaily(): void {
 			await perform();
 		} catch (error: unknown) {
 			const message = jsutil.getErrorMessage(error);
-			logEventsAndPrint(`Daily database backup failed: ${message}`, 'errLog');
+			logEvents.addAndPrint(`Daily database backup failed: ${message}`, 'errLog');
 		}
 	}, BACKUP_INTERVAL_MS);
 }
@@ -92,7 +92,7 @@ function purgeOldBackups(): void {
 		}
 	} catch (error: unknown) {
 		const message = jsutil.getErrorMessage(error);
-		void logEventsAndPrint(`Error purging old db backups: ${message}`, 'errLog');
+		void logEvents.addAndPrint(`Error purging old db backups: ${message}`, 'errLog');
 	}
 }
 

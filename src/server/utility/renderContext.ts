@@ -9,7 +9,7 @@
 import type { Request } from 'express';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
-import { logEventsAndPrint } from './logEvents.js';
+import logEvents from './logEvents.js';
 import componentTranslationLoader, {
 	LanguageOption,
 } from '../config/componentTranslationLoader.js';
@@ -64,7 +64,7 @@ function getErrorPageContext(
 	// own page; any other code falls back to the 500 page.
 	let code = status;
 	if (t[status] === undefined) {
-		logEventsAndPrint(
+		logEvents.addAndPrint(
 			`No error page copy exists for status ${status}; falling back to the 500 page. Add a [${status}] table to error TOML.`,
 			'errLog',
 		);

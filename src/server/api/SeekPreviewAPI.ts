@@ -12,7 +12,7 @@ import { SeekIdSchema } from '../../shared/transport/domain.js';
 import activeseeks from '../game/seeksmanager/activeseeks.js';
 
 /** `GET /api/seek-preview/:seekId` — returns `{ icn }` of a custom (ICN) lobby seek for hover previews. */
-function getSeekPreview(req: Request, res: Response): void {
+function get(req: Request, res: Response): void {
 	const seekId = req.params['seekId']!;
 
 	if (!SeekIdSchema.safeParse(seekId).success) {
@@ -35,4 +35,6 @@ function getSeekPreview(req: Request, res: Response): void {
 	res.json({ icn: seek.variant.position });
 }
 
-export { getSeekPreview };
+// Exports ------------------------------------------------------------------------------------
+
+export default { get };

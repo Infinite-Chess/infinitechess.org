@@ -10,13 +10,13 @@ import socketutil from '../../shared/util/socketutil.js';
 
 import db from '../database/database.js';
 import roles from './roles.js';
+import urlUtils from '../utility/urlUtils.js';
+import logEvents from '../utility/logEvents.js';
 import emailService from '../utility/emailService.js';
 import sessionManager from './authenticationTokens/sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import blacklistManager from '../database/blacklistManager.js';
-import { getAppBaseUrl } from '../utility/urlUtils.js';
 import accountValidation from './accountValidation.js';
-import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 // Types -----------------------------------------------------------------------------------------
 
@@ -66,7 +66,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// Blacklist gates only the send, never the response — a blacklisted member still
 			// falls through to the same generic 200, so it can't be told apart by the response.
 			if (blacklistManager.isBlacklisted(email)) {
-				logEventsAndPrint(
+				logEvents.addAndPrint(
 					`Skipping sending password reset email to blacklisted address ${email} (user_id ${userId}).`,
 					'blacklistLog',
 				);
@@ -81,18 +81,18 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 					[userId, hashedTokenForDb, expiresAt],
 				);
 
-				const baseUrl = getAppBaseUrl();
+				const baseUrl = urlUtils.getAppBaseUrl();
 				const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
 
-				logEvents(
+				logEvents.add(
 					`Sending password reset email to user_id (${userId})...`,
 					'loginAttempts',
 				);
 				emailService.sendPasswordResetEmail(email, resetUrl, req.lang); // Fire-and-forget
 			}
 		} else {
-			logEventsAndPrint(
-				`No member exists with the email (${escapeLogNewlines(email)}). Not sending password reset email.`,
+			logEvents.addAndPrint(
+				`No member exists with the email (${logEvents.escapeLogNewlines(email)}). Not sending password reset email.`,
 				'loginAttempts',
 			);
 		}
@@ -102,7 +102,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 	} catch (error) {
 		const errorMessage: string =
 			'Forgot password database error: ' + jsutil.getErrorStack(error);
-		logEventsAndPrint(errorMessage, 'errLog');
+		logEvents.addAndPrint(errorMessage, 'errLog');
 		res.status(500).json({
 			message: req.t.responses.errors.server_error,
 		});
@@ -157,7 +157,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// The authoritative one-time guarantee is still enforced in the transaction below.
 		const precheckTokenRecord = findUnexpiredResetTokenRecord(token);
 		if (!precheckTokenRecord) {
-			logEvents(`Invalid or expired password reset token presented.`, 'loginAttempts');
+			logEvents.add(`Invalid or expired password reset token presented.`, 'loginAttempts');
 			// The tokenInvalid flag tells the client to reload (re-SSRing the expired-link card).
 			res.status(400).json({ tokenInvalid: true });
 			return;
@@ -211,7 +211,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// Handle the token being expired or consumed by another
 		// request between the pre-check and the async bcrypt hashing.
 		if (member === undefined) {
-			logEvents(
+			logEvents.add(
 				`Password reset token ALREADY CONSUMED after pre-check and before transaction.`,
 				'loginAttempts',
 			);
@@ -237,10 +237,10 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		res.sendStatus(200);
 
 		// Log the successful password reset
-		logEvents(`Password reset successful for user_id (${member.user_id})`, 'loginAttempts');
+		logEvents.add(`Password reset successful for user_id (${member.user_id})`, 'loginAttempts');
 	} catch (error) {
 		const errorMessage: string = 'Reset password error: ' + jsutil.getErrorStack(error);
-		logEventsAndPrint(errorMessage, 'errLog');
+		logEvents.addAndPrint(errorMessage, 'errLog');
 		res.status(500).json({
 			message: req.t.responses.errors.server_error,
 		});
@@ -298,4 +298,6 @@ function verifyBodyHasForgotPasswordData(req: Request, res: Response): string | 
 	return email;
 }
 
-export { handleForgotPasswordRequest, getResetPasswordPageState, handleResetPassword };
+// Exports ------------------------------------------------------------------------------------
+
+export default { handleForgotPasswordRequest, getResetPasswordPageState, handleResetPassword };

@@ -14,7 +14,7 @@ import deadgamestate from '../game/gamemanager/deadgamestate.js';
  * `GET /api/game/:id` — returns the {@link DeadGameState} of a concluded game.
  * 404s if no such game exists, or if the game is still live (not in DB).
  */
-function getGameState(req: Request, res: Response): void {
+function getState(req: Request, res: Response): void {
 	const decoded = gamesManager.decodeID(req.params['id']!);
 	if (decoded === undefined) {
 		// Unlocalized because browsers visiting the /game/:id page are sent 404 before this.
@@ -33,4 +33,6 @@ function getGameState(req: Request, res: Response): void {
 	res.json(deadGameState);
 }
 
-export { getGameState };
+// Exports ------------------------------------------------------------------------------------
+
+export default { getState };

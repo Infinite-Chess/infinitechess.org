@@ -11,6 +11,8 @@ import type { Request, Response } from 'express';
 
 import express from 'express';
 
+import GitHub from '../api/GitHub.js';
+import GameAPI from '../api/GameAPI.js';
 import authRouter from './auth.js';
 import newsRouter from './news.js';
 import adminRouter from './admin.js';
@@ -18,15 +20,13 @@ import rateLimiters from '../middleware/rateLimiters.js';
 import membersRouter from './members.js';
 import registerRouter from './register.js';
 import passwordRouter from './password.js';
-import { getGameState } from '../api/GameAPI.js';
+import SeekPreviewAPI from '../api/SeekPreviewAPI.js';
+import deployController from '../controllers/deployController.js';
 import editorSavesRouter from './editorSaves.js';
 import preferencesRouter from './preferences.js';
 import leaderboardsRouter from './leaderboards.js';
-import { getSeekPreview } from '../api/SeekPreviewAPI.js';
-import { getContributors } from '../api/GitHub.js';
 import practiceProgressRouter from './practiceProgress.js';
 import verifyAccountController from '../controllers/verifyAccountController.js';
-import { handlePrepareRestart } from '../controllers/deployController.js';
 
 const router = express.Router();
 
@@ -43,16 +43,16 @@ router.use('/', passwordRouter);
 
 /** `GET /api/contributors` — returns the JSON list of project contributors. */
 router.get('/contributors', (_req: Request, res: Response) => {
-	const contributors = getContributors();
+	const contributors = GitHub.getContributors();
 	res.json(contributors);
 });
 
-router.get('/seek-preview/:seekId', rateLimiters.seekPreview, getSeekPreview);
+router.get('/seek-preview/:seekId', rateLimiters.seekPreview, SeekPreviewAPI.get);
 
-router.get('/game/:id', rateLimiters.gameState, getGameState);
+router.get('/game/:id', rateLimiters.gameState, GameAPI.getState);
 
 // Endpoint called by the GitHub Actions deploy workflow before pm2 reload
-router.post('/prepare-restart', handlePrepareRestart);
+router.post('/prepare-restart', deployController.handlePrepareRestart);
 
 router.post('/verify/:token', verifyAccountController.verifyPendingRegistration);
 

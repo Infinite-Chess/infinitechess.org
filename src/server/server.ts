@@ -13,13 +13,13 @@ import variantcache from '../shared/chess/variants/variantcache.js';
 
 import db from './database/database.js';
 import app from './app.js';
+import logEvents from './utility/logEvents.js';
 import gamemanager from './game/gamemanager/gamemanager.js';
+import certOptions from './config/certOptions.js';
 import socketServer from './socket/socketServer.js';
 import startupLogger from './utility/startupLogger.js';
 import databaseTables from './database/databaseTables.js';
-import { getCertOptions } from './config/certOptions.js';
 import { initDevEnvironment } from './setupDev.js';
-import { logEventsAndPrint, startPeriodicLogCleanup } from './utility/logEvents.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
@@ -32,16 +32,16 @@ import 'dotenv/config'; // Imports all properties of process.env, if it exists
 // fn call in a request handler). Logged, then we keep serving.
 process.on('unhandledRejection', (reason: unknown) => {
 	const detail = jsutil.getErrorStack(reason);
-	logEventsAndPrint(`Unhandled promise rejection: ${detail}`, 'errLog');
+	logEvents.addAndPrint(`Unhandled promise rejection: ${detail}`, 'errLog');
 });
 // A synchronous throw outside any try/catch (e.g. inside a setTimeout callback).
 // It leaves the process in an undefined state, so we log and exit;
 // PM2 restarts us and live games restore from the database.
 process.on('uncaughtException', (error: unknown) => {
 	const detail = jsutil.getErrorStack(error);
-	logEventsAndPrint(`Exiting from uncaught exception: ${detail}`, 'errLog').finally(() =>
-		process.exit(1),
-	);
+	logEvents
+		.addAndPrint(`Exiting from uncaught exception: ${detail}`, 'errLog')
+		.finally(() => process.exit(1));
 });
 
 // Startup ------------------------------------------------------------------------------------
@@ -49,9 +49,9 @@ process.on('uncaughtException', (error: unknown) => {
 databaseTables.initDatabase();
 // Ensure our workspace is ready for the dev environment
 initDevEnvironment();
-startPeriodicLogCleanup();
+logEvents.startPeriodicLogCleanup();
 
-const httpsServer = https.createServer(getCertOptions(), app);
+const httpsServer = https.createServer(certOptions.get(), app);
 
 // Keep the origin's keep-alive window above the Cloudflare tunnel's (cloudflared's default
 // originRequest.keepAliveTimeout is 90s) so the origin never closes a pooled connection out from

@@ -7,12 +7,12 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
+import IP from '../utility/IP.js';
 import banned from '../database/banned.js';
+import logEvents from '../utility/logEvents.js';
 import requestMeter from '../utility/requestMeter.js';
+import respondError from './respondError.js';
 import renderContext from '../utility/renderContext.js';
-import { getClientIP } from '../utility/IP.js';
-import { respondError } from './respondError.js';
-import { logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
@@ -42,16 +42,16 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 
 	requestMeter.recordRecent();
 
-	const clientIP = getClientIP(req);
+	const clientIP = IP.get(req);
 	if (!clientIP) {
-		logEvents('Unable to identify client IP address.', 'errLog');
+		logEvents.add('Unable to identify client IP address.', 'errLog');
 		res.status(400).json({ message: 'Unable to identify IP address' });
 		return;
 	}
 
 	if (banned.isIP(clientIP)) {
 		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent'] || 'Unknown agent'}`;
-		logEvents(logThis, 'bannedIPLog');
+		logEvents.add(logThis, 'bannedIPLog');
 		res.status(403).json({ message: 'You are banned' });
 		return;
 	}
@@ -84,7 +84,7 @@ function respondRateLimited(req: Request, res: Response, retryAfterSec: number):
 	const renderHtml = requestMeter.isUnderAttack()
 		? undefined
 		: (): void => renderRateLimitPage(req, res, retryAfterSec, message);
-	respondError(req, res, message, renderHtml);
+	respondError.send(req, res, message, renderHtml);
 }
 
 /**
@@ -112,7 +112,7 @@ function renderRateLimitPage(
 			if (!renderErr) {
 				res.send(html);
 			} else {
-				logEventsAndPrint(
+				logEvents.addAndPrint(
 					`Critical error in rateLimit.ts rendering 429 page: ${renderErr.stack}`,
 					'errLog',
 				);

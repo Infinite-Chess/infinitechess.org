@@ -12,7 +12,7 @@ import memberManager from '../database/memberManager.js';
 // Functions --------------------------------------------------------------------------------------
 
 /** `GET /api/news/unread-count` — returns `{ count }` of the signed-in user's unread news posts. */
-function getUnreadNewsCount(req: Request, res: Response): void {
+function getUnreadCount(req: Request, res: Response): void {
 	// Not logged in - return 0 unread
 	if (!req.memberInfo?.signedIn) {
 		res.json({ count: 0 });
@@ -40,7 +40,7 @@ function getUnreadNewsCount(req: Request, res: Response): void {
 }
 
 /** `GET /api/news/unread-dates` — returns `{ dates }`, the signed-in user's unread news dates (YYYY-MM-DD). */
-function getUnreadNewsDates(req: Request, res: Response): void {
+function getUnreadDates(req: Request, res: Response): void {
 	// Not logged in - no unread news
 	if (!req.memberInfo?.signedIn) {
 		res.json({ dates: [] });
@@ -68,7 +68,7 @@ function getUnreadNewsDates(req: Request, res: Response): void {
 }
 
 /** `PATCH /api/news/read` — marks news read up to the latest post for the signed-in user. */
-function markNewsAsRead(req: Request, res: Response): void {
+function markAsRead(req: Request, res: Response): void {
 	// Not logged in - nothing to update
 	if (!req.memberInfo?.signedIn) {
 		res.sendStatus(200);
@@ -88,6 +88,6 @@ function markNewsAsRead(req: Request, res: Response): void {
 	}
 }
 
-// Exports ----------------------------------------------------------------------------------------
+// Exports ------------------------------------------------------------------------------------
 
-export { getUnreadNewsCount, getUnreadNewsDates, markNewsAsRead };
+export default { getUnreadCount, getUnreadDates, markAsRead };

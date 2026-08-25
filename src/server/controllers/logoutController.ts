@@ -4,7 +4,7 @@ import type { Request, Response } from 'express';
 
 import socketutil from '../../shared/util/socketutil.js';
 
-import { logEvents } from '../utility/logEvents.js';
+import logEvents from '../utility/logEvents.js';
 import sessionManager from './authenticationTokens/sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
@@ -30,7 +30,9 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 
 	res.sendStatus(200);
 
-	logEvents(`Logged out a member.`, 'loginAttempts');
+	logEvents.add(`Logged out a member.`, 'loginAttempts');
 }
 
-export { handleLogout };
+// Exports ------------------------------------------------------------------------------------
+
+export default { handleLogout };

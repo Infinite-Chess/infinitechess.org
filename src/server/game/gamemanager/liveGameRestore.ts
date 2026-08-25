@@ -31,10 +31,10 @@ import jsutil from '../../../shared/util/jsutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import icnmoves from '../../../shared/chess/logic/icn/icnmoves.js';
 
+import logEvents from '../../utility/logEvents.js';
 import gameutility from './gameutility.js';
 import memberManager from '../../database/memberManager.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
-import { logEventsAndPrint } from '../../utility/logEvents.js';
 import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
 import liveEngineGamesManager from '../../database/liveEngineGamesManager.js';
 
@@ -111,7 +111,7 @@ function restoreAll(): RestoredGame[] {
 			const playerRows = playerRowsByGame.get(gameRow.game_id) ?? [];
 			const engineRows = engineRowsByGame.get(gameRow.game_id) ?? [];
 			if (playerRows.length + engineRows.length !== 2 || engineRows.length > 1) {
-				logEventsAndPrint(
+				logEvents.addAndPrint(
 					`Live game ${gameRow.game_id} has invalid participant rows. Skipping restoration.`,
 					'errLog',
 				);
@@ -123,7 +123,7 @@ function restoreAll(): RestoredGame[] {
 			restored.push(result);
 		} catch (error: unknown) {
 			const message = jsutil.getErrorMessage(error);
-			logEventsAndPrint(
+			logEvents.addAndPrint(
 				`Failed to restore live game ${gameRow.game_id}: ${message}`,
 				'errLog',
 			);
@@ -219,7 +219,7 @@ function reconstructPlayerIdentities(
 				try {
 					roles = memberData.roles ? JSON.parse(memberData.roles) : null;
 				} catch {
-					logEventsAndPrint(
+					logEvents.addAndPrint(
 						`Failed to parse roles for user_id ${row.user_id} during game restoration.`,
 						'errLog',
 					);

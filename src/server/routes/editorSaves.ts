@@ -7,14 +7,14 @@
 
 import express from 'express';
 
+import resolveAuth from '../middleware/resolveAuth.js';
 import rateLimiters from '../middleware/rateLimiters.js';
 import EditorSavesAPI from '../api/EditorSavesAPI.js';
-import { resolveAuth } from '../middleware/resolveAuth.js';
 
 const router = express.Router();
 
 // Every editor-saves route is private, auth is required.
-router.use(resolveAuth);
+router.use(resolveAuth.resolve);
 
 router.get('/', EditorSavesAPI.getSavedPositions);
 router.post('/', rateLimiters.editorSave, EditorSavesAPI.savePosition);

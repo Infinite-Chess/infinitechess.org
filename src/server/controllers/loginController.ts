@@ -15,11 +15,11 @@ import type { Request, Response } from 'express';
 import jsutil from '../../shared/util/jsutil.js';
 
 import roles from './roles.js';
+import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
 import sessionManager from './authenticationTokens/sessionManager.js';
+import authController from './authController.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
-import { testPasswordForRequest } from './authController.js';
-import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 /**
  * `POST /api/auth` — verifies the submitted username/password and, on success, logs the user
@@ -27,7 +27,7 @@ import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logE
  */
 async function handleLogin(req: Request, res: Response): Promise<void> {
 	// Initial check - if this fails, it sends a response and returns.
-	const identity = await testPasswordForRequest(req, res);
+	const identity = await authController.testPasswordForRequest(req, res);
 	if (!identity) return;
 	// Correct password...
 
@@ -57,8 +57,8 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorMessage(error);
 		// Log the detailed error for server-side debugging.
-		logEventsAndPrint(
-			`Error during handleLogin for user "${escapeLogNewlines(String(req.body.username))}": ${detail}`,
+		logEvents.addAndPrint(
+			`Error during handleLogin for user "${logEvents.escapeLogNewlines(String(req.body.username))}": ${detail}`,
 			'errLog',
 		);
 		// Send a generic error response to the client.
@@ -76,7 +76,9 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 	} catch {
 		// Already logged
 	}
-	logEvents(`Logged in member "${identity.username}".`, 'loginAttempts');
+	logEvents.add(`Logged in member "${identity.username}".`, 'loginAttempts');
 }
 
-export { handleLogin };
+// Exports ------------------------------------------------------------------------------------
+
+export default { handleLogin };

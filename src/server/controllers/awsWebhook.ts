@@ -11,9 +11,9 @@ import MessageValidator from 'sns-validator';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import { logZodError } from '../utility/zodlogger.js';
+import zodlogger from '../utility/zodlogger.js';
+import logEvents from '../utility/logEvents.js';
 import blacklistManager from '../database/blacklistManager.js';
-import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -57,10 +57,10 @@ const SesNotificationSchema = z.discriminatedUnion('notificationType', [
  * verifying the SNS signature first so only genuine AWS requests are processed.
  * Owns every response this route sends; the helpers below never touch `res`.
  */
-export async function handleSesWebhook(req: Request, res: Response): Promise<void> {
+async function handle(req: Request, res: Response): Promise<void> {
 	// Basic sanity check
 	if (!req.body || !req.headers['x-amz-sns-message-type']) {
-		logEventsAndPrint('[AWS WEBHOOK] Invalid request: missing body or headers', 'errLog');
+		logEvents.addAndPrint('[AWS WEBHOOK] Invalid request: missing body or headers', 'errLog');
 		res.status(400).send('Invalid request');
 		return;
 	}
@@ -86,7 +86,10 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 
 	if (messageType === 'Notification') processNotification(message['Message']);
 	else
-		logEventsAndPrint(`[AWS WEBHOOK] Unknown message type: ${messageType}`, 'awsNotifications');
+		logEvents.addAndPrint(
+			`[AWS WEBHOOK] Unknown message type: ${messageType}`,
+			'awsNotifications',
+		);
 
 	// Always return 200 OK.
 	// If we return 500, AWS will keep retrying to send us the same bounce event.
@@ -112,7 +115,7 @@ async function verifySnsMessage(
 	} catch (err: unknown) {
 		const msg = jsutil.getErrorMessage(err);
 		// This likely means a hacker is trying to spoof a request
-		logEvents(
+		logEvents.add(
 			`[AWS WEBHOOK] Signature Verification Failed! Is this a hacker? Error: ${msg}`,
 			'awsNotifications',
 		);
@@ -125,14 +128,14 @@ async function verifySnsMessage(
  * Returns whether it succeeded.
  */
 async function confirmSubscription(subscribeUrl: string): Promise<boolean> {
-	logEventsAndPrint('[AWS WEBHOOK] Verifying subscription...', 'awsNotifications');
+	logEvents.addAndPrint('[AWS WEBHOOK] Verifying subscription...', 'awsNotifications');
 	try {
 		await fetch(subscribeUrl);
-		logEventsAndPrint('[AWS WEBHOOK] Subscription Confirmed!', 'awsNotifications');
+		logEvents.addAndPrint('[AWS WEBHOOK] Subscription Confirmed!', 'awsNotifications');
 		return true;
 	} catch (err: unknown) {
 		const msg = jsutil.getErrorMessage(err);
-		logEventsAndPrint(`[AWS WEBHOOK] Confirmation failed: ${msg}`, 'errLog');
+		logEvents.addAndPrint(`[AWS WEBHOOK] Confirmation failed: ${msg}`, 'errLog');
 		return false;
 	}
 }
@@ -144,8 +147,8 @@ async function confirmSubscription(subscribeUrl: string): Promise<boolean> {
  */
 function processNotification(snsMessage: unknown): void {
 	// Log entire message so we can learn unexpected structures
-	logEvents(
-		`[AWS WEBHOOK] Received Notification: ${escapeLogNewlines(String(snsMessage))}`,
+	logEvents.add(
+		`[AWS WEBHOOK] Received Notification: ${logEvents.escapeLogNewlines(String(snsMessage))}`,
 		'awsNotifications',
 	);
 
@@ -154,13 +157,13 @@ function processNotification(snsMessage: unknown): void {
 		unvalidatedJson = JSON.parse(String(snsMessage));
 	} catch (err: unknown) {
 		const msg = jsutil.getErrorMessage(err);
-		logEventsAndPrint(`[AWS WEBHOOK] JSON Parse Error: ${msg}`, 'errLog');
+		logEvents.addAndPrint(`[AWS WEBHOOK] JSON Parse Error: ${msg}`, 'errLog');
 		return;
 	}
 
 	const parseResult = SesNotificationSchema.safeParse(unvalidatedJson);
 	if (!parseResult.success) {
-		logZodError(
+		zodlogger.log(
 			unvalidatedJson,
 			parseResult.error,
 			'[AWS WEBHOOK] Malformed SES notification.',
@@ -173,7 +176,7 @@ function processNotification(snsMessage: unknown): void {
 		// Successful hand-off to the recipient's mail server
 		case 'Delivery': {
 			const { recipients } = notification.delivery;
-			logEvents(
+			logEvents.add(
 				`[AWS WEBHOOK] Delivery: ${recipients.join(', ')} (${notification.mail.messageId})`,
 				'awsNotifications',
 			);
@@ -185,8 +188,8 @@ function processNotification(snsMessage: unknown): void {
 			// (Mailbox Full) are usually safe to retry later, so we leave them alone.
 			if (bounceType === 'Permanent') blacklistRecipients(bouncedRecipients);
 			else
-				logEvents(
-					`[AWS WEBHOOK] Bounce Type is not Permanent. No action taken: ${escapeLogNewlines(bounceType)}`, // prettier-ignore
+				logEvents.add(
+					`[AWS WEBHOOK] Bounce Type is not Permanent. No action taken: ${logEvents.escapeLogNewlines(bounceType)}`, // prettier-ignore
 					'awsNotifications',
 				);
 			break;
@@ -195,8 +198,8 @@ function processNotification(snsMessage: unknown): void {
 		// transactional — never strand a real user from account-recovery emails.
 		case 'Complaint':
 			for (const { emailAddress } of notification.complaint.complainedRecipients) {
-				logEvents(
-					`[AWS WEBHOOK] Complaint: ${escapeLogNewlines(emailAddress)}`,
+				logEvents.add(
+					`[AWS WEBHOOK] Complaint: ${logEvents.escapeLogNewlines(emailAddress)}`,
 					'awsNotifications',
 				);
 			}
@@ -207,8 +210,8 @@ function processNotification(snsMessage: unknown): void {
 /** Bans every hard-bounced recipient from receiving any future email from us. */
 function blacklistRecipients(recipients: Recipients): void {
 	for (const { emailAddress } of recipients) {
-		logEvents(
-			`[AWS WEBHOOK] Hard Bounce: ${escapeLogNewlines(emailAddress)}`,
+		logEvents.add(
+			`[AWS WEBHOOK] Hard Bounce: ${logEvents.escapeLogNewlines(emailAddress)}`,
 			'awsNotifications',
 		);
 		try {
@@ -218,3 +221,7 @@ function blacklistRecipients(recipients: Recipients): void {
 		}
 	}
 }
+
+// Exports ------------------------------------------------------------------------------------
+
+export default { handle };

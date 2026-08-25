@@ -20,6 +20,7 @@ import typeutil from '../../../shared/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import logEvents from '../../utility/logEvents.js';
 import disconnect from './disconnect.js';
 import socketsend from '../../socket/socketSend.js';
 import gamesockets from './gamesockets.js';
@@ -33,7 +34,6 @@ import liveGameValues from './liveGameValues.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
 import liveGameRestore from './liveGameRestore.js';
 import gamestatebuilder from './gamestatebuilder.js';
-import { logEventsAndPrint } from '../../utility/logEvents.js';
 
 // Creation -----------------------------------------------------------------------------------
 
@@ -129,7 +129,7 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefined)[]): void {
 	// The stack, not just the message — these are unexpected internal failures.
 	const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
-	logEventsAndPrint(`Error creating game: ${details}`, 'errLog');
+	logEvents.addAndPrint(`Error creating game: ${details}`, 'errLog');
 	for (const ws of sockets) {
 		if (ws) socketsend.send(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
 	}

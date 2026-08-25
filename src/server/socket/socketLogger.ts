@@ -7,7 +7,7 @@
 
 import type { CustomWebSocket } from './socketTypes.js';
 
-import { escapeLogNewlines, logEvents } from '../utility/logEvents.js';
+import logEvents from '../utility/logEvents.js';
 
 // Constants ----------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ function truncateMessage(messageData: string): string {
 function logOpen(ws: CustomWebSocket): void {
 	const socketID = ws.metadata.id;
 	const logThis = `Opened socket of ID "${socketID}": ${JSON.stringify(ws.metadata.memberInfo)}`;
-	logEvents(logThis, 'wsInLog');
+	logEvents.add(logThis, 'wsInLog');
 }
 
 /**
@@ -39,8 +39,8 @@ function logOpen(ws: CustomWebSocket): void {
  */
 function logIn(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;
-	const logThis = `From socket of ID "${socketID}":   ${escapeLogNewlines(truncateMessage(messageData))}`;
-	logEvents(logThis, 'wsInLog');
+	const logThis = `From socket of ID "${socketID}":   ${logEvents.escapeLogNewlines(truncateMessage(messageData))}`;
+	logEvents.add(logThis, 'wsInLog');
 }
 
 /**
@@ -50,7 +50,7 @@ function logIn(ws: CustomWebSocket, messageData: string): void {
 function logOut(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;
 	const logThis = `To socket of ID "${socketID}":   ${truncateMessage(messageData)}`;
-	logEvents(logThis, 'wsOutLog');
+	logEvents.add(logThis, 'wsOutLog');
 }
 
 // Exports ------------------------------------------------------------------------------------
