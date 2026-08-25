@@ -328,22 +328,15 @@ function parseReviver(_key: string, value: any): any {
 
 /**
  * Ensures any type of object is JSON stringified. Strings are left unchanged.
- * If there's a provided error message, it will log any ocurred error.
+ * Unstringifiable input (a circular structure) yields a placeholder instead of throwing.
  * @param input - The input to stringify.
- * @param errorMessage - If specified, then this message will be printed if an error occurs.
  * @param spaces - If specified, the number of spaces to indent the output with (pretty-printing).
  */
-function ensureJSONString(input: any, errorMessage?: string, spaces?: number): string {
+function ensureJSONString(input: any, spaces?: number): string {
 	if (typeof input === 'string') return input;
 	try {
 		return JSON.stringify(input, stringifyReplacer, spaces);
-	} catch (error) {
-		// Handle cases where input cannot be stringified
-		if (errorMessage) {
-			// Print the error...
-			const errText = `${errorMessage}\n${(error as Error).stack}`;
-			console.log(errText);
-		}
+	} catch {
 		return 'Error: Input could not be JSON stringified';
 	}
 }
