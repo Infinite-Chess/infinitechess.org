@@ -1,11 +1,11 @@
-// scripts/imports/pagereach.ts
+// scripts/imports/page-reach.ts
 
 /**
  * Which client pages ship a module — the constraint that decides most placement questions.
  *
- *   npx tsx scripts/imports/pagereach.ts                    every client module, with its page set
- *   npx tsx scripts/imports/pagereach.ts <substring> ...    just the matching modules, any root
- *   npx tsx scripts/imports/pagereach.ts <substring> --why  plus the chain that drags each in
+ *   npx tsx scripts/imports/page-reach.ts                    every client module, with its page set
+ *   npx tsx scripts/imports/page-reach.ts <substring> ...    just the matching modules, any root
+ *   npx tsx scripts/imports/page-reach.ts <substring> --why  plus the chain that drags each in
  *
  * With no argument this also lists the client modules NO page reaches.
  *

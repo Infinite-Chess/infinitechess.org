@@ -11,7 +11,7 @@
  *
  *   ladder.ts        Direction, cycles, a module's consumers, and a per-directory survey,
  *                    for any root. Counts `import type` edges, which the checks below do not.
- *   pagereach.ts     Which client pages ship a module, and with --why the chain that drags
+ *   page-reach.ts    Which client pages ship a module, and with --why the chain that drags
  *                    it in. Bundle truth, from the esbuild metafile.
  *   pkg-cost.ts      Which pages bundle an npm package, and what it costs them in KB.
  *   import-chain.ts  Everything one page pulls in, grouped by depth.
@@ -27,7 +27,7 @@
  * Here a file's home is its WIDEST CONSUMER, not its subject matter. `deltatime.ts`
  * reads like game code but lives in `board/` because `boardpos.ts` needs it,
  * and the home page reaches boardpos through variant preview tooltips.
- * `pagereach.ts` computes each module's widest consumer directly.
+ * `page-reach.ts` computes each module's widest consumer directly.
  *
  * TWO CHECKS, neither subsuming the other. Reachability asks "which pages may
  * descend this far", so it wants the shipped bundle. The ladder asks "which

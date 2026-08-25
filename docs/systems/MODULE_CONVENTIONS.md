@@ -13,7 +13,7 @@ scripts disagree, study more siblings before trusting either.
   file is a lookup rather than a re-derivation.
 - Answer it with the tools in `scripts/imports/`, not by grep —
   `ladder.ts <root> consumers <path>` for who imports a module (type-only edges
-  included), `pagereach.ts` for which client pages would then ship it, `pkg-cost.ts`
+  included), `page-reach.ts` for which client pages would then ship it, `pkg-cost.ts`
   when a heavy package is what makes the placement matter.
 - One responsibility per script. Splitting a script might also make it easier to
   deduce their correct home. A file that fits no rung's subject is usually carrying two.
