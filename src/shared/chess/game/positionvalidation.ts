@@ -8,7 +8,7 @@
 
 import type { RawType } from '../../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
-import type { EngineSupportCode } from '../engines/apeiron_card.js';
+import type { EngineSupportCode } from '../engines/apeironcard.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 import type { GameFile, VariantOptions } from '../logic/gamefile.js';
 
@@ -18,7 +18,7 @@ import boardutil from '../logic/boardutil.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
 import checkmate from '../logic/checkmate.js';
-import apeiron_card from '../engines/apeiron_card.js';
+import apeironcard from '../engines/apeironcard.js';
 import variantreader from '../logic/variantreader.js';
 import checkdetection from '../logic/checkdetection.js';
 import gamefileutility from '../logic/gamefileutility.js';
@@ -241,7 +241,7 @@ export function getPlayabilityRejection(
 
 	// --- Rule 6: The engine can handle the position ---
 	if (context.engine) {
-		const support = apeiron_card.isPlaySupported(gamefile);
+		const support = apeironcard.isPlaySupported(gamefile);
 		if (!support.supported) return { kind: 'engine', code: support.reason };
 	}
 	return null;

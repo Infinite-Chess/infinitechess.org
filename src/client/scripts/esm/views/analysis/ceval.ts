@@ -8,14 +8,14 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineSupportCode } from '../../../../../shared/chess/engines/apeiron_card.js';
+import type { EngineSupportCode } from '../../../../../shared/chess/engines/apeironcard.js';
 import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
 
 import math from '../../../../../shared/util/math/math.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
-import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
+import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
@@ -581,7 +581,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
  * out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
  */
 function computeBlockReason(gamefile: GameFile): EngineSupportCode | undefined {
-	const result = apeiron_card.isAnalysisSupported(gamefile);
+	const result = apeironcard.isAnalysisSupported(gamefile);
 	if (!result.supported) return result.reason;
 	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) return 'out_of_bounds';
 	return undefined;

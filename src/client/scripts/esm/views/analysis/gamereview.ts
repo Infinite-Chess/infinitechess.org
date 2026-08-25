@@ -21,7 +21,7 @@ import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
+import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/util/typeutil.js';
 import { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -396,7 +396,7 @@ function canStart(): boolean {
 	if (status !== 'idle') return false;
 	const gamefile = gameslot.getGamefile();
 	if (gamefile === undefined || captureMainline().length === 0) return false;
-	return apeiron_card.isGameReviewSupported(gamefile).supported;
+	return apeironcard.isGameReviewSupported(gamefile).supported;
 }
 
 function getStatus(): ReviewStatus {

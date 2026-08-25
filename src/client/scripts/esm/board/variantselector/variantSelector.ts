@@ -22,7 +22,7 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
-import apeiron_card from '../../../../../shared/chess/engines/apeiron_card.js';
+import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
@@ -299,7 +299,7 @@ function setEngineOnly(restrict: boolean): void {
 		let anySupported = false;
 		panel.querySelectorAll<HTMLElement>('.variant-item[data-code]').forEach((btn) => {
 			const code = btn.getAttribute('data-code') as VariantCode;
-			const supported = apeiron_card.SUPPORTED_VARIANTS.has(code);
+			const supported = apeironcard.SUPPORTED_VARIANTS.has(code);
 			btn.classList.toggle('hidden', engineOnly && !supported);
 			if (supported) anySupported = true;
 		});
@@ -309,7 +309,7 @@ function setEngineOnly(restrict: boolean): void {
 	});
 
 	if (selection.kind === 'preset') {
-		if (engineOnly && !apeiron_card.SUPPORTED_VARIANTS.has(selection.code))
+		if (engineOnly && !apeironcard.SUPPORTED_VARIANTS.has(selection.code))
 			selectVariant('Classical');
 	} else revalidateCustomSelection();
 }

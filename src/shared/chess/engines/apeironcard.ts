@@ -1,4 +1,4 @@
-// src/shared/chess/engines/apeiron_card.ts
+// src/shared/chess/engines/apeironcard.ts
 
 /**
  * The Apeiron engine's support rules: what positions/variants it can actually handle.

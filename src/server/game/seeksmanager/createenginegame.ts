@@ -11,7 +11,7 @@
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { CreateEngineGameMessage } from '../../../shared/serverbound.js';
 
-import apeiron_card from '../../../shared/chess/engines/apeiron_card.js';
+import apeironcard from '../../../shared/chess/engines/apeironcard.js';
 import typeutil, { players } from '../../../shared/util/typeutil.js';
 import { ENGINE_DICTIONARY, ValidEngine } from '../../../shared/chess/engines/engine.js';
 
@@ -44,7 +44,7 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	// Unreachable via the client (it validates first), so reaching here is a hand-crafted message.
 	if (
 		body.strengthLevel > ENGINE_DICTIONARY[ONLINE_ENGINE].maxStrengthLevel ||
-		(body.variant.kind === 'preset' && !apeiron_card.SUPPORTED_VARIANTS.has(body.variant.code))
+		(body.variant.kind === 'preset' && !apeironcard.SUPPORTED_VARIANTS.has(body.variant.code))
 	) {
 		logEventsAndPrint('Player tried to create an engine game with invalid properties!', 'errLog'); // prettier-ignore
 		return;

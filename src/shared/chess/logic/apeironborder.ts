@@ -4,7 +4,7 @@
  * The board an engine game is played on: how its world border is derived, and the
  * coordinate range the Apeiron engine can evaluate inside.
  *
- * Split from apeiron_card.ts, which judges whether the engine can handle a position and
+ * Split from apeironcard.ts, which judges whether the engine can handle a position and
  * therefore needs a whole GameFile. A border is decided while a game is still being built,
  * so it is owned down here where game construction can reach it.
  */
