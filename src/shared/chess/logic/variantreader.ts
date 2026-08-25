@@ -73,14 +73,14 @@ function getMovesets(
 function getSpecialMovesOfVariant(
 	mod: VariantModule | undefined,
 ): RawTypeGroup<SpecialMoveFunction> {
-	const DEFAULT_SPECIAL_MOVES = jsutil.deepCopyObject(specialmove.DEFAULT_SPECIAL_MOVES);
+	const defaultSpecialMoves = specialmove.getDefaultSpecialMoves();
 	// Pasted games with no variant specified use the default
-	if (mod === undefined) return DEFAULT_SPECIAL_MOVES;
+	if (mod === undefined) return defaultSpecialMoves;
 
 	const overrides = mod.getSpecialMoves?.();
-	if (overrides === undefined) return DEFAULT_SPECIAL_MOVES;
-	jsutil.copyPropertiesToObject(overrides, DEFAULT_SPECIAL_MOVES);
-	return DEFAULT_SPECIAL_MOVES;
+	if (overrides === undefined) return defaultSpecialMoves;
+	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
+	return defaultSpecialMoves;
 }
 
 /**

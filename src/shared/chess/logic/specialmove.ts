@@ -31,21 +31,23 @@ export interface MoveRunning extends MoveTagged, Edit {}
  */
 export type SpecialVicinity = RawTypeGroup<Coords[]>;
 
-// Constants -------------------------------------------------------------------
+// Default Special Moves -------------------------------------------------------
 
 /**
- * The function that EXECUTES each piece type's special move. These do NOT calculate
- * whether the move is legal — that is specialdetect's job.
+ * Returns a fresh map of the function that EXECUTES each piece type's special move.
+ * These do NOT calculate whether the move is legal — that is specialdetect's job.
  *
  * Each returns false when the move it was handed isn't its special move after all,
  * so the caller falls back to moving the piece normally.
  */
-const DEFAULT_SPECIAL_MOVES: RawTypeGroup<SpecialMoveFunction> = {
-	[r.KING]: kings,
-	[r.ROYALCENTAUR]: kings,
-	[r.PAWN]: pawns,
-	[r.ROSE]: roses,
-};
+function getDefaultSpecialMoves(): RawTypeGroup<SpecialMoveFunction> {
+	return {
+		[r.KING]: kings,
+		[r.ROYALCENTAUR]: kings,
+		[r.PAWN]: pawns,
+		[r.ROSE]: roses,
+	};
+}
 
 // Special Move Functions ------------------------------------------------------
 
@@ -154,8 +156,8 @@ function getDefaultSpecialVicinitiesByPiece(): SpecialVicinity {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// Constants
-	DEFAULT_SPECIAL_MOVES,
+	// Default Special Moves
+	getDefaultSpecialMoves,
 	// Special Vicinities
 	getDefaultSpecialVicinitiesByPiece,
 };
