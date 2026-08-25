@@ -7,7 +7,8 @@ Each non-local session (working directory contains `/home/runner/` or `/github/`
 - **Frontend:** TS, CSS and assets in `src/client`. No major frameworks — vanilla, modular scripts. Bundled with **esbuild**, not Vite.
 - **Backend:** Node.js server at `src/server/server.js` — API, game logic, socket communication. Every html is SSR'd via Nunjucks; the old EJS system is being migrated away from during the website redesign.
 - **Database:** SQLite, via the `better-sqlite3` package.
-- **`src/` is split three ways:** `client/` (only client scripts may import), `server/` (only server scripts may import) and `shared/` (both sides may import). A refactor may call for migrating code from either side into `shared/`.
+- **`src/` is split three ways:** `client/` (only client scripts may import), `server/` (only server scripts may import) and `shared/` (both sides may import).
+- **`scripts/`** is a toolbox of developer and CI automation utilities. Maintain alongside `src/`.
 - **`dev-utils/`** is archived. Do not maintain it, and note that no source code imports from it.
 
 ## Useful notes
