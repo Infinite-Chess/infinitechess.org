@@ -150,7 +150,7 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 54. When I _do_ ask you to commit, `git push` immediately after. On a branch whose name won't match its remote's (`pr/<author>/<number>`, from `gh pr checkout` of a fork PR), bare `git push` aborts — read the remote and branch as two _separate_ values, from `branch.<current>.remote` and `branch.<current>.merge` in `git config`, then push explicitly: `git push <remote> HEAD:<branch>`.
 
-55. When I ask for work in a worktree, run its whole lifecycle yourself — I never type any of these commands. Create it in `.worktrees/`, branched from the branch I have checked out, never from `main`: `git worktree add .worktrees/<task> -b <task> <my-branch>`. Commit there per rule 53. Only when requested, deliver it unstaged into my working tree with `git cherry-pick -n <task>` and `git reset`, so I review it in my own editor. Immediately remove the worktree and delete the branch — any revision I ask for afterwards is ordinary work in my tree.
+55. When I ask for work in a worktree, run its whole lifecycle yourself — I never type any of these commands. Create it in `.worktrees/`, branched from the branch I have checked out, never from `main`: `git worktree add .worktrees/<task> -b <task> <my-branch>`. Node walks up to the repo's `node_modules`, so it needs no install. Commit there per rule 53. Only when requested, deliver it unstaged into my working tree with `git cherry-pick -n <task>` and `git reset`, so I review it in my own editor. Immediately remove the worktree and delete the branch — any revision I ask for afterwards is ordinary work in my tree.
 
 ### Session flow
 
