@@ -1,5 +1,11 @@
 // src/client/scripts/esm/board/GameBus.ts
 
+/**
+ * Typed event bus for the game board, covering both its logical and its
+ * graphical events. Handlers self-register by listening; the board's modules
+ * dispatch facts about game/piece/render state.
+ */
+
 import type { Piece } from '../../../../shared/chess/logic/boardutil';
 import type { LegalMoves } from '../../../../shared/chess/logic/legalmoves';
 
