@@ -1,12 +1,14 @@
 // src/server/game/gamemanager/gamelogger.ts
 
 /**
- * This script logs all completed games into the "games" database table
- * It also computes the players' ratings in rated games and logs them into the "ratings" table
- * It also updates the players' stats in the "players_stats" table
+ * Writes a finished game's permanent record: the "games" row, the rating changes of a
+ * rated game, and the players' "player_stats" counters — one transaction, one concern.
  *
  * This is the WRITE side; `deadgamestate.ts` is the READ side
  * that reconstructs a concluded game from these columns.
+ *
+ * The Cheat-report overturn section stays HERE rather than in `cheatreport.ts`: it reverses
+ * cell-for-cell what the log side wrote, and shares four of its helpers. Apart they would drift.
  */
 
 import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
