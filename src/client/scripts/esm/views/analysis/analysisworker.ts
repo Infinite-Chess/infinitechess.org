@@ -9,7 +9,7 @@
  * requeues it, the legal-moves helper simply goes away until the next request.
  */
 
-import type { AnalysisCommand, AnalysisResponse } from './apeironanalysis.worker.js';
+import type { AnalysisCommand, AnalysisResponse } from './analysisprotocol.js';
 
 // Types -----------------------------------------------------------------------
 

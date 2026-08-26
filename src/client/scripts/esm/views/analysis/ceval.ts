@@ -10,7 +10,7 @@
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { EngineSupportCode } from '../../../../../shared/chess/engines/apeironcard.js';
 import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
-import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './apeironanalysis.worker.js';
+import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './analysisprotocol.js';
 
 import math from '../../../../../shared/util/math/math.js';
 import timeutil from '../../../../../shared/util/timeutil.js';

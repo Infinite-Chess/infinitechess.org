@@ -15,7 +15,12 @@ import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
 import type { Player, PlayerGroup } from '../../../../../shared/util/typeutil.js';
 import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
-import type { AnalysisCommand, AnalysisResponse, AnalysisInfo } from './apeironanalysis.worker.js';
+import type {
+	AnalysisCommand,
+	AnalysisInfo,
+	AnalysisResponse,
+	EvaluateResult,
+} from './analysisprotocol.js';
 
 import * as z from 'zod';
 
@@ -36,6 +41,7 @@ import gamecompressor from '../../chess/gamecompressor.js';
 import reviewdivision from './reviewdivision.js';
 import analysisworker from './analysisworker.js';
 import analysisenginebounds from './analysisenginebounds.js';
+import { EvaluateResultSchema } from './analysisprotocol.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -217,31 +223,6 @@ const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
 const REVIEW_CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 // Schemas ---------------------------------------------------------------------
-
-/** The result of a one-shot `evaluate` command (see {@link EvaluateResultSchema}). */
-export type EvaluateResult = z.infer<typeof EvaluateResultSchema>;
-/**
- * The result of a one-shot `evaluate` command, and the source of truth for the
- * {@link EvaluateResult} type. Score is from the side-to-move's perspective; both
- * absent on a terminal position (no legal moves).
- */
-const EvaluateResultSchema = z.object({
-	requestId: z.int(),
-	/** Centipawns. Absent when mating or terminal. */
-	cp: z.number().optional(),
-	/** Full moves to mate (negative = getting mated). */
-	mate: z.number().optional(),
-	/** The engine's best line as compact move tokens ("x,y>x,y=Q"). Absent on terminal positions. */
-	pv: z.array(z.string()).optional(),
-	/** 0 = terminal (checkmate/stalemate), 1 = forced move (not searched). */
-	legalMoveCount: z.int(),
-	/** Whether the side to move is in check (distinguishes checkmate from stalemate when terminal). */
-	inCheck: z.boolean(),
-	/** The deepest depth the search completed (0 for terminal/forced/unevaluated positions). */
-	depth: z.int(),
-	/** Echoed for an unreported TT-warming search. */
-	warmup: z.boolean().optional(),
-});
 
 /** Validates a persisted review's shape (see {@link CachedGameReview}). */
 const CachedGameReviewSchema = z.object({
