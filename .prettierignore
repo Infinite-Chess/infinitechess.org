@@ -1,5 +1,7 @@
 # .prettierignore
 
+# Agent worktrees
+.claude/
 dist/
 dev-utils/
 src/client/pkg/

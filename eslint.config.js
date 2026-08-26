@@ -9,7 +9,8 @@ import eslintConfigPrettier from 'eslint-config-prettier/flat';
 export default [
 	pluginJs.configs.recommended,
 	{
-		ignores: ['dev-utils/**', 'dist/**', 'src/client/pkg/**', 'sandbox/**'],
+		// '.claude/**' covers agent worktrees.
+		ignores: ['.claude/**', 'dev-utils/**', 'dist/**', 'src/client/pkg/**', 'sandbox/**'],
 	},
 	{
 		files: ['**/*.js', '**/*.ts'], // Apply the following rule overrides to both js and ts files...
