@@ -63,6 +63,10 @@ GameBus.addEventListener('moves-changed', () => {
 	updateOfferDrawButton();
 });
 GameBus.addEventListener('game-concluded', () => refresh());
+GameBus.addEventListener('draw-offer-changed', () => {
+	refresh();
+	updateOfferDrawButton();
+});
 // Resign and abort are disabled while the server still owes us an answer for them.
 // Rematch is disabled while the socket is down.
 SocketBus.addEventListener('intents', () => {
@@ -72,10 +76,7 @@ SocketBus.addEventListener('intents', () => {
 
 // Block visibility ------------------------------------------------------------
 
-/**
- * Reveals the single action block matching the current game state. Called on
- * load/conclusion, and by {@link drawoffers} whenever an incoming offer opens or closes.
- */
+/** Reveals the single action block matching the current game state. */
 function refresh(): void {
 	const gamefile = gameslot.getGamefile();
 
@@ -326,8 +327,6 @@ function initListeners(): void {
 initListeners();
 
 export default {
-	refresh,
-	updateOfferDrawButton,
 	setRematchState,
 	onOpponentRematchOffer,
 	onOpponentLeft,
