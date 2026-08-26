@@ -1,10 +1,20 @@
 // src/client/scripts/esm/webgl/BufferUtil.ts
 
 /**
- * This script works with buffers. Creating them, assigning data, and modifying their indices.
+ * GPU buffers: creating one from vertex data, and rewriting a slice of one in place.
  */
 
-import { TypedArray } from './Renderable.js';
+// Types -----------------------------------------------------------------------
+
+/**
+ * All signed type arrays compatible with WebGL, that can be used as vertex data.
+ *
+ * Float32Array => Max safe integer: 16,777,215. Max value: 3.4e+38
+ * Int32Array => Max integer: 2,147,483,647
+ * Int16Array => Max integer: 32,767
+ * Int8Array => Max integer: 127
+ */
+export type TypedArray = Float32Array | Int32Array | Int16Array | Int8Array;
 
 // Variables -------------------------------------------------------------------
 
@@ -16,23 +26,10 @@ const DRAW_HINT = 'STATIC_DRAW';
 // Functions -------------------------------------------------------------------
 
 /**
- * Updates a buffer on the gpu with new data.
- * Can be used to modify meshes without having to create a new model.
- * @param buffer - The buffer to modify
- * @param data - The new data to put into the buffer.
- */
-// function updateBuffer(buffer: WebGLBuffer, data: Float32Array) {
-// 	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-// 	// gl.bufferData(gl.ARRAY_BUFFER, data, gl[DRAW_HINT]); // OLD. SLOW
-// 	gl.bufferSubData(gl.ARRAY_BUFFER, 0, data); // NEW. Sometimes faster? It stops being fast when I rewind & forward the game.
-// 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
-// }
-
-/**
  * Updates only the provided indices of a buffer on the GPU with new data.
  * FAST. Use if only a part of the mesh has changed.
  * @param buffer - The WebGL buffer to update.
- * @param data - The typed array containing the new data (e.g., Float32Array, Uint16Array, etc.).
+ * @param data - The typed array containing the new data (e.g., Float32Array, Int16Array).
  * @param changedIndicesStart - The index in the vertex data marking the first value changed.
  * @param changedIndicesCount - The number of indices in the vertex data that were changed, beginning at {@link changedIndicesStart}.
  */

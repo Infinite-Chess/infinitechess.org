@@ -15,6 +15,7 @@
  */
 
 import type { Vec3 } from '../../../../shared/util/math/vectors.js';
+import type { TypedArray } from './BufferUtil.js';
 
 import mat4 from './gl-matrix.js';
 import { ShaderProgram } from './ShaderProgram.js';
@@ -45,16 +46,6 @@ export interface ViewSource {
  * number[] => Double precision (64-bit). Max safe integer of 9,007,199,254,740,991 (9 quadrillion). Max value of 1.8e+308.
  */
 export type InputArray = number[] | TypedArray;
-
-/**
- * All signed type arrays compatible with WebGL, that can be used as vertex data.
- *
- * Float32Array => Max safe integer: 16,777,215. Max value: 3.4e+38
- * Int32Array => Max integer: 2,147,483,647
- * Int16Array => Max integer: 32,767
- * Int8Array => Max integer: 127
- */
-export type TypedArray = Float32Array | Int32Array | Int16Array | Int8Array;
 
 /** All valid primitive shapes we can render with */
 export type PrimitiveType =
