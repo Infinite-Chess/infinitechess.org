@@ -8,6 +8,6 @@ export default defineConfig({
 		environment: 'node',
 		setupFiles: ['src/tests/tests-setup.ts'],
 		include: ['**/*.test.ts', '**/*.test.js'],
-		exclude: ['node_modules', 'dist'],
+		exclude: ['.worktrees', 'node_modules', 'dist'],
 	},
 });

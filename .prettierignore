@@ -1,5 +1,6 @@
 # .prettierignore
 
+.worktrees/
 dist/
 dev-utils/
 src/client/pkg/
