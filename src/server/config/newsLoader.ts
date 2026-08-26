@@ -1,5 +1,15 @@
 // src/server/config/newsLoader.ts
 
+/**
+ * Compiles the markdown news posts into per-language HTML.
+ *
+ * DORMANT — nothing imports this. It is the EJS-era news renderer, kept for the loading logic
+ * worth repurposing: the date-sorted file walk, the per-language fallback to English, and the
+ * locale-aware date format. Revisit when the redesigned news page lands, at which point:
+ *  - the HTML string building below must go — markup belongs in a `.njk` template, not a script,
+ *  - and what stays returns post DATA for the template to render, not a joined HTML blob.
+ */
+
 import fs from 'fs';
 import path from 'path';
 import { marked } from 'marked';

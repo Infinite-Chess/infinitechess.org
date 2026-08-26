@@ -18,8 +18,8 @@ const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
 // Scheduling ----------------------------------------------------------------------------------
 
-/** Runs immediately, then once a day: every table's stale-data cleanup. */
-export function startPeriodicDatabaseCleanupTasks(): void {
+/** Starts periodic cleanup tasks for the database. Runs immediately, then once a day. */
+function startPeriodic(): void {
 	performCleanupTasks(); // Run immediately to clean up now.
 	setInterval(() => performCleanupTasks(), CLEANUP_INTERVAL_MS);
 }
@@ -100,3 +100,7 @@ function cleanUpExpiredRefreshTokens(): void {
 		logEvents.addAndPrint(errorMessage, 'errLog');
 	}
 }
+
+// Exports --------------------------------------------------------------------
+
+export default { startPeriodic };

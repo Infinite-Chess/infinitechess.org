@@ -1,15 +1,15 @@
-// src/server/api/Prefs.ts
+// src/server/api/prefs.ts
 
 /**
  * This script has an API for setting your preferences in the database.
- * (The preferences cookie itself is owned by controllers/prefsCookie.ts.)
+ * (The preferences cookie itself is owned by cookies/prefsCookie.ts.)
  */
 
 import type { Request, Response } from 'express';
 
 import zodlogger from '../utility/zodlogger.js';
 import logEvents from '../utility/logEvents.js';
-import prefsCookie from '../controllers/prefsCookie.js';
+import prefsCookie from '../cookies/prefsCookie.js';
 import memberManager from '../database/memberManager.js';
 
 /** `PUT /api/preferences` — replaces the signed-in user's preferences in the database. */

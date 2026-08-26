@@ -1,12 +1,13 @@
 // src/server/middleware/contentSecurityPolicy.ts
 
-import helmet from 'helmet';
-
 /**
  * CSP (Content Security Policy): protects our users by telling the browser to only load/run
  * resources (scripts, frames, images, ...) from sources we explicitly allowlist below.
  * Its main job is mitigating XSS: an injected or inline script from a non-allowlisted source won't run.
  */
+
+import helmet from 'helmet';
+
 const contentSecurityPolicy = helmet({
 	contentSecurityPolicy: {
 		directives: {

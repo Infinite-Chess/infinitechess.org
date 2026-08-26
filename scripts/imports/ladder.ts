@@ -67,13 +67,16 @@ const SPECS: Record<string, RootSpec> = {
 		},
 		rank: {
 			'(root) types.ts': 0,
-			'config/': 1, 'utility/': 1, 'database/': 1,
-			'game/': 2, 'socket/': 2,
-			'controllers/': 3,
-			'api/': 4,
-			'middleware/': 5,
-			'routes/': 6,
-			'(root) app.ts': 7, '(root) server.ts': 7, '(root) setupDev.ts': 7,
+			'config/': 1,
+			'utility/': 2,
+			'database/': 3,
+			'cookies/': 4,
+			'game/': 5, 'socket/': 5,
+			'controllers/': 6,
+			'api/': 7,
+			'middleware/': 8,
+			'routes/': 9,
+			'(root) app.ts': 10, '(root) server.ts': 10, '(root) setupDev.ts': 10,
 		}, // prettier-ignore
 	},
 	client: {

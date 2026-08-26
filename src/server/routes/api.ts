@@ -11,16 +11,16 @@ import type { Request, Response } from 'express';
 
 import express from 'express';
 
-import GitHub from '../api/GitHub.js';
-import GameAPI from '../api/GameAPI.js';
+import gameAPI from '../api/gameAPI.js';
 import authRouter from './auth.js';
 import newsRouter from './news.js';
 import adminRouter from './admin.js';
+import contributors from '../api/contributors.js';
 import rateLimiters from '../middleware/rateLimiters.js';
 import membersRouter from './members.js';
 import registerRouter from './register.js';
 import passwordRouter from './password.js';
-import SeekPreviewAPI from '../api/SeekPreviewAPI.js';
+import seekPreviewAPI from '../api/seekPreviewAPI.js';
 import deployController from '../controllers/deployController.js';
 import editorSavesRouter from './editorSaves.js';
 import preferencesRouter from './preferences.js';
@@ -43,13 +43,12 @@ router.use('/', passwordRouter);
 
 /** `GET /api/contributors` — returns the JSON list of project contributors. */
 router.get('/contributors', (_req: Request, res: Response) => {
-	const contributors = GitHub.getContributors();
-	res.json(contributors);
+	res.json(contributors.get());
 });
 
-router.get('/seek-preview/:seekId', rateLimiters.seekPreview, SeekPreviewAPI.get);
+router.get('/seek-preview/:seekId', rateLimiters.seekPreview, seekPreviewAPI.get);
 
-router.get('/game/:id', rateLimiters.gameState, GameAPI.getState);
+router.get('/game/:id', rateLimiters.gameState, gameAPI.getState);
 
 // Endpoint called by the GitHub Actions deploy workflow before pm2 reload
 router.post('/prepare-restart', deployController.handlePrepareRestart);

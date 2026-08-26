@@ -14,11 +14,11 @@ import variantcache from '../shared/chess/variants/variantcache.js';
 import db from './database/database.js';
 import app from './app.js';
 import logEvents from './utility/logEvents.js';
-import gamemanager from './game/gamemanager/gamemanager.js';
+import gamerestart from './game/gamemanager/gamerestart.js';
 import certOptions from './config/certOptions.js';
 import socketServer from './socket/socketServer.js';
+import databaseInit from './database/databaseInit.js';
 import startupLogger from './utility/startupLogger.js';
-import databaseTables from './database/databaseTables.js';
 import { initDevEnvironment } from './setupDev.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
@@ -46,7 +46,7 @@ process.on('uncaughtException', (error: unknown) => {
 
 // Startup ------------------------------------------------------------------------------------
 
-databaseTables.initDatabase();
+databaseInit.init();
 // Ensure our workspace is ready for the dev environment
 initDevEnvironment();
 logEvents.startPeriodicLogCleanup();
@@ -63,7 +63,7 @@ httpsServer.keepAliveTimeout = 95000;
 await variantcache.loadAllVariants();
 
 // Restore live games from the database into memory before accepting new connections.
-gamemanager.restoreLiveGames();
+gamerestart.restoreLiveGames();
 
 // Start the server
 const DEV_BUILD = process.env['NODE_ENV'] === 'development';
@@ -94,7 +94,7 @@ function handleCleanup(signal: string): void {
 
 	startupLogger.stopped(signal);
 
-	gamemanager.prepForShutdown();
+	gamerestart.prepForShutdown();
 
 	db.close(); // Close the database when the server is shutting down.
 

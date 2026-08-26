@@ -55,13 +55,26 @@
  * each other sideways; that is deliberate, not an exception:
  *
  *   types.ts                       the file, not a directory — everything reads it
- *   config/, utility/, database/   process setup, generic helpers, persistence
+ *   config/                        what is loaded or configured once at boot
+ *   utility/                       shared infrastructure below the domain: logging,
+ *                                  email, IP, tokens, metering, request context
+ *   database/                      persistence: the connection, the schema, one
+ *                                  manager per table
+ *   cookies/                       who owns each cookie we set — its schema, lifetime,
+ *                                  options, and how to read, write and clear it
  *   game/, socket/                 live game state and the connections carrying it
  *   controllers/                   request handlers that render or answer
  *   api/                           JSON endpoints
  *   middleware/                    what wraps a request before it reaches the above
  *   routes/                        the URL table
  *   app.ts, server.ts, setupDev.ts the process entry points
+ *
+ * Inside database/ the same idea repeats one level down, and it is worth knowing before
+ * adding a file there: database.ts is the floor (connection, queries, and the column cache
+ * every validation reads); the per-table managers and databaseTables.ts sit above it and
+ * reach nothing but it; migrations.ts reaches the managers; databaseInit.ts is the roof,
+ * reached only by server.ts and the integration tests. No hand-written copy of the schema
+ * exists — column lists are read out of SQLite at boot, so they cannot drift from it.
  *
  * Subject picks the directory here, and the widest-consumer rule does not apply: by it,
  * loginController.ts (reached only from routes/) would live in routes/. The ladder only

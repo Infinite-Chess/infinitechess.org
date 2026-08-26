@@ -96,7 +96,7 @@ The register browser's awaiting page ([register-awaiting.ts](/src/client/scripts
 polls `GET /api/register/awaiting/status` on a backoff schedule. The poll returns one of four
 statuses: `pending` → keep waiting; `expired`/`blacklisted` → reload (the server re-renders
 the right variant); `verified` → queue a toast and redirect home. On `verified` the server
-— because _this_ browser holds the `claim_token` cookie — issues it a session ([sessionManager.ts](/src/server/controllers/authenticationTokens/sessionManager.ts)
+— because _this_ browser holds the `claim_token` cookie — issues it a session ([sessionManager.ts](/src/server/controllers/sessionManager.ts)
 `createNewSession`) and clears the pending cookie. This is the only place a session is issued.
 The browser that entered the password is typically the device the user wants to be logged in
 on, not the one they checked their emails with.
@@ -173,7 +173,7 @@ the normal flow and create a **verified member directly** via `memberManager.add
 | Verification email                                                   | [emailService.ts](/src/server/utility/emailService.ts)                                                                                                                                     |
 | Turnstile verification                                               | [turnstile.ts](/src/server/controllers/turnstile.ts)                                                                                                                                       |
 | Email blacklist                                                      | [blacklistManager.ts](/src/server/database/blacklistManager.ts) / [awsWebhook.ts](/src/server/controllers/awsWebhook.ts)                                                                   |
-| Session issuance (poll only)                                         | [sessionManager.ts](/src/server/controllers/authenticationTokens/sessionManager.ts)                                                                                                        |
+| Session issuance (poll only)                                         | [sessionManager.ts](/src/server/controllers/sessionManager.ts)                                                                                                                             |
 | Page routes / API routes                                             | [root.ts](/src/server/routes/root.ts) / [register.ts](/src/server/routes/register.ts), [api.ts](/src/server/routes/api.ts)                                                                 |
 | SSR templates                                                        | `src/server/views/register.njk`, `register-awaiting.njk`, `verify.njk`                                                                                                                     |
 | Client scripts                                                       | [register.ts](/src/client/scripts/esm/views/register.ts), [register-awaiting.ts](/src/client/scripts/esm/views/register-awaiting.ts), [verify.ts](/src/client/scripts/esm/views/verify.ts) |

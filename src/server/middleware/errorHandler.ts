@@ -1,5 +1,11 @@
 // src/server/middleware/errorHandler.ts
 
+/**
+ * Express error handler. Reached by uncaught server errors (statusless or 5xx) and
+ * by errors that carry an HTTP status — in practice only the JSON body parser
+ * (express.json), which throws 400 / 413 / 415.
+ */
+
 import type { Request, Response, NextFunction } from 'express';
 
 import jsutil from '../../shared/util/jsutil.js';
@@ -8,11 +14,6 @@ import logEvents from '../utility/logEvents.js';
 import respondError from './respondError.js';
 import renderErrorPage from './renderErrorPage.js';
 
-/**
- * Express error handler. Reached by uncaught server errors (statusless or 5xx) and by errors that
- * carry an HTTP status — in practice only the JSON body parser (express.json),
- * which throws 400 / 413 / 415.
- */
 function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): void {
 	const status = 'status' in err && typeof err.status === 'number' ? err.status : 500;
 

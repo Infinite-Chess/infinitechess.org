@@ -11,12 +11,12 @@
 import express from 'express';
 
 import resolveAuth from '../middleware/resolveAuth.js';
-import PracticeProgress from '../api/PracticeProgress.js';
+import practiceProgress from '../api/practiceProgress.js';
 
 const router = express.Router();
 
 router.use(resolveAuth.resolve);
 
-router.put('/', PracticeProgress.postCheckmateBeaten);
+router.put('/', practiceProgress.postCheckmateBeaten);
 
 export default router;

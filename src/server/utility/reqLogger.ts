@@ -8,14 +8,14 @@
 import type { IncomingMessage } from 'node:http';
 import type { Request, Response } from 'express';
 
-import IP from './IP.js';
+import ip from './ip.js';
 import logEvents from './logEvents.js';
 
 // Functions --------------------------------------------------------------------------------------
 
 /** Logs one incoming request or websocket upgrade into `reqLog`. */
 function incoming(req: IncomingMessage): void {
-	const clientIP = IP.get(req) || 'Unknown ip';
+	const clientIP = ip.get(req) || 'Unknown ip';
 	const origin = req.headers.origin || 'Unknown origin';
 	const agent = req.headers['user-agent'] || 'Unknown agent';
 

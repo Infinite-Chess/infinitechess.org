@@ -1,8 +1,9 @@
 // src/server/game/gamemanager/gamerouter.ts
 
-/*
- * This script routes all incoming websocket messages
- * with the "game" route to where they need to go.
+/**
+ * Routes every incoming websocket message on the "game" route to its handler.
+ *
+ * See docs/systems/WEBSOCKETS.md.
  */
 
 import type { CustomWebSocket } from '../../socket/socketTypes.js';

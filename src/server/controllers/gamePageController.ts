@@ -335,6 +335,4 @@ function resolveGameRules(
 
 // Exports ---------------------------------------------------------------------------
 
-// Exports ------------------------------------------------------------------------------------
-
 export default { getPageState, getDeadGameViewState };

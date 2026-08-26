@@ -1,4 +1,4 @@
-// src/server/controllers/authenticationTokens/sessionManager.ts
+// src/server/controllers/sessionManager.ts
 
 /**
  * This module handles the creation, renewal, and revocation of user login sessions.
@@ -6,15 +6,15 @@
  */
 
 import type { Request, Response } from 'express';
-import type { Role } from '../../types.js';
-import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
+import type { Role } from '../types.js';
+import type { RefreshTokenRecord } from '../database/refreshTokenManager.js';
 
-import prefsCookie from '../prefsCookie.js';
-import tokenSigner from '../../utility/tokenSigner.js';
-import memberInfoCookie from './memberInfoCookie.js';
-import refreshTokenCookie from './refreshTokenCookie.js';
-import refreshTokenManager from '../../database/refreshTokenManager.js';
-import practiceProgressCookie from '../practiceProgressCookie.js';
+import prefsCookie from '../cookies/prefsCookie.js';
+import tokenSigner from '../utility/tokenSigner.js';
+import memberInfoCookie from '../cookies/memberInfoCookie.js';
+import refreshTokenCookie from '../cookies/refreshTokenCookie.js';
+import refreshTokenManager from '../database/refreshTokenManager.js';
+import practiceProgressCookie from '../cookies/practiceProgressCookie.js';
 
 // Constants ---------------------------------------------------------------------------------------
 

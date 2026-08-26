@@ -1,16 +1,16 @@
-// src/server/controllers/practiceProgressCookie.ts
+// src/server/cookies/practiceProgressCookie.ts
 
 /**
  * Owns the user 'checkmates_beaten' cookie: sets it for signed-in members on HTML
  * requests from their stored checkmate progression, and removes it on logout.
  *
- * The API for recording new checkmates lives in api/PracticeProgress.ts.
+ * The API for recording new checkmates lives in api/practiceProgress.ts.
  */
 
 import type { Request, Response } from 'express';
 
 import memberManager from '../database/memberManager.js';
-import memberInfoCookie from './authenticationTokens/memberInfoCookie.js';
+import memberInfoCookie from './memberInfoCookie.js';
 
 // Constants --------------------------------------------------------------------------------------
 

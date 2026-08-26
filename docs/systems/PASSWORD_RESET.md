@@ -50,7 +50,7 @@ routes ([password.ts](/src/server/routes/password.ts), mounted at `/api`) the pa
 
 ### 1. Request — `POST /api/forgot-password`
 
-[passwordResetController.ts](/src/server/controllers/passwordResetController.ts) `handleForgotPasswordRequest`:
+[passwordResetController.ts](/src/server/controllers/passwordResetController.ts) `handleForgot`:
 
 1. Body check — `email` a non-empty string.
 2. Look up member by email (`COLLATE NOCASE`). If none → log, fall through to the generic `200`.
@@ -67,7 +67,7 @@ and shows the generic confirmation on any `2xx`; a non-OK surfaces the server's 
 
 ### 2. Open the link — `GET /reset-password/:token`
 
-Inert. `getResetPasswordPageState` hashes the `:token` param and checks for a matching unexpired
+Inert. `getPageState` hashes the `:token` param and checks for a matching unexpired
 row **without consuming it**, returning `{ state: 'valid' | 'invalid' }`. `valid` → renders the
 set-new-password form; `invalid`/expired → a dead-link card linking back to `/forgot-password`.
 The route sets `Referrer-Policy: no-referrer` so the token in the URL doesn't leak via `Referer`
@@ -77,7 +77,7 @@ The GET is read-only and consumes nothing, so an email scanner pre-fetching it d
 
 ### 3. Set the password — `POST /api/reset-password`
 
-`handleResetPassword` (body `{ token, password }`):
+`handleReset` (body `{ token, password }`):
 
 1. `verifyBodyHasResetPasswordData` — both non-empty strings; `token` ≤ 100 chars
    (a valid token is 43 chars — rejects obviously invalid values before hashing).
@@ -125,16 +125,16 @@ With no email credentials in `.env` (most devs), the server logs the password re
 
 ## File map
 
-| Concern                                                    | File                                                                                                                                                        |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Both API handlers, page-state, token hash/lookup           | [passwordResetController.ts](/src/server/controllers/passwordResetController.ts)                                                                            |
-| API routes (`/api/forgot-password`, `/api/reset-password`) | [password.ts](/src/server/routes/password.ts)                                                                                                               |
-| Page routes (`/forgot-password`, `/reset-password/:token`) | [root.ts](/src/server/routes/root.ts)                                                                                                                       |
-| Reset + changed emails                                     | [emailService.ts](/src/server/utility/emailService.ts)                                                                                                      |
-| Password format rules / salt rounds                        | [accountValidation.ts](/src/server/controllers/accountValidation.ts)                                                                                        |
-| Session issuance / session teardown                        | [sessionManager.ts](/src/server/controllers/authenticationTokens/sessionManager.ts) / [refreshTokenManager.ts](/src/server/database/refreshTokenManager.ts) |
-| Email blacklist                                            | [blacklistManager.ts](/src/server/database/blacklistManager.ts)                                                                                             |
-| Table schema                                               | [databaseTables.ts](/src/server/database/databaseTables.ts)                                                                                                 |
-| Expiry sweep                                               | [cleanupTasks.ts](/src/server/database/cleanupTasks.ts)                                                                                                     |
-| SSR templates                                              | `src/server/views/forgotpassword.njk`, `resetpassword.njk`                                                                                                  |
-| Client scripts                                             | [forgotpassword.ts](/src/client/scripts/esm/views/forgotpassword.ts), [resetpassword.ts](/src/client/scripts/esm/views/resetpassword.ts)                    |
+| Concern                                                    | File                                                                                                                                     |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Both API handlers, page-state, token hash/lookup           | [passwordResetController.ts](/src/server/controllers/passwordResetController.ts)                                                         |
+| API routes (`/api/forgot-password`, `/api/reset-password`) | [password.ts](/src/server/routes/password.ts)                                                                                            |
+| Page routes (`/forgot-password`, `/reset-password/:token`) | [root.ts](/src/server/routes/root.ts)                                                                                                    |
+| Reset + changed emails                                     | [emailService.ts](/src/server/utility/emailService.ts)                                                                                   |
+| Password format rules / salt rounds                        | [accountValidation.ts](/src/server/controllers/accountValidation.ts)                                                                     |
+| Session issuance / session teardown                        | [sessionManager.ts](/src/server/controllers/sessionManager.ts) / [refreshTokenManager.ts](/src/server/database/refreshTokenManager.ts)   |
+| Email blacklist                                            | [blacklistManager.ts](/src/server/database/blacklistManager.ts)                                                                          |
+| Table schema                                               | [databaseTables.ts](/src/server/database/databaseTables.ts)                                                                              |
+| Expiry sweep                                               | [cleanupTasks.ts](/src/server/database/cleanupTasks.ts)                                                                                  |
+| SSR templates                                              | `src/server/views/forgotpassword.njk`, `resetpassword.njk`                                                                               |
+| Client scripts                                             | [forgotpassword.ts](/src/client/scripts/esm/views/forgotpassword.ts), [resetpassword.ts](/src/client/scripts/esm/views/resetpassword.ts) |

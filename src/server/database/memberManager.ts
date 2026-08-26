@@ -9,7 +9,6 @@ import type { PendingRegistrationRecord } from './pendingRegistrationManager.js'
 import jsonutil from '../../shared/util/jsonutil.js';
 
 import db from './database.js';
-import databaseTables from './databaseTables.js';
 import pendingRegistrationManager from './pendingRegistrationManager.js';
 
 // Types --------------------------------------------------------------------------------------
@@ -36,6 +35,19 @@ type MembersColumn = keyof MemberRecord;
 export type DeleteReason = (typeof VALID_DELETE_REASONS)[number];
 
 // Constants ----------------------------------------------------------------------------------
+
+/**
+ * 62**4: Limit of unique user ids with 4-digit base-62 user ids! EXCLUSIVE.
+ * Matches `gamesManager`'s game-id cap, but nothing depends on the two being equal.
+ */
+const USER_ID_UPPER_CAP: number = 14_776_336;
+
+/**
+ * Every members column that uniquely identifies a single member, and is therefore
+ * valid to search one by. A deliberate SUBSET of the table, so it is not derivable
+ * from the schema the way the full column list is.
+ */
+const UNIQUE_MEMBERS_COLUMNS: string[] = ['user_id', 'username', 'email'];
 
 /**
  * A list of all valid reasons to delete an account.
@@ -182,7 +194,6 @@ function updateColumns(user_id: number, updates: Partial<MemberRecord>): void {
 	db.call(() => {
 		const result = db.runRowUpdate({
 			tableName: 'members',
-			allowedColumns: databaseTables.ALL_MEMBERS_COLUMNS,
 			updates,
 			errorContext: `updating member of ID "${user_id}"`,
 			whereClause: 'user_id = ?',
@@ -359,7 +370,7 @@ function isEmailTakenOrPending(email: string): boolean {
 function genUniqueUserID(): number {
 	let id: number;
 	do {
-		id = Math.floor(Math.random() * databaseTables.USER_ID_UPPER_CAP);
+		id = Math.floor(Math.random() * USER_ID_UPPER_CAP);
 	} while (isUserIdTaken(id));
 	return id;
 }
@@ -377,11 +388,11 @@ function validateMemberQueryArgs(
 	searchValues: (string | number)[],
 ): void {
 	// 1. Validate Columns
-	db.assertColumnsValid(columns, databaseTables.ALL_MEMBERS_COLUMNS, 'members');
+	db.assertColumnsValid(columns, 'members');
 
 	// 2. Validate Search Key
-	if (typeof searchKey !== 'string' || !databaseTables.UNIQUE_MEMBERS_COLUMNS.includes(searchKey))
-		throw new Error(`Invalid search key for members table "${searchKey}". Must be one of: ${databaseTables.UNIQUE_MEMBERS_COLUMNS.join(', ')}`); // prettier-ignore
+	if (typeof searchKey !== 'string' || !UNIQUE_MEMBERS_COLUMNS.includes(searchKey))
+		throw new Error(`Invalid search key for members table "${searchKey}". Must be one of: ${UNIQUE_MEMBERS_COLUMNS.join(', ')}`); // prettier-ignore
 
 	// 3. Validate Search Values
 	if (

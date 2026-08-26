@@ -1,8 +1,8 @@
 // src/server/utility/mailer.ts
 
-/*
- * This module sets up the email transporter (AWS SES via nodemailer)
- * and exposes a low-level sendMail helper for dispatching prepared emails.
+/**
+ * Sets up the email transporter (AWS SES via nodemailer) and exposes a low-level
+ * send helper for dispatching prepared emails.
  */
 
 import nodemailer from 'nodemailer';

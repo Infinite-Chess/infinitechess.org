@@ -1,12 +1,13 @@
 // src/server/middleware/pathTraversal.ts
 
-import type { Request, Response, NextFunction } from 'express';
-
 /**
  * Path Traversal Protection, and error protection from malformed URLs.
  * Blocks requests whose URL tries to escape the intended directory (e.g. encoded `..` sequences).
  */
-const pathTraversal = (req: Request, res: Response, next: NextFunction): void => {
+
+import type { Request, Response, NextFunction } from 'express';
+
+function pathTraversal(req: Request, res: Response, next: NextFunction): void {
 	try {
 		const decoded = decodeURIComponent(req.url);
 
@@ -28,6 +29,6 @@ const pathTraversal = (req: Request, res: Response, next: NextFunction): void =>
 	} catch (_err) {
 		res.status(400).send('Invalid URL encoding');
 	}
-};
+}
 
 export default pathTraversal;

@@ -11,10 +11,10 @@
 import express from 'express';
 
 import resolveAuth from '../middleware/resolveAuth.js';
-import LeaderboardAPI from '../api/LeaderboardAPI.js';
+import leaderboardAPI from '../api/leaderboardAPI.js';
 
 const router = express.Router();
 
-router.get('/:leaderboard_id/top', resolveAuth.resolve, LeaderboardAPI.getData);
+router.get('/:leaderboard_id/top', resolveAuth.resolve, leaderboardAPI.getData);
 
 export default router;

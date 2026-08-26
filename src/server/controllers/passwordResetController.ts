@@ -1,5 +1,12 @@
 // src/server/controllers/passwordResetController.ts
 
+/**
+ * The password-reset flow: emailing a single-use reset link, serving the reset page it
+ * points at, and setting the new password once the token checks out.
+ *
+ * See docs/systems/PASSWORD_RESET.md.
+ */
+
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
@@ -13,7 +20,7 @@ import roles from './roles.js';
 import urlUtils from '../utility/urlUtils.js';
 import logEvents from '../utility/logEvents.js';
 import emailService from '../utility/emailService.js';
-import sessionManager from './authenticationTokens/sessionManager.js';
+import sessionManager from './sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import blacklistManager from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';
@@ -45,7 +52,7 @@ const PASSWORD_RESET_TOKEN_EXPIRY_MS: number = 1000 * 60 * 60; // 1 Hour
  * single-use reset token and emails the reset link. Always returns the same generic 200
  * (unknown, sendable, or blacklisted alike) to prevent email enumeration.
  */
-async function handleForgotPasswordRequest(req: Request, res: Response): Promise<void> {
+async function handleForgot(req: Request, res: Response): Promise<void> {
 	const email = verifyBodyHasForgotPasswordData(req, res);
 	if (!email) return; // Response already sent
 
@@ -123,7 +130,7 @@ function hashResetToken(token: string): string {
  * Computes the SSR state for the set-password page from the `:token` URL param:
  * whether the token currently matches an unexpired row, WITHOUT consuming it.
  */
-function getResetPasswordPageState(req: Request): { state: 'valid' | 'invalid' } {
+function getPageState(req: Request): { state: 'valid' | 'invalid' } {
 	const token = req.params['token']!;
 	const match = findUnexpiredResetTokenRecord(token);
 	return { state: match ? 'valid' : 'invalid' };
@@ -143,7 +150,7 @@ function findUnexpiredResetTokenRecord(token: string): TokenRecord | undefined {
  * password, invalidates the used token and all of the member's existing sessions, then logs
  * this browser in and sends a password-changed receipt email.
  */
-async function handleResetPassword(req: Request, res: Response): Promise<void> {
+async function handleReset(req: Request, res: Response): Promise<void> {
 	// Structural body validation.
 	const body = verifyBodyHasResetPasswordData(req, res);
 	if (!body) return; // Response already sent
@@ -300,4 +307,4 @@ function verifyBodyHasForgotPasswordData(req: Request, res: Response): string | 
 
 // Exports ------------------------------------------------------------------------------------
 
-export default { handleForgotPasswordRequest, getResetPasswordPageState, handleResetPassword };
+export default { handleForgot, getPageState, handleReset };

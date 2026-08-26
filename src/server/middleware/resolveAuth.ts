@@ -9,9 +9,9 @@ import type { Request, Response, NextFunction } from 'express';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import IP from '../utility/IP.js';
+import ip from '../utility/ip.js';
 import logEvents from '../utility/logEvents.js';
-import sessionManager from '../controllers/authenticationTokens/sessionManager.js';
+import sessionManager from '../controllers/sessionManager.js';
 import { ParsedCookies } from '../types.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
 
@@ -42,7 +42,7 @@ function tryRefreshToken(req: Request, res: Response): void {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return; // No refresh token present
 
-	const result = refreshTokenManager.validate(refreshToken, IP.get(req));
+	const result = refreshTokenManager.validate(refreshToken, ip.get(req));
 
 	if (!result) {
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.

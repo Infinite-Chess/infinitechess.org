@@ -5,7 +5,6 @@
  */
 
 import db from './database.js';
-import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -53,7 +52,7 @@ function getOfGame<K extends EngineGamesColumn>(
 	columns: K[],
 ): Pick<EngineGamesRecord, K>[] {
 	return db.call(() => {
-		db.assertColumnsValid(columns, databaseTables.ALL_ENGINE_GAMES_COLUMNS, 'engine_games');
+		db.assertColumnsValid(columns, 'engine_games');
 
 		return db.all<Pick<EngineGamesRecord, K>>(
 			`SELECT ${columns.join(', ')} FROM engine_games WHERE game_id = ? ORDER BY player_number`,

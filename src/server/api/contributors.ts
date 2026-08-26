@@ -1,8 +1,12 @@
-// src/server/api/GitHub.ts
+// src/server/api/contributors.ts
 
 /**
- * Connects to GitHub's API to periodically refresh the list of contributors
- * shown on the website, backed by a JSON snapshot for instant reads.
+ * The data behind `GET /api/contributors`: connects to GitHub's API to periodically refresh
+ * the list of contributors shown on the website, backed by a JSON snapshot for instant reads.
+ *
+ * Not a request handler — the endpoint itself is three lines in `routes/api.ts`. It lives here
+ * because that endpoint is its only reason to exist, and it reads `utility/`, which puts every
+ * ladder rung below `api/` out of reach.
  *
  * INSTRUCTIONS:
  * In ANY github account (does not need to be a maintainer of the project),
@@ -72,7 +76,7 @@ const INTERVAL_TO_REFRESH_CONTRIBUTORS_MS = 1000 * 60 * 60 * 3; // 3 hours
 let contributors: Contributor[] = loadContributorsSnapshot();
 
 /** The id of the interval to update contributors. Can be used to cancel it if the API token isn't specified. */
-const intervalId = setInterval(refreshContributorsList, INTERVAL_TO_REFRESH_CONTRIBUTORS_MS);
+const intervalId = setInterval(refresh, INTERVAL_TO_REFRESH_CONTRIBUTORS_MS);
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -95,7 +99,7 @@ function loadContributorsSnapshot(): Contributor[] {
  * Uses GitHub's API to fetch all contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
  * and updates our list!
  */
-function refreshContributorsList(): void {
+function refresh(): void {
 	const { GITHUB_API_KEY, GITHUB_REPO } = process.env;
 
 	if (
@@ -204,10 +208,10 @@ function refreshContributorsList(): void {
  * Returns a list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org),
  * updated every {@link INTERVAL_TO_REFRESH_CONTRIBUTORS_MS}.
  */
-function getContributors(): Contributor[] {
+function get(): Contributor[] {
 	return contributors;
 }
 
 // Exports ------------------------------------------------------------------------------------
 
-export default { refreshContributorsList, getContributors };
+export default { refresh, get };

@@ -9,16 +9,16 @@ import express from 'express';
 
 import resolveAuth from '../middleware/resolveAuth.js';
 import rateLimiters from '../middleware/rateLimiters.js';
-import EditorSavesAPI from '../api/EditorSavesAPI.js';
+import editorSavesAPI from '../api/editorSavesAPI.js';
 
 const router = express.Router();
 
 // Every editor-saves route is private, auth is required.
 router.use(resolveAuth.resolve);
 
-router.get('/', EditorSavesAPI.getSavedPositions);
-router.post('/', rateLimiters.editorSave, EditorSavesAPI.savePosition);
-router.get('/:position_name', rateLimiters.editorLoad, EditorSavesAPI.getPosition);
-router.delete('/:position_name', EditorSavesAPI.deletePosition);
+router.get('/', editorSavesAPI.getSavedPositions);
+router.post('/', rateLimiters.editorSave, editorSavesAPI.savePosition);
+router.get('/:position_name', rateLimiters.editorLoad, editorSavesAPI.getPosition);
+router.delete('/:position_name', editorSavesAPI.deletePosition);
 
 export default router;

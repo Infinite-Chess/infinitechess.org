@@ -7,13 +7,13 @@
 
 import express from 'express';
 
-import AdminPanel from '../api/AdminPanel.js';
+import adminPanel from '../api/adminPanel.js';
 import resolveAuth from '../middleware/resolveAuth.js';
 
 const router = express.Router();
 
 router.use(resolveAuth.resolve);
 
-router.post('/command', AdminPanel.processCommand);
+router.post('/command', adminPanel.processCommand);
 
 export default router;

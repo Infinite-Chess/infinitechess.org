@@ -15,7 +15,7 @@ import logoutController from '../controllers/logoutController.js';
 
 const router = express.Router();
 
-router.post('/auth', rateLimiters.authAttempt, loginController.handleLogin);
-router.post('/logout', logoutController.handleLogout);
+router.post('/auth', rateLimiters.authAttempt, loginController.handle);
+router.post('/logout', logoutController.handle);
 
 export default router;

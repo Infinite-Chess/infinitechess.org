@@ -1,4 +1,4 @@
-// src/server/middleware/browserIDManager.ts
+// src/server/cookies/browserIDCookie.ts
 
 /**
  * Owns the 'browser-id' cookie: the anonymous per-device identifier handed to every

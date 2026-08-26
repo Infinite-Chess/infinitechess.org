@@ -10,13 +10,13 @@
 
 import express from 'express';
 
-import Prefs from '../api/Prefs.js';
+import prefs from '../api/prefs.js';
 import resolveAuth from '../middleware/resolveAuth.js';
 
 const router = express.Router();
 
 router.use(resolveAuth.resolve);
 
-router.put('/', Prefs.put);
+router.put('/', prefs.put);
 
 export default router;

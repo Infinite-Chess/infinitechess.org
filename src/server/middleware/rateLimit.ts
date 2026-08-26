@@ -7,7 +7,7 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
-import IP from '../utility/IP.js';
+import ip from '../utility/ip.js';
 import banned from '../database/banned.js';
 import logEvents from '../utility/logEvents.js';
 import requestMeter from '../utility/requestMeter.js';
@@ -15,6 +15,8 @@ import respondError from './respondError.js';
 import renderContext from '../utility/renderContext.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
+// Constants ----------------------------------------------------------------------------------
 
 /**
  * Whether the server is running in development mode.
@@ -30,6 +32,8 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) {
 	throw new Error('ARE_RATE_LIMITING must be true in production!!');
 }
 
+// Functions ----------------------------------------------------------------------------------
+
 /**
  * Middleware that counts this IP address's recent connections,
  * and rejects this request if they've sent too many.
@@ -42,7 +46,7 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 
 	requestMeter.recordRecent();
 
-	const clientIP = IP.get(req);
+	const clientIP = ip.get(req);
 	if (!clientIP) {
 		logEvents.add('Unable to identify client IP address.', 'errLog');
 		res.status(400).json({ message: 'Unable to identify IP address' });
@@ -121,5 +125,7 @@ function renderRateLimitPage(
 		},
 	);
 }
+
+// Exports ------------------------------------------------------------------------------------
 
 export default rateLimit;

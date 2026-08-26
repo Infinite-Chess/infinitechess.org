@@ -1,11 +1,11 @@
 // src/server/game/gamemanager/gamemanager.ts
 
 /**
- * Drives the live games the server is hosting: creating them, attaching and detaching
- * their participants, pushing their clocks, and restoring them across a restart.
+ * Drives the live games the server is hosting: creating them, attaching and
+ * detaching their participants, and pushing their clocks.
  *
- * `activegames.ts` holds the collection itself, and `gamelifecycle.ts` takes a game
- * from concluded to evicted.
+ * `activegames.ts` holds the collection itself, `gamelifecycle.ts` takes a game from
+ * concluded to evicted, and `gamerestart.ts` carries them across a server restart.
  */
 
 import type { AuthMemberInfo } from '../../types.js';
@@ -32,7 +32,6 @@ import gamelifecycle from './gamelifecycle.js';
 import deadgamestate from './deadgamestate.js';
 import liveGameValues from './liveGameValues.js';
 import memberinfoutil from '../../utility/memberinfoutil.js';
-import liveGameRestore from './liveGameRestore.js';
 import gamestatebuilder from './gamestatebuilder.js';
 
 // Creation -----------------------------------------------------------------------------------
@@ -312,15 +311,9 @@ function armAutoTimeLoss(servergame: ServerGame): void {
 	// Cancel previous auto loss timer if it exists
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	servergame.match.autoTimeLossTimeoutID = setTimeout(
-		() => onPlayerLostOnTime(servergame),
+		() => gamelifecycle.concludeOnTime(servergame),
 		Math.max(servergame.clocks.timeRemainAtTurnStart, 0),
 	);
-}
-
-/** A player has lost on time: set the game conclusion. */
-function onPlayerLostOnTime(servergame: ServerGame): void {
-	const winner = typeutil.invertPlayer(servergame.whosTurn);
-	gamelifecycle.conclude(servergame, { victor: winner, condition: 'time' });
 }
 
 /** If it's an engine game: Pauses the engine's clock, rewinding its turn. */
@@ -402,114 +395,6 @@ function produceStaticGameState(id: number):
 	return deadgamestate.produceStaticState(id); // undefined if the game doesn't exist
 }
 
-// Shutdown Preparation & Startup Restoration -------------------------------------------------
-
-/**
- * Call when server's about to restart.
- * Stop all runtime timers and close sockets gracefully.
- * The games will be restored from the database on the next startup.
- * Their state is already stored inside live_* tables.
- */
-function prepForShutdown(): void {
-	for (const servergame of activegames.getAll()) {
-		// Cancel all runtime timers
-		clearTimeout(servergame.match.autoTimeLossTimeoutID);
-		disconnect.cancelAllTimers(servergame.match);
-		gamelifecycle.cancelFinalizeTimer(servergame.match);
-
-		// Unsubscribe all sockets (we will resub them when they reconnect)
-		for (const data of Object.values(servergame.match.playerData)) {
-			if (!data.socket) continue;
-			gamesockets.detachParticipant(servergame.match, data.socket);
-		}
-
-		activegames.remove(servergame.match.id);
-	}
-}
-
-/**
- * Restores all live games from the database on server startup.
- * Should be called after databaseTables.initDatabase() and before accepting client connections.
- */
-function restoreLiveGames(): void {
-	const restoredGames = liveGameRestore.restoreAll();
-
-	for (const { servergame, pendingTimers } of restoredGames) {
-		// Add the game to the active games list
-		activegames.add(servergame);
-
-		// Only ongoing games are ever restored: a game's live row is dropped the instant it
-		// concludes (its result then lives permanently in the games table), so a concluded game
-		// is never persisted to restore. Register its players in the active-players list (blocks
-		// them from joining a second game, and shows their lobby in-game banner).
-		for (const [strcolor, data] of Object.entries(servergame.match.playerData)) {
-			// No navigate notice owed — the game predates the restart, so they already know of it.
-			activeplayers.add(
-				data.identifier,
-				servergame.match.id,
-				Number(strcolor) as Player,
-				false,
-			);
-		}
-
-		// Start timers
-
-		// 1. Auto time loss timer (for timed games)
-		if (pendingTimers.autoTimeLossMs !== undefined) {
-			if (pendingTimers.autoTimeLossMs <= 0) {
-				// Clock already expired during downtime
-				onPlayerLostOnTime(servergame);
-				continue;
-			}
-			servergame.match.autoTimeLossTimeoutID = setTimeout(
-				() => onPlayerLostOnTime(servergame),
-				pendingTimers.autoTimeLossMs,
-			);
-		}
-
-		// 2. Per-player disconnect state (claim windows).
-		// An already-elapsed window simply restores as already-claimable.
-		for (const [playerStr, timerState] of Object.entries(pendingTimers.disconnectTimers)) {
-			const player = Number(playerStr) as Player;
-
-			if (timerState.type === 'timer') {
-				// The opponent's claim window was already open. Restore the timestamp; nothing
-				// fires. If it's now in the past, the window is simply already claimable.
-				const playerdata = servergame.match.playerData[player]!;
-				playerdata.disconnect.startTime = undefined;
-				playerdata.disconnect.timeOpponentMayClaim = Date.now() + timerState.remainingMs;
-				playerdata.disconnect.voluntary = timerState.voluntary;
-			} else if (timerState.type === 'cushion') {
-				// Still in the 5-second cushion period
-				if (timerState.remainingMs <= 0) {
-					// Cushion has elapsed, open the claim window immediately and persist that state.
-					disconnect.startClaimTimer(servergame, player, !timerState.voluntary);
-				} else {
-					// Revive the cushion timer for the remaining duration
-					servergame.match.playerData[player]!.disconnect.startID = setTimeout(
-						() => disconnect.startClaimTimer(servergame, player, !timerState.voluntary),
-						timerState.remainingMs,
-					);
-					servergame.match.playerData[player]!.disconnect.startTime =
-						Date.now() + timerState.remainingMs;
-				}
-			} else {
-				// Fresh: was connected before restart, now disconnected due to server restart.
-				// Give them the same 5-second cushion as a normal internet interruption.
-				disconnect.startCushionTimer(servergame, player);
-			}
-		}
-
-		// 3. Both-disconnected timer. If both players ended up disconnected, revive the
-		//    persisted deadline (fires immediately if elapsed), or start fresh if the
-		//    restart itself disconnected both (no deadline was persisted).
-		gamelifecycle.maybeStartBothDisconnectedTimer(
-			servergame,
-			pendingTimers.bothDisconnectedEndTime,
-		);
-	}
-}
-
 // Exports ------------------------------------------------------------------------------------
 
 export default {
@@ -526,7 +411,4 @@ export default {
 	resumeEngineClock,
 	// SSR Page State
 	produceStaticGameState,
-	// Shutdown Preparation & Startup Restoration
-	prepForShutdown,
-	restoreLiveGames,
 };

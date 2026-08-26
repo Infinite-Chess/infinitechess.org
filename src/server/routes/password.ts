@@ -12,11 +12,7 @@ import passwordResetController from '../controllers/passwordResetController.js';
 
 const router = express.Router();
 
-router.post(
-	'/forgot-password',
-	rateLimiters.forgotPassword,
-	passwordResetController.handleForgotPasswordRequest,
-);
-router.post('/reset-password', passwordResetController.handleResetPassword);
+router.post('/forgot-password', rateLimiters.forgotPassword, passwordResetController.handleForgot);
+router.post('/reset-password', passwordResetController.handleReset);
 
 export default router;
