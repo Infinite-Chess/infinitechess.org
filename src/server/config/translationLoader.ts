@@ -14,14 +14,14 @@ import { FilterXSS, IFilterXSSOptions } from 'xss';
 
 import tconfig from './translationconfig.js';
 
-// Types ---------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** All translations for every single language. */
 type Translations = Record<string, LanguageTranslations>;
 /** All translations for a single language. */
 type LanguageTranslations = { default: Record<string, any> };
 
-// Constants -----------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -40,7 +40,7 @@ const xss_options: IFilterXSSOptions = {
 };
 const custom_xss = new FilterXSS(xss_options);
 
-// Functions -----------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Loads and processes all translation TOML files into one object. */
 function loadTranslations(): Translations {
@@ -127,7 +127,7 @@ function html_escape(value: any): any {
 	return value; // numbers, booleans, etc.
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	loadTranslations,

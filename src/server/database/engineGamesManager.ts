@@ -6,7 +6,7 @@
 
 import db from './database.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Structure of a complete engine_games record. */
 interface EngineGamesRecord {
@@ -20,7 +20,7 @@ interface EngineGamesRecord {
 
 type EngineGamesColumn = keyof EngineGamesRecord;
 
-// Methods ------------------------------------------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /**
  * Inserts one engine participant row for a game.
@@ -61,6 +61,6 @@ function getOfGame<K extends EngineGamesColumn>(
 	}, `Error getting engine participants for game ${game_id}`);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { insert, getOfGame };

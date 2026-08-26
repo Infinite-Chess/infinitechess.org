@@ -111,7 +111,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 	if (deletedAnySeek) activeseeks.broadcast();
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	accept,

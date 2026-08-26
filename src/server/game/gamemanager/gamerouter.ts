@@ -89,6 +89,6 @@ function routeGameMessage(ws: CustomWebSocket, contents: ServerboundGameMessage)
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { routeGameMessage };

@@ -21,7 +21,7 @@ import frametracker from '../../../board/rendering/frametracker.js';
 import arrowscalculator from './arrowscalculator.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 
-// Types -------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** An object containing all the arrow lines of a single frame. */
 export interface SlideArrows {
@@ -117,14 +117,14 @@ export interface HintArrow extends BaseArrow {
 	targetSquare: Coords;
 }
 
-// Constants ---------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The maximum number of pieces in a game before we disable arrow indicator rendering, for performance. */
 const MAX_PIECES = 40_000;
 /** The maximum number of lines in a game before we disable arrow indicator rendering, for performance. */
 const MAX_LINES = 8;
 
-// State -------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * The mode the arrow indicators on the edges of the screen is currently in.
@@ -166,7 +166,7 @@ let animatedArrows: Arrow[] = [];
  */
 let hintArrows: HintArrow[] = [];
 
-// Mode management ---------------------------------------------------------------------
+// Mode management -------------------------------------------------------------
 
 /** Returns the mode the arrow indicators on the edges of the screen is currently in. */
 function getMode(): typeof mode {
@@ -206,7 +206,7 @@ function toggleArrows(): void {
 	setMode(nextMode);
 }
 
-// Getters -----------------------------------------------------------------------------
+// Getters ---------------------------------------------------------------------
 
 /**
  * Returns all Arrow objects currently in the slide arrows structure.
@@ -272,7 +272,7 @@ function areArrowsActiveThisFrame(): boolean {
 	return mode !== 0 && arrowscalculator.areZoomedInEnoughForArrows();
 }
 
-// Frame lifecycle ---------------------------------------------------------------------
+// Frame lifecycle -------------------------------------------------------------
 
 /**
  * Resets the arrows lists in prep for the next frame.
@@ -309,7 +309,7 @@ function update(): void {
 	slideArrows = result.slideArrows!;
 }
 
-// Exports -----------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 
 import logEvents from './logEvents.js';
 
-// Helpers -----------------------------------------------------------------------------------------
+// Helpers ---------------------------------------------------------------------
 
 /** Writes a log entry to logs/startupLog.txt with the provided message and a timestamp. */
 function writeStartupLog(message: string): void {
@@ -24,7 +24,7 @@ function writeStartupLog(message: string): void {
 	}
 }
 
-// API ------------------------------------------------------------------------------------------
+// API -------------------------------------------------------------------------
 
 /** Logs a server startup entry to logs/startupLog.txt. */
 function started(): void {
@@ -40,6 +40,6 @@ function stopped(signal: string): void {
 	writeStartupLog(`🔴 Server stopped (${signal})`);
 }
 
-// Exports ------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { started, stopped };

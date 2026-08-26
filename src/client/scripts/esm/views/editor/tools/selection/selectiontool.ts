@@ -30,7 +30,7 @@ import stransformations from './stransformations';
 import guipositionheader from '../../gui/guipositionheader';
 import { listener_document, listener_canvas } from '../../../../game/chess/gamecore';
 
-// State ----------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Whether or now we are currently making a selection. */
 let selecting: boolean = false;
@@ -48,13 +48,13 @@ let startPoint: Coords | undefined;
  */
 let endPoint: Coords | undefined;
 
-// Events -------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 // A selection outlives no game: every consumer of one (copy/cut/paste, the Delete shortcut)
 // reads the gamefile it was made against, and a discarded load leaves none behind.
 GameBus.addEventListener('game-unloaded', () => resetState());
 
-// Methods -------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 function update(): void {
 	if (isExistingSelection()) testShortcuts(); // Is a current selection, or one is in progress
@@ -250,7 +250,7 @@ function selectAll(): void {
 	// Transition.zoomToCoordsBox(box);
 }
 
-// Exports ------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	update,

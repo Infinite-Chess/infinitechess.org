@@ -32,7 +32,7 @@ import gamecompressor from '../../chess/gamecompressor.js';
 import enginelegalmovesdebug from './enginelegalmovesdebug.js';
 import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';
 
-// State --------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * The engine worker of the game we're in, if any.
@@ -43,13 +43,13 @@ import { maxEngineThreads, THREAD_CAP } from '../chess/engines/enginewasm.js';
  */
 let engine: ({ worker: Worker; ready: boolean; color: Player } & EngineAndConfig) | undefined;
 
-// Events -----------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('user-move-played', () => onMovePlayed());
 GameBus.addEventListener('game-concluded', () => terminate());
 GameBus.addEventListener('game-unloaded', () => terminate());
 
-// Functions ------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
@@ -297,7 +297,7 @@ function terminate(): void {
 	enginelegalmovesdebug.detach();
 }
 
-// Export ---------------------------------------------------------------------------------
+// Export ----------------------------------------------------------------------
 
 export default {
 	initEngineGame,

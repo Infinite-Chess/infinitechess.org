@@ -23,7 +23,7 @@ import variantregistry from '../../../../shared/chess/variants/variantregistry.j
 import { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
 import { players as p } from '../../../../shared/util/typeutil.js';
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Builds a {@link MetaData} on demand from a loaded
@@ -125,7 +125,7 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 	return resolved;
 }
 
-// Exports -----------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	buildMetaDataFromGamefile,

@@ -24,7 +24,7 @@ import { GameBus } from '../../../board/GameBus.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrows, { ArrowPiece } from './arrows.js';
 
-// Types ------------------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */
 interface ArrowLegalMoves {
@@ -50,14 +50,14 @@ interface ArrowLegalMoves {
  */
 const hoveredArrowsLegalMoves: ArrowLegalMoves[] = [];
 
-// Events ----------------------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 // Whenever viewing a different move in the game, the color of the legal
 // move highlights of the hovered arrows changes depending on whosTurn.
 // Erase the list so they can be regenerated next frame with the correct color.
 GameBus.addEventListener('view-move', () => reset());
 
-// Functions -------------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * This makes sure that the legal moves of all of the hovered arrows this

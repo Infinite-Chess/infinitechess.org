@@ -38,7 +38,7 @@ import activeplayers from '../gamemanager/activeplayers.js';
 import memberinfoutil from '../../auth/memberinfoutil.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
 
-// Functions -------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Creates a new seek from their websocket message.
@@ -185,7 +185,7 @@ function validateSeekMetadata(metadata: MetaData): PositionRejection | null {
 	return null;
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	create,

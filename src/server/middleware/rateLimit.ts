@@ -16,7 +16,7 @@ import renderContext from '../utility/renderContext.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Whether the server is running in development mode.
@@ -32,7 +32,7 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) {
 	throw new Error('ARE_RATE_LIMITING must be true in production!!');
 }
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Middleware that counts this IP address's recent connections,
@@ -126,6 +126,6 @@ function renderRateLimitPage(
 	);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default rateLimit;

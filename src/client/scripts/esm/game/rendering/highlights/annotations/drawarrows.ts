@@ -34,7 +34,7 @@ import preferences from '../../../../components/header/preferences.js';
 import { GameBus } from '../../../../board/GameBus.js';
 import { createRenderable } from '../../../../board/rendering/renderable.js';
 
-// Events --------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 // Stop drawing arrow if the board steals our pointer to pinch.
 GameBus.addEventListener('steal-pointer', (e) => {
@@ -42,7 +42,7 @@ GameBus.addEventListener('steal-pointer', (e) => {
 	stopDrawing();
 });
 
-// Constants -----------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Properties for the drawn arrows.*/
 const ARROW = {
@@ -75,7 +75,7 @@ let pointerId: string | undefined;
 /** The last known position of the pointer drawing an arrow. */
 let pointerWorld: DoubleCoords | undefined;
 
-// Updating -----------------------------------------------------------------
+// Updating --------------------------------------------------------------------
 
 /**
  * Tests if the user has started/finished drawing new arrows,
@@ -197,7 +197,7 @@ function createArrow(start: Coords, end: Coords): Arrow {
 	};
 }
 
-// Rendering -----------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 function render(arrows: Arrow[]): void {
 	// Add the arrow currently being drawn
@@ -421,7 +421,7 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	return vertices;
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	update,

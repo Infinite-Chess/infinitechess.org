@@ -21,7 +21,7 @@ import verifyAccountController from '../controllers/verifyAccountController.js';
 import passwordResetController from '../controllers/passwordResetController.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
 
-// Helpers ------------------------------------------------------------------------------------
+// Helpers ---------------------------------------------------------------------
 
 const router = express.Router();
 
@@ -69,7 +69,7 @@ function getRandomSplashText(req: Request): string {
 /** Cache all variant groups and their variants. */
 const variantGroups = variantregistry.getVariantGroupsWithVariants();
 
-// Pages --------------------------------------------------------------------------------------
+// Pages -----------------------------------------------------------------------
 
 page('^/$|/index(.html)?', (req: Request, res: Response) => res.render('index.njk', { variantGroups, splashText: getRandomSplashText(req) })); // prettier-ignore
 page('/about(.html)?', (_req: Request, res: Response) => res.render('about.njk'));
@@ -129,11 +129,11 @@ page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render(
 page('/editor(.html)?', (_req: Request, res: Response) => res.render('editor.njk'));
 page('/patron(.html)?', (_req: Request, res: Response) => res.render('patron.njk'));
 
-// Legacy Redirects ---------------------------------------------------------------------------
+// Legacy Redirects ------------------------------------------------------------
 
 // Permanent 301s
 router.get('/termsofservice(.html)?', (_req: Request, res: Response) => res.redirect(301, '/terms')); // prettier-ignore
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default router;

@@ -72,7 +72,7 @@ function areHigherInPriority(roles1: Role[] | null, roles2: Role[] | null): bool
 	return roles1HighestPriority > roles2HighestPriority;
 }
 
-// Exports ---------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	add,

@@ -35,6 +35,6 @@ function routeLobbyMessage(ws: CustomWebSocket, contents: ServerboundLobbyMessag
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { routeLobbyMessage };

@@ -89,6 +89,6 @@ function deleteAccount(user_id: number, reason_deleted: DeleteReason): void {
 	// However, they will have to refresh the page for their page and navigation links to update.
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { removeAccount, deleteAccount };

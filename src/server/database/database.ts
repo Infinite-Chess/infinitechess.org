@@ -18,11 +18,11 @@ import jsonutil from '../../shared/util/jsonutil.js';
 
 import logEvents from '../utility/logEvents.js';
 
-// Types ---------------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 type SupportedColumnTypes = string | number | boolean | null;
 
-// Connection ----------------------------------------------------------------------------------------------
+// Connection ------------------------------------------------------------------
 
 // Get the current file path and derive the directory (ESM doesn't support __dirname)
 const __filename: string = fileURLToPath(import.meta.url);
@@ -44,7 +44,7 @@ db.pragma('synchronous = NORMAL');
 // No `foreign_keys` pragma is needed: better-sqlite3 compiles SQLite with
 // SQLITE_DEFAULT_FOREIGN_KEYS=1, so enforcement is already ON for every connection.
 
-// State ---------------------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Prepared statements cache */
 const stmtCache: Record<string, Database.Statement> = {};
@@ -52,7 +52,7 @@ const stmtCache: Record<string, Database.Statement> = {};
 /** Every table's column names, filled by {@link cacheAllColumns} once the schema is final. */
 const columnCache = new Map<string, readonly string[]>();
 
-// Query Calls ---------------------------------------------------------------------------------------------
+// Query Calls -----------------------------------------------------------------
 
 // Utility function to retrieve or prepare statements
 function prepareStatement(query: string): Database.Statement {
@@ -96,7 +96,7 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 	return stmt.all(...params) as T[];
 }
 
-// Schema Introspection ------------------------------------------------------------------------------------
+// Schema Introspection --------------------------------------------------------
 
 /**
  * Reads every table's column names out of SQLite and caches them. Call once the schema is
@@ -166,7 +166,7 @@ function columnIsNullable(tableName: string, columnName: string): boolean {
 	}
 }
 
-// Validation & Dynamic Updates ----------------------------------------------------------------------------
+// Validation & Dynamic Updates ------------------------------------------------
 
 /**
  * Validates a column-selection argument of a read query: it must be a non-empty array
@@ -210,7 +210,7 @@ function runRowUpdate(params: {
 	]);
 }
 
-// Transactions --------------------------------------------------------------------------------------------
+// Transactions ----------------------------------------------------------------
 
 /**
  * Creates a transaction function that wraps the given callback in a database transaction.
@@ -238,7 +238,7 @@ function transaction<Args extends unknown[], Return>(
 	return db.transaction(callback);
 }
 
-// Error Handling & Maintenance ----------------------------------------------------------------------------
+// Error Handling & Maintenance ------------------------------------------------
 
 /**
  * Wraps a db call in a try/catch: on error, logs the description + full stack to errLog, then rethrows.
@@ -274,7 +274,7 @@ function close(): void {
 	db.close();
 }
 
-// Exports -------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Query Calls

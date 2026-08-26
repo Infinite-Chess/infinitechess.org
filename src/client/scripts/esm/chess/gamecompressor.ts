@@ -123,7 +123,7 @@ function convertMovesToICNConverterInMove(moves: MoveFull[]): MovePreprint[] {
 	return jsutil.deepCopyObject(mappedMoves);
 }
 
-// Converting a Game to Single Position ---------------------------------------------------------------------------------
+// Converting a Game to Single Position ----------------------------------------
 
 /**
  * Takes a game state and applies the desired moves to it, modifying it.
@@ -178,7 +178,7 @@ function gamefileToPositionOptions(gamefile: GameFile): VariantOptions {
 	return GameToPosition(startState, gamefile.moves, Infinity);
 }
 
-// Exports --------------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	compressGamefile,

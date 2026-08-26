@@ -29,12 +29,12 @@ import guidisconnect from './gui/guidisconnect.js';
 
 import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 
-// Types --------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The various lifecycle stages of the server game. See {@link stage}. */
 type GameStage = 'active' | 'finalized' | 'evicted';
 
-// Variables ----------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /**
  * Whether we are in sync with the server game, and the game isn't finalized yet (excludes rematch state).
@@ -58,7 +58,7 @@ let inSync: boolean = false;
  */
 let stage: GameStage | undefined = undefined;
 
-// Events -------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 SocketBus.addEventListener('closed', () => {
 	if (stage !== 'evicted') inSync = false;
@@ -67,7 +67,7 @@ SocketBus.addEventListener('reconnect', () => {
 	if (stage !== 'evicted') subscribeToGame();
 });
 
-// Getters ------------------------------------------------------------
+// Getters ---------------------------------------------------------------------
 
 function areInSync(): boolean {
 	return inSync;
@@ -79,7 +79,7 @@ function setInSync(value: boolean): void {
 	if (value) guidisconnect.onSelfReturn();
 }
 
-// Functions --------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * A fresh page load (not a reconnect, game live OR dead): Loads a game onto the
@@ -287,7 +287,7 @@ function onEvicted(): void {
 	setInSync(true);
 }
 
-// Exports -------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	areInSync,

@@ -43,7 +43,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Constants ---------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Regex pattern to match " from " followed by a quote in import statements */
 const FROM_WITH_QUOTE_PATTERN = /\sfrom\s+['"]/;
@@ -57,7 +57,7 @@ const TESTS_DIR = path.resolve(process.cwd(), 'src/tests');
 /** Path to the server directory */
 const SERVER_DIR = path.resolve(process.cwd(), 'src/server');
 
-// Types -------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 interface Import {
 	raw: string;
@@ -70,7 +70,7 @@ interface Import {
 	sourceDir: 'shared' | 'client' | 'tests' | 'server' | null;
 }
 
-// Helper Functions --------------------------------------------------------
+// Helper Functions ------------------------------------------------------------
 
 /**
  * Resolves an import path from the current file and determines which source directory it belongs to.
@@ -166,7 +166,7 @@ function compareImports(a: Import, b: Import): number {
 	return a.lengthBeforeFrom - b.lengthBeforeFrom;
 }
 
-// Import Extraction -------------------------------------------------------
+// Import Extraction -----------------------------------------------------------
 
 function findImportBoundaries(lines: string[]): { start: number; end: number } | null {
 	let start = -1;
@@ -306,7 +306,7 @@ function extractImports(
 	return { imports, beforeImports, afterImports };
 }
 
-// Import Sorting ----------------------------------------------------------
+// Import Sorting --------------------------------------------------------------
 
 function organizeImports(imports: Import[]): string {
 	// Group imports
@@ -400,7 +400,7 @@ function organizeImports(imports: Import[]): string {
 	return groups.join('\n\n');
 }
 
-// File Processing ---------------------------------------------------------
+// File Processing -------------------------------------------------------------
 
 function processFile(filePath: string): boolean {
 	try {
@@ -442,7 +442,7 @@ function processFile(filePath: string): boolean {
 	return false;
 }
 
-// Main Execution ----------------------------------------------------------
+// Main Execution --------------------------------------------------------------
 
 function main(): void {
 	const args = process.argv.slice(2);

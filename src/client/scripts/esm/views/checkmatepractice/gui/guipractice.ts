@@ -15,7 +15,7 @@ import svgcache from '../../../chess/rendering/svgcache.js';
 import validatorama from '../../../util/validatorama.js';
 import checkmatepractice from '../checkmatepractice.js';
 
-// Variables ----------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 const element_menuExternalLinks: HTMLElement = document.getElementById('menu-external-links')!;
 
@@ -79,7 +79,7 @@ const SCROLL: {
 /** Whether the practice page is open */
 let isOpen: boolean = false;
 
-// Events ---------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 // Set an event listener, for when the theme changes, to re-generate the icons, as their color may change
 document.addEventListener('theme-change', () => {
@@ -87,7 +87,7 @@ document.addEventListener('theme-change', () => {
 	if (isOpen) addPieceIcons(); // Regenerate the icons so they can update their color, if the new theme has different color arguments
 });
 
-// Functions ------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Returns the last selected checkmate practce. Useful
@@ -269,7 +269,7 @@ function closeListeners(): void {
 	}
 }
 
-// Scrolling list with the left mouse button ------------------------------------------------
+// Scrolling list with the left mouse button -----------------------------------
 
 function callback_mouseDown(event: MouseEvent): void {
 	SCROLL.mouseIsDown = true;
@@ -320,7 +320,7 @@ function clearScrollMomentumInterval(): void {
 	SCROLL.momentumInterval = undefined;
 }
 
-// End of scrolling ---------------------------------------------------------------------
+// End of scrolling ------------------------------------------------------------
 
 function changeCheckmateSelected(checkmateid: string): void {
 	for (const element of element_checkmates.children) {
@@ -449,7 +449,7 @@ function moveUpSelection(event: Event): void {
 	changeCheckmateSelected(newSelectionElement.id);
 }
 
-// Exports ------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getCheckmateSelectedID,

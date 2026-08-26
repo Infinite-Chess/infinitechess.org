@@ -34,6 +34,6 @@ ${treeifiedErrors}
 	logEvents.addAndPrint(`${contextMessage} - Check zodLog.txt for more details.`, 'errLog');
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { log };

@@ -9,7 +9,7 @@
 
 import bimath from '../../../../../shared/util/math/bimath.js';
 
-// Functions -------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Estimates the size, in memory, of ANY object, no matter how deep it's nested,

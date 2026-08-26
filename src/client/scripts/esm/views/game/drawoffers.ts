@@ -20,7 +20,7 @@ import gameactions from './gui/guigameactions.js';
 import { GameBus } from '../../board/GameBus.js';
 import socketintents from '../../socket/socketintents.js';
 
-// Variables ---------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The last move we extended a draw, if we have, otherwise undefined. */
 let plyOfLastOfferedDraw: number | undefined;
@@ -28,7 +28,7 @@ let plyOfLastOfferedDraw: number | undefined;
 /** Whether we have an open draw offer FROM OUR OPPONENT */
 let isAcceptingDraw: boolean = false;
 
-// Functions ---------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 GameBus.addEventListener('game-concluded', () => {
 	// Close any open draw offer and resets all draw for values for future games.

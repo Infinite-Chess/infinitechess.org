@@ -67,6 +67,6 @@ function loadNews(supportedLanguages: string[]): Record<string, string> {
 	return newsPosts;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { loadNews };

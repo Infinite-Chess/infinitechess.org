@@ -34,14 +34,14 @@ import movesequence from './movesequence.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import { animateMove } from './graphicalchanges.js';
 
-// Types --------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 interface Premove extends Edit, MoveTagged {
 	/** The type of piece moved */
 	type: number;
 }
 
-// Variables ----------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The list of all premoves we currently have, in order. */
 let premoves: Premove[] = [];
@@ -62,7 +62,7 @@ let premoves: Premove[] = [];
  */
 let applied: boolean = true;
 
-// Events ----------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-concluded', () => {
 	// console.error("Game ended, clearing premoves");
@@ -97,7 +97,7 @@ document.addEventListener('premoves-toggle', (_e) => {
 	cancelPremoves(gamefile, mesh);
 });
 
-// Processing Premoves ---------------------------------------------------------------------
+// Processing Premoves ---------------------------------------------------------
 
 /** Gets all pending premoves. */
 function hasAtleastOnePremove(): boolean {
@@ -404,7 +404,7 @@ function performWithUnapplied(
 	}
 }
 
-// Updating Premoves ------------------------------------------------
+// Updating Premoves -----------------------------------------------------------
 
 /** Clears premoves if right mouse is down and Lingering Annotations mode is off. */
 function update(gamefile: GameFile, mesh?: Mesh): void {
@@ -420,7 +420,7 @@ function update(gamefile: GameFile, mesh?: Mesh): void {
 	}
 }
 
-// Rendering --------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /** Renders the premoves */
 function render(): void {
@@ -440,7 +440,7 @@ function render(): void {
 	squarerendering.genModel(premoveSquares, color).render(undefined, undefined, { u_size });
 }
 
-// Exports ------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	hasAtleastOnePremove,

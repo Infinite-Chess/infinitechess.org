@@ -70,7 +70,7 @@ function drawPlayableRegionMask(
 	ctx.renderable.createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
 
-// Exports -------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	drawPlayableRegionMask,

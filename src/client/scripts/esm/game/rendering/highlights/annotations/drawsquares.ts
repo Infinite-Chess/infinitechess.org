@@ -23,7 +23,7 @@ import { Mouse } from '../../../input.js';
 import preferences from '../../../../components/header/preferences.js';
 import squarerendering from '../squarerendering.js';
 
-// Constants -----------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The color of preset squares for the variant. */
 const PRESET_SQUARE_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.19   Transparent orange (makes preset squares less noticeable/distracting)
@@ -37,7 +37,7 @@ const OPACITY_OFFSET = 0.08;
 /** ADDITONAL (not overriding) opacity when hovering over highlights. */
 const HOVER_OPACITY = 0.5;
 
-// Variables -----------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /**
  * The preset square overrides if provided from the ICN.
@@ -45,7 +45,7 @@ const HOVER_OPACITY = 0.5;
  */
 let preset_squares: Coords[] | undefined;
 
-// Updating -----------------------------------------------------------------
+// Updating --------------------------------------------------------------------
 
 /** Returns a list of all square highlights being hovered over by any pointer. */
 function getAllSquaresHovered(highlights: Coords[]): Coords[] {
@@ -158,7 +158,7 @@ function clearPresetOverrides(): void {
 	preset_squares = undefined;
 }
 
-// Rendering -----------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 function render(highlights: Coords[]): void {
 	const presetSquares =
@@ -196,7 +196,7 @@ function render(highlights: Coords[]): void {
 	}
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	PRESET_SQUARE_COLOR,

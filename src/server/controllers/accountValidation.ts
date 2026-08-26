@@ -17,7 +17,7 @@ import validators from '../../shared/util/validators.js';
 import logEvents from '../utility/logEvents.js';
 import blacklistManager from '../database/blacklistManager.js';
 
-// Constants -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The number of times to SALT passwords before storing in the database.
@@ -50,7 +50,7 @@ const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
 	'guest', 'anonymous', 'deleted',
 ]); // prettier-ignore
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Returns true if the username passes all format/content checks before account generation. */
 function doUsernameFormatChecks(username: string, req: Request, res: Response): boolean {
@@ -213,7 +213,7 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 	return true;
 }
 
-// Exports -----------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

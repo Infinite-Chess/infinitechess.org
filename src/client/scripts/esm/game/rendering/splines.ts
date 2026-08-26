@@ -13,7 +13,7 @@ import space from '../../board/space.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import { createRenderable } from '../../board/rendering/renderable.js';
 
-// Constants ------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const ZERO = bd.fromBigInt(0n);
 const ONE = bd.fromBigInt(1n);
@@ -21,7 +21,7 @@ const TWO = bd.fromBigInt(2n);
 const THREE = bd.fromBigInt(3n);
 const FOUR = bd.fromBigInt(4n);
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Computes a natural cubic spline for a given set of points.
@@ -294,7 +294,7 @@ function renderSplineDebug(controlPoints: BDCoords[], width: number, color: Colo
 	createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
 
-// Exports -----------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	generateCubicSplineCoefficients,

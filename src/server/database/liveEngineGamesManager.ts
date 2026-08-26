@@ -10,7 +10,7 @@
 
 import db from './database.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Per-engine live game data columns, excluding the composite key fields. */
 interface LiveEngineGameData {
@@ -26,7 +26,7 @@ export interface LiveEngineGamesRecord extends LiveEngineGameData {
 	player_number: number;
 }
 
-// Methods ------------------------------------------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /**
  * Inserts a new live engine game row into the database.
@@ -85,6 +85,6 @@ function getAll(): LiveEngineGamesRecord[] {
 	);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { insert, update, getAll };

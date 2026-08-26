@@ -26,6 +26,6 @@ function get(req: IncomingMessage): string | undefined {
 	return req.socket.remoteAddress;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { get };

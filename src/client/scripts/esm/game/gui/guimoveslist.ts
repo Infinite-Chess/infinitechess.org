@@ -35,7 +35,7 @@ import frametracker from '../../board/rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import { listener_document } from '../chess/gamecore.js';
 
-// Renderer extension ------------------------------------------------------------------------
+// Renderer extension ----------------------------------------------------------
 
 /**
  * An optional alternative renderer for the moves panel. The analysis page registers one to
@@ -65,7 +65,7 @@ function registerRenderer(r: MovesListRenderer): void {
 	renderer = r;
 }
 
-// Elements ----------------------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_First = document.getElementById('btn-move-first') as HTMLButtonElement;
 const element_Prev = document.getElementById('btn-move-prev') as HTMLButtonElement;
@@ -77,13 +77,13 @@ const element_GameResult = document.querySelector('.game-result')!;
 const element_ResultScore = element_GameResult.querySelector('.result-score')!;
 const element_ResultText = element_GameResult.querySelector('.result-text')!;
 
-// Variables ---------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** Navigation can never be spammed faster than this, capping the hold-to-repeat rate. */
 const minimumNavIntervalMs = 20;
 let lastNav = 0;
 
-// Events ------------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the gamefile
 // bypass 'moves-changed'), reconcile the plies on move-list changes, follow the viewed ply's

@@ -25,12 +25,12 @@ import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
 import lobbysubscribers from './lobbysubscribers.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The engine used for online computer games. */
 const ONLINE_ENGINE: ValidEngine = 'apeiron';
 
-// Functions -------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Creates an engine game from the owner's websocket message. On success, createGame's
@@ -82,7 +82,7 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	}
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	create,

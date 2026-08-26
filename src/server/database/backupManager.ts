@@ -24,12 +24,12 @@ const BACKUPS_DIR = path.join(__dirname, '../../../backups');
 const MAX_BACKUP_AGE_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 const BACKUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
-// State --------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The in-flight backup promise, or null if no backup is currently running. */
 let activeBackup: Promise<void> | null = null;
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Schedules a database backup to run once every 24 hours. */
 function startDaily(): void {
@@ -96,6 +96,6 @@ function purgeOldBackups(): void {
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { startDaily, perform };

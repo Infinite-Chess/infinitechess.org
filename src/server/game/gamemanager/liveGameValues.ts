@@ -23,7 +23,7 @@ import liveGamesManager from '../../database/liveGamesManager.js';
 import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
 import liveEngineGamesManager from '../../database/liveEngineGamesManager.js';
 
-// Value Computation --------------------------------------------------------------------------
+// Value Computation -----------------------------------------------------------
 
 /**
  * Computes the moves string from a ServerGame's move list, including embedded clock stamps.
@@ -96,7 +96,7 @@ function buildPlayerRecord(
 	};
 }
 
-// Persistence Events -------------------------------------------------------------------------
+// Persistence Events ----------------------------------------------------------
 
 /**
  * Runs a best-effort live-game persistence write, swallowing any database error (already
@@ -258,7 +258,7 @@ function onEngineClockChanged(servergame: ServerGame): void {
 	);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	onGameCreated,

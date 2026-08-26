@@ -37,6 +37,6 @@ function render(req: Request, res: Response, status: number): void {
 	});
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { render };

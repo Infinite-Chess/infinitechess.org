@@ -40,7 +40,7 @@ import movesequence from '../../../game/chess/movesequence.js';
 import guimoveslist from '../../../game/gui/guimoveslist.js';
 import guiboardcontrols from '../../../game/gui/guiboardcontrols.js';
 
-// State ---------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The open right-click context menu, if any. */
 let contextMenu: HTMLElement | undefined;
@@ -48,7 +48,7 @@ let contextMenu: HTMLElement | undefined;
 /** Maps each rendered ply's node id back to its node, for the delegated click/right-click handlers. */
 const idToNode = new Map<number, AnalysisMoveNode>();
 
-// Rendering ----------------------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 const patch = init([attributesModule, classModule]);
 
@@ -330,7 +330,7 @@ function getVariationChildren(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	return first?.forceVariation ? node.children : node.children.slice(1);
 }
 
-// Game review repaints -------------------------------------------------------------------------
+// Game review repaints --------------------------------------------------------
 
 // Repaint as classifications and evals land, so the list colors gradually while a review runs.
 // Coalesced: restoring a cached review classifies and labels every move in one synchronous pass.
@@ -349,7 +349,7 @@ function formatEvalLabel(label: MoveEvalLabel): string {
 	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`.replace('-', '−');
 }
 
-// Context menu -------------------------------------------------------------------------------
+// Context menu ----------------------------------------------------------------
 
 /**
  * Opens the right-click menu for `node` with the applicable
@@ -490,7 +490,7 @@ function closeContextMenuOnEscape(e: KeyboardEvent): void {
 	if (e.key === 'Escape') closeAnalysisContextMenu();
 }
 
-// Navigation ---------------------------------------------------------------------------------
+// Navigation ------------------------------------------------------------------
 
 /**
  * Switches the active line to `node`'s branch and views
@@ -547,7 +547,7 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	selection.unselectPiece();
 }
 
-// Registration ------------------------------------------------------------------
+// Registration ----------------------------------------------------------------
 
 guimoveslist.registerRenderer({
 	reconcile: reconcileMoveTree,
@@ -558,7 +558,7 @@ guimoveslist.registerRenderer({
 	onGameUnloaded: clearMoveTree,
 });
 
-// Public API -----------------------------------------------------------------------
+// Public API ------------------------------------------------------------------
 
 /**
  * Navigates the board to the given move-tree node. Navigating to the already-viewed node

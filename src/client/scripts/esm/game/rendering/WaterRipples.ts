@@ -20,7 +20,7 @@ import perspective from './perspective';
 import frametracker from '../../board/rendering/frametracker';
 import { RippleState, WaterRipplePass } from '../../webgl/post_processing/passes/WaterRipplePass';
 
-// Constants --------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The distance beyond the screen edge that ripples are capped at, in virtual pixels,
@@ -38,7 +38,7 @@ const RIPPLE_LIFETIME_BASE = 1.1;
 /** How much longer ripples last per screen ratio of width/height. */
 const RIPPLE_LIFETIME_MULTIPLIER = 0.5;
 
-// Variables --------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 let waterRipplePass: WaterRipplePass;
 
@@ -50,7 +50,7 @@ const activeDroplets: RippleState[] = [];
  */
 let rippleLifetime: number;
 
-// Functions --------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 function init(programManager: ProgramManager, width: number, height: number): void {
 	waterRipplePass = new WaterRipplePass(programManager, width, height);

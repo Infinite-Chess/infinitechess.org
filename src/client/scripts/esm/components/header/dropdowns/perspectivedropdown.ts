@@ -5,7 +5,7 @@
 import docutil from '../../../util/docutil.js';
 import preferences from '../preferences.js';
 
-// Document Elements -------------------------------------------------------------------------
+// Document Elements -----------------------------------------------------------
 
 // The option in the main settings menu
 const perspectiveSettingsDropdownItem = document.getElementById(
@@ -31,7 +31,7 @@ const fovResetDefaultContainer = document.querySelector(
 )!;
 const fovResetDefault = document.querySelector('.perspective-dropdown .fov .reset-default')!;
 
-// Functions ---------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 (function init() {
 	if (docutil.isMouseSupported())

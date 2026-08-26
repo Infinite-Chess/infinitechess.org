@@ -4,7 +4,7 @@
  * This module provides generic, reusable utility functions for working with the Web Audio API.
  */
 
-// Constants --------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The number of points to use when generating fade curves. Higher = smoother, but more CPU. */
 const FADE_CURVE_RESOLUTION = 100;
@@ -17,7 +17,7 @@ const FADE_CURVE_RESOLUTION = 100;
  */
 const FADE_RAMP_CURVATURE = 0.4;
 
-// Utility -----------------------------------------------------------------------------------
+// Utility ---------------------------------------------------------------------
 
 /**
  * Applies a perceptually-blended fade with a dynamic blending curve to any AudioParam.
@@ -75,7 +75,7 @@ function applyPerceptualFade(
 	}
 }
 
-// Exports ----------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	applyPerceptualFade,

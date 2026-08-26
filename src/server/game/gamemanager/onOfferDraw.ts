@@ -18,7 +18,7 @@ import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
 import liveGameValues from './liveGameValues.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Called when client wants to offer a draw. Sends confirmation to opponent. */
 function offer(servergame: ServerGame, ourRole: Player): void {
@@ -81,7 +81,7 @@ function decline(servergame: ServerGame, ourRole: Player): void {
 	liveGameValues.onDrawOfferDeclined(servergame);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	offer,

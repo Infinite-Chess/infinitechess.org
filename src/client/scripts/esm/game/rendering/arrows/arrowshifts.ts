@@ -30,7 +30,7 @@ import arrows from './arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import arrowscalculator from './arrowscalculator.js';
 
-// Types ----------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** An Arrow Shift/Modification. */
 type Shift =
@@ -55,11 +55,11 @@ type Shift =
 			end: Coords;
 	  };
 
-// Constants ----------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const ONE = bd.fromBigInt(1n);
 
-// State --------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * A list of arrow modifications made by other
@@ -67,7 +67,7 @@ const ONE = bd.fromBigInt(1n);
  */
 let shifts: Shift[] = [];
 
-// Functions -------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Clears the pending shifts list. Called from arrows.reset() at the start of each frame. */
 export function reset(): void {
@@ -305,7 +305,7 @@ function recalculateLinesThroughCoords(
 	}
 }
 
-// Exports -----------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// State management

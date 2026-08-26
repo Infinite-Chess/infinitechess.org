@@ -9,7 +9,7 @@ import type { ScriptTranslations } from '../../shared/types/script-translations.
 
 import rateLimit from 'express-rate-limit';
 
-// Options ------------------------------------------------------------------------------------
+// Options ---------------------------------------------------------------------
 
 /** Produces a rate-limit handler that responds with the given translation key. */
 function makeHandler(key: keyof ScriptTranslations['responses']['rate_limiting']) {
@@ -29,7 +29,7 @@ const DEFAULT_OPTIONS = {
 	handler: makeHandler('generic'),
 };
 
-// Limiters -----------------------------------------------------------------------------------
+// Limiters --------------------------------------------------------------------
 
 /**
  * Account Creation Limiter (successful registrations only)
@@ -119,7 +119,7 @@ const gameState = rateLimit({
 	...DEFAULT_OPTIONS,
 });
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	createAccount,

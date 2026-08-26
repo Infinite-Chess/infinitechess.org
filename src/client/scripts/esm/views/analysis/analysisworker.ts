@@ -11,7 +11,7 @@
 
 import type { AnalysisCommand, AnalysisResponse } from './apeironanalysis.worker.js';
 
-// Types ------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Why a worker died. 'unloadable' = it faulted before ever posting 'ready', so the engine glue
@@ -47,7 +47,7 @@ interface SpawnOptions {
 	onFault: (fault: AnalysisWorkerFault, reason: string) => void;
 }
 
-// Lifecycle ----------------------------------------------------------------------
+// Lifecycle -------------------------------------------------------------------
 
 /** Spawns a worker against the page's engine build and posts its `init`. */
 function spawn(options: SpawnOptions): AnalysisWorker {

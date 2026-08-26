@@ -45,7 +45,7 @@ let reconnectTimerId: number | undefined;
 /** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
 let timeoutIDToAutoClose: number;
 
-// Listeners --------------------------------------------------------------
+// Listeners -------------------------------------------------------------------
 
 SocketBus.addEventListener('connection-lost', () => {
 	noConnection = true;
@@ -208,7 +208,7 @@ function resubAll(): void {
 	SocketBus.dispatch('reconnect');
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getSocket,

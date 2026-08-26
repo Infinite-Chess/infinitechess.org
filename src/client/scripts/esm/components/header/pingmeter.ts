@@ -6,16 +6,16 @@
 
 import { SocketBus } from '../../socket/SocketBus.js';
 
-// Document Elements -------------------------------------------------------------------------
+// Document Elements -----------------------------------------------------------
 
 const pingMeter = document.querySelector('.ping-meter')!;
 const pingBars = document.querySelector('.ping-bars')!;
 const pingValue = document.querySelector('.ping-value')!;
 const loadingAnim = document.querySelector('.ping-meter .svg-pawn')!; // Spinning-pawn loading animation
 
-// Variables ---------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
-// Functions ---------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 (function init() {
 	initEventListeners();

@@ -23,7 +23,7 @@ import camera from './camera.js';
 import deltatime from '../deltatime.js';
 import frametracker from './frametracker.js';
 
-// Types -------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** One independent board-position instance, as returned by {@link createBoardPos}. */
 export interface BoardPos {
@@ -69,7 +69,7 @@ export interface BoardPos {
 	wireGlobalListeners(): void;
 }
 
-// Constants --------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The furthest we can be zoomed IN. */
 const maximumScale = bd.fromBigInt(5n); // Default: 5.0
@@ -77,7 +77,7 @@ const maximumScale = bd.fromBigInt(5n); // Default: 5.0
 const ZERO = bd.fromBigInt(0n);
 const ONE = bd.fromBigInt(1n);
 
-// Factory ----------------------------------------------------------------
+// Factory ---------------------------------------------------------------------
 
 /**
  * Creates one independent board-position instance.

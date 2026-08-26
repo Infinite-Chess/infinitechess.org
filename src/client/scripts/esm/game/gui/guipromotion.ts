@@ -16,7 +16,7 @@ import { Mouse } from '../input.js';
 import { GameBus } from '../../board/GameBus.js';
 import { listener_canvas } from '../chess/gamecore.js';
 
-// Variables --------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 const PromotionGUI: {
 	base: HTMLElement;
@@ -31,7 +31,7 @@ const PromotionGUI: {
 
 let selectionOpen = false; // True when promotion GUI visible. Do not listen to navigational controls in the mean time
 
-// Events -----------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('piece-unselected', () => {
 	close();
@@ -40,7 +40,7 @@ GameBus.addEventListener('game-unloaded', () => {
 	resetUI();
 });
 
-// Functions --------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 // Prevent right-clicking on the promotion UI
 PromotionGUI.base.addEventListener('contextmenu', (event) => event.preventDefault());

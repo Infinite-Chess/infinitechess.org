@@ -22,7 +22,7 @@ import { GameBus } from '../../board/GameBus.js';
 import guipromotion from '../gui/guipromotion.js';
 import { listener_canvas } from '../chess/gamecore.js';
 
-// Types -------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * A board position/scale entry, used for calculating its velocity
@@ -34,7 +34,7 @@ interface PositionHistoryEntry {
 	boardScale: BigDecimal;
 }
 
-// Variables -------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** Whether we currently dragging the board */
 let boardIsGrabbed: boolean = false;
@@ -58,7 +58,7 @@ let pointer2BoardPosGrabbed: BDCoords | undefined;
 const positionHistory: PositionHistoryEntry[] = [];
 const positionHistoryWindowMs: number = 80; // The amount of milliseconds to look back into for board velocity calculation.
 
-// Listeners -------------------------------------------------------------
+// Listeners -------------------------------------------------------------------
 
 // Cancel any active board drag when a transition begins.
 document.addEventListener('transition-start', cancelBoardDrag);
@@ -419,7 +419,7 @@ function removeOldPositions(now: number): void {
 		positionHistory.shift();
 }
 
-// Exports ------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	isBoardDragging,

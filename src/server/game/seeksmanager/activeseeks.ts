@@ -18,17 +18,17 @@ import seekutility from './seekutility.js';
 import memberinfoutil from '../../auth/memberinfoutil.js';
 import lobbysubscribers from './lobbysubscribers.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Whether to log new seek creations/deletions to the console */
 const PRINT_SEEK_CHANGES = true;
 
-// State -----------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The list of all active seeks. */
 const seeks: AuthSeek[] = [];
 
-// Membership ------------------------------------------------------------------------------------
+// Membership ------------------------------------------------------------------
 
 /** Adds a newly created seek to the collection, and broadcasts the new list. */
 function add(seek: AuthSeek): void {
@@ -81,7 +81,7 @@ function deleteOfUser(info: AuthMemberInfo, { dontBroadcast = false } = {}): boo
 	return deletedSeek;
 }
 
-// Lookups ---------------------------------------------------------------------------------------
+// Lookups ---------------------------------------------------------------------
 
 /**
  * Tests if any active seek already has the ID provided.
@@ -110,7 +110,7 @@ function getAllSafe(): OutSeek[] {
 	return seeks.map((seek) => seekutility.makeSafe(seek));
 }
 
-// Broadcasts ------------------------------------------------------------------------------------
+// Broadcasts ------------------------------------------------------------------
 
 /**
  * Broadcasts a live seek list update to all subbed clients, each told which seek is theirs.
@@ -126,7 +126,7 @@ function broadcast(): void {
 	}
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Membership

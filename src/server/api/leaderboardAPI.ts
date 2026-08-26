@@ -11,7 +11,7 @@ import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
 import leaderboardsManager from '../database/leaderboardsManager.js';
 
-// Constants -------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Number of players returned when the request omits the `n_players` query param. */
 const DEFAULT_N_PLAYERS = 50;
@@ -19,7 +19,7 @@ const DEFAULT_N_PLAYERS = 50;
 /** Maximum number of players allowed to be requested in a single request. */
 const MAX_N_PLAYERS_REQUEST_CAP = 100;
 
-// Functions -------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * `GET /api/leaderboards/:leaderboard_id/top` — returns the top N (`n_players`) players from
@@ -158,6 +158,6 @@ function getRankStringOfRequester(
 	return requester_elo.confident ? `#${requester_rank}` : `#${requester_rank}?`;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getData };

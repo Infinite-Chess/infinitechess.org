@@ -22,7 +22,7 @@ import edithistory from '../../edithistory';
 import guifloatingwindow from '../guifloatingwindow';
 import egamerules, { GameRulesGUIinfo } from '../../egamerules';
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 /** The button the toggles visibility of the Game Rules popup window. */
 const element_gamerules = document.getElementById('gamerules')!;
@@ -87,14 +87,14 @@ const elements_selectionList: HTMLInputElement[] = [
 	element_borderTop,
 ];
 
-// Constants --------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Regexes for validating game rules input fields */
 const integerRegex = new RegExp(String.raw`^${icnposition.INTEGER_SOURCE}$`);
 const promotionRanksRegex = new RegExp(String.raw`^${icnconverter.PROMOTION_RANKS_SOURCE}$`);
 const promotionPiecesRegex = new RegExp(String.raw`^${icnconverter.PROMOTIONS_PIECES_SOURCE}$`);
 
-// Create floating window -------------------------------------
+// Create floating window ------------------------------------------------------
 
 const floatingWindow = guifloatingwindow.create({
 	windowEl: element_window,
@@ -105,7 +105,7 @@ const floatingWindow = guifloatingwindow.create({
 	onClose,
 });
 
-// Toggling ---------------------------------------------
+// Toggling --------------------------------------------------------------------
 
 function onOpen(): void {
 	element_gamerules.classList.add('active');
@@ -118,7 +118,7 @@ function onClose(resetPositioning: boolean): void {
 	closeGameRulesListeners();
 }
 
-// Gamerules-specific listeners -------------------------------------------
+// Gamerules-specific listeners ------------------------------------------------
 
 function initGameRulesListeners(): void {
 	elements_selectionList.forEach((el) => {
@@ -132,7 +132,7 @@ function closeGameRulesListeners(): void {
 	});
 }
 
-// Reading/Writing Game Rules -----------------------------------------------
+// Reading/Writing Game Rules --------------------------------------------------
 
 /** Reads the game rules inserted into the input boxes and updates egamerules.gameRulesGUIinfo */
 function readGameRules(): void {
@@ -504,7 +504,7 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 	element_borderTop.classList.remove('invalid-input');
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	open: floatingWindow.open,

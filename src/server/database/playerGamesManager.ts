@@ -10,7 +10,7 @@ import jsonutil from '../../shared/util/jsonutil.js';
 
 import db from './database.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Structure of a complete player_games record. */
 export interface PlayerGamesRecord {
@@ -26,7 +26,7 @@ export interface PlayerGamesRecord {
 
 type PlayerGamesColumn = keyof PlayerGamesRecord;
 
-// Methods ------------------------------------------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /**
  * Gets player_games entries for all opponents of a specific user for a list of specific games.
@@ -119,7 +119,7 @@ function getRecentNRatedForUser<K extends PlayerGamesColumn>(
 	}, `Error fetching recent rated games for user ${user_id} on leaderboard ${leaderboard_id}`);
 }
 
-// Writes -------------------------------------------------------------------------------------
+// Writes ----------------------------------------------------------------------
 
 // These intentionally skip `dbCall`. gamelogger is their only caller, and it already logs the
 // failure and rolls back the surrounding transaction — wrapping them would log the same error twice.
@@ -162,7 +162,7 @@ function update(game_id: number, player_number: Player, updates: Partial<PlayerG
 	});
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Methods

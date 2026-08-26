@@ -34,7 +34,7 @@ import liveGameValues from './liveGameValues.js';
 import memberinfoutil from '../../auth/memberinfoutil.js';
 import gamestatebuilder from './gamestatebuilder.js';
 
-// Creation -----------------------------------------------------------------------------------
+// Creation --------------------------------------------------------------------
 
 /**
  * Creates and persists the `ServerGame`, then signals each requesting socket to navigate to
@@ -134,7 +134,7 @@ function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefin
 	}
 }
 
-// Participant Subscription -------------------------------------------------------------------
+// Participant Subscription ----------------------------------------------------
 
 /**
  * Links their socket to this game and runs reconnect side-effects (cancels disconnect/claim timer).
@@ -276,7 +276,7 @@ function unsubscribeSpectator(ws: CustomWebSocket): void {
 	gamesockets.detachSpectator(activegames.getByID(gameID)!, ws);
 }
 
-// Clocks -------------------------------------------------------------------------------------
+// Clocks ----------------------------------------------------------------------
 
 /**
  * Pushes the game clock, adding increment. Resets the timer
@@ -359,7 +359,7 @@ function resumeEngineClock(servergame: ServerGame): void {
 	gamesockets.broadcastEngineClock(servergame);
 }
 
-// SSR Page State -----------------------------------------------------------------------------
+// SSR Page State --------------------------------------------------------------
 
 /**
  * Resolves a game id's {@link StaticGameState} — live (in memory) or dead (in the DB) —
@@ -395,7 +395,7 @@ function produceStaticGameState(id: number):
 	return deadgamestate.produceStaticState(id); // undefined if the game doesn't exist
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Creation

@@ -12,13 +12,13 @@ import math from '../../../../../../shared/util/math/math';
 
 import guiboardeditor from './guiboardeditor.js';
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_boardUI = document.getElementById('boardUI')!;
 const element_menu = document.getElementById('editor-menu')!;
 const element_menuToggle = document.getElementById('editor-menu-toggle')!;
 
-// Constants -----------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The viewport width (px) below which the sidebar switches to overlay/collapsible mode.
@@ -27,7 +27,7 @@ const element_menuToggle = document.getElementById('editor-menu-toggle')!;
  */
 const NARROW_THRESHOLD = 727;
 
-// Types -------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Functions that handle all floating window behavior */
 interface FloatingWindowHandle {
@@ -59,7 +59,7 @@ interface FloatingWindowOptions {
 	onClose: (resetPositioning: boolean) => void;
 }
 
-// Utilities -------------------------------------------------------------
+// Utilities -------------------------------------------------------------------
 
 /** Create the functions needed for the handling of a floating window in the board editor */
 function create(opts: FloatingWindowOptions): FloatingWindowHandle {

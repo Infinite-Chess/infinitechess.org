@@ -26,7 +26,7 @@ import cloudstore, {
 	PositionTooLargeError,
 } from '../../../savedpositions/cloudstore';
 
-// Actions ----------------------------------------------------------------------
+// Actions ---------------------------------------------------------------------
 
 /** Helper that maps a saveCloudState failure to the correct toast message. */
 function toastSaveCloudError(err: unknown): void {
@@ -200,7 +200,7 @@ async function getAllCloudSaveInfos(): Promise<CloudSaveListRecord[]> {
 	}
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	saveCloud,

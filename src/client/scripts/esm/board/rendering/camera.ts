@@ -30,7 +30,7 @@ import preferences from '../../components/header/preferences.js';
 import frametracker from './frametracker.js';
 import { createScreenShake } from './screenshake.js';
 
-// Types --------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** One independent camera instance, as returned by {@link createCamera}. */
 export interface Camera {
@@ -134,7 +134,7 @@ interface CameraHooks {
 	onCanvasResize?: (detail: { width: number; height: number }) => void;
 }
 
-// Constants -------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 // This will NEVER change! The camera stays while the board position is what moves!
 // What CAN change is the rotation of the view matrix!
@@ -150,7 +150,7 @@ const zNear = 1;
 /** Has to be at least {@link DIST_TO_RENDER_BOARD} * sqrt(2) */
 const zFar = DIST_TO_RENDER_BOARD * Math.SQRT2;
 
-// Factory -----------------------------------------------------------------------
+// Factory ---------------------------------------------------------------------
 
 /** Creates one independent camera instance with its own matrices, canvas, and rotation state. */
 function createCamera(hooks: CameraHooks = {}): Camera {

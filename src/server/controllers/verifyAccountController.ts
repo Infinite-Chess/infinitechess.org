@@ -13,7 +13,7 @@ import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
 import pendingRegistrationManager from '../database/pendingRegistrationManager.js';
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Whether a verification token is still "live" — i.e. the verify button should do something.
@@ -78,6 +78,6 @@ function verifyPendingRegistration(req: Request, res: Response): void {
 	}
 }
 
-// Exports -----------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getPageState, verifyPendingRegistration };

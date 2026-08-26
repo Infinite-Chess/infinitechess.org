@@ -27,14 +27,14 @@ import preferences from '../../../components/header/preferences.js';
 import { GameBus } from '../../../board/GameBus.js';
 import squarerendering from './squarerendering.js';
 
-// Variables -----------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The coords of the selected piece that owns the individual moves, or undefined. */
 let selectedPieceCoords: Coords | undefined;
 /** The individual legal moves to highlight, if conditions are met. Empty otherwise. */
 let individualMoves: Coords[] = [];
 
-// Event Listeners ------------------------------------------------------------------
+// Event Listeners -------------------------------------------------------------
 
 GameBus.addEventListener('piece-selected', (event) => {
 	const { legalMoves } = event.detail;
@@ -45,7 +45,7 @@ GameBus.addEventListener('piece-unselected', () => {
 	clearIndividualMoves();
 });
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Updates the list of individual move hints based on the current selection and game state.
@@ -78,7 +78,7 @@ function clearIndividualMoves(): void {
 	selectedPieceCoords = undefined;
 }
 
-// Export for snapping.ts ---------------------------------------------------------
+// Export for snapping.ts ------------------------------------------------------
 
 /** Returns the coords of the selected piece that owns the individual move hints, or undefined. */
 function getPieceCoords(): Coords | undefined {
@@ -90,7 +90,7 @@ function getSquares(): Coords[] {
 	return individualMoves;
 }
 
-// Rendering -----------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /** [Zoomed out] Renders the individual legal move hint squares as green entity squares. */
 function render(): void {
@@ -112,7 +112,7 @@ function render(): void {
 	}
 }
 
-// Exports -------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getPieceCoords,

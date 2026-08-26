@@ -31,7 +31,7 @@ import guimovetree from './guimovetree.js';
 import { GameBus } from '../../../board/GameBus.js';
 import analysisloader from '../analysisloader.js';
 
-// Elements ---------------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_GameReviewBtn = document.getElementById('btn-game-review')!;
 const element_Stats = document.getElementById('review-stats')!;
@@ -56,7 +56,7 @@ const BLUNDER_VARIATION_MAX_PLIES = 6;
 /** The loaded game's mainline, snapshotted at load (bar-delimited move tokens) for edit detection. */
 let pristineMainline = '';
 
-// Initialization -----------------------------------------------------------------------
+// Initialization --------------------------------------------------------------
 
 /** Wires the game review UI, including the Game Review button click. */
 function init(): void {
@@ -198,7 +198,7 @@ function addBlunderVariation(review: MoveReview): void {
 	if (parent) guimovetree.addVariation(parent, review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES));
 }
 
-// Progress --------------------------------------------------------------------------------
+// Progress --------------------------------------------------------------------
 
 function updateProgress(): void {
 	if (element_Progress.classList.contains('hidden')) return;
@@ -223,7 +223,7 @@ function onReviewFinished(outcome: ReviewOutcome): void {
 	else toast.show('The engine failed to load.', { error: true });
 }
 
-// Stats columns ------------------------------------------------------------------------------
+// Stats columns ---------------------------------------------------------------
 
 /** Writes a column header's name. No-op on /analysis/:id, whose headers are real participant rows. */
 function setPlayerName(color: Player, name: string): void {
@@ -324,7 +324,7 @@ function updateStats(): void {
 	}
 }
 
-// Eval graph ------------------------------------------------------------------------------------
+// Eval graph ------------------------------------------------------------------
 
 /**
  * Symmetric top/bottom inset so the zero line sits at the exact vertical center (like lila).

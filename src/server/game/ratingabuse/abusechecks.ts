@@ -25,7 +25,7 @@ import type { AbuseEvidence, SuspicionRecord, SuspicionVerdict } from './ratinga
 
 import timeutil from '../../../shared/util/timeutil.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Total suspicion score which is enough to mark a user as suspicious. */
 const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 1.0;
@@ -36,7 +36,7 @@ const SUSPICIOUS_UNUSED_CLOCK_FRACTION = 0.8;
 /** Opponents with a younger account age than this count as suspicious. */
 const SUSPICIOUS_ACCOUNT_AGE_MS = 1000 * 60 * 60 * 24 * 5; // 5 days
 
-// Verdict ---------------------------------------------------------------------------------------
+// Verdict ---------------------------------------------------------------------
 
 /** Runs every check over the evidence, and sums their weights into a verdict. */
 function runAll(evidence: AbuseEvidence): SuspicionVerdict {
@@ -56,7 +56,7 @@ function runAll(evidence: AbuseEvidence): SuspicionVerdict {
 	};
 }
 
-// Checks ----------------------------------------------------------------------------------------
+// Checks ----------------------------------------------------------------------
 
 /**
  * Check if the player won their games without spending their own clock.
@@ -173,7 +173,7 @@ function checkOpponentAccountAge(evidence: AbuseEvidence, records: SuspicionReco
 		});
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	runAll,

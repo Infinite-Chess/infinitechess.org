@@ -33,7 +33,7 @@ import movesequence from '../../game/chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
 import { retryFetch, RetryFetchOptions } from '../../util/fetchRetrier.js';
 
-// Variables ----------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** These checkmates we may place the black king nearer to the white pieces. */
 const checkmatesWithBlackRoyalNearer = [
@@ -75,7 +75,7 @@ GameBus.addEventListener('user-move-played', registerHumanMove);
 GameBus.addEventListener('engine-move-played', registerEngineMove);
 GameBus.addEventListener('game-concluded', onEngineGameConclude);
 
-// Functions ----------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 function setUndoingIsLegal(value: boolean): void {
 	undoingIsLegal = value;
@@ -445,7 +445,7 @@ function restartGame(): void {
 	startCheckmatePractice(guipractice.getCheckmateSelectedID());
 }
 
-// Exports ------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	startCheckmatePractice,

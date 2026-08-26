@@ -7,7 +7,7 @@
 
 import { listener_document } from '../../../../../game/chess/gamecore';
 
-// Types -------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Different modes for the modal confirmation dialog */
 export type ModalMode = 'load' | 'delete' | 'overwrite_save';
@@ -19,7 +19,7 @@ type ModalConfig = {
 	onConfirm: () => Promise<void> | void;
 };
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 /** Confirmation dialog modal elements */
 const element_modal = document.getElementById('load-position-modal-overlay')!;
@@ -29,12 +29,12 @@ const element_modalMessage = document.getElementById('load-position-modal-messag
 const element_modalNoButton = document.getElementById('load-position-modal-no')!;
 const element_modalYesButton = document.getElementById('load-position-modal-yes')!;
 
-// Variables ----------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The current config of the Confirmation dialog modal */
 let modal_config: ModalConfig | undefined = undefined;
 
-// Functions -----------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Open the confirmation modal with the given mode and callback.
@@ -79,7 +79,7 @@ function closeModal(): void {
 	closeModalListeners();
 }
 
-// Listeners -------------------------------------------
+// Listeners -------------------------------------------------------------------
 
 function initModalListeners(): void {
 	element_modalCloseButton.addEventListener('click', closeModal);
@@ -121,7 +121,7 @@ function isOpen(): boolean {
 	return modal_config !== undefined;
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	openModal,

@@ -19,7 +19,7 @@ import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import svgcache from './svgcache.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 
-// Variables ---------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /**
  * The cache storing HTMLImageElement objects for each piece type.
@@ -27,7 +27,7 @@ import svgtoimageconverter from '../../util/svgtoimageconverter.js';
  */
 let cachedImages: TypeGroup<HTMLImageElement> = {};
 
-// Functions ---------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Initializes the image cache for the provided gamefile.
@@ -111,7 +111,7 @@ function deleteImageCache(): void {
 	cachedImages = {};
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	initImagesForGame,

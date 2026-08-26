@@ -11,7 +11,7 @@ import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
 
 import logEvents from './logEvents.js';
 
-// Types ------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * The category of an outgoing email, recorded in the sent-email log.
@@ -25,7 +25,7 @@ type SendMailOptions = {
 	subject: string;
 } & ({ html: string } | { text: string });
 
-// Module Setup -----------------------------------------------------------------------------------
+// Module Setup ----------------------------------------------------------------
 
 const AWS_REGION = process.env['AWS_REGION'];
 /** Who our sent emails will appear as if they're from. */
@@ -49,7 +49,7 @@ const transporter = sesClient
 		} as nodemailer.TransportOptions)
 	: null;
 
-// Functions --------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Sends a prepared email via the transporter.
@@ -76,6 +76,6 @@ async function send(type: EmailType, options: SendMailOptions): Promise<boolean>
 	return true;
 }
 
-// Exports ----------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { EMAIL_FROM_ADDRESS, send };

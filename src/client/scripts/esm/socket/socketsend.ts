@@ -216,7 +216,7 @@ function transmit(socket: WebSocket, message: string): void {
 	} else socket.send(message); // Send immediately
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	cancelTimerOfMessageID,

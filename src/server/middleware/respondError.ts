@@ -24,6 +24,6 @@ function isBrowserNavigation(req: Request): boolean {
 	return req.accepts('html') !== false && req.get('Sec-Fetch-Mode') === 'navigate';
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { send };

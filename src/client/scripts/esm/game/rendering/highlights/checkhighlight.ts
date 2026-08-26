@@ -19,7 +19,7 @@ import preferences from '../../../components/header/preferences.js';
 import { Renderable } from '../../../webgl/Renderable.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Renders the red glow around all pieces in check on the currently-viewed move.

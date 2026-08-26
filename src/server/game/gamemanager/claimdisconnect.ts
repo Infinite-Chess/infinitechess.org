@@ -18,7 +18,7 @@ import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import logEvents from '../../utility/logEvents.js';
 import gamelifecycle from './gamelifecycle.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Whether `ourColor` may currently claim victory / a draw against their opponent:
@@ -58,7 +58,7 @@ function claimDraw(servergame: ServerGame, ourRole: Player): void {
 	gamelifecycle.conclude(servergame, { victor: null, condition: 'abandonment' });
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	claimVictory,

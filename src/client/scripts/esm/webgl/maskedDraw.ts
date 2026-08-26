@@ -38,7 +38,7 @@ export interface MaskedDraw {
 	): void;
 }
 
-// Factory -------------------------------------------------------------------------------
+// Factory ---------------------------------------------------------------------
 
 /** Creates one stencil-masker bound to the given WebGL context and ProgramManager. */
 function createMaskedDraw(gl: WebGL2RenderingContext, programManager: ProgramManager): MaskedDraw {
@@ -191,7 +191,7 @@ function createMaskedDraw(gl: WebGL2RenderingContext, programManager: ProgramMan
 	return { onFrameStart, execute };
 }
 
-// Game default -------------------------------------------------------------------------
+// Game default ----------------------------------------------------------------
 
 /** The interactive game's masker, created at runtime by {@link init}. */
 let gameInstance: MaskedDraw;

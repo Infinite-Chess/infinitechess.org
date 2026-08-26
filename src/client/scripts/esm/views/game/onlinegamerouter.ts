@@ -40,7 +40,7 @@ import socketintents from '../../socket/socketintents.js';
 import guidisconnect from './gui/guidisconnect.js';
 import movesendreceive from './movesendreceive.js';
 
-// Types ------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Every game message that reaches the router. `notlive` is consumed by receiveMessage first.
@@ -48,12 +48,12 @@ import movesendreceive from './movesendreceive.js';
  */
 type RoutedGameMessage = Exclude<ClientboundGameMessage, { action: 'notlive' }>;
 
-// State ------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Messages received while the game's logical part is still loading, replayed once it's ready. */
 const messageQueue: RoutedGameMessage[] = [];
 
-// Routing ----------------------------------------------------------
+// Routing ---------------------------------------------------------------------
 
 // Listen for incoming messages for the 'game' subscription
 SocketBus.addEventListener('game', (e) => receiveMessage(e.detail));

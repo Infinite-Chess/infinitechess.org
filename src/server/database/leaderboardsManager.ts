@@ -13,7 +13,7 @@ import db from './database.js';
 import logEvents from '../utility/logEvents.js';
 import ratingcalculation from '../utility/ratingcalculation.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Structure of a complete leaderboard entry record. */
 interface LeaderboardEntry {
@@ -25,7 +25,7 @@ interface LeaderboardEntry {
 	rd_last_update_date: string | null;
 }
 
-// Methods ------------------------------------------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /**
  * The core logic for adding a user to a leaderboard.
@@ -192,7 +192,7 @@ function getPlayerRank(user_id: number, leaderboard_id: Leaderboard): number | u
 	return result?.rank;
 }
 
-// Helper Functions ---------------------------------------------------------------------------
+// Helper Functions ------------------------------------------------------------
 
 /**
  * Returns the elo of a player on a specific leaderboard, or their elo if they were
@@ -222,7 +222,7 @@ function getAllLeaderboardEntries(): LeaderboardEntry[] {
 	);
 }
 
-// Regular Table Utility Functions ------------------------------------------------------------
+// Regular Table Utility Functions ---------------------------------------------
 
 /** Calls updateAllRatingDeviationsOfLeaderboardTable() every {@link ratingcalculation.RD_UPDATE_FREQUENCY} milliseconds */
 function startPeriodicRatingDeviationUpdate(): void {
@@ -261,7 +261,7 @@ function updateAllRatingDeviationsOfLeaderboardTable(): void {
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Methods

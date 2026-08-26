@@ -28,14 +28,14 @@ import guipositionheader from './gui/guipositionheader.js';
 
 import './tools/normaltool.js'; // Self-registers its move logic with selection.ts on load
 
-// Types -------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The identity of a saved position — its name and where it is stored. */
 export type ActivePosition =
 	| { name: string; storage_type: 'local' }
 	| { name: string; storage_type: 'cloud'; owner: string };
 
-// State -------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The active position, if any, as displayed on editor bar and used for "Save" button by default */
 let active_position: ActivePosition | undefined = undefined;
@@ -43,7 +43,7 @@ let active_position: ActivePosition | undefined = undefined;
 /** Whether the current board position has unsaved changes. */
 let positionDirty = false;
 
-// Initialization ------------------------------------------------------------------------
+// Initialization --------------------------------------------------------------
 
 /**
  * Initializes the board editor.
@@ -140,7 +140,7 @@ function _render(): void {
 	if (etoolmanager.getTool() === 'selection-tool') selectiontool.render();
 }
 
-// Utility --------------------------------------------------------------------
+// Utility ---------------------------------------------------------------------
 
 /** Returns true if the current board position has unsaved changes. */
 function isPositionDirty(): boolean {
@@ -204,7 +204,7 @@ function flushActivePositionToAutosave(): void {
 	void eautosave.autosaveCurrentPositionOnce();
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// State

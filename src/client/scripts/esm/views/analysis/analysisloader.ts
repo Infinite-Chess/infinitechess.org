@@ -45,7 +45,7 @@ function reloadPristine(): Promise<void> {
 	return lastLoad?.replay() ?? Promise.resolve();
 }
 
-// Load Paths -------------------------------------------------------------------
+// Load Paths ------------------------------------------------------------------
 
 /**
  * Fetches a finished game from the server by its id and loads it, oriented to the

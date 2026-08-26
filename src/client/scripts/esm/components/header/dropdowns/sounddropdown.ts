@@ -4,7 +4,7 @@
 
 import preferences from '../preferences.js';
 
-// Document Elements -------------------------------------------------------------------------
+// Document Elements -----------------------------------------------------------
 
 const soundDropdown = document.querySelector('.sound-dropdown') as HTMLElement;
 const soundDropdownTitle = document.querySelector('.sound-dropdown .dropdown-title') as HTMLElement;
@@ -21,7 +21,7 @@ const ambienceCheckbox = document.querySelector(
 	'.boolean-option.ambience input',
 ) as HTMLInputElement;
 
-// Functions ---------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 (function init(): void {
 	setInitialValues();

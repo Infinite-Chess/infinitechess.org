@@ -9,12 +9,12 @@ import type { CustomWebSocket } from './socketTypes.js';
 
 import logEvents from '../utility/logEvents.js';
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Message beyond this length will be truncated in the logs to prevent log bloat. */
 const MAX_LOGGED_MESSAGE_LENGTH = 2048;
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Truncates a message's contents if it exceeds {@link MAX_LOGGED_MESSAGE_LENGTH},
@@ -53,6 +53,6 @@ function logOut(ws: CustomWebSocket, messageData: string): void {
 	logEvents.add(logThis, 'wsOutLog');
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { logOpen, logIn, logOut };

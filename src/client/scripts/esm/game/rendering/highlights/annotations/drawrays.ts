@@ -32,7 +32,7 @@ import legalmovemodel from '../legalmovemodel.js';
 import highlightline, { Line } from '../highlightline.js';
 import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
 
-// Events --------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 // Stop drawing ray if the board steals our pointer to pinch.
 GameBus.addEventListener('steal-pointer', (e) => {
@@ -40,7 +40,7 @@ GameBus.addEventListener('steal-pointer', (e) => {
 	stopDrawing();
 });
 
-// Variables -----------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The color of preset rays for the variant. */
 const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.18   Transparent orange (makes preset rays less noticeable/distracting)
@@ -58,7 +58,7 @@ let pointerId: string | undefined;
 /** The last known position of the pointer drawing a ray. */
 let pointerWorld: DoubleCoords | undefined;
 
-// Getters -------------------------------------------------------------------
+// Getters ---------------------------------------------------------------------
 
 /** Whether a ray is currently being drawn. */
 function areDrawing(): boolean {
@@ -79,7 +79,7 @@ function getPresetRays(): Ray[] {
 	});
 }
 
-// Updating -----------------------------------------------------------------
+// Updating --------------------------------------------------------------------
 
 /**
  * Tests if the user has started/finished drawing new rays,
@@ -434,7 +434,7 @@ function clearPresetOverrides(): void {
 	preset_rays = undefined;
 }
 
-// Rendering -----------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /** Renders all existing rays, including preset rays. */
 function render(rays: Ray[]): void {
@@ -472,7 +472,7 @@ function genAndRenderRays(rays: Ray[], color: Color): void {
 	}
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	PRESET_RAY_COLOR,

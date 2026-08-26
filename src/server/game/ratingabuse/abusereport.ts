@@ -16,12 +16,12 @@ import logEvents from '../../utility/logEvents.js';
 import emailService from '../../utility/emailService.js';
 import ratingAbuseManager from '../../database/ratingAbuseManager.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Buffer time for sending the next email. If a user is found suspicious several times in that interval, no email is sent. */
 const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MS = 1000 * 60 * 60 * 24; // 24 hours
 
-// Reports ---------------------------------------------------------------------------------------
+// Reports ---------------------------------------------------------------------
 
 /**
  * Reports a completed measurement: logs it either way, and — when the player
@@ -83,7 +83,7 @@ function reportNoRatingGain(
 	);
 }
 
-// Composition -----------------------------------------------------------------------------------
+// Composition -----------------------------------------------------------------
 
 /** The one-line preamble naming who was measured, on what, and to what effect. */
 function describeMeasurement(ctx: AbuseReportContext): string {
@@ -106,7 +106,7 @@ function buildBody(ctx: AbuseReportContext, verdict: SuspicionVerdict, pretty: b
 	].join(sep);
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	reportMeasurement,

@@ -103,6 +103,6 @@ function verifyBodyHasLoginFormData(
 	return { claimedUsername: username, claimedPassword: password };
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { testPasswordForRequest };

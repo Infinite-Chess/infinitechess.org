@@ -43,7 +43,7 @@ import modifierSelector from './modifierSelector.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
 import variantPreviewTooltip from '../rendering/variantPreviewTooltip.js';
 
-// Types -------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The current variant selection. */
 type DisplaySelection =
@@ -77,7 +77,7 @@ type IcnResult =
 	| { kind: 'saved'; isValid: boolean; options: VariantOptions }
 	| { kind: 'icn'; isValid: boolean; longFormat: LongFormatOut; gamefile: GameFile };
 
-// Elements ----------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_variantCustomSection = document.getElementById('variant-custom-section')!;
 const element_variantSelector = document.getElementById('variant-selector')!;
@@ -106,7 +106,7 @@ const element_btnCustomFromICN = document.getElementById('btn-custom-from-icn')!
 const element_btnCustomFromICNName =
 	element_btnCustomFromICN.querySelector<HTMLElement>('.group-name')!;
 
-// State ----------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Host config, populated by {@link initVariantGroupDropdown}. */
 let config: VariantSelectorConfig;
@@ -151,7 +151,7 @@ const localPreviewCache = new Map<string, VariantOptions>();
 
 const patch = init([attributesModule, classModule, eventListenersModule]);
 
-// Initialization ----------------------------------------------
+// Initialization --------------------------------------------------------------
 
 /** Wires the variant selector open/close and group navigation. */
 function initVariantGroupDropdown(hostConfig: VariantSelectorConfig): void {
@@ -256,7 +256,7 @@ function initIcnValidation(): void {
 	});
 }
 
-// Dropdown navigation ----------------------------------------------
+// Dropdown navigation ---------------------------------------------------------
 
 /** Toggles the group dropdown, closing the variant list if it was open instead. */
 function toggleVariantDropdown(): void {
@@ -333,7 +333,7 @@ async function openCustomVariantList(): Promise<void> {
 	);
 }
 
-// Custom panel ----------------------------------------------
+// Custom panel ----------------------------------------------------------------
 
 /**
  * Builds a single save-row VNode for the custom panel's saved positions list.
@@ -430,7 +430,7 @@ function goToEditor(): void {
 	window.location.assign('/editor');
 }
 
-// Variant selection ----------------------------------------------
+// Variant selection -----------------------------------------------------------
 
 /** Updates the selected variant state and selector button, then closes all panels. */
 function selectVariant(code: VariantCode): void {
@@ -515,7 +515,7 @@ function hideCustomSection(): void {
 	clearError(element_icnInputWrap);
 }
 
-// Selector display ----------------------------------------------
+// Selector display ------------------------------------------------------------
 
 /** Sets the variant selector display button's name text and group icon. */
 function setSelectorDisplay(name: string, iconId: string): void {
@@ -540,7 +540,7 @@ function applyCustomToSelector(name: string): void {
 	setSelectorDisplay(name, 'svg-wrench');
 }
 
-// Remembering Committed State ----------------------------------------------
+// Remembering Committed State -------------------------------------------------
 
 /** Records the current selection, ICN, and modifiers as accepted to remember. */
 function snapshotAccepted(): void {
@@ -572,7 +572,7 @@ function restoreAcceptedDisplay(): void {
 	modifierSelector.applyModifiers(loaded.modifiers);
 }
 
-// Validation ----------------------------------------------
+// Validation ------------------------------------------------------------------
 
 /** Sets icnResult and notifies the host of the change. */
 function setIcnResult(result: IcnResult | null): void {
@@ -760,7 +760,7 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	setIcnResult({ kind: 'icn', isValid: true, longFormat, gamefile: constructed });
 }
 
-// Preview tooltips ----------------------------------------------
+// Preview tooltips ------------------------------------------------------------
 
 /** Shows the preview tooltip for the currently selected variant in the display button. */
 function handleDisplayPreviewHover(anchor: HTMLElement): void {
@@ -818,7 +818,7 @@ function handleSavePreview(
 	);
 }
 
-// Selection accessors ----------------------------------------------
+// Selection accessors ---------------------------------------------------------
 
 /** The current selection. */
 function getSelection(): DisplaySelection {
@@ -881,7 +881,7 @@ function getSeekVariant(): SeekVariant | null {
 	return { kind: 'custom', position };
 }
 
-// Exports ----------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	initVariantGroupDropdown,

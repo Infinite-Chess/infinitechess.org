@@ -15,12 +15,12 @@ import zodlogger from '../utility/zodlogger.js';
 import logEvents from '../utility/logEvents.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 
-// Constants ---------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Maximum number of saved positions allowed per user */
 const MAX_SAVED_POSITIONS = 50;
 
-// Zod Schemas -------------------------------------------------------------------------------
+// Zod Schemas -----------------------------------------------------------------
 
 /** Schema for validating the body of POST /api/editor-saves (save position) */
 const SavePositionBodySchema = z.strictObject({
@@ -62,7 +62,7 @@ const PositionNameParamSchema = z.strictObject({
 		),
 });
 
-// API Endpoints -----------------------------------------------------------------------------
+// API Endpoints ---------------------------------------------------------------
 
 /** `GET /api/editor-saves` — returns `{ saves }` (position_id, name, size) for the signed-in user. */
 function getSavedPositions(req: Request, res: Response): void {
@@ -252,7 +252,7 @@ function getSignedInUserIdOrRespond(req: Request, res: Response): number | undef
 	return req.memberInfo.user_id;
 }
 
-// Exports -----------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

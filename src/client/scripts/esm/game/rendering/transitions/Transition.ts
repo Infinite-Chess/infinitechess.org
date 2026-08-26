@@ -34,7 +34,7 @@ import preferences from '../../../components/header/preferences.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import area, { Area } from '../../../board/rendering/area.js';
 
-// Types ---------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Main Transition type. Either Zooming OR Panning. */
 type Transition =
@@ -58,7 +58,7 @@ type PanTransition = {
 	destinationCoords: BDCoords;
 };
 
-// Constants ----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The maximum number of transitions we will retain in our history, for undoing transitions. */
 const HISTORY_CAP = 20;
@@ -106,11 +106,11 @@ const ZOOM_TRANSITION_CONFIG = {
 const ONE = bd.fromBigInt(1n);
 const NEGONE = bd.fromBigInt(-1n);
 
-// Variables ----------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 const teleportHistory: Transition[] = [];
 
-// State --------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 // The state of the current transition
 
@@ -204,13 +204,13 @@ let v_at_stage2_mid: number;
 let e_at_stage2_end: number;
 let v_at_stage2_end: number;
 
-// Events ---------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-unloaded', () => {
 	eraseTelHist();
 });
 
-// Initiating Transitions ---------------------------------------------------------------------
+// Initiating Transitions ------------------------------------------------------
 
 /** Sets common variables between starting either a Zooming or Panning Transition. */
 function onTransitionStart(): void {
@@ -531,7 +531,7 @@ function undoTransition(): void {
 	}
 }
 
-// Updating --------------------------------------------------------------------------------------
+// Updating --------------------------------------------------------------------
 
 /** If we are currently transitioning, this updates the board position and scale. */
 function update(): void {
@@ -737,7 +737,7 @@ function finishTransition(): void {
 	else isTransitioning = false;
 }
 
-// Utility ------------------------------------------------------------------------------
+// Utility ---------------------------------------------------------------------
 
 /** Whether we are currently transitioning.  */
 function areTransitioning(): boolean {
@@ -756,7 +756,7 @@ function terminate(): void {
 	nextTransition = undefined;
 }
 
-// Exports ------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Initiating Transitions

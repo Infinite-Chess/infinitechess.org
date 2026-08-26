@@ -69,6 +69,6 @@ function countUnreadNews(lastReadDate: string | null): number {
 	return getUnreadNewsDates(lastReadDate).length;
 }
 
-// Exports ------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getLatestNewsDate, countUnreadNews, getUnreadNewsDates };

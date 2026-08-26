@@ -22,7 +22,7 @@ import guipalette from './gui/guipalette.js';
 import gamesession from '../../game/chess/gamesession.js';
 import boardeditor from './boardeditor.js';
 
-// Start Game --------------------------------------------------------------------
+// Start Game ------------------------------------------------------------------
 
 /** Initializes the board editor. */
 async function startBoardEditor(): Promise<void> {
@@ -94,7 +94,7 @@ async function startBoardEditorFromCustomPosition(
 	boardeditor.initBoardEditor(dirty, variantOptionsCopy, pawnDoublePush, castling);
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	startBoardEditor,

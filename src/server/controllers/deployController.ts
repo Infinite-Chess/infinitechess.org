@@ -46,6 +46,6 @@ async function handlePrepareRestart(req: Request, res: Response): Promise<void> 
 	res.status(200).send('Ready for restart.');
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { handlePrepareRestart };

@@ -18,12 +18,12 @@ import variantSelector from '../../board/variantselector/variantSelector.js';
 import modifierSelector from '../../board/variantselector/modifierSelector.js';
 import gamesetuphandoff from '../../handoffs/gamesetuphandoff.js';
 
-// Types ----------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The data-* attribute keys that each identify an exclusive-select toggle button group. */
 type ToggleGroupAttribute = 'data-time' | 'data-mode' | 'data-side' | 'data-level';
 
-// Constants ------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Submit-button labels per active mode. */
 const SUBMIT_LABELS: Record<ModalMode, string> = {
@@ -32,7 +32,7 @@ const SUBMIT_LABELS: Record<ModalMode, string> = {
 	computer: t.index.lobby_buttons.play_computer,
 };
 
-// Elements ----------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_modalOverlay = document.getElementById('modal-overlay')!;
 const element_modalClose = document.getElementById('modal-close')!;
@@ -51,17 +51,17 @@ const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTML
 	'data-level': document.querySelectorAll<HTMLElement>('[data-level]'),
 };
 
-// Variables ------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The active game creation flow. */
 let currentMode: ModalMode;
 
-// Initialization ----------------------------------------------
+// Initialization --------------------------------------------------------------
 
 initModal();
 void consumePendingHandoff();
 
-// Functions ----------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Initializes shared exclusive-selection behavior for all data-* toggle button groups. */
 function initToggleGroups(): void {

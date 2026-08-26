@@ -13,14 +13,14 @@ import savestore from '../../../savedpositions/savestore';
 import egamerules from '../egamerules';
 import boardeditor from '../boardeditor';
 
-// State --------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Prevent overlapping IndexedDB saves (single-flight): is save ongoing */
 let positionSaveInFlight = false;
 /** Prevent overlapping IndexedDB writes (single-flight): is save pending */
 let positionSavePending = false;
 
-// Actions ----------------------------------------------------------------------
+// Actions ---------------------------------------------------------------------
 
 /** Saves current position under "position_name". */
 async function saveLocal(position_name: string): Promise<void> {
@@ -80,7 +80,7 @@ async function readLocal(position_name: string): Promise<EditorSaveState | undef
 	}
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	saveLocal,

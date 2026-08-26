@@ -8,7 +8,7 @@
 import db from './database.js';
 import logEvents from '../utility/logEvents.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Adds an email to the blacklist, if it isn't already.
@@ -64,6 +64,6 @@ function isBlacklisted(email: string): boolean {
 	return Boolean(row?.found);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { add, remove, isBlacklisted };

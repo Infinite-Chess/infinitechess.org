@@ -20,7 +20,7 @@ import meshes from '../../../../board/rendering/meshes';
 import primitives from '../../../../board/rendering/primitives';
 import { createRenderable } from '../../../../board/rendering/renderable';
 
-// Constants ---------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The color for the wireframe of the selection box, including the small square in the corner,
@@ -38,7 +38,7 @@ const DASHED_WIDTH = 1;
 /** How many virtual screen pixels long the dashes are. */
 const DASHED_LENGTH = 6;
 
-// Methods -----------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /**
  * Outlines the current rank and file of the square
@@ -163,7 +163,7 @@ function renderCornerSquare(worldBox: DoubleBoundingBox): void {
 	createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();
 }
 
-// Exports ----------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	outlineRankAndFile,

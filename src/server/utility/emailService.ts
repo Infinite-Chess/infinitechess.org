@@ -21,7 +21,7 @@ import logEvents from './logEvents.js';
 import emailTemplates from './emailTemplates.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
 
-// Email Senders -----------------------------------------------------------------------------------
+// Email Senders ---------------------------------------------------------------
 
 /**
  * Sends an account verification email.
@@ -167,7 +167,7 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	sendEmailConfirmation,

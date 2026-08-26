@@ -6,7 +6,7 @@ import colorutil from '../../../util/colorutil.js';
 import preferences from '../preferences.js';
 import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerator.js';
 
-// Document Elements -------------------------------------------------------------------------
+// Document Elements -----------------------------------------------------------
 
 const appearanceDropdownTitle = document.querySelector('.appearance-dropdown .dropdown-title')!;
 const appearanceDropdown = document.querySelector('.appearance-dropdown')!;
@@ -28,7 +28,7 @@ const advancedEffectsCheckbox = document.querySelector<HTMLInputElement>(
 	'.boolean-option.advanced-effects input',
 )!;
 
-// Constants ---------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The key used to store the light/dark theme preference in localStorage. */
 const THEME_KEY = 'color-scheme';
@@ -36,11 +36,11 @@ const THEME_KEY = 'color-scheme';
 const THEME_DARK = 'dark';
 const THEME_LIGHT = 'light';
 
-// Types -------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 type Theme = typeof THEME_DARK | typeof THEME_LIGHT;
 
-// Functions ---------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 (function init() {
 	showCheckmarkOnSelectedOptions();

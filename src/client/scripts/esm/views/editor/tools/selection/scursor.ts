@@ -9,21 +9,21 @@
 
 import gamecore from '../../../../game/chess/gamecore';
 
-// Types ----------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 type Cursor = 'grab' | 'grabbing' | 'crosshair';
 
-// Constants ------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** If multiple cursor styles are enabled, only the one with most priority is actually applied. */
 const priority: Cursor[] = ['crosshair', 'grabbing', 'grab'];
 
-// State ----------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** A list of all active cursor styles. */
 const current: Set<Cursor> = new Set();
 
-// Methods --------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /** Adds a cursor style, immediately applying it if it has the highest priority. */
 function addCursor(cursor: Cursor): void {
@@ -61,7 +61,7 @@ function updateCursor(): void {
 	overlay.style.cursor = highestPrio!; // Apply new cursor style
 }
 
-// Exports ---------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	addCursor,

@@ -14,7 +14,7 @@ import jsutil from '../../shared/util/jsutil.js';
 
 import logEvents from './logEvents.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The maximum number of requests/messages allowed per client, per minute. */
 const MAX_REQUESTS_PER_MINUTE = process.env['NODE_ENV'] === 'development' ? 400 : 200; // Default: 400 / 200
@@ -33,7 +33,7 @@ const ATTACK_WINDOW_REQUEST_CAP = 200;
 
 const MINUTE_MS = 60000;
 
-// State ----------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * The timestamps of each client's recent requests, keyed by `"IP|User-Agent"`.
@@ -52,7 +52,7 @@ const recentRequests: number[] = [];
 /** Whether we think we're currently experiencing a DDOS. If true, 429 errors never render html, returning a plain json/string instead. */
 let underAttackMode = false;
 
-// Recording -------------------------------------------------------------------------------------
+// Recording -------------------------------------------------------------------
 
 /**
  * Adds the current timestamp to {@link recentRequests}.
@@ -63,7 +63,7 @@ function recordRecent(): void {
 	recentRequests.push(Date.now());
 }
 
-// Metering --------------------------------------------------------------------------------------
+// Metering --------------------------------------------------------------------
 
 /**
  * Records a connection attempt from a client and checks it against their per-minute cap.
@@ -138,7 +138,7 @@ setInterval(() => {
 	}
 }, RATE_UPDATE_INTERVAL_MS);
 
-// Attack-mode watchdog --------------------------------------------------------------------------
+// Attack-mode watchdog --------------------------------------------------------
 
 /** Whether we currently believe traffic is DDOS-scale. */
 function isUnderAttack(): boolean {
@@ -181,7 +181,7 @@ function logAttackEnd(): void {
 	logEvents.addAndPrint(logText, 'hackLog');
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Recording

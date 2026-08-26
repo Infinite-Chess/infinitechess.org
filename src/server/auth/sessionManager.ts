@@ -16,13 +16,13 @@ import refreshTokenCookie from '../cookies/refreshTokenCookie.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
 import practiceProgressCookie from '../cookies/practiceProgressCookie.js';
 
-// Constants ---------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** How old a session must be before its refresh token is renewed. */
 const MIN_TIME_TO_WAIT_TO_RENEW_REFRESH_TOKENS_MS = 1000 * 60 * 60 * 24; // 1 day
 // const MIN_TIME_TO_WAIT_TO_RENEW_REFRESH_TOKENS_MS = 1000 * 10; // Debug: 10s
 
-// Renewing & Revoking Sessions --------------------------------------------------------------------
+// Renewing & Revoking Sessions ------------------------------------------------
 
 /**
  * Makes sure a user's session is still fresh, renewing it if it's older than a day.
@@ -107,7 +107,7 @@ function revoke(res: Response): void {
 	practiceProgressCookie.remove(res);
 }
 
-// Cookies storing session information --------------------------------------------------------------------
+// Cookies storing session information -----------------------------------------
 
 /**
  * Creates and sets the cookies:
@@ -139,7 +139,7 @@ function deleteSessionCookies(res: Response): void {
 	memberInfoCookie.clear(res);
 }
 
-// Exports -----------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	freshen,

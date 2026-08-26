@@ -9,7 +9,7 @@ import type { EditorAbridgedSaveState, EditorSaveState } from './storetypes.js';
 import IndexedDB from '../util/IndexedDB.js';
 import storetypes from './storetypes.js';
 
-// Constants ----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Prefix for editor saves in IndexedDB */
 const EDITOR_SAVE_PREFIX = 'editor-save-' as const;
@@ -17,7 +17,7 @@ const EDITOR_SAVE_PREFIX = 'editor-save-' as const;
 /** Prefix for editor saveinfo in IndexedDB */
 const EDITOR_SAVEINFO_PREFIX = 'editor-saveinfo-' as const;
 
-// Helpers ----------------------------------------------------------------------
+// Helpers ---------------------------------------------------------------------
 
 /** Returns the IndexedDB key for the full save data of a position. */
 function saveKey(position_name: string): string {
@@ -29,7 +29,7 @@ function saveinfoKey(position_name: string): string {
 	return `${EDITOR_SAVEINFO_PREFIX}${position_name}`;
 }
 
-// Actions ----------------------------------------------------------------------
+// Actions ---------------------------------------------------------------------
 
 /**
  * Persists a fully constructed SaveState to IndexedDB.
@@ -104,7 +104,7 @@ async function readLocal(position_name: string): Promise<EditorSaveState> {
 	return editorSaveStateParsed.data;
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	saveState,

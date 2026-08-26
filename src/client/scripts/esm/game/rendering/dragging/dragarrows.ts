@@ -44,7 +44,7 @@ import arrowscalculator from '../arrows/arrowscalculator.js';
 import { ARROW_SIZE_RATIO } from '../arrows/arrowsgraphics.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 
-// Types ---------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * State stored when the user presses the mouse on an own-piece arrow indicator.
@@ -61,7 +61,7 @@ interface CandidateArrow {
 	pointerId: string;
 }
 
-// Constants -------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Settings for the animated arrows shown beside the candidate arrow indicator. */
 const CANDIDATE_ANIM = {
@@ -89,7 +89,7 @@ const SLIDE_ZONE_GRADIENT = {
 	VELOCITY: 9,
 } as const;
 
-// State ---------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The candidate arrow — set when mouse is pressed on an own-piece arrow, cleared when pointer releases. */
 let candidate: CandidateArrow | undefined;
@@ -106,7 +106,7 @@ let candidateAnimStartTime: number = 0;
 /** Current phase offset for the slide zone radial gradient, in world units. */
 let slideZonePhase: number = 0;
 
-// Main update ---------------------------------------------------------------------------
+// Main update -----------------------------------------------------------------
 
 /**
  * Main per-frame update.
@@ -234,7 +234,7 @@ function detectCandidateArrow(): void {
 	}
 }
 
-// Active drag management ---------------------------------------------------------------
+// Active drag management ------------------------------------------------------
 
 /**
  * Returns the hovered arrow that matches the current candidate, or undefined if not found.
@@ -319,7 +319,7 @@ function updateOnScreenDrag(): void {
 	arrowshifts.deleteArrow(candidate!.pieceCoords);
 }
 
-// Cleanup -----------------------------------------------------------------------------
+// Cleanup ---------------------------------------------------------------------
 
 /** Resets all drag arrow state. Called when the drag naturally completes or is force-cleared. */
 function reset(): void {
@@ -331,7 +331,7 @@ function reset(): void {
 	draganimation.setForceRankFileOutline(false);
 }
 
-// Rendering ---------------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /** Renders all dragarrows visuals: the slide zone gradient and the slide move highlights. */
 function render(): void {
@@ -510,7 +510,7 @@ function renderSlideMoveHighlights(): void {
 	model.render(position, scale);
 }
 
-// Exports ------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	update,

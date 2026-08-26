@@ -17,7 +17,7 @@ import blacklistManager from '../database/blacklistManager.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
 import deleteAccountController from '../controllers/deleteAccountController.js';
 
-// Constants -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const VALID_COMMANDS = [
 	'ban',
@@ -30,7 +30,7 @@ const VALID_COMMANDS = [
 	'help',
 ] as const;
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * `POST /api/admin/command` — parses and runs an admin console command from the request body.
@@ -379,6 +379,6 @@ function sendAndLogResponse(res: Response, code: number, message: string): void 
 	logEvents.addAndPrint('Result:   ' + message + '\n', 'adminCommands');
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { processCommand };

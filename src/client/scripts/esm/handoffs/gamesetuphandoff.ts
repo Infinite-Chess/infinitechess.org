@@ -10,7 +10,7 @@
 
 import { createHandoff } from './createhandoff.js';
 
-// Types ------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The game creation flow the modal opens into. `online` is a public lobby seek. */
 export type ModalMode = 'online' | 'friend' | 'computer';
@@ -23,11 +23,11 @@ export interface GameSetupHandoff {
 	mode: ModalMode;
 }
 
-// Constants --------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** How long a stashed handoff stays valid before being auto-discarded. */
 const EXPIRY_MS = 1000 * 60 * 5; // 5 minutes
 
-// Exports ----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default createHandoff<GameSetupHandoff>('game-setup-handoff', EXPIRY_MS);

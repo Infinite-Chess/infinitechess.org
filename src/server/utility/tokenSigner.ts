@@ -17,7 +17,7 @@ import crypto from 'crypto';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
-// Types ------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The payload of the JWT token, containing user information. */
 export interface TokenPayload {
@@ -26,7 +26,7 @@ export interface TokenPayload {
 	roles: Role[] | null;
 }
 
-// Constants --------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN_SECRET');
 const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
@@ -41,7 +41,7 @@ const DEFAULT_SESSION_EXPIRY_MS = 1000 * 60 * 60 * 24 * 2; // 48 hours
  */
 const EXTENDED_SESSION_EXPIRY_MS = 1000 * 60 * 60 * 24 * 180; // 180 days (~6 months)
 
-// Signing Tokens ------------------------------------------------------------------------------------
+// Signing Tokens --------------------------------------------------------------
 
 /**
  * Signs and generates a refresh token for the user.
@@ -71,7 +71,7 @@ function generatePayload(user_id: number, username: string, roles: Role[] | null
 	return { user_id, username, roles };
 }
 
-// Verifying Tokens ------------------------------------------------------------------------------------
+// Verifying Tokens ------------------------------------------------------------
 
 /**
  * Extracts and decodes the payload from a refresh token, verifying its signature and expiry.
@@ -94,7 +94,7 @@ function verify(token: string): TokenPayload | null {
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

@@ -22,7 +22,7 @@ import arrowshifts from '../arrows/arrowshifts.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import draganimation from './draganimation.js';
 
-// Constants -------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Settings for the opacity pulsation on legally capturable arrow indicators. */
 const LEGAL_CAPTURE_PULSATE = {
@@ -32,13 +32,13 @@ const LEGAL_CAPTURE_PULSATE = {
 	MIN_OPACITY: 0.4,
 } as const;
 
-// State -----------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 let capturedPieceThisFrame: Piece | undefined;
 /** Timestamp when the current drag started, used to anchor the pulsation phase to 0. */
 let dragStartTime: number | undefined;
 
-// Functions -------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Update the piece that would be captured if we were to let

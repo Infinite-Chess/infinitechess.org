@@ -16,7 +16,7 @@ import { passwordFormatError, setFieldError } from '../util/accountFormatErrors.
 
 import '../util/passwordToggle.js';
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 // All null in the invalid state (no form rendered).
 const form = document.querySelector<HTMLFormElement>('#reset-form');
@@ -27,7 +27,7 @@ const submitButton = document.querySelector<HTMLButtonElement>('#reset-submit');
 // The token is the last path segment of this page's URL (GET /reset-password/:token).
 const token = docutil.getLastSegmentOfURL();
 
-// Functions ---------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Shows an error beneath the field (format, server, or network), or clears it when called with no message. */
 function setError(message?: string): void {
@@ -86,7 +86,7 @@ async function submit(): Promise<void> {
 	}
 }
 
-// Event Listeners ---------------------------------------------------
+// Event Listeners -------------------------------------------------------------
 
 // Only wire up in the SSR 'valid' state; the invalid state has no form (the refs above are null).
 if (form) {

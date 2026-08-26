@@ -15,7 +15,7 @@ import socketutil from '../../shared/util/socketutil.js';
 
 import requestContext from '../utility/requestContext.js';
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const MAX_SOCKETS_ALLOWED_PER_IP = 10;
 const MAX_SOCKETS_ALLOWED_PER_SESSION = 5;
@@ -26,7 +26,7 @@ const MAX_SOCKETS_ALLOWED_PER_SESSION = 5;
  */
 const MAX_WEBSOCKET_AGE_MS = 1000 * 60 * 15; // 15 minutes.
 
-// State --------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** All active websocket connections, keyed by their socket ID. */
 const websocketConnections: { [id: string]: CustomWebSocket } = {};
@@ -37,7 +37,7 @@ const connectedSessions: { [jwt: string]: string[] } = {};
 /** Open socket ID's per member user ID. */
 const connectedMembers: { [user_id: string]: string[] } = {};
 
-// Adding / Removing from the lists -----------------------------------------------------------
+// Adding / Removing from the lists --------------------------------------------
 
 /** Adds a websocket to all the tracking lists, and arms its expiry timer. */
 function add(ws: CustomWebSocket): void {
@@ -96,7 +96,7 @@ function startTimerToExpireSocket(ws: CustomWebSocket): void {
 	); // We pass in an arrow function so it doesn't lose scope of ws.
 }
 
-// Terminating all sockets of criteria --------------------------------------------------------
+// Terminating all sockets of criteria -----------------------------------------
 
 /** Closes every socket connected from the given IP address. */
 function terminateAllOfIP(IP: string): void {
@@ -134,7 +134,7 @@ function closeAllSocketsInList(
 	});
 }
 
-// Limiting the socket count per user ---------------------------------------------------------
+// Limiting the socket count per user ------------------------------------------
 
 /** Returns true if the given IP has the maximum number of websockets opened. */
 function doesClientHaveMaxCount(IP: string): boolean {
@@ -148,14 +148,14 @@ function doesSessionHaveMaxCount(jwt: string): boolean {
 	return connectedSessions[jwt].length >= MAX_SOCKETS_ALLOWED_PER_SESSION;
 }
 
-// Miscellaneous ------------------------------------------------------------------------------
+// Miscellaneous ---------------------------------------------------------------
 
 /** Generates a unique socket ID. */
 function generateUniqueID(): string {
 	return uuid.genUniqueID(requestContext.ID_LENGTH, websocketConnections); // Matches request IDs' length
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Adding / Removing

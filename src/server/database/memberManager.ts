@@ -11,7 +11,7 @@ import jsonutil from '../../shared/util/jsonutil.js';
 import db from './database.js';
 import pendingRegistrationManager from './pendingRegistrationManager.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Structure of a complete member record. */
 export interface MemberRecord {
@@ -34,7 +34,7 @@ type MembersColumn = keyof MemberRecord;
 /** A valid account deletion reason, stored in the deleted_members table. */
 export type DeleteReason = (typeof VALID_DELETE_REASONS)[number];
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * 62**4: Limit of unique user ids with 4-digit base-62 user ids! EXCLUSIVE.
@@ -60,7 +60,7 @@ const VALID_DELETE_REASONS = [
 	'rating abuse', // Unfairly boosted their own elo with a throwaway account
 ] as const;
 
-// Creation -----------------------------------------------------------------------------------
+// Creation --------------------------------------------------------------------
 
 /**
  * Creates a new account. This is the single, authoritative function for user creation.
@@ -130,7 +130,7 @@ function promote(pending: PendingRegistrationRecord): number {
 	return promoteTransaction(pending);
 }
 
-// Reads --------------------------------------------------------------------------------------
+// Reads -----------------------------------------------------------------------
 
 /**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.
@@ -182,7 +182,7 @@ function getMultipleDataByCriteria<K extends MembersColumn>(
 	}, 'Error getting MULTIPLE member data by criteria');
 }
 
-// Updates ------------------------------------------------------------------------------------
+// Updates ---------------------------------------------------------------------
 
 /**
  * Updates specified columns for a member based on their user ID.
@@ -246,7 +246,7 @@ function updateLastSeen(userId: number): void {
 	}, `Error updating last_seen for member of id "${userId}"`);
 }
 
-// Deletion -----------------------------------------------------------------------------------
+// Deletion --------------------------------------------------------------------
 
 /** Type Guard: Checks if a string is a valid DeleteReason. */
 function isValidDeleteReason(reason: string): reason is DeleteReason {
@@ -287,7 +287,7 @@ function remove(user_id: number, reason_deleted: DeleteReason): void {
 	);
 }
 
-// Existence & Availability Checks ------------------------------------------------------------
+// Existence & Availability Checks ---------------------------------------------
 
 /**
  * Checks if a given user_id exists in the members table OR deleted_members table.
@@ -361,7 +361,7 @@ function isEmailTakenOrPending(email: string): boolean {
 	return isEmailTaken(email) || pendingRegistrationManager.isEmailTaken(email);
 }
 
-// Internal Helpers ---------------------------------------------------------------------------
+// Internal Helpers ------------------------------------------------------------
 
 /**
  * Generates a unique user_id that no other member has ever used.
@@ -403,7 +403,7 @@ function validateMemberQueryArgs(
 		throw new Error(`Invalid search values for members table: ${jsonutil.ensureJSONString(searchValues)}`); // prettier-ignore
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Creation

@@ -50,6 +50,6 @@ function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { subscribeToRematch };

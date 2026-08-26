@@ -31,6 +31,6 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: ServerboundRou
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { routeIncomingSocketMessage };

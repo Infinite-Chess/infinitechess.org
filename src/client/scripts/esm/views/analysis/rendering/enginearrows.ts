@@ -19,7 +19,7 @@ import drawarrows from '../../../game/rendering/highlights/annotations/drawarrow
 import frametracker from '../../../board/rendering/frametracker.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 
-// Types --------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** One engine suggestion to draw. */
 interface EngineArrow {
@@ -29,7 +29,7 @@ interface EngineArrow {
 	rank: number;
 }
 
-// Constants -----------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Best-line arrow color (blue, like lichess' engine arrows). */
 const COLOR: Color = [0.15, 0.48, 0.85, 0.85];
@@ -41,7 +41,7 @@ const RANK_OPACITY_MULTIPLIER = 0.7;
 /** The currently displayed engine arrows, with precalculated render properties. */
 let arrows: { arrow: Arrow; rank: number }[] = [];
 
-// Functions ---------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Points the board arrows at each line's first move (only for the viewed position). */
 function update(update: CevalUpdate): void {

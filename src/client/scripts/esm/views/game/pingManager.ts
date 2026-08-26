@@ -9,14 +9,14 @@
 
 import { SocketBus } from '../../socket/SocketBus.js';
 
-// Variables -------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 let currentPing: number = 0; // Stores the current ping value
 
 const MAX_PING_HISTORY: number = 3; // Maximum number of ping history entries to store
 const pingHistory: number[] = []; // Stores the last 'MAX_PING_HISTORY' ping values
 
-// Functions -------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 (function init(): void {
 	SocketBus.addEventListener('ping', handlePingUpdate);

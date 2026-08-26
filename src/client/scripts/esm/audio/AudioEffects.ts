@@ -4,7 +4,7 @@
  * This module is responsible for creating and managing audio effects using the Web Audio API.
  */
 
-// Types ---------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A wrapper containing the input and output nodes of an effect graph. */
 export interface NodeChain {
@@ -30,7 +30,7 @@ export type EffectConfig = EffectConfigBase & { type: 'reverb'; durationSecs: nu
 // Future effects will be added here, e.g.:
 // | { type: 'filter', filterType: BiquadFilterType, frequency: number }
 
-// Effect Creation ---------------------------------------------------------------------------------
+// Effect Creation -------------------------------------------------------------
 
 /**
  * Creates a complete, wrapped effect node graph based on the provided configuration.
@@ -80,7 +80,7 @@ export function createEffectNode(audioContext: AudioContext, config: EffectConfi
 	return { input, output };
 }
 
-// Internal Helpers --------------------------------------------------------------------------------
+// Internal Helpers ------------------------------------------------------------
 
 /** Generates a reverb effect node. */
 function generateConvolverNode(audioContext: AudioContext, durationSecs: number): ConvolverNode {

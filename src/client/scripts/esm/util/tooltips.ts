@@ -20,7 +20,7 @@
 
 import docutil from './docutil.js';
 
-// Variables ----------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 const tooltipClasses: string[] = [
 	'tooltip-dl',
@@ -51,7 +51,7 @@ const SUPPRESS_COOLDOWN_MS: number = 2000;
 /** If no new tooltip is viewed within this window, fast-transition mode turns off. */
 const FAST_TRANSITION_COOLDOWN_MS: number = 750;
 
-// State ---------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Per-element hover/click state, lazily created on first interaction. */
 interface TooltipState {
@@ -83,7 +83,7 @@ let hideTimer: number | undefined;
 /** The rAF id for the position-tracking loop, or undefined when not running. */
 let positionLoopId: number | undefined;
 
-// Functions ----------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Returns or creates the per-element state for a tooltip target. */
 function getOrCreateState(el: Element): TooltipState {
@@ -341,7 +341,7 @@ function resetSuppressTimer(target: HTMLElement, state: TooltipState, direction:
 	}, SUPPRESS_COOLDOWN_MS);
 }
 
-// Delegated event listeners ------------------------------------------------------------
+// Delegated event listeners ---------------------------------------------------
 
 if (docutil.isMouseSupported()) {
 	// mouseover/mouseout bubble, letting us simulate mouseenter/mouseleave via delegation.

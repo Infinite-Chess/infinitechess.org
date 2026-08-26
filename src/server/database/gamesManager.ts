@@ -9,7 +9,7 @@ import jsonutil from '../../shared/util/jsonutil.js';
 
 import db from './database.js';
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * 62**4: Limit of unique game ids with 4-digit base-62 game ids! EXCLUSIVE.
@@ -17,7 +17,7 @@ import db from './database.js';
  */
 const GAME_ID_UPPER_CAP: number = 14_776_336;
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Structure of a complete games record. */
 export interface GamesRecord {
@@ -50,7 +50,7 @@ export interface GamesRecord {
 
 type GamesColumn = keyof GamesRecord;
 
-// Methods ------------------------------------------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /**
  * Decodes a base62 game-id string (as it appears in `/game/:id`) into its numeric id.
@@ -155,7 +155,7 @@ function getMultipleData<K extends GamesColumn>(
 	);
 }
 
-// Writes -------------------------------------------------------------------------------------
+// Writes ----------------------------------------------------------------------
 
 // These intentionally skip `dbCall`. gamelogger is their only caller, and it already logs the
 // failure and rolls back the surrounding transaction — wrapping them would log the same error twice.
@@ -208,7 +208,7 @@ function remove(game_id: number): void {
 	db.run('DELETE FROM games WHERE game_id = ?', [game_id]);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Methods

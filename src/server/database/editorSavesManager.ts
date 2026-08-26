@@ -8,7 +8,7 @@ import type { RunResult } from 'better-sqlite3';
 
 import db from './database.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Represents a saved position list record (name, piece_count, timestamp). */
 type EditorSavesListRecord = {
@@ -28,7 +28,7 @@ type EditorSavesIcnRecord = {
 	castling: -1 | 0 | 1;
 };
 
-// Methods ------------------------------------------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /**
  * Retrieves all saved positions for a given user_id.
@@ -151,6 +151,6 @@ function remove(name: string, user_id: number): RunResult {
 	);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getAllForUser, getCount, doesExist, add, getICN, remove };

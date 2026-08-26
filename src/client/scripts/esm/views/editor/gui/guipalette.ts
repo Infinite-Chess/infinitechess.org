@@ -16,7 +16,7 @@ import gameslot from '../../../game/chess/gameslot.js';
 import drawingtool from '../tools/drawingtool.js';
 import etoolmanager from '../tools/etoolmanager.js';
 
-// Elements ---------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_typesContainer = document.getElementById('editor-pieceTypes')!;
 const element_neutralTypesContainer = document.getElementById('editor-neutralTypes')!;
@@ -26,7 +26,7 @@ const element_playerContainers: Map<Player, Element> = new Map();
 const element_playerTypes: Map<Player, Array<Element>> = new Map();
 const element_neutralTypes: Array<Element> = [];
 
-// Constants -----------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Player pieces in the order they will appear */
 const coloredTypes = [
@@ -55,7 +55,7 @@ const coloredTypes = [
 /** Neutral pieces in the order they will appear (except void, which is included manually in initUI by default) */
 const neutralTypes = [r.OBSTACLE];
 
-// State -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * Whether the UI has been initialized and all piece svgs appended to the editor menu.
@@ -63,7 +63,7 @@ const neutralTypes = [r.OBSTACLE];
  */
 let initialized = false;
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Initializes the palette UI, appending piece SVGs to the editor menu.
@@ -232,7 +232,7 @@ function closeListeners(): void {
 	});
 }
 
-// Helper Functions ---------------------------------------------------------
+// Helper Functions ------------------------------------------------------------
 
 /** Helper: Returns an array of players based on the current gamefile's turn order. */
 function _getPlayersInOrder(): Player[] {
@@ -246,7 +246,7 @@ function _getActivePieceElements(): Element[] {
 	return [...playerElements, ...element_neutralTypes];
 }
 
-// Callbacks ---------------------------------------------------------------
+// Callbacks -------------------------------------------------------------------
 
 function callback_ChangePieceType(e: Event): void {
 	const target = e.currentTarget as HTMLElement;
@@ -257,7 +257,7 @@ function callback_ChangePieceType(e: Event): void {
 	markPiece(currentPieceType);
 }
 
-// Exports ----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	initUI,

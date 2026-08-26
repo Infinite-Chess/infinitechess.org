@@ -22,7 +22,7 @@ import { FilterXSS, IFilterXSSOptions } from 'xss';
 
 import tconfig from './translationconfig.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Stores all component translations at runtime.
@@ -49,7 +49,7 @@ export type LanguageOption = {
 	englishName: string;
 };
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const englishTOMLName = `${tconfig.DEFAULT_LANGUAGE}.toml`;
 
@@ -75,7 +75,7 @@ const custom_xss = new FilterXSS(xss_options);
  */
 const PSEUDO_LOC = false;
 
-// State --------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Module-level store. */
 let componentStore: ComponentStore | null = null;
@@ -86,7 +86,7 @@ let supportedLanguages: string[] = [];
 /** Language-selector options (code + display names) for the header dropdown. */
 let languageOptions: LanguageOption[] = [];
 
-// Loading Translations -----------------------------------------------------------------------
+// Loading Translations --------------------------------------------------------
 
 /**
  * Loads all component translation TOML files from translation/<component>/<lang>.toml
@@ -194,7 +194,7 @@ function getLangOptions(): LanguageOption[] {
 	return languageOptions;
 }
 
-// Utility ------------------------------------------------------------------------------------
+// Utility ---------------------------------------------------------------------
 
 /** Returns the filtered list of component names from the translation folder. */
 function getComponentNames(): string[] {
@@ -286,7 +286,7 @@ function deepMerge(source: Record<string, any>, target: Record<string, any>): Re
 	return result;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	load,

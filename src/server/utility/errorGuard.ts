@@ -25,6 +25,6 @@ function executeSafely(callback: () => void, errorMessage: string): boolean {
 	return true;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { executeSafely };

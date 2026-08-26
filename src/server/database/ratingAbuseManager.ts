@@ -6,7 +6,7 @@
 
 import db from './database.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Structure of a complete rating_abuse record. */
 interface RatingAbuseRecord {
@@ -18,7 +18,7 @@ interface RatingAbuseRecord {
 
 type RatingAbuseColumn = keyof RatingAbuseRecord;
 
-// Methods ------------------------------------------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /**
  * Adds an entry to the rating_abuse table.
@@ -112,6 +112,6 @@ function updateColumns(
 	}, `Error updating rating_abuse table columns for user ID "${user_id}" and leaderboard ID "${leaderboard_id}"`);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { addEntry, isEntryIn, getData, updateColumns };

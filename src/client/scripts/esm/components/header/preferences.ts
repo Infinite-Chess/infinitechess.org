@@ -51,7 +51,7 @@ interface ServerSidePreferences {
 /** Both client and server side preferences */
 type Preferences = ServerSidePreferences & ClientSidePreferences;
 
-// Variables ------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** All our preferences. */
 let preferences: Preferences;
@@ -78,7 +78,7 @@ const default_ambience_enabled: boolean = true;
  */
 let changeWasMade: boolean = false;
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 (function init(): void {
 	loadPreferences();
@@ -335,7 +335,7 @@ function setAmbienceEnabled(ambience_enabled: boolean): void {
 	document.dispatchEvent(new CustomEvent('ambience-toggle', { detail: ambience_enabled }));
 }
 
-// Getters for our current theme properties --------------------------------------------------------
+// Getters for our current theme properties ------------------------------------
 
 function getColorOfLightTiles(): Color {
 	const boardColorName: string = getBoardColor();
@@ -534,7 +534,7 @@ function getTintColorOfType(type: number): Color {
 // }
 // setInterval(dispatchThemeChangeEvent, 1000);
 
-// Exports -----------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getBoardColor,

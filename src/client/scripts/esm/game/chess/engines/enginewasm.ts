@@ -10,7 +10,7 @@ import type { Player, RawType } from '../../../../../../shared/util/typeutil.js'
 import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import typeutil, { rawTypes as r } from '../../../../../../shared/util/typeutil.js';
 
-// Types ------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The exports every engine glue module provides. */
 export interface EngineWasmModule {
@@ -42,7 +42,7 @@ export interface WasmMove {
 	promotion?: string | null;
 }
 
-// Wasm Loading -----------------------------------------------------------
+// Wasm Loading ----------------------------------------------------------------
 
 /** Hard cap on Lazy SMP threads used by engine features. */
 const THREAD_CAP = 4;
@@ -88,7 +88,7 @@ function maxEngineThreads(cap: number, reserve: number = 0): number {
 	return Math.min(cap, Math.max(1, (navigator.hardwareConcurrency || 2) - reserve));
 }
 
-// Piece Codes ------------------------------------------------------------
+// Piece Codes -----------------------------------------------------------------
 
 /**
  * Apeiron's own single-letter piece codes (its `PieceType::to_str()`, src/board.rs), which

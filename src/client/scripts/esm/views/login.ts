@@ -14,7 +14,7 @@ import { setFieldError } from '../util/accountFormatErrors.js';
 
 import '../util/passwordToggle.js';
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const form = document.querySelector<HTMLFormElement>('#login-form')!;
 const usernameInput = document.querySelector<HTMLInputElement>('#username')!;
@@ -23,7 +23,7 @@ const keepLoggedInInput = document.querySelector<HTMLInputElement>('#keep-logged
 const submitButton = document.querySelector<HTMLButtonElement>('#login-submit')!;
 const errorElement = document.querySelector<HTMLParagraphElement>('#login-error')!;
 
-// Functions ---------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Displays an error beneath the form, or clears it when called with no message. */
 function setError(message?: string): void {
@@ -64,7 +64,7 @@ async function submitLogin(): Promise<void> {
 	}
 }
 
-// Event Listeners ---------------------------------------------------
+// Event Listeners -------------------------------------------------------------
 
 form.addEventListener('submit', (event: SubmitEvent): void => {
 	event.preventDefault();

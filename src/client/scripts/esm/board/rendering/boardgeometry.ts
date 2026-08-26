@@ -21,7 +21,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import camera from './camera.js';
 import boardpos from './boardpos.js';
 
-// Constants ---------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Without this, the center of tiles would be their bottom-left corner. Range: 0-1 */
 const squareCenter: number = 0.5;
@@ -29,7 +29,7 @@ const squareCenter: number = 0.5;
 // BigDecimal constants
 const ONE = bd.fromBigInt(1n);
 
-// Variables ---------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /**
  * The *exact* bounding box of the board currently visible on the canvas.
@@ -50,7 +50,7 @@ let boundingBox: BoundingBox;
  */
 let boundingBox_debugMode: BoundingBox;
 
-// Updating --------------------------------------------------------------------------------
+// Updating --------------------------------------------------------------------
 
 // Recalculate board velicity, scale, and other common variables.
 function recalcVariables(): void {
@@ -73,7 +73,7 @@ function recalcBoundingBox(): void {
 	boundingBox_debugMode = roundAwayBoundingBox(boundingBoxFloat_debugMode);
 }
 
-// Public API ---------------------------------------------------------------------------------
+// Public API ------------------------------------------------------------------
 
 function getSquareCenter(): BigDecimal {
 	return bd.fromNumber(squareCenter);
@@ -202,7 +202,7 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 	return { left, right, bottom, top };
 }
 
-// Exports -------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Updating

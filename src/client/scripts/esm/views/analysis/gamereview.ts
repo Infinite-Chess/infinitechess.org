@@ -37,7 +37,7 @@ import reviewdivision from './reviewdivision.js';
 import analysisworker from './analysisworker.js';
 import analysisenginebounds from './analysisenginebounds.js';
 
-// Types ------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A reviewed move's classification tier. Colors live in CSS (`.review-<key>`). */
 export type ClassificationKey =
@@ -148,7 +148,7 @@ interface ReviewWorker {
 	aborting?: true;
 }
 
-// Constants ----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Classification thresholds on win-probability loss [0,1]. */
 const THRESHOLDS: { max: number; key: ClassificationKey }[] = [
@@ -216,7 +216,7 @@ const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
 /** How long a persisted review survives LocalStorage. */
 const REVIEW_CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
 
-// Schemas ----------------------------------------------------------------------------
+// Schemas ---------------------------------------------------------------------
 
 /** The result of a one-shot `evaluate` command (see {@link EvaluateResultSchema}). */
 export type EvaluateResult = z.infer<typeof EvaluateResultSchema>;
@@ -252,7 +252,7 @@ const CachedGameReviewSchema = z.object({
 	results: z.array(EvaluateResultSchema),
 });
 
-// State ----------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 let status: ReviewStatus = 'idle';
 /** The live worker pool. Dropping an entry disposes everything that worker owned. */
@@ -295,7 +295,7 @@ const listeners: { [K in keyof ReviewListeners]: Set<ReviewListeners[K]> } = {
 	finished: new Set(),
 };
 
-// Events ----------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 /**
  * Discards the review on game unload, so the next game can be reviewed afresh. Move-tree node
@@ -304,7 +304,7 @@ const listeners: { [K in keyof ReviewListeners]: Set<ReviewListeners[K]> } = {
  */
 GameBus.addEventListener('game-unloaded', resetState);
 
-// Win probability & accuracy (lichess formulas) ----------------------------------------
+// Win probability & accuracy (lichess formulas) -------------------------------
 
 /** Maps a mover-POV cp to a win probability [0,1]. */
 function cpToWinProb(cp: number): number {
@@ -329,7 +329,7 @@ function gameAccuracy(accuracies: number[]): number {
 	return (harmonic + arithmetic) / 2;
 }
 
-// Depth heuristic ---------------------------------------------------------------------
+// Depth heuristic -------------------------------------------------------------
 
 /**
  * Per-position search depth. Each doubling of the chunk-rounds a worker must run serially
@@ -367,7 +367,7 @@ function buildReverseChunks(totalPositions: number, threads: number): ReviewWork
 	});
 }
 
-// Mainline capture ----------------------------------------------------------------------
+// Mainline capture ------------------------------------------------------------
 
 /** The node's mainline continuation, or undefined when its first child is forced into a variation. */
 function getMainlineChild(node: AnalysisMoveNode): AnalysisMoveNode | undefined {
@@ -386,7 +386,7 @@ function captureMainline(): AnalysisMoveNode[] {
 	return nodes;
 }
 
-// Lifecycle ------------------------------------------------------------------------------
+// Lifecycle -------------------------------------------------------------------
 
 /**
  * Whether a review can start: an idle, engine-supported
@@ -545,7 +545,7 @@ function persistCompletedReview(): void {
 	}
 }
 
-// Worker pool -----------------------------------------------------------------------------
+// Worker pool -----------------------------------------------------------------
 
 function spawnWorkers(count: number): void {
 	for (let i = 0; i < count; i++) spawnWorker();
@@ -728,7 +728,7 @@ function serializePosition(index: number): string {
 	return engineicn.serialize(rebased);
 }
 
-// Stall watchdog ---------------------------------------------------------------------------
+// Stall watchdog --------------------------------------------------------------
 
 /** (Re)arms the stall watchdog over a worker's in-flight search. */
 function armStallWatchdog(entry: ReviewWorker): void {
@@ -760,7 +760,7 @@ function abortStalledSearch(entry: ReviewWorker): void {
 	entry.watchdog = setTimeout(() => abortStalledSearch(entry), ABORT_GRACE_MS);
 }
 
-// Result processing --------------------------------------------------------------------------
+// Result processing -----------------------------------------------------------
 
 /** The player to move at position `index` (= the mover of mainline move `index`). */
 function moverAtPly(index: number): Player {
@@ -967,7 +967,7 @@ function finishReview(): void {
 	persistCompletedReview();
 }
 
-// Summaries ------------------------------------------------------------------------------------
+// Summaries -------------------------------------------------------------------
 
 /** Builds the live review standing from the classifications so far. */
 function getSummary(): ReviewSummary {
@@ -1008,7 +1008,7 @@ function getSummary(): ReviewSummary {
 	return { summaries, evaluated: evaluatedCount, total: results.length, depth: reviewDepth };
 }
 
-// Queries for the renderers -----------------------------------------------------------------------
+// Queries for the renderers ---------------------------------------------------
 
 /** The review of the move at the given move-tree node, if classified. */
 function getReviewForNode(nodeId: number): MoveReview | undefined {
@@ -1034,7 +1034,7 @@ function getWhiteCpAt(index: number): number | undefined {
 	return effectiveWhiteCp[index];
 }
 
-// Subscriptions ---------------------------------------------------------------------------------
+// Subscriptions ---------------------------------------------------------------
 
 function notifyProgress(): void {
 	for (const listener of listeners.progress) listener();

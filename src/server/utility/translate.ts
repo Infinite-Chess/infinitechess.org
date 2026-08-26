@@ -10,7 +10,7 @@ import i18next from 'i18next';
 
 import tconfig from '../config/translationconfig.js';
 
-// Functions -----------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Retrieves the translation for a given key and language.
@@ -23,6 +23,6 @@ function getTranslation(key: TranslationKeys, language: string = tconfig.DEFAULT
 	return i18next.t(key, options);
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export { getTranslation };

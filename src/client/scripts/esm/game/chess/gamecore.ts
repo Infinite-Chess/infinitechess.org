@@ -63,7 +63,7 @@ import {
 	PostProcessPass,
 } from '../../webgl/post_processing/PostProcessingPipeline.js';
 
-// Variables -------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 let element_canvas: HTMLCanvasElement;
 /** The input listener for the board canvas */
@@ -86,7 +86,7 @@ let effectZoneManager: EffectZoneManager | undefined;
 //  */
 // let colorFlowRenderer: ColorFlowRenderer;
 
-// Functions -------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 function init(canvas: HTMLCanvasElement): void {
 	element_canvas = canvas;

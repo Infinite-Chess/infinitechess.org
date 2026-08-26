@@ -22,7 +22,7 @@ import socketutil from '../../shared/util/socketutil.js';
 
 import socketLogger from './socketLogger.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Every message we may send, keyed by the route it goes out on. */
 type OutMessages = {
@@ -40,7 +40,7 @@ export type OutAction<R extends OutRoute> = RouteAction<OutMessages, R>;
 /** The value an action carries, or `undefined` for the actions that carry none. */
 export type OutValue<R extends OutRoute, A extends OutAction<R>> = ActionValue<OutMessages, R, A>;
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The amount of latency to add to websocket replies, in millis. ONLY USE IN DEV!!
@@ -52,7 +52,7 @@ if (process.env['NODE_ENV'] !== 'development' && SIMULATED_WEBSOCKET_LATENCY_MS 
 	throw new Error('SIMULATED_WEBSOCKET_LATENCY_MS must be 0 in production!!');
 }
 
-// Sending Messages ---------------------------------------------------------------------------
+// Sending Messages ------------------------------------------------------------
 
 /**
  * Sends a message to this websocket's client.
@@ -113,7 +113,7 @@ function receipt(ws: CustomWebSocket, route: 'echo' | 'ack', id: number): void {
 	} else ws.send(stringifiedPayload);
 }
 
-// Echo Timers --------------------------------------------------------------------------------
+// Echo Timers -----------------------------------------------------------------
 
 /**
  * Cancels the timer that closes the socket when we
@@ -132,7 +132,7 @@ function cancelAllEchoTimers(ws: CustomWebSocket): void {
 	ws.metadata.echoTimers = {};
 }
 
-// Heartbeat Ping-Pong ------------------------------------------------------------------------
+// Heartbeat Ping-Pong ---------------------------------------------------------
 
 /**
  * Reschedule the timer to send an empty message to the client
@@ -152,7 +152,7 @@ function cancelHeartbeatTimer(ws: CustomWebSocket): void {
 	ws.metadata.heartbeatTimerID = undefined;
 }
 
-// Teardown -----------------------------------------------------------------------------------
+// Teardown --------------------------------------------------------------------
 
 /** Clears all timers tied to the socket. Called when it's torn down. */
 function clearPendingState(ws: CustomWebSocket): void {
@@ -160,7 +160,7 @@ function clearPendingState(ws: CustomWebSocket): void {
 	cancelHeartbeatTimer(ws);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Sending Messages

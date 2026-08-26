@@ -38,7 +38,7 @@ let hasPlayedLowtimeSound = false;
 /** Timeout ID for the scheduled low-time sound. */
 let lowtimeTimeoutID: number | undefined;
 
-// Events ---------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-unloaded', () => {
 	stopClocks();
@@ -50,7 +50,7 @@ GameBus.addEventListener('moves-changed', () => {
 	updateTempo(basegame);
 });
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Stops clock sound and resets low-time state. */
 function stopClocks(basegame?: GameFile): void {

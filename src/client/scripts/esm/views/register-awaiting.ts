@@ -13,7 +13,7 @@ import flashToast from '../util/flashToast.js';
 import { serverFetch } from '../util/serverFetch.js';
 import { emailFormatError, setFieldError } from '../util/accountFormatErrors.js';
 
-// Constants ---------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Backoff schedule for verification polling. Each step's `intervalMs` applies until that much
@@ -38,7 +38,7 @@ const POLL_BACKOFF_SCHEDULE: readonly { readonly untilMs: number; readonly inter
  */
 const POLL_MAX_DURATION_MS = 1000 * 60 * 60 * 24 + 1000 * 60; // 24h 1m
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const awaitingCard = document.querySelector<HTMLElement>('#awaiting-card')!;
 // Absent in the blacklisted variant, where the change-email field is already expanded.
@@ -48,7 +48,7 @@ const newEmailInput = document.querySelector<HTMLInputElement>('#new-email')!;
 const newEmailError = document.querySelector<HTMLParagraphElement>('#new-email-error')!;
 const changeSubmit = document.querySelector<HTMLButtonElement>('#change-email-submit')!;
 
-// State -------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Pending next-poll timeout id, or undefined when none is armed (paused while hidden, or stopped). */
 let pollTimerId: number | undefined;
@@ -67,7 +67,7 @@ let lastPollAt = 0;
 
 let newEmailValid = false;
 
-// Verification polling ----------------------------------------------
+// Verification polling --------------------------------------------------------
 
 /** Returns the backoff interval to wait given how long polling has been running. */
 function pollIntervalForElapsed(elapsedMs: number): number {
@@ -159,7 +159,7 @@ function handleVisibilityChange(): void {
 	}
 }
 
-// Change email ------------------------------------------------------
+// Change email ----------------------------------------------------------------
 
 /** Shows an inline error beneath the change-email field, or clears it when called with no message. */
 function setEmailError(message?: string): void {
@@ -209,7 +209,7 @@ async function submitNewEmail(): Promise<void> {
 	}
 }
 
-// Event Listeners ---------------------------------------------------
+// Event Listeners -------------------------------------------------------------
 
 // The toggle is absent in the blacklisted variant (the field is already expanded there).
 changeToggle?.addEventListener('click', (): void => {

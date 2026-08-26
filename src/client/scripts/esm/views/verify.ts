@@ -11,14 +11,14 @@
 import docutil from '../util/docutil.js';
 import { serverFetch } from '../util/serverFetch.js';
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 // Present only on the prompt state; the already-verified and invalid states are fully SSR'd, so
 // there's nothing to wire up there.
 const button = document.querySelector<HTMLButtonElement>('#verify-button');
 const error = document.querySelector<HTMLElement>('#verify-error');
 
-// Verification ------------------------------------------------------
+// Verification ----------------------------------------------------------------
 
 /** Hides the prompt elements (heading, subtitle, button, inline error) before showing a result state. */
 function hidePrompt(): void {
@@ -76,7 +76,7 @@ async function verify(): Promise<void> {
 	}
 }
 
-// Event Listeners ---------------------------------------------------
+// Event Listeners -------------------------------------------------------------
 
 if (button) {
 	button.addEventListener('click', (): void => {

@@ -8,15 +8,15 @@
 import fs from 'fs';
 import path from 'path';
 
-// Constants ------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const PATH = path.join(process.cwd(), 'dist/manifest.json');
 
-// State ----------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 let manifest: Record<string, string> | undefined;
 
-// Functions ------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Loads the built asset manifest, replacing the cached record. */
 function load(): Record<string, string> {
@@ -39,7 +39,7 @@ function getEngineVersion(): string {
 	return version;
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

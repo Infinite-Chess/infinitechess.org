@@ -20,7 +20,7 @@ import gameutility from './gameutility.js';
 import memberinfoutil from '../../auth/memberinfoutil.js';
 import gamestatebuilder from './gamestatebuilder.js';
 
-// Attaching & Detaching ----------------------------------------------------------------------
+// Attaching & Detaching -------------------------------------------------------
 
 /** Attaches a spectator's socket to a game, marking its subscription metadata. */
 function attachSpectator(servergame: ServerGame, ws: CustomWebSocket): void {
@@ -60,7 +60,7 @@ function getRole(servergame: ServerGame, ws: CustomWebSocket): Player | undefine
 	return undefined;
 }
 
-// Addressed Messages -------------------------------------------------------------------------
+// Addressed Messages ----------------------------------------------------------
 
 /**
  * Sends a websocket message to the specified color in the game.
@@ -112,7 +112,7 @@ function sendRematchState(servergame: ServerGame): void {
 	}
 }
 
-// Broadcasts ---------------------------------------------------------------------------------
+// Broadcasts ------------------------------------------------------------------
 
 /** Broadcasts a message to every connected participant of the game. */
 function broadcastToParticipants<
@@ -145,7 +145,7 @@ function broadcastToEveryone<A extends OutAction<'game'>, V extends OutValue<'ga
 	broadcastToSpectators(servergame, action, value);
 }
 
-// Engine Clocks ------------------------------------------------------------------------------
+// Engine Clocks ---------------------------------------------------------------
 
 /** Broadcasts a live engine game's updated clock values to all spectators. */
 function broadcastEngineClock(servergame: ServerGame & { untimed: false }): void {
@@ -153,7 +153,7 @@ function broadcastEngineClock(servergame: ServerGame & { untimed: false }): void
 	broadcastToSpectators(servergame, 'clock', clockValues);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Attaching & Detaching

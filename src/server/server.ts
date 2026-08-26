@@ -23,7 +23,7 @@ import { initDevEnvironment } from './setupDev.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
-// Global Error Handlers ----------------------------------------------------------------------
+// Global Error Handlers -------------------------------------------------------
 
 // Last-resort global handlers for errors that slipped past every local handler.
 // By this point, state is broken. Can't ensure responses are sent.
@@ -44,7 +44,7 @@ process.on('uncaughtException', (error: unknown) => {
 		.finally(() => process.exit(1));
 });
 
-// Startup ------------------------------------------------------------------------------------
+// Startup ---------------------------------------------------------------------
 
 databaseInit.init();
 // Ensure our workspace is ready for the dev environment
@@ -78,7 +78,7 @@ httpsServer.listen(HTTPSPORT, () => {
 // WebSocket server
 socketServer.start(httpsServer);
 
-// Closing ------------------------------------------------------------------------------------
+// Closing ---------------------------------------------------------------------
 
 let cleanupDone = false;
 

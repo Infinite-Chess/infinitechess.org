@@ -24,7 +24,7 @@ import gameutility from './gameutility.js';
 import activeplayers from './activeplayers.js';
 import gamelifecycle from './gamelifecycle.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Called when a client offers a rematch of a concluded game. Relays the offer to the
@@ -124,6 +124,6 @@ function createRematchGame(oldGame: ServerGame): void {
 		socketsend.send(socket, 'game', 'ingame', { id: newGameID, role });
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { offerRematch };

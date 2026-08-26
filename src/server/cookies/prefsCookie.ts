@@ -16,11 +16,11 @@ import themes from '../../shared/components/header/themes.js';
 import memberManager from '../database/memberManager.js';
 import memberInfoCookie from './memberInfoCookie.js';
 
-// Types ------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 export type Preferences = z.infer<typeof PreferencesSchema>;
 
-// Constants --------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The client has this long to read the cookie and update preferences in memory. */
 const LIFETIME_MS = 1000 * 10; // 10 seconds
@@ -38,7 +38,7 @@ const PreferencesSchema = z
 	})
 	.partial();
 
-// Functions --------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Sets the preferences cookie for logged-in users based on their memberInfo cookie.
@@ -95,7 +95,7 @@ function get(userId: number): Preferences | undefined {
 	return JSON.parse(record.preferences);
 }
 
-// Exports ----------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	set,

@@ -23,7 +23,7 @@ import gameslot from '../../game/chess/gameslot';
 import edithistory from './edithistory';
 import guigamerules from './gui/actions/guigamerules';
 
-// Types -------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Type encoding information for the game rules object of the editor position */
 export interface GameRulesGUIinfo {
@@ -47,7 +47,7 @@ export interface GameRulesGUIinfo {
 	worldBorder?: UnboundedRectangle;
 }
 
-// Constants -------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 // Game rule relevant piece types
 
@@ -56,7 +56,7 @@ const pawnDoublePushTypes: RawType[] = [r.PAWN];
 /** All piece types affected by the castling rule. These pieces are the only pieces allowed to castle under the castling rule. */
 const castlingTypes: RawType[] = [r.ROOK, r.KING, r.ROYALCENTAUR];
 
-// State -------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Virtual game rules object for the position */
 let gamerulesGUIinfo: GameRulesGUIinfo = {
@@ -64,7 +64,7 @@ let gamerulesGUIinfo: GameRulesGUIinfo = {
 	winConditions: [gamerules.DEFAULT_WIN_CONDITION],
 };
 
-// Getting & Setting -------------------------------------------------------------
+// Getting & Setting -----------------------------------------------------------
 
 function getPlayerToMove(): 'white' | 'black' {
 	return gamerulesGUIinfo.playerToMove;
@@ -258,7 +258,7 @@ function updateGamerulesUponQueueToggleSpecialRight(type: number, future: boolea
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
-// Updating Special Rights -------------------------------------------------------------
+// Updating Special Rights -----------------------------------------------------
 
 /** Gives or removes all special rights of pawns according to the value of pawnDoublePush. */
 function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit): void {
@@ -287,7 +287,7 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void
 	}
 }
 
-// Updating Gamefile State -------------------------------------------------------------
+// Updating Gamefile State -----------------------------------------------------
 
 /**
  * Updates the en passant square, promotion lines, and turn order in the current gamefile.
@@ -336,7 +336,7 @@ function updateGamefileProperties(
 	gamefile.gameRules.worldBorder = worldBorder;
 }
 
-// Exports -------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	pawnDoublePushTypes,

@@ -14,7 +14,7 @@ import ip from '../utility/ip.js';
 import tokenSigner from '../utility/tokenSigner.js';
 import memberManager from './memberManager.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Represents a record in the `refresh_tokens` database table.
@@ -37,7 +37,7 @@ export type RefreshTokenRecord = {
 	is_persistent: 0 | 1;
 };
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The window where a "consumed" token is still accepted, allowing a
@@ -45,7 +45,7 @@ export type RefreshTokenRecord = {
  */
 const GRACE_PERIOD_MS = 1000 * 10; // 10 seconds
 
-// Finding ------------------------------------------------------------------------------------
+// Finding ---------------------------------------------------------------------
 
 /**
  * Finds a refresh token in the database.
@@ -84,7 +84,7 @@ function findAllForUsers(user_id_list: number[]): RefreshTokenRecord[] {
 	);
 }
 
-// Adding & Updating --------------------------------------------------------------------------
+// Adding & Updating -----------------------------------------------------------
 
 /**
  * Adds a new refresh token record to the database.
@@ -148,7 +148,7 @@ function markConsumed(token: string): void {
 	);
 }
 
-// Deleting -----------------------------------------------------------------------------------
+// Deleting --------------------------------------------------------------------
 
 /**
  * Deletes a specific refresh token from the database.
@@ -175,7 +175,7 @@ function removeAllForUser(userId: number): void {
 	);
 }
 
-// Validating presented tokens ----------------------------------------------------------------
+// Validating presented tokens -------------------------------------------------
 
 /**
  * Checks if a presented refresh token is valid: not expired, nor tampered, and it's
@@ -249,7 +249,7 @@ function resolveValidTokenRecord(token: string, IP?: string): RefreshTokenRecord
 	return tokenRecord;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

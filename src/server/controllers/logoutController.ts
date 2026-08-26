@@ -38,6 +38,6 @@ async function handle(req: Request, res: Response): Promise<void> {
 	logEvents.add(`Logged out a member.`, 'loginAttempts');
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { handle };

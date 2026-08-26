@@ -38,6 +38,6 @@ function clear(res: Response): void {
 	res.clearCookie('jwt', COOKIE_OPTIONS);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { create, clear };

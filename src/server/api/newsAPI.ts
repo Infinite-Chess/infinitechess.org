@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 import newsUtil from '../utility/newsUtil.js';
 import memberManager from '../database/memberManager.js';
 
-// Functions --------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** `GET /api/news/unread-count` — returns `{ count }` of the signed-in user's unread news posts. */
 function getUnreadCount(req: Request, res: Response): void {
@@ -88,6 +88,6 @@ function markAsRead(req: Request, res: Response): void {
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getUnreadCount, getUnreadDates, markAsRead };

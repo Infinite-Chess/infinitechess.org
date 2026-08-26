@@ -13,7 +13,7 @@ import db from './database.js';
 import memberManager from './memberManager.js';
 import blacklistManager from './blacklistManager.js';
 
-// Scheduling -----------------------------------------------------------------
+// Scheduling ------------------------------------------------------------------
 
 /** Runs every migration, in order. Call after the tables exist and before the schema is read. */
 function run(): void {
@@ -33,7 +33,7 @@ function run(): void {
 	addModifierColumnsIfNeeded();
 }
 
-// Individual migrations ------------------------------------------------------
+// Individual migrations -------------------------------------------------------
 
 /**
  * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
@@ -273,6 +273,6 @@ function addModifierColumnsIfNeeded(): void {
 	}
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { run };

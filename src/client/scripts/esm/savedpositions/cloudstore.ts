@@ -16,7 +16,7 @@ import icnconverter from '../../../../shared/chess/logic/icn/icnconverter';
 
 import savesapi from './savesapi';
 
-// Error classes --------------------------------------------------------------
+// Error classes ---------------------------------------------------------------
 
 /** Thrown by {@link saveCloudState} when the compressed ICN exceeds the cloud size limit. */
 export class PositionTooLargeError extends Error {}
@@ -34,7 +34,7 @@ export class ICNDecompressionError extends Error {
 	}
 }
 
-// Actions ----------------------------------------------------------------------
+// Actions ---------------------------------------------------------------------
 
 /**
  * Parses a CloudPositionRecord into an EditorSaveState, decompressing the ICN.
@@ -120,7 +120,7 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<CloudSa
 	);
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	parseCloudPosition,

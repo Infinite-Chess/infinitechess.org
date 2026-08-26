@@ -30,7 +30,7 @@ import requestContext from './requestContext.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Constants ---------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Absolute path to the project-root `logs/` directory. */
 const LOGS_DIR = path.join(__dirname, '..', '..', '..', 'logs');
@@ -47,7 +47,7 @@ const LOG_RETENTION_MS = 1000 * 60 * 60 * 24 * 30 * 6; // ~6 months
 /** How often the retention sweep runs. */
 const LOG_CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
-// Logging ---------------------------------------------------------------
+// Logging ---------------------------------------------------------------------
 
 /**
  * Escapes `\r`/`\n` to their literal forms so a raw newline in untrusted,
@@ -112,7 +112,7 @@ function resolveLogPath(logName: string): string {
 	return path.join(LOGS_DIR, logName, `${bucketDate}.txt`);
 }
 
-// Cleanup ----------------------------------------------------
+// Cleanup ---------------------------------------------------------------------
 
 /** Starts the periodic retention sweep of rotated logs. */
 function startPeriodicLogCleanup(): void {
@@ -145,7 +145,7 @@ function purgeOldRotatedLogs(): void {
 	}
 }
 
-// Exports --------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	LOGS_DIR,

@@ -27,7 +27,7 @@ import boardgeometry from './boardgeometry.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 
-// Types ---------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** One independent tile renderer, as returned by {@link createBoardTiles}. */
 export interface BoardTiles {
@@ -45,7 +45,7 @@ export interface BoardTiles {
  */
 type NoiseTextures = { perlinNoise?: WebGLTexture; whiteNoise?: WebGLTexture };
 
-// Constants ---------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Z level for perspective mode rendering of the board tiles. */
 const perspectiveMode_z = -0.01;
@@ -55,7 +55,7 @@ const ONE = bd.fromBigInt(1n);
 const TWO = bd.fromBigInt(2n);
 const TEN = bd.fromBigInt(10n);
 
-// Factory ---------------------------------------------------------------------------
+// Factory ---------------------------------------------------------------------
 
 /** Creates one tile renderer bound to the given {@link RenderContext}. */
 function createBoardTiles(ctx: RenderContext): BoardTiles {

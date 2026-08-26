@@ -21,7 +21,7 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Per-player rating outcome of a finalized rated game: the rating going in (at-game) + the delta.

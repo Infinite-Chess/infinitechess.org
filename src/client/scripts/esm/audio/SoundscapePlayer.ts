@@ -11,7 +11,7 @@ import AudioUtils from './AudioUtils';
 import AudioManager from './AudioManager';
 import { LayerConfig, SoundLayer } from './SoundLayer';
 
-// Types -----------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The complete configuration for a soundscape. */
 export interface SoundscapeConfig {
@@ -19,7 +19,7 @@ export interface SoundscapeConfig {
 	layers: LayerConfig[];
 }
 
-// Constants  --------------------------------------------------------------------------------
+// Constants  ------------------------------------------------------------------
 
 /**
  * The length of the shared noise buffer for this soundscape's layers, in seconds.
@@ -27,7 +27,7 @@ export interface SoundscapeConfig {
  */
 const NOISE_DURATION_SECS = 10;
 
-// SoundscapePlayer Class --------------------------------------------------------------------------------
+// SoundscapePlayer Class ------------------------------------------------------
 
 /** The control interface for a soundscape player. */
 export class SoundscapePlayer {

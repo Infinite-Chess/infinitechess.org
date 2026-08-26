@@ -44,7 +44,7 @@ async function createAndLoginUser(): Promise<{
 	};
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	createAndLoginUser,

@@ -18,7 +18,7 @@ import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import gameutility from './gameutility.js';
 import gamelifecycle from './gamelifecycle.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Called when a client tries to abort a game. */
 function abort(servergame: ServerGame): void {
@@ -73,7 +73,7 @@ function resignEngine(servergame: ServerGame): void {
 	else abort(servergame);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	abort,

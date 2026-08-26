@@ -29,7 +29,7 @@ import TextureLoader from '../../../webgl/TextureLoader.js';
 import svgtoimageconverter from '../../../util/svgtoimageconverter.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 
-// Constants -----------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * lila's exact white glyph paths, authored in the same 0–100 coordinate space as the
@@ -56,14 +56,14 @@ const RADIUS_FRACTION = 0.2;
 const OFFSET_X_FRACTION = 0.41;
 const OFFSET_Y_FRACTION = 0.42;
 
-// State -----------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Rasterized badge textures, built lazily per classification. `null` marks a failed build (don't retry). */
 const textureCache: Partial<Record<LapseKey, WebGLTexture | null>> = {};
 /** Classifications whose texture is currently loading, to avoid duplicate builds. */
 const loading = new Set<LapseKey>();
 
-// Init ------------------------------------------------------------------------------
+// Init ------------------------------------------------------------------------
 
 GameBus.addEventListener('render-above-pieces', render);
 
@@ -75,7 +75,7 @@ gamereview.onClassified((review) => {
 		frametracker.onVisualChange();
 });
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Renders the classification badge on the currently-viewed move, if it has one. */
 function render(): void {

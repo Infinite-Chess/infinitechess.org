@@ -11,7 +11,7 @@ import { interpolate } from '../../shared/util/interpolate.js';
 import ip from '../utility/ip.js';
 import logEvents from '../utility/logEvents.js';
 
-// Types ----------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 type LoginAttemptData = {
 	attempts: number;
@@ -20,7 +20,7 @@ type LoginAttemptData = {
 	deleteTimeoutID?: NodeJS.Timeout;
 };
 
-// Variables ----------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** Maximum consecutive login attempts allowed for each username-IP
  * combination before they will be locked out temporarily. */
@@ -45,7 +45,7 @@ const loginAttemptData: Record<string, LoginAttemptData> = {};
  */
 const TIME_TO_DELETE_BROWSER_AGENT_AFTER_NO_ATTEMPTS_MS = 1000 * 60 * 5; // 5 minutes
 
-// Functions ----------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Prevents a user-IP combination from entering login attempts too fast.
@@ -190,6 +190,6 @@ function onCorrectPassword(browserAgent: string): void {
 	delete loginAttemptData[browserAgent];
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { limitLogin, getBrowserAgent, onIncorrectPassword, onCorrectPassword };

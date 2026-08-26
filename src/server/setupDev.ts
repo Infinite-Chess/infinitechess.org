@@ -13,7 +13,7 @@ import accountSeeder from './controllers/accountSeeder.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
-// Functions --------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Seeds the dev accounts and prints the local URL. Does nothing in production. */
 export function initDevEnvironment(): void {

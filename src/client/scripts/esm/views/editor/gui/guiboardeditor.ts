@@ -23,7 +23,7 @@ import guiresetposition from './actions/guiresetposition.js';
 import guiclearposition from './actions/guiclearposition.js';
 import guiloadpositionsavelist from './actions/loadposition/guiloadpositionsavelist.js';
 
-// Elements ---------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_menu = document.getElementById('editor-menu')!;
 const element_menuToggle = document.getElementById('editor-menu-toggle')!;
@@ -52,12 +52,12 @@ const elements_actions = [
 	document.getElementById('editor-color-select')!,
 ];
 
-// State -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Whether the board editor UI is open. */
 let boardEditorOpen = false;
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Open the board editor GUI
@@ -144,7 +144,7 @@ function closeAllFloatingWindows(resetPositioning: boolean): void {
 	guigamerules.close(resetPositioning);
 }
 
-// Callbacks ---------------------------------------------------------------
+// Callbacks -------------------------------------------------------------------
 
 function callback_ToggleMenu(): void {
 	setSidebarExpanded(!element_menu.classList.contains('expanded'));
@@ -284,7 +284,7 @@ function callback_Action(e: Event): void {
 	}
 }
 
-// Exports ----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	open,

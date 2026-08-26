@@ -22,7 +22,7 @@ import activeplayers from '../gamemanager/activeplayers.js';
 import memberinfoutil from '../../auth/memberinfoutil.js';
 import lobbysubscribers from './lobbysubscribers.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Time to allow the client to reconnect after an UNEXPECTED (not purposeful)
@@ -30,7 +30,7 @@ import lobbysubscribers from './lobbysubscribers.js';
  */
 const DISCONNECT_CUSHION_MS = 5000; // 5 seconds
 
-// State -----------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * An object containing usernames for the keys, and setTimeout timer ID's for the values,
@@ -45,7 +45,7 @@ const timersMember: Record<number, ReturnType<typeof setTimeout>> = {};
  */
 const timersBrowser: Record<string, ReturnType<typeof setTimeout>> = {};
 
-// Subscribing -----------------------------------------------------------------------------------
+// Subscribing -----------------------------------------------------------------
 
 /**
  * Subscribes a socket to the lobby, sends them the full lobby state,
@@ -98,7 +98,7 @@ function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined
 	return;
 }
 
-// Seek Cushion ----------------------------------------------------------------------------------
+// Seek Cushion ----------------------------------------------------------------
 
 /**
  * Cancels any running timers to delete a users seeks from a network interruption.
@@ -131,7 +131,7 @@ function deleteSeeksIfNotConnected(info: AuthMemberInfo): void {
 	activeseeks.deleteOfUser(info);
 }
 
-// Broadcasts ------------------------------------------------------------------------------------
+// Broadcasts ------------------------------------------------------------------
 
 /**
  * Sends the full lobby state (seeks list, viewer count, and whether they're already
@@ -203,7 +203,7 @@ function broadcastMemberInGameStatus(
 	}
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Subscribing

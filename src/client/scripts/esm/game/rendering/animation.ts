@@ -35,7 +35,7 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../board/rendering/renderable.js';
 
-// Types ----------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Represents an animation segment between two waypoints. */
 interface AnimationSegment {
@@ -147,7 +147,7 @@ const MOVE_ANIMATION_DURATION = {
 	multiplierMillis_Curved_Debug: 30,
 };
 
-// Variables -------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The list of all current animations */
 const animations: Animation[] = [];
@@ -155,14 +155,14 @@ const animations: Animation[] = [];
 /** If this is enabled, the spline of the animations will be rendered, and the animations' duration increased. */
 let DEBUG = false;
 
-// Events ----------------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-unloaded', () => {
 	// Clear all animations from the last game
 	clearAnimations();
 });
 
-// Adding / Clearing Animations -----------------------------------------------------------------------
+// Adding / Clearing Animations ------------------------------------------------
 
 /**
  * Animates a single piece after moving it. One king/rook in castling counts as one animation.
@@ -255,7 +255,7 @@ function toggleDebug(): void {
 	console.log(`Toggled animation splines: ${DEBUG}`);
 }
 
-// Helper Functions -----------------------------------------------------------
+// Helper Functions ------------------------------------------------------------
 
 /**
  * Stretches a {@link Animation.showKeyframes} or {@link Animation.hideKeyframes}
@@ -350,7 +350,7 @@ function playAnimationSound(animation: Animation): void {
 	animation.soundPlayed = true;
 }
 
-// Updating -------------------------------------------------------------------------------
+// Updating --------------------------------------------------------------------
 
 /** Flags the frame to be rendered if there are any animations, and adds an arrow indicator animation for each */
 function update(): void {
@@ -382,7 +382,7 @@ function shiftArrowIndicatorOfAnimatedPiece(animation: Animation): void {
 	);
 }
 
-// Rendering -------------------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /**
  * [ZOOMED IN] Renders the transparent squares that block out the default rendering of the pieces while the animation is visible.
@@ -491,7 +491,7 @@ function renderAnimations(): void {
 	renderTypeGroup(movingPiecesInstanceData);
 }
 
-// Animation Calculations -----------------------------------------------------
+// Animation Calculations ------------------------------------------------------
 
 /**
  * Calculates which segment of the animation the animated piece is currently on,

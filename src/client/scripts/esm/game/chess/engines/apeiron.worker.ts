@@ -29,7 +29,7 @@ import jsutil from '../../../../../../shared/util/jsutil.js';
 import engineicn from './engineicn.js';
 import { loadEngineWasm, getPromotionAbbr } from './enginewasm.js';
 
-// Types ----------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The gameplay engine glue's exports. */
 interface GameplayWasmModule extends EngineWasmModule {
@@ -48,11 +48,11 @@ interface GameplayEngine extends WasmEngine {
 	get_best_move_with_time: (timeLimit: number, useBook: boolean) => WasmMove | null;
 }
 
-// State ----------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 let wasm: GameplayWasmModule;
 
-// Message Handling -----------------------------------------------------
+// Message Handling ------------------------------------------------------------
 
 self.onmessage = async function (
 	e: MessageEvent<EngineInitRequest | ApeironMoveRequest>,

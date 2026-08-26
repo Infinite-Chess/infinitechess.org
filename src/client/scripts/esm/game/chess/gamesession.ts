@@ -21,7 +21,7 @@ import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import { GameBus } from '../../board/GameBus.js';
 
-// Types ------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Optional per-page steps woven into {@link loadGame}'s lifecycle. */
 type LoadHooks = {
@@ -46,7 +46,7 @@ type GameSession =
 	  }
 	| { type: 'analysis' | 'editor' };
 
-// Variables --------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** Every page must establish this at entry, before the game loop starts, so it is never read un-set. */
 let session: GameSession;
@@ -54,7 +54,7 @@ let session: GameSession;
 /** True while the gamefile's logical, graphical (images), or engine resources are currently loading. */
 let loading: boolean = false;
 
-// Getters / Setters ------------------------------------------------------------
+// Getters / Setters -----------------------------------------------------------
 
 /** Returns the type of game we are in. */
 function getGameType(): GameSession['type'] {
@@ -83,7 +83,7 @@ function isLoading(): boolean {
 	return loading;
 }
 
-// Load / Unload lifecycle ------------------------------------------------------
+// Load / Unload lifecycle -----------------------------------------------------
 
 /** Declares the kind of game session we're in. */
 function setSessionGame(gameSession: GameSession): void {
@@ -189,7 +189,7 @@ function unloadGame(): void {
 	gamecore.getCanvas().classList.add('visibility-hidden');
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getGameType,

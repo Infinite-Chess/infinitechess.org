@@ -12,7 +12,7 @@ import jsutil from '../../../../shared/util/jsutil.js';
 
 import AudioManager from '../audio/AudioManager.js';
 
-// Types --------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 type SoundName =
 	| 'move' | 'capture' | 'bell' | 'ripple_a3'
@@ -20,7 +20,7 @@ type SoundName =
 	| 'notify' | 'low_time'
 	| 'glass_crack_1' | 'glass_crack_2' | 'glass_crack_3' | 'glass_crack_4' | 'glass_crack_5'; // prettier-ignore
 
-// Cache --------------------------------------------------------------------------
+// Cache -----------------------------------------------------------------------
 
 const audioCache = new Map<SoundName, AudioBuffer>();
 
@@ -49,7 +49,7 @@ async function preload(soundName: SoundName): Promise<void> {
 	// console.log(`Preloaded sound: ${soundName}`);
 }
 
-// Playing Sounds --------------------------------------------------------------------------
+// Playing Sounds --------------------------------------------------------------
 
 /**
  * Plays a sound by name, fetching and caching its buffer on first use.
@@ -92,7 +92,7 @@ async function playSoundEffect(
 	return AudioManager.playAudio(buffer, { volume, delay, playbackRate, effects, bypassDownsampler }); // prettier-ignore
 }
 
-// Named Play Functions --------------------------------------------------------------------------
+// Named Play Functions --------------------------------------------------------
 
 function playViola_c3({ volume }: { volume?: number } = {}): void {
 	playSoundEffect('viola_staccato_c3', { volume });
@@ -144,7 +144,7 @@ function playGlassCrack(): void {
 	});
 }
 
-// Exports --------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Cache

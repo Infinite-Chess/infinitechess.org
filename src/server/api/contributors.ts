@@ -29,7 +29,7 @@ import logEvents from '../utility/logEvents.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Types -------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A GitHub contributor on the infinitechess.org repository. */
 interface Contributor {
@@ -39,7 +39,7 @@ interface Contributor {
 	contributionCount: number;
 }
 
-// Schemas -----------------------------------------------------------------------------------
+// Schemas ---------------------------------------------------------------------
 
 /** The raw contributor shape GitHub's API returns. */
 const GitHubContributorSchema = z.array(
@@ -51,14 +51,14 @@ const GitHubContributorSchema = z.array(
 	}),
 );
 
-// Constants ---------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
 
 /** The interval to use GitHub's API to refresh the contributor list. */
 const INTERVAL_TO_REFRESH_CONTRIBUTORS_MS = 1000 * 60 * 60 * 3; // 3 hours
 
-// State -------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** A list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org).
  * This should be periodically refreshed.
@@ -78,7 +78,7 @@ let contributors: Contributor[] = loadContributorsSnapshot();
 /** The id of the interval to update contributors. Can be used to cancel it if the API token isn't specified. */
 const intervalId = setInterval(refresh, INTERVAL_TO_REFRESH_CONTRIBUTORS_MS);
 
-// Functions ---------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Reads the contributor snapshot off disk, so the site has a list before the first refresh.
@@ -212,6 +212,6 @@ function get(): Contributor[] {
 	return contributors;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { refresh, get };

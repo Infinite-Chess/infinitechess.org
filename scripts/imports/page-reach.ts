@@ -27,7 +27,7 @@ import { globSync } from 'node:fs';
 
 import { ESMEntryPoints } from '../../build/client';
 
-// Constants ---------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const E = 'src/client/scripts/esm/';
 
@@ -51,7 +51,7 @@ const entries = [...LIVE, ...DORMANT];
 /** Top-level directories reported in bulk mode. */
 const PREFIXES = ['game/', 'util/', 'components/', 'board/', 'chess/', 'webgl/', 'audio/', 'socket/', 'savedpositions/']; // prettier-ignore
 
-// Helper Functions --------------------------------------------------------
+// Helper Functions ------------------------------------------------------------
 
 /** Trims the noisy common prefix so paths read cleanly. */
 function short(f: string): string {
@@ -114,7 +114,7 @@ function chainTo(graph: Record<string, string[]>, entry: string, needle: string)
 	return null;
 }
 
-// Report ------------------------------------------------------------------
+// Report ----------------------------------------------------------------------
 
 const args = process.argv.slice(2);
 const why = args.includes('--why');

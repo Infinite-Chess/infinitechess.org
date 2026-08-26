@@ -9,19 +9,19 @@ import type { MemberInfoCookie } from '../../../../shared/types/memberinfo.js';
 
 import docutil from './docutil.js';
 
-// Types ----------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Our identity (the cookie payload) when signed in, else just the flag. */
 type MemberInfoState = ({ signedIn: true } & MemberInfoCookie) | { signedIn: false };
 
-// Variables ----------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The timeout ID for the timer to check session expiry. */
 let sessionExpiryTimer: number | undefined;
 
 let memberInfo: MemberInfoState = { signedIn: false };
 
-// Functions ----------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 (function init(): void {
 	initListeners();

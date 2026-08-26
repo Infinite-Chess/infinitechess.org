@@ -62,6 +62,6 @@ function isBrowserID(browserID: string): boolean {
 	return bannedJSON['browser-ids'][browserID] !== undefined;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { isIP, isBrowserID };

@@ -11,7 +11,7 @@
 import type { GamesRecord } from '../../database/gamesManager.js';
 import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 
-// Database Records ------------------------------------------------------------------------------
+// Database Records ------------------------------------------------------------
 
 /** The entries of a {@link PlayerGamesRecord} the rating abuse calculation reads. */
 export type AbusePlayerGamesRecord = Pick<
@@ -48,7 +48,7 @@ export type AbuseMemberRecord = {
 	joined: string;
 };
 
-// Measurement -----------------------------------------------------------------------------------
+// Measurement -----------------------------------------------------------------
 
 /** Who the player faced across the measured games, and the identities behind them. */
 export type IdentityEvidence = {

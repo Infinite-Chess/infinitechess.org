@@ -25,7 +25,7 @@ import selectiontool from './selectiontool';
 import stoolgraphics from './stoolgraphics';
 import stransformations from './stransformations';
 
-// Constants -----------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The distance, in virtual screen pixels, that we may grab the edge of the selection box to drag it. */
 const GRABBABLE_DIST = {
@@ -33,7 +33,7 @@ const GRABBABLE_DIST = {
 	MOBILE: 18,
 };
 
-// State ---------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Whether the mouse is currently within the minimum distance to grab and drag the selection. */
 let withinGrabDist = false;
@@ -47,7 +47,7 @@ let lastPointerCoords: Coords | undefined;
 /** The integer coordinate the mouse has grabbed, if we're dragging the selection. */
 let anchorCoords: Coords | undefined = undefined;
 
-// Methods -------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /** Returns the grabbable distance in virtual pixels depending on whether a mouse or touch input is being used. */
 function getGrabbableDist(): number {
@@ -187,7 +187,7 @@ function dropSelection(): void {
 // 	return translation[0] !== 0n || translation[1] !== 0n;
 // }
 
-// Rendering ---------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 function render(): void {
 	if (!areDragging || !anchorCoords) return;
@@ -213,7 +213,7 @@ function render(): void {
 	// stoolgraphics.renderSelectionBoxFill(translatedWorldBox);
 }
 
-// Exports -----------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getGrabbableDist,

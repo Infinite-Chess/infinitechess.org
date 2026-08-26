@@ -41,7 +41,7 @@ import { isGameServerValidated } from '../../../shared/chess/variants/servervali
 
 import logEvents from '../../utility/logEvents.js';
 
-// Construction -------------------------------------------------------------------------------
+// Construction ----------------------------------------------------------------
 
 /**
  * The registry code of the variant a game is played with, or `null` if it's a custom position —
@@ -215,7 +215,7 @@ function assignWhiteBlackPlayersFromSeek(
 	return colorData;
 }
 
-// Predicates ---------------------------------------------------------------------------------
+// Predicates ------------------------------------------------------------------
 
 /** Returns true if the game is against an engine opponent. */
 function isEngineGame(servergame: ServerGame): boolean {
@@ -248,7 +248,7 @@ function isGameBorderlineResignable(servergame: ServerGame): boolean {
 	return servergame.moves.length === 2;
 }
 
-// Clocks -------------------------------------------------------------------------------------
+// Clocks ----------------------------------------------------------------------
 
 /**
  * Return the clock values of the servergame that can be sent to a client or logged.
@@ -285,7 +285,7 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): void {
 	playerdata[servergame.whosTurn] = newTime;
 }
 
-// Debug Printing -----------------------------------------------------------------------------
+// Debug Printing --------------------------------------------------------------
 
 /**
  * Safely prints a game to the console. Temporarily stringifies the
@@ -331,7 +331,7 @@ function getSimplifiedGameString(servergame: ServerGame): string {
 	return JSON.stringify(simplifiedGame);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Construction

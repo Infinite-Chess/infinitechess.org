@@ -28,7 +28,7 @@ import requestContext from './utility/requestContext.js';
 import reqTranslations from './config/reqTranslations.js';
 import htmlCacheControl from './middleware/htmlCacheControl.js';
 
-// Setup --------------------------------------------------------------------------------------
+// Setup -----------------------------------------------------------------------
 
 const app = express();
 
@@ -55,7 +55,7 @@ reqTranslations.install(app);
 
 configurePipeline(app); // Assemble the request pipeline
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Assembles the request pipeline onto the app, in order.
@@ -102,6 +102,6 @@ function configurePipeline(app: Express): void {
 	app.use(errorHandler);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default app;

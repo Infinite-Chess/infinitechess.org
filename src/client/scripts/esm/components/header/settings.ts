@@ -15,7 +15,7 @@ import perspectivedropdown from './dropdowns/perspectivedropdown.js';
 
 import './pingmeter.js'; // Only imported so its code runs
 
-// Document Elements -------------------------------------------------------------------------
+// Document Elements -----------------------------------------------------------
 
 // Main settings dropdown
 const settings = document.getElementById('settings')!;
@@ -51,7 +51,7 @@ const subDropdowns: { selection: Element; module: { open(): void; close(): void 
 	{ selection: document.getElementById('sound-settings-dropdown-item')!, module: sounddropdown },
 ];
 
-// Variables ---------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 const allSettingsDropdowns = [...allSettingsDropdownsExceptMainOne, settingsDropdown];
 const allBackButtons = document.querySelectorAll<Element>('.dropdown-title');
@@ -63,7 +63,7 @@ const openHandlers = subDropdowns.map(({ module }) => () => {
 	hideMainSettingsPanel();
 });
 
-// Functions ---------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 (function init() {
 	settings.addEventListener('click', (event) => {

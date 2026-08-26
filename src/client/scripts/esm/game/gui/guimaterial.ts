@@ -25,7 +25,7 @@ import svgcache from '../../chess/rendering/svgcache.js';
 import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
 
-// Point values --------------------------------------------------------------------------------
+// Point values ----------------------------------------------------------------
 
 /**
  * Estimated point value of each raw piece type, used only to compute the `+X` lead
@@ -55,12 +55,12 @@ const RAW_PIECE_VALUES: Partial<Record<RawType, number>> = {
 	[rawTypes.AMAZON]: 16,
 };
 
-// Elements ------------------------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_MaterialTop = document.getElementById('material-top')!;
 const element_MaterialBottom = document.getElementById('material-bottom')!;
 
-// Variables -----------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /**
  * Whether the loaded game is balanced (see {@link isGameBalanced}).
@@ -68,7 +68,7 @@ const element_MaterialBottom = document.getElementById('material-bottom')!;
  */
 let balanced = false;
 
-// Events --------------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 // Recompute `balance` from the freshly-loaded start position, then render the current material.
 // Must be 'graphical-loaded' — see the SVG cache note in render().
@@ -87,7 +87,7 @@ GameBus.addEventListener('game-unloaded', () => (balanced = false));
 GameBus.addEventListener('view-move', () => render());
 GameBus.addEventListener('board-flipped', () => render());
 
-// Balance detection ---------------------------------------------------------------------------
+// Balance detection -----------------------------------------------------------
 
 /**
  * Tests whether a game's material differences are meaningful — true if its start position is
@@ -122,7 +122,7 @@ function isStartPositionBalanced(position: Map<CoordsKey, number>): boolean {
 	return true;
 }
 
-// Rendering -----------------------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /** The net material surplus of each side at the currently-viewed move, and the point lead. */
 interface MaterialSurplus {

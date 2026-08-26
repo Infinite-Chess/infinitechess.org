@@ -18,7 +18,7 @@ import requestMeter from '../utility/requestMeter.js';
 import socketLogger from './socketLogger.js';
 import messageRouter from './messageRouter.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Callback function that is executed whenever we receive an incoming websocket message.
@@ -108,6 +108,6 @@ function logAndRateLimitMessage(ws: CustomWebSocket, rawMessage: string): boolea
 	return true;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { onmessage };

@@ -9,7 +9,7 @@ import type { Tool } from '../tools/etoolmanager.js';
 
 import etoolmanager from '../tools/etoolmanager.js';
 
-// Elements ---------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const elements_tools = [
 	document.getElementById('normal')!,
@@ -18,7 +18,7 @@ const elements_tools = [
 	document.getElementById('selection-tool')!,
 ];
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Adds/removes the 'active' class from the tools, changing their style. */
 function markTool(tool: Tool): void {
@@ -41,7 +41,7 @@ function closeListeners(): void {
 	});
 }
 
-// Callbacks ---------------------------------------------------------------
+// Callbacks -------------------------------------------------------------------
 
 function callback_ChangeTool(e: Event): void {
 	const target = e.currentTarget as HTMLElement;
@@ -50,7 +50,7 @@ function callback_ChangeTool(e: Event): void {
 	etoolmanager.setTool(tool);
 }
 
-// Exports ----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	markTool,

@@ -20,12 +20,12 @@ import jsonutil from '../../shared/util/jsonutil.js';
 
 import logEvents from '../utility/logEvents.js';
 
-// Constants --------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The options the `memberInfo` cookie is created with. */
 const COOKIE_OPTIONS = { httpOnly: false, sameSite: 'lax' as const, secure: true };
 
-// Functions --------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Sets the `memberInfo` cookie (readable by JavaScript, not HTTP-only).
@@ -90,6 +90,6 @@ function isMemberInfoCookie(value: unknown): value is MemberInfoCookie {
 	);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { create, clear, read };

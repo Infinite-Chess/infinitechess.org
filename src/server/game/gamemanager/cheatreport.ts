@@ -150,6 +150,6 @@ function concludeReportedGame(
 	if (wasLogged) gamelogger.updateOverturned(servergame, originalConclusion!, cheaterColor);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { onReport };

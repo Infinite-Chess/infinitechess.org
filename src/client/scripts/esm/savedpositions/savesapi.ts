@@ -9,7 +9,7 @@ import type { CompressionMode } from '../../../../shared/util/compression';
 import { serverFetch } from '../util/serverFetch.js';
 import { fetchWithDeduplication } from '../util/fetchDeduplicator.js';
 
-// Types ----------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Abridged info returned by getSavedPositions */
 export interface CloudSaveListRecord {
@@ -31,11 +31,11 @@ export interface CloudPositionRecord {
 	castling?: boolean;
 }
 
-// Constants -----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const HEADERS: Record<string, string> = { 'Content-Type': 'application/json' };
 
-// API Wrappers --------------------------------------------------------------------
+// API Wrappers ----------------------------------------------------------------
 
 /**
  * GET /api/editor-saves
@@ -129,7 +129,7 @@ async function deletePosition(position_name: string): Promise<CloudSaveListRecor
 	return data.saves;
 }
 
-// Exports -------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getSavedPositions,

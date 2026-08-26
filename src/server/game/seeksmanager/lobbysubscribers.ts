@@ -16,16 +16,16 @@ import type { OutAction, OutValue } from '../../socket/socketSend.js';
 import socketsend from '../../socket/socketSend.js';
 import memberinfoutil from '../../auth/memberinfoutil.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const PRINT_SUBSCRIBER_COUNT = false;
 
-// State -----------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Set of clients currently subscribed to the lobby. */
 const subscribedClients: Set<CustomWebSocket> = new Set();
 
-// Functions -------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Returns an iterator over all sockets currently subscribed to the lobby.
@@ -94,7 +94,7 @@ function hasUser(info: AuthMemberInfo): boolean {
 	return false;
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getAll,

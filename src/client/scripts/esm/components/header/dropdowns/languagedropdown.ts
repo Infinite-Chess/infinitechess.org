@@ -5,7 +5,7 @@
 
 import docutil from '../../../util/docutil.js';
 
-// Document Elements -------------------------------------------------------------------------
+// Document Elements -----------------------------------------------------------
 
 const languageDropdown = document.querySelector('.language-dropdown')!;
 const dropdownItems = document.querySelectorAll('.language-dropdown-item');
@@ -14,7 +14,7 @@ const languageDropdownTitle = document.querySelector('.language-dropdown .dropdo
 /** How long the language-override cookie persists, in days. */
 const LANGUAGE_COOKIE_DAYS = 365;
 
-// Functions ---------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 function open(): void {
 	languageDropdown.classList.remove('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden

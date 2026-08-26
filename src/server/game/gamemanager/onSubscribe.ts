@@ -48,6 +48,6 @@ function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { subscribeToGame };

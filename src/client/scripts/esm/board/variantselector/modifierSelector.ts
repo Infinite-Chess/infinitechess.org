@@ -11,7 +11,7 @@ import modutil from '../../../../../shared/chess/util/modutil.js';
 
 import variantSelector from './variantSelector.js';
 
-// Types -------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Callbacks a host wires to react to the modifier selector's state. */
 interface ModifierSelectorConfig {
@@ -21,12 +21,12 @@ interface ModifierSelectorConfig {
 	onCommit?: () => void;
 }
 
-// Constants ---------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Default slide limit distance in squares. */
 const SLIDE_LIMIT_DEFAULT = 7;
 
-// Elements ----------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_modifierAddBtn = document.querySelector<SVGElement>('.modifier-add')!;
 const element_modifierDropdown = document.getElementById('modifier-dropdown')!;
@@ -36,14 +36,14 @@ const element_slideLimitSection = document.getElementById('slide-limit-section')
 const element_slideLimitSlider = document.getElementById('slider-slide-limit') as HTMLInputElement;
 const element_slideLimitDisplay = document.getElementById('slide-limit-display')!;
 
-// State -------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Host callbacks, populated by {@link initModifierSelector}. */
 let config: ModifierSelectorConfig = {};
 
 const selectedModifiers = new Set<ModifierCode>();
 
-// Functions ---------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Wires all modifier selector interactions. */
 function initModifierSelector(hostConfig: ModifierSelectorConfig = {}): void {
@@ -183,7 +183,7 @@ function getGameModifiers(): GameModifier[] {
 	return configs;
 }
 
-// Exports -----------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	initModifierSelector,

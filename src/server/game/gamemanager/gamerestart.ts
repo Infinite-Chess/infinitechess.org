@@ -21,7 +21,7 @@ import activeplayers from './activeplayers.js';
 import gamelifecycle from './gamelifecycle.js';
 import liveGameRestore from './liveGameRestore.js';
 
-// Shutdown -------------------------------------------------------------------
+// Shutdown --------------------------------------------------------------------
 
 /**
  * Call when server's about to restart.
@@ -46,7 +46,7 @@ function prepForShutdown(): void {
 	}
 }
 
-// Startup --------------------------------------------------------------------
+// Startup ---------------------------------------------------------------------
 
 /**
  * Restores all live games from the database on server startup.
@@ -133,6 +133,6 @@ function reinstateTimers(servergame: ServerGame, pendingTimers: PendingTimers): 
 	);
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { prepForShutdown, restoreLiveGames };

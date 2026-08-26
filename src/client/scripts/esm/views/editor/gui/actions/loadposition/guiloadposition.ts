@@ -14,7 +14,7 @@ import guifloatingwindow from '../../guifloatingwindow';
 import guiloadpositionmodal from './guiloadpositionmodal';
 import guiloadpositionsavelist from './guiloadpositionsavelist';
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 /** The button the toggles visibility of the Load Position game popup window. */
 const element_loadbutton = document.getElementById('load-position')!;
@@ -36,12 +36,12 @@ const element_saveAsPositionName = document.getElementById(
 /** "Save" button in UI */
 const element_saveCurrentPositionButton = document.getElementById('save-position-button')!;
 
-// Variables ----------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The current open/close mode of the Load Position UI */
 let mode: 'load' | 'save-as' | undefined = undefined;
 
-// Create floating window -------------------------------------
+// Create floating window ------------------------------------------------------
 
 const floatingWindow = guifloatingwindow.create({
 	windowEl: element_window,
@@ -51,7 +51,7 @@ const floatingWindow = guifloatingwindow.create({
 	onClose,
 });
 
-// Toggling ------------------------------------------------
+// Toggling --------------------------------------------------------------------
 
 function onOpen(): void {
 	guiloadpositionsavelist.updateSavedPositionListUI();
@@ -94,7 +94,7 @@ function getMode(): typeof mode {
 	return mode;
 }
 
-// Save-as form listeners -------------------------------------------
+// Save-as form listeners ------------------------------------------------------
 
 function initSavePositionUIListeners(): void {
 	element_saveCurrentPositionButton.addEventListener('click', onSaveButtonPress);
@@ -111,7 +111,7 @@ function onSaveKeyDown(e: KeyboardEvent): void {
 	if (e.key === 'Enter' && !guiloadpositionmodal.isOpen()) onSaveButtonPress();
 }
 
-// Save-as form functions -------------------------------------------
+// Save-as form functions ------------------------------------------------------
 
 /** Gets executed when the "save" button is pressed. */
 async function onSaveButtonPress(): Promise<void> {
@@ -139,7 +139,7 @@ async function onSaveButtonPress(): Promise<void> {
 	guiloadpositionsavelist.updateSavedPositionListUI();
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	openLoadPosition,

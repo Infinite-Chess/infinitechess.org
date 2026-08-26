@@ -79,6 +79,6 @@ async function handle(req: Request, res: Response): Promise<void> {
 	logEvents.add(`Logged in member "${identity.username}".`, 'loginAttempts');
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { handle };

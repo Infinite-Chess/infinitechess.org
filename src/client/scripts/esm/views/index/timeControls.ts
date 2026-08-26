@@ -9,7 +9,7 @@ import clockutil from '../../../../../shared/chess/util/clockutil';
  * the timed/untimed toggle, base+increment sliders, and preset buttons.
  */
 
-// Constants ------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Mappings from slider index to actual time control values for both time control sliders. */
 const TIME_CONTROL_SLIDER_MAPPINGS = {
@@ -17,7 +17,7 @@ const TIME_CONTROL_SLIDER_MAPPINGS = {
 	INCREMENT: clockutil.VALID_INCREMENT_SECS,
 };
 
-// Elements ----------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_timeSliders = document.getElementById('time-sliders')!;
 const element_sliderMinutes = document.getElementById('slider-minutes') as HTMLInputElement;
@@ -26,7 +26,7 @@ const element_sliderIncrement = document.getElementById('slider-increment') as H
 const element_incrementDisplay = document.getElementById('increment-display')!;
 const element_presetButtons = document.querySelectorAll<HTMLElement>('.preset-btn');
 
-// Functions ----------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Connects both time sliders to their value displays. */
 function initModalSliders(): void {
@@ -110,7 +110,7 @@ function getTimeControl(): TimeControl {
 	}
 }
 
-// Exports ----------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	initModalSliders,

@@ -9,7 +9,7 @@
 
 import db from './database.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Structure of a complete pending_registrations record. */
 export interface PendingRegistrationRecord {
@@ -32,7 +32,7 @@ export interface PendingRegistrationRecord {
 	member_user_id: number | null;
 }
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * How long a pending registration stays valid before it is swept, in milliseconds.
@@ -41,7 +41,7 @@ export interface PendingRegistrationRecord {
  */
 const EXPIRY_MS = 1000 * 60 * 60 * 24; // 1 day
 
-// Create -------------------------------------------------------------------------------------
+// Create ----------------------------------------------------------------------
 
 /**
  * Inserts a new pending registration.
@@ -81,7 +81,7 @@ function add(
 	);
 }
 
-// Lookups ------------------------------------------------------------------------------------
+// Lookups ---------------------------------------------------------------------
 
 /**
  * Looks up a pending registration by its `claim_token` (the poll/resend path).
@@ -111,7 +111,7 @@ function getByVerificationToken(verificationToken: string): PendingRegistrationR
 	);
 }
 
-// Availability checks (non-expired rows only) ------------------------------------------------
+// Availability checks (non-expired rows only) ---------------------------------
 
 /**
  * Checks whether a username is held by a non-expired pending registration
@@ -177,7 +177,7 @@ function isEmailTakenByOther(email: string, excludeClaimToken: string): boolean 
 	return Boolean(row?.found);
 }
 
-// Update -------------------------------------------------------------------------------------
+// Update ----------------------------------------------------------------------
 
 /**
  * Changes the email of a pending registration (identified by its claim_token), rotates its
@@ -218,7 +218,7 @@ function markVerified(claimToken: string, memberUserId: number): void {
 	}, 'Database error while marking pending registration verified');
 }
 
-// Deletion -----------------------------------------------------------------------------------
+// Deletion --------------------------------------------------------------------
 
 /**
  * Deletes any expired pending rows holding the given username or email. Used before a fresh
@@ -250,7 +250,7 @@ function removeExpired(): void {
 	);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

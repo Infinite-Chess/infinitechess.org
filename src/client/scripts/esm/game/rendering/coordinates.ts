@@ -35,7 +35,7 @@ import arrowscalculator from './arrows/arrowscalculator.js';
 import { createRenderable } from '../../board/rendering/renderable.js';
 import { ATLAS_DESCENDER_FRACTION } from './text/glyphatlas.js';
 
-// Constants -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Virtual-pixel height of each coordinate label at full size. Zoom-independent. */
 const LABEL_SIZE_PX = 24;
@@ -74,7 +74,7 @@ const LABEL_ARROW_PADDING_PX = 6;
 /** Whether to render a wireframe outline of each label's bounding box for debugging. */
 const DEBUG_RENDER_LABEL_BOUNDS = false;
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Returns the label size in virtual pixels for the current frame. */
 function calcLabelSizePx(): number {
@@ -257,6 +257,6 @@ function renderLabelBoundsOutline(labelBounds: DoubleBoundingBox): void {
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
-// Exports -------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { render };

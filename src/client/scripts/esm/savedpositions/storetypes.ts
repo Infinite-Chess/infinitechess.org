@@ -13,7 +13,7 @@ import type { VariantOptions } from '../../../../shared/chess/logic/gamefile.js'
 
 import * as z from 'zod';
 
-// Types ------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Whether a position is stored locally (IndexedDB) or on the server (cloud) */
 export type StorageType = 'local' | 'cloud';
@@ -39,7 +39,7 @@ export interface EditorSaveState extends EditorPositionData {
 	position_name: string;
 }
 
-// Zod Schemas --------------------------------------------------------------------
+// Zod Schemas -----------------------------------------------------------------
 
 /** Shared Zod fields for EditorSaveState and EditorAutosaveState */
 const positionDataFields = {
@@ -69,7 +69,7 @@ const SaveStateSchema = z.strictObject({
 	...positionDataFields,
 }) satisfies z.ZodType<EditorSaveState>;
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	positionDataFields,

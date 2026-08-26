@@ -12,11 +12,11 @@ import logEvents from '../utility/logEvents.js';
 import refreshTokenManager from './refreshTokenManager.js';
 import pendingRegistrationManager from './pendingRegistrationManager.js';
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
-// Scheduling ----------------------------------------------------------------------------------
+// Scheduling ------------------------------------------------------------------
 
 /** Starts periodic cleanup tasks for the database. Runs immediately, then once a day. */
 function startPeriodic(): void {
@@ -32,7 +32,7 @@ function performCleanupTasks(): void {
 	pendingRegistrationManager.removeExpired();
 }
 
-// Individual cleanups -------------------------------------------------------------------------
+// Individual cleanups ---------------------------------------------------------
 
 /** Checks the integrity of the SQLite database and logs it to the error log if the check fails. */
 function checkDatabaseIntegrity(): void {
@@ -101,6 +101,6 @@ function cleanUpExpiredRefreshTokens(): void {
 	}
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { startPeriodic };

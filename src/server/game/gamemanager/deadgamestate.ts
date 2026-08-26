@@ -33,7 +33,7 @@ import ratingcalculation from '../../utility/ratingcalculation.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
 import engineGamesManager from '../../database/engineGamesManager.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The engine participant of a concluded engine game, as stored in `engine_games`. */
 type EngineParticipant = {
@@ -43,7 +43,7 @@ type EngineParticipant = {
 	container: ServerUsernameContainer;
 };
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Display name for a player whose account was deleted (their `player_games` row remains, but no `members` row). */
 const DELETED_USER_DISPLAY_NAME = '(Deleted User)';
@@ -53,7 +53,7 @@ const STATIC_GAME_COLUMNS = ['variant', 'rated', 'date', 'base_time_seconds', 'i
 /** The `player_games` columns needed to assemble a {@link StaticGameState}. */
 const STATIC_PLAYER_COLUMNS = ['player_number', 'user_id', 'elo_at_game', 'rating_deviation_at_game'] as const; // prettier-ignore
 
-// Building the game states -------------------------------------------------------------------
+// Building the game states ----------------------------------------------------
 
 /**
  * Returns the color a signed-in user played in a concluded game, or `undefined` if they
@@ -217,7 +217,7 @@ function getEngineParticipant(game_id: number): EngineParticipant | undefined {
 	};
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	resolveParticipantColor,

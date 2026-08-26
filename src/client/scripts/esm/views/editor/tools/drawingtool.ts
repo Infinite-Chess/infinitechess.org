@@ -31,7 +31,7 @@ import edithistory from '../edithistory';
 import { GameBus } from '../../../board/GameBus';
 import specialrighthighlights from '../../../game/rendering/highlights/specialrighthighlights';
 
-// Events ----------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 // Cancel the in-progress edit if the board steals its pointer to pinch.
 GameBus.addEventListener('steal-pointer', (e) => {
@@ -39,12 +39,12 @@ GameBus.addEventListener('steal-pointer', (e) => {
 	cancelEdit();
 });
 
-// Constants -------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** All tools that support drawing. */
 const drawingTools: Tool[] = ['placer', 'eraser', 'specialrights'];
 
-// State -----------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 let currentColor: Player = p.WHITE;
 let currentPieceType: number = typeutil.buildType(r.PAWN, currentColor);
@@ -65,7 +65,7 @@ let previousSquare: Coords | undefined;
 /** Whether special rights are currently being added or removed with the current drawing stroke. Undefined if neither. */
 let addingSpecialRights: boolean | undefined;
 
-// Initialization ---------------------------------------------------------
+// Initialization --------------------------------------------------------------
 
 function init(): void {
 	guipalette.updatePieceColors(currentColor);
@@ -80,7 +80,7 @@ function resetState(): void {
 	addingSpecialRights = undefined;
 }
 
-// Managing the Edit --------------------------------------------
+// Managing the Edit -----------------------------------------------------------
 
 function beginEdit(): void {
 	drawing = true;
@@ -187,7 +187,7 @@ function queueToggleSpecialRight(
 	egamerules.updateGamerulesUponQueueToggleSpecialRight(pieceHovered.type, future);
 }
 
-// API ---------------------------------------------------------
+// API -------------------------------------------------------------------------
 
 function onToolChange(tool: Tool): void {
 	endEdit();
@@ -224,7 +224,7 @@ function getColor(): Player {
 	return currentColor;
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Initialization

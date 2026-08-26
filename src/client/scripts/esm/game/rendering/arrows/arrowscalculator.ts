@@ -48,7 +48,7 @@ import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import { listener_canvas } from '../../chess/gamecore.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 
-// Types -------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * An object containing all the arrow lines of a single frame,
@@ -96,7 +96,7 @@ type ArrowDraft = {
 	canSlideOntoScreen: boolean;
 };
 
-// Constants ---------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The width of all pictures of the pieces and their arrows, in percentage of 1 tile. */
 const WIDTH = 0.65;
@@ -119,7 +119,7 @@ const PERSPECTIVE_EDGE_DIST = 17;
 
 const HALF = bd.fromNumber(0.5);
 
-// State -------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * The bounding box of the screen for this frame, with padding added so
@@ -133,7 +133,7 @@ let boundingBoxFloat: BoundingBoxBD | undefined;
  */
 let boundingBoxInt: BoundingBox | undefined;
 
-// Getters -----------------------------------------------------------------------------
+// Getters ---------------------------------------------------------------------
 
 export function getBoundingBoxFloat(): BoundingBoxBD | undefined {
 	return boundingBoxFloat;
@@ -152,7 +152,7 @@ export function getArrowIndicatorHalfWidth(): number {
 	return (WIDTH * boardpos.getBoardScaleAsNumber()) / 2;
 }
 
-// Main entry point --------------------------------------------------------------------
+// Main entry point ------------------------------------------------------------
 
 /**
  * Calculates which arrows should be visible for a frame.
@@ -182,7 +182,7 @@ export function calculateArrows(mode: 0 | 1 | 2 | 3): {
 	return { active: true, slideArrows, hoveredArrows, hintArrows };
 }
 
-// Bounding box ------------------------------------------------------------------------
+// Bounding box ----------------------------------------------------------------
 
 /**
  * Calculates the visible bounding box of the screen for this frame,
@@ -209,7 +209,7 @@ function updateBoundingBoxesOfVisibleScreen(): void {
 	boundingBoxFloat.top = bd.subtract(boundingBoxFloat.top, IMAGE_EDGE_DIST);
 }
 
-// Arrow draft generation --------------------------------------------------------------
+// Arrow draft generation ------------------------------------------------------
 
 /**
  * Generates a draft of all the arrows for a game, as if All (plus hippogonals) mode was on.
@@ -453,7 +453,7 @@ export function calcArrowsLineDraft(
 	return { negDotProd, posDotProd, intersections: intersections as [BDCoords, BDCoords] };
 }
 
-// Mode-based filtering ----------------------------------------------------------------
+// Mode-based filtering --------------------------------------------------------
 
 /**
  * Removes arrows based on the mode.
@@ -538,7 +538,7 @@ export function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLine
 	}
 }
 
-// Finalizing arrows -------------------------------------------------------------------
+// Finalizing arrows -----------------------------------------------------------
 
 /**
  * Converts all arrow drafts into fully computed arrows with world-space positions
@@ -718,7 +718,7 @@ function transitionTowardTargetIfClicked(
 	Transition.startPanTransition(telCoords, false);
 }
 
-// Hint Arrows -------------------------------------------------------------------------
+// Hint Arrows -----------------------------------------------------------------
 
 /**
  * Computes hint arrows for the current frame.
@@ -779,7 +779,7 @@ function updateHintArrows(): HintArrow[] {
 	return newHintArrows;
 }
 
-// Exports -----------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

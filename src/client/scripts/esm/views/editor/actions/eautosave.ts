@@ -17,7 +17,7 @@ import storetypes from '../../../savedpositions/storetypes';
 import boardeditor from '../boardeditor';
 import validatorama from '../../../util/validatorama';
 
-// Types -----------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Complete save state as written by the autosave.
@@ -29,7 +29,7 @@ export interface EditorAutosaveState extends EditorPositionData {
 	dirty: boolean;
 }
 
-// Constants -------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Name of the IndexedDB key for the board editor autosave. */
 const EDITOR_AUTOSAVE_NAME = 'infinitechess-boardeditor-autosave';
@@ -46,7 +46,7 @@ const AutosaveStateSchema = z.strictObject({
 	...storetypes.positionDataFields,
 }) satisfies z.ZodType<EditorAutosaveState>;
 
-// Variables --------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** Number of milliseconds for period of position autosave */
 const positionAutosaveIntervalMs = 10000;
@@ -62,7 +62,7 @@ let positionAutosavePending = false;
 /** Track whether anything changed since last save */
 let positionDirty = true;
 
-// Functions --------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Mark position as needing save.

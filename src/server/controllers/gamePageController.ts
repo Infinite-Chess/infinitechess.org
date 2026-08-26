@@ -38,7 +38,7 @@ import deadgamestate from '../game/gamemanager/deadgamestate.js';
 import piecesvgcache from '../config/piecesvgcache.js';
 import memberinfoutil from '../auth/memberinfoutil.js';
 
-// Types -----------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The full render context for `game.njk`. */
 interface GamePageState {
@@ -101,7 +101,7 @@ type RuleLineViewModel =
 	| { kind: 'text'; text: string }
 	| { kind: 'promotion'; prefix: string; svgs: string[]; suffix: string };
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Resolves the render state for `/game/:id`, or `undefined`
@@ -275,7 +275,7 @@ function buildGameMetaViewModel(
 	};
 }
 
-// Gamerule summary ------------------------------------------------------------------
+// Gamerule summary ------------------------------------------------------------
 
 /**
  * Summarizes how a game's rules depart from the standard ones, resolving
@@ -333,6 +333,6 @@ function resolveGameRules(
 	return { gameRules, state_global };
 }
 
-// Exports ---------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getPageState, getDeadGameViewState };

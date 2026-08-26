@@ -11,7 +11,7 @@ import type { MemberInfo, AuthMemberInfo } from '../types.js';
 
 import metadatautil from '../../shared/chess/util/metadatautil.js';
 
-// Equality --------------------------------------------------------------------------------------
+// Equality --------------------------------------------------------------------
 
 /** Compares two MemberInfo objects to see if they are the same person or not. */
 function eq(u1: AuthMemberInfo, u2: AuthMemberInfo): boolean {
@@ -34,7 +34,7 @@ function eqPartial(authed: AuthMemberInfo, other: MemberInfo): boolean {
 	);
 }
 
-// Projection ------------------------------------------------------------------------------------
+// Projection ------------------------------------------------------------------
 
 /**
  * Builds the public {@link ServerUsernameContainer} for a player from their auth identity.
@@ -51,7 +51,7 @@ function buildServerUsernameContainer(
 	};
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Equality

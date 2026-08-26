@@ -21,7 +21,7 @@ import { ShaderProgram } from './ShaderProgram.js';
 import { createBufferFromData, updateBufferIndices } from './BufferUtil.js';
 import { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js';
 
-// Types ----------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A 4x4 matrix, represented as a 16-element Float32Array */
 export type Mat4 = Float32Array;
@@ -183,7 +183,7 @@ export interface RenderableFactory {
 	): RenderableInstanced;
 }
 
-// Context-bound factory ------------------------------------------------------------------
+// Context-bound factory -------------------------------------------------------
 
 /**
  * Builds the renderable create-functions bound to a specific WebGL context, ProgramManager,
@@ -582,7 +582,7 @@ function createRenderableFactory(
 	};
 }
 
-// Pure helpers (context-independent) -----------------------------------------------------
+// Pure helpers (context-independent) ------------------------------------------
 
 /**
  * Returns the attribute information object for some vertex data,

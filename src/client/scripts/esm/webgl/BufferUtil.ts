@@ -6,14 +6,14 @@
 
 import { TypedArray } from './Renderable.js';
 
-// Variables --------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The draw hint when creating buffers on the gpu. Supposedly, dynamically
  * choosing which hint based on your needs offers very minor performance improvement.
  * Can choose between `gl.STATIC_DRAW`, `gl.DYNAMIC_DRAW`, or `gl.STREAM_DRAW` */
 const DRAW_HINT = 'STATIC_DRAW';
 
-// Functions --------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Updates a buffer on the gpu with new data.

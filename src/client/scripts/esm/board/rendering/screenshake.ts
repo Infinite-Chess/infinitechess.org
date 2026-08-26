@@ -13,7 +13,7 @@ import mat4 from '../../webgl/gl-matrix.js';
 import deltatime from '../deltatime.js';
 import { GameBus } from '../GameBus.js';
 
-// Types ---------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Optional integration hooks a screen shake fires into. */
 interface ScreenShakeHooks {
@@ -42,7 +42,7 @@ export interface ScreenShake {
 	wireGlobalListeners(): void;
 }
 
-// Constants -----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 // Shake Parameters
 
@@ -54,7 +54,7 @@ const MAX_TRANSLATION = 0.23; // Default: 0.28
 /** How quickly trauma fades. Higher is faster. */
 const TRAUMA_DECAY = 1.2;
 
-// Factory -------------------------------------------------------------------------
+// Factory ---------------------------------------------------------------------
 
 /** Creates one independent screen shake instance with its own trauma level. */
 function createScreenShake(hooks: ScreenShakeHooks = {}): ScreenShake {
@@ -138,6 +138,6 @@ function createScreenShake(hooks: ScreenShakeHooks = {}): ScreenShake {
 	};
 }
 
-// Exports -------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export { createScreenShake };

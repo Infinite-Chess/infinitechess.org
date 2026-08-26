@@ -7,7 +7,7 @@
 
 import type { Color } from '../../../../shared/types/color';
 
-// Types -------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** HSL Color representation */
 interface HSLColor {
@@ -19,7 +19,7 @@ interface HSLColor {
 	l: number;
 }
 
-// Functions -------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Converts an array of [r, g, b, a], range 0-1, into a valid CSS rgba color string.

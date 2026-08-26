@@ -30,7 +30,7 @@ import { GameBus } from '../../board/GameBus.js';
 import movesequence from '../../game/chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
 
-// Functions -----------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Reconciles our board against a `gamestate` message — a live reconnect reply, or a push (e.g. the
@@ -216,7 +216,7 @@ function findLastestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MoveP
 	return ourMoves.length - 1; // We agree with all
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	handleGameState,

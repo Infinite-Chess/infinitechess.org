@@ -71,7 +71,7 @@ function getID(): string | undefined {
 	return storage.getStore()?.requestID;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	REQUEST_ID_PLACEHOLDER,

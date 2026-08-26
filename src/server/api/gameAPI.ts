@@ -33,6 +33,6 @@ function getState(req: Request, res: Response): void {
 	res.json(deadGameState);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getState };

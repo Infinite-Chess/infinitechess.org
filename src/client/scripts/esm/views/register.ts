@@ -20,7 +20,7 @@ import {
 
 import '../util/passwordToggle.js';
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const form = document.querySelector<HTMLFormElement>('#register-form')!;
 const usernameInput = document.querySelector<HTMLInputElement>('#username')!;
@@ -33,7 +33,7 @@ const emailError = document.querySelector<HTMLParagraphElement>('#email-error')!
 const passwordError = document.querySelector<HTMLParagraphElement>('#password-error')!;
 const formError = document.querySelector<HTMLParagraphElement>('#register-error')!;
 
-// State -------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 let usernameValid = false;
 let emailValid = false;
@@ -44,7 +44,7 @@ let turnstileWidgetId: string | undefined;
 /** The latest single-use Turnstile token, or undefined until solved / after it's spent or expires. */
 let turnstileToken: string | undefined;
 
-// Functions ---------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Shows an error beneath a field, or clears it when called with no message. */
 function setFieldError(
@@ -78,7 +78,7 @@ function refreshSubmit(): void {
 	submitButton.disabled = !allFilled || anyVisibleError || turnstileToken === undefined;
 }
 
-// Turnstile -------------------------------------------------------
+// Turnstile -------------------------------------------------------------------
 
 /** Re-issues the Turnstile challenge for a fresh token, clearing the spent one (tokens are single-use). */
 function resetTurnstile(): void {
@@ -124,7 +124,7 @@ document.addEventListener('color-scheme-change', (): void => {
 	renderTurnstileWidget();
 });
 
-// Form submission --------------------------------------------------
+// Form submission -------------------------------------------------------------
 
 /**
  * Runs the synchronous format check for a field and returns whether it's valid.
@@ -222,7 +222,7 @@ async function submitRegister(): Promise<void> {
 	}
 }
 
-// Event Listeners ---------------------------------------------------
+// Event Listeners -------------------------------------------------------------
 
 form.addEventListener('submit', (event: SubmitEvent): void => {
 	event.preventDefault();

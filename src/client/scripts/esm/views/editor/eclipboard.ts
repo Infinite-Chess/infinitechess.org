@@ -15,7 +15,7 @@ import etoolmanager from './tools/etoolmanager.js';
 import selectiontool from './tools/selection/selectiontool.js';
 import stransformations from './tools/selection/stransformations.js';
 
-// Event Listeners ------------------------------------------------------------
+// Event Listeners -------------------------------------------------------------
 
 /** Registers the copy/cut/paste event listeners on the document. */
 function addEventListeners(): void {
@@ -26,7 +26,7 @@ function addEventListeners(): void {
 	document.addEventListener('paste-game', onPasteGame);
 }
 
-// Handlers -------------------------------------------------------------------
+// Handlers --------------------------------------------------------------------
 
 /** Custom Board Editor handler for the Copy event. */
 function onCopy(): void {
@@ -86,7 +86,7 @@ function onPasteGame(): void {
 	eactions.paste();
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	addEventListeners,

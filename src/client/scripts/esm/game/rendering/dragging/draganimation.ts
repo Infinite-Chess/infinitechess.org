@@ -42,7 +42,7 @@ import {
 	createRenderable_Instanced,
 } from '../../../board/rendering/renderable.js';
 
-// Variables --------------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 const z: number = 0.01;
 
@@ -108,7 +108,7 @@ let hoveredCoords: Coords | undefined;
 /** The type of piece being dragged. */
 let pieceType: number | undefined;
 
-// Functions --------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 function areDraggingPiece(): boolean {
 	return areDragging;
@@ -238,7 +238,7 @@ function cancelDragging(): void {
 	parity = true;
 }
 
-// Rendering --------------------------------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 // Hides the original piece by rendering a transparent square model above it in the depth field.
 function renderTransparentSquare(): void {

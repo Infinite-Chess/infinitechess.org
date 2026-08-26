@@ -19,7 +19,7 @@ import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
 import boardgeometry from './boardgeometry.js';
 
-// Variables ------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /**
  * Properties for the dots that are rendered on legal squares without an occupying piece.
@@ -73,7 +73,7 @@ const PLUS_SIGN = {
 	OPACITY_OFFSET: 0.2, // Default: 0.2
 };
 
-// Functions ------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Generates the legal move square instance mesh, centered on [0,0]

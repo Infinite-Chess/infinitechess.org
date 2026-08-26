@@ -28,14 +28,14 @@ const crosshairColor: Color = [1, 1, 1, 1]; // RGBA. It will invert the colors i
 /** The buffer model of the mouse crosshair when in perspective mode. */
 let crosshairModel: Renderable;
 
-// Listeners ---------------------------------------------------------------------
+// Listeners -------------------------------------------------------------------
 
 // Listen for canvas resize, FOV, and camera debug-toggle events to reinit the crosshair
 document.addEventListener('canvas_resize', () => initCrosshairModel());
 document.addEventListener('fov-change', () => initCrosshairModel());
 document.addEventListener('camera-debug-toggle', () => initCrosshairModel());
 
-// Functions --------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 function getEnabled(): boolean {
 	return enabled;
@@ -138,7 +138,7 @@ function unlockMouse(): void {
 	document.exitPointerLock();
 }
 
-// Exports -----------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getEnabled,

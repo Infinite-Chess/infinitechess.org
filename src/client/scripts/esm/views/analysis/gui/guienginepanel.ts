@@ -29,7 +29,7 @@ import movesequence from '../../../game/chess/movesequence.js';
 import { listener_document } from '../../../game/chess/gamecore.js';
 import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
 
-// Elements -------------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_Toggle = document.getElementById('engine-toggle') as HTMLInputElement;
 const element_Eval = document.getElementById('engine-eval')!;
@@ -52,11 +52,11 @@ const element_HashValue = document.getElementById('setting-hash-value')!;
 const element_Depth = document.getElementById('setting-depth') as HTMLInputElement;
 const element_DepthValue = document.getElementById('setting-depth-value')!;
 
-// Constants ----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const ENABLED_STORAGE_KEY = 'ceval.enabled';
 
-// State ----------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * Per-rank (PV line index) window offset into that line's moves, for the '…' pager.
@@ -78,7 +78,7 @@ let crashToastShown = false;
  */
 let lastStatusKind: CevalStatus['kind'] | undefined;
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Initializes the engine panel. Called once by the page entry. */
 function init(): void {
@@ -132,7 +132,7 @@ function setGaugeVisible(visible: boolean): void {
 	if (wasHidden === visible) window.dispatchEvent(new Event('resize'));
 }
 
-// Settings UI ------------------------------------------------------------------------
+// Settings UI -----------------------------------------------------------------
 
 function initSettingsUI(): void {
 	const settings = ceval.getSettings();
@@ -244,7 +244,7 @@ function closeSettings(): void {
 	element_SettingsBtn.classList.remove('active');
 }
 
-// Engine output rendering ------------------------------------------------------------
+// Engine output rendering -----------------------------------------------------
 
 /**
  * Resets the panel to a no-lines readout: clears the arrows and PV list (which also resets
@@ -393,7 +393,7 @@ function terminalGaugeChances(): number {
 	return victor === p.WHITE ? 1 : victor === p.BLACK ? -1 : 0;
 }
 
-// PV lines ----------------------------------------------------------------------------
+// PV lines --------------------------------------------------------------------
 
 function renderLines(lines: CevalLine[]): void {
 	element_Lines.replaceChildren();
@@ -659,13 +659,13 @@ function branchFromViewedPosition(gamefile: GameFile): void {
 	animation.clearAnimations();
 }
 
-// Registration ---------------------------------------------------------------
+// Registration ----------------------------------------------------------------
 
 // Tell selection.ts to branch from the viewed ply (instead of forwarding to the front)
 // when a piece is selected mid-game, so a new continuation can be played from there.
 selection.setViewedPositionBrancher(branchFromViewedPosition);
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	init,

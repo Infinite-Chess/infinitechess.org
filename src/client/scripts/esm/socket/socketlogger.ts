@@ -46,7 +46,7 @@ function logIncoming(message: ClientboundMessage): void {
 	console.log(`Incoming message: ${JSON.stringify(message)}`);
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	isDebugEnabled,

@@ -20,7 +20,7 @@ import { players as p } from '../../../../../shared/util/typeutil.js';
 import gameslot from '../chess/gameslot.js';
 import { GameBus } from '../../board/GameBus.js';
 
-// Elements ----------------------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_Started = document.getElementById('meta-started') as HTMLTimeElement;
 
@@ -31,7 +31,7 @@ const element_BannerText = element_ResultBanner.querySelector('.result-text')!;
 /** The participant `.username-embed`s, in SSR order: white first, then black. */
 const element_MetaPlayerEmbeds = document.querySelectorAll('.meta-players .meta-player .username-embed'); // prettier-ignore
 
-// Events ------------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-concluded', showResultBanner);
 

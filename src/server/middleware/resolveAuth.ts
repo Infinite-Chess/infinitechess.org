@@ -69,6 +69,6 @@ function tryRefreshToken(req: Request, res: Response): void {
 	req.memberInfo = memberInfo;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { resolve };

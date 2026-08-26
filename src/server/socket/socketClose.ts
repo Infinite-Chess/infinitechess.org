@@ -32,6 +32,6 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	socketsend.clearPendingState(ws);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { onclose };

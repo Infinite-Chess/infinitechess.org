@@ -9,7 +9,7 @@
 
 import IndexedDB from '../util/IndexedDB.js';
 
-// Types ------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** One handoff slot, with its own storage key and lifetime. */
 export interface Handoff<T> {
@@ -19,7 +19,7 @@ export interface Handoff<T> {
 	take(): Promise<T | undefined>;
 }
 
-// Factory ----------------------------------------------------------------
+// Factory ---------------------------------------------------------------------
 
 /**
  * Creates a handoff slot backed by one IndexedDB key.

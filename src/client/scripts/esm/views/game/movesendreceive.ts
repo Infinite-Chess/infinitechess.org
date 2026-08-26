@@ -29,7 +29,7 @@ import { GameBus } from '../../board/GameBus.js';
 import gamesession from '../../game/chess/gamesession.js';
 import movesequence from '../../game/chess/movesequence.js';
 
-// Events ---------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('user-move-played', () => sendMove());
 GameBus.addEventListener('engine-move-played', () => sendMove());
@@ -177,7 +177,7 @@ function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefin
 	guiclock.edit(gamefile);
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	sendMove,

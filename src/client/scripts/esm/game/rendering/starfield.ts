@@ -101,7 +101,7 @@ const CONFIG = {
 	// fadeDuration: 0.0,
 } as const;
 
-// Module State ------------------------------------------------------------
+// Module State ----------------------------------------------------------------
 
 /** All star objects. The entire star field. */
 const stars: Star[] = [];
@@ -116,7 +116,7 @@ let isInitialized: boolean = false;
  */
 let desiredNumStars: number = 0;
 
-// Initialization -----------------------------------------------------------------------
+// Initialization --------------------------------------------------------------
 
 /** Event listener for when we toggle Starfield in the settings dropdown. */
 document.addEventListener('starfield-toggle', (e) => {
@@ -216,7 +216,7 @@ function applyVariance(base: number, variance: number): number {
 	return base + (Math.random() - 0.5) * 2 * variance;
 }
 
-// Updating ----------------------------------------------------------------------
+// Updating --------------------------------------------------------------------
 
 /** Updates all stars motion, opacity, pulsing, birth, and death! */
 function update(): void {
@@ -315,7 +315,7 @@ function isStarfieldVisible(): boolean {
 	return !bounds.boxContainsBox(gamefile.gameRules.worldBorder, screenBox);
 }
 
-// Rendering ----------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /** Renders the star field. */
 function render(): void {
@@ -373,7 +373,7 @@ function render(): void {
 	});
 }
 
-// Exports -----------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	init,

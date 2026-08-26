@@ -21,7 +21,7 @@ import typeutil, { players, rawTypes } from '../../shared/util/typeutil.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Constants ---------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The built client's piece SVG folder — the very files the client fetches at runtime. */
 const PIECE_SVG_FOLDER = path.join(__dirname, '../../client/svg/pieces');
@@ -39,12 +39,12 @@ const SVG_ELEMENT_REGEX = /<svg\b([^>]*)>([\s\S]*?)<\/svg>/g;
  */
 const ID_ATTRIBUTE_REGEX = /\sid="([^"]*)"/;
 
-// State -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Each raw type's black-variant SVG markup, with the source file's `id` stripped. */
 const pieceSVGs: Map<RawType, string> = loadPieceSVGs();
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Reads every piece SVG file. Every page that renders a piece wants these, so
@@ -108,8 +108,8 @@ function get(rawType: RawType): string {
 	return markup;
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { get };

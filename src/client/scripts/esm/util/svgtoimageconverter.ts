@@ -6,7 +6,7 @@
  * It also can normalize the pixel data of an image by drawing it onto a canvas and re-serializing it.
  */
 
-// Functions --------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Converts a list of SVGs into a list of HTMLImageElements. Does this in parallel. */
 async function convertSVGsToImages(svgElements: SVGElement[]): Promise<HTMLImageElement[]> {
@@ -98,7 +98,7 @@ async function normalizeImagePixelData(
 	return processedImg;
 }
 
-// Exports -------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	convertSVGsToImages,

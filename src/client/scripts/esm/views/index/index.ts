@@ -16,7 +16,7 @@ import { SocketBus } from '../../socket/SocketBus.js';
 import './newPrompt.js';
 import './gameSetupModal.js';
 
-// Initial setup -----------------------------------------------------
+// Initial setup ---------------------------------------------------------------
 
 // Show any toast queued before a redirect here (e.g. "Account activated!" after registering or "Your password was reset!").
 flashToast.consume();

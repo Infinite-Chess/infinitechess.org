@@ -26,21 +26,21 @@ import coordutil, { BDCoords, Coords } from '../../../../../../../shared/util/co
 import edithistory from '../../edithistory';
 import selectiontool from './selectiontool';
 
-// Types ---------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A Piece object that also remembers its specialrights state. */
 interface StatePiece extends Piece {
 	specialrights: boolean;
 }
 
-// Constants ------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const NEGONE = bd.fromBigInt(-1n, 1);
 const HALF = bd.fromNumber(0.5, 1);
 const ONE = bd.fromBigInt(1n, 1);
 const TWO = bd.fromBigInt(2n, 1);
 
-// State ------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Whatever's copied to the clipboard via the "Copy selection" action button. */
 let clipboard: StatePiece[] | undefined;
@@ -54,7 +54,7 @@ let clipboardBox: BoundingBox | undefined;
  */
 let rotationParity: boolean = false;
 
-// Selection Box Transformations ------------------------------------------------
+// Selection Box Transformations -----------------------------------------------
 
 /** Translates the selection by a given vector. */
 function Translate(
@@ -173,7 +173,7 @@ function Fill(
 	selectiontool.setSelection([newBox.left, newBox.top], [newBox.right, newBox.bottom]);
 }
 
-// Action Button Transformations ------------------------------------------------
+// Action Button Transformations -----------------------------------------------
 
 /** Deletes the given selection box. */
 function Delete(gamefile: GameFile, mesh: Mesh, box: BoundingBox): void {
@@ -441,7 +441,7 @@ function InvertColor(gamefile: GameFile, mesh: Mesh, box: BoundingBox): void {
 	Transform(gamefile, mesh, box, box, selectionCorners, transformer);
 }
 
-// Transformation Helpers -----------------------------------------------------
+// Transformation Helpers ------------------------------------------------------
 
 /**
  * Executes a transformation, where pieces within the selection may be moved or modified.
@@ -508,7 +508,7 @@ function Transform(
 	selectiontool.setSelection(newSelectionCorners[0], newSelectionCorners[1]);
 }
 
-// Utility ------------------------------------------------------------
+// Utility ---------------------------------------------------------------------
 
 /** Queues all the pieces in the list to be removed in this Edit. */
 function removeAllPieces(gamefile: GameFile, edit: Edit, pieces: Piece[]): void {
@@ -598,7 +598,7 @@ function resetState(): void {
 	clipboardBox = undefined;
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Selection Box Transformations

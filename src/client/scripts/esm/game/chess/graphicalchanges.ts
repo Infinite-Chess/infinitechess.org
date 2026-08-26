@@ -18,7 +18,7 @@ import animation from '../rendering/animation.js';
 import piecemodels from '../../board/rendering/piecemodels.js';
 import preferences from '../../components/header/preferences.js';
 
-// Types ----------------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * An object mapping move changes to a function that performs the graphical mesh change for that action.
@@ -38,7 +38,7 @@ const meshChanges: ChangeApplication<genericChangeFunc<Mesh>> = {
 	},
 };
 
-// Mesh Changes -----------------------------------------------------------------------------------------
+// Mesh Changes ----------------------------------------------------------------
 
 function addMeshPiece(mesh: Mesh, change: Change): void {
 	piecemodels.overwritebufferdata(mesh, change.piece);
@@ -62,7 +62,7 @@ function returnMeshPiece(mesh: Mesh, change: Change): void {
 	piecemodels.overwritebufferdata(mesh, change.piece);
 }
 
-// Animate -----------------------------------------------------------------------------------------
+// Animate ---------------------------------------------------------------------
 
 /**
  * Animates a given set of changes to the board.

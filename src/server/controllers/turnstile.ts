@@ -14,7 +14,7 @@ import jsutil from '../../shared/util/jsutil.js';
 import ip from '../utility/ip.js';
 import logEvents from '../utility/logEvents.js';
 
-// Types -------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * The result of verifying a Turnstile token:
@@ -25,7 +25,7 @@ import logEvents from '../utility/logEvents.js';
  */
 type TurnstileResult = 'success' | 'failed' | 'error';
 
-// Constants -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Cloudflare's documented dummy keys, used in development when real keys are unset
@@ -61,7 +61,7 @@ const SECRET_KEY: string = process.env['TURNSTILE_SECRET_KEY'] || TEST_SECRET_KE
 /** Cloudflare's token verification endpoint. */
 const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Verifies a Cloudflare Turnstile token against the siteverify endpoint.
@@ -97,6 +97,6 @@ async function verify(token: string, req: IncomingMessage): Promise<TurnstileRes
 	}
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { SITE_KEY, verify };

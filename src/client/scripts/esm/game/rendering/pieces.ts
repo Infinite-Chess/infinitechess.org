@@ -16,12 +16,12 @@ import piecemodels from '../../board/rendering/piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import { createRenderable } from '../../board/rendering/renderable.js';
 
-// Variables ---------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** Opacity of ghost piece over legal move highlights. Default: 0.4 */
 const ghostOpacity: number = 0.4;
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Renders all of our pieces on the board,

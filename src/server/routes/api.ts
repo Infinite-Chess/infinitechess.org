@@ -39,7 +39,7 @@ router.use('/members', membersRouter);
 // Password-reset router (public, pre-login)
 router.use('/', passwordRouter);
 
-// One-off endpoints that don't form resource families ----------------------------------------
+// One-off endpoints that don't form resource families -------------------------
 
 /** `GET /api/contributors` — returns the JSON list of project contributors. */
 router.get('/contributors', (_req: Request, res: Response) => {
@@ -55,7 +55,7 @@ router.post('/prepare-restart', deployController.handlePrepareRestart);
 
 router.post('/verify/:token', verifyAccountController.verifyPendingRegistration);
 
-// Routers that manage their own authentication (per-router or per-route resolveAuth) ---------
+// Routers that manage their own authentication (per-router or per-route resolveAuth) ---
 
 router.use('/', authRouter); // login + logout (both public)
 router.use('/editor-saves', editorSavesRouter);

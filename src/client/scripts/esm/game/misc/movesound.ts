@@ -16,7 +16,7 @@ import camera from '../../board/rendering/camera.js';
 import gamesound from '../../board/gamesound.js';
 import WaterRipples from '../rendering/WaterRipples.js';
 
-// Move Configs --------------------------------------------------------------------------
+// Move Configs ----------------------------------------------------------------
 
 /** Config for successive, or rapidly played move sounds. */
 const SUCCESSIVE_MOVES_CONFIG = {
@@ -90,12 +90,12 @@ const PREMOVE_CONFIG = {
 	volume: 0.5,
 } as const;
 
-// State --------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Timestamp of the last played move sound. */
 let timeLastMoveOrCaptureSound = 0;
 
-// Functions --------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Plays a piece move sound effect.
@@ -204,6 +204,6 @@ function calculateReverb(
 	};
 }
 
-// Exports --------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { playMove };

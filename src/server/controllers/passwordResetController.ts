@@ -25,7 +25,7 @@ import socketRegistry from '../socket/socketRegistry.js';
 import blacklistManager from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';
 
-// Types -----------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The `password_reset_tokens` columns a reset-token lookup needs. */
 type TokenRecord = { user_id: number; hashed_token: string };
@@ -305,6 +305,6 @@ function verifyBodyHasForgotPasswordData(req: Request, res: Response): string | 
 	return email;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { handleForgot, getPageState, handleReset };

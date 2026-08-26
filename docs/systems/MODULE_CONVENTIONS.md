@@ -26,7 +26,7 @@ scripts disagree, study more siblings before trusting either.
   what the script **is**, not where it's used.
 - Sections in order: imports → Types → Constants → State → functional groups → Exports.
   Every section gets a `// Section name -------` divider — never `=====` bars, never
-  `// --- Name ---`. Keep widths uniform within the directory, ≤100 characters.
+  `// --- Name ---`. Pad the dashes so the line is exactly 80 characters.
 - Constants UPPER_SNAKE_CASE; mutable state camelCase under `// State`.
 - Locals follow whichever casing dominates the surrounding script — camelCase or
   snake_case (database columns leak snake_case server-side); consistency wins.

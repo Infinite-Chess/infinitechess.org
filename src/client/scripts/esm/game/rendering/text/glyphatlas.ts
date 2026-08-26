@@ -15,7 +15,7 @@
 
 import { gl } from '../../../board/rendering/webgl.js';
 
-// Types -------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * UV coordinates and advance-width ratio for a single glyph in the atlas.
@@ -38,7 +38,7 @@ interface GlyphMetrics {
 	advanceWidth: number;
 }
 
-// Constants -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Height of every glyph cell in the atlas in pixels.
@@ -97,7 +97,7 @@ const SUPPORTED_CHARS: string[] = [
 	REPLACEMENT_CHAR,
 ];
 
-// Variables -------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** WebGL texture for the glyph atlas. Lazily initialised on first use. Takes ~1 ms. */
 let atlasTexture: WebGLTexture | undefined;
@@ -108,7 +108,7 @@ let atlasTexture: WebGLTexture | undefined;
  */
 let metricsTable: Map<string, GlyphMetrics> | undefined;
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Returns the next integer that is a power of two and ≥ `n`. */
 function nextPowerOfTwo(n: number): number {
@@ -264,6 +264,6 @@ function getGlyphMetrics(char: string): GlyphMetrics {
 	return metricsTable!.get(char) ?? metricsTable!.get(REPLACEMENT_CHAR)!; // fallback to replacement char for unsupported glyphs
 }
 
-// Exports -------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export { getAtlasTexture, getGlyphMetrics, ATLAS_DESCENDER_FRACTION, ATLAS_ASCENT_FRACTION };

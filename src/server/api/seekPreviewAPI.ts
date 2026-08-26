@@ -35,6 +35,6 @@ function get(req: Request, res: Response): void {
 	res.json({ icn: seek.variant.position });
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { get };

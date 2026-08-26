@@ -16,7 +16,7 @@ import type {
 	CheckmatePracticeEngineConfig,
 } from '../../../../../../shared/chess/util/engine.js';
 
-// Requests -------------------------------------------------------------
+// Requests --------------------------------------------------------------------
 
 /** The first message to an engine whose worker loads its glue at runtime (`hasGlue`). */
 export interface EngineInitRequest {
@@ -54,7 +54,7 @@ export interface ApeironMoveRequest extends EngineMoveRequest {
 	requestGeneratedMoves?: boolean;
 }
 
-// Responses ------------------------------------------------------------
+// Responses -------------------------------------------------------------------
 
 /** A worker's reply while it loads, before the page swaps in its move listener. */
 export type EngineInitResponse =

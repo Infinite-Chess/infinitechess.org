@@ -14,7 +14,7 @@ import gamelimits from '../../../shared/chess/util/gamelimits.js';
 
 import logEvents from '../../utility/logEvents.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Returns true if the game currently has an open draw offer.
@@ -76,7 +76,7 @@ function getLastOfferPly(match: MatchInfo, color: Player): number | undefined {
 	return match.playerData[color]?.lastOfferPly;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	isOpen,

@@ -38,7 +38,7 @@ import liveGamesManager from '../../database/liveGamesManager.js';
 import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
 import liveEngineGamesManager from '../../database/liveEngineGamesManager.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Result of restoring games. The caller is responsible for adding them
@@ -79,7 +79,7 @@ interface DisconnectTimerState {
 	voluntary: boolean;
 }
 
-// Restoration --------------------------------------------------------------------------------
+// Restoration -----------------------------------------------------------------
 
 /**
  * Restores all live games from the database.
@@ -195,7 +195,7 @@ function restoreSingleGame(
 	return { servergame, pendingTimers };
 }
 
-// Reconstruction -----------------------------------------------------------------------------
+// Reconstruction --------------------------------------------------------------
 
 /** Reconstructs AuthMemberInfo for each player from the database rows. */
 function reconstructPlayerIdentities(
@@ -356,7 +356,7 @@ function parseMoves(movesString: string): MoveRecord[] {
 	return icnmoves.parseShortFormMoves(movesString);
 }
 
-// Pending Timers -----------------------------------------------------------------------------
+// Pending Timers --------------------------------------------------------------
 
 /** Computes which timers need to be started after restoration. */
 function computePendingTimers(
@@ -415,6 +415,6 @@ function computePendingTimers(
 	return timers;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { restoreAll };

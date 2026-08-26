@@ -12,7 +12,7 @@ import type { VariantOptions } from '../../../../shared/chess/logic/gamefile.js'
 
 import { createHandoff } from './createhandoff.js';
 
-// Types ------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A pending position handed off to the board editor from another page. */
 export interface EditorHandoff {
@@ -20,11 +20,11 @@ export interface EditorHandoff {
 	variantOptions: VariantOptions;
 }
 
-// Constants --------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** How long a stashed handoff stays valid before being auto-discarded. */
 const EXPIRY_MS = 1000 * 60 * 5; // 5 minutes
 
-// Exports ----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default createHandoff<EditorHandoff>('board-editor-handoff', EXPIRY_MS);

@@ -12,7 +12,7 @@ import validators from '../../../../shared/util/validators.js';
 
 import { serverFetch } from '../util/serverFetch.js';
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const form = document.querySelector<HTMLFormElement>('#forgot-form')!;
 const emailInput = document.querySelector<HTMLInputElement>('#email')!;
@@ -20,7 +20,7 @@ const submitButton = document.querySelector<HTMLButtonElement>('#forgot-submit')
 const errorElement = document.querySelector<HTMLParagraphElement>('#forgot-error')!;
 const confirmation = document.querySelector<HTMLDivElement>('#forgot-confirmation')!;
 
-// Functions ---------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Shows an error beneath the field (format, server, or network), or clears it when called with no message. */
 function setError(message?: string): void {
@@ -69,7 +69,7 @@ async function submitForgotPassword(): Promise<void> {
 	}
 }
 
-// Event Listeners ---------------------------------------------------
+// Event Listeners -------------------------------------------------------------
 
 form.addEventListener('submit', (event: SubmitEvent): void => {
 	event.preventDefault();

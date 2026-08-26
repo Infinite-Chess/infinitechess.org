@@ -27,7 +27,7 @@ import selectiontool from './selectiontool';
 import stoolgraphics from './stoolgraphics';
 import stransformations from './stransformations';
 
-// State ---------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Whether the mouse is currently within the minimum distance to grab the fill handle. */
 let withinGrabDist = false;
@@ -39,7 +39,7 @@ let pointerId: string | undefined = undefined;
 /** The last known square the pointer was hovering over. */
 let lastPointerCoords: Coords | undefined;
 
-// Methods -------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /** Returns whether we are currently filling. */
 function areWeFilling(): boolean {
@@ -201,7 +201,7 @@ function calculateFillBox(): BoundingBox | undefined {
 	}
 }
 
-// Rendering ---------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 function render(): void {
 	if (!areFilling) return;
@@ -216,7 +216,7 @@ function render(): void {
 	stoolgraphics.renderSelectionBoxWireframeDashed(worldFillBox);
 }
 
-// Exports -----------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	areWeFilling,

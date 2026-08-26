@@ -17,7 +17,7 @@ import socketOpen from './socketOpen.js';
 import errorGuard from '../utility/errorGuard.js';
 import requestContext from '../utility/requestContext.js';
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The maximum size of an incoming websocket message, in bytes. The `ws` receiver rejects
@@ -44,11 +44,11 @@ const MAX_PAYLOAD_BYTES = 500_000; // 500 KB
  */
 const CLOSE_HANDSHAKE_TIMEOUT_MS = 2500;
 
-// State --------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 let WebSocketServer: Server;
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Creates the WebSocketServer on top of the HTTPS server, wiring up the connection handler. */
 function start(httpsServer: HttpsServer): void {

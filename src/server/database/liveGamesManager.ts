@@ -9,7 +9,7 @@
 
 import db from './database.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Structure of a complete live_games record. */
 export interface LiveGamesRecord extends LiveGameData {
@@ -43,7 +43,7 @@ export interface LiveGameData {
 	mod_slide_limit: number | null;
 }
 
-// Methods ------------------------------------------------------------------------------------
+// Methods ---------------------------------------------------------------------
 
 /**
  * Inserts a new live game row into the database.
@@ -112,6 +112,6 @@ function getAll(): LiveGamesRecord[] {
 	);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { insert, update, remove, getAll };

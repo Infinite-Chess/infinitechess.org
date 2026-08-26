@@ -9,7 +9,7 @@ import type { ServerboundGeneralMessage } from '../../shared/transport/serverbou
 
 import socketSubs from './socketSubs.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Routes a validated 'general' message to the handler for its action. */
 function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGeneralMessage): void {
@@ -26,6 +26,6 @@ function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGeneralMes
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { routeGeneralMessage };

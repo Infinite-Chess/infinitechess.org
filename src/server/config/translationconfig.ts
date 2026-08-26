@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Constants -----------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The default/fallback language code. */
 const DEFAULT_LANGUAGE = 'en-US' as const;
@@ -70,7 +70,7 @@ function getDateLocale(lang: string): Locale {
 	return LANGUAGE_METADATA[lang]?.dateLocale ?? enUS;
 }
 
-// Exports --------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	DEFAULT_LANGUAGE,

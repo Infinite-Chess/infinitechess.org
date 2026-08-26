@@ -40,7 +40,7 @@ import variantPreviewTooltip from '../../board/rendering/variantPreviewTooltip.j
 
 const patch = init([attributesModule, classModule]);
 
-// Types ----------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The structure for a single seek in the lobby, with client-side rendering info. */
 export type LobbySeek = BaseSeek &
@@ -48,7 +48,7 @@ export type LobbySeek = BaseSeek &
 		isOurs: boolean;
 	};
 
-// Constants ------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const element_lobbyTbody = document.getElementById('lobby-tbody')!;
 const element_lobbyIdleOverlay = document.getElementById('lobby-overlay')!;
@@ -63,7 +63,7 @@ const elements_disabledWhileInGame = [
 ];
 let tbodyVNode: VNode | Element = element_lobbyTbody;
 
-// Constants -----------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** How long, in milliseconds, without page interaction before the user is unsubbed from the lobby. */
 const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
@@ -76,7 +76,7 @@ const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
  */
 const GRACE_MS = 667;
 
-// State ----------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The ID of our current seek, if we have one. */
 let ourSeekId: SeekId | undefined;
@@ -95,7 +95,7 @@ let isIdle = false;
  */
 let gameIdWeAreIn: number | undefined;
 
-// Init -----------------------------------------------
+// Init ------------------------------------------------------------------------
 
 initLobbyClickHandler();
 initIdleDetection();
@@ -107,7 +107,7 @@ gamesound.preload('base_staccato_c2');
 gamesound.preload('viola_staccato_c3');
 gamesound.preload('notify');
 
-// Functions ------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Sets up a single delegated click listener on the lobby table body. */
 function initLobbyClickHandler(): void {
@@ -291,7 +291,7 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 	}
 }
 
-// Creating/Accepting/Canceling Seeks -------------------------------------------
+// Creating/Accepting/Canceling Seeks ------------------------------------------
 
 /** Sends a createseek message to the server with the given options. */
 function createSeek(options: CreateSeekMessage): void {
@@ -317,7 +317,7 @@ function accept(seekId: SeekId): void {
 	socketintents.submit('lobby', 'acceptseek', seekId, () => gameIdWeAreIn === undefined && seekMap.has(seekId)); // prettier-ignore
 }
 
-// Subscribing ---------------------------------------------
+// Subscribing -----------------------------------------------------------------
 
 /** Subscribes to the server's lobby subscription list (seeks, live games). */
 async function subscribe(): Promise<void> {
@@ -333,7 +333,7 @@ function unsubscribe(): void {
 	socketsubs.unsubFromLobby();
 }
 
-// Idle detection ---------------------------------------------
+// Idle detection --------------------------------------------------------------
 
 /** Registers the idle listener that will unsub from the lobby after inactivity. */
 function initIdleDetection(): void {
@@ -377,7 +377,7 @@ function exitIdle(): void {
 	subscribe();
 }
 
-// Snabbdom Rendering ----------------------------------------------
+// Snabbdom Rendering ----------------------------------------------------------
 
 /** Patches the lobby table body with the latest seek rows. */
 function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<string>()): void {
@@ -553,7 +553,7 @@ function createSideDotVNode(color: LobbySeek['color']): VNode | null {
 	return h(selector, { attrs: { title: `Invite owner chooses to be ${colorName}` } });
 }
 
-// Exports ----------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	renderSeekList,

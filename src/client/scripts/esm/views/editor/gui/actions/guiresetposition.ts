@@ -8,7 +8,7 @@ import eactions from '../../actions/eactions';
 import guifloatingwindow from '../guifloatingwindow';
 import { listener_document } from '../../../../game/chess/gamecore';
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 /** The button the toggles visibility of the Start local game popup window. */
 const element_resetbutton = document.getElementById('reset')!;
@@ -21,7 +21,7 @@ const element_closeButton = document.getElementById('close-reset-position-UI')!;
 const yesButton = document.getElementById('reset-position-yes')!;
 const noButton = document.getElementById('reset-position-no')!;
 
-// Create floating window -------------------------------------
+// Create floating window ------------------------------------------------------
 
 const floatingWindow = guifloatingwindow.create({
 	windowEl: element_window,
@@ -31,7 +31,7 @@ const floatingWindow = guifloatingwindow.create({
 	onClose,
 });
 
-// Toggling ---------------------------------------------
+// Toggling --------------------------------------------------------------------
 
 function onOpen(): void {
 	element_resetbutton.classList.add('active');
@@ -44,7 +44,7 @@ function onClose(resetPositioning: boolean): void {
 	closeResetPositionUIListeners();
 }
 
-// Gamerules-specific listeners -------------------------------------------
+// Gamerules-specific listeners ------------------------------------------------
 
 function initResetPositionUIListeners(): void {
 	yesButton.addEventListener('click', onYesButtonPress);
@@ -58,7 +58,7 @@ function closeResetPositionUIListeners(): void {
 	document.removeEventListener('keydown', onKeyDown);
 }
 
-// Utilities---------------------------------------------------------------------
+// Utilities -------------------------------------------------------------------
 
 function onKeyDown(e: KeyboardEvent): void {
 	if (e.key === 'Enter') onYesButtonPress();
@@ -77,7 +77,7 @@ function onNoButtonPress(): void {
 	floatingWindow.close(false);
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	open: floatingWindow.open,

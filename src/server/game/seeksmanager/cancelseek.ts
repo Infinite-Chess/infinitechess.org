@@ -36,7 +36,7 @@ function cancel(ws: CustomWebSocket, messageContents: SeekId): void {
 	activeseeks.deleteByID(id);
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	cancel,

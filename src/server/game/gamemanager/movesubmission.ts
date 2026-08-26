@@ -39,14 +39,14 @@ import gamelifecycle from './gamelifecycle.js';
 import liveGameValues from './liveGameValues.js';
 import gamestatebuilder from './gamestatebuilder.js';
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The number of additional coordinate digits allowed per second of game duration. */
 const DIGITS_PER_SECOND = 4.5;
 /** The number of digits in the maximum teleport coordinate. */
 const TELEPORT_LIMIT_DIGITS = bimath.countDigits(gamelimits.TELEPORT_LIMIT);
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Call when a websocket submits a move. Performs some checks,
@@ -335,6 +335,6 @@ function buildMoveMessage(servergame: ServerGame, move: MoveRecord): OpponentsMo
 	return message;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { submitMove };

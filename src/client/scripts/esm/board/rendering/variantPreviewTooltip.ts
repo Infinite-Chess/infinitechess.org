@@ -38,7 +38,7 @@ import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { createMaskedDraw } from '../../webgl/maskedDraw.js';
 import { createTextureCache } from '../../chess/rendering/texturecache.js';
 
-// Types -------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Optional extras a preview may be shown with. */
 interface PreviewOptions {
@@ -51,7 +51,7 @@ interface PreviewOptions {
 	engineGame?: boolean;
 }
 
-// Constants ---------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Size of mini image icons in the preview tooltip, in virtual pixels. */
 const PREVIEW_ENTITY_WIDTH_VPIXELS = 20;
@@ -67,7 +67,7 @@ const TOOLTIP_OFFSET_Y = 8;
 /** Minimum gap in px between the tooltip and the viewport edge. */
 const EDGE_PAD = 8;
 
-// State -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * The preview's own render context, built lazily on first show. It owns a separate
@@ -136,7 +136,7 @@ element_rules.append(element_rulesBody);
 element_tooltip.append(element_name, element_rules, element_canvas);
 document.body.appendChild(element_tooltip);
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Builds the preview's own render context once, on its own WebGL context (idempotent). */
 async function ensureGLReady(): Promise<void> {
@@ -350,7 +350,7 @@ async function buildPromotionLine(
 	return span;
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 /** Returns true if the given node is inside the tooltip element. */
 function containsNode(node: Node): boolean {

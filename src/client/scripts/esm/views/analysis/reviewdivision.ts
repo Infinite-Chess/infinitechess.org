@@ -17,7 +17,7 @@ import coordutil from '../../../../../shared/util/coordutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import typeutil, { players as p, rawTypes as r } from '../../../../../shared/util/typeutil.js';
 
-// Types ------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Lila-style game-phase boundaries, expressed as position indices. */
 export interface ReviewDivision {
@@ -39,7 +39,7 @@ interface PhaseProfile {
 	minimumMiddlePly: number;
 }
 
-// Division -----------------------------------------------------------------------
+// Division --------------------------------------------------------------------
 
 /** Finds opening/middlegame/endgame boundaries from each replayed board position. */
 function determineDivision(

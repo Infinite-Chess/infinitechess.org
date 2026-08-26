@@ -20,7 +20,7 @@ import space from '../space.js';
 import instancedshapes from './instancedshapes.js';
 import { RenderableInstanced, AttributeInfoInstanced } from '../../webgl/Renderable.js';
 
-// Constants ---------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The maximum number of pieces in a game before mini image rendering is disabled
@@ -39,7 +39,7 @@ const attribInfo: AttributeInfoInstanced = {
 	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }],
 };
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Builds instance data (world-space positions per type) for all pieces in a
@@ -147,7 +147,7 @@ function render(
 	});
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	pieceCountToDisableMiniImages,

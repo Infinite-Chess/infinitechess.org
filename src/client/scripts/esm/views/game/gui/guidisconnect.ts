@@ -22,12 +22,12 @@ import { GameBus } from '../../../board/GameBus.js';
 import { SocketBus } from '../../../socket/SocketBus.js';
 import socketintents from '../../../socket/socketintents.js';
 
-// Constants ---------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** How long the "Reconnected." confirmation lingers before the notice hides itself. */
 const RECONNECTED_LINGER_MS = 2000;
 
-// Elements ----------------------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_DisconnectStatus = document.querySelector('.disconnect-status');
 const element_SelfDisconnectStatus = document.querySelector('.self-disconnect-status');
@@ -38,7 +38,7 @@ const element_ClaimVictory = document.getElementById(
 ) as HTMLButtonElement | null;
 const element_ClaimDraw = document.getElementById('btn-claim-draw') as HTMLButtonElement | null;
 
-// State -------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The epoch-ms timestamp from which we may claim victory/draw. Undefined when the opponent is connected. */
 let claimableAt: number | undefined;
@@ -49,11 +49,11 @@ let renderIntervalID: number | undefined;
 /** The hide timer's id, while the "Reconnected." confirmation is showing. */
 let reconnectedTimeoutID: number | undefined;
 
-// Events ------------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-concluded', () => onOpponentReturn());
 
-// Functions ---------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Called when our opponent disconnects (or on load if they're already disconnected). */
 function onOpponentDisconnect(info: DisconnectInfo): void {
@@ -103,7 +103,7 @@ function render(): void {
 	}
 }
 
-// Button handlers ----------------------------------------------------------------------------
+// Button handlers -------------------------------------------------------------
 
 /**
  * Whether the claim window is currently open. A resync restores the opponent's disconnect
@@ -129,7 +129,7 @@ function callback_ClaimDraw(): void {
 element_ClaimVictory?.addEventListener('click', callback_ClaimVictory);
 element_ClaimDraw?.addEventListener('click', callback_ClaimDraw);
 
-// Our own disconnection ------------------------------------------------------------------------
+// Our own disconnection -------------------------------------------------------
 
 // Only fires on an involuntary close while we still hold a subscription — exactly when
 // our opponent's claim timer is running against us.
@@ -163,7 +163,7 @@ function onSelfReturn(): void {
 	}, RECONNECTED_LINGER_MS);
 }
 
-// Exports ------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	onOpponentDisconnect,

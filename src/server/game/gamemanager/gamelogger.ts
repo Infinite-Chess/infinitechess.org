@@ -34,12 +34,12 @@ import engineGamesManager from '../../database/engineGamesManager.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A single player's outcome in a game, from that player's perspective. */
 type PlayerOutcome = 'wins' | 'losses' | 'draws' | 'aborted';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Moves a completed game out of live storage and into permanent storage: it deletes the game's
@@ -297,7 +297,7 @@ function updateSinglePlayerStatsInTransaction(
 	}
 }
 
-// Helpers ------------------------------------------------------------------------------------
+// Helpers ---------------------------------------------------------------------
 
 /** A player's user_id, or undefined if they're a guest. */
 function getUserID(data: PlayerData | undefined): number | undefined {
@@ -391,7 +391,7 @@ function getPlayerMoveCountsInGame(servergame: ServerGame): PlayerGroup<number> 
 	return playerMoveCounts;
 }
 
-// Cheat-report overturn ----------------------------------------------------------------------
+// Cheat-report overturn -------------------------------------------------------
 
 /**
  * Re-logs an already-logged game after a cheat report overturns its result to an abort.
@@ -511,7 +511,7 @@ function reversePlayerStatsForOverturn(
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Functions

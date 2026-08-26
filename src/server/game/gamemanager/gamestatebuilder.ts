@@ -54,7 +54,7 @@ import ratingcalculation from '../../utility/ratingcalculation.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
 import componentTranslationLoader from '../../config/componentTranslationLoader.js';
 
-// Ratings ------------------------------------------------------------------------------------
+// Ratings ---------------------------------------------------------------------
 
 /**
  * Returns the current elo of all players in the game on the leaderboard
@@ -96,7 +96,7 @@ function getRatingChanges(servergame: ServerGame): PlayerGroup<number> | undefin
 	return ratingChanges;
 }
 
-// SSR Page State -----------------------------------------------------------------------------
+// SSR Page State --------------------------------------------------------------
 
 /**
  * Assembles the role-agnostic {@link StaticGameState} of a live game (the static side-bar and game info).
@@ -156,7 +156,7 @@ function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 	};
 }
 
-// ICN Metadata -------------------------------------------------------------------------------
+// ICN Metadata ----------------------------------------------------------------
 
 /**
  * Assembles the ICN {@link MetaData} of a game on demand from its properties
@@ -251,7 +251,7 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 	return metadata;
 }
 
-// Wire Messages ------------------------------------------------------------------------------
+// Wire Messages ---------------------------------------------------------------
 
 /**
  * Builds the recipient-agnostic {@link GameStateBase} — the live move list, clocks, conclusion, and
@@ -306,7 +306,7 @@ function simplifyMove(move: MoveRecord): MovePacket {
 	return { token: move.token };
 }
 
-// Participant Overlay ------------------------------------------------------------------------
+// Participant Overlay ---------------------------------------------------------
 
 /** Builds a participant's private state overlay (clocks, rematch offers) for their resyncs. */
 function getParticipantState(servergame: ServerGame, role: Player): ParticipantState {
@@ -356,7 +356,7 @@ function getRematchOfferInfo(servergame: ServerGame, role: Player): RematchOffer
 	};
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Ratings

@@ -10,7 +10,7 @@
  * any other client code that needs to surface a transient message.
  */
 
-// Types --------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 interface ToastOptions {
 	/** Whether the toast indicates an error. Renders with the error styling. */
@@ -19,7 +19,7 @@ interface ToastOptions {
 	durationMultiplier?: number;
 }
 
-// Constants ---------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Base duration for toasts, in milliseconds. */
 const DURATION_BASE = 2000;
@@ -28,13 +28,13 @@ const DURATION_PER_CHAR = 45;
 /** Duration of the slide-out animation, in milliseconds. Must match toast.css. */
 const EXIT_ANIMATION_MS = 280;
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const toastEl = document.getElementById('toast')!;
 const textEl = toastEl.querySelector<HTMLElement>('.toast-text')!;
 const closeBtn = toastEl.querySelector<HTMLButtonElement>('.toast-close')!;
 
-// State -------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 let timerId: number | undefined;
 let hideTimerId: number | undefined;
@@ -45,7 +45,7 @@ let shownAt = 0;
 /** Time hover began, or undefined when not paused. */
 let pauseStart: number | undefined;
 
-// Functions ---------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 function show(text: string, options: ToastOptions = {}): void {
 	// Safety net in case `text` was provided by an undefined translation of the `any` type:
@@ -110,7 +110,7 @@ function showPleaseWaitForTask(): void {
 	show(translations.please_wait, { durationMultiplier: 0.5 });
 }
 
-// Exports -----------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	show,

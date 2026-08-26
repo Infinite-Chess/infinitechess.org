@@ -14,7 +14,7 @@ import componentTranslationLoader, {
 	LanguageOption,
 } from '../config/componentTranslationLoader.js';
 
-// Types ------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The locals every SSR'd page template requires to render. */
 type BaseRenderContext = {
@@ -27,7 +27,7 @@ type BaseRenderContext = {
 	languageOptions: LanguageOption[];
 };
 
-// Context Builders -------------------------------------------------------------------------------
+// Context Builders ------------------------------------------------------------
 
 /** Returns the locals every SSR'd page template requires to render. */
 function getBaseRenderContext(req: Request): BaseRenderContext {
@@ -80,6 +80,6 @@ function getErrorPageContext(
 	};
 }
 
-// Exports ------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getBaseRenderContext, getErrorPageContext };

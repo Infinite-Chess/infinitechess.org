@@ -12,7 +12,7 @@
 
 import { createLFO, LFOConfig } from './LFOFactory';
 
-// Types -----------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** A single sound layer within a soundscape. */
 export interface LayerConfig {
@@ -61,7 +61,7 @@ interface ModulatedParamConfig {
 	lfo?: LFOConfig;
 }
 
-// SoundLayer Class ----------------------------------------------------------------
+// SoundLayer Class ------------------------------------------------------------
 
 /**
  * Represents the complete audio graph for a single layer in a soundscape.

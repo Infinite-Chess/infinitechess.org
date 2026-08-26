@@ -10,7 +10,7 @@
 
 import db from './database.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Creates the tables in our database if they do not exist. */
 function generate(): void {
@@ -318,6 +318,6 @@ function clear(): void {
 	db.run('PRAGMA foreign_keys = ON');
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { generate, clear };

@@ -25,7 +25,7 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../../board/rendering/renderable.js';
 
-// Constants ---------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The size of arrow triangles as a fraction of the arrow indicator half-width. */
 export const ARROW_SIZE_RATIO = 0.3;
@@ -52,7 +52,7 @@ const ATTRIB_INFO_ARROWS: AttributeInfoInstanced = {
 	],
 };
 
-// Functions ---------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Renders all the arrow indicators for this frame. */
 export function render(): void {
@@ -222,7 +222,7 @@ function getVertexDataOfArrow(halfWorldWidth: number): number[] {
 	];
 }
 
-// Exports -----------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Frame lifecycle

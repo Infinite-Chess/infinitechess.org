@@ -37,7 +37,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 
 import { loadEngineWasm, getPromotionAbbr } from '../../game/chess/engines/enginewasm.js';
 
-// Types ------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Messages accepted by this worker. */
 export type AnalysisCommand =
@@ -163,7 +163,7 @@ interface AnalysisWasmEngine extends WasmEngine {
 	) => AnalysisInfo | null;
 }
 
-// Constants --------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Wall-clock budget per engine call; 0 = unbounded (run to maxDepth in ONE call). The page
@@ -171,7 +171,7 @@ interface AnalysisWasmEngine extends WasmEngine {
  */
 const SLICE_MS = 0;
 
-// State ------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 let wasm: AnalysisWasmModule;
 /** Whether {@link wasm} has finished loading and is safe to call into. */
@@ -202,7 +202,7 @@ let goOptions: GoOptions = { multiPv: 1, maxDepth: 13, requestId: 0 };
  */
 let reachedDepth = 0;
 
-// Init -----------------------------------------------------------------------------
+// Init ------------------------------------------------------------------------
 
 /**
  * Loads the wasm module from the served glue, sizes its hash, brings up the Lazy SMP
@@ -243,7 +243,7 @@ async function init(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promise<voi
 	}
 }
 
-// Message Handling ---------------------------------------------------------------
+// Message Handling ------------------------------------------------------------
 
 self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 	const msg = e.data;
@@ -289,7 +289,7 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 	}
 };
 
-// Search loop ------------------------------------------------------------------------
+// Search loop -----------------------------------------------------------------
 
 /**
  * The ongoing analysis loop: each engine call runs unbounded ({@link SLICE_MS} = 0) toward the
@@ -387,7 +387,7 @@ function yieldToMessageQueue(): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-// One-shot queries ---------------------------------------------------------------------
+// One-shot queries ------------------------------------------------------------
 
 /**
  * Answers a one-shot `legalmoves` query: enumerates the legal moves for {@link icn}

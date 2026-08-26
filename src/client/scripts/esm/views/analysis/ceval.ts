@@ -27,7 +27,7 @@ import analysisworker from './analysisworker.js';
 import analysisenginebounds from './analysisenginebounds.js';
 import { maxEngineThreads, THREAD_CAP } from '../../game/chess/engines/enginewasm.js';
 
-// Types ------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Engine settings, persisted to localStorage. */
 export interface CevalSettings {
@@ -93,7 +93,7 @@ interface RefreshAnalysisOptions {
 	restartSearch?: boolean;
 }
 
-// Constants ----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The engine's maximum search depth — the ceiling that "go deeper" runs toward. */
 const MAX_DEPTH = 64;
@@ -128,7 +128,7 @@ const DEFAULT_SETTINGS: CevalSettings = {
 	threads: DEFAULT_THREADS,
 };
 
-// State ----------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * The persistent search worker, kept alive across position switches so its
@@ -196,7 +196,7 @@ const statusListeners = new Set<(status: CevalStatus) => void>();
 const legalMovesListeners = new Set<(update: CevalLegalMovesUpdate) => void>();
 const queuedLegalMovesRequests: { requestId: number; icn: string }[] = [];
 
-// Settings persistence ----------------------------------------------------------------
+// Settings persistence --------------------------------------------------------
 
 function loadSettings(): CevalSettings {
 	const loaded: CevalSettings = {
@@ -215,7 +215,7 @@ function persistSettings(): void {
 	LocalStorage.saveItem(STORAGE_KEY, settings, STORAGE_EXPIRY_MS);
 }
 
-// Winning chances (adjusted for infinitechess players) ------------------------------------
+// Winning chances (adjusted for infinitechess players) ------------------------
 
 /**
  * Maps a centipawn score to winning chances in [-1, 1], from that score's POV.
@@ -247,7 +247,7 @@ function lineWinningChances(cp: number | undefined, mate: number | undefined): n
 	return mate !== undefined ? mateWinningChances(mate) : cpWinningChances(cp ?? 0);
 }
 
-// Worker lifecycle -----------------------------------------------------------------------
+// Worker lifecycle ------------------------------------------------------------
 
 /** Spawns (or respawns) the search worker with the current settings and Lazy SMP thread count. */
 function spawnWorker(): void {
@@ -275,7 +275,7 @@ function interruptSearch(): void {
 	if (search) analysisworker.interrupt(search);
 }
 
-// Legal-moves helper worker --------------------------------------------------------------
+// Legal-moves helper worker ---------------------------------------------------
 
 /** Lazily spins up the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
 function ensureLegalWorker(): void {
@@ -301,7 +301,7 @@ function terminateLegalWorker(): void {
 	legal = undefined;
 }
 
-// Fault recovery -------------------------------------------------------------------------
+// Fault recovery --------------------------------------------------------------
 
 /**
  * Handles the search worker dying. An engine that never loaded switches analysis off — a respawn
@@ -428,7 +428,7 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 	}
 }
 
-// Position tracking --------------------------------------------------------------------
+// Position tracking -----------------------------------------------------------
 
 /**
  * The compact ICN of the position under analysis, carrying move history so the engine can
@@ -628,7 +628,7 @@ function restartWorkerForSearch(): void {
 	spawnWorker();
 }
 
-// Normalization & emission ----------------------------------------------------------------
+// Normalization & emission ----------------------------------------------------
 
 function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, terminal = false): void {
 	if (!analyzed) return;
@@ -792,7 +792,7 @@ function notifyStatus(): void {
 	for (const listener of statusListeners) listener(status);
 }
 
-// Public API --------------------------------------------------------------------------------
+// Public API ------------------------------------------------------------------
 
 /** Starts the engine and wires it to the board. Must be called before {@link setEnabled}. */
 function init(): void {

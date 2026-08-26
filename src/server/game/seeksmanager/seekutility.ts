@@ -12,7 +12,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { BaseSeek, OutSeek } from '../../../shared/transport/domain.js';
 import type { SeekVariant, OutSeekVariant } from '../../../shared/chess/util/variantselection.js';
 
-// Type Definitions ------------------------------------------------------------------------------
+// Type Definitions ------------------------------------------------------------
 
 /** A lobby game seek, WITH the owner's sensitive information. */
 export interface AuthSeek extends BaseSeek {
@@ -21,7 +21,7 @@ export interface AuthSeek extends BaseSeek {
 	variant: SeekVariant;
 }
 
-// Functions -------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Projects a seek into the form broadcast to lobby viewers, dropping the owner's
@@ -46,7 +46,7 @@ function makeSafe(seek: AuthSeek): OutSeek {
 	};
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	makeSafe,

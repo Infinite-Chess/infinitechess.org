@@ -32,7 +32,7 @@ import liveGameValues from './liveGameValues.js';
 import gamestatebuilder from './gamestatebuilder.js';
 import ratingcalculation from '../../utility/ratingcalculation.js';
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The cushion time, after a non-server-validated game concludes, before its result is locked in
@@ -47,7 +47,7 @@ const FINALIZE_CUSHION_MS = 1000 * 8;
  */
 const BOTH_DISCONNECTED_TIMEOUT_MS = 1000 * 60 * 5; // 5 minutes
 
-// 1. Conclusion ------------------------------------------------------------------------------
+// 1. Conclusion ---------------------------------------------------------------
 
 /**
  * Sets the game conclusion, broadcasts it to all clients, frees -> finalizes -> evicts game.
@@ -110,7 +110,7 @@ function consoleLogGameOver(servergame: ServerGame): void {
 	console.log(`Game ${servergame.match.id} over & logged. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.gameConclusion)}. Moves: ${servergame.moves.length}.`); // prettier-ignore
 }
 
-// 2. Freeing ---------------------------------------------------------------------------------
+// 2. Freeing ------------------------------------------------------------------
 
 /**
  * The game has concluded (but not yet finalized): Release both players to join a new game,
@@ -193,7 +193,7 @@ function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingRes
 	return ratingResults;
 }
 
-// 3. Finalizing ------------------------------------------------------------------------------
+// 3. Finalizing ---------------------------------------------------------------
 
 /**
  * Finalizes a concluded game: locks in its result permanently. Afterward, cheat reports are
@@ -222,7 +222,7 @@ function cancelFinalizeTimer(match: MatchInfo): void {
 	clearTimeout(match.finalizeTimeoutID);
 }
 
-// 4. Eviction --------------------------------------------------------------------------------
+// 4. Eviction -----------------------------------------------------------------
 
 /**
  * Evicts a concluded, lingering game from memory once both players have left. Finalizes the
@@ -260,7 +260,7 @@ function evictIfBothLeft(servergame: ServerGame): void {
 	if (bothLeft) evict(servergame);
 }
 
-// Both-Disconnected Abandonment --------------------------------------------------------------
+// Both-Disconnected Abandonment -----------------------------------------------
 
 /**
  * Starts the both-disconnected timer if BOTH players are currently disconnected and it
@@ -310,7 +310,7 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// 1. Conclusion

@@ -23,7 +23,7 @@ import blacklistManager from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';
 import pendingRegistrationManager from '../database/pendingRegistrationManager.js';
 
-// Constants -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Name of the httpOnly cookie that holds a pending registration's `claim_token`,
@@ -32,7 +32,7 @@ import pendingRegistrationManager from '../database/pendingRegistrationManager.j
  */
 const PENDING_REGISTRATION_COOKIE_NAME = 'pending_registration';
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * `POST /api/register` — validates the submission, stages a pending registration,
@@ -388,7 +388,7 @@ function isUsernameAvailable(req: Request, res: Response): void {
 	res.json({ available: true });
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	createNewMember,

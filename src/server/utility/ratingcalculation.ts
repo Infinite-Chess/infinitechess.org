@@ -8,7 +8,7 @@
 import timeutil from '../../shared/util/timeutil.js';
 import { PlayerGroup, Player, players as p } from '../../shared/util/typeutil.js';
 
-// Types -----------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Type containing all relevant rating calculation quantities for a specific player */
 type PlayerRatingData = {
@@ -24,7 +24,7 @@ type PlayerRatingData = {
 /** A dictionary type with Players as keys, containing PlayerRatingData for each player */
 export type RatingData = PlayerGroup<PlayerRatingData>;
 
-// Constants -------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Default elo for a player not contained in a leaderboard. We use the same default across the leaderboards, to avoid confusion. */
 const DEFAULT_LEADERBOARD_ELO = 1500.0;
@@ -61,7 +61,7 @@ const RATING_PERIOD_DURATION = 1000 * 60 * 60 * 24 * 15; // 15 days
 const RD_UPDATE_FREQUENCY = 1000 * 60 * 60 * 24; // 24 hours
 // const RD_UPDATE_FREQUENCY = 1000 * 30; // 30s for dev testing
 
-// Functions -------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Derives whether a stored rating deviation is low enough for the rating to be
@@ -319,7 +319,7 @@ function computeChanges(ratingdata: RatingData, victor: Player | null): RatingDa
 // 	}
 // }, SIMULATION_DURATION_MS);
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

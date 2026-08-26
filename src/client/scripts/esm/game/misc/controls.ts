@@ -66,7 +66,7 @@ const scaleVelCap_Scroll = 2.5;
 /** Dampener multiplied to the wheel delta before applying it to the scale velocity. */
 const wheelMultiplier = 0.015; // Default: 0.015
 
-// Panning & Zooming Controls WASD/Space/Shift/Wheel ------------------------------------------------------
+// Panning & Zooming Controls WASD/Space/Shift/Wheel ---------------------------
 
 // Called from game.updateBoard()
 function updateNavControls(): void {
@@ -233,7 +233,7 @@ function deccelerateScaleVel(scaleVel: number): number {
 	return scaleVel;
 }
 
-// Toggles ---------------------------------------------------------------------------------
+// Toggles ---------------------------------------------------------------------
 
 /** Debug toggles that are not only for in a game, but outside. */
 function testOutGameToggles(): void {
@@ -261,7 +261,7 @@ function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
 	guimoveslist.update();
 }
 
-// Exports ---------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	updateNavControls,

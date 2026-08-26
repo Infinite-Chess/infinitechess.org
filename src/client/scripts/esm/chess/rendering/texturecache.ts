@@ -39,7 +39,7 @@ export interface TextureCache {
 	getTexture(type: number): WebGLTexture;
 }
 
-// Factory ----------------------------------------------------------
+// Factory ---------------------------------------------------------------------
 
 /**
  * Creates one independent piece-texture cache.

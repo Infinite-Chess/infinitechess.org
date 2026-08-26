@@ -59,7 +59,7 @@ type RayIterationInfo = {
 	iterationCount: number;
 };
 
-// Constants -----------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The attribute info for all legal move highlight instanced rendering models. */
 const ATTRIB_INFO: AttributeInfoInstanced = {
@@ -101,7 +101,7 @@ const multiplier_perspective = 2;
 
 const ZERO: BigDecimal = bd.fromBigInt(0n);
 
-// Variables -----------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /**
  * The current view box to generate visible legal moves inside.
@@ -126,7 +126,7 @@ let boundingBoxOfRenderRange: BoundingBox | undefined;
  */
 let model_Offset: Coords = [0n, 0n];
 
-// Updating Render Range and Offset --------------------------------------------------
+// Updating Render Range and Offset --------------------------------------------
 
 /** Returns {@link model_Offset} */
 function getOffset(): Coords {
@@ -242,7 +242,7 @@ function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 	return [newWidth, newHeight];
 }
 
-// Generating Legal Move Buffer Models ----------------------------------------------------------------------------------
+// Generating Legal Move Buffer Models -----------------------------------------
 
 /**
  * Generates the renderable instanced rendering buffer models for the
@@ -338,7 +338,7 @@ function generateModelForSlideHighlightOutlines(
 	);
 }
 
-// Individual Moves ------------------------------------------------------------------------------------------------------
+// Individual Moves ------------------------------------------------------------
 
 /**
  * Calculates instanceposition data of legal individual (jumping) moves and appends it to the provided instance data arrays.
@@ -365,7 +365,7 @@ function pushIndividual(
 	}
 }
 
-// Sliding Moves ------------------------------------------------------------------------------------------------------
+// Sliding Moves ---------------------------------------------------------------
 
 /**
  * Calculates instanceposition data of legal sliding moves and appends it to the running instance data arrays.
@@ -672,7 +672,7 @@ function getRayIterationInfo(
 	return { startCoords, startCoordsOffset, iterationCount };
 }
 
-// Rays --------------------------------------------------------------------------------------
+// Rays ------------------------------------------------------------------------
 
 /**
  * Generates a model for rendering all rays in the provided list.
@@ -719,7 +719,7 @@ function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
 	);
 }
 
-// Rendering ----------------------------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /**
  * [DEBUG] Renders an outline of the box containing all legal move highlights.
@@ -745,7 +745,7 @@ function renderOutlineofFloatingBox(box: BoundingBoxBD): void {
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
-// Exports ------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Updating Render Range and Offset

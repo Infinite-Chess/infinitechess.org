@@ -19,11 +19,11 @@ import componentTranslationLoader from '../src/server/config/componentTranslatio
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Constants -----------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const SCRIPT_OUTPUT_FILE = path.join(__dirname, '../src/shared/types/script-translations.d.ts');
 
-// Functions -----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Generates the ScriptTranslations declaration file for components with [script] sections. */
 function generateScriptTranslations(): void {

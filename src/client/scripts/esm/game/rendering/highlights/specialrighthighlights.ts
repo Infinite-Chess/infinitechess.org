@@ -23,7 +23,7 @@ import squarerendering from './squarerendering.js';
 import { RenderableInstanced } from '../../../webgl/Renderable.js';
 import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
 
-// Variables -------------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The color of the special rights indicator. */
 const SPECIAL_RIGHTS_COLOR: Color = [0, 1, 0.5, 0.3];
@@ -34,7 +34,7 @@ const ENPASSANT_COLOR: Color = [0.5, 0, 1, 0.3];
 let enabled = false;
 let model: RenderableInstanced | undefined;
 
-// Events ----------------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-loaded', () => {
 	regenModel();
@@ -47,7 +47,7 @@ GameBus.addEventListener('view-move', () => {
 	regenModel();
 });
 
-// Functions -------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 function enable(): void {
 	enabled = true;
@@ -117,7 +117,7 @@ function renderEnPassant(): void {
 		.render(undefined, undefined, { u_size });
 }
 
-// Exports -----------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	enable,

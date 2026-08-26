@@ -23,7 +23,7 @@ import validatorama from '../../../../../util/validatorama';
 import guiloadposition from './guiloadposition';
 import guiloadpositionmodal from './guiloadpositionmodal';
 
-// Types -------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Object to keep track of listener for position button */
 type ButtonHandlerPair = {
@@ -37,7 +37,7 @@ type UnifiedSave = { storage_type: StorageType } & EditorAbridgedSaveState;
 /** Cloud saves list returned by a mutation, used to skip a follow-up GET */
 type PreloadedCloudSaves = CloudSaveListRecord[] | undefined;
 
-// Elements ----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 /** The outer container for the saved positions section. */
 const element_savedPositions = document.querySelector('.saved-positions')!;
@@ -51,7 +51,7 @@ const element_noSavesMessage = document.getElementById('saved-position-list-empt
 /** Spinny pawn loading animation shown during in-flight API requests */
 const element_loadingPawn = document.getElementById('load-position-loading-pawn')!;
 
-// Variables ----------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** Object to keep track of all position button listeners */
 const registeredButtonListeners = new Map<HTMLButtonElement, ButtonHandlerPair>();
@@ -65,14 +65,14 @@ let load_counter = 0;
 /** Count of in-flight API requests — spinner is visible whenever this is > 0 */
 let activeRequestCount = 0;
 
-// Load Counter ----------------------------------------------------------
+// Load Counter ----------------------------------------------------------------
 
 GameBus.addEventListener('game-loaded', () => {
 	load_counter++;
 	// console.log('Incremented positionLoadEpoch');
 });
 
-// Loading animation -----------------------------------------------
+// Loading animation -----------------------------------------------------------
 
 /**
  * Runs an async API call while showing the loading spinner, hiding it when done.
@@ -89,7 +89,7 @@ async function withRequest<T>(fn: () => Promise<T>): Promise<T> {
 	}
 }
 
-// Utilities----------------------------------------------------------------
+// Utilities -------------------------------------------------------------------
 
 function registerButtonClick(button: HTMLButtonElement, handler: (e: MouseEvent) => void): void {
 	button.addEventListener('click', handler);
@@ -108,7 +108,7 @@ function clearSavedPositionList(): void {
 	element_savedPositionsToLoad.replaceChildren();
 }
 
-// Operations ---------------------------------------------------------------
+// Operations ------------------------------------------------------------------
 
 /** Performs the actual load operation for a saved position, bypassing the modal. */
 async function performLoad(position_name: string, storage_type: StorageType): Promise<void> {
@@ -167,7 +167,7 @@ async function performDelete(position_name: string, storage_type: StorageType): 
 	updateSavedPositionListUI(preloadedCloudSaves);
 }
 
-// Row generation ---------------------------------------------------------------
+// Row generation --------------------------------------------------------------
 
 /**
  * Update the saved positions list.
@@ -345,7 +345,7 @@ function createButtonElement(svgHref: string): HTMLButtonElement {
 	return button;
 }
 
-// Exports -----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	registerButtonClick,

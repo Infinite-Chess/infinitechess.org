@@ -24,7 +24,7 @@ import frametracker from './frametracker.js';
 import instancedshapes from './instancedshapes.js';
 import { AttributeInfoInstanced, RenderableInstanced } from '../../webgl/Renderable.js';
 
-// Types --------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Piece Mesh Instance Data.
@@ -53,7 +53,7 @@ export interface Mesh {
 	types: TypeGroup<MeshData>;
 }
 
-// Variables ----------------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /**
  * A tiny z offset, to prevent the pieces from tearing with highlights while in perspective.
@@ -89,7 +89,7 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
 	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }],
 };
 
-// Generating Meshes ------------------------------------------------------------------------
+// Generating Meshes -----------------------------------------------------------
 
 /**
  * Regenerates every single piece mesh in the gamefile.
@@ -279,7 +279,7 @@ function castBigIntArrayToFloat32(instanceData: bigint[]): Float32Array {
 	return result;
 }
 
-// Shifting Meshes ------------------------------------------------------------------------
+// Shifting Meshes -------------------------------------------------------------
 
 /**
  * Shifts the instance data of each piece mesh in the game to require less severe
@@ -329,7 +329,7 @@ function shiftModel(meshData: MeshData, diffXOffset: bigint, diffYOffset: bigint
 	meshData.model.updateBufferIndices_InstanceBuffer(0, instanceData.length); // Update every index
 }
 
-// Rotating Models ------------------------------------------------------------------------------
+// Rotating Models -------------------------------------------------------------
 
 /**
  * Rotates each piece model (except voids) by updating its vertex data of
@@ -356,7 +356,7 @@ function rotateAll(mesh: Mesh, newInverted: boolean): void {
 	}
 }
 
-// Modifying Mesh Data --------------------------------------------------------------------------
+// Modifying Mesh Data ---------------------------------------------------------
 
 /**
  * Overwrites the instance data of the specified piece within its
@@ -404,7 +404,7 @@ function deletebufferdata(mesh: Mesh, piece: Piece): void {
 	meshData.model.updateBufferIndices_InstanceBuffer(i, STRIDE_PER_PIECE); // Update only the indices the piece was at
 }
 
-// Rendering ----------------------------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /**
  * Renders ever piece type mesh of the game, EXCLUDING voids,
@@ -450,7 +450,7 @@ function isOffsetOutOfRangeOfRegenRange(ctx: RenderContext, offset: Coords): boo
 	return chebyshevDist > REGEN_RANGE;
 }
 
-// Exports --------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	ATTRIBUTE_INFO,

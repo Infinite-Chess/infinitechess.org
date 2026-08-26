@@ -11,7 +11,7 @@ import metadatautil from '../../../../shared/chess/util/metadatautil.js';
 
 import docutil from './docutil.js';
 
-// Types ----------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Such an object contains all display information for a given user
@@ -61,12 +61,12 @@ export type RatingItem = {
 	change?: number;
 };
 
-// Variables ----------------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 const profileSVGSource = '<svg class="svg-profile"><use href="#svg-profile"></use></svg>';
 const engineSVGSource = '<svg class="svg-engine"><use href="#svg-engine"></use></svg>';
 
-// General functions ----------------------------------------------------------------------------------------
+// General functions -----------------------------------------------------------
 
 /**
  * Creates an HTML Div Element containing all information to be shown about a UsernameContainer
@@ -277,7 +277,7 @@ function updateUsernameContainerRatingTextContent(usernamecontainer: UsernameCon
 	}
 }
 
-// Animating Elo Changes ----------------------------------------------------------------------------------------
+// Animating Elo Changes -------------------------------------------------------
 
 /**
  * Returns a function that formats an elo value into a string for going into the `.elo` element's textContent.
@@ -389,7 +389,7 @@ function animateNumber(
 	};
 }
 
-// Exports ----------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	createUsernameContainer,

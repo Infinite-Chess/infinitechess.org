@@ -27,7 +27,7 @@ import requestContext from '../utility/requestContext.js';
 import reqTranslations from '../config/reqTranslations.js';
 import identityResolver from '../auth/identityResolver.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Gates and completes every websocket upgrade request: validation, metadata, listeners. */
 function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
@@ -203,6 +203,6 @@ function onerror(error: Error): void {
 	logEvents.addAndPrint(errText, 'errLog');
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { onConnectionRequest };

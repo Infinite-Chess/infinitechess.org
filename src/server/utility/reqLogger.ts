@@ -11,7 +11,7 @@ import type { Request, Response } from 'express';
 import ip from './ip.js';
 import logEvents from './logEvents.js';
 
-// Functions --------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Logs one incoming request or websocket upgrade into `reqLog`. */
 function incoming(req: IncomingMessage): void {
@@ -39,6 +39,6 @@ function middleware(req: Request, _res: Response, next: () => void): void {
 	next(); // Continue to next middleware
 }
 
-// Exports ------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { incoming, middleware };

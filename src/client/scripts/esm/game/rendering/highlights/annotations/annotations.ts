@@ -61,7 +61,7 @@ const annotes_plies: Annotes[] = [];
 /** The main list of annotations, when lingering annotations is ON. */
 let annotes_linger: Annotes = getEmptyAnnotes();
 
-// Events ---------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('piece-selected', () => {
 	// Erase all the annotations of the current ply, if lingering annotations is OFF.
@@ -200,7 +200,7 @@ function resetState(): void {
 	drawrays.clearPresetOverrides();
 }
 
-// Rendering ----------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /** Renders the annotations that should be rendered below the pieces */
 function render_belowPieces(): void {
@@ -214,7 +214,7 @@ function render_abovePieces(): void {
 	drawarrows.render(annotes.Arrows);
 }
 
-// Exports ----------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getSquares,

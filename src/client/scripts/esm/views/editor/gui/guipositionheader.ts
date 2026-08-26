@@ -6,7 +6,7 @@
  * in the board editor GUI.
  */
 
-// Elements ---------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const element_activePositionNameDisplay = document.getElementById('active-position-name-display')!;
 const element_dirtyIndicator = document.getElementById('position-dirty-indicator')!;
@@ -18,7 +18,7 @@ const element_selectionActions = document.getElementsByClassName(
 /** These selection action buttons are always enabled. */
 const alwaysActiveSelectionActions = [document.getElementById('select-all')!];
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Updates the displayed active position name. */
 function updateActivePositionElement(positionname: string | undefined): void {
@@ -57,7 +57,7 @@ function onClearSelection(): void {
 	});
 }
 
-// Exports ----------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	updateActivePositionElement,

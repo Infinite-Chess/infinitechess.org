@@ -22,7 +22,7 @@ import typeutil, { players } from '../../../../../shared/util/typeutil.js';
 
 import preferences from '../../components/header/preferences.js';
 
-// Variables -----------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** Stores fetched SVG elements, keyed by their unique svg id (e.g., 'pawn-white'). These ids are on the svg elements themselves. */
 const cachedPieceSVGs: { [pieceType: string]: SVGElement } = {};
@@ -33,7 +33,7 @@ const processingCache: { [key: string]: Promise<void> } = {};
 // Initialization: Cache classical pieces on load. EVERY SINGLE GAME USES THESE.
 fetchLocation('classical');
 
-// Core functionality --------------------------------------------------------
+// Core functionality ----------------------------------------------------------
 
 /**
  * Fetches required SVG files if not cached, then returns the SVG elements for the requested piece types.
@@ -153,7 +153,7 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 	return svgElement;
 }
 
-// Helper functions ---------------------------------------------------------
+// Helper functions ------------------------------------------------------------
 
 /**
  * Identifies the unique SVG file locations (e.g., "classical", "fairy/rose") that need to be fetched.
@@ -266,7 +266,7 @@ function showCache(): void {
 	}
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getSVGElements,

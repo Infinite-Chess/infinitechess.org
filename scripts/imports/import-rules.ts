@@ -135,7 +135,7 @@ import esbuild, { Metafile } from 'esbuild';
 
 import { ESMEntryPoints } from '../../build/client';
 
-// Types -------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 interface Rule {
 	/** Restricted module's short path. Trailing "/" = directory prefix; else exact file. */
@@ -154,7 +154,7 @@ interface Layer {
 	audience: string;
 }
 
-// Constants ---------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const SRC_PREFIX = 'src/';
 
@@ -197,7 +197,7 @@ const RULES: Rule[] = [
 /** Only script entry points — the bundled CSS entries are skipped. */
 const ENTRIES = ESMEntryPoints.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
 
-// Helper Functions --------------------------------------------------------
+// Helper Functions ------------------------------------------------------------
 
 /** Trims the noisy common prefix so paths read cleanly. */
 function short(file: string): string {
@@ -237,7 +237,7 @@ function cap(edges: string[]): string[] {
 	return [...edges.slice(0, MAX_LISTED), `- (+${edges.length - MAX_LISTED} more)`];
 }
 
-// Reachability Check ------------------------------------------------------
+// Reachability Check ----------------------------------------------------------
 
 /** An entry point's full transitive graph: every module it pulls in, and what each imports. */
 async function bundleGraph(entry: string): Promise<Metafile['inputs']> {
@@ -349,7 +349,7 @@ async function checkReachability(): Promise<{ lines: string[]; problems: number 
 	return { lines, problems };
 }
 
-// Ladder Check ------------------------------------------------------------
+// Ladder Check ----------------------------------------------------------------
 
 /** Every .ts/.js file under a directory, as cwd-relative forward-slash paths. */
 function walkScripts(dir: string, out: string[] = []): string[] {
@@ -424,7 +424,7 @@ function checkLadder(): { lines: string[]; problems: number } {
 	return { lines, problems };
 }
 
-// Report ------------------------------------------------------------------
+// Report ----------------------------------------------------------------------
 
 const reachability = await checkReachability();
 const ladder = checkLadder();

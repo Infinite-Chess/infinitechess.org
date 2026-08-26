@@ -11,7 +11,7 @@ import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
 import accountValidation from './accountValidation.js';
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Generate an account only from the provided username, email, and password.
@@ -35,6 +35,6 @@ async function generateAccount({
 	return user_id;
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { generateAccount };

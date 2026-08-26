@@ -31,7 +31,7 @@ import movesequence from '../../game/chess/movesequence.js';
 import guinavigation from './gui/guinavigation.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
-// Types ----------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * An edit that also keeps track of the state of certain position-dependent game rules AFTER the edit is made.
@@ -44,7 +44,7 @@ interface EditWithRules extends Edit {
 	castling?: boolean;
 }
 
-// Constants ------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The maximum allowed summed changes in the edit history before oldest edits are pruned.
@@ -56,7 +56,7 @@ interface EditWithRules extends Edit {
  */
 const EDIT_HISTORY_MAX_CHANGES = 8_000_000;
 
-// State ----------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The list of all edits the user has made. */
 let edits: Array<EditWithRules> | undefined;
@@ -67,7 +67,7 @@ let initial_pawnDoublePush: boolean | undefined = true;
 /** The value of the castling game rule in the initial zeroth edit */
 let initial_castling: boolean | undefined = true;
 
-// Initialization -------------------------------------------------------------
+// Initialization --------------------------------------------------------------
 
 /** Initializes the edit history state when the board editor is opened. */
 function init(pawnDoublePush: boolean | undefined, castling: boolean | undefined): void {
@@ -84,7 +84,7 @@ function reset(): void {
 	indexOfThisEdit = undefined;
 }
 
-// Running Edits --------------------------------------------------------------
+// Running Edits ---------------------------------------------------------------
 
 /** Runs both logical and graphical changes. */
 function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = true): void {
@@ -203,7 +203,7 @@ function canRedo(): boolean {
 	return indexOfThisEdit !== undefined && edits !== undefined && indexOfThisEdit < edits.length;
 }
 
-// Queuing Edits --------------------------------------------------------------
+// Queuing Edits ---------------------------------------------------------------
 
 /** Queues the deletion of a piece, including its special rights, if present, to the edit changes. */
 function queueRemovePiece(gamefile: GameFile, edit: Edit, piece: Piece): void {
@@ -234,7 +234,7 @@ function queueSpecialRights(gamefile: GameFile, edit: Edit, coords: Coords, add:
 	state.createSpecialRightsState(edit, coordsKey, current, add);
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Initialization

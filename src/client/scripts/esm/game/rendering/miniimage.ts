@@ -39,7 +39,7 @@ import boardgeometry from '../../board/rendering/boardgeometry.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 import snapping, { ENTITY_WIDTH_VPIXELS } from './highlights/snapping.js';
 
-// Variables --------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
 const MAX_ANIM_DIST_VPIXELS = bd.fromBigInt(2300n);
@@ -47,14 +47,14 @@ const MAX_ANIM_DIST_VPIXELS = bd.fromBigInt(2300n);
 /** True if we're disabled and not rendering mini images, such as when there's too many pieces. */
 let disabled: boolean = false; // Disabled when there's too many pieces
 
-// Events ---------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-unloaded', () => {
 	// Re-enable them if the previous game turned them off due to too many pieces.
 	enable();
 });
 
-// Toggling --------------------------------------------------------------
+// Toggling --------------------------------------------------------------------
 
 function isDisabled(): boolean {
 	return disabled;
@@ -76,7 +76,7 @@ function toggle(): void {
 	else toast.show('Toggled on icon rendering.');
 }
 
-// Updating --------------------------------------------------------------------------
+// Updating --------------------------------------------------------------------
 
 /** Iterate over every renderable piece (static and animated) and invoke the callback with its board coords and type. */
 function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => void): void {
@@ -320,7 +320,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	return piecesToRender;
 }
 
-// Rendering ---------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 function render(): void {
 	if (!boardpos.areZoomedOut()) return;
@@ -339,7 +339,7 @@ function render(): void {
 	);
 }
 
-// Exports ---------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	isDisabled,

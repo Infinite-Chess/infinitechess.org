@@ -13,7 +13,7 @@ import { serverFetch } from '../../util/serverFetch.js';
 import './settings.js';
 import '../../util/tooltips.js'; // Should be imported on EVERY page
 
-// Elements ---------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const button = document.querySelector<HTMLButtonElement>('.header-hamburger')!;
 const panel = document.getElementById('header-mobile-panel')!;
@@ -24,7 +24,7 @@ const dimHeader = document.querySelector<HTMLElement>('.header-mobile-dim-header
 const home = document.querySelector<HTMLElement>('.header-home')!;
 const aura = document.querySelector<SVGElement>('.header-logo-aura')!;
 
-// Constants --------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Settings for the logo aura pulse animation triggered on hover. */
 const LOGO_PULSE = {
@@ -38,7 +38,7 @@ const LOGO_PULSE = {
 
 const LOGO_PULSE_START_PHASE = Math.acos(1 - 2 * (1 - LOGO_PULSE.MIN_SCALE) / (LOGO_PULSE.MAX_SCALE - LOGO_PULSE.MIN_SCALE)) / (2 * Math.PI); // prettier-ignore
 
-// Functions ----------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 function initHamburger(): void {
 	const setOpen = (open: boolean): void => {

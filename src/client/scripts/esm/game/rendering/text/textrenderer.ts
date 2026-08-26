@@ -21,7 +21,7 @@ import {
 	ATLAS_DESCENDER_FRACTION,
 } from './glyphatlas.js';
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Computes the total world-space width of `text` when rendered at the given `size`.
@@ -118,6 +118,6 @@ function render(
 	createRenderable(data, 2, 'TRIANGLES', 'colorTexture', true, getAtlasTexture()).render();
 }
 
-// Exports -------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getTextWidth, getTextBounds, render };

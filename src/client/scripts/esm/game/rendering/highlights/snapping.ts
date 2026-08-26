@@ -41,7 +41,7 @@ import { Renderable } from '../../../webgl/Renderable.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 import selectedpiecehighlightline from './selectedpiecehighlightline.js';
 
-// Variables --------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /**
  * Width of all entity icons when zoomed out, in virtual pixels.
@@ -106,7 +106,7 @@ type Intersection = {
 	line2: Line;
 };
 
-// Entity Hovering ---------------------------------------------------------
+// Entity Hovering -------------------------------------------------------------
 
 /** Returns the width of entity icons when zoomed out, in world-space units. */
 export function getEntityWidthWorld(): number {
@@ -523,7 +523,7 @@ function getAnnoteSnapPoints(trimDecimals: boolean): BDCoords[] {
 	];
 }
 
-// Rendering --------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /**
  * Snapping is in charge of rendering either a glow dot on the snap point,
@@ -626,7 +626,7 @@ function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable
 	);
 }
 
-// Exports --------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getEntityWidthWorld,

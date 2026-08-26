@@ -15,11 +15,11 @@ import zodlogger from '../utility/zodlogger.js';
 import logEvents from '../utility/logEvents.js';
 import blacklistManager from '../database/blacklistManager.js';
 
-// Constants -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const validator = new MessageValidator();
 
-// Schemas ---------------------------------------------------------------------------
+// Schemas ---------------------------------------------------------------------
 
 /** The recipient list shape shared by bounce and complaint notifications. */
 type Recipients = z.infer<typeof RecipientsSchema>;
@@ -50,7 +50,7 @@ const SesNotificationSchema = z.discriminatedUnion('notificationType', [
 	}),
 ]);
 
-// Functions -------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * `POST /webhooks/ses` — handles AWS SNS notifications (bounces/complaints),
@@ -222,6 +222,6 @@ function blacklistRecipients(recipients: Recipients): void {
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { handle };

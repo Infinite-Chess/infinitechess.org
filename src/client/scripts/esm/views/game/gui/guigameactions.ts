@@ -29,7 +29,7 @@ import { GameBus } from '../../../board/GameBus.js';
 import { SocketBus } from '../../../socket/SocketBus.js';
 import socketintents from '../../../socket/socketintents.js';
 
-// Elements ----------------------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 // Action blocks. The live-only blocks are absent from the DOM when the game loaded concluded, or for spectators.
 const element_ActionsLive = document.querySelector('.actions-live');
@@ -51,7 +51,7 @@ const element_Rematch = document.getElementById('btn-rematch') as HTMLButtonElem
 // A link (SSR'd href), so it navigates natively and honors ctrl/cmd/middle-click.
 const element_Analysis = document.getElementById('btn-analysis') as HTMLAnchorElement;
 
-// Events ------------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 // Correct the SSR'd guess once the game loads, then swap to actions-over on conclusion.
 GameBus.addEventListener('game-loaded', () => {
@@ -70,7 +70,7 @@ SocketBus.addEventListener('intents', () => {
 	updateRematchButton();
 });
 
-// Block visibility ---------------------------------------------------------------------------
+// Block visibility ------------------------------------------------------------
 
 /**
  * Reveals the single action block matching the current game state. Called on
@@ -124,7 +124,7 @@ function updateResignAbortButtons(): void {
 	element_Abort.disabled = socketintents.isOutstanding('game', 'abort');
 }
 
-// Appearance grace period --------------------------------------------------------------------
+// Appearance grace period -----------------------------------------------------
 
 /**
  * How long a freshly-revealed block's buttons stay disabled, so
@@ -164,7 +164,7 @@ function armGracePeriod(block: Element): void {
 	);
 }
 
-// Two-click confirmation ---------------------------------------------------------------------
+// Two-click confirmation ------------------------------------------------------
 
 const CONFIRM_REVERT_MS = 3000;
 
@@ -201,7 +201,7 @@ function clearConfirmation(button: HTMLElement): void {
 	button.classList.remove('confirming');
 }
 
-// Button handlers ----------------------------------------------------------------------------
+// Button handlers -------------------------------------------------------------
 
 /** Extends a draw offer, if legal. */
 function callback_OfferDraw(): void {
@@ -230,7 +230,7 @@ function callback_Abort(): void {
 	});
 }
 
-// Rematch ------------------------------------------------------------------------------------
+// Rematch ---------------------------------------------------------------------
 
 /** Whether WE have extended a rematch offer this game (button disabled, waiting on opponent). */
 let weOfferedRematch = false;

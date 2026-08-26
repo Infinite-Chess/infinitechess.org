@@ -42,7 +42,7 @@ import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
-// Types ---------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Options for loading a game. */
 export interface LoadOptions extends GameConstructionOptions {
@@ -50,7 +50,7 @@ export interface LoadOptions extends GameConstructionOptions {
 	viewWhitePerspective: boolean;
 }
 
-// Variables ---------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The currently loaded game. */
 let loadedGamefile: GameFile | undefined;
@@ -72,7 +72,7 @@ let animateLastMoveTimeoutID: ReturnType<typeof setTimeout> | undefined;
  */
 const delayOfLatestMoveAnimationOnRejoinMs = 150;
 
-// Listeners ---------------------------------------------------------------
+// Listeners -------------------------------------------------------------------
 
 // Regenerate piece textures and rebuild the promotion UI whenever the theme changes.
 document.addEventListener('theme-change', () => {
@@ -91,7 +91,7 @@ document.addEventListener('theme-change', () => {
 	guipromotion.initUI(gamefile.gameRules.promotion?.pieces, uniquePlayers);
 });
 
-// Functions ---------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**  Returns the gamefile currently loaded */
 function getGamefile(): GameFile | undefined {

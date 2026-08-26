@@ -61,7 +61,7 @@ import guiboardcontrols from '../../../game/gui/guiboardcontrols';
 import gamesetuphandoff from '../../../handoffs/gamesetuphandoff.js';
 import clientmetadatautil from '../../../chess/clientmetadatautil';
 
-// Constants ----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * If a position with less pieces than this is pasted, the position dependent
@@ -73,7 +73,7 @@ const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
 /** Shown to the user when the browser denies clipboard access. */
 const CLIPBOARD_DENIED = 'Clipboard permission denied. This might be your browser.';
 
-// Actions ----------------------------------------------------------------------
+// Actions ---------------------------------------------------------------------
 
 /** Resets the board editor position to the Classical position. */
 async function reset(): Promise<void> {
@@ -191,7 +191,7 @@ async function startEngineGame(): Promise<void> {
 	window.location.assign('/');
 }
 
-// Helpers ----------------------------------------------------------------
+// Helpers ---------------------------------------------------------------------
 
 /**
  * Gets and validates the current board editor position.
@@ -393,7 +393,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	guiboardcontrols.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	reset,

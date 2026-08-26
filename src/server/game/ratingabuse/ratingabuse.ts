@@ -38,12 +38,12 @@ import playerGamesManager from '../../database/playerGamesManager.js';
 import ratingAbuseManager from '../../database/ratingAbuseManager.js';
 import refreshTokenManager from '../../database/refreshTokenManager.js';
 
-// Constants -------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** How many games played to measure a player's rating abuse probability at once. */
 const GAME_INTERVAL_TO_MEASURE = 5;
 
-// Measurement -----------------------------------------------------------------------------------
+// Measurement -----------------------------------------------------------------
 
 /** Monitor suspicion levels for all players who played a particular game in a particular leaderboard. */
 function measureAfterGame(servergame: ServerGame): void {
@@ -148,7 +148,7 @@ function consumeCheckInterval(
 	return { lastAlertedAt: rating_abuse_data.last_alerted_at ?? null };
 }
 
-// Evidence Gathering ----------------------------------------------------------------------------
+// Evidence Gathering ----------------------------------------------------------
 
 /** Joins the player's recent games against the `games` table, deriving each one's final clock. */
 function buildGameInfoList(
@@ -289,7 +289,7 @@ function deriveFinalClockOfPlayer(
 	)[player];
 }
 
-// Exports ---------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	measureAfterGame,

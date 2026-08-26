@@ -28,7 +28,7 @@ import { RenderableInstanced } from '../../../webgl/Renderable.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
 import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
 
-// Variables -----------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The current piece selected, if there is one. */
 let pieceSelected: Piece | undefined;
@@ -52,7 +52,7 @@ let model_NonCapture: RenderableInstanced | undefined;
  */
 let model_Capture: RenderableInstanced | undefined;
 
-// Init Listeners --------------------------------------------------------------------------------
+// Init Listeners --------------------------------------------------------------
 
 // When the legal move shape settings is modified, regenerate the model of the highlights
 document.addEventListener('legalmove-shape-change', regenerateAll); // Custom Event
@@ -61,7 +61,7 @@ document.addEventListener('legalmove-shape-change', regenerateAll); // Custom Ev
 // will be regenerated next render call.
 document.addEventListener('theme-change', regenerateAll);
 
-// On Events -------------------------------------------------------------------------------------
+// On Events -------------------------------------------------------------------
 
 GameBus.addEventListener('piece-selected', (event) => {
 	const detail = event.detail;
@@ -81,7 +81,7 @@ GameBus.addEventListener('piece-unselected', () => {
 	model_Capture = undefined;
 });
 
-// Rendering --------------------------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /**
  * Renders the legal move highlights of the selected piece, all hovered arrows,
@@ -167,7 +167,7 @@ function renderSelectedPieceLegalMoves(): void {
 	model_Capture!.render(position, scale);
 }
 
-// Exports -----------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Rendering

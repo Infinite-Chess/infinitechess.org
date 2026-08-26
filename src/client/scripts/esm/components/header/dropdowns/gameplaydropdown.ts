@@ -4,7 +4,7 @@
 
 import preferences from '../preferences.js';
 
-// Document Elements -------------------------------------------------------------------------
+// Document Elements -----------------------------------------------------------
 
 const gameplayDropdown = document.querySelector('.gameplay-dropdown')!;
 const gameplayDropdownTitle = document.querySelector('.gameplay-dropdown .dropdown-title')!;
@@ -21,7 +21,7 @@ const lingeringAnnotationsCheckbox = document.querySelector(
 	'.boolean-option.lingering-annotations input',
 ) as HTMLInputElement;
 
-// Functions ---------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 (function init() {
 	showCheckmarkOnSelectedOptions();

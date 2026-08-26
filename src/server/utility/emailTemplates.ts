@@ -6,7 +6,7 @@
  * the on-brand layout.
  */
 
-// Types --------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Content for an action email (verification, password reset) */
 type ActionEmailContent = {
@@ -20,7 +20,7 @@ type ActionEmailContent = {
 	tagline: string;
 };
 
-// Constants ---------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Header/button accent color: a dark neutral grey. */
 const ACCENT_COLOR = '#383838';
@@ -29,7 +29,7 @@ const PAGE_BG_COLOR = '#f1eeea';
 /** Sign-off appended to every email's plain-text alternative. */
 const SIGNATURE = '— InfiniteChess.org';
 
-// Shared Layout ---------------------------------------------
+// Shared Layout ---------------------------------------------------------------
 
 /**
  * Wraps body content in the shared, on-brand email layout: off-white page,
@@ -71,7 +71,7 @@ function buildEmailShell(preheader: string, tagline: string, bodyHtml: string): 
 	`;
 }
 
-// HTML Builders ---------------------------------------------
+// HTML Builders ---------------------------------------------------------------
 
 /**
  * Builds an action email — heading, intro line, prominent button, fallback link,
@@ -115,7 +115,7 @@ function buildReceiptEmailHtml(opts: {
 	return buildEmailShell(opts.preheader, opts.tagline, body);
 }
 
-// Plain-Text ---------------------------------------------
+// Plain-Text ------------------------------------------------------------------
 
 /**
  * Builds an email's plain-text alternative from its content blocks, joined by blank lines
@@ -130,7 +130,7 @@ function stripInlineTags(html: string): string {
 	return html.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
 }
 
-// Renderers (HTML + text) ---------------------------------------------
+// Renderers (HTML + text) -----------------------------------------------------
 
 /** Renders an action email (verification, password reset) in both HTML and plain-text. */
 function renderActionEmail(opts: ActionEmailContent): { html: string; text: string } {
@@ -140,7 +140,7 @@ function renderActionEmail(opts: ActionEmailContent): { html: string; text: stri
 	};
 }
 
-// Exports ---------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

@@ -28,11 +28,11 @@ import boardpos from './boardpos.js';
 import primitives from './primitives.js';
 import boardgeometry from './boardgeometry.js';
 
-// Constants -------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const ONE = bd.fromBigInt(1n);
 
-// Square Bounds ---------------------------------------------------------------------------
+// Square Bounds ---------------------------------------------------------------
 
 /**
  * [Model Space] Returns a bounding box of a square.
@@ -124,7 +124,7 @@ function applyWorldTransformationsToBoundingBox(
 	return { left, bottom, right, top };
 }
 
-// Mesh Data ---------------------------------------------------------------------------------
+// Mesh Data -------------------------------------------------------------------
 
 /**
  * [Model Space] Generates the vertex data of a square highlight, given the coords and color.
@@ -191,7 +191,7 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 // 	return primitives.Quad_Color(left, bottom, right, top, color);
 // }
 
-// Transforming Vertices ---------------------------------------------------------------
+// Transforming Vertices -------------------------------------------------------
 
 /** Applies a rotational & translational transformation to an array of points. */
 // function applyTransformToPoints(points: DoubleCoords[], rotation: number, translation: DoubleCoords): DoubleCoords[] {
@@ -212,7 +212,7 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 // 	return transformedPoints;
 // }
 
-// Other Generic Rendering Methods -------------------------------------------------------
+// Other Generic Rendering Methods ---------------------------------------------
 
 /** Returns the position and uniform scale needed to render a board-space model. */
 function getBoardRenderTransform(
@@ -249,7 +249,7 @@ function getModelPosition(boardPos: BDCoords, modelOffset: Coords, z: number = 0
 	];
 }
 
-// Exports -----------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Square Bounds

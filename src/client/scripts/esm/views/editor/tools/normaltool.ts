@@ -22,7 +22,7 @@ import edithistory from '../edithistory';
 import { GameBus } from '../../../board/GameBus';
 import movesequence from '../../../game/chess/movesequence';
 
-// Making Move Edits in the Game ---------------------------------------------
+// Making Move Edits in the Game -----------------------------------------------
 
 /**
  * Similar to {@link movesequence.makeMove}, but doesn't push the move to the game's
@@ -71,12 +71,12 @@ function generateMoveEdit(boardsim: Board, moveCoords: MoveCoords): Edit {
 	return edit;
 }
 
-// Registration ---------------------------------------------------------------
+// Registration ----------------------------------------------------------------
 
 // Override selection's default move logic with the editor's on load.
 selection.setEditorMoveHandler(makeMoveEdit);
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	makeMoveEdit,

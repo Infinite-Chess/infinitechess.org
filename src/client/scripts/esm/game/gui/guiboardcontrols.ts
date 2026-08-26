@@ -31,7 +31,7 @@ import annotations from '../rendering/highlights/annotations/annotations.js';
 import { GameBus } from '../../board/GameBus.js';
 import { listener_document, listener_canvas } from '../chess/gamecore.js';
 
-// Elements ----------------------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 // View toggles
 const element_Perspective = document.getElementById('btn-perspective')!;
@@ -61,7 +61,7 @@ const ARROW_TOOLTIPS: { [mode in 0 | 1 | 2 | 3]: string } = {
 	3: 'Arrow indicators: All + Hippogonals (tab)',
 };
 
-// Variables ---------------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /**
  * Whether the annotations button is enabled.
@@ -69,7 +69,7 @@ const ARROW_TOOLTIPS: { [mode in 0 | 1 | 2 | 3]: string } = {
  */
 let annotationsEnabled: boolean = false;
 
-// Events ------------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 document.addEventListener('ray-count-change', (e) => {
 	const rayCount = e.detail;

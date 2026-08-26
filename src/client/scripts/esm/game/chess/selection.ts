@@ -49,7 +49,7 @@ import draganimation from '../rendering/dragging/draganimation.js';
 import { animateMove } from './graphicalchanges.js';
 import { listener_canvas } from './gamecore.js';
 
-// Types -----------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * Executes a move and returns its resulting edit.
@@ -63,7 +63,7 @@ type MoveHandler = (gamefile: GameFile, mesh: Mesh | undefined, moveTagged: Move
  */
 type ViewedPositionBrancher = (gamefile: GameFile) => void;
 
-// Variables -----------------------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** The currently selected piece, if there is one */
 let pieceSelected: Piece | undefined;
@@ -92,7 +92,7 @@ let moveHandler: MoveHandler | undefined;
 /** The "branch from viewed position" handler, if registered. The analysis page registers one. */
 let viewedPositionBrancher: ViewedPositionBrancher | undefined;
 
-// Events ----------------------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-concluded', () => {
 	unselectPiece();
@@ -110,7 +110,7 @@ GameBus.addEventListener('steal-pointer', (e) => {
 	return draganimation.dropPiece();
 });
 
-// Getters ---------------------------------------------------------------------------------------
+// Getters ---------------------------------------------------------------------
 
 /** Returns the current selected piece, if there is one. */
 function getPieceSelected(): Piece | undefined {
@@ -160,7 +160,7 @@ function setViewedPositionBrancher(handler: ViewedPositionBrancher): void {
 	viewedPositionBrancher = handler;
 }
 
-// Updating ---------------------------------------------------------------------------------------------
+// Updating --------------------------------------------------------------------
 
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update(): void {
@@ -245,7 +245,7 @@ function updateHoverSquareLegal(gamefile: GameFile): void {
 				bounds.boxContainsSquare(gamefile.gameRules.worldBorder, hoverSquare))); // Allow ALL moves in board editor.
 }
 
-// Piece Select / Drop / Move -----------------------------------------------------------------------------
+// Piece Select / Drop / Move --------------------------------------------------
 
 /** If a piece was clicked or dragged, this will attempt to select that piece. */
 function testIfPieceSelected(gamefile: GameFile, mesh: Mesh | undefined): void {
@@ -354,7 +354,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: GameFile, mesh: Mesh | undefi
 	return true;
 }
 
-// Can Select/Move/Drop Piece Type ---------------------------------------------------------------------------------
+// Can Select/Move/Drop Piece Type ---------------------------------------------
 
 /**
  * 0 => Can't select this piece type EVER (i.e. voids, neutrals).
@@ -398,7 +398,7 @@ function isOpponentType(gamefile: GameFile, type: number): boolean {
 	else return pieceColor !== gamesession.getRole();
 }
 
-// Selection & Moving ---------------------------------------------------------------------------------------------
+// Selection & Moving ----------------------------------------------------------
 
 /**
  * Selects the provided piece. If the piece is already selected, it will be deselected.
@@ -589,7 +589,7 @@ function makePromotionMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	perspective.relockMouse();
 }
 
-// Rendering ---------------------------------------------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
 function renderGhostPiece(): void {
@@ -611,7 +611,7 @@ function renderGhostPiece(): void {
 	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	isAPieceSelected,

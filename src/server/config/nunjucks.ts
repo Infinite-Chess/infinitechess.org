@@ -74,6 +74,6 @@ function setManifestGlobals(env: nunjucks.Environment, assets: Record<string, st
 	);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { configure };

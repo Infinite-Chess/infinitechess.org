@@ -8,7 +8,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 
 import deltatime from '../../board/deltatime.js';
 
-// Variables -------------------------------------------------------------
+// Variables -------------------------------------------------------------------
 
 /** In millis since the start of the program (updated at the beginning of each frame). */
 let runTime: number;
@@ -21,7 +21,7 @@ let fps = 0;
 /** Estimation of the monitor's refresh rate. */
 let monitorRefreshRate = 0;
 
-// Functions ------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 function update(runtime: number): void {
 	// milliseconds
@@ -58,6 +58,6 @@ function updateMonitorRefreshRate(): void {
 	monitorRefreshRate = fps;
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { update };

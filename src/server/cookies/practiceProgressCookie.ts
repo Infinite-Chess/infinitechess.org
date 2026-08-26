@@ -12,12 +12,12 @@ import type { Request, Response } from 'express';
 import memberManager from '../database/memberManager.js';
 import memberInfoCookie from './memberInfoCookie.js';
 
-// Constants --------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The options the `checkmates_beaten` cookie is created with. */
 const COOKIE_OPTIONS = { httpOnly: false, sameSite: 'lax' as const, secure: true };
 
-// Functions --------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Sets the checkmates_beaten cookie for logged-in users based on their memberInfo cookie.
@@ -76,6 +76,6 @@ function toArray(checkmates_beaten: string): string[] {
 	return checkmates_beaten.match(/[^,]+/g) || []; // match() returns null if no matches
 }
 
-// Exports ----------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { set, create, remove, get, toArray };

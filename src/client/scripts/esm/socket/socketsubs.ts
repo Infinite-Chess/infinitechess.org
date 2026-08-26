@@ -70,7 +70,7 @@ function unsubFromLobby(): void {
 	void socketsend.send('general', 'unsub', 'lobby');
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	zeroSubs,

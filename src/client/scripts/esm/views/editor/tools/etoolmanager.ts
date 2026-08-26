@@ -15,21 +15,21 @@ import edithistory from '../edithistory.js';
 import selectiontool from './selection/selectiontool.js';
 import { listener_document } from '../../../game/chess/gamecore.js';
 
-// Types ----------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 export type Tool = (typeof validTools)[number];
 
-// Constants ------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** All tools that can be used in the board editor. */
 const validTools = ['normal', 'placer', 'eraser', 'specialrights', 'selection-tool'] as const;
 
-// State ----------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The tool currently selected. */
 let currentTool: Tool = 'normal';
 
-// Initialization -------------------------------------------------------------
+// Initialization --------------------------------------------------------------
 
 /** Resets the tool state when the board editor is closed. */
 function reset(): void {
@@ -37,7 +37,7 @@ function reset(): void {
 	guitoolbar.markTool(currentTool); // Effectively resets classes state
 }
 
-// Tool Management ------------------------------------------------------------
+// Tool Management -------------------------------------------------------------
 
 /** Returns the currently active tool. */
 function getTool(): Tool {
@@ -66,7 +66,7 @@ function isLeftMouseReserved(): boolean {
 	return drawingtool.isToolADrawingTool(currentTool) || currentTool === 'selection-tool';
 }
 
-// Shortcuts ------------------------------------------------------------------
+// Shortcuts -------------------------------------------------------------------
 
 /** Tests for keyboard shortcuts in the board editor. */
 function testShortcuts(): void {
@@ -89,7 +89,7 @@ function testShortcuts(): void {
 	else if (listener_document.isKeyDown('KeyK')) setTool('placer');
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Initialization

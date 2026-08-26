@@ -27,7 +27,7 @@ import gamesession from './gamesession.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import { animateMove, meshChanges } from './graphicalchanges.js';
 
-// Global Moving ----------------------------------------------------------------------------------------------------------
+// Global Moving ---------------------------------------------------------------
 
 /**
  * Commits a global forward move to the game: all logical, game-state,
@@ -148,7 +148,7 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 }
 
-// Local Moving ----------------------------------------------------------------------------------------------------------
+// Local Moving ----------------------------------------------------------------
 
 /**
  * Applies a move's logical + mesh changes to *view* it (instead of making it),

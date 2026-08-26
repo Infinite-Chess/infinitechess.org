@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Constants ---------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const certDir = path.join(__dirname, '..', '..', '..', 'cert');
 
@@ -20,7 +20,7 @@ const certDir = path.join(__dirname, '..', '..', '..', 'cert');
 const keyPath = path.join(certDir, 'cert.key');
 const certPath = path.join(certDir, 'cert.pem');
 
-// Functions --------------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Retrieves SSL/TLS certificate options (a self-signed key + cert).
@@ -74,6 +74,6 @@ function ensureSelfSignedCertificate(): void {
 	console.log('Generated self-signed certificate.');
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { get };

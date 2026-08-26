@@ -18,7 +18,7 @@ import { players as p } from '../../shared/util/typeutil.js';
 import gamesManager from '../database/gamesManager.js';
 import gamePageController from './gamePageController.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** The full render context for `analysis.njk`. */
 interface AnalysisPageState {
@@ -32,12 +32,12 @@ interface AnalysisPageState {
 	meta?: GameMetaViewModel;
 }
 
-// Constants ----------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Cache all variant groups and their variants. */
 const variantGroups = variantregistry.getVariantGroupsWithVariants();
 
-// Functions ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /**
  * Resolves the render state for `/analysis/:id?/:color?`, or `undefined` if an id was
@@ -70,6 +70,6 @@ function getPageState(req: Request): AnalysisPageState | undefined {
 	};
 }
 
-// Exports ----------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { getPageState };

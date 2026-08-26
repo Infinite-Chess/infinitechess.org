@@ -15,7 +15,7 @@ import backupManager from './backupManager.js';
 import databaseTables from './databaseTables.js';
 import leaderboardsManager from './leaderboardsManager.js';
 
-// Functions ------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Readies the database for use, and starts every recurring task that runs against it. */
 function init(): void {
@@ -38,6 +38,6 @@ function startPeriodicTasks(): void {
 	backupManager.startDaily();
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { init, buildSchema };

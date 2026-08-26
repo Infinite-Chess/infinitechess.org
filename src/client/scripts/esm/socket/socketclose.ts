@@ -129,7 +129,7 @@ function leaveTimeout(): void {
 	socketconnection.resubAll();
 }
 
-// Exports -------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	onclose,

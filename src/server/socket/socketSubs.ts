@@ -12,12 +12,12 @@ import type { CustomWebSocket } from './socketTypes.js';
 import gamemanager from '../game/gamemanager/gamemanager.js';
 import lobbymanager from '../game/seeksmanager/lobbymanager.js';
 
-// Types --------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Every subscription list a socket can be attached to, each with its own detach handler run on close. */
 type SubscriptionKey = keyof CustomWebSocket['metadata']['subscriptions'];
 
-// Subbing ------------------------------------------------------------------------------------
+// Subbing ---------------------------------------------------------------------
 
 /** Subscribes a socket to a stream's updates. Only 'lobby' is client-requestable. */
 function sub(ws: CustomWebSocket, value: 'lobby'): void {
@@ -31,7 +31,7 @@ function sub(ws: CustomWebSocket, value: 'lobby'): void {
 	}
 }
 
-// Unsubbing ----------------------------------------------------------------------------------
+// Unsubbing -------------------------------------------------------------------
 
 /**
  * Unsubscribes a socket from a subscription list.
@@ -64,7 +64,7 @@ function unsubFromAll(ws: CustomWebSocket, involuntary: boolean): void {
 	for (const key of subscriptionsKeys) unsub(ws, key, involuntary);
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Subbing

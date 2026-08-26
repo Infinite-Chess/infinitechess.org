@@ -72,6 +72,6 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 	}
 }
 
-// Exports ------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { postCheckmateBeaten };

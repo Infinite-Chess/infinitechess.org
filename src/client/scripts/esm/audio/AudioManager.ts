@@ -9,7 +9,7 @@ import preferences from '../components/header/preferences';
 import { DownsamplerNode } from './processors/downsampler/DownsamplerNode';
 import { createEffectNode, EffectConfig, NodeChain } from './AudioEffects';
 
-// Types ---------------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 type AudioBufferWithGainNode = AudioBufferSourceNode & { gainNode: GainNode };
 
@@ -68,12 +68,12 @@ interface PlaySoundOptions {
 	bypassDownsampler?: boolean;
 }
 
-// Constants ----------------------------------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Any volume above this is probably a mistake, so we reset it to 1 and log an error in the console. */
 const VOLUME_DANGER_THRESHOLD = 4;
 
-// State ----------------------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** This context plays all our sounds. */
 const audioContext: AudioContext = new AudioContext();
@@ -141,7 +141,7 @@ limiter.connect(audioContext.destination);
 	}
 })();
 
-// Getters ----------------------------------------------------------------------------------------------
+// Getters ---------------------------------------------------------------------
 
 /** Returns the global audio context. */
 function getContext(): AudioContext {
@@ -157,7 +157,7 @@ function getDestination(): AudioNode {
 	return masterGain;
 }
 
-// Public API -------------------------------------------------------------------------------------------
+// Public API ------------------------------------------------------------------
 
 /** Fades in the global downsampler effect over a given duration. */
 function fadeInDownsampler(durationMillis: number): void {
@@ -179,7 +179,7 @@ function fadeOutDownsampler(durationMillis: number): void {
 	AudioUtils.applyPerceptualFade(audioContext, downsamplerWetGain.gain, 0, durationMillis);
 }
 
-// Sound Playing ------------------------------------------------------------------------------------------
+// Sound Playing ---------------------------------------------------------------
 
 /** Plays the specified audio buffer with the specified options. */
 function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObject {
@@ -285,7 +285,7 @@ function scheduleDisconnection(
 	});
 }
 
-// Audio Nodes ------------------------------------------------------------------------------------------
+// Audio Nodes -----------------------------------------------------------------
 
 /**
  * Creates a new buffer source and its master gain node.
@@ -379,7 +379,7 @@ function fadeOut(source: AudioBufferWithGainNode, endTime: number): void {
 	source.gainNode.gain.linearRampToValueAtTime(0, endTime);
 }
 
-// Exports ----------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Getters

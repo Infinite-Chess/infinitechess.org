@@ -110,7 +110,7 @@ function ongeneralmessage(message: ClientboundGeneralMessage): void {
 	}
 }
 
-// Exports --------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	onmessage,
