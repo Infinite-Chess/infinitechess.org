@@ -7,7 +7,7 @@
 
 import express from 'express';
 
-import NewsAPI from '../api/NewsAPI.js';
+import newsAPI from '../api/newsAPI.js';
 import resolveAuth from '../middleware/resolveAuth.js';
 
 const router = express.Router();
@@ -15,8 +15,8 @@ const router = express.Router();
 // Every news route reads the signed-in member's state, so auth is required.
 router.use(resolveAuth.resolve);
 
-router.get('/unread-count', NewsAPI.getUnreadCount);
-router.get('/unread-dates', NewsAPI.getUnreadDates);
-router.patch('/read', NewsAPI.markAsRead);
+router.get('/unread-count', newsAPI.getUnreadCount);
+router.get('/unread-dates', newsAPI.getUnreadDates);
+router.patch('/read', newsAPI.markAsRead);
 
 export default router;

@@ -10,7 +10,7 @@ import type { Request } from 'express';
 import type { TokenPayload } from '../utility/tokenSigner.js';
 
 import db from './database.js';
-import IP from '../utility/IP.js';
+import ip from '../utility/ip.js';
 import tokenSigner from '../utility/tokenSigner.js';
 import memberManager from './memberManager.js';
 
@@ -107,7 +107,7 @@ function add(
         INSERT INTO refresh_tokens (token, user_id, created_at, expires_at, is_persistent, ip_address)
         VALUES (?, ?, ?, ?, ?, ?)
 	`;
-	const ip_address = IP.get(req) || null;
+	const ip_address = ip.get(req) || null;
 	db.call(
 		() =>
 			db.run(query, [

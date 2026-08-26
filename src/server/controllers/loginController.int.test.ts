@@ -4,13 +4,14 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import { testRequest } from '../../tests/testRequest.js';
 
+import databaseInit from '../database/databaseInit.js';
 import accountSeeder from './accountSeeder.js';
 import databaseTables from '../database/databaseTables.js';
 
 describe('Login Controller Integration', () => {
 	// Runs once at the very start of this file
 	beforeAll(() => {
-		databaseTables.generateTables();
+		databaseInit.buildSchema();
 	});
 
 	// Runs before EVERY single 'it' block

@@ -1,5 +1,11 @@
 // src/server/routes/root.ts
 
+/**
+ * The URL table for every SSR'd HTML page, mounted at `/`. Each route resolves auth,
+ * attaches the base render context, then renders its Nunjucks template — with the page's
+ * own state coming from a controller where the page needs any.
+ */
+
 import express, { NextFunction, Request, RequestHandler, Response } from 'express';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
@@ -14,6 +20,8 @@ import analysisPageController from '../controllers/analysisPageController.js';
 import verifyAccountController from '../controllers/verifyAccountController.js';
 import passwordResetController from '../controllers/passwordResetController.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
+
+// Helpers ------------------------------------------------------------------------------------
 
 const router = express.Router();
 
@@ -61,7 +69,7 @@ function getRandomSplashText(req: Request): string {
 /** Cache all variant groups and their variants. */
 const variantGroups = variantregistry.getVariantGroupsWithVariants();
 
-// Regular pages
+// Pages --------------------------------------------------------------------------------------
 page('^/$|/index(.html)?', (req: Request, res: Response) => res.render('index.njk', { variantGroups, splashText: getRandomSplashText(req) })); // prettier-ignore
 page('/about(.html)?', (_req: Request, res: Response) => res.render('about.njk'));
 page('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.njk'));
@@ -120,7 +128,11 @@ page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render(
 page('/editor(.html)?', (_req: Request, res: Response) => res.render('editor.njk'));
 page('/patron(.html)?', (_req: Request, res: Response) => res.render('patron.njk'));
 
-// Legacy URL redirects (permanent 301)
+// Legacy Redirects ---------------------------------------------------------------------------
+
+// Permanent 301s
 router.get('/termsofservice(.html)?', (_req: Request, res: Response) => res.redirect(301, '/terms')); // prettier-ignore
+
+// Exports ------------------------------------------------------------------------------------
 
 export default router;

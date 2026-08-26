@@ -69,6 +69,12 @@ function conclude(servergame: ServerGame, conclusion: GameConclusion): void {
 	free(servergame);
 }
 
+/** A player has lost on time: set the game conclusion. */
+function concludeOnTime(servergame: ServerGame): void {
+	const winner = typeutil.invertPlayer(servergame.whosTurn);
+	conclude(servergame, { victor: winner, condition: 'time' });
+}
+
 /** Sets the game conclusion, stops clocks, resets state, records end time. */
 function applyConclusion(servergame: ServerGame, conclusion: GameConclusion): void {
 	servergame.gameConclusion = conclusion;
@@ -309,6 +315,7 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 export default {
 	// 1. Conclusion
 	conclude,
+	concludeOnTime,
 	applyConclusion,
 	// 2. Freeing
 	free,

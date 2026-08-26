@@ -8,7 +8,7 @@ import type { Request, Response } from 'express';
 
 import { interpolate } from '../../shared/util/interpolate.js';
 
-import IP from '../utility/IP.js';
+import ip from '../utility/ip.js';
 import logEvents from '../utility/logEvents.js';
 
 // Types ----------------------------------------------------------------------------
@@ -101,7 +101,7 @@ function limitLogin(req: Request, res: Response, browserAgent: string): boolean 
  * concatenated with no separator.
  */
 function getBrowserAgent(req: Request, username: string): string {
-	const clientIP = IP.get(req);
+	const clientIP = ip.get(req);
 	// The colon separates username from IP; usernames are strictly alphanumeric,
 	// so no concatenation of two different pairs can collide.
 	return `${username}:${clientIP}`;

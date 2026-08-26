@@ -1,4 +1,4 @@
-// src/server/api/SeekPreviewAPI.ts
+// src/server/api/seekPreviewAPI.ts
 
 /**
  * HTTP API handler for lobby seek position previews.

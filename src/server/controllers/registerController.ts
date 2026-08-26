@@ -12,13 +12,13 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
-import IP from '../utility/IP.js';
+import ip from '../utility/ip.js';
 import roles from './roles.js';
 import turnstile from './turnstile.js';
 import logEvents from '../utility/logEvents.js';
 import emailService from '../utility/emailService.js';
 import memberManager from '../database/memberManager.js';
-import sessionManager from './authenticationTokens/sessionManager.js';
+import sessionManager from './sessionManager.js';
 import blacklistManager from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';
 import pendingRegistrationManager from '../database/pendingRegistrationManager.js';
@@ -186,9 +186,9 @@ function verifyBodyHasRegisterFormData(
 
 /** The metadata tail for a rejected-registration log line: `IP   username   email   userAgent`. */
 function formatRegistrationLogMeta(req: Request, username: unknown, email: unknown): string {
-	const ip = IP.get(req) ?? 'Unknown ip';
+	const clientIP = ip.get(req) ?? 'Unknown ip';
 	const agent = req.headers['user-agent']!;
-	return logEvents.escapeLogNewlines([ip, username ?? '', email ?? '', agent].join('   '));
+	return logEvents.escapeLogNewlines([clientIP, username ?? '', email ?? '', agent].join('   '));
 }
 
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */

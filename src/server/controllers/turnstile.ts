@@ -11,7 +11,7 @@ import type { IncomingMessage } from 'http';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import IP from '../utility/IP.js';
+import ip from '../utility/ip.js';
 import logEvents from '../utility/logEvents.js';
 
 // Types -------------------------------------------------------------------------
@@ -71,7 +71,7 @@ const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverif
  */
 async function verify(token: string, req: IncomingMessage): Promise<TurnstileResult> {
 	const body = new URLSearchParams({ secret: SECRET_KEY, response: token });
-	const remoteip = IP.get(req);
+	const remoteip = ip.get(req);
 	if (remoteip !== undefined) body.append('remoteip', remoteip);
 
 	try {

@@ -1,4 +1,4 @@
-// src/server/api/PracticeProgress.int.test.ts
+// src/server/api/practiceProgress.int.test.ts
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
@@ -7,6 +7,7 @@ import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 
+import databaseInit from '../database/databaseInit.js';
 import memberManager from '../database/memberManager.js';
 import databaseTables from '../database/databaseTables.js';
 
@@ -18,7 +19,7 @@ if (!VALID_CHECKMATE_ID) throw new Error('No valid checkmate IDs found for testi
 describe('Practice Progress Integration', () => {
 	// Runs once at the very start of this file
 	beforeAll(() => {
-		databaseTables.generateTables();
+		databaseInit.buildSchema();
 	});
 
 	// Runs before EVERY single 'it' block

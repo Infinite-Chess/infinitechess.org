@@ -1,4 +1,4 @@
-// src/server/api/NewsAPI.ts
+// src/server/api/newsAPI.ts
 
 /**
  * API endpoints for news-related functionality.

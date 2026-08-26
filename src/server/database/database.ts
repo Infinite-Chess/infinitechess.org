@@ -6,6 +6,9 @@
  *
  * It supports executing SQL queries, retrieving results (single or multiple rows),
  * caching prepared statements for performance, and handling database transactions.
+ *
+ * It also owns the column cache: every table's real column names, read out of SQLite at
+ * startup. Column validation reads from it, so no hand-written column list exists to drift.
  */
 
 import path from 'path';
@@ -47,6 +50,9 @@ db.pragma('synchronous = NORMAL');
 
 /** Prepared statements cache */
 const stmtCache: Record<string, Database.Statement> = {};
+
+/** Every table's column names, filled by {@link cacheAllColumns} once the schema is final. */
+const columnCache = new Map<string, readonly string[]>();
 
 // Query Calls ---------------------------------------------------------------------------------------------
 
@@ -92,54 +98,39 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 	return stmt.all(...params) as T[];
 }
 
-// Validation & Dynamic Updates ----------------------------------------------------------------------------
-
-/**
- * Validates a column-selection argument of a read query: it must be a non-empty array
- * of strings that are all columns of the named table. Throws on the first problem.
- */
-function assertColumnsValid(
-	columns: unknown,
-	allowedColumns: readonly string[],
-	tableName: string,
-): void {
-	if (!Array.isArray(columns))
-		throw new Error(`When getting ${tableName} data, columns must be an array of strings! Received: ${jsonutil.ensureJSONString(columns)}`); // prettier-ignore
-	if (columns.length === 0 || !columns.every((column) => typeof column === 'string' && allowedColumns.includes(column)))
-		throw new Error(`Invalid columns requested from ${tableName} table: ${jsonutil.ensureJSONString(columns)}`); // prettier-ignore
-}
-
-/**
- * Runs a dynamic UPDATE of exactly the provided columns against the row(s) matching `whereClause`.
- * Validates that `updates` is non-empty and every column belongs to the table, minus any
- * excluded (primary keys are never updatable). Normalizes undefined values to null.
- * @returns The run result, for callers that verify a row was actually changed.
- */
-function runRowUpdate(params: {
-	tableName: string;
-	allowedColumns: readonly string[];
-	excludedColumns?: readonly string[];
-	updates: Record<string, SupportedColumnTypes>;
-	errorContext: string;
-	whereClause: string;
-	whereValues: SupportedColumnTypes[];
-}): Database.RunResult {
-	const entries = Object.entries(params.updates);
-	if (entries.length === 0)
-		throw new Error(`Empty updates provided when ${params.errorContext}! Received: ${jsonutil.ensureJSONString(params.updates)}`); // prettier-ignore
-	const excluded = params.excludedColumns ?? [];
-	if (!entries.every(([column]) => !excluded.includes(column) && params.allowedColumns.includes(column)))
-		throw new Error(`Invalid columns provided when ${params.errorContext}! Received: ${jsonutil.ensureJSONString(params.updates)}`); // prettier-ignore
-
-	const setClauses = entries.map(([column]) => `${column} = ?`).join(', ');
-	const values = entries.map(([, value]) => value ?? null);
-	return run(`UPDATE ${params.tableName} SET ${setClauses} WHERE ${params.whereClause}`, [
-		...values,
-		...params.whereValues,
-	]);
-}
-
 // Schema Introspection ------------------------------------------------------------------------------------
+
+/**
+ * Reads every table's column names out of SQLite and caches them. Call once the schema is
+ * final — after the tables are generated AND every migration has run — so that no hand-written
+ * copy of the schema can ever drift from it.
+ * @throws If a database error occurs.
+ */
+function cacheAllColumns(): void {
+	columnCache.clear();
+	const tables = db
+		.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`)
+		.all() as { name: string }[];
+	for (const { name } of tables) {
+		// PRAGMA queries are special and should not use the statement cache.
+		// We access the raw db instance's prepare method directly.
+		const rows = db.prepare(`SELECT name FROM pragma_table_info(?)`).all(name) as {
+			name: string;
+		}[];
+		columnCache.set(
+			name,
+			rows.map((row) => row.name),
+		);
+	}
+}
+
+/** Every column of a table, from the cache {@link cacheAllColumns} filled at startup. */
+function getColumns(tableName: string): readonly string[] {
+	const columns = columnCache.get(tableName);
+	if (columns === undefined)
+		throw new Error(`No cached columns for table "${tableName}" — was the database initialized?`); // prettier-ignore
+	return columns;
+}
 
 /**
  * Checks if a column exists in a table.
@@ -176,6 +167,50 @@ function columnIsNullable(tableName: string, columnName: string): boolean {
 		console.error(`Error checking if column ${columnName} is nullable in ${tableName}:`, error);
 		throw error; // Rethrow
 	}
+}
+
+// Validation & Dynamic Updates ----------------------------------------------------------------------------
+
+/**
+ * Validates a column-selection argument of a read query: it must be a non-empty array
+ * of strings that are all columns of the named table. Throws on the first problem.
+ */
+function assertColumnsValid(columns: unknown, tableName: string): void {
+	const allowedColumns = getColumns(tableName);
+	if (!Array.isArray(columns))
+		throw new Error(`When getting ${tableName} data, columns must be an array of strings! Received: ${jsonutil.ensureJSONString(columns)}`); // prettier-ignore
+	if (columns.length === 0 || !columns.every((column) => typeof column === 'string' && allowedColumns.includes(column)))
+		throw new Error(`Invalid columns requested from ${tableName} table: ${jsonutil.ensureJSONString(columns)}`); // prettier-ignore
+}
+
+/**
+ * Runs a dynamic UPDATE of exactly the provided columns against the row(s) matching `whereClause`.
+ * Validates that `updates` is non-empty and every column belongs to the table, minus any
+ * excluded (primary keys are never updatable). Normalizes undefined values to null.
+ * @returns The run result, for callers that verify a row was actually changed.
+ */
+function runRowUpdate(params: {
+	tableName: string;
+	excludedColumns?: readonly string[];
+	updates: Record<string, SupportedColumnTypes>;
+	errorContext: string;
+	whereClause: string;
+	whereValues: SupportedColumnTypes[];
+}): Database.RunResult {
+	const allowedColumns = getColumns(params.tableName);
+	const entries = Object.entries(params.updates);
+	if (entries.length === 0)
+		throw new Error(`Empty updates provided when ${params.errorContext}! Received: ${jsonutil.ensureJSONString(params.updates)}`); // prettier-ignore
+	const excluded = params.excludedColumns ?? [];
+	if (!entries.every(([column]) => !excluded.includes(column) && allowedColumns.includes(column)))
+		throw new Error(`Invalid columns provided when ${params.errorContext}! Received: ${jsonutil.ensureJSONString(params.updates)}`); // prettier-ignore
+
+	const setClauses = entries.map(([column]) => `${column} = ?`).join(', ');
+	const values = entries.map(([, value]) => value ?? null);
+	return run(`UPDATE ${params.tableName} SET ${setClauses} WHERE ${params.whereClause}`, [
+		...values,
+		...params.whereValues,
+	]);
 }
 
 // Transactions --------------------------------------------------------------------------------------------
@@ -250,12 +285,13 @@ export default {
 	get,
 	all,
 	call,
+	// Schema Introspection
+	cacheAllColumns,
+	columnExists,
+	columnIsNullable,
 	// Validation & Dynamic Updates
 	assertColumnsValid,
 	runRowUpdate,
-	// Schema Introspection
-	columnExists,
-	columnIsNullable,
 	// Transactions
 	transaction,
 	// Error Handling & Maintenance

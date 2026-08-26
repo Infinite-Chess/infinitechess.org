@@ -1,10 +1,10 @@
-// src/server/controllers/prefsCookie.ts
+// src/server/cookies/prefsCookie.ts
 
 /**
  * Owns the user 'preferences' cookie: sets it for signed-in members on HTML requests
  * from their stored preferences, and removes it on logout.
  *
- * The API for changing preferences lives in api/Prefs.ts, which shares this schema.
+ * The API for changing preferences lives in api/prefs.ts, which shares this schema.
  */
 
 import type { Request, Response } from 'express';
@@ -14,7 +14,7 @@ import z from 'zod';
 import themes from '../../shared/components/header/themes.js';
 
 import memberManager from '../database/memberManager.js';
-import memberInfoCookie from './authenticationTokens/memberInfoCookie.js';
+import memberInfoCookie from './memberInfoCookie.js';
 
 // Types ------------------------------------------------------------------------------------------
 

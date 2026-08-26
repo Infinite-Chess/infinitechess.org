@@ -9,7 +9,6 @@
  */
 
 import db from './database.js';
-import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -70,7 +69,6 @@ function update(
 	db.call(() => {
 		db.runRowUpdate({
 			tableName: 'live_engine_games',
-			allowedColumns: databaseTables.ALL_LIVE_ENGINE_GAMES_COLUMNS,
 			updates,
 			errorContext: `updating live engine participant for game ${game_id}`,
 			whereClause: 'game_id = ? AND player_number = ?',

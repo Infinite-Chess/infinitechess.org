@@ -1,4 +1,4 @@
-// src/server/api/EditorSavesAPI.int.test.ts
+// src/server/api/editorSavesAPI.int.test.ts
 
 /**
  * Integration tests for the EditorSavesAPI endpoints.
@@ -14,14 +14,15 @@ import gamelimits from '../../shared/chess/util/gamelimits.js';
 import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 
-import EditorSavesAPI from './EditorSavesAPI.js';
+import databaseInit from '../database/databaseInit.js';
+import editorSavesAPI from './editorSavesAPI.js';
 import databaseTables from '../database/databaseTables.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 
 describe('EditorSavesAPI Integration', () => {
 	// Runs once at the very start of this file
 	beforeAll(() => {
-		databaseTables.generateTables();
+		databaseInit.buildSchema();
 	});
 
 	// Runs before EVERY single 'it' block
@@ -261,7 +262,7 @@ describe('EditorSavesAPI Integration', () => {
 			const user = await integrationUtils.createAndLoginUser();
 
 			// Add 50 positions to reach the quota limit
-			for (let i = 0; i < EditorSavesAPI.MAX_SAVED_POSITIONS; i++) {
+			for (let i = 0; i < editorSavesAPI.MAX_SAVED_POSITIONS; i++) {
 				await testRequest()
 					.post('/api/editor-saves')
 					.set('Cookie', user.cookie)

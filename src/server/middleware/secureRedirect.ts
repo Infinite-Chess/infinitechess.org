@@ -1,5 +1,9 @@
 // src/server/middleware/secureRedirect.ts
 
+/**
+ * Redirects every http request to https, and sets HSTS on every response.
+ */
+
 import type { Request, Response, NextFunction } from 'express';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists

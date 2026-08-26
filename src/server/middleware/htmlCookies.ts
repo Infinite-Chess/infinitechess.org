@@ -10,9 +10,9 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
-import prefsCookie from '../controllers/prefsCookie.js';
-import browserIDManager from './browserIDManager.js';
-import practiceProgressCookie from '../controllers/practiceProgressCookie.js';
+import prefsCookie from '../cookies/prefsCookie.js';
+import browserIDCookie from '../cookies/browserIDCookie.js';
+import practiceProgressCookie from '../cookies/practiceProgressCookie.js';
 
 /** Refreshes every per-page-load cookie, skipping those only an HTML page has any use for. */
 function htmlCookies(req: Request, res: Response, next: NextFunction): void {
@@ -24,7 +24,7 @@ function htmlCookies(req: Request, res: Response, next: NextFunction): void {
 	// Deliberately NOT the stricter `Sec-Fetch-Mode: navigate` test the error responders use:
 	// browsers omitting that header would then never receive a browser-id, their websocket identity.
 	if (req.accepts('html')) {
-		browserIDManager.assignOrRenew(req, res);
+		browserIDCookie.assignOrRenew(req, res);
 		prefsCookie.set(req, res);
 		practiceProgressCookie.set(req, res);
 	}

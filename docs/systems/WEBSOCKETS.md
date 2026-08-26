@@ -455,7 +455,7 @@ makes no difference whether they were one version behind or two.
 - **Malformed-frame errors from `ws` are swallowed** (`WS_ERR_*` in `socketOpen.onerror`) — flaky
   client stacks echoing 1006 onto the wire are benign and would otherwise flood errLog. Oversized
   messages are the exception and land in hackLog.
-- **Sockets never survive a server restart.** `prepGamesForShutdown()` detaches them all. Everyone
+- **Sockets never survive a server restart.** [`gamerestart.prepForShutdown()`](/src/server/game/gamemanager/gamerestart.ts) detaches them all. Everyone
   connected at shutdown gets a fresh 5 s cushion on restore; anyone already mid-cushion or
   mid-claim-window resumes the persisted remainder instead.
 

@@ -5,7 +5,6 @@
  */
 
 import db from './database.js';
-import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -76,7 +75,7 @@ function getData<K extends RatingAbuseColumn>(
 	columns: K[],
 ): Pick<RatingAbuseRecord, K> {
 	return db.call(() => {
-		db.assertColumnsValid(columns, databaseTables.ALL_RATING_ABUSE_COLUMNS, 'rating_abuse');
+		db.assertColumnsValid(columns, 'rating_abuse');
 
 		const query = `SELECT ${columns.join(', ')} FROM rating_abuse WHERE user_id = ? AND leaderboard_id = ?`;
 		const row = db.get<Pick<RatingAbuseRecord, K>>(query, [user_id, leaderboard_id]);
@@ -103,7 +102,6 @@ function updateColumns(
 	db.call(() => {
 		const result = db.runRowUpdate({
 			tableName: 'rating_abuse',
-			allowedColumns: databaseTables.ALL_RATING_ABUSE_COLUMNS,
 			updates: updates,
 			errorContext: `updating rating_abuse columns for user ID "${user_id}" and leaderboard ID "${leaderboard_id}"`,
 			whereClause: 'user_id = ? AND leaderboard_id = ?',

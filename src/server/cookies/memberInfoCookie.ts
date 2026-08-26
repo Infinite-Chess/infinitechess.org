@@ -1,4 +1,4 @@
-// src/server/controllers/authenticationTokens/memberInfoCookie.ts
+// src/server/cookies/memberInfoCookie.ts
 
 /**
  * Manages the `memberInfo` cookie — creating, reading/validating, and deleting it.
@@ -12,13 +12,13 @@
  */
 
 import type { Request, Response } from 'express';
-import type { ParsedCookies } from '../../types.js';
-import type { MemberInfoCookie } from '../../../shared/types/memberinfo.js';
+import type { ParsedCookies } from '../types.js';
+import type { MemberInfoCookie } from '../../shared/types/memberinfo.js';
 
-import jsutil from '../../../shared/util/jsutil.js';
-import jsonutil from '../../../shared/util/jsonutil.js';
+import jsutil from '../../shared/util/jsutil.js';
+import jsonutil from '../../shared/util/jsonutil.js';
 
-import logEvents from '../../utility/logEvents.js';
+import logEvents from '../utility/logEvents.js';
 
 // Constants --------------------------------------------------------------------------------------
 

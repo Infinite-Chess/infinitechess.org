@@ -1,10 +1,11 @@
-// src/server/api/Prefs.int.test.ts
+// src/server/api/prefs.int.test.ts
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 
+import databaseInit from '../database/databaseInit.js';
 import memberManager from '../database/memberManager.js';
 import databaseTables from '../database/databaseTables.js';
 
@@ -27,7 +28,7 @@ const VALID_PREFS_2 = {
 describe('Preferences Integration', () => {
 	// Runs once at the very start of this file
 	beforeAll(() => {
-		databaseTables.generateTables();
+		databaseInit.buildSchema();
 	});
 
 	// Runs before EVERY single 'it' block

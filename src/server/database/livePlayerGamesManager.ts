@@ -8,7 +8,6 @@
  */
 
 import db from './database.js';
-import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -78,7 +77,6 @@ function update(game_id: number, player_number: number, updates: Partial<LivePla
 	db.call(() => {
 		db.runRowUpdate({
 			tableName: 'live_player_games',
-			allowedColumns: databaseTables.ALL_LIVE_PLAYER_GAMES_COLUMNS,
 			updates,
 			errorContext: `updating live player game (game_id=${game_id}, player=${player_number})`,
 			whereClause: 'game_id = ? AND player_number = ?',

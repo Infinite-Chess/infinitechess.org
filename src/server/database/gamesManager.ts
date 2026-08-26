@@ -8,7 +8,14 @@ import uuid from '../../shared/util/uuid.js';
 import jsonutil from '../../shared/util/jsonutil.js';
 
 import db from './database.js';
-import databaseTables from './databaseTables.js';
+
+// Constants ----------------------------------------------------------------------------------
+
+/**
+ * 62**4: Limit of unique game id with 4-digit base-62 game ids! EXCLUSIVE.
+ * Matches `memberManager`'s user-id cap, but nothing depends on the two being equal.
+ */
+const GAME_ID_UPPER_CAP: number = 14_776_336;
 
 // Types --------------------------------------------------------------------------------------
 
@@ -57,7 +64,7 @@ function decodeID(idStr: string): number | undefined {
 	} catch {
 		return undefined; // Invalid base62 characters
 	}
-	if (decoded >= databaseTables.GAME_ID_UPPER_CAP) return undefined; // Out of range
+	if (decoded >= GAME_ID_UPPER_CAP) return undefined; // Out of range
 	// Prevents '000f6Ke' from being treated as game id 'f6Ke'
 	if (uuid.base10ToBase62(decoded) !== idStr) return undefined; // Non-canonical encoding
 	return decoded;
@@ -81,8 +88,8 @@ function genUniqueID(): number {
  * @returns - A random game_id.
  */
 function generateRandomGameId(): number {
-	// Generate a random number between 0 and databaseTables.GAME_ID_UPPER_CAP
-	return Math.floor(Math.random() * databaseTables.GAME_ID_UPPER_CAP);
+	// Generate a random number between 0 and GAME_ID_UPPER_CAP
+	return Math.floor(Math.random() * GAME_ID_UPPER_CAP);
 }
 
 /**
@@ -113,7 +120,7 @@ function getData<K extends GamesColumn>(
 	columns: K[],
 ): Pick<GamesRecord, K> | undefined {
 	return db.call(() => {
-		db.assertColumnsValid(columns, databaseTables.ALL_GAMES_COLUMNS, 'games');
+		db.assertColumnsValid(columns, 'games');
 
 		// Arguments are valid, move onto the SQL query
 		const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id = ?`;
@@ -134,7 +141,7 @@ function getMultipleData<K extends GamesColumn>(
 ): Pick<GamesRecord, K>[] {
 	return db.call(
 		() => {
-			db.assertColumnsValid(columns, databaseTables.ALL_GAMES_COLUMNS, 'games');
+			db.assertColumnsValid(columns, 'games');
 
 			// Arguments are valid, move onto the SQL query
 			const placeholders = game_id_list.map(() => '?').join(', ');
@@ -183,7 +190,6 @@ function insert(record: GamesRecord): void {
 function update(game_id: number, updates: Partial<GamesRecord>): void {
 	db.runRowUpdate({
 		tableName: 'games',
-		allowedColumns: databaseTables.ALL_GAMES_COLUMNS,
 		excludedColumns: ['game_id'],
 		updates,
 		errorContext: `updating game ${game_id}`,

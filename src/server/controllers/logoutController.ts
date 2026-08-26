@@ -1,11 +1,16 @@
 // src/server/controllers/logoutController.ts
 
+/**
+ * Ends a session: clears its cookies, deletes its refresh token, and closes every
+ * socket it opened.
+ */
+
 import type { Request, Response } from 'express';
 
 import socketutil from '../../shared/util/socketutil.js';
 
 import logEvents from '../utility/logEvents.js';
-import sessionManager from './authenticationTokens/sessionManager.js';
+import sessionManager from './sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
 

@@ -1,5 +1,15 @@
 // src/server/controllers/passwordResetController.ts
 
+/**
+ * The password-reset flow: emailing a single-use reset link, serving the reset page it
+ * points at, and setting the new password once the token checks out.
+ *
+ * Only the token's hash is ever stored, and a request for an unknown address answers the
+ * same generic 200 as a known one, so the endpoint cannot enumerate accounts.
+ *
+ * See docs/systems/PASSWORD_RESET.md.
+ */
+
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
@@ -13,7 +23,7 @@ import roles from './roles.js';
 import urlUtils from '../utility/urlUtils.js';
 import logEvents from '../utility/logEvents.js';
 import emailService from '../utility/emailService.js';
-import sessionManager from './authenticationTokens/sessionManager.js';
+import sessionManager from './sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import blacklistManager from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';

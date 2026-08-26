@@ -1,4 +1,4 @@
-// src/server/api/GameAPI.ts
+// src/server/api/gameAPI.ts
 
 /**
  * HTTP API handler for fetching a concluded ("dead") game's state.

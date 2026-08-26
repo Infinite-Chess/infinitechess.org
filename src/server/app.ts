@@ -28,6 +28,8 @@ import requestContext from './utility/requestContext.js';
 import reqTranslations from './config/reqTranslations.js';
 import htmlCacheControl from './middleware/htmlCacheControl.js';
 
+// Functions ----------------------------------------------------------------------------------
+
 /**
  * Assembles the request pipeline onto the app, in order.
  * @param app - The express application instance.
@@ -73,11 +75,13 @@ function configurePipeline(app: Express): void {
 	app.use(errorHandler);
 }
 
+// Setup --------------------------------------------------------------------------------------
+
 const app = express();
 
 // Trust 1 proxy hop (Cloudflare) so req.ip reflects the real client.
 // This number must match the actual proxy count, AND all traffic
-// must reach the origin only through Cloudflare. See utility/IP.ts.
+// must reach the origin only through Cloudflare. See utility/ip.ts.
 app.set('trust proxy', 1);
 app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
 
@@ -97,5 +101,7 @@ reqLanguage.install(app);
 reqTranslations.install(app);
 
 configurePipeline(app); // Assemble the request pipeline
+
+// Exports ------------------------------------------------------------------------------------
 
 export default app;

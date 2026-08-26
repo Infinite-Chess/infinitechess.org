@@ -1,4 +1,4 @@
-// src/server/controllers/authenticationTokens/refreshTokenCookie.ts
+// src/server/cookies/refreshTokenCookie.ts
 
 /**
  * Manages the `jwt` cookie — our refresh/session token — creating,

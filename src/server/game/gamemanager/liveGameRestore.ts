@@ -51,7 +51,7 @@ interface RestoredGame {
 }
 
 /** Timers that may need to be started for a restored game, based on its state at the time of server shutdown. */
-interface PendingTimers {
+export interface PendingTimers {
 	/** Per-player disconnect state to restore. */
 	disconnectTimers: PlayerGroup<DisconnectTimerState>;
 	/**
@@ -83,7 +83,7 @@ interface DisconnectTimerState {
 
 /**
  * Restores all live games from the database.
- * Called once during server startup, after databaseTables.initDatabase() and before accepting connections.
+ * Called once during server startup, after databaseInit.init() and before accepting connections.
  *
  * @returns An array of restored ServerGame objects with their pending timers.
  * The caller is responsible for integrating these into the active game system.

@@ -7,7 +7,7 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
-import IP from '../utility/IP.js';
+import ip from '../utility/ip.js';
 import banned from '../database/banned.js';
 import logEvents from '../utility/logEvents.js';
 import requestMeter from '../utility/requestMeter.js';
@@ -15,6 +15,8 @@ import respondError from './respondError.js';
 import renderContext from '../utility/renderContext.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
+// Constants ----------------------------------------------------------------------------------
 
 /**
  * Whether the server is running in development mode.
@@ -37,12 +39,14 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) {
  * @param res - The response object
  * @param next - The function to call, when finished, to continue the middleware waterfall.
  */
+// Functions ----------------------------------------------------------------------------------
+
 function rateLimit(req: Request, res: Response, next: NextFunction): void {
 	if (!ARE_RATE_LIMITING) return next(); // Not rate limiting
 
 	requestMeter.recordRecent();
 
-	const clientIP = IP.get(req);
+	const clientIP = ip.get(req);
 	if (!clientIP) {
 		logEvents.add('Unable to identify client IP address.', 'errLog');
 		res.status(400).json({ message: 'Unable to identify IP address' });
@@ -121,5 +125,7 @@ function renderRateLimitPage(
 		},
 	);
 }
+
+// Exports ------------------------------------------------------------------------------------
 
 export default rateLimit;

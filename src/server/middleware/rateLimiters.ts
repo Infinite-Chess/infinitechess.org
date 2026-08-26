@@ -12,7 +12,7 @@ import rateLimit from 'express-rate-limit';
 // Options ------------------------------------------------------------------------------------
 
 /** Produces a rate-limit handler that responds with the given translation key. */
-function make_handler(key: keyof ScriptTranslations['responses']['rate_limiting']) {
+function makeHandler(key: keyof ScriptTranslations['responses']['rate_limiting']) {
 	return (req: Request, res: Response): Response =>
 		res.status(429).json({
 			message: req.t.responses.rate_limiting[key],
@@ -20,13 +20,13 @@ function make_handler(key: keyof ScriptTranslations['responses']['rate_limiting'
 }
 
 /** Default options for all rate limiters. */
-const default_options = {
+const DEFAULT_OPTIONS = {
 	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
 	legacyHeaders: false, // Disable the outdated `X-RateLimit-*` headers
 	// Integration tests share one IP and blow past per-IP caps,
 	// so all limiters are inert under vitest.
 	skip: (): boolean => process.env['NODE_ENV'] === 'test',
-	handler: make_handler('generic'),
+	handler: makeHandler('generic'),
 };
 
 // Limiters -----------------------------------------------------------------------------------
@@ -39,8 +39,8 @@ const createAccount = rateLimit({
 	windowMs: 1000 * 60 * 60 * 24, // 1 day
 	max: 6,
 	skipFailedRequests: true, // Only counts if a pending registration was created (email sent)
-	...default_options,
-	handler: make_handler('account_creations'),
+	...DEFAULT_OPTIONS,
+	handler: makeHandler('account_creations'),
 });
 
 /**
@@ -51,7 +51,7 @@ const createAccountAttempt = rateLimit({
 	windowMs: 1000 * 60 * 5, // 5 minutes
 	max: 20,
 	skipSuccessfulRequests: true, // Only counts if no pending registration was made (no email)
-	...default_options,
+	...DEFAULT_OPTIONS,
 });
 
 /**
@@ -61,15 +61,15 @@ const createAccountAttempt = rateLimit({
 const usernameAvailability = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 30,
-	...default_options,
+	...DEFAULT_OPTIONS,
 });
 
 /** Verification Email Limiter (pending registration email change) */
 const verificationEmail = rateLimit({
 	windowMs: 1000 * 60 * 60, // 1 hour
 	max: 8,
-	...default_options,
-	handler: make_handler('email_requests'),
+	...DEFAULT_OPTIONS,
+	handler: makeHandler('email_requests'),
 });
 
 /**
@@ -80,43 +80,43 @@ const verificationEmail = rateLimit({
 const authAttempt = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 20,
-	...default_options,
+	...DEFAULT_OPTIONS,
 });
 
 /** Forgot Password Email Limiter */
 const forgotPassword = rateLimit({
 	windowMs: 1000 * 60 * 60, // 1 hour
 	max: 8,
-	...default_options,
-	handler: make_handler('email_requests'),
+	...DEFAULT_OPTIONS,
+	handler: makeHandler('email_requests'),
 });
 
 /** Editor Save Limiter */
 const editorSave = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 10,
-	...default_options,
+	...DEFAULT_OPTIONS,
 });
 
 /** Editor Load Limiter */
 const editorLoad = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 30,
-	...default_options,
+	...DEFAULT_OPTIONS,
 });
 
 /** Seek Preview Limiter */
 const seekPreview = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 20,
-	...default_options,
+	...DEFAULT_OPTIONS,
 });
 
 /** Dead-game state fetch limiter. Game states can be large. */
 const gameState = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 30,
-	...default_options,
+	...DEFAULT_OPTIONS,
 });
 
 // Exports ------------------------------------------------------------------------------------

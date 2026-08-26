@@ -3,6 +3,10 @@
 /**
  * This module constructs and dispatches application emails:
  * account verification, password resets, and rating abuse alerts.
+ *
+ * Blacklist screening is deliberately NOT done here — every flow gates at its own entrance
+ * (accountValidation, registerController, passwordResetController), because only the caller
+ * can shape the reply a blocked address gets. A check here could merely drop the mail.
  */
 
 import jsutil from '../../shared/util/jsutil.js';
@@ -12,13 +16,12 @@ import mailer from './mailer.js';
 import urlUtils from './urlUtils.js';
 import logEvents from './logEvents.js';
 import emailTemplates from './emailTemplates.js';
-import blacklistManager from '../database/blacklistManager.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
 
 // Email Senders -----------------------------------------------------------------------------------
 
 /**
- * Sends an account verification email, IF the recipient is not blacklisted.
+ * Sends an account verification email.
  * The link points at the verify endpoint that promotes the pending registration.
  * @param recipientEmail - The recipient's email address, in LOWERCASE.
  * @param username - The username to be shown in the email body.
@@ -32,14 +35,6 @@ async function sendEmailConfirmation(
 	language: string,
 ): Promise<void> {
 	try {
-		if (blacklistManager.isBlacklisted(recipientEmail)) {
-			logEvents.addAndPrint(
-				`[BLOCKED] Skipping email confirmation to ${recipientEmail} (Blacklisted)`,
-				'blacklistLog',
-			);
-			return;
-		}
-
 		const baseUrl = urlUtils.getAppBaseUrl();
 		const verificationUrl = new URL(`${baseUrl}/verify/${verificationToken}`).toString();
 

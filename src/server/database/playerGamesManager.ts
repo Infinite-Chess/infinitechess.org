@@ -9,7 +9,6 @@ import type { Player } from '../../shared/util/typeutil.js';
 import jsonutil from '../../shared/util/jsonutil.js';
 
 import db from './database.js';
-import databaseTables from './databaseTables.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -45,7 +44,7 @@ function getOpponentsOfUser<K extends PlayerGamesColumn>(
 ): Pick<PlayerGamesRecord, K>[] {
 	return db.call(
 		() => {
-			db.assertColumnsValid(columns, databaseTables.ALL_PLAYER_GAMES_COLUMNS, 'player_games');
+			db.assertColumnsValid(columns, 'player_games');
 
 			// Move onto the SQL query
 			const placeholders = game_id_list.map(() => '?').join(', ');
@@ -77,7 +76,7 @@ function getOfGame<K extends PlayerGamesColumn>(
 	columns: K[],
 ): Pick<PlayerGamesRecord, K>[] {
 	return db.call(() => {
-		db.assertColumnsValid(columns, databaseTables.ALL_PLAYER_GAMES_COLUMNS, 'player_games');
+		db.assertColumnsValid(columns, 'player_games');
 
 		const query = `SELECT ${columns.join(', ')} FROM player_games WHERE game_id = ?`;
 		return db.all<Pick<PlayerGamesRecord, K>>(query, [game_id]);
@@ -101,7 +100,7 @@ function getRecentNRatedForUser<K extends PlayerGamesColumn>(
 	columns: K[],
 ): Pick<PlayerGamesRecord, K>[] {
 	return db.call(() => {
-		db.assertColumnsValid(columns, databaseTables.ALL_PLAYER_GAMES_COLUMNS, 'player_games');
+		db.assertColumnsValid(columns, 'player_games');
 
 		// Move on to the SQL query
 		const selectClause = columns.map((col) => `pg.${col}`).join(', ');
@@ -155,7 +154,6 @@ function insert(record: PlayerGamesRecord): void {
 function update(game_id: number, player_number: Player, updates: Partial<PlayerGamesRecord>): void {
 	db.runRowUpdate({
 		tableName: 'player_games',
-		allowedColumns: databaseTables.ALL_PLAYER_GAMES_COLUMNS,
 		excludedColumns: ['user_id', 'game_id', 'player_number'],
 		updates,
 		errorContext: `updating player_games row (game ${game_id}, player ${player_number})`,

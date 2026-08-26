@@ -12,7 +12,7 @@ import { parse as parseCookie } from 'cookie';
 
 import socketutil from '../../shared/util/socketutil.js';
 
-import IP from '../utility/IP.js';
+import ip from '../utility/ip.js';
 import reqLogger from '../utility/reqLogger.js';
 import logEvents from '../utility/logEvents.js';
 import socketsend from './socketSend.js';
@@ -108,8 +108,8 @@ function closeIfInvalidAndAddMetadata(
 		return;
 	}
 
-	const ip = IP.get(req);
-	if (ip === undefined) {
+	const clientIP = ip.get(req);
+	if (clientIP === undefined) {
 		logEvents.add('Unable to identify IP address from websocket connection!', 'hackLog');
 		socket.close(1008, socketutil.ClosureReasons.UNIDENTIFIABLE_IP);
 		return;
@@ -141,7 +141,7 @@ function closeIfInvalidAndAddMetadata(
 		userAgent,
 		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
 		id: socketRegistry.generateUniqueID(), // Sets the ws.metadata.id property of the websocket
-		IP: ip,
+		IP: clientIP,
 		echoTimers: {},
 	};
 

@@ -1,5 +1,10 @@
 // src/server/database/blacklistManager.ts
 
+/**
+ * This script handles queries to the email_blacklist table: addresses we no longer send to,
+ * because mail to them hard-bounced or an admin banned them.
+ */
+
 import db from './database.js';
 import logEvents from '../utility/logEvents.js';
 

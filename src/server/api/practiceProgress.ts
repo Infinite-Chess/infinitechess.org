@@ -1,8 +1,8 @@
-// src/server/api/PracticeProgress.ts
+// src/server/api/practiceProgress.ts
 
 /**
  * This script updates the checkmates_beaten list in the database when a user submits a newly completed checkmate.
- * (The checkmates_beaten cookie itself is owned by controllers/practiceProgressCookie.ts.)
+ * (The checkmates_beaten cookie itself is owned by cookies/practiceProgressCookie.ts.)
  */
 
 import type { Request, Response } from 'express';
@@ -11,7 +11,7 @@ import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 
 import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
-import practiceProgressCookie from '../controllers/practiceProgressCookie.js';
+import practiceProgressCookie from '../cookies/practiceProgressCookie.js';
 
 /** `PUT /api/checkmates-progress` — records a checkmate the signed-in user has beaten. */
 function postCheckmateBeaten(req: Request, res: Response): void {

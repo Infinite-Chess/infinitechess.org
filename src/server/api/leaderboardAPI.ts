@@ -1,4 +1,4 @@
-// src/server/api/LeaderboardAPI.ts
+// src/server/api/leaderboardAPI.ts
 
 /**
  * Serves the ranked entries of a leaderboard to the client's leaderboard/profile script.

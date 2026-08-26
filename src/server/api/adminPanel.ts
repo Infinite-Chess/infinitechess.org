@@ -1,4 +1,4 @@
-// src/server/api/AdminPanel.ts
+// src/server/api/adminPanel.ts
 
 /**
  * This script handles all incoming commands send from the admin console page
@@ -10,8 +10,8 @@ import type { Request, Response } from 'express';
 import validators from '../../shared/util/validators.js';
 
 import roles from '../controllers/roles.js';
-import GitHub from './GitHub.js';
 import logEvents from '../utility/logEvents.js';
+import contributors from './contributors.js';
 import memberManager from '../database/memberManager.js';
 import blacklistManager from '../database/blacklistManager.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
@@ -309,7 +309,7 @@ function getUserInfo(command: string, commandAndArgs: string[], req: Request, re
 
 function updateContributorsCommand(command: string, req: Request, res: Response): void {
 	logCommand(command, req);
-	GitHub.refreshContributorsList();
+	contributors.refresh();
 	sendAndLogResponse(res, 200, 'Contributors should now be updated!');
 }
 

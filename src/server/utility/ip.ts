@@ -1,4 +1,4 @@
-// src/server/utility/IP.ts
+// src/server/utility/ip.ts
 
 /**
  * This module reads the IP address attached to incoming
