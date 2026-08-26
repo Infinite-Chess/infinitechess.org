@@ -6,6 +6,8 @@ logs
 dist
 # Claude Code per-machine settings
 .claude/settings.local.json
+# Agent worktrees
+.worktrees/
 # Agent ad-hoc scripts
 sandbox/
 # Old json data storage "database"
