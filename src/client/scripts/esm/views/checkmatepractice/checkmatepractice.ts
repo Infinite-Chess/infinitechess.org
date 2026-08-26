@@ -31,7 +31,7 @@ import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../../game/chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
-import { retryFetch, RetryFetchOptions } from '../../util/fetchRetrier.js';
+import { retryFetch, RetryFetchOptions } from '../../util/fetchretrier.js';
 
 // Variables -------------------------------------------------------------------
 

@@ -33,7 +33,7 @@ import highlights from '../rendering/highlights/highlights.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import dragarrows from '../rendering/dragging/dragarrows.js';
 import Transition from '../rendering/transitions/Transition.js';
-import maskedDraw from '../../webgl/maskedDraw.js';
+import maskeddraw from '../../webgl/maskeddraw.js';
 import primitives from '../../board/rendering/primitives.js';
 import gamesession from './gamesession.js';
 import arrowshifts from '../rendering/arrows/arrowshifts.js';
@@ -91,7 +91,7 @@ let effectZoneManager: EffectZoneManager | undefined;
 function init(canvas: HTMLCanvasElement): void {
 	element_canvas = canvas;
 	programManager = new ProgramManager(gl);
-	const gameMasker = maskedDraw.init(gl, programManager);
+	const gameMasker = maskeddraw.init(gl, programManager);
 	gameContext = new RenderContext({
 		gl,
 		canvas,
@@ -258,7 +258,7 @@ function renderScene(): void {
 	 */
 
 	// Star Field Animation: Appears in border & voids
-	maskedDraw.execute(
+	maskeddraw.execute(
 		() => piecemodels.renderVoids(gameContext, mesh), // INCLUSION MASK is our voids
 		() => border.drawPlayableRegionMask(gameContext, gamefile.gameRules.worldBorder), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
@@ -267,7 +267,7 @@ function renderScene(): void {
 	);
 	// Board Tiles & Voids: Mask the playable region so the tiles
 	// don't render outside the world border or where voids should be
-	maskedDraw.execute(
+	maskeddraw.execute(
 		() => border.drawPlayableRegionMask(gameContext, gamefile.gameRules.worldBorder), // INCLUSION MASK containing playable region
 		() => piecemodels.renderVoids(gameContext, mesh), // EXCLUSION MASK (voids)
 		() => renderTilesAndPromoteLines(gamefile), // MAIN SCENE

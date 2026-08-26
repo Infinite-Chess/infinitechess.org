@@ -11,7 +11,7 @@ import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
 import logEvents from '../utility/logEvents.js';
-import ratingcalculation from '../utility/ratingcalculation.js';
+import ratingCalculation from '../utility/ratingCalculation.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -147,7 +147,7 @@ function getTopPlayers(
 		() =>
 			db.all<LeaderboardEntry>(query, [
 				leaderboard_id,
-				ratingcalculation.UNCERTAIN_LEADERBOARD_RD,
+				ratingCalculation.UNCERTAIN_LEADERBOARD_RD,
 				n_players,
 				offset,
 			]),
@@ -183,7 +183,7 @@ function getPlayerRank(user_id: number, leaderboard_id: Leaderboard): number | u
 		() =>
 			db.get<{ rank: number }>(query, [
 				leaderboard_id,
-				ratingcalculation.UNCERTAIN_LEADERBOARD_RD,
+				ratingCalculation.UNCERTAIN_LEADERBOARD_RD,
 				user_id,
 				user_id,
 			]),
@@ -205,9 +205,9 @@ function getPlayerRank(user_id: number, leaderboard_id: Leaderboard): number | u
 function getEloOfPlayer(user_id: number, leaderboard_id: Leaderboard): Rating {
 	const rating_values = getPlayerRating(user_id, leaderboard_id);
 	if (!rating_values)
-		return { value: ratingcalculation.DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
+		return { value: ratingCalculation.DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
-	const confident = ratingcalculation.isRatingConfident(rating_values.rating_deviation);
+	const confident = ratingCalculation.isRatingConfident(rating_values.rating_deviation);
 	return { value: rating_values.elo, confident };
 }
 
@@ -224,11 +224,11 @@ function getAllLeaderboardEntries(): LeaderboardEntry[] {
 
 // Regular Table Utility Functions ---------------------------------------------
 
-/** Calls updateAllRatingDeviationsOfLeaderboardTable() every {@link ratingcalculation.RD_UPDATE_FREQUENCY} milliseconds */
+/** Calls updateAllRatingDeviationsOfLeaderboardTable() every {@link ratingCalculation.RD_UPDATE_FREQUENCY} milliseconds */
 function startPeriodicRatingDeviationUpdate(): void {
 	setInterval(
 		() => updateAllRatingDeviationsOfLeaderboardTable(),
-		ratingcalculation.RD_UPDATE_FREQUENCY,
+		ratingCalculation.RD_UPDATE_FREQUENCY,
 	);
 }
 
@@ -237,7 +237,7 @@ function updateAllRatingDeviationsOfLeaderboardTable(): void {
 	try {
 		const entries = getAllLeaderboardEntries();
 		for (const entry of entries) {
-			const updatedRD = ratingcalculation.getTrueRD(
+			const updatedRD = ratingCalculation.getTrueRD(
 				entry.rating_deviation,
 				entry.rd_last_update_date,
 			);

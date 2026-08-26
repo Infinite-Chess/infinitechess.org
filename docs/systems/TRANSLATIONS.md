@@ -18,7 +18,7 @@ translation/
 
 A component's TOML may include a top-level `[script]` sub-table. Everything **outside** `[script]` is for server-side templating only; the `[script]` block is the **only** part that can be shipped to the browser. A component whose keys are _all_ script-facing can set top-level `script_only = true` and write subtable headers without the `script.` prefix — see [translation/shared/en-US.toml](/translation/shared/en-US.toml).
 
-Config lives in [src/server/config/translationconfig.ts](/src/server/config/translationconfig.ts) (`DEFAULT_LANGUAGE`, `TRANSLATION_FOLDER`, `EXCLUDED_DIRS`).
+Config lives in [src/server/config/translationConfig.ts](/src/server/config/translationConfig.ts) (`DEFAULT_LANGUAGE`, `TRANSLATION_FOLDER`, `EXCLUDED_DIRS`).
 
 ## Boot
 
@@ -156,7 +156,7 @@ When working on this refactor, the migration approach in todo.md is: localize ea
 | -------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | Loader, getters, deepMerge, XSS        | [src/server/config/componentTranslationLoader.ts](/src/server/config/componentTranslationLoader.ts) |
 | Boot wiring                            | [src/server/config/i18n.ts](/src/server/config/i18n.ts)                                             |
-| Constants (folder, default lang)       | [src/server/config/translationconfig.ts](/src/server/config/translationconfig.ts)                   |
+| Constants (folder, default lang)       | [src/server/config/translationConfig.ts](/src/server/config/translationConfig.ts)                   |
 | Language resolution (`req.lang`)       | [src/server/config/reqLanguage.ts](/src/server/config/reqLanguage.ts)                               |
 | Request-bound translations (`req.t`)   | [src/server/config/reqTranslations.ts](/src/server/config/reqTranslations.ts)                       |
 | Connection-bound translations (`ws.t`) | [src/server/socket/socketOpen.ts](/src/server/socket/socketOpen.ts)                                 |

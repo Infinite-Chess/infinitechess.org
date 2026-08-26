@@ -10,33 +10,33 @@
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
 import socketsend from '../../socket/socketSend.js';
-import gamemanager from './gamemanager.js';
-import gamesockets from './gamesockets.js';
-import activegames from './activegames.js';
-import gamestatebuilder from './gamestatebuilder.js';
+import gameManager from './gameManager.js';
+import gameSockets from './gameSockets.js';
+import activeGames from './activeGames.js';
+import gameStateBuilder from './gameStateBuilder.js';
 
 /**
  * Fires when a client sends the 'subscribe' action with a game id, to attach to a live game and
  * receive its current state. Also the live-reconnect path (the socket reopened mid-game).
  */
 function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
-	const game = activegames.getByID(game_id);
+	const game = activeGames.getByID(game_id);
 	if (game !== undefined) {
 		// Live game
-		const ourRole = gamesockets.getRole(game, ws);
+		const ourRole = gameSockets.getRole(game, ws);
 		if (ourRole !== undefined) {
 			// Participant path: attach, then send the current state.
-			const { evicted } = gamemanager.subscribeParticipant(game, ws, ourRole);
+			const { evicted } = gameManager.subscribeParticipant(game, ws, ourRole);
 			// A takeover kicks the previous tab, terminating its engine worker mid-search. It can
 			// never finish that search, so rewind the engine's turn before this client resumes it.
-			if (evicted) gamemanager.freezeEngineClock(game);
-			gamemanager.resumeEngineClock(game);
-			const gameStateMessage = gamestatebuilder.buildStateMessage(game, ourRole, false);
+			if (evicted) gameManager.freezeEngineClock(game);
+			gameManager.resumeEngineClock(game);
+			const gameStateMessage = gameStateBuilder.buildStateMessage(game, ourRole, false);
 			socketsend.send(ws, 'game', 'gamestate', gameStateMessage);
 		} else {
 			// Spectator path: attach, then send the role-agnostic state (no participantState overlay).
-			gamesockets.attachSpectator(game, ws);
-			const gameStateBaseMessage = gamestatebuilder.buildStateBase(game);
+			gameSockets.attachSpectator(game, ws);
+			const gameStateBaseMessage = gameStateBuilder.buildStateBase(game);
 			socketsend.send(ws, 'game', 'gamestate', gameStateBaseMessage);
 		}
 	} else {

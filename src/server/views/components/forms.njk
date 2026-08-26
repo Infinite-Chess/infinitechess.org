@@ -8,7 +8,7 @@
 {% endmacro %}
 
 {# Password input with a show/hide eye toggle. The toggle's behavior is wired by
-   util/passwordToggle.ts (which keys off the .password-toggle class). #}
+   util/passwordtoggle.ts (which keys off the .password-toggle class). #}
 {% macro passwordInput(id, name, autocomplete) %}
 <div class="password-wrap">
 	{# maxlength 72: the password max length from validatePassword() in validators.ts (bcrypt's 72-byte limit). #}

@@ -10,7 +10,7 @@
  * board, or recolored into a monochrome silhouette. The classical file is preloaded on
  * import, since every single game uses it.
  *
- * `server/config/piecesvgcache.ts` is the server's counterpart, reading these same
+ * `server/config/pieceSvgCache.ts` is the server's counterpart, reading these same
  * files off disk as markup for SSR'd piece icons.
  */
 

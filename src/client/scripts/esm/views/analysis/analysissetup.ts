@@ -13,18 +13,18 @@ import docutil from '../../util/docutil.js';
 import gamesession from '../../game/chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
 import analysisloader from './analysisloader.js';
-import variantSelector from '../../board/variantselector/variantSelector.js';
-import modifierSelector from '../../board/variantselector/modifierSelector.js';
+import variantselector from '../../board/variantselector/variantselector.js';
+import modifierselector from '../../board/variantselector/modifierselector.js';
 
 /** Wires the widget's commit callbacks to load the selection onto the board. */
 function init(): void {
 	// Allow analyzing positions of any size.
-	variantSelector.initVariantGroupDropdown({ isSeekContext: false, onCommit: loadSelection });
-	variantSelector.initIcnValidation();
-	modifierSelector.initModifierSelector({ onCommit: loadSelection });
+	variantselector.initVariantGroupDropdown({ isSeekContext: false, onCommit: loadSelection });
+	variantselector.initIcnValidation();
+	modifierselector.initModifierSelector({ onCommit: loadSelection });
 	// A move on the board abandons any un-committed selection (e.g. an opened, empty From-ICN
 	// field), so snap the display back to the variant actually loaded on the board.
-	GameBus.addEventListener('physical-move', () => variantSelector.restoreAcceptedDisplay());
+	GameBus.addEventListener('physical-move', () => variantselector.restoreAcceptedDisplay());
 	// Fires for every load, whoever started it (the initial one included) and whether it
 	// finished or failed — matching the isLoading() check the owed load is waiting on.
 	// Deferred out of the dispatch, since draining unloads the game its listeners are reading.
@@ -41,12 +41,12 @@ function onPaste(e: ClipboardEvent): void {
 	// clipboardData is only ever absent on synthetic events, but the DOM types it nullable.
 	const icn = e.clipboardData?.getData('text/plain').trim();
 	if (!icn) return; // Nothing textual was pasted (e.g. an image)
-	void variantSelector.applyIcn(icn);
+	void variantselector.applyIcn(icn);
 }
 
 /** The active Slide Limit modifier as a bigint gamerule, or undefined if none is selected. */
 function getSelectedSlideLimit(): bigint | undefined {
-	for (const modifier of modifierSelector.getGameModifiers()) {
+	for (const modifier of modifierselector.getGameModifiers()) {
 		if (modifier.kind === 'slide-limit') return BigInt(modifier.value);
 	}
 	return undefined;
@@ -65,13 +65,13 @@ function loadSelection(): void {
 	}
 
 	const slideLimit = getSelectedSlideLimit();
-	const selection = variantSelector.getSelection();
+	const selection = variantselector.getSelection();
 
 	if (selection.kind === 'preset') {
 		void analysisloader.loadVariant(selection.code, slideLimit);
 	} else {
 		// Custom (saved position or ICN) — only load once it resolves to a legal position.
-		const custom = variantSelector.getCustomPosition();
+		const custom = variantselector.getCustomPosition();
 		if (custom === null) return;
 		if (custom.kind === 'options') {
 			// Saved position — its options are already resolved; load them directly.
@@ -83,7 +83,7 @@ function loadSelection(): void {
 	}
 
 	// Remember what's now loaded, so a later board move can revert the display to it.
-	variantSelector.snapshotAccepted();
+	variantselector.snapshotAccepted();
 }
 
 /** Runs the load refused during the one that just finished, re-reading the selection fresh. */

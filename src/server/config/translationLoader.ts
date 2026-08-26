@@ -12,7 +12,7 @@ import { parse } from 'smol-toml';
 import { fileURLToPath } from 'node:url';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 
-import tconfig from './translationconfig.js';
+import tconfig from './translationConfig.js';
 
 // Types -----------------------------------------------------------------------
 

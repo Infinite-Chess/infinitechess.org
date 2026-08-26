@@ -11,7 +11,7 @@ import piecethemes, { PieceColorGroup } from '../../../../../shared/chess/util/p
 import docutil from '../../util/docutil.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import validatorama from '../../util/validatorama.js';
-import { serverFetch } from '../../util/serverFetch.js';
+import { serverfetch } from '../../util/serverfetch.js';
 
 /** Prefs that do NOT get saved on the server side */
 const clientSidePrefs: string[] = [
@@ -137,7 +137,7 @@ async function sendPrefsToServer(): Promise<void> {
 
 async function PUTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 	try {
-		const response: Response = await serverFetch('/api/preferences', {
+		const response: Response = await serverfetch('/api/preferences', {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json',

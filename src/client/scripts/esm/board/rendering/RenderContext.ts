@@ -15,7 +15,7 @@ import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import type { Camera } from './camera.js';
 import type { BoardPos } from './boardpos.js';
 import type { BoardTiles } from './boardtiles.js';
-import type { MaskedDraw } from '../../webgl/maskedDraw.js';
+import type { MaskedDraw } from '../../webgl/maskeddraw.js';
 import type { TextureCache } from '../../chess/rendering/texturecache.js';
 import type { ProgramManager } from '../../webgl/ProgramManager.js';
 import type { RenderableFactory } from '../../webgl/Renderable.js';

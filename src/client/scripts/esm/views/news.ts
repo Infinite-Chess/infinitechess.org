@@ -6,7 +6,7 @@
  */
 
 import validatorama from '../util/validatorama.js';
-import { serverFetch } from '../util/serverFetch.js';
+import { serverfetch } from '../util/serverfetch.js';
 
 /**
  * Marks all news as read for the current user
@@ -17,7 +17,7 @@ async function markNewsAsRead(): Promise<void> {
 	if (!username) return;
 
 	try {
-		const response = await serverFetch('/api/news/read', { method: 'PATCH' });
+		const response = await serverfetch('/api/news/read', { method: 'PATCH' });
 
 		if (response.ok) {
 			// Dispatch event to update header badge
@@ -33,7 +33,7 @@ async function markNewsAsRead(): Promise<void> {
  */
 async function fetchUnreadNewsDates(): Promise<string[]> {
 	try {
-		const response = await serverFetch('/api/news/unread-dates');
+		const response = await serverfetch('/api/news/unread-dates');
 
 		if (!response.ok) return [];
 

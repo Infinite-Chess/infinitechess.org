@@ -9,17 +9,17 @@
 import type { ClientboundLobbyMessage } from '../../../../../shared/transport/clientbound.js';
 
 import lobby from './lobby.js';
-import flashToast from '../../util/flashToast.js';
+import flashtoast from '../../util/flashtoast.js';
 import socketintents from '../../socket/socketintents.js';
 import { SocketBus } from '../../socket/SocketBus.js';
 
-import './newPrompt.js';
-import './gameSetupModal.js';
+import './newprompt.js';
+import './gamesetupmodal.js';
 
 // Initial setup ---------------------------------------------------------------
 
 // Show any toast queued before a redirect here (e.g. "Account activated!" after registering or "Your password was reset!").
-flashToast.consume();
+flashtoast.consume();
 
 lobby.subscribe();
 SocketBus.addEventListener('reconnect', () => lobby.subscribe());

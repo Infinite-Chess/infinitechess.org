@@ -13,7 +13,7 @@ import type { UsernameItem } from '../util/usernamecontainer.js';
 import leaderboardregistry from '../../../../shared/chess/variants/leaderboardregistry.js';
 
 import validatorama from '../util/validatorama.js';
-import { serverFetch } from '../util/serverFetch.js';
+import { serverfetch } from '../util/serverfetch.js';
 import usernamecontainer from '../util/usernamecontainer.js';
 
 // --- DOM Element Selection ---
@@ -115,7 +115,7 @@ async function populateTable(n_players: number): Promise<void> {
 			n_players: String(n_players + 1),
 			include_requester_rank: String(include_requester_rank),
 		});
-		const response = await serverFetch(
+		const response = await serverfetch(
 			`/api/leaderboards/${leaderboard_id}/top?${params}`,
 			config,
 		);

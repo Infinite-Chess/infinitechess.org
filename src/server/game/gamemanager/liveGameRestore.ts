@@ -25,14 +25,14 @@ import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
 import type { ClockValues, TimeControl } from '../../../shared/chess/util/clockutil.js';
-import type { MatchInfo, PlayerData, ServerGame } from './servergametypes.js';
+import type { MatchInfo, PlayerData, ServerGame } from './serverGameTypes.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import icnmoves from '../../../shared/chess/logic/icn/icnmoves.js';
 
 import logEvents from '../../utility/logEvents.js';
-import gameutility from './gameutility.js';
+import gameUtility from './gameUtility.js';
 import memberManager from '../../database/memberManager.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
 import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
@@ -160,7 +160,7 @@ function restoreSingleGame(
 
 	// 3. Create the game (also computes gameRules).
 	const variant = reconstructVariant(gameRow);
-	const construction = gameutility.resolveGameConstruction(
+	const construction = gameUtility.resolveGameConstruction(
 		variant,
 		gameRow.time_created,
 		gameRow.mod_slide_limit ?? undefined,
@@ -187,7 +187,7 @@ function restoreSingleGame(
 	// 5. Parse & replay moves, conditionally constructing the board state
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
-	const servergame: ServerGame = gameutility.initServerGame(game, construction, match, moves);
+	const servergame: ServerGame = gameUtility.initServerGame(game, construction, match, moves);
 
 	// 6. Compute pending timers
 	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame);

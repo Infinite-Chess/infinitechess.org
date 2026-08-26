@@ -157,7 +157,7 @@ function getMultipleData<K extends GamesColumn>(
 
 // Writes ----------------------------------------------------------------------
 
-// These intentionally skip `dbCall`. gamelogger is their only caller, and it already logs the
+// These intentionally skip `dbCall`. gameLogger is their only caller, and it already logs the
 // failure and rolls back the surrounding transaction — wrapping them would log the same error twice.
 
 /**

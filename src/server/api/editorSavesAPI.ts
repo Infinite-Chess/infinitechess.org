@@ -11,7 +11,7 @@ import * as z from 'zod';
 import jsutil from '../../shared/util/jsutil.js';
 import gamelimits from '../../shared/chess/util/gamelimits.js';
 
-import zodlogger from '../utility/zodlogger.js';
+import zodLogger from '../utility/zodLogger.js';
 import logEvents from '../utility/logEvents.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 
@@ -98,7 +98,7 @@ function savePosition(req: Request, res: Response): void {
 	if (!parseResult.success) {
 		// Not localized: unreachable via the client, only a hand-crafted request lands here.
 		res.status(400).json({ message: 'The request was invalid.' });
-		zodlogger.log(req.body, parseResult.error, `Invalid save position request body.`);
+		zodLogger.log(req.body, parseResult.error, `Invalid save position request body.`);
 		return;
 	}
 
@@ -149,7 +149,7 @@ function getPosition(req: Request, res: Response): void {
 	if (!parseResult.success) {
 		// Not localized: unreachable via the client (the name comes from the validated saved list).
 		res.status(400).json({ message: 'The position name is invalid.' });
-		zodlogger.log(req.params, parseResult.error, `Invalid get position request params.`);
+		zodLogger.log(req.params, parseResult.error, `Invalid get position request params.`);
 		return;
 	}
 
@@ -197,7 +197,7 @@ function deletePosition(req: Request, res: Response): void {
 	if (!parseResult.success) {
 		// Not localized: unreachable via the client (the name comes from the validated saved list).
 		res.status(400).json({ message: 'The position name is invalid.' });
-		zodlogger.log(req.params, parseResult.error, `Invalid delete position request params.`);
+		zodLogger.log(req.params, parseResult.error, `Invalid delete position request params.`);
 		return;
 	}
 

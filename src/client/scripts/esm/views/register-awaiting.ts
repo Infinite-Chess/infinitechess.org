@@ -9,9 +9,9 @@
  * address is PUT to /api/register/awaiting/email; success reloads the page, errors show inline.
  */
 
-import flashToast from '../util/flashToast.js';
-import { serverFetch } from '../util/serverFetch.js';
-import { emailFormatError, setFieldError } from '../util/accountFormatErrors.js';
+import flashtoast from '../util/flashtoast.js';
+import { serverfetch } from '../util/serverfetch.js';
+import { emailFormatError, setFieldError } from '../util/accountformaterrors.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -122,7 +122,7 @@ async function pollVerification(): Promise<void> {
 	}
 	lastPollAt = Date.now();
 	try {
-		const response = await serverFetch('/api/register/awaiting/status');
+		const response = await serverfetch('/api/register/awaiting/status');
 		// Only parse the body if OK: a non-OK status (e.g. a 429 from the rate limiter)
 		// isn't the JSON shape we expect, so just keep waiting and retry next tick.
 		if (response.ok) {
@@ -131,7 +131,7 @@ async function pollVerification(): Promise<void> {
 			};
 			if (result.status === 'verified') {
 				stopPolling();
-				flashToast.queue(t.awaiting.account_activated);
+				flashtoast.queue(t.awaiting.account_activated);
 				window.location.assign('/');
 				return;
 			} else if (result.status === 'expired' || result.status === 'blacklisted') {
@@ -188,7 +188,7 @@ async function submitNewEmail(): Promise<void> {
 	}
 	changeSubmit.disabled = true;
 	try {
-		const response = await serverFetch('/api/register/awaiting/email', {
+		const response = await serverfetch('/api/register/awaiting/email', {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email: newEmailInput.value.trim() }),

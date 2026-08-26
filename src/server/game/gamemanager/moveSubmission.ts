@@ -1,0 +1,340 @@
+// src/server/game/gamemanager/moveSubmission.ts
+
+/**
+ * Handles the `submitmove` game action: the trust boundary a client's move crosses before
+ * it joins the game — format, turn, move number and distance cap, then either full
+ * server-side validation or the client's own reported conclusion.
+ *
+ * Which of the two applies is the game's `validateMoves` flag; games without server-side
+ * validation are the ones `cheatReport.ts` exists for. As there, a move-triggered
+ * conclusion is broadcast from here rather than through `gameLifecycle.ts`.
+ */
+
+import type { Player } from '../../../shared/util/typeutil.js';
+import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
+import type { MoveParsed } from '../../../shared/chess/logic/icn/icnmoves.js';
+import type { ServerGame } from './serverGameTypes.js';
+import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
+import type { SubmitMoveMessage } from '../../../shared/transport/serverbound.js';
+import type { OpponentsMoveMessage } from '../../../shared/transport/clientbound.js';
+
+import bimath from '../../../shared/util/math/bimath.js';
+import typeutil from '../../../shared/util/typeutil.js';
+import icnmoves from '../../../shared/chess/logic/icn/icnmoves.js';
+import movepiece from '../../../shared/chess/logic/movepiece.js';
+import winconutil from '../../../shared/chess/util/winconutil.js';
+import gamelimits from '../../../shared/chess/util/gamelimits.js';
+import wincondition from '../../../shared/chess/logic/wincondition.js';
+import movevalidation from '../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
+
+import logEvents from '../../utility/logEvents.js';
+import socketsend from '../../socket/socketSend.js';
+import onOfferDraw from './onOfferDraw.js';
+import gameManager from './gameManager.js';
+import gameSockets from './gameSockets.js';
+import gameUtility from './gameUtility.js';
+import gameLifecycle from './gameLifecycle.js';
+import liveGameValues from './liveGameValues.js';
+import gameStateBuilder from './gameStateBuilder.js';
+
+// Constants -------------------------------------------------------------------
+
+/** The number of additional coordinate digits allowed per second of game duration. */
+const DIGITS_PER_SECOND = 4.5;
+/** The number of digits in the maximum teleport coordinate. */
+const TELEPORT_LIMIT_DIGITS = bimath.countDigits(gamelimits.TELEPORT_LIMIT);
+
+// Functions -------------------------------------------------------------------
+
+/**
+ * Call when a websocket submits a move. Performs some checks,
+ * adds the move to the game's move list, adjusts the game's
+ * properties, and alerts their opponent of the move.
+ */
+function submitMove(
+	ws: CustomWebSocket,
+	servergame: ServerGame,
+	messageContents: SubmitMoveMessage,
+): void {
+	// They can't submit a move if they aren't subscribed to a game
+	if (!ws.metadata.subscriptions.game) {
+		console.error('Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.'); // prettier-ignore
+		socketsend.send(
+			ws,
+			'general',
+			'printerror',
+			'Failed to submit move. You are not subscribed to a game.',
+		);
+		return;
+	}
+
+	// The owner submits both colors in engine games; move numbers still catch desync.
+	const engineParticipant = servergame.match.engineParticipant;
+	const role = engineParticipant ? servergame.whosTurn : ws.metadata.subscriptions.game.color;
+
+	// If the game is already over, don't accept it.
+	if (gamefileutility.isGameOver(servergame)) return;
+
+	// Make sure it's their turn
+	if (!engineParticipant && servergame.whosTurn !== role) {
+		// Can occasionally happen if they in rapid succession reconnect ('subscribe') and
+		// submit a move, then when they receive 'gamestate' their client re-submits their move.
+		// Discard this submission and push them the current state just in case they're desynced.
+		gameSockets.sendGameState(servergame, role, false);
+		return;
+	}
+
+	// Make sure the move number matches up. If not, they've desynced, send them the current state.
+	const expectedMoveNumber = servergame.moves.length + 1;
+	if (messageContents.moveNumber !== expectedMoveNumber) {
+		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEvents.addAndPrint(errString, 'hackLog');
+		gameSockets.sendGameState(servergame, role, false);
+		return;
+	}
+
+	// Verify the move is in the correct format
+	const moveParsed = doesMoveCheckOut(messageContents.move);
+	if (moveParsed === null) {
+		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEvents.addAndPrint(errString, 'hackLog');
+		socketsend.send(ws, 'general', 'printerror', 'Invalid move format.');
+		return;
+	}
+
+	// Check if the move exceeds the soft distance cap based on game duration
+	if (!isMoveWithinDistanceCap(moveParsed, servergame.match.timeCreated)) {
+		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEvents.addAndPrint(errString, 'hackLog');
+		// Force their move list to match ours, else they keep the rejected move
+		// and resubmit it on every resync, desynced for the rest of the game.
+		gameSockets.sendGameState(servergame, role, true);
+		// Send notifyerror last to override any previous toasts
+		socketsend.send(
+			ws,
+			'general',
+			'notifyerror',
+			'Move not accepted. Distance exceeds allowed limit for game duration.',
+		);
+		return;
+	}
+
+	// Use server-side validation if enabled, otherwise trust the client's reported conclusion.
+	const moveRecord = servergame.validateMoves
+		? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, role)
+		: applyClientReportedMove(ws, servergame, messageContents, moveParsed, role);
+	if (moveRecord === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
+
+	onOfferDraw.decline(servergame, role); // Auto-decline any open draw offer on move submissions
+
+	// Persist the move and updated game state to the database.
+	liveGameValues.onMoveSubmitted(servergame);
+
+	broadcastMove(servergame, moveRecord, ws, role);
+}
+
+/**
+ * Applies any move-triggered conclusion, broadcasts the
+ * move to all clients, then frees the game if it concluded.
+ * Custom version of gameLifecycle.conclude()
+ */
+function broadcastMove(
+	servergame: ServerGame,
+	moveRecord: MoveRecord,
+	ws: CustomWebSocket,
+	role: Player,
+): void {
+	if (servergame.gameConclusion === undefined) {
+		// Game not over: send the move-submitter only the updated clocks.
+		if (!servergame.untimed) {
+			const message = gameUtility.getClockValues(servergame);
+			socketsend.send(ws, 'game', 'clock', message);
+		}
+	} else {
+		// The game ended: apply the conclusion (stops the clocks),
+		// then send the submitter the conclusion message.
+		gameLifecycle.applyConclusion(servergame, servergame.gameConclusion);
+		const conclusionMessage = gameStateBuilder.buildConclusionMessage(servergame);
+		socketsend.send(ws, 'game', 'gameconclusion', conclusionMessage);
+	}
+
+	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
+	const moveMessage = buildMoveMessage(servergame, moveRecord);
+	if (!gameUtility.isEngineGame(servergame))
+		gameSockets.sendToColor(servergame.match, typeutil.invertPlayer(role), 'game', 'move', moveMessage); // prettier-ignore
+	gameSockets.broadcastToSpectators(servergame, 'move', moveMessage);
+
+	// Free, finalize, and evict the game if it's concluded.
+	if (servergame.gameConclusion !== undefined) gameLifecycle.free(servergame);
+}
+
+/**
+ * Validates the move against the server-side board simulation, makes it, and updates the game state.
+ * Returns the resulting MoveRecord, or undefined if the move was illegal (error messages are sent to the client).
+ */
+function applyServerValidatedMove(
+	ws: CustomWebSocket,
+	servergame: ServerGame & { validateMoves: true },
+	messageContents: SubmitMoveMessage,
+	moveParsed: MoveParsed,
+	role: Player,
+): MoveRecord | undefined {
+	const validationResult = movevalidation.validateMove(servergame, moveParsed);
+	if (!validationResult.valid) {
+		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEvents.addAndPrint(errString, 'hackLog');
+		// Send the sender the current game state to correct their board if a bug somehow caused this
+		gameSockets.sendGameState(servergame, role, true); // forceSync true to force their move list to match ours
+		// Send notifyerror last to override any previous toasts
+		socketsend.send(
+			ws,
+			'general',
+			'notifyerror',
+			'Oops! That was an illegal move. If this is a bug, please report it!',
+		);
+		return;
+	}
+
+	// Generate and make the move. makeMove pushes the resulting MoveFull onto servergame.moves.
+	const moveRecord = movepiece.generateAndMakeMove(servergame, validationResult.tagged);
+
+	// Push the clock after the move has been added to servergame.moves.
+	const clockStamp = gameManager.pushClock(servergame);
+	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp;
+
+	// The server determines the game conclusion; discard any client-claimed conclusion.
+	// Auto-sets basegame.gameConclusion if the move triggers a conclusion.
+	wincondition.doGameOverChecks(servergame);
+
+	return moveRecord;
+}
+
+/**
+ * Accepts a move for large variants without server-side validation, and updates the game state.
+ * Returns the resulting MoveRecord, or undefined if the claimed game conclusion was invalid.
+ */
+function applyClientReportedMove(
+	ws: CustomWebSocket,
+	servergame: ServerGame & { validateMoves: false },
+	messageContents: SubmitMoveMessage,
+	moveParsed: MoveParsed,
+	role: Player,
+): MoveRecord | undefined {
+	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, role)) {
+		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEvents.addAndPrint(errString, 'hackLog');
+		socketsend.send(ws, 'general', 'printerror', 'Invalid game conclusion.');
+		return;
+	}
+
+	const moveRecord: MoveRecord = {
+		startCoords: moveParsed.startCoords,
+		endCoords: moveParsed.endCoords,
+		token: moveParsed.token,
+		// clockStamp added below
+	};
+	if (moveParsed.promotion !== undefined) moveRecord.promotion = moveParsed.promotion;
+	// Must be BEFORE pushing the clock, because gameManager.pushClock() depends on the length of the moves.
+	servergame.moves.push(moveRecord); // Add the move to the list!
+	// Must be AFTER pushing the move, because gameManager.pushClock() depends on the length of the moves.
+	const clockStamp = gameManager.pushClock(servergame); // Flip whos turn and adjust the game properties
+	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
+
+	// Manually set gameConclusion to client-reported conclusion
+	servergame.gameConclusion = messageContents.gameConclusion;
+
+	return moveRecord;
+}
+
+/**
+ * Calculates the maximum distance a move should be allowed based on game duration.
+ * @param gameStartTime - When the game was created (in milliseconds)
+ * @returns Maximum allowed coordinate digits
+ */
+function getMaxAllowedCoordinateDigits(gameStartTime: number): number {
+	const currentTime = Date.now();
+	const gameElapsedSeconds = (currentTime - gameStartTime) / 1000;
+
+	// Start with a baseline of 1 digit (allows coordinates like -9 to 9)
+	const baselineDigits = 1;
+	const extraDigits = gameElapsedSeconds * DIGITS_PER_SECOND;
+
+	return Math.floor(baselineDigits + extraDigits) + TELEPORT_LIMIT_DIGITS;
+}
+
+/**
+ * Checks if a move's coordinates exceed the soft distance cap based on game duration.
+ * Only checks end coordinates since start coordinates are known to be safe.
+ * @param moveParsed - The parsed move to check
+ * @param gameStartTime - When the game was created (in milliseconds)
+ * @returns true if the move is within allowed distance, false otherwise
+ */
+function isMoveWithinDistanceCap(moveParsed: MoveParsed, gameStartTime: number): boolean {
+	const maxAllowedDigits = getMaxAllowedCoordinateDigits(gameStartTime);
+
+	// Only check end coordinates since start coordinates are safe
+	const endXDigits = bimath.countDigits(moveParsed.endCoords[0]);
+	const endYDigits = bimath.countDigits(moveParsed.endCoords[1]);
+
+	const maxDigitsInMove = Math.max(endXDigits, endYDigits);
+
+	return maxDigitsInMove <= maxAllowedDigits;
+}
+
+/**
+ * Parses their submitted move token (`x,y>x,y=3N`).
+ * @returns The parsed move, or false if it's malformed.
+ */
+function doesMoveCheckOut(move: string): MoveParsed | null {
+	// Is the move in the correct format? "x,y>x,y=N"
+	let moveParsed: MoveParsed;
+	try {
+		moveParsed = icnmoves.parseTokenMove(move);
+	} catch {
+		// It either didn't pass the regex, or the promoted piece abbreviation was invalid.
+		return null;
+	}
+
+	return moveParsed;
+}
+
+/**
+ * Returns true if the provided game conclusion seems reasonable for their move submission.
+ * An example of a not reasonable one would be if they claimed they won by their opponent resigning.
+ * This does not run the checkmate algorithm, so it's not foolproof.
+ * @param gameConclusion - Their claimed game conclusion.
+ * @param role - The color they are in the game.
+ * @returns *true* if their claimed conclusion seems reasonable.
+ */
+function doesGameConclusionCheckOut(
+	gameConclusion: GameConclusion | undefined,
+	role: Player,
+): boolean {
+	if (gameConclusion === undefined) return true;
+
+	const { victor, condition } = gameConclusion;
+	if (!winconutil.isConclusionMoveTriggered(condition)) return false;
+	// We can't submit a move where our opponent wins
+	const oppositeColor = typeutil.invertPlayer(role);
+	return victor !== oppositeColor;
+}
+
+/**
+ * Builds the move message for the latest move, which also
+ * includes the game conclusion, move number, and clocks.
+ */
+function buildMoveMessage(servergame: ServerGame, move: MoveRecord): OpponentsMoveMessage {
+	const message: OpponentsMoveMessage = {
+		move: gameStateBuilder.simplifyMove(move),
+		gameConclusion: servergame.gameConclusion,
+		moveNumber: servergame.moves.length,
+	};
+	if (!servergame.untimed) message.clockValues = gameUtility.getClockValues(servergame);
+	return message;
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default { submitMove };

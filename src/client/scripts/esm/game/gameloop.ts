@@ -14,7 +14,7 @@ import boardpos from '../board/rendering/boardpos.js';
 import gamecore from './chess/gamecore.js';
 import gameslot from './chess/gameslot.js';
 import IndexedDB from '../util/IndexedDB.js';
-import maskedDraw from '../webgl/maskedDraw.js';
+import maskeddraw from '../webgl/maskeddraw.js';
 import gamesession from './chess/gamesession.js';
 import LocalStorage from '../util/LocalStorage.js';
 import frametracker from '../board/rendering/frametracker.js';
@@ -81,7 +81,7 @@ function render(): void {
 	if (!gameslot.getGamefile() || gamesession.isLoading()) return;
 
 	gamecore.getGameContext().clearScreen(); // Clear the color + depth + stencil buffers
-	maskedDraw.onFrameStart(); // Reset stencil bit-pair index for this frame
+	maskeddraw.onFrameStart(); // Reset stencil bit-pair index for this frame
 
 	gamecore.render();
 

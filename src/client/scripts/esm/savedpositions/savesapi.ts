@@ -6,8 +6,8 @@
 
 import type { CompressionMode } from '../../../../shared/util/compression';
 
-import { serverFetch } from '../util/serverFetch.js';
-import { fetchWithDeduplication } from '../util/fetchDeduplicator.js';
+import { serverfetch } from '../util/serverfetch.js';
+import { fetchWithDeduplication } from '../util/fetchdeduplicator.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ const HEADERS: Record<string, string> = { 'Content-Type': 'application/json' };
  * @throws If the request fails or the server returns a non-OK response.
  */
 async function getSavedPositions(): Promise<CloudSaveListRecord[]> {
-	const response = await serverFetch('/api/editor-saves', {
+	const response = await serverfetch('/api/editor-saves', {
 		method: 'GET',
 		headers: HEADERS,
 	});
@@ -69,7 +69,7 @@ async function savePosition(
 	pawn_double_push?: boolean,
 	castling?: boolean,
 ): Promise<CloudSaveListRecord[]> {
-	const response = await serverFetch('/api/editor-saves', {
+	const response = await serverfetch('/api/editor-saves', {
 		method: 'POST',
 		headers: HEADERS,
 		body: JSON.stringify({
@@ -117,7 +117,7 @@ async function getPosition(position_name: string): Promise<CloudPositionRecord> 
  * @throws If the request fails or the server returns a non-OK response.
  */
 async function deletePosition(position_name: string): Promise<CloudSaveListRecord[]> {
-	const response = await serverFetch(`/api/editor-saves/${encodeURIComponent(position_name)}`, {
+	const response = await serverfetch(`/api/editor-saves/${encodeURIComponent(position_name)}`, {
 		method: 'DELETE',
 		headers: HEADERS,
 	});

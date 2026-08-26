@@ -34,9 +34,9 @@ import gamesound from '../../board/gamesound.js';
 import socketsubs from '../../socket/socketsubs.js';
 import socketsend from '../../socket/socketsend.js';
 import socketintents from '../../socket/socketintents.js';
-import gameSetupModal from './gameSetupModal.js';
-import seekPreviewCache from './seekPreviewCache.js';
-import variantPreviewTooltip from '../../board/rendering/variantPreviewTooltip.js';
+import gamesetupmodal from './gamesetupmodal.js';
+import seekpreviewcache from './seekpreviewcache.js';
+import variantpreviewtooltip from '../../board/rendering/variantpreviewtooltip.js';
 
 const patch = init([attributesModule, classModule]);
 
@@ -179,7 +179,7 @@ function onSeekListUpdate(
 	const previousOurSeekId = ourSeekId;
 	seekMap.clear();
 	for (const seek of seeks) seekMap.set(seek.id, seek);
-	seekPreviewCache.evictRemovedSeeks(new Set(seekMap.keys()));
+	seekpreviewcache.evictRemovedSeeks(new Set(seekMap.keys()));
 
 	// Adopted before anything below reads it — ownership drives the arrival sounds and rendering.
 	ourSeekId = ourseekid;
@@ -265,7 +265,7 @@ function showInGameBanner(ingame: InGameMessage): void {
 	element_lobbyIngameJoin.setAttribute('href', gameurl.getGameUrl(ingame.id, ingame.role));
 	element_lobbyIngameOverlay.classList.remove('hidden');
 	for (const btn of elements_disabledWhileInGame) btn.setAttribute('disabled', '');
-	gameSetupModal.close();
+	gamesetupmodal.close();
 }
 
 /** Hides the in-game banner. */
@@ -352,7 +352,7 @@ function onLobbyIdle(): void {
 	unsubscribe();
 	hideInGameBanner();
 	showIdleOverlay();
-	gameSetupModal.close();
+	gamesetupmodal.close();
 }
 
 /** Shows the pre-existing idle overlay element, wiring up pointer listeners to dismiss it. */
@@ -457,7 +457,7 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 						attrs: { title: '' }, // Overrides seek's title
 						hook: {
 							insert: (vnode) => {
-								variantPreviewTooltip.attachAnchor(
+								variantpreviewtooltip.attachAnchor(
 									vnode.elm as HTMLElement,
 									(anchor) => handleVariantPreviewHover(anchor, seek),
 								);
@@ -533,9 +533,9 @@ function spawnSeekPulse(row: HTMLElement, isOurs: boolean): void {
 /** Fetches and shows the variant preview tooltip for a seek row's variant cell. */
 function handleVariantPreviewHover(anchor: HTMLElement, seek: LobbySeek): void {
 	if (seek.variant.group === 'custom') {
-		void variantPreviewTooltip.showForPosition(anchor, t.shared.variant_groups.custom.display_label, () => seekPreviewCache.getSeekPreview(seek.id), 'below', { modifiers: seek.modifiers }); // prettier-ignore
+		void variantpreviewtooltip.showForPosition(anchor, t.shared.variant_groups.custom.display_label, () => seekpreviewcache.getSeekPreview(seek.id), 'below', { modifiers: seek.modifiers }); // prettier-ignore
 	} else {
-		variantPreviewTooltip.showForVariantCode(anchor, seek.variant.code, 'below', { modifiers: seek.modifiers }); // prettier-ignore
+		variantpreviewtooltip.showForVariantCode(anchor, seek.variant.code, 'below', { modifiers: seek.modifiers }); // prettier-ignore
 	}
 }
 

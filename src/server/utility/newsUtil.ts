@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import tconfig from '../config/translationconfig.js';
+import tconfig from '../config/translationConfig.js';
 
 /** The directory containing the news posts, which are files named like "2025-11-01.md". */
 function getNewsDir(): string {

@@ -11,11 +11,11 @@
  */
 
 import type { Player } from '../../../shared/util/typeutil.js';
-import type { MatchInfo, ServerGame } from './servergametypes.js';
+import type { MatchInfo, ServerGame } from './serverGameTypes.js';
 
 import typeutil from '../../../shared/util/typeutil.js';
 
-import gamesockets from './gamesockets.js';
+import gameSockets from './gameSockets.js';
 import liveGameValues from './liveGameValues.js';
 
 // Constants -------------------------------------------------------------------
@@ -77,7 +77,7 @@ function startClaimTimer(servergame: ServerGame, role: Player, involuntary: bool
 		millisUntilClaimable: timeUntilClaimable,
 		voluntary: !involuntary,
 	};
-	gamesockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value); // prettier-ignore
+	gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value); // prettier-ignore
 
 	liveGameValues.onPlayerDisconnected(servergame, role); // Persist the state to the db
 }

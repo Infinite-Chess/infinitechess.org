@@ -10,15 +10,15 @@
  * polling, and the change-email recovery control).
  */
 
-import { serverFetch } from '../util/serverFetch.js';
+import { serverfetch } from '../util/serverfetch.js';
 import {
 	usernameFormatError,
 	emailFormatError,
 	passwordFormatError,
 	setFieldError as setInlineError,
-} from '../util/accountFormatErrors.js';
+} from '../util/accountformaterrors.js';
 
-import '../util/passwordToggle.js';
+import '../util/passwordtoggle.js';
 
 // Elements --------------------------------------------------------------------
 
@@ -170,7 +170,7 @@ async function submitRegister(): Promise<void> {
 	submitButton.disabled = true;
 
 	try {
-		const response = await serverFetch('/api/register', {
+		const response = await serverfetch('/api/register', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -253,7 +253,7 @@ usernameInput.addEventListener('blur', async (): Promise<void> => {
 	refreshSubmit();
 	if (!usernameValid) return;
 	try {
-		const response = await serverFetch(
+		const response = await serverfetch(
 			`/api/register/availability?username=${encodeURIComponent(usernameInput.value)}`,
 		);
 		// If it's rate-limited (or otherwise non-OK), skip silently — don't alert the user.

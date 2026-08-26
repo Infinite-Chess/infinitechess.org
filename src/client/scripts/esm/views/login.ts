@@ -9,10 +9,10 @@
  */
 
 import docutil from '../util/docutil.js';
-import { serverFetch } from '../util/serverFetch.js';
-import { setFieldError } from '../util/accountFormatErrors.js';
+import { serverfetch } from '../util/serverfetch.js';
+import { setFieldError } from '../util/accountformaterrors.js';
 
-import '../util/passwordToggle.js';
+import '../util/passwordtoggle.js';
 
 // Elements --------------------------------------------------------------------
 
@@ -40,7 +40,7 @@ async function submitLogin(): Promise<void> {
 	submitButton.disabled = true;
 
 	try {
-		const response = await serverFetch('/api/auth', {
+		const response = await serverfetch('/api/auth', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ username, password, keepLoggedIn: keepLoggedInInput.checked }),

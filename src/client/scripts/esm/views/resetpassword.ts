@@ -10,11 +10,11 @@
  */
 
 import docutil from '../util/docutil.js';
-import flashToast from '../util/flashToast.js';
-import { serverFetch } from '../util/serverFetch.js';
-import { passwordFormatError, setFieldError } from '../util/accountFormatErrors.js';
+import flashtoast from '../util/flashtoast.js';
+import { serverfetch } from '../util/serverfetch.js';
+import { passwordFormatError, setFieldError } from '../util/accountformaterrors.js';
 
-import '../util/passwordToggle.js';
+import '../util/passwordtoggle.js';
 
 // Elements --------------------------------------------------------------------
 
@@ -53,7 +53,7 @@ async function submit(): Promise<void> {
 	submitButton!.disabled = true;
 
 	try {
-		const response = await serverFetch('/api/reset-password', {
+		const response = await serverfetch('/api/reset-password', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ token, password: passwordInput!.value }),
@@ -61,7 +61,7 @@ async function submit(): Promise<void> {
 
 		if (response.ok) {
 			// The session cookie is now set; queue a toast that survives the navigation home.
-			flashToast.queue(t.resetpassword.password_reset);
+			flashtoast.queue(t.resetpassword.password_reset);
 			window.location.assign('/');
 			return;
 		}

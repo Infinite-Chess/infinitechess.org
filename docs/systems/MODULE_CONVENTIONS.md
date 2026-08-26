@@ -17,7 +17,9 @@ scripts disagree, study more siblings before trusting either.
   when a heavy package is what makes the placement matter.
 - One responsibility per script. Splitting a script might also make it easier to
   deduce their correct home. A file that fits no rung's subject is usually carrying two.
-- Script names: lowercase when repo-specific (`editorsave.ts`), PascalCase only when
+- Script names: multi-word basenames are lowercase compounds under `src/client/`
+  and `src/shared/` (`editorsave.ts`; dashes fine), and camelCase under `src/server/`
+  and `src/tests/` (`refreshTokenManager.ts`). PascalCase is reserved for modules
   reusable outside this project (`AudioManager.ts`).
 
 ## File anatomy

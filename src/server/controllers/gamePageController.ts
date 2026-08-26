@@ -30,13 +30,13 @@ import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.js';
 import { players as p, Player, PlayerGroup } from '../../shared/util/typeutil.js';
 
-import tconfig from '../config/translationconfig.js';
+import tconfig from '../config/translationConfig.js';
 import manifest from '../config/manifest.js';
-import gamemanager from '../game/gamemanager/gamemanager.js';
+import gameManager from '../game/gamemanager/gameManager.js';
 import gamesManager from '../database/gamesManager.js';
-import deadgamestate from '../game/gamemanager/deadgamestate.js';
-import piecesvgcache from '../config/piecesvgcache.js';
-import memberinfoutil from '../auth/memberinfoutil.js';
+import deadGameState from '../game/gamemanager/deadGameState.js';
+import pieceSvgCache from '../config/pieceSvgCache.js';
+import memberInfoUtil from '../auth/memberInfoUtil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -114,7 +114,7 @@ function getPageState(req: Request): GamePageState | undefined {
 
 	const memberInfo = req.memberInfo!;
 
-	const resolved = gamemanager.produceStaticGameState(id);
+	const resolved = gameManager.produceStaticGameState(id);
 	if (resolved === undefined) return undefined; // Game doesn't exist
 	const { state, game, ratingChanges, moveCount } = resolved; // game is defined if live
 	let { engineGame } = resolved; // Gains the client's engine asset URLs below, if live
@@ -123,14 +123,14 @@ function getPageState(req: Request): GamePageState | undefined {
 	let role: Player | undefined;
 	if (game) {
 		for (const [strColor, { identifier }] of Object.entries(game.match.playerData)) {
-			if (memberinfoutil.eqPartial(identifier, memberInfo)) {
+			if (memberInfoUtil.eqPartial(identifier, memberInfo)) {
 				role = Number(strColor) as Player;
 				break;
 			}
 		}
 	} else if (memberInfo.signedIn) {
 		// Dead games match members only; dead guests aren't identifiable.
-		role = deadgamestate.resolveParticipantColor(id, memberInfo.user_id);
+		role = deadGameState.resolveParticipantColor(id, memberInfo.user_id);
 	}
 
 	// Only a live engine game still needs the assets to run the engine client-side.
@@ -183,13 +183,13 @@ function getDeadGameViewState(
 			meta: GameMetaViewModel;
 	  }
 	| undefined {
-	const dead = deadgamestate.produceStaticState(id);
+	const dead = deadGameState.produceStaticState(id);
 	if (dead === undefined) return undefined; // Game not in the database
 
 	// Dead guests aren't identifiable.
 	const memberInfo = req.memberInfo!;
 	const role = memberInfo.signedIn
-		? deadgamestate.resolveParticipantColor(id, memberInfo.user_id)
+		? deadGameState.resolveParticipantColor(id, memberInfo.user_id)
 		: undefined;
 	const viewColor = resolveViewColor(req, role);
 
@@ -296,7 +296,7 @@ function buildRuleLines(
 		return {
 			kind: 'promotion',
 			prefix,
-			svgs: pieces.map((piece) => piecesvgcache.get(piece)),
+			svgs: pieces.map((piece) => pieceSvgCache.get(piece)),
 			suffix,
 		};
 	});

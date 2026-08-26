@@ -138,7 +138,7 @@ Two different questions, two different receipts. **Neither is ever echoed back**
 
 The client's echo round-trip time is what feeds the ping meter
 ([pingmeter.ts](/src/client/scripts/esm/components/header/pingmeter.ts)) and the clock ping
-adjustment ([pingManager.ts](/src/client/scripts/esm/views/game/pingManager.ts)).
+adjustment ([pingmanager.ts](/src/client/scripts/esm/views/game/pingmanager.ts)).
 
 **Echoes are deliberately unlogged and unmetered server-side.** An echo isn't traffic the client
 chose to send — we oblige one per message _we_ send — so charging their rate budget for our own

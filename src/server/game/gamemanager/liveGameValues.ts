@@ -10,7 +10,7 @@
 
 import type { Player } from '../../../shared/util/typeutil.js';
 import type { LiveGameData, LiveGamesRecord } from '../../database/liveGamesManager.js';
-import type { ServerGame, PlayerData, PlayerDisconnect } from './servergametypes.js';
+import type { ServerGame, PlayerData, PlayerDisconnect } from './serverGameTypes.js';
 import type {
 	LivePlayerDisconnectData,
 	LivePlayerGamesRecord,

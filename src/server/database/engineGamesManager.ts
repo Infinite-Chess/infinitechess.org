@@ -25,7 +25,7 @@ type EngineGamesColumn = keyof EngineGamesRecord;
 /**
  * Inserts one engine participant row for a game.
  *
- * Intentionally skips `dbCall`. gamelogger is its only caller, and it already logs the failure
+ * Intentionally skips `dbCall`. gameLogger is its only caller, and it already logs the failure
  * and rolls back the surrounding transaction — wrapping this would log the same error twice.
  * @throws If a database error occurs.
  */

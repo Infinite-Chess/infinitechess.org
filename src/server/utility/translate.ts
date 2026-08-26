@@ -8,7 +8,7 @@ import type { TranslationKeys } from '../../types/translations.js';
 
 import i18next from 'i18next';
 
-import tconfig from '../config/translationconfig.js';
+import tconfig from '../config/translationConfig.js';
 
 // Functions -------------------------------------------------------------------
 

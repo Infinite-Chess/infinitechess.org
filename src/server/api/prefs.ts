@@ -7,7 +7,7 @@
 
 import type { Request, Response } from 'express';
 
-import zodlogger from '../utility/zodlogger.js';
+import zodLogger from '../utility/zodLogger.js';
 import logEvents from '../utility/logEvents.js';
 import prefsCookie from '../cookies/prefsCookie.js';
 import memberManager from '../database/memberManager.js';
@@ -30,7 +30,7 @@ function put(req: Request, res: Response): void {
 	// Validate preferences using Zod schema
 	const parseResult = prefsCookie.PreferencesSchema.safeParse(preferences);
 	if (!parseResult.success) {
-		zodlogger.log(
+		zodLogger.log(
 			preferences,
 			parseResult.error,
 			`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database.`,

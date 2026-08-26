@@ -8,7 +8,7 @@
 import type { Request, Response } from 'express';
 
 import gamesManager from '../database/gamesManager.js';
-import deadgamestate from '../game/gamemanager/deadgamestate.js';
+import deadGameState from '../game/gamemanager/deadGameState.js';
 
 /**
  * `GET /api/game/:id` — returns the {@link DeadGameState} of a concluded game.
@@ -22,15 +22,15 @@ function getState(req: Request, res: Response): void {
 		return;
 	}
 
-	const deadGameState = deadgamestate.produceGameState(decoded);
-	if (deadGameState === undefined) {
+	const gameState = deadGameState.produceGameState(decoded);
+	if (gameState === undefined) {
 		// Not a logged concluded game (still-live games aren't in the games table yet).
 		// Unlocalized because clients will never be instructed to request a non-existent game
 		res.status(404).send('Game not found.');
 		return;
 	}
 
-	res.json(deadGameState);
+	res.json(gameState);
 }
 
 // Exports ---------------------------------------------------------------------

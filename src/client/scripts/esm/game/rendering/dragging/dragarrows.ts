@@ -33,7 +33,7 @@ import keybinds from '../../misc/keybinds.js';
 import deltatime from '../../../board/deltatime.js';
 import selection from '../../chess/selection.js';
 import { Mouse } from '../../input.js';
-import maskedDraw from '../../../webgl/maskedDraw.js';
+import maskeddraw from '../../../webgl/maskeddraw.js';
 import primitives from '../../../board/rendering/primitives.js';
 import droparrows from './droparrows.js';
 import arrowshifts from '../arrows/arrowshifts.js';
@@ -427,7 +427,7 @@ function renderSlideZone(): void {
 	if (maskData.length === 0) return;
 
 	const maskRenderable = createRenderable(maskData, 2, 'TRIANGLES', 'color', true);
-	maskedDraw.execute(
+	maskeddraw.execute(
 		() => maskRenderable.render(),
 		undefined,
 		() =>

@@ -15,7 +15,7 @@ import path from 'path';
 import { marked } from 'marked';
 import { format, parseISO } from 'date-fns';
 
-import tconfig from './translationconfig.js';
+import tconfig from './translationConfig.js';
 
 /** The folder path containing English markdown news posts. */
 const englishNewsFolder = path.join(tconfig.NEWS_FOLDER, tconfig.DEFAULT_LANGUAGE);

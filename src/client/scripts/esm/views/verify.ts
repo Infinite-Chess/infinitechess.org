@@ -9,7 +9,7 @@
  */
 
 import docutil from '../util/docutil.js';
-import { serverFetch } from '../util/serverFetch.js';
+import { serverfetch } from '../util/serverfetch.js';
 
 // Elements --------------------------------------------------------------------
 
@@ -53,7 +53,7 @@ async function verify(): Promise<void> {
 	try {
 		// The token is the last path segment of this page's URL (GET /verify/:token).
 		const token = docutil.getLastSegmentOfURL();
-		const response = await serverFetch(`/api/verify/${token}`, { method: 'POST' });
+		const response = await serverfetch(`/api/verify/${token}`, { method: 'POST' });
 		if (response.ok) {
 			hidePrompt();
 			document

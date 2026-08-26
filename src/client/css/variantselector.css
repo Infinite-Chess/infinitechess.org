@@ -218,7 +218,7 @@
 	flex-direction: column;
 	gap: 6px;
 	padding: 10px 12px 12px;
-	max-width: 400px; /* Must match TOOLTIP_MAX_WIDTH in variantPreviewTooltip.ts */
+	max-width: 400px; /* Must match TOOLTIP_MAX_WIDTH in variantpreviewtooltip.ts */
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);
 	border-radius: 8px;

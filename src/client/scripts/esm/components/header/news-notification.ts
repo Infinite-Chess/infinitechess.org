@@ -7,7 +7,7 @@
  */
 
 import validatorama from '../../util/validatorama.js';
-import { serverFetch } from '../../util/serverFetch.js';
+import { serverfetch } from '../../util/serverfetch.js';
 
 const newsLink = document.querySelector<HTMLAnchorElement>('a[href*="/news"]');
 let notificationBadge: HTMLSpanElement | null = null;
@@ -51,7 +51,7 @@ function createNotificationBadge(count: number): HTMLSpanElement {
  */
 async function fetchUnreadNewsCount(): Promise<number> {
 	try {
-		const response = await serverFetch('/api/news/unread-count');
+		const response = await serverfetch('/api/news/unread-count');
 
 		if (!response.ok) {
 			console.error('Failed to fetch unread news count');

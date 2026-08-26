@@ -24,7 +24,7 @@ import { request, RequestOptions } from 'node:https';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import zodlogger from '../utility/zodlogger.js';
+import zodLogger from '../utility/zodLogger.js';
 import logEvents from '../utility/logEvents.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -157,7 +157,7 @@ function refresh(): void {
 
 			const parseResult = GitHubContributorSchema.safeParse(unvalidatedJson);
 			if (!parseResult.success) {
-				zodlogger.log(
+				zodLogger.log(
 					unvalidatedJson,
 					parseResult.error,
 					'Invalid GitHub API response for contributors.',

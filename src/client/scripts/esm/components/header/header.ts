@@ -8,7 +8,7 @@
  * pulse aura animation on hover.
  */
 
-import { serverFetch } from '../../util/serverFetch.js';
+import { serverfetch } from '../../util/serverfetch.js';
 
 import './settings.js';
 import '../../util/tooltips.js'; // Should be imported on EVERY page
@@ -84,7 +84,7 @@ function initLogout(): void {
 		void (async (): Promise<void> => {
 			logoutButton.disabled = true;
 			try {
-				await serverFetch('/api/logout', { method: 'POST' });
+				await serverfetch('/api/logout', { method: 'POST' });
 				// Any server response clears the session cookies, so land them home logged out.
 				window.location.assign('/');
 			} catch (e: unknown) {

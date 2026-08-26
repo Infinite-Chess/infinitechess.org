@@ -796,7 +796,7 @@ button:disabled {
 
 /* Paints a piece SVG monochrome in the CSS `color` it inherits, leaving `none` fills and
    strokes alone. Replaces recoloring each element in script, so the client (svgcache.ts,
-   which tags each <svg>) and the server (piecesvgcache.ts, whose markup is emitted
+   which tags each <svg>) and the server (pieceSvgCache.ts, whose markup is emitted
    verbatim inside a tagged container) render the one silhouette off the one rule.
    Both placements work: the tagged element is styled along with its descendants. */
 .piece-silhouette:not([fill='none']),

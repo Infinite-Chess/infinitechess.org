@@ -11,7 +11,7 @@ import MessageValidator from 'sns-validator';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import zodlogger from '../utility/zodlogger.js';
+import zodLogger from '../utility/zodLogger.js';
 import logEvents from '../utility/logEvents.js';
 import blacklistManager from '../database/blacklistManager.js';
 
@@ -163,7 +163,7 @@ function processNotification(snsMessage: unknown): void {
 
 	const parseResult = SesNotificationSchema.safeParse(unvalidatedJson);
 	if (!parseResult.success) {
-		zodlogger.log(
+		zodLogger.log(
 			unvalidatedJson,
 			parseResult.error,
 			'[AWS WEBHOOK] Malformed SES notification.',

@@ -10,7 +10,7 @@
 
 import validators from '../../../../shared/util/validators.js';
 
-import { serverFetch } from '../util/serverFetch.js';
+import { serverfetch } from '../util/serverfetch.js';
 
 // Elements --------------------------------------------------------------------
 
@@ -44,7 +44,7 @@ async function submitForgotPassword(): Promise<void> {
 	submitButton.disabled = true;
 
 	try {
-		const response = await serverFetch('/api/forgot-password', {
+		const response = await serverfetch('/api/forgot-password', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email }),

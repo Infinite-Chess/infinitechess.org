@@ -11,7 +11,7 @@ import jsutil from '../../shared/util/jsutil.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import logEvents from '../utility/logEvents.js';
-import activegames from '../game/gamemanager/activegames.js';
+import activeGames from '../game/gamemanager/activeGames.js';
 import memberManager from '../database/memberManager.js';
 import sessionManager from '../auth/sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
@@ -36,7 +36,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 	// THIS DOES NOT PREVENT AN ADMIN MANUALLY DELETING THEIR ACCOUNT
 	// If that is done while they are in the middle of a rated game,
 	// errors will happen when the game is deleted.
-	if (activegames.hasMember(identity.username)) {
+	if (activeGames.hasMember(identity.username)) {
 		logEvents.addAndPrint(
 			`User ${identity.username} requested account deletion while being listed in some active game.`,
 			'deletedAccounts.txt',

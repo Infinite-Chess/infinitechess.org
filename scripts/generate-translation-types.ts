@@ -12,7 +12,7 @@ import path from 'path';
 import { fileURLToPath } from 'node:url';
 import { parse, TomlTable } from 'smol-toml';
 
-import tconfig from '../src/server/config/translationconfig';
+import tconfig from '../src/server/config/translationConfig';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const translationFile = path.join(tconfig.TRANSLATION_FOLDER, `${tconfig.DEFAULT_LANGUAGE}.toml`);

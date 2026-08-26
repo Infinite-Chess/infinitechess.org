@@ -54,7 +54,7 @@ export const ESMEntryPoints = [
 	// Workers
 	'src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts',
 	'src/client/scripts/esm/game/chess/engines/apeiron.worker.ts',
-	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.worker.ts',
+	'src/client/scripts/esm/game/chess/engines/enginecheckmatepractice.worker.ts',
 
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',

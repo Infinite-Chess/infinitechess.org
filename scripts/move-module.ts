@@ -50,9 +50,10 @@ function toSpec(fromDir: string, target: string, hadJsExt: boolean): string {
 	return rel.split(path.sep).join('/');
 }
 
-const files = execFileSync('git', ['ls-files', 'src/'], { encoding: 'utf8' })
+// Every tracked script except the archived dev-utils/ — scripts/ and build/ import src/ too.
+const files = execFileSync('git', ['ls-files'], { encoding: 'utf8' })
 	.split('\n')
-	.filter((f) => f.endsWith('.ts') || f.endsWith('.js'))
+	.filter((f) => /\.[cm]?[tj]s$/.test(f) && !f.startsWith('dev-utils/'))
 	.map((f) => path.resolve(ROOT, f));
 
 // Do the git mv's first so resolution below sees the new tree.

@@ -1,0 +1,386 @@
+// src/client/scripts/esm/board/rendering/variantpreviewtooltip.ts
+
+/**
+ * Renders a floating tooltip containing a small WebGL board preview and
+ * gamerule summary when the user hovers over a variant preview (eye) icon.
+ * Supports both preset variant codes and custom saved positions.
+ */
+
+import type { Mesh } from './piecemodels.js';
+import type { VariantCode } from '../../../../../shared/chess/util/variantcodes.js';
+import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
+import type { GameModifier } from '../../../../../shared/chess/util/modutil.js';
+import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+
+import boardutil from '../../../../../shared/chess/logic/boardutil.js';
+import variantcache from '../../../../../shared/chess/variants/variantcache.js';
+import variantrules from '../../../../../shared/chess/logic/variantrules.js';
+import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
+import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
+import {
+	summarizeGameRules,
+	type RuleSummaryItem,
+} from '../../../../../shared/chess/variants/gamerulesummary.js';
+
+import area from './area.js';
+import webgl from './webgl.js';
+import meshes from './meshes.js';
+import border from './border.js';
+import svgcache from '../../chess/rendering/svgcache.js';
+import imagecache from '../../chess/rendering/imagecache.js';
+import piecemodels from './piecemodels.js';
+import RenderContext from './RenderContext.js';
+import promotionlines from './promotionlines.js';
+import { createCamera } from './camera.js';
+import miniimagerenderer from './miniimagerenderer.js';
+import { createBoardPos } from './boardpos.js';
+import { ProgramManager } from '../../webgl/ProgramManager.js';
+import { createMaskedDraw } from '../../webgl/maskeddraw.js';
+import { createTextureCache } from '../../chess/rendering/texturecache.js';
+
+// Types -----------------------------------------------------------------------
+
+/** Optional extras a preview may be shown with. */
+interface PreviewOptions {
+	/** Gamerule modifiers active on the game, listed among its rules. */
+	modifiers?: GameModifier[];
+	/**
+	 * Whether the engine would be the opponent, so a preset preview shows the bordered board that
+	 * will actually load. A custom position's border is already in the rules it is previewed with.
+	 */
+	engineGame?: boolean;
+}
+
+// Constants -------------------------------------------------------------------
+
+/** Size of mini image icons in the preview tooltip, in virtual pixels. */
+const PREVIEW_ENTITY_WIDTH_VPIXELS = 20;
+
+/** Natural (max) width of the tooltip in px — must match the CSS max-width. */
+
+const TOOLTIP_MAX_WIDTH = 400;
+/** Horizontal gap in px between the tooltip and its anchor element. */
+const TOOLTIP_OFFSET_X = 12;
+/** Vertical gap in px between the tooltip and its anchor element (below placement). */
+const TOOLTIP_OFFSET_Y = 8;
+
+/** Minimum gap in px between the tooltip and the viewport edge. */
+const EDGE_PAD = 8;
+
+// State -----------------------------------------------------------------------
+
+/**
+ * The preview's own render context, built lazily on first show. It owns a separate
+ * WebGL context, camera, board position, textures, and masker so rendering the preview
+ * never disturbs the interactive game's render state.
+ */
+let previewCtx: RenderContext;
+/** Incremented on every show/hide; compared after async work to discard stale renders. */
+let showToken = 0;
+/** The anchor element of the currently visible tooltip, if any. */
+let currentAnchor: HTMLElement | null = null;
+
+// Hide the tooltip if its anchor is removed from the DOM — otherwise pointerleave never fires and the tooltip is stranded.
+new MutationObserver(() => {
+	if (currentAnchor && !currentAnchor.isConnected) hide();
+}).observe(document.body, { childList: true, subtree: true });
+
+// DOM elements created once and reused
+
+const element_tooltip = document.createElement('div');
+element_tooltip.id = 'variant-preview-tooltip';
+element_tooltip.classList.add('visibility-hidden');
+/**
+ * Prevent the imminent release of a finger that hides the
+ * tooltip from triggering a click on the items that we below it.
+ */
+let suppressSynthesizedEventsUntil = 0;
+
+// Hide the tooltip on screen resize to avoid it being squished into odd positions.
+window.addEventListener('resize', () => {
+	if (!element_tooltip.classList.contains('visibility-hidden')) hide();
+});
+
+// On touch devices, any finger-down anywhere immediately dismisses the tooltip.
+document.addEventListener(
+	'touchstart',
+	() => {
+		if (element_tooltip.classList.contains('visibility-hidden')) return;
+		hide();
+		suppressSynthesizedEventsUntil = Date.now() + 200;
+	},
+	{ passive: true },
+);
+
+// Prevent the imminent release of a finger that hides the tooltip from triggering a click on the items that we below it.
+document.addEventListener('click', eatSynthesizedEvent, { capture: true });
+function eatSynthesizedEvent(e: Event): void {
+	if (Date.now() < suppressSynthesizedEventsUntil) {
+		e.stopPropagation();
+		e.preventDefault();
+	}
+}
+
+const element_name = document.createElement('div');
+element_name.classList.add('preview-tooltip-name');
+
+const element_canvas = document.createElement('canvas');
+element_canvas.classList.add('preview-tooltip-canvas');
+
+const element_rulesBody = document.createElement('span');
+
+const element_rules = document.createElement('p');
+element_rules.classList.add('preview-tooltip-rules', 'hidden');
+element_rules.append(element_rulesBody);
+
+element_tooltip.append(element_name, element_rules, element_canvas);
+document.body.appendChild(element_tooltip);
+
+// Functions -------------------------------------------------------------------
+
+/** Builds the preview's own render context once, on its own WebGL context (idempotent). */
+async function ensureGLReady(): Promise<void> {
+	if (previewCtx) return;
+
+	const previewGl = webgl.createContext(element_canvas);
+	const previewCamera = createCamera(); // No hooks; inert toward game-loop globals.
+	previewCamera.init(previewGl, element_canvas);
+	const previewPM = new ProgramManager(previewGl);
+
+	previewCtx = new RenderContext({
+		gl: previewGl,
+		canvas: element_canvas,
+		programManager: previewPM,
+		camera: previewCamera,
+		boardpos: createBoardPos(previewCamera),
+		textures: createTextureCache(),
+		maskedDraw: createMaskedDraw(previewGl, previewPM),
+	});
+
+	await previewCtx.boardtiles.init();
+}
+
+/**
+ * Shows the preview tooltip for a custom position.
+ * @param anchor - The element the tooltip should appear beside.
+ * @param name - The display name of the saved position.
+ * @param resolvePosition - Resolves the position to preview, or undefined if unavailable.
+ * A resolver, not the position itself, so the show is claimed before any fetching begins —
+ * a hide partway through then cancels it, instead of the tooltip surfacing after the pointer left.
+ */
+async function showForPosition(
+	anchor: HTMLElement,
+	name: string,
+	resolvePosition: () => Promise<VariantOptions | undefined>,
+	placement: 'left' | 'below',
+	options: PreviewOptions = {},
+): Promise<void> {
+	const token = ++showToken;
+	const variantOptions = await resolvePosition();
+	if (variantOptions === undefined || token !== showToken) return; // Unavailable, or they have since left hover.
+	const boardsim = boardpreviewer.initBoardPreview(variantOptions.gameRules, undefined, {
+		variantOptions,
+	});
+	await showForBoard(anchor, name, boardsim, token, placement, undefined, options.modifiers);
+}
+
+/**
+ * Shows the preview tooltip for a preset variant code.
+ * @param anchor - The element the tooltip should appear beside.
+ * @param code - The variant code (e.g. 'Classical').
+ */
+async function showForVariantCode(
+	anchor: HTMLElement,
+	code: VariantCode,
+	placement: 'left' | 'below',
+	options: PreviewOptions = {},
+): Promise<void> {
+	const token = ++showToken;
+	const variantName = t.shared.variants[code];
+	await variantcache.ensureVariantLoaded(code);
+	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
+	const loadedVariant: LoadedVariant = {
+		code,
+		mod: variantcache.getModule(code),
+		dateTimestamp: Date.now(),
+	};
+	const gameRules = variantrules.getGameRulesOfVariant(loadedVariant);
+	// The board an engine game would be played on — the same one game construction resolves.
+	if (options.engineGame && gameRules.worldBorder === undefined) {
+		gameRules.worldBorder = apeironborder.forVariant(loadedVariant);
+	}
+	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant);
+	await showForBoard(anchor, variantName, boardsim, token, placement, code, options.modifiers);
+}
+
+/** Hides the tooltip. */
+function hide(): void {
+	showToken++;
+	element_tooltip.classList.add('visibility-hidden');
+	currentAnchor = null;
+}
+
+/** Core show logic: positions the tooltip, renders the board, populates rules. */
+async function showForBoard(
+	anchor: HTMLElement,
+	name: string,
+	boardsim: BoardPreview,
+	token: number,
+	placement: 'left' | 'below',
+	/** Undefined for custom positions, which have no variant. */
+	variantCode: VariantCode | undefined,
+	modifiers: GameModifier[] | undefined,
+): Promise<void> {
+	element_name.textContent = name;
+	await populateRules(boardsim, variantCode, modifiers);
+	await ensureReady(boardsim);
+
+	if (token !== showToken || !anchor.isConnected) return; // They have since left hover, hovered over another tooltip anchor, or the anchor has been removed from the DOM mid-load.
+
+	positionTooltip(anchor, placement);
+	renderBoard(boardsim);
+	element_tooltip.classList.remove('visibility-hidden');
+	currentAnchor = anchor;
+}
+
+/** Positions the tooltip relative to the anchor. */
+function positionTooltip(anchor: HTMLElement, placement: 'left' | 'below'): void {
+	const rect = anchor.getBoundingClientRect();
+
+	const preferredLeft =
+		placement === 'below'
+			? rect.left + rect.width / 2 - TOOLTIP_MAX_WIDTH / 2
+			: rect.left - TOOLTIP_MAX_WIDTH - TOOLTIP_OFFSET_X;
+	const preferredTop = placement === 'below' ? rect.bottom + TOOLTIP_OFFSET_Y : rect.top;
+
+	// Clamp to viewport edges.
+	element_tooltip.style.left = `${Math.max(preferredLeft, EDGE_PAD)}px`;
+	element_tooltip.style.right = `${EDGE_PAD}px`;
+	// Read natural height after horizontal constraints are applied (canvas shrinks with width via aspect-ratio).
+	const tooltipH = element_tooltip.offsetHeight;
+	element_tooltip.style.top = `${Math.min(preferredTop, window.innerHeight - tooltipH - EDGE_PAD)}px`;
+
+	// Sync canvas dimensions to the potential new preview dimensions
+	previewCtx.camera.syncCanvasDimensions();
+}
+
+/** Builds the preview context once and loads any not-yet-cached images and textures for the board. */
+async function ensureReady(boardsim: BoardPreview): Promise<void> {
+	await ensureGLReady();
+	await imagecache.initImagesForGame(boardsim);
+	await previewCtx.textures.initTexturesForGame(previewCtx.gl, boardsim);
+}
+
+/** Renders the board to the preview canvas, using the preview's own render context. */
+function renderBoard(boardsim: BoardPreview): void {
+	const ctx = previewCtx;
+	const { gameRules } = boardsim;
+
+	const mesh: Mesh = { offset: [0n, 0n], inverted: false, types: {} };
+	piecemodels.regenAll(ctx, boardsim, mesh);
+
+	const startBox = boardsim.startSnapshot.box;
+	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(startBox);
+	const centerArea = area.calculateFromUnpaddedBox(boxFloating, ctx.camera);
+
+	ctx.boardpos.setBoardPos(centerArea.coords);
+	ctx.boardpos.setBoardScale(centerArea.scale);
+
+	ctx.clearScreen();
+	ctx.maskedDraw.onFrameStart();
+
+	// Render board and promotion lines
+	ctx.maskedDraw.execute(
+		() => border.drawPlayableRegionMask(ctx, gameRules.worldBorder), // INCLUSION MASK: playable region
+		() => piecemodels.renderVoids(ctx, mesh), // EXCLUSION MASK: voids
+		() => {
+			ctx.boardtiles.render();
+			promotionlines.render(ctx, gameRules.promotion, startBox);
+		},
+		'and',
+	);
+	// Render pieces
+	if (
+		!ctx.boardpos.areZoomedOut() ||
+		boardutil.getPieceCountOfGame(boardsim.pieces) >
+			miniimagerenderer.pieceCountToDisableMiniImages
+	) {
+		piecemodels.renderAll(ctx, mesh);
+	} else {
+		const instanceData = miniimagerenderer.buildInstanceData(ctx, boardsim);
+		miniimagerenderer.render(ctx, boardsim.existingTypes, instanceData, {}, false, PREVIEW_ENTITY_WIDTH_VPIXELS); // prettier-ignore
+	}
+}
+
+/** Populates the gamerule modifications list above the canvas. */
+async function populateRules(
+	boardsim: BoardPreview,
+	variantCode: VariantCode | undefined,
+	modifiers: GameModifier[] | undefined,
+): Promise<void> {
+	const items = summarizeGameRules(
+		boardsim.gameRules,
+		boardsim.startSnapshot.state_global,
+		variantCode,
+		modifiers,
+		t.shared,
+	);
+
+	element_rules.classList.toggle('hidden', items.length === 0);
+	element_rulesBody.replaceChildren();
+	for (const [i, item] of items.entries()) {
+		if (i > 0) element_rulesBody.append(' ');
+		if (item.kind === 'text') element_rulesBody.append(item.text);
+		else {
+			const promotionLine = await buildPromotionLine(item);
+			element_rulesBody.appendChild(promotionLine);
+		}
+	}
+}
+
+/** Draws a summary's promotion line, its pieces as inline silhouette icons. */
+async function buildPromotionLine(
+	item: Extract<RuleSummaryItem, { kind: 'promotion' }>,
+): Promise<HTMLSpanElement> {
+	const span = document.createElement('span');
+	span.classList.add('promotion-icons');
+	span.append(item.prefix);
+	for (const raw of item.pieces) span.appendChild(await svgcache.getSilhouetteSVG(raw));
+	span.append(item.suffix);
+	return span;
+}
+
+// Exports ---------------------------------------------------------------------
+
+/** Returns true if the given node is inside the tooltip element. */
+function containsNode(node: Node): boolean {
+	return element_tooltip.contains(node);
+}
+
+/**
+ * Wires the standard preview-anchor interaction onto an element:
+ * mouse hover shows the tooltip, leave hides it, click (touch or mouse) shows it.
+ * @param element - The anchor element to attach listeners to.
+ * @param show - Called with the anchor element whenever the tooltip should be shown.
+ */
+function attachAnchor(element: HTMLElement, show: (anchor: HTMLElement) => void): void {
+	element.addEventListener('pointerenter', (e) => {
+		if (e.pointerType === 'touch') return;
+		show(element);
+	});
+	element.addEventListener('pointerleave', (e) => {
+		if (e.pointerType !== 'touch') hide();
+	});
+	element.addEventListener('click', (e) => {
+		e.stopPropagation();
+		show(element);
+	});
+}
+
+export default {
+	showForPosition,
+	showForVariantCode,
+	hide,
+	containsNode,
+	attachAnchor,
+};

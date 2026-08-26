@@ -20,7 +20,7 @@ import path from 'path';
 import { parse } from 'smol-toml';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 
-import tconfig from './translationconfig.js';
+import tconfig from './translationConfig.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -142,7 +142,7 @@ function load(): void {
 	languageOptions = supportedLanguages.map((code) => {
 		const meta = tconfig.LANGUAGE_METADATA[code];
 		if (!meta)
-			throw new Error(`Supported language "${code}" has no LANGUAGE_METADATA entry in translationconfig.ts.`); // prettier-ignore
+			throw new Error(`Supported language "${code}" has no LANGUAGE_METADATA entry in translationConfig.ts.`); // prettier-ignore
 		return { code, name: meta.name, englishName: meta.englishName };
 	});
 }

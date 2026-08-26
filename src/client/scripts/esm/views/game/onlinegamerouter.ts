@@ -7,7 +7,7 @@
  * arriving during a load are buffered and replayed the instant it finishes, and the
  * first `gamestate` is what bootstraps the game when nothing is loaded at all.
  *
- * Counterpart of the server's gamerouter.
+ * Counterpart of the server's gameRouter.
  */
 
 import type { Player } from '../../../../../shared/util/typeutil.js';
@@ -28,9 +28,9 @@ import gameslot from '../../game/chess/gameslot.js';
 import gamesound from '../../board/gamesound.js';
 import drawoffers from './drawoffers.js';
 import onlinegame from './onlinegame.js';
-import flashToast from '../../util/flashToast.js';
+import flashtoast from '../../util/flashtoast.js';
 import socketsubs from '../../socket/socketsubs.js';
-import pingManager from './pingManager.js';
+import pingmanager from './pingmanager.js';
 import gameactions from './gui/guigameactions.js';
 import gamesession from '../../game/chess/gamesession.js';
 import guigamemeta from '../../game/gui/guigamemeta.js';
@@ -192,11 +192,11 @@ function getClockValues(contents: ClientboundGameMessage): ClockValues | undefin
 function adjustClockValuesForPing(clockValues: ClockValues): void {
 	if (!clockValues.colorTicking) return; // No clock is ticking (< 2 moves, or game is over), don't adjust for ping
 
-	// console.log(`Adjusting clock values for ping. Ping is ${pingManager.getPing()}.`);
+	// console.log(`Adjusting clock values for ping. Ping is ${pingmanager.getPing()}.`);
 
 	// Ping is round-trip time (RTT), So divided by two to get the approximate
 	// time that has elapsed since the server sent us the correct clock values
-	const halfPing = pingManager.getHalfPing();
+	const halfPing = pingmanager.getHalfPing();
 	if (halfPing > 2500)
 		console.error('Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!'); // prettier-ignore
 	// console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${clockValues.colorTicking}'s clock.`);
@@ -253,7 +253,7 @@ function handleUnsubbing(): void {
  * This tab navigates home and displays a toast.
  */
 function handleLeaveGame(): void {
-	flashToast.queue('Another window connected to the game.');
+	flashtoast.queue('Another window connected to the game.');
 	window.location.assign('/');
 }
 

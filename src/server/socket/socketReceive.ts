@@ -11,7 +11,7 @@ import type { ServerboundMessage } from '../../shared/transport/serverbound.js';
 import socketutil from '../../shared/util/socketutil.js';
 import { ServerboundSchema } from '../../shared/transport/serverbound.js';
 
-import zodlogger from '../utility/zodlogger.js';
+import zodLogger from '../utility/zodLogger.js';
 import logEvents from '../utility/logEvents.js';
 import socketsend from './socketSend.js';
 import requestMeter from '../utility/requestMeter.js';
@@ -85,7 +85,7 @@ function parseAndValidateMessage(messageStr: string): ServerboundMessage | null 
 	if (!result.success) {
 		// Should only be reachable from explicitly crafted messages, but thus far
 		// no bots have exploited this. Safe to log in case it's ever a legit bug.
-		zodlogger.log(parsed, result.error, 'Received malformed websocket in-message.');
+		zodLogger.log(parsed, result.error, 'Received malformed websocket in-message.');
 		return null;
 	}
 

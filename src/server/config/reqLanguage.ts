@@ -19,7 +19,7 @@ import type { Express, Request } from 'express';
 import accepts from 'accepts';
 import { parse as parseCookie } from 'cookie';
 
-import tconfig from './translationconfig.js';
+import tconfig from './translationConfig.js';
 import componentTranslationLoader from './componentTranslationLoader.js';
 
 /** The cookie storing the user's manual language override. */

@@ -11,17 +11,17 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import socketsend from '../../socket/socketSend.js';
-import gamemanager from './gamemanager.js';
-import gamesockets from './gamesockets.js';
-import activegames from './activegames.js';
-import gamestatebuilder from './gamestatebuilder.js';
+import gameManager from './gameManager.js';
+import gameSockets from './gameSockets.js';
+import activeGames from './activeGames.js';
+import gameStateBuilder from './gameStateBuilder.js';
 
 /**
  * A lean reconnect for a game the client already knows is finalized:
  * its result is locked in, so only rematch-offer state can still change.
  */
 function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
-	const game = activegames.getByID(game_id);
+	const game = activeGames.getByID(game_id);
 
 	if (game !== undefined) {
 		// Live game
@@ -30,16 +30,16 @@ function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 			console.error(`Client requested a rematch subscription for a game that is not over (game_id ${game_id}).`); // prettier-ignore
 			return;
 		}
-		const ourRole = gamesockets.getRole(game, ws);
+		const ourRole = gameSockets.getRole(game, ws);
 		if (ourRole !== undefined) {
 			// Participant path: attach, then send the current rematch state.
-			gamemanager.subscribeParticipant(game, ws, ourRole);
-			const value = gamestatebuilder.getRematchOfferInfo(game, ourRole)!; // Guaranteed because above we confirm the game is over
+			gameManager.subscribeParticipant(game, ws, ourRole);
+			const value = gameStateBuilder.getRematchOfferInfo(game, ourRole)!; // Guaranteed because above we confirm the game is over
 			socketsend.send(ws, 'game', 'rematchstate', value);
 		} else {
 			// Spectator path: attach, but send no rematch state (they only
 			// stay connected for the 'ingame' message when a rematch is agreed).
-			gamesockets.attachSpectator(game, ws);
+			gameSockets.attachSpectator(game, ws);
 		}
 	} else {
 		// Dead game
