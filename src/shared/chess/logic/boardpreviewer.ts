@@ -1,12 +1,12 @@
 // src/shared/chess/logic/boardpreviewer.ts
 
 /**
- * Defines BoardPreview — the lightweight subset of Board used by preview
- * renderers and other consumers that do not need move-execution machinery
- * (pieceMovesets, specialMoves, vicinity, specialVicinity, moves).
+ * Defines BoardPreview — the static-position tier of the BoardPreview -> Board ->
+ * GameFile ladder, holding everything needed to render a snapshot and none of the
+ * move-execution fields (pieceMovesets, specialMoves, vicinity, specialVicinity, moves).
  *
- * initBoardPreview() constructs a BoardPreview without importing variantmovement
- * or movesets, keeping the dependency tree light for preview contexts.
+ * Renderers take a BoardPreview so their signature states they read a position and
+ * never simulate on it.
  */
 
 import type { RawType } from '../../util/typeutil.js';

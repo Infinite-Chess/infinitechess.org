@@ -3,6 +3,7 @@
 /**
  * The contract a variant script implements, declared here at the layer that consumes
  * it: the logic reads a variant it is handed, without knowing which variants exist.
+ * Predicates over the contract's own shape live here too.
  */
 
 import type { Movesets } from './movesets.js';
@@ -82,4 +83,26 @@ export type GameRuleModifications = {
 type PromotionModifications = {
 	ranks?: Promotion['ranks'];
 	pieces?: Promotion['pieces'];
+};
+
+// Functions -------------------------------------------------------------------
+
+/**
+ * Whether the variant overrides how pieces move. These overrides live solely in the
+ * variant module, so an ICN with no Variant metadata silently reverts to default movement.
+ * @param mod - The loaded variant module, or `undefined` for pasted games with no variant.
+ */
+function hasCustomMovement(mod: VariantModule | undefined): boolean {
+	if (mod === undefined) return false;
+	return (
+		mod.genMovesetModifications !== undefined ||
+		mod.getSpecialMoves !== undefined ||
+		mod.getSpecialVicinity !== undefined
+	);
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	hasCustomMovement,
 };

@@ -4,8 +4,7 @@
  * Reads a pre-loaded VariantModule for what a game is set UP with: its gamerules,
  * starting position, and annotation presets.
  *
- * The light half of variant reading. variantmovement.ts is the other half, and stays
- * separate so a caller wanting only these can skip movesets and special moves entirely.
+ * How its pieces MOVE is read by boardinit.ts instead.
  */
 
 import type { BaseRay } from '../../util/math/geometry.js';

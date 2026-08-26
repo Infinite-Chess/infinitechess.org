@@ -20,8 +20,8 @@ import gamelimits from '../../../shared/chess/util/gamelimits.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import variantmodule from '../../../shared/chess/logic/variantmodule.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
-import variantmovement from '../../../shared/chess/logic/variantmovement.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { SEEK_ID_LENGTH } from '../../../shared/transport/domain.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
@@ -179,7 +179,7 @@ function validateSeekMetadata(metadata: MetaData): PositionRejection | null {
 	const code = variantregistry.resolveVariantCode(metadata.Variant);
 	if (code === undefined) return { kind: 'position', code: 'invalid_icn' };
 	// Every variant module is preloaded at server startup.
-	if (variantmovement.hasCustomMovement(variantcache.getModule(code))) {
+	if (variantmodule.hasCustomMovement(variantcache.getModule(code))) {
 		return { kind: 'position', code: 'no_4d_movement' };
 	}
 	return null;

@@ -19,8 +19,8 @@ import boardutil from '../logic/boardutil.js';
 import gamerules from '../util/gamerules.js';
 import checkmate from '../logic/checkmate.js';
 import apeironcard from '../engines/apeironcard.js';
+import variantmodule from '../logic/variantmodule.js';
 import checkdetection from '../logic/checkdetection.js';
-import variantmovement from '../logic/variantmovement.js';
 import gamefileutility from '../logic/gamefileutility.js';
 
 // Types -----------------------------------------------------------------------
@@ -91,7 +91,7 @@ export function getRejection(
 
 	if (context.seek) {
 		// --- Rule 2: No custom piece movement ---
-		if (variantmovement.hasCustomMovement(gamefile.variant?.mod))
+		if (variantmodule.hasCustomMovement(gamefile.variant?.mod))
 			return { kind: 'position', code: 'no_4d_movement' };
 
 		// --- Rule 3: The game isn't already over ---
