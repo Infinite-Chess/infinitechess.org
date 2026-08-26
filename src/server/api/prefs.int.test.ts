@@ -33,7 +33,7 @@ describe('Preferences Integration', () => {
 
 	// Runs before EVERY single 'it' block
 	beforeEach(() => {
-		databaseTables.clearAllTables();
+		databaseTables.clear();
 	});
 
 	it('should verify middleware sets preferences cookie on GET request', async () => {

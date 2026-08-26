@@ -70,7 +70,7 @@ function dropLegacyLivePlayerGamesEloColumnIfPresent(): void {
  *
  * Adds the `is_persistent` column to the `refresh_tokens` table if it's missing. Only patches
  * existing databases (e.g. production) that predate the "keep me logged in" feature.
- * Fresh DBs get the column from `generateTables()`.
+ * Fresh DBs get the column from `generate()`.
  */
 function addIsPersistentColumnToRefreshTokensIfNeeded(): void {
 	if (db.columnExists('refresh_tokens', 'is_persistent')) return; // Already migrated.
@@ -133,7 +133,7 @@ function clearSpamReportBlacklistEntries(): void {
  * NOT NULL in place, so we shuffle through a temp column: add nullable `variant_tmp`, copy
  * the codes across, drop the old `variant`, rename `variant_tmp` back. No table rebuild, so
  * the `player_games` → `games` FK cascade is never triggered. Idempotent: skips a table whose
- * `variant` is already nullable. Fresh DBs get nullable from `generateTables()` directly.
+ * `variant` is already nullable. Fresh DBs get nullable from `generate()` directly.
  */
 function makeVariantColumnsNullableIfNeeded(): void {
 	for (const table of ['games', 'live_games'] as const) {
@@ -155,7 +155,7 @@ function makeVariantColumnsNullableIfNeeded(): void {
  *
  * Adds the nullable `position` column to `live_games` — holds a custom game's start position
  * (null for preset games), so custom games can be restored across a restart (preset games
- * rebuild from the variant code alone). Fresh DBs get the column from `generateTables()`.
+ * rebuild from the variant code alone). Fresh DBs get the column from `generate()`.
  */
 function addPositionColumnToLiveGamesIfNeeded(): void {
 	if (db.columnExists('live_games', 'position')) return; // Already migrated.
@@ -169,7 +169,7 @@ function addPositionColumnToLiveGamesIfNeeded(): void {
  * Renames `live_player_games.disconnect_resign_time` → `disconnect_claim_time`. The column's
  * meaning changed: it no longer auto-resigns the player, it now marks the epoch ms from which
  * the opponent may claim victory/draw. The stored value (the same instant) carries over.
- * Fresh DBs get the new name from `generateTables()`.
+ * Fresh DBs get the new name from `generate()`.
  */
 function renameDisconnectResignTimeColumnIfNeeded(): void {
 	if (!db.columnExists('live_player_games', 'disconnect_resign_time')) return; // Already migrated.
@@ -184,7 +184,7 @@ function renameDisconnectResignTimeColumnIfNeeded(): void {
  *
  * Renames `live_player_games.disconnect_by_choice` → `disconnect_voluntary`. The column's
  * name was made more semantically clear. The stored value carries over unchanged.
- * Fresh DBs get the new name from `generateTables()`.
+ * Fresh DBs get the new name from `generate()`.
  */
 function renameDisconnectByChoiceColumnIfNeeded(): void {
 	if (!db.columnExists('live_player_games', 'disconnect_by_choice')) return; // Already migrated.
@@ -199,7 +199,7 @@ function renameDisconnectByChoiceColumnIfNeeded(): void {
  *
  * Adds the nullable `both_disconnected_end_time` column to `live_games` — the epoch ms the
  * both-disconnected timer concludes the game (draw by abandonment, or abort) when neither
- * player is present to claim. Fresh DBs get the column from `generateTables()`.
+ * player is present to claim. Fresh DBs get the column from `generate()`.
  */
 function addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded(): void {
 	if (db.columnExists('live_games', 'both_disconnected_end_time')) return; // Already migrated.
@@ -249,7 +249,7 @@ function dropPlayerGamesClockAtEndColumnIfPresent(): void {
  * `player_games` — the Glicko RDs before/after the game, so a concluded game's pre-game and
  * new ratings can each report faithful confidence in review (mirroring the live path) instead
  * of being hardcoded confident. Old rows stay NULL (treated as confident, unrecoverable).
- * Fresh DBs get the columns from `generateTables()`.
+ * Fresh DBs get the columns from `generate()`.
  */
 function addRatingDeviationColumnsToPlayerGamesIfNeeded(): void {
 	if (db.columnExists('player_games', 'rating_deviation_at_game')) return; // Already migrated.
@@ -263,7 +263,7 @@ function addRatingDeviationColumnsToPlayerGamesIfNeeded(): void {
  *
  * Adds the `mod_slide_limit` column to `games` and `live_games` — the Slide Limit modifier's
  * value, with NULL marking the modifier inactive. Existing rows need no backfill: every game
- * played before modifiers existed had none. Fresh DBs get the column from `generateTables()`.
+ * played before modifiers existed had none. Fresh DBs get the column from `generate()`.
  */
 function addModifierColumnsIfNeeded(): void {
 	for (const table of ['games', 'live_games'] as const) {

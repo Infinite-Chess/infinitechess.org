@@ -16,7 +16,7 @@ describe('Login Controller Integration', () => {
 
 	// Runs before EVERY single 'it' block
 	beforeEach(() => {
-		databaseTables.clearAllTables();
+		databaseTables.clear();
 	});
 
 	it('should reject login with no body', async () => {

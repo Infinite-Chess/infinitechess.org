@@ -1,9 +1,9 @@
 // src/server/middleware/errorHandler.ts
 
 /**
- * Express error handler. Reached by uncaught server errors (statusless or 5xx) and by errors that
- * carry an HTTP status — in practice only the JSON body parser (express.json),
- * which throws 400 / 413 / 415.
+ * Express error handler. Reached by uncaught server errors (statusless or 5xx) and
+ * by errors that carry an HTTP status — in practice only the JSON body parser
+ * (express.json), which throws 400 / 413 / 415.
  */
 
 import type { Request, Response, NextFunction } from 'express';

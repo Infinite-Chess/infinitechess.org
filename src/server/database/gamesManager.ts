@@ -12,7 +12,7 @@ import db from './database.js';
 // Constants ----------------------------------------------------------------------------------
 
 /**
- * 62**4: Limit of unique game id with 4-digit base-62 game ids! EXCLUSIVE.
+ * 62**4: Limit of unique game ids with 4-digit base-62 game ids! EXCLUSIVE.
  * Matches `memberManager`'s user-id cap, but nothing depends on the two being equal.
  */
 const GAME_ID_UPPER_CAP: number = 14_776_336;

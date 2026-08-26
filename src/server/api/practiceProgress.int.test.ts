@@ -24,7 +24,7 @@ describe('Practice Progress Integration', () => {
 
 	// Runs before EVERY single 'it' block
 	beforeEach(() => {
-		databaseTables.clearAllTables();
+		databaseTables.clear();
 	});
 
 	it('should reject requests with no body', async () => {

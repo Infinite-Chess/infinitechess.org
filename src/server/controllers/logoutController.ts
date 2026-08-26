@@ -15,7 +15,7 @@ import socketRegistry from '../socket/socketRegistry.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
 
 /** `POST /api/logout` — revokes the caller's session, deletes its refresh token, and closes its sockets. */
-async function handleLogout(req: Request, res: Response): Promise<void> {
+async function handle(req: Request, res: Response): Promise<void> {
 	// Always clear the client's session cookies, signed in or not.
 	sessionManager.revoke(res);
 
@@ -40,4 +40,4 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 
 // Exports ------------------------------------------------------------------------------------
 
-export default { handleLogout };
+export default { handle };

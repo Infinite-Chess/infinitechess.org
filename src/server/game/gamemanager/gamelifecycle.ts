@@ -96,7 +96,7 @@ function applyConclusion(servergame: ServerGame, conclusion: GameConclusion): vo
 	gamesockets.sendRematchState(servergame);
 }
 
-/** Game has ended: console log the result for debugging. */
+/** [DEBUG] Game has ended: console log the result. */
 function consoleLogGameOver(servergame: ServerGame): void {
 	if (!activegames.PRINT_GAMES) return;
 

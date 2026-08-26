@@ -37,7 +37,7 @@ export type DeleteReason = (typeof VALID_DELETE_REASONS)[number];
 // Constants ----------------------------------------------------------------------------------
 
 /**
- * 62**4: Limit of unique user id with 4-digit base-62 user ids! EXCLUSIVE.
+ * 62**4: Limit of unique user ids with 4-digit base-62 user ids! EXCLUSIVE.
  * Matches `gamesManager`'s game-id cap, but nothing depends on the two being equal.
  */
 const USER_ID_UPPER_CAP: number = 14_776_336;

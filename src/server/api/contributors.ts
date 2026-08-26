@@ -6,7 +6,7 @@
  *
  * Not a request handler — the endpoint itself is three lines in `routes/api.ts`. It lives here
  * because that endpoint is its only reason to exist, and it reads `utility/`, which puts every
- * rung below `api/` out of reach.
+ * ladder rung below `api/` out of reach.
  *
  * INSTRUCTIONS:
  * In ANY github account (does not need to be a maintainer of the project),

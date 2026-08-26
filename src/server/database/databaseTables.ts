@@ -1,8 +1,11 @@
 // src/server/database/databaseTables.ts
 
 /**
- * Creates our database tables if they aren't already present — the shape a FRESH database
- * gets. Bringing an OLD one up to this shape is `migrations.ts`; running both is `databaseInit.ts`.
+ * The schema definition: every `CREATE TABLE` statement and index a fresh database gets.
+ * Also home to `clear` (wipes all data, test-only).
+ *
+ * Patching an old database up to this shape is `migrations.ts`; sequencing both at boot
+ * is `databaseInit.ts`.
  */
 
 import db from './database.js';
@@ -10,7 +13,7 @@ import db from './database.js';
 // Functions ----------------------------------------------------------------------------------
 
 /** Creates the tables in our database if they do not exist. */
-function generateTables(): void {
+function generate(): void {
 	// --- Accounts ---
 
 	// Members table
@@ -290,7 +293,7 @@ function generateTables(): void {
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */
-function clearAllTables(): void {
+function clear(): void {
 	if (process.env['NODE_ENV'] !== 'test') {
 		return console.error('CANNOT CLEAR DATABASE TABLES OUTSIDE OF TEST ENVIRONMENT!');
 	}
@@ -317,4 +320,4 @@ function clearAllTables(): void {
 
 // Exports ------------------------------------------------------------------------------------
 
-export default { generateTables, clearAllTables };
+export default { generate, clear };

@@ -1,14 +1,12 @@
 // src/server/database/database.ts
 
 /**
- * This module provides utility functions for managing SQLite database operations
- * using the `better-sqlite3` library.
+ * The server's single SQLite connection (`better-sqlite3`, WAL mode), and the query
+ * primitives around it: cached prepared statements behind run/get/all, transactions,
+ * and validated dynamic updates.
  *
- * It supports executing SQL queries, retrieving results (single or multiple rows),
- * caching prepared statements for performance, and handling database transactions.
- *
- * It also owns the column cache: every table's real column names, read out of SQLite at
- * startup. Column validation reads from it, so no hand-written column list exists to drift.
+ * Also owns the column cache — every table's real columns, read out of SQLite once the
+ * schema is final.
  */
 
 import path from 'path';
@@ -102,8 +100,7 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 
 /**
  * Reads every table's column names out of SQLite and caches them. Call once the schema is
- * final — after the tables are generated AND every migration has run — so that no hand-written
- * copy of the schema can ever drift from it.
+ * final — after the tables are generated AND every migration has run.
  * @throws If a database error occurs.
  */
 function cacheAllColumns(): void {

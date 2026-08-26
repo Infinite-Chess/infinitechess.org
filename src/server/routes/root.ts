@@ -70,6 +70,7 @@ function getRandomSplashText(req: Request): string {
 const variantGroups = variantregistry.getVariantGroupsWithVariants();
 
 // Pages --------------------------------------------------------------------------------------
+
 page('^/$|/index(.html)?', (req: Request, res: Response) => res.render('index.njk', { variantGroups, splashText: getRandomSplashText(req) })); // prettier-ignore
 page('/about(.html)?', (_req: Request, res: Response) => res.render('about.njk'));
 page('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.njk'));
@@ -116,7 +117,7 @@ page('/reset-password/:token', (req: Request, res: Response) => {
 	// The token sits in the URL; keep it out of any Referer
 	// header sent to third-party resources to avoid leaking it.
 	res.setHeader('Referrer-Policy', 'no-referrer');
-	res.render('resetpassword.njk', passwordResetController.getResetPasswordPageState(req));
+	res.render('resetpassword.njk', passwordResetController.getPageState(req));
 });
 page('/terms(.html)?', (_req: Request, res: Response) => res.render('terms.njk'));
 page('/privacy(.html)?', (_req: Request, res: Response) => res.render('privacy.njk'));

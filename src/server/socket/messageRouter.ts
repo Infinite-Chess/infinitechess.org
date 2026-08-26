@@ -1,7 +1,9 @@
 // src/server/socket/messageRouter.ts
 
 /**
- * This script routes incoming socket messages where they need to go.
+ * Routes every incoming websocket message to the router for its route.
+ *
+ * See docs/systems/WEBSOCKETS.md.
  */
 
 import type { CustomWebSocket } from './socketTypes.js';

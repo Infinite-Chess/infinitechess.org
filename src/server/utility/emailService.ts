@@ -1,12 +1,15 @@
 // src/server/utility/emailService.ts
 
 /**
- * This module constructs and dispatches application emails:
- * account verification, password resets, and rating abuse alerts.
+ * Constructs and dispatches the application's transactional emails — account
+ * verification, password resets, password-changed notices, and rating-abuse alerts —
+ * from localized templates, handed to `mailer.ts` for delivery.
  *
- * Blacklist screening is deliberately NOT done here — every flow gates at its own entrance
- * (accountValidation, registerController, passwordResetController), because only the caller
- * can shape the reply a blocked address gets. A check here could merely drop the mail.
+ * Blacklist screening is deliberately NOT done here: the flows where it matters gate at
+ * their own entrance (accountValidation, passwordResetController), because only the
+ * caller can shape the reply a blocked address gets; a check here could merely drop the
+ * mail. Notices to members' own stored addresses (password changed, rating abuse) are
+ * never screened.
  */
 
 import jsutil from '../../shared/util/jsutil.js';

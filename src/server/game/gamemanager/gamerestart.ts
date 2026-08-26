@@ -21,6 +21,31 @@ import activeplayers from './activeplayers.js';
 import gamelifecycle from './gamelifecycle.js';
 import liveGameRestore from './liveGameRestore.js';
 
+// Shutdown -------------------------------------------------------------------
+
+/**
+ * Call when server's about to restart.
+ * Stop all runtime timers and close sockets gracefully.
+ * The games will be restored from the database on the next startup.
+ * Their state is already stored inside live_* tables.
+ */
+function prepForShutdown(): void {
+	for (const servergame of activegames.getAll()) {
+		// Cancel all runtime timers
+		clearTimeout(servergame.match.autoTimeLossTimeoutID);
+		disconnect.cancelAllTimers(servergame.match);
+		gamelifecycle.cancelFinalizeTimer(servergame.match);
+
+		// Unsubscribe all sockets (we will resub them when they reconnect)
+		for (const data of Object.values(servergame.match.playerData)) {
+			if (!data.socket) continue;
+			gamesockets.detachParticipant(servergame.match, data.socket);
+		}
+
+		activegames.remove(servergame.match.id);
+	}
+}
+
 // Startup --------------------------------------------------------------------
 
 /**
@@ -108,31 +133,6 @@ function reinstateTimers(servergame: ServerGame, pendingTimers: PendingTimers): 
 	);
 }
 
-// Shutdown -------------------------------------------------------------------
-
-/**
- * Call when server's about to restart.
- * Stop all runtime timers and close sockets gracefully.
- * The games will be restored from the database on the next startup.
- * Their state is already stored inside live_* tables.
- */
-function prepForShutdown(): void {
-	for (const servergame of activegames.getAll()) {
-		// Cancel all runtime timers
-		clearTimeout(servergame.match.autoTimeLossTimeoutID);
-		disconnect.cancelAllTimers(servergame.match);
-		gamelifecycle.cancelFinalizeTimer(servergame.match);
-
-		// Unsubscribe all sockets (we will resub them when they reconnect)
-		for (const data of Object.values(servergame.match.playerData)) {
-			if (!data.socket) continue;
-			gamesockets.detachParticipant(servergame.match, data.socket);
-		}
-
-		activegames.remove(servergame.match.id);
-	}
-}
-
 // Exports --------------------------------------------------------------------
 
-export default { restoreLiveGames, prepForShutdown };
+export default { prepForShutdown, restoreLiveGames };

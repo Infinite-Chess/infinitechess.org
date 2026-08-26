@@ -28,6 +28,33 @@ import requestContext from './utility/requestContext.js';
 import reqTranslations from './config/reqTranslations.js';
 import htmlCacheControl from './middleware/htmlCacheControl.js';
 
+// Setup --------------------------------------------------------------------------------------
+
+const app = express();
+
+// Trust 1 proxy hop (Cloudflare) so req.ip reflects the real client.
+// This number must match the actual proxy count, AND all traffic
+// must reach the origin only through Cloudflare. See utility/ip.ts.
+app.set('trust proxy', 1);
+app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
+
+// Configure Nunjucks as the view engine.
+nunjucks.configure(app);
+
+// This is in here so integration tests work, as otherwise if
+// this is in server.js, i18next is never initialized for tests.
+i18n.init();
+
+// Precompute language-resolution structures from the now-loaded supported-language set.
+reqLanguage.init();
+
+// Install the lazy `req.lang` (resolved language) and `req.t` (translations) getters on
+// the request prototype, so server code can read either anywhere in the pipeline.
+reqLanguage.install(app);
+reqTranslations.install(app);
+
+configurePipeline(app); // Assemble the request pipeline
+
 // Functions ----------------------------------------------------------------------------------
 
 /**
@@ -74,33 +101,6 @@ function configurePipeline(app: Express): void {
 	// Error handling. Catches uncaught server errors.
 	app.use(errorHandler);
 }
-
-// Setup --------------------------------------------------------------------------------------
-
-const app = express();
-
-// Trust 1 proxy hop (Cloudflare) so req.ip reflects the real client.
-// This number must match the actual proxy count, AND all traffic
-// must reach the origin only through Cloudflare. See utility/ip.ts.
-app.set('trust proxy', 1);
-app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
-
-// Configure Nunjucks as the view engine.
-nunjucks.configure(app);
-
-// This is in here so integration tests work, as otherwise if
-// this is in server.js, i18next is never initialized for tests.
-i18n.init();
-
-// Precompute language-resolution structures from the now-loaded supported-language set.
-reqLanguage.init();
-
-// Install the lazy `req.lang` (resolved language) and `req.t` (translations) getters on
-// the request prototype, so server code can read either anywhere in the pipeline.
-reqLanguage.install(app);
-reqTranslations.install(app);
-
-configurePipeline(app); // Assemble the request pipeline
 
 // Exports ------------------------------------------------------------------------------------
 

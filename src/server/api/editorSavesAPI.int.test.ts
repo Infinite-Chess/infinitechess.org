@@ -27,7 +27,7 @@ describe('EditorSavesAPI Integration', () => {
 
 	// Runs before EVERY single 'it' block
 	beforeEach(() => {
-		databaseTables.clearAllTables();
+		databaseTables.clear();
 	});
 
 	describe('GET /api/editor-saves', () => {

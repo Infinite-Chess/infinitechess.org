@@ -7,7 +7,7 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
-const pathTraversal = (req: Request, res: Response, next: NextFunction): void => {
+function pathTraversal(req: Request, res: Response, next: NextFunction): void {
 	try {
 		const decoded = decodeURIComponent(req.url);
 
@@ -29,6 +29,6 @@ const pathTraversal = (req: Request, res: Response, next: NextFunction): void =>
 	} catch (_err) {
 		res.status(400).send('Invalid URL encoding');
 	}
-};
+}
 
 export default pathTraversal;

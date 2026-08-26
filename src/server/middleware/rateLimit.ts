@@ -32,6 +32,8 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) {
 	throw new Error('ARE_RATE_LIMITING must be true in production!!');
 }
 
+// Functions ----------------------------------------------------------------------------------
+
 /**
  * Middleware that counts this IP address's recent connections,
  * and rejects this request if they've sent too many.
@@ -39,8 +41,6 @@ if (!DEV_BUILD && !ARE_RATE_LIMITING) {
  * @param res - The response object
  * @param next - The function to call, when finished, to continue the middleware waterfall.
  */
-// Functions ----------------------------------------------------------------------------------
-
 function rateLimit(req: Request, res: Response, next: NextFunction): void {
 	if (!ARE_RATE_LIMITING) return next(); // Not rate limiting
 

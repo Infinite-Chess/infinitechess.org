@@ -30,6 +30,4 @@ function init(): void {
 	componentTranslationLoader.load();
 }
 
-// Exports ------------------------------------------------------------------------------------
-
 export default { init };

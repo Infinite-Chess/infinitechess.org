@@ -2,7 +2,8 @@
 
 /**
  * Brings the database up at boot: the schema first, then the background work that runs
- * against it. The top of `database/` — everything else here is reached through it.
+ * against it. The top of the `database/` ladder — everything else here is reached
+ * through it.
  *
  * Integration tests call {@link buildSchema} alone, skipping the periodic tasks.
  */
@@ -22,13 +23,11 @@ function init(): void {
 	startPeriodicTasks();
 }
 
-/**
- * Brings the schema to its current shape, then caches it. The cache MUST be filled last:
- * the migrations alter tables, so anything read before them would be out of date.
- */
+/** Brings the schema to its current shape, then caches it. */
 function buildSchema(): void {
-	databaseTables.generateTables();
+	databaseTables.generate();
 	migrations.run();
+	// MUST be filled last: the migrations alter tables.
 	db.cacheAllColumns();
 }
 

@@ -25,7 +25,7 @@ import refreshTokenManager from '../database/refreshTokenManager.js';
  * `POST /api/auth` — verifies the submitted username/password and, on success, logs the user
  * in (issues tokens, updates member vars). Always responds JSON; errors are shown on the page.
  */
-async function handleLogin(req: Request, res: Response): Promise<void> {
+async function handle(req: Request, res: Response): Promise<void> {
 	// Initial check - if this fails, it sends a response and returns.
 	const identity = await authController.testPasswordForRequest(req, res);
 	if (!identity) return;
@@ -58,7 +58,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 		const detail = jsutil.getErrorMessage(error);
 		// Log the detailed error for server-side debugging.
 		logEvents.addAndPrint(
-			`Error during handleLogin for user "${logEvents.escapeLogNewlines(String(req.body.username))}": ${detail}`,
+			`Error during handle for user "${logEvents.escapeLogNewlines(String(req.body.username))}": ${detail}`,
 			'errLog',
 		);
 		// Send a generic error response to the client.
@@ -81,4 +81,4 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 
 // Exports ------------------------------------------------------------------------------------
 
-export default { handleLogin };
+export default { handle };
