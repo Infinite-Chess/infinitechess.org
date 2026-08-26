@@ -55,7 +55,7 @@ router.post('/prepare-restart', deployController.handlePrepareRestart);
 
 router.post('/verify/:token', verifyAccountController.verifyPendingRegistration);
 
-// Routers that manage their own authentication (per-router or per-route resolveAuth) ---
+// Routers that manage their own authentication --------------------------------
 
 router.use('/', authRouter); // login + logout (both public)
 router.use('/editor-saves', editorSavesRouter);
