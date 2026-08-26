@@ -1,8 +1,7 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/TheBeginningZone.ts
 
+import type { Zone } from '../Zone';
 import type { PostProcessPass } from '../../../../webgl/post_processing/PostProcessPass';
-
-import { Zone } from '../EffectZoneManager';
 
 export class TheBeginningZone implements Zone {
 	/** The unique integer id this effect zone gets. */

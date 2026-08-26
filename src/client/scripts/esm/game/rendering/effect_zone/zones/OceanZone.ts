@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/OceanZone.ts
 
-import type { Zone } from '../EffectZoneManager';
+import type { Zone } from '../Zone';
 import type { PostProcessPass } from '../../../../webgl/post_processing/PostProcessPass';
 
 import camera from '../../../../board/rendering/camera';

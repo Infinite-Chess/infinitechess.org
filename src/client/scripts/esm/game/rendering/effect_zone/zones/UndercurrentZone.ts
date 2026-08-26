@@ -6,7 +6,7 @@
  * It has NO visual effect, but it does introduce the first ambience.
  */
 
-import type { Zone } from '../EffectZoneManager';
+import type { Zone } from '../Zone';
 import type { PostProcessPass } from '../../../../webgl/post_processing/PostProcessPass';
 
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
