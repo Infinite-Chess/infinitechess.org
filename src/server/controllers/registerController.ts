@@ -18,7 +18,7 @@ import turnstile from './turnstile.js';
 import logEvents from '../utility/logEvents.js';
 import emailService from '../utility/emailService.js';
 import memberManager from '../database/memberManager.js';
-import sessionManager from './sessionManager.js';
+import sessionManager from '../auth/sessionManager.js';
 import blacklistManager from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';
 import pendingRegistrationManager from '../database/pendingRegistrationManager.js';

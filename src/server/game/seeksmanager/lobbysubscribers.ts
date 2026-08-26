@@ -14,7 +14,7 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { OutAction, OutValue } from '../../socket/socketSend.js';
 
 import socketsend from '../../socket/socketSend.js';
-import memberinfoutil from '../../utility/memberinfoutil.js';
+import memberinfoutil from '../../auth/memberinfoutil.js';
 
 // Constants -------------------------------------------------------------------------------------
 

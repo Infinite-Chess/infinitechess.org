@@ -1,4 +1,4 @@
-// src/server/utility/memberinfoutil.ts
+// src/server/auth/memberinfoutil.ts
 
 /**
  * Pure helpers for the {@link MemberInfo} / {@link AuthMemberInfo} types:

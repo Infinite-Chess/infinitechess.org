@@ -35,7 +35,7 @@ import {
 import socketsend from '../../socket/socketSend.js';
 import activeseeks from './activeseeks.js';
 import activeplayers from '../gamemanager/activeplayers.js';
-import memberinfoutil from '../../utility/memberinfoutil.js';
+import memberinfoutil from '../../auth/memberinfoutil.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
 
 // Functions -------------------------------------------------------------------------------------

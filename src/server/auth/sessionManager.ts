@@ -1,4 +1,4 @@
-// src/server/controllers/sessionManager.ts
+// src/server/auth/sessionManager.ts
 
 /**
  * This module handles the creation, renewal, and revocation of user login sessions.
@@ -142,7 +142,6 @@ function deleteSessionCookies(res: Response): void {
 // Exports -----------------------------------------------------------------------------------------
 
 export default {
-	// Renewing & Revoking Sessions
 	freshen,
 	create,
 	revoke,

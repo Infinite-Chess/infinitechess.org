@@ -25,7 +25,7 @@ import socketReceive from './socketReceive.js';
 import socketRegistry from './socketRegistry.js';
 import requestContext from '../utility/requestContext.js';
 import reqTranslations from '../config/reqTranslations.js';
-import refreshTokenManager from '../database/refreshTokenManager.js';
+import identityResolver from '../auth/identityResolver.js';
 
 // Functions ----------------------------------------------------------------------------------
 
@@ -55,17 +55,11 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	// Initialize who they are. Member? Browser ID?...
 	// Validates their refresh-token cookie against the database. If they are signed
 	// in, adds their user_id, username, and roles to the socket metadata's memberInfo.
-	const refreshToken = ws.metadata.cookies.jwt;
-	if (refreshToken !== undefined) {
-		const result = refreshTokenManager.validate(refreshToken, ws.metadata.IP);
-		if (result) {
-			ws.metadata.memberInfo = {
-				...ws.metadata.memberInfo,
-				signedIn: true,
-				...result.payload,
-			};
-		}
-	}
+	ws.metadata.memberInfo = identityResolver.resolveIdentity(
+		ws.metadata.memberInfo,
+		ws.metadata.cookies.jwt,
+		ws.metadata.IP,
+	).memberInfo;
 
 	if (
 		ws.metadata.memberInfo.signedIn &&

@@ -15,7 +15,7 @@ import type { OutSeek, SeekId } from '../../../shared/transport/domain.js';
 
 import socketsend from '../../socket/socketSend.js';
 import seekutility from './seekutility.js';
-import memberinfoutil from '../../utility/memberinfoutil.js';
+import memberinfoutil from '../../auth/memberinfoutil.js';
 import lobbysubscribers from './lobbysubscribers.js';
 
 // Constants -------------------------------------------------------------------------------------

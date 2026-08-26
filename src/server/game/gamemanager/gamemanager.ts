@@ -31,7 +31,7 @@ import activeplayers from './activeplayers.js';
 import gamelifecycle from './gamelifecycle.js';
 import deadgamestate from './deadgamestate.js';
 import liveGameValues from './liveGameValues.js';
-import memberinfoutil from '../../utility/memberinfoutil.js';
+import memberinfoutil from '../../auth/memberinfoutil.js';
 import gamestatebuilder from './gamestatebuilder.js';
 
 // Creation -----------------------------------------------------------------------------------

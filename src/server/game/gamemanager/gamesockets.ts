@@ -17,7 +17,7 @@ import type { OutAction, OutRoute, OutValue } from '../../socket/socketSend.js';
 
 import socketsend from '../../socket/socketSend.js';
 import gameutility from './gameutility.js';
-import memberinfoutil from '../../utility/memberinfoutil.js';
+import memberinfoutil from '../../auth/memberinfoutil.js';
 import gamestatebuilder from './gamestatebuilder.js';
 
 // Attaching & Detaching ----------------------------------------------------------------------

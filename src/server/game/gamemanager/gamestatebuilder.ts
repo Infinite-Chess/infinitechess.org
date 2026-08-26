@@ -49,7 +49,7 @@ import { getFormattedEngineName } from '../../../shared/chess/util/engine.js';
 import tconfig from '../../config/translationconfig.js';
 import drawoffers from './drawoffers.js';
 import gameutility from './gameutility.js';
-import memberinfoutil from '../../utility/memberinfoutil.js';
+import memberinfoutil from '../../auth/memberinfoutil.js';
 import ratingcalculation from '../../utility/ratingcalculation.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
 import componentTranslationLoader from '../../config/componentTranslationLoader.js';

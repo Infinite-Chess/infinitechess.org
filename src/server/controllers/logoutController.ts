@@ -10,7 +10,7 @@ import type { Request, Response } from 'express';
 import socketutil from '../../shared/util/socketutil.js';
 
 import logEvents from '../utility/logEvents.js';
-import sessionManager from './sessionManager.js';
+import sessionManager from '../auth/sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
 

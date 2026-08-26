@@ -13,7 +13,7 @@ import socketutil from '../../shared/util/socketutil.js';
 import logEvents from '../utility/logEvents.js';
 import activegames from '../game/gamemanager/activegames.js';
 import memberManager from '../database/memberManager.js';
-import sessionManager from './sessionManager.js';
+import sessionManager from '../auth/sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import authController from './authController.js';
 import { getTranslation } from '../utility/translate.js';

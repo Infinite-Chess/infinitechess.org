@@ -36,7 +36,7 @@ import gamemanager from '../game/gamemanager/gamemanager.js';
 import gamesManager from '../database/gamesManager.js';
 import deadgamestate from '../game/gamemanager/deadgamestate.js';
 import piecesvgcache from '../config/piecesvgcache.js';
-import memberinfoutil from '../utility/memberinfoutil.js';
+import memberinfoutil from '../auth/memberinfoutil.js';
 
 // Types -----------------------------------------------------------------------------
 

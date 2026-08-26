@@ -20,7 +20,7 @@ import roles from './roles.js';
 import urlUtils from '../utility/urlUtils.js';
 import logEvents from '../utility/logEvents.js';
 import emailService from '../utility/emailService.js';
-import sessionManager from './sessionManager.js';
+import sessionManager from '../auth/sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import blacklistManager from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';

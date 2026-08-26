@@ -62,6 +62,8 @@
  *                                  manager per table
  *   cookies/                       who owns each cookie we set — its schema, lifetime,
  *                                  options, and how to read, write and clear it
+ *   auth/                          authentication and identity: who a request or connection
+ *                                  is, and the lifecycle of login sessions
  *   game/, socket/                 live game state and the connections carrying it
  *   controllers/                   request handlers that render or answer
  *   api/                           JSON endpoints

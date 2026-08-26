@@ -17,7 +17,7 @@ import jsutil from '../../shared/util/jsutil.js';
 import roles from './roles.js';
 import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
-import sessionManager from './sessionManager.js';
+import sessionManager from '../auth/sessionManager.js';
 import authController from './authController.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
 

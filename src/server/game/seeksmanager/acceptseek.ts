@@ -20,7 +20,7 @@ import gamemanager from '../gamemanager/gamemanager.js';
 import activeseeks from './activeseeks.js';
 import lobbymanager from './lobbymanager.js';
 import activeplayers from '../gamemanager/activeplayers.js';
-import memberinfoutil from '../../utility/memberinfoutil.js';
+import memberinfoutil from '../../auth/memberinfoutil.js';
 import lobbysubscribers from './lobbysubscribers.js';
 
 /**

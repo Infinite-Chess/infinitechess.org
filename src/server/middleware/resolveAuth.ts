@@ -11,9 +11,9 @@ import jsutil from '../../shared/util/jsutil.js';
 
 import ip from '../utility/ip.js';
 import logEvents from '../utility/logEvents.js';
-import sessionManager from '../controllers/sessionManager.js';
+import sessionManager from '../auth/sessionManager.js';
+import identityResolver from '../auth/identityResolver.js';
 import { ParsedCookies } from '../types.js';
-import refreshTokenManager from '../database/refreshTokenManager.js';
 
 /**
  * [HTTP] Resolves identity from the refresh-token cookie, setting `req.memberInfo` so downstream
@@ -33,43 +33,40 @@ function resolve(req: Request, res: Response, next: NextFunction): void {
 }
 
 /**
- * [HTTP] Reads the request's refresh token cookie,
- * updates the connections `memberInfo` property if it is valid (are signed in).
- * Performs database queries.
+ * [HTTP] Validates the request's refresh token cookie, updating `req.memberInfo` if it is
+ * valid (they are signed in). Revokes or renews their session cookies accordingly.
  */
 function tryRefreshToken(req: Request, res: Response): void {
 	const cookies: ParsedCookies = req.cookies;
-	const refreshToken = cookies.jwt;
-	if (!refreshToken) return; // No refresh token present
 
-	const result = refreshTokenManager.validate(refreshToken, ip.get(req));
+	const { memberInfo, validation } = identityResolver.resolveIdentity(
+		req.memberInfo!,
+		cookies.jwt,
+		ip.get(req),
+	);
 
-	if (!result) {
+	if (!validation && cookies.jwt) {
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
 		sessionManager.revoke(res);
-		return;
+	} else if (validation) {
+		const payload = validation.payload;
+		try {
+			// Renew the session if it was issued more than a day ago.
+			sessionManager.freshen(
+				req,
+				res,
+				payload.user_id,
+				payload.username,
+				payload.roles,
+				validation.tokenRecord,
+			);
+		} catch (error) {
+			const errMsg = jsutil.getErrorMessage(error);
+			logEvents.addAndPrint(`Error freshening session: ${errMsg}`, 'errLog');
+		}
 	}
 
-	const payload = result.payload;
-
-	try {
-		// Renew the session if it was issued more than a day ago.
-		sessionManager.freshen(
-			req,
-			res,
-			payload.user_id,
-			payload.username,
-			payload.roles,
-			result.tokenRecord,
-		);
-	} catch (error) {
-		const errMsg = jsutil.getErrorMessage(error);
-		logEvents.addAndPrint(`Error freshening session: ${errMsg}`, 'errLog');
-	}
-
-	// Valid! Set their req.memberInfo property!
-
-	req.memberInfo = { ...req.memberInfo, signedIn: true, ...result.payload }; // Username was our payload when we generated the access token
+	req.memberInfo = memberInfo;
 }
 
 // Exports ------------------------------------------------------------------------------------
