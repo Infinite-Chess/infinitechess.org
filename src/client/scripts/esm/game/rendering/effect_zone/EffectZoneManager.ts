@@ -1,6 +1,7 @@
 // src/client/scripts/esm/game/rendering/effect_zone/EffectZoneManager.ts
 
 import type { BoardTiles } from '../../../board/rendering/boardtiles';
+import type { PostProcessPass } from '../../../webgl/post_processing/PostProcessPass';
 
 import ImageLoader from '../../../util/ImageLoader';
 import preferences from '../../../components/header/preferences';
@@ -12,7 +13,6 @@ import { EchoRiftZone } from './zones/EchoRiftZone';
 import { ProgramManager } from '../../../webgl/ProgramManager';
 import { EmberVergeZone } from './zones/EmberVergeZone';
 import { DustyWastesZone } from './zones/DustyWastesZone';
-import { PostProcessPass } from '../../../webgl/post_processing/PostProcessingPipeline';
 import { IridescenceZone } from './zones/IridescenceZone';
 import { AshfallVocsZone } from './zones/AshfallVocsZone';
 import { TheBeginningZone } from './zones/TheBeginningZone';

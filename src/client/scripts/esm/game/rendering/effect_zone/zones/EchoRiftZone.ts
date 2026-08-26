@@ -1,6 +1,7 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/EchoRiftZone.ts
 
 import type { Zone } from '../EffectZoneManager';
+import type { PostProcessPass } from '../../../../webgl/post_processing/PostProcessPass';
 
 import gamesound from '../../../../board/gamesound';
 import PerlinNoise from '../../../../util/PerlinNoise';
@@ -8,7 +9,6 @@ import preferences from '../../../../components/header/preferences';
 import AudioManager from '../../../../audio/AudioManager';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
-import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import { VoronoiDistortionPass } from '../../../../webgl/post_processing/passes/VoronoiDistortionPass';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 

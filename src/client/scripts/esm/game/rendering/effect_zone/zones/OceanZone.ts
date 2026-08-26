@@ -1,12 +1,12 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/OceanZone.ts
 
 import type { Zone } from '../EffectZoneManager';
+import type { PostProcessPass } from '../../../../webgl/post_processing/PostProcessPass';
 
 import camera from '../../../../board/rendering/camera';
 import deltatime from '../../../../board/deltatime.js';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
-import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 import { RippleSource, WaterPass } from '../../../../webgl/post_processing/passes/WaterPass';

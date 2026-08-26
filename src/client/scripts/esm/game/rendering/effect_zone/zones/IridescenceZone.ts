@@ -1,9 +1,9 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/IridescenceZone.ts
 
 import type { Zone } from '../EffectZoneManager';
+import type { PostProcessPass } from '../../../../webgl/post_processing/PostProcessPass';
 
 import deltatime from '../../../../board/deltatime.js';
-import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 

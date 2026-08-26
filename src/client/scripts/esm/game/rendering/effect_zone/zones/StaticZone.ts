@@ -1,11 +1,11 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/StaticZone.ts
 
 import type { Zone } from '../EffectZoneManager';
+import type { PostProcessPass } from '../../../../webgl/post_processing/PostProcessPass';
 
 import AudioManager from '../../../../audio/AudioManager';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
-import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class StaticZone implements Zone {

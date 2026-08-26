@@ -1,6 +1,6 @@
 // src/client/scripts/esm/webgl/post_processing/passes/WaterPass.ts
 
-import type { PostProcessPass } from '../PostProcessingPipeline';
+import type { PostProcessPass } from '../PostProcessPass';
 import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 
 /** Defines a single ripple's source point. */

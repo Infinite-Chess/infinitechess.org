@@ -5,7 +5,7 @@
  */
 
 import type { ProgramManager } from '../../webgl/ProgramManager';
-import type { PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline';
+import type { PostProcessPass } from '../../webgl/post_processing/PostProcessPass';
 
 import bounds from '../../../../../shared/util/math/bounds';
 import bdcoords from '../../../../../shared/util/bdcoords';

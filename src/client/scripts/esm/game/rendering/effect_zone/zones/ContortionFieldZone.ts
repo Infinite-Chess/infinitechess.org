@@ -1,11 +1,11 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/ContortionFieldZone.ts
 
 import type { Zone } from '../EffectZoneManager';
+import type { PostProcessPass } from '../../../../webgl/post_processing/PostProcessPass';
 
 import deltatime from '../../../../board/deltatime.js';
 import { SineWavePass } from '../../../../webgl/post_processing/passes/SineWavePass';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
-import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 

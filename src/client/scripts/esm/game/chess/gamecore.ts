@@ -8,6 +8,7 @@
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/types/color.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { PostProcessPass } from '../../webgl/post_processing/PostProcessPass.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
@@ -56,12 +57,9 @@ import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
+import { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
 import Renderable, { createRenderable } from '../../board/rendering/renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
-import {
-	PostProcessingPipeline,
-	PostProcessPass,
-} from '../../webgl/post_processing/PostProcessingPipeline.js';
 
 // Variables -------------------------------------------------------------------
 

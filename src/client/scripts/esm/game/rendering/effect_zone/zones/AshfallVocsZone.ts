@@ -1,12 +1,12 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/AshfallVocsZone.ts
 
 import type { Zone } from '../EffectZoneManager';
+import type { PostProcessPass } from '../../../../webgl/post_processing/PostProcessPass';
 
 import { HeatWavePass } from '../../../../webgl/post_processing/passes/HeatWavePass';
 import { VignettePass } from '../../../../webgl/post_processing/passes/VignettePass';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
-import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
