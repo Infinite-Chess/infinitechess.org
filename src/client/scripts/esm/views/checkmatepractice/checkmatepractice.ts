@@ -26,7 +26,6 @@ import gameslot from '../../game/chess/gameslot.js';
 import selection from '../../game/chess/selection.js';
 import enginegame from '../../game/misc/enginegame.js';
 import gamesession from '../../game/chess/gamesession.js';
-import guipractice from './gui/guipractice.js';
 import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../../game/chess/movesequence.js';
@@ -58,15 +57,18 @@ const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion'
  * A list of checkmate strings we have beaten
  * [ "2Q-1k", "3R-1k", "2CH-1k"]
  *
- * This will be initialized when guipractice calls {@link updateCompletedCheckmates} for the first time!
+ * This will be initialized on the first {@link getCompletedCheckmates} call.
  * If we initialize it right here, we crash in production, because LocalStorage is not defined yet.
  * @type {string[]}
  */
 let completedCheckmates: string[];
 const expiryOfCompletedCheckmatesMs: number = 1000 * 60 * 60 * 24 * 365; // 1 year
 
-/** Whether we are in a checkmate practice engine game. */
-let inCheckmatePractice: boolean = false;
+/**
+ * The checkmate the current game was started with. Owned here rather than read back off
+ * the menu, which the player may have re-selected in since, marking the wrong one beaten.
+ */
+let checkmatePracticing: string | undefined;
 
 /** Whether the player is allowed to undo a move in the current position. */
 let undoingIsLegal: boolean = false;
@@ -87,7 +89,7 @@ function setUndoingIsLegal(value: boolean): void {
  */
 function startCheckmatePractice(checkmateSelectedID: string): void {
 	console.log('Loading practice checkmate game.');
-	inCheckmatePractice = true;
+	checkmatePracticing = checkmateSelectedID;
 	setUndoingIsLegal(false);
 	initListeners();
 
@@ -265,22 +267,21 @@ function squareNotInSight(square: CoordsKey, position: Map<CoordsKey, number>): 
 
 /**
  * Only for dev testing
- * Erases checkmate practice progress in local storage
- * Call {@link checkmatepractice.eraseCheckmatePracticeProgressFromLocalStorage} in developer tools to use this
+ * Erases checkmate practice progress in local storage.
+ * Call it in developer tools, then reopen the practice menu to see it cleared.
  */
 function eraseCheckmatePracticeProgressFromLocalStorage(): void {
 	LocalStorage.deleteItem(nameOfCompletedCheckmatesInStorage);
 	console.log('DELETED all checkmate practice progress.');
 	if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
 	completedCheckmates.length = 0;
-	guipractice.updateCheckmatesBeaten(completedCheckmates); // Delete the 'beaten' class from all
 }
 
 /**
- * Updates completedCheckmates list and redraws the GUI by calling guipractice.updateCheckmatesBeaten()
+ * The checkmates we have beaten, re-read from the source of truth: the server's
+ * cookie when signed in, else LocalStorage.
  */
-function updateCompletedCheckmates(): void {
-	// Update completedCheckmates according to checkmates_beaten cookie, if it exists, and if we are logged in
+function getCompletedCheckmates(): string[] {
 	const cookieCheckmates: string | undefined = docutil.getCookieValue('checkmates_beaten');
 	if (validatorama.areWeLoggedIn() && cookieCheckmates !== undefined) {
 		// console.log("checkmates_beaten cookie was present!");
@@ -289,7 +290,7 @@ function updateCompletedCheckmates(): void {
 		// Else, use LocalStorage as a fallback
 		completedCheckmates = LocalStorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
 	}
-	guipractice.updateCheckmatesBeaten(completedCheckmates);
+	return completedCheckmates;
 }
 
 /**
@@ -347,8 +348,6 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 
 		if (response.ok) {
 			console.log('Server recorded checkmate completion successfully.');
-			// Do this now, since the server will have updated the cookie containing the completed checkmates
-			guipractice.updateCheckmatesBeaten(completedCheckmates);
 		} else {
 			// Handle unsuccessful response
 			// This means retries were exhausted on a 500, or it was a non-retryable response (e.g., 400, 401)
@@ -365,7 +364,7 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 /** Called when an engine game ends */
 function onEngineGameConclude(): void {
 	// Were we doing checkmate practice
-	if (!inCheckmatePractice) return; // Not in checkmate practice
+	if (checkmatePracticing === undefined) return; // Not in checkmate practice
 
 	const gameConclusion: GameConclusion | undefined = gameslot.getGamefile()!.gameConclusion;
 	if (gameConclusion === undefined)
@@ -379,15 +378,14 @@ function onEngineGameConclude(): void {
 	// WON!!! 🎉
 
 	// Add the checkmate to the list of completed!
-	const checkmatePracticeID: string = guipractice.getCheckmateSelectedID();
-	markCheckmateBeaten(checkmatePracticeID);
+	markCheckmateBeaten(checkmatePracticing);
 }
 
 /**
  * This function gets called by enginegame.ts whenever a human player submitted a move
  */
 function registerHumanMove(): void {
-	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
+	if (checkmatePracticing === undefined) return; // The engine game is not a checkmate practice game
 
 	const gamefile = gameslot.getGamefile()!;
 	if (!undoingIsLegal && gamefileutility.isGameOver(gamefile) && gamefile.moves.length > 0) {
@@ -403,7 +401,7 @@ function registerHumanMove(): void {
  * This function gets called by enginegame.ts whenever an engine player submitted a move
  */
 function registerEngineMove(): void {
-	if (!inCheckmatePractice) return; // The engine game is not a checkmate practice game
+	if (checkmatePracticing === undefined) return; // The engine game is not a checkmate practice game
 
 	const gamefile = gameslot.getGamefile()!;
 	if (!undoingIsLegal && gamefile.moves.length > 1) {
@@ -413,7 +411,7 @@ function registerEngineMove(): void {
 }
 
 function undoMove(): void {
-	if (!inCheckmatePractice)
+	if (checkmatePracticing === undefined)
 		return console.error('Undoing moves is currently not allowed for non-practice mode games');
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
@@ -437,18 +435,18 @@ function undoMove(): void {
 }
 
 function restartGame(): void {
-	if (!inCheckmatePractice)
+	if (checkmatePracticing === undefined)
 		return console.error('Restarting games is currently not supported for non-practice mode games'); // prettier-ignore
 	// Don't stomp an in-flight load — unloading its gamefile would crash its graphical half.
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 
-	startCheckmatePractice(guipractice.getCheckmateSelectedID());
+	startCheckmatePractice(checkmatePracticing);
 }
 
 // Exports ---------------------------------------------------------------------
 
 export default {
 	startCheckmatePractice,
-	updateCompletedCheckmates,
+	getCompletedCheckmates,
 	eraseCheckmatePracticeProgressFromLocalStorage,
 };

@@ -89,14 +89,6 @@ document.addEventListener('theme-change', () => {
 
 // Functions -------------------------------------------------------------------
 
-/**
- * Returns the last selected checkmate practce. Useful
- * for knowing which one we just beat.
- */
-function getCheckmateSelectedID(): string {
-	return checkmateSelectedID;
-}
-
 function open(): void {
 	isOpen = true;
 	element_practiceSelection.classList.remove('hidden');
@@ -104,7 +96,7 @@ function open(): void {
 	if (!generatedHTML) createPracticeHTML();
 	if (!generatedIcons) addPieceIcons();
 	changeCheckmateSelected(checkmateSelectedID);
-	checkmatepractice.updateCompletedCheckmates();
+	updateCheckmatesBeaten(checkmatepractice.getCompletedCheckmates());
 	initListeners();
 }
 
@@ -452,7 +444,5 @@ function moveUpSelection(event: Event): void {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	getCheckmateSelectedID,
 	open,
-	updateCheckmatesBeaten,
 };
