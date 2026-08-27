@@ -63,7 +63,7 @@ message assembled into a variable first would smuggle extra keys onto the wire. 
 
 Each side then declares its own `OutMessages` map ([socketSend.ts](/src/server/socket/socketSend.ts),
 [socketsend.ts](/src/client/scripts/esm/socket/socketsend.ts)) for the direction it sends, which is
-what makes `socketsend.send(ws, 'game', 'move', …)` fully type-checked on route/action/value.
+what makes `socketSend.send(ws, 'game', 'move', …)` fully type-checked on route/action/value.
 
 ### Adding a message
 
