@@ -65,19 +65,8 @@ class RenderContext {
 		this.textures = params.textures;
 		this.maskedDraw = params.maskedDraw;
 		this.#clearColor = [0.5, 0.5, 0.5]; // Fallback sky color. Replaced by boardtiles.ts.
-		this.renderable = createRenderableFactory({
-			gl: this.gl,
-			programManager: this.programManager,
-			cam: this.camera,
-		});
-		this.boardtiles = createBoardTiles({
-			gl: this.gl,
-			camera: this.camera,
-			boardpos: this.boardpos,
-			renderable: this.renderable,
-			setClearColor: this.setClearColor.bind(this),
-			executeWithDepthFunc_ALWAYS: this.executeWithDepthFunc_ALWAYS.bind(this),
-		});
+		this.renderable = createRenderableFactory(this.gl, this.programManager, this.camera);
+		this.boardtiles = createBoardTiles(this);
 	}
 
 	/** Clears this context's color, depth, and stencil buffers. Call every frame before rendering. */

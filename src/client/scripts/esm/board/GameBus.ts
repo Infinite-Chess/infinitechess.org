@@ -26,11 +26,6 @@ interface GameBusEvents {
 	'game-unloaded': void;
 	/** Dispatched when games end, and the termination is shown on screen. */
 	'game-concluded': void;
-	/**
-	 * Dispatched when an online game's draw offer opens or closes, or when extending
-	 * one becomes legal or illegal again.
-	 */
-	'draw-offer-changed': void;
 	'piece-selected': { piece: Piece; legalMoves: LegalMoves };
 	'piece-unselected': void;
 	// /** Dispatched immediately before legal move generation. */

@@ -33,8 +33,8 @@ import idleness from './idleness.js';
 import gamesound from '../../board/gamesound.js';
 import socketsubs from '../../socket/socketsubs.js';
 import socketsend from '../../socket/socketsend.js';
-import { LobbyBus } from './LobbyBus.js';
 import socketintents from '../../socket/socketintents.js';
+import gamesetupmodal from './gamesetupmodal.js';
 import seekpreviewcache from './seekpreviewcache.js';
 import variantpreviewtooltip from '../../board/rendering/variantpreviewtooltip.js';
 
@@ -265,7 +265,7 @@ function showInGameBanner(ingame: InGameMessage): void {
 	element_lobbyIngameJoin.setAttribute('href', gameurl.getGameUrl(ingame.id, ingame.role));
 	element_lobbyIngameOverlay.classList.remove('hidden');
 	for (const btn of elements_disabledWhileInGame) btn.setAttribute('disabled', '');
-	LobbyBus.dispatch('seek-creation-closed');
+	gamesetupmodal.close();
 }
 
 /** Hides the in-game banner. */
@@ -352,7 +352,7 @@ function onLobbyIdle(): void {
 	unsubscribe();
 	hideInGameBanner();
 	showIdleOverlay();
-	LobbyBus.dispatch('seek-creation-closed');
+	gamesetupmodal.close();
 }
 
 /** Shows the pre-existing idle overlay element, wiring up pointer listeners to dismiss it. */

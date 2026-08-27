@@ -5,22 +5,15 @@
  * It owns the tile textures (context-bound GPU objects) and draws the fractal boards.
  * The board's geometry queries (bounding box, tile width) live in {@link boardgeometry}.
  *
- * This is a FACTORY: {@link createBoardTiles} builds one tile renderer. The interactive
- * game and the variant-preview tooltip each own one, with their own tile textures in
- * their own gl context.
+ * This is a FACTORY: {@link createBoardTiles} builds one tile renderer bound to a
+ * {@link RenderContext}. The interactive game and the variant-preview tooltip each
+ * own one, with their own tile textures in their own gl context.
  */
 
-import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import type { Color } from '../../../../../shared/types/color.js';
-import type { Camera } from './camera.js';
-import type { BoardPos } from './boardpos.js';
+import type RenderContext from './RenderContext.js';
 import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
-import type {
-	AttributeInfo,
-	Renderable,
-	RenderableFactory,
-	TextureInfo,
-} from '../../webgl/Renderable.js';
+import type { AttributeInfo, Renderable, TextureInfo } from '../../webgl/Renderable.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -52,22 +45,6 @@ export interface BoardTiles {
  */
 type NoiseTextures = { perlinNoise?: WebGLTexture; whiteNoise?: WebGLTexture };
 
-/** Options for {@link createBoardTiles}: the exact context pieces the tile renderer draws with. */
-interface BoardTilesOptions {
-	/** The gl to build this renderer's tile textures in. */
-	gl: WebGL2RenderingContext;
-	/** Places the tiles on screen (which squares, their perspective projection). */
-	camera: Camera;
-	/** The board position/scale the tiles follow. */
-	boardpos: BoardPos;
-	/** Builds the tile models in the same context. */
-	renderable: RenderableFactory;
-	/** Reports the sky clear color back to the context. */
-	setClearColor: (color: Vec3) => void;
-	/** Runs a render pass with the depth function forced to ALWAYS. */
-	executeWithDepthFunc_ALWAYS: (func: Function) => void;
-}
-
 // Constants -------------------------------------------------------------------
 
 /** Z level for perspective mode rendering of the board tiles. */
@@ -80,15 +57,8 @@ const TEN = bd.fromBigInt(10n);
 
 // Factory ---------------------------------------------------------------------
 
-/** Creates one tile renderer given the exact context pieces it draws with. */
-function createBoardTiles({
-	gl,
-	camera,
-	boardpos,
-	renderable,
-	setClearColor,
-	executeWithDepthFunc_ALWAYS,
-}: BoardTilesOptions): BoardTiles {
+/** Creates one tile renderer bound to the given {@link RenderContext}. */
+function createBoardTiles(ctx: RenderContext): BoardTiles {
 	/** 2x2 Opaque, no mipmaps. Used in perspective mode. Medium moire, medium blur, no antialiasing. */
 	let tilesTexture_2: WebGLTexture | undefined; // Opaque, no mipmaps
 	/** 256x256 Opaque, yes mipmaps. Used in 2D mode. Zero moire, yes antialiasing. */
@@ -134,7 +104,7 @@ function createBoardTiles({
 			'black',
 			256,
 		);
-		tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
+		tilesMask = TextureLoader.loadTexture(ctx.gl, tilesMask_IMG, { mipmaps: false });
 	}
 
 	async function initTextures(): Promise<void> {
@@ -147,8 +117,8 @@ function createBoardTiles({
 			checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256),
 		]);
 
-		tilesTexture_2 = TextureLoader.loadTexture(gl, tilesTexture_2_IMG, { mipmaps: false });
-		tilesTexture_256mips = TextureLoader.loadTexture(gl, tilesTexture_256mips_IMG, {
+		tilesTexture_2 = TextureLoader.loadTexture(ctx.gl, tilesTexture_2_IMG, { mipmaps: false });
+		tilesTexture_256mips = TextureLoader.loadTexture(ctx.gl, tilesTexture_256mips_IMG, {
 			mipmaps: true,
 		});
 
@@ -186,8 +156,8 @@ function createBoardTiles({
 		const skyG = (avgG - baseDim) * multiplierDim;
 		const skyB = (avgB - baseDim) * multiplierDim;
 
-		setClearColor([skyR, skyG, skyB]);
-		// setClearColor([0,0,0]); // Solid Black
+		ctx.setClearColor([skyR, skyG, skyB]);
+		// ctx.setClearColor([0,0,0]); // Solid Black
 	}
 
 	// Rendering -------------------------------------------------------------------------
@@ -195,7 +165,7 @@ function createBoardTiles({
 	// Renders board tiles
 	function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void {
 		// This prevents tearing when rendering in the same z-level and in perspective.
-		executeWithDepthFunc_ALWAYS(() => {
+		ctx.executeWithDepthFunc_ALWAYS(() => {
 			renderSolidCover(); // This is needed even outside of perspective, so when we zoom out, the rendered fractal transprent boards look correct.
 			renderFractalBoards(noiseTextures, uniforms);
 		});
@@ -204,9 +174,9 @@ function createBoardTiles({
 	// Renders an upside down grey cone centered around the camera, and level with the horizon.
 	function renderSolidCover(): void {
 		// const dist = camera.DIST_TO_RENDER_BOARD;
-		const dist = camera.getZFar() / Math.SQRT2;
+		const dist = ctx.camera.getZFar() / Math.SQRT2;
 		const z = getRelativeZ();
-		const cameraZ = camera.getPosition(true)[2];
+		const cameraZ = ctx.camera.getPosition(true)[2];
 
 		const r = (lightTiles[0] + darkTiles[0]) / 2;
 		const g = (lightTiles[1] + darkTiles[1]) / 2;
@@ -216,7 +186,7 @@ function createBoardTiles({
 		const data = primitives.BoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
 		data.push(...primitives.Quad_Color3D(-dist, -dist, dist, dist, z, [r, g, b, a])); // Floor of the box
 
-		const model = renderable.createRenderable(data, 3, 'TRIANGLES', 'color', true);
+		const model = ctx.renderable.createRenderable(data, 3, 'TRIANGLES', 'color', true);
 
 		model.render();
 	}
@@ -228,10 +198,10 @@ function createBoardTiles({
 		const z = getRelativeZ();
 
 		// Determine at what "e" the main boards tiles are 1 virtual pixel wide.
-		const scaleWhen1TileIs1VirtualPixel = camera.getScaleWhenZoomedOut();
+		const scaleWhen1TileIs1VirtualPixel = ctx.camera.getScaleWhenZoomedOut();
 		const eWhen1TileIs1VirtualPixel = bd.log10(scaleWhen1TileIs1VirtualPixel);
 
-		const currentE = bd.log10(boardpos.getBoardScale());
+		const currentE = bd.log10(ctx.boardpos.getBoardScale());
 
 		// Board 1 (most zoomed in, always rendered, but may be fading out)
 		const board1_E =
@@ -269,7 +239,7 @@ function createBoardTiles({
 
 	/** Returns what Z level the board tiles should be rendered at this frame. */
 	function getRelativeZ(): number {
-		return camera.isCameraRotated() ? perspectiveMode_z : 0;
+		return ctx.camera.isCameraRotated() ? perspectiveMode_z : 0;
 	}
 
 	/**
@@ -285,22 +255,22 @@ function createBoardTiles({
 	): Renderable | undefined {
 		if (!tilesMask) return; // Mask texture not loaded yet
 
-		const boardScale = boardpos.getBoardScale();
+		const boardScale = ctx.boardpos.getBoardScale();
 
 		/** Whether this is NOT the main board (zoom level 1.0) */
 		const isFractal = !bd.areEqual(zoom, ONE);
 		// Fractal boards get the texture with no antialiasing, but some moire.
 		const boardTexture =
-			isFractal || camera.isCameraRotated() ? tilesTexture_2 : tilesTexture_256mips;
+			isFractal || ctx.camera.isCameraRotated() ? tilesTexture_2 : tilesTexture_256mips;
 		if (!boardTexture) return; // Texture not loaded yet
 
 		/** The scale of the RENDERED board. Final result should always be within a small, visible range. */
 		const zoomTimesScale = bd.toNumber(bd.multiplyFloating(boardScale, zoom));
 		const zoomTimesScaleTwo = zoomTimesScale * 2;
 
-		const { left, right, bottom, top } = camera.getRespectiveScreenBox();
+		const { left, right, bottom, top } = ctx.camera.getRespectiveScreenBox();
 
-		const boardPos = boardpos.getBoardPos();
+		const boardPos = ctx.boardpos.getBoardPos();
 
 		/** Calculates the texture coords for one axis (X/Y) of the tiles model. */
 		function getAxisTexCoords(boardPos: BigDecimal, start: number, end: number): DoubleCoords {
@@ -339,7 +309,7 @@ function createBoardTiles({
 			textures.push({ texture: perlinNoise, uniformName: 'u_perlinNoiseTexture' });
 		if (whiteNoise) textures.push({ texture: whiteNoise, uniformName: 'u_whiteNoiseTexture' });
 
-		return renderable.createRenderable_GivenInfo(data, attributeInfo, 'TRIANGLES', 'board_uber_shader', textures); // prettier-ignore
+		return ctx.renderable.createRenderable_GivenInfo(data, attributeInfo, 'TRIANGLES', 'board_uber_shader', textures); // prettier-ignore
 	}
 
 	return { init, render, renderSolidCover };

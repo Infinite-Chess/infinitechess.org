@@ -14,7 +14,6 @@ import leaderboardregistry from '../../../../../shared/chess/variants/leaderboar
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
 import timecontrols from './timecontrols.js';
-import { LobbyBus } from './LobbyBus.js';
 import variantselector from '../../board/variantselector/variantselector.js';
 import modifierselector from '../../board/variantselector/modifierselector.js';
 import gamesetuphandoff from '../../handoffs/gamesetuphandoff.js';
@@ -61,10 +60,6 @@ let currentMode: ModalMode;
 
 initModal();
 void consumePendingHandoff();
-
-// Seek creation can be taken off the table while the modal is up — a game was
-// entered (in-game banner) or the lobby idled out — so close then.
-LobbyBus.addEventListener('seek-creation-closed', close);
 
 // Functions -------------------------------------------------------------------
 
@@ -234,3 +229,5 @@ async function consumePendingHandoff(): Promise<void> {
 	openModal(handoff.mode);
 	await variantselector.applyIcn(handoff.icn);
 }
+
+export default { close };

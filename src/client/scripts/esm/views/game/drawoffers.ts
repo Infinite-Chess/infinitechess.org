@@ -16,6 +16,7 @@ import gamelimits from '../../../../../shared/chess/util/gamelimits.js';
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
 import gamesound from '../../board/gamesound.js';
+import gameactions from './gui/guigameactions.js';
 import { GameBus } from '../../board/GameBus.js';
 import socketintents from '../../socket/socketintents.js';
 
@@ -33,7 +34,7 @@ GameBus.addEventListener('game-concluded', () => {
 	// Close any open draw offer and resets all draw for values for future games.
 	plyOfLastOfferedDraw = undefined;
 	isAcceptingDraw = false;
-	GameBus.dispatch('draw-offer-changed');
+	gameactions.refresh();
 });
 // When WE play a move, decline any open draw offer from our opponent. We don't need
 // to inform the server because it knows to auto decline when we submit our move.
@@ -73,8 +74,8 @@ function areWeAcceptingDraw(): boolean {
 
 /** Is called when we receive a draw offer from our opponent */
 function onOpponentExtendedOffer(): void {
-	isAcceptingDraw = true; // Needs to be set FIRST, since listeners read it back.
-	GameBus.dispatch('draw-offer-changed');
+	isAcceptingDraw = true; // Needs to be set FIRST, because gameactions.refresh() reads it.
+	gameactions.refresh();
 	gamesound.playBase();
 }
 
@@ -94,7 +95,7 @@ function extendOffer(): void {
 	socketintents.submit('game', 'offerdraw', undefined, () => isOfferingDrawLegal());
 	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.moves.length;
-	GameBus.dispatch('draw-offer-changed'); // It's now too soon to offer again — disable the button.
+	gameactions.updateOfferDrawButton(); // It's now too soon to offer again — disable the button.
 	// TODO: Log into chat window instead.
 	toast.show(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
 }
@@ -108,7 +109,7 @@ function callback_AcceptDraw(): void {
 	// A resync restores isAcceptingDraw from the server, so a held intent
 	// is dropped if the offer is no longer open by the time we're back.
 	socketintents.submit('game', 'acceptdraw', undefined, () => gameslot.isGameLive() && isAcceptingDraw); // prettier-ignore
-	GameBus.dispatch('draw-offer-changed');
+	gameactions.refresh();
 }
 
 /**
@@ -135,7 +136,7 @@ function callback_declineDraw(): void {
 function closeDraw(): void {
 	if (!isAcceptingDraw) return; // No open draw offer from our opponent
 	isAcceptingDraw = false;
-	GameBus.dispatch('draw-offer-changed');
+	gameactions.refresh();
 }
 
 /**
@@ -144,7 +145,7 @@ function closeDraw(): void {
  */
 function set(drawOffer: DrawOfferInfo): void {
 	plyOfLastOfferedDraw = drawOffer.lastOfferPly;
-	GameBus.dispatch('draw-offer-changed'); // Restored ply may make it too soon to offer.
+	gameactions.updateOfferDrawButton(); // Restored ply may make it too soon to offer.
 	if (!drawOffer.unconfirmed) return; // No open draw offer
 	// Open draw offer!!
 	onOpponentExtendedOffer();

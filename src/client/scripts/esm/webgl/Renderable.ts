@@ -174,25 +174,17 @@ export interface RenderableFactory {
 	): RenderableInstanced;
 }
 
-/** Options for {@link createRenderableFactory}: the context and view to bind models to. */
-interface RenderableFactoryOptions {
-	gl: WebGL2RenderingContext;
-	programManager: ProgramManager;
-	/** The camera source of the transform matrices (satisfies ViewSource structurally). */
-	cam: ViewSource;
-}
-
 // Context-bound factory -------------------------------------------------------
 
 /**
  * Builds the renderable create-functions bound to a specific WebGL context, ProgramManager,
  * and camera. Models created here draw into that context, transformed by that camera.
  */
-function createRenderableFactory({
-	gl,
-	programManager,
-	cam,
-}: RenderableFactoryOptions): RenderableFactory {
+function createRenderableFactory(
+	gl: WebGL2RenderingContext,
+	programManager: ProgramManager,
+	cam: ViewSource,
+): RenderableFactory {
 	function createRenderable(
 		/** The array of vertex data of the mesh to be rendered. */
 		data: InputArray,
