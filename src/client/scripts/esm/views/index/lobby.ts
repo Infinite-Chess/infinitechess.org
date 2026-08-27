@@ -320,17 +320,22 @@ function accept(seekId: SeekId): void {
 // Subscribing -----------------------------------------------------------------
 
 /** Subscribes to the server's lobby subscription list (seeks, live games). */
-async function subscribe(): Promise<void> {
+function subscribe(): void {
 	if (isIdle) return; // Don't resubscribe while idle; the user must interact with the lobby to reconnect
 	if (socketsubs.isSubbedTo('lobby')) return;
 	socketsubs.addSub('lobby');
 	void socketsend.send('general', 'sub', 'lobby');
 }
 
-/** Unsubscribes from the invites list and clears the rendered seek list. */
+/**
+ * Unsubscribes from the invites list and clears the rendered seek list.
+ * The lobby is the only stream detachable in place — a game's ends with the socket.
+ */
 function unsubscribe(): void {
 	clearSeekList();
-	socketsubs.unsubFromLobby();
+	if (!socketsubs.isSubbedTo('lobby')) return; // Already unsubbed.
+	socketsubs.deleteSub('lobby');
+	void socketsend.send('general', 'unsub', 'lobby');
 }
 
 // Idle detection --------------------------------------------------------------

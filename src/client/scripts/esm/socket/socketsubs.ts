@@ -9,8 +9,6 @@
  * Counterpart of the server's socketSubs, which holds the authoritative side.
  */
 
-import socketsend from './socketsend.js';
-
 /** The routes carrying a server-pushed stream we subscribe to. Excludes 'general', the protocol route. */
 export type SubscribedRoute = 'lobby' | 'game';
 
@@ -59,17 +57,6 @@ function clearAllSubs(): void {
 	for (const sub of Object.keys(subs) as SubscribedRoute[]) subs[sub] = false;
 }
 
-/**
- * Detaches from the lobby's stream, informing the server we no longer want updates.
- * The only stream detachable in place — a game's ends with the socket.
- */
-function unsubFromLobby(): void {
-	if (!isSubbedTo('lobby')) return; // Already unsubbed.
-	deleteSub('lobby');
-	// Tell the server we no longer want updates.
-	void socketsend.send('general', 'unsub', 'lobby');
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -78,5 +65,4 @@ export default {
 	addSub,
 	deleteSub,
 	clearAllSubs,
-	unsubFromLobby,
 };
