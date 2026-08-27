@@ -7,12 +7,8 @@
  *
  *   edges               Every import pointing UP the ladder. Should print 0.
  *   dirs                Directory-level SCCs, then the full directory edge list. Should say DAG.
- *   sccs [substr]       File-level cycles. One inside a single directory is ladder-legal, still a
- *                       cycle. With a substring, the full anatomy of the ONE cycle containing that
- *                       file instead: external importers, degrees, which single lift collapses it
- *                       most, and every internal edge with the SYMBOLS it carries — the symbols
- *                       are the diagnosis, since a contract type declared by one of its two
- *                       parties is the most common cause.
+ *   sccs                File-level cycles, and their members. Only src/server is required to have
+ *                       none; src/client and src/shared carry theirs deliberately.
  *   consumers <substr>  Every importer of the matching file(s), across ALL THREE roots, marked
  *                       rt/type. The widest-consumer lookup — a module's home must sit at or
  *                       below its lowest-ranked consumer.
@@ -121,8 +117,6 @@ const allFiles = ROOTS.flatMap((r) => (fs.existsSync(r) ? walk(r) : []));
 const deps = new Map<string, Set<string>>();
 /** "a->b" for edges carried by at least one non-type-only statement. */
 const runtimeEdge = new Set<string>();
-/** "a->b" -> the symbols each statement on that edge brings across. */
-const edgeSymbols = new Map<string, string[]>();
 
 for (const f of allFiles) {
 	const text = fs.readFileSync(f, 'utf8');
@@ -134,16 +128,12 @@ for (const f of allFiles) {
 		const r = resolveSpec(f, ref.fileName);
 		if (r && r !== f) set.add(r);
 	}
-	// Classify type-only separately with the AST (preProcessFile exposes neither that nor the
-	// symbol names), recording what each statement carries across.
+	// Classify type-only separately with the AST, which preProcessFile doesn't expose.
 	const sf = ts.createSourceFile(f, text, ts.ScriptTarget.Latest, true);
-	const record = (spec: string, symbols: string[], typeOnly: boolean): void => {
+	const record = (spec: string, typeOnly: boolean): void => {
 		const r = resolveSpec(f, spec);
 		if (!r || r === f) return;
-		const key = `${f}->${r}`;
-		if (!typeOnly) runtimeEdge.add(key);
-		if (!edgeSymbols.has(key)) edgeSymbols.set(key, []);
-		edgeSymbols.get(key)!.push(...symbols);
+		if (!typeOnly) runtimeEdge.add(`${f}->${r}`);
 	};
 	for (const stmt of sf.statements) {
 		if (ts.isImportDeclaration(stmt) && ts.isStringLiteral(stmt.moduleSpecifier)) {
@@ -153,29 +143,19 @@ for (const f of allFiles) {
 			if (!typeOnly && clause?.namedBindings && ts.isNamedImports(clause.namedBindings) && !clause.name) {
 				typeOnly = clause.namedBindings.elements.every((el) => el.isTypeOnly);
 			} // prettier-ignore
-			const symbols: string[] = [];
-			if (clause?.name) symbols.push(clause.name.text);
-			if (clause?.namedBindings) {
-				if (ts.isNamedImports(clause.namedBindings)) {
-					for (const el of clause.namedBindings.elements) symbols.push(el.name.text);
-				} else symbols.push(`* as ${clause.namedBindings.name.text}`);
-			}
-			record(stmt.moduleSpecifier.text, symbols, typeOnly);
+			record(stmt.moduleSpecifier.text, typeOnly);
 		} else if (ts.isExportDeclaration(stmt) && stmt.moduleSpecifier && ts.isStringLiteral(stmt.moduleSpecifier)) {
 			let typeOnly = stmt.isTypeOnly;
 			if (!typeOnly && stmt.exportClause && ts.isNamedExports(stmt.exportClause)) {
 				typeOnly = stmt.exportClause.elements.every((el) => el.isTypeOnly);
 			}
-			const symbols = stmt.exportClause && ts.isNamedExports(stmt.exportClause)
-				? stmt.exportClause.elements.map((el) => `re-export ${el.name.text}`)
-				: ['re-export *'];
-			record(stmt.moduleSpecifier.text, symbols, typeOnly);
+			record(stmt.moduleSpecifier.text, typeOnly);
 		} // prettier-ignore
 	}
 	const visitDynamic = (n: ts.Node): void => {
 		if (ts.isCallExpression(n) && n.expression.kind === ts.SyntaxKind.ImportKeyword) {
 			const a = n.arguments[0];
-			if (a && ts.isStringLiteral(a) && a.text.startsWith('.')) record(a.text, ['(dynamic)'], false); // prettier-ignore
+			if (a && ts.isStringLiteral(a) && a.text.startsWith('.')) record(a.text, false);
 		}
 		n.forEachChild(visitDynamic);
 	};
@@ -285,21 +265,11 @@ if (mode === 'consumers') {
 		[...deps.get(f)!].filter((d) => d.startsWith(`${ROOT}/`)),
 	);
 	sccs.sort((a, b) => b.length - a.length);
-	const target = process.argv[4];
-	if (target === undefined) {
-		for (const s of sccs) {
-			console.log(`\n== SCC of ${s.length} files, spanning: ${[...new Set(s.map(nodeOf))].sort().join(', ')}`);
-			for (const f of s) console.log(`   ${rel(f)}`);
-		} // prettier-ignore
-		if (sccs.length === 0) console.log('No file-level cycles.');
-	} else {
-		const scc = sccs.find((s) => s.some((f) => f.includes(target)));
-		if (!scc) {
-			console.error(`No cycle in ${ROOT} contains a file matching "${target}".`);
-			process.exit(1);
-		}
-		anatomy(scc);
-	}
+	for (const s of sccs) {
+		console.log(`\n== SCC of ${s.length} files, spanning: ${[...new Set(s.map(nodeOf))].sort().join(', ')}`);
+		for (const f of s) console.log(`   ${rel(f)}`);
+	} // prettier-ignore
+	if (sccs.length === 0) console.log('No file-level cycles.');
 } else if (mode === 'survey') {
 	const byDir = new Map<string, string[]>();
 	for (const f of rootFiles) {
@@ -350,82 +320,6 @@ if (mode === 'consumers') {
 }
 
 // Helper Functions ------------------------------------------------------------
-
-/**
- * Everything needed to diagnose ONE cycle. The mutual pairs and their symbols come first among
- * the detail, because a contract type declared by one of its two parties is the usual cause and
- * shows up there immediately.
- */
-function anatomy(scc: string[]): void {
-	const members = new Set(scc);
-	const inScc = (f: string): string[] => [...deps.get(f)!].filter((d) => members.has(d));
-	const kind = (key: string): string => (runtimeEdge.has(key) ? 'rt  ' : 'type');
-	const syms = (key: string): string =>
-		[...new Set(edgeSymbols.get(key) ?? [])].join(', ') || '(side-effect)';
-
-	console.log(`== SCC of ${scc.length} files, spanning: ${[...new Set(scc.map(nodeOf))].sort().join(', ')}`); // prettier-ignore
-	for (const f of scc) console.log(`   ${rel(f)}`);
-
-	console.log('\n-- external importers (blast radius) --');
-	const fanIn = new Map<string, number>();
-	for (const f of allFiles) {
-		if (members.has(f)) continue;
-		for (const d of deps.get(f)!) if (members.has(d)) fanIn.set(d, (fanIn.get(d) ?? 0) + 1);
-	}
-	if (fanIn.size === 0) console.log('   (none — this cycle is private to its own files)');
-	for (const [f, n] of [...fanIn].sort((a, b) => b[1] - a[1])) {
-		console.log(`   ${String(n).padStart(3)}  ${rel(f)}`);
-	}
-
-	console.log('\n-- degree inside the cycle --');
-	const deg = new Map(scc.map((f) => [f, { in: 0, out: 0 }]));
-	for (const f of scc) {
-		for (const d of inScc(f)) {
-			deg.get(f)!.out++;
-			deg.get(d)!.in++;
-		}
-	}
-	for (const [f, d] of [...deg].sort((a, b) => b[1].in + b[1].out - (a[1].in + a[1].out))) {
-		console.log(`   in ${String(d.in).padStart(2)}  out ${String(d.out).padStart(2)}   ${rel(f)}`); // prettier-ignore
-	}
-
-	// A low number means one file is holding the cycle together; a high one means a mesh, which
-	// no single lift will fix.
-	console.log('\n-- lifting ONE file out leaves this many still cycling --');
-	const collapse = scc.map((f) => {
-		const after = tarjan(scc.filter((o) => o !== f), (o) => deps.get(o)!); // prettier-ignore
-		return { f, largest: Math.max(0, ...after.map((c) => c.length)) };
-	});
-	for (const c of collapse.sort((a, b) => a.largest - b.largest)) {
-		console.log(`   ${String(c.largest).padStart(3)}  after lifting ${rel(c.f)}`);
-	}
-
-	const pairs: string[][] = [];
-	const seen = new Set<string>();
-	for (const f of scc) {
-		for (const d of inScc(f)) {
-			if (!inScc(d).includes(f)) continue;
-			const key = [f, d].sort().join('|');
-			if (seen.has(key)) continue;
-			seen.add(key);
-			pairs.push([
-				`   ${rel(f)}  <->  ${rel(d)}`,
-				`      ${kind(`${f}->${d}`)}  ${rel(f)} takes: ${syms(`${f}->${d}`)}`,
-				`      ${kind(`${d}->${f}`)}  ${rel(d)} takes: ${syms(`${d}->${f}`)}`,
-			]);
-		}
-	}
-	console.log(`\n-- mutual pairs (${pairs.length}) --`);
-	for (const p of pairs) console.log(p.join('\n'));
-
-	const edges = scc.flatMap((f) =>
-		inScc(f)
-			.sort()
-			.map((d) => `   ${kind(`${f}->${d}`)} ${rel(f)} -> ${rel(d)}   ${syms(`${f}->${d}`)}`),
-	);
-	console.log(`\n-- all internal edges (${edges.length}) --`);
-	for (const e of edges.sort()) console.log(e);
-}
 
 /** A file's exported-symbol count: default-object members if present, plus named exports. */
 function exportInfo(f: string): string {

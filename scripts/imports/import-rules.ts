@@ -11,8 +11,6 @@
  *
  *   ladder.ts        Direction, cycles, a module's consumers, and a per-directory survey,
  *                    for any root. Counts `import type` edges, which the checks below do not.
- *                    `sccs <substr>` gives one cycle's full anatomy — every internal edge with
- *                    the symbols it carries, which is what diagnoses a cycle rather than name it.
  *   page-reach.ts    Which client pages ship a module, and with --why the chain that drags
  *                    it in. Bundle truth, from the esbuild metafile.
  *   pkg-cost.ts      Which pages bundle an npm package, and what it costs them in KB.
