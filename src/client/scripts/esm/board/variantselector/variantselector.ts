@@ -159,8 +159,13 @@ function initVariantGroupDropdown(hostConfig: VariantSelectorConfig): void {
 	applyVariantToSelector('Classical');
 
 	element_variantDisplay.addEventListener('click', (e) => {
-		if ((e.target as HTMLElement).closest('.preview')) return; // They clicked the preview button
-		if ((e.target as HTMLElement).closest('.modifier-add')) return; // They clicked the modifier button
+		if ((e.target as HTMLElement).closest('.preview')) return; // They clicked the preview button.
+		// The modifier-add button is inside the display and bubbles to us; the user is leaving
+		// variant selection, so close it. (The modifier leaf toggles its own dropdown on the click.)
+		if ((e.target as HTMLElement).closest('.modifier-add')) {
+			closeVariantDropdown();
+			return;
+		}
 		toggleVariantDropdown();
 	});
 	document.addEventListener('pointerdown', (e) => {

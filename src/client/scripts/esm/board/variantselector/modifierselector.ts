@@ -9,8 +9,6 @@ import type { ModifierCode, GameModifier } from '../../../../../shared/chess/uti
 
 import modutil from '../../../../../shared/chess/util/modutil.js';
 
-import variantselector from './variantselector.js';
-
 // Types -----------------------------------------------------------------------
 
 /** Callbacks a host wires to react to the modifier selector's state. */
@@ -49,9 +47,7 @@ const selectedModifiers = new Set<ModifierCode>();
 function initModifierSelector(hostConfig: ModifierSelectorConfig = {}): void {
 	config = hostConfig;
 
-	element_modifierAddBtn.addEventListener('click', (e) => {
-		e.stopPropagation();
-		variantselector.closeVariantDropdown();
+	element_modifierAddBtn.addEventListener('click', () => {
 		toggleModifierDropdown();
 	});
 
