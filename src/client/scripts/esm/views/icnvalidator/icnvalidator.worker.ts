@@ -161,9 +161,14 @@ function validateTermination(
 			throw new Error(`Termination is "Maximum moves reached" but game is over: ${JSON.stringify(gameConclusion)}`); // prettier-ignore
 		return;
 	}
-	if (termination && termination.startsWith('Material adjudication')) {
+	// Adjudication terminations are suffixed with their eval threshold, e.g. "Max-ply adjudication (|eval| >= 1000 cp)"
+	if (
+		termination &&
+		(termination.startsWith('Material adjudication') ||
+			termination.startsWith('Max-ply adjudication'))
+	) {
 		if (gameConclusion !== undefined)
-			throw new Error(`Termination is Material Adjudication, but game is over: ${JSON.stringify(gameConclusion)}`); // prettier-ignore
+			throw new Error(`Termination is "${termination}", but game is over: ${JSON.stringify(gameConclusion)}`); // prettier-ignore
 		return;
 	}
 	if (gameConclusion === undefined) {
