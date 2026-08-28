@@ -166,21 +166,16 @@ function validateTermination(
 			);
 		return;
 	}
-	// Check for adjudication terminations
+	// Adjudication terminations are suffixed with their eval threshold, e.g. "Max-ply adjudication (|eval| >= 1000 cp)"
 	if (
 		termination &&
 		(termination.startsWith('Material adjudication') ||
-			termination.startsWith('adjudication') ||
 			termination.startsWith('Max-ply adjudication'))
 	) {
-		if (gameConclusion !== undefined) {
-			// Max-ply adjudication is reported as "adjudication" in the metadata, so we rename it for specificity
-			if (termination.startsWith('adjudication')) termination = 'Max-ply adjudication';
-
+		if (gameConclusion !== undefined)
 			throw new Error(
-				`Termination is ${termination}, but game is over: ${JSON.stringify(gameConclusion)}`,
+				`Termination is "${termination}", but game is over: ${JSON.stringify(gameConclusion)}`,
 			);
-		}
 		return;
 	}
 	if (gameConclusion === undefined) {
