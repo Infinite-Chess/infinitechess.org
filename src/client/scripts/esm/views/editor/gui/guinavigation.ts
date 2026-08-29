@@ -6,7 +6,7 @@
  * future editor page will get its own unique UI to replace this.
  */
 
-import holdrepeat from '../../../util/holdrepeat.js';
+import holdrepeat from '../../../components/holdrepeat.js';
 import edithistory from '../edithistory.js';
 import { listener_document } from '../../../game/chess/gamecore.js';
 

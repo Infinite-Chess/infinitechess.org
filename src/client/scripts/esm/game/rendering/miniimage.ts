@@ -23,7 +23,7 @@ import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import boardutil, { Piece } from '../../../../../shared/chess/logic/boardutil.js';
 
 import toast from '../../components/toast.js';
-import space from '../../board/space.js';
+import space from '../../board/rendering/space.js';
 import mouse from '../mouse.js';
 import camera from '../../board/rendering/camera.js';
 import gamecore from '../chess/gamecore.js';

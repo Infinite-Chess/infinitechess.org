@@ -24,13 +24,13 @@ import coordutil, {
 	DoubleCoords,
 } from '../../../../../../../shared/util/coordutil.js';
 
-import space from '../../../../board/space.js';
+import space from '../../../../board/rendering/space.js';
 import mouse from '../../../mouse.js';
 import camera from '../../../../board/rendering/camera.js';
 import snapping from '../snapping.js';
 import boardpos from '../../../../board/rendering/boardpos.js';
 import { Mouse } from '../../../input.js';
-import preferences from '../../../../components/header/preferences.js';
+import preferences from '../../../../util/preferences.js';
 import { GameBus } from '../../../../board/GameBus.js';
 import { createRenderable } from '../../../../board/rendering/renderable.js';
 

@@ -16,7 +16,7 @@ import type {
 
 import animation from '../rendering/animation.js';
 import piecemodels from '../../board/rendering/piecemodels.js';
-import preferences from '../../components/header/preferences.js';
+import preferences from '../../util/preferences.js';
 
 // Types -----------------------------------------------------------------------
 

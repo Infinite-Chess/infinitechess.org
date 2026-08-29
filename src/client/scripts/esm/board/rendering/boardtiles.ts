@@ -21,7 +21,7 @@ import math from '../../../../../shared/util/math/math.js';
 
 import colorutil from '../../util/colorutil.js';
 import primitives from './primitives.js';
-import preferences from '../../components/header/preferences.js';
+import preferences from '../../util/preferences.js';
 import frametracker from './frametracker.js';
 import boardgeometry from './boardgeometry.js';
 import TextureLoader from '../../webgl/TextureLoader.js';

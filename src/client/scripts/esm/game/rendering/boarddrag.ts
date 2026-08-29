@@ -15,7 +15,7 @@ import coordutil from '../../../../../shared/util/coordutil.js';
 
 import mouse from '../mouse.js';
 import boardpos from '../../board/rendering/boardpos.js';
-import keybinds from '../misc/keybinds.js';
+import keybinds from '../keybinds.js';
 import Transition from './transitions/Transition.js';
 import perspective from './perspective.js';
 import { GameBus } from '../../board/GameBus.js';

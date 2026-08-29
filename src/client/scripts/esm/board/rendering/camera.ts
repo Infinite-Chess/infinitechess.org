@@ -26,7 +26,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from '../../webgl/gl-matrix.js';
-import preferences from '../../components/header/preferences.js';
+import preferences from '../../util/preferences.js';
 import frametracker from './frametracker.js';
 import { createScreenShake } from './screenshake.js';
 

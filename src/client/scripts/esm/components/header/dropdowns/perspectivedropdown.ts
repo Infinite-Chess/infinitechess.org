@@ -3,7 +3,7 @@
 // This script allows us to adjust the mouse sensitivity in perspective mode
 
 import docutil from '../../../util/docutil.js';
-import preferences from '../preferences.js';
+import preferences from '../../../util/preferences.js';
 
 // Document Elements -----------------------------------------------------------
 

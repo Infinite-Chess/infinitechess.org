@@ -36,7 +36,7 @@ import socketsend from '../../socket/socketsend.js';
 import socketintents from '../../socket/socketintents.js';
 import gamesetupmodal from './gamesetupmodal.js';
 import seekpreviewcache from './seekpreviewcache.js';
-import variantpreviewtooltip from '../../board/rendering/variantpreviewtooltip.js';
+import variantpreviewtooltip from '../../board/variantselector/variantpreviewtooltip.js';
 
 const patch = init([attributesModule, classModule]);
 

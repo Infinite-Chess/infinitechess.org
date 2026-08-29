@@ -15,7 +15,7 @@ import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import { players as p } from '../../../../../shared/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
-import keybinds from '../../game/misc/keybinds.js';
+import keybinds from '../../game/keybinds.js';
 import eautosave from './actions/eautosave.js';
 import egamerules from './egamerules.js';
 import eclipboard from './eclipboard.js';

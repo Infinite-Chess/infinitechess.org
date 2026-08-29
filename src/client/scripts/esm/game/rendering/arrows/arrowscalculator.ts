@@ -36,7 +36,7 @@ import { rawTypes as r } from '../../../../../../shared/util/typeutil.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import organizedpieces, { LineKey } from '../../../../../../shared/chess/logic/organizedpieces.js';
 
-import space from '../../../board/space.js';
+import space from '../../../board/rendering/space.js';
 import mouse from '../../mouse.js';
 import arrows from './arrows.js';
 import gameslot from '../../chess/gameslot.js';

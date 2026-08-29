@@ -16,7 +16,7 @@ import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import { players as p, TypeGroup } from '../../../../../shared/util/typeutil.js';
 
-import space from '../space.js';
+import space from './space.js';
 import instancedshapes from './instancedshapes.js';
 import { RenderableInstanced, AttributeInfoInstanced } from '../../webgl/Renderable.js';
 

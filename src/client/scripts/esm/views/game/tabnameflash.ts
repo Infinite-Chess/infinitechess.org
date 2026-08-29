@@ -10,7 +10,7 @@ import bd from '@naviary/bigdecimal';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
-import movesound from '../../game/misc/movesound.js';
+import movesound from '../../game/movesound.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from '../../game/chess/gamesession.js';
 

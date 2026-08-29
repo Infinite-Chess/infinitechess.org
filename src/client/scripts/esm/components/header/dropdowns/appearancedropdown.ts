@@ -3,7 +3,7 @@
 import themes from '../../../../../../shared/components/header/themes.js';
 
 import colorutil from '../../../util/colorutil.js';
-import preferences from '../preferences.js';
+import preferences from '../../../util/preferences.js';
 import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerator.js';
 
 // Document Elements -----------------------------------------------------------

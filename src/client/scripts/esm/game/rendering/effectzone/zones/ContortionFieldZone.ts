@@ -1,0 +1,59 @@
+// src/client/scripts/esm/game/rendering/effectzone/zones/ContortionFieldZone.ts
+
+import type { Zone } from '../Zone';
+import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
+
+import deltatime from '../../../../board/deltatime.js';
+import { SineWavePass } from '../../../../webgl/postprocessing/passes/SineWavePass';
+import { ProgramManager } from '../../../../webgl/ProgramManager';
+import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
+
+export class ContortionFieldZone implements Zone {
+	/** The unique integer id this effect zone gets. */
+	readonly effectType: number = 3;
+
+	/** Post Processing Effect creating heat waves. */
+	private sineWavePass: SineWavePass;
+
+	/** The soundscape player for this zone. */
+	private ambience: SoundscapePlayer;
+
+	/** How fast the sine waves oscillate. */
+	private oscillationSpeed: number = 1.0;
+
+	/** How fast the sine waves rotates, in degrees per second. */
+	private rotationSpeed: number = 3.0;
+
+	constructor(programManager: ProgramManager) {
+		this.sineWavePass = new SineWavePass(programManager);
+
+		// Load the ambience...
+
+		// Initialize the player with the config.
+		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
+	}
+
+	public update(): void {
+		const deltaTime = deltatime.get(); // Seconds
+
+		this.sineWavePass.time = (performance.now() / 1000) * this.oscillationSpeed;
+		this.sineWavePass.angle += this.rotationSpeed * deltaTime;
+	}
+
+	public getUniforms(): Record<string, any> {
+		return {};
+	}
+
+	public getPasses(): PostProcessPass[] {
+		return [this.sineWavePass];
+	}
+
+	public fadeInAmbience(transitionDurationMs: number): void {
+		this.ambience.fadeIn(transitionDurationMs);
+	}
+
+	public fadeOutAmbience(transitionDurationMs: number): void {
+		this.ambience.fadeOut(transitionDurationMs);
+	}
+}

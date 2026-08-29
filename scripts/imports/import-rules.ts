@@ -219,7 +219,7 @@ function audienceOf(moduleShort: string): string {
 	return LAYERS.find((l) => l.dir === topDirOf(moduleShort))?.audience ?? FLOOR_AUDIENCE;
 }
 
-/** The page a views/ module belongs to: "views/game/gui/x.ts" -> "game", "views/news.ts" -> "news". */
+/** The page a views/ module belongs to: "views/game/gui/x.ts" -> "game", "views/login.ts" -> "login". */
 function pageOf(moduleShort: string): string {
 	return moduleShort.split('/')[1]!.replace(/\.[^.]+$/, '');
 }

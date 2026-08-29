@@ -8,7 +8,7 @@
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/types/color.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { PostProcessPass } from '../../webgl/post_processing/PostProcessPass.js';
+import type { PostProcessPass } from '../../webgl/postprocessing/PostProcessPass.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
@@ -20,11 +20,12 @@ import border from '../../board/rendering/border.js';
 import camera from '../../board/rendering/camera.js';
 import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
-import controls from '../misc/controls.js';
+import boardnav from '../boardnav.js';
+import toggles from '../debug/toggles.js';
 import snapping from '../rendering/highlights/snapping.js';
 import guiclock from '../gui/guiclock.js';
 import premoves from './premoves.js';
-import keybinds from '../misc/keybinds.js';
+import keybinds from '../keybinds.js';
 import animation from '../rendering/animation.js';
 import selection from './selection.js';
 import boarddrag from '../rendering/boarddrag.js';
@@ -53,11 +54,12 @@ import webgl, { gl } from '../../board/rendering/webgl.js';
 import promotionlines from '../../board/rendering/promotionlines.js';
 import arrowsgraphics from '../rendering/arrows/arrowsgraphics.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';
+import guimoveslist from '../gui/guimoveslist.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
-import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
+import { EffectZoneManager } from '../rendering/effectzone/EffectZoneManager.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
-import { PostProcessingPipeline } from '../../webgl/post_processing/PostProcessingPipeline.js';
+import { PostProcessingPipeline } from '../../webgl/postprocessing/PostProcessingPipeline.js';
 import Renderable, { createRenderable } from '../../board/rendering/renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 
@@ -133,7 +135,7 @@ function preloadSounds(): void {
 // Update the game every single frame
 function update(): void {
 	camera.shake.update();
-	controls.testOutGameToggles();
+	toggles.testOutGame();
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile || gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the background.
 
@@ -143,15 +145,16 @@ function update(): void {
 
 	const mesh = gameslot.getMesh()!;
 
-	controls.testInGameToggles(gamefile, mesh);
+	toggles.testInGame(gamefile, mesh);
+	guimoveslist.update();
 
 	clock.update(gamefile);
 	guiclock.update(gamefile);
 
-	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
+	boardnav.update(); // Update board dragging, and WASD to move, scroll to zoom
 	if (!Transition.areTransitioning()) boardpos.update(); // Updates the board's position and scale according to its velocity
 
-	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), boardpos.update()
+	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After boardnav.update(), boardpos.update()
 	// BEFORE board.recalcVariables(), as that needs to be called after the board position is updated.
 	Transition.update();
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it

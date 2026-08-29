@@ -9,9 +9,9 @@
  * address is PUT to /api/register/awaiting/email; success reloads the page, errors show inline.
  */
 
-import flashtoast from '../util/flashtoast.js';
+import flashtoast from '../components/flashtoast.js';
 import { serverfetch } from '../util/serverfetch.js';
-import { emailFormatError, setFieldError } from '../util/accountformaterrors.js';
+import { emailFormatError, setFieldError } from '../components/accountformaterrors.js';
 
 // Constants -------------------------------------------------------------------
 

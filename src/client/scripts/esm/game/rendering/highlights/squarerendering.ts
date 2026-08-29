@@ -14,7 +14,7 @@ import type { Coords } from '../../../../../../shared/util/coordutil.js';
 
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 
-import space from '../../../board/space.js';
+import space from '../../../board/rendering/space.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import { RenderableInstanced } from '../../../webgl/Renderable.js';
 import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';

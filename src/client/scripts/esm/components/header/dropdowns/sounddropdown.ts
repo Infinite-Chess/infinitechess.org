@@ -2,7 +2,7 @@
 
 // This script manages the sound settings dropdown
 
-import preferences from '../preferences.js';
+import preferences from '../../../util/preferences.js';
 
 // Document Elements -----------------------------------------------------------
 

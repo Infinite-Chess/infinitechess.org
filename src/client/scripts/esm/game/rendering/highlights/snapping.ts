@@ -21,7 +21,7 @@ import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.js';
 
-import space from '../../../board/space.js';
+import space from '../../../board/rendering/space.js';
 import mouse from '../../mouse.js';
 import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';
@@ -35,7 +35,7 @@ import primitives from '../../../board/rendering/primitives.js';
 import perspective from '../perspective.js';
 import drawsquares from './annotations/drawsquares.js';
 import annotations from './annotations/annotations.js';
-import preferences from '../../../components/header/preferences.js';
+import preferences from '../../../util/preferences.js';
 import texturecache from '../../../chess/rendering/texturecache.js';
 import { Renderable } from '../../../webgl/Renderable.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';

@@ -15,7 +15,7 @@ import vectors from '../../../../../../shared/util/math/vectors.js';
 import arrows from './arrows.js';
 import meshes from '../../../board/rendering/meshes.js';
 import primitives from '../../../board/rendering/primitives.js';
-import preferences from '../../../components/header/preferences.js';
+import preferences from '../../../util/preferences.js';
 import drawsquares from '../highlights/annotations/drawsquares.js';
 import texturecache from '../../../chess/rendering/texturecache.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';

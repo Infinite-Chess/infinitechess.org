@@ -16,7 +16,7 @@ import type { LapseKey } from '../gamereview.js';
 
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 
-import space from '../../../board/space.js';
+import space from '../../../board/rendering/space.js';
 import { gl } from '../../../board/rendering/webgl.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import gameslot from '../../../game/chess/gameslot.js';

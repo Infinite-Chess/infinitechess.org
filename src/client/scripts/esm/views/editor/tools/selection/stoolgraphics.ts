@@ -14,7 +14,7 @@ import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coor
 import bounds from '../../../../../../../shared/util/math/bounds';
 
 import mouse from '../../../../game/mouse';
-import space from '../../../../board/space';
+import space from '../../../../board/rendering/space';
 import camera from '../../../../board/rendering/camera';
 import meshes from '../../../../board/rendering/meshes';
 import primitives from '../../../../board/rendering/primitives';

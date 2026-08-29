@@ -10,9 +10,9 @@
 
 import docutil from '../util/docutil.js';
 import { serverfetch } from '../util/serverfetch.js';
-import { setFieldError } from '../util/accountformaterrors.js';
+import { setFieldError } from '../components/accountformaterrors.js';
 
-import '../util/passwordtoggle.js';
+import '../components/passwordtoggle.js';
 
 // Elements --------------------------------------------------------------------
 

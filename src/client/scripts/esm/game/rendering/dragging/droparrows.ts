@@ -14,7 +14,7 @@ import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 
-import space from '../../../board/space.js';
+import space from '../../../board/rendering/space.js';
 import arrows from '../arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';

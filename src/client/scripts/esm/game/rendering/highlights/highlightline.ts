@@ -12,7 +12,7 @@ import type { LineCoefficients } from '../../../../../../shared/util/math/vector
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import space from '../../../board/space.js';
+import space from '../../../board/rendering/space.js';
 import camera from '../../../board/rendering/camera.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import perspective from '../perspective.js';

@@ -17,7 +17,7 @@ import boardpos from '../../../board/rendering/boardpos.js';
 import premoves from '../../chess/premoves.js';
 import movehints from './movehints.js';
 import annotations from './annotations/annotations.js';
-import preferences from '../../../components/header/preferences.js';
+import preferences from '../../../util/preferences.js';
 import checkhighlight from './checkhighlight.js';
 import squarerendering from './squarerendering.js';
 import legalmovehighlights from './legalmovehighlights.js';

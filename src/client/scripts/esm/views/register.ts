@@ -16,9 +16,9 @@ import {
 	emailFormatError,
 	passwordFormatError,
 	setFieldError as setInlineError,
-} from '../util/accountformaterrors.js';
+} from '../components/accountformaterrors.js';
 
-import '../util/passwordtoggle.js';
+import '../components/passwordtoggle.js';
 
 // Elements --------------------------------------------------------------------
 

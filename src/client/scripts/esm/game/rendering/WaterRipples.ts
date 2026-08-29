@@ -5,20 +5,20 @@
  */
 
 import type { ProgramManager } from '../../webgl/ProgramManager';
-import type { PostProcessPass } from '../../webgl/post_processing/PostProcessPass';
+import type { PostProcessPass } from '../../webgl/postprocessing/PostProcessPass';
 
 import bounds from '../../../../../shared/util/math/bounds';
 import bdcoords from '../../../../../shared/util/bdcoords';
 import coordutil, { Coords } from '../../../../../shared/util/coordutil';
 
-import space from '../../board/space';
+import space from '../../board/rendering/space';
 import camera from '../../board/rendering/camera';
 import boardpos from '../../board/rendering/boardpos';
 import drawrays from './highlights/annotations/drawrays';
 import gameslot from '../chess/gameslot';
 import perspective from './perspective';
 import frametracker from '../../board/rendering/frametracker';
-import { RippleState, WaterRipplePass } from '../../webgl/post_processing/passes/WaterRipplePass';
+import { RippleState, WaterRipplePass } from '../../webgl/postprocessing/passes/WaterRipplePass';
 
 // Constants -------------------------------------------------------------------
 

@@ -29,12 +29,12 @@ import organizedpieces from '../../../../../../shared/chess/logic/organizedpiece
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 
-import space from '../../../board/space.js';
+import space from '../../../board/rendering/space.js';
 import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import primitives from '../../../board/rendering/primitives.js';
-import preferences from '../../../components/header/preferences.js';
+import preferences from '../../../util/preferences.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
 import perspective from '../perspective.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';

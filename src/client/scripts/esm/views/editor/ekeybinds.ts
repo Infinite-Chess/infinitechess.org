@@ -7,7 +7,7 @@
  * can reserve the left mouse button, shifting board dragging to the right.
  */
 
-import type { InputProfile } from '../../game/misc/keybinds.js';
+import type { InputProfile } from '../../game/keybinds.js';
 
 import perspective from '../../game/rendering/perspective.js';
 import etoolmanager from './tools/etoolmanager.js';

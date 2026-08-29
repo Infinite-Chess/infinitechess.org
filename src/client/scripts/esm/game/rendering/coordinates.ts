@@ -22,13 +22,13 @@ import bd, { BigDecimal, toNumber } from '@naviary/bigdecimal';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 
-import space from '../../board/space.js';
+import space from '../../board/rendering/space.js';
 import camera from '../../board/rendering/camera.js';
 import arrows from './arrows/arrows.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import primitives from '../../board/rendering/primitives.js';
 import perspective from './perspective.js';
-import preferences from '../../components/header/preferences.js';
+import preferences from '../../util/preferences.js';
 import textrenderer from './text/textrenderer.js';
 import boardgeometry from '../../board/rendering/boardgeometry.js';
 import arrowscalculator from './arrows/arrowscalculator.js';

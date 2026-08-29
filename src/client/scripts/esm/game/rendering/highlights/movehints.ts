@@ -23,7 +23,7 @@ import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
 import gamesession from '../../chess/gamesession.js';
 import drawsquares from './annotations/drawsquares.js';
-import preferences from '../../../components/header/preferences.js';
+import preferences from '../../../util/preferences.js';
 import { GameBus } from '../../../board/GameBus.js';
 import squarerendering from './squarerendering.js';
 

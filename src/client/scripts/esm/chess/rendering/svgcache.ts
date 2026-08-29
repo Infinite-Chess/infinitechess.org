@@ -20,7 +20,7 @@ import type { RawType } from '../../../../../shared/util/typeutil.js';
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import typeutil, { players } from '../../../../../shared/util/typeutil.js';
 
-import preferences from '../../components/header/preferences.js';
+import preferences from '../../util/preferences.js';
 
 // Variables -------------------------------------------------------------------
 

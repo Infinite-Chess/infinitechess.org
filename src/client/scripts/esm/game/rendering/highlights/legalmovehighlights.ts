@@ -17,7 +17,7 @@ import coordutil from '../../../../../../shared/util/coordutil.js';
 import camera from '../../../board/rendering/camera.js';
 import meshes from '../../../board/rendering/meshes.js';
 import selection from '../../chess/selection.js';
-import preferences from '../../../components/header/preferences.js';
+import preferences from '../../../util/preferences.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
 import { GameBus } from '../../../board/GameBus.js';
 import frametracker from '../../../board/rendering/frametracker.js';

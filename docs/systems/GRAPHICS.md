@@ -24,7 +24,7 @@ The center of the screen is always `[0, 0]` in world space. The bounding box of 
 
 ### Converting Between Spaces
 
-[`space.ts`](../src/client/scripts/esm/board/space.ts) provides key conversion functions for converting from one coordinate space to the other.
+[`space.ts`](../src/client/scripts/esm/board/rendering/space.ts) provides key conversion functions for converting from one coordinate space to the other.
 
 - `convertCoordToWorldSpace(coords)` — Grid → World. You may first have to cast BigInt coords to BigDecimal coords via `bdcoords.FromCoords(coords)`.
 - `convertWorldSpaceToCoords(worldCoords)` — World → Grid (includes decimal precision).
@@ -107,7 +107,7 @@ Call your script's render method in the appropriate section.
 
 ## Rendering Architecture: Render Contexts
 
-The game can draw two independent boards at the same time: the interactive game, and the small board inside the variant-preview hover tooltip ([`variantpreviewtooltip.ts`](../src/client/scripts/esm/board/rendering/variantpreviewtooltip.ts)). Each lives on its own `<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs, textures, buffers/VAOs) can **never** be shared across contexts.
+The game can draw two independent boards at the same time: the interactive game, and the small board inside the variant-preview hover tooltip ([`variantpreviewtooltip.ts`](../src/client/scripts/esm/board/variantselector/variantpreviewtooltip.ts)). Each lives on its own `<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs, textures, buffers/VAOs) can **never** be shared across contexts.
 
 A [`RenderContext`](../src/client/scripts/esm/board/rendering/RenderContext.ts) bundles everything bound to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale), piece `textures`, stencil `maskedDraw`, tile renderer (`boardtiles`), and a `renderable` factory for creating models in that context. The interactive game builds one in `gamecore.init()`; the preview builds its own in `ensureGLReady()`. Shared drawing code is handed a `RenderContext` and draws for whichever board it's told, instead of reaching for a process-wide singleton.
 

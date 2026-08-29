@@ -5,7 +5,7 @@
  */
 
 import AudioUtils from './AudioUtils';
-import preferences from '../components/header/preferences';
+import preferences from '../util/preferences';
 import { DownsamplerNode } from './processors/downsampler/DownsamplerNode';
 import { createEffectNode, EffectConfig, NodeChain } from './AudioEffects';
 

@@ -11,7 +11,7 @@
 import { serverfetch } from '../../util/serverfetch.js';
 
 import './settings.js';
-import '../../util/tooltips.js'; // Should be imported on EVERY page
+import '../tooltips.js'; // Should be imported on EVERY page
 
 // Elements --------------------------------------------------------------------
 

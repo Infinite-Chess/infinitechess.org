@@ -26,8 +26,8 @@ import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../board/GameBus.js';
 import enginearrows from '../rendering/enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
+import enginelegalmoves from '../../../game/debug/enginelegalmoves.js';
 import { listener_document } from '../../../game/chess/gamecore.js';
-import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
 
 // Elements --------------------------------------------------------------------
 
@@ -83,7 +83,7 @@ let lastStatusKind: CevalStatus['kind'] | undefined;
 /** Initializes the engine panel. Called once by the page entry. */
 function init(): void {
 	ceval.init();
-	enginelegalmovesdebug.init({
+	enginelegalmoves.init({
 		canRequest: () => {
 			const gamefile = gameslot.getGamefile();
 			return gamefile !== undefined && ceval.computeBlockReason(gamefile) === undefined;
@@ -97,9 +97,7 @@ function init(): void {
 
 	ceval.onUpdate(onEngineUpdate);
 	ceval.onStatus(onEngineStatus);
-	ceval.onLegalMoves(({ requestId, moves }) =>
-		enginelegalmovesdebug.receiveMoves(requestId, moves),
-	);
+	ceval.onLegalMoves(({ requestId, moves }) => enginelegalmoves.receiveMoves(requestId, moves));
 
 	// Restore the persisted on/off state once the first game finishes loading.
 	GameBus.addEventListener('game-loaded', () => {

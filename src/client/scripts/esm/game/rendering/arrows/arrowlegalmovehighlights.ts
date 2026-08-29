@@ -19,7 +19,7 @@ import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
 import gamesession from '../../chess/gamesession.js';
-import preferences from '../../../components/header/preferences.js';
+import preferences from '../../../util/preferences.js';
 import { GameBus } from '../../../board/GameBus.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrows, { ArrowPiece } from './arrows.js';

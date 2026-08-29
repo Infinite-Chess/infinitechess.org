@@ -28,7 +28,7 @@ import gameslot from './gameslot.js';
 import selection from './selection.js';
 import animation from '../rendering/animation.js';
 import { Mouse } from '../input.js';
-import preferences from '../../components/header/preferences.js';
+import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import movesequence from './movesequence.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';

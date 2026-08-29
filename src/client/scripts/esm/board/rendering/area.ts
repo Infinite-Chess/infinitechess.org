@@ -15,7 +15,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
-import space from '../space.js';
+import space from './space.js';
 import camera from './camera.js';
 import meshes from './meshes.js';
 import boardgeometry from './boardgeometry.js';

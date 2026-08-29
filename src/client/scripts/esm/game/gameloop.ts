@@ -19,7 +19,7 @@ import gamesession from './chess/gamesession.js';
 import LocalStorage from '../util/LocalStorage.js';
 import frametracker from '../board/rendering/frametracker.js';
 import boardgeometry from '../board/rendering/boardgeometry.js';
-import frameprofiler from './misc/frameprofiler.js';
+import frameprofiler from '../board/frameprofiler.js';
 
 /** Optional per-frame page logic, run each frame after the game core updates. */
 let onUpdate: (() => void) | undefined;

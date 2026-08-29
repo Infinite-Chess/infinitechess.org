@@ -14,13 +14,13 @@ import bdcoords from '../../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../../shared/util/coordutil.js';
 import variantrules from '../../../../../../../shared/chess/logic/variantrules.js';
 
-import space from '../../../../board/space.js';
+import space from '../../../../board/rendering/space.js';
 import mouse from '../../../mouse.js';
 import snapping from '../snapping.js';
 import boardpos from '../../../../board/rendering/boardpos.js';
 import gameslot from '../../../chess/gameslot.js';
 import { Mouse } from '../../../input.js';
-import preferences from '../../../../components/header/preferences.js';
+import preferences from '../../../../util/preferences.js';
 import squarerendering from '../squarerendering.js';
 
 // Constants -------------------------------------------------------------------

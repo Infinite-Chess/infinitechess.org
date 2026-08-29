@@ -41,7 +41,8 @@ import validatorama from '../../util/validatorama.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import modifierselector from './modifierselector.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
-import variantpreviewtooltip from '../rendering/variantpreviewtooltip.js';
+
+import variantpreviewtooltip from './variantpreviewtooltip.js';
 
 // Types -----------------------------------------------------------------------
 

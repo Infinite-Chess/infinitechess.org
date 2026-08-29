@@ -28,7 +28,7 @@ import gameslot from '../../game/chess/gameslot.js';
 import gamesound from '../../board/gamesound.js';
 import drawoffers from './drawoffers.js';
 import onlinegame from './onlinegame.js';
-import flashtoast from '../../util/flashtoast.js';
+import flashtoast from '../../components/flashtoast.js';
 import socketsubs from '../../socket/socketsubs.js';
 import pingmanager from './pingmanager.js';
 import gameactions from './gui/guigameactions.js';

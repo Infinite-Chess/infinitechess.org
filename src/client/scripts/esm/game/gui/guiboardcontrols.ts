@@ -19,7 +19,7 @@ import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 
 import toast from '../../components/toast.js';
 import mouse from '../mouse.js';
-import space from '../../board/space.js';
+import space from '../../board/rendering/space.js';
 import arrows from '../rendering/arrows/arrows.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';

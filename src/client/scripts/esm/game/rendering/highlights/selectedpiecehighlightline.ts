@@ -16,7 +16,7 @@ import coordutil, { BDCoords, Coords, CoordsKey } from '../../../../../../shared
 
 import boardpos from '../../../board/rendering/boardpos.js';
 import selection from '../../chess/selection.js';
-import preferences from '../../../components/header/preferences.js';
+import preferences from '../../../util/preferences.js';
 import highlightline from './highlightline.js';
 
 /**

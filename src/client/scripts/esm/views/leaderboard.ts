@@ -8,13 +8,13 @@
  */
 
 import type { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
-import type { UsernameItem } from '../util/usernamecontainer.js';
+import type { UsernameItem } from '../components/usernamecontainer.js';
 
 import leaderboardregistry from '../../../../shared/chess/variants/leaderboardregistry.js';
 
 import validatorama from '../util/validatorama.js';
 import { serverfetch } from '../util/serverfetch.js';
-import usernamecontainer from '../util/usernamecontainer.js';
+import usernamecontainer from '../components/usernamecontainer.js';
 
 // --- DOM Element Selection ---
 const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;

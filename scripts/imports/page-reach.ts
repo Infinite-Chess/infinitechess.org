@@ -41,7 +41,7 @@ const DORMANT = [
 	`${E}views/icnvalidator/icnvalidator.ts`,
 	`${E}views/icnvalidator/icnvalidator.worker.ts`,
 	`${E}views/leaderboard.ts`,
-	`${E}views/news.ts`,
+	`${E}views/news/news.ts`,
 	`${E}views/guide.ts`,
 	`${E}views/admin.ts`,
 ];

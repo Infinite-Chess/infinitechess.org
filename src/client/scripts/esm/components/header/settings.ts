@@ -6,7 +6,7 @@ import math from '../../../../../shared/util/math/math.js';
 import themes from '../../../../../shared/components/header/themes.js';
 
 import colorutil from '../../util/colorutil.js';
-import preferences from './preferences.js';
+import preferences from '../../util/preferences.js';
 import sounddropdown from './dropdowns/sounddropdown.js';
 import languagedropdown from './dropdowns/languagedropdown.js';
 import gameplaydropdown from './dropdowns/gameplaydropdown.js';

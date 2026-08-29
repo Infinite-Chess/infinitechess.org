@@ -23,13 +23,13 @@ import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 
-import space from '../../../board/space.js';
+import space from '../../../board/rendering/space.js';
 import mouse from '../../mouse.js';
 import camera from '../../../board/rendering/camera.js';
 import meshes from '../../../board/rendering/meshes.js';
 import arrows from '../arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
-import keybinds from '../../misc/keybinds.js';
+import keybinds from '../../keybinds.js';
 import deltatime from '../../../board/deltatime.js';
 import selection from '../../chess/selection.js';
 import { Mouse } from '../../input.js';

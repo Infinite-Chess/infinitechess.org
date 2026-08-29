@@ -20,7 +20,7 @@ import gameslot from '../../game/chess/gameslot.js';
 import drawoffers from './drawoffers.js';
 import socketsubs from '../../socket/socketsubs.js';
 import socketsend from '../../socket/socketsend.js';
-import enginegame from '../../game/misc/enginegame.js';
+import enginegame from '../../game/chess/enginegame.js';
 import gameactions from './gui/guigameactions.js';
 import gamesession from '../../game/chess/gamesession.js';
 import guigamemeta from '../../game/gui/guigamemeta.js';

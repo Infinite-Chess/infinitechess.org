@@ -9,7 +9,7 @@
 import type { ClientboundLobbyMessage } from '../../../../../shared/transport/clientbound.js';
 
 import lobby from './lobby.js';
-import flashtoast from '../../util/flashtoast.js';
+import flashtoast from '../../components/flashtoast.js';
 import socketintents from '../../socket/socketintents.js';
 import { SocketBus } from '../../socket/SocketBus.js';
 

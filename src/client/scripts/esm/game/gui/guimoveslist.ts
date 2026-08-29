@@ -27,7 +27,7 @@ import premoves from '../chess/premoves.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';
 import animation from '../rendering/animation.js';
-import holdrepeat from '../../util/holdrepeat.js';
+import holdrepeat from '../../components/holdrepeat.js';
 import Transition from '../rendering/transitions/Transition.js';
 import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';

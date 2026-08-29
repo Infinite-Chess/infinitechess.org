@@ -432,7 +432,7 @@ makes no difference whether they were one version behind or two.
   2048 chars. Each upgrade gets an `R` correlation id, each inbound message a `W` one, so every log
   line a message produces shares an id.
 - **Client** ([socketlogger.ts](/src/client/scripts/esm/socket/socketlogger.ts)) is a dev toggle, off
-  by default — press `3` on the game page ([controls.ts](/src/client/scripts/esm/game/misc/controls.ts)).
+  by default — press `3` on the game page ([toggles.ts](/src/client/scripts/esm/game/debug/toggles.ts)).
   On, it prints routed traffic and adds 1 s of simulated send latency. Echoes _we_ send are never
   printed; incoming ones only if `alsoPrintIncomingEchos` is flipped.
 - **Server-side simulated latency**: `SIMULATED_WEBSOCKET_LATENCY_MS` in

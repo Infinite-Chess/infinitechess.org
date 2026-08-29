@@ -11,7 +11,7 @@ import webgl from '../../board/rendering/webgl.js';
 import config from '../config.js';
 import camera from '../../board/rendering/camera.js';
 import gameslot from '../chess/gameslot.js';
-import preferences from '../../components/header/preferences.js';
+import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import { Renderable } from '../../webgl/Renderable.js';

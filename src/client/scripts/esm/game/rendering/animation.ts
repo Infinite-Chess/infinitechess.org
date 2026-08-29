@@ -22,7 +22,7 @@ import meshes from '../../board/rendering/meshes.js';
 import camera from '../../board/rendering/camera.js';
 import splines from './splines.js';
 import boardpos from '../../board/rendering/boardpos.js';
-import movesound from '../misc/movesound.js';
+import movesound from '../movesound.js';
 import arrowshifts from './arrows/arrowshifts.js';
 import piecemodels from '../../board/rendering/piecemodels.js';
 import { GameBus } from '../../board/GameBus.js';

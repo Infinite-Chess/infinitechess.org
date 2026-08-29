@@ -15,7 +15,7 @@ import bounds, {
 } from '../../../../../../../shared/util/math/bounds';
 
 import mouse from '../../../../game/mouse';
-import space from '../../../../board/space';
+import space from '../../../../board/rendering/space';
 import arrows from '../../../../game/rendering/arrows/arrows';
 import docutil from '../../../../util/docutil.js';
 import scursor from './scursor';

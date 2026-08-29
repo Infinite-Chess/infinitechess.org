@@ -12,10 +12,10 @@ import type { BDCoords, Coords } from '../../../../../../shared/util/coordutil.j
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import gamefileutility from '../../../../../../shared/chess/logic/gamefileutility.js';
 
-import space from '../../../board/space.js';
+import space from '../../../board/rendering/space.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import primitives from '../../../board/rendering/primitives.js';
-import preferences from '../../../components/header/preferences.js';
+import preferences from '../../../util/preferences.js';
 import { Renderable } from '../../../webgl/Renderable.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 

@@ -16,7 +16,7 @@ import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import meshes from './meshes.js';
 import primitives from './primitives.js';
-import preferences from '../../components/header/preferences.js';
+import preferences from '../../util/preferences.js';
 import boardgeometry from './boardgeometry.js';
 
 // Variables -------------------------------------------------------------------

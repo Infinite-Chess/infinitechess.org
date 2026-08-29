@@ -10,11 +10,11 @@
  */
 
 import docutil from '../util/docutil.js';
-import flashtoast from '../util/flashtoast.js';
+import flashtoast from '../components/flashtoast.js';
 import { serverfetch } from '../util/serverfetch.js';
-import { passwordFormatError, setFieldError } from '../util/accountformaterrors.js';
+import { passwordFormatError, setFieldError } from '../components/accountformaterrors.js';
 
-import '../util/passwordtoggle.js';
+import '../components/passwordtoggle.js';
 
 // Elements --------------------------------------------------------------------
 

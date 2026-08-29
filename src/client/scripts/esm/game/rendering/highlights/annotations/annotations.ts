@@ -17,11 +17,11 @@ import coordutil from '../../../../../../../shared/util/coordutil.js';
 
 import gameslot from '../../../chess/gameslot.js';
 import drawrays from './drawrays.js';
-import keybinds from '../../../misc/keybinds.js';
+import keybinds from '../../../keybinds.js';
 import { Mouse } from '../../../input.js';
 import drawarrows from './drawarrows.js';
 import drawsquares from './drawsquares.js';
-import preferences from '../../../../components/header/preferences.js';
+import preferences from '../../../../util/preferences.js';
 import { GameBus } from '../../../../board/GameBus.js';
 
 // Types -----------------------------------------------------------------------

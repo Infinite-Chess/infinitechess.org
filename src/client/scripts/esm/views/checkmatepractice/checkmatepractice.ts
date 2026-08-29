@@ -24,7 +24,7 @@ import toast from '../../components/toast.js';
 import docutil from '../../util/docutil.js';
 import gameslot from '../../game/chess/gameslot.js';
 import selection from '../../game/chess/selection.js';
-import enginegame from '../../game/misc/enginegame.js';
+import enginegame from '../../game/chess/enginegame.js';
 import gamesession from '../../game/chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';

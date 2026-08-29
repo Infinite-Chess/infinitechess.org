@@ -25,12 +25,12 @@ import coordutil, {
 	DoubleCoords,
 } from '../../../../../../shared/util/coordutil.js';
 
-import space from '../../../board/space.js';
+import space from '../../../board/rendering/space.js';
 import meshes from '../../../board/rendering/meshes.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../../board/GameBus.js';
-import preferences from '../../../components/header/preferences.js';
+import preferences from '../../../util/preferences.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import area, { Area } from '../../../board/rendering/area.js';
 

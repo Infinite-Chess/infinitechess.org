@@ -16,7 +16,7 @@ import docutil from '../../util/docutil.js';
 import gameslot from '../chess/gameslot.js';
 import deltatime from '../../board/deltatime.js';
 import primitives from '../../board/rendering/primitives.js';
-import preferences from '../../components/header/preferences.js';
+import preferences from '../../util/preferences.js';
 import perspective from './perspective.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import boardgeometry from '../../board/rendering/boardgeometry.js';

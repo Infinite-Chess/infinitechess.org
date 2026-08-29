@@ -61,7 +61,7 @@ export const ESMEntryPoints = [
 
 	// Dormant — pages whose code is not yet repurposed for the redesign.
 	// 'src/client/scripts/esm/views/leaderboard.ts',
-	// 'src/client/scripts/esm/views/news.ts',
+	// 'src/client/scripts/esm/views/news/news.ts',
 	// 'src/client/scripts/esm/views/guide.ts',
 	// 'src/client/scripts/esm/views/admin.ts',
 	// 'src/client/scripts/esm/views/icnvalidator/icnvalidator.ts',
