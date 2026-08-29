@@ -37,7 +37,6 @@ const LIVE = ESMEntryPoints.filter((e) => e.endsWith('.ts') || e.endsWith('.js')
 /** Pages that exist but have no entry in ESMEntryPoints yet. Marked `*` when printed. */
 const DORMANT = [
 	`${E}views/editor/boardeditor.ts`,
-	`${E}views/checkmatepractice/checkmatepractice.ts`,
 	`${E}views/icnvalidator/icnvalidator.ts`,
 	`${E}views/icnvalidator/icnvalidator.worker.ts`,
 	`${E}views/leaderboard.ts`,

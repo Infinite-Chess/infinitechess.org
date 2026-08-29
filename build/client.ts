@@ -37,6 +37,7 @@ export const ESMEntryPoints = [
 	'src/client/css/register-awaiting.css',
 	'src/client/css/game.css',
 	'src/client/css/analysis.css',
+	'src/client/css/checkmatepractice.css',
 	'src/client/css/variantselector.css',
 
 	// Scripts
@@ -50,6 +51,7 @@ export const ESMEntryPoints = [
 	'src/client/scripts/esm/views/resetpassword.ts',
 	'src/client/scripts/esm/views/game/game.ts',
 	'src/client/scripts/esm/views/analysis/analysis.ts',
+	'src/client/scripts/esm/views/checkmatepractice/checkmatepractice.ts',
 
 	// Workers
 	'src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts',

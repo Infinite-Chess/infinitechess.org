@@ -66,6 +66,17 @@ export interface ScriptTranslations {
 			accept_seek: string;
 		};
 	};
+	practice: {
+		badges: {
+			logged_out: string;
+			bronze: string;
+			silver: string;
+			gold: string;
+			bronze_unearned: string;
+			silver_unearned: string;
+			gold_unearned: string;
+		};
+	};
 	register: {
 		verification_failed: string;
 		verification_expired: string;

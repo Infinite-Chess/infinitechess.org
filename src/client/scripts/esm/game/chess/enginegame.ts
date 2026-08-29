@@ -225,7 +225,7 @@ function makeEngineMove(tokenMove: string | null): void {
 	}
 
 	// Can rarely happen if the server forced us to resync, undoing our move.
-	if (gamePageData.role === gamefile.whosTurn) {
+	if (gamesession.getRole() === gamefile.whosTurn) {
 		console.error(`Engine returned a move when it was our turn. Ignoring it: ${tokenMove}`);
 		return;
 	}

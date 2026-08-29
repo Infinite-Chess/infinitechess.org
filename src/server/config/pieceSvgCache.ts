@@ -6,11 +6,12 @@
  * these very same files over HTTP — the difference being what each side needs: the client
  * builds live SVGElements to tint and rasterize, this hands out flat markup.
  *
- * Only the black variant of each piece is kept: pages inline these as monochrome
- * silhouettes, recolored by CSS, so no tint or other player color is ever wanted.
+ * Only white's and black's variants are kept — the two the artwork actually distinguishes.
+ * Pages wanting a monochrome silhouette instead take either and tag it `piece-silhouette`,
+ * whose CSS repaints every fill and stroke.
  */
 
-import type { RawType } from '../../shared/util/typeutil.js';
+import type { RawType, Player, PlayerGroup } from '../../shared/util/typeutil.js';
 
 import fs from 'fs';
 import path from 'path';
@@ -39,21 +40,24 @@ const SVG_ELEMENT_REGEX = /<svg\b([^>]*)>([\s\S]*?)<\/svg>/g;
  */
 const ID_ATTRIBUTE_REGEX = /\sid="([^"]*)"/;
 
+/** The player variants kept — the two the artwork distinguishes. */
+const CACHED_PLAYERS: Player[] = [players.WHITE, players.BLACK];
+
 // State -----------------------------------------------------------------------
 
-/** Each raw type's black-variant SVG markup, with the source file's `id` stripped. */
-const pieceSVGs: Map<RawType, string> = loadPieceSVGs();
+/** Each raw type's per-player SVG markup, with the source file's `id` stripped. */
+const pieceSVGs: Map<RawType, PlayerGroup<string>> = loadPieceSVGs();
 
 // Functions -------------------------------------------------------------------
 
 /**
  * Reads every piece SVG file. Every page that renders a piece wants these, so
  * they are read once on import rather than waiting on a call from startup.
- * @throws If a file is missing, breaks the flat `<svg id="...">` shape, or lacks a piece's
- *   black or neutral variant — failing the boot instead of corrupting a page later.
+ * @throws If a file is missing, breaks the flat `<svg id="...">` shape, or lacks a variant
+ *   for a cached player — failing the boot instead of corrupting a page later.
  */
-function loadPieceSVGs(): Map<RawType, string> {
-	const pieceSVGs = new Map<RawType, string>();
+function loadPieceSVGs(): Map<RawType, PlayerGroup<string>> {
+	const pieceSVGs = new Map<RawType, PlayerGroup<string>>();
 	/** Every piece SVG across all the files, keyed by its source id (e.g. `"pawn-black"`). */
 	const svgsById = new Map<string, string>();
 
@@ -84,26 +88,34 @@ function loadPieceSVGs(): Map<RawType, string> {
 	for (const rawType of allRawTypes) {
 		if (piecethemes.getLocationForType(rawType) === null) continue; // Has no svg (VOID)
 		const baseId = typeutil.getRawTypeStr(rawType);
-		const markup = piecethemes
-			.getSVGColorPriority(players.BLACK)
-			.map((ext) => svgsById.get(baseId + ext))
-			.find((found) => found !== undefined);
-		if (markup === undefined) throw new Error(`No black or neutral svg found for piece "${baseId}".`); // prettier-ignore
-		pieceSVGs.set(rawType, markup);
+		const variants: PlayerGroup<string> = {};
+		for (const player of CACHED_PLAYERS) {
+			// Falls back down the player's priority list, e.g. to the neutral svg of a piece
+			// drawn the same for both sides (obstacle).
+			const markup = piecethemes
+				.getSVGColorPriority(player)
+				.map((ext) => svgsById.get(baseId + ext))
+				.find((found) => found !== undefined);
+			if (markup === undefined) throw new Error(`No svg found for piece "${baseId}" of player ${player}.`); // prettier-ignore
+			variants[player] = markup;
+		}
+		pieceSVGs.set(rawType, variants);
 	}
 
 	return pieceSVGs;
 }
 
 /**
- * Returns a piece's black-variant `<svg>` markup, ready to inline into a page.
+ * Returns a piece's `<svg>` markup for one player, ready to inline into a page.
  * Its own fills and strokes are left untouched, for the page's CSS to override.
- * @throws If the piece has no svg of its own (VOID).
+ * @throws If the piece has no svg of its own (VOID), or isn't cached for that player.
  */
-function get(rawType: RawType): string {
-	const markup = pieceSVGs.get(rawType);
+function get(rawType: RawType, player: Player): string {
+	const markup = pieceSVGs.get(rawType)?.[player];
 	if (markup === undefined) {
-		throw new Error(`Piece "${typeutil.getRawTypeStr(rawType)}" has no svg.`);
+		throw new Error(
+			`Piece "${typeutil.getRawTypeStr(rawType)}" has no svg for player ${player}.`,
+		);
 	}
 	return markup;
 }

@@ -1,0 +1,242 @@
+/* src/client/css/checkmatepractice.css */
+
+/* The checkmate practice page (/checkmatepractice): the game.css board layout, plus the
+   checkmate selection overlay and the side bar's practice actions. */
+
+.practice {
+	position: relative;
+}
+
+/* ============================
+   Practice actions (side bar)
+   ============================ */
+
+.actions-practice {
+	display: flex;
+	justify-content: center;
+}
+
+.actions-practice .action-btn {
+	width: 75px;
+	height: 40px;
+	background: none;
+	border-radius: 6px;
+}
+
+/* Square, since all three icons share one square viewBox. */
+.actions-practice .action-icon {
+	width: 22px;
+	height: 22px;
+}
+
+.actions-practice .action-btn:disabled {
+	opacity: 0.4;
+}
+
+/* ============================
+   Checkmate selection overlay
+   ============================ */
+
+.practice-selection {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	overflow-y: auto;
+	background: linear-gradient(var(--c-bg-overlay), var(--c-bg-overlay)), var(--checkerboard);
+	background-attachment: local;
+}
+
+.practice-content {
+	max-width: 960px;
+	margin: 0 auto;
+	padding: 28px 20px 48px;
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+}
+
+.practice-title {
+	font-size: 28px;
+	font-weight: 700;
+	color: var(--c-text-emphasis);
+	margin-bottom: 16px;
+}
+
+/* Progress panel */
+
+.progress-panel {
+	padding: 16px 20px 20px;
+}
+
+.progress-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	margin-bottom: 10px;
+}
+
+.progress-label {
+	font-size: 13px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--c-text-muted);
+}
+
+.progress-count {
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--c-text-emphasis);
+}
+
+.progress-track {
+	position: relative;
+	height: 14px;
+	margin: 14px 22px 14px 0; /* Room for the badges overhanging the ends of the bar */
+	border-radius: 999px;
+	background: var(--c-surface-2);
+	border: 1px solid var(--c-border-muted);
+}
+
+.progress-fill {
+	height: 100%;
+	width: 0;
+	border-radius: inherit;
+	background: var(--c-accent);
+	transition: width 0.3s ease;
+}
+
+/* The three badges sit on the bar at the percentage that earns them. */
+.progress-track .badge {
+	position: absolute;
+	top: 50%;
+	width: 44px;
+	height: 44px;
+	transform: translate(-50%, -50%);
+}
+
+#checkmate-badge-bronze {
+	left: 50%;
+}
+
+#checkmate-badge-silver {
+	left: 75%;
+}
+
+#checkmate-badge-gold {
+	left: 100%;
+}
+
+.progress-track .badge img {
+	position: relative; /* Paint above the shine elements (they carry z-index: -1) */
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.progress-track .badge img.unearned {
+	filter: grayscale(1) opacity(0.45);
+}
+
+.practice-notice {
+	margin-top: 12px;
+	font-size: 14px;
+	color: var(--c-error);
+}
+
+/* Difficulty groups */
+
+.difficulty-title {
+	font-size: 15px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--c-text-muted);
+	margin-bottom: 10px;
+}
+
+.checkmates {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 12px;
+}
+
+/* Checkmate banners: blue while unsolved, green + checkmark once beaten. */
+
+.checkmate {
+	display: flex;
+	align-items: center;
+	min-height: 64px;
+	padding: 10px 14px;
+	border-radius: 10px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	color: white;
+	cursor: pointer;
+	background: linear-gradient(180deg, #4a86c4 0%, #366ba6 100%);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.15),
+		0 3px 8px var(--c-shadow-elev);
+	-webkit-tap-highlight-color: transparent;
+}
+
+.checkmate:hover {
+	filter: brightness(1.08);
+}
+
+.checkmate:active {
+	transform: translateY(1px);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.15),
+		0 1px 4px var(--c-shadow-elev);
+}
+
+.checkmate.beaten {
+	background: linear-gradient(180deg, #57a151 0%, #438840 100%);
+}
+
+.mate-pieces {
+	display: flex;
+	align-items: center;
+}
+
+/* The icons carry the artwork's own colors (white fill/black outline, and vice versa). */
+.mate-pieces.white {
+	flex: 1;
+	justify-content: flex-end;
+}
+
+.mate-pieces.black {
+	flex: 1;
+	justify-content: flex-start;
+}
+
+.mate-piece svg {
+	display: block;
+	width: 30px;
+	height: 30px;
+}
+
+/* Repeats of a piece overlap onto the previous copy to keep big armies compact. */
+.mate-piece.collated {
+	margin-left: -15px;
+}
+
+.mate-versus {
+	padding: 0 12px;
+	font-size: 13px;
+	font-weight: 600;
+	opacity: 0.85;
+}
+
+/* Reserves its space on every banner so the piece rows don't shift when one is beaten. */
+.mate-check {
+	width: 22px;
+	height: 22px;
+	margin-left: 8px;
+	color: #fff;
+	opacity: 0;
+}
+
+.checkmate.beaten .mate-check {
+	opacity: 1;
+}

@@ -17,6 +17,7 @@ import renderContext from '../utility/renderContext.js';
 import gamePageController from '../controllers/gamePageController.js';
 import registerController from '../controllers/registerController.js';
 import analysisPageController from '../controllers/analysisPageController.js';
+import practicePageController from '../controllers/practicePageController.js';
 import verifyAccountController from '../controllers/verifyAccountController.js';
 import passwordResetController from '../controllers/passwordResetController.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
@@ -125,7 +126,7 @@ page('/member(.html)?/:member', (_req: Request, res: Response) => res.render('me
 page('/admin(.html)?', (_req: Request, res: Response) => res.render('admin.njk'));
 page('/icnvalidator(.html)?', (_req: Request, res: Response) => res.render('icnvalidator.njk')); // prettier-ignore
 page('/tutorial(.html)?', (_req: Request, res: Response) => res.render('tutorial.njk'));
-page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render('checkmatepractice.njk')); // prettier-ignore
+page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render('checkmatepractice.njk', practicePageController.getPageState())); // prettier-ignore
 page('/editor(.html)?', (_req: Request, res: Response) => res.render('editor.njk'));
 page('/patron(.html)?', (_req: Request, res: Response) => res.render('patron.njk'));
 
