@@ -158,6 +158,8 @@ async function performDelete(position_name: string, storage_type: StorageType): 
 	let preloadedCloudSaves: PreloadedCloudSaves;
 	if (storage_type === 'cloud') {
 		preloadedCloudSaves = await withRequest(() => ecloud.deleteCloud(position_name));
+		// Delete failed, keep the active position and skip the refresh.
+		if (preloadedCloudSaves === undefined) return;
 	} else {
 		await savestore.deleteLocal(position_name);
 	}
