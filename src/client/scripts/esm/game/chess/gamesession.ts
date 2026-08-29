@@ -16,7 +16,7 @@ import thread from '../../util/thread.js';
 import meshes from '../../board/rendering/meshes.js';
 import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
-import gamecore from './gamecore.js';
+import listeners from '../listeners.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import { GameBus } from '../../board/GameBus.js';
@@ -139,7 +139,7 @@ function markLoadingDone(): void {
 	// console.log('Game fully loaded.');
 	loading = false;
 	// The canvas is visible exactly while a fully-loaded game exists: this is its only reveal.
-	gamecore.getCanvas().classList.remove('visibility-hidden');
+	listeners.getCanvas().classList.remove('visibility-hidden');
 	centerView();
 	GameBus.dispatch('graphical-loaded');
 	GameBus.dispatch('load-ended');
@@ -186,7 +186,7 @@ function unloadGame(): void {
 	boardpos.eraseMomentum();
 	Transition.terminate();
 	// unloadGame() is its only hide, and all board pages ship it hidden.
-	gamecore.getCanvas().classList.add('visibility-hidden');
+	listeners.getCanvas().classList.add('visibility-hidden');
 }
 
 // Exports ---------------------------------------------------------------------

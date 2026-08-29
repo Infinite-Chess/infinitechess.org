@@ -29,7 +29,7 @@ import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import { GameBus } from '../../board/GameBus.js';
-import { listener_document, listener_canvas } from '../chess/gamecore.js';
+import { listener_document, listener_canvas } from '../listeners.js';
 
 // Elements --------------------------------------------------------------------
 

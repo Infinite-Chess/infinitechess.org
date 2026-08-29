@@ -1,4 +1,4 @@
-// src/client/scripts/esm/components/header/preferences.ts
+// src/client/scripts/esm/util/preferences.ts
 
 /**
  * The user's saved preferences — board theme, sound, perspective, animation and premove
@@ -431,7 +431,7 @@ function getTintColorOfType(type: number): Color {
  * modifying of theme players using the keyboard keys!
  */
 
-// import { listener_document } from '../../game/chess/gamecore.js';
+// import { listener_document } from '../game/listeners.js';
 
 // const allProperties = Object.keys(themes.THEMES[themes.DEFAULT_THEME]!);
 // let currPropertyIndex = 0;

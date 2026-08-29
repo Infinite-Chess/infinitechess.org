@@ -25,9 +25,9 @@ import typeutil, { players as p } from '../../../../../shared/util/typeutil.js';
 import arrows from '../rendering/arrows/arrows.js';
 import { gl } from '../../board/rendering/webgl.js';
 import camera from '../../board/rendering/camera.js';
-import gamecore from './gamecore.js';
 import guiclock from '../gui/guiclock.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
+import gamescene from '../rendering/gamescene.js';
 import miniimage from '../rendering/miniimage.js';
 import starfield from '../rendering/starfield.js';
 import gamesound from '../../board/gamesound.js';
@@ -83,7 +83,7 @@ document.addEventListener('theme-change', () => {
 	imagecache.initImagesForGame(gamefile).then(() => {
 		// Regenerate piece textures with the new tinted images
 		texturecache.initTexturesForGame(gl, gamefile);
-		piecemodels.regenAll(gamecore.getGameContext(), gamefile, mesh!);
+		piecemodels.regenAll(gamescene.getGameContext(), gamefile, mesh!);
 	});
 	// Reinit the promotion UI
 	guipromotion.resetUI();
@@ -215,7 +215,7 @@ async function loadGraphical(): Promise<void> {
 	};
 
 	// Generate the mesh of every piece type
-	piecemodels.regenAll(gamecore.getGameContext(), loadedGamefile!, mesh);
+	piecemodels.regenAll(gamescene.getGameContext(), loadedGamefile!, mesh);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
 	if (lastmove !== undefined)

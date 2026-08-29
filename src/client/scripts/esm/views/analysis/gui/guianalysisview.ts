@@ -10,7 +10,7 @@ import gameslot from '../../../game/chess/gameslot.js';
 import guiclock from '../../../game/gui/guiclock.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../board/GameBus.js';
-import { listener_document } from '../../../game/chess/gamecore.js';
+import { listener_document } from '../../../game/listeners.js';
 
 // Wire the orientation/view GameBus listeners.
 

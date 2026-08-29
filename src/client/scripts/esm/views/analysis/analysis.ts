@@ -57,7 +57,7 @@ function start(): void {
 	if (gameId === null) void analysisloader.loadVariant('Classical');
 	else void analysisloader.loadGameById(gameId);
 
-	// Poll each module's keyboard shortcuts every frame (via gamecore's document input listener).
+	// Poll each module's keyboard shortcuts every frame (via the game's document input listener).
 	gameloop.start(() => {
 		guianalysisview.updateShortcuts();
 		guienginepanel.updateShortcuts();

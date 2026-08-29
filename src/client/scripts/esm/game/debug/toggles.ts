@@ -15,13 +15,14 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import camera from '../../board/rendering/camera.js';
 import animation from '../rendering/animation.js';
 import miniimage from '../rendering/miniimage.js';
+import gamescene from '../rendering/gamescene.js';
 import piecemodels from '../../board/rendering/piecemodels.js';
 import { GameBus } from '../../board/GameBus.js';
 import socketlogger from '../../socket/socketlogger.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';
+import { listener_document } from '../listeners.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import { estimateMemorySizeOf } from '../../util/memoryestimator.js';
-import gamecore, { listener_document } from '../chess/gamecore.js';
 
 // Functions -------------------------------------------------------------------
 
@@ -43,7 +44,7 @@ function testInGame(gamefile: GameFile, mesh: Mesh | undefined): void {
 
 	if (listener_document.isKeyDown('Tab')) guiboardcontrols.callback_Arrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
-		piecemodels.regenAll(gamecore.getGameContext(), gamefile, mesh);
+		piecemodels.regenAll(gamescene.getGameContext(), gamefile, mesh);
 		console.log('Regenerated piece models.');
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();

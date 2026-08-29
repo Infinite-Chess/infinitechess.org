@@ -27,7 +27,7 @@ import { GameBus } from '../../../board/GameBus.js';
 import enginearrows from '../rendering/enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
 import enginelegalmoves from '../../../game/debug/enginelegalmoves.js';
-import { listener_document } from '../../../game/chess/gamecore.js';
+import { listener_document } from '../../../game/listeners.js';
 
 // Elements --------------------------------------------------------------------
 

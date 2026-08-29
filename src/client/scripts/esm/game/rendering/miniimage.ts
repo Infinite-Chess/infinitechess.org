@@ -26,10 +26,10 @@ import toast from '../../components/toast.js';
 import space from '../../board/rendering/space.js';
 import mouse from '../mouse.js';
 import camera from '../../board/rendering/camera.js';
-import gamecore from '../chess/gamecore.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import premoves from '../chess/premoves.js';
+import gamescene from './gamescene.js';
 import animation from './animation.js';
 import selection from '../chess/selection.js';
 import perspective from './perspective.js';
@@ -330,7 +330,7 @@ function render(): void {
 	const { instanceData, instanceData_hovered } = getImageInstanceData();
 
 	miniimagerenderer.render(
-		gamecore.getGameContext(),
+		gamescene.getGameContext(),
 		gamefile.existingTypes,
 		instanceData,
 		instanceData_hovered,

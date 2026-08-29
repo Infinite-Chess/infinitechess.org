@@ -6,7 +6,7 @@
 
 import eactions from '../../actions/eactions';
 import guifloatingwindow from '../guifloatingwindow';
-import { listener_document } from '../../../../game/chess/gamecore';
+import { listener_document } from '../../../../game/listeners';
 
 // Elements --------------------------------------------------------------------
 

@@ -8,7 +8,7 @@
 
 import holdrepeat from '../../../components/holdrepeat.js';
 import edithistory from '../edithistory.js';
-import { listener_document } from '../../../game/chess/gamecore.js';
+import { listener_document } from '../../../game/listeners.js';
 
 // Navigation
 

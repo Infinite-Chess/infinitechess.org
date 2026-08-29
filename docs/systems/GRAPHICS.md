@@ -95,7 +95,7 @@ Other shaders can allow for more unique properties for each instance, such as `'
 
 ## Integrating Into the Render Loop
 
-The render loop lives in `gamecore.ts`. The `renderScene()` function renders all items in the order:
+The frame is driven by [`gameloop.ts`](../src/client/scripts/esm/game/gameloop.ts), which updates every game module in order and then calls the scene. The drawing itself lives in [`gamescene.ts`](../src/client/scripts/esm/game/rendering/gamescene.ts), whose `renderScene()` function renders all items in the order:
 
 1. **Background** — Starfield / void rendering (uses masking)
 2. **Board** — Infinite tile grid, promotion lines
@@ -109,7 +109,7 @@ Call your script's render method in the appropriate section.
 
 The game can draw two independent boards at the same time: the interactive game, and the small board inside the variant-preview hover tooltip ([`variantpreviewtooltip.ts`](../src/client/scripts/esm/board/variantselector/variantpreviewtooltip.ts)). Each lives on its own `<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs, textures, buffers/VAOs) can **never** be shared across contexts.
 
-A [`RenderContext`](../src/client/scripts/esm/board/rendering/RenderContext.ts) bundles everything bound to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale), piece `textures`, stencil `maskedDraw`, tile renderer (`boardtiles`), and a `renderable` factory for creating models in that context. The interactive game builds one in `gamecore.init()`; the preview builds its own in `ensureGLReady()`. Shared drawing code is handed a `RenderContext` and draws for whichever board it's told, instead of reaching for a process-wide singleton.
+A [`RenderContext`](../src/client/scripts/esm/board/rendering/RenderContext.ts) bundles everything bound to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale), piece `textures`, stencil `maskedDraw`, tile renderer (`boardtiles`), and a `renderable` factory for creating models in that context. The interactive game builds one in `gamescene.init()`; the preview builds its own in `ensureGLReady()`. Shared drawing code is handed a `RenderContext` and draws for whichever board it's told, instead of reaching for a process-wide singleton.
 
 ### Choosing a shape for a new render module
 

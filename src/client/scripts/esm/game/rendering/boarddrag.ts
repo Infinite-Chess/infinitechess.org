@@ -20,7 +20,7 @@ import Transition from './transitions/Transition.js';
 import perspective from './perspective.js';
 import { GameBus } from '../../board/GameBus.js';
 import guipromotion from '../gui/guipromotion.js';
-import { listener_canvas } from '../chess/gamecore.js';
+import { listener_canvas } from '../listeners.js';
 
 // Types -----------------------------------------------------------------------
 

@@ -45,7 +45,7 @@ import movehints from '../highlights/movehints.js';
 import Transition from '../transitions/Transition.js';
 import perspective from '../perspective.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
-import { listener_canvas } from '../../chess/gamecore.js';
+import { listener_canvas } from '../../listeners.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 
 // Types -----------------------------------------------------------------------

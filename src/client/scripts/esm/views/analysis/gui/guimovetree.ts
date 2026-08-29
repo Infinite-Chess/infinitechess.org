@@ -25,10 +25,10 @@ import movevalidation from '../../../../../../shared/chess/logic/movevalidation.
 
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
-import gamecore from '../../../game/chess/gamecore.js';
 import guiclock from '../../../game/gui/guiclock.js';
 import premoves from '../../../game/chess/premoves.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
+import gamescene from '../../../game/rendering/gamescene.js';
 import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
 import gamereview from '../gamereview.js';
@@ -647,7 +647,7 @@ function generateVariationMoves(
 	// pieces. Same position, so it's not a visual change; the only mesh work a review ever does.
 	const mesh = gameslot.getMesh();
 	if (mesh && gamefile.pieces.newlyRegenerated)
-		piecemodels.regenAll(gamecore.getGameContext(), gamefile, mesh);
+		piecemodels.regenAll(gamescene.getGameContext(), gamefile, mesh);
 
 	return { moves, conclusion };
 }

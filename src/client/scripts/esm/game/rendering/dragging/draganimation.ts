@@ -36,7 +36,7 @@ import frametracker from '../../../board/rendering/frametracker.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
-import { listener_canvas } from '../../chess/gamecore.js';
+import { listener_canvas } from '../../listeners.js';
 import {
 	createRenderable,
 	createRenderable_Instanced,

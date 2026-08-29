@@ -14,7 +14,7 @@ import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';
 import { Mouse } from '../input.js';
 import { GameBus } from '../../board/GameBus.js';
-import { listener_canvas } from '../chess/gamecore.js';
+import { listener_canvas } from '../listeners.js';
 
 // Variables -------------------------------------------------------------------
 

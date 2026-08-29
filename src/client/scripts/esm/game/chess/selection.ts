@@ -47,7 +47,7 @@ import frametracker from '../../board/rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { animateMove } from './graphicalchanges.js';
-import { listener_canvas } from './gamecore.js';
+import { listener_canvas } from '../listeners.js';
 
 // Types -----------------------------------------------------------------------
 

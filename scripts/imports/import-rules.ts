@@ -16,13 +16,20 @@
  *   pkg-cost.ts      Which pages bundle an npm package, and what it costs them in KB.
  *   import-chain.ts  Everything one page pulls in, grouped by depth.
  *
- * THE LADDER — a directory encodes its AUDIENCE, and imports only ever go DOWN
- * it: never up, and never sideways between two page islands.
+ * THE LADDER — imports only ever go DOWN it, and never sideways between two page
+ * islands. Every LINE is its own rank; only units sharing a line may import each other.
+ * All of src/shared sits below the bottom line.
  *
- *   (everything else)  any page — util/, webgl/, chess/, components/, shared/ …
- *   board/             pages that render a board at all, home page included
- *   game/              pages with an interactive board
- *   views/<page>/      that one page alone
+ *   util/, webgl/                                ┐
+ *   audio/, chess/, handoffs/, savedpositions/   ├─ any page
+ *   components/, socket/                         ┘
+ *   board/                                          pages that render a board, home page included
+ *   game/                                           pages with an interactive board
+ *   views/<page>/                                   that one page alone
+ *
+ * The right column is the AUDIENCE — which pages may ship a directory, and the only
+ * thing reachability enforces. Ranks sharing an audience are still ranks: `chess/` may
+ * not import `components/`, though both ship everywhere.
  *
  * Here a file's home is its WIDEST CONSUMER, not its subject matter. `deltatime.ts`
  * reads like game code but lives in `board/` because `boardpos.ts` needs it,
@@ -35,8 +42,8 @@
  * `import type` edges, over a third of the client's real coupling and exactly
  * what the ladder exists to catch. Never re-point the ladder at the metafile.
  *
- * Only rungs get a reachability rule. `chess/` and its floor-mates are usable by
- * anything, so they need none — do not add one.
+ * Only rungs get a reachability rule. The three "any page" ranks exist to fix DIRECTION
+ * only — they need none.
  *
  * The ladder resolves RELATIVE specifiers only, safe while tsconfig.json
  * declares no `paths`. Add path aliases and the scan must learn to resolve them.

@@ -33,7 +33,7 @@ import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
-import { listener_document } from '../chess/gamecore.js';
+import { listener_document } from '../listeners.js';
 
 // Renderer extension ----------------------------------------------------------
 
