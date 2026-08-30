@@ -39,7 +39,7 @@ function resolve(req: Request, res: Response, next: NextFunction): void {
 function tryRefreshToken(req: Request, res: Response): void {
 	const cookies: ParsedCookies = req.cookies;
 
-	const { memberInfo, validation } = identityResolver.resolveIdentity(
+	const { memberInfo, validation } = identityResolver.resolve(
 		req.memberInfo!,
 		cookies.jwt,
 		ip.get(req),

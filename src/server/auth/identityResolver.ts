@@ -12,7 +12,7 @@ import type { MemberInfo, AuthMemberInfo } from '../types.js';
 
 import refreshTokenManager from '../database/refreshTokenManager.js';
 
-/** What {@link resolveIdentity} resolves: possibly-upgraded identity, plus the successful validation. */
+/** What {@link resolve} resolves: possibly-upgraded identity, plus the successful validation. */
 interface Resolution<M extends MemberInfo> {
 	memberInfo: M;
 	/** Present iff the refresh token validated. Callers holding a `res` need it to renew or revoke the session. */
@@ -24,17 +24,17 @@ interface Resolution<M extends MemberInfo> {
  * signed-in member's identity on success. Absent or invalid tokens leave `memberInfo`
  * unchanged. Does database work — only call where authentication is needed.
  */
-function resolveIdentity(
+function resolve(
 	memberInfo: AuthMemberInfo,
 	refreshToken: string | undefined,
 	IP?: string,
 ): Resolution<AuthMemberInfo>;
-function resolveIdentity(
+function resolve(
 	memberInfo: MemberInfo,
 	refreshToken: string | undefined,
 	IP?: string,
 ): Resolution<MemberInfo>;
-function resolveIdentity(
+function resolve(
 	memberInfo: MemberInfo,
 	refreshToken: string | undefined,
 	IP?: string,
@@ -50,4 +50,4 @@ function resolveIdentity(
 	};
 }
 
-export default { resolveIdentity };
+export default { resolve };

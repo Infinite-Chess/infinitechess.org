@@ -55,7 +55,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	// Initialize who they are. Member? Browser ID?...
 	// Validates their refresh-token cookie against the database. If they are signed
 	// in, adds their user_id, username, and roles to the socket metadata's memberInfo.
-	ws.metadata.memberInfo = identityResolver.resolveIdentity(
+	ws.metadata.memberInfo = identityResolver.resolve(
 		ws.metadata.memberInfo,
 		ws.metadata.cookies.jwt,
 		ws.metadata.IP,

@@ -63,7 +63,7 @@ declare module 'ws' {
 /** Information to identify a specific user, logged in or not. */
 export type MemberInfo = SignedInMemberInfo | SignedOutMemberInfo;
 
-export type SignedInMemberInfo = {
+type SignedInMemberInfo = {
 	signedIn: true;
 	user_id: number;
 	username: string;

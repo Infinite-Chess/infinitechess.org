@@ -180,7 +180,7 @@ export type ServerGame = Game & {
 } & ValidationDependant;
 
 /** The servergame variables that depend on whether the server is performing legal move validation. */
-export type ValidationDependant =
+type ValidationDependant =
 	| ({
 			/**
 			 * Whether the server is performing move validation for this game.

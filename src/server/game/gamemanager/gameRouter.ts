@@ -25,7 +25,7 @@ import onSubscribeRematch from './onSubscribeRematch.js';
  * The actions needing no game are routed first; the rest resolve
  * the game the socket belongs to, and its color in it.
  */
-function routeGameMessage(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
+function route(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
 	// All actions that don't require a game
 	switch (contents.action) {
 		case 'subscribe':
@@ -91,4 +91,4 @@ function routeGameMessage(ws: CustomWebSocket, contents: ServerboundGameMessage)
 
 // Exports ---------------------------------------------------------------------
 
-export default { routeGameMessage };
+export default { route };

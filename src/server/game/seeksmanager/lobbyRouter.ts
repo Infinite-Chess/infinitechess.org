@@ -15,7 +15,7 @@ import acceptSeek from './acceptSeek.js';
 import createEngineGame from './createEngineGame.js';
 
 /** Routes all incoming websocket messages related to the lobby. */
-function routeLobbyMessage(ws: CustomWebSocket, contents: ServerboundLobbyMessage): void {
+function route(ws: CustomWebSocket, contents: ServerboundLobbyMessage): void {
 	// Route them according to their action
 	switch (contents.action) {
 		case 'createseek':
@@ -37,4 +37,4 @@ function routeLobbyMessage(ws: CustomWebSocket, contents: ServerboundLobbyMessag
 
 // Exports ---------------------------------------------------------------------
 
-export default { routeLobbyMessage };
+export default { route };

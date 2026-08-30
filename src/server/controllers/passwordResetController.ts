@@ -88,7 +88,7 @@ async function handleForgot(req: Request, res: Response): Promise<void> {
 					[userId, hashedTokenForDb, expiresAt],
 				);
 
-				const baseUrl = urlUtils.getAppBaseUrl();
+				const baseUrl = urlUtils.getAppBase();
 				const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
 
 				logEvents.add(

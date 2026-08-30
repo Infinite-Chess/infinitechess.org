@@ -38,7 +38,7 @@ async function sendEmailConfirmation(
 	language: string,
 ): Promise<void> {
 	try {
-		const baseUrl = urlUtils.getAppBaseUrl();
+		const baseUrl = urlUtils.getAppBase();
 		const verificationUrl = new URL(`${baseUrl}/verify/${verificationToken}`).toString();
 
 		const email = componentTranslationLoader.getScript('email', language);
@@ -111,7 +111,7 @@ async function sendPasswordResetEmail(
  * @param language - The recipient's language code (`req.lang`).
  */
 async function sendPasswordChangedEmail(recipientEmail: string, language: string): Promise<void> {
-	const baseUrl = urlUtils.getAppBaseUrl();
+	const baseUrl = urlUtils.getAppBase();
 	const forgotPassUrl = new URL(`${baseUrl}/forgot-password`).toString();
 
 	try {

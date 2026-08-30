@@ -15,7 +15,7 @@ import componentTranslationLoader from './componentTranslationLoader.js';
 /** Initializes i18next for the server process, loading languages from .toml files. */
 function init(): void {
 	// Load OLD translations
-	const translations = translationLoader.loadTranslations();
+	const translations = translationLoader.load();
 	const supportedLngs = Object.keys(translations);
 
 	i18next.init({

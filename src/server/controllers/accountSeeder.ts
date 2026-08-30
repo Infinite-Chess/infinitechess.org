@@ -19,7 +19,7 @@ import accountValidation from './accountValidation.js';
  * @returns If it was a success, the row ID of where the member was inserted (same as their user_id).
  * @throws If account creation fails for any reason.
  */
-async function generateAccount({
+async function generate({
 	username,
 	email,
 	password,
@@ -37,4 +37,4 @@ async function generateAccount({
 
 // Exports ---------------------------------------------------------------------
 
-export default { generateAccount };
+export default { generate };

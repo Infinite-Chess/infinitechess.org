@@ -53,7 +53,7 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 	// Their message is evidence the connection is alive
 	socketsend.rescheduleHeartbeatTimer(ws);
 	try {
-		messageRouter.routeIncomingSocketMessage(ws, message);
+		messageRouter.route(ws, message);
 	} finally {
 		// Acked even if the handler threw. The client releases its lock on this action when
 		// the ack lands, and an action stuck outstanding forever is worse than one acked

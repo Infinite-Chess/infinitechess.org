@@ -63,7 +63,7 @@ describe('Login Controller Integration', () => {
 
 	it('should reject login with incorrect password', async () => {
 		// 1. Setup
-		await accountSeeder.generateAccount({
+		await accountSeeder.generate({
 			username: 'RealUser',
 			email: 'test@example.com',
 			password: 'CorrectPassword!',
@@ -79,7 +79,7 @@ describe('Login Controller Integration', () => {
 
 	it('should login successfully with correct credentials', async () => {
 		// 1. Setup
-		await accountSeeder.generateAccount({
+		await accountSeeder.generate({
 			username: 'RealUser',
 			email: 'test@example.com',
 			password: 'CorrectPassword!',

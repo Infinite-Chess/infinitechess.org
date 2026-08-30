@@ -14,17 +14,17 @@ import lobbyRouter from '../game/seeksmanager/lobbyRouter.js';
 import generalRouter from './generalRouter.js';
 
 /** Routes a validated socket message to the handler for its route. */
-function routeIncomingSocketMessage(ws: CustomWebSocket, message: ServerboundRoutedMessage): void {
+function route(ws: CustomWebSocket, message: ServerboundRoutedMessage): void {
 	// Route them to their specified location
 	switch (message.route) {
 		case 'general':
-			generalRouter.routeGeneralMessage(ws, message.contents);
+			generalRouter.route(ws, message.contents);
 			break;
 		case 'lobby':
-			lobbyRouter.routeLobbyMessage(ws, message.contents);
+			lobbyRouter.route(ws, message.contents);
 			break;
 		case 'game':
-			gameRouter.routeGameMessage(ws, message.contents);
+			gameRouter.route(ws, message.contents);
 			break;
 		default:
 			console.error('UNKNOWN web socket route received!', message satisfies never);
@@ -33,4 +33,4 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: ServerboundRou
 
 // Exports ---------------------------------------------------------------------
 
-export default { routeIncomingSocketMessage };
+export default { route };

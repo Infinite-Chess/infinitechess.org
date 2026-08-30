@@ -43,7 +43,7 @@ const custom_xss = new FilterXSS(xss_options);
 // Functions -------------------------------------------------------------------
 
 /** Loads and processes all translation TOML files into one object. */
-function loadTranslations(): Translations {
+function load(): Translations {
 	const translations: Translations = {};
 
 	const tomlFiles = fs.readdirSync(translationsFolder).filter((f) => f.endsWith('.toml'));
@@ -130,5 +130,5 @@ function html_escape(value: any): any {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	loadTranslations,
+	load,
 };
