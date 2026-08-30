@@ -11,8 +11,8 @@
 
 import docutil from '../util/docutil.js';
 import flashtoast from '../components/flashtoast.js';
+import accountform from '../components/accountform.js';
 import { serverfetch } from '../util/serverfetch.js';
-import { passwordFormatError, setFieldError } from '../components/accountformaterrors.js';
 
 import '../components/passwordtoggle.js';
 
@@ -31,18 +31,18 @@ const token = docutil.getLastSegmentOfURL();
 
 /** Shows an error beneath the field (format, server, or network), or clears it when called with no message. */
 function setError(message?: string): void {
-	setFieldError(errorElement!, message, passwordInput!);
+	accountform.setFieldError(errorElement!, message, passwordInput!);
 }
 
 /** Enables the submit button once the password is a valid length. */
 function refreshSubmit(): void {
-	submitButton!.disabled = passwordFormatError(passwordInput!.value) !== undefined;
+	submitButton!.disabled = accountform.passwordError(passwordInput!.value) !== undefined;
 }
 
 /** Submits the new password, navigating home on success. */
 async function submit(): Promise<void> {
 	// Authoritative gate: reveal any unseen format error, focus the field, and bail.
-	const passwordMessage = passwordFormatError(passwordInput!.value);
+	const passwordMessage = accountform.passwordError(passwordInput!.value);
 	if (passwordMessage !== undefined) {
 		setError(passwordMessage);
 		passwordInput!.focus();
@@ -97,19 +97,19 @@ if (form) {
 
 	// While typing, "reward early": clear a shown error once valid, and recompute the submit gate.
 	passwordInput!.addEventListener('input', (): void => {
-		if (passwordFormatError(passwordInput!.value) === undefined) setError();
+		if (accountform.passwordError(passwordInput!.value) === undefined) setError();
 		refreshSubmit();
 	});
 
 	// On blur, reveal any format error.
 	passwordInput!.addEventListener('blur', (): void => {
-		setError(passwordFormatError(passwordInput!.value));
+		setError(accountform.passwordError(passwordInput!.value));
 		refreshSubmit();
 	});
 
 	// Enter on a too-short password can't submit (disabled button), so reveal the error like blur.
 	passwordInput!.addEventListener('keydown', (event: KeyboardEvent): void => {
-		if (event.key === 'Enter') setError(passwordFormatError(passwordInput!.value));
+		if (event.key === 'Enter') setError(accountform.passwordError(passwordInput!.value));
 	});
 
 	passwordInput!.focus();

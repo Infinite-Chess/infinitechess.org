@@ -32,8 +32,8 @@ import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import movesequence from './movesequence.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
-import { animateMove } from './graphicalchanges.js';
 import { SettingsBus } from '../../util/SettingsBus.js';
+import graphicalchanges from './graphicalchanges.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -312,7 +312,7 @@ function processPremoves(gamefile: GameFile, mesh?: Mesh): void {
 		// This also immediately terminates the opponent's move animation
 		// MUST READ the move's changes returned from movesequence.makeMove()
 		// instead of the premove's changes, as the changes need to be regenerated!
-		animateMove(move.changes, true, false, false, true); // true for force instant animation, even secondary pieces aren't animated!
+		graphicalchanges.animateMove(move.changes, true, false, false, true); // true for force instant animation, even secondary pieces aren't animated!
 
 		// Apply remaining premove changes & visuals, but don't make them physically on the board
 		applyPremoves(gamefile, mesh);

@@ -40,7 +40,7 @@ export class ICNDecompressionError extends Error {
  * Parses a CloudPositionRecord into an EditorSaveState, decompressing the ICN.
  * @throws On decompression or ICN parse failure.
  */
-export async function parseCloudPosition(
+async function parseCloudPosition(
 	position_name: string,
 	cloudPosition: CloudPositionRecord,
 ): Promise<EditorSaveState> {
@@ -123,7 +123,6 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<CloudSa
 // Exports ---------------------------------------------------------------------
 
 export default {
-	parseCloudPosition,
 	readCloud,
 	saveCloudState,
 };

@@ -15,7 +15,7 @@ import { createHandoff } from './createhandoff.js';
 // Types -----------------------------------------------------------------------
 
 /** A pending position handed off to the board editor from another page. */
-export interface EditorHandoff {
+interface EditorHandoff {
 	/** The position for the editor to open, in place of its autosave. */
 	variantOptions: VariantOptions;
 }

@@ -13,13 +13,8 @@ import type { DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 import type { DoubleBoundingBox } from '../../../../../../shared/util/math/bounds.js';
 
 import primitives from '../../../board/rendering/primitives.js';
+import glyphatlas from './glyphatlas.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
-import {
-	getAtlasTexture,
-	getGlyphMetrics,
-	ATLAS_ASCENT_FRACTION,
-	ATLAS_DESCENDER_FRACTION,
-} from './glyphatlas.js';
 
 // Functions -------------------------------------------------------------------
 
@@ -30,7 +25,7 @@ import {
 function getTextWidth(text: string, size: number): number {
 	let width = 0;
 	for (const char of text) {
-		const m = getGlyphMetrics(char);
+		const m = glyphatlas.getMetrics(char);
 		width += size * m.advanceWidth;
 	}
 	return width;
@@ -62,9 +57,9 @@ function getTextBounds(
 		left,
 		right: left + totalWidth,
 		// Exclude the descender space: bottom is the alphabetic baseline, not the cell bottom.
-		bottom: coords[1] - size * (0.5 - ATLAS_DESCENDER_FRACTION),
+		bottom: coords[1] - size * (0.5 - glyphatlas.DESCENDER_FRACTION),
 		// Use the measured cap height of a digit so the top aligns with the visible top of numbers.
-		top: coords[1] + size * ATLAS_ASCENT_FRACTION,
+		top: coords[1] + size * glyphatlas.ASCENT_FRACTION,
 	};
 }
 
@@ -101,7 +96,7 @@ function render(
 	const data: number[] = [];
 
 	for (const char of text) {
-		const m = getGlyphMetrics(char);
+		const m = glyphatlas.getMetrics(char);
 
 		const quadWidth = size * m.advanceWidth;
 		const left = cursorX;
@@ -115,7 +110,7 @@ function render(
 		cursorX += quadWidth;
 	}
 
-	createRenderable(data, 2, 'TRIANGLES', 'colorTexture', true, getAtlasTexture()).render();
+	createRenderable(data, 2, 'TRIANGLES', 'colorTexture', true, glyphatlas.getTexture()).render();
 }
 
 // Exports ---------------------------------------------------------------------

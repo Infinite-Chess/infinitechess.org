@@ -29,7 +29,6 @@ import { rawTypes as r, players as p } from '../../../../../shared/util/typeutil
 import mouse from '../mouse.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
-import config from '../config.js';
 import camera from '../../board/rendering/camera.js';
 import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
@@ -46,7 +45,8 @@ import movesequence from './movesequence.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
-import { animateMove } from './graphicalchanges.js';
+import { VIDEO_MODE } from '../config.js';
+import graphicalchanges from './graphicalchanges.js';
 import { listener_canvas } from '../listeners.js';
 
 // Types -----------------------------------------------------------------------
@@ -562,7 +562,7 @@ function moveGamefilePiece(gamefile: GameFile, mesh: Mesh | undefined, coords: C
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	const animateMain = !wasBeingDragged;
-	animateMove(changes, true, animateMain, isPremove);
+	graphicalchanges.animateMove(changes, true, animateMain, isPremove);
 
 	if (!isPremove) GameBus.dispatch('user-move-played');
 
@@ -602,7 +602,7 @@ function renderGhostPiece(): void {
 		!hoverSquareLegal ||
 		draganimation.areDraggingPiece() ||
 		listener_canvas.isMouseTouch(mouseKeybind) ||
-		config.VIDEO_MODE
+		VIDEO_MODE
 	)
 		return;
 	const rawType = typeutil.getRawType(pieceSelected.type);

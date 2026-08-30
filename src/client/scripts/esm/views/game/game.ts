@@ -36,7 +36,7 @@ function start(): void {
 		onlinegame.subscribeToGame(); // Naturally requests the full game state which bootstraps the game
 	} else {
 		// Dead (memory-evicted) game: fetch its state over HTTP and render it — no socket opened.
-		deadgameloader.loadDeadGame();
+		deadgameloader.load();
 	}
 
 	gameloop.start();

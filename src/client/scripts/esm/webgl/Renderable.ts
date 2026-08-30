@@ -18,8 +18,8 @@ import type { Vec3 } from '../../../../shared/util/math/vectors.js';
 import type { TypedArray } from './BufferUtil.js';
 
 import mat4 from './gl-matrix.js';
+import BufferUtil from './BufferUtil.js';
 import { ShaderProgram } from './ShaderProgram.js';
-import { createBufferFromData, updateBufferIndices } from './BufferUtil.js';
 import { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js';
 
 // Types -----------------------------------------------------------------------
@@ -31,7 +31,7 @@ export type Mat4 = Float32Array;
  * The minimum a camera must provide for a factory to render with it. Kept narrow so
  * this layer stays free of the board's camera, which satisfies it structurally.
  */
-export interface ViewSource {
+interface ViewSource {
 	getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 };
 }
 
@@ -254,7 +254,7 @@ function createRenderableFactory(
 
 		const vertexCount = data.length / stride;
 
-		const buffer = createBufferFromData(gl, data);
+		const buffer = BufferUtil.createFromData(gl, data);
 
 		const shaderProgram = programManager.get(shader);
 
@@ -271,7 +271,7 @@ function createRenderableFactory(
 		return {
 			data,
 			updateBufferIndices: (changedIndicesStart: number, changedIndicesCount: number): void =>
-				updateBufferIndices(gl, buffer, data, changedIndicesStart, changedIndicesCount),
+				BufferUtil.updateIndices(gl, buffer, data, changedIndicesStart, changedIndicesCount), // prettier-ignore
 			render: (
 				position: Vec3 = [0, 0, 0],
 				scale: Vec3 = [1, 1, 1],
@@ -316,8 +316,8 @@ function createRenderableFactory(
 		const vertexCount = vertexData.length / vertexDataStride; // The vertex count of our vertex data of one single instance
 		const instanceCount = instanceData.length / instanceDataStride;
 
-		const vertexBuffer = createBufferFromData(gl, vertexData);
-		const instanceBuffer = createBufferFromData(gl, instanceData);
+		const vertexBuffer = BufferUtil.createFromData(gl, vertexData);
+		const instanceBuffer = BufferUtil.createFromData(gl, instanceData);
 
 		const shaderProgram = programManager.get(shader);
 
@@ -353,24 +353,12 @@ function createRenderableFactory(
 				changedIndicesStart: number,
 				changedIndicesCount: number,
 			): void =>
-				updateBufferIndices(
-					gl,
-					vertexBuffer,
-					vertexData,
-					changedIndicesStart,
-					changedIndicesCount,
-				),
+				BufferUtil.updateIndices(gl, vertexBuffer, vertexData, changedIndicesStart, changedIndicesCount), // prettier-ignore
 			updateBufferIndices_InstanceBuffer: (
 				changedIndicesStart: number,
 				changedIndicesCount: number,
 			): void =>
-				updateBufferIndices(
-					gl,
-					instanceBuffer,
-					instanceData,
-					changedIndicesStart,
-					changedIndicesCount,
-				),
+				BufferUtil.updateIndices(gl, instanceBuffer, instanceData, changedIndicesStart, changedIndicesCount), // prettier-ignore
 			render: (
 				position: Vec3 = [0, 0, 0],
 				scale: Vec3 = [1, 1, 1],

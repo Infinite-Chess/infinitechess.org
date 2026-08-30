@@ -39,7 +39,7 @@ export interface ChunkResults {
 }
 
 /** The stage a game failed at. Doubles as the error item's CSS class on the page. */
-export type ValidationPhase =
+type ValidationPhase =
 	| 'icnconverter'
 	| 'formulator'
 	| 'illegal-move'
@@ -59,7 +59,7 @@ export interface ValidationError {
 }
 
 /** The failure tallies of a single variant, one per phase that can fail. */
-export interface VariantErrorCounts {
+interface VariantErrorCounts {
 	icn: number;
 	formulator: number;
 	illegal: number;

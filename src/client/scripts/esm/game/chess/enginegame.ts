@@ -26,13 +26,13 @@ import gameslot from './gameslot.js';
 import premoves from './premoves.js';
 import selection from './selection.js';
 import engineicn from './engines/engineicn.js';
+import enginewasm from './engines/enginewasm.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from './gamesession.js';
 import movesequence from './movesequence.js';
 import socketintents from '../../socket/socketintents.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import enginelegalmoves from '../debug/enginelegalmoves.js';
-import { maxEngineThreads, THREAD_CAP } from './engines/enginewasm.js';
 
 // State -----------------------------------------------------------------------
 
@@ -289,7 +289,7 @@ function requestGeneratedMoves(gamefile: GameFile): void {
  * cross-origin isolation (SharedArrayBuffer); without it the engine runs single-threaded.
  */
 function getEngineThreadCount(): number {
-	return maxEngineThreads(THREAD_CAP, 1);
+	return enginewasm.maxThreads(1);
 }
 
 /** Stops the active engine worker and clears its session state. */

@@ -7,8 +7,8 @@
  * it as-is while others layer it underneath sounds of their own.
  */
 
-import { LayerConfig } from '../../../../audio/SoundLayer';
-import { SoundscapeConfig } from '../../../../audio/SoundscapePlayer';
+import { LayerConfig } from '../../../../audio/SoundLayer.js';
+import { SoundscapeConfig } from '../../../../audio/SoundscapePlayer.js';
 
 /** The source of the Undercurrent soundscape layer is white noise. */
 const source: LayerConfig['source'] = {

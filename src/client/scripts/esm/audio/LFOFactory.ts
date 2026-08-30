@@ -4,7 +4,7 @@
  * A factory for creating Low-Frequency Oscillator (LFO) units for modulating audio parameters.
  */
 
-import PerlinNoise from '../util/PerlinNoise';
+import PerlinNoise from '../util/PerlinNoise.js';
 
 // Types -----------------------------------------------------------------------
 

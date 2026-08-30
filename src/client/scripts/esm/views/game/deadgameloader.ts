@@ -18,7 +18,7 @@ import toast from '../../components/toast.js';
 import onlinegame from './onlinegame.js';
 
 /** Fetches and loads the dead game named by the page URL. */
-async function loadDeadGame(): Promise<void> {
+async function load(): Promise<void> {
 	try {
 		const deadState: DeadGameState = await fetchDeadState();
 		// Parsed once here and handed on: it is also the start position of a custom game.
@@ -61,4 +61,4 @@ function normalizeToGameState(
 	return state;
 }
 
-export default { loadDeadGame };
+export default { load };

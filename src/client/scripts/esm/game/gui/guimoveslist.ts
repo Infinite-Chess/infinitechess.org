@@ -215,8 +215,8 @@ function updateNavButtons(): void {
 	element_Last.disabled = !incrementingLegal;
 }
 
-holdrepeat.makeHoldRepeatable(element_Prev, callback_Prev);
-holdrepeat.makeHoldRepeatable(element_Next, callback_Next);
+holdrepeat.make(element_Prev, callback_Prev);
+holdrepeat.make(element_Next, callback_Next);
 element_First.addEventListener('click', jumpToStart);
 element_Last.addEventListener('click', jumpToEnd);
 

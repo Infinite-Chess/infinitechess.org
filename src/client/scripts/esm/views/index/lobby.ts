@@ -43,7 +43,7 @@ const patch = init([attributesModule, classModule]);
 // Types -----------------------------------------------------------------------
 
 /** The structure for a single seek in the lobby, with client-side rendering info. */
-export type LobbySeek = BaseSeek &
+type LobbySeek = BaseSeek &
 	({ variant: VariantInfo } | { variant: { group: 'custom' } }) & {
 		isOurs: boolean;
 	};

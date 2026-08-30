@@ -20,8 +20,8 @@ const MINIMUM_EDIT_INTERVAL_MS = 20;
 let lastEdit = 0;
 
 function _initListeners_Navigation(): void {
-	holdrepeat.makeHoldRepeatable(element_undoEdit, callback_UndoEdit);
-	holdrepeat.makeHoldRepeatable(element_redoEdit, callback_RedoEdit);
+	holdrepeat.make(element_undoEdit, callback_UndoEdit);
+	holdrepeat.make(element_redoEdit, callback_RedoEdit);
 }
 
 // FUTURE: Move to all call within board editor code

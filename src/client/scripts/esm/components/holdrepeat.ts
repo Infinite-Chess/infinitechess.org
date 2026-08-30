@@ -19,7 +19,7 @@ const DEFAULT_HOLD_DELAY = 250;
 const DEFAULT_REPEAT_INTERVAL = 60;
 
 /** Makes `element` fire `onFire` on click, and auto-repeat `onFire` while held. */
-function makeHoldRepeatable(
+function make(
 	element: HTMLElement,
 	onFire: () => void,
 	{
@@ -85,4 +85,4 @@ function makeHoldRepeatable(
 	});
 }
 
-export default { makeHoldRepeatable };
+export default { make };

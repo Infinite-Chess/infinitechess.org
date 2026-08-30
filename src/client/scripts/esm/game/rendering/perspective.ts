@@ -8,12 +8,12 @@
 import type { Color } from '../../../../../shared/types/color.js';
 
 import webgl from '../../board/rendering/webgl.js';
-import config from '../config.js';
 import camera from '../../board/rendering/camera.js';
 import gameslot from '../chess/gameslot.js';
 import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';
+import { VIDEO_MODE } from '../config.js';
 import { Renderable } from '../../webgl/Renderable.js';
 import { createRenderable } from '../../board/rendering/renderable.js';
 
@@ -129,7 +129,7 @@ function initCrosshairModel(): void {
 
 function renderCrosshair(): void {
 	if (!enabled) return;
-	if (config.VIDEO_MODE) return; // Don't render while recording
+	if (VIDEO_MODE) return; // Don't render while recording
 
 	camera.renderWithoutPerspectiveRotations(() => {
 		webgl.executeWithInverseBlending(() => {

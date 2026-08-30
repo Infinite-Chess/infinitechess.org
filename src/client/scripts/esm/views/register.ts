@@ -10,14 +10,9 @@
  * polling, and the change-email recovery control).
  */
 
+import accountform from '../components/accountform.js';
 import { serverfetch } from '../util/serverfetch.js';
 import { SettingsBus } from '../util/SettingsBus.js';
-import {
-	usernameFormatError,
-	emailFormatError,
-	passwordFormatError,
-	setFieldError as setInlineError,
-} from '../components/accountformaterrors.js';
 
 import '../components/passwordtoggle.js';
 
@@ -53,12 +48,12 @@ function setFieldError(
 	errorElement: HTMLParagraphElement,
 	message?: string,
 ): void {
-	setInlineError(errorElement, message, input);
+	accountform.setFieldError(errorElement, message, input);
 }
 
 /** Shows the form-level submit error, or clears it when called with no message. */
 function setFormError(message?: string): void {
-	setInlineError(formError, message);
+	accountform.setFieldError(formError, message);
 }
 
 /**
@@ -152,9 +147,9 @@ async function submitRegister(): Promise<void> {
 	// Authoritative gate: a field can be filled but unblurred, so its error may not
 	// have surfaced yet (and the button stayed enabled). Reveal any such errors now,
 	// then focus the first invalid field and bail without sending.
-	usernameValid = validateFormat(usernameInput, usernameError, usernameFormatError, true);
-	passwordValid = validateFormat(passwordInput, passwordError, passwordFormatError, true);
-	emailValid = validateFormat(emailInput, emailError, emailFormatError, true);
+	usernameValid = validateFormat(usernameInput, usernameError, accountform.usernameError, true);
+	passwordValid = validateFormat(passwordInput, passwordError, accountform.passwordError, true);
+	emailValid = validateFormat(emailInput, emailError, accountform.emailError, true);
 	refreshSubmit();
 	if (!usernameValid || !passwordValid || !emailValid || !turnstileToken) {
 		if (!usernameValid) usernameInput.focus();
@@ -232,17 +227,17 @@ form.addEventListener('submit', (event: SubmitEvent): void => {
 
 // While typing, recompute validity for the submit button.
 usernameInput.addEventListener('input', (): void => {
-	usernameValid = validateFormat(usernameInput, usernameError, usernameFormatError, false);
+	usernameValid = validateFormat(usernameInput, usernameError, accountform.usernameError, false);
 	setFormError();
 	refreshSubmit();
 });
 passwordInput.addEventListener('input', (): void => {
-	passwordValid = validateFormat(passwordInput, passwordError, passwordFormatError, false);
+	passwordValid = validateFormat(passwordInput, passwordError, accountform.passwordError, false);
 	setFormError();
 	refreshSubmit();
 });
 emailInput.addEventListener('input', (): void => {
-	emailValid = validateFormat(emailInput, emailError, emailFormatError, false);
+	emailValid = validateFormat(emailInput, emailError, accountform.emailError, false);
 	setFormError();
 	refreshSubmit();
 });
@@ -250,7 +245,7 @@ emailInput.addEventListener('input', (): void => {
 // On blur, reveal any format error; then — for fields with a server-side check —
 // verify availability if the format is valid.
 usernameInput.addEventListener('blur', async (): Promise<void> => {
-	usernameValid = validateFormat(usernameInput, usernameError, usernameFormatError, true);
+	usernameValid = validateFormat(usernameInput, usernameError, accountform.usernameError, true);
 	refreshSubmit();
 	if (!usernameValid) return;
 	try {
@@ -272,11 +267,11 @@ usernameInput.addEventListener('blur', async (): Promise<void> => {
 	}
 });
 passwordInput.addEventListener('blur', (): void => {
-	passwordValid = validateFormat(passwordInput, passwordError, passwordFormatError, true);
+	passwordValid = validateFormat(passwordInput, passwordError, accountform.passwordError, true);
 	refreshSubmit();
 });
 emailInput.addEventListener('blur', (): void => {
-	emailValid = validateFormat(emailInput, emailError, emailFormatError, true);
+	emailValid = validateFormat(emailInput, emailError, accountform.emailError, true);
 	refreshSubmit();
 });
 

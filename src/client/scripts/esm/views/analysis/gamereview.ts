@@ -46,7 +46,7 @@ import { EvaluateResultSchema } from './analysisprotocol.js';
 // Types -----------------------------------------------------------------------
 
 /** A reviewed move's classification tier. Colors live in CSS (`.review-<key>`). */
-export type ClassificationKey =
+type ClassificationKey =
 	| 'best'
 	| 'excellent'
 	| 'good'
@@ -425,7 +425,7 @@ function start(): void {
 	// Serialize the game once; each position re-slices the move list.
 	longformIn = gamecompressor.compressGamefile(gamefile);
 	engineicn.prepareForEngine(longformIn);
-	division = reviewdivision.determineDivision(longformIn.position, mainlineMoves);
+	division = reviewdivision.determine(longformIn.position, mainlineMoves);
 
 	const totalPositions = mainlineNodes.length + 1;
 	// All but one hardware thread, leaving the UI responsive.

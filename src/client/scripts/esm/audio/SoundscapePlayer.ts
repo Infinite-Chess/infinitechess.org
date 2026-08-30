@@ -7,9 +7,9 @@
  * dev-utils/sounds/SoundscapeGenerator.html
  */
 
-import AudioUtils from './AudioUtils';
-import AudioManager from './AudioManager';
-import { LayerConfig, SoundLayer } from './SoundLayer';
+import AudioUtils from './AudioUtils.js';
+import AudioManager from './AudioManager.js';
+import { LayerConfig, SoundLayer } from './SoundLayer.js';
 
 // Types -----------------------------------------------------------------------
 

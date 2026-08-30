@@ -19,10 +19,10 @@ import { BaseZone } from './BaseZone';
 type RGB = [number, number, number];
 
 /** Exactly six gradient color stops, one per `u<effectType>_color1..6` uniform. */
-export type ColorStops = [RGB, RGB, RGB, RGB, RGB, RGB];
+type ColorStops = [RGB, RGB, RGB, RGB, RGB, RGB];
 
 /** How one ColorFlow zone differs from its siblings. */
-export interface ColorFlowConfig {
+interface ColorFlowConfig {
 	/** The unique integer id this effect zone gets, and the prefix of its uniform names. */
 	effectType: number;
 	/** The RGB colors defining the gradient. */

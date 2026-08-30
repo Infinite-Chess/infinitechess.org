@@ -10,7 +10,7 @@
  * Each layer can have its own volume control, and each parameter can be modulated by an LFO.
  */
 
-import { createLFO, LFOConfig } from './LFOFactory';
+import { createLFO, LFOConfig } from './LFOFactory.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ export interface LayerConfig {
 }
 
 /** The configuration for the audio source of a layer. */
-export type SourceConfig = NoiseSourceConfig | OscillatorSourceConfig;
+type SourceConfig = NoiseSourceConfig | OscillatorSourceConfig;
 
 /** Configuration for a noise source. */
 export interface NoiseSourceConfig {
@@ -30,7 +30,7 @@ export interface NoiseSourceConfig {
 }
 
 /** Configuration for an oscillator source with optional LFO modulation. */
-export interface OscillatorSourceConfig {
+interface OscillatorSourceConfig {
 	type: 'oscillator';
 	wave: 'sine' | 'square' | 'sawtooth' | 'triangle';
 	freq: ModulatedParamConfig;

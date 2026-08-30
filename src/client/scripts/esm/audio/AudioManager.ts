@@ -4,11 +4,11 @@
  * This module is responsible for creating and playing sounds using the Web Audio API.
  */
 
-import AudioUtils from './AudioUtils';
-import preferences from '../util/preferences';
-import { SettingsBus } from '../util/SettingsBus';
-import { DownsamplerNode } from './processors/downsampler/DownsamplerNode';
-import { createEffectNode, EffectConfig, NodeChain } from './AudioEffects';
+import AudioUtils from './AudioUtils.js';
+import preferences from '../util/preferences.js';
+import { SettingsBus } from '../util/SettingsBus.js';
+import { DownsamplerNode } from './processors/downsampler/DownsamplerNode.js';
+import { createEffectNode, EffectConfig, NodeChain } from './AudioEffects.js';
 
 // Types -----------------------------------------------------------------------
 

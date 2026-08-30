@@ -16,7 +16,7 @@ import { createHandoff } from './createhandoff.js';
 export type ModalMode = 'online' | 'friend' | 'computer';
 
 /** A pending game-setup seed handed off from another page. */
-export interface GameSetupHandoff {
+interface GameSetupHandoff {
 	/** ICN of the position to pre-fill into the modal's Custom From-ICN field. */
 	icn: string;
 	/** Which game creation flow to open the modal into. */

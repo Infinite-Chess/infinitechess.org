@@ -96,7 +96,7 @@ export interface AnalysisInfo {
 }
 
 /** One PV of an info update. Moves are compact ICN tokens ("x,y>x,y=Q"). */
-export interface AnalysisLine {
+interface AnalysisLine {
 	moves: string[];
 	/** Centipawns from the side-to-move's perspective. Absent when mating. */
 	cp?: number;

@@ -5,8 +5,4 @@
  */
 
 /** Video mode disables the rendering of some items, making recordings more immersive. */
-const VIDEO_MODE: boolean = false;
-
-export default {
-	VIDEO_MODE,
-};
+export const VIDEO_MODE: boolean = false;

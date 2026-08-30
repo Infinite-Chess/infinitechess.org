@@ -16,7 +16,7 @@ import docutil from '../util/docutil.js';
 /**
  * Such an object contains all display information for a given user
  */
-export type UsernameContainer = {
+type UsernameContainer = {
 	properties: UsernameContainerProperties;
 	/** A reference to the documant element container. */
 	element: HTMLDivElement;
@@ -52,7 +52,7 @@ export type UsernameItem = {
 	 */
 	openInNewWindow: boolean;
 };
-export type RatingItem = {
+type RatingItem = {
 	/** The actual rating */
 	value: number;
 	/** Whether the rating is confident or not (low RD). If not confident, a question mark "?" is shown. */

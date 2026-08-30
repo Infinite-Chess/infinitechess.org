@@ -20,17 +20,17 @@ import { players as p } from '../../../../../shared/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import engineicn from '../../game/chess/engines/engineicn.js';
+import enginewasm from '../../game/chess/engines/enginewasm.js';
 import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import analysisworker from './analysisworker.js';
 import analysisenginebounds from './analysisenginebounds.js';
-import { maxEngineThreads, THREAD_CAP } from '../../game/chess/engines/enginewasm.js';
 
 // Types -----------------------------------------------------------------------
 
 /** Engine settings, persisted to localStorage. */
-export interface CevalSettings {
+interface CevalSettings {
 	/** Number of engine lines to search & display (1-5). */
 	multiPv: number;
 	/** Transposition table size in MB. */
@@ -83,7 +83,7 @@ export type CevalStatus =
 	| { kind: 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'crashed' }
 	| { kind: 'blocked'; reason: EngineSupportCode };
 
-export interface CevalLegalMovesUpdate {
+interface CevalLegalMovesUpdate {
 	requestId: number;
 	moves: string[];
 }
@@ -110,10 +110,10 @@ const CRASHES_BEFORE_GIVING_UP = 2;
  * `initThreadPool`). The worker reports it on load; assume true until then. */
 let engineSupportsThreads = true;
 
-/** Most threads the user can pick: {@link THREAD_CAP} when threading is usable, else 1 (locked). */
+/** Most threads the user can pick: the engine thread cap when threading is usable, else 1 (locked). */
 function maxThreads(): number {
 	if (!engineSupportsThreads) return 1;
-	return maxEngineThreads(THREAD_CAP);
+	return enginewasm.maxThreads();
 }
 
 const DEFAULT_THREADS = maxThreads();

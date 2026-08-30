@@ -46,7 +46,7 @@ type Transition =
 			isZoom: false;
 	  });
 
-export type ZoomTransition = {
+type ZoomTransition = {
 	/** The destination board location. */
 	destinationCoords: BDCoords;
 	/** The destination board location. */

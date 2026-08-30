@@ -7,6 +7,7 @@
 
 import type { Player, RawType } from '../../../../../../shared/util/typeutil.js';
 
+import math from '../../../../../../shared/util/math/math.js';
 import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import typeutil, { rawTypes as r } from '../../../../../../shared/util/typeutil.js';
 
@@ -68,7 +69,7 @@ const BROWSER_SUPPORTS_THREADS: boolean = (() => {
  * `beforeThreadPool` runs after init but before the pool starts, for setup the
  * search threads must already see (e.g. hash size).
  */
-async function loadEngineWasm<T extends EngineWasmModule>(
+async function load<T extends EngineWasmModule>(
 	engineUrl: string,
 	threads: number,
 	beforeThreadPool?: (wasm: T) => void,
@@ -83,9 +84,9 @@ async function loadEngineWasm<T extends EngineWasmModule>(
 }
 
 /** Returns the usable hardware-thread count after an optional reservation. */
-function maxEngineThreads(cap: number, reserve: number = 0): number {
+function maxThreads(reserve: number = 0): number {
 	if (!BROWSER_SUPPORTS_THREADS) return 1;
-	return Math.min(cap, Math.max(1, (navigator.hardwareConcurrency || 2) - reserve));
+	return math.clamp((navigator.hardwareConcurrency || 2) - reserve, 1, THREAD_CAP);
 }
 
 // Piece Codes -----------------------------------------------------------------
@@ -115,4 +116,10 @@ function getPromotionAbbr(engineCode: string, mover: Player): string {
 	return icnposition.getAbbrFromType(typeutil.buildType(rawType, mover));
 }
 
-export { BROWSER_SUPPORTS_THREADS, THREAD_CAP, maxEngineThreads, loadEngineWasm, getPromotionAbbr };
+export default {
+	// Wasm Loading
+	load,
+	maxThreads,
+	// Piece Codes
+	getPromotionAbbr,
+};

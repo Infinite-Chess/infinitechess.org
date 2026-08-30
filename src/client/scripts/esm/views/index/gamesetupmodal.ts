@@ -132,7 +132,7 @@ function initModal(): void {
 }
 
 /** Reads current seek options and disables the Rated button if a rated game is not permitted. */
-export function syncRatedButton(): void {
+function syncRatedButton(): void {
 	const variant = variantselector.getSeekVariant();
 	const time: TimeControl = timecontrols.getTimeControl();
 	const color = getSelectedColor();

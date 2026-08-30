@@ -42,10 +42,7 @@ interface PhaseProfile {
 // Division --------------------------------------------------------------------
 
 /** Finds opening/middlegame/endgame boundaries from each replayed board position. */
-function determineDivision(
-	initial: Map<CoordsKey, number> | undefined,
-	moves: MoveFull[],
-): ReviewDivision {
+function determine(initial: Map<CoordsKey, number> | undefined, moves: MoveFull[]): ReviewDivision {
 	if (!initial?.size) return {};
 	const position = new Map(initial);
 	const homeRanks = getHomeRanks(position);
@@ -329,4 +326,4 @@ function phaseMetrics(
 	};
 }
 
-export default { determineDivision };
+export default { determine };
