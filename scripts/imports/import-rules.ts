@@ -5,23 +5,11 @@
  * check, the reachability rules, and the gates. Run via `npm run import-rules` (a pass inside
  * `npm run check`); exits non-zero on any problem.
  *
- * THE FULL MODEL lives in docs/systems/IMPORT_RULES.md: all three ladders and what each rung
- * is for, every rule and gate, the deliberate absences, and the workflows for placing a
- * module or changing the rules. Keep that document in step — not a second copy of it here.
- *
- * SISTER TOOLS in this directory — reach for these rather than re-deriving by grep. Each
- * one's own header carries its usage:
- *
- *   ladder.ts        Who imports a module, type-only edges included (the widest-consumer
- *                    lookup), plus the direction/cycle/shape surveys behind the rules here.
- *   page-reach.ts    Which client pages ship a module, and with --why the chain that drags
- *                    it in. Bundle truth, from the esbuild metafile.
- *   pkg-cost.ts      Which pages bundle an npm package, and what it costs them in KB.
+ * THE FULL MODEL lives in docs/systems/IMPORT_RULES.md. Its sister tools here — ladder.ts,
+ * page-reach.ts, pkg-cost.ts — answer placement questions; each header carries its usage.
  *
  * All paths are "short form": "src/client/scripts/esm/" or "src/" chopped off the front,
- * giving views/index/index.ts and shared/util/typeutil.ts. The scan resolves RELATIVE
- * specifiers only — safe while tsconfig.json declares no `paths`; add path aliases and the
- * scan must learn to resolve them.
+ * giving views/index/index.ts and shared/util/typeutil.ts.
  */
 
 import fs from 'node:fs';
@@ -321,7 +309,10 @@ function walkScripts(dir: string, out: string[] = []): string[] {
 	return out;
 }
 
-/** Resolves a relative specifier to the file it means — ".js" specifiers point at ".ts" sources. */
+/**
+ * Resolves a relative specifier to the file it means — ".js" specifiers point at ".ts" sources.
+ * Relative only, which is safe while tsconfig.json declares no `paths`.
+ */
 function resolveRelative(fromFile: string, specifier: string): string | undefined {
 	const base = path.posix.join(path.posix.dirname(fromFile), specifier);
 	const candidates = [base.replace(/\.js$/, '.ts'), base, `${base}.ts`];
