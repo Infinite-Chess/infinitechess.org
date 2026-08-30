@@ -1,23 +1,29 @@
 // scripts/imports/ladder.ts
 
 /**
- * Direction, cycles and shape of any one src/ root's import graph.
+ * Direction and shape of any one src/ root's import graph, plus the widest-consumer lookup.
  *
  *   npx tsx scripts/imports/ladder.ts <shared|server|client> <mode> [arg]
  *
- *   edges               Every import pointing UP the ladder. Should print 0.
- *   dirs                Directory-level SCCs, then the full directory edge list. Should say DAG.
- *   sccs                File-level cycles, and their members. Only src/server is required to have
- *                       none; src/client and src/shared carry theirs deliberately.
  *   consumers <substr>  Every importer of the matching file(s), across ALL THREE roots, marked
  *                       rt/type. The widest-consumer lookup — a module's home must sit at or
  *                       below its lowest-ranked consumer.
+ *
+ *   PHASE SCAFFOLDING — the three modes below serve the remaining phase documents'
+ *   verification steps; `npm run import-rules` enforces all of this on its own once
+ *   they land. When the last phase doc lands: delete them — edges and dirs drag the
+ *   RANK tables with them, survey stands alone — and rename this script to
+ *   importers.ts, updating the sister-tools list in import-rules.ts and the
+ *   reference in MODULE_CONVENTIONS.md.
+ *
+ *   edges               Every import pointing UP the ladder. Should print 0.
+ *   dirs                Directory-level SCCs, then the full directory edge list. Should say DAG.
  *   survey              Per directory: each file's LOC, export count, fan-in (client/server/
  *                       shared) and fan-out, plus the intra-directory graph and its SCCs.
  *
- * Parses with ts.preProcessFile, so `import type` edges COUNT — that is the coupling a ladder
- * exists to catch, and esbuild erases it. The RANK tables below are the locked orderings; retune
- * one only when its ladder in import-rules.ts changes.
+ * Parses with ts.preProcessFile, so `import type` edges COUNT — that is the coupling a
+ * ladder exists to catch, and esbuild erases it. The RANK tables below are the locked
+ * orderings; retune one only when its ladder in import-rules.ts changes.
  */
 
 import fs from 'node:fs';
@@ -86,10 +92,25 @@ const SPECS: Record<string, RootSpec> = {
 		nodeOf: (rel) => {
 			const parts = rel.split('/');
 			if (parts.length === 1) return `(root) ${rel}`;
+			// board/'s sub-ladder: board/ -> board/rendering/ -> board/variantselector/.
+			if (parts[0] === 'board' && parts.length > 2) return `board/${parts[1]}`;
 			// views/ is a per-page island: each page is its own node, so sideways is caught too.
 			return parts[0] === 'views' ? `views/${parts[1]!.replace(/\.[^.]+$/, '')}` : parts[0]!;
 		},
-		rank: { board: 1, game: 2 }, // Anything unlisted is the floor (0); views/* is handled below.
+		rank: {
+			util: 0,
+			webgl: 0,
+			audio: 1,
+			chess: 1,
+			handoffs: 1,
+			savedpositions: 1,
+			components: 2,
+			socket: 2,
+			board: 3,
+			'board/rendering': 4,
+			'board/variantselector': 5,
+			game: 6,
+		}, // Anything unlisted is the floor (0); views/* is handled below.
 	},
 };
 
@@ -208,7 +229,7 @@ const nodeOf = (f: string): string => spec.nodeOf(rel(f));
 /** A node's rung. Unlisted = the floor, except a per-page island, which sits at the top. */
 function rankOf(node: string): number {
 	if (node in spec.rank) return spec.rank[node]!;
-	if (rootArg === 'client' && node.startsWith('views/')) return 3;
+	if (rootArg === 'client' && node.startsWith('views/')) return 7;
 	if (rootArg === 'shared' && (node.startsWith('(root) ') || node.startsWith('chess/ ')))
 		return -1;
 	return 0;
@@ -223,6 +244,7 @@ if (mode === 'consumers') {
 		console.log(`\n== ${m}  (${cons.length} consumers)`);
 		for (const c of cons.sort()) console.log(`   ${runtimeEdge.has(`${c}->${m}`) ? 'rt  ' : 'type'} ${c}`);
 	} // prettier-ignore
+	// PHASE SCAFFOLDING — delete with the last phase doc.
 } else if (mode === 'edges') {
 	const groups = new Map<string, string[]>();
 	for (const f of rootFiles) {
@@ -260,16 +282,6 @@ if (mode === 'consumers') {
 	for (const n of dirNodes.sort()) {
 		console.log(`   ${n} -> ${[...dirDeps.get(n)!].sort().join(', ') || '(none)'}`);
 	}
-} else if (mode === 'sccs') {
-	const sccs = tarjan(rootFiles, (f) =>
-		[...deps.get(f)!].filter((d) => d.startsWith(`${ROOT}/`)),
-	);
-	sccs.sort((a, b) => b.length - a.length);
-	for (const s of sccs) {
-		console.log(`\n== SCC of ${s.length} files, spanning: ${[...new Set(s.map(nodeOf))].sort().join(', ')}`);
-		for (const f of s) console.log(`   ${rel(f)}`);
-	} // prettier-ignore
-	if (sccs.length === 0) console.log('No file-level cycles.');
 } else if (mode === 'survey') {
 	const byDir = new Map<string, string[]>();
 	for (const f of rootFiles) {

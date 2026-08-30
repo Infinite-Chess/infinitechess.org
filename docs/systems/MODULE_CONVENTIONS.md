@@ -7,10 +7,9 @@ scripts disagree, study more siblings before trusting either.
 
 ## Choosing homes
 
-- A module's permanent home must satisfy the ladder rules encoded in the header of
-  `scripts/imports/import-rules.ts` (imports point down), also checked by
-  `npm run check --silent`. That header carries all three roots' ladders, so placing a
-  file is a lookup rather than a re-derivation.
+- A module's permanent home must satisfy the import rules: what its directory may import,
+  and which pages may ship it. [IMPORT_RULES.md](/docs/systems/IMPORT_RULES.md) documents
+  the rules and the placement workflow; `npm run check --silent` enforces them.
 - Answer it with the tools in `scripts/imports/`, not by grep —
   `ladder.ts <root> consumers <path>` for who imports a module (type-only edges
   included), `page-reach.ts` for which client pages would then ship it, `pkg-cost.ts`

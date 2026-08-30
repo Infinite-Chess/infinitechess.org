@@ -1,138 +1,27 @@
 // scripts/imports/import-rules.ts
 
 /**
- * Enforces the client's import-boundary model.
+ * Enforces every src/ root's import-boundary model — the three ladders, the server file-cycle
+ * check, the reachability rules, and the gates. Run via `npm run import-rules` (a pass inside
+ * `npm run check`); exits non-zero on any problem.
  *
- * Usage:
- *   npm run import-rules     Exits non-zero on any problem.
+ * THE FULL MODEL lives in docs/systems/IMPORT_RULES.md: all three ladders and what each rung
+ * is for, every rule and gate, the deliberate absences, and the workflows for placing a
+ * module or changing the rules. Keep that document in step — not a second copy of it here.
  *
  * SISTER TOOLS in this directory — reach for these rather than re-deriving by grep. Each
  * one's own header carries its usage:
  *
- *   ladder.ts        Direction, cycles, a module's consumers, and a per-directory survey,
- *                    for any root. Counts `import type` edges, which the checks below do not.
+ *   ladder.ts        Who imports a module, type-only edges included (the widest-consumer
+ *                    lookup), plus the direction/cycle/shape surveys behind the rules here.
  *   page-reach.ts    Which client pages ship a module, and with --why the chain that drags
  *                    it in. Bundle truth, from the esbuild metafile.
  *   pkg-cost.ts      Which pages bundle an npm package, and what it costs them in KB.
- *   import-chain.ts  Everything one page pulls in, grouped by depth.
  *
- * THE LADDER — imports only ever go DOWN it, and never sideways between two page
- * islands. Every LINE is its own rank; only units sharing a line may import each other.
- * All of src/shared sits below the bottom line.
- *
- *   util/, webgl/                                ┐
- *   audio/, chess/, handoffs/, savedpositions/   ├─ any page
- *   components/, socket/                         ┘
- *   board/                                          pages that render a board, home page included
- *   game/                                           pages with an interactive board
- *   views/<page>/                                   that one page alone
- *
- * The right column is the AUDIENCE — which pages may ship a directory, and the only
- * thing reachability enforces. Ranks sharing an audience are still ranks: `chess/` may
- * not import `components/`, though both ship everywhere.
- *
- * Here a file's home is its WIDEST CONSUMER, not its subject matter. `deltatime.ts`
- * reads like game code but lives in `board/` because `boardpos.ts` needs it,
- * and the home page reaches boardpos through variant preview tooltips.
- * `page-reach.ts` computes each module's widest consumer directly.
- *
- * TWO CHECKS, neither subsuming the other. Reachability asks "which pages may
- * descend this far", so it wants the shipped bundle. The ladder asks "which
- * direction may an import go", so it wants the source — esbuild erases
- * `import type` edges, over a third of the client's real coupling and exactly
- * what the ladder exists to catch. Never re-point the ladder at the metafile.
- *
- * Only rungs get a reachability rule. The three "any page" ranks exist to fix DIRECTION
- * only — they need none.
- *
- * The ladder resolves RELATIVE specifiers only, safe while tsconfig.json
- * declares no `paths`. Add path aliases and the scan must learn to resolve them.
- *
- * All paths are "short form": "src/client/scripts/esm/" or "src/" chopped off
- * the front, giving views/index/index.ts and shared/util/typeutil.ts.
- *
- * ---------------------------------------------------------------------------
- * THE OTHER TWO LADDERS
- *
- * src/server and src/shared are layer-clean and ranked too, though only the
- * client's is enforced here so far. Both orderings are recorded below so that
- * placing a new file, or moving one, is a lookup rather than a re-derivation.
- *
- * src/server (bottom -> top). Units on ONE line share a rank and may import
- * each other sideways; that is deliberate, not an exception:
- *
- *   types.ts                       the file, not a directory — everything reads it
- *   config/                        what is loaded or configured once at boot
- *   utility/                       shared infrastructure below the domain: logging,
- *                                  email, IP, tokens, metering, request context
- *   database/                      persistence: the connection, the schema, one
- *                                  manager per table
- *   cookies/                       who owns each cookie we set — its schema, lifetime,
- *                                  options, and how to read, write and clear it
- *   auth/                          authentication and identity: who a request or connection
- *                                  is, and the lifecycle of login sessions
- *   game/, socket/                 live game state and the connections carrying it
- *   controllers/                   request handlers that render or answer
- *   api/                           JSON endpoints
- *   middleware/                    what wraps a request before it reaches the above
- *   routes/                        the URL table
- *   app.ts, server.ts, setupDev.ts the process entry points
- *
- * Inside database/ the same idea repeats one level down, and it is worth knowing before
- * adding a file there: database.ts is the floor (connection, queries, and the column cache
- * every validation reads); the per-table managers and databaseTables.ts sit above it and
- * reach nothing but it; migrations.ts reaches the managers; databaseInit.ts is the roof,
- * reached only by server.ts and the integration tests. No hand-written copy of the schema
- * exists — column lists are read out of SQLite at boot, so they cannot drift from it.
- *
- * Subject picks the directory here, and the widest-consumer rule does not apply: by it,
- * loginController.ts (reached only from routes/) would live in routes/. The ladder only
- * vetoes which way imports may point.
- *
- * The client differs because it ships ONE BUNDLE PER PAGE: a module's directory decides
- * which pages download it, so audience is the only thing worth naming, and two rules then
- * cover hundreds of files. The server ships unbundled and src/shared has no entry points,
- * so placement there costs no bytes and subject wins.
- *
- * src/shared (bottom -> top), every rank strict — no ties:
- *
- *   types/, util/       Vocabulary owing nothing to chess: coords, math, time,
- *                       color, JSON, jsutil. A file here must make sense to a
- *                       reader who has never heard of this game.
- *   chess/util/         Chess vocabulary that knows nothing of a board: gamerules,
- *                       win conditions, clock format, metadata tags, variant codes,
- *                       piece themes, game modifiers, the engine roster. Nothing
- *                       here may mention Board or Move.
- *   chess/logic/        The data model and the rules engine: OrganizedPieces, Board,
- *                       Move, movesets, legal moves, check, notation (ICN), and the
- *                       VariantModule contract. Works on a variant handed to it.
- *   chess/engines/      What an engine can handle. Needs a whole GameFile.
- *   chess/variants/     The variant definitions and the registry/cache that load
- *                       them, plus the policy keyed off which variant a game is.
- *   chess/game/         Decides WHICH variant and loads it (async) before building
- *                       or judging a game. The only rung that may reach the cache.
- *   components/         SSR-shared UI pieces.
- *   transport/          The transport contract — domain.ts and the two websocket
- *                       directions. Nothing under chess/ may import from here; a
- *                       schema the chess layer also needs is owned down the ladder,
- *                       beside the vocabulary it describes.
- *
- * Subject picks the directory here too, as on the server — every shared rung names a
- * KIND of thing, not an audience. So the widest-consumer rule does not apply, and a
- * file does NOT slide down a rung just because its lowest consumer allows it. The
- * ladder only vetoes which way imports may point. A file that fits no rung's subject
- * is carrying more than one responsibility; split it rather than picking the least
- * bad rung.
- *
- * The rung that keeps catching people out is chess/logic vs chess/game: "is a
- * variant handed to me, or do I have to go find it?" Everything that had to go
- * find one is what forced this split.
- *
- * A schema carrying zod is a placement constraint of its own — zod is ~60 KB
- * minified. chess/util/typeschemas.ts exists ONLY to hold schemas away from the
- * modules whose types they describe, so those modules stay zod-free: typeutil.ts,
- * which the header bundle every page loads reaches, and winconutil.ts, which
- * icnconverter.ts and through it both engine workers read. Measure before moving one.
+ * All paths are "short form": "src/client/scripts/esm/" or "src/" chopped off the front,
+ * giving views/index/index.ts and shared/util/typeutil.ts. The scan resolves RELATIVE
+ * specifiers only — safe while tsconfig.json declares no `paths`; add path aliases and the
+ * scan must learn to resolve them.
  */
 
 import fs from 'node:fs';
@@ -144,9 +33,14 @@ import { ESMEntryPoints } from '../../build/client';
 
 // Types -----------------------------------------------------------------------
 
+/** One of the three src/ roots the checks walk. */
+type RootName = 'client' | 'server' | 'shared';
+
 interface Rule {
 	/** Restricted module's short path. Trailing "/" = directory prefix; else exact file. */
 	target: string;
+	/** Who the target is for, in words — the finding's heading quotes it. */
+	audience: string;
 	/**
 	 * Entry points allowed to reach the target, matched as a SUBSTRING of an
 	 * entry's short path. An entry INSIDE the target needs no listing — a bundle
@@ -155,40 +49,131 @@ interface Rule {
 	allowedEntries: string[];
 }
 
-/** One rung of the ladder: a directory, and who it is usable by. */
-interface Layer {
-	dir: string;
+/** A module only the listed importers may even name — every page may still REACH it through them. */
+interface Gate {
+	/** Restricted module's short path. Trailing "/" = directory prefix; else exact file. */
+	target: string;
+	allowedImporters: string[];
+}
+
+/** One rung of a ladder: units sharing it may import each other sideways, deliberately. */
+interface Rank {
+	/** Directories (trailing "/") or exact files, relative to the ladder's root. */
+	units: string[];
+	/** What the rung is for, in words — findings quote it, one sentence per pair. */
 	audience: string;
+}
+
+/** One root's ladder: where its files live and its rungs in ASCENDING order. */
+interface Ladder {
+	root: string;
+	/** The root's prefix in short form — '' for the client, 'server/', 'shared/'. */
+	prefix: string;
+	ranks: Rank[];
+}
+
+/** Where a module sits on its ladder: the rung's index, naming unit, and audience. */
+interface Rung {
+	rank: number;
+	unit: string;
+	audience: string;
+}
+
+/** One import between first-party files, in short form. */
+interface Edge {
+	from: string;
+	to: string;
 }
 
 // Constants -------------------------------------------------------------------
 
 const SRC_PREFIX = 'src/';
 
-/** Root the ladder scan walks — every first-party client script. */
-const CLIENT_ESM = 'src/client/scripts/esm/';
-
 /** How many edges one group lists before truncating, so a mass breakage stays readable. */
 const MAX_LISTED = 20;
 
-/** The per-page island rung — the only one that also forbids SIDEWAYS imports. */
+/** The per-page island rung of the client ladder — the only one that also forbids SIDEWAYS imports between pages. */
 const VIEWS = 'views/';
 
-/** What a directory not on a rung is usable by — the floor of the ladder. */
+/** What a module on no rung is usable by — the floor of a ladder. */
 const FLOOR_AUDIENCE = 'any page';
 
 /**
- * The rungs in ASCENDING order — later means a smaller audience. Anything
- * unlisted sits at the floor. Each audience is the single source of its wording:
- * findings quote it, and reachability headings are built from it.
+ * The three roots' ladders, rungs in ASCENDING order — later means further up, and
+ * imports may only point DOWN. Exact files rank individually (src/server's types.ts
+ * at the very bottom, its entry points at the very top), and a sub-directory rung
+ * (board/rendering/) sits above its parent (board/). Each audience is the single
+ * source of its wording: findings quote it, one sentence per pair. Rungs sharing
+ * an audience are still rungs: chess/ may not import components/, though both
+ * ship everywhere.
  */
-const LAYERS: Layer[] = [
-	{ dir: 'board/', audience: 'pages that render a board' },
-	{ dir: 'game/', audience: 'pages with an interactive board' },
-	{ dir: VIEWS, audience: 'one page only' },
-];
+const LADDERS: Record<RootName, Ladder> = {
+	client: {
+		root: 'src/client/scripts/esm/',
+		prefix: '',
+		ranks: [
+			{ units: ['util/', 'webgl/'], audience: 'any page' },
+			{ units: ['audio/', 'chess/', 'handoffs/', 'savedpositions/'], audience: 'any page' },
+			{ units: ['components/', 'socket/'], audience: 'any page' },
+			{ units: ['board/'], audience: 'pages that render a board' },
+			{ units: ['board/rendering/'], audience: 'pages that render a board' },
+			{ units: ['board/variantselector/'], audience: 'pages that render a board' },
+			{ units: ['game/'], audience: 'pages with an interactive board' },
+			{ units: [VIEWS], audience: 'one page only' },
+		],
+	},
+	server: {
+		root: 'src/server/',
+		prefix: 'server/',
+		ranks: [
+			{ units: ['types.ts'], audience: 'the type vocabulary everything reads' },
+			{ units: ['config/'], audience: 'what is loaded once at boot' },
+			{ units: ['utility/'], audience: 'infrastructure below the domain' },
+			{ units: ['database/'], audience: 'persistence' },
+			{ units: ['cookies/'], audience: 'cookie ownership' },
+			{ units: ['auth/'], audience: 'identity and login sessions' },
+			{
+				units: ['game/', 'socket/'],
+				audience: 'live game state and the connections carrying it',
+			},
+			{ units: ['controllers/'], audience: 'request handlers that render or answer' },
+			{ units: ['api/'], audience: 'JSON endpoints' },
+			{
+				units: ['middleware/'],
+				audience: 'what wraps a request before it reaches the above',
+			},
+			{ units: ['routes/'], audience: 'the URL table' },
+			{ units: ['app.ts', 'server.ts', 'setupDev.ts'], audience: 'the process entry points' },
+		],
+	},
+	shared: {
+		root: 'src/shared/',
+		prefix: 'shared/',
+		ranks: [
+			{ units: ['types/', 'util/'], audience: 'vocabulary owing nothing to chess' },
+			{ units: ['chess/util/'], audience: 'chess vocabulary that knows nothing of a board' },
+			{ units: ['chess/logic/'], audience: 'the data model and the rules engine' },
+			{ units: ['chess/engines/'], audience: 'what an engine can handle' },
+			{
+				units: ['chess/variants/'],
+				audience: 'the variant definitions and the registry that loads them',
+			},
+			{
+				units: ['chess/game/'],
+				audience: 'deciding WHICH variant, then building or judging the game',
+			},
+			{
+				units: ['components/', 'transport/'],
+				audience: 'UI shared with the server, and the transport contract',
+			},
+		],
+	},
+};
 
-/** The page islands with an interactive board — the base of both rules. */
+/** Roots whose FILE graph must be acyclic. The server is clean; the other two deliberately carry cycles. */
+const ACYCLIC_ROOTS: RootName[] = ['server'];
+
+/** The page islands with an interactive board — the base of every board-carrying rule. */
 const INTERACTIVE_BOARD_PAGES = [
 	'views/game/',
 	'views/analysis/',
@@ -196,9 +181,65 @@ const INTERACTIVE_BOARD_PAGES = [
 	'views/checkmatepractice/',
 ];
 
+/** Pages holding a live websocket — who may reach the transport contract. */
+const SOCKET_PAGES = ['views/index/', 'views/game/'];
+
 const RULES: Rule[] = [
-	{ target: 'game/', allowedEntries: INTERACTIVE_BOARD_PAGES },
-	{ target: 'board/', allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/'] },
+	{
+		target: 'game/',
+		audience: 'pages with an interactive board',
+		allowedEntries: INTERACTIVE_BOARD_PAGES,
+	},
+	{
+		target: 'board/',
+		audience: 'pages that render a board, home page included',
+		allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/'],
+	},
+	{
+		target: 'shared/components/',
+		audience: 'the app shell and the game pages',
+		allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/', 'components/header/'],
+	},
+	{
+		target: 'shared/chess/util/',
+		audience: 'anything chess-flavored, the header included',
+		allowedEntries: [
+			...INTERACTIVE_BOARD_PAGES,
+			'views/index/',
+			'components/header/',
+			'game/chess/engines/',
+		],
+	},
+	{
+		target: 'shared/chess/logic/',
+		audience: 'the interactive pages and the engine workers',
+		allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/', 'game/chess/engines/'],
+	},
+	{
+		target: 'shared/chess/engines/',
+		audience: 'the home page, via the engine card, and analysis',
+		allowedEntries: ['views/index/', 'views/analysis/'],
+	},
+	{
+		target: 'shared/chess/game/',
+		audience: 'the interactive pages',
+		allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/'],
+	},
+	{
+		target: 'shared/transport/',
+		audience: 'pages holding a live websocket',
+		allowedEntries: SOCKET_PAGES,
+	},
+];
+
+const GATES: Gate[] = [
+	{
+		// Each variant's module loads through the registry's dynamic import(), arriving as
+		// its own lazy chunk — a static import elsewhere would make that script eager in
+		// the importing page's bundle, silently.
+		target: 'shared/chess/variants/variant_scripts/',
+		allowedImporters: ['shared/chess/variants/variantregistry.ts'],
+	},
 ];
 
 /** Only script entry points — the bundled CSS entries are skipped. */
@@ -211,19 +252,37 @@ function short(file: string): string {
 	return file.replace(/^src\/client\/scripts\/esm\//, '').replace(/^src\//, '');
 }
 
+/** Which root a short path lives under. */
+function rootNameOf(moduleShort: string): RootName {
+	return moduleShort.startsWith('server/')
+		? 'server'
+		: moduleShort.startsWith('shared/')
+			? 'shared'
+			: 'client';
+}
+
 /** A module's top-level directory, slash included: "util/thread.ts" -> "util/". */
 function topDirOf(moduleShort: string): string {
 	return `${moduleShort.split('/')[0]!}/`;
 }
 
-/** A module's rung on the ladder. Unlisted top-level directories are the floor, 0. */
-function rankOf(moduleShort: string): number {
-	return LAYERS.findIndex((l) => l.dir === topDirOf(moduleShort)) + 1;
+/**
+ * A module's rung on its ladder: the DEEPEST matching unit wins, so a sub-rung
+ * (board/rendering/) outranks its parent (board/), and exact files rank alone.
+ * Anything unlisted sits at the floor, rank 0.
+ */
+function rungOf(ladder: Ladder, rel: string): Rung {
+	for (let i = ladder.ranks.length - 1; i >= 0; i--) {
+		const { units, audience } = ladder.ranks[i]!;
+		const unit = units.find((u) => (u.endsWith('/') ? rel.startsWith(u) : rel === u));
+		if (unit !== undefined) return { rank: i + 1, unit: ladder.prefix + unit, audience };
+	}
+	return { rank: 0, unit: ladder.prefix + topDirOf(rel), audience: FLOOR_AUDIENCE };
 }
 
-/** Who a module's directory is usable by, in words. */
-function audienceOf(moduleShort: string): string {
-	return LAYERS.find((l) => l.dir === topDirOf(moduleShort))?.audience ?? FLOOR_AUDIENCE;
+/** Directory targets prefix-match; otherwise the target is one exact file. */
+function matchesPath(target: string, moduleShort: string): boolean {
+	return target.endsWith('/') ? moduleShort.startsWith(target) : moduleShort === target;
 }
 
 /** The page a views/ module belongs to: "views/game/gui/x.ts" -> "game", "views/login.ts" -> "login". */
@@ -242,6 +301,201 @@ function namesOf(hits: string[], target: string): string {
 function cap(edges: string[]): string[] {
 	if (edges.length <= MAX_LISTED) return edges;
 	return [...edges.slice(0, MAX_LISTED), `- (+${edges.length - MAX_LISTED} more)`];
+}
+
+// Ladder Check ----------------------------------------------------------------
+
+/** Every .ts/.js file under a directory, as cwd-relative forward-slash paths. */
+function walkScripts(dir: string, out: string[] = []): string[] {
+	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+		const child = path.posix.join(dir, entry.name);
+		if (entry.isDirectory()) walkScripts(child, out);
+		else if (/\.(ts|js)$/.test(entry.name)) out.push(child);
+	}
+	return out;
+}
+
+/** Resolves a relative specifier to the file it means — ".js" specifiers point at ".ts" sources. */
+function resolveRelative(fromFile: string, specifier: string): string | undefined {
+	const base = path.posix.join(path.posix.dirname(fromFile), specifier);
+	const candidates = [base.replace(/\.js$/, '.ts'), base, `${base}.ts`];
+	return candidates.find((c) => fs.existsSync(c) && fs.statSync(c).isFile());
+}
+
+/**
+ * Every first-party import edge across all three roots, in short form: one walk
+ * feeding the ladder, cycle and gate checks. Relative specifiers only — bare ones
+ * are npm packages, and cross-root direction is tsconfig's and the RULES' business,
+ * not a ladder's.
+ */
+function collectEdges(): Edge[] {
+	const edges: Edge[] = [];
+	for (const ladder of Object.values(LADDERS)) {
+		for (const file of walkScripts(ladder.root)) {
+			const source = fs.readFileSync(file, 'utf8');
+			// TypeScript's own preprocessor: every import form, type-only and dynamic included.
+			for (const { fileName } of ts.preProcessFile(source, true, true).importedFiles) {
+				if (!fileName.startsWith('.')) continue; // Bare specifiers are npm packages.
+				const resolved = resolveRelative(file, fileName);
+				if (resolved === undefined) continue; // No source file behind it — nothing to check.
+				edges.push({ from: short(file), to: short(resolved) });
+			}
+		}
+	}
+	return edges;
+}
+
+/**
+ * Asks "which direction may an import go" in every root: a pure source scan,
+ * counting `import type` edges that never reach a bundle. Needs no entry points,
+ * so it also covers pages that have none yet.
+ */
+function checkLadders(edges: Edge[]): { lines: string[]; problems: number } {
+	/**
+	 * Rung-pair sentence -> the offending edges under it. An audience belongs to
+	 * the RUNG, so it is stated once per pair, not repeated on every edge.
+	 */
+	const upward = new Map<string, string[]>();
+	const crossPage: string[] = [];
+
+	for (const { from, to } of edges) {
+		const name = rootNameOf(from);
+		if (name !== rootNameOf(to)) continue; // Cross-root: not a ladder's business.
+		const ladder = LADDERS[name];
+		const fromRung = rungOf(ladder, from.slice(ladder.prefix.length));
+		const toRung = rungOf(ladder, to.slice(ladder.prefix.length));
+
+		if (toRung.rank > fromRung.rank) {
+			const pair =
+				`${fromRung.unit} (${fromRung.audience}) must not import` +
+				` ${toRung.unit} (${toRung.audience})`;
+			if (!upward.has(pair)) upward.set(pair, []);
+			upward.get(pair)!.push(`- ${from} → ${to}`);
+		} else if (from.startsWith(VIEWS) && to.startsWith(VIEWS) && pageOf(from) !== pageOf(to)) {
+			crossPage.push(`- ${from} → ${to}`);
+		}
+	}
+
+	const lines: string[] = [];
+	let problems = crossPage.length;
+
+	if (upward.size > 0) {
+		lines.push('### Imports pointing up a ladder', '');
+		for (const [pair, edgesUnderPair] of upward) {
+			problems += edgesUnderPair.length;
+			lines.push(pair, ...cap(edgesUnderPair), '');
+		}
+	}
+	if (crossPage.length > 0) {
+		lines.push("### One page importing another page's code", '', ...cap(crossPage), '');
+	}
+	return { lines, problems };
+}
+
+// Cycle Check -----------------------------------------------------------------
+
+/**
+ * Asks "is this root still ring-free": a Tarjan SCC pass over the FILE graph the
+ * scan produced — the ladders rank directories, so a ring living entirely within
+ * one directory would otherwise be ladder-legal. Only the roots in ACYCLIC_ROOTS
+ * are held to this; the checker says nothing about the others.
+ */
+function checkCycles(edges: Edge[]): { lines: string[]; problems: number } {
+	const lines: string[] = [];
+	let problems = 0;
+
+	for (const name of ACYCLIC_ROOTS) {
+		const ladder = LADDERS[name];
+		const importsOf = new Map<string, string[]>();
+		for (const { from, to } of edges) {
+			if (rootNameOf(from) !== name || rootNameOf(to) !== name) continue;
+			if (!importsOf.has(from)) importsOf.set(from, []);
+			importsOf.get(from)!.push(to);
+		}
+		const sccs = tarjan([...importsOf.keys()], (file) => importsOf.get(file) ?? []).filter(
+			(scc) => scc.length > 1,
+		);
+		if (sccs.length === 0) continue;
+		lines.push(`### Circular imports within ${ladder.root}`, '');
+		for (const scc of sccs) {
+			problems++;
+			lines.push(`- ${scc.sort().join(' ↔ ')}`, '');
+		}
+	}
+	return { lines, problems };
+}
+
+/** Tarjan's strongly connected components over a file graph. */
+function tarjan(nodes: string[], importsOf: (file: string) => string[]): string[][] {
+	let counter = 0;
+	const index = new Map<string, number>();
+	const lowlink = new Map<string, number>();
+	const stack: string[] = [];
+	const onStack = new Set<string>();
+	const sccs: string[][] = [];
+
+	const strongconnect = (file: string): void => {
+		const i = counter++;
+		index.set(file, i);
+		lowlink.set(file, i);
+		stack.push(file);
+		onStack.add(file);
+		for (const imported of importsOf(file)) {
+			if (!index.has(imported)) {
+				strongconnect(imported);
+				lowlink.set(file, Math.min(lowlink.get(file)!, lowlink.get(imported)!));
+			} else if (onStack.has(imported)) {
+				lowlink.set(file, Math.min(lowlink.get(file)!, index.get(imported)!));
+			}
+		}
+		if (lowlink.get(file) === index.get(file)) {
+			const scc: string[] = [];
+			let member: string;
+			do {
+				member = stack.pop()!;
+				onStack.delete(member);
+				scc.push(member);
+			} while (member !== file);
+			sccs.push(scc);
+		}
+	};
+
+	for (const file of nodes) if (!index.has(file)) strongconnect(file);
+	return sccs;
+}
+
+// Gate Check ------------------------------------------------------------------
+
+/**
+ * Asks "which MODULE may even name this": for targets every page legitimately
+ * reaches through an allowed importer's dynamic imports, so no list of pages can
+ * express the constraint. Checked against the SOURCE scan, not the bundle graph —
+ * a static `import type` from the wrong module fails just as loudly.
+ */
+function checkGates(edges: Edge[]): { lines: string[]; problems: number } {
+	const lines: string[] = [];
+	let problems = 0;
+
+	for (const gate of GATES) {
+		const findings = edges
+			.filter(
+				({ from, to }) =>
+					matchesPath(gate.target, to) &&
+					// An importer INSIDE the target is exempt — it cannot avoid naming its own neighbors.
+					!matchesPath(gate.target, from) &&
+					!gate.allowedImporters.some((allowed) => matchesPath(allowed, from)),
+			)
+			.map(({ from, to }) => `- ${from} → ${to}`);
+		if (findings.length === 0) continue;
+		problems += findings.length;
+		lines.push(
+			`### ${gate.target} may only be imported by ${gate.allowedImporters.join(', ')}`,
+			'',
+			...cap(findings),
+			'',
+		);
+	}
+	return { lines, problems };
 }
 
 // Reachability Check ----------------------------------------------------------
@@ -314,11 +568,7 @@ async function checkReachability(): Promise<{ lines: string[]; problems: number 
 	let problems = 0;
 
 	for (const rule of RULES) {
-		// A trailing "/" matches a whole directory; otherwise the target is one exact file.
-		const matches = (moduleShort: string): boolean =>
-			rule.target.endsWith('/')
-				? moduleShort.startsWith(rule.target)
-				: moduleShort === rule.target;
+		const matches = (moduleShort: string): boolean => matchesPath(rule.target, moduleShort);
 
 		const findings: string[] = [];
 		for (const entry of ENTRIES) {
@@ -345,97 +595,20 @@ async function checkReachability(): Promise<{ lines: string[]; problems: number 
 		}
 
 		if (findings.length === 0) continue; // Only failures are logged.
-		lines.push(
-			`### ${rule.target} is only for ${audienceOf(rule.target)}.`,
-			'',
-			...findings,
-			'',
-		);
+		lines.push(`### ${rule.target} is only for ${rule.audience}.`, '', ...findings, '');
 	}
 
-	return { lines, problems };
-}
-
-// Ladder Check ----------------------------------------------------------------
-
-/** Every .ts/.js file under a directory, as cwd-relative forward-slash paths. */
-function walkScripts(dir: string, out: string[] = []): string[] {
-	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-		const child = path.posix.join(dir, entry.name);
-		if (entry.isDirectory()) walkScripts(child, out);
-		else if (/\.(ts|js)$/.test(entry.name)) out.push(child);
-	}
-	return out;
-}
-
-/** Resolves a relative specifier to the file it means — ".js" specifiers point at ".ts" sources. */
-function resolveRelative(fromFile: string, specifier: string): string | undefined {
-	const base = path.posix.join(path.posix.dirname(fromFile), specifier);
-	const candidates = [base.replace(/\.js$/, '.ts'), base, `${base}.ts`];
-	return candidates.find((c) => fs.existsSync(c) && fs.statSync(c).isFile());
-}
-
-/**
- * Asks "which direction may an import go": a pure source scan of every
- * first-party client file, counting `import type` edges that never reach a
- * bundle. Needs no entry points, so it also covers pages that have none yet.
- */
-function checkLadder(): { lines: string[]; problems: number } {
-	/**
-	 * Directory-pair sentence -> the offending edges under it. An audience belongs
-	 * to the DIRECTORY, so it is stated once per pair, not repeated on every edge.
-	 */
-	const upward = new Map<string, string[]>();
-	const crossPage: string[] = [];
-
-	for (const file of walkScripts(CLIENT_ESM)) {
-		const from = short(file);
-		const fromRank = rankOf(from);
-		const source = fs.readFileSync(file, 'utf8');
-		// TypeScript's own preprocessor: every import form, type-only included, comments excluded.
-		for (const { fileName } of ts.preProcessFile(source, true, true).importedFiles) {
-			if (!fileName.startsWith('.')) continue; // Bare specifiers are npm packages.
-			const resolved = resolveRelative(file, fileName);
-			if (resolved === undefined) continue; // No source file behind it — nothing to rank.
-			const to = short(resolved);
-
-			if (rankOf(to) > fromRank) {
-				const pair =
-					`${topDirOf(from)} (usable by ${audienceOf(from)})` +
-					` must not import ${topDirOf(to)} (usable by ${audienceOf(to)})`;
-				if (!upward.has(pair)) upward.set(pair, []);
-				upward.get(pair)!.push(`- ${from} → ${to}`);
-			} else if (
-				from.startsWith(VIEWS) &&
-				to.startsWith(VIEWS) &&
-				pageOf(from) !== pageOf(to)
-			) {
-				crossPage.push(`- ${from} → ${to}`);
-			}
-		}
-	}
-
-	const lines: string[] = [];
-	let problems = crossPage.length;
-
-	if (upward.size > 0) {
-		lines.push('### Files importing code with a smaller audience', '');
-		for (const [pair, edges] of upward) {
-			problems += edges.length;
-			lines.push(pair, ...cap(edges), '');
-		}
-	}
-	if (crossPage.length > 0) {
-		lines.push("### One page importing another page's code", '', ...cap(crossPage), '');
-	}
 	return { lines, problems };
 }
 
 // Report ----------------------------------------------------------------------
 
+const edges = collectEdges();
+const ladders = checkLadders(edges);
+const cycles = checkCycles(edges);
+const gates = checkGates(edges);
 const reachability = await checkReachability();
-const ladder = checkLadder();
-const problems = reachability.problems + ladder.problems;
+const problems = ladders.problems + cycles.problems + gates.problems + reachability.problems;
 
 if (problems === 0) {
 	console.log('Import rules: no problems.');
@@ -443,6 +616,16 @@ if (problems === 0) {
 }
 
 // Ladder findings lead: one bad edge often causes several reachability findings below it.
-console.log(['## Import rules', '', ...ladder.lines, ...reachability.lines].join('\n'));
+console.log(
+	[
+		'## Import rules',
+		'',
+		...ladders.lines,
+		...cycles.lines,
+		...gates.lines,
+		...reachability.lines,
+	].join('\n'),
+);
 console.error(`✗ ${problems} problem${problems === 1 ? '' : 's'}`);
+console.error('The model behind these rules: docs/systems/IMPORT_RULES.md');
 process.exit(1);
