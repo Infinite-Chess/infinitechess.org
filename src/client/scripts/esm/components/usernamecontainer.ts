@@ -21,7 +21,7 @@ export type UsernameContainer = {
 	/** A reference to the documant element container. */
 	element: HTMLDivElement;
 	/** Cancel functions for any running `animateNumber` calls. */
-	animationCancels: Function[];
+	animationCancels: (() => void)[];
 };
 
 /**

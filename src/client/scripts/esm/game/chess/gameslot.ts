@@ -40,6 +40,7 @@ import perspective from '../rendering/perspective.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
+import { SettingsBus } from '../../util/SettingsBus.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 // Types -----------------------------------------------------------------------
@@ -75,7 +76,7 @@ const delayOfLatestMoveAnimationOnRejoinMs = 150;
 // Listeners -------------------------------------------------------------------
 
 // Regenerate piece textures and rebuild the promotion UI whenever the theme changes.
-document.addEventListener('theme-change', () => {
+SettingsBus.addEventListener('theme-change', () => {
 	const gamefile = loadedGamefile;
 	if (!gamefile) return;
 	imagecache.deleteImageCache();
@@ -170,7 +171,7 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 
 	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.pieces);
 	// Disable miniimages if there's too many pieces
-	if (pieceCount > miniimagerenderer.pieceCountToDisableMiniImages) miniimage.disable();
+	if (pieceCount > miniimagerenderer.MAX_PIECE_COUNT) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
 	if (pieceCount > arrows.MAX_PIECES || loadedGamefile.pieces.slides.length > arrows.MAX_LINES)
 		arrows.setMode(0);

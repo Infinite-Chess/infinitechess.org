@@ -62,7 +62,7 @@ const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion'
  * @type {string[]}
  */
 let completedCheckmates: string[];
-const expiryOfCompletedCheckmatesMs: number = 1000 * 60 * 60 * 24 * 365; // 1 year
+const COMPLETED_EXPIRY_MS: number = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 /**
  * The checkmate the current game was started with. Owned here rather than read back off
@@ -288,7 +288,8 @@ function getCompletedCheckmates(): string[] {
 		completedCheckmates = decodeURIComponent(cookieCheckmates).match(/[^,]+/g) || []; // match() returns null if no matches
 	} else {
 		// Else, use LocalStorage as a fallback
-		completedCheckmates = LocalStorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
+		completedCheckmates =
+			(LocalStorage.loadItem(nameOfCompletedCheckmatesInStorage) as string[]) || [];
 	}
 	return completedCheckmates;
 }
@@ -313,7 +314,7 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 		LocalStorage.saveItem(
 			nameOfCompletedCheckmatesInStorage,
 			completedCheckmates,
-			expiryOfCompletedCheckmatesMs,
+			COMPLETED_EXPIRY_MS,
 		);
 		return;
 	}

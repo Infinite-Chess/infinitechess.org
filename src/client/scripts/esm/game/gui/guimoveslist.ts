@@ -114,7 +114,7 @@ GameBus.addEventListener('game-concluded', () => {
 });
 GameBus.addEventListener('game-unloaded', () => clearMovesTable());
 
-// =============================== Move Navigation ===============================
+// Move Navigation -------------------------------------------------------------
 
 function isOkayToNavigate(): boolean {
 	return Date.now() - lastNav >= minimumNavIntervalMs; // True if enough time has passed!
@@ -220,7 +220,7 @@ holdrepeat.makeHoldRepeatable(element_Next, callback_Next);
 element_First.addEventListener('click', jumpToStart);
 element_Last.addEventListener('click', jumpToEnd);
 
-// =============================== Game Result ===============================
+// Game Result -----------------------------------------------------------------
 
 /** Populates and reveals the `.game-result` banner with the game's conclusion. */
 function showGameResult(): void {
@@ -232,7 +232,7 @@ function showGameResult(): void {
 	element_GameResult.classList.remove('hidden');
 }
 
-// =============================== Moves Table ===============================
+// Moves Table -----------------------------------------------------------------
 
 /**
  * Visible move text is capped to this many characters (CSS ellipsis truncates further);
@@ -480,7 +480,7 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 	scrollToCurrentPly(); // Clicking a ply in the flat list centers it, matching the nav controls.
 }
 
-// ===========================================================================
+// Exports ---------------------------------------------------------------------
 
 export default {
 	registerRenderer,

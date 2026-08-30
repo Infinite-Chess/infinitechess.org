@@ -71,7 +71,7 @@ let annotationsEnabled: boolean = false;
 
 // Events ----------------------------------------------------------------------
 
-document.addEventListener('ray-count-change', (e) => {
+GameBus.addEventListener('ray-count-change', (e) => {
 	const rayCount = e.detail;
 	if (rayCount > 0) showCollapse();
 	else hideCollapse();
@@ -82,7 +82,7 @@ document.addEventListener('ray-count-change', (e) => {
 GameBus.addEventListener('arrow-mode-change', () => update_ArrowsButton());
 GameBus.addEventListener('perspective-toggle', () => update_PerspectiveButton());
 
-// =============================== View Toggles ===============================
+// View Toggles ----------------------------------------------------------------
 
 /** Toggles perspective view. */
 function callback_Perspective(): void {
@@ -112,7 +112,7 @@ function update_ArrowsButton(): void {
 	element_Arrows.setAttribute('data-tooltip', ARROW_TOOLTIPS[mode]);
 }
 
-// =============================== Annotation Tools ===============================
+// Annotation Tools ------------------------------------------------------------
 
 function callback_Annotations(): void {
 	annotationsEnabled = !annotationsEnabled;
@@ -141,7 +141,7 @@ function hideCollapse(): void {
 	element_Collapse.classList.add('hidden');
 }
 
-// =============================== Board-View Navigation ===============================
+// Board-View Navigation -------------------------------------------------------
 
 function callback_Back(): void {
 	Transition.undoTransition();
@@ -187,7 +187,7 @@ function callback_Recenter(): void {
 	Transition.zoomToCoordsBox(gamefile.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
 }
 
-// =============================== Coordinate Fields ===============================
+// Coordinate Fields -----------------------------------------------------------
 
 // Update the division on the screen displaying your current coordinates
 function updateCoords(): void {
@@ -333,7 +333,7 @@ function callback_CoordsChange(index: 0 | 1): void {
 	boardpos.setBoardPos(newPos);
 }
 
-// =================================================================================
+// Listeners -------------------------------------------------------------------
 
 /** Wires the click/change listeners for every `.board-controls` element. */
 function initListeners(): void {
@@ -353,6 +353,8 @@ function initListeners(): void {
 }
 
 initListeners();
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	updateCoords,

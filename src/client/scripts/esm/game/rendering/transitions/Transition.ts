@@ -219,7 +219,7 @@ function onTransitionStart(): void {
 	originCoords = boardpos.getBoardPos();
 	originScale = boardpos.getBoardScale();
 
-	document.dispatchEvent(new CustomEvent('transition-start'));
+	GameBus.dispatch('transition-start');
 }
 
 /** Starts a Zooming Transition. */

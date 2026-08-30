@@ -17,23 +17,30 @@ import frametracker from '../../board/rendering/frametracker.js';
 import { Renderable } from '../../webgl/Renderable.js';
 import { createRenderable } from '../../board/rendering/renderable.js';
 
+// Constants -------------------------------------------------------------------
+
+/** Multiplied by the perspective_sensitivity preference. Default: 0.13 */
+const SENSITIVITY_MULTIPLIER = 0.13;
+
+/** Default: 2.5 */
+const CROSSHAIR_THICKNESS = 2.5;
+/** RGBA. Inverted against the buffer, so this is what BLACKS get dyed — whites appear black. */
+const CROSSHAIR_COLOR: Color = [1, 1, 1, 1];
+
+// State -----------------------------------------------------------------------
+
 /** Whether perspective mode is enabled. */
 let enabled = false;
 
-const mouseSensitivityMultiplier = 0.13; // 0.13 Default   This is Multiplied by our perspective_sensitivity in the preferences.
-
-// Crosshair
-const crosshairThickness = 2.5; // Default: 2.5
-const crosshairColor: Color = [1, 1, 1, 1]; // RGBA. It will invert the colors in the buffer. This is what color BLACKS will be dyed! Whites will appear black.
 /** The buffer model of the mouse crosshair when in perspective mode. */
 let crosshairModel: Renderable;
 
 // Listeners -------------------------------------------------------------------
 
 // Listen for canvas resize, FOV, and camera debug-toggle events to reinit the crosshair
-document.addEventListener('canvas_resize', () => initCrosshairModel());
+GameBus.addEventListener('canvas-resize', () => initCrosshairModel());
 document.addEventListener('fov-change', () => initCrosshairModel());
-document.addEventListener('camera-debug-toggle', () => initCrosshairModel());
+GameBus.addEventListener('camera-debug-toggle', () => initCrosshairModel());
 
 // Functions -------------------------------------------------------------------
 
@@ -84,8 +91,7 @@ function lockMouse(): void {
  * @param mouseChangeY - Vertical mouse delta.
  */
 function addRotation(mouseChangeX: number, mouseChangeY: number): void {
-	const sensitivity =
-		mouseSensitivityMultiplier * (preferences.getPerspectiveSensitivity() / 100); // Divide by 100 to bring it to the range 0.25-2
+	const sensitivity = SENSITIVITY_MULTIPLIER * (preferences.getPerspectiveSensitivity() / 100); // Divide by 100 to bring it to the range 0.25-2
 
 	const newRotX = camera.getRotX() + mouseChangeY * sensitivity;
 	const newRotZ = camera.getRotZ() + mouseChangeX * sensitivity;
@@ -103,9 +109,9 @@ function initCrosshairModel(): void {
 	const screenHeight = camera.getScreenHeightWorld();
 
 	const innerSide =
-		((crosshairThickness / 2) * screenHeight) / camera.getCanvasHeightVirtualPixels();
+		((CROSSHAIR_THICKNESS / 2) * screenHeight) / camera.getCanvasHeightVirtualPixels();
 
-	const [r, g, b, a] = crosshairColor;
+	const [r, g, b, a] = CROSSHAIR_COLOR;
 
 	// prettier-ignore
 	const data = new Float32Array([

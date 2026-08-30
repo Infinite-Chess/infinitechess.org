@@ -108,15 +108,4 @@ declare global {
 	var turnstile: Turnstile;
 	/** Called by Turnstile's `api.js` (`?onload=…`) once ready; register.ts assigns it to render the widget. */
 	var onloadTurnstileCallback: () => void;
-
-	// Our Custom Events
-	interface DocumentEventMap {
-		'premoves-toggle': CustomEvent<boolean>;
-		'lingering-annotations-toggle': CustomEvent<boolean>;
-		'starfield-toggle': CustomEvent<boolean>;
-		'master-volume-change': CustomEvent<number>;
-		'ambience-toggle': CustomEvent<boolean>;
-		'ray-count-change': CustomEvent<number>;
-		canvas_resize: CustomEvent<{ width: number; height: number }>;
-	}
 }

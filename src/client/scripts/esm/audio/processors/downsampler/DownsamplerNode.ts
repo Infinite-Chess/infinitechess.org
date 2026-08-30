@@ -1,5 +1,12 @@
 // src/client/scripts/esm/audio/processors/downsampler/DownsamplerNode.ts
 
+/**
+ * The main-thread handle for the downsampler audio worklet — a sample-and-hold
+ * effect that crushes the sample rate of whatever is routed through it.
+ */
+
+// Downsampler Node ------------------------------------------------------------
+
 export class DownsamplerNode extends AudioWorkletNode {
 	constructor(context: AudioContext) {
 		super(context, 'downsampler-processor');

@@ -41,6 +41,7 @@ import Transition from './rendering/transitions/Transition.js';
 import gamesession from './chess/gamesession.js';
 import arrowshifts from './rendering/arrows/arrowshifts.js';
 import annotations from './rendering/highlights/annotations/annotations.js';
+import { GameBus } from '../board/GameBus.js';
 import LocalStorage from '../util/LocalStorage.js';
 import guimoveslist from './gui/guimoveslist.js';
 import frametracker from '../board/rendering/frametracker.js';
@@ -50,12 +51,12 @@ import boardgeometry from '../board/rendering/boardgeometry.js';
 import guiboardcontrols from './gui/guiboardcontrols.js';
 import arrowlegalmovehighlights from './rendering/arrows/arrowlegalmovehighlights.js';
 
-// State ---------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Optional per-frame page logic, run each frame after the game modules update. */
 let onUpdate: (() => void) | undefined;
 
-// Setup ---------------------------------------------------------------------------------
+// Setup -----------------------------------------------------------------------
 
 /** Boots the WebGL render engine and shared page-teardown listeners. Call once before {@link start}. */
 function init(canvas: HTMLCanvasElement): void {
@@ -70,7 +71,7 @@ function init(canvas: HTMLCanvasElement): void {
 	// Repaint synchronously the instant the canvas buffer resizes. Assigning canvas.width/height
 	// wipes the drawing buffer to black; drawing now before the browser composites means that
 	// black is never shown for a single frame.
-	document.addEventListener('canvas_resize', () => {
+	GameBus.addEventListener('canvas-resize', () => {
 		// A resize changes the board's on-screen bounding box, so recalculate the geometry
 		// before repainting — otherwise we'd draw with the stale box, or an undefined one on
 		// the first frame, since the normal loop only recalculates it inside update().
@@ -95,7 +96,7 @@ function preloadSounds(): void {
 	gamesound.preload('low_time');
 }
 
-// The Loop ------------------------------------------------------------------------------
+// The Loop --------------------------------------------------------------------
 
 /**
  * Begins the update+render loop, running every animation frame.
@@ -116,7 +117,7 @@ function gameLoop(runtime: number): void {
 	render();
 
 	// Reset all event-listener states so we catch new events next frame.
-	document.dispatchEvent(new Event('reset-listener-events'));
+	GameBus.dispatch('reset-listener-events');
 
 	requestAnimationFrame(gameLoop); // Loop again
 }
@@ -221,6 +222,6 @@ function render(): void {
 	frametracker.onFrameRender();
 }
 
-// Exports -------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default { init, start };

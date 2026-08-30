@@ -1,6 +1,12 @@
 // src/client/scripts/esm/components/header/settings.ts
 
-// This script opens and closes our settings drop-down menu when it is clicked.
+/**
+ * Opens and closes the settings drop-down, and routes between it and its
+ * sub-dropdowns. Closing it sends the changed preferences to the server.
+ *
+ * Also keeps the --c-tile and --c-tile-2 stylesheet colors matched to the
+ * chosen board theme, which the rest of the site's accents are built from.
+ */
 
 import math from '../../../../../shared/util/math/math.js';
 import themes from '../../../../../shared/components/header/themes.js';
@@ -8,6 +14,7 @@ import themes from '../../../../../shared/components/header/themes.js';
 import colorutil from '../../util/colorutil.js';
 import preferences from '../../util/preferences.js';
 import sounddropdown from './dropdowns/sounddropdown.js';
+import { SettingsBus } from '../../util/SettingsBus.js';
 import languagedropdown from './dropdowns/languagedropdown.js';
 import gameplaydropdown from './dropdowns/gameplaydropdown.js';
 import appearancedropdown from './dropdowns/appearancedropdown.js';
@@ -76,7 +83,7 @@ const openHandlers = subDropdowns.map(({ module }) => () => {
 	document.addEventListener('touchstart', closeSettingsDropdownIfClickedAway);
 
 	updateBackgroundColor();
-	document.addEventListener('theme-change', updateBackgroundColor);
+	SettingsBus.addEventListener('theme-change', updateBackgroundColor);
 
 	// [DEBUGGING] Instantly open the settings dropdown on page refresh
 	// openSettingsDropdown();

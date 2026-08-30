@@ -1,8 +1,14 @@
 // src/client/scripts/esm/game/rendering/effectzone/zones/AshfallVocsZone.ts
 
-import type { Zone } from '../Zone';
+/**
+ * A dark red board with heavily blown-out color, edges falling away into shadow,
+ * and heat waves rising over it. Sizzles faintly.
+ */
+
+import type { UniformValue } from '../../../../webgl/Renderable';
 import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
 
+import { BaseZone } from '../BaseZone';
 import { HeatWavePass } from '../../../../webgl/postprocessing/passes/HeatWavePass';
 import { VignettePass } from '../../../../webgl/postprocessing/passes/VignettePass';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
@@ -10,7 +16,7 @@ import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGra
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
-export class AshfallVocsZone implements Zone {
+export class AshfallVocsZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 9;
 
@@ -18,13 +24,11 @@ export class AshfallVocsZone implements Zone {
 	private vignettePass: VignettePass;
 	private heatWavePass: HeatWavePass | undefined = undefined;
 
-	/** The soundscape player for this zone. */
-	private ambience: SoundscapePlayer;
-
 	/** The speed of the moving heat waves. */
 	private heatWaveSpeed: number = 2.0;
 
 	constructor(programManager: ProgramManager, noise: Promise<WebGLTexture>) {
+		super();
 		noise.then((texture) => (this.heatWavePass = new HeatWavePass(programManager, texture)));
 
 		this.colorGradePass = new ColorGradePass(programManager);
@@ -84,21 +88,13 @@ export class AshfallVocsZone implements Zone {
 			this.heatWavePass.time = (performance.now() / 1000) * this.heatWaveSpeed;
 	}
 
-	public getUniforms(): Record<string, any> {
+	public getUniforms(): Record<string, UniformValue> {
 		return {};
 	}
 
-	public getPasses(): PostProcessPass[] {
+	public override getPasses(): PostProcessPass[] {
 		const passes: PostProcessPass[] = [this.colorGradePass, this.vignettePass];
 		if (this.heatWavePass) passes.push(this.heatWavePass);
 		return passes;
-	}
-
-	public fadeInAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeIn(transitionDurationMs);
-	}
-
-	public fadeOutAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeOut(transitionDurationMs);
 	}
 }

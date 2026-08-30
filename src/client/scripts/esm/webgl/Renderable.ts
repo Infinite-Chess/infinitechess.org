@@ -74,6 +74,12 @@ export type AttributeInfoInstanced = {
 	instanceDataAttribInfo: AttributeInfo;
 };
 
+/**
+ * A value a custom uniform may be set to. Numbers become floats,
+ * booleans become ints, and arrays of 2-4 become the matching vec.
+ */
+export type UniformValue = number | boolean | [number, number] | [number, number, number] | [number, number, number, number]; // prettier-ignore
+
 /** A texture, along with its given uniform name in the desired shader. */
 export interface TextureInfo {
 	texture: WebGLTexture;
@@ -99,7 +105,7 @@ interface BaseRenderable {
 	 * @param [scale] - The scaling transformation, default [1,1,1]
 	 * @param uniforms - Custom uniform values, for example, 'u_size'.
 	 */
-	render: (position?: Vec3, scale?: Vec3, uniforms?: Record<string, any>) => void;
+	render: (position?: Vec3, scale?: Vec3, uniforms?: Record<string, UniformValue>) => void;
 }
 
 /** A renderable model. */
@@ -269,7 +275,7 @@ function createRenderableFactory(
 			render: (
 				position: Vec3 = [0, 0, 0],
 				scale: Vec3 = [1, 1, 1],
-				uniforms: Record<string, any> = {},
+				uniforms: Record<string, UniformValue> = {},
 			): void =>
 				prepareAndExecuteRender(
 					shaderProgram,
@@ -368,7 +374,7 @@ function createRenderableFactory(
 			render: (
 				position: Vec3 = [0, 0, 0],
 				scale: Vec3 = [1, 1, 1],
-				uniforms: Record<string, any> = {},
+				uniforms: Record<string, UniformValue> = {},
 			): void =>
 				prepareAndExecuteRender(
 					shaderProgram,
@@ -397,7 +403,7 @@ function createRenderableFactory(
 		vao: WebGLVertexArrayObject,
 		position: Vec3,
 		scale: Vec3,
-		uniforms: Record<string, any>,
+		uniforms: Record<string, UniformValue>,
 		textures: TextureInfo[],
 		drawCallback: () => void,
 	): void {
@@ -482,7 +488,7 @@ function createRenderableFactory(
 		shaderProgram: ShaderProgram<A, U>,
 		position: Vec3,
 		scale: Vec3,
-		uniforms: Record<string, any>,
+		uniforms: Record<string, UniformValue>,
 		textures: TextureInfo[],
 	): void {
 		// Calculate the final Model-View-Projection matrix for this object

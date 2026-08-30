@@ -20,6 +20,7 @@ import piecethemes, { PieceColorGroup } from '../../../../shared/chess/util/piec
 import docutil from './docutil.js';
 import LocalStorage from './LocalStorage.js';
 import validatorama from './validatorama.js';
+import { SettingsBus } from './SettingsBus.js';
 import { serverfetch } from './serverfetch.js';
 
 /** Prefs that do NOT get saved on the server side */
@@ -60,10 +61,7 @@ interface ServerSidePreferences {
 /** Both client and server side preferences */
 type Preferences = ServerSidePreferences & ClientSidePreferences;
 
-// Variables -------------------------------------------------------------------
-
-/** All our preferences. */
-let preferences: Preferences;
+// Constants -------------------------------------------------------------------
 
 // The legal moves shape preference
 const default_legal_moves: 'dots' | 'squares' = 'squares'; // dots/squares
@@ -81,9 +79,32 @@ const default_advanced_effects_enabled: boolean = true;
 const default_master_volume: number = 1;
 const default_ambience_enabled: boolean = true;
 
+/** The preferences a user starts with. */
+const DEFAULT_PREFERENCES: Preferences = {
+	theme: themes.DEFAULT_THEME,
+	legal_moves: default_legal_moves,
+	perspective_sensitivity: default_perspective_sensitivity,
+	perspective_fov: default_perspective_fov,
+	drag_enabled: default_drag_enabled,
+	premove_enabled: default_premove_enabled,
+	fast_transitions_enabled: default_fast_transitions_enabled,
+	animations: default_animations,
+	lingering_annotations: default_lingering_annotations,
+	coordinates_enabled: default_coordinates_enabled,
+	starfield_enabled: default_starfield_enabled,
+	advanced_effects_enabled: default_advanced_effects_enabled,
+	master_volume: default_master_volume,
+	ambience_enabled: default_ambience_enabled,
+};
+
+// Variables -------------------------------------------------------------------
+
+/** The user's preferences. */
+let preferences: Preferences;
+
 /**
  * Whether a change was made to the preferences since the last time we sent them over to the server.
- * We only change this to true if we change a preference that isn't only client side.
+ * We only change this to true if we change a preference that is stored on the server.
  */
 let changeWasMade: boolean = false;
 
@@ -94,22 +115,7 @@ let changeWasMade: boolean = false;
 })();
 
 function loadPreferences(): void {
-	const browserStoragePrefs: Preferences = LocalStorage.loadItem('preferences') || {
-		theme: themes.DEFAULT_THEME,
-		legal_moves: default_legal_moves,
-		perspective_sensitivity: default_perspective_sensitivity,
-		perspective_fov: default_perspective_fov,
-		drag_enabled: default_drag_enabled,
-		premove_enabled: default_premove_enabled,
-		fast_transitions_enabled: default_fast_transitions_enabled,
-		animations: default_animations,
-		lingering_annotations: default_lingering_annotations,
-		coordinates_enabled: default_coordinates_enabled,
-		starfield_enabled: default_starfield_enabled,
-		advanced_effects_enabled: default_advanced_effects_enabled,
-		master_volume: default_master_volume,
-		ambience_enabled: default_ambience_enabled,
-	};
+	const browserStoragePrefs: Preferences = { ...DEFAULT_PREFERENCES, ...readStoredPreferences() };
 
 	preferences = browserStoragePrefs;
 
@@ -120,6 +126,22 @@ function loadPreferences(): void {
 		// console.log(jsutil.deepCopyObject(preferences));
 		clientSidePrefs.forEach((pref) => (preferences![pref] = browserStoragePrefs[pref]));
 	}
+}
+
+/** Reads the preferences out of local storage, returning only the valid ones. */
+function readStoredPreferences(): Partial<Preferences> {
+	const stored: unknown = LocalStorage.loadItem('preferences');
+	if (typeof stored !== 'object' || stored === null) return {};
+	/**
+	 * A bad theme name needs no check here — {@link themes.getPropertyOfTheme}
+	 * already falls back to the default theme's colors for a name it doesn't recognize.
+	 */
+	const valid: Partial<Preferences> = {};
+	for (const [key, value] of Object.entries(stored)) {
+		// An unrecognized key's default is undefined, so its typeof never matches.
+		if (typeof value === typeof DEFAULT_PREFERENCES[key]) valid[key] = value;
+	}
+	return valid;
 }
 
 function savePreferences(): void {
@@ -200,8 +222,7 @@ function setStarfieldMode(value: boolean): void {
 	preferences.starfield_enabled = value;
 	savePreferences();
 
-	// Dispatch an event so that the game code can detect it, if present.
-	document.dispatchEvent(new CustomEvent('starfield-toggle', { detail: value }));
+	SettingsBus.dispatch('starfield-toggle', value);
 }
 
 function getLegalMovesShape(): 'dots' | 'squares' {
@@ -235,8 +256,7 @@ function setPremoveMode(value: boolean): void {
 	preferences.premove_enabled = value;
 	savePreferences();
 
-	// Dispatch an event so that the game code can detect it, if present.
-	document.dispatchEvent(new CustomEvent('premoves-toggle', { detail: value }));
+	SettingsBus.dispatch('premoves-toggle', value);
 }
 
 function getFastTransitionsMode(): boolean {
@@ -246,9 +266,6 @@ function getFastTransitionsMode(): boolean {
 function setFastTransitionsMode(value: boolean): void {
 	preferences.fast_transitions_enabled = value;
 	savePreferences();
-
-	// Dispatch an event so that the game code can detect it, if present.
-	document.dispatchEvent(new CustomEvent('fast-transitions-toggle', { detail: value }));
 }
 
 function getAnimationsMode(): boolean {
@@ -285,7 +302,7 @@ function setPerspectiveFOV(perspective_fov: number): void {
 		throw new Error('Cannot set preference perspective_fov when it is not a number.');
 	preferences.perspective_fov = perspective_fov;
 	savePreferences();
-	document.dispatchEvent(new CustomEvent('fov-change'));
+	SettingsBus.dispatch('fov-change');
 }
 
 function getLingeringAnnotationsMode(): boolean {
@@ -297,8 +314,7 @@ function setLingeringAnnotationsMode(value: boolean): void {
 	onChangeMade();
 	savePreferences();
 
-	// Dispatch an event so that the game code can detect it, if present.
-	document.dispatchEvent(new CustomEvent('lingering-annotations-toggle', { detail: value }));
+	SettingsBus.dispatch('lingering-annotations-toggle', value);
 }
 
 /** Whether the user has enabled "Advanced Effects" in the settings. */
@@ -322,8 +338,7 @@ function setMasterVolume(master_volume: number): void {
 	preferences.master_volume = master_volume;
 	savePreferences();
 
-	// Dispatch an event so that the game code can detect it, if present.
-	document.dispatchEvent(new CustomEvent('master-volume-change', { detail: master_volume }));
+	SettingsBus.dispatch('master-volume-change', master_volume);
 }
 
 /** Whether the user has enabled "Ambience" in the settings. */
@@ -337,8 +352,7 @@ function setAmbienceEnabled(ambience_enabled: boolean): void {
 	preferences.ambience_enabled = ambience_enabled;
 	savePreferences();
 
-	// Dispatch an event so that the game code can detect it, if present.
-	document.dispatchEvent(new CustomEvent('ambience-toggle', { detail: ambience_enabled }));
+	SettingsBus.dispatch('ambience-toggle', ambience_enabled);
 }
 
 // Getters for our current theme properties ------------------------------------
@@ -534,11 +548,6 @@ function getTintColorOfType(type: number): Color {
 // 		console.log(JSON.stringify(themes.THEMES[preferences.theme]));
 // 	}
 // }
-
-// function dispatchThemeChangeEvent(): void {
-// 	document.dispatchEvent(new Event('theme-change'));
-// }
-// setInterval(dispatchThemeChangeEvent, 1000);
 
 // Exports ---------------------------------------------------------------------
 

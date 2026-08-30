@@ -65,7 +65,7 @@ self.onmessage = function (e: MessageEvent<CheckmatePracticeMoveRequest>): void 
 };
 
 /** Seeded RNG function, will be initialized in runEngine() */
-let rand: Function;
+let rand: () => number;
 
 /** Whether the engine has already been initialized for the current game */
 let engineInitialized: boolean = false;

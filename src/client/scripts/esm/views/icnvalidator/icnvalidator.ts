@@ -1,17 +1,25 @@
 // src/client/scripts/esm/views/icnvalidator/icnvalidator.ts
 
+/**
+ * The ICN validator page. Replays the games json from an Apeiron SPRT run against
+ * the website's own move and game-end logic, reporting every game the two disagree
+ * on — each one a bug in the engine or the site.
+ *
+ * The games are split into chunks across one worker per hardware thread.
+ */
+
+import type {
+	ValidationError,
+	ValidationRequest,
+	ValidationResponse,
+	VariantStats,
+} from './icnvalidatorprotocol.js';
+
 import * as z from 'zod';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
-interface VariantStats {
-	total: number;
-	icn: number;
-	formulator: number;
-	illegal: number;
-	termination: number;
-}
-
+/** Every worker's chunk tallies, merged into one run-wide total. */
 interface ValidationResults {
 	total: number;
 	successful: number;
@@ -22,44 +30,6 @@ interface ValidationResults {
 	errors: ValidationError[];
 	variantErrors: Record<string, VariantStats>;
 }
-
-interface ValidationError {
-	gameIndex: number;
-	phase: string;
-	error: string;
-	variant?: string;
-	icn: string;
-	termination?: string;
-	result?: string;
-	gameConclusion?: string;
-}
-
-/** Result message from the ICN validator worker. */
-interface WorkerResult {
-	type: 'done';
-	chunkId: number;
-	results: {
-		success: boolean;
-		successfulCount: number;
-		icnconverterErrors: number;
-		formulatorErrors: number;
-		illegalMoveErrors: number;
-		terminationMismatchErrors: number;
-		errors: any[];
-		variantErrors: Record<string, VariantStats>;
-	};
-}
-
-/**
- * Progress message from the ICN validator worker.
- */
-interface WorkerProgressMessage {
-	type: 'progress';
-	chunkId: number;
-	count: number;
-}
-
-type WorkerMessage = WorkerResult | WorkerProgressMessage;
 
 type LogType = 'info' | 'success' | 'warning' | 'error';
 
@@ -248,7 +218,7 @@ async function validateGames(): Promise<void> {
 		let itemsProcessedInChunk = 0;
 
 		// Handle Messages
-		worker.onmessage = (e: MessageEvent<WorkerMessage>) => {
+		worker.onmessage = (e: MessageEvent<ValidationResponse>) => {
 			if (e.data.type === 'progress') {
 				// Update counters
 				const count = e.data.count;
@@ -275,9 +245,7 @@ async function validateGames(): Promise<void> {
 				globalResults.errors.push(...results.errors);
 
 				// Merge Variant Stats
-				for (const [variant, stats] of Object.entries(
-					results.variantErrors as Record<string, VariantStats>,
-				)) {
+				for (const [variant, stats] of Object.entries(results.variantErrors)) {
 					if (!globalResults.variantErrors[variant]) {
 						globalResults.variantErrors[variant] = { ...stats };
 					} else {
@@ -313,7 +281,7 @@ async function validateGames(): Promise<void> {
 		};
 
 		// Start the worker
-		worker.postMessage({ chunkId: i, games: slice });
+		worker.postMessage({ chunkId: i, games: slice } satisfies ValidationRequest);
 	}
 }
 

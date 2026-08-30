@@ -1,7 +1,5 @@
 // src/client/scripts/esm/board/rendering/webgl.ts
 
-import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
-
 /**
  * This script builds WebGL rendering contexts, and stores our
  * interactive game's context, and contains other utility methods.
@@ -13,16 +11,15 @@ import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
  * to the game context, so game-only callers stay unchanged while per-context code passes its own.
  */
 
-/** The interactive game's WebGL rendering context. Initiated in {@link init}. */
-let gl: WebGL2RenderingContext; // The WebGL context. Is initiated in init()
-/** Whether {@link init} has run and {@link gl} is ready to use. */
-let initialized: boolean = false;
+import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
+
+// Constants -------------------------------------------------------------------
 
 /**
  * The default screen clear color, used to initialize a fresh context and as the
  * fallback for {@link clearScreen}. Per-context sky colors live on each RenderContext.
  */
-const clearColor: Vec3 = [0.5, 0.5, 0.5]; // Grey
+const CLEAR_COLOR: Vec3 = [0.5, 0.5, 0.5]; // Grey
 
 /**
  * Specifies the condition under which a fragment passes the depth test,
@@ -36,7 +33,7 @@ const clearColor: Vec3 = [0.5, 0.5, 0.5]; // Grey
  *
  * Accepted values: `NEVER`, `LESS`, `EQUAL`, `LEQUAL`, `GREATER`, `NOTEQUAL`, `GEQUAL`, `ALWAYS`
  */
-const defaultDepthFuncParam = 'LEQUAL';
+const DEFAULT_DEPTH_FUNC = 'LEQUAL';
 
 /**
  * Whether to cull (skip) rendering back faces.
@@ -45,12 +42,20 @@ const defaultDepthFuncParam = 'LEQUAL';
  * IF WE AREN'T CAREFUL about all vertices going into the same clockwise/counterclockwise
  * direction, then some objects will be invisible!
  */
-const culling = false;
+const CULLING = false;
+
 /**
  * If true, whether a face is determined as a front face depends
  * on whether it's vertices move in a clockwise direction, otherwise counterclockwise.
  */
-const frontFaceVerticesAreClockwise = true;
+const FRONT_FACE_IS_CW = true;
+
+// State -----------------------------------------------------------------------
+
+/** The interactive game's WebGL rendering context. */
+let gl: WebGL2RenderingContext;
+
+// Context Creation ------------------------------------------------------------
 
 /**
  * Builds & configures a fresh WebGL2 rendering context for the given canvas.
@@ -73,14 +78,14 @@ function createContext(canvasElement: HTMLCanvasElement): WebGL2RenderingContext
 	clearScreen(newContext);
 
 	newContext.enable(newContext.DEPTH_TEST);
-	newContext.depthFunc(newContext[defaultDepthFuncParam]);
+	newContext.depthFunc(newContext[DEFAULT_DEPTH_FUNC]);
 
 	newContext.enable(newContext.BLEND);
 	toggleNormalBlending(newContext);
 
-	if (culling) {
+	if (CULLING) {
 		newContext.enable(newContext.CULL_FACE);
-		const dir = frontFaceVerticesAreClockwise ? newContext.CW : newContext.CCW;
+		const dir = FRONT_FACE_IS_CW ? newContext.CW : newContext.CCW;
 		newContext.frontFace(dir); // Specifies what faces are considered front, depending on their vertices direction.
 		newContext.cullFace(newContext.BACK); // Skip rendering back faces. Alertnatively we could skip rendering FRONT faces.
 	}
@@ -93,22 +98,23 @@ function createContext(canvasElement: HTMLCanvasElement): WebGL2RenderingContext
 /** Initiates the interactive game's WebGL context, stored as the module {@link gl} export. */
 function init(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
 	gl = createContext(canvasElement);
-	initialized = true;
 	return gl;
 }
 
 /** Whether the game's WebGL context has been initialized via {@link init}. */
 function isInitialized(): boolean {
-	return initialized;
+	return gl !== undefined;
 }
+
+// Rendering State -------------------------------------------------------------
 
 /**
  * Clears color buffer and depth buffers.
  * Needs to be called every frame.
- * @param glCtx - The context to clear. Defaults to the game context.
+ * @param glCtx - The context to clear.
  * @param color - The color to clear to. Defaults to the game clear color.
  */
-function clearScreen(glCtx: WebGL2RenderingContext, color: Vec3 = clearColor): void {
+function clearScreen(glCtx: WebGL2RenderingContext, color: Vec3 = CLEAR_COLOR): void {
 	glCtx.clearColor(...color, 1.0);
 	glCtx.stencilMask(0xff); // Ensure all stencil bits are writable before clearing.
 	glCtx.clear(glCtx.COLOR_BUFFER_BIT | glCtx.DEPTH_BUFFER_BIT | glCtx.STENCIL_BUFFER_BIT);
@@ -140,11 +146,11 @@ function enableBlending_Inverse(glCtx: WebGL2RenderingContext = gl): void {
  * @param func - The render function to run.
  * @param glCtx - The context to affect. Defaults to the game context.
  */
-function executeWithDepthFunc_ALWAYS(func: Function, glCtx: WebGL2RenderingContext = gl): void {
+function executeWithDepthFunc_ALWAYS(func: () => void, glCtx: WebGL2RenderingContext = gl): void {
 	// This prevents tearing when rendering in the same z-level and in perspective.
 	glCtx.depthFunc(glCtx.ALWAYS); // Temporary toggle the depth function to ALWAYS.
 	func();
-	glCtx.depthFunc(glCtx[defaultDepthFuncParam]); // Return to the original blending.
+	glCtx.depthFunc(glCtx[DEFAULT_DEPTH_FUNC]); // Return to the original blending.
 }
 
 /**
@@ -156,7 +162,7 @@ function executeWithDepthFunc_ALWAYS(func: Function, glCtx: WebGL2RenderingConte
  * @param func - The render function to run.
  * @param glCtx - The context to affect. Defaults to the game context.
  */
-function executeWithInverseBlending(func: Function, glCtx: WebGL2RenderingContext = gl): void {
+function executeWithInverseBlending(func: () => void, glCtx: WebGL2RenderingContext = gl): void {
 	enableBlending_Inverse(glCtx);
 	func();
 	toggleNormalBlending(glCtx);
@@ -257,14 +263,14 @@ function executeWithInverseBlending(func: Function, glCtx: WebGL2RenderingContex
 // }
 
 export default {
+	// Context Creation
 	createContext,
 	init,
 	isInitialized,
+	// Rendering State
 	clearScreen,
 	executeWithDepthFunc_ALWAYS,
 	executeWithInverseBlending,
-	// queryWebGLContextInfo,
 };
 
-// TODO: Don't export this, but rather pass the gl returned from init() to all scripts that need it.
 export { gl };

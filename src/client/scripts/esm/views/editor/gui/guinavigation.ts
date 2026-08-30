@@ -1,31 +1,28 @@
 // src/client/scripts/esm/views/editor/gui/guinavigation.ts
 
 /**
- * Remaining play-page (play.ejs) GUI logic not yet migrated to the redesigned
- * game page. Currently the board editor's custom undo/redo edit buttons — the
- * future editor page will get its own unique UI to replace this.
+ * Greys out the board editor's undo/redo buttons when there is nothing left to
+ * undo or redo.
+ *
+ * To be repurposed when redesigning the board editor page.
  */
 
 import holdrepeat from '../../../components/holdrepeat.js';
 import edithistory from '../edithistory.js';
 import { listener_document } from '../../../game/listeners.js';
 
-// Navigation
-
 const element_undoEdit = document.getElementById('undo-edit')!;
 const element_redoEdit = document.getElementById('redo-edit')!;
 
-const minimumEditIntervalMs = 20; // Undoing and redoing can never be spammed faster than this
-let lastEdit = 0;
+/** Throttles undo/redo: a held button or arrow key can't fire faster than this. */
+const MINIMUM_EDIT_INTERVAL_MS = 20;
 
-// =====================================================================
+let lastEdit = 0;
 
 function _initListeners_Navigation(): void {
 	holdrepeat.makeHoldRepeatable(element_undoEdit, callback_UndoEdit);
 	holdrepeat.makeHoldRepeatable(element_redoEdit, callback_RedoEdit);
 }
-
-// =====================================================================
 
 // FUTURE: Move to all call within board editor code
 /** Tests if the arrow keys have been pressed, signaling to undo/redo edit. */
@@ -34,11 +31,9 @@ function _updateEditButtons(): void {
 	testIfRedoEdit();
 }
 
-// Edit Buttons =====================================================
-
 function isItOkayToUndoEditOrRedoEdit(): boolean {
 	const timeSinceLastEdit = Date.now() - lastEdit;
-	return timeSinceLastEdit >= minimumEditIntervalMs; // True if enough time has passed!
+	return timeSinceLastEdit >= MINIMUM_EDIT_INTERVAL_MS; // True if enough time has passed!
 }
 
 /**

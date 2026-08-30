@@ -23,6 +23,7 @@ import drawarrows from './drawarrows.js';
 import drawsquares from './drawsquares.js';
 import preferences from '../../../../util/preferences.js';
 import { GameBus } from '../../../../board/GameBus.js';
+import { SettingsBus } from '../../../../util/SettingsBus.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -111,7 +112,7 @@ function getRelevantAnnotes(): Annotes {
 }
 
 /** Event listener for when we change the Lingering Annotations mode */
-document.addEventListener('lingering-annotations-toggle', (e) => {
+SettingsBus.addEventListener('lingering-annotations-toggle', (e) => {
 	const enabled: boolean = e.detail;
 	const ply = gameslot.getGamefile()!.state.local.moveIndex + 1; // Change -1 based to 0 based index
 	if (enabled) {

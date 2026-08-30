@@ -29,7 +29,7 @@ import socketintents from './socketintents.js';
  * @param serverMessage - The incoming server message event.
  */
 function onmessage(serverMessage: MessageEvent): void {
-	let parsedUnvalidatedMessage: any;
+	let parsedUnvalidatedMessage: unknown;
 	try {
 		parsedUnvalidatedMessage = JSON.parse(serverMessage.data);
 	} catch (error) {

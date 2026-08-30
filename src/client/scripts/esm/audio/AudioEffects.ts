@@ -27,8 +27,6 @@ interface EffectConfigBase {
 
 /** The configuration for a single effect in the effects chain. */
 export type EffectConfig = EffectConfigBase & { type: 'reverb'; durationSecs: number };
-// Future effects will be added here, e.g.:
-// | { type: 'filter', filterType: BiquadFilterType, frequency: number }
 
 // Effect Creation -------------------------------------------------------------
 
@@ -36,7 +34,7 @@ export type EffectConfig = EffectConfigBase & { type: 'reverb'; durationSecs: nu
  * Creates a complete, wrapped effect node graph based on the provided configuration.
  * @param audioContext - The global audio context.
  * @param config - The configuration object for the effect.
- * @returns An EffectWrapper containing the input and output nodes of the effect graph.
+ * @returns A NodeChain containing the input and output nodes of the effect graph.
  */
 export function createEffectNode(audioContext: AudioContext, config: EffectConfig): NodeChain {
 	// 1. Create the core effect node based on its type.
@@ -47,15 +45,8 @@ export function createEffectNode(audioContext: AudioContext, config: EffectConfi
 			coreEffectNode = generateConvolverNode(audioContext, config.durationSecs);
 			break;
 		}
-		// When you add a filter:
-		// case 'filter': {
-		// 	coreEffectNode = audioContext.createBiquadFilter();
-		// 	coreEffectNode.type = config.filterType;
-		// 	coreEffectNode.frequency.value = config.frequency;
-		// 	break;
-		// }
 		default:
-			throw new Error(`Unknown effect type specified in config.`);
+			throw new Error(`Unsupported effect type: ${config.type satisfies never}`);
 	}
 
 	// 2. Create the input and output nodes for parallel dry and wet signal paths.

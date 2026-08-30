@@ -17,14 +17,14 @@ import meshes from './meshes.js';
 import primitives from './primitives.js';
 import boardgeometry from './boardgeometry.js';
 
-// ===================================== Constants =====================================
+// Constants -------------------------------------------------------------------
 
 /** How many tiles on both ends the promotion lines should extend past the farthest piece */
 const EXTRA_LENGTH = 2;
 /** Vertical thickness of the promotion lines. */
 const THICKNESS = 0.01;
 
-// ===================================== Functions =====================================
+// Rendering -------------------------------------------------------------------
 
 /**
  * Renders the promotion lines for the given promotion rules.
@@ -81,7 +81,7 @@ function render(
 	ctx.renderable.createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
 
-// ===================================== Exports =====================================
+// Exports ---------------------------------------------------------------------
 
 export default {
 	render,

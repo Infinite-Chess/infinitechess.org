@@ -57,7 +57,7 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 		return location;
 	}
 
-	// Private Helper Methods -----------------------------------------------------------
+	// Private Helper Methods ------------------------------------------------------
 
 	/**
 	 * Creates an actual program from the provided vertex shader and fragment shader

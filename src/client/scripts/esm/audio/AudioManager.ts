@@ -6,51 +6,26 @@
 
 import AudioUtils from './AudioUtils';
 import preferences from '../util/preferences';
+import { SettingsBus } from '../util/SettingsBus';
 import { DownsamplerNode } from './processors/downsampler/DownsamplerNode';
 import { createEffectNode, EffectConfig, NodeChain } from './AudioEffects';
 
 // Types -----------------------------------------------------------------------
 
-type AudioBufferWithGainNode = AudioBufferSourceNode & { gainNode: GainNode };
-
+/**
+ * A one-shot sound in flight. Long-running, loopable, fadeable
+ * audio is the SoundscapePlayer's job, not this module's.
+ */
 export interface SoundObject {
-	/** The source of the audio, with its attached `gainNode`. */
-	source: AudioBufferWithGainNode;
-	/** Whether to loop the sound indefinitely. */
-	readonly looping: boolean;
 	/**
 	 * Resolves once the note AND its effect tails (e.g. reverb) have fully finished —
 	 * await before anything that would cut the sound off (e.g. a hard navigation).
-	 * Looping sounds only resolve it once stopped.
 	 */
 	whenEnded: Promise<void>;
-	/**
-	 * Stops the sound from playing.
-	 * If this creates static pops, use fadeOut() instead.
-	 */
-	stop: () => void;
-	/**
-	 * Fades out the sound.
-	 * [Looping sounds] Fades to silent and continues playing.
-	 * [Non-looping sounds] Fades to silent and then stops the sound entirely.
-	 * @param durationMillis - The duration of the fade out in milliseconds.
-	 */
-	fadeOut: (durationMillis: number) => void;
-	/**
-	 * Fades in the sound from its current volume to a target volume.
-	 * If you wish to fade-in a non-looping sound, initate the sound object with 0 volume initially.
-	 * @param targetVolume - The final volume level (0-1).
-	 * @param durationMillis - The duration of the fade-in effect in milliseconds.
-	 */
-	fadeIn: (targetVolume: number, durationMillis: number) => void;
 }
 
 /** Config options for playing a sound. */
 interface PlaySoundOptions {
-	/** The time of the audio buffer to start playing, if not from the beginning. */
-	startTime?: number;
-	/** The duration to play the audio buffer for, if not for the whole duration. */
-	duration?: number;
 	/** Volume of the sound. Default: 1. Typical range: 0-1. Capped at {@link VOLUME_DANGER_THRESHOLD} for safety. */
 	volume?: number;
 	/** Delay before the sound starts playing in seconds. Default: 0 */
@@ -62,8 +37,6 @@ interface PlaySoundOptions {
 	 * Lower = slower & lower pitch. Higher = faster & higher pitch.
 	 */
 	playbackRate?: number;
-	/** Whether the sound should loop indefinitely. Default: false */
-	loop?: boolean;
 	/** If true, the sound will bypass the global downsampler effect. Default: false */
 	bypassDownsampler?: boolean;
 }
@@ -93,7 +66,7 @@ downsamplerWetGain.gain.value = 0; // Default to 0% wet signal
 const masterGain = audioContext.createGain();
 masterGain.gain.value = preferences.getMasterVolume(); // Initialize to saved preference
 // Listen for changes to the master volume preference
-document.addEventListener('master-volume-change', (event) => {
+SettingsBus.addEventListener('master-volume-change', (event) => {
 	const newVolume = event.detail;
 	masterGain.gain.setValueAtTime(newVolume, audioContext.currentTime);
 });
@@ -106,6 +79,8 @@ const limiter = new DynamicsCompressorNode(audioContext, {
 	attack: 0.001, // Very fast attack to catch transients
 	release: 0.1, // Quick release
 });
+
+// Initialization --------------------------------------------------------------
 
 // Connect the audio graph: Effects Bus -> Master Gain -> Limiter -> Destination (speakers)
 // Initially, connect the effectsBus directly to masterGain as a bypass until the downsampler loads.
@@ -133,8 +108,6 @@ limiter.connect(audioContext.destination);
 		effectsBus.connect(globalDownsampler);
 		globalDownsampler.connect(downsamplerWetGain);
 		downsamplerWetGain.connect(masterGain);
-
-		// console.log('Global downsampler effect initialized successfully.');
 	} catch (error) {
 		console.error('Failed to initialize global downsampler effect. Audio will remain clean.', error); // prettier-ignore
 		// If it fails, the initial bypass connection from effectsBus to masterGain remains active.
@@ -187,12 +160,9 @@ function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObj
 	if (audioContext.state === 'suspended') audioContext.resume();
 
 	const {
-		startTime,
-		duration,
 		volume = 1,
 		delay = 0,
 		playbackRate = 1,
-		loop = false,
 		effects = [],
 		bypassDownsampler = false,
 	} = playOptions;
@@ -203,50 +173,24 @@ function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObj
 	// We need an audio "source" to play our main sound effect. Several of these can exist at once for one audio context.
 
 	// 1. Create the fundamental source and its master gain node.
-	const mainSource = createBufferSource(buffer, volume, playbackRate);
-	mainSource.loop = loop; // Set the loop property on the audio source itself.
+	const { source, gainNode } = createBufferSource(buffer, volume, playbackRate);
 
 	// 2. Build the effects chain by asking the factory to create the nodes.
 	const effectNodes = effects.map((effectConfig) => createEffectNode(audioContext, effectConfig));
 
 	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Effects Bus -> Master Gain -> Limiter -> Destination
-	connectNodeChain(mainSource.gainNode, effectNodes, bypassDownsampler);
+	connectNodeChain(gainNode, effectNodes, bypassDownsampler);
 
 	// Resolved by scheduleDisconnection once the sound + tails finish.
 	let resolveWhenEnded!: () => void;
 	const whenEnded = new Promise<void>((resolve) => (resolveWhenEnded = resolve));
 
-	// The SoundObject is now much simpler!
-	const soundObject: SoundObject = {
-		source: mainSource,
-		looping: loop,
-		whenEnded,
-
-		stop: (): void => {
-			soundObject.source.stop();
-		},
-		fadeOut: (durationMillis): void => {
-			const fadeOutEndTime = audioContext.currentTime + durationMillis / 1000;
-			// Fade the source to silent
-			fadeOut(soundObject.source, fadeOutEndTime);
-			// For non-looping sounds, stop them completely after the fade. Scheduled on the
-			// audio clock, so it can never land before the ramp it's waiting on has finished.
-			if (!soundObject.looping) soundObject.source.stop(fadeOutEndTime);
-		},
-		fadeIn: (targetVolume, durationMillis): void => {
-			const fadeInDurationSecs = durationMillis / 1000;
-			const fadeInEndTime = audioContext.currentTime + fadeInDurationSecs;
-			// Fade the main source to the target volume
-			fadeIn(soundObject.source, targetVolume, fadeInEndTime);
-		},
-	};
-
 	// Start the playback
-	soundObject.source.start(startAt, startTime, duration);
+	source.start(startAt);
 
-	scheduleDisconnection(mainSource, effects, resolveWhenEnded);
+	scheduleDisconnection(source, effects, resolveWhenEnded);
 
-	return soundObject;
+	return { whenEnded };
 }
 
 /**
@@ -265,7 +209,6 @@ function scheduleDisconnection(
 	// late a suspended context actually begins rendering. Timing the whole lifetime off
 	// setTimeout instead would disconnect mid-note whenever the context started late,
 	// cutting the sound off (or silencing it outright, for sounds shorter than the delay).
-	// A looping source never fires 'ended' until stopped — exactly onEnded's contract.
 	source.addEventListener('ended', () => {
 		// 'ended' marks the end of the BUFFER, so any effect tails are still sounding.
 		// Find the longest tail duration among all applied effects.
@@ -293,13 +236,13 @@ function scheduleDisconnection(
  * @param buffer - The audio buffer to play.
  * @param volume - The initial volume of the sound (0-1).
  * @param playbackRate - The playback rate of the sound. 1 = normal speed & pitch.
- * @returns The created AudioBufferSourceNode with its attached GainNode as `gainNode` property.
+ * @returns The source and the gain node it feeds, which is where fading controls act.
  */
 function createBufferSource(
 	buffer: AudioBuffer,
 	volume: number,
 	playbackRate: number = 1,
-): AudioBufferWithGainNode {
+): { source: AudioBufferSourceNode; gainNode: GainNode } {
 	const source = audioContext.createBufferSource();
 	source.buffer = buffer;
 	source.playbackRate.value = playbackRate;
@@ -307,10 +250,7 @@ function createBufferSource(
 	const gainNode = generateGainNode(audioContext, volume);
 	source.connect(gainNode); // Connect source to its own master gain node
 
-	// @ts-ignore
-	source.gainNode = gainNode; // Attach for fading controls
-
-	return source as AudioBufferWithGainNode;
+	return { source, gainNode };
 }
 
 /** Generates a gain node for affecting the volume of sounds. */
@@ -346,37 +286,6 @@ function connectNodeChain(
 	// Connect the very last node in the chain to either the effects bus or directly to master gain.
 	const destinationNode = bypassDownsampler ? masterGain : effectsBus;
 	currentNode.connect(destinationNode);
-}
-
-/**
- * Initiates a fade-in for an audio source's gain node. This is interruptible.
- * @param source - The audio source node to fade in, WITH ITS `gainNode` property attached.
- * @param targetVolume - The final volume level.
- * @param endTime - The audioContext time at which the fade should complete.
- */
-function fadeIn(source: AudioBufferWithGainNode, targetVolume: number, endTime: number): void {
-	const now = audioContext.currentTime;
-	// First, cancel any pending volume changes to make this interruptible.
-	source.gainNode.gain.cancelScheduledValues(now);
-	// Set the starting point for the ramp at the current volume.
-	source.gainNode.gain.setValueAtTime(source.gainNode.gain.value, now);
-	// Schedule the linear ramp to the target volume.
-	source.gainNode.gain.linearRampToValueAtTime(targetVolume, endTime);
-}
-
-/**
- * Initiates a fade-out for an audio source's gain node. This is interruptible.
- * @param source - The audio source node to fade out, WITH ITS `gainNode` property attached.
- * @param endTime - The audioContext time at which the fade should complete.
- */
-function fadeOut(source: AudioBufferWithGainNode, endTime: number): void {
-	const now = audioContext.currentTime;
-	// First, cancel any pending volume changes to make this interruptible.
-	source.gainNode.gain.cancelScheduledValues(now);
-	// Set the starting point for the ramp at the current volume.
-	source.gainNode.gain.setValueAtTime(source.gainNode.gain.value, now);
-	// Schedule the linear ramp down to zero.
-	source.gainNode.gain.linearRampToValueAtTime(0, endTime);
 }
 
 // Exports ---------------------------------------------------------------------

@@ -596,7 +596,9 @@ function getCurrentAnimationPosition(
 		bd.fromNumber(segment.yRatio),
 	);
 
-	const addOrSubtract: Function = segmentInfo.forward ? bd.add : bd.subtract;
+	const addOrSubtract: (a: BigDecimal, b: BigDecimal) => BigDecimal = segmentInfo.forward
+		? bd.add
+		: bd.subtract;
 
 	return [
 		addOrSubtract(startPoint[0], xTraversalAlongSegment),

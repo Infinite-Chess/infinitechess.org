@@ -34,7 +34,12 @@ interface PositionHistoryEntry {
 	boardScale: BigDecimal;
 }
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
+
+/** The amount of milliseconds to look back into for board velocity calculation. */
+const POSITION_HISTORY_WINDOW_MS = 80;
+
+// State -------------------------------------------------------------------
 
 /** Whether we currently dragging the board */
 let boardIsGrabbed: boolean = false;
@@ -56,12 +61,11 @@ let pointer2BoardPosGrabbed: BDCoords | undefined;
 
 /** Stores past board positions from the last few frames. Used to calculate throw velocity after dragging. */
 const positionHistory: PositionHistoryEntry[] = [];
-const positionHistoryWindowMs: number = 80; // The amount of milliseconds to look back into for board velocity calculation.
 
 // Listeners -------------------------------------------------------------------
 
 // Cancel any active board drag when a transition begins.
-document.addEventListener('transition-start', cancelBoardDrag);
+GameBus.addEventListener('transition-start', cancelBoardDrag);
 
 // Functions -------------------------------------------------------------------
 
@@ -409,12 +413,9 @@ function addCurrentPositionToHistory(): void {
 	});
 }
 
-/**
- * Removes all positions from the history that are older than the
- * positionHistoryWindowMs.
- */
+/** Removes all positions from the history that are older than {@link POSITION_HISTORY_WINDOW_MS}. */
 function removeOldPositions(now: number): void {
-	const earliestTime = now - positionHistoryWindowMs;
+	const earliestTime = now - POSITION_HISTORY_WINDOW_MS;
 	while (positionHistory.length > 0 && positionHistory[0]!.time < earliestTime)
 		positionHistory.shift();
 }

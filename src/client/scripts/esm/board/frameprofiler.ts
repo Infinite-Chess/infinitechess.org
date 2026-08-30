@@ -14,7 +14,7 @@ import deltatime from './deltatime.js';
 let runTime: number;
 
 /** Milliseconds to average the fps over */
-const fpsWindow = 1000;
+const FPS_WINDOW_MS = 1000;
 /** Contains an ordered array of the timestamps of all frames over the last second */
 const frames: number[] = [];
 let fps = 0;
@@ -36,10 +36,10 @@ function update(runtime: number): void {
 	updateMonitorRefreshRate();
 }
 
-// Deletes frame timestamps from our list over 1 second ago
+/** Deletes frame timestamps from our list over 1 second ago. */
 function trimFrames(): void {
 	// What time was it 1 second ago
-	const splitPoint = runTime - fpsWindow;
+	const splitPoint = runTime - FPS_WINDOW_MS;
 
 	// Use binary search to find the split point.
 	const indexToSplit = jsutil.findIndexOfPointInOrganizedArray(frames, splitPoint);
@@ -49,10 +49,10 @@ function trimFrames(): void {
 }
 
 function updateFPS(): void {
-	fps = (frames.length * 1000) / fpsWindow;
+	fps = (frames.length * 1000) / FPS_WINDOW_MS;
 }
 
-// Our highest-ever fps will be the monitor's refresh rate!
+/** Raises our recorded monitor refresh rate, since our highest-ever fps can't exceed it. */
 function updateMonitorRefreshRate(): void {
 	if (fps <= monitorRefreshRate) return;
 	monitorRefreshRate = fps;

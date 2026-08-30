@@ -1,5 +1,12 @@
 // src/client/scripts/esm/game/rendering/effectzone/soundscapes/IridescenceSoundscape.ts
 
+/**
+ * A shared soundscape used by the Iridescence and Spectral Edge zones:
+ * four harmonic ringing tones.
+ *
+ * Exported as two pairs, low and high, so Spectral Edge can take just the low pair.
+ */
+
 import type { LayerConfig } from '../../../../audio/SoundLayer';
 
 /** The first two layers of the Iridescence soundscape (lower pitch). */

@@ -1,6 +1,8 @@
 // src/client/scripts/esm/game/chess/enginegame.ts
 
-// This module keeps track of the data of the engine game we are currently in.
+/**
+ * Keeps track of the data of the engine game we are currently in.
+ */
 
 import type { Player } from '../../../../../shared/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';

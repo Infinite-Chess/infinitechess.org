@@ -80,12 +80,12 @@ class RenderContext {
 	}
 
 	/** Runs a render function with the depth function forced to ALWAYS, in this context. */
-	executeWithDepthFunc_ALWAYS(func: Function): void {
+	executeWithDepthFunc_ALWAYS(func: () => void): void {
 		webgl.executeWithDepthFunc_ALWAYS(func, this.gl);
 	}
 
 	/** Runs a render function with inverse blending enabled, in this context. */
-	executeWithInverseBlending(func: Function): void {
+	executeWithInverseBlending(func: () => void): void {
 		webgl.executeWithInverseBlending(func, this.gl);
 	}
 }

@@ -24,35 +24,38 @@ import { listener_document, listener_canvas } from './listeners.js';
 
 // Constants -------------------------------------------------------------------
 
-/** The accelleration/deceleration rate of the board velocity in 2D mode. */
-const panAccel2D: number = 145; // Default: 145
-/** The accelleration/deceleration rate of the board velocity in 3D mode. */
-const panAccel3D: number = 75; // Default: 75
+/** The accelleration/deceleration rate of the board velocity. */
+const PAN_ACCEL = {
+	'2D': 145,
+	'3D': 75,
+};
 
-/** The hypotenuse of the x & y pan velocities cannot exceed this value in 2D mode. */
-const panVelCap2D = 22.0; // Default: 22
-/** The hypotenuse of the x & y pan velocities cannot exceed this value in 3D mode. */
-const panVelCap3D = 16.0; // Default: 16
-
-/** The acceleration/deration rate of the board SCALE velocity in 2D mode. */
-const scaleAccel_Desktop: number = 6.0; // Acceleration of board scaling   Default: 6
-/**
- * The deceleration rate of the board SCALE velocity in 3D mode.
- * (No accerlation, scale velocity is determined by finger movement)
- */
-const scaleAccel_Mobile: number = 14.0; // Acceleration of board scaling   Default: 14
+/** Maximum panning speed. Capped on the x/y hypotenuse. */
+const PAN_VEL_CAP = {
+	'2D': 22.0,
+	'3D': 16.0,
+};
 
 /**
- * This is the scale velocity cap when using Space/Shift.
- * It is NOT the absoulte cap which you can reach by scrolling.
+ * The acceleration/deceleration rate of the board SCALE velocity.
+ * Mobile only decelerates — its scale velocity comes from finger movement.
  */
-const scaleVelCap = 2.0; // Default: 1
+const SCALE_ACCEL = {
+	DESKTOP: 6.0,
+	MOBILE: 14.0,
+};
 
-/** The scale velocity cap when u sing the scroll wheel (higher). */
-const scaleVelCap_Scroll = 2.5;
+/**
+ * The scale velocity cap, per input. SPACE_SHIFT is not the absolute cap —
+ * scrolling reaches the higher SCROLL one.
+ */
+const SCALE_VEL_CAP = {
+	SPACE_SHIFT: 2.0,
+	SCROLL: 2.5,
+};
 
 /** Dampener multiplied to the wheel delta before applying it to the scale velocity. */
-const wheelMultiplier = 0.015; // Default: 0.015
+const WHEEL_MULTIPLIER = 0.015; // Default: 0.015
 
 // Panning & Zooming Controls WASD/Space/Shift/Wheel ---------------------------
 
@@ -122,7 +125,7 @@ function detectPanning(): void {
 	if (panning) {
 		// Make sure the velocity doesn't exceed the cap
 		const hyp = Math.hypot(...panVel);
-		const relativePanVelCap = perspective.getEnabled() ? panVelCap3D : panVelCap2D;
+		const relativePanVelCap = perspective.getEnabled() ? PAN_VEL_CAP['3D'] : PAN_VEL_CAP['2D'];
 		const ratio = hyp / relativePanVelCap;
 		if (ratio > 1) {
 			// Too fast, divide components by the ratio to cap our velocity
@@ -142,7 +145,7 @@ function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
 	const dirOfTravel = baseAngle + angleDegs;
 	const angleRad = vectors.degreesToRadians(dirOfTravel);
 	const XYComponents: DoubleCoords = vectors.getXYComponentsFromAngle(angleRad);
-	const accelToUse = perspective.getEnabled() ? panAccel3D : panAccel2D;
+	const accelToUse = perspective.getEnabled() ? PAN_ACCEL['3D'] : PAN_ACCEL['2D'];
 	panVel[0] += deltatime.get() * accelToUse * XYComponents[0];
 	panVel[1] += deltatime.get() * accelToUse * XYComponents[1];
 	return panVel;
@@ -152,7 +155,7 @@ function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
 function deccelPanVel(panVel: DoubleCoords): DoubleCoords {
 	if (panVel[0] === 0 && panVel[1] === 0) return panVel; // Already stopped
 
-	const rateToUse = perspective.getEnabled() ? panAccel3D : panAccel2D;
+	const rateToUse = perspective.getEnabled() ? PAN_ACCEL['3D'] : PAN_ACCEL['2D'];
 
 	const hyp = Math.hypot(...panVel);
 	const newHyp = hyp - deltatime.get() * rateToUse;
@@ -176,24 +179,24 @@ function detectZooming(): void {
 		// Space/Shift
 		if (listener_document.isKeyHeld('Space')) {
 			scaling = true;
-			scaleVel -= deltatime.get() * scaleAccel_Desktop;
+			scaleVel -= deltatime.get() * SCALE_ACCEL.DESKTOP;
 		}
 		if (listener_document.isKeyHeld('ShiftLeft')) {
 			scaling = true;
-			scaleVel += deltatime.get() * scaleAccel_Desktop;
+			scaleVel += deltatime.get() * SCALE_ACCEL.DESKTOP;
 		}
 		// Mouse wheel
 		const wheelDelta = mouse.getWheelDelta();
 		if (wheelDelta !== 0) {
 			scaling = true;
 			scrolling = true;
-			scaleVel -= wheelMultiplier * wheelDelta;
+			scaleVel -= WHEEL_MULTIPLIER * wheelDelta;
 		}
 	}
 
 	if (scaling) {
 		// Cap the velocity
-		const capToUse = scrolling ? scaleVelCap_Scroll : scaleVelCap;
+		const capToUse = scrolling ? SCALE_VEL_CAP.SCROLL : SCALE_VEL_CAP.SPACE_SHIFT;
 		if (scaleVel > capToUse) scaleVel = capToUse;
 		else if (scaleVel < -capToUse) scaleVel = -capToUse;
 	} else {
@@ -207,7 +210,9 @@ function detectZooming(): void {
 function deccelerateScaleVel(scaleVel: number): number {
 	if (scaleVel === 0) return scaleVel; // Already stopped
 
-	const deccelerationToUse = docutil.isMouseSupported() ? scaleAccel_Desktop : scaleAccel_Mobile;
+	const deccelerationToUse = docutil.isMouseSupported()
+		? SCALE_ACCEL.DESKTOP
+		: SCALE_ACCEL.MOBILE;
 
 	if (scaleVel > 0) {
 		scaleVel -= deltatime.get() * deccelerationToUse;

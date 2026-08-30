@@ -30,6 +30,7 @@ import gamereview from '../gamereview.js';
 import guimovetree from './guimovetree.js';
 import { GameBus } from '../../../board/GameBus.js';
 import analysisloader from '../analysisloader.js';
+import { SettingsBus } from '../../../util/SettingsBus';
 
 // Elements --------------------------------------------------------------------
 
@@ -77,7 +78,7 @@ function init(): void {
 	});
 	// The eval line's color is read from the canvas's CSS `color` at draw time, so a light/dark
 	// switch needs an explicit redraw — nothing else touches the graph until the next interaction.
-	document.addEventListener('color-scheme-change', () => {
+	SettingsBus.addEventListener('color-scheme-change', () => {
 		if (isGraphVisible()) drawGraph();
 	});
 	GameBus.addEventListener('view-move', () => {

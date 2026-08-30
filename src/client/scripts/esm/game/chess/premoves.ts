@@ -33,6 +33,7 @@ import { GameBus } from '../../board/GameBus.js';
 import movesequence from './movesequence.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import { animateMove } from './graphicalchanges.js';
+import { SettingsBus } from '../../util/SettingsBus.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -86,7 +87,7 @@ GameBus.addEventListener('game-unloaded', () => {
 });
 
 /** Event listener for when we change the Premoves toggle */
-document.addEventListener('premoves-toggle', (_e) => {
+SettingsBus.addEventListener('premoves-toggle', (_e) => {
 	// const enabled: boolean = _e.detail;
 
 	const gamefile = gameslot.getGamefile();

@@ -1,5 +1,10 @@
 // src/client/scripts/esm/views/admin.ts
 
+/**
+ * The admin page's command console. Posts typed commands to /api/admin/command
+ * and appends the server's reply to the history box.
+ */
+
 const commandInput = document.getElementById('commandInput')! as HTMLInputElement;
 const commandHistory = document.getElementById('commandHistory')! as HTMLTextAreaElement;
 const sendCommandButton = document.getElementById('sendButton')! as HTMLButtonElement;
@@ -17,9 +22,8 @@ async function sendCommand(): Promise<void> {
 	scrollToBottom(commandHistory);
 }
 
-function clickSubmitIfReturnPressed(event: any): void {
-	// 13 is the key code for Enter key
-	if (event.keyCode === 13) sendCommandButton.click();
+function clickSubmitIfReturnPressed(event: KeyboardEvent): void {
+	if (event.key === 'Enter') sendCommandButton.click();
 }
 
 /**

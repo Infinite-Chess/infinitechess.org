@@ -12,7 +12,7 @@ import type { ClientboundMessage } from '../../../../shared/transport/clientboun
 // Constants -------------------------------------------------------------------
 
 /** Whether to also print incoming echos. They're frequent and rarely what you're debugging. */
-const alsoPrintIncomingEchos = false;
+const PRINT_ECHOS = false;
 
 // Variables -------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ function logOutgoing(message: string): void {
 /** Prints a validated message we received. */
 function logIncoming(message: ClientboundMessage): void {
 	if (!DEBUG) return;
-	if (message.route === 'echo' && !alsoPrintIncomingEchos) return;
+	if (message.route === 'echo' && !PRINT_ECHOS) return;
 	console.log(`Incoming message: ${JSON.stringify(message)}`);
 }
 

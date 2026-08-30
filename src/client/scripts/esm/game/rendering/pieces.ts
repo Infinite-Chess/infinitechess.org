@@ -16,10 +16,10 @@ import piecemodels from '../../board/rendering/piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import { createRenderable } from '../../board/rendering/renderable.js';
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Opacity of ghost piece over legal move highlights. Default: 0.4 */
-const ghostOpacity: number = 0.4;
+const GHOST_OPACITY: number = 0.4;
 
 // Functions -------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ function renderPiecesInGame(ctx: RenderContext, mesh: Mesh | undefined): void {
 
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type: number, coords: Coords): void {
-	const data = meshes.QuadWorld_ColorTexture(coords, [1, 1, 1, ghostOpacity]);
+	const data = meshes.QuadWorld_ColorTexture(coords, [1, 1, 1, GHOST_OPACITY]);
 	const model = createRenderable(
 		data,
 		2,
@@ -49,7 +49,7 @@ function renderGhostPiece(type: number, coords: Coords): void {
 	model.render();
 }
 
-// ------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	renderPiecesInGame,

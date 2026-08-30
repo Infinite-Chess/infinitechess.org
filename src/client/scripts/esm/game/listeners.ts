@@ -10,7 +10,7 @@
 
 import { CreateInputListener, InputListener } from './input.js';
 
-// State ---------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 let element_canvas: HTMLCanvasElement;
 /** The input listener for the board canvas. */
@@ -18,7 +18,7 @@ let listener_canvas: InputListener;
 /** The input listener for the document element. */
 let listener_document: InputListener;
 
-// Functions -----------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------
 
 /** Attaches both input listeners. Call once, before anything reads them. */
 function init(canvas: HTMLCanvasElement): void {
@@ -37,7 +37,7 @@ function atleastOneInput(): boolean {
 	return listener_document.atleastOneInput() || listener_canvas.atleastOneInput();
 }
 
-// Exports -------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	init,

@@ -49,7 +49,7 @@ const AutosaveStateSchema = z.strictObject({
 // Variables -------------------------------------------------------------------
 
 /** Number of milliseconds for period of position autosave */
-const positionAutosaveIntervalMs = 10000;
+const AUTOSAVE_INTERVAL_MS = 10000;
 
 /** Interval object for position autosave */
 let positionAutosaveTimer: number | undefined;
@@ -128,7 +128,7 @@ function startPositionAutosave(): void {
 
 	positionAutosaveTimer = window.setInterval(
 		() => autosaveCurrentPositionOnce(),
-		positionAutosaveIntervalMs,
+		AUTOSAVE_INTERVAL_MS,
 	);
 }
 

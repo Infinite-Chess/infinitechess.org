@@ -307,7 +307,7 @@ function onUnsub(): void {
 	updateRematchButton();
 }
 
-// =================================================================================
+// Listeners -------------------------------------------------------------------
 
 /** Wires the click listeners for every `.game-actions` button present in the DOM. */
 function initListeners(): void {
@@ -324,6 +324,8 @@ function initListeners(): void {
 }
 
 initListeners();
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	refresh,

@@ -12,6 +12,7 @@
 import type { DoubleCoords } from '../../../../shared/util/coordutil.js';
 
 import docutil from '../util/docutil.js';
+import { GameBus } from '../board/GameBus.js';
 
 /**
  * A list of all keyboard shortcuts that don't have a built in event in javascript.
@@ -252,7 +253,7 @@ interface ClickInfo {
 /**
  * Creates an input listener that listens to mouse and keyboard events on the given element.
  *
- * EVERY FRAME you need to dispatch the 'reset-listener-events' event on the document
+ * EVERY FRAME you need to dispatch the 'reset-listener-events' event on the GameBus
  * to reset the state of the input listener.
  * @param element - The HTML element to listen for events on.
  * @returns An object with methods to check the state of mouse and keyboard inputs.
@@ -328,15 +329,15 @@ function CreateInputListener(
 
 	const eventHandlers: Record<string, { target: EventTarget; handler: EventListener }> = {};
 
-	// Helper Functions ---------------------------------------------------------------------------
+	// Helper Functions ------------------------------------------------------------
 
 	function addListener(target: EventTarget, eventType: string, handler: EventListener): void {
 		target.addEventListener(eventType, handler);
 		eventHandlers[eventType] = { target, handler };
 	}
 
-	/** Reset the input events for the next frame. Fire 'reset-listener-events' event at the very end of EVERY frame. */
-	document.addEventListener('reset-listener-events', () => {
+	/** Reset the input events for the next frame. Fire 'reset-listener-events' at the very end of EVERY frame. */
+	GameBus.addEventListener('reset-listener-events', () => {
 		// console.log("Resetting events");
 		// We can continuously hold a key without triggering more events, so held keys should still count as an input that frame.
 		// atleastOneInputThisFrame = keyHelds.length > 0 || Object.values(clickInfo).some(clickInfo => clickInfo.isHeld);
@@ -554,7 +555,7 @@ function CreateInputListener(
 	}
 
 	if (mouse) {
-		// Mouse Events ---------------------------------------------------------------------------
+		// Mouse Events ----------------------------------------------------------------
 
 		addListener(element, 'mousedown', ((e: MouseEvent): void => {
 			if (element instanceof HTMLElement) {
@@ -626,7 +627,7 @@ function CreateInputListener(
 			e.preventDefault();
 		}) as EventListener);
 
-		// Finger Events ---------------------------------------------------------------------------
+		// Finger Events ---------------------------------------------------------------
 
 		addListener(element, 'touchstart', ((e: TouchEvent): void => {
 			if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
@@ -715,7 +716,7 @@ function CreateInputListener(
 		}
 	}
 
-	// Keyboard Events ---------------------------------------------------------------------------
+	// Keyboard Events -------------------------------------------------------------
 
 	if (keyboard) {
 		addListener(element, 'keydown', ((e: KeyboardEvent): void => {
@@ -774,7 +775,7 @@ function CreateInputListener(
 		});
 	}
 
-	// Return the InputListener object ---------------------------------------------------------------------------
+	// Return the InputListener object ---------------------------------------------
 
 	return {
 		element,

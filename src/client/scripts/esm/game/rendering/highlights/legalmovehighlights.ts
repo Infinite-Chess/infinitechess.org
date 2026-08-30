@@ -23,6 +23,7 @@ import { GameBus } from '../../../board/GameBus.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
+import { SettingsBus } from '../../../util/SettingsBus.js';
 import specialrighthighlights from './specialrighthighlights.js';
 import { RenderableInstanced } from '../../../webgl/Renderable.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
@@ -55,11 +56,11 @@ let model_Capture: RenderableInstanced | undefined;
 // Init Listeners --------------------------------------------------------------
 
 // When the legal move shape settings is modified, regenerate the model of the highlights
-document.addEventListener('legalmove-shape-change', regenerateAll); // Custom Event
+SettingsBus.addEventListener('legalmove-shape-change', regenerateAll);
 
 // When the theme is changed, erase the models so they
 // will be regenerated next render call.
-document.addEventListener('theme-change', regenerateAll);
+SettingsBus.addEventListener('theme-change', regenerateAll);
 
 // On Events -------------------------------------------------------------------
 

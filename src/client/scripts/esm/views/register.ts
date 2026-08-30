@@ -11,6 +11,7 @@
  */
 
 import { serverfetch } from '../util/serverfetch.js';
+import { SettingsBus } from '../util/SettingsBus.js';
 import {
 	usernameFormatError,
 	emailFormatError,
@@ -116,7 +117,7 @@ function renderTurnstileWidget(): void {
 window.onloadTurnstileCallback = renderTurnstileWidget;
 
 // When the user switches light/dark theme, re-render the widget.
-document.addEventListener('color-scheme-change', (): void => {
+SettingsBus.addEventListener('color-scheme-change', (): void => {
 	if (turnstileWidgetId === undefined) return; // Never rendered (api.js failed) — nothing to swap.
 	window.turnstile.remove(turnstileWidgetId);
 	turnstileToken = undefined;

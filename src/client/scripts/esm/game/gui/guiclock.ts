@@ -1,5 +1,13 @@
 // src/client/scripts/esm/game/gui/guiclock.ts
 
+/**
+ * Drives the two player bars: the clock text, the `.tempo` highlight on whoever is
+ * on the move, and the `.lowtime` warning.
+ *
+ * The two bars are SSR'd as top and bottom. Which player gets which depends on the
+ * side we're viewing from, since that side is always the bottom bar.
+ */
+
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
 import type { Player, PlayerGroup } from '../../../../../shared/util/typeutil.js';

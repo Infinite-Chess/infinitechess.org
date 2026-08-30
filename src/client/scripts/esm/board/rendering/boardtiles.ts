@@ -13,6 +13,7 @@
 import type { Color } from '../../../../../shared/types/color.js';
 import type RenderContext from './RenderContext.js';
 import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
+import type { UniformValue } from '../../webgl/Renderable.js';
 import type { AttributeInfo, Renderable, TextureInfo } from '../../webgl/Renderable.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -25,6 +26,7 @@ import preferences from '../../util/preferences.js';
 import frametracker from './frametracker.js';
 import boardgeometry from './boardgeometry.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
+import { SettingsBus } from '../../util/SettingsBus.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 
 // Types -----------------------------------------------------------------------
@@ -34,7 +36,7 @@ export interface BoardTiles {
 	/** Loads and generates this context's tile textures. */
 	init(): Promise<void>;
 	/** Renders the board tiles (solid cover + fractal boards). */
-	render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void;
+	render(noiseTextures?: NoiseTextures, uniforms?: Record<string, UniformValue>): void;
 	/** Renders the solid grey cover behind the tiles. */
 	renderSolidCover(): void;
 }
@@ -48,7 +50,7 @@ type NoiseTextures = { perlinNoise?: WebGLTexture; whiteNoise?: WebGLTexture };
 // Constants -------------------------------------------------------------------
 
 /** Z level for perspective mode rendering of the board tiles. */
-const perspectiveMode_z = -0.01;
+const PERSPECTIVE_MODE_Z = -0.01;
 
 // BigDecimal constants
 const ONE = bd.fromBigInt(1n);
@@ -76,12 +78,12 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 	/** Color [r,g,b,a] of the dark tiles. */
 	let darkTiles: Color;
 
-	document.addEventListener('theme-change', () => {
+	SettingsBus.addEventListener('theme-change', () => {
 		// console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
 		resetColor();
 	});
 
-	// Initialization --------------------------------------------------------------------------------
+	// Initialization --------------------------------------------------------------
 
 	async function init(): Promise<void> {
 		// Generate the tiles mask texture
@@ -137,7 +139,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		return initTextures();
 	}
 
-	// Updates sky color based on current board color
+	/** Updates the sky color to match the current board color. */
 	function updateSkyColor(): void {
 		const avgR = (lightTiles[0] + darkTiles[0]) / 2;
 		const avgG = (lightTiles[1] + darkTiles[1]) / 2;
@@ -160,10 +162,10 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		// ctx.setClearColor([0,0,0]); // Solid Black
 	}
 
-	// Rendering -------------------------------------------------------------------------
+	// Rendering -------------------------------------------------------------------
 
-	// Renders board tiles
-	function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): void {
+	/** Renders the board tiles. */
+	function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, UniformValue>): void {
 		// This prevents tearing when rendering in the same z-level and in perspective.
 		ctx.executeWithDepthFunc_ALWAYS(() => {
 			renderSolidCover(); // This is needed even outside of perspective, so when we zoom out, the rendered fractal transprent boards look correct.
@@ -171,7 +173,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		});
 	}
 
-	// Renders an upside down grey cone centered around the camera, and level with the horizon.
+	/** Renders a box tunnel and floor around the camera, tinted the average tile color. */
 	function renderSolidCover(): void {
 		// const dist = camera.DIST_TO_RENDER_BOARD;
 		const dist = ctx.camera.getZFar() / Math.SQRT2;
@@ -193,7 +195,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 
 	function renderFractalBoards(
 		noiseTextures?: NoiseTextures,
-		uniforms?: Record<string, any>,
+		uniforms?: Record<string, UniformValue>,
 	): void {
 		const z = getRelativeZ();
 
@@ -239,7 +241,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 
 	/** Returns what Z level the board tiles should be rendered at this frame. */
 	function getRelativeZ(): number {
-		return ctx.camera.isCameraRotated() ? perspectiveMode_z : 0;
+		return ctx.camera.isCameraRotated() ? PERSPECTIVE_MODE_Z : 0;
 	}
 
 	/**

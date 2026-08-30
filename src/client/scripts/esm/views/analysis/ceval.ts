@@ -199,9 +199,11 @@ const queuedLegalMovesRequests: { requestId: number; icn: string }[] = [];
 // Settings persistence --------------------------------------------------------
 
 function loadSettings(): CevalSettings {
+	// Only an object is mergable. The clamps below actually sanitize the fields.
+	const stored: unknown = LocalStorage.loadItem(STORAGE_KEY);
 	const loaded: CevalSettings = {
 		...DEFAULT_SETTINGS,
-		...(LocalStorage.loadItem(STORAGE_KEY) ?? {}),
+		...(typeof stored === 'object' && stored !== null ? stored : {}),
 	};
 	// Sanitize against the allowed ranges.
 	loaded.multiPv = math.clamp(loaded.multiPv, 1, MAX_MULTI_PV);

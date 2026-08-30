@@ -1,4 +1,4 @@
-// src/client/scripts/esm/board/rendering/variantpreviewtooltip.ts
+// src/client/scripts/esm/board/variantselector/variantpreviewtooltip.ts
 
 /**
  * Renders a floating tooltip containing a small WebGL board preview and
@@ -302,8 +302,7 @@ function renderBoard(boardsim: BoardPreview): void {
 	// Render pieces
 	if (
 		!ctx.boardpos.areZoomedOut() ||
-		boardutil.getPieceCountOfGame(boardsim.pieces) >
-			miniimagerenderer.pieceCountToDisableMiniImages
+		boardutil.getPieceCountOfGame(boardsim.pieces) > miniimagerenderer.MAX_PIECE_COUNT
 	) {
 		piecemodels.renderAll(ctx, mesh);
 	} else {

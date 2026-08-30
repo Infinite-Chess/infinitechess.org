@@ -1,23 +1,27 @@
 // src/client/scripts/esm/game/rendering/effectzone/zones/DustyWastesZone.ts
 
-import type { Zone } from '../Zone';
+/**
+ * A dim, red-tinted board with two layers of dust blowing across it, the wind
+ * slowly changing direction. Every few seconds the picture tears and the colors
+ * split apart, then settle. Wind howls.
+ */
+
+import type { UniformValue } from '../../../../webgl/Renderable';
 import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
 
 import deltatime from '../../../../board/deltatime.js';
+import { BaseZone } from '../BaseZone';
 import { GlitchPass } from '../../../../webgl/postprocessing/passes/GlitchPass';
 import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
-export class DustyWastesZone implements Zone {
+export class DustyWastesZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 6;
 
 	private colorGradePass: ColorGradePass;
 	private glitchPass: GlitchPass;
-
-	/** The soundscape player for this zone. */
-	private ambience: SoundscapePlayer;
 
 	// --- Wind Effect Properties ---
 	/** The opacity of the wind effect. */
@@ -76,6 +80,7 @@ export class DustyWastesZone implements Zone {
 	private timeUntilNextGlitch: number = 0.0;
 
 	constructor(programManager: ProgramManager) {
+		super();
 		this.colorGradePass = new ColorGradePass(programManager);
 		this.colorGradePass.brightness = -0.2; // Default: 0.7
 		this.colorGradePass.tint = [1.0, 0.75, 0.7]; // Slight red tint
@@ -232,7 +237,7 @@ export class DustyWastesZone implements Zone {
 			this.minInterval + Math.random() * (this.maxInterval - this.minInterval);
 	}
 
-	public getUniforms(): Record<string, any> {
+	public getUniforms(): Record<string, UniformValue> {
 		// Pass the final accumulated offsets directly to the shader.
 		return {
 			u6_strength: this.windOpacity,
@@ -242,15 +247,7 @@ export class DustyWastesZone implements Zone {
 		};
 	}
 
-	public getPasses(): PostProcessPass[] {
+	public override getPasses(): PostProcessPass[] {
 		return [this.colorGradePass, this.glitchPass];
-	}
-
-	public fadeInAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeIn(transitionDurationMs);
-	}
-
-	public fadeOutAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeOut(transitionDurationMs);
 	}
 }

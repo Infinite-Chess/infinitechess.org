@@ -27,7 +27,9 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from '../../webgl/gl-matrix.js';
 import preferences from '../../util/preferences.js';
+import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
+import { SettingsBus } from '../../util/SettingsBus.js';
 import { createScreenShake } from './screenshake.js';
 
 // Types -----------------------------------------------------------------------
@@ -52,7 +54,7 @@ export interface Camera {
 	 * white's perspective. ZERO perspective rotations!
 	 * Works both in 3D perspective mode and in 2D black's-perspective mode.
 	 */
-	renderWithoutPerspectiveRotations(func: Function): void;
+	renderWithoutPerspectiveRotations(func: () => void): void;
 	setPerspectiveRotation(newRotX: number, newRotZ: number): void;
 	getPosition(ignoreDevmode?: boolean): Vec3;
 	getZFar(): number;
@@ -138,17 +140,17 @@ interface CameraHooks {
 
 // This will NEVER change! The camera stays while the board position is what moves!
 // What CAN change is the rotation of the view matrix!
-const position: Vec3 = [0, 0, 12]; // [x, y, z]
-const position_devMode: Vec3 = [0, 0, 18]; // Default: 18
+const POSITION: Vec3 = [0, 0, 12]; // [x, y, z]
+const POSITION_DEV_MODE: Vec3 = [0, 0, 18]; // Default: 18
 
 /** How far to render the board into the distance when in perspective mode. */
 const DIST_TO_RENDER_BOARD = 1500;
 
 // The closer near & far limits are in terms of orders of magnitude, the more accurate
 // and less often things appear out of order. Should be within 5-6 magnitude orders.
-const zNear = 1;
+const Z_NEAR = 1;
 /** Has to be at least {@link DIST_TO_RENDER_BOARD} * sqrt(2) */
-const zFar = DIST_TO_RENDER_BOARD * Math.SQRT2;
+const Z_FAR = DIST_TO_RENDER_BOARD * Math.SQRT2;
 
 // Factory ---------------------------------------------------------------------
 
@@ -157,7 +159,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	const onVisualChange = hooks.onVisualChange;
 	const onCanvasResize = hooks.onCanvasResize;
 
-	// State ---------------------------------------------------------------
+	// State -----------------------------------------------------------------------
 
 	/** Field of view, in radians */
 	let fieldOfView: number;
@@ -209,7 +211,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		},
 	});
 
-	// Functions -----------------------------------------------------------------------
+	// Functions -------------------------------------------------------------------
 
 	/** Returns true if we have no perspective rotation */
 	function haveZeroRotation(): boolean {
@@ -268,7 +270,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		return rotX <= -90;
 	}
 
-	function renderWithoutPerspectiveRotations(func: Function): void {
+	function renderWithoutPerspectiveRotations(func: () => void): void {
 		if (haveZeroRotation()) return func();
 
 		const perspectiveViewMatrixCopy = getViewMatrix();
@@ -286,13 +288,13 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		onPositionChange(); // Calculate new viewMatrix
 	}
 
-	// Returns devMode-sensitive camera position.
+	/** Returns the devMode-sensitive camera position. */
 	function getPosition(ignoreDevmode?: boolean): Vec3 {
-		return jsutil.deepCopyObject(!ignoreDevmode && DEBUG ? position_devMode : position);
+		return jsutil.deepCopyObject(!ignoreDevmode && DEBUG ? POSITION_DEV_MODE : POSITION);
 	}
 
 	function getZFar(): number {
-		return zFar;
+		return Z_FAR;
 	}
 
 	function getCanvasWidthVirtualPixels(): number {
@@ -307,7 +309,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		DEBUG = !DEBUG;
 		onVisualChange?.(); // Visual change, render the screen this frame
 		onPositionChange();
-		document.dispatchEvent(new CustomEvent('camera-debug-toggle'));
+		GameBus.dispatch('camera-debug-toggle');
 
 		console.log(`Toggled camera debug: ${DEBUG}`);
 	}
@@ -367,7 +369,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		return { projMatrix, viewMatrix };
 	}
 
-	// Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
+	/** Binds this camera to a gl context and canvas, then builds its FOV and matrices. */
 	function init(glContext: WebGL2RenderingContext, canvasElement: HTMLCanvasElement): void {
 		gl = glContext;
 		canvas = canvasElement;
@@ -376,12 +378,12 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	}
 
 	function wireGlobalListeners(): void {
-		document.addEventListener('fov-change', () => onFOVChange());
+		SettingsBus.addEventListener('fov-change', () => onFOVChange());
 		window.addEventListener('resize', () => syncCanvasDimensions());
 		shake.wireGlobalListeners();
 	}
 
-	// Inits the matrix uniforms: viewMatrix (camera) & projMatrix
+	/** Syncs the canvas dimensions, then builds the projection and view matrices. */
 	function initMatrixes(): void {
 		projMatrix = mat4.create(); // Same for every shader program
 
@@ -393,7 +395,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		// World matrix only needs to be initiated when rendering objects
 	}
 
-	// Call this when window resized. Also updates the projection matrix.
+	/** Rebuilds the projection matrix, which is all that perspective setup amounts to. */
 	function initPerspective(): void {
 		initProjMatrix();
 	}
@@ -409,7 +411,6 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		if (rect.width <= 0 || rect.height <= 0) {
 			// Prevent NaN's (from dividing by zero) from propogating the system.
 			// Can happen when the screen is resized so the last known preview tooltip position squishes the preview to nothing.
-			// console.warn(`Canvas has zero area dimensions.`);
 			return;
 		}
 
@@ -433,12 +434,12 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		initScreenBoundingBox();
 	}
 
-	// Set view matrix
+	/** Stores a new view matrix. */
 	function setViewMatrix(newMatrix: Mat4): void {
 		viewMatrix = newMatrix;
 	}
 
-	// Initiates the camera matrix. View matrix.
+	/** Initiates the camera (view) matrix. */
 	function initViewMatrix(ignoreRotations?: boolean): void {
 		const newViewMatrix: Mat4 = mat4.create();
 
@@ -461,18 +462,24 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		// because the combined transformMatrix is recalculated on every draw call.
 	}
 
-	/** Inits the projection matrix uniform and sends that over to the gpu for each of our shader programs. */
+	/**
+	 * Recomputes the projection matrix from the current FOV,
+	 * aspect and z limits, then flags a visual change.
+	 */
 	function initProjMatrix(): void {
-		mat4.perspective(projMatrix, fieldOfView, aspect, zNear, zFar);
+		mat4.perspective(projMatrix, fieldOfView, aspect, Z_NEAR, Z_FAR);
 		// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
 		// because the combined transformMatrix is recalculated on every draw call.
 		onVisualChange?.();
 	}
 
-	// Return the world-space x & y positions of the screen edges. Not affected by scale or board position.
+	/**
+	 * Stores the world-space screen-edge boxes, normal and devMode, derived from
+	 * the FOV, aspect and camera distance. Not affected by scale or board position.
+	 */
 	function initScreenBoundingBox(): void {
 		// Camera dist
-		let dist = position[2];
+		let dist = POSITION[2];
 		// const dist = 7;
 		const thetaY = fieldOfView / 2; // Radians
 
@@ -491,7 +498,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 
 		// Now init the developer-mode screen bounding box
 
-		dist = position_devMode[2];
+		dist = POSITION_DEV_MODE[2];
 
 		distToVertEdge = Math.tan(thetaY) * dist;
 		distToHorzEdge = distToVertEdge * aspect;
@@ -504,19 +511,18 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		};
 	}
 
-	// Converts to radians
+	/** Reads the FOV preference and stores it in radians. */
 	function initFOV(): void {
 		fieldOfView = (preferences.getPerspectiveFOV() * Math.PI) / 180;
 	}
 
 	function onFOVChange(): void {
-		// console.log("Detected field of view change custom event!");
 		initFOV();
 		initProjMatrix();
 		recalcCanvasVariables(); // The only thing inside here we don't actually need to change is the aspect variable, but it doesn't matter.
 	}
 
-	// Call both when camera moves or rotates
+	/** Rebuilds the view matrix after the camera has moved or rotated. */
 	function onPositionChange(): void {
 		initViewMatrix();
 	}
@@ -574,7 +580,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 const gameCamera = createCamera({
 	onVisualChange: () => frametracker.onVisualChange(),
 	onCanvasResize: (detail: { width: number; height: number }): void => {
-		document.dispatchEvent(new CustomEvent('canvas_resize', { detail }));
+		GameBus.dispatch('canvas-resize', detail);
 	},
 });
 

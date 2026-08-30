@@ -42,9 +42,10 @@ import {
 	createRenderable_Instanced,
 } from '../../../board/rendering/renderable.js';
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
-const z: number = 0.01;
+/** The z-depth the dragged piece renders at, outside perspective mode. */
+const FLAT_Z: number = 0.01;
 
 /**
  * The minimum size of the rendered dragged piece on screen, in virtual pixels.
@@ -70,17 +71,19 @@ const outlineWidth = {
 } as const;
 
 /** When using a touchscreen, the piece is shifted upward by this amount to prevent it being covered by fingers. */
-const touchscreenOffset: number = 1.6; // Default: 2
+const TOUCHSCREEN_OFFSET: number = 1.6; // Default: 2
 /** When each square becomes smaller than this in virtual pixels, we render rank/column outlines instead of the outline box. */
-const minSizeToDrawOutline: number = 40;
+const MIN_SIZE_TO_DRAW_OUTLINE: number = 40;
 
 /** Adjustments for the dragged piece while in perspective mode. */
-const perspectiveConfigs: { z: number; shadowColor: Color } = {
+const perspectiveConfigs = {
 	/** The height the piece is rendered above the board when in perspective mode. */
 	z: 0.6,
 	/** The color of the shadow of the dragged piece. */
 	shadowColor: [0.1, 0.1, 0.1, 0.5],
 } as const;
+
+// State -------------------------------------------------------------------
 
 /** If true, `pieceSelected` is currently being held. */
 let areDragging = false;
@@ -246,7 +249,7 @@ function renderTransparentSquare(): void {
 
 	const color: Color = [0, 0, 0, 0];
 	const data = meshes.QuadWorld_Color(startCoords, color); // Hide orginal piece
-	return createRenderable(data, 2, 'TRIANGLES', 'color', true).render([0, 0, z]);
+	return createRenderable(data, 2, 'TRIANGLES', 'color', true).render([0, 0, FLAT_Z]);
 }
 
 // Renders the box outline, the dragged piece and its shadow
@@ -268,7 +271,7 @@ function renderPieceModel(): void {
 	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
 
 	// In perspective the piece is rendered above the surface of the board.
-	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;
+	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : FLAT_Z;
 
 	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
 	// it being covered by the finger.
@@ -285,13 +288,14 @@ function renderPieceModel(): void {
 	const halfSize = size / 2;
 	const left = worldLocation![0] - halfSize;
 	const bottom =
-		worldLocation![1] - halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
+		worldLocation![1] - halfSize + (touchscreenUsed ? TOUCHSCREEN_OFFSET * rotation : 0);
 	const right = worldLocation![0] + halfSize;
-	const top = worldLocation![1] + halfSize + (touchscreenUsed ? touchscreenOffset * rotation : 0);
+	const top =
+		worldLocation![1] + halfSize + (touchscreenUsed ? TOUCHSCREEN_OFFSET * rotation : 0);
 
 	const data: number[] = [];
 	// prettier-ignore
-	if (perspectiveEnabled) data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
+	if (perspectiveEnabled) data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, FLAT_Z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
 	// prettier-ignore
 	data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
 	createRenderable(
@@ -323,7 +327,7 @@ function renderOutline(): void {
 	// 2. It is a touch screen, OR we are zoomed out enough.
 	if (
 		!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) &&
-		(forceRankFileOutline || pointerIsTouch || bd.toNumber(boardgeometry.getTileWidthPixels()) < minSizeToDrawOutline)
+		(forceRankFileOutline || pointerIsTouch || bd.toNumber(boardgeometry.getTileWidthPixels()) < MIN_SIZE_TO_DRAW_OUTLINE)
 	) {
 		// Outline the entire rank and file
 		const screenBox = camera.getRespectiveScreenBox();

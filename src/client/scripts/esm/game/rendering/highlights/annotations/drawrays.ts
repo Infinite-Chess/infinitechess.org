@@ -411,7 +411,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 }
 
 function dispatchRayCountEvent(rays: Ray[]): void {
-	document.dispatchEvent(new CustomEvent('ray-count-change', { detail: rays.length }));
+	GameBus.dispatch('ray-count-change', rays.length);
 }
 
 /**

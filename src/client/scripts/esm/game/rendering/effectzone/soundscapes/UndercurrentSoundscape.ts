@@ -1,5 +1,12 @@
 // src/client/scripts/esm/game/rendering/effectzone/soundscapes/UndercurrentSoundscape.ts
 
+/**
+ * A shared soundscape used by several zones: a deep, steady rumble.
+ *
+ * Exported both as a finished soundscape and in pieces, since some zones play
+ * it as-is while others layer it underneath sounds of their own.
+ */
+
 import { LayerConfig } from '../../../../audio/SoundLayer';
 import { SoundscapeConfig } from '../../../../audio/SoundscapePlayer';
 

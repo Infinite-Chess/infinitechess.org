@@ -17,6 +17,7 @@ import boardpos from '../../board/rendering/boardpos';
 import drawrays from './highlights/annotations/drawrays';
 import gameslot from '../chess/gameslot';
 import perspective from './perspective';
+import { GameBus } from '../../board/GameBus';
 import frametracker from '../../board/rendering/frametracker';
 import { RippleState, WaterRipplePass } from '../../webgl/postprocessing/passes/WaterRipplePass';
 
@@ -59,7 +60,7 @@ function init(programManager: ProgramManager, width: number, height: number): vo
 
 	// The post processing effect relies on the dimensions of the canvas.
 	// Init listener for screen resize
-	document.addEventListener('canvas_resize', (event) => {
+	GameBus.addEventListener('canvas-resize', (event) => {
 		const { width, height } = event.detail;
 		waterRipplePass.setResolution(width, height);
 		updateRippleLifetime(width, height);

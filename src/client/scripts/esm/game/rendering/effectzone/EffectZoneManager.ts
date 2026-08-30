@@ -1,7 +1,14 @@
 // src/client/scripts/esm/game/rendering/effectzone/EffectZoneManager.ts
 
-import type { Zone } from './Zone';
+/**
+ * Picks the effect zone for how far the board is from the origin, and cross-fades
+ * between zones on a timed transition. Both zones run at once mid-transition, their
+ * uniforms and post-process passes blended by progress.
+ */
+
+import type { BaseZone } from './BaseZone';
 import type { BoardTiles } from '../../../board/rendering/boardtiles';
+import type { UniformValue } from '../../../webgl/Renderable.js';
 import type { PostProcessPass } from '../../../webgl/postprocessing/PostProcessPass';
 
 import ImageLoader from '../../../util/ImageLoader';
@@ -10,6 +17,7 @@ import frametracker from '../../../board/rendering/frametracker';
 import TextureLoader from '../../../webgl/TextureLoader';
 import { OceanZone } from './zones/OceanZone';
 import { StaticZone } from './zones/StaticZone';
+import { SettingsBus } from '../../../util/SettingsBus';
 import { EchoRiftZone } from './zones/EchoRiftZone';
 import { ProgramManager } from '../../../webgl/ProgramManager';
 import { EmberVergeZone } from './zones/EmberVergeZone';
@@ -76,7 +84,7 @@ export class EffectZoneManager {
 	private gl: WebGL2RenderingContext;
 
 	/** The constructed Zones. */
-	private zones: Record<ZoneName, Zone>;
+	private zones: Record<ZoneName, BaseZone>;
 
 	/** The perlin noise texture used for cloudy effects. */
 	private perlinNoiseTexture: WebGLTexture | undefined;
@@ -91,9 +99,9 @@ export class EffectZoneManager {
 	private transitionStartTime: number | null = null;
 
 	/** The current zone we are in, or transitioning out of. */
-	private currentZone: Zone;
+	private currentZone: BaseZone;
 	/** The zone we are transitioning into, or null if no transition is happening. */
-	private transitionTargetZone: Zone | null = null;
+	private transitionTargetZone: BaseZone | null = null;
 
 	/** 0.0 = fully currentZone, 1.0 = fully targetZone */
 	private transitionProgress: number = 0.0;
@@ -136,7 +144,7 @@ export class EffectZoneManager {
 		this.currentZone = this.zones['The Beginning'];
 
 		// Set up a listener for the ambience-enabled preference changing.
-		document.addEventListener('ambience-toggle', (event) => {
+		SettingsBus.addEventListener('ambience-toggle', (event) => {
 			// Turn on/off the ambience of the current zone (and transition target zone, if applicable).
 			const enabled: boolean = event.detail;
 			if (!enabled) {
@@ -156,10 +164,10 @@ export class EffectZoneManager {
 	/**
 	 * Finds the active zone for a given distance from the origin.
 	 */
-	private findZoneForDistance(distance: bigint): Zone {
+	private findZoneForDistance(distance: bigint): BaseZone {
 		const advancedEnabled = preferences.getAdvancedEffectsMode();
 
-		let furthestZone: Zone | undefined;
+		let furthestZone: BaseZone | undefined;
 		// Iterate through all proceeding zones in reverse to find
 		// the furthest one that starts before our current distance.
 		for (let i = EffectZoneManager.ZONES.length - 1; i >= 0; i--) {
@@ -268,7 +276,7 @@ export class EffectZoneManager {
 
 		// Construct the uniform object for the Uber-Shader
 
-		const uniforms: Record<string, any> = {
+		const uniforms: Record<string, UniformValue> = {
 			// Global uniforms
 			u_transitionProgress: this.transitionProgress,
 			u_resolution: [this.gl.canvas.width, this.gl.canvas.height],
