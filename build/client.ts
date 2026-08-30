@@ -64,6 +64,7 @@ export const ESMEntryPoints = [
 	// 'src/client/scripts/esm/views/news/news.ts',
 	// 'src/client/scripts/esm/views/guide.ts',
 	// 'src/client/scripts/esm/views/admin.ts',
+	// 'src/client/scripts/esm/views/checkmatepractice/checkmatepractice.ts',
 	// 'src/client/scripts/esm/views/icnvalidator/icnvalidator.ts',
 	// 'src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts',
 ];
