@@ -60,8 +60,11 @@ interface Gate {
 interface Rank {
 	/** Directories (trailing "/") or exact files, relative to the ladder's root. */
 	units: string[];
-	/** What the rung is for, in words — findings quote it, one sentence per pair. */
-	audience: string;
+	/**
+	 * What the rung is for, in words — its AUDIENCE on the client, its SUBJECT
+	 * on the server and shared. Findings quote it, one sentence per pair.
+	 */
+	purpose: string;
 }
 
 /** One root's ladder: where its files live and its rungs in ASCENDING order. */
@@ -72,17 +75,23 @@ interface Ladder {
 	ranks: Rank[];
 }
 
-/** Where a module sits on its ladder: the rung's index, naming unit, and audience. */
+/** Where a module sits on its ladder: the rung's index, naming unit, and purpose. */
 interface Rung {
 	rank: number;
 	unit: string;
-	audience: string;
+	purpose: string;
 }
 
 /** One import between first-party files, in short form. */
 interface Edge {
 	from: string;
 	to: string;
+}
+
+/** What one check reports: its findings as report lines, and how many problems they represent. */
+interface CheckResult {
+	lines: string[];
+	problems: number;
 }
 
 // Constants -------------------------------------------------------------------
@@ -95,16 +104,13 @@ const MAX_LISTED = 20;
 /** The per-page island rung of the client ladder — the only one that also forbids SIDEWAYS imports between pages. */
 const VIEWS = 'views/';
 
-/** What a module on no rung is usable by — the floor of a ladder. */
-const FLOOR_AUDIENCE = 'any page';
+/** What a module on no rung is usable by — the floor of a ladder, and the client's lowest rungs. */
+const FLOOR_PURPOSE = 'any page';
 
 /**
  * The three roots' ladders, rungs in ASCENDING order — later means further up, and
- * imports may only point DOWN. Exact files rank individually (src/server's types.ts
- * at the very bottom, its entry points at the very top), and a sub-directory rung
- * (board/rendering/) sits above its parent (board/). Each audience is the single
- * source of its wording: findings quote it, one sentence per pair. Rungs sharing
- * an audience are still rungs: chess/ may not import components/, though both
+ * imports may only point DOWN. `rungOf` resolves a module to one of these. Rungs
+ * sharing a purpose are still rungs: chess/ may not import components/, though both
  * ship everywhere.
  */
 const LADDERS: Record<RootName, Ladder> = {
@@ -112,59 +118,59 @@ const LADDERS: Record<RootName, Ladder> = {
 		root: 'src/client/scripts/esm/',
 		prefix: '',
 		ranks: [
-			{ units: ['util/', 'webgl/'], audience: 'any page' },
-			{ units: ['audio/', 'chess/', 'handoffs/', 'savedpositions/'], audience: 'any page' },
-			{ units: ['components/', 'socket/'], audience: 'any page' },
-			{ units: ['board/'], audience: 'pages that render a board' },
-			{ units: ['board/rendering/'], audience: 'pages that render a board' },
-			{ units: ['board/variantselector/'], audience: 'pages that render a board' },
-			{ units: ['game/'], audience: 'pages with an interactive board' },
-			{ units: [VIEWS], audience: 'one page only' },
+			{ units: ['util/', 'webgl/'], purpose: FLOOR_PURPOSE },
+			{ units: ['audio/', 'chess/', 'handoffs/', 'savedpositions/'], purpose: FLOOR_PURPOSE },
+			{ units: ['components/', 'socket/'], purpose: FLOOR_PURPOSE },
+			{ units: ['board/'], purpose: 'pages that render a board' },
+			{ units: ['board/rendering/'], purpose: 'pages that render a board' },
+			{ units: ['board/variantselector/'], purpose: 'pages that render a board' },
+			{ units: ['game/'], purpose: 'pages with an interactive board' },
+			{ units: [VIEWS], purpose: 'one page only' },
 		],
 	},
 	server: {
 		root: 'src/server/',
 		prefix: 'server/',
 		ranks: [
-			{ units: ['types.ts'], audience: 'the type vocabulary everything reads' },
-			{ units: ['config/'], audience: 'what is loaded once at boot' },
-			{ units: ['utility/'], audience: 'infrastructure below the domain' },
-			{ units: ['database/'], audience: 'persistence' },
-			{ units: ['cookies/'], audience: 'cookie ownership' },
-			{ units: ['auth/'], audience: 'identity and login sessions' },
+			{ units: ['types.ts'], purpose: 'the type vocabulary everything reads' },
+			{ units: ['config/'], purpose: 'what is loaded once at boot' },
+			{ units: ['utility/'], purpose: 'infrastructure below the domain' },
+			{ units: ['database/'], purpose: 'persistence' },
+			{ units: ['cookies/'], purpose: 'cookie ownership' },
+			{ units: ['auth/'], purpose: 'identity and login sessions' },
 			{
 				units: ['game/', 'socket/'],
-				audience: 'live game state and the connections carrying it',
+				purpose: 'live game state and the connections carrying it',
 			},
-			{ units: ['controllers/'], audience: 'request handlers that render or answer' },
-			{ units: ['api/'], audience: 'JSON endpoints' },
+			{ units: ['controllers/'], purpose: 'request handlers that render or answer' },
+			{ units: ['api/'], purpose: 'JSON endpoints' },
 			{
 				units: ['middleware/'],
-				audience: 'what wraps a request before it reaches the above',
+				purpose: 'what wraps a request before it reaches the above',
 			},
-			{ units: ['routes/'], audience: 'the URL table' },
-			{ units: ['app.ts', 'server.ts', 'setupDev.ts'], audience: 'the process entry points' },
+			{ units: ['routes/'], purpose: 'the URL table' },
+			{ units: ['app.ts', 'server.ts', 'setupDev.ts'], purpose: 'the process entry points' },
 		],
 	},
 	shared: {
 		root: 'src/shared/',
 		prefix: 'shared/',
 		ranks: [
-			{ units: ['types/', 'util/'], audience: 'vocabulary owing nothing to chess' },
-			{ units: ['chess/util/'], audience: 'chess vocabulary that knows nothing of a board' },
-			{ units: ['chess/logic/'], audience: 'the data model and the rules engine' },
-			{ units: ['chess/engines/'], audience: 'what an engine can handle' },
+			{ units: ['types/', 'util/'], purpose: 'vocabulary owing nothing to chess' },
+			{ units: ['chess/util/'], purpose: 'chess vocabulary that knows nothing of a board' },
+			{ units: ['chess/logic/'], purpose: 'the data model and the rules engine' },
+			{ units: ['chess/engines/'], purpose: 'what an engine can handle' },
 			{
 				units: ['chess/variants/'],
-				audience: 'the variant definitions and the registry that loads them',
+				purpose: 'the variant definitions and the registry that loads them',
 			},
 			{
 				units: ['chess/game/'],
-				audience: 'deciding WHICH variant, then building or judging the game',
+				purpose: 'deciding WHICH variant, then building or judging the game',
 			},
 			{
 				units: ['components/', 'transport/'],
-				audience: 'UI shared with the server, and the transport contract',
+				purpose: 'UI shared with the server, and the transport contract',
 			},
 		],
 	},
@@ -202,7 +208,7 @@ const RULES: Rule[] = [
 	},
 	{
 		target: 'shared/chess/util/',
-		audience: 'anything chess-flavored, the header included',
+		audience: 'anything chess-flavored, or the header',
 		allowedEntries: [
 			...INTERACTIVE_BOARD_PAGES,
 			'views/index/',
@@ -273,11 +279,11 @@ function topDirOf(moduleShort: string): string {
  */
 function rungOf(ladder: Ladder, rel: string): Rung {
 	for (let i = ladder.ranks.length - 1; i >= 0; i--) {
-		const { units, audience } = ladder.ranks[i]!;
+		const { units, purpose } = ladder.ranks[i]!;
 		const unit = units.find((u) => (u.endsWith('/') ? rel.startsWith(u) : rel === u));
-		if (unit !== undefined) return { rank: i + 1, unit: ladder.prefix + unit, audience };
+		if (unit !== undefined) return { rank: i + 1, unit: ladder.prefix + unit, purpose };
 	}
-	return { rank: 0, unit: ladder.prefix + topDirOf(rel), audience: FLOOR_AUDIENCE };
+	return { rank: 0, unit: ladder.prefix + topDirOf(rel), purpose: FLOOR_PURPOSE };
 }
 
 /** Directory targets prefix-match; otherwise the target is one exact file. */
@@ -303,7 +309,7 @@ function cap(edges: string[]): string[] {
 	return [...edges.slice(0, MAX_LISTED), `- (+${edges.length - MAX_LISTED} more)`];
 }
 
-// Ladder Check ----------------------------------------------------------------
+// Source Scan -----------------------------------------------------------------
 
 /** Every .ts/.js file under a directory, as cwd-relative forward-slash paths. */
 function walkScripts(dir: string, out: string[] = []): string[] {
@@ -345,14 +351,16 @@ function collectEdges(): Edge[] {
 	return edges;
 }
 
+// Ladder Check ----------------------------------------------------------------
+
 /**
  * Asks "which direction may an import go" in every root: a pure source scan,
  * counting `import type` edges that never reach a bundle. Needs no entry points,
  * so it also covers pages that have none yet.
  */
-function checkLadders(edges: Edge[]): { lines: string[]; problems: number } {
+function checkLadders(edges: Edge[]): CheckResult {
 	/**
-	 * Rung-pair sentence -> the offending edges under it. An audience belongs to
+	 * Rung-pair sentence -> the offending edges under it. A purpose belongs to
 	 * the RUNG, so it is stated once per pair, not repeated on every edge.
 	 */
 	const upward = new Map<string, string[]>();
@@ -367,10 +375,11 @@ function checkLadders(edges: Edge[]): { lines: string[]; problems: number } {
 
 		if (toRung.rank > fromRung.rank) {
 			const pair =
-				`${fromRung.unit} (${fromRung.audience}) must not import` +
-				` ${toRung.unit} (${toRung.audience})`;
+				`${fromRung.unit} (${fromRung.purpose}) must not import` +
+				` ${toRung.unit} (${toRung.purpose})`;
 			if (!upward.has(pair)) upward.set(pair, []);
 			upward.get(pair)!.push(`- ${from} → ${to}`);
+			// An `else` only because views/ is one rung, so two pages always tie on rank.
 		} else if (from.startsWith(VIEWS) && to.startsWith(VIEWS) && pageOf(from) !== pageOf(to)) {
 			crossPage.push(`- ${from} → ${to}`);
 		}
@@ -400,7 +409,7 @@ function checkLadders(edges: Edge[]): { lines: string[]; problems: number } {
  * one directory would otherwise be ladder-legal. Only the roots in ACYCLIC_ROOTS
  * are held to this; the checker says nothing about the others.
  */
-function checkCycles(edges: Edge[]): { lines: string[]; problems: number } {
+function checkCycles(edges: Edge[]): CheckResult {
 	const lines: string[] = [];
 	let problems = 0;
 
@@ -472,7 +481,7 @@ function tarjan(nodes: string[], importsOf: (file: string) => string[]): string[
  * express the constraint. Checked against the SOURCE scan, not the bundle graph —
  * a static `import type` from the wrong module fails just as loudly.
  */
-function checkGates(edges: Edge[]): { lines: string[]; problems: number } {
+function checkGates(edges: Edge[]): CheckResult {
 	const lines: string[] = [];
 	let problems = 0;
 
@@ -557,7 +566,7 @@ function chainToTarget(
  * graph (via esbuild's metafile — the SAME resolution as the real build) and
  * reports any DISALLOWED entry that reaches a restricted target in its tree.
  */
-async function checkReachability(): Promise<{ lines: string[]; problems: number }> {
+async function checkReachability(): Promise<CheckResult> {
 	// Build each entry's graph once, then evaluate all rules against it.
 	const graphByEntry = new Map<string, Metafile['inputs']>();
 	await Promise.all(
@@ -586,7 +595,7 @@ async function checkReachability(): Promise<{ lines: string[]; problems: number 
 
 			// A directory target names its hits without repeating the prefix; a file target IS the hit.
 			const detail = rule.target.endsWith('/')
-				? `${hits.length} ${rule.target} modules: ${namesOf(hits, rule.target)}`
+				? `${hits.length} ${rule.target} module${hits.length === 1 ? '' : 's'}: ${namesOf(hits, rule.target)}`
 				: rule.target;
 			findings.push(`- ${entryShort} bundles ${detail}`);
 			// The offending import often sits many hops below the page, so name the path to it.
@@ -626,6 +635,5 @@ console.log(
 		...reachability.lines,
 	].join('\n'),
 );
-console.error(`✗ ${problems} problem${problems === 1 ? '' : 's'}`);
-console.error('The model behind these rules: docs/systems/IMPORT_RULES.md');
+console.error(`✗ ${problems} problem${problems === 1 ? '' : 's'} — the model: docs/systems/IMPORT_RULES.md`); // prettier-ignore
 process.exit(1);
