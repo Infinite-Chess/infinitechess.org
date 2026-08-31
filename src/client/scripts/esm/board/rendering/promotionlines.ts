@@ -11,7 +11,7 @@ import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd from '@naviary/bigdecimal';
 
-import { players as p } from '../../../../../shared/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import meshes from './meshes.js';
 import primitives from './primitives.js';

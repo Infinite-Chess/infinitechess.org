@@ -6,7 +6,7 @@
 
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { EnPassant } from './state.js';
 import type { MoveCoords } from './icn/icnmoves.js';

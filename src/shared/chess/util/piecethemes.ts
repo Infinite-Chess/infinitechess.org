@@ -5,9 +5,9 @@
  */
 
 import type { Color } from '../../types/color.js';
-import type { RawType, Player } from '../../util/typeutil.js';
+import type { RawType, Player } from './typeutil.js';
 
-import { rawTypes as r, players as p } from '../../util/typeutil.js';
+import { rawTypes as r, players as p } from './typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

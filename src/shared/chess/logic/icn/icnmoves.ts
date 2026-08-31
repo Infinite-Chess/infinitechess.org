@@ -10,7 +10,7 @@
  * See docs/systems/ICN.md for the full format reference.
  */
 
-import type { Player } from '../../../util/typeutil.js';
+import type { Player } from '../../util/typeutil.js';
 
 import icnposition from './icnposition.js';
 import coordutil, { Coords, CoordsKey } from '../../../util/coordutil.js';

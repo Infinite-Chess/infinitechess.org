@@ -9,13 +9,13 @@
  * the game — stage 3 of the life cycle — is what closes the reporting window.
  */
 
-import type { Player } from '../../../shared/util/typeutil.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './serverGameTypes.js';
 import type { ReportMessage } from '../../../shared/transport/serverbound.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type { GameStateMessage } from '../../../shared/transport/clientbound.js';
 
-import typeutil from '../../../shared/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 
 import logEvents from '../../utility/logEvents.js';

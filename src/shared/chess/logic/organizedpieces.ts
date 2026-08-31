@@ -15,13 +15,13 @@ import type { Promotion } from '../util/gamerules.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Coords, CoordsKey } from '../../util/coordutil.js';
-import type { Player, RawType, TypeGroup, RawTypeGroup } from '../../util/typeutil.js';
+import type { Player, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
 
 import bimath from '../../util/math/bimath.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
 import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
-import typeutil, { ext, players as p, rawTypes, neutralRawTypes } from '../../util/typeutil.js';
+import typeutil, { ext, players as p, rawTypes, neutralRawTypes } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

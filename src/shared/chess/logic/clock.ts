@@ -11,10 +11,10 @@ import type { GameRules } from '../util/gamerules.js';
 import type { MoveRecord } from './movepiece.js';
 import type { GameConclusion } from '../util/typeschemas.js';
 import type { ClockDependant } from './gamefile.js';
-import type { Player, PlayerGroup } from '../../util/typeutil.js';
+import type { Player, PlayerGroup } from '../util/typeutil.js';
 import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';
 
-import typeutil from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import moveutil from './moveutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamerules from '../util/gamerules.js';

@@ -11,12 +11,12 @@
 
 import type { RatingData } from '../../utility/ratingCalculation.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { MatchInfo, PlayerRatingResult, ServerGame } from './serverGameTypes.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
-import typeutil from '../../../shared/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import drawOffers from './drawOffers.js';

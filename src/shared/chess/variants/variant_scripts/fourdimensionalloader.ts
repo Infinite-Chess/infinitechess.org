@@ -13,7 +13,7 @@ import bimath from '../../../util/math/bimath.js';
 import movesets from '../../logic/movesets.js';
 import coordutil from '../../../util/coordutil.js';
 import gen4dposition from './gen4dposition.js';
-import { rawTypes as r } from '../../../util/typeutil.js';
+import { rawTypes as r } from '../../util/typeutil.js';
 import fourdimensionalmoves from '../../logic/fourdimensionalmoves.js';
 
 // Moveset Overrides -----------------------------------------------------------

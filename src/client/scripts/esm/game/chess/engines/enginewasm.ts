@@ -5,11 +5,11 @@
  * engine's own piece codes to the site's ICN abbreviations.
  */
 
-import type { Player, RawType } from '../../../../../../shared/util/typeutil.js';
+import type { Player, RawType } from '../../../../../../shared/chess/util/typeutil.js';
 
 import math from '../../../../../../shared/util/math/math.js';
 import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
-import typeutil, { rawTypes as r } from '../../../../../../shared/util/typeutil.js';
+import typeutil, { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

@@ -14,7 +14,7 @@
 import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { RatingData } from '../../utility/ratingCalculation.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
-import type { PlayerGroup, Player } from '../../../shared/util/typeutil.js';
+import type { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
 import type { MatchInfo, PlayerData, ServerGame } from './serverGameTypes.js';
 
 import jsutil from '../../../shared/util/jsutil.js';

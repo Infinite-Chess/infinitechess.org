@@ -9,7 +9,7 @@
  * Workers bundle separately and stay zod-free only while importing from here `import type`.
  */
 
-import type { Player } from '../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import * as z from 'zod';
 

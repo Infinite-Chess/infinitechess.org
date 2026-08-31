@@ -10,10 +10,10 @@
  * is the interactive game's cache; the variant-preview tooltip creates its own.
  */
 
-import type { TypeGroup } from '../../../../../shared/util/typeutil.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
-import typeutil from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 
 import imagecache from './imagecache.js';

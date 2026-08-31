@@ -16,7 +16,7 @@ import type {
 } from '../../../../../shared/chess/logic/movepiece.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
-import typeutil from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
@@ -24,7 +24,7 @@ import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import coordutil, { Coords } from '../../../../../shared/util/coordutil.js';
-import { rawTypes as r, players as p } from '../../../../../shared/util/typeutil.js';
+import { rawTypes as r, players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import mouse from '../mouse.js';
 import pieces from '../rendering/pieces.js';

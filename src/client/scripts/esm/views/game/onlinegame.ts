@@ -13,7 +13,7 @@ import type {
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
-import { players as p } from '../../../../../shared/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { ENGINE_DICTIONARY } from '../../../../../shared/chess/util/engine.js';
 
 import gameslot from '../../game/chess/gameslot.js';

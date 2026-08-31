@@ -6,21 +6,21 @@
  * special moves, the only place those are needed.
  */
 
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { VariantModule } from './variantmodule.js';
 import type { LoadedVariant } from './gamefile.js';
 import type { OrganizedPieces } from './organizedpieces.js';
-import type { RawType, RawTypeGroup } from '../../util/typeutil.js';
+import type { RawType, RawTypeGroup } from '../util/typeutil.js';
 import type { Movesets, PieceMoveset } from './movesets.js';
 import type { BoardInitOptions, BoardPreview } from './boardpreviewer.js';
 import type { SpecialMoveFunction, SpecialVicinity } from './specialmove.js';
 
 import jsutil from '../../util/jsutil.js';
 import movesets from './movesets.js';
-import typeutil from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
 import specialmove from './specialmove.js';
 import boardpreviewer from './boardpreviewer.js';

@@ -23,7 +23,7 @@ rules themselves.
       just because its lowest consumer allows it. A file that fits no rung's subject is
       carrying two responsibilities — split it rather than picking the least bad rung.
 - All paths inside the checker are "short form": `src/client/scripts/esm/` or `src/` chopped
-  off the front (`views/game/gui/x.ts`, `shared/util/typeutil.ts`).
+  off the front (`views/game/gui/x.ts`, `shared/chess/util/typeutil.ts`).
 
 ## The three ladders
 
@@ -83,10 +83,11 @@ rank: client `chess/` may not import client `components/`, though both ship ever
  3  chess/logic/             The data model and the rules engine: OrganizedPieces,
                              Board, Move, movesets, legal moves, check, notation (ICN),
                              the VariantModule contract. Works on a variant handed to it.
- 2  chess/util/              Chess vocabulary that knows nothing of a board: gamerules,
-                             win conditions, clock format, metadata tags, variant codes,
-                             piece themes, game modifiers, the engine roster. Nothing
-                             here may name the Board or Move types.
+ 2  chess/util/              Chess vocabulary that knows nothing of a board: piece types
+                             and players, gamerules, win conditions, clock format,
+                             metadata tags, variant codes, piece themes, game modifiers,
+                             the engine roster, the game page URLs. Nothing here may
+                             name the Board or Move types.
  1  types/, util/            Vocabulary owing nothing to chess: coords, math, time,
                              color, JSON, jsutil. A file here must make sense to a reader
                              who has never heard of this game.

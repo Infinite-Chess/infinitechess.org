@@ -12,7 +12,7 @@ import type { Coords, DoubleCoords } from '../../../../../../shared/util/coordut
 
 import bd from '@naviary/bigdecimal';
 
-import typeutil from '../../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 import piecethemes from '../../../../../../shared/chess/util/piecethemes.js';

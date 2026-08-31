@@ -374,7 +374,7 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 | Parsed ICN → constructed gamefile                  | [gameformulator.ts](/src/shared/chess/game/gameformulator.ts)                                                                           |
 | Gamefile → the converter's input shape             | [gamecompressor.ts](/src/client/scripts/esm/chess/gamecompressor.ts)                                                                    |
 | Gamerule + win-condition vocabularies              | [gamerules.ts](/src/shared/chess/util/gamerules.ts), [winconutil.ts](/src/shared/chess/util/winconutil.ts)                              |
-| Piece types and player numbers                     | [typeutil.ts](/src/shared/util/typeutil.ts)                                                                                             |
+| Piece types and player numbers                     | [typeutil.ts](/src/shared/chess/util/typeutil.ts)                                                                                       |
 | Metadata tag definitions                           | [metadatautil.ts](/src/shared/chess/util/metadatautil.ts)                                                                               |
 | Variant starting positions (raw position strings)  | `src/shared/chess/variants/variant_scripts/variants/`                                                                                   |
 | Logged-game ICN writer                             | [gamelogger.ts](/src/server/game/gamemanager/gamelogger.ts)                                                                             |

@@ -10,18 +10,18 @@
 import type { BaseRay } from '../../util/math/geometry.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { LoadedVariant } from './gamefile.js';
-import type { Player, RawType } from '../../util/typeutil.js';
+import type { Player, RawType } from '../util/typeutil.js';
 import type { CoordsKey, Coords } from '../../util/coordutil.js';
 import type { VariantModule, GameRuleModifications } from './variantmodule.js';
 
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
-import typeutil from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
 import gamerules from '../util/gamerules.js';
 import castlingutil from './castlingutil.js';
 import icnconverter from './icn/icnconverter.js';
-import { rawTypes as r } from '../../util/typeutil.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
 // Functions -------------------------------------------------------------------
 

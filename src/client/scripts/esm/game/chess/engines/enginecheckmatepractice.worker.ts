@@ -29,7 +29,7 @@ import {
 	ext as e,
 	players as p,
 	numTypes,
-} from '../../../../../../shared/util/typeutil.js';
+} from '../../../../../../shared/chess/util/typeutil.js';
 
 /**
  * The subset of the game this engine reads, rebuilt from the compressed position the

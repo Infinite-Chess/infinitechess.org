@@ -10,13 +10,13 @@
 
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { GameSetup, ServerGame } from './serverGameTypes.js';
 import type { EngineGamePageInfo, StaticGameState } from '../../../shared/transport/domain.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
-import typeutil from '../../../shared/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 

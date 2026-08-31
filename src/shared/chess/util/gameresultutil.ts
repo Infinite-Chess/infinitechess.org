@@ -9,7 +9,7 @@
 import type { GameConclusion } from './typeschemas.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 
-import { players } from '../../util/typeutil.js';
+import { players } from './typeutil.js';
 import { interpolate } from '../../util/interpolate.js';
 
 // Types -----------------------------------------------------------------------

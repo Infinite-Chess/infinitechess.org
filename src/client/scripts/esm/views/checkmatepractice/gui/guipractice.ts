@@ -4,10 +4,10 @@
  * Handles our Practice page, containing our practice selection menu.
  */
 
-import typeutil from '../../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import validcheckmates from '../../../../../../shared/chess/util/validcheckmates.js';
-import { players as p } from '../../../../../../shared/util/typeutil.js';
+import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
 import docutil from '../../../util/docutil.js';
 import svgcache from '../../../chess/rendering/svgcache.js';

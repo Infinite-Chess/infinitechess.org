@@ -18,7 +18,7 @@ import typeutil, {
 	Player,
 	players as p,
 	rawTypes as r,
-} from '../../../../../../shared/util/typeutil';
+} from '../../../../../../shared/chess/util/typeutil';
 
 import mouse from '../../../game/mouse';
 import arrows from '../../../game/rendering/arrows/arrows';

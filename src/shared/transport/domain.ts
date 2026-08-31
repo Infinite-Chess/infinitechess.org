@@ -18,7 +18,7 @@ import type { ValidEngine } from '../chess/util/engine.js';
 import type { TimeControl } from '../chess/util/clockutil.js';
 import type { GameConclusion } from '../chess/util/typeschemas.js';
 import type { GameStateVariant } from '../chess/util/variantselection.js';
-import type { Player, PlayerGroup } from '../util/typeutil.js';
+import type { Player, PlayerGroup } from '../chess/util/typeutil.js';
 
 import * as z from 'zod';
 

@@ -8,7 +8,7 @@
  */
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
-import type { Player } from '../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameConstructionOptions } from '../../../../../shared/chess/game/gameformulator.js';
 import type { GameFile, LoadedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 
@@ -20,7 +20,7 @@ import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
-import typeutil, { players as p } from '../../../../../shared/util/typeutil.js';
+import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import arrows from '../rendering/arrows/arrows.js';
 import { gl } from '../../board/rendering/webgl.js';

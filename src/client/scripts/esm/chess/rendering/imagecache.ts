@@ -10,10 +10,10 @@
  * so the cache persists across games. Only a theme change invalidates it.
  */
 
-import type { TypeGroup } from '../../../../../shared/util/typeutil.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
-import typeutil from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 
 import svgcache from './svgcache.js';

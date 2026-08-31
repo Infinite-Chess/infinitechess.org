@@ -8,13 +8,13 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from './typeutil.js';
 import type { TimeControl } from './clockutil.js';
 
 import * as z from 'zod';
 
 import timeutil from '../../util/timeutil.js';
-import { players as p } from '../../util/typeutil.js';
+import { players as p } from './typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

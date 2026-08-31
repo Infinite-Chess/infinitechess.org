@@ -1,4 +1,4 @@
-// src/shared/util/gameurl.ts
+// src/shared/chess/util/gameurl.ts
 
 /**
  * The `/game/:id/:color?` and `/analysis/:id/:color?` page URLs, built and parsed in one place.
@@ -9,7 +9,7 @@
 
 import type { Player } from './typeutil.js';
 
-import uuid from './uuid.js';
+import uuid from '../../util/uuid.js';
 import { players as p } from './typeutil.js';
 
 // Types -----------------------------------------------------------------------

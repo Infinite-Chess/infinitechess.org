@@ -8,7 +8,7 @@
  */
 
 import type { Color } from '../../../../../../shared/types/color.js';
-import type { Player } from '../../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';

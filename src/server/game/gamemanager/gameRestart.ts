@@ -10,7 +10,7 @@
  * See docs/systems/LIVE_GAME_PERSISTENCE.md for the schema and restoration details.
  */
 
-import type { Player } from '../../../shared/util/typeutil.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './serverGameTypes.js';
 import type { PendingTimers } from './liveGameRestore.js';
 

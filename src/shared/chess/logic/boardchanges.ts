@@ -16,7 +16,7 @@ import type { Coords } from '../../util/coordutil.js';
 import type { MoveFull } from './movepiece.js';
 
 import jsutil from '../../util/jsutil.js';
-import typeutil from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import boardutil from './boardutil.js';
 import organizedpieces from './organizedpieces.js';
 import coordutil, { CoordsKey } from '../../util/coordutil.js';

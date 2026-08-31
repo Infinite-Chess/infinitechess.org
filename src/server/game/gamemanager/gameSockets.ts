@@ -10,7 +10,7 @@
  */
 
 import type { Exact } from '../../../shared/util/socketutil.js';
-import type { Player } from '../../../shared/util/typeutil.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { MatchInfo, ServerGame } from './serverGameTypes.js';
 import type { OutAction, OutRoute, OutValue } from '../../socket/socketSend.js';

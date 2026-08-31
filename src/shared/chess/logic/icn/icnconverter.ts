@@ -42,7 +42,7 @@ import winconutil from '../../util/winconutil.js';
 import icnposition from './icnposition.js';
 import coordutil, { Coords, CoordsKey } from '../../../util/coordutil.js';
 import icnmoves, { MoveParsed, MovePreprint } from './icnmoves.js';
-import { players as p, RawType, Player, PlayerGroup } from '../../../util/typeutil.js';
+import { players as p, RawType, Player, PlayerGroup } from '../../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

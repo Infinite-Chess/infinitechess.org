@@ -5,7 +5,7 @@
  * engine / editor), whether it's still loading, and the shared load-finish / unload lifecycle.
  */
 
-import type { Player } from '../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { LoadOptions } from './gameslot.js';
 
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';

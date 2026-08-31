@@ -21,7 +21,7 @@ import type { SeekVariant } from '../../../shared/chess/util/variantselection.js
 import type { AuthMemberInfo } from '../../types.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { SlideLimitValue } from '../../../shared/chess/util/modutil.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
 import type { ClockValues, TimeControl } from '../../../shared/chess/util/clockutil.js';

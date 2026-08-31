@@ -12,7 +12,7 @@ import path from 'path';
 import nunjucks from 'nunjucks';
 import { fileURLToPath } from 'node:url';
 
-import { players as p } from '../../shared/util/typeutil.js';
+import { players as p } from '../../shared/chess/util/typeutil.js';
 import { getVersionedEngineName } from '../../shared/chess/util/engine.js';
 
 import manifest from './manifest.js';

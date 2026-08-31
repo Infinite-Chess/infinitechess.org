@@ -4,7 +4,7 @@
  * This script handles queries to the player_games table.
  */
 
-import type { Player } from '../../shared/util/typeutil.js';
+import type { Player } from '../../shared/chess/util/typeutil.js';
 
 import jsonutil from '../../shared/util/jsonutil.js';
 

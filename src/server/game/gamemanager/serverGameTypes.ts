@@ -18,7 +18,7 @@ import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
 import type { GameModifier } from '../../../shared/chess/util/modutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 
 // Types -----------------------------------------------------------------------

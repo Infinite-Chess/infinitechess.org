@@ -10,7 +10,7 @@ import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
 import timeutil from '../../../../util/timeutil.js';
 import icnposition from '../../../logic/icn/icnposition.js';
-import { players as p } from '../../../../util/typeutil.js';
+import { players as p } from '../../../util/typeutil.js';
 
 const POSITION_STRINGS: Record<number, string> = {
 	// March 12, 2024, 12:00 AM - Swapped black king & queen so they are on the same side as white king & queen.

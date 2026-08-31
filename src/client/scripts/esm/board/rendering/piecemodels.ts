@@ -6,18 +6,18 @@
 
 import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
 import type { Coords } from '../../../../../shared/util/coordutil.js';
-import type { TypeGroup } from '../../../../../shared/util/typeutil.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
 import vectors from '../../../../../shared/util/math/vectors.js';
-import typeutil from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import geometry from '../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
-import { rawTypes as r } from '../../../../../shared/util/typeutil.js';
+import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 import meshes from './meshes.js';
 import frametracker from './frametracker.js';

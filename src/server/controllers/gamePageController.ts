@@ -17,7 +17,7 @@ import type {
 	StaticGameState,
 } from '../../shared/transport/domain.js';
 
-import gameurl from '../../shared/util/gameurl.js';
+import gameurl from '../../shared/chess/util/gameurl.js';
 import timeutil from '../../shared/util/timeutil.js';
 import clockutil from '../../shared/chess/util/clockutil.js';
 import icnimport from '../../shared/chess/logic/icn/icnimport.js';
@@ -28,7 +28,7 @@ import variantrules from '../../shared/chess/logic/variantrules.js';
 import gameresultutil from '../../shared/chess/util/gameresultutil.js';
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.js';
-import { players as p, Player, PlayerGroup } from '../../shared/util/typeutil.js';
+import { players as p, Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
 
 import tconfig from '../config/translationConfig.js';
 import manifest from '../config/manifest.js';

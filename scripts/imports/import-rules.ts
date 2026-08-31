@@ -9,7 +9,7 @@
  * page-reach.ts, pkg-cost.ts — answer placement questions; each header carries its usage.
  *
  * All paths are "short form": "src/client/scripts/esm/" or "src/" chopped off the front,
- * giving views/index/index.ts and shared/util/typeutil.ts.
+ * giving views/index/index.ts and shared/chess/util/typeutil.ts.
  */
 
 import fs from 'node:fs';

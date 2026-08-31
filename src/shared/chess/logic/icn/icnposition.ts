@@ -14,8 +14,8 @@
 import type { CoordsKey } from '../../../util/coordutil.js';
 
 import jsutil from '../../../util/jsutil.js';
-import typeutil from '../../../util/typeutil.js';
-import { rawTypes as r, ext as e, RawType, Player } from '../../../util/typeutil.js';
+import typeutil from '../../util/typeutil.js';
+import { rawTypes as r, ext as e, RawType, Player } from '../../util/typeutil.js';
 
 // Dictionaries ----------------------------------------------------------------
 

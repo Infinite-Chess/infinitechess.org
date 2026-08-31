@@ -16,7 +16,7 @@ import type { MovePacket } from '../../chess/util/typeschemas.js';
 import type { MoveSpecialTags, SpecialTags } from './moveutil.js';
 
 import state from './state.js';
-import typeutil from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import moveutil from './moveutil.js';
 import icnmoves from './icn/icnmoves.js';
 import coordutil from '../../util/coordutil.js';
@@ -29,7 +29,7 @@ import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
 import movevalidation from './movevalidation.js';
 import organizedpieces from './organizedpieces.js';
-import { rawTypes as r } from '../../util/typeutil.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

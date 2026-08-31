@@ -15,10 +15,10 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CoordsKey } from '../../../../../shared/util/coordutil.js';
-import type { Player, RawType } from '../../../../../shared/util/typeutil.js';
+import type { Player, RawType } from '../../../../../shared/chess/util/typeutil.js';
 
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
-import typeutil, { rawTypes, players as p } from '../../../../../shared/util/typeutil.js';
+import typeutil, { rawTypes, players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import svgcache from '../../chess/rendering/svgcache.js';

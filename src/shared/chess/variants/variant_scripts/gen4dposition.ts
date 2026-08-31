@@ -10,7 +10,7 @@ import type { Dimensions } from '../../logic/fourdimensionalmoves.js';
 
 import coordutil from '../../../util/coordutil.js';
 import icnposition from '../../logic/icn/icnposition.js';
-import { rawTypes as r, ext as e } from '../../../util/typeutil.js';
+import { rawTypes as r, ext as e } from '../../util/typeutil.js';
 
 // Functions -------------------------------------------------------------------
 

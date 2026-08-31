@@ -10,7 +10,7 @@
  * Counterpart of the server's gameRouter.
  */
 
-import type { Player } from '../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ClockValues } from '../../../../../shared/chess/util/clockutil.js';
 import type {
@@ -19,8 +19,8 @@ import type {
 	GameNavigation,
 } from '../../../../../shared/transport/clientbound.js';
 
-import gameurl from '../../../../../shared/util/gameurl.js';
-import typeutil from '../../../../../shared/util/typeutil.js';
+import gameurl from '../../../../../shared/chess/util/gameurl.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 
 import docutil from '../../util/docutil.js';
 import resyncer from './resyncer.js';

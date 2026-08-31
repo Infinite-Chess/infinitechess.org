@@ -5,7 +5,7 @@
  * and what else a seek must satisfy to be rated at all.
  */
 
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { TimeControl } from '../util/clockutil.js';
 import type { SeekVariant } from '../util/variantselection.js';
 import type { VariantCode } from '../util/variantcodes.js';

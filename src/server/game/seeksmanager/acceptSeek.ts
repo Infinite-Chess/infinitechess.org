@@ -11,7 +11,7 @@
 import type { SeekId } from '../../../shared/transport/domain.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 
 import logEvents from '../../utility/logEvents.js';
 import socketsend from '../../socket/socketSend.js';

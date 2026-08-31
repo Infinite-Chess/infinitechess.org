@@ -14,7 +14,7 @@ import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { ClockValues } from '../../../shared/chess/util/clockutil.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 import type {
 	EngineInfo,
@@ -36,7 +36,7 @@ import variantrules from '../../../shared/chess/logic/variantrules.js';
 import apeironborder from '../../../shared/chess/logic/apeironborder.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
-import { players as p } from '../../../shared/util/typeutil.js';
+import { players as p } from '../../../shared/chess/util/typeutil.js';
 import { isGameServerValidated } from '../../../shared/chess/variants/servervalidation.js';
 
 import logEvents from '../../utility/logEvents.js';

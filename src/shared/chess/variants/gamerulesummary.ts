@@ -18,7 +18,7 @@ import type { GameruleWinCondition } from '../util/winconutil.js';
 import modutil from '../util/modutil.js';
 import piecethemes from '../util/piecethemes.js';
 import variantregistry from './variantregistry.js';
-import typeutil, { Player, RawType, players } from '../../util/typeutil.js';
+import typeutil, { Player, RawType, players } from '../util/typeutil.js';
 import { interpolate, splitAroundPlaceholder } from '../../util/interpolate.js';
 
 // Types -----------------------------------------------------------------------

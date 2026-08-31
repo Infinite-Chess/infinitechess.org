@@ -13,7 +13,7 @@ import type { ValidEngine } from '../../../shared/chess/util/engine.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type { SlideLimitValue } from '../../../shared/chess/util/modutil.js';
 import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
 	DeadGameState,
 	EngineGamePageInfo,
@@ -23,7 +23,7 @@ import type {
 
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
-import { players } from '../../../shared/util/typeutil.js';
+import { players } from '../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { getFormattedEngineName } from '../../../shared/chess/util/engine.js';
 

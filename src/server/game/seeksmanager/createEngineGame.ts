@@ -12,7 +12,7 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { CreateEngineGameMessage } from '../../../shared/transport/serverbound.js';
 
 import apeironcard from '../../../shared/chess/engines/apeironcard.js';
-import typeutil, { players } from '../../../shared/util/typeutil.js';
+import typeutil, { players } from '../../../shared/chess/util/typeutil.js';
 import { ENGINE_DICTIONARY, ValidEngine } from '../../../shared/chess/util/engine.js';
 
 import manifest from '../../config/manifest.js';

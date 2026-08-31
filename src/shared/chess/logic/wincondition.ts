@@ -16,9 +16,9 @@ import boardutil from './boardutil.js';
 import checkmate from './checkmate.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from './gamefileutility.js';
-import typeutil, { RawType } from '../../util/typeutil.js';
+import typeutil, { RawType } from '../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
-import { rawTypes as r, Player } from '../../util/typeutil.js';
+import { rawTypes as r, Player } from '../util/typeutil.js';
 import { detectInsufficientMaterial } from './insufficientmaterial.js';
 
 // Constants -------------------------------------------------------------------

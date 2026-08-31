@@ -11,12 +11,12 @@
  * but take only the inferred TYPE, which esbuild erases.
  */
 
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from './typeutil.js';
 
 import * as z from 'zod';
 
 import winconutil from './winconutil.js';
-import { players } from '../../util/typeutil.js';
+import { players } from './typeutil.js';
 
 // Constants -------------------------------------------------------------------
 

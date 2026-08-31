@@ -12,7 +12,7 @@ import type { Promotion } from '../util/gamerules.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js';
 import type { SpecialMoveFunction, SpecialVicinity } from './specialmove.js';
-import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../../util/typeutil.js';
+import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

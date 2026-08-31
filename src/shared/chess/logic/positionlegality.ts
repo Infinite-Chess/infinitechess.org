@@ -7,7 +7,7 @@
  * then start a game from it — which needs a constructed GameFile — is playability.ts's.
  */
 
-import type { RawType } from '../../util/typeutil.js';
+import type { RawType } from '../util/typeutil.js';
 import type { VariantOptions } from './gamefile.js';
 
 import bounds from '../../util/math/bounds.js';
@@ -15,7 +15,7 @@ import moveutil from './moveutil.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
 import gamelimits from '../util/gamelimits.js';
-import typeutil, { neutralRawTypes, players as p } from '../../util/typeutil.js';
+import typeutil, { neutralRawTypes, players as p } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

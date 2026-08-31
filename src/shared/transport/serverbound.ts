@@ -16,7 +16,7 @@
 import * as z from 'zod';
 
 import typeschemas from '../chess/util/typeschemas.js';
-import { players } from '../util/typeutil.js';
+import { players } from '../chess/util/typeutil.js';
 import leaderboardregistry from '../chess/variants/leaderboardregistry.js';
 import { SeekVariantSchema } from '../chess/util/variantselection.js';
 import { GameModifierSchema } from '../chess/util/modutil.js';

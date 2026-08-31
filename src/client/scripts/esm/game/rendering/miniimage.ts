@@ -4,7 +4,7 @@
  * This script handles the rendering of the mini images of our pieces when we're zoomed out
  */
 
-import type { TypeGroup } from '../../../../../shared/util/typeutil.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type {
 	BDCoords,
 	Coords,
@@ -16,7 +16,7 @@ import bd from '@naviary/bigdecimal';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
-import typeutil from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';

@@ -10,7 +10,7 @@ import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { RenderableInstanced } from '../../../webgl/Renderable.js';
 
-import typeutil from '../../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import coordutil, { Coords } from '../../../../../../shared/util/coordutil.js';

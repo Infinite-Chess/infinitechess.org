@@ -11,13 +11,13 @@ import type { Piece } from '../../../../../shared/chess/logic/boardutil';
 import type { Coords } from '../../../../../shared/util/coordutil';
 import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds';
 import type { GameRules, Promotion } from '../../../../../shared/chess/util/gamerules';
-import type { PlayerGroup, RawType } from '../../../../../shared/util/typeutil';
+import type { PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil';
 
 import boardutil from '../../../../../shared/chess/logic/boardutil';
 import gamerules from '../../../../../shared/chess/util/gamerules';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
-import typeutil, { players as p, rawTypes as r } from '../../../../../shared/util/typeutil';
+import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
 
 import gameslot from '../../game/chess/gameslot';
 import edithistory from './edithistory';

@@ -13,7 +13,7 @@ import type { Color } from '../../../../shared/types/color.js';
 
 import themes from '../../../../shared/components/header/themes.js';
 import jsutil from '../../../../shared/util/jsutil.js';
-import typeutil from '../../../../shared/util/typeutil.js';
+import typeutil from '../../../../shared/chess/util/typeutil.js';
 import timeutil from '../../../../shared/util/timeutil.js';
 import piecethemes, { PieceColorGroup } from '../../../../shared/chess/util/piecethemes.js';
 

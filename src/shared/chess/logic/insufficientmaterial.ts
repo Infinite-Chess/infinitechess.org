@@ -16,8 +16,8 @@ import moveutil from './moveutil.js';
 import boardutil from './boardutil.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
-import typeutil, { Player } from '../../util/typeutil.js';
-import { rawTypes as r, ext as e, players as p, TypeGroup } from '../../util/typeutil.js';
+import typeutil, { Player } from '../util/typeutil.js';
+import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

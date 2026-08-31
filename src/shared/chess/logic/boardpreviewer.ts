@@ -9,7 +9,7 @@
  * never simulate on it.
  */
 
-import type { RawType } from '../../util/typeutil.js';
+import type { RawType } from '../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { OrganizedPiecesBase } from './organizedpieces.js';

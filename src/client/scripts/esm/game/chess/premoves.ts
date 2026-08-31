@@ -11,7 +11,7 @@ import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/types/color.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
-import typeutil from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';

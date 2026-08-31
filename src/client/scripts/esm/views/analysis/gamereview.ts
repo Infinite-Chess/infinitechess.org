@@ -13,7 +13,7 @@ import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { MoveEvalLabel } from './moveevals.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
-import type { Player, PlayerGroup } from '../../../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
 import type {
 	AnalysisCommand,
@@ -27,7 +27,7 @@ import * as z from 'zod';
 import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
-import { players as p } from '../../../../../shared/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import ceval from './ceval.js';

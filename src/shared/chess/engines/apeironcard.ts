@@ -15,7 +15,7 @@ import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
 import boardutil from '../logic/boardutil.js';
 import apeironborder from '../logic/apeironborder.js';
-import typeutil, { RawType, rawTypes as r, players as p } from '../../util/typeutil.js';
+import typeutil, { RawType, rawTypes as r, players as p } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

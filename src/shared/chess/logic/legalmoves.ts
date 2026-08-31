@@ -7,7 +7,7 @@
 import type { Piece } from './boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
@@ -22,7 +22,7 @@ import specialdetect from './specialdetect.js';
 import checkresolver from './checkresolver.js';
 import organizedpieces from './organizedpieces.js';
 import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
-import typeutil, { players as p, rawTypes as r } from '../../util/typeutil.js';
+import typeutil, { players as p, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
