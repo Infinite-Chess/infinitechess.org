@@ -1,16 +1,21 @@
 # Live Game Persistence
 
-Active games are persisted to the database so they survive server restarts instead of being aborted. This document describes the three-table schema, what each column stores, and the event matrix that drives every DB write.
+Active games are persisted to the database so they survive server restarts instead of being
+aborted. This document describes the three-table schema, what each column stores, and the event
+matrix that drives every DB write.
 
 ---
 
 ## Database Schema: Three Tables
 
-Following the pattern of `games` + `player_games` for ended games, live state is split across three tables to support an arbitrary number of participants per game:
+Following the pattern of `games` + `player_games` for ended games, live state is split across
+three tables to support an arbitrary number of participants per game:
 
 - **`live_games`** — One row per active game. Contains game-level state.
-- **`live_player_games`** — One row per human player per active game. Contains identity and disconnect state.
-- **`live_engine_games`** — One row per engine participant per active game. Contains engine settings and clock state.
+- **`live_player_games`** — One row per human player per active game. Contains identity and
+  disconnect state.
+- **`live_engine_games`** — One row per engine participant per active game. Contains engine
+  settings and clock state.
 
 ### Table 1: `live_games`
 
@@ -33,7 +38,10 @@ Following the pattern of `games` + `player_games` for ended games, live state is
 | ------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `moves` | TEXT NOT NULL DEFAULT `''` | Pipe-delimited compact moves with embedded clock comments via ICN format (e.g. `1,2>3,4{[%clk 0:09:56.7]}`). See below. |
 
-**Move format:** Produced by `getShortFormMovesFromMoves()` in `icnmoves.ts` with `{ compact: true, spaces: false, comments: !untimed, move_numbers: false }`. Each move encodes `startCoords > endCoords`, optional promotion, and optional clock comment. Parsed back via `parseShortFormMoves()`. The entire column is rewritten on each move submission.
+**Move format:** Produced by `getShortFormMovesFromMoves()` in `icnmoves.ts` with
+`{ compact: true, spaces: false, comments: !untimed, move_numbers: false }`.
+Each move encodes `startCoords > endCoords`, optional promotion, and optional clock comment.
+Parsed back via `parseShortFormMoves()`. The entire column is rewritten on each move submission.
 
 #### Group 3: Clock State
 
@@ -84,17 +92,23 @@ One row per human player per live game.
 
 **Three-case disconnect restoration:**
 
-- `disconnect_claim_time` non-NULL → the opponent's claim window was set; restore the timestamp (if already past, the window is simply already claimable).
-- `disconnect_cushion_end_time` non-NULL, `disconnect_claim_time` NULL → still in the 5-second cushion; revive it (or open the claim window if elapsed).
-- All disconnect columns NULL → player was connected before the restart; start a fresh 5-second cushion (server restart counts as not-by-choice).
+- `disconnect_claim_time` non-NULL → the opponent's claim window was set; restore the timestamp
+  (if already past, the window is simply already claimable).
+- `disconnect_cushion_end_time` non-NULL, `disconnect_claim_time` NULL → still in the 5-second
+  cushion; revive it (or open the claim window if elapsed).
+- All disconnect columns NULL → player was connected before the restart; start a fresh 5-second
+  cushion (server restart counts as not-by-choice).
 
-Every human is disconnected once restoration finishes — sockets never survive a restart — so `both_disconnected_end_time` is **always** revived, or started fresh at 5 minutes if NULL. It's cleared the moment any player reconnects.
+Every human is disconnected once restoration finishes — sockets never survive a restart — so
+`both_disconnected_end_time` is **always** revived, or started fresh at 5 minutes if NULL. It's
+cleared the moment any player reconnects.
 
 ---
 
 ### Table 3: `live_engine_games`
 
-One row per engine participant per live game. Engines have no identity or disconnect state, so they are stored separately from human players.
+One row per engine participant per live game. Engines have no identity or disconnect state, so
+they are stored separately from human players.
 
 | Column              | Type             | Notes                                                        |
 | ------------------- | ---------------- | ------------------------------------------------------------ |
@@ -130,7 +144,8 @@ One row per engine participant per live game. Engines have no identity or discon
 
 ### Game conclusion & the rematch window
 
-The moment a game concludes it is **logged to the permanent `games`/`player_games` tables**, and its `live_games` row (plus
-cascaded participant rows) is **deleted**. The game **lingers in memory** to host the rematch handshake and cheat-report
-window until both players leave, at which point it is evicted from memory. Rematch offers, the `finalized` flag, and post-game
+The moment a game concludes it is **logged to the permanent `games`/`player_games` tables**, and
+its `live_games` row (plus cascaded participant rows) is **deleted**. The game **lingers in
+memory** to host the rematch handshake and cheat-report window until both players leave, at
+which point it is evicted from memory. Rematch offers, the `finalized` flag, and post-game
 reconnection cushions are all ephemeral (never persisted).
