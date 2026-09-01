@@ -178,7 +178,7 @@ async function showForPosition(
 	const token = ++showToken;
 	const variantOptions = await resolvePosition();
 	if (variantOptions === undefined || token !== showToken) return; // Unavailable, or they have since left hover.
-	const boardsim = boardpreviewer.initBoardPreview(variantOptions.gameRules, undefined, {
+	const boardsim = boardpreviewer.init(variantOptions.gameRules, undefined, {
 		variantOptions,
 	});
 	await showForBoard(anchor, name, boardsim, token, placement, undefined, options.modifiers);
@@ -209,7 +209,7 @@ async function showForVariantCode(
 	if (options.engineGame && gameRules.worldBorder === undefined) {
 		gameRules.worldBorder = apeironborder.forVariant(loadedVariant);
 	}
-	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant);
+	const boardsim = boardpreviewer.init(gameRules, loadedVariant);
 	await showForBoard(anchor, variantName, boardsim, token, placement, code, options.modifiers);
 }
 

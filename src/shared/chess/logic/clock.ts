@@ -295,17 +295,6 @@ function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined
 	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMs;
 }
 
-/** [DEBUG] Logs both players' clocks and the current turn's timestamps. */
-function printClocks(basegame: ClockDependant): void {
-	if (basegame.untimed) return console.log('Game is untimed.');
-	const clocks = basegame.clocks!;
-	for (const color in clocks.currentTime) {
-		console.log(`${color} time: ${clocks.currentTime[Number(color) as Player]}`);
-	}
-	console.log(`timeRemainAtTurnStart: ${clocks.timeRemainAtTurnStart}`);
-	console.log(`timeAtTurnStart: ${clocks.timeAtTurnStart}`);
-}
-
 /** Snapshots the clocks into the {@link ClockValues} shape sent to clients. */
 function createEdit(clocks: ClockData): ClockValues {
 	const tickingData: Omit<ClockValues, 'clocks'> = {};
@@ -324,14 +313,13 @@ function createEdit(clocks: ClockData): ClockValues {
 
 export default {
 	init,
-	createEdit,
 	edit,
 	seedFromMoveStamps,
 	clocksAtMoveIndex,
+	push,
 	stop,
 	endGame,
 	update,
-	push,
 	getColorTickingTrueTimeRemaining,
-	printClocks,
+	createEdit,
 };

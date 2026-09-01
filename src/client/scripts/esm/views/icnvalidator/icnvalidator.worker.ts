@@ -15,10 +15,10 @@ import type {
 } from './icnvalidatorprotocol.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
-import { IllegalMoveError } from '../../../../../shared/chess/logic/movepiece.js';
 
 // Message Handling ------------------------------------------------------------
 
@@ -84,7 +84,7 @@ self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
 				game = await gameformulator.formulateGame(longFormat, undefined, true);
 			} catch (error) {
 				const message = jsutil.getErrorMessage(error);
-				const illegalMove = error instanceof IllegalMoveError;
+				const illegalMove = error instanceof movepiece.IllegalMoveError;
 				if (illegalMove) localResults.illegalMoveErrors++;
 				else localResults.formulatorErrors++;
 				localResults.errors.push({

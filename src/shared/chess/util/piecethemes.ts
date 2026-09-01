@@ -143,7 +143,9 @@ function getSVGColorPriority(color: Player): string[] {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
 	SVGLESS_TYPES,
+	// Functions
 	getLocationsForTypes,
 	getLocationForType,
 	getBaseColorForType,

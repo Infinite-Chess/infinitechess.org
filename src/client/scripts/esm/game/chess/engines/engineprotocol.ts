@@ -14,7 +14,7 @@ import type {
 	ApeironEngineConfig,
 	BaseEngineConfig,
 	CheckmatePracticeEngineConfig,
-} from '../../../../../../shared/chess/util/engine.js';
+} from '../../../../../../shared/chess/util/engineregistry.js';
 
 // Requests --------------------------------------------------------------------
 

@@ -6,7 +6,7 @@
 
 import type { Request, Response } from 'express';
 
-import { interpolate } from '../../shared/util/interpolate.js';
+import interpolate from '../../shared/util/interpolate.js';
 
 import ip from '../utility/ip.js';
 import logEvents from '../utility/logEvents.js';
@@ -78,7 +78,7 @@ function limitLogin(req: Request, res: Response, browserAgent: string): boolean 
 		);
 		const template =
 			login_cooldown === 1 ? authT.login_retry_in_one : authT.login_retry_in_other;
-		const translation = interpolate(template, { n: login_cooldown }); // "Failed to login, try again in 3 seconds."
+		const translation = interpolate.interpolate(template, { n: login_cooldown }); // "Failed to login, try again in 3 seconds."
 
 		res.status(401).json({ message: translation });
 

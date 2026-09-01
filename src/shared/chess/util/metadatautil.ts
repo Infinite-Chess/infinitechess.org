@@ -18,13 +18,6 @@ import { players as p } from './typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
-/** A player's rating value and whether we are confident about it. */
-export type Rating = z.infer<typeof RatingSchema>;
-export const RatingSchema = z.strictObject({
-	value: z.number(),
-	confident: z.boolean(),
-});
-
 /**
  * ICN (Infinite Chess Notation) metadata for a game, inspired by PGN notation.
  * A plain type, not a schema — it is parsed out of an ICN, never off the wire.
@@ -82,6 +75,15 @@ const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
  * movesets, `UTCDate`/`UTCTime` pin which revision of that variant applies.
  */
 const SOURCE_VARIANT_METADATA = ['Variant', 'UTCDate', 'UTCTime'] as const satisfies readonly MetadataKey[]; // prettier-ignore
+
+// Schemas ---------------------------------------------------------------------
+
+/** A player's rating value and whether we are confident about it. */
+export type Rating = z.infer<typeof RatingSchema>;
+const RatingSchema = z.strictObject({
+	value: z.number(),
+	confident: z.boolean(),
+});
 
 // Functions -------------------------------------------------------------------
 
@@ -152,8 +154,12 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
 	GUEST_NAME_ICN_METADATA,
 	SOURCE_VARIANT_METADATA,
+	// Schemas
+	RatingSchema,
+	// Functions
 	trimToSourceVariantMetadata,
 	resolveTimestampFromMetadata,
 	getResultFromVictor,

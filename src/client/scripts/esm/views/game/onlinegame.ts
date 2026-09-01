@@ -13,8 +13,8 @@ import type {
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
+import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
-import { ENGINE_DICTIONARY } from '../../../../../shared/chess/util/engine.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import drawoffers from './drawoffers.js';
@@ -169,7 +169,7 @@ function loadGameFromState(
 							name: engineGame.engine,
 							config: {
 								engineTimeLimitPerMoveMillis:
-									ENGINE_DICTIONARY[engineGame.engine]
+									engineregistry.REGISTRY[engineGame.engine]
 										.defaultTimeLimitPerMoveMillis,
 								strengthLevel: engineGame.strengthLevel,
 							},

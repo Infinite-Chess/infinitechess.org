@@ -12,7 +12,7 @@ import memberManager from '../database/memberManager.js';
 import databaseTables from '../database/databaseTables.js';
 
 // We'll use the first easy checkmate as our valid test case
-const VALID_CHECKMATE_ID = validcheckmates.VALID_CHECKMATES.easy[0];
+const VALID_CHECKMATE_ID = validcheckmates.BY_DIFFICULTY.easy[0];
 
 if (!VALID_CHECKMATE_ID) throw new Error('No valid checkmate IDs found for testing!');
 
@@ -106,7 +106,7 @@ describe('Practice Progress Integration', () => {
 	it('should correctly store multiple checkmates', async () => {
 		const user = await integrationUtils.createAndLoginUser();
 
-		const secondCheckmateId = validcheckmates.VALID_CHECKMATES.easy[1];
+		const secondCheckmateId = validcheckmates.BY_DIFFICULTY.easy[1];
 		if (!secondCheckmateId) throw new Error('Not enough valid checkmate IDs for this test!');
 
 		// 1. Submit First Checkmate

@@ -56,7 +56,7 @@ const ECHO_TIMEOUT_MS = 5000;
  * it received, so a reason the server sent still comes back to it. Don't strike the
  * server-sent reasons from {@link INVOLUNTARY_CLOSURE_REASONS} as unreachable server-side; they aren't.
  */
-const ClosureReasons = {
+const CLOSURE_REASONS = {
 	// Sent by the server:
 
 	/** 1000. Can read this even if we disable our own network in dev tools. */
@@ -85,10 +85,10 @@ const ClosureReasons = {
 } as const;
 
 /** A reason one end gave the other for closing the socket. */
-export type ClosureReason = (typeof ClosureReasons)[keyof typeof ClosureReasons];
+export type ClosureReason = (typeof CLOSURE_REASONS)[keyof typeof CLOSURE_REASONS];
 
 /** The reason values, for {@link isClosureReason} to test membership against. */
-const CLOSURE_REASON_VALUES: ReadonlySet<string> = new Set(Object.values(ClosureReasons));
+const CLOSURE_REASON_VALUES: ReadonlySet<string> = new Set(Object.values(CLOSURE_REASONS));
 
 // Closures that carry no reason at all:
 // 1009 ""  Message exceeded MAX_PAYLOAD_BYTES (see socketServer.ts). The `ws` library
@@ -114,9 +114,9 @@ const CLOSURE_REASON_VALUES: ReadonlySet<string> = new Set(Object.values(Closure
 // so IMMEDIATELY tell their opponent they disconnected!
 const INVOLUNTARY_CLOSURE_CODES: number[] = [1006];
 const INVOLUNTARY_CLOSURE_REASONS: ClosureReason[] = [
-	ClosureReasons.CONNECTION_EXPIRED,
-	ClosureReasons.TOO_MANY_SOCKETS,
-	ClosureReasons.CLOSED_BY_CLIENT_RENEW,
+	CLOSURE_REASONS.CONNECTION_EXPIRED,
+	CLOSURE_REASONS.TOO_MANY_SOCKETS,
+	CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW,
 ];
 
 // Functions -------------------------------------------------------------------
@@ -144,10 +144,12 @@ function wasSocketClosureInvoluntary(code: number, reason: string): boolean {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
 	PROTOCOL_VERSION,
 	HEARTBEAT_INTERVAL_MS,
 	ECHO_TIMEOUT_MS,
-	ClosureReasons,
+	CLOSURE_REASONS,
+	// Functions
 	isClosureReason,
 	wasSocketClosureInvoluntary,
 };

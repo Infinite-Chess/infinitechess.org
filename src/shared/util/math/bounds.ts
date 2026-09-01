@@ -266,7 +266,6 @@ export default {
 	getBoxFromCoordsList,
 	castDoubleBoundingBoxToBigDecimal,
 	castBoundingBoxToBigDecimal,
-	expandBoxToContainSquare,
 	expandBDBoxToContainSquare,
 	mergeBoundingBoxes,
 	mergeBoundingBoxBDs,

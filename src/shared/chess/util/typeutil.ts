@@ -15,7 +15,7 @@
  * and it affects the order the miniimages of the
  * pieces are rendered when zoomed out.
  */
-const rawTypes = {
+export const rawTypes = {
 	VOID: 0,
 	OBSTACLE: 1,
 	KING: 2,
@@ -40,10 +40,10 @@ const rawTypes = {
 	PAWN: 21,
 } as const;
 
-const neutralRawTypes: RawType[] = [rawTypes.VOID, rawTypes.OBSTACLE];
+export const neutralRawTypes: RawType[] = [rawTypes.VOID, rawTypes.OBSTACLE];
 
 /** All player colors suppored in the game. Multiply the raw type by this to get the colored type. */
-const players = {
+export const players = {
 	NEUTRAL: 0,
 	WHITE: 1,
 	BLACK: 2,
@@ -54,10 +54,10 @@ const players = {
 	GREEN: 6,
 } as const;
 
-const numTypes = Object.keys(rawTypes).length;
+export const numTypes = Object.keys(rawTypes).length;
 
 /** Color extensions of all players. Add this to a raw type to get the colored type. */
-const ext = {
+export const ext = {
 	N: players.NEUTRAL * numTypes,
 	W: players.WHITE * numTypes,
 	B: players.BLACK * numTypes,
@@ -117,7 +117,6 @@ const strcolors = ['neutral', 'white', 'black', 'red', 'blue', 'yellow', 'green'
 
 // Types -----------------------------------------------------------------------
 
-type StrPlayer = (typeof strcolors)[number];
 export type RawType = (typeof rawTypes)[keyof typeof rawTypes];
 export type Player = (typeof players)[keyof typeof players];
 
@@ -204,11 +203,6 @@ function getRawTypeStr(type: RawType): string {
 	return strtypes[type];
 }
 
-/** The player a color name like `"white"` refers to. */
-function getPlayerFromString(string: StrPlayer): Player {
-	return strcolors.indexOf(string) as Player;
-}
-
 /** Prunes, IN PLACE, every entry of a raw-type group whose piece this game doesn't use. */
 function deleteUnusedFromRawTypeGroup<T>(
 	existingRawTypes: RawType[],
@@ -231,8 +225,6 @@ function debugType(type: number): string {
 
 // Exports ---------------------------------------------------------------------
 
-export { rawTypes, neutralRawTypes, players, numTypes, ext };
-
 export default {
 	// Constants
 	jumpingRoyals,
@@ -248,7 +240,6 @@ export default {
 	invertType,
 	invertPlayer,
 	getRawTypeStr,
-	getPlayerFromString,
 	deleteUnusedFromRawTypeGroup,
 	debugType,
 };

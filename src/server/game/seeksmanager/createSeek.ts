@@ -15,6 +15,7 @@ import type { MetaData, Rating } from '../../../shared/chess/util/metadatautil.j
 import type { CreateSeekMessage } from '../../../shared/transport/serverbound.js';
 
 import uuid from '../../../shared/util/uuid.js';
+import domain from '../../../shared/transport/domain.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import gamelimits from '../../../shared/chess/util/gamelimits.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
@@ -23,14 +24,9 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantmodule from '../../../shared/chess/logic/variantmodule.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
-import { SEEK_ID_LENGTH } from '../../../shared/transport/domain.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 import { validatePosition } from '../../../shared/chess/logic/positionlegality.js';
-import {
-	PositionRejection,
-	localizeRejection,
-	getRejection,
-} from '../../../shared/chess/game/playability.js';
+import playability, { PositionRejection } from '../../../shared/chess/game/playability.js';
 
 import socketsend from '../../socket/socketSend.js';
 import activeSeeks from './activeSeeks.js';
@@ -84,7 +80,7 @@ function getSeekFromWebsocketMessageContents(
 
 	let id: string;
 	do {
-		id = uuid.generateID_Base36(SEEK_ID_LENGTH);
+		id = uuid.generateID_Base36(domain.SEEK_ID_LENGTH);
 	} while (activeSeeks.hasID(id));
 
 	const owner = ws.metadata.memberInfo;
@@ -125,7 +121,7 @@ function validateVariant(ws: CustomWebSocket, variant: SeekVariant, engineGame: 
 	if (variant.kind !== 'custom') return true;
 	const rejection = validateIcnSeekContent(variant.position, engineGame);
 	if (rejection === null) return true;
-	socketsend.send(ws, 'general', 'notify', localizeRejection(ws.t, rejection));
+	socketsend.send(ws, 'general', 'notify', playability.localizeRejection(ws.t, rejection));
 	return false;
 }
 
@@ -161,7 +157,7 @@ function validateIcnSeekContent(content: string, engineGame: boolean): PositionR
 	// Legal, but the game still has to be playable from here. Built on the board the real game
 	// gets — the ICN's own world border, which an engine game must carry — then discarded.
 	const constructed = gameformulator.constructPosition(variantOptions);
-	return getRejection(constructed, { seek: true, engine: engineGame });
+	return playability.getRejection(constructed, { seek: true, engine: engineGame });
 }
 
 /**

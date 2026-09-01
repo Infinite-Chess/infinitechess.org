@@ -235,7 +235,9 @@ function getKingVicinity(board_spacing: bigint, strong_kings_and_queens: boolean
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Moveset Overrides
 	gen4DMoveset,
+	// Special Vicinity Overrides
 	getPawnVicinity,
 	getKnightVicinity,
 	getKingVicinity,

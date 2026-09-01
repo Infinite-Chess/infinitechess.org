@@ -49,7 +49,7 @@ const elements_checkmateBadgeGoldShine = document.querySelectorAll(
 	'#checkmate-badge-gold .shine-clockwise, #checkmate-badge-gold .shine-anticlockwise',
 );
 
-let checkmateSelectedID: string = validcheckmates.VALID_CHECKMATES.easy[0]!; // id of selected checkmate
+let checkmateSelectedID: string = validcheckmates.BY_DIFFICULTY.easy[0]!; // id of selected checkmate
 let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
 let generatedHTML: boolean = false;
 /** Whether the svgs of all the pieces in the checkmates list have been appended to the doc */
@@ -112,7 +112,7 @@ function close(): void {
  * On first practice page load, generate list of checkmate HTML elements to be shown on page
  */
 function createPracticeHTML(): void {
-	for (const [difficulty, checkmates] of Object.entries(validcheckmates.VALID_CHECKMATES)) {
+	for (const [difficulty, checkmates] of Object.entries(validcheckmates.BY_DIFFICULTY)) {
 		checkmates.forEach((checkmateID: string) => {
 			const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
 			if (!piecelist) return;
@@ -344,7 +344,7 @@ function updateCheckmatesBeaten(completedCheckmates: string[]): void {
 	}
 
 	// Update the progress and progress bar
-	const numTotal = Object.values(validcheckmates.VALID_CHECKMATES).flat().length;
+	const numTotal = Object.values(validcheckmates.BY_DIFFICULTY).flat().length;
 	element_progress.textContent = `${numCompleted} / ${numTotal}`;
 	const percentageBeaten = (100 * numCompleted) / numTotal;
 	element_progressBar.style.background = `linear-gradient(to right, rgba(0, 163, 0, 0.3) ${percentageBeaten}%, transparent ${percentageBeaten}%)`;

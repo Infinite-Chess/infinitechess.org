@@ -82,7 +82,7 @@ function deleteAccount(user_id: number, reason_deleted: DeleteReason): void {
 	memberManager.remove(user_id, reason_deleted);
 
 	// Close their sockets, delete their seeks...
-	socketRegistry.closeAllOfMember(user_id, 1008, socketutil.ClosureReasons.LOGGED_OUT);
+	socketRegistry.closeAllOfMember(user_id, 1008, socketutil.CLOSURE_REASONS.LOGGED_OUT);
 
 	// Account deleting automatically invalidates all their sessions,
 	// because their refresh tokens are deleted.

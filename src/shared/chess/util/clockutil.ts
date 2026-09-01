@@ -11,20 +11,41 @@ import typeschemas from './typeschemas.js';
 
 // Types -----------------------------------------------------------------------
 
+/** The speed category of a game, based on its time control. */
+export type SpeedCategory = 'bullet' | 'blitz' | 'rapid' | 'classical' | 'infinite';
+
+// Constants -------------------------------------------------------------------
+
+/** Valid base time values in minutes, matching the game setup modal's base-time slider ticks. */
+const VALID_BASE_MINUTES = [
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	25, 30, 35, 40, 45,
+	60,
+]; // prettier-ignore
+
+/** Valid increment values in seconds, matching the game setup modal's increment slider ticks. */
+const VALID_INCREMENT_SECS = [
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	25, 30, 35, 40, 45,
+	60,
+]; // prettier-ignore
+
+// Schemas ---------------------------------------------------------------------
+
 /**
  * The clock value for the game, `s+s`, where the left side is
  * start time in seconds, and the right is increment in seconds.
  * Untimed = `-`
  */
 export type TimeControl = z.infer<typeof TimeControlSchema>;
-export const TimeControlSchema = z.union([
+const TimeControlSchema = z.union([
 	z.templateLiteral([z.int().positive(), '+', z.int().nonnegative()]),
 	z.literal('-'),
 ]);
 
 /** The values of each color's clock, and which one is currently counting down, if any. */
 export type ClockValues = z.infer<typeof ClockValuesSchema>;
-export const ClockValuesSchema = z.strictObject({
+const ClockValuesSchema = z.strictObject({
 	/** Each color's remaining time in milliseconds, keyed by player number. */
 	clocks: typeschemas.GenPlayerGroupSchema(z.number()),
 	/**
@@ -41,25 +62,6 @@ export const ClockValuesSchema = z.strictObject({
 	 */
 	timeColorTickingLosesAt: z.number().optional(),
 });
-
-/** The speed category of a game, based on its time control. */
-export type SpeedCategory = 'bullet' | 'blitz' | 'rapid' | 'classical' | 'infinite';
-
-// Constants -------------------------------------------------------------------
-
-/** Valid base time values in minutes, matching the game setup modal's base-time slider ticks. */
-const VALID_BASE_MINUTES = [
-	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-	25, 30, 35, 40, 45,
-	60,
-]; // prettier-ignore
-
-/** Valid increment values in seconds, matching the game setup modal's increment slider ticks. */
-export const VALID_INCREMENT_SECS = [
-	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-	25, 30, 35, 40, 45,
-	60,
-]; // prettier-ignore
 
 // Functions -------------------------------------------------------------------
 
@@ -197,6 +199,9 @@ export default {
 	// Constants
 	VALID_BASE_MINUTES,
 	VALID_INCREMENT_SECS,
+	// Schemas
+	TimeControlSchema,
+	ClockValuesSchema,
 	// Functions
 	isTimedControlValid,
 	getTextContentFromTimeRemain,

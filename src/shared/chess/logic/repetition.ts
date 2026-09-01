@@ -30,7 +30,7 @@ type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassa
  *
  * Complexity O(m) where m is the move count since the last pawn push or capture or special right loss!
  */
-function detectRepetitionDraw(boardsim: Board): GameConclusion | undefined {
+function detect(boardsim: Board): GameConclusion | undefined {
 	const moveList = boardsim.moves;
 	const turnOrderLength = boardsim.gameRules.turnOrder.length;
 	/** What index of the turn order whos turn it is at the front of the game.
@@ -142,4 +142,6 @@ function detectRepetitionDraw(boardsim: Board): GameConclusion | undefined {
 	else return undefined;
 }
 
-export { detectRepetitionDraw };
+// Exports ---------------------------------------------------------------------
+
+export default { detect };

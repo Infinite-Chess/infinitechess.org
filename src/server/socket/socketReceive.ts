@@ -102,7 +102,7 @@ function logAndRateLimitMessage(ws: CustomWebSocket, rawMessage: string): boolea
 	requestMeter.recordRecent();
 	if (requestMeter.meter(ws.metadata.IP, ws.metadata.userAgent) !== undefined) {
 		// Rate limited; close the socket.
-		ws.close(1009, socketutil.ClosureReasons.TOO_MANY_REQUESTS);
+		ws.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_REQUESTS);
 		return false;
 	}
 	return true;

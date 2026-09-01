@@ -13,7 +13,7 @@
  */
 
 import jsutil from '../../shared/util/jsutil.js';
-import { interpolate } from '../../shared/util/interpolate.js';
+import interpolate from '../../shared/util/interpolate.js';
 
 import mailer from './mailer.js';
 import urlUtils from './urlUtils.js';
@@ -45,7 +45,7 @@ async function sendEmailConfirmation(
 		const t = email.verify;
 		const { html, text } = emailTemplates.renderActionEmail({
 			preheader: t.preheader,
-			heading: interpolate(t.heading, { username }),
+			heading: interpolate.interpolate(t.heading, { username }),
 			intro: t.intro,
 			buttonLabel: t.button,
 			url: verificationUrl,
@@ -125,14 +125,14 @@ async function sendPasswordChangedEmail(recipientEmail: string, language: string
 				preheader: t.preheader,
 				heading: t.heading,
 				body: t.body,
-				warning: interpolate(t.warning, { resetLink }),
+				warning: interpolate.interpolate(t.warning, { resetLink }),
 				tagline: email.common.tagline,
 			}),
 			// Plain text: the warning's link becomes its bare label, with the URL on its own line.
 			text: emailTemplates.buildPlainText([
 				t.heading,
 				t.body,
-				interpolate(t.warning, { resetLink: t.reset_link_text }),
+				interpolate.interpolate(t.warning, { resetLink: t.reset_link_text }),
 				forgotPassUrl,
 			]),
 		});

@@ -23,7 +23,7 @@ import vectors from '../../../../../../shared/util/math/vectors.js';
 import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import { primalityTest } from '../../../../../../shared/util/math/isprime.js';
-import { detectInsufficientMaterial } from '../../../../../../shared/chess/logic/insufficientmaterial.js';
+import insufficientmaterial from '../../../../../../shared/chess/logic/insufficientmaterial.js';
 import {
 	rawTypes as r,
 	ext as e,
@@ -1692,7 +1692,7 @@ function runIterativeDeepening(
 						).pieces,
 					};
 
-					if (detectInsufficientMaterial(dummy_board)) break;
+					if (insufficientmaterial.detect(dummy_board)) break;
 				}
 
 				// special case for 3B3B-1k variant after piece capture

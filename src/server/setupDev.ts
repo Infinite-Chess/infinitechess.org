@@ -38,14 +38,14 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 
 		// Give Owner checkmate progression for debugging purposes
 		// Bronze
-		// const checkmates_beaten = Object.values(validcheckmates.VALID_CHECKMATES.easy).toString()
-		// 	+ "," + Object.values(validcheckmates.VALID_CHECKMATES.medium).toString();
+		// const checkmates_beaten = Object.values(validcheckmates.BY_DIFFICULTY.easy).toString()
+		// 	+ "," + Object.values(validcheckmates.BY_DIFFICULTY.medium).toString();
 		// Silver
-		// const checkmates_beaten = Object.values(validcheckmates.VALID_CHECKMATES.easy).toString()
-		// 	+ "," + Object.values(validcheckmates.VALID_CHECKMATES.medium).toString()
-		// 	+ "," + Object.values(validcheckmates.VALID_CHECKMATES.hard).toString();
+		// const checkmates_beaten = Object.values(validcheckmates.BY_DIFFICULTY.easy).toString()
+		// 	+ "," + Object.values(validcheckmates.BY_DIFFICULTY.medium).toString()
+		// 	+ "," + Object.values(validcheckmates.BY_DIFFICULTY.hard).toString();
 		// Gold
-		const checkmates_beaten = Object.values(validcheckmates.VALID_CHECKMATES).flat().join(',');
+		const checkmates_beaten = Object.values(validcheckmates.BY_DIFFICULTY).flat().join(',');
 		memberManager.updateColumns(user_id, { checkmates_beaten });
 	}
 	if (!memberManager.isUsernameTaken('admin')) {

@@ -28,7 +28,7 @@ import vectors, { Vec2 } from '../../util/math/vectors.js';
  * @param trackChecks - If true, the results object will contain a list of check pairs for the player's royals. This is useful for calculating blocking moves that may resolve the check. Should be true if we're using checkmate, and left out if we're using royal capture, to save compute.
  * @returns An object containing information such as whether the given color is in check in the current position, which royals are in check, and if applicable, the check pairs (each checked royal with its attacker).
  */
-function detectCheck(
+function detect(
 	boardsim: Board,
 	color: Player,
 	trackChecks?: boolean,
@@ -314,7 +314,4 @@ function doesLineAttackSquare(
 
 // Exports ---------------------------------------------------------------------
 
-export default {
-	detectCheck,
-	doesLineAttackSquare,
-};
+export default { detect };

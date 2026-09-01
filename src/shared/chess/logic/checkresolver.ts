@@ -65,7 +65,7 @@ function removeCheckInvalidMoves(boardsim: Board, pieceSelected: Piece, moves: L
 	// Check these FIRST because in situations where we are in existing check, additional individual moves may be added, which are then simulated below to see if they're legal.
 	removeCheckInvalidMoves_Sliding(boardsim, moves, pieceSelected, color);
 
-	// 2. Individual moves. We can iterate through these and use detectCheck() to test them.
+	// 2. Individual moves. We can iterate through these and use checkdetection.detect() to test them.
 	removeCheckInvalidMoves_Individual(boardsim, moves.individual, pieceSelected, color);
 }
 
@@ -260,7 +260,7 @@ function addressPins(
 	const deleteChange = boardchanges.queueDeletePiece([], true, pieceSelected);
 	boardchanges.runChanges(boardsim, deleteChange, boardchanges.CHANGE_FUNCS, true);
 
-	const checkResults = checkdetection.detectCheck(boardsim, color, true); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
+	const checkResults = checkdetection.detect(boardsim, color, true); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
 
 	// Filter to only the newly-exposed checks (ignore the pre-existing ones).
 	const newChecks: CheckInfo[] = checkResults.checks!.filter((c) => {
@@ -544,9 +544,9 @@ function getSimulatedCheck(
 	boardsim: Board,
 	moveTagged: MoveTagged,
 	colorToTestInCheck: Player,
-): ReturnType<typeof checkdetection.detectCheck> {
+): ReturnType<typeof checkdetection.detect> {
 	return movepiece.simulateEditWrapper(boardsim, moveTagged, () =>
-		checkdetection.detectCheck(boardsim, colorToTestInCheck),
+		checkdetection.detect(boardsim, colorToTestInCheck),
 	);
 }
 

@@ -10,7 +10,7 @@
  * - Possibly return a class (?) with a .getTranslationKey() function or add some other way to do that (then there could also be the .isValid property)
  */
 
-// Types -----------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 enum PasswordValidationResult {
 	Ok,
@@ -74,9 +74,11 @@ function validateUsername(username: string): UsernameValidationResult {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
 	PasswordValidationResult,
 	EmailValidationResult,
 	UsernameValidationResult,
+	// Functions
 	validatePassword,
 	validateEmail,
 	validateUsername,

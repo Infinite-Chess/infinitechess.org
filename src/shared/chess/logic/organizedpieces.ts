@@ -365,19 +365,6 @@ function generatePositionFromPieces({ coords, types }: OrganizedPieces): Map<Coo
 	return position;
 }
 
-/**
- * Generates an iterable of [coordsKey, pieceType] pairs from the given organized pieces.
- *
- * More efficient than {@link generatePositionFromPieces}, as this doesn't create an intermediate map.
- * @param o - The organized pieces object. Destructure the `coords` and `type` objects so the organized pieces can be garbage cleaned.
- * @returns The piece iterator, yielding [coordsKey, pieceType] pairs.
- */
-function* getPieceIterable({ coords, types }: OrganizedPieces): Iterable<[CoordsKey, number]> {
-	for (const [coordsKey, idx] of coords) {
-		yield [coordsKey, types[idx]!];
-	}
-}
-
 // Processing and Removing Pieces in space -------------------------------------
 
 /** Adds a piece to o.coords and o.lines so that it can be used for efficient collision detection. */
@@ -689,15 +676,18 @@ function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Main Functions
 	processInitialPosition,
-	addSlideLines,
 	regenerateLists,
 	generatePositionFromPieces,
-	getPieceIterable,
+	// Processing and Removing Pieces in space
 	registerPieceInSpace,
 	removePieceFromSpace,
+	// Helper Functions
 	getTypeUndefinedsBehavior,
+	// Line Key Functions
 	getKeyFromLine,
 	getCFromKey,
-	getXFromLine,
+	// Slide Line Functions
+	addSlideLines,
 };

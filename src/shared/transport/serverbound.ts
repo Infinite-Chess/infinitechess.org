@@ -15,13 +15,13 @@
 
 import * as z from 'zod';
 
+import domain from './domain.js';
+import modutil from '../chess/util/modutil.js';
+import clockutil from '../chess/util/clockutil.js';
 import typeschemas from '../chess/util/typeschemas.js';
 import { players } from '../chess/util/typeutil.js';
+import variantselection from '../chess/util/variantselection.js';
 import leaderboardregistry from '../chess/variants/leaderboardregistry.js';
-import { SeekVariantSchema } from '../chess/util/variantselection.js';
-import { GameModifierSchema } from '../chess/util/modutil.js';
-import clockutil, { TimeControlSchema } from '../chess/util/clockutil.js';
-import { GameIDSchema, GameModeSchema, SeekIdSchema } from './domain.js';
 
 // General Route ---------------------------------------------------------------
 
@@ -44,16 +44,19 @@ const ServerboundGeneralSchema = z.discriminatedUnion('action', [
 export type CreateSeekMessage = z.infer<typeof CreateSeekMessageSchema>;
 const CreateSeekMessageSchema = z
 	.strictObject({
-		variant: SeekVariantSchema,
-		time: TimeControlSchema.refine(
+		variant: variantselection.SeekVariantSchema,
+		time: clockutil.TimeControlSchema.refine(
 			(timeControl) => clockutil.isTimedControlValid(timeControl),
 			{
 				error: 'Invalid clock value.',
 			},
 		),
 		color: z.literal([players.WHITE, players.BLACK, null]),
-		mode: GameModeSchema,
-		modifiers: z.array(GameModifierSchema).max(GameModifierSchema.options.length).optional(),
+		mode: domain.GameModeSchema,
+		modifiers: z
+			.array(modutil.GameModifierSchema)
+			.max(modutil.GameModifierSchema.options.length)
+			.optional(),
 	})
 	.refine(
 		(val) =>
@@ -65,10 +68,11 @@ const CreateSeekMessageSchema = z
 /** Client → server websocket payload for creating an engine game. */
 export type CreateEngineGameMessage = z.infer<typeof CreateEngineGameMessageSchema>;
 const CreateEngineGameMessageSchema = z.strictObject({
-	variant: SeekVariantSchema,
-	time: TimeControlSchema.refine((timeControl) => clockutil.isTimedControlValid(timeControl), {
-		error: 'Invalid clock value.',
-	}),
+	variant: variantselection.SeekVariantSchema,
+	time: clockutil.TimeControlSchema.refine(
+		(timeControl) => clockutil.isTimedControlValid(timeControl),
+		{ error: 'Invalid clock value.' },
+	),
 	/** The color the human plays, or null for random. */
 	color: z.literal([players.WHITE, players.BLACK, null]),
 	/** The engine's strength level (validated against the engine's max server-side). */
@@ -79,8 +83,8 @@ const CreateEngineGameMessageSchema = z.strictObject({
 export type ServerboundLobbyMessage = z.infer<typeof ServerboundLobbySchema>;
 const ServerboundLobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('createseek'), value: CreateSeekMessageSchema }),
-	z.strictObject({ action: z.literal('cancelseek'), value: SeekIdSchema }),
-	z.strictObject({ action: z.literal('acceptseek'), value: SeekIdSchema }),
+	z.strictObject({ action: z.literal('cancelseek'), value: domain.SeekIdSchema }),
+	z.strictObject({ action: z.literal('acceptseek'), value: domain.SeekIdSchema }),
 	z.strictObject({ action: z.literal('createengine'), value: CreateEngineGameMessageSchema }),
 ]);
 
@@ -106,12 +110,12 @@ const SubmitMoveMessageSchema = z.strictObject({
 export type ServerboundGameMessage = z.infer<typeof ServerboundGameSchema>;
 const ServerboundGameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('abort') }),
-	z.strictObject({ action: z.literal('subscriberematch'), value: GameIDSchema }),
+	z.strictObject({ action: z.literal('subscriberematch'), value: domain.GameIDSchema }),
 	z.strictObject({ action: z.literal('offerdraw') }),
 	z.strictObject({ action: z.literal('acceptdraw') }),
 	z.strictObject({ action: z.literal('declinedraw') }),
 	z.strictObject({ action: z.literal('offerrematch') }),
-	z.strictObject({ action: z.literal('subscribe'), value: GameIDSchema }),
+	z.strictObject({ action: z.literal('subscribe'), value: domain.GameIDSchema }),
 	z.strictObject({ action: z.literal('resign') }),
 	z.strictObject({ action: z.literal('engineresign') }),
 	z.strictObject({ action: z.literal('claimvictory') }),

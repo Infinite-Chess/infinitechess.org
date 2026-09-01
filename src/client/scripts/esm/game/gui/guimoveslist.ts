@@ -226,7 +226,7 @@ element_Last.addEventListener('click', jumpToEnd);
 function showGameResult(): void {
 	const gamefile = gameslot.getGamefile()!;
 
-	const { score, text } = gameresultutil.getResultDisplay(gamefile.gameConclusion!, t.shared);
+	const { score, text } = gameresultutil.getDisplay(gamefile.gameConclusion!, t.shared);
 	element_ResultScore.textContent = score;
 	element_ResultText.textContent = text;
 	element_GameResult.classList.remove('hidden');

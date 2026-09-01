@@ -42,14 +42,14 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	// socket and terminate all the IP's sockets for now!
 	requestMeter.recordRecent();
 	if (requestMeter.meter(ws.metadata.IP, ws.metadata.userAgent) !== undefined) {
-		ws.close(1009, socketutil.ClosureReasons.TOO_MANY_REQUESTS);
+		ws.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_REQUESTS);
 		return socketRegistry.terminateAllOfIP(ws.metadata.IP);
 	}
 
 	// Check if ip has too many connections
 	if (socketRegistry.doesClientHaveMaxCount(ws.metadata.IP)) {
 		console.log(`Client IP ${ws.metadata.IP} has too many sockets! Not connecting this one.`);
-		return ws.close(1009, socketutil.ClosureReasons.TOO_MANY_SOCKETS);
+		return ws.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_SOCKETS);
 	}
 
 	// Initialize who they are. Member? Browser ID?...
@@ -66,7 +66,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 		socketRegistry.doesSessionHaveMaxCount(ws.metadata.cookies.jwt!)
 	) {
 		console.log(`Member "${ws.metadata.memberInfo.username}" has too many sockets for this session! Not connecting this one.`); // prettier-ignore
-		return ws.close(1009, socketutil.ClosureReasons.TOO_MANY_SOCKETS);
+		return ws.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_SOCKETS);
 	}
 
 	socketRegistry.add(ws);
@@ -98,21 +98,21 @@ function closeIfInvalidAndAddMetadata(
 			`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`,
 			'hackLog',
 		);
-		socket.close(1008, socketutil.ClosureReasons.ORIGIN_ERROR);
+		socket.close(1008, socketutil.CLOSURE_REASONS.ORIGIN_ERROR);
 		return;
 	}
 
 	const clientIP = ip.get(req);
 	if (clientIP === undefined) {
 		logEvents.add('Unable to identify IP address from websocket connection!', 'hackLog');
-		socket.close(1008, socketutil.ClosureReasons.UNIDENTIFIABLE_IP);
+		socket.close(1008, socketutil.CLOSURE_REASONS.UNIDENTIFIABLE_IP);
 		return;
 	}
 
 	const userAgent = req.headers['user-agent'];
 	if (!userAgent) {
 		// Occasionally, automated scanner and vulnerability prober bots will omit the user agent.
-		socket.close(1008, socketutil.ClosureReasons.USER_AGENT_REQUIRED);
+		socket.close(1008, socketutil.CLOSURE_REASONS.USER_AGENT_REQUIRED);
 		return;
 	}
 
@@ -121,7 +121,7 @@ function closeIfInvalidAndAddMetadata(
 	const cookies = parseCookie(req.headers.cookie ?? '');
 	if (cookies['browser-id'] === undefined) {
 		// Can happen if the client has cookies disabled
-		socket.close(1008, socketutil.ClosureReasons.AUTHENTICATION_NEEDED);
+		socket.close(1008, socketutil.CLOSURE_REASONS.AUTHENTICATION_NEEDED);
 		return;
 	}
 

@@ -172,7 +172,7 @@ function closeSocket(): void {
 	if (!socket) return;
 	if (socket.readyState !== WebSocket.OPEN)
 		return console.error("Cannot close socket because it's not open! Yet socket is defined.");
-	socket.close(1000, socketutil.ClosureReasons.CLOSED_BY_CLIENT);
+	socket.close(1000, socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT);
 }
 
 /**
@@ -193,7 +193,7 @@ function dropSocket(): void {
 	dropped.onmessage = null;
 	// The reason is for the server alone, should the frame still land: it grants us the
 	// reconnection grace period, where a plain client closure would cost us our seek.
-	dropped.close(1000, socketutil.ClosureReasons.CLOSED_BY_CLIENT_RENEW);
+	dropped.close(1000, socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW);
 	socketclose.onclose(1006, ''); // Report it as the abnormal closure it is.
 }
 

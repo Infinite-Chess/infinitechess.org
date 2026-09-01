@@ -626,23 +626,18 @@ function hasAtleast1Move(moves: LegalMoves, boardsim: Board, piece: Piece): bool
 
 export default {
 	getPieceMoveset,
-
 	getBlockingFuncFromPieceMoveset,
 	getIgnoreFuncFromPieceMoveset,
-
 	getEmptyLegalMoves,
 	appendPotentialMoves,
-	removeObstructedMoves,
 	appendSpecialMoves,
+	removeObstructedMoves,
 	testSquareValidity,
 	testCaptureValidity,
-
 	calculateAll,
 	calculateAllPremoves,
-
 	slide_CalcLegalLimit,
 	calcPiecesLegalSlideLimitOnSpecificLine,
-
 	checkIfMoveLegal,
 	doSlideRangesContainSquare,
 	doesSlidingMovesetContainSquare,

@@ -50,13 +50,13 @@ type Vicinity = Record<CoordsKey, RawType[]>;
 // Board Construction ----------------------------------------------------------
 
 /** Creates a new {@link Board} object from provided arguments */
-function initBoard(
+function init(
 	/** The rules to base the board on. Deep-copied — the board owns its own rules. */
 	gameRules: GameRules,
 	variant: LoadedVariant | undefined,
 	options: BoardInitOptions = {},
 ): Board {
-	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, options);
+	const boardPreview = boardpreviewer.init(gameRules, variant, options);
 
 	// Calculate movesets
 	const pieceMovesets = getMovesetsOfVariant(variant?.mod, boardPreview.gameRules.slideLimit);
@@ -226,6 +226,4 @@ function genSpecialVicinity(mod: VariantModule | undefined, existingRawTypes: Ra
 
 // Exports ---------------------------------------------------------------------
 
-export default {
-	initBoard,
-};
+export default { init };

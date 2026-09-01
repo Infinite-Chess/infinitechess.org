@@ -37,7 +37,7 @@ import apeironborder from '../../../shared/chess/logic/apeironborder.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
-import { isGameServerValidated } from '../../../shared/chess/variants/servervalidation.js';
+import servervalidation from '../../../shared/chess/variants/servervalidation.js';
 
 import logEvents from '../../utility/logEvents.js';
 
@@ -101,10 +101,10 @@ function resolveGameConstruction(
 		variant: loaded,
 		gameRules,
 		variantOptions,
-		validateMoves: isGameServerValidated(variant, loaded),
+		validateMoves: servervalidation.isGameValidated(variant, loaded),
 	};
 
-	// Slide Limit modifier override. Must precede initBoard(),
+	// Slide Limit modifier override. Must precede boardinit.init(),
 	// which reads gameRules.slideLimit to narrow the sliding movesets.
 	if (slideLimit !== undefined) construction.gameRules.slideLimit = BigInt(slideLimit);
 
@@ -159,7 +159,7 @@ function initServerGame(
 ): ServerGame {
 	const { variant, gameRules, variantOptions, validateMoves } = construction;
 	if (validateMoves) {
-		const boardsim = boardinit.initBoard(gameRules, variant, { variantOptions });
+		const boardsim = boardinit.init(gameRules, variant, { variantOptions });
 		// The same load the client runs, so both ends settle on identical
 		// win conditions and starting check state. Spread last, so the servergame's
 		// rules are the board's own copy — never a second one.

@@ -40,11 +40,11 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import engineregistry from '../../../shared/chess/util/engineregistry.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
-import { getFormattedEngineName } from '../../../shared/chess/util/engine.js';
 
 import tconfig from '../../config/translationConfig.js';
 import drawOffers from './drawOffers.js';
@@ -129,7 +129,7 @@ function buildStaticState(servergame: ServerGame): StaticGameState {
 		const { color, engine, strengthLevel } = match.engineParticipant;
 		players[color] = {
 			type: 'engine',
-			username: getFormattedEngineName(engine, strengthLevel),
+			username: engineregistry.getFormattedName(engine, strengthLevel),
 		};
 	}
 
@@ -202,7 +202,7 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 
 	const getPlayerName = (color: Player): string => {
 		if (match.engineParticipant?.color === color)
-			return getFormattedEngineName(
+			return engineregistry.getFormattedName(
 				match.engineParticipant.engine,
 				match.engineParticipant.strengthLevel,
 			);

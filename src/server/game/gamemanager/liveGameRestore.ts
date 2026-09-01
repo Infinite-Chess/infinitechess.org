@@ -16,7 +16,7 @@
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
-import type { ValidEngine } from '../../../shared/chess/util/engine.js';
+import type { ValidEngine } from '../../../shared/chess/util/engineregistry.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';

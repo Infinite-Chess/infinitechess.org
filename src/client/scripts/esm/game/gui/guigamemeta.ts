@@ -57,7 +57,7 @@ setInterval(() => {
 function showResultBanner(): void {
 	const gamefile = gameslot.getGamefile()!;
 
-	const { score, text } = gameresultutil.getResultDisplay(gamefile.gameConclusion!, t.shared);
+	const { score, text } = gameresultutil.getDisplay(gamefile.gameConclusion!, t.shared);
 	element_BannerScore.textContent = score;
 	element_BannerText.textContent = text;
 	element_ResultBanner.classList.remove('hidden');

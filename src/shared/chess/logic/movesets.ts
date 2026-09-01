@@ -91,7 +91,7 @@ type SlidingMoves = {
  * The start and end coords arguments are useful for the Huygen, as it can
  * calculate the distance traveled, and then test if it's prime.
  *
- * The gamefile and detectCheck method may be used for the Royal Queen,
+ * The gamefile and checkdetection.detect method may be used for the Royal Queen,
  * as it can test if the squares are check for positive.
  */
 export type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
@@ -350,5 +350,4 @@ export default {
 	defaultIgnoreFunction,
 	getPieceDefaultMovesets,
 	convertRawMovesetsToPieceMovesets,
-	isVectorColinear,
 };

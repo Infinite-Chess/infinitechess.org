@@ -47,4 +47,9 @@ function isValidPair(aCoords: Coords, aType: number, bCoords: Coords, bType: num
 
 // Exports ---------------------------------------------------------------------
 
-export default { MIN_DISTANCE, isValidPair };
+export default {
+	// Constants
+	MIN_DISTANCE,
+	// Functions
+	isValidPair,
+};

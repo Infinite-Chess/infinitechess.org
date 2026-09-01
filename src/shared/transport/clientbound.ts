@@ -16,9 +16,9 @@
 
 import * as z from 'zod';
 
+import domain from './domain.js';
+import clockutil from '../chess/util/clockutil.js';
 import typeschemas from '../chess/util/typeschemas.js';
-import { ClockValuesSchema } from '../chess/util/clockutil.js';
-import { GameIDSchema, OutSeekSchema, SeekIdSchema } from './domain.js';
 
 // Common Helper Schemas -------------------------------------------------------
 
@@ -28,7 +28,7 @@ import { GameIDSchema, OutSeekSchema, SeekIdSchema } from './domain.js';
  */
 export type GameNavigation = z.infer<typeof GameNavigationSchema>;
 const GameNavigationSchema = z.strictObject({
-	id: GameIDSchema,
+	id: domain.GameIDSchema,
 	/** Our color in the game. Absent if we're not a participant (spectator). */
 	role: typeschemas.PlayerSchema.optional(),
 });
@@ -54,9 +54,9 @@ const ViewerCountSchema = z.number().nonnegative();
 /** The payload of the `seekslist` message — every seek currently open in the lobby, and which one is ours. */
 export type SeeksMessage = z.infer<typeof SeeksMessageSchema>;
 const SeeksMessageSchema = z.strictObject({
-	seekslist: z.array(OutSeekSchema),
+	seekslist: z.array(domain.OutSeekSchema),
 	/** The id of our own open seek, absent if we have none. Always one of {@link SeeksMessage.seekslist}. */
-	ourseekid: SeekIdSchema.optional(),
+	ourseekid: domain.SeekIdSchema.optional(),
 });
 
 /** Tells us we're in a game — carried by the lobby state on subscribe, and pushed live thereafter. */
@@ -140,7 +140,7 @@ const GameStateBaseSchema = z.strictObject({
 	 * The live ticking clocks, so a fresh load / reconnect shows
 	 * running time, not the base time. Absent for untimed games.
 	 */
-	clockValues: ClockValuesSchema.optional(),
+	clockValues: clockutil.ClockValuesSchema.optional(),
 	gameConclusion: typeschemas.GameConclusionSchema.optional(),
 	/**
 	 * Per-player rating deltas. A finalized-result fact carried as state so a late
@@ -179,7 +179,7 @@ export type GameConclusionMessage = z.infer<typeof GameConclusionMessageSchema>;
 const GameConclusionMessageSchema = z.strictObject({
 	gameConclusion: typeschemas.GameConclusionSchema,
 	/** If the game is timed, the frozen final clock values. */
-	clockValues: ClockValuesSchema.optional(),
+	clockValues: clockutil.ClockValuesSchema.optional(),
 });
 
 /** The message contents of a server websocket `'move'` message — our opponent's move. */
@@ -191,7 +191,7 @@ const OpponentsMoveMessageSchema = z.strictObject({
 	/** Our opponent's move number, 1-based. */
 	moveNumber: z.number().int().positive(),
 	/** If the game is timed, this will be the current clock values. */
-	clockValues: ClockValuesSchema.optional(),
+	clockValues: clockutil.ClockValuesSchema.optional(),
 });
 
 /** Every message the server may send on the 'game' route. */
@@ -199,7 +199,7 @@ export type ClientboundGameMessage = z.infer<typeof ClientboundGameSchema>;
 const ClientboundGameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('gamestate'), value: GameStateMessageSchema }),
 	z.strictObject({ action: z.literal('move'), value: OpponentsMoveMessageSchema }),
-	z.strictObject({ action: z.literal('clock'), value: ClockValuesSchema }),
+	z.strictObject({ action: z.literal('clock'), value: clockutil.ClockValuesSchema }),
 	z.strictObject({
 		action: z.literal('gameconclusion'),
 		value: GameConclusionMessageSchema,

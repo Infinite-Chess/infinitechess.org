@@ -76,7 +76,7 @@ export type PositionRejection =
  * @param context - Which play contexts to judge it by beyond rule 1. Analysis is neither: it
  * loads finished and engine-unplayable games fine.
  */
-export function getRejection(
+function getRejection(
 	gamefile: GameFile,
 	context: { seek: boolean; engine: boolean },
 ): PositionRejection | null {
@@ -84,7 +84,7 @@ export function getRejection(
 	if (gamerules.usesCheckmate(gamefile.gameRules)) {
 		// Whoever moves on turn 2 is the one turn 1 could have taken a royal from.
 		const secondToMove = moveutil.getWhosTurnAtMoveIndex(gamefile, 0);
-		if (checkdetection.detectCheck(gamefile, secondToMove, false).check) {
+		if (checkdetection.detect(gamefile, secondToMove, false).check) {
 			return { kind: 'position', code: 'king_capture_on_turn_1' };
 		}
 	}
@@ -121,8 +121,12 @@ export function getRejection(
 }
 
 /** The display text for a rejection, in the language of the given translations. */
-export function localizeRejection(t: ScriptTranslations, rejection: PositionRejection): string {
+function localizeRejection(t: ScriptTranslations, rejection: PositionRejection): string {
 	return rejection.kind === 'engine'
 		? t.shared.position_errors.engine[rejection.code].message
 		: t.shared.position_errors[rejection.code];
 }
+
+// Exports ---------------------------------------------------------------------
+
+export default { getRejection, localizeRejection };

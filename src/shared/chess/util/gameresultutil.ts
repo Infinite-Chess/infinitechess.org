@@ -10,7 +10,7 @@ import type { GameConclusion } from './typeschemas.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 
 import { players } from './typeutil.js';
-import { interpolate } from '../../util/interpolate.js';
+import interpolate from '../../util/interpolate.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -25,23 +25,26 @@ interface GameResultDisplay {
 // Functions -------------------------------------------------------------------
 
 /** Derives the display score + sentence for a concluded game. */
-function getResultDisplay(
+function getDisplay(
 	conclusion: GameConclusion,
 	sharedT: ScriptTranslations['shared'],
 ): GameResultDisplay {
 	if (conclusion.condition === 'aborted') return { score: '', text: sharedT.game_result.aborted };
 	const label = sharedT.conditions[conclusion.condition];
 	if (conclusion.victor === null) {
-		return { score: '½-½', text: interpolate(sharedT.game_result.draw_by, { label }) };
+		return {
+			score: '½-½',
+			text: interpolate.interpolate(sharedT.game_result.draw_by, { label }),
+		};
 	}
 	const isWhite = conclusion.victor === players.WHITE;
 	const color = isWhite ? sharedT.sides.white : sharedT.sides.black;
 	return {
 		score: isWhite ? '1-0' : '0-1',
-		text: interpolate(sharedT.game_result.color_wins_by, { color, label }),
+		text: interpolate.interpolate(sharedT.game_result.color_wins_by, { color, label }),
 	};
 }
 
 // Exports ---------------------------------------------------------------------
 
-export default { getResultDisplay };
+export default { getDisplay };

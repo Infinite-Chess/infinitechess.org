@@ -267,7 +267,7 @@ function buildGameMetaViewModel(
 		timeCreated: setup.timeCreated,
 		startedAgo: timeutil.getRelativeTimeString(setup.timeCreated, locale),
 		...(state.gameConclusion && {
-			result: gameresultutil.getResultDisplay(state.gameConclusion, req.t.shared),
+			result: gameresultutil.getDisplay(state.gameConclusion, req.t.shared),
 		}),
 		players,
 		moveCount,

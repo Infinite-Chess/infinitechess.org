@@ -17,7 +17,7 @@ import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
-import { isGameServerValidated } from '../../../../../shared/chess/variants/servervalidation.js';
+import servervalidation from '../../../../../shared/chess/variants/servervalidation.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import guiclock from '../../game/gui/guiclock.js';
@@ -150,7 +150,7 @@ function checkAndReportIllegalOpponentMove(
 
 	if (gamesession.getRole() === undefined) return; // Spectators never report
 	if (window.gamePageData.engineGame) return; // If the engine plays an illegal move, we already force it to resign.
-	if (isGameServerValidated(window.gamePageData.variant, gamefile.variant)) return; // Server-validated game
+	if (servervalidation.isGameValidated(window.gamePageData.variant, gamefile.variant)) return; // Server-validated game
 
 	reportOpponentsMove(moveValidationResult.reason);
 }

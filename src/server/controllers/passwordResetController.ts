@@ -228,7 +228,7 @@ async function handleReset(req: Request, res: Response): Promise<void> {
 
 		// Every session is now dead, so close their sockets with the same reason logging
 		// out uses — the client reloads and re-auths off whatever session it has left.
-		socketRegistry.closeAllOfMember(member.user_id, 1008, socketutil.ClosureReasons.LOGGED_OUT);
+		socketRegistry.closeAllOfMember(member.user_id, 1008, socketutil.CLOSURE_REASONS.LOGGED_OUT); // prettier-ignore
 
 		// Issue a fresh session to this browser — the device that proved control
 		// of the account by clicking the email link and setting the new password.

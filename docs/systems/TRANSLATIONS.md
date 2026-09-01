@@ -89,11 +89,11 @@ If a response can only be triggered by a malformed request that a well-behaved c
 
 ## Interpolating dynamic values
 
-Translated strings are static — there is no built-in interpolation. Put `{name}` placeholders in the TOML value and resolve them with `interpolate(template, vars)` from [src/shared/util/interpolate.ts](/src/shared/util/interpolate.ts) (shared, so it works on both sides; unknown placeholders are left intact):
+Translated strings are static — there is no built-in interpolation. Put `{name}` placeholders in the TOML value and resolve them with `interpolate.interpolate(template, vars)` from [src/shared/util/interpolate.ts](/src/shared/util/interpolate.ts) (shared, so it works on both sides; unknown placeholders are left intact):
 
 ```ts
 // login_retry_in_other = "Failed to login, try again in {n} seconds."
-interpolate(req.t.responses.auth.login_retry_in_other, { n: 3 }); // "...in 3 seconds."
+interpolate.interpolate(req.t.responses.auth.login_retry_in_other, { n: 3 }); // "...in 3 seconds."
 ```
 
 Keep the whole phrase in one key with placeholders — never assemble sentences by concatenation, so translators can reorder words freely.

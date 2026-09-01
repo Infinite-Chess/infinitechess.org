@@ -14,12 +14,12 @@ import type { GameConclusion } from '../util/typeschemas.js';
 import moveutil from './moveutil.js';
 import boardutil from './boardutil.js';
 import checkmate from './checkmate.js';
+import repetition from './repetition.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from './gamefileutility.js';
+import insufficientmaterial from './insufficientmaterial.js';
 import typeutil, { RawType } from '../util/typeutil.js';
-import { detectRepetitionDraw } from './repetition.js';
 import { rawTypes as r, Player } from '../util/typeutil.js';
-import { detectInsufficientMaterial } from './insufficientmaterial.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -48,11 +48,11 @@ function getGameConclusion(boardsim: Board): GameConclusion | undefined {
 		detectRoyalCapture(boardsim) ||
 		detectAllroyalscaptured(boardsim) ||
 		detectKoth(boardsim) ||
-		detectRepetitionDraw(boardsim) ||
+		repetition.detect(boardsim) ||
 		checkmate.detect(boardsim) ||
 		// This needs to be last so that a draw isn't enforced in a true win
 		detectMoveRule(boardsim) || // 50-move-rule
-		detectInsufficientMaterial(boardsim) ||
+		insufficientmaterial.detect(boardsim) ||
 		undefined
 	); // No win condition passed. No game conclusion!
 }

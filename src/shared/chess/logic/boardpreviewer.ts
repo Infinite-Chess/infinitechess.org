@@ -71,7 +71,7 @@ export type BoardPreview = {
 // Functions -------------------------------------------------------------------
 
 /** Creates a new {@link BoardPreview} from the provided arguments. */
-function initBoardPreview(
+function init(
 	/** The rules to base the board on. */
 	gameRulesIn: GameRules,
 	variant: LoadedVariant | undefined,
@@ -147,6 +147,4 @@ function initBoardPreview(
 
 // Exports ---------------------------------------------------------------------
 
-export default {
-	initBoardPreview,
-};
+export default { init };

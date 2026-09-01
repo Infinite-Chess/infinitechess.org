@@ -386,7 +386,6 @@ export default {
 	queueMovePiece,
 	// Executing changes of a Move
 	runChanges,
-	applyChanges,
 	runChanges_Position,
 	// Helper Functions
 	getCapturedPieceTypes,

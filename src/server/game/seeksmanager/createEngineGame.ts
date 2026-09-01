@@ -13,7 +13,7 @@ import type { CreateEngineGameMessage } from '../../../shared/transport/serverbo
 
 import apeironcard from '../../../shared/chess/engines/apeironcard.js';
 import typeutil, { players } from '../../../shared/chess/util/typeutil.js';
-import { ENGINE_DICTIONARY, ValidEngine } from '../../../shared/chess/util/engine.js';
+import engineregistry, { ValidEngine } from '../../../shared/chess/util/engineregistry.js';
 
 import manifest from '../../config/manifest.js';
 import logEvents from '../../utility/logEvents.js';
@@ -43,7 +43,7 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	// The properties zod can't constrain, since they depend on the engine's capabilities.
 	// Unreachable via the client (it validates first), so reaching here is a hand-crafted message.
 	if (
-		body.strengthLevel > ENGINE_DICTIONARY[ONLINE_ENGINE].maxStrengthLevel ||
+		body.strengthLevel > engineregistry.REGISTRY[ONLINE_ENGINE].maxStrengthLevel ||
 		(body.variant.kind === 'preset' && !apeironcard.SUPPORTED_VARIANTS.has(body.variant.code))
 	) {
 		logEvents.addAndPrint('Player tried to create an engine game with invalid properties!', 'errLog'); // prettier-ignore

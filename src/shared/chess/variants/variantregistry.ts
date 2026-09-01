@@ -55,7 +55,7 @@ const VARIANT_GROUPS = Object.keys(VARIANT_GROUP_ICONS) as VariantGroup[];
 
 // Variant Registry ------------------------------------------------------------
 
-const VARIANT_REGISTRY = {
+const REGISTRY = {
 	// ---- Standard ----
 	Classical: {
 		group: 'standard',
@@ -216,9 +216,9 @@ function getVariantGroupIconId(group: VariantGroup | 'custom'): string {
 function resolveVariantCode(variantName: string | undefined): VariantCode | undefined {
 	if (variantName === undefined) return undefined;
 	// Direct code match
-	if (variantName in VARIANT_REGISTRY) return variantName as VariantCode;
+	if (variantName in REGISTRY) return variantName as VariantCode;
 	// Search by English display name
-	for (const [code, variantEntry] of Object.entries(VARIANT_REGISTRY) as [
+	for (const [code, variantEntry] of Object.entries(REGISTRY) as [
 		VariantCode,
 		VariantRegistryEntry,
 	][]) {
@@ -237,27 +237,17 @@ function getVariantName(
 	variantCode: VariantCode | null,
 	sharedT: ScriptTranslations['shared'],
 ): string {
-	return variantCode
-		? VARIANT_REGISTRY[variantCode].name
-		: sharedT.variant_groups.custom.display_label; // Translate 'Custom Variant'
+	return variantCode ? REGISTRY[variantCode].name : sharedT.variant_groups.custom.display_label; // Translate 'Custom Variant'
 }
 
 /** Returns the group of the given variant code. */
 function getVariantGroup(variantCode: VariantCode): VariantGroup {
-	return VARIANT_REGISTRY[variantCode].group;
-}
-
-/**
- * Tests if the provided variant is a valid variant.
- * Acts as a type guard, narrowing the input to {@link VariantCode}.
- */
-function isVariantValid(variant: string): variant is VariantCode {
-	return variant in VARIANT_REGISTRY;
+	return REGISTRY[variantCode].group;
 }
 
 /** Returns the dynamic import function for the given variant code. */
 function getVariantLoader(variantCode: VariantCode): () => Promise<VariantModule> {
-	return VARIANT_REGISTRY[variantCode].loadVariant;
+	return REGISTRY[variantCode].loadVariant;
 }
 
 /**
@@ -280,7 +270,7 @@ function getVariantGroupsWithVariants(): {
 /** Returns all non-hidden variant codes belonging to the given group, in registry order. */
 function getVariantsForGroup(group: VariantGroup): VariantCode[] {
 	return VARIANT_CODES.filter((code) => {
-		const entry = VARIANT_REGISTRY[code] as VariantRegistryEntry;
+		const entry = REGISTRY[code] as VariantRegistryEntry;
 		return entry.group === group && !entry.hidden;
 	});
 }
@@ -292,7 +282,6 @@ export default {
 	resolveVariantCode,
 	getVariantName,
 	getVariantGroup,
-	isVariantValid,
 	getVariantLoader,
 	getVariantGroupsWithVariants,
 };

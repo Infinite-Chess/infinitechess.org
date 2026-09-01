@@ -91,7 +91,7 @@ function removeConnectionFromList(
 /** Arms the timer that closes the socket when it reaches its maximum age. */
 function startTimerToExpireSocket(ws: CustomWebSocket): void {
 	ws.metadata.clearafter = setTimeout(
-		() => ws.close(1000, socketutil.ClosureReasons.CONNECTION_EXPIRED),
+		() => ws.close(1000, socketutil.CLOSURE_REASONS.CONNECTION_EXPIRED),
 		MAX_WEBSOCKET_AGE_MS,
 	); // We pass in an arrow function so it doesn't lose scope of ws.
 }
@@ -104,7 +104,7 @@ function terminateAllOfIP(IP: string): void {
 	if (connectionList === undefined) return; // They don't have any sockets to terminate!
 	for (const id of connectionList) {
 		const ws = websocketConnections[id];
-		ws?.close(1009, socketutil.ClosureReasons.TOO_MANY_REQUESTS);
+		ws?.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_REQUESTS);
 	}
 }
 

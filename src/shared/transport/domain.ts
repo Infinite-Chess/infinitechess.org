@@ -14,7 +14,7 @@
  * vocabulary it describes.
  */
 
-import type { ValidEngine } from '../chess/util/engine.js';
+import type { ValidEngine } from '../chess/util/engineregistry.js';
 import type { TimeControl } from '../chess/util/clockutil.js';
 import type { GameConclusion } from '../chess/util/typeschemas.js';
 import type { GameStateVariant } from '../chess/util/variantselection.js';
@@ -22,17 +22,17 @@ import type { Player, PlayerGroup } from '../chess/util/typeutil.js';
 
 import * as z from 'zod';
 
+import clockutil from '../chess/util/clockutil.js';
 import typeschemas from '../chess/util/typeschemas.js';
-import { RatingSchema } from '../chess/util/metadatautil.js';
-import { TimeControlSchema } from '../chess/util/clockutil.js';
-import { OutSeekVariantSchema } from '../chess/util/variantselection.js';
-import { GameModifierSchema, GameModifier } from '../chess/util/modutil.js';
+import metadatautil from '../chess/util/metadatautil.js';
+import variantselection from '../chess/util/variantselection.js';
+import modutil, { GameModifier } from '../chess/util/modutil.js';
 
 // Common Helper Schemas -------------------------------------------------------
 
 /** Whether a game is casual or rated. */
 export type GameMode = z.infer<typeof GameModeSchema>;
-export const GameModeSchema = z.enum(['casual', 'rated']);
+const GameModeSchema = z.enum(['casual', 'rated']);
 
 /** The username container of an seek sent by the server. DIFFERENT FROM UsernameContainerProperties!!!! */
 export type ServerUsernameContainer = z.infer<typeof ServerUsernameContainerSchema>;
@@ -40,13 +40,13 @@ const ServerUsernameContainerSchema = z.strictObject({
 	type: z.enum(['player', 'guest', 'engine']),
 	username: z.string(),
 	/** The rating of the user. Falls back to the INFINITY leaderboard. */
-	rating: RatingSchema.optional(),
+	rating: metadatautil.RatingSchema.optional(),
 });
 
 // Game Helper Schemas ---------------------------------------------------------
 
 /** The id of an online game. */
-export const GameIDSchema = z.number().int().nonnegative();
+const GameIDSchema = z.number().int().nonnegative();
 
 // Game State Types ------------------------------------------------------------
 
@@ -97,10 +97,10 @@ export interface DeadGameState extends StaticGameState {
 // Seek Schemas ----------------------------------------------------------------
 
 /** The number of digits generated seek IDs are. */
-export const SEEK_ID_LENGTH = 5;
+const SEEK_ID_LENGTH = 5;
 /** Seek ID: Base36 alphanumeric, fixed length of 5. */
 export type SeekId = z.infer<typeof SeekIdSchema>;
-export const SeekIdSchema = z
+const SeekIdSchema = z
 	.string()
 	.length(SEEK_ID_LENGTH)
 	.regex(/^[0-9a-z]+$/);
@@ -111,15 +111,15 @@ const BaseSeekSchema = z.strictObject({
 	id: SeekIdSchema,
 	player: ServerUsernameContainerSchema,
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
-	time: TimeControlSchema,
+	time: clockutil.TimeControlSchema,
 	mode: GameModeSchema,
-	modifiers: z.array(GameModifierSchema).optional(),
+	modifiers: z.array(modutil.GameModifierSchema).optional(),
 });
 
 /** The version of seeks broadcast to lobby viewers. */
 export type OutSeek = z.infer<typeof OutSeekSchema>;
-export const OutSeekSchema = BaseSeekSchema.extend({
-	variant: OutSeekVariantSchema,
+const OutSeekSchema = BaseSeekSchema.extend({
+	variant: variantselection.OutSeekVariantSchema,
 });
 
 // SSR Page Data ---------------------------------------------------------------
@@ -151,3 +151,16 @@ export interface GamePageData extends StaticGameSetup {
 	viewColor: Player;
 	engineGame?: EngineGamePageInfo;
 }
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	// Common Helper Schemas
+	GameModeSchema,
+	// Game Helper Schemas
+	GameIDSchema,
+	// Seek Schemas
+	SEEK_ID_LENGTH,
+	SeekIdSchema,
+	OutSeekSchema,
+};

@@ -436,8 +436,11 @@ function kingLegalMoves(
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Pawn Legal Move Calculation and Execution
 	fourDimensionalPawnMove,
 	doFourDimensionalPawnMove,
+	// Knight Legal Move Calculation
 	fourDimensionalKnightMove,
+	// King Legal Move Calculation
 	fourDimensionalKingMove,
 };

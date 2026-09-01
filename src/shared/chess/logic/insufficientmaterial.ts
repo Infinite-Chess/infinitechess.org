@@ -384,7 +384,7 @@ function invertScenario(scenario: Scenario): Scenario {
  * Detects if the game is drawn by insufficient material,
  * returning the game conclusion if so.
  */
-export function detectInsufficientMaterial(boardsim: InsuffmatBoard): GameConclusion | undefined {
+function detect(boardsim: InsuffmatBoard): GameConclusion | undefined {
 	if (!doesPositionSupportInsuffmat(boardsim)) return undefined;
 
 	const gameRules = boardsim.gameRules;
@@ -499,3 +499,7 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: InsuffmatBoard): Sc
 
 	return scenarios;
 }
+
+// Exports ---------------------------------------------------------------------
+
+export default { detect };

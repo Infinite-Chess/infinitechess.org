@@ -257,7 +257,7 @@ function validateConclusion(
 // Exports ---------------------------------------------------------------------
 
 export default {
-	isTokenMoveLegal,
 	isOpponentsMoveLegal,
+	isTokenMoveLegal,
 	validateMove,
 };
