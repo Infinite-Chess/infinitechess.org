@@ -1,4 +1,4 @@
-// scripts/move-module.ts
+// scripts/modules/move-module.ts
 
 /**
  * `git mv`s one or more modules and rewrites every relative import specifier pointing
@@ -11,7 +11,7 @@
  * block, are yours — though the precommit hook re-sorts anyway.
  *
  * Usage:
- *   npx tsx scripts/move-module.ts <old> <new> [<old> <new> ...]
+ *   npx tsx scripts/modules/move-module.ts <old> <new> [<old> <new> ...]
  *   (paths repo-relative; run from the repo root, then type-check)
  */
 

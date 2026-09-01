@@ -3,7 +3,7 @@
 How `src/` is organized so that dependency direction and bundle weight are **enforced, not
 remembered**: three roots, each with a ladder imports may only point down, plus rules over
 which client pages may ship which code. Enforced by
-[import-rules.ts](/scripts/imports/import-rules.ts) — `npm run import-rules`, a pass inside
+[import-rules.ts](/scripts/modules/import-rules.ts) — `npm run import-rules`, a pass inside
 `npm run check`. Read this before adding or moving any file in `src/`, and before editing the
 rules themselves.
 
@@ -122,7 +122,7 @@ rank: client `chess/` may not import client `components/`, though both ship ever
 
 ## The rules
 
-Two rule tables live in [import-rules.ts](/scripts/imports/import-rules.ts). Their
+Two rule tables live in [import-rules.ts](/scripts/modules/import-rules.ts). Their
 `audience` sentences and the ladders' wording are the single source of the report's phrasing.
 
 **`RULES`** — "which pages may reach this target", matched against page bundles. The page sets
@@ -155,11 +155,11 @@ variant's module loads through the registry's dynamic `import()`.
 
 ## Placing or moving a module
 
-1. Answer with the tools, not grep:
-   `importers.ts <root> consumers <substr>` — every importer, **type-only edges included**,
+1. Answer with the tools in `scripts/modules/`, not grep:
+   `importers.ts <substr>` — every importer, **type-only edges included**,
    across all three roots: the widest-consumer lookup. `page-reach.ts <substr> --why` — which
    pages would ship it, and the chain that drags it in. `pkg-cost.ts` — what a heavy npm
    package costs the pages that bundle it.
 2. Pick the rung by root: widest consumer on the client, subject on the server and shared.
-3. `scripts/move-module.ts` `git mv`s modules and rewrites every relative specifier from each
+3. `move-module.ts` `git mv`s modules and rewrites every relative specifier from each
    file's NEW home. Pass every move in ONE run so they resolve against each other.

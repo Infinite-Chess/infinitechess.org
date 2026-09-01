@@ -1,12 +1,15 @@
-// scripts/imports/import-rules.ts
+// scripts/modules/import-rules.ts
 
 /**
  * Enforces every src/ root's import-boundary model — the three ladders, the server file-cycle
- * check, the reachability rules, and the gates. Run via `npm run import-rules` (a pass inside
- * `npm run check`); exits non-zero on any problem.
+ * check, the reachability rules, and the gates. Runs as a pass inside `npm run check`.
  *
- * THE FULL MODEL lives in docs/systems/IMPORT_RULES.md. Its sister tools here — ladder.ts,
- * page-reach.ts, pkg-cost.ts — answer placement questions; each header carries its usage.
+ * Usage:
+ *   npm run import-rules
+ *
+ * THE FULL MODEL lives in docs/systems/IMPORT_RULES.md. Its sister tools here — importers.ts,
+ * page-reach.ts, pkg-cost.ts — answer placement questions, and move-module.ts performs the
+ * move.
  *
  * All paths are "short form": "src/client/scripts/esm/" or "src/" chopped off the front,
  * giving views/index/index.ts and shared/chess/util/typeutil.ts.

@@ -1,11 +1,12 @@
-// scripts/imports/page-reach.ts
+// scripts/modules/page-reach.ts
 
 /**
  * Which client pages ship a module — the constraint that decides most placement questions.
  *
- *   npx tsx scripts/imports/page-reach.ts                    every client module, with its page set
- *   npx tsx scripts/imports/page-reach.ts <substring> ...    just the matching modules, any root
- *   npx tsx scripts/imports/page-reach.ts <substring> --why  plus the chain that drags each in
+ * Usage:
+ *   npx tsx scripts/modules/page-reach.ts                    every client module, with its page set
+ *   npx tsx scripts/modules/page-reach.ts <substring> ...    just the matching modules, any root
+ *   npx tsx scripts/modules/page-reach.ts <substring> --why  plus the chain that drags each in
  *
  * With no argument this also lists the client modules NO page reaches.
  *
@@ -15,7 +16,7 @@
  *
  * Resolution comes from esbuild's metafile — the SAME resolution as the real build — so
  * `import type` edges do not appear. That is correct for a bundling question and wrong for a
- * coupling one: use `ladder.ts` when type-only edges matter. A module shown as unreachable may
+ * coupling one: use `importers.ts` when type-only edges matter. A module shown as unreachable may
  * still be imported for its types.
  *
  * Pages with no entry in ESMEntryPoints yet are still scanned, and marked `*` in the output.

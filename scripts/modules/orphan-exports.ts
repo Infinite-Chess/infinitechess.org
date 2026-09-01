@@ -1,9 +1,10 @@
-// scripts/orphan-exports.ts
+// scripts/modules/orphan-exports.ts
 
 /**
  * Exported symbols with no reference anywhere outside their own file.
  *
- *   npx tsx scripts/orphan-exports.ts [src/shared | src/server | src/client | any path prefix]
+ * Usage:
+ *   npx tsx scripts/modules/orphan-exports.ts [src/shared | src/server | src/client | any path prefix]
  *
  * Nothing should be exported — types included — without a consumer outside its module, so every
  * hit is either a dead `export` keyword to drop or a symbol whose module is the wrong home.

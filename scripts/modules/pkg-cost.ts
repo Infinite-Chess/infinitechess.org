@@ -1,9 +1,10 @@
-// scripts/imports/pkg-cost.ts
+// scripts/modules/pkg-cost.ts
 
 /**
  * Which client pages bundle an npm package, why, and what it costs them.
  *
- *   npx tsx scripts/imports/pkg-cost.ts [pkg] [--why] [--cost]
+ * Usage:
+ *   npx tsx scripts/modules/pkg-cost.ts [pkg] [--why] [--cost]
  *
  * Defaults to zod. --why prints the shortest import chain pulling it in; --cost bundles each
  * entry twice, once with the package stubbed empty, and diffs the minified bytes.
