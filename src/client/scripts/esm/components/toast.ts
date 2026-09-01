@@ -6,7 +6,7 @@
  * A toast element (from components/toast/toast.njk) slides in from the
  * top-right and auto-dismisses. Subsequent calls replace its content and
  * restart the timer without re-animating. Pauses on hover, dismissible via X.
- * Used by the websocket router for `notify` / `notifyerror` actions, and by
+ * Used by the websocket router for `toast` / `toast-error` actions, and by
  * any other client code that needs to surface a transient message.
  */
 

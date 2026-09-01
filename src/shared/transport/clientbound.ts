@@ -38,8 +38,8 @@ const GameNavigationSchema = z.strictObject({
 /** Every message the server may send on the 'general' route. */
 export type ClientboundGeneralMessage = z.infer<typeof ClientboundGeneralSchema>;
 const ClientboundGeneralSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('notify'), value: z.string() }),
-	z.strictObject({ action: z.literal('notifyerror'), value: z.string() }),
+	z.strictObject({ action: z.literal('toast'), value: z.string() }),
+	z.strictObject({ action: z.literal('toast-error'), value: z.string() }),
 	z.strictObject({ action: z.literal('print'), value: z.string() }),
 	z.strictObject({ action: z.literal('printerror'), value: z.string() }),
 	z.strictObject({ action: z.literal('ping') }),

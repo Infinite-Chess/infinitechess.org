@@ -44,12 +44,12 @@ import leaderboardsManager from '../../database/leaderboardsManager.js';
 function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 	if (activePlayers.hasSocket(ws)) {
 		// Can't create seek because they are already in a game
-		return socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
+		return socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.already_in_game);
 	}
 
 	// Reject rated seeks from signed-out users
 	if (messageContents.mode === 'rated' && !ws.metadata.memberInfo.signedIn) {
-		socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.rated_requires_signin);
+		socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.rated_requires_signin);
 		return;
 	}
 
@@ -63,7 +63,7 @@ function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 		activeSeeks.add(seek);
 	} catch {
 		// DB error (already logged)
-		socketsend.send(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
+		socketsend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
 	}
 }
 
@@ -121,7 +121,7 @@ function validateVariant(ws: CustomWebSocket, variant: SeekVariant, engineGame: 
 	if (variant.kind !== 'custom') return true;
 	const rejection = validateIcnSeekContent(variant.position, engineGame);
 	if (rejection === null) return true;
-	socketsend.send(ws, 'general', 'notify', playability.localizeRejection(ws.t, rejection));
+	socketsend.send(ws, 'general', 'toast', playability.localizeRejection(ws.t, rejection));
 	return false;
 }
 

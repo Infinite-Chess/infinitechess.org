@@ -38,7 +38,7 @@ const ONLINE_ENGINE: ValidEngine = 'apeiron';
  */
 function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	if (activePlayers.hasSocket(ws))
-		return socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
+		return socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.already_in_game);
 
 	// The properties zod can't constrain, since they depend on the engine's capabilities.
 	// Unreachable via the client (it validates first), so reaching here is a hand-crafted message.

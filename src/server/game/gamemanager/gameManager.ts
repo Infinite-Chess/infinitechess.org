@@ -130,7 +130,7 @@ function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefin
 	const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
 	logEvents.addAndPrint(`Error creating game: ${details}`, 'errLog');
 	for (const ws of sockets) {
-		if (ws) socketsend.send(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
+		if (ws) socketsend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
 	}
 }
 

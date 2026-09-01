@@ -111,11 +111,11 @@ function submitMove(
 		// Force their move list to match ours, else they keep the rejected move
 		// and resubmit it on every resync, desynced for the rest of the game.
 		gameSockets.sendGameState(servergame, role, true);
-		// Send notifyerror last to override any previous toasts
+		// Send toast-error last to override any previous toasts
 		socketsend.send(
 			ws,
 			'general',
-			'notifyerror',
+			'toast-error',
 			'Move not accepted. Distance exceeds allowed limit for game duration.',
 		);
 		return;
@@ -187,11 +187,11 @@ function applyServerValidatedMove(
 		logEvents.addAndPrint(errString, 'hackLog');
 		// Send the sender the current game state to correct their board if a bug somehow caused this
 		gameSockets.sendGameState(servergame, role, true); // forceSync true to force their move list to match ours
-		// Send notifyerror last to override any previous toasts
+		// Send toast-error last to override any previous toasts
 		socketsend.send(
 			ws,
 			'general',
-			'notifyerror',
+			'toast-error',
 			'Oops! That was an illegal move. If this is a bug, please report it!',
 		);
 		return;

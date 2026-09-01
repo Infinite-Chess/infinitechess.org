@@ -95,13 +95,13 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	for (const [colorStr, { socket: ws }] of Object.entries(servergame.match.playerData)) {
 		if (!ws) continue; // Not connected, can't send message
 		if (Number(colorStr) === opponentColor) {
-			socketsend.send(ws, 'general', 'notifyerror', ws.t.responses.game.you_cheated);
+			socketsend.send(ws, 'general', 'toast-error', ws.t.responses.game.you_cheated);
 		} else {
-			socketsend.send(ws, 'general', 'notify', ws.t.responses.game.opponent_cheated);
+			socketsend.send(ws, 'general', 'toast', ws.t.responses.game.opponent_cheated);
 		}
 	}
 	for (const ws of servergame.spectators) {
-		socketsend.send(ws, 'general', 'notify', ws.t.responses.game.cheat_detected);
+		socketsend.send(ws, 'general', 'toast', ws.t.responses.game.cheat_detected);
 	}
 
 	concludeReportedGame(servergame, { condition: 'aborted' }, colorThatPlayedPerpetratingMove);

@@ -171,7 +171,7 @@ function logConcludedGame(servergame: ServerGame): void {
 		// Log failure already logged. The live game row is dropped either way.
 		const message =
 			"A server error occurred while logging this game. It won't be available in your game history.";
-		gameSockets.broadcastToParticipants(servergame, 'general', 'notifyerror', message);
+		gameSockets.broadcastToParticipants(servergame, 'general', 'toast-error', message);
 	}
 }
 

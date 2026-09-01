@@ -105,7 +105,7 @@ compile error rather than a silent no-op.
 | --------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `general` | `ping`                                            | Heartbeat. Expects only the echo every message gets                                                 |
 | `general` | `protocolversion`                                 | Sent the instant the socket opens; mismatch → client reloads                                        |
-| `general` | `notify` / `notifyerror`                          | Toast. **Already translated server-side** (`ws.t`)                                                  |
+| `general` | `toast` / `toast-error`                           | Toast. **Already translated server-side** (`ws.t`)                                                  |
 | `general` | `print` / `printerror`                            | Console relay                                                                                       |
 | `lobby`   | `lobbystate`                                      | Full snapshot on subscribe: seeks, our seek id, viewer count, in-game status                        |
 | `lobby`   | `seekslist` / `viewercount`                       | Live deltas                                                                                         |
@@ -451,7 +451,7 @@ makes no difference whether they were one version behind or two.
   logging, and id — bypassing them breaks liveness detection. To reach a game's players, use
   [gamesockets.ts](/src/server/game/gamemanager/gamesockets.ts)'s `sendMessageToColor` /
   `broadcastToSpectators` / `broadcastToEveryone`, which resolve the sockets and call through.
-- **`ws.t`, not raw strings.** `notify`/`notifyerror` values are user-facing and must already be
+- **`ws.t`, not raw strings.** `toast`/`toast-error` values are user-facing and must already be
   translated server-side from the socket's bound translations.
 - **The idle auto-close is 10 s with zero subscriptions**, reset on every outgoing message. A tab
   with no subs will not hold a socket open.

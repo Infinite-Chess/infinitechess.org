@@ -30,13 +30,13 @@ import lobbySubscribers from './lobbySubscribers.js';
  */
 function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 	if (activePlayers.hasSocket(ws)) {
-		return socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
+		return socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.already_in_game);
 	}
 
 	// Does the seek still exist?
 	const seek = activeSeeks.getByID(messageContents);
 	if (!seek) {
-		socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.game_aborted);
+		socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.game_aborted);
 		return;
 	}
 
@@ -50,7 +50,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	// Make sure it's legal for them to accept. (Not legal if they are a guest, and the seek is RATED)
 	if (seek.mode === 'rated' && !user.signedIn) {
-		return socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.rated_requires_signin);
+		return socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.rated_requires_signin);
 	}
 
 	// Accept the seek!

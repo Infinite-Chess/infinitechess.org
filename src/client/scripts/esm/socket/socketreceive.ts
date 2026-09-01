@@ -85,10 +85,10 @@ function onmessage(serverMessage: MessageEvent): void {
  */
 function ongeneralmessage(message: ClientboundGeneralMessage): void {
 	switch (message.action) {
-		case 'notify':
+		case 'toast':
 			toast.show(message.value);
 			break;
-		case 'notifyerror':
+		case 'toast-error':
 			toast.show(message.value, { error: true });
 			break;
 		case 'print':

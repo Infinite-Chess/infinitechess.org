@@ -68,7 +68,7 @@ function getRole(servergame: ServerGame, ws: CustomWebSocket): Player | undefine
  * @param role - The color of the player in this game to send the message to
  * @param sub - Where this message should be routed to, client side.
  * @param action - The action the client should perform.
- * @param value - The value to send to the client. Already-translated text for notify/notifyerror.
+ * @param value - The value to send to the client. Already-translated text for toast/toast-error.
  */
 function sendToColor<R extends OutRoute, A extends OutAction<R>, V extends OutValue<R, A>>(
 	match: MatchInfo,
