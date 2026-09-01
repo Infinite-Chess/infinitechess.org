@@ -118,6 +118,10 @@ async function loadGame(loadOptions: LoadOptions, hooks?: LoadHooks): Promise<vo
 		.then(({ graphical }) => {
 			// Logical loaded. Init anything that needs the gamefile before the board shows.
 			hooks?.onLogicalLoaded?.();
+			// Announced only after the hook runs: a listener replaying updates buffered
+			// during the load (onlinegamerouter's queue) must apply them ON TOP of the state
+			// the hook just restored, never underneath it.
+			GameBus.dispatch('game-loaded');
 			return graphical;
 		})
 		.then(() => {

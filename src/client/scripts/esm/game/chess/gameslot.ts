@@ -182,8 +182,6 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 		drawsquares.setPresetOverrides(loadOptions.presetAnnotes.squares);
 	if (loadOptions.presetAnnotes?.rays)
 		drawrays.setPresetOverrides(loadOptions.presetAnnotes.rays);
-
-	GameBus.dispatch('game-loaded');
 }
 
 /** Loads all of the graphical components of a game */
