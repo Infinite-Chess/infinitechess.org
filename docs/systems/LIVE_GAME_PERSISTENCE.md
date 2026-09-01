@@ -33,7 +33,7 @@ Following the pattern of `games` + `player_games` for ended games, live state is
 | ------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `moves` | TEXT NOT NULL DEFAULT `''` | Pipe-delimited compact moves with embedded clock comments via ICN format (e.g. `1,2>3,4{[%clk 0:09:56.7]}`). See below. |
 
-**Move format:** Produced by `getShortFormMovesFromMoves()` in `icnconverter.ts` with `{ compact: true, spaces: false, comments: true, move_numbers: false }`. Each move encodes `startCoords > endCoords`, optional promotion, and a clock comment. Parsed back via `parseShortFormMoves()`. The entire column is rewritten on each move submission.
+**Move format:** Produced by `getShortFormMovesFromMoves()` in `icnmoves.ts` with `{ compact: true, spaces: false, comments: !untimed, move_numbers: false }`. Each move encodes `startCoords > endCoords`, optional promotion, and optional clock comment. Parsed back via `parseShortFormMoves()`. The entire column is rewritten on each move submission.
 
 #### Group 3: Clock State
 
