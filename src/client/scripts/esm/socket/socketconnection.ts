@@ -35,7 +35,7 @@ let socket: WebSocket | undefined;
 let openingSocket = false;
 /**
  * True if we are having trouble connecting. If true, and we reconnect,
- * we'll display "Reconnected."
+ * we'll display 'Reconnected.'
  */
 let noConnection = false;
 /** Number of consecutive failed connection attempts, used to determine reconnect delay. */
@@ -56,6 +56,20 @@ SocketBus.addEventListener('connection-lost', () => {
 // to not give us a grace period for reconnection. CANNOT USE 'pagehide' because that doesn't
 // reliably fire the close event before we leave, but defers it for when we RETURN, causing reconnection issues.
 window.addEventListener('beforeunload', closeSocket);
+
+// Network status handling. We do not repeatedly attempt to reconnect while the browser is offline.
+window.addEventListener('offline', () => {
+	console.log('Network connection lost.');
+	// Any scheduled attempt is now doomed; 'online' is what restarts us.
+	clearTimeout(reconnectTimerId);
+	reconnectTimerId = undefined;
+	dropSocket();
+});
+window.addEventListener('online', () => {
+	console.log('Network connection regained.');
+	consecutiveFailures = 0;
+	resubAll();
+});
 
 // Page navigation handling
 window.addEventListener('pageshow', (event) => {
@@ -80,6 +94,7 @@ function getSocket(): WebSocket | undefined {
  */
 function scheduleReconnect(): void {
 	if (reconnectTimerId !== undefined) return;
+	if (!navigator.onLine) return; // Browser is offline
 	if (consecutiveFailures > 0) noConnection = true;
 	const cappedIndex = Math.min(consecutiveFailures, RECONNECT_DELAY_MS.length - 1);
 	const delay = RECONNECT_DELAY_MS[cappedIndex]!;
@@ -97,6 +112,7 @@ function scheduleReconnect(): void {
  */
 async function establishSocket(): Promise<boolean> {
 	if (socketclose.isInTimeout()) return false;
+	if (!navigator.onLine) return false; // Browser is offline
 
 	while (
 		openingSocket ||

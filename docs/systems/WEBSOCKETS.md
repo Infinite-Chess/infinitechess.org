@@ -154,6 +154,7 @@ Constants are shared in [socketutil.ts](/src/shared/util/socketutil.ts):
 | **Echo timer**          | Armed per sent message. No echo in 5s → `ws.terminate()`                                  | Armed per sent message. No echo in 5s → `dropSocket()`                                  |
 | **Heartbeat**           | Rescheduled on every send **and** every non-echo receive. Idle 10s → sends `general/ping` | —                                                                                       |
 | **Inactivity watchdog** | — (covered by the ping's own echo timer)                                                  | Rescheduled on **every** incoming message. Silent for 15s (10 s + 5 s) → `dropSocket()` |
+| **`offline` event**     | —                                                                                         | The network interface went away → `dropSocket()` at once                                |
 
 So a dead peer is detected in **≤15 s from either side**. The client's watchdog is only armed
 while it has subscriptions; an unsubscribed socket is closing on its own idle timer anyway.
@@ -280,20 +281,22 @@ abandonment, an abort if not yet resignable, or an engine win by disconnect in a
 [socketclose.ts](/src/client/scripts/esm/socket/socketclose.ts) clears pending timers, dispatches
 `closed` (then `connection-lost` if involuntary _and_ we had subs), clears its sub flags, and:
 
-| Trigger                              | Response                                                           |
-| ------------------------------------ | ------------------------------------------------------------------ |
-| `1006`                               | `scheduleReconnect()` — backoff `[0, 2500, 5000] ms`, last repeats |
-| `1001`                               | Nothing (page unloaded)                                            |
-| `CONNECTION_EXPIRED`                 | `resubAll()` immediately                                           |
-| `TOO_MANY_SOCKETS`                   | `resubAll()` after 10 s                                            |
-| `TOO_MANY_REQUESTS` / `ORIGIN_ERROR` | Enter a 10 s timeout that blocks all connecting, then `resubAll()` |
-| `AUTHENTICATION_NEEDED`              | Toast: cookies required                                            |
-| `LOGGED_OUT`                         | `validatorama.reloadAfterLogout()`                                 |
-| `CLOSED_BY_CLIENT`                   | Nothing — our own frame coming back                                |
-| `CLOSED_BY_CLIENT_RENEW`             | Unreachable: `dropSocket()` detaches `onclose` before sending it   |
+| Trigger                              | Response                                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `1006`                               | `scheduleReconnect()` — backoff `[0, 2500, 5000] ms`, last repeats, suspended while offline |
+| `1001`                               | Nothing (page unloaded)                                                                     |
+| `CONNECTION_EXPIRED`                 | `resubAll()` immediately                                                                    |
+| `TOO_MANY_SOCKETS`                   | `resubAll()` after 10 s                                                                     |
+| `TOO_MANY_REQUESTS` / `ORIGIN_ERROR` | Enter a 10 s timeout that blocks all connecting, then `resubAll()`                          |
+| `AUTHENTICATION_NEEDED`              | Toast: cookies required                                                                     |
+| `LOGGED_OUT`                         | `validatorama.reloadAfterLogout()`                                                          |
+| `CLOSED_BY_CLIENT`                   | Nothing — our own frame coming back                                                         |
+| `CLOSED_BY_CLIENT_RENEW`             | Unreachable: `dropSocket()` detaches `onclose` before sending it                            |
 
 A `beforeunload` listener closes with `CLOSED_BY_CLIENT` so the server knows the departure was
-deliberate. `'pagehide'` is **not** usable: it defers the close event until the user _returns_.
+deliberate. `pagehide` is **not** usable: it defers the close event until the user _returns_.
+
+An `offline` listener drops the socket and suspends connecting until `online` is heard.
 
 `resubAll()` merely dispatches `reconnect` on the SocketBus; each subsystem re-subscribes itself,
 and the first outgoing message lazily reopens the socket. A bfcache restore (`pageshow` with
