@@ -113,6 +113,7 @@ compile error rather than a silent no-op.
 | `game`    | `gamestate`                                | The full live state; the `subscribe` reply and every forced resync                                  |
 | `game`    | `move`                                     | Opponent's move + move number + clocks + any conclusion                                             |
 | `game`    | `clock`                                    | Clock values alone                                                                                  |
+| `game`    | `spectatorcount`                           | Live spectator count                                                                                |
 | `game`    | `gameconclusion`                           | Non-move-triggered conclusion (for those who can't desync)                                          |
 | `game`    | `gameratingchange`                         | Per-player rating deltas                                                                            |
 | `game`    | `finalized`                                | Result locked in permanently                                                                        |

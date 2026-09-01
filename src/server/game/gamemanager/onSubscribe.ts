@@ -38,6 +38,7 @@ function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
 			gameSockets.attachSpectator(game, ws);
 			const gameStateBaseMessage = gameStateBuilder.buildStateBase(game);
 			socketsend.send(ws, 'game', 'gamestate', gameStateBaseMessage);
+			gameSockets.broadcastSpectatorCount(game);
 		}
 	} else {
 		// The game isn't live in server memory (concluded + evicted, or never existed). The client

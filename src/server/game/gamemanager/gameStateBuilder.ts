@@ -254,8 +254,9 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 // Wire Messages ---------------------------------------------------------------
 
 /**
- * Builds the recipient-agnostic {@link GameStateBase} — the live move list, clocks, conclusion, and
- * finalized flag. The core of every `gamestate` message — the `subscribe` reply and live pushes.
+ * Builds the recipient-agnostic {@link GameStateBase} — the live move list, clocks, conclusion,
+ * spectator count, and finalized flag. The core of every `gamestate` message — the `subscribe`
+ * reply and live pushes.
  * @param forceSync - Set true ONLY when the server rejected the client's last move,
  * to force their move list to match exactly. Omitted from the message when false.
  */
@@ -263,6 +264,7 @@ function buildStateBase(servergame: ServerGame, forceSync = false): GameStateBas
 	const base: GameStateBase = {
 		finalized: servergame.match.finalized,
 		moves: servergame.moves.map((m) => simplifyMove(m)),
+		spectators: servergame.spectators.size,
 	};
 	if (!servergame.untimed) base.clockValues = gameUtility.getClockValues(servergame);
 	if (servergame.gameConclusion !== undefined) base.gameConclusion = servergame.gameConclusion;

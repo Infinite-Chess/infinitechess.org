@@ -41,6 +41,8 @@ function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 			// stay connected for the 'rematchstarted' message when a rematch is agreed).
 			gameSockets.attachSpectator(game, ws);
 		}
+		// Neither branch's reply embeds the spectator count the way a `gamestate` does.
+		gameSockets.broadcastSpectatorCount(game);
 	} else {
 		// Dead game
 		// Client should already have seen the finalized conclusion (otherwise they wouldn't

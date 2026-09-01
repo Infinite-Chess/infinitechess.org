@@ -1,18 +1,19 @@
 // src/client/scripts/esm/views/game/gui/guispectators.ts
 
 /**
- * Manages the live spectator count in the game page's `.game-meta` panel.
+ * Manages the `.meta-spectators` readout of the game page's `.game-meta` panel:
+ * how many clients are watching the live game right now.
  *
- * Groundwork: the server tracks each game's spectators but doesn't broadcast
- * a count yet, so nothing calls this until that `game`-route message exists.
+ * Shown only while that number is live — hidden at zero, and once the
+ * game has left server memory and the count can no longer change.
  */
 
 const element_Spectators = document.querySelector('.meta-spectators')!;
 const element_SpectatorCount = element_Spectators.querySelector('.spectator-count')!;
 
-/** Reveals/updates/hides the live spectator count. Hidden at 0, shown at 1+. */
-function updateSpectatorCount(count: number): void {
-	if (count <= 0) {
+/** Reveals/updates/hides the live spectator count. Shown at 1+, hidden at 0 and when undefined. */
+function updateSpectatorCount(count: number | undefined): void {
+	if (count === undefined || count <= 0) {
 		element_Spectators.classList.add('hidden');
 		return;
 	}

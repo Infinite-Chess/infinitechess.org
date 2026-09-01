@@ -28,6 +28,7 @@ import gamesession from '../../game/chess/gamesession.js';
 import guigamemeta from '../../game/gui/guigamemeta.js';
 import { GameBus } from '../../board/GameBus.js';
 import movesequence from '../../game/chess/movesequence.js';
+import guispectators from './gui/guispectators.js';
 import movesendreceive from './movesendreceive.js';
 
 // Functions -------------------------------------------------------------------
@@ -69,6 +70,8 @@ function handleGameState(
 
 	// A finalized rated game carries its deltas — show them.
 	if (message.ratingChanges) guigamemeta.showRatingChanges(message.ratingChanges);
+
+	guispectators.updateSpectatorCount(message.spectators);
 
 	return true;
 }
@@ -218,6 +221,4 @@ function findLastestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MoveP
 
 // Exports ---------------------------------------------------------------------
 
-export default {
-	handleGameState,
-};
+export default { handleGameState };

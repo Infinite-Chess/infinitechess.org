@@ -18,8 +18,9 @@ import { createEffectNode, EffectConfig, NodeChain } from './AudioEffects.js';
  */
 export interface SoundObject {
 	/**
-	 * Resolves once the note AND its effect tails (e.g. reverb) have fully finished —
-	 * await before anything that would cut the sound off (e.g. a hard navigation).
+	 * Resolves once the note AND its effect tails (e.g. reverb) have fully finished,
+	 * or when it can't be played — await before anything that would cut the sound off
+	 * (e.g. a hard navigation).
 	 */
 	whenEnded: Promise<void>;
 }
@@ -189,6 +190,9 @@ function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObj
 	source.start(startAt);
 
 	scheduleDisconnection(source, effects, resolveWhenEnded);
+
+	// Don't let `ended` hang if the context is suspended.
+	if (audioContext.state !== 'running') resolveWhenEnded();
 
 	return { whenEnded };
 }

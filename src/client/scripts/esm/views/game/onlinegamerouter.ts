@@ -38,6 +38,7 @@ import { GameBus } from '../../board/GameBus.js';
 import { SocketBus } from '../../socket/SocketBus.js';
 import socketintents from '../../socket/socketintents.js';
 import guidisconnect from './gui/guidisconnect.js';
+import guispectators from './gui/guispectators.js';
 import movesendreceive from './movesendreceive.js';
 
 // Types -----------------------------------------------------------------------
@@ -124,6 +125,9 @@ function routeMessage(contents: RoutedGameMessage): void {
 			break;
 		case 'clock':
 			movesendreceive.applyClockValues(gamefile, contents.value);
+			break;
+		case 'spectatorcount':
+			guispectators.updateSpectatorCount(contents.value);
 			break;
 		case 'gameconclusion':
 			handleGameConclusion(gamefile, contents.value);
@@ -240,6 +244,7 @@ function handleGameConclusion(gamefile: GameFile, message: GameConclusionMessage
  * are coming, so we tear down our subscription and clear the rematch state.
  */
 function handleDetached(): void {
+	guispectators.updateSpectatorCount(0);
 	socketsubs.deleteSub('game');
 	onlinegame.onEvicted(); // Prevents a reconnect from trying to re-subscribe to the now-deleted game.
 	gameactions.onDetached();

@@ -26,6 +26,7 @@ import gamesession from '../../game/chess/gamesession.js';
 import guigamemeta from '../../game/gui/guigamemeta.js';
 import { SocketBus } from '../../socket/SocketBus.js';
 import guidisconnect from './gui/guidisconnect.js';
+import guispectators from './gui/guispectators.js';
 
 import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 
@@ -184,6 +185,8 @@ function loadGameFromState(
 			onLoadError: () => (inSync = false),
 		},
 	);
+
+	guispectators.updateSpectatorCount(state.spectators);
 }
 
 /**

@@ -273,7 +273,9 @@ function onPostGameLeave(servergame: ServerGame, role: Player, involuntary: bool
 function unsubscribeSpectator(ws: CustomWebSocket): void {
 	const gameID = ws.metadata.subscriptions.spectating?.id;
 	if (gameID === undefined) return; // Not spectating any game
-	gameSockets.detachSpectator(activeGames.getByID(gameID)!, ws);
+	const servergame = activeGames.getByID(gameID)!;
+	gameSockets.detachSpectator(servergame, ws);
+	gameSockets.broadcastSpectatorCount(servergame);
 }
 
 // Clocks ----------------------------------------------------------------------

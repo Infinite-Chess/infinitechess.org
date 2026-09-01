@@ -127,10 +127,13 @@ const ParticipantStateSchema = z.strictObject({
 	rematch: RematchOfferInfoSchema.optional(),
 });
 
+/** How many spectators there are right now for a live game. */
+const SpectatorCountSchema = z.number().nonnegative();
+
 /**
  * The recipient-agnostic core of a live game-state message (no per-player overlay). Carries the
- * live move list, clocks, conclusion, and finalized flag. The core of every `gamestate` message —
- * the `subscribe` reply (fresh load or live reconnect).
+ * live move list, clocks, conclusion, spectator count, and finalized flag. The core of every
+ * `gamestate` message — the `subscribe` reply (fresh load or live reconnect).
  */
 export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
 const GameStateBaseSchema = z.strictObject({
@@ -142,6 +145,8 @@ const GameStateBaseSchema = z.strictObject({
 	 */
 	clockValues: clockutil.ClockValuesSchema.optional(),
 	gameConclusion: typeschemas.GameConclusionSchema.optional(),
+	/** How many spectators there are right now. Absent only for a dead game loaded over HTTP. */
+	spectators: SpectatorCountSchema.optional(),
 	/**
 	 * Per-player rating deltas. A finalized-result fact carried as state so a late
 	 * resyncer gets it. Present only once a rated game is finalized; absent otherwise.
@@ -200,6 +205,7 @@ const ClientboundGameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('gamestate'), value: GameStateMessageSchema }),
 	z.strictObject({ action: z.literal('move'), value: OpponentsMoveMessageSchema }),
 	z.strictObject({ action: z.literal('clock'), value: clockutil.ClockValuesSchema }),
+	z.strictObject({ action: z.literal('spectatorcount'), value: SpectatorCountSchema }),
 	z.strictObject({
 		action: z.literal('gameconclusion'),
 		value: GameConclusionMessageSchema,
