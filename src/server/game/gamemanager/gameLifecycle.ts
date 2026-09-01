@@ -240,10 +240,7 @@ function evict(servergame: ServerGame): void {
 	// Both players have already left, but a spectator (or a stray old-tab socket)
 	// may still be attached — tell any remaining socket it is detached.
 	gameSockets.broadcastToEveryone(servergame, 'detached', undefined);
-	for (const data of Object.values(servergame.match.playerData)) {
-		if (data.socket) gameSockets.detachParticipant(servergame.match, data.socket);
-	}
-	for (const ws of servergame.spectators) gameSockets.detachSpectator(servergame, ws);
+	gameSockets.detachEveryone(servergame);
 
 	if (activeGames.PRINT_GAMES) console.log(`Evicted game ${servergame.match.id}.`);
 }

@@ -42,6 +42,14 @@ function detachSpectator(servergame: ServerGame, ws: CustomWebSocket): void {
 	delete ws.metadata.subscriptions.spectating;
 }
 
+/** Detaches every connected participant and spectator from the game. */
+function detachEveryone(servergame: ServerGame): void {
+	for (const data of Object.values(servergame.match.playerData)) {
+		if (data.socket) detachParticipant(servergame.match, data.socket);
+	}
+	for (const ws of servergame.spectators) detachSpectator(servergame, ws);
+}
+
 /**
  * Resolves the color a websocket is playing as in a specific live game, if they are a participant.
  * Uses game subscription metadata when valid, with identity fallback for resync/refresh cases.
@@ -163,6 +171,7 @@ export default {
 	attachSpectator,
 	detachParticipant,
 	detachSpectator,
+	detachEveryone,
 	getRole,
 	// Addressing
 	sendToColor,

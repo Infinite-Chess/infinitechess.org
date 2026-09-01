@@ -37,10 +37,7 @@ function prepForShutdown(): void {
 		gameLifecycle.cancelFinalizeTimer(servergame.match);
 
 		// Unsubscribe all sockets (we will resub them when they reconnect)
-		for (const data of Object.values(servergame.match.playerData)) {
-			if (!data.socket) continue;
-			gameSockets.detachParticipant(servergame.match, data.socket);
-		}
+		gameSockets.detachEveryone(servergame);
 
 		activeGames.remove(servergame.match.id);
 	}
