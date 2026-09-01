@@ -70,7 +70,7 @@ SocketBus.addEventListener('reconnect', () => {
 	if (stage !== 'evicted') subscribeToGame();
 });
 
-// Getters ---------------------------------------------------------------------
+// Sync ------------------------------------------------------------------------
 
 function areInSync(): boolean {
 	return inSync;
@@ -82,7 +82,44 @@ function setInSync(value: boolean): void {
 	if (value) guidisconnect.onSelfReturn();
 }
 
-// Functions -------------------------------------------------------------------
+// Life Cycle -----------------------------------------------------------
+
+/**
+ * Requests to subscribe to the server game, and expects to receive a full game state.
+ * A finalized game (`subscriberematch`) instead expects to receive only rematch-offer state.
+ */
+function subscribeToGame(): void {
+	const id = window.gamePageData.id;
+
+	socketsubs.addSub('game'); // subs were cleared when the socket closed.
+	if (stage === 'finalized' && gameslot.getGamefile()) {
+		// The result is locked in — nothing but rematch offers can change, so we can't desync.
+		void socketsend.send('game', 'subscriberematch', id);
+	} else {
+		// No game loaded yet (initial subscribe), a load that failed and left us with none,
+		// or it's live but not finalized (may still change) — request the full state.
+		void socketsend.send('game', 'subscribe', id);
+	}
+}
+
+/** Records the game's stage as finalized. See {@link stage}. */
+function onFinalized(): void {
+	if (stage === 'active') stage = 'finalized'; // Never regress a later 'evicted'
+}
+
+/**
+ * Records that the server has evicted the participants from the game.
+ * No further state updates are received, not even rematch state. See {@link stage}.
+ */
+function onEvicted(): void {
+	stage = 'evicted';
+	// An evicted game receives nothing further, so it can never be out of sync. Without this,
+	// an eviction landing while we're disconnected (the reconnect's `subscribe` answered with
+	// `unsub`) would leave us marked out of sync permanently.
+	setInSync(true);
+}
+
+// Loading --------------------------------------------------------------
 
 /**
  * A fresh page load (not a reconnect, game live OR dead): Loads a game onto the
@@ -206,29 +243,6 @@ function setParticipantState(participantState?: ParticipantState): void {
 	if (participantState.rematch) gameactions.setRematchState(participantState.rematch);
 }
 
-/** Boots the engine worker for an online engine game. */
-function startEngineGame(engineGame: EngineGamePageInfo, ourRole: Player): void {
-	const { workerUrl, engineUrl } = engineGame;
-	if (!workerUrl || !engineUrl) throw new Error('Engine assets are missing from the game page.');
-	// The server only ever creates online engine games against apeiron
-	// (createEngineGame.ts) — no other engine's config can be built from page data.
-	if (engineGame.engine !== 'apeiron')
-		throw new Error(`Unsupported online engine "${engineGame.engine}".`);
-	enginegame.initEngineGame({
-		youAreColor: ourRole,
-		engine: {
-			name: engineGame.engine,
-			config: {
-				engineTimeLimitPerMoveMillis:
-					engineregistry.REGISTRY[engineGame.engine].defaultTimeLimitPerMoveMillis,
-				strengthLevel: engineGame.strengthLevel,
-			},
-		},
-		workerUrl,
-		engineUrl,
-	});
-}
-
 /**
  * Confirm that the user DOES actually want to leave the page if they are in an online game.
  *
@@ -258,49 +272,40 @@ function confirmNavigationAwayFromGame(event: MouseEvent): void {
 	 */
 }
 
-/**
- * Requests to subscribe to the server game, and expects to receive a full game state.
- * A finalized game (`subscriberematch`) instead expects to receive only rematch-offer state.
- */
-function subscribeToGame(): void {
-	const id = window.gamePageData.id;
-
-	socketsubs.addSub('game'); // subs were cleared when the socket closed.
-	if (stage === 'finalized' && gameslot.getGamefile()) {
-		// The result is locked in — nothing but rematch offers can change, so we can't desync.
-		void socketsend.send('game', 'subscriberematch', id);
-	} else {
-		// No game loaded yet (initial subscribe), a load that failed and left us with none,
-		// or it's live but not finalized (may still change) — request the full state.
-		void socketsend.send('game', 'subscribe', id);
-	}
-}
-
-/** Records the game's stage as finalized. See {@link stage}. */
-function onFinalized(): void {
-	if (stage === 'active') stage = 'finalized'; // Never regress a later 'evicted'
-}
-
-/**
- * Records that the server has evicted the participants from the game.
- * No further state updates are received, not even rematch state. See {@link stage}.
- */
-function onEvicted(): void {
-	stage = 'evicted';
-	// An evicted game receives nothing further, so it can never be out of sync. Without this,
-	// an eviction landing while we're disconnected (the reconnect's `subscribe` answered with
-	// `unsub`) would leave us marked out of sync permanently.
-	setInSync(true);
+/** Boots the engine worker for an online engine game. */
+function startEngineGame(engineGame: EngineGamePageInfo, ourRole: Player): void {
+	const { workerUrl, engineUrl } = engineGame;
+	if (!workerUrl || !engineUrl) throw new Error('Engine assets are missing from the game page.');
+	// The server only ever creates online engine games against apeiron
+	// (createEngineGame.ts) — no other engine's config can be built from page data.
+	if (engineGame.engine !== 'apeiron')
+		throw new Error(`Unsupported online engine "${engineGame.engine}".`);
+	enginegame.initEngineGame({
+		youAreColor: ourRole,
+		engine: {
+			name: engineGame.engine,
+			config: {
+				engineTimeLimitPerMoveMillis:
+					engineregistry.REGISTRY[engineGame.engine].defaultTimeLimitPerMoveMillis,
+				strengthLevel: engineGame.strengthLevel,
+			},
+		},
+		workerUrl,
+		engineUrl,
+	});
 }
 
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Sync
 	areInSync,
 	setInSync,
-	loadGameFromState,
-	setParticipantState,
+	// Life Cycle
 	subscribeToGame,
 	onFinalized,
 	onEvicted,
+	// Loading
+	loadGameFromState,
+	setParticipantState,
 };
