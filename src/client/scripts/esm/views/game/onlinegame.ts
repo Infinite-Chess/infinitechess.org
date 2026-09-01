@@ -4,6 +4,8 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { EngineGamePageInfo } from '../../../../../shared/transport/domain.js';
 import type { Additional, DatedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatOut, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
 import type {
@@ -151,34 +153,10 @@ function loadGameFromState(
 		{
 			onLogicalLoaded: () => {
 				const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
-				initOnlineGame(initialStage, state.participantState);
+				initOnlineGame(initialStage, state);
 
-				// A finalized rated game carries its deltas in the state.
-				if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
-
-				if (engineGame && ourRole !== undefined && !state.gameConclusion) {
-					const { workerUrl, engineUrl } = engineGame;
-					if (!workerUrl || !engineUrl)
-						throw new Error('Engine assets are missing from the game page.');
-					// The server only ever creates online engine games against apeiron
-					// (createEngineGame.ts) — no other engine's config can be built from page data.
-					if (engineGame.engine !== 'apeiron')
-						throw new Error(`Unsupported online engine "${engineGame.engine}".`);
-					enginegame.initEngineGame({
-						youAreColor: ourRole,
-						engine: {
-							name: engineGame.engine,
-							config: {
-								engineTimeLimitPerMoveMillis:
-									engineregistry.REGISTRY[engineGame.engine]
-										.defaultTimeLimitPerMoveMillis,
-								strengthLevel: engineGame.strengthLevel,
-							},
-						},
-						workerUrl,
-						engineUrl,
-					});
-				}
+				if (engineGame && ourRole !== undefined && !state.gameConclusion)
+					startEngineGame(engineGame, ourRole);
 			},
 			concludeIfOver: true,
 			// The gamestate arrived but never became a game — we don't hold it after all.
@@ -192,14 +170,16 @@ function loadGameFromState(
 /**
  * Initializes the online game session.
  * @param initialStage - The game's starting lifecycle {@link stage}.
- * @param participantState - Only provide if we're a participant of an ongoing game,
- *   not a spectator or when the game is memory-evicted.
+ * @param state - The initial full game state message.
  */
-function initOnlineGame(initialStage: GameStage, participantState?: ParticipantState): void {
+function initOnlineGame(initialStage: GameStage, state: GameStateMessage): void {
 	stage = initialStage;
 
 	// If we are a participator, set the draw offers, disconnect timer, rematch state.
-	setParticipantState(participantState);
+	setParticipantState(state.participantState);
+
+	// A finalized rated game carries its deltas in the state.
+	if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
 
 	/**
 	 * Leave-game warning popups on every hyperlink.
@@ -224,6 +204,29 @@ function setParticipantState(participantState?: ParticipantState): void {
 
 	// Restore the rematch button's state (present only once the game is over).
 	if (participantState.rematch) gameactions.setRematchState(participantState.rematch);
+}
+
+/** Boots the engine worker for an online engine game. */
+function startEngineGame(engineGame: EngineGamePageInfo, ourRole: Player): void {
+	const { workerUrl, engineUrl } = engineGame;
+	if (!workerUrl || !engineUrl) throw new Error('Engine assets are missing from the game page.');
+	// The server only ever creates online engine games against apeiron
+	// (createEngineGame.ts) — no other engine's config can be built from page data.
+	if (engineGame.engine !== 'apeiron')
+		throw new Error(`Unsupported online engine "${engineGame.engine}".`);
+	enginegame.initEngineGame({
+		youAreColor: ourRole,
+		engine: {
+			name: engineGame.engine,
+			config: {
+				engineTimeLimitPerMoveMillis:
+					engineregistry.REGISTRY[engineGame.engine].defaultTimeLimitPerMoveMillis,
+				strengthLevel: engineGame.strengthLevel,
+			},
+		},
+		workerUrl,
+		engineUrl,
+	});
 }
 
 /**
