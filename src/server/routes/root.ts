@@ -67,7 +67,7 @@ function getRandomSplashText(req: Request): string {
 }
 
 /** Cache all variant groups and their variants. */
-const variantGroups = variantregistry.getVariantGroupsWithVariants();
+const variantGroups = variantregistry.getGroupsWithVariants();
 
 // Pages -----------------------------------------------------------------------
 

@@ -57,7 +57,7 @@ export function summarizeGameRules(
 	const pushText = (text: string): number => items.push({ kind: 'text', text });
 
 	// 4D movement — first
-	if (variantCode !== undefined && variantregistry.getVariantGroup(variantCode) === '4D') {
+	if (variantCode !== undefined && variantregistry.getGroup(variantCode) === '4D') {
 		pushText(tp.four_d_movement);
 	}
 

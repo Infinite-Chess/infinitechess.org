@@ -205,7 +205,7 @@ const REGISTRY = {
 // Functions -------------------------------------------------------------------
 
 /** Returns the id for the icon of the given variant group. */
-function getVariantGroupIconId(group: VariantGroup | 'custom'): string {
+function getGroupIconId(group: VariantGroup | 'custom'): string {
 	return VARIANT_GROUP_ICONS[group];
 }
 
@@ -213,7 +213,7 @@ function getVariantGroupIconId(group: VariantGroup | 'custom'): string {
  * Resolves a variant string (English name or code) sourced from metadata into a {@link VariantCode}.
  * Warns if the variant is not recognized.
  */
-function resolveVariantCode(variantName: string | undefined): VariantCode | undefined {
+function resolveCode(variantName: string | undefined): VariantCode | undefined {
 	if (variantName === undefined) return undefined;
 	// Direct code match
 	if (variantName in REGISTRY) return variantName as VariantCode;
@@ -233,20 +233,17 @@ function resolveVariantCode(variantName: string | undefined): VariantCode | unde
  * @param variantCode - The variant code to look up.
  * @param sharedT - The shared translations object, used to translate 'Custom Variant'.
  */
-function getVariantName(
-	variantCode: VariantCode | null,
-	sharedT: ScriptTranslations['shared'],
-): string {
+function getName(variantCode: VariantCode | null, sharedT: ScriptTranslations['shared']): string {
 	return variantCode ? REGISTRY[variantCode].name : sharedT.variant_groups.custom.display_label; // Translate 'Custom Variant'
 }
 
 /** Returns the group of the given variant code. */
-function getVariantGroup(variantCode: VariantCode): VariantGroup {
+function getGroup(variantCode: VariantCode): VariantGroup {
 	return REGISTRY[variantCode].group;
 }
 
 /** Returns the dynamic import function for the given variant code. */
-function getVariantLoader(variantCode: VariantCode): () => Promise<VariantModule> {
+function getLoader(variantCode: VariantCode): () => Promise<VariantModule> {
 	return REGISTRY[variantCode].loadVariant;
 }
 
@@ -255,7 +252,7 @@ function getVariantLoader(variantCode: VariantCode): () => Promise<VariantModule
  * of non-hidden variant codes belonging to that group.
  * Used for SSR'ing the index page.
  */
-function getVariantGroupsWithVariants(): {
+function getGroupsWithVariants(): {
 	group: VariantGroup;
 	iconId: string;
 	variants: VariantCode[];
@@ -278,10 +275,10 @@ function getVariantsForGroup(group: VariantGroup): VariantCode[] {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	getVariantGroupIconId,
-	resolveVariantCode,
-	getVariantName,
-	getVariantGroup,
-	getVariantLoader,
-	getVariantGroupsWithVariants,
+	getGroupIconId,
+	resolveCode,
+	getName,
+	getGroup,
+	getLoader,
+	getGroupsWithVariants,
 };

@@ -219,15 +219,13 @@ function buildGameMetaViewModel(
 ): GameMetaViewModel {
 	const { setup } = state;
 	const variantGroup =
-		setup.variant.kind === 'preset'
-			? variantregistry.getVariantGroup(setup.variant.code)
-			: 'custom';
+		setup.variant.kind === 'preset' ? variantregistry.getGroup(setup.variant.code) : 'custom';
 	const variant = {
 		name:
 			setup.variant.kind === 'preset'
 				? req.t.shared.variants[setup.variant.code]
 				: req.t.shared.variant_groups.custom.display_label,
-		iconId: variantregistry.getVariantGroupIconId(variantGroup),
+		iconId: variantregistry.getGroupIconId(variantGroup),
 	};
 
 	const players: PlayerGroup<{ name: string; elo?: string }> = {};

@@ -35,7 +35,7 @@ interface AnalysisPageState {
 // Constants -------------------------------------------------------------------
 
 /** Cache all variant groups and their variants. */
-const variantGroups = variantregistry.getVariantGroupsWithVariants();
+const variantGroups = variantregistry.getGroupsWithVariants();
 
 // Functions -------------------------------------------------------------------
 

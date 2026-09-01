@@ -186,7 +186,7 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 	const scriptT = componentTranslationLoader.getScript('shared', tconfig.DEFAULT_LANGUAGE); // Game metadata should only ever be in English
 	const variantCode = gameUtility.getVariantCode(match.variant);
 	// Names the GAME: a custom game is a "Custom Variant" game no matter what it's a position of.
-	const variantEnglishName = variantregistry.getVariantName(variantCode, scriptT);
+	const variantEnglishName = variantregistry.getName(variantCode, scriptT);
 	// These name the POSITION instead: which variant, at which revision of it, it was lifted from —
 	// a date that may long predate this game, so a custom game's are carried over verbatim from its
 	// seek rather than derived from its start. The game's own start time is a `games` table column.

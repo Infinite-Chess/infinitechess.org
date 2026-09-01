@@ -26,7 +26,7 @@ const moduleCache = new Map<VariantCode, VariantModule>();
  */
 async function ensureVariantLoaded(variantCode: VariantCode): Promise<void> {
 	if (moduleCache.has(variantCode)) return; // Already loaded — synchronous fast path
-	const loader = variantregistry.getVariantLoader(variantCode);
+	const loader = variantregistry.getLoader(variantCode);
 	const mod = await loader().catch((err: unknown) => {
 		console.log(`Failed to load variant "${variantCode}", retrying...`, err);
 		// Browsers cache failed dynamic imports by URL, so retrying the same URL returns

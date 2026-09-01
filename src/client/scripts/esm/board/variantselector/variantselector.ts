@@ -529,11 +529,8 @@ function setSelectorDisplay(name: string, iconId: string): void {
 
 /** Updates the selector button's icon and name to reflect the given preset variant. */
 function applyVariantToSelector(code: VariantCode): void {
-	const variantGroup = variantregistry.getVariantGroup(code);
-	setSelectorDisplay(
-		t.shared.variants[code],
-		variantregistry.getVariantGroupIconId(variantGroup),
-	);
+	const variantGroup = variantregistry.getGroup(code);
+	setSelectorDisplay(t.shared.variants[code], variantregistry.getGroupIconId(variantGroup));
 }
 
 /** Updates the selector button's icon and name to reflect a custom (non-preset) selection. */

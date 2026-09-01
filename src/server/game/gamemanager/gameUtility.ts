@@ -45,7 +45,7 @@ import logEvents from '../../utility/logEvents.js';
 
 /**
  * The registry code of the variant a game is played with, or `null` if it's a custom position —
- * the shape both the `variant` columns and `variantregistry.getVariantName` take.
+ * the shape both the `variant` columns and `variantregistry.getName` take.
  */
 function getVariantCode(variant: SeekVariant): VariantCode | null {
 	return variant.kind === 'preset' ? variant.code : null;

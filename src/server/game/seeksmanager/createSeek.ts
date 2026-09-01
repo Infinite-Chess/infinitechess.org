@@ -172,7 +172,7 @@ function validateSeekMetadata(metadata: MetaData): PositionRejection | null {
 	if (Object.keys(metadata).some((key) => !permitted.includes(key)))
 		return { kind: 'position', code: 'invalid_icn' };
 	if (metadata.Variant === undefined) return null;
-	const code = variantregistry.resolveVariantCode(metadata.Variant);
+	const code = variantregistry.resolveCode(metadata.Variant);
 	if (code === undefined) return { kind: 'position', code: 'invalid_icn' };
 	// Every variant module is preloaded at server startup.
 	if (variantmodule.hasCustomMovement(variantcache.getModule(code))) {

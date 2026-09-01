@@ -279,7 +279,7 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 	const isOurs = seek.id === ourSeekId;
 	if (seek.variant.kind === 'preset') {
 		const variant: VariantInfo = {
-			group: variantregistry.getVariantGroup(seek.variant.code),
+			group: variantregistry.getGroup(seek.variant.code),
 			code: seek.variant.code,
 		};
 		return { ...seek, variant, isOurs };
@@ -414,7 +414,7 @@ function createSeekListVNode(seeks: LobbySeek[], newSeekIds: Set<string>): VNode
 function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	const playerRating = createPlayerRatingVNode(seek.player.rating);
 	const sideDot = createSideDotVNode(seek.color);
-	const variantIcon = variantregistry.getVariantGroupIconId(seek.variant.group);
+	const variantIcon = variantregistry.getGroupIconId(seek.variant.group);
 	const variantName =
 		seek.variant.group === 'custom'
 			? t.shared.variant_groups.custom.display_label
