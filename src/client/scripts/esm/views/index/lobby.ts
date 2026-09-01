@@ -16,7 +16,7 @@ import type {
 import type {
 	InGameMessage,
 	LobbyStateMessage,
-	SeeksMessage,
+	SeeksListMessage,
 } from '../../../../../shared/transport/clientbound.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
@@ -172,7 +172,7 @@ const trackNewSeeks = (() => {
  * so seeks returning after a reconnect aren't treated as new and replay arrival sounds.
  */
 function onSeekListUpdate(
-	{ seekslist: seeks, ourseekid }: SeeksMessage,
+	{ seekslist: seeks, ourseekid }: SeeksListMessage,
 	preserveNewSeekTracker = false,
 ): void {
 	const previousSeekIds = [...seekMap.keys()];
@@ -303,7 +303,7 @@ function createSeek(options: CreateSeekMessage): void {
  * socket is required, gating bots. Navigation happens on the server's `ingame` push.
  */
 function createEngineGame(body: CreateEngineGameMessage): void {
-	socketintents.submit('lobby', 'createengine', body, () => gameIdWeAreIn === undefined);
+	socketintents.submit('lobby', 'createenginegame', body, () => gameIdWeAreIn === undefined);
 }
 
 /** Sends a cancelseek message for our current seek. */

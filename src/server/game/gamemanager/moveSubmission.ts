@@ -64,7 +64,7 @@ function submitMove(
 		socketsend.send(
 			ws,
 			'general',
-			'printerror',
+			'print-error',
 			'Failed to submit move. You are not subscribed to a game.',
 		);
 		return;
@@ -100,7 +100,7 @@ function submitMove(
 	if (moveParsed === null) {
 		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEvents.addAndPrint(errString, 'hackLog');
-		socketsend.send(ws, 'general', 'printerror', 'Invalid move format.');
+		socketsend.send(ws, 'general', 'print-error', 'Invalid move format.');
 		return;
 	}
 
@@ -225,7 +225,7 @@ function applyClientReportedMove(
 	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, role)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEvents.addAndPrint(errString, 'hackLog');
-		socketsend.send(ws, 'general', 'printerror', 'Invalid game conclusion.');
+		socketsend.send(ws, 'general', 'print-error', 'Invalid game conclusion.');
 		return;
 	}
 

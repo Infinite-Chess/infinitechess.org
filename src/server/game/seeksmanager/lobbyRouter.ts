@@ -27,7 +27,7 @@ function route(ws: CustomWebSocket, contents: ServerboundLobbyMessage): void {
 		case 'acceptseek':
 			acceptSeek.accept(ws, contents.value);
 			break;
-		case 'createengine':
+		case 'createenginegame':
 			createEngineGame.create(ws, contents.value);
 			break;
 		default:

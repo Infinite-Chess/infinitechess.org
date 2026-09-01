@@ -89,7 +89,7 @@ compile error rather than a silent no-op.
 | `general` | `sub` / `unsub`                            | `'lobby'` — the only subbable value                               |
 | `lobby`   | `createseek`                               | variant, time, color, mode, modifiers (rated combos re-validated) |
 | `lobby`   | `cancelseek` / `acceptseek`                | `SeekId`                                                          |
-| `lobby`   | `createengine`                             | variant, time, color, strengthLevel                               |
+| `lobby`   | `createenginegame`                         | variant, time, color, strengthLevel                               |
 | `game`    | `subscribe`                                | game id — attach + get full state                                 |
 | `game`    | `subscriberematch`                         | game id — attach + get rematch state only                         |
 | `game`    | `submitmove`                               | `{ move, moveNumber, gameConclusion? }`                           |
@@ -106,7 +106,7 @@ compile error rather than a silent no-op.
 | `general` | `ping`                                     | Heartbeat. Expects only the echo every message gets                                                 |
 | `general` | `protocolversion`                          | Sent the instant the socket opens; mismatch → client reloads                                        |
 | `general` | `toast` / `toast-error`                    | Toast. **Already translated server-side** (`ws.t`)                                                  |
-| `general` | `print` / `printerror`                     | Console relay                                                                                       |
+| `general` | `print` / `print-error`                    | Console relay                                                                                       |
 | `lobby`   | `lobbystate`                               | Full snapshot on subscribe: seeks, our seek id, viewer count, in-game status                        |
 | `lobby`   | `seekslist` / `viewercount`                | Live deltas                                                                                         |
 | `lobby`   | `ingame` / `outgame`                       | We are (not) in a game. `ingame.navigate` decides _this tab_ goes there vs. shows the rejoin banner |

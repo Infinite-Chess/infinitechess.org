@@ -85,7 +85,7 @@ const ServerboundLobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('createseek'), value: CreateSeekMessageSchema }),
 	z.strictObject({ action: z.literal('cancelseek'), value: domain.SeekIdSchema }),
 	z.strictObject({ action: z.literal('acceptseek'), value: domain.SeekIdSchema }),
-	z.strictObject({ action: z.literal('createengine'), value: CreateEngineGameMessageSchema }),
+	z.strictObject({ action: z.literal('createenginegame'), value: CreateEngineGameMessageSchema }),
 ]);
 
 // Game Route ------------------------------------------------------------------

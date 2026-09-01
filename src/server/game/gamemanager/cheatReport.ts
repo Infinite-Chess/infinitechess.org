@@ -42,7 +42,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 			servergame.match,
 			ourRole,
 			'general',
-			'printerror',
+			'print-error',
 			'Cannot report opponent: this game has already been finalized.',
 		);
 		return;
@@ -57,7 +57,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 			servergame.match,
 			ourRole,
 			'general',
-			'printerror',
+			'print-error',
 			'Cannot report opponent in this game.',
 		);
 		return;
@@ -75,7 +75,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 			servergame.match,
 			ourRole,
 			'general',
-			'printerror',
+			'print-error',
 			"Silly goose. You can't report yourself for cheating! You played that move!",
 		);
 		return;

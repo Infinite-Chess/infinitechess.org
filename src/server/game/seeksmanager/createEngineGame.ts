@@ -1,7 +1,7 @@
 // src/server/game/seeksmanager/createEngineGame.ts
 
 /**
- * Handles the `createengine` lobby action: starting a game against the server's
+ * Handles the `createenginegame` lobby action: starting a game against the server's
  * engine at once, with no seek posted and no opponent to wait for.
  *
  * Bypasses the lobby, but shares `createSeek.ts`'s variant validation and

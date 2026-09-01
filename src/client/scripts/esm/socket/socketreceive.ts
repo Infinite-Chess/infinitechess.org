@@ -94,7 +94,7 @@ function ongeneralmessage(message: ClientboundGeneralMessage): void {
 		case 'print':
 			console.log(message.value);
 			break;
-		case 'printerror':
+		case 'print-error':
 			console.error(message.value);
 			break;
 		case 'ping':
