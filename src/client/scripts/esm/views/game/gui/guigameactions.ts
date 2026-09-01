@@ -299,8 +299,8 @@ function onOpponentReturn(): void {
 	updateRematchButton();
 }
 
-/** Unsubscribed from the game — clear all rematch offer state and disable the button. */
-function onUnsub(): void {
+/** Detached from the game — clear all rematch offer state and disable the button. */
+function onDetached(): void {
 	weOfferedRematch = false;
 	opponentOfferedRematch = false;
 	opponentPresentPostGame = false;
@@ -334,5 +334,5 @@ export default {
 	onOpponentRematchOffer,
 	onOpponentLeft,
 	onOpponentReturn,
-	onUnsub,
+	onDetached,
 };

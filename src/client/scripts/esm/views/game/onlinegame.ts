@@ -53,7 +53,7 @@ let inSync: boolean = false;
  * - `'finalized'`: conclusion is locked in permanently; nothing but rematch-offer state can change,
  *   so a reconnect fetches only that via `subscriberematch`. Set from the `finalized` flag on a game
  *   snapshot, or the `finalized` message.
- * - `'evicted'`: server deleted the game from memory (sent the `unsub` action, or the game was
+ * - `'evicted'`: server deleted the game from memory (sent the `detached` action, or the game was
  *   fetched dead over HTTP); it is now dead, so a reconnect doesn't re-subscribe at all.
  */
 let stage: GameStage | undefined = undefined;

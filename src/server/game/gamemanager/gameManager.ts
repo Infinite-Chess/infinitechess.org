@@ -110,7 +110,7 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 		for (const [c, data] of Object.entries(servergame.match.playerData)) {
 			if (!memberInfoUtil.eq(data.identifier, identifier)) continue;
 			if (data.socket) {
-				socketsend.send(data.socket, 'game', 'unsub', undefined); // Unsub the game on their old tab.
+				socketsend.send(data.socket, 'game', 'detached', undefined); // Detach the game on their old tab.
 				gameSockets.detachParticipant(servergame.match, data.socket);
 			}
 			onPostGameLeave(servergame, Number(c) as Player, false);
@@ -154,7 +154,7 @@ function subscribeParticipant(
 	}
 	const previousSocket = playerData.socket;
 	if (previousSocket) {
-		socketsend.send(previousSocket, 'game', 'leavegame', undefined);
+		socketsend.send(previousSocket, 'game', 'supersededbytab', undefined);
 		gameSockets.detachParticipant(match, previousSocket);
 	}
 	playerData.socket = ws;
@@ -190,7 +190,7 @@ function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void 
 		liveGameValues.onPlayerReconnected(servergame, ourRole);
 		// Alert their opponent we have returned, if they were informed of the disconnect
 		if (claimWindowWasSet) {
-			gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentdisconnectreturn', undefined); // prettier-ignore
+			gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentreconnect', undefined); // prettier-ignore
 		}
 	} else {
 		gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentreturn', undefined); // prettier-ignore

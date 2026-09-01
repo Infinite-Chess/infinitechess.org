@@ -238,8 +238,8 @@ function evict(servergame: ServerGame): void {
 	activeGames.remove(servergame.match.id);
 
 	// Both players have already left, but a spectator (or a stray old-tab socket)
-	// may still be attached — tell any remaining socket to unsubscribe.
-	gameSockets.broadcastToEveryone(servergame, 'unsub', undefined);
+	// may still be attached — tell any remaining socket it is detached.
+	gameSockets.broadcastToEveryone(servergame, 'detached', undefined);
 	for (const data of Object.values(servergame.match.playerData)) {
 		if (data.socket) gameSockets.detachParticipant(servergame.match, data.socket);
 	}

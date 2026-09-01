@@ -38,15 +38,15 @@ function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 			socketsend.send(ws, 'game', 'rematchstate', value);
 		} else {
 			// Spectator path: attach, but send no rematch state (they only
-			// stay connected for the 'ingame' message when a rematch is agreed).
+			// stay connected for the 'rematchstarted' message when a rematch is agreed).
 			gameSockets.attachSpectator(game, ws);
 		}
 	} else {
 		// Dead game
 		// Client should already have seen the finalized conclusion (otherwise they wouldn't
-		// be requesting to 'subscriberematch'). Tell them to unsub, they should then reset
-		// rematch offer state and disable the button.
-		socketsend.send(ws, 'game', 'unsub', undefined);
+		// be requesting to 'subscriberematch'). Tell them they're detached, they should then
+		// reset rematch offer state and disable the button.
+		socketsend.send(ws, 'game', 'detached', undefined);
 	}
 }
 

@@ -131,22 +131,22 @@ function routeMessage(contents: RoutedGameMessage): void {
 		case 'gameratingchange':
 			guigamemeta.showRatingChanges(contents.value);
 			break;
-		case 'unsub':
-			handleUnsubbing();
+		case 'detached':
+			handleDetached();
 			break;
-		case 'leavegame':
-			handleLeaveGame();
+		case 'supersededbytab':
+			handleSupersededByTab();
 			break;
 		case 'opponentdisconnect':
 			guidisconnect.onOpponentDisconnect(contents.value);
 			break;
-		case 'opponentdisconnectreturn':
+		case 'opponentreconnect':
 			guidisconnect.onOpponentReturn();
 			break;
 		case 'drawoffer':
 			drawoffers.onOpponentExtendedOffer();
 			break;
-		case 'declinedraw':
+		case 'drawdecline':
 			drawoffers.onOpponentDeclinedOffer();
 			break;
 		case 'rematchstate':
@@ -166,8 +166,8 @@ function routeMessage(contents: RoutedGameMessage): void {
 		case 'finalized':
 			onlinegame.onFinalized();
 			break;
-		case 'ingame':
-			handleInGame(contents.value);
+		case 'rematchstarted':
+			handleRematchStarted(contents.value);
 			break;
 		default:
 			console.error("Unknown action received from server in 'game' route.", contents satisfies never); // prettier-ignore
@@ -235,24 +235,21 @@ function handleGameConclusion(gamefile: GameFile, message: GameConclusionMessage
 }
 
 /**
- * Called after the server deletes the game after it has ended.
- * It basically tells us the server will no longer be sending updates related to the game,
- * so we should just unsub.
- *
- * Called when the server informs us they have unsubbed us from receiving updates from the game.
- * At this point we should leave the game.
+ * The server has detached us from the game — it was evicted from memory, was already dead,
+ * or we joined a new game while an old concluded one lingered. Either way no further updates
+ * are coming, so we tear down our subscription and clear the rematch state.
  */
-function handleUnsubbing(): void {
+function handleDetached(): void {
 	socketsubs.deleteSub('game');
 	onlinegame.onEvicted(); // Prevents a reconnect from trying to re-subscribe to the now-deleted game.
-	gameactions.onUnsub();
+	gameactions.onDetached();
 }
 
 /**
  * You have connected to the same game from another window/device.
  * This tab navigates home and displays a toast.
  */
-function handleLeaveGame(): void {
+function handleSupersededByTab(): void {
 	flashtoast.queue('Another window connected to the game.');
 	window.location.assign('/');
 }
@@ -262,7 +259,7 @@ function handleLeaveGame(): void {
  * Play the notify sound and navigate to the new game.
  * Agnostic of whether we are a participant or spectator.
  */
-async function handleInGame(rematch: GameNavigation): Promise<void> {
+async function handleRematchStarted(rematch: GameNavigation): Promise<void> {
 	await gamesound.playNotifyToCompletion();
 	const viewColor = resolveRematchViewColor(rematch.role);
 	window.location.assign(gameurl.getGameUrl(rematch.id, viewColor));

@@ -77,7 +77,7 @@ function decline(servergame: ServerGame, ourRole: Player): void {
 	drawOffers.close(servergame.match);
 
 	// Alert their opponent
-	gameSockets.sendToColor(servergame.match, opponentColor, 'game', 'declinedraw', undefined); // prettier-ignore
+	gameSockets.sendToColor(servergame.match, opponentColor, 'game', 'drawdecline', undefined); // prettier-ignore
 	liveGameValues.onDrawOfferDeclined(servergame);
 }
 

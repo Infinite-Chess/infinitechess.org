@@ -208,22 +208,22 @@ const ClientboundGameSchema = z.discriminatedUnion('action', [
 		action: z.literal('gameratingchange'),
 		value: typeschemas.GenPlayerGroupSchema(z.number()),
 	}),
-	z.strictObject({ action: z.literal('unsub') }),
+	z.strictObject({ action: z.literal('detached') }),
 	z.strictObject({ action: z.literal('notlive') }),
-	z.strictObject({ action: z.literal('leavegame') }),
+	z.strictObject({ action: z.literal('supersededbytab') }),
 	z.strictObject({
 		action: z.literal('opponentdisconnect'),
 		value: DisconnectInfoSchema,
 	}),
-	z.strictObject({ action: z.literal('opponentdisconnectreturn') }),
+	z.strictObject({ action: z.literal('opponentreconnect') }),
 	z.strictObject({ action: z.literal('drawoffer') }),
-	z.strictObject({ action: z.literal('declinedraw') }),
+	z.strictObject({ action: z.literal('drawdecline') }),
 	z.strictObject({ action: z.literal('finalized') }),
 	z.strictObject({ action: z.literal('rematchstate'), value: RematchOfferInfoSchema }),
 	z.strictObject({ action: z.literal('rematchoffer') }),
 	z.strictObject({ action: z.literal('opponentleft') }),
 	z.strictObject({ action: z.literal('opponentreturn') }),
-	z.strictObject({ action: z.literal('ingame'), value: GameNavigationSchema }),
+	z.strictObject({ action: z.literal('rematchstarted'), value: GameNavigationSchema }),
 ]);
 
 // Envelope --------------------------------------------------------------------

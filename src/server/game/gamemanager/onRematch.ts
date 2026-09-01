@@ -121,7 +121,7 @@ function createRematchGame(oldGame: ServerGame): void {
 
 	// Alert all connected players of the new game (they auto navigate)
 	for (const { socket, role } of toNavigate)
-		socketsend.send(socket, 'game', 'ingame', { id: newGameID, role });
+		socketsend.send(socket, 'game', 'rematchstarted', { id: newGameID, role });
 }
 
 // Exports ---------------------------------------------------------------------

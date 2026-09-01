@@ -101,29 +101,29 @@ compile error rather than a silent no-op.
 
 ### Clientbound (server → client)
 
-| Route     | Action                                            | Meaning                                                                                             |
-| --------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `general` | `ping`                                            | Heartbeat. Expects only the echo every message gets                                                 |
-| `general` | `protocolversion`                                 | Sent the instant the socket opens; mismatch → client reloads                                        |
-| `general` | `toast` / `toast-error`                           | Toast. **Already translated server-side** (`ws.t`)                                                  |
-| `general` | `print` / `printerror`                            | Console relay                                                                                       |
-| `lobby`   | `lobbystate`                                      | Full snapshot on subscribe: seeks, our seek id, viewer count, in-game status                        |
-| `lobby`   | `seekslist` / `viewercount`                       | Live deltas                                                                                         |
-| `lobby`   | `ingame` / `outgame`                              | We are (not) in a game. `ingame.navigate` decides _this tab_ goes there vs. shows the rejoin banner |
-| `game`    | `gamestate`                                       | The full live state; the `subscribe` reply and every forced resync                                  |
-| `game`    | `move`                                            | Opponent's move + move number + clocks + any conclusion                                             |
-| `game`    | `clock`                                           | Clock values alone                                                                                  |
-| `game`    | `gameconclusion`                                  | Non-move-triggered conclusion (for those who can't desync)                                          |
-| `game`    | `gameratingchange`                                | Per-player rating deltas                                                                            |
-| `game`    | `finalized`                                       | Result locked in permanently                                                                        |
-| `game`    | `unsub`                                           | Game evicted from memory — stop expecting updates                                                   |
-| `game`    | `notlive`                                         | The id you subscribed to isn't live → client reloads into SSR                                       |
-| `game`    | `leavegame`                                       | Another tab took over this game; this tab goes home                                                 |
-| `game`    | `opponentdisconnect` / `opponentdisconnectreturn` | Claim window opened / cancelled                                                                     |
-| `game`    | `drawoffer` / `declinedraw`                       | Draw offer relays                                                                                   |
-| `game`    | `rematchstate` / `rematchoffer`                   | Rematch overlay state / opponent offered                                                            |
-| `game`    | `opponentleft` / `opponentreturn`                 | Opponent left/returned to the post-game rematch window                                              |
-| `game`    | `ingame`                                          | A rematch was agreed — navigate to the new game                                                     |
+| Route     | Action                                     | Meaning                                                                                             |
+| --------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `general` | `ping`                                     | Heartbeat. Expects only the echo every message gets                                                 |
+| `general` | `protocolversion`                          | Sent the instant the socket opens; mismatch → client reloads                                        |
+| `general` | `toast` / `toast-error`                    | Toast. **Already translated server-side** (`ws.t`)                                                  |
+| `general` | `print` / `printerror`                     | Console relay                                                                                       |
+| `lobby`   | `lobbystate`                               | Full snapshot on subscribe: seeks, our seek id, viewer count, in-game status                        |
+| `lobby`   | `seekslist` / `viewercount`                | Live deltas                                                                                         |
+| `lobby`   | `ingame` / `outgame`                       | We are (not) in a game. `ingame.navigate` decides _this tab_ goes there vs. shows the rejoin banner |
+| `game`    | `gamestate`                                | The full live state; the `subscribe` reply and every forced resync                                  |
+| `game`    | `move`                                     | Opponent's move + move number + clocks + any conclusion                                             |
+| `game`    | `clock`                                    | Clock values alone                                                                                  |
+| `game`    | `gameconclusion`                           | Non-move-triggered conclusion (for those who can't desync)                                          |
+| `game`    | `gameratingchange`                         | Per-player rating deltas                                                                            |
+| `game`    | `finalized`                                | Result locked in permanently                                                                        |
+| `game`    | `detached`                                 | Detached from the game — stop expecting updates                                                     |
+| `game`    | `notlive`                                  | The id you subscribed to isn't live → client reloads into SSR                                       |
+| `game`    | `supersededbytab`                          | Another tab took over this game; this tab goes home                                                 |
+| `game`    | `opponentdisconnect` / `opponentreconnect` | Claim window opened / cancelled                                                                     |
+| `game`    | `drawoffer` / `drawdecline`                | Draw offer relays                                                                                   |
+| `game`    | `rematchstate` / `rematchoffer`            | Rematch overlay state / opponent offered                                                            |
+| `game`    | `opponentleft` / `opponentreturn`          | Opponent left/returned to the post-game rematch window                                              |
+| `game`    | `rematchstarted`                           | A rematch was agreed — navigate to the new game                                                     |
 
 ## Receipts: echo vs. ack
 
@@ -265,7 +265,7 @@ socket closes
                     60s if involuntary AND resignable, else 10s
                     opponent gets `opponentdisconnect` { millisUntilClaimable, voluntary }
                        │
-                       ├─ they reconnect → `opponentdisconnectreturn`, window cancelled
+                       ├─ they reconnect → `opponentreconnect`, window cancelled
                        └─ window elapsed → opponent may `claimvictory` / `claimdraw`
 ```
 
@@ -304,11 +304,11 @@ and the first outgoing message lazily reopens the socket. A bfcache restore (`pa
 
 ## Subscriptions
 
-| Key          | Server metadata | Attach                               | Detach                                      |
-| ------------ | --------------- | ------------------------------------ | ------------------------------------------- |
-| `lobby`      | `boolean`       | `general`/`sub` `'lobby'`            | `general`/`unsub`, or socket close          |
-| `game`       | `{ id, color }` | `game`/`subscribe` (participant)     | Socket close, or server `unsub`/`leavegame` |
-| `spectating` | `{ id }`        | `game`/`subscribe` (non-participant) | Socket close, or server `unsub`             |
+| Key          | Server metadata | Attach                               | Detach                                               |
+| ------------ | --------------- | ------------------------------------ | ---------------------------------------------------- |
+| `lobby`      | `boolean`       | `general`/`sub` `'lobby'`            | `general`/`unsub`, or socket close                   |
+| `game`       | `{ id, color }` | `game`/`subscribe` (participant)     | Socket close, or server `detached`/`supersededbytab` |
+| `spectating` | `{ id }`        | `game`/`subscribe` (non-participant) | Socket close, or server `detached`                   |
 
 **Clients may only ever request `lobby`.** `sub` accepts nothing else; the game keys are
 attached server-side by `subscribe`, which resolves participant-vs-spectator itself from
@@ -319,8 +319,8 @@ Client-side, [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts) track
 authoritative state: it exists so a reconnect knows what to re-request, and so the socket knows
 when it may auto-close. It is wiped on every close.
 
-A second socket subscribing as the same player **evicts the first**: the old tab gets `leavegame`
-and navigates home.
+A second socket subscribing as the same player **evicts the first**: the old tab gets
+`supersededbytab` and navigates home.
 
 ### Game (re)subscription: `subscribe` vs. `subscriberematch`
 
