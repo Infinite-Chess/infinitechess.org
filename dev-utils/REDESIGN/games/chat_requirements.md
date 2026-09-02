@@ -4,7 +4,7 @@ Decided requirements for the game-page chat, split into behavior (what the user 
 experiences) and the backend design.
 
 **The report system is a separate system**, specified in its own document —
-[report_requirements.md](report_requirements.md). It consumes the chat's data but shares none of
+[chat_report_requirements.md](chat_report_requirements.md). It consumes the chat's data but shares none of
 its lifecycle, wire or storage decisions. Nothing here depends on it.
 
 Everything here is **decided**. Where a rejected alternative is recorded, it was rejected
@@ -45,6 +45,15 @@ deliberately — don't re-open it without a new reason.
 - 140-character cap. The input physically prevents typing past it (enforced as you type, *and* on submit, *and* server side).
 - No timestamps, no sounds, no unread indicator.
 - Auto-scroll only sticks to the bottom when already at the bottom; a scrolled-up reading position is never disturbed.
+- **No profanity filter.** Messages are never blocked, censored or masked, and the existing
+  `accountValidation.checkProfanity` (used on usernames) is not reused here. A username is
+  broadcast to every player, which is what justifies filtering it; a chat is private between two
+  people. A word list also cannot tell swearing from abuse, and abuse is what the
+  [report system](chat_report_requirements.md) exists to catch — with context, judged by a human.
+  *Rejected: Lichess's model, where `shutup` lets the message through but auto-reports the sender.
+  That suits a site with a mod team; here every auto-report would land in one inbox. Also rejected:
+  a per-user preference masking profane words client-side, which would ship the `obscenity` package
+  in the game page bundle.*
 
 ### Sending & rate limiting
 
@@ -227,7 +236,7 @@ the asymmetry looks wrong at first glance:
 | --- | --- |
 | `gameLogger.log` | The 0-move early return (a report landed *before* conclusion) |
 | `gameLogger.updateOverturned` | The `else` branch only — a report landed on an already-logged game and popped it to 0 moves, beside `gamesManager.remove` |
-| Admin Panel | Moderation — the delete-chat-of-a-game-id command, shipping with the [report system](report_requirements.md) |
+| Admin Panel | Moderation — the delete-chat-of-a-game-id command, shipping with the [report system](chat_report_requirements.md) |
 
 `updateOverturned`'s **`if` branch (one or more moves left) touches the chat not at all**: the
 `games` row survives, the page still renders, and the popped move has nothing to do with what
