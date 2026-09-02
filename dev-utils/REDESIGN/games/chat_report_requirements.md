@@ -6,7 +6,7 @@ its own CSS classes, its own rate limiting. The [chat system](chat_requirements.
 dependency on this one; the chat ships and works with the flag button inert.
 
 Ships **after** the main chat. Everything here is **decided**. A rejected alternative recorded in
-*italics* was rejected deliberately — don't re-open it without a new reason.
+_italics_ was rejected deliberately — don't re-open it without a new reason.
 
 Three constraints from the owner govern every trade-off: he is **one person**, so simple beats
 comprehensive; the system exists for **legal cover** and so users know they can protect
@@ -22,8 +22,8 @@ Only its behavior is missing; nothing about its markup or placement changes.
 
 **The flag's appearance never varies with the state of the chat** — identical whether the log is
 empty or full. Its only appearance change is the disabled state after a successful report.
-*Rejected: greying it out until the first message arrives. A button that lights up the instant
-someone speaks draws the eye and tempts clicks.*
+_Rejected: greying it out until the first message arrives. A button that lights up the instant
+someone speaks draws the eye and tempts clicks._
 
 ### The two popups
 
@@ -45,14 +45,14 @@ menu 1 with menu 2**, a confirmation naming that reason. Three clicks total: ope
 └────────────────────────────┘
 ```
 
-*Rejected: the `.modal-overlay` / `.modal` component in `index.css` — the owner overrode it in
+_Rejected: the `.modal-overlay` / `.modal` component in `index.css` — the owner overrode it in
 favor of the dropdown look. Also rejected: one menu with a lit-up selection plus a Submit button
 (the industry norm), which must hold selection state; the two-menu form holds none, because the
-picked reason rides on the click.*
+picked reason rides on the click._
 
 **Menu 1's title row reads "Report the chat"** — the same words as the flag's tooltip, and the
 in-house pattern (the analysis context menu's title names its subject, e.g. `12. Nf3`).
-*Rejected: "Why are you reporting?", "Report opponent".*
+_Rejected: "Why are you reporting?", "Report opponent"._
 
 **Menu 2 quotes the chosen label back on its own line**, verbatim:
 
@@ -63,17 +63,17 @@ Harassment or hate speech
 [ Cancel ]  [ Report ]
 ```
 
-*Rejected: inlining it into a sentence ("Report opponent for harassment?"). Our labels are full
-phrases, so an inline sentence would need a second, shorter word per reason.*
+_Rejected: inlining it into a sentence ("Report opponent for harassment?"). Our labels are full
+phrases, so an inline sentence would need a second, shorter word per reason._
 
 **Reference implementation to copy — behavior only, not classes:**
 
-| Piece | Where |
-| --- | --- |
-| Markup shape, and the second menu | `analysis.njk` — `#analysis-actions-menu`, then `#continue-choice-menu` |
+| Piece                                                  | Where                                                                                                                |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Markup shape, and the second menu                      | `analysis.njk` — `#analysis-actions-menu`, then `#continue-choice-menu`                                              |
 | Open/close/toggle, and the outside-`pointerdown` close | `guianalysisactions.ts` — `toggleActionsMenu`, `closeActionsMenu`, `syncActionsToggle`, `openContinueFromHereChoice` |
-| A11y | `aria-haspopup="menu"` and a synced `aria-expanded` on the toggle |
-| Visual reference | `.analysis-menu` in `analysis.css` |
+| A11y                                                   | `aria-haspopup="menu"` and a synced `aria-expanded` on the toggle                                                    |
+| Visual reference                                       | `.analysis-menu` in `analysis.css`                                                                                   |
 
 Only ~40 lines of `guianalysisactions.ts` are popup machinery — the five functions above. Its
 other ~170 lines are ICN export and the editor/lobby handoffs, none of which the report needs.
@@ -98,19 +98,19 @@ call alone, once both designs are visually final.
 Rows 1-2 are "someone is attacking me", rows 3-4 "someone is sending me filth or a con", row 5 the
 one carrying a legal duty. "Other" is always last.
 
-*Rejected: severity-first ordering (YouTube/X style, `Child safety` first) — with six short rows
+_Rejected: severity-first ordering (YouTube/X style, `Child safety` first) — with six short rows
 nothing is buried, and it makes the popup grim for the majority reporting plain rudeness. The
 draft's order, with `Threats` at row 4, was changed because a threat is likelier than sexual
-content in a heated game.*
+content in a heated game._
 
 **No free-text box, and no per-message selection.** A report always covers the whole chat.
-*Why: the whole chat is snapshotted anyway, a textarea would need its own cap/trim/control-char
+_Why: the whole chat is snapshotted anyway, a textarea would need its own cap/trim/control-char
 validation and would mail abuse straight to the owner, and with two people the reported user is
-implied.*
+implied._
 
 Notes on the six, so they aren't re-litigated:
 
-- **"Child safety", not "child sexual content".** Kept separate from *Sexual content* so the one
+- **"Child safety", not "child sexual content".** Kept separate from _Sexual content_ so the one
   category with a legal reporting duty isn't buried — but relabelled, as Discord and X do, because
   the chat is text-only: the realistic threat is grooming, not literal content.
 - **Row 1 stays one row.** `Harassment` and `Hate speech` end in the same action.
@@ -122,27 +122,27 @@ Notes on the six, so they aren't re-litigated:
 
 ```ts
 const REPORT_REASONS = [
-	{ code: 'harassment',   label: 'Harassment or hate speech' },
-	{ code: 'threats',      label: 'Threats or violence' },
-	{ code: 'sexual',       label: 'Sexual content' },
-	{ code: 'scam',         label: 'Scam or phishing' },
+	{ code: 'harassment', label: 'Harassment or hate speech' },
+	{ code: 'threats', label: 'Threats or violence' },
+	{ code: 'sexual', label: 'Sexual content' },
+	{ code: 'scam', label: 'Scam or phishing' },
 	{ code: 'child-safety', label: 'Child safety' },
-	{ code: 'other',        label: 'Other' },
+	{ code: 'other', label: 'Other' },
 ] as const;
 ```
 
-| Reader | Use |
-| --- | --- |
+| Reader               | Use                                                              |
+| -------------------- | ---------------------------------------------------------------- |
 | `gamePageController` | Hands the list to `game.njk`, which loops it to SSR the six rows |
-| `chatReportAPI.ts` | Builds its zod enum from the codes |
-| `chatReport.ts` | Maps the code back to the label for the email subject |
+| `chatReportAPI.ts`   | Builds its zod enum from the codes                               |
+| `chatReport.ts`      | Maps the code back to the label for the email subject            |
 
 - **The wire carries the code, never the label** — `{"reason":"harassment"}`.
 - **The menu markup is SSR'd and starts hidden**, like `#analysis-actions-menu`. The client never
   builds this HTML; it toggles `hidden` and reads `data-reason` off the clicked row.
 
-*Rejected: typing the labels into `game.njk` and again server-side, as `analysis.njk` does for its
-own menu — two copies would drift the first time a label is reworded.*
+_Rejected: typing the labels into `game.njk` and again server-side, as `analysis.njk` does for its
+own menu — two copies would drift the first time a label is reworded._
 
 **The list may not live in `chatReportAPI.ts`** — that is illegal, not merely worse.
 [IMPORT_RULES.md](/docs/systems/IMPORT_RULES.md) points `src/server/` imports **down** a ladder:
@@ -152,8 +152,8 @@ points up and fails `npm run check`.
 ### After submitting
 
 A **toast** reading **"Report sent."** — `toast.show(...)` from `components/toast.ts`, no `error`
-flag. The wording matches the flag's new tooltip. *Rejected: a third popup state that swaps to
-"Report sent" and self-closes — it needs a timer and another state.*
+flag. The wording matches the flag's new tooltip. _Rejected: a third popup state that swaps to
+"Report sent" and self-closes — it needs a timer and another state._
 
 The flag then **disables** for the rest of that page visit — greyed, not clickable, its tooltip
 changing from "Report the chat" to "Report sent". **No tick or checkmark icon**; the disabled
@@ -163,15 +163,15 @@ state is the whole feedback.
 
 Two toasts, both `error: true`, chosen by the HTTP status alone. The flag stays enabled.
 
-| Case | Toast |
-| --- | --- |
+| Case                                | Toast                             |
+| ----------------------------------- | --------------------------------- |
 | Over the 8-per-day IP cap (**429**) | "You have sent too many reports." |
-| Anything else | "Failed to submit report." |
+| Anything else                       | "Failed to submit report."        |
 
 Nothing leaks: `express-rate-limit` runs **before** the route handler, so a 429 is reached without
-the participation check ever running. *Rejected: one generic toast for every failure (an honest
+the participation check ever running. _Rejected: one generic toast for every failure (an honest
 user can hit the cap and would think the button was dead), and a distinct message per failure
-(tells a hacker which check they tripped).*
+(tells a hacker which check they tripped)._
 
 Where each string lives:
 
@@ -179,7 +179,7 @@ Where each string lives:
   `[rate_limiting] chat_reports`, in `translation/responses/en-US.toml`, with the limiter using
   `makeHandler('chat_reports')`; the client displays the body's `message`. All nine existing limiters work
   this way, and [TRANSLATIONS.md](/docs/systems/TRANSLATIONS.md) requires localizing a response a
-  *behaving* client can surface.
+  _behaving_ client can surface.
 - **"Failed to submit report." is hardcoded English in the client.** Forced: a network failure
   produces no server reply, so the client must hold the words. It also matches the
   [chat system](chat_requirements.md)'s rule that game-page copy stays hardcoded until the
@@ -200,17 +200,17 @@ whose only entries are a draw offer or a disconnect is still nothing to report.
   normally; the refusal lands where the success toast would have.
 - The toast is the existing **"Failed to submit report."** — no new string, no explanation.
 
-*Rejected: a flag-click check with a dedicated "There is nothing to report yet." toast — a new
-string for a case nobody honest reaches.*
+_Rejected: a flag-click check with a dedicated "There is nothing to report yet." toast — a new
+string for a case nobody honest reaches._
 
 ### Who can report, and when
 
 > **You can report exactly as long as the server can still prove you were a participant.**
 
-| Situation | Who can report | The check |
-| --- | --- | --- |
+| Situation           | Who can report         | The check                                                                          |
+| ------------------- | ---------------------- | ---------------------------------------------------------------------------------- |
 | Game live in memory | **Guests and members** | `memberInfoUtil.eqPartial(identifier, memberInfo)` against `game.match.playerData` |
-| Game evicted | **Members only** | `deadGameState.resolveParticipantColor(id, user_id)` |
+| Game evicted        | **Members only**       | `deadGameState.resolveParticipantColor(id, user_id)`                               |
 
 Both are the exact if/else `gamePageController` already runs to resolve `role`. Do not invent a
 second participation check.
@@ -219,13 +219,13 @@ second participation check.
 cannot reply, so denying them the flag would leave visible abuse unreportable.
 
 **On `detached`, the flag hides — for guests only.** A member stays identifiable after eviction, so
-keeps it. Mirrors what the [chat system](chat_requirements.md) decided for the chat *input*.
+keeps it. Mirrors what the [chat system](chat_requirements.md) decided for the chat _input_.
 
-*This is load-bearing and not obvious. Eviction does **not** reload the page — it sends only
+_This is load-bearing and not obvious. Eviction does **not** reload the page — it sends only
 `{"action":"detached"}`, verified against `wsOutLog`. An earlier draft assumed a `subscribe` →
 `notlive` → `window.location.reload()` chain closes the window; **it does not happen**. A guest
 keeps a fully-rendered chat log on screen indefinitely after eviction, and without this rule their
-flag would post reports the server can never attribute. Do not re-derive the reload chain.*
+flag would post reports the server can never attribute. Do not re-derive the reload chain._
 
 **Online games are strictly two-player**, verified — every server-side "opponent" is
 `typeutil.invertPlayer(ourRole)`. So the reported player is always the other one, and the server
@@ -242,9 +242,9 @@ database. This mirrors rating abuse exactly: `abuseReport.reportMeasurement` wri
 Consequences: `mailer.ts`'s `EmailType` union gains **`'chat-report'`** (beside
 `'rating-abuse-alert'`), and a new log name is used.
 
-*Rejected: a `chat_reports` table alongside the email. It would answer "how many reports has this
+_Rejected: a `chat_reports` table alongside the email. It would answer "how many reports has this
 user received?", at the cost of a permanent table and an admin command to read it back — but it was
-never forbidden, so it is the first thing to revisit if queryable history is ever needed.*
+never forbidden, so it is the first thing to revisit if queryable history is ever needed._
 
 #### The log file: one line per report
 
@@ -256,8 +256,8 @@ report**, in this field order: **time, game id (numeric), reporter, reported, re
 weekly), so appended transcripts would leave no way to see where one report ends and the next
 begins. One line per report also answers "how many this month?" at a glance.
 
-*Rejected: logging the full report text (unreadable in a flat file — size was never the issue, at
-~35 KB per report), and one `.txt` file per report in a folder (`logEvents` cannot do it).*
+_Rejected: logging the full report text (unreadable in a flat file — size was never the issue, at
+~35 KB per report), and one `.txt` file per report in a folder (`logEvents` cannot do it)._
 
 **Accepted cost:** if the email send fails, the transcript is lost. `emailService` writes the
 failure to `errLog`, the log line still names the game id, and the `chat_entries` rows are usually
@@ -284,9 +284,9 @@ The game id rides in the **path**, because it is the resource being reported and
   `GET /api/game/:id` is public and must stay without it. It sets `req.memberInfo` with a `user_id`
   for members and a `browser_id` for guests — what both participation checks need.
 
-*Rejected: a websocket action alongside `submitchatmessage`. Less code, but no socket exists on the
+_Rejected: a websocket action alongside `submitchatmessage`. Less code, but no socket exists on the
 finished game page — and players report afterwards, once calm and re-reading the chat, not
-mid-game. Also rejected: a flat `POST /api/report-chat` with the game id in the body.*
+mid-game. Also rejected: a flat `POST /api/report-chat` with the game id in the body._
 
 ### Validation, at the trust boundary
 
@@ -310,16 +310,16 @@ const ReportBodySchema = z.strictObject({ reason: z.enum(REASON_CODES) });
    **`chatReport`** — an `express-rate-limit` entry spreading `DEFAULT_OPTIONS` with
    `makeHandler('chat_reports')`. Limiters are already inert under vitest.
 
-**No send buffer** — every report emails. *Rejected: rating abuse's 24-hour suppression window.
+**No send buffer** — every report emails. _Rejected: rating abuse's 24-hour suppression window.
 There is no table to hold the timestamp, rating abuse fires automatically while a report takes
 three deliberate clicks, and a suppressed report loses a real complaint rather than a repeat of the
-same machine verdict.*
+same machine verdict._
 
-**No per-game report memory on the server.** *Rejected: allowing a repeat report only once a new
+**No per-game report memory on the server.** _Rejected: allowing a repeat report only once a new
 chat entry arrives. The state could only live in memory and a restart would wipe it — and fatally,
 the rule never says **whose** entry, so an angry reporter types "a" and reports again. The IP cap
 was always the real bound; duplicates are spotted by eye, which is what the game's date in the
-email is for.*
+email is for._
 
 ### The evidence snapshot
 
@@ -362,33 +362,33 @@ It does **not** use `emailTemplates.buildEmailShell`, the on-brand wrapper the v
 password-reset emails use: that shell's card is fixed at **600px**, too narrow for a 140-character
 transcript line, and its branding is aimed at users while the owner is the only reader.
 
-*Rejected: building a shared "moderation email shell" now, for this email plus the planned
-rating-abuse rewrite.* **Extract the redundancy when the second caller exists, not by predicting
+_Rejected: building a shared "moderation email shell" now, for this email plus the planned
+rating-abuse rewrite._ **Extract the redundancy when the second caller exists, not by predicting
 it** — once both emails are real, a shared shell can be lifted from two actual examples.
 
 ### What it contains
 
-| Group | Fields |
-| --- | --- |
-| **The report** | Reason; reporter and reported (name, `user_id`, **and which color each played**); when the report was sent |
-| **The game** | Game id (**numeric**); a link to it on the site; **date and time the game was played**; variant; rated; time control; private or public |
-| **The reported player** | `joined` (account age), `game_count`, `last_seen` |
-| **The chat** | The full transcript, timestamps to the second, **including the static notices** |
+| Group                   | Fields                                                                                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **The report**          | Reason; reporter and reported (name, `user_id`, **and which color each played**); when the report was sent                              |
+| **The game**            | Game id (**numeric**); a link to it on the site; **date and time the game was played**; variant; rated; time control; private or public |
+| **The reported player** | `joined` (account age), `game_count`, `last_seen`                                                                                       |
+| **The chat**            | The full transcript, timestamps to the second, **including the static notices**                                                         |
 
 **The email never says whether the game is live or finished**, and carries **no result, no
 termination, no game duration and no move count.** Those four are exactly the fields a live game
 cannot supply, so dropping them removes the whole live/dead branch from the body. The seven game
 fields above all exist in memory for a live game and in the `games` row for a finished one.
 
-*Rejected: "Game still in progress" in place of the result, and holding the report until the game
+_Rejected: "Game still in progress" in place of the result, and holding the report until the game
 ends (which delays an urgent report, and the game may never end cleanly). Also excluded, having
 been offered and declined: `login_count`, `username_history`, `roles`, per-player `score`, and
-per-player elo.*
+per-player elo._
 
 **Guests carry no identifier.** A guest appears as `(Guest)` plus the colour they played.
 **No `browser_id` appears anywhere in the report** — no admin command can act on one, so it is noise
 in an email read by eye. Either person can be a guest, since guests can chat in private/friend
-games. When the *reported* player is a guest, the "reported player" block is omitted entirely,
+games. When the _reported_ player is a guest, the "reported player" block is omitted entirely,
 because those fields come from the members tables.
 
 ### The layout
@@ -434,15 +434,15 @@ CHAT — as the reporter saw it
 
 **Do not write new formatters.** `gamePageController.buildGameMetaViewModel` already produces them:
 
-| Needed | Existing source |
-| --- | --- |
-| Time control label | `clockutil.getTimeControlLabel(setup.timeControl)` |
-| Variant name | `t.shared.variants[code]`, or the custom-position label |
-| Rated, players per color | The same view model's own fields |
+| Needed                   | Existing source                                         |
+| ------------------------ | ------------------------------------------------------- |
+| Time control label       | `clockutil.getTimeControlLabel(setup.timeControl)`      |
+| Variant name             | `t.shared.variants[code]`, or the custom-position label |
+| Rated, players per color | The same view model's own fields                        |
 
 These take a `ScriptTranslations['shared']` object rather than a `req`, so the report passes the
-**English** shared translations. *(`gameresultutil.getDisplay` was on this list and is no longer
-used — the result banner sentence left with the result itself.)*
+**English** shared translations. _(`gameresultutil.getDisplay` was on this list and is no longer
+used — the result banner sentence left with the result itself.)_
 
 ### The transcript is rendered from the reporter's point of view
 
@@ -452,11 +452,11 @@ reporter's role**, so the owner sees exactly what the reporter saw. Because "You
 reporter, **the transcript carries a heading saying so**; the email names the reporter and their
 colour immediately above it.
 
-*Rejected: a third, neutral mode with no reader ("Black disconnected"). It reads better for an
-outsider but adds a branch to a function the chat system also uses.*
+_Rejected: a third, neutral mode with no reader ("Black disconnected"). It reads better for an
+outsider but adds a branch to a function the chat system also uses._
 
 **Notices stay in the transcript.** Abuse usually follows a declined draw or a disconnect, so they
-show the trigger — and keeping them is *less* code, since `entryToParts` renders both kinds.
+show the trigger — and keeping them is _less_ code, since `entryToParts` renders both kinds.
 
 **Every id shown is numeric, so it can be pasted straight into `deletechat`** — but the link's
 `href` must carry the **base62** id, because `/game/:id` runs `gamesManager.decodeID`, which is
@@ -471,19 +471,19 @@ in the email is his only copy — which is why the snapshot is mandatory.
 
 The email carries a **`.txt` attachment holding the whole report** — every field above plus the
 transcript, in plain text — so it can be dropped straight into an AI agent to judge. It is the
-*full* report, not a bare chat dump: the agent needs the metadata.
+_full_ report, not a bare chat dump: the agent needs the metadata.
 
 Named **`chat-report-<game_id>.txt`**, using the **numeric** id, so two saved reports never
-collide and the name can be pasted straight into `deletechat`. *Rejected: a bare
+collide and the name can be pasted straight into `deletechat`. _Rejected: a bare
 `report.txt`, a date-prefixed name, and a `<pre>` block appended to the HTML body (which duplicates
-the whole body inline and must be drag-selected).*
+the whole body inline and must be drag-selected)._
 
 **Cost this incurs:** `mailer.ts`'s `SendMailOptions` is `{to, subject} & ({html} | {text})`. It
 must be widened to carry attachments.
 
 **Capability check, done:** nodemailer 8's SES transport builds the raw MIME message itself, so
-attachments ride along. SES caps a message at 40 MB, and `.txt` is not a blocked type. *Not
-verified by sending a real email.*
+attachments ride along. SES caps a message at 40 MB, and `.txt` is not a blocked type. _Not
+verified by sending a real email._
 
 ## Chat moderation — the Admin Panel command
 
@@ -500,15 +500,15 @@ The panel is a command console: `POST /api/admin/command` dispatches on a comman
 plus its `help` entry.
 
 It is the **only** command taking a game id rather than a user identifier — say so in its `help`
-text. *Rejected: `clearchat`, `wipechat`; neither matches an existing verb the way `delete` does.*
+text. _Rejected: `clearchat`, `wipechat`; neither matches an existing verb the way `delete` does._
 
 ## New files
 
-| File | Holds |
-| --- | --- |
-| `src/server/api/chatReportAPI.ts` | The route handler: decode the id, the two checks, the reply |
-| `src/server/game/gamemanager/chatReport.ts` | `REPORT_REASONS`, the evidence snapshot, the subject, the HTML body, the `.txt` attachment, the log line, and the send |
-| `src/client/scripts/esm/views/game/gui/guichatreport.ts` | The popups: open/close, menu swap, POST, toast, disabling the flag |
+| File                                                     | Holds                                                                                                                  |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `src/server/api/chatReportAPI.ts`                        | The route handler: decode the id, the two checks, the reply                                                            |
+| `src/server/game/gamemanager/chatReport.ts`              | `REPORT_REASONS`, the evidence snapshot, the subject, the HTML body, the `.txt` attachment, the log line, and the send |
+| `src/client/scripts/esm/views/game/gui/guichatreport.ts` | The popups: open/close, menu swap, POST, toast, disabling the flag                                                     |
 
 The actual send goes in **`emailService.sendChatReportEmail`**, a new sibling of
 `sendRatingAbuseEmail` in `src/server/utility/emailService.ts`, which already try/catches and logs
@@ -519,8 +519,8 @@ jobs** — mirroring rating abuse's trigger → `abuseReport.ts` → `emailServi
 
 - `chatReport.ts` sits in `gamemanager/`, **not** a folder of its own — a directory holding one file
   is not wanted, and `src/server/game` has no loose files. It lands beside the chat system's
-  `chat.ts`, which it reads. *Its neighbour `cheatReport.ts` is unrelated — that one is a player
-  claiming the opponent's move was illegal.*
+  `chat.ts`, which it reads. _Its neighbour `cheatReport.ts` is unrelated — that one is a player
+  claiming the opponent's move was illegal._
 - `chatReportAPI.ts` is **new**, not a second function in `gameAPI.ts`: `api/` is one file per
   feature, `GET /api/game/:id` is a public unauthenticated **read** while this is an authenticated
   moderation **write**, and `gameAPI.ts` is 37 lines whose stated job is dead-game state. Only
