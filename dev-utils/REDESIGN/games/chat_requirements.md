@@ -7,8 +7,9 @@ experiences) and the backend design.
 [chat_report_requirements.md](chat_report_requirements.md). It consumes the chat's data but shares none of
 its lifecycle, wire or storage decisions. Nothing here depends on it.
 
-Everything here is **decided**. Where a rejected alternative is recorded, it was rejected
-deliberately — don't re-open it without a new reason.
+Everything here is **decided**, except the [Unresolved](#unresolved) section at the bottom.
+Where a rejected alternative is recorded, it was rejected deliberately — don't re-open it
+without a new reason.
 
 ## Behavior
 
@@ -20,6 +21,9 @@ deliberately — don't re-open it without a new reason.
   either hold an account or be playing a friend.
 - For a guest in a public game the input is present but unusable: placeholder reads
   **"Create an account to chat."**, and hovering shows the `not-allowed` cursor.
+  Spelled as the **`disabled` attribute** (`.chat-input:disabled` supplies the cursor), so no
+  client-side permission check exists anywhere — there is no path from a disabled input to a
+  send. The server's own guest rejection is independent of it, not a backstop for it.
 - The chat works on the single game page (`/game/:id`). There is no pre-game page state — the panel exists only when the page renders a game.
 
 ### Messages
@@ -42,7 +46,12 @@ deliberately — don't re-open it without a new reason.
   player's old messages show the new name; a deleted account shows `(Deleted User)`. This
   follows the house rule that player-name snapshots are stored nowhere; players are always
   referenced by `user_id`, which never changes.
-- 140-character cap. The input physically prevents typing past it (enforced as you type, *and* on submit, *and* server side).
+- 140-character cap. The input physically prevents typing past it (enforced as you type, *and*
+  on submit, *and* server side). `MAX_CHAT_MESSAGE_LENGTH` lives in
+  `shared/util/chatratelimit.ts` beside the flood rules, and is imported by both the zod schema
+  and the client's submit check. `game.njk` keeps a bare `maxlength="140"` with a comment naming
+  that constant — Nunjucks can't import TypeScript, and this is exactly how the auth pages carry
+  their own caps (`components/forms.njk`).
 - No timestamps, no sounds, no unread indicator.
 - Auto-scroll only sticks to the bottom when already at the bottom; a scrolled-up reading position is never disturbed.
 - **No profanity filter.** Messages are never blocked, censored or masked, and the existing
@@ -62,9 +71,30 @@ Rate-limit state is scoped **per game** — fresh each game. Two rules, both ado
 1. **Window:** reject if the sender's 5th-most-recent message in this game is younger than 10 seconds (max 4 per rolling 10s window).
 2. **Duplicates:** reject only on an **exact match** against either of the sender's last 2 messages in this game (no edit-distance similarity).
 
+Both rules live in **one shared module**, `shared/util/chatratelimit.ts`, so neither side
+reimplements them: `check(history, text, now)` returns a rejection reason or nothing, and
+`record(history, text, now)` pushes and trims the history to 5. The client maps a reason to its
+error text; the server maps it to its `hackLog` line. Drift is impossible by construction.
+
+*Home: shared placement goes by subject, and a flood limiter over user text owes nothing to
+chess, so `shared/util/` (rung 1) is its rung. It imports nothing, so it can't point up a
+ladder, and that rung carries no page-reachability rule.*
+
 Enforcement model:
 
-- The client mirrors both rules. If a send would be rejected, it shows a small error above the input explaining why — **without sending and without clearing the input**. No round trip.
+- The client mirrors both rules by calling that module. If a send would be rejected, a small
+  error shows above the input explaining why — **without sending and without clearing the
+  input**. No round trip. One `<div class="chat-error hidden">` sits between `.chat-log` and
+  `.chat-input`, cleared on the next keystroke:
+
+  | Trigger | Text |
+  | --- | --- |
+  | Over the window limit | Slow down, too many messages. |
+  | Duplicate | You just said that. |
+  | Disconnected | You are disconnected. |
+
+- **Enter sends.** Same pattern as the variant selector's ICN field (`variantselector.ts`),
+  minus its `shiftKey` guard — a single-line `<input>` has no newline to suppress.
 - If the client approves the send: the input clears immediately, and the message renders **only when the server's chat delta arrives** (no optimistic rendering).
 - A server-side rejection after a client-approved send is only reachable by hackers/bots: it is **silent** — no error back, the message simply never renders. No text restoration logic exists for this path.
 - The typed text is never lost: it clears only when the client approves the send; predicted rejections leave it in place.
@@ -78,27 +108,50 @@ The chat log doubles as a passive event log. Notices are worded **relative to th
 ("You disconnected" vs "Opponent disconnected"), so each side sees the same event described
 from its own point of view.
 
-The closed set of eight notice codes:
+The closed set of nine notice codes, and the English each renders as. Every row stores
+`player_number` — the player the notice is *about* — so the wording is picked from whether the
+reader is that player:
 
-| Code | Written when |
-| --- | --- |
-| `draw-offered` | A draw offer is extended |
-| `draw-declined` | A draw offer is declined — **including** the auto-decline when the opponent moves |
-| `draw-accepted` | A draw offer is accepted |
-| `rematch-offered` | A rematch is offered, and the opponent had not already offered |
-| `rematch-accepted` | The second player's offer completes the handshake |
-| `disconnected` | A player's claim window opens |
-| `reconnected` | That player returns |
-| `cheat-detected` | A cheat report overturns the game |
+| Code | Written when | Reader is that player | Reader is the other |
+| --- | --- | --- | --- |
+| `draw-offered` | A draw offer is extended | You offered a draw. | Opponent offered a draw. |
+| `draw-declined` | A draw offer is declined — **including** the auto-decline when the opponent moves | You declined the draw offer. | Opponent declined the draw offer. |
+| `draw-accepted` | A draw offer is accepted | You accepted the draw offer. | Opponent accepted the draw offer. |
+| `rematch-offered` | A rematch is offered, and the opponent had not already offered | You offered a rematch. | Opponent offered a rematch. |
+| `rematch-accepted` | The second player's offer completes the handshake | You accepted the rematch. | Opponent accepted the rematch. |
+| `disconnect-voluntary` | A player's claim window opens, and they left on purpose | You disconnected. | Opponent disconnected. |
+| `disconnect-involuntary` | A player's claim window opens, and their network dropped | You lost connection. | Opponent lost connection. |
+| `reconnected` | That player returns | You reconnected. | Opponent reconnected. |
+| `cheat-detected` | A cheat report overturns the game | Cheating was detected. The game was aborted. | *(same)* |
+
+"Opponent", no article, matching the sidebar's existing copy in `guidisconnect.ts`.
 
 Notes on the set:
 
+- **The two disconnect codes are named off the wire, not off their sentences.** There is only
+  ONE socket action, `opponentdisconnect`, and it carries the distinction in a `voluntary`
+  boolean — so the codes mirror `opponentdisconnect` + that field rather than inventing a second
+  event name. (`connection-lost` was rejected outright: `SocketBus` already declares an event by
+  that exact name meaning **our own** socket dropped, and a stored code sharing it would make
+  every grep ambiguous.)
+- **They are two codes rather than one, on purpose.** Voluntariness is only *inferred* —
+  `wasSocketClosureInvoluntary` reads it off the socket close code, so a rage-quit closing as
+  1006 and a flaky stack emitting 1001 are both mislabelled. That argues for showing one neutral
+  sentence. But the rows are permanent and can never be repaired retroactively, so collapsing
+  them at write time would destroy a distinction we could never recover. Store both, and keep the
+  choice of what to display open. `startClaimTimer` already holds `involuntary`, so it is a
+  ternary at the single write site. Their two sentences also match the live sidebar word for
+  word, which one shared sentence would not.
+- **`draw-declined` stays reader-relative even for the auto-decline.** Moving really is
+  declining — the client already models it that way (`user-move-played` → `closeDraw()`) — and
+  the opponent's side needs "Opponent declined the draw offer." to be true regardless. A
+  reader-agnostic carve-out for one code would break the only wording rule the set has.
 - **There is no rematch *rejection*.** No such event exists — a player who doesn't want a
   rematch simply leaves. `rematch-offered` and `rematch-accepted` must be **two distinct
   codes**, because a dead log of only "offered" rows cannot reveal which one completed the
   handshake. `rematch-accepted` is never seen live (the rematch evicts the old game and
   navigates everyone away); it exists for the dead game's page.
-- `disconnected` / `reconnected` are **live-game only**. Leaving during the post-conclusion
+- The two disconnect codes and `reconnected` are **live-game only**. Leaving during the post-conclusion
   rematch window (`opponentleft` / `opponentreturn`) gets **no** notice — leaving then is
   expected behavior, not an event worth logging.
 - `cheat-detected` renders **generically** — the same sentence for both readers, naming nobody.
@@ -119,6 +172,14 @@ would disagree.
 
 These notices replace **all three** toasts in `drawoffers.ts`, and their TODO comments go with
 them: "Opponent declined draw offer.", "Waiting for opponent to accept...", and "Draw declined".
+
+**Removing the first one deletes the whole `drawdecline` path.** That toast *is* the entire body
+of `onOpponentDeclinedOffer`, which is the message's only handler, and no client state depends on
+it arriving: the client tracks `isAcceptingDraw` (an offer *from* the opponent) and
+`plyOfLastOfferedDraw` (when *we* last offered), and a decline touches neither — the offer-draw
+button's enablement reads only the second. So the handler, its router case, the `drawdecline`
+action in `clientbound.ts`, and the server send in `onOfferDraw.decline` all go. The offerer still
+finds out: the `draw-declined` notice is broadcast to both participants.
 
 ### Lifecycle
 
@@ -274,27 +335,35 @@ But a finalized reconnect (`subscriberematch`) previously received `rematchstate
 `gamestate` becomes:
 
 ```
-gamestate: { stage: 'active',    ...common, moves, clockValues?, ratingChanges?, forceSync? }
-         | { stage: 'finalized', ...common }
+gamestate: { kind: 'full', ...common, moves, finalized, clockValues?, gameConclusion?, ratingChanges?, forceSync? }
+         | { kind: 'lean', ...common }
 
-common           = { spectators, participantState? }
+common           = { spectators?, participantState? }
 participantState = { drawOffer, disconnect?, rematch?, chat }
 ```
 
+- **The shape follows the REQUEST, not the game's lifecycle stage.** `subscribe` is always
+  answered `full`; `subscriberematch` is always answered `lean`. This is not a preference — a
+  client asking for the full state may be bootstrapping a board from nothing, and the server
+  cannot tell whether it already holds one. Picking the shape from the game's stage would answer
+  a finalized-but-lingering game with a moveless reply, and a plain page refresh during the
+  rematch window is the everyday case. Give them what they asked for.
 - **Discriminated, not optional fields.** Making everything optional would type `moves` as
   optional while it is mandatory on the `subscribe` path, and the client could not tell "no
   moves sent" from "empty move list".
-- **`stage` matches `onlinegame.ts`'s existing `GameStage`** (`'active' | 'finalized' |
-  'evicted'`), so the reply *names the stage the client should move to*. `'active'` stays
-  honest for a concluded-but-not-finalized game, which is exactly the window a cheat report
-  lives in. `'evicted'` is not a `gamestate` shape — that case is the `detached` message.
-- **`finalized` and `gameConclusion` are dropped from `common`.** The discriminator *is* the
-  finalized flag, and keeping both is one more way for two values to disagree. The conclusion
-  is frozen by then (cheat reports are refused once finalized), and any client in the finalized
-  stage already holds it — a client that missed the `finalized` delta is still `'active'` and
-  sends a plain `subscribe` instead.
+- **`kind` names the reply, so `finalized` survives** — on the `full` shape only. Because the
+  discriminator now tracks the request, it can no longer double as the finalized flag. The `lean`
+  shape needs no copy: only a client already at stage `'finalized'` ever sends `subscriberematch`.
+  So the fact still has exactly one home and nothing can disagree.
+  *(Rejected: naming the variants `'active'` / `'finalized'` after `onlinegame.ts`'s `GameStage`.
+  A `full` reply for a finalized game would then be a lie about the game.)*
+- **`gameConclusion` also sits on `full` only.** It is frozen by the time a `lean` reply is even
+  possible — cheat reports are refused once finalized — and any client sending `subscriberematch`
+  already holds it.
+- **`'evicted'` has no `gamestate` shape at all** — that case is the `detached` message.
 - **`rematchstate` is deleted.** Its data already lives in `participantState.rematch`, built by
-  the same function — it was a duplicate wire path for one value.
+  the same function — it was a duplicate wire path for one value. Its single push, at conclusion,
+  is replaced below.
 
 Chat riding `gamestate` costs nothing in size: `gamestate` already ships every move token on
 every resync, and those reach hundreds of KB on large games. Moves dominate chat by far.
@@ -304,12 +373,10 @@ every resync, and those reach hundreds of KB on large games. Moves dominate chat
 `gameSockets.sendGameState` becomes the single reply for both subscribe paths:
 
 ```
-sendGameState(servergame, role, stage, forceSync)
+sendGameState(servergame, role, kind, forceSync)
 ```
 
-`gameStateBuilder.buildStateMessage` gains `stage` and returns the lean shape for
-`'finalized'`. `gameSockets.sendRematchState` is deleted; `gameLifecycle.applyConclusion` sends
-the lean `gamestate` instead.
+`gameStateBuilder.buildStateMessage` gains `kind` and returns the lean shape for `'lean'`.
 
 **This is the point of the change.** `onSubscribe.ts` and `onSubscribeRematch.ts` each
 hand-rolled their own reply, which is why the spectator count was added to one and had to be
@@ -320,6 +387,31 @@ That patch then moves: `onSubscribeRematch`'s `broadcastSpectatorCount` goes **i
 spectator `else` branch**, and the comment above it is deleted (the participant branch's lean
 `gamestate` now carries the count). A participant attaching doesn't change the count; a
 spectator attaching does. Both subscribe files end up the same shape.
+
+#### The rematch overlay at conclusion
+
+`gameSockets.sendRematchState` is deleted with **no replacement message**.
+`gameLifecycle.applyConclusion` sends `opponentleft` instead, to any participant whose opponent
+has no socket.
+
+The overlay is two booleans, and at conclusion `offered` is always false — nobody could have
+offered before the game was over. So the only fact worth pushing is `present`, and only when it
+is false. `opponentleft` already means exactly that ("their socket is gone, the game is over"),
+carries no payload, and `guigameactions.onOpponentLeft` already sets both booleans correctly.
+The button's repaint comes from the board's own `game-concluded` event, not from any message, so
+sending nothing in the common case is safe.
+
+- **Why anything is needed at all:** `opponentleft` only fires from `onPostGameLeave`, which runs
+  when someone leaves *after* the conclusion. A player already gone when the game ended never
+  triggers it, and `guigameactions`'s `opponentPresentPostGame` defaults to `true` — so without
+  this, Rematch lights up for an opponent who isn't there.
+- **Not a full `gamestate`.** That would ship an entire move list to carry one boolean, on the
+  one path where large games are already expensive.
+- **Engine games return early.** `playerData` holds humans only — the engine lives in
+  `match.engineParticipant` — so an engine opponent reads as "no socket" and would wrongly
+  disable Rematch. `getRematchOfferInfo` already special-cases this; mirror it.
+- The turn player also receives `participantState.rematch` inside the `gamestate` `conclude()`
+  sends them. It carries the same `present: false`, so the two agree rather than conflict.
 
 #### Addressing
 
@@ -367,8 +459,19 @@ The zod schema for `submitchatmessage`:
 
 **Every server-side rejection is silent to the client but logged to `hackLog`** — matching how
 a bogus cheat report and an oversized frame are handled. Covers: over the rate limit, a
-duplicate, a guest sending in a public game, over 140 characters, empty after trim, and control
-characters. When logging the offending text, pass it through `logEvents.escapeLogNewlines`.
+duplicate, a guest sending in a public game, **an engine game**, over 140 characters, empty after
+trim, and control characters. When logging the offending text, pass it through
+`logEvents.escapeLogNewlines`.
+
+**Engine games have no chat, period.** `game.njk` already gates the panel on
+`role is defined and not engineGame`, so nothing an engine game writes could ever be read. One
+guard in `chat.ts` covers both directions: `appendNotice` returns early, and a
+`submitchatmessage` is dropped (silently, per above). The notice sites stay ignorant of it.
+Without the guard, every engine game would write at least one permanent row nobody can render —
+the two disconnect codes and `reconnected` fire when the human leaves and returns, and
+`rematch-accepted` fires because `offerRematch` calls `createRematchGame` directly for engines.
+The `submitchatmessage` half is a trust-boundary check, not an optimization: a hand-crafted
+client can still send one.
 
 ### Rate limiting
 
@@ -406,7 +509,7 @@ mode that ruled out optimistic rendering.
 | `draw-offered` / `draw-declined` / `draw-accepted` | `onOfferDraw.offer` / `.decline` / `.accept` |
 | `rematch-offered` | `onRematch.offerRematch`, the relay branch |
 | `rematch-accepted` | `onRematch.offerRematch`, the `createRematchGame` branch |
-| `disconnected` | `disconnect.startClaimTimer`, beside the `opponentdisconnect` send |
+| `disconnect-voluntary` / `disconnect-involuntary` | `disconnect.startClaimTimer`, beside the `opponentdisconnect` send. It already holds `involuntary`, so the code is a ternary on it |
 | `reconnected` | `gameManager.runReconnectSideEffects`, beside `opponentreconnect` |
 | `cheat-detected` | `cheatReport.concludeReportedGame`; `player_number` holds the **cheater** |
 
@@ -416,7 +519,7 @@ expiring, and a deliberate tab close — so one write site covers both.
 **Not `disconnect.cancelTimer`.** It is also called on game over via `cancelAllTimers`, which
 would log a bogus "reconnected" every time a game ended while someone was away.
 
-**The pairing is structural; no guard against two-in-a-row is needed.** `disconnected` is
+**The pairing is structural; no guard against two-in-a-row is needed.** A disconnect code is
 written only inside `startClaimTimer`; `reconnected` only when `claimWindowWasSet` was true;
 and `cancelTimer` clears `timeOpponentMayClaim`, so a second `startClaimTimer` cannot happen
 without a real reconnect first.
@@ -426,7 +529,7 @@ without a real reconnect first.
 - **Shutdown writes no notice.** `prepForShutdown` calls `gameSockets.detachEveryone` directly,
   never `unsubscribeParticipant`, so `startClaimTimer` never runs.
 - **Restore, claim window already open:** sets the fields directly without calling
-  `startClaimTimer`, so no notice — and the pre-restart `disconnected` row is still in the
+  `startClaimTimer`, so no notice — and the pre-restart disconnect row is still in the
   database.
 - **Restore, cushion or fresh:** these *do* call `startClaimTimer`, and it is each player's
   **first** notice, because their cushion never expired before shutdown.
@@ -474,6 +577,20 @@ in `shared/`. The notice-code-to-sentence mapping, the reader-relative wording, 
 resolution live there **once**. Nunjucks assembles tags with `autoescape: true`; the client
 uses `textContent`. Only a three-line tag skeleton is written twice — that is not duplication
 worth avoiding.
+
+**`playerNames` is added to `GamePageData`.** `entryToParts` needs the display names, and while
+the server has them in `meta.players`, `meta` is the Nunjucks view model — it never reaches the
+browser. `window.gamePageData` is the only SSR→client channel, and it carries no names, so a
+**live** entry arriving over the socket has nothing to build its label from. One field,
+`playerNames: PlayerGroup<string>`, filled from the same values `meta.players` uses, so both
+sides resolve identically by construction. Not gated on `role`: the names are already in the
+page's HTML for spectators too, so there is nothing to withhold and no branch to get wrong.
+
+*Rejected: scraping `.meta-players .username` from the DOM — `game.njk` marks that region
+SSR-OWNED, and it would couple chat to the player-list markup with no compile-time link.
+Also rejected: putting the sender's name on every `chatentry` — it repeats the name per message,
+does nothing for the SSR'd backlog, and a mid-game rename would make old and new entries
+disagree, which is exactly what render-time resolution exists to prevent.*
 
 The eight notice sentences are **hardcoded English inside `entryToParts`**, per the copy rule
 above. They must live there rather than in Nunjucks or the client, because both sides render
@@ -548,10 +665,90 @@ four `gameactions` cases — several call `gameactions.refresh()`, which may rea
 | `src/server/game/gamemanager/chat.ts` | The router entry, validation, rate limiting, the row write, the delta broadcast, and the `appendNotice` helper the notice sites call |
 | `src/server/database/chatEntriesManager.ts` | `insert` / `getOfGame` / `removeOfGame` |
 | `src/client/scripts/esm/views/game/gui/guichat.ts` | The panel: reconcile, append, input handling |
+| `src/shared/util/chatratelimit.ts` | The two flood rules, the 5-entry history shape, and `MAX_CHAT_MESSAGE_LENGTH` — called by both sides |
+| `src/shared/components/chatentry.ts` | `entryToParts`: the notice sentences, reader-relative wording, and name resolution |
 
 `chat.ts` is **one** file, sibling to `drawOffers.ts` — not split into `onChat.ts` + `chat.ts`
 the way `onOfferDraw.ts` / `drawOffers.ts` are. That pair splits because its rules are read from
 three other places; chat has no such fan-out.
 
-The shared `entryToParts` lives in `shared/`, since both the server (Nunjucks SSR) and the
-client render from it.
+`entryToParts` lives in `shared/components/` — the rung for SSR-shared UI pieces — since both the
+server (Nunjucks SSR) and the client render from it. It type-imports the entry shape from
+`shared/transport/`, a sideways edge on the same rung, and that rung is reachable from the game
+page. The flood rules go in `shared/util/` instead: they are policy over user text, not a UI
+piece, and they must stay importable without dragging zod anywhere.
+
+---
+
+## Unresolved
+
+Everything above is decided. These five are **not** — they are gaps found while auditing this
+document, and each needs a decision before implementation starts. Resolve them, then fold the
+answer into the relevant section above and delete it from here.
+
+### 1. The `chatentry` payload shape is never written down
+
+The wire table says `chatentry` carries "one entry — message or notice" and stops there. Decided
+already: `message_id` never crosses the wire (it would leak site-wide chat volume). Still open:
+
+- The field list itself. `player_number` plus exactly one of `message` / `notice` is the obvious
+  shape, mirroring the table's complementary columns — but it isn't stated.
+- Whether `sent_at` is sent. It should not be: the UI shows no timestamps, and the column exists
+  for the deferred moderation report, not for clients. Say so explicitly.
+- The shape of `participantState.chat`. "The full log rides `participantState`" is stated; that
+  it is an array of the same entry objects is not.
+
+This is the first thing an implementer needs, and it also pins the schema's home
+(`clientbound.ts`, since the entry exists only as clientbound message contents).
+
+### 2. "Only reachable by hackers/bots" is false after a page reload
+
+The Enforcement model claims a server-side rejection following a client-approved send is
+unreachable for an honest user, and the silent-rejection design leans on that claim.
+
+It doesn't hold. The client's flood history is per-page-load state; a reload wipes it. The
+server's array lives on the `ServerGame` and survives. So a player who refreshes mid-game can
+send 5 messages in under 10 seconds and watch the 5th vanish with no explanation.
+
+- The **duplicate** rule can be re-seeded client-side from the SSR'd log — the player's own last
+  two messages are already rendered on the page.
+- The **window** rule cannot, because `sent_at` never crosses the wire (see gap 1).
+
+Options are roughly: accept the silent drop as rare; send timestamps for the reader's own recent
+entries so the mirror can be seeded; or make this one rejection non-silent. Not decided.
+
+### 3. `private` has no reader on the restart path
+
+The `private` flag section names every writer — `MatchInfo`, `GameSetup`, the seek-creation
+boundary, and the three hardcodes it deletes — and correctly notes `live_games.private` already
+exists so there's no migration.
+
+But nothing reads that column back. `liveGameRestore`'s `MatchInfo` builder has no `private`
+field, so a server restart would silently turn a friend game public and strip its guests of the
+right to chat. It needs `private: gameRow.private === 1` alongside `rated: gameRow.rated === 1`.
+
+Trivial to fix, easy to miss, and it is a correctness bug rather than a design question — but it
+belongs in the doc so the implementer doesn't have to rediscover it.
+
+### 4. Where SSR reads the log from is unstated
+
+The Rendering section says both the live and dead pages SSR the rendered entries, and the
+Database section says rows are written live rather than batched at eviction. Together those imply
+the database is the single source for every read, live game included — there is no in-memory
+entry list on the `ServerGame` (only the rate-limit history).
+
+Not stated, though, and it has two named call sites worth pinning down: `gamePageController`
+building the SSR'd log, and `getParticipantState` building `chat` on every `gamestate`. The
+latter means a DB read per subscribe, which the index note already argues is fine — but the doc
+should say that is the intent rather than leave it inferred.
+
+### 5. The markup skeleton is described but never written
+
+`entryToParts(entry, readerRole, playerNames) -> { cssClass, prefix, body }` is specified, and
+the doc says "only a three-line tag skeleton is written twice — that is not duplication worth
+avoiding". The skeleton itself is never shown.
+
+Open: the message's CSS class (`.chat-notice` exists in `game.css`; its message counterpart does
+not), whether the sender prefix gets its own element, and whether `prefix` is optional or an
+empty string for notices. Both renderers must agree exactly, so this needs writing down once —
+Nunjucks assembles it with `autoescape: true`, the client with `textContent`.
