@@ -20,6 +20,7 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import chat from './chat.js';
 import logEvents from '../../utility/logEvents.js';
 import disconnect from './disconnect.js';
 import socketsend from '../../socket/socketSend.js';
@@ -109,11 +110,9 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 		if (!gamefileutility.isGameOver(servergame)) continue; // Only concluded games linger for a rematch.
 		for (const [c, data] of Object.entries(servergame.match.playerData)) {
 			if (!memberInfoUtil.eq(data.identifier, identifier)) continue;
-			if (data.socket) {
-				socketsend.send(data.socket, 'game', 'detached', undefined); // Detach the game on their old tab.
-				gameSockets.detachParticipant(servergame.match, data.socket);
-			}
-			onPostGameLeave(servergame, Number(c) as Player, false);
+			// Detach the game on their old tab. leaveRematchWindow detaches us server-side.
+			if (data.socket) socketsend.send(data.socket, 'game', 'detached', undefined);
+			leaveRematchWindow(servergame, Number(c) as Player, false);
 			return; // A player can only be a participant of one lingering game.
 		}
 	}
@@ -168,7 +167,7 @@ function subscribeParticipant(
 		color: ourRole,
 	};
 
-	runReconnectSideEffects(servergame, ourRole);
+	runReconnectSideEffects(servergame, ourRole, previousSocket === undefined);
 
 	return { evicted: previousSocket !== undefined };
 }
@@ -178,8 +177,14 @@ function subscribeParticipant(
  * While live: clears any disconnect/claim timer and notifies live-game tracking they reconnected.
  * Post-conclusion (game lingering for a rematch): clears the reconnection cushion and tells the
  * opponent we're back so their rematch button re-enables.
+ * @param wasAbsent - Whether they held no socket before this one. A refresh or a second tab
+ * replaces a socket already there.
  */
-function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void {
+function runReconnectSideEffects(
+	servergame: ServerGame,
+	ourRole: Player,
+	wasAbsent: boolean,
+): void {
 	/** Whether the opponent had been told they could claim (the claim window was set). */
 	const claimWindowWasSet = gameUtility.isClaimWindowSetForColor(servergame.match, ourRole);
 
@@ -191,9 +196,16 @@ function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void 
 		// Alert their opponent we have returned, if they were informed of the disconnect
 		if (claimWindowWasSet) {
 			gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentreconnect', undefined); // prettier-ignore
+			// Pairs structurally with the disconnect notice: a claim window is only ever set
+			// inside startClaimTimer, and cancelTimer clears it, so the two can't repeat.
+			chat.appendNotice(servergame, ourRole, 'reconnected');
 		}
-	} else {
+	} else if (wasAbsent) {
+		// Alert their opponent we're back, only if they were told we left. A second tab
+		// supersedes a socket that was already here, which never sends `opponentleft` —
+		// leaveRematchWindow is the sole clearer of that socket, and the only sender of it.
 		gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentreturn', undefined); // prettier-ignore
+		chat.appendNotice(servergame, ourRole, 'postgame-returned');
 	}
 }
 
@@ -210,9 +222,9 @@ function unsubscribeParticipant(ws: CustomWebSocket, involuntary: boolean): void
 	const servergame = activeGames.getByID(gameID)!;
 
 	const role = gameSockets.getRole(servergame, ws)!;
-	gameSockets.detachParticipant(servergame.match, ws);
 
 	if (!gamefileutility.isGameOver(servergame)) {
+		gameSockets.detachParticipant(servergame.match, ws);
 		// Game is ongoing: inform the opponent they disconnected.
 		if (involuntary) {
 			// Internet interruption. Give them 5 seconds before opening the opponent's claim window.
@@ -230,24 +242,31 @@ function unsubscribeParticipant(ws: CustomWebSocket, involuntary: boolean): void
 		gameLifecycle.maybeStartBothDisconnectedTimer(servergame);
 	} else {
 		// Post-conclusion: the game only lingers for the rematch handshake — no claim window applies.
-		onPostGameLeave(servergame, role, involuntary);
+		leaveRematchWindow(servergame, role, involuntary);
 	}
 }
 
 /**
- * Game is concluded: Handles a player leaving a concluded game's rematch window.
- * Withdraws their rematch offer and informs the opponent, then memory-evicts
- * either now or after a short cushion timer if it was involuntary.
+ * Takes a player out of a concluded game's rematch window: detaches their socket, withdraws any
+ * rematch offer of theirs, and informs their opponent. The game is then memory-evicted if that
+ * leaves nobody — at once, or after a reconnection cushion when the leave was involuntary.
  * Entry points: Socket close, client choice, or joined new game.
  */
-function onPostGameLeave(servergame: ServerGame, role: Player, involuntary: boolean): void {
+function leaveRematchWindow(servergame: ServerGame, role: Player, involuntary: boolean): void {
 	const match = servergame.match;
+	const playerdata = match.playerData[role]!;
+
+	// Joining a new game calls this a second time to collapse the cushion below, by
+	// which point there is no socket left to take — and no departure to announce.
+	if (playerdata.socket) {
+		chat.appendNotice(servergame, role, 'postgame-left');
+		gameSockets.detachParticipant(match, playerdata.socket);
+	}
 
 	// Withdraw their rematch offer, if any, and tell the opponent they've left (disable + unglow).
 	match.rematchOffers.delete(role);
 	gameSockets.sendToColor(match, typeutil.invertPlayer(role), 'game', 'opponentleft', undefined); // prettier-ignore
 
-	const playerdata = match.playerData[role]!;
 	clearTimeout(playerdata.disconnect.startID);
 	delete playerdata.disconnect.startID;
 

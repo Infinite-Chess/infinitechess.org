@@ -18,6 +18,7 @@ import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
 import type { GameModifier } from '../../../shared/chess/util/modutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
+import type { ChatHistoryEntry } from '../../../shared/util/chatlimits.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 
@@ -81,6 +82,8 @@ export interface PlayerData {
 	lastOfferPly?: number;
 	/** Contains information about this players disconnection and opponent ability to claim victory. */
 	disconnect: PlayerDisconnect;
+	/** Their last few chat messages, which `chatlimits` checks each new one against. */
+	chatHistory: ChatHistoryEntry[];
 }
 
 /** Identifies the engine a human is playing against. */
@@ -104,6 +107,8 @@ export interface MatchInfo {
 	timeEnded?: number;
 	/** Whether the match is rated. */
 	rated: boolean;
+	/** Whether the match is private (created from "Challenge a friend" flow). */
+	private: boolean;
 	/**
 	 * The time control `s+s` of the game (e.g. `"600+5"` or `"-"` for untimed).
 	 * Guaranteed defined here because we can't read it from MetaData since it is optional there.
@@ -215,6 +220,8 @@ export interface GameSetup {
 	variant: SeekVariant;
 	time: TimeControl;
 	rated: boolean;
+	/** Whether the game is private (created from "Challenge a friend" flow). */
+	private: boolean;
 	/** The modifiers to apply to the game. Absent if none. */
 	modifiers?: GameModifier[];
 	engineParticipant?: MatchInfo['engineParticipant'];

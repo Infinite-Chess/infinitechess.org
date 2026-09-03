@@ -19,6 +19,7 @@ import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import chat from './chat.js';
 import drawOffers from './drawOffers.js';
 import disconnect from './disconnect.js';
 import gameLogger from './gameLogger.js';
@@ -27,10 +28,12 @@ import gameUtility from './gameUtility.js';
 import ratingAbuse from '../ratingabuse/ratingAbuse.js';
 import activeGames from './activeGames.js';
 import lobbyManager from '../seeksmanager/lobbyManager.js';
+import gamesManager from '../../database/gamesManager.js';
 import activePlayers from './activePlayers.js';
 import liveGameValues from './liveGameValues.js';
 import gameStateBuilder from './gameStateBuilder.js';
 import ratingCalculation from '../../utility/ratingCalculation.js';
+import chatEntriesManager from '../../database/chatEntriesManager.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -58,13 +61,14 @@ function conclude(servergame: ServerGame, conclusion: GameConclusion): void {
 
 	// The player whos turn it is gets the full game state,
 	// as they may have had an in-flight move to reconcile against.
-	gameSockets.sendGameState(servergame, servergame.whosTurn, false);
+	gameSockets.sendGameState(servergame, servergame.whosTurn, 'full', false);
 
 	// All other players and spectators get the conclusion message, as they can't desync.
-	const conclusionMessage = gameStateBuilder.buildConclusionMessage(servergame);
 	const opponentColor = typeutil.invertPlayer(servergame.whosTurn);
-	gameSockets.sendToColor(servergame.match, opponentColor, 'game', 'gameconclusion', conclusionMessage); // prettier-ignore
-	gameSockets.broadcastToSpectators(servergame, 'gameconclusion', conclusionMessage);
+	const opponentMessage = gameStateBuilder.buildConclusionMessage(servergame, opponentColor);
+	const spectatorMessage = gameStateBuilder.buildConclusionMessage(servergame);
+	gameSockets.sendToColor(servergame.match, opponentColor, 'game', 'gameconclusion', opponentMessage); // prettier-ignore
+	gameSockets.broadcastToSpectators(servergame, 'gameconclusion', spectatorMessage);
 
 	free(servergame);
 }
@@ -83,6 +87,8 @@ function applyConclusion(servergame: ServerGame, conclusion: GameConclusion): vo
 
 	clock.stop(servergame);
 
+	announceAnyoneAlreadyGone(servergame); // BEFORE the timers below, which erase what it reads.
+
 	// Cancel timers
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	disconnect.cancelAllTimers(servergame.match);
@@ -91,9 +97,7 @@ function applyConclusion(servergame: ServerGame, conclusion: GameConclusion): vo
 	// Set end time
 	if (servergame.match.timeEnded === undefined) servergame.match.timeEnded = Date.now();
 
-	// The game now lingers for the rematch handshake. Sent from here, ahead of every
-	// conclusion message, so participants hold the overlay before the button is revealed.
-	gameSockets.sendRematchState(servergame);
+	// The game now lingers for the rematch handshake.
 }
 
 /** [DEBUG] Game has ended: console log the result. */
@@ -108,6 +112,23 @@ function consoleLogGameOver(servergame: ServerGame): void {
 		};
 	}
 	console.log(`Game ${servergame.match.id} over & logged. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.gameConclusion)}. Moves: ${servergame.moves.length}.`); // prettier-ignore
+}
+
+/**
+ * Writes the "Opponent left." chat notice for a player whose departure was never announced
+ * — they dropped inside the reconnection cushion, which stays silent until it elapses.
+ */
+function announceAnyoneAlreadyGone(servergame: ServerGame): void {
+	// A cheat report concludes the game a SECOND time (`timeEnded` marks the first). By then every
+	// cushion below was started by leaveRematchWindow, which writes this notice itself — so skip.
+	if (servergame.match.timeEnded !== undefined) return;
+
+	for (const [color, data] of Object.entries(servergame.match.playerData)) {
+		// A pending cushion implies their socket is gone: it starts only on a detach, and a
+		// reconnect cancels it. Once it elapses, startClaimTimer clears this and announces them.
+		if (data.disconnect.startTime === undefined) continue;
+		chat.appendNotice(servergame, Number(color) as Player, 'postgame-left');
+	}
 }
 
 // 2. Freeing ------------------------------------------------------------------
@@ -241,6 +262,15 @@ function evict(servergame: ServerGame): void {
 	// may still be attached — tell any remaining socket it is detached.
 	gameSockets.broadcastToEveryone(servergame, 'detached', undefined);
 	gameSockets.detachEveryone(servergame);
+
+	// An unlogged game's page 404s, so nothing can render its chat again. No earlier than here:
+	// until now the game still took messages, and deleting rows renumbers what clients render by.
+	try {
+		if (!gamesManager.isLogged(servergame.match.id))
+			chatEntriesManager.removeOfGame(servergame.match.id);
+	} catch {
+		// Already logged. Swallowed so it can't crash the timers eviction runs from.
+	}
 
 	if (activeGames.PRINT_GAMES) console.log(`Evicted game ${servergame.match.id}.`);
 }

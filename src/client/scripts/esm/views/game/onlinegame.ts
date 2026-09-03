@@ -9,7 +9,8 @@ import type { EngineGamePageInfo } from '../../../../../shared/transport/domain.
 import type { Additional, DatedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatOut, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
 import type {
-	GameStateMessage,
+	GameStateFull,
+	LeanParticipantState,
 	ParticipantState,
 } from '../../../../../shared/transport/clientbound.js';
 
@@ -18,6 +19,7 @@ import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
+import guichat from './gui/guichat.js';
 import gameslot from '../../game/chess/gameslot.js';
 import drawoffers from './drawoffers.js';
 import socketsubs from '../../socket/socketsubs.js';
@@ -34,8 +36,8 @@ import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 
 // Types -----------------------------------------------------------------------
 
-/** The various lifecycle stages of the server game. See {@link stage}. */
-type GameStage = 'active' | 'finalized' | 'evicted';
+/** The various stages of our standing with the server game. See {@link stage}. */
+type GameStage = 'active' | 'finalized' | 'detached';
 
 // Variables -------------------------------------------------------------------
 
@@ -43,31 +45,31 @@ type GameStage = 'active' | 'finalized' | 'evicted';
  * Whether we are in sync with the server game, and the game isn't finalized yet (excludes rematch state).
  * If false, we do not submit our moves (instead auto-submitted upon re-subscribing).
  * Set to false whenever we lose connection, or detect a desync.
- * Set to true whenever we receive a fresh full game state, or the game is evicted —
- * there's then nothing left to be out of sync with.
+ * Set to true whenever we receive a fresh full game state, or the game
+ * is detached — there's then nothing left to be out of sync with.
  */
 let inSync: boolean = false;
 
 /**
- * The lifecycle stage of the server game, dictating what a (re)subscribe requests.
- * Advances monotonically active -> finalized -> evicted:
+ * Our standing with the server game, dictating what a (re)subscribe requests.
+ * Advances monotonically active -> finalized -> detached:
  * - `undefined`: no game loaded yet — the initial subscribe requests the full state to bootstrap.
  * - `'active'`: game is live — a reconnect does a full `subscribe` to resync.
  * - `'finalized'`: conclusion is locked in permanently; nothing but rematch-offer state can change,
  *   so a reconnect fetches only that via `subscriberematch`. Set from the `finalized` flag on a game
  *   snapshot, or the `finalized` message.
- * - `'evicted'`: server deleted the game from memory (sent the `detached` action, or the game was
- *   fetched dead over HTTP); it is now dead, so a reconnect doesn't re-subscribe at all.
+ * - `'detached'`: nothing more is coming for us — the server evicted the game, or we loaded it dead
+ *   over HTTP. A reconnect doesn't re-subscribe at all.
  */
 let stage: GameStage | undefined = undefined;
 
 // Events ----------------------------------------------------------------------
 
 SocketBus.addEventListener('closed', () => {
-	if (stage !== 'evicted') inSync = false;
+	if (stage !== 'detached') inSync = false;
 });
 SocketBus.addEventListener('reconnect', () => {
-	if (stage !== 'evicted') subscribeToGame();
+	if (stage !== 'detached') subscribeToGame();
 });
 
 // Sync ------------------------------------------------------------------------
@@ -104,18 +106,18 @@ function subscribeToGame(): void {
 
 /** Records the game's stage as finalized. See {@link stage}. */
 function onFinalized(): void {
-	if (stage === 'active') stage = 'finalized'; // Never regress a later 'evicted'
+	if (stage === 'active') stage = 'finalized'; // Never regress a later 'detached'
 }
 
 /**
- * Records that the server has evicted the participants from the game.
+ * Records that the server has detached us from the game.
  * No further state updates are received, not even rematch state. See {@link stage}.
  */
-function onEvicted(): void {
-	stage = 'evicted';
-	// An evicted game receives nothing further, so it can never be out of sync. Without this,
-	// an eviction landing while we're disconnected (the reconnect's `subscribe` answered with
-	// `unsub`) would leave us marked out of sync permanently.
+function onDetached(): void {
+	stage = 'detached';
+	// We receive nothing further, so we can never be out of sync.
+	// Without this, a `detached` landing on a freshly reconnected socket — before
+	// its subscribe has been answered — would leave us marked out of sync permanently.
 	setInSync(true);
 }
 
@@ -128,11 +130,7 @@ function onEvicted(): void {
  * @param longformat - The game's parsed ICN. Required of the dead path, where a custom game's
  *   start position lives ONLY here; the live path SSRs that position instead, and passes nothing.
  */
-function loadGameFromState(
-	state: GameStateMessage,
-	dead: boolean,
-	longformat?: LongFormatOut,
-): void {
+function loadGameFromState(state: GameStateFull, dead: boolean, longformat?: LongFormatOut): void {
 	/** The viewer's color, if they're a participant; undefined => spectator (white POV). */
 	const ourRole = gamesession.getRole();
 
@@ -189,7 +187,7 @@ function loadGameFromState(
 		},
 		{
 			onLogicalLoaded: () => {
-				const initialStage: GameStage = dead ? 'evicted' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
+				const initialStage: GameStage = dead ? 'detached' : state.finalized ? 'finalized' : 'active'; // prettier-ignore
 				initOnlineGame(initialStage, state);
 
 				if (engineGame && ourRole !== undefined && !state.gameConclusion)
@@ -206,10 +204,10 @@ function loadGameFromState(
 
 /**
  * Initializes the online game session.
- * @param initialStage - The game's starting lifecycle {@link stage}.
+ * @param initialStage - Our starting {@link stage} with the game.
  * @param state - The initial full game state message.
  */
-function initOnlineGame(initialStage: GameStage, state: GameStateMessage): void {
+function initOnlineGame(initialStage: GameStage, state: GameStateFull): void {
 	stage = initialStage;
 
 	// If we are a participator, set the draw offers, disconnect timer, rematch state.
@@ -229,6 +227,7 @@ function initOnlineGame(initialStage: GameStage, state: GameStateMessage): void 
 	});
 }
 
+/** Applies the overlay a FULL gamestate carries, absent when we're a spectator. */
 function setParticipantState(participantState?: ParticipantState): void {
 	if (!participantState) return;
 
@@ -241,6 +240,14 @@ function setParticipantState(participantState?: ParticipantState): void {
 
 	// Restore the rematch button's state (present only once the game is over).
 	if (participantState.rematch) gameactions.setRematchState(participantState.rematch);
+
+	if (participantState.chat) guichat.reconcile(participantState.chat);
+}
+
+/** Applies the overlay a LEAN gamestate carries: the rematch handshake and the chat. */
+function setLeanParticipantState(participantState: LeanParticipantState): void {
+	gameactions.setRematchState(participantState.rematch);
+	if (participantState.chat) guichat.reconcile(participantState.chat);
 }
 
 /**
@@ -304,8 +311,9 @@ export default {
 	// Life Cycle
 	subscribeToGame,
 	onFinalized,
-	onEvicted,
+	onDetached,
 	// Loading
 	loadGameFromState,
 	setParticipantState,
+	setLeanParticipantState,
 };

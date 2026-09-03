@@ -8,7 +8,7 @@
 
 import type { DeadGameState } from '../../../../../shared/transport/domain.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameStateMessage } from '../../../../../shared/transport/clientbound.js';
+import type { GameStateFull } from '../../../../../shared/transport/clientbound.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
@@ -46,11 +46,9 @@ async function fetchDeadState(): Promise<DeadGameState> {
  * Normalizes a `DeadGameState` into the live `gamestate` shape the loader consumes.
  * @param longformat - The state's already-parsed {@link DeadGameState.icn}, holding its move list.
  */
-function normalizeToGameState(
-	deadState: DeadGameState,
-	longformat: LongFormatOut,
-): GameStateMessage {
-	const state: GameStateMessage = {
+function normalizeToGameState(deadState: DeadGameState, longformat: LongFormatOut): GameStateFull {
+	const state: GameStateFull = {
+		kind: 'full',
 		// The ICN's clock stamps ride along: they are the sole source of
 		// the game's final clocks, which the loader derives from them.
 		moves: icnimport.movePacketsFromParsed(longformat.moves ?? []),

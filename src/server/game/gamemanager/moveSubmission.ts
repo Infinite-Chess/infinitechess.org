@@ -82,7 +82,7 @@ function submitMove(
 		// Can occasionally happen if they in rapid succession reconnect ('subscribe') and
 		// submit a move, then when they receive 'gamestate' their client re-submits their move.
 		// Discard this submission and push them the current state just in case they're desynced.
-		gameSockets.sendGameState(servergame, role, false);
+		gameSockets.sendGameState(servergame, role, 'full', false);
 		return;
 	}
 
@@ -91,7 +91,7 @@ function submitMove(
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEvents.addAndPrint(errString, 'hackLog');
-		gameSockets.sendGameState(servergame, role, false);
+		gameSockets.sendGameState(servergame, role, 'full', false);
 		return;
 	}
 
@@ -110,7 +110,7 @@ function submitMove(
 		logEvents.addAndPrint(errString, 'hackLog');
 		// Force their move list to match ours, else they keep the rejected move
 		// and resubmit it on every resync, desynced for the rest of the game.
-		gameSockets.sendGameState(servergame, role, true);
+		gameSockets.sendGameState(servergame, role, 'full', true);
 		// Send toast-error last to override any previous toasts
 		socketsend.send(
 			ws,
@@ -156,7 +156,7 @@ function broadcastMove(
 		// The game ended: apply the conclusion (stops the clocks),
 		// then send the submitter the conclusion message.
 		gameLifecycle.applyConclusion(servergame, servergame.gameConclusion);
-		const conclusionMessage = gameStateBuilder.buildConclusionMessage(servergame);
+		const conclusionMessage = gameStateBuilder.buildConclusionMessage(servergame, role);
 		socketsend.send(ws, 'game', 'gameconclusion', conclusionMessage);
 	}
 
@@ -186,7 +186,7 @@ function applyServerValidatedMove(
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEvents.addAndPrint(errString, 'hackLog');
 		// Send the sender the current game state to correct their board if a bug somehow caused this
-		gameSockets.sendGameState(servergame, role, true); // forceSync true to force their move list to match ours
+		gameSockets.sendGameState(servergame, role, 'full', true); // forceSync true to force their move list to match ours
 		// Send toast-error last to override any previous toasts
 		socketsend.send(
 			ws,

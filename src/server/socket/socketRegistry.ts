@@ -25,6 +25,7 @@ const MAX_SOCKETS_ALLOWED_PER_SESSION = 5;
  * Users have to provide authentication whenever they open a new socket.
  */
 const MAX_WEBSOCKET_AGE_MS = 1000 * 60 * 15; // 15 minutes.
+// const MAX_WEBSOCKET_AGE_MS = 1000 * 10; // Dev: 10 seconds
 
 // State -----------------------------------------------------------------------
 

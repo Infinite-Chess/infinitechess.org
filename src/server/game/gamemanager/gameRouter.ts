@@ -9,9 +9,9 @@
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { ServerboundGameMessage } from '../../../shared/transport/serverbound.js';
 
+import chat from './chat.js';
 import onRematch from './onRematch.js';
 import onOfferDraw from './onOfferDraw.js';
-import gameSockets from './gameSockets.js';
 import activeGames from './activeGames.js';
 import cheatReport from './cheatReport.js';
 import onSubscribe from './onSubscribe.js';
@@ -36,18 +36,16 @@ function route(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
 			return;
 	}
 
-	const servergame = activeGames.getBySocket(ws); // The game they belong in, if they belong in one.
-	if (!servergame) {
-		// Benign: the game was torn down between the client sending this and the
-		// server receiving it (it just concluded). The message is simply stale — drop it.
-		// OR, a spectator is sending a message to a game they are spectating, which is not allowed.
-		return;
-	}
+	// Every remaining action targets the game this socket itself subscribed to — never one
+	// resolved from the sender's identity, which can name a different game entirely (a socket
+	// spectating one game whose owner is playing another).
+	const subscription = ws.metadata.subscriptions.game;
+	// A detach (tab takeover, rematch-window exit, eviction) can't outrun
+	// an action already in flight. A spectator's action lands here too.
+	if (subscription === undefined) return;
 
-	// The socket's color in this game. Guaranteed defined since getGameBySocket resolved the game
-	// for this same socket; treat undefined as a guard against the (impossible) non-participant case.
-	const color = gameSockets.getRole(servergame, ws);
-	if (color === undefined) return;
+	const servergame = activeGames.getByID(subscription.id)!; // Guaranteed: Eviction detaches every socket, live subscriptions always names a live game.
+	const color = subscription.color;
 
 	// All remaining actions requiring the game they're in
 	switch (contents.action) {
@@ -80,6 +78,9 @@ function route(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
 			break;
 		case 'offerrematch':
 			onRematch.offerRematch(servergame, color);
+			break;
+		case 'submitchatmessage':
+			chat.submitMessage(servergame, color, contents.value);
 			break;
 		case 'report':
 			cheatReport.onReport(servergame, color, contents.value);

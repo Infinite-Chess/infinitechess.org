@@ -149,6 +149,11 @@ export interface GamePageData extends StaticGameSetup {
 	role?: Player;
 	/** The side of the board the viewer sees it from, overridable by the URL's color segment. */
 	viewColor: Player;
+	/**
+	 * Each color's display name, so a live chat entry can label its sender.
+	 * The same values the SSR'd player list shows, so the two can't disagree.
+	 */
+	playerNames: PlayerGroup<string>;
 	engineGame?: EngineGamePageInfo;
 }
 

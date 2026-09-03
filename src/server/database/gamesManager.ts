@@ -79,7 +79,7 @@ function genUniqueID(): number {
 	let id: number;
 	do {
 		id = generateRandomGameId();
-	} while (isGameIdTaken(id));
+	} while (isLogged(id));
 	return id;
 }
 
@@ -93,16 +93,14 @@ function generateRandomGameId(): number {
 }
 
 /**
- * Checks if a given game_id exists in the games table.
- * @param game_id - The game_id to check.
- * @returns - Returns true if the game_id exists, false otherwise.
+ * Whether a game of given id has a permanent record.
  * @throws If a database error occurs.
  */
-function isGameIdTaken(game_id: number): boolean {
+function isLogged(game_id: number): boolean {
 	const query = 'SELECT EXISTS(SELECT 1 FROM games WHERE game_id = ?) AS found';
 	const row = db.call(
 		() => db.get<{ found: 0 | 1 }>(query, [game_id]),
-		`Error checking if game_id "${game_id}" is taken`,
+		`Error checking whether game_id "${game_id}" has a record`,
 	);
 	return Boolean(row?.found);
 }
@@ -214,6 +212,7 @@ export default {
 	// Methods
 	decodeID,
 	genUniqueID,
+	isLogged,
 	getData,
 	getMultipleData,
 	// Writes

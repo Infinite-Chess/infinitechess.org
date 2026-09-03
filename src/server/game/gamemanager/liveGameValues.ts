@@ -125,7 +125,7 @@ function onGameCreated(servergame: ServerGame): void {
 		position: match.variant.kind === 'custom' ? match.variant.position : null,
 		clock: match.clock,
 		rated: match.rated ? 1 : 0,
-		private: 0, // All games are public for now, even "Challenge a friend" games.
+		private: match.private ? 1 : 0,
 		moves: '',
 		color_ticking: null,
 		clock_snapshot_time: null,

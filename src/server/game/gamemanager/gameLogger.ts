@@ -54,7 +54,8 @@ function log(servergame: ServerGame): RatingData | undefined {
 	// live row. A failed log then merely loses the game, instead of leaving one to be revived.
 	liveGamesManager.remove(servergame.match.id);
 
-	if (servergame.moves.length === 0) return; // Zero-move games are not recorded permanently.
+	// Zero-move games are not recorded permanently.
+	if (servergame.moves.length === 0) return;
 
 	try {
 		return db.transaction(() => logGameInTransaction(servergame))();
@@ -190,7 +191,7 @@ function addGameRecordsInTransaction(
 		variant: gameUtility.getVariantCode(match.variant),
 		rated: match.rated ? 1 : 0,
 		leaderboard_id: leaderboardregistry.ofVariant(match.variant) ?? null,
-		private: 0, // All matches are considered public for now, even "Challenge a friend" games.
+		private: match.private ? 1 : 0,
 		result: metadata.Result!,
 		termination,
 		move_count: servergame.moves.length,
@@ -249,6 +250,7 @@ function updateAllPlayerStatsInTransaction(
 			moves_played_increment: playerMoveCounts[player]!,
 			outcome: getOutcomeForPlayer(victor, player),
 			is_rated: match.rated,
+			is_private: match.private,
 			sign: 1,
 		});
 	}
@@ -265,6 +267,7 @@ function updateSinglePlayerStatsInTransaction(
 		moves_played_increment: number;
 		outcome: PlayerOutcome;
 		is_rated: boolean;
+		is_private: boolean;
 		sign: 1 | -1;
 	},
 ): void {
@@ -277,7 +280,7 @@ function updateSinglePlayerStatsInTransaction(
 		setClauses.push(`game_count_aborted = game_count_aborted ${op} 1`);
 	} else {
 		const ratedString: 'rated' | 'casual' = statsToUpdate.is_rated ? 'rated' : 'casual';
-		const publicity: 'public' | 'private' = 'public'; // All games are considered public for now, even "Challenge a friend" games.
+		const publicity: 'public' | 'private' = statsToUpdate.is_private ? 'private' : 'public';
 		const outcome = statsToUpdate.outcome;
 		// The rated/casual, public/private, win/loss/draw, and combined outcome+rated/casual counters.
 		setClauses.push(`game_count_${ratedString} = game_count_${ratedString} ${op} 1`);
@@ -418,8 +421,12 @@ function updateOverturned(
 	try {
 		const transaction = db.transaction(() => {
 			// --- Part 1: games + player_games cells (or full deletion) ---
-			if (gameStillExists) updateGameRecordForOverturn(servergame);
-			else gamesManager.remove(match.id); // Zero-move games are never stored; cascades to player_games.
+			if (gameStillExists) {
+				updateGameRecordForOverturn(servergame);
+				// The `games` row survives, so its page still renders — the chat stays.
+			} else {
+				gamesManager.remove(match.id); // Zero-move games are never stored; cascades to player_games.
+			}
 
 			// --- Part 2: player_stats counters (kept separate from the record update above) ---
 			reversePlayerStatsForOverturn(
@@ -497,6 +504,7 @@ function reversePlayerStatsForOverturn(
 			moves_played_increment: prePopMoves,
 			outcome: getOutcomeForPlayer(originalConclusion.victor, player),
 			is_rated: match.rated,
+			is_private: match.private,
 			sign: -1,
 		});
 
@@ -506,6 +514,7 @@ function reversePlayerStatsForOverturn(
 				moves_played_increment: postPopMoves,
 				outcome: 'aborted',
 				is_rated: match.rated,
+				is_private: match.private,
 				sign: 1,
 			});
 	}

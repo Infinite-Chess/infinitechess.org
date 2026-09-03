@@ -262,8 +262,8 @@
 
 		</div>{# .play-group #}
 
-		{# Chat window — participant-only. #}
-		{% if gamePageData.role is defined and not gamePageData.engineGame %}
+		{# Chat window — participants of a non-engine game. Driven by guichat.ts. #}
+		{% if chat %}
 		<div class="chat panel">
 			{# The client toggles `.collapsed` on the .chat panel. #}
 			<div class="chat-bar">
@@ -275,13 +275,21 @@
 					<svg><use href="#svg-flag"/></svg>
 				</button>
 			</div>
+			{# KEEP IN SYNC with `guichat.append`: identical markup, and nothing but
+			   entries may live here — it seeds its render count from these children. #}
 			<div class="chat-log scrollbar-thin">
-				{# EXAMPLE — the client renders chat messages and event notices here. #}
-				{# <div class="chat-notice">Opponent offered a draw.</div>
-				<div class="chat-notice">Draw offer declined.</div> #}
+				{% for e in chat.entries %}
+				<div class="{{ e.cssClass }}">{% if e.prefix %}<span class="chat-sender">{{ e.prefix }}</span>{% endif %}{{ e.body }}</div>
+				{% endfor %}
 			</div>
-			{# Chat input — the client disables/hides it for guests in non-friend games. #}
-			<input class="chat-input" type="text" placeholder="Please be nice!" id="chat-input" />
+			{# `disabled` is the only thing stopping a guest sending; there is no JS check. #}
+			{% if chat.input %}
+			{# Why a predicted send was refused. #}
+			<div class="chat-error hidden"></div>
+			<input class="chat-input" type="text" maxlength="{{ chat.input.maxLength }}" id="chat-input"
+				{%- if not chat.input.disabled %} placeholder="Please be nice!"
+				{%- else %} disabled placeholder="Create an account to chat."{% endif %} />
+			{% endif %}
 		</div>
 		{% endif %}
 

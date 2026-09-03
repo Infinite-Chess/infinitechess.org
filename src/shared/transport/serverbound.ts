@@ -121,6 +121,7 @@ const ServerboundGameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('claimvictory') }),
 	z.strictObject({ action: z.literal('claimdraw') }),
 	z.strictObject({ action: z.literal('report'), value: ReportMessageSchema }),
+	z.strictObject({ action: z.literal('submitchatmessage'), value: z.string() }),
 	z.strictObject({ action: z.literal('submitmove'), value: SubmitMoveMessageSchema }),
 ]);
 

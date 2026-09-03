@@ -18,6 +18,7 @@ import type { GameStateMessage } from '../../../shared/transport/clientbound.js'
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 
+import chat from './chat.js';
 import logEvents from '../../utility/logEvents.js';
 import gameLogger from './gameLogger.js';
 import socketsend from '../../socket/socketSend.js';
@@ -122,17 +123,20 @@ function concludeReportedGame(
 	const wasLogged = servergame.match.freed;
 	const originalConclusion = servergame.gameConclusion;
 
+	// Ahead of the conclusion, so it lands in the log the states below carry.
+	chat.appendNotice(servergame, cheaterColor, 'cheat-detected');
+
 	gameLifecycle.applyConclusion(servergame, conclusion);
 
 	// Everyone gets the full state, not just the conclusion, because the popped move may still be
 	// sitting on their board: the cheater played it, so they're a move ahead of the server (whosTurn
 	// included), and any spectator who joined after it was played has it too — an initial load
 	// replays the move list unvalidated, so they never ran the check that refuses it live.
-	const base = gameStateBuilder.buildStateBase(servergame);
+	const state = gameStateBuilder.buildFullState(servergame);
 	for (const [color, data] of Object.entries(servergame.match.playerData)) {
 		if (data.socket === undefined) continue; // Not connected, can't send message
 		const message: GameStateMessage = {
-			...base,
+			...state,
 			participantState: gameStateBuilder.getParticipantState(
 				servergame,
 				Number(color) as Player,
@@ -142,7 +146,7 @@ function concludeReportedGame(
 	}
 
 	// Spectators get the same state, minus the participant overlay.
-	gameSockets.broadcastToSpectators(servergame, 'gamestate', base);
+	gameSockets.broadcastToSpectators(servergame, 'gamestate', state);
 
 	gameLifecycle.free(servergame);
 

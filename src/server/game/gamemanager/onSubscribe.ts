@@ -31,13 +31,12 @@ function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
 			// never finish that search, so rewind the engine's turn before this client resumes it.
 			if (evicted) gameManager.freezeEngineClock(game);
 			gameManager.resumeEngineClock(game);
-			const gameStateMessage = gameStateBuilder.buildStateMessage(game, ourRole, false);
-			socketsend.send(ws, 'game', 'gamestate', gameStateMessage);
+			gameSockets.sendGameState(game, ourRole, 'full', false);
 		} else {
 			// Spectator path: attach, then send the role-agnostic state (no participantState overlay).
 			gameSockets.attachSpectator(game, ws);
-			const gameStateBaseMessage = gameStateBuilder.buildStateBase(game);
-			socketsend.send(ws, 'game', 'gamestate', gameStateBaseMessage);
+			const gameStateMessage = gameStateBuilder.buildFullState(game);
+			socketsend.send(ws, 'game', 'gamestate', gameStateMessage);
 			gameSockets.broadcastSpectatorCount(game);
 		}
 	} else {
