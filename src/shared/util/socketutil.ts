@@ -17,11 +17,14 @@
  * extras onto the wire unnoticed. Applied to a send function's value parameter, this catches
  * them however the caller built the value.
  *
- * A union `Shape` is judged one member at a time, since `keyof` a union yields only the keys
- * its members share.
+ * A union `Shape` narrows to the single member `V` is, and `V` is checked against that member's
+ * keys alone — not the union's shared keys (which rejects a member's own keys), nor every
+ * member's keys (which accepts a sibling's).
  */
 export type Exact<V, Shape> = Shape extends unknown
-	? V & { [K in keyof V]: K extends keyof Shape ? V[K] : never }
+	? V extends Shape
+		? V & { [K in keyof V]: K extends keyof Shape ? V[K] : never }
+		: never
 	: never;
 
 /**

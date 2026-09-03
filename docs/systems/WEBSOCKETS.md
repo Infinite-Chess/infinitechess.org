@@ -91,12 +91,13 @@ compile error rather than a silent no-op.
 | `lobby`   | `cancelseek` / `acceptseek`                | `SeekId`                                                          |
 | `lobby`   | `createenginegame`                         | variant, time, color, strengthLevel                               |
 | `game`    | `subscribe`                                | game id — attach + get full state                                 |
-| `game`    | `subscriberematch`                         | game id — attach + get rematch state only                         |
+| `game`    | `subscriberematch`                         | game id — attach + get the lean state                             |
 | `game`    | `submitmove`                               | `{ move, moveNumber, gameConclusion? }`                           |
 | `game`    | `abort` / `resign` / `engineresign`        | —                                                                 |
 | `game`    | `claimvictory` / `claimdraw`               | —                                                                 |
 | `game`    | `offerdraw` / `acceptdraw` / `declinedraw` | —                                                                 |
 | `game`    | `offerrematch`                             | —                                                                 |
+| `game`    | `submitchatmessage`                        | The typed chat message                                            |
 | `game`    | `report`                                   | `{ reason, opponentsMoveNumber }`                                 |
 
 ### Clientbound (server → client)
@@ -110,7 +111,7 @@ compile error rather than a silent no-op.
 | `lobby`   | `lobbystate`                               | Full snapshot on subscribe: seeks, our seek id, viewer count, in-game status                        |
 | `lobby`   | `seekslist` / `viewercount`                | Live deltas                                                                                         |
 | `lobby`   | `ingame` / `outgame`                       | We are (not) in a game. `ingame.navigate` decides _this tab_ goes there vs. shows the rejoin banner |
-| `game`    | `gamestate`                                | The full live state; the `subscribe` reply and every forced resync                                  |
+| `game`    | `gamestate`                                | `full`: board + participant overlay — `subscribe` and any resync. `lean`: overlay + spectators      |
 | `game`    | `move`                                     | Opponent's move + move number + clocks + any conclusion                                             |
 | `game`    | `clock`                                    | Clock values alone                                                                                  |
 | `game`    | `spectatorcount`                           | Live spectator count                                                                                |
@@ -121,8 +122,9 @@ compile error rather than a silent no-op.
 | `game`    | `notlive`                                  | The id you subscribed to isn't live → client reloads into SSR                                       |
 | `game`    | `supersededbytab`                          | Another tab took over this game; this tab goes home                                                 |
 | `game`    | `opponentdisconnect` / `opponentreconnect` | Claim window opened / cancelled                                                                     |
-| `game`    | `drawoffer` / `drawdecline`                | Draw offer relays                                                                                   |
-| `game`    | `rematchstate` / `rematchoffer`            | Rematch overlay state / opponent offered                                                            |
+| `game`    | `drawoffer`                                | Opponent extended a draw offer (a decline reaches them as a chat notice instead)                    |
+| `game`    | `rematchoffer`                             | Opponent offered a rematch                                                                          |
+| `game`    | `chatentry`                                | One chat log entry — a typed message or a static notice. **Participants only**                      |
 | `game`    | `opponentleft` / `opponentreturn`          | Opponent left/returned to the post-game rematch window                                              |
 | `game`    | `rematchstarted`                           | A rematch was agreed — navigate to the new game                                                     |
 
@@ -333,13 +335,14 @@ monotonic `stage`, which decides what a reconnect asks for:
 | `undefined`   | Nothing loaded — initial page load             | `subscribe` (bootstraps the board) |
 | `'active'`    | Live game; the move list can still change      | `subscribe` (full resync)          |
 | `'finalized'` | Result locked in; only rematch offers can move | `subscriberematch` (lean)          |
-| `'evicted'`   | Server deleted the game from memory            | Nothing at all                     |
+| `'detached'`  | Nothing more is coming — evicted               | Nothing at all                     |
 
 Server-side replies: [onSubscribe.ts](/src/server/game/gamemanager/onSubscribe.ts) sends
 `gamestate` (with a `participantState` overlay for participants, without it for spectators), or
 `notlive` if the id isn't in memory — the client then reloads so SSR serves the dead review page or
-a 404. [onSubscribeRematch.ts](/src/server/game/gamemanager/onSubscribeRematch.ts) sends
-`rematchstate`, or `unsub` if the game has since been evicted.
+a 404. [onSubscribeRematch.ts](/src/server/game/gamemanager/onSubscribeRematch.ts) sends the **lean**
+`gamestate` (the rematch overlay + the chat log), or `notlive` if the game has since been evicted, so
+they reload into SSR the same way.
 
 A dead game is loaded over **HTTP**, not the socket
 ([deadgameloader.ts](/src/client/scripts/esm/views/game/deadgameloader.ts)) — it

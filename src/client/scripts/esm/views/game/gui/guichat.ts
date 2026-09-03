@@ -16,7 +16,7 @@ import chatlimits from '../../../../../../shared/util/chatlimits.js';
 
 import socketsend from '../../../socket/socketsend.js';
 import pingmanager from '../pingmanager.js';
-import guidisconnect from './guidisconnect.js';
+import socketintents from '../../../socket/socketintents.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -143,14 +143,14 @@ function submit(): void {
 	const text = element_ChatInput.value.trim();
 	if (text === '') return; // Nothing to send.
 
-	// Refused for the same reason the match panel reads "You have disconnected."
-	if (guidisconnect.isSelfDisconnected()) return showError('disconnected');
+	// Refused if we are not connected and fully in sync.
+	if (!socketintents.isRouteReady('game')) return showError('disconnected');
 
 	const rejection = chatlimits.check(sentHistory, text, Date.now());
 	if (rejection !== undefined) return showError(rejection);
 
-	// Bypasses socketintents deliberately: a held intent REPLACES the previous one and an
-	// outstanding one swallows the next, both of which silently drop a distinct message.
+	// Bypasses socketintents.submit() deliberately: a held intent REPLACES the previous one and
+	// an outstanding one swallows the next, both of which silently drop a distinct message.
 	void socketsend.send('game', 'submitchatmessage', text);
 	// It renders only when the server's delta arrives — no optimistic rendering. The typed
 	// text is lost only here, where we approved the send; a predicted refusal leaves it.

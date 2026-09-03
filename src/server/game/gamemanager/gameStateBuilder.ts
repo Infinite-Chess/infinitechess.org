@@ -333,33 +333,26 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
 	const opponentRole = typeutil.invertPlayer(role);
 	const now = Date.now();
 	const match = servergame.match;
-	const opponentData = match.playerData[opponentRole];
+	const opponentDisconnect = match.playerData[opponentRole]?.disconnect; // An engine opponent has no entry
 
-	const participantState: ParticipantState = {
+	return {
 		drawOffer: {
 			unconfirmed: drawOffers.isExtendedBy(match, opponentRole), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
 			lastOfferPly: drawOffers.getLastOfferPly(match, role), // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
 		},
+		// Present once their opponent has disconnected and the claim window is set.
+		disconnect:
+			opponentDisconnect?.timeOpponentMayClaim !== undefined
+				? {
+						millisUntilClaimable: opponentDisconnect.timeOpponentMayClaim - now,
+						voluntary: opponentDisconnect.voluntary,
+					}
+				: undefined,
+		// Once the game is over it lingers for the rematch handshake — send enough to
+		// restore the rematch button's state (glow / disabled) on a page refresh.
+		rematch: getRematchOfferInfo(servergame, role),
+		chat: buildChatLog(servergame),
 	};
-
-	// Include other relevant stuff if defined...
-
-	// If their opponent has disconnected and the claim window is set, send them that info too.
-	if (opponentData?.disconnect.timeOpponentMayClaim !== undefined) {
-		participantState.disconnect = {
-			millisUntilClaimable: opponentData.disconnect.timeOpponentMayClaim - now,
-			voluntary: opponentData.disconnect.voluntary,
-		};
-	}
-
-	// Once the game is over it lingers for the rematch handshake — send enough to
-	// restore the rematch button's state (glow / disabled) on a page refresh.
-	const rematch = getRematchOfferInfo(servergame, role);
-	if (rematch !== undefined) participantState.rematch = rematch;
-
-	participantState.chat = buildChatLog(servergame);
-
-	return participantState;
 }
 
 /**

@@ -119,6 +119,10 @@ function consoleLogGameOver(servergame: ServerGame): void {
  * — they dropped inside the reconnection cushion, which stays silent until it elapses.
  */
 function announceAnyoneAlreadyGone(servergame: ServerGame): void {
+	// A cheat report concludes the game a SECOND time (`timeEnded` marks the first). By then every
+	// cushion below was started by leaveRematchWindow, which writes this notice itself — so skip.
+	if (servergame.match.timeEnded !== undefined) return;
+
 	for (const [color, data] of Object.entries(servergame.match.playerData)) {
 		// A pending cushion implies their socket is gone: it starts only on a detach, and a
 		// reconnect cancels it. Once it elapses, startClaimTimer clears this and announces them.
