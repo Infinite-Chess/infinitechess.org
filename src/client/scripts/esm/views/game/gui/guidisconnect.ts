@@ -48,6 +48,8 @@ let voluntary: boolean = false;
 let renderIntervalID: number | undefined;
 /** The hide timer's id, while the "Reconnected." confirmation is showing. */
 let reconnectedTimeoutID: number | undefined;
+/** Whether WE are currently disconnected. */
+let selfDisconnected: boolean = false;
 
 // Events ----------------------------------------------------------------------
 
@@ -135,8 +137,14 @@ element_ClaimDraw?.addEventListener('click', callback_ClaimDraw);
 // our opponent's claim timer is running against us.
 SocketBus.addEventListener('connection-lost', () => onSelfDisconnect());
 
+/** Whether we have lost connection and not yet come back in sync. */
+function isSelfDisconnected(): boolean {
+	return selfDisconnected;
+}
+
 /** Called when we lose connection. */
 function onSelfDisconnect(): void {
+	selfDisconnected = true;
 	if (!element_SelfDisconnectStatus) return; // Memory-evicted game: block absent.
 	clearTimeout(reconnectedTimeoutID); // A fresh drop overrides a lingering "Reconnected."
 	reconnectedTimeoutID = undefined;
@@ -151,6 +159,7 @@ function onSelfDisconnect(): void {
  * Confirms with "Reconnected." for a moment before hiding.
  */
 function onSelfReturn(): void {
+	selfDisconnected = false;
 	if (!element_SelfDisconnectStatus) return; // Memory-evicted game: block absent.
 	// Also fires on the page-load sync and on desync recoveries, where we never dropped.
 	if (element_SelfDisconnectStatus.classList.contains('hidden')) return;
@@ -168,5 +177,6 @@ function onSelfReturn(): void {
 export default {
 	onOpponentDisconnect,
 	onOpponentReturn,
+	isSelfDisconnected,
 	onSelfReturn,
 };

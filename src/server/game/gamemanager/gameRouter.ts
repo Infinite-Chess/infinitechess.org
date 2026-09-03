@@ -9,6 +9,7 @@
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { ServerboundGameMessage } from '../../../shared/transport/serverbound.js';
 
+import chat from './chat.js';
 import onRematch from './onRematch.js';
 import onOfferDraw from './onOfferDraw.js';
 import gameSockets from './gameSockets.js';
@@ -80,6 +81,9 @@ function route(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
 			break;
 		case 'offerrematch':
 			onRematch.offerRematch(servergame, color);
+			break;
+		case 'submitchatmessage':
+			chat.submitMessage(servergame, color, contents.value);
 			break;
 		case 'report':
 			cheatReport.onReport(servergame, color, contents.value);

@@ -15,6 +15,7 @@ import type { MatchInfo, ServerGame } from './serverGameTypes.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
+import chat from './chat.js';
 import gameSockets from './gameSockets.js';
 import liveGameValues from './liveGameValues.js';
 
@@ -77,7 +78,9 @@ function startClaimTimer(servergame: ServerGame, role: Player, involuntary: bool
 		millisUntilClaimable: timeUntilClaimable,
 		voluntary: !involuntary,
 	};
-	gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value); // prettier-ignore
+	gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value);
+
+	chat.appendNotice(servergame, role, involuntary ? 'disconnect-involuntary' : 'disconnect-voluntary'); // prettier-ignore
 
 	liveGameValues.onPlayerDisconnected(servergame, role); // Persist the state to the db
 }

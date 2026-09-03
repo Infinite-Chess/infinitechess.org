@@ -14,6 +14,7 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
 import gamesManager from '../../database/gamesManager.js';
 import activePlayers from './activePlayers.js';
+import chatEntriesManager from '../../database/chatEntriesManager.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -34,7 +35,8 @@ const activeGames: Record<number, ServerGame> = {};
 // Membership ------------------------------------------------------------------
 
 /**
- * Returns an id that is unique across BOTH the games table AND the live games in memory.
+ * Returns an id that is unique across the games table, the
+ * live games in memory, and any chat entries still holding it.
  * The game will receive this same id in the database when it is logged.
  * @throws If a database error occurs.
  */
@@ -42,7 +44,7 @@ function issueUniqueId(): number {
 	let id: number;
 	do {
 		id = gamesManager.genUniqueID(); // This is already unique against all game_ids in the table.
-	} while (activeGames[id] !== undefined); // Repeat until we have an id unique against all active games.
+	} while (activeGames[id] !== undefined || chatEntriesManager.countOfGame(id) > 0); // Repeat until we have an id unique against all claimed ids.
 	return id;
 }
 

@@ -9,7 +9,7 @@ import type { EngineGamePageInfo } from '../../../../../shared/transport/domain.
 import type { Additional, DatedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatOut, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
 import type {
-	GameStateMessage,
+	GameStateFull,
 	ParticipantState,
 } from '../../../../../shared/transport/clientbound.js';
 
@@ -18,6 +18,7 @@ import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
+import guichat from './gui/guichat.js';
 import gameslot from '../../game/chess/gameslot.js';
 import drawoffers from './drawoffers.js';
 import socketsubs from '../../socket/socketsubs.js';
@@ -128,11 +129,7 @@ function onEvicted(): void {
  * @param longformat - The game's parsed ICN. Required of the dead path, where a custom game's
  *   start position lives ONLY here; the live path SSRs that position instead, and passes nothing.
  */
-function loadGameFromState(
-	state: GameStateMessage,
-	dead: boolean,
-	longformat?: LongFormatOut,
-): void {
+function loadGameFromState(state: GameStateFull, dead: boolean, longformat?: LongFormatOut): void {
 	/** The viewer's color, if they're a participant; undefined => spectator (white POV). */
 	const ourRole = gamesession.getRole();
 
@@ -209,7 +206,7 @@ function loadGameFromState(
  * @param initialStage - The game's starting lifecycle {@link stage}.
  * @param state - The initial full game state message.
  */
-function initOnlineGame(initialStage: GameStage, state: GameStateMessage): void {
+function initOnlineGame(initialStage: GameStage, state: GameStateFull): void {
 	stage = initialStage;
 
 	// If we are a participator, set the draw offers, disconnect timer, rematch state.
@@ -241,6 +238,8 @@ function setParticipantState(participantState?: ParticipantState): void {
 
 	// Restore the rematch button's state (present only once the game is over).
 	if (participantState.rematch) gameactions.setRematchState(participantState.rematch);
+
+	if (participantState.chat) guichat.reconcile(participantState.chat);
 }
 
 /**

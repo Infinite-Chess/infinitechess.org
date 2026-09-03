@@ -62,15 +62,16 @@ SocketBus.addEventListener('game', (e) => receiveMessage(e.detail));
 GameBus.addEventListener('game-loaded', () => flushQueue());
 
 /**
- * Entry point for every `game`-route message: stamps clock timing at receipt, then buffers it
- * during load, bootstraps the game on the first `gamestate`, or hands it off to be routed.
+ * Entry point for every `game`-route message: stamps everything that must be
+ * measured at RECEIPT, then buffers it during load, bootstraps the game on
+ * the first `gamestate`, or hands it off to be routed.
  * @param contents - The contents of the incoming server websocket message
  */
 function receiveMessage(contents: ClientboundGameMessage): void {
-	// The subscribed game isn't live in server memory (concluded + evicted, or never existed).
-	// Reload regardless of our load state; fresh SSR then serves the correct page — the dead
-	// review page (which fetches the state over HTTP) or the 404 page.
 	if (contents.action === 'notlive') {
+		// The game isn't live in server memory (concluded + evicted, or never existed). Reload
+		// whatever our load state — no gamestate is coming, so the queue would never flush.
+		// Fresh SSR then serves the correct page: the dead review page, or the 404 page.
 		window.location.reload();
 		return;
 	}
@@ -79,16 +80,19 @@ function receiveMessage(contents: ClientboundGameMessage): void {
 	// deadline is stamped at receipt time — accurate even if the message's handling is deferred.
 	const clockValues = getClockValues(contents);
 	if (clockValues) adjustClockValuesForPing(clockValues);
+	// Same hazard, same fix: a chat entry queued through the board
+	// load would be stamped at flush, reading as newer than it is.
+	stampChatHistory(contents);
 
-	// The gamefile's logical part must be loaded before we can act on any message.
+	// The gamefile's logical part must be loaded before we can act on any remaining message.
 	if (gameslot.getGamefile() === undefined) {
 		if (gamesession.isLoading()) {
 			// A (logical) load is currently underway: buffer the message and replay it the
 			// instant logical loading finishes, so no delta is lost or applied too early.
 			messageQueue.push(contents);
-		} else if (contents.action === 'gamestate') {
-			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
-			// Nothing loaded/loading yet: the first `gamestate` bootstraps the game.
+		} else if (contents.action === 'gamestate' && contents.value.kind === 'full') {
+			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate message.
+			// Nothing loaded/loading yet: the first full `gamestate` bootstraps the game.
 			onlinegame.loadGameFromState(contents.value, false);
 			socketintents.onRouteSynced('game');
 		} else {

@@ -27,10 +27,12 @@ import gameUtility from './gameUtility.js';
 import ratingAbuse from '../ratingabuse/ratingAbuse.js';
 import activeGames from './activeGames.js';
 import lobbyManager from '../seeksmanager/lobbyManager.js';
+import gamesManager from '../../database/gamesManager.js';
 import activePlayers from './activePlayers.js';
 import liveGameValues from './liveGameValues.js';
 import gameStateBuilder from './gameStateBuilder.js';
 import ratingCalculation from '../../utility/ratingCalculation.js';
+import chatEntriesManager from '../../database/chatEntriesManager.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -58,7 +60,7 @@ function conclude(servergame: ServerGame, conclusion: GameConclusion): void {
 
 	// The player whos turn it is gets the full game state,
 	// as they may have had an in-flight move to reconcile against.
-	gameSockets.sendGameState(servergame, servergame.whosTurn, false);
+	gameSockets.sendGameState(servergame, servergame.whosTurn, 'full', false);
 
 	// All other players and spectators get the conclusion message, as they can't desync.
 	const conclusionMessage = gameStateBuilder.buildConclusionMessage(servergame);
@@ -91,9 +93,7 @@ function applyConclusion(servergame: ServerGame, conclusion: GameConclusion): vo
 	// Set end time
 	if (servergame.match.timeEnded === undefined) servergame.match.timeEnded = Date.now();
 
-	// The game now lingers for the rematch handshake. Sent from here, ahead of every
-	// conclusion message, so participants hold the overlay before the button is revealed.
-	gameSockets.sendRematchState(servergame);
+	// The game now lingers for the rematch handshake.
 }
 
 /** [DEBUG] Game has ended: console log the result. */
@@ -241,6 +241,15 @@ function evict(servergame: ServerGame): void {
 	// may still be attached — tell any remaining socket it is detached.
 	gameSockets.broadcastToEveryone(servergame, 'detached', undefined);
 	gameSockets.detachEveryone(servergame);
+
+	// An unlogged game's page 404s, so nothing can render its chat again. No earlier than here:
+	// until now the game still took messages, and deleting rows renumbers what clients render by.
+	try {
+		if (!gamesManager.isLogged(servergame.match.id))
+			chatEntriesManager.removeOfGame(servergame.match.id);
+	} catch {
+		// Already logged. Swallowed so it can't crash the timers eviction runs from.
+	}
 
 	if (activeGames.PRINT_GAMES) console.log(`Evicted game ${servergame.match.id}.`);
 }

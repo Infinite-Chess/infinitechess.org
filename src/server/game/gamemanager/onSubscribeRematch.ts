@@ -14,7 +14,6 @@ import socketsend from '../../socket/socketSend.js';
 import gameManager from './gameManager.js';
 import gameSockets from './gameSockets.js';
 import activeGames from './activeGames.js';
-import gameStateBuilder from './gameStateBuilder.js';
 
 /**
  * A lean reconnect for a game the client already knows is finalized:
@@ -32,17 +31,15 @@ function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 		}
 		const ourRole = gameSockets.getRole(game, ws);
 		if (ourRole !== undefined) {
-			// Participant path: attach, then send the current rematch state.
+			// Participant path: attach, then send the lean state (their rematch overlay).
 			gameManager.subscribeParticipant(game, ws, ourRole);
-			const value = gameStateBuilder.getRematchOfferInfo(game, ourRole)!; // Guaranteed because above we confirm the game is over
-			socketsend.send(ws, 'game', 'rematchstate', value);
+			gameSockets.sendGameState(game, ourRole, 'lean', false);
 		} else {
-			// Spectator path: attach, but send no rematch state (they only
-			// stay connected for the 'rematchstarted' message when a rematch is agreed).
+			// Spectator path: attach, but send no state (they only stay
+			// connected for the 'rematchstarted' message when a rematch is agreed).
 			gameSockets.attachSpectator(game, ws);
+			gameSockets.broadcastSpectatorCount(game);
 		}
-		// Neither branch's reply embeds the spectator count the way a `gamestate` does.
-		gameSockets.broadcastSpectatorCount(game);
 	} else {
 		// Dead game
 		// Client should already have seen the finalized conclusion (otherwise they wouldn't

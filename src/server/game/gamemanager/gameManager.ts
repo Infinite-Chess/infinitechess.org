@@ -20,6 +20,7 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import chat from './chat.js';
 import logEvents from '../../utility/logEvents.js';
 import disconnect from './disconnect.js';
 import socketsend from '../../socket/socketSend.js';
@@ -191,6 +192,9 @@ function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void 
 		// Alert their opponent we have returned, if they were informed of the disconnect
 		if (claimWindowWasSet) {
 			gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentreconnect', undefined); // prettier-ignore
+			// Pairs structurally with the disconnect notice: a claim window is only ever set
+			// inside startClaimTimer, and cancelTimer clears it, so the two can't repeat.
+			chat.appendNotice(servergame, ourRole, 'reconnected');
 		}
 	} else {
 		gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentreturn', undefined); // prettier-ignore

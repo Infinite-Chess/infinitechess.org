@@ -18,6 +18,7 @@ import type { GameStateMessage } from '../../../shared/transport/clientbound.js'
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 
+import chat from './chat.js';
 import logEvents from '../../utility/logEvents.js';
 import gameLogger from './gameLogger.js';
 import socketsend from '../../socket/socketSend.js';
@@ -121,6 +122,9 @@ function concludeReportedGame(
 	// to the permanent database — the overturn must update that record below.
 	const wasLogged = servergame.match.freed;
 	const originalConclusion = servergame.gameConclusion;
+
+	// Ahead of the conclusion, so it lands in the log the states below carry.
+	chat.appendNotice(servergame, cheaterColor, 'cheat-detected');
 
 	gameLifecycle.applyConclusion(servergame, conclusion);
 

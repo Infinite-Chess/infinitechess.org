@@ -16,6 +16,7 @@ import type { GameSetup, ServerGame } from './serverGameTypes.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import chat from './chat.js';
 import manifest from '../../config/manifest.js';
 import socketsend from '../../socket/socketSend.js';
 import gameManager from './gameManager.js';
@@ -49,9 +50,11 @@ function offerRematch(servergame: ServerGame, ourRole: Player): void {
 
 	if (match.rematchOffers.has(opponentColor)) {
 		// Both players have offered — start the rematch!
+		chat.appendNotice(servergame, ourRole, 'rematch-accepted');
 		createRematchGame(servergame);
 	} else {
 		// Relay the offer to the opponent (their rematch button starts glowing).
+		chat.appendNotice(servergame, ourRole, 'rematch-offered');
 		gameSockets.sendToColor(match, opponentColor, 'game', 'rematchoffer', undefined);
 	}
 }
@@ -93,6 +96,7 @@ function createRematchGame(oldGame: ServerGame): void {
 		variant: oldMatch.variant,
 		time: oldMatch.clock,
 		rated: oldMatch.rated,
+		private: oldMatch.private,
 		modifiers: oldMatch.modifiers, // A rematch inherits the original game's modifiers.
 		// The version is re-seeded rather than carried over — an engine update could have
 		// landed mid-game, in which case the old game's version is no longer what we'd serve.

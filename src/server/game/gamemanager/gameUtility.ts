@@ -128,6 +128,7 @@ function initMatch(
 				timeOpponentMayClaim: undefined,
 				voluntary: undefined,
 			},
+			chatHistory: [],
 		};
 	}
 
@@ -138,6 +139,7 @@ function initMatch(
 		engineParticipant: setup.engineParticipant,
 		timeCreated: Date.now(),
 		rated: setup.rated,
+		private: setup.private,
 		modifiers: setup.modifiers,
 		clock: setup.time,
 		freed: false,

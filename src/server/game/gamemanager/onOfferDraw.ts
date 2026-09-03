@@ -12,6 +12,7 @@ import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import chat from './chat.js';
 import drawOffers from './drawOffers.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
@@ -40,6 +41,7 @@ function offer(servergame: ServerGame, ourRole: Player): void {
 
 	drawOffers.open(servergame, ourRole);
 	liveGameValues.onDrawOfferExtended(servergame, ourRole);
+	chat.appendNotice(servergame, ourRole, 'draw-offered');
 
 	// Alert their opponent
 	const opponentColor = typeutil.invertPlayer(ourRole);
@@ -58,10 +60,11 @@ function accept(servergame: ServerGame, ourRole: Player): void {
 	// Accept draw offer!
 
 	drawOffers.close(servergame.match);
+	chat.appendNotice(servergame, ourRole, 'draw-accepted');
 	gameLifecycle.conclude(servergame, { victor: null, condition: 'agreement' });
 }
 
-/** Called when client declines a draw. Alerts opponent. */
+/** Called when client declines a draw. The notice is what tells the offerer. */
 function decline(servergame: ServerGame, ourRole: Player): void {
 	const opponentColor = typeutil.invertPlayer(ourRole);
 
@@ -75,9 +78,7 @@ function decline(servergame: ServerGame, ourRole: Player): void {
 	// Decline the draw!
 
 	drawOffers.close(servergame.match);
-
-	// Alert their opponent
-	gameSockets.sendToColor(servergame.match, opponentColor, 'game', 'drawdecline', undefined); // prettier-ignore
+	chat.appendNotice(servergame, ourRole, 'draw-declined');
 	liveGameValues.onDrawOfferDeclined(servergame);
 }
 

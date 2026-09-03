@@ -35,6 +35,7 @@ import logEvents from '../../utility/logEvents.js';
 import gameUtility from './gameUtility.js';
 import memberManager from '../../database/memberManager.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
+import chatEntriesManager from '../../database/chatEntriesManager.js';
 import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
 import liveEngineGamesManager from '../../database/liveEngineGamesManager.js';
 
@@ -115,7 +116,7 @@ function restoreAll(): RestoredGame[] {
 					`Live game ${gameRow.game_id} has invalid participant rows. Skipping restoration.`,
 					'errLog',
 				);
-				liveGamesManager.remove(gameRow.game_id);
+				dropUnrestorableGame(gameRow.game_id);
 				continue;
 			}
 
@@ -128,7 +129,7 @@ function restoreAll(): RestoredGame[] {
 				'errLog',
 			);
 			// Delete the corrupt game from the database so it doesn't block future restarts.
-			liveGamesManager.remove(gameRow.game_id);
+			dropUnrestorableGame(gameRow.game_id);
 		}
 	}
 
@@ -144,6 +145,12 @@ function groupRowsByGame<T extends { game_id: number }>(rows: T[]): Map<number, 
 		grouped.set(row.game_id, gameRows);
 	}
 	return grouped;
+}
+
+/** Drops a live game that can't be restored, along with the chat rows that would be orphaned. */
+function dropUnrestorableGame(game_id: number): void {
+	liveGamesManager.remove(game_id);
+	chatEntriesManager.removeOfGame(game_id);
 }
 
 /** Restores a single live game from its database rows. */
@@ -317,6 +324,7 @@ function reconstructMatchInfo(
 				timeOpponentMayClaim: undefined,
 				voluntary: undefined,
 			},
+			chatHistory: [], // The chat limits deliberately reset on a restart.
 		};
 	}
 
@@ -325,7 +333,8 @@ function reconstructMatchInfo(
 		variant,
 		timeCreated: gameRow.time_created,
 		timeEnded: undefined, // Only ongoing games are restored — none have ended.
-		rated: gameRow.rated === 1,
+		rated: Boolean(gameRow.rated),
+		private: Boolean(gameRow.private),
 		modifiers:
 			gameRow.mod_slide_limit !== null
 				? [{ kind: 'slide-limit', value: gameRow.mod_slide_limit as SlideLimitValue }]
@@ -391,7 +400,7 @@ function computePendingTimers(
 			timers.disconnectTimers[player] = {
 				type: 'timer',
 				remainingMs: Math.max(remaining, 0),
-				voluntary: row.disconnect_voluntary === 1,
+				voluntary: Boolean(row.disconnect_voluntary),
 			};
 		} else if (row.disconnect_cushion_end_time !== null) {
 			// Case 2: Still in the 5-second cushion period
@@ -399,7 +408,7 @@ function computePendingTimers(
 			timers.disconnectTimers[player] = {
 				type: 'cushion',
 				remainingMs: Math.max(remaining, 0),
-				voluntary: row.disconnect_voluntary === 1,
+				voluntary: Boolean(row.disconnect_voluntary),
 			};
 		} else {
 			// Case 3: Was connected before restart. Give them a fresh disconnect timer

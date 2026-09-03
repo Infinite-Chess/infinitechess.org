@@ -90,6 +90,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 				variant: seek.variant,
 				time: seek.time,
 				rated: seek.mode === 'rated',
+				private: false, // Hardcoded until the "Challenge a friend" flow ships.
 				modifiers: seek.modifiers,
 			},
 			assignments,

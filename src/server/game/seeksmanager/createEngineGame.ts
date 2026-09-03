@@ -64,6 +64,7 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 				variant: body.variant,
 				time: body.time,
 				rated: false,
+				private: false,
 				engineParticipant: {
 					color: engineColor,
 					engine: ONLINE_ENGINE,

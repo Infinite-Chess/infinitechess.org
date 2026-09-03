@@ -9,6 +9,7 @@ import onlinegame from './onlinegame.js';
 import gamesession from '../../game/chess/gamesession.js';
 import deadgameloader from './deadgameloader.js';
 
+import './gui/guichat.js';
 import './onlinegamerouter.js';
 import './gui/guigameactions.js';
 import '../../game/gui/guigamemeta.js';

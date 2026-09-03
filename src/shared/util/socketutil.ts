@@ -11,13 +11,18 @@
 // Types -----------------------------------------------------------------------
 
 /**
- * Constrains a value to EXACTLY `Shape`, rejecting undeclared properties.
+ * Constrains a value to EXACTLY `Shape`: any property `Shape` doesn't declare resolves to
+ * `never`, so it can't be assigned. TypeScript's own excess-property check only fires on
+ * fresh object literals, so a message assembled into a variable first would otherwise carry
+ * extras onto the wire unnoticed. Applied to a send function's value parameter, this catches
+ * them however the caller built the value.
  *
- * TypeScript's own excess property check only fires on fresh object literals, so a message
- * built into a variable first would smuggle extra properties onto the wire. Applied to a
- * send function's value parameter, this catches them however the caller assembled the value.
+ * A union `Shape` is judged one member at a time, since `keyof` a union yields only the keys
+ * its members share.
  */
-export type Exact<V, Shape> = V & { [K in keyof V]: K extends keyof Shape ? V[K] : never };
+export type Exact<V, Shape> = Shape extends unknown
+	? V & { [K in keyof V]: K extends keyof Shape ? V[K] : never }
+	: never;
 
 /**
  * A map of route name → the union of messages that route carries.

@@ -11,8 +11,8 @@
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MovePacket } from '../../../../../shared/chess/util/typeschemas.js';
+import type { GameStateFull } from '../../../../../shared/transport/clientbound.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
-import type { GameStateMessage } from '../../../../../shared/transport/clientbound.js';
 import type { MoveRecord, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
@@ -42,7 +42,7 @@ import movesendreceive from './movesendreceive.js';
 function handleGameState(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
-	message: GameStateMessage,
+	message: GameStateFull,
 ): boolean {
 	const claimedGameConclusion = message.gameConclusion;
 	if (message.finalized) onlinegame.onFinalized();
