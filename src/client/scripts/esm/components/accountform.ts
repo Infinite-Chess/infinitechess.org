@@ -9,12 +9,13 @@
  */
 
 import validators from '../../../../shared/util/validators.js';
+import interpolate from '../../../../shared/util/interpolate.js';
 
 /** The localized format error for a username, or undefined if valid. */
 function usernameError(value: string): string | undefined {
 	switch (validators.validateUsername(value)) {
 		case validators.UsernameValidationResult.UsernameTooShort:
-			return t.shared.account.username_short;
+			return interpolate.interpolate(t.shared.account.username_short, { min: validators.MIN_USERNAME_LENGTH }); // prettier-ignore
 		case validators.UsernameValidationResult.UsernameAlphanumeric:
 			return t.shared.account.username_alphanumeric;
 		default:
@@ -36,7 +37,7 @@ function emailError(value: string): string | undefined {
 function passwordError(value: string): string | undefined {
 	switch (validators.validatePassword(value)) {
 		case validators.PasswordValidationResult.PasswordTooShort:
-			return t.shared.account.password_short;
+			return interpolate.interpolate(t.shared.account.password_short, { min: validators.MIN_PASSWORD_LENGTH }); // prettier-ignore
 		default:
 			return undefined;
 	}

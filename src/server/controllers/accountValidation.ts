@@ -13,6 +13,7 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 
 import jsutil from '../../shared/util/jsutil.js';
 import validators from '../../shared/util/validators.js';
+import interpolate from '../../shared/util/interpolate.js';
 
 import logEvents from '../utility/logEvents.js';
 import blacklistManager from '../database/blacklistManager.js';
@@ -60,14 +61,14 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 			case validators.UsernameValidationResult.UsernameTooShort:
 				res.status(400).json({
 					field: 'username',
-					message: req.t.shared.account.username_short,
+					message: interpolate.interpolate(req.t.shared.account.username_short, { min: validators.MIN_USERNAME_LENGTH }), // prettier-ignore
 				});
 				return false;
 			case validators.UsernameValidationResult.UsernameTooLong:
 				// Unlocalized: only a bot bypassing the form's maxlength can trigger this.
 				res.status(400).json({
 					field: 'username',
-					message: "Username can't be over 20 characters long",
+					message: `Username can't be over ${validators.MAX_USERNAME_LENGTH} characters long`,
 				});
 				return false;
 			case validators.UsernameValidationResult.UsernameAlphanumeric:
@@ -191,14 +192,14 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 			case validators.PasswordValidationResult.PasswordTooShort:
 				res.status(400).json({
 					field: 'password',
-					message: req.t.shared.account.password_short,
+					message: interpolate.interpolate(req.t.shared.account.password_short, { min: validators.MIN_PASSWORD_LENGTH }), // prettier-ignore
 				});
 				return false;
 			case validators.PasswordValidationResult.PasswordTooLong:
 				// Unlocalized: only a bot bypassing the form's maxlength can trigger this.
 				res.status(400).json({
 					field: 'password',
-					message: "Password can't be over 72 characters long",
+					message: `Password can't be over ${validators.MAX_PASSWORD_LENGTH} characters long`,
 				});
 				return false;
 			default:

@@ -14,10 +14,10 @@ network = "Network error. Please try again."
 # Account-field format errors shown client-side on the register / awaiting / resetpassword forms.
 # The server reads these too; server-only validation responses live in responses.account.
 [account]
-username_short = "Username must be at least 3 characters long"
+username_short = "Username must be at least {min} characters long"
 username_alphanumeric = "Username must only contain letters A-Z and numbers 0-9"
 email_invalid = "This is not a valid email"
-password_short = "Password must be 6+ characters long"
+password_short = "Password must be {min}+ characters long"
 
 [socket]
 cookies_required = "Your browser does not support cookies. Unable to connect to the server."

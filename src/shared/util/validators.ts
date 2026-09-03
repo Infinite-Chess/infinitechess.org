@@ -10,7 +10,7 @@
  * - Possibly return a class (?) with a .getTranslationKey() function or add some other way to do that (then there could also be the .isValid property)
  */
 
-// Constants -------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 enum PasswordValidationResult {
 	Ok,
@@ -31,12 +31,27 @@ enum UsernameValidationResult {
 	UsernameAlphanumeric,
 }
 
+// Constants -------------------------------------------------------------------
+
+/** The shortest a username may be. */
+const MIN_USERNAME_LENGTH = 3;
+/** The longest a username may be. */
+const MAX_USERNAME_LENGTH = 20;
+
+/** The shortest a password may be. */
+const MIN_PASSWORD_LENGTH = 6;
+/** The longest a password may be, from bcrypt's 72-byte input limit. */
+const MAX_PASSWORD_LENGTH = 72;
+
+/** The longest an email may be — RFC 5321's maximum address length. */
+const MAX_EMAIL_LENGTH = 320;
+
 // Functions -------------------------------------------------------------------
 
 /** Validates a password's length. `Ok` if valid, otherwise the reason it isn't. */
 function validatePassword(password: string): PasswordValidationResult {
-	if (password.length < 6) return PasswordValidationResult.PasswordTooShort;
-	if (password.length > 72) return PasswordValidationResult.PasswordTooLong;
+	if (password.length < MIN_PASSWORD_LENGTH) return PasswordValidationResult.PasswordTooShort;
+	if (password.length > MAX_PASSWORD_LENGTH) return PasswordValidationResult.PasswordTooLong;
 	return PasswordValidationResult.Ok;
 }
 
@@ -46,7 +61,7 @@ function validatePassword(password: string): PasswordValidationResult {
  * @param email - The email to check. Case in-sensitive.
  */
 function validateEmail(email: string): EmailValidationResult {
-	if (email.length > 320) return EmailValidationResult.EmailTooLong;
+	if (email.length > MAX_EMAIL_LENGTH) return EmailValidationResult.EmailTooLong;
 	if (!isEmailFormatValid(email)) return EmailValidationResult.InvalidFormat;
 	return EmailValidationResult.Ok;
 }
@@ -64,8 +79,8 @@ function isEmailFormatValid(email: string): boolean {
  * `Ok` if valid, otherwise the reason it isn't.
  */
 function validateUsername(username: string): UsernameValidationResult {
-	if (username.length < 3) return UsernameValidationResult.UsernameTooShort;
-	if (username.length > 20) return UsernameValidationResult.UsernameTooLong;
+	if (username.length < MIN_USERNAME_LENGTH) return UsernameValidationResult.UsernameTooShort;
+	if (username.length > MAX_USERNAME_LENGTH) return UsernameValidationResult.UsernameTooLong;
 	// Only alphanumeric characters
 	if (!/^[a-zA-Z0-9]+$/.test(username)) return UsernameValidationResult.UsernameAlphanumeric;
 	return UsernameValidationResult.Ok;
@@ -74,10 +89,16 @@ function validateUsername(username: string): UsernameValidationResult {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// Constants
+	// Types
 	PasswordValidationResult,
 	EmailValidationResult,
 	UsernameValidationResult,
+	// Constants
+	MIN_USERNAME_LENGTH,
+	MAX_USERNAME_LENGTH,
+	MIN_PASSWORD_LENGTH,
+	MAX_PASSWORD_LENGTH,
+	MAX_EMAIL_LENGTH,
 	// Functions
 	validatePassword,
 	validateEmail,
