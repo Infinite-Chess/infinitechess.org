@@ -10,6 +10,7 @@
 import type { Request } from 'express';
 import type { GameRules } from '../../shared/chess/util/gamerules.js';
 import type { SpeedCategory } from '../../shared/chess/util/clockutil.js';
+import type { ChatEntryParts } from '../../shared/components/chatentry.js';
 import type { GlobalGameState } from '../../shared/chess/logic/state.js';
 import type {
 	GamePageData,
@@ -21,6 +22,8 @@ import gameurl from '../../shared/chess/util/gameurl.js';
 import timeutil from '../../shared/util/timeutil.js';
 import clockutil from '../../shared/chess/util/clockutil.js';
 import icnimport from '../../shared/chess/logic/icn/icnimport.js';
+import chatentry from '../../shared/components/chatentry.js';
+import chatlimits from '../../shared/util/chatlimits.js';
 import metadatautil from '../../shared/chess/util/metadatautil.js';
 import variantcache from '../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../shared/chess/logic/icn/icnconverter.js';
@@ -37,16 +40,30 @@ import gamesManager from '../database/gamesManager.js';
 import deadGameState from '../game/gamemanager/deadGameState.js';
 import pieceSvgCache from '../config/pieceSvgCache.js';
 import memberInfoUtil from '../auth/memberInfoUtil.js';
+import chatEntryMapper from '../game/gamemanager/chatEntryMapper.js';
+import chatEntriesManager from '../database/chatEntriesManager.js';
 
 // Types -----------------------------------------------------------------------
 
 /** The full render context for `game.njk`. */
 interface GamePageState {
-	/** Includes all static info about the game. */
+	/** All static info about the game, serialized into the page as `window.gamePageData`. */
 	gamePageData: GamePageData;
 	/** Link to this game's analysis page, carrying the perspective it's currently viewed from. */
 	analysisUrl: string;
 	meta: GameMetaViewModel;
+	/** The chat panel. Absent for spectators and engine games. */
+	chat?: {
+		/** The whole log, already rendered into its display parts. */
+		entries: ChatEntryParts[];
+		/** The chat input's attributes. Absent when the game can no longer be chatted in. */
+		input?: {
+			/** Its `disabled` attribute — a guest in a public game may read but never send. */
+			disabled: boolean;
+			/** Its `maxlength`, passed through from the source of truth. */
+			maxLength: number;
+		};
+	};
 }
 
 /** Display-ready static game-meta fields, precomputed since Nunjucks can't call the shared utils. */
@@ -101,7 +118,7 @@ type RuleLineViewModel =
 	| { kind: 'text'; text: string }
 	| { kind: 'promotion'; prefix: string; svgs: string[]; suffix: string };
 
-// Functions -------------------------------------------------------------------
+// Page State ------------------------------------------------------------------
 
 /**
  * Resolves the render state for `/game/:id`, or `undefined`
@@ -143,6 +160,7 @@ function getPageState(req: Request): GamePageState | undefined {
 	}
 
 	const viewColor = resolveViewColor(req, role);
+	const playerNames = resolvePlayerNames(state, role, req);
 
 	return {
 		gamePageData: {
@@ -152,24 +170,33 @@ function getPageState(req: Request): GamePageState | undefined {
 			isLive: !!game,
 			role,
 			viewColor,
+			playerNames,
 			engineGame,
 		},
 		analysisUrl: gameurl.getAnalysisUrl(id, viewColor),
 		meta: buildGameMetaViewModel(state, resolved.icn, ratingChanges, role, viewColor, moveCount, req), // prettier-ignore
+		// The chat exists only for a participant of a non-engine game
+		chat:
+			role !== undefined && engineGame === undefined
+				? {
+						entries: renderChatLog(id, role, playerNames),
+						// Only a live game can still be typed in, and only there is `private` knowable.
+						input: game
+							? {
+									// A guest can't be punished for chat abuse, so they
+									// may only send in a game they were invited to.
+									disabled: !memberInfo.signedIn && !game.match.private,
+									maxLength: chatlimits.MAX_CHAT_MESSAGE_LENGTH,
+								}
+							: undefined,
+					}
+				: undefined,
 	};
 }
 
 /**
- * Resolves which side of the board the viewer sees it from: the URL's color segment if it
- * carries one, else the side they played on, else white's (spectators and non-participants).
- */
-function resolveViewColor(req: Request, role: Player | undefined): Player {
-	return gameurl.parseViewColorCode(req.params['color']) ?? role ?? p.WHITE;
-}
-
-/**
  * Resolves the viewer-facing SSR state (board perspective + meta) for a concluded game straight
- * from the database, or `undefined` if no such game row exists. Unlike {@link getGamePageState}
+ * from the database, or `undefined` if no such game row exists. Unlike {@link getPageState}
  * this ignores live games — the analysis page only ever loads a game from the DB, never a live one.
  * @throws If a database error occurs.
  */
@@ -195,17 +222,53 @@ function getDeadGameViewState(
 
 	return {
 		viewColor,
-		meta: buildGameMetaViewModel(
-			dead.state,
-			dead.icn,
-			dead.ratingChanges,
-			role,
-			viewColor,
-			dead.moveCount,
-			req,
-		),
+		meta: buildGameMetaViewModel(dead.state, dead.icn, dead.ratingChanges, role, viewColor, dead.moveCount, req), // prettier-ignore
 	};
 }
+
+// Page Helpers ----------------------------------------------------------------
+
+/**
+ * Resolves which side of the board the viewer sees it from: the URL's color segment if it
+ * carries one, else the side they played on, else white's (spectators and non-participants).
+ */
+function resolveViewColor(req: Request, role: Player | undefined): Player {
+	return gameurl.parseViewColorCode(req.params['color']) ?? role ?? p.WHITE;
+}
+
+/** Each color's display name. */
+function resolvePlayerNames(
+	state: StaticGameState,
+	role: Player | undefined,
+	req: Request,
+): PlayerGroup<string> {
+	const names: PlayerGroup<string> = {};
+	for (const [strColor, container] of Object.entries(state.players)) {
+		const color = Number(strColor) as Player;
+		// A guest who is the viewer shows "(You)"; every other name is the container's own
+		// (members → username, other guests → the hardcoded "(Guest)" ICN name). Mirrors the lobby.
+		const isYouGuest = container.type === 'guest' && color === role;
+		names[color] = isYouGuest ? req.t.shared.user_status.you_indicator : container.username;
+	}
+	return names;
+}
+
+/**
+ * Reads a game's whole chat log and renders it for `game.njk`.
+ * @throws If a database error occurs.
+ */
+function renderChatLog(
+	id: number,
+	role: Player,
+	playerNames: PlayerGroup<string>,
+): ChatEntryParts[] {
+	return chatEntriesManager.getOfGame(id).map((record, i) => {
+		const entry = chatEntryMapper.toEntry(record, i);
+		return chatentry.toParts(entry, role, playerNames);
+	});
+}
+
+// Game Meta -------------------------------------------------------------------
 
 /** Derives the display-ready {@link GameMetaViewModel} from a {@link StaticGameState}. */
 function buildGameMetaViewModel(
@@ -228,22 +291,21 @@ function buildGameMetaViewModel(
 		iconId: variantregistry.getGroupIconId(variantGroup),
 	};
 
-	const players: PlayerGroup<{ name: string; elo?: string }> = {};
+	const names = resolvePlayerNames(state, role, req);
+	const players: GameMetaViewModel['players'] = {};
 	for (const [strColor, container] of Object.entries(state.players)) {
 		const color = Number(strColor) as Player;
-		// A guest who is the viewer shows "(You)"; every other name is the container's own
-		// (members → username, other guests → the hardcoded "(Guest)" ICN name). Mirrors the lobby.
-		const isYouGuest = container.type === 'guest' && color === role;
 		const change = ratingChanges?.[color];
 		players[color] = {
-			name: isYouGuest ? req.t.shared.user_status.you_indicator : container.username,
-			...(container.rating && { elo: metadatautil.getFormattedElo(container.rating) }),
-			...(change !== undefined && {
-				eloDiff: {
-					text: metadatautil.getWhiteBlackRatingDiff(change),
-					positive: change >= 0,
-				},
-			}),
+			name: names[color]!,
+			elo: container.rating ? metadatautil.getFormattedElo(container.rating) : undefined,
+			eloDiff:
+				change !== undefined
+					? {
+							text: metadatautil.getWhiteBlackRatingDiff(change),
+							positive: change >= 0,
+						}
+					: undefined,
 		};
 	}
 
@@ -264,9 +326,9 @@ function buildGameMetaViewModel(
 		rated: state.rated,
 		timeCreated: setup.timeCreated,
 		startedAgo: timeutil.getRelativeTimeString(setup.timeCreated, locale),
-		...(state.gameConclusion && {
-			result: gameresultutil.getDisplay(state.gameConclusion, req.t.shared),
-		}),
+		result: state.gameConclusion
+			? gameresultutil.getDisplay(state.gameConclusion, req.t.shared)
+			: undefined,
 		players,
 		moveCount,
 		resignable: moveCount > 1,

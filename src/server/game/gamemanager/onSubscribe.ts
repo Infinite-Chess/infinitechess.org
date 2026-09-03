@@ -35,8 +35,8 @@ function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
 		} else {
 			// Spectator path: attach, then send the role-agnostic state (no participantState overlay).
 			gameSockets.attachSpectator(game, ws);
-			const gameStateBaseMessage = gameStateBuilder.buildStateBase(game);
-			socketsend.send(ws, 'game', 'gamestate', gameStateBaseMessage);
+			const gameStateMessage = gameStateBuilder.buildFullState(game);
+			socketsend.send(ws, 'game', 'gamestate', gameStateMessage);
 			gameSockets.broadcastSpectatorCount(game);
 		}
 	} else {

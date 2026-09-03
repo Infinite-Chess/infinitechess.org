@@ -17,9 +17,11 @@ import type { PendingTimers } from './liveGameRestore.js';
 import disconnect from './disconnect.js';
 import gameSockets from './gameSockets.js';
 import activeGames from './activeGames.js';
+import gamesManager from '../../database/gamesManager.js';
 import activePlayers from './activePlayers.js';
 import gameLifecycle from './gameLifecycle.js';
 import liveGameRestore from './liveGameRestore.js';
+import chatEntriesManager from '../../database/chatEntriesManager.js';
 
 // Shutdown --------------------------------------------------------------------
 
@@ -38,6 +40,15 @@ function prepForShutdown(): void {
 
 		// Unsubscribe all sockets (we will resub them when they reconnect)
 		gameSockets.detachEveryone(servergame);
+
+		// A freed game is never restored, so this is its last chance at eviction.
+		// Drop the chat of one that was never logged, so they aren't orphaned.
+		try {
+			if (servergame.match.freed && !gamesManager.isLogged(servergame.match.id))
+				chatEntriesManager.removeOfGame(servergame.match.id);
+		} catch {
+			// Already logged. Swallowed so one game can't abort the rest of the shutdown.
+		}
 
 		activeGames.remove(servergame.match.id);
 	}

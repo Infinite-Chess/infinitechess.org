@@ -156,7 +156,7 @@ function broadcastMove(
 		// The game ended: apply the conclusion (stops the clocks),
 		// then send the submitter the conclusion message.
 		gameLifecycle.applyConclusion(servergame, servergame.gameConclusion);
-		const conclusionMessage = gameStateBuilder.buildConclusionMessage(servergame);
+		const conclusionMessage = gameStateBuilder.buildConclusionMessage(servergame, role);
 		socketsend.send(ws, 'game', 'gameconclusion', conclusionMessage);
 	}
 

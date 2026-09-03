@@ -12,6 +12,7 @@
 import type { Exact } from '../../../shared/util/socketutil.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
+import type { GameStateMessage } from '../../../shared/transport/clientbound.js';
 import type { MatchInfo, ServerGame } from './serverGameTypes.js';
 import type { OutAction, OutRoute, OutValue } from '../../socket/socketSend.js';
 
@@ -124,33 +125,24 @@ function broadcastToEveryone<A extends OutAction<'game'>, V extends OutValue<'ga
 // Composed Messages -----------------------------------------------------------
 
 /**
- * Sends the current game state (`gamestate`) to the player of the specified color: the
- * move list, timers, conclusion, and finalized flag, with their participant overlay.
+ * The single `gamestate` reply to a participant, whichever way they attached: their participant
+ * overlay, plus — for a `full` reply — the move list, timers, conclusion and finalized flag.
+ * @param kind - `'full'` answers a `subscribe`, `'lean'` a `subscriberematch`.
  * @param forceSync - If true, the client forces its move list to exactly match the server's
  * (not re-submitting any extra move). Set only when the server rejected their last move.
+ * @throws If a database error occurs.
  */
-function sendGameState(servergame: ServerGame, role: Player, forceSync: boolean): void {
+function sendGameState(
+	servergame: ServerGame,
+	role: Player,
+	kind: GameStateMessage['kind'],
+	forceSync: boolean,
+): void {
 	const playerdata = servergame.match.playerData[role];
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message
 
-	const messageContents = gameStateBuilder.buildStateMessage(servergame, role, forceSync);
+	const messageContents = gameStateBuilder.buildStateMessage(servergame, role, kind, forceSync);
 	socketsend.send(playerdata.socket, 'game', 'gamestate', messageContents);
-}
-
-/**
- * Hands every connected participant their rematch overlay, the moment the game's conclusion
- * brings it into existence. The conclusion itself reaches them over several recipient-agnostic
- * messages (`gameconclusion`, `move`) that spectators receive too, so none of them can carry it.
- * Recipients also getting a full `gamestate` receive it twice — the participant overlay
- * embeds the same one — which is idempotent, and the price of one un-missable call site.
- */
-function sendRematchState(servergame: ServerGame): void {
-	for (const color of Object.keys(servergame.match.playerData)) {
-		const role = Number(color) as Player;
-		// Guaranteed defined — callers invoke this only once the conclusion is applied.
-		const rematch = gameStateBuilder.getRematchOfferInfo(servergame, role)!;
-		sendToColor(servergame.match, role, 'game', 'rematchstate', rematch);
-	}
 }
 
 /** Broadcasts the game's live spectator count to everyone attached. */
@@ -180,7 +172,6 @@ export default {
 	broadcastToEveryone,
 	// Composed Messages
 	sendGameState,
-	sendRematchState,
 	broadcastSpectatorCount,
 	broadcastEngineClock,
 };

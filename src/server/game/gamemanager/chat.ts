@@ -16,7 +16,7 @@ import chatlimits from '../../../shared/util/chatlimits.js';
 import logEvents from '../../utility/logEvents.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
-import { toChatEntry } from './chatEntry.js';
+import chatEntryMapper from './chatEntryMapper.js';
 import chatEntriesManager from '../../database/chatEntriesManager.js';
 
 // Constants -------------------------------------------------------------------
@@ -112,7 +112,7 @@ function append(servergame: ServerGame, data: ChatEntryData): void {
 	}
 
 	// Participants only — spectators must never receive private chat deltas at all.
-	const entry = toChatEntry(data, index);
+	const entry = chatEntryMapper.toEntry(data, index);
 	gameSockets.broadcastToParticipants(servergame, 'game', 'chatentry', entry);
 }
 

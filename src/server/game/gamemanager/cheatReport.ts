@@ -132,11 +132,11 @@ function concludeReportedGame(
 	// sitting on their board: the cheater played it, so they're a move ahead of the server (whosTurn
 	// included), and any spectator who joined after it was played has it too — an initial load
 	// replays the move list unvalidated, so they never ran the check that refuses it live.
-	const base = gameStateBuilder.buildStateBase(servergame);
+	const state = gameStateBuilder.buildFullState(servergame);
 	for (const [color, data] of Object.entries(servergame.match.playerData)) {
 		if (data.socket === undefined) continue; // Not connected, can't send message
 		const message: GameStateMessage = {
-			...base,
+			...state,
 			participantState: gameStateBuilder.getParticipantState(
 				servergame,
 				Number(color) as Player,
@@ -146,7 +146,7 @@ function concludeReportedGame(
 	}
 
 	// Spectators get the same state, minus the participant overlay.
-	gameSockets.broadcastToSpectators(servergame, 'gamestate', base);
+	gameSockets.broadcastToSpectators(servergame, 'gamestate', state);
 
 	gameLifecycle.free(servergame);
 

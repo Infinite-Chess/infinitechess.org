@@ -10,6 +10,7 @@
  * Counterpart of the server's gameRouter.
  */
 
+import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ClockValues } from '../../../../../shared/chess/util/clockutil.js';
@@ -17,12 +18,14 @@ import type {
 	GameConclusionMessage,
 	ClientboundGameMessage,
 	GameNavigation,
+	GameStateMessage,
 } from '../../../../../shared/transport/clientbound.js';
 
 import gameurl from '../../../../../shared/chess/util/gameurl.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 
 import docutil from '../../util/docutil.js';
+import guichat from './gui/guichat.js';
 import resyncer from './resyncer.js';
 import gameslot from '../../game/chess/gameslot.js';
 import gamesound from '../../board/gamesound.js';
@@ -114,15 +117,7 @@ function routeMessage(contents: RoutedGameMessage): void {
 
 	switch (contents.action) {
 		case 'gamestate':
-			// BEFORE the resync: resyncer submits moves as it reconciles, which movesendreceive gates on areInSync().
-			onlinegame.setInSync(true);
-			if (!resyncer.handleGameState(gamefile, mesh, contents.value)) {
-				onlinegame.setInSync(false); // It refused the server's state, so we hold none of it.
-				break;
-			}
-			// AFTER the resync, not alongside setInSync() above: the intents held through the
-			// outage check the reconciled board to decide whether they still make sense.
-			socketintents.onRouteSynced('game');
+			handleGameState(gamefile, mesh, contents.value);
 			break;
 		case 'move':
 			movesendreceive.handleMove(gamefile, mesh, contents.value);
@@ -154,13 +149,8 @@ function routeMessage(contents: RoutedGameMessage): void {
 		case 'drawoffer':
 			drawoffers.onOpponentExtendedOffer();
 			break;
-		case 'drawdecline':
-			drawoffers.onOpponentDeclinedOffer();
-			break;
-		case 'rematchstate':
-			onlinegame.setInSync(true); // We're in sync whenever we receive a gamestate/rematchstate message.
-			gameactions.setRematchState(contents.value);
-			socketintents.onRouteSynced('game');
+		case 'chatentry':
+			guichat.append(contents.value);
 			break;
 		case 'rematchoffer':
 			gameactions.onOpponentRematchOffer();
@@ -182,10 +172,20 @@ function routeMessage(contents: RoutedGameMessage): void {
 	}
 }
 
+/** Replays the messages buffered during loading, in arrival order. */
+function flushQueue(): void {
+	messageQueue.forEach((m) => routeMessage(m));
+	messageQueue.length = 0;
+}
+
+// Receipt Stamping ------------------------------------------------------------
+
 /** Returns the clock values embedded in a game message, if it carries any. */
 function getClockValues(contents: ClientboundGameMessage): ClockValues | undefined {
 	switch (contents.action) {
 		case 'gamestate':
+			// A lean reply carries no board or clocks.
+			return contents.value.kind === 'full' ? contents.value.clockValues : undefined;
 		case 'move':
 		case 'gameconclusion':
 			return contents.value.clockValues;
@@ -224,34 +224,68 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 	return;
 }
 
-/** Replays the messages buffered during loading, in arrival order. */
-function flushQueue(): void {
-	messageQueue.forEach((m) => routeMessage(m));
-	messageQueue.length = 0;
+/** Keeps the chat's send history up to date, at receipt. See {@link receiveMessage}. */
+function stampChatHistory(contents: ClientboundGameMessage): void {
+	// A delta carries no age — it was recorded the moment it was sent.
+	if (contents.action === 'chatentry')
+		guichat.recordEntry(contents.value, guichat.receiptInstant()); // prettier-ignore
+	else if (contents.action === 'gamestate' && contents.value.participantState?.chat)
+		guichat.rebuildHistory(contents.value.participantState.chat);
+}
+
+// Message Handlers ------------------------------------------------------------
+
+/**
+ * Applies a `gamestate`: a full one reconciles the whole board, a lean one only the overlay,
+ * its board being finalized. Either way we are back in sync, so held intents are released.
+ */
+function handleGameState(
+	gamefile: GameFile,
+	mesh: Mesh | undefined,
+	state: GameStateMessage,
+): void {
+	// BEFORE the resync: resyncer submits moves as it reconciles, which movesendreceive gates on areInSync().
+	onlinegame.setInSync(true);
+
+	if (state.kind === 'full') {
+		if (!resyncer.handleGameState(gamefile, mesh, state)) {
+			onlinegame.setInSync(false); // It refused the server's state, so we hold none of it.
+			return;
+		}
+	} else {
+		// A finalized game's board can no longer change, so there is nothing to reconcile.
+		onlinegame.setLeanParticipantState(state.participantState);
+		guispectators.updateSpectatorCount(state.spectators);
+	}
+
+	// AFTER the resync, not alongside setInSync() above: the intents held through the
+	// outage check the reconciled board to decide whether they still make sense.
+	socketintents.onRouteSynced('game');
 }
 
 /**
- * Concludes the game from a non-move-triggered conclusion (resignation, timeout, draw
- * agreement, etc.) sent to spectators. They can't desync while subscribed, so the server
- * sends only the conclusion + frozen clocks rather than a full resync.
- * (Move-triggered conclusions reach spectators via the `'move'` message instead.)
+ * Concludes the game from a non-move-triggered conclusion. Its recipients can't desync,
+ * so it carries no board — only the conclusion, the frozen clocks, and a participant's
+ * rematch overlay. Move-triggered ones ride `move`.
  */
 function handleGameConclusion(gamefile: GameFile, message: GameConclusionMessage): void {
 	gamefile.gameConclusion = message.gameConclusion; // Must be set before editing the clocks.
 	movesendreceive.applyClockValues(gamefile, message.clockValues);
+	// Set rematch state now before concluding reveals the button.
+	if (message.rematch) gameactions.setRematchState(message.rematch);
 	gameslot.concludeGame();
 }
 
 /**
- * The server has detached us from the game — it was evicted from memory, was already dead,
- * or we joined a new game while an old concluded one lingered. Either way no further updates
- * are coming, so we tear down our subscription and clear the rematch state.
+ * The server has detached us from the game — it was evicted from memory. No further
+ * updates are coming, so we tear down our subscription and clear the rematch state.
  */
 function handleDetached(): void {
 	guispectators.updateSpectatorCount(0);
 	socketsubs.deleteSub('game');
-	onlinegame.onEvicted(); // Prevents a reconnect from trying to re-subscribe to the now-deleted game.
+	onlinegame.onDetached(); // Prevents a reconnect from trying to re-subscribe.
 	gameactions.onDetached();
+	guichat.onDetached();
 }
 
 /**
@@ -286,6 +320,6 @@ function resolveRematchViewColor(role: Player | undefined): Player | undefined {
 	return pinned !== undefined ? typeutil.invertPlayer(pinned) : undefined;
 }
 
-export default {
-	receiveMessage,
-};
+// Exports ---------------------------------------------------------------------
+
+export default { receiveMessage };

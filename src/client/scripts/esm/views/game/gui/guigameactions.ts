@@ -265,7 +265,7 @@ function canOfferRematch(): boolean {
 function setRematchState(rematch: RematchOfferInfo): void {
 	// Not a lost-offer bug. Either the game just concluded, before we could have offered at all,
 	// or we're on a fresh socket, and the server withdrew our offer the instant the old one
-	// closed (onPostGameLeave) — so there is never a standing offer of ours to clear here.
+	// closed (leaveRematchWindow) — so there is never a standing offer of ours to clear here.
 	weOfferedRematch = false;
 	opponentOfferedRematch = rematch.offered;
 	opponentPresentPostGame = rematch.present;

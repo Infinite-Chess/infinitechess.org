@@ -19,6 +19,7 @@ import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import chat from './chat.js';
 import drawOffers from './drawOffers.js';
 import disconnect from './disconnect.js';
 import gameLogger from './gameLogger.js';
@@ -63,10 +64,11 @@ function conclude(servergame: ServerGame, conclusion: GameConclusion): void {
 	gameSockets.sendGameState(servergame, servergame.whosTurn, 'full', false);
 
 	// All other players and spectators get the conclusion message, as they can't desync.
-	const conclusionMessage = gameStateBuilder.buildConclusionMessage(servergame);
 	const opponentColor = typeutil.invertPlayer(servergame.whosTurn);
-	gameSockets.sendToColor(servergame.match, opponentColor, 'game', 'gameconclusion', conclusionMessage); // prettier-ignore
-	gameSockets.broadcastToSpectators(servergame, 'gameconclusion', conclusionMessage);
+	const opponentMessage = gameStateBuilder.buildConclusionMessage(servergame, opponentColor);
+	const spectatorMessage = gameStateBuilder.buildConclusionMessage(servergame);
+	gameSockets.sendToColor(servergame.match, opponentColor, 'game', 'gameconclusion', opponentMessage); // prettier-ignore
+	gameSockets.broadcastToSpectators(servergame, 'gameconclusion', spectatorMessage);
 
 	free(servergame);
 }
@@ -84,6 +86,8 @@ function applyConclusion(servergame: ServerGame, conclusion: GameConclusion): vo
 	consoleLogGameOver(servergame); // Debug
 
 	clock.stop(servergame);
+
+	announceAnyoneAlreadyGone(servergame); // BEFORE the timers below, which erase what it reads.
 
 	// Cancel timers
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
@@ -108,6 +112,19 @@ function consoleLogGameOver(servergame: ServerGame): void {
 		};
 	}
 	console.log(`Game ${servergame.match.id} over & logged. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.gameConclusion)}. Moves: ${servergame.moves.length}.`); // prettier-ignore
+}
+
+/**
+ * Writes the "Opponent left." chat notice for a player whose departure was never announced
+ * — they dropped inside the reconnection cushion, which stays silent until it elapses.
+ */
+function announceAnyoneAlreadyGone(servergame: ServerGame): void {
+	for (const [color, data] of Object.entries(servergame.match.playerData)) {
+		// A pending cushion implies their socket is gone: it starts only on a detach, and a
+		// reconnect cancels it. Once it elapses, startClaimTimer clears this and announces them.
+		if (data.disconnect.startTime === undefined) continue;
+		chat.appendNotice(servergame, Number(color) as Player, 'postgame-left');
+	}
 }
 
 // 2. Freeing ------------------------------------------------------------------

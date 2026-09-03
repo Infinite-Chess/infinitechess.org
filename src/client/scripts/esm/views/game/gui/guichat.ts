@@ -54,6 +54,7 @@ let stickToBottom: boolean = true;
 /**
  * How many entries of the game's log we have rendered — so the next one to render is the entry
  * at exactly this index. Seeded from what SSR painted, which is always a true prefix of the log.
+ * So `.chat-log` may hold nothing but entries; any other child shifts every index.
  */
 let renderedCount: number = element_ChatLog?.children.length ?? 0;
 

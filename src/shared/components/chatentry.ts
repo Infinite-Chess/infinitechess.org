@@ -39,6 +39,10 @@ const NOTICE_WORDINGS: Record<ChatNoticeCode, string | PerspectiveWordings> = {
 	'disconnect-voluntary': { self: 'You disconnected.', other: 'Opponent disconnected.' },
 	'disconnect-involuntary': { self: 'You lost connection.', other: 'Opponent lost connection.' },
 	reconnected: { self: 'You reconnected.', other: 'Opponent reconnected.' },
+	// Post-game wordings. Leaving once the game is over is normal, so these
+	// say nothing of a connection — they explain the Rematch button state.
+	'postgame-left': { self: 'You left.', other: 'Opponent left.' },
+	'postgame-returned': { self: 'You returned.', other: 'Opponent returned.' },
 	'cheat-detected': 'Illegal move detected. Game aborted.',
 };
 

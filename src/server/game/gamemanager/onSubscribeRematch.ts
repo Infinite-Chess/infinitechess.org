@@ -41,11 +41,11 @@ function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 			gameSockets.broadcastSpectatorCount(game);
 		}
 	} else {
-		// Dead game
-		// Client should already have seen the finalized conclusion (otherwise they wouldn't
-		// be requesting to 'subscriberematch'). Tell them they're detached, they should then
-		// reset rematch offer state and disable the button.
-		socketsend.send(ws, 'game', 'detached', undefined);
+		// The game isn't live in server memory (concluded + evicted, or never existed). They
+		// missed the eviction while disconnected, so their view is stale by more than the
+		// rematch state — chat is appended right up to it. Reloading (`notlive`) then serves
+		// them fresh SSR: the dead review page, else the 404 page.
+		socketsend.send(ws, 'game', 'notlive', undefined);
 	}
 }
 

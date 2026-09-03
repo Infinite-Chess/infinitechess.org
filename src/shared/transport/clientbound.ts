@@ -86,6 +86,8 @@ const ClientboundLobbySchema = z.discriminatedUnion('action', [
 
 // Game Route ------------------------------------------------------------------
 
+// --- Overlay Info ---
+
 /** Info storing draw offers of the game. */
 export type DrawOfferInfo = z.infer<typeof DrawOfferInfoSchema>;
 const DrawOfferInfoSchema = z.strictObject({
@@ -117,7 +119,64 @@ const RematchOfferInfoSchema = z.strictObject({
 	present: z.boolean(),
 });
 
-/** The state of the game unique to participants (not spectators): draw/disconnect while live, and rematch once over. */
+// --- Chat ---
+
+/** The closed set of static event notices the chat log can hold. */
+export type ChatNoticeCode = z.infer<typeof ChatNoticeCodeSchema>;
+const ChatNoticeCodeSchema = z.literal([
+	'draw-offered', 'draw-declined', 'draw-accepted',
+	'rematch-offered', 'rematch-accepted',
+	'disconnect-voluntary', 'disconnect-involuntary', 'reconnected',
+	'postgame-left', 'postgame-returned',
+	'cheat-detected',
+]); // prettier-ignore
+
+/** What every chat log entry carries, message or notice. */
+const ChatEntryBaseSchema = z.strictObject({
+	/**
+	 * Its 0-based position in this game's log. The client appends an entry only when this is
+	 * the next index it needs — a repeat, or one past a gap, is dropped instead of mis-ordered.
+	 */
+	index: z.number().int().nonnegative(),
+	/** The sender, or the player a notice is about. */
+	player: typeschemas.PlayerSchema,
+});
+
+const ChatMessageSchema = ChatEntryBaseSchema.extend({
+	kind: z.literal('message'),
+	text: z.string(),
+});
+const ChatNoticeSchema = ChatEntryBaseSchema.extend({
+	kind: z.literal('notice'),
+	code: ChatNoticeCodeSchema,
+});
+
+/** One live chat delta: a player's typed message, or a static event notice. */
+export type ChatEntry = z.infer<typeof ChatEntrySchema>;
+const ChatEntrySchema = z.discriminatedUnion('kind', [ChatMessageSchema, ChatNoticeSchema]);
+
+/**
+ * One entry of a FULL log — a delta, plus how long ago the server recorded it. A duration,
+ * never an instant, since the two clocks aren't in sync. Required here but absent from a delta:
+ * only a full log is replayed to rebuild the client's rate-limit history, and a delta is
+ * broadcast the moment it is recorded.
+ */
+export type ChatLogEntry = z.infer<typeof ChatLogEntrySchema>;
+const ChatLogEntrySchema = z.discriminatedUnion('kind', [
+	ChatMessageSchema.extend({ millisAgo: z.number() }),
+	ChatNoticeSchema.extend({ millisAgo: z.number() }),
+]);
+
+/** A participant's whole chat log, oldest first. Absent for a chatless engine game. */
+const ChatLogSchema = z.array(ChatLogEntrySchema);
+
+// --- Participant State ---
+
+/**
+ * The state of the game unique to participants (not spectators), as a FULL gamestate carries
+ * it: draw/disconnect while live, and rematch once over. A `subscribe` lands on either stage,
+ * so this carries both.
+ */
 export type ParticipantState = z.infer<typeof ParticipantStateSchema>;
 const ParticipantStateSchema = z.strictObject({
 	drawOffer: DrawOfferInfoSchema,
@@ -125,18 +184,37 @@ const ParticipantStateSchema = z.strictObject({
 	disconnect: DisconnectInfoSchema.optional(),
 	/** Present only once the game is concluded and not memory-evicted yet for the rematch handshake. */
 	rematch: RematchOfferInfoSchema.optional(),
+	chat: ChatLogSchema.optional(),
 });
+
+/**
+ * The same state as a LEAN gamestate carries it. Its game is always concluded, and
+ * `applyConclusion` closes the draw offer and cancels the disconnect — so this cannot
+ * express either.
+ */
+export type LeanParticipantState = z.infer<typeof LeanParticipantStateSchema>;
+const LeanParticipantStateSchema = z.strictObject({
+	/** Required: the game is over, handshake is underway. */
+	rematch: RematchOfferInfoSchema,
+	chat: ChatLogSchema.optional(),
+});
+
+// --- Game State ---
 
 /** How many spectators there are right now for a live game. */
 const SpectatorCountSchema = z.number().nonnegative();
 
 /**
- * The recipient-agnostic core of a live game-state message (no per-player overlay). Carries the
- * live move list, clocks, conclusion, spectator count, and finalized flag. The core of every
- * `gamestate` message — the `subscribe` reply (fresh load or live reconnect).
+ * The FULL `gamestate` — the answer to every `subscribe`, and to every push that can desync a
+ * board. Carries the move list, clocks and conclusion.
  */
-export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
-const GameStateBaseSchema = z.strictObject({
+export type GameStateFull = z.infer<typeof GameStateFullSchema>;
+const GameStateFullSchema = z.strictObject({
+	kind: z.literal('full'),
+	/** How many spectators there are right now. Absent only for a dead game loaded over HTTP. */
+	spectators: SpectatorCountSchema.optional(),
+	/** Present for participants, absent for spectators. */
+	participantState: ParticipantStateSchema.optional(),
 	/** The full move list (reconciled against on reconnect). */
 	moves: z.array(typeschemas.MovePacketSchema),
 	/**
@@ -145,8 +223,6 @@ const GameStateBaseSchema = z.strictObject({
 	 */
 	clockValues: clockutil.ClockValuesSchema.optional(),
 	gameConclusion: typeschemas.GameConclusionSchema.optional(),
-	/** How many spectators there are right now. Absent only for a dead game loaded over HTTP. */
-	spectators: SpectatorCountSchema.optional(),
 	/**
 	 * Per-player rating deltas. A finalized-result fact carried as state so a late
 	 * resyncer gets it. Present only once a rated game is finalized; absent otherwise.
@@ -166,25 +242,39 @@ const GameStateBaseSchema = z.strictObject({
 });
 
 /**
- * A live game-state message: the {@link GameStateBase} plus the recipient's participant overlay.
- * The payload of every `gamestate` message — the `subscribe` reply.
- * `participantState` is present for participants of an ongoing game, absent for spectators.
+ * The LEAN `gamestate` — the answer to every `subscriberematch`. Only a client that already holds
+ * a finalized game ever sends that, so its board can no longer change and needs no re-sending.
  */
-export type GameStateMessage = z.infer<typeof GameStateMessageSchema>;
-const GameStateMessageSchema = GameStateBaseSchema.extend({
-	participantState: ParticipantStateSchema.optional(),
+const GameStateLeanSchema = z.strictObject({
+	kind: z.literal('lean'),
+	/** Required, unlike on a full state: a lean one is only ever built from a live game. */
+	spectators: SpectatorCountSchema,
+	/** Required: only a participant is ever answered with a lean state — a spectator gets none. */
+	participantState: LeanParticipantStateSchema,
 });
 
+/** The payload of every `gamestate`. Which one follows the REQUEST, never the game's stage. */
+export type GameStateMessage = z.infer<typeof GameStateMessageSchema>;
+const GameStateMessageSchema = z.discriminatedUnion('kind', [
+	GameStateFullSchema,
+	GameStateLeanSchema,
+]);
+
+// --- Other Payloads ---
+
 /**
- * Server websocket `'gameconclusion'` message — a non-move-triggered conclusion for spectators.
- * Spectators can't desync so long as their socket is open, so they need only the conclusion
- * + frozen clocks, not a full re-send. (Move-triggered conclusions reach them via `'move'`.)
+ * The `gameconclusion` message — a non-move-triggered conclusion sent to those who can't
+ * desync (whoever's turn it is NOT) so long as their socket is open, so they need only the
+ * conclusion + frozen clocks + rematch starting state (if participant), not a full game
+ * state resend. Move-triggered conclusions already reach them via `move`.
  */
 export type GameConclusionMessage = z.infer<typeof GameConclusionMessageSchema>;
 const GameConclusionMessageSchema = z.strictObject({
 	gameConclusion: typeschemas.GameConclusionSchema,
 	/** If the game is timed, the frozen final clock values. */
 	clockValues: clockutil.ClockValuesSchema.optional(),
+	/** The recipient's rematch overlay, born with this very conclusion — present only for a participant. */
+	rematch: RematchOfferInfoSchema.optional(),
 });
 
 /** The message contents of a server websocket `'move'` message — our opponent's move. */
@@ -198,6 +288,8 @@ const OpponentsMoveMessageSchema = z.strictObject({
 	/** If the game is timed, this will be the current clock values. */
 	clockValues: clockutil.ClockValuesSchema.optional(),
 });
+
+// --- Actions ---
 
 /** Every message the server may send on the 'game' route. */
 export type ClientboundGameMessage = z.infer<typeof ClientboundGameSchema>;
@@ -223,9 +315,8 @@ const ClientboundGameSchema = z.discriminatedUnion('action', [
 	}),
 	z.strictObject({ action: z.literal('opponentreconnect') }),
 	z.strictObject({ action: z.literal('drawoffer') }),
-	z.strictObject({ action: z.literal('drawdecline') }),
 	z.strictObject({ action: z.literal('finalized') }),
-	z.strictObject({ action: z.literal('rematchstate'), value: RematchOfferInfoSchema }),
+	z.strictObject({ action: z.literal('chatentry'), value: ChatEntrySchema }),
 	z.strictObject({ action: z.literal('rematchoffer') }),
 	z.strictObject({ action: z.literal('opponentleft') }),
 	z.strictObject({ action: z.literal('opponentreturn') }),
