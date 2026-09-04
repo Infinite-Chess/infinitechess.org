@@ -108,8 +108,13 @@ function hasSocket(ws: CustomWebSocket): boolean {
 
 /** Gets the active-game entry of a player, if they belong to one. */
 function getEntry(player: AuthMemberInfo): ActiveGameEntry | undefined {
-	if (player.signedIn) return membersInActiveGames[player.user_id];
+	if (player.signedIn) return getEntryOfUser(player.user_id);
 	else return browsersInActiveGames[player.browser_id];
+}
+
+/** Gets the active-game entry of a signed-in member, for callers holding only their user_id. */
+function getEntryOfUser(user_id: number): ActiveGameEntry | undefined {
+	return membersInActiveGames[user_id];
 }
 
 /**
@@ -143,6 +148,7 @@ export default {
 	add,
 	remove,
 	hasSocket,
+	getEntryOfUser,
 	getGameID,
 	getRole,
 	consumeNavigateNotice,

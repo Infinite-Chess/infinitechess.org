@@ -66,17 +66,6 @@ function getAll(): ServerGame[] {
 	return Object.values(activeGames);
 }
 
-/** Whether the signed-in member is a participant of any game currently in memory. */
-function hasMember(username: string): boolean {
-	for (const servergame of getAll()) {
-		for (const player of Object.values(servergame.match.playerData)) {
-			if (!player.identifier.signedIn) continue;
-			if (player.identifier.username === username) return true;
-		}
-	}
-	return false;
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -89,5 +78,4 @@ export default {
 	// Lookups
 	getByID,
 	getAll,
-	hasMember,
 };

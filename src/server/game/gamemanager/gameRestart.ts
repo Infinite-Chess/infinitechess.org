@@ -36,7 +36,7 @@ function prepForShutdown(): void {
 		// Cancel all runtime timers
 		clearTimeout(servergame.match.autoTimeLossTimeoutID);
 		disconnect.cancelAllTimers(servergame.match);
-		gameLifecycle.cancelFinalizeTimer(servergame.match);
+		clearTimeout(servergame.match.finalizeTimeoutID);
 
 		// Unsubscribe all sockets (we will resub them when they reconnect)
 		gameSockets.detachEveryone(servergame);
@@ -85,7 +85,7 @@ function restoreLiveGames(): void {
 	}
 }
 
-/** Revives the auto-time-loss, disconnect and both-disconnected timers a restored game was mid-way through. */
+/** Revives the auto-time-loss and disconnect timers a restored game was mid-way through. */
 function reinstateTimers(servergame: ServerGame, pendingTimers: PendingTimers): void {
 	// 1. Auto time loss timer (for timed games)
 	if (pendingTimers.autoTimeLossMs !== undefined) {
@@ -108,9 +108,10 @@ function reinstateTimers(servergame: ServerGame, pendingTimers: PendingTimers): 
 			// The opponent's claim window was already open. Restore the timestamp; nothing
 			// fires. If it's now in the past, the window is simply already claimable.
 			const playerdata = servergame.match.playerData[player]!;
-			playerdata.disconnect.startTime = undefined;
-			playerdata.disconnect.timeOpponentMayClaim = Date.now() + timerState.remainingMs;
-			playerdata.disconnect.voluntary = timerState.voluntary;
+			playerdata.disconnect.claim = {
+				openTime: Date.now() + timerState.remainingMs,
+				voluntary: timerState.voluntary,
+			};
 		} else if (timerState.type === 'cushion') {
 			// Still in the 5-second cushion period
 			if (timerState.remainingMs <= 0) {
@@ -118,12 +119,13 @@ function reinstateTimers(servergame: ServerGame, pendingTimers: PendingTimers): 
 				disconnect.startClaimTimer(servergame, player, !timerState.voluntary);
 			} else {
 				// Revive the cushion timer for the remaining duration
-				servergame.match.playerData[player]!.disconnect.startID = setTimeout(
-					() => disconnect.startClaimTimer(servergame, player, !timerState.voluntary),
-					timerState.remainingMs,
-				);
-				servergame.match.playerData[player]!.disconnect.startTime =
-					Date.now() + timerState.remainingMs;
+				servergame.match.playerData[player]!.disconnect.cushion = {
+					id: setTimeout(
+						() => disconnect.startClaimTimer(servergame, player, !timerState.voluntary),
+						timerState.remainingMs,
+					),
+					endTime: Date.now() + timerState.remainingMs,
+				};
 			}
 		} else {
 			// Fresh: was connected before restart, now disconnected due to server restart.
@@ -131,14 +133,6 @@ function reinstateTimers(servergame: ServerGame, pendingTimers: PendingTimers): 
 			disconnect.startCushionTimer(servergame, player);
 		}
 	}
-
-	// 3. Both-disconnected timer. If both players ended up disconnected, revive the
-	//    persisted deadline (fires immediately if elapsed), or start fresh if the
-	//    restart itself disconnected both (no deadline was persisted).
-	gameLifecycle.maybeStartBothDisconnectedTimer(
-		servergame,
-		pendingTimers.bothDisconnectedEndTime,
-	);
 }
 
 // Exports ---------------------------------------------------------------------

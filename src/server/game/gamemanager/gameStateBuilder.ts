@@ -333,7 +333,7 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
 	const opponentRole = typeutil.invertPlayer(role);
 	const now = Date.now();
 	const match = servergame.match;
-	const opponentDisconnect = match.playerData[opponentRole]?.disconnect; // An engine opponent has no entry
+	const opponentClaim = match.playerData[opponentRole]?.disconnect.claim; // An engine opponent has no entry
 
 	return {
 		drawOffer: {
@@ -341,13 +341,12 @@ function getParticipantState(servergame: ServerGame, role: Player): ParticipantS
 			lastOfferPly: drawOffers.getLastOfferPly(match, role), // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
 		},
 		// Present once their opponent has disconnected and the claim window is set.
-		disconnect:
-			opponentDisconnect?.timeOpponentMayClaim !== undefined
-				? {
-						millisUntilClaimable: opponentDisconnect.timeOpponentMayClaim - now,
-						voluntary: opponentDisconnect.voluntary,
-					}
-				: undefined,
+		disconnect: opponentClaim
+			? {
+					millisUntilClaimable: opponentClaim.openTime - now,
+					voluntary: opponentClaim.voluntary,
+				}
+			: undefined,
 		// Once the game is over it lingers for the rematch handshake — send enough to
 		// restore the rematch button's state (glow / disabled) on a page refresh.
 		rematch: getRematchOfferInfo(servergame, role),

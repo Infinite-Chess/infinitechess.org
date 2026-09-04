@@ -60,11 +60,6 @@ export interface PendingTimers {
 	 * turn should fire after this many ms. 0 means immediately.
 	 */
 	autoTimeLossMs?: number;
-	/**
-	 * If defined, the epoch-ms deadline of the persisted both-disconnected timer to
-	 * revive exactly (fires immediately if already past). Undefined if none was persisted.
-	 */
-	bothDisconnectedEndTime?: number;
 }
 
 /** Represents the disconnect state of a player that needs to be restored. */
@@ -197,7 +192,7 @@ function restoreSingleGame(
 	const servergame: ServerGame = gameUtility.initServerGame(game, construction, match, moves);
 
 	// 6. Compute pending timers
-	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame);
+	const pendingTimers = computePendingTimers(playerRows, servergame);
 
 	return { servergame, pendingTimers };
 }
@@ -318,12 +313,9 @@ function reconstructMatchInfo(
 		playerData[row.player_number as Player] = {
 			identifier: identity,
 			lastOfferPly: row.last_draw_offer_ply ?? undefined,
-			disconnect: {
-				startID: undefined,
-				startTime: row.disconnect_cushion_end_time ?? undefined,
-				timeOpponentMayClaim: undefined,
-				voluntary: undefined,
-			},
+			// Left empty: reinstateTimers arms the cushion and claim window
+			// from `pendingTimers`, which carries the persisted deadlines.
+			disconnect: {},
 			chatHistory: [], // The chat limits deliberately reset on a restart.
 		};
 	}
@@ -356,6 +348,9 @@ function reconstructMatchInfo(
 		freed: false,
 		finalized: false,
 		rematchOffers: new Set(), // Ephemeral — rematch offers never survive a restart.
+		// The abandonment sweep picks the countdown back up from here, and re-stamps
+		// from scratch if the shutdown happened while somebody was still connected.
+		emptySince: gameRow.empty_since ?? undefined,
 	};
 }
 
@@ -369,7 +364,6 @@ function parseMoves(movesString: string): MoveRecord[] {
 
 /** Computes which timers need to be started after restoration. */
 function computePendingTimers(
-	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
 	servergame: ServerGame,
 ): PendingTimers {
@@ -383,11 +377,6 @@ function computePendingTimers(
 	if (!servergame.untimed && servergame.clocks.colorTicking !== undefined) {
 		const tickingTime = servergame.clocks.currentTime[servergame.clocks.colorTicking]!;
 		timers.autoTimeLossMs = Math.max(tickingTime, 0);
-	}
-
-	// Both-disconnected timer deadline (game-level), if one was persisted.
-	if (gameRow.both_disconnected_end_time !== null) {
-		timers.bothDisconnectedEndTime = gameRow.both_disconnected_end_time;
 	}
 
 	// Per-player disconnect state

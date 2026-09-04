@@ -454,7 +454,6 @@ export type TranslationKeys =
 	| 'news.more_dev_logs'
 	| 'server.javascript.ws-forbidden_wrong_account'
 	| 'server.javascript.ws-deleting_account_not_found'
-	| 'server.javascript.ws-deleting_account_in_game'
 	| 'server.javascript.ws-forbidden'
 	| 'server.javascript.ws-already_in_game'
 	| 'server.javascript.ws-cannot_resign_finished_game'
@@ -988,7 +987,6 @@ export interface TranslationsObject {
 		javascript: {
 			'ws-forbidden_wrong_account': string;
 			'ws-deleting_account_not_found': string;
-			'ws-deleting_account_in_game': string;
 			'ws-forbidden': string;
 			'ws-already_in_game': string;
 			'ws-cannot_resign_finished_game': string;

@@ -37,8 +37,11 @@ export interface LiveGameData {
 	draw_offer_state: number | null;
 	/** 0 = false, 1 = true */
 	validate_moves: 0 | 1;
-	/** Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected. */
-	both_disconnected_end_time: number | null;
+	/**
+	 * Epoch ms the game was found with EVERY human gone, from which
+	 * the abandonment countdown runs. NULL while anyone is connected.
+	 */
+	empty_since: number | null;
 	/** Slide Limit modifier: max squares a sliding piece may travel. Null if the modifier is inactive. */
 	mod_slide_limit: number | null;
 }
@@ -54,8 +57,8 @@ function insert(record: LiveGamesRecord): void {
 	const query = `
 			INSERT INTO live_games (
 				game_id, time_created, variant, position, clock, rated, private,
-				moves, color_ticking, clock_snapshot_time,
-				draw_offer_state, validate_moves, both_disconnected_end_time, mod_slide_limit
+				moves, color_ticking, clock_snapshot_time, draw_offer_state,
+				validate_moves, empty_since, mod_slide_limit
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 	db.call(
@@ -64,7 +67,7 @@ function insert(record: LiveGamesRecord): void {
 				record.game_id, record.time_created, record.variant, record.position,
 				record.clock, record.rated, record.private, record.moves, record.color_ticking,
 				record.clock_snapshot_time, record.draw_offer_state, record.validate_moves,
-				record.both_disconnected_end_time, record.mod_slide_limit,
+				record.empty_since, record.mod_slide_limit,
 			]), // prettier-ignore
 		`Error inserting live game ${record.game_id}`,
 	);

@@ -31,40 +31,30 @@ import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/
  */
 export type PlayerRatingResult = { ratingAtGame: Rating; change: number };
 
-/** Contains information about this player's disconnection and claim-window timer. */
+/** Contains information about this player's disconnection and their opponent's claim window. */
 export type PlayerDisconnect = {
 	/**
-	 * The timeout id of the timer that will OPEN the opponent's claim window.
-	 * This is triggered if their socket unexpectedly closes,
-	 * and lasts for 5 seconds to give them a chance to reconnect.
+	 * The 5-second reconnection cushion currently running,
+	 * armed when their socket involuntarily closes.
 	 */
-	startID?: NodeJS.Timeout;
+	cushion?: {
+		/** Timeout id, so the cushion can be cancelled. */
+		id: NodeJS.Timeout;
+		/** Epoch-ms the cushion expires. Persisted, so a restart can revive it. */
+		endTime: number;
+	};
 	/**
-	 * The epoch-ms timestamp when the 5-second reconnection cushion expires.
-	 * Set alongside startID when the cushion timer is started.
-	 * Used for persistence: on server restart, this allows reviving the cushion timer.
+	 * The opponent's claim window against this disconnected player,
+	 * armed once the cushion above elapses. Nothing fires on it —
+	 * an arriving claim is validated on-demand against `openTime`.
 	 */
-	startTime?: number;
-} & (
-	| {
-			/**
-			 * The epoch-ms timestamp from which the OPPONENT is allowed to claim
-			 * victory or a draw against this disconnected player. The claim is
-			 * validated on-demand against this timestamp when it arrives. Once
-			 * this is in the past, the opponent's claim window is open.
-			 */
-			timeOpponentMayClaim: number;
-			/**
-			 * Whether the player disconnected voluntarily.
-			 * If not, they are given extra time to reconnect.
-			 */
-			voluntary: boolean;
-	  }
-	| {
-			timeOpponentMayClaim: undefined;
-			voluntary: undefined;
-	  }
-);
+	claim?: {
+		/** Epoch-ms the window opens. Once this is in the past, the opponent may claim. */
+		openTime: number;
+		/** Whether they disconnected voluntarily. If not, the window opens later. */
+		voluntary: boolean;
+	};
+};
 
 /** Information about a single player in an online game. */
 export interface PlayerData {
@@ -116,7 +106,7 @@ export interface MatchInfo {
 	clock: TimeControl;
 	/** The modifiers configuration applied to this game. Absent if none. */
 	modifiers?: GameModifier[];
-	/** The data held for each player */
+	/** The data held for each human player. An engine occupies `engineParticipant` instead. */
 	playerData: PlayerGroup<PlayerData>;
 	/** Present only for games against an engine. Its moves arrive over the human's socket. */
 	engineParticipant?: EngineInfo & { color: Player };
@@ -129,8 +119,8 @@ export interface MatchInfo {
 	drawOfferState?: Player;
 
 	/**
-	 * Whether or not the game has concluded at all, which then frees players
-	 * to join a new game, and logs the game into the db. Freed !== finalized.
+	 * Whether the post-conclusion work has run: players released to join
+	 * a new game, and the game logged to the db. Freed !== finalized.
 	 */
 	freed: boolean;
 	/**
@@ -155,16 +145,10 @@ export interface MatchInfo {
 	finalizeTimeoutID?: NodeJS.Timeout;
 
 	/**
-	 * The ID of the timer that concludes the game once BOTH players have been
-	 * disconnected for too long (neither is present to claim victory/draw).
-	 * Started when the second player disconnects; cancelled if either reconnects.
+	 * The epoch-ms the abandonment sweep found this game with
+	 * nobody connected to it. Persisted, so a restart resumes it.
 	 */
-	bothDisconnectedTimeoutID?: NodeJS.Timeout;
-	/**
-	 * The epoch-ms timestamp the {@link bothDisconnectedTimeoutID} timer fires.
-	 * Persisted so the timer can be revived (or fired) on server restart.
-	 */
-	bothDisconnectedEndTime?: number;
+	emptySince?: number;
 }
 
 /** The game stored in the server */

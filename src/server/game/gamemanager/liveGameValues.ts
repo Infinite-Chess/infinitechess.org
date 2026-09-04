@@ -46,10 +46,9 @@ function getMovesString(servergame: ServerGame): string {
  */
 function getDisconnectColumnData(disconnect: PlayerDisconnect): LivePlayerDisconnectData {
 	return {
-		disconnect_cushion_end_time: disconnect.startTime ?? null,
-		disconnect_claim_time: disconnect.timeOpponentMayClaim ?? null,
-		disconnect_voluntary:
-			disconnect.voluntary !== undefined ? (disconnect.voluntary ? 1 : 0) : null,
+		disconnect_cushion_end_time: disconnect.cushion?.endTime ?? null,
+		disconnect_claim_time: disconnect.claim?.openTime ?? null,
+		disconnect_voluntary: disconnect.claim !== undefined ? (disconnect.claim.voluntary ? 1 : 0) : null, // prettier-ignore
 	};
 }
 
@@ -131,7 +130,7 @@ function onGameCreated(servergame: ServerGame): void {
 		clock_snapshot_time: null,
 		draw_offer_state: null,
 		validate_moves: servergame.validateMoves ? 1 : 0,
-		both_disconnected_end_time: null,
+		empty_since: null,
 		mod_slide_limit: match.modifiers?.find((m) => m.kind === 'slide-limit')?.value ?? null,
 	};
 
@@ -219,8 +218,8 @@ function onPlayerDisconnected(servergame: ServerGame, color: Player): void {
 }
 
 /**
- * Called when a player reconnects. Clears their disconnect state, and the game-level
- * both-disconnected timer (a reconnect means the players are no longer both gone).
+ * Called when a player reconnects. Clears their disconnect state, and the game's
+ * empty-since stamp (someone is present, so the game is no longer empty).
  */
 function onPlayerReconnected(servergame: ServerGame, color: Player): void {
 	persist(() => {
@@ -229,18 +228,18 @@ function onPlayerReconnected(servergame: ServerGame, color: Player): void {
 			disconnect_claim_time: null,
 			disconnect_voluntary: null,
 		});
-		liveGamesManager.update(servergame.match.id, { both_disconnected_end_time: null });
+		liveGamesManager.update(servergame.match.id, { empty_since: null });
 	});
 }
 
 /**
- * Called when the game-level both-disconnected timer is started or cleared.
- * Persists its deadline so it can be revived (or fired) on server restart.
+ * Called when the game's empty-since stamp is set or cleared.
+ * Persists it, so a restart resumes the countdown.
  */
-function onBothDisconnectedTimerChanged(servergame: ServerGame): void {
+function onEmptySinceChanged(servergame: ServerGame): void {
 	persist(() =>
 		liveGamesManager.update(servergame.match.id, {
-			both_disconnected_end_time: servergame.match.bothDisconnectedEndTime ?? null,
+			empty_since: servergame.match.emptySince ?? null,
 		}),
 	);
 }
@@ -267,6 +266,6 @@ export default {
 	onDrawOfferDeclined,
 	onPlayerDisconnected,
 	onPlayerReconnected,
-	onBothDisconnectedTimerChanged,
+	onEmptySinceChanged,
 	onEngineClockChanged,
 };

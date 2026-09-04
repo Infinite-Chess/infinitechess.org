@@ -149,6 +149,7 @@ function concludeReportedGame(
 	gameSockets.broadcastToSpectators(servergame, 'gamestate', state);
 
 	gameLifecycle.free(servergame);
+	gameLifecycle.finalize(servergame); // Max of one report per game.
 
 	// Update the already-logged game record to reflect the overturn (aborted, one fewer move...).
 	if (wasLogged) gameLogger.updateOverturned(servergame, originalConclusion!, cheaterColor);

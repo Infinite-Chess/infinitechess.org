@@ -279,7 +279,7 @@ function generate(): void {
 			clock_snapshot_time        INTEGER,
 			draw_offer_state           INTEGER,
 			validate_moves             BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1)),
-			both_disconnected_end_time INTEGER, -- Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected.
+			empty_since                INTEGER, -- Epoch ms every human was found gone; the abandonment countdown starts. NULL otherwise.
 			mod_slide_limit            INTEGER -- Slide Limit modifier: max squares a sliding piece may travel. NULL = modifier inactive.
 		);
 	`);

@@ -44,6 +44,8 @@ const NOTICE_WORDINGS: Record<ChatNoticeCode, string | PerspectiveWordings> = {
 	'postgame-left': { self: 'You left.', other: 'Opponent left.' },
 	'postgame-returned': { self: 'You returned.', other: 'Opponent returned.' },
 	'cheat-detected': 'Illegal move detected. Game aborted.',
+	'account-closed': { self: 'You closed your account.', other: 'Opponent closed their account.' },
+	'account-terminated': { self: 'Your account was terminated.', other: "Opponent's account was terminated." }, // prettier-ignore
 };
 
 // Functions -------------------------------------------------------------------

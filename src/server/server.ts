@@ -19,6 +19,7 @@ import gameRestart from './game/gamemanager/gameRestart.js';
 import certOptions from './config/certOptions.js';
 import socketServer from './socket/socketServer.js';
 import databaseInit from './database/databaseInit.js';
+import gameLifecycle from './game/gamemanager/gameLifecycle.js';
 import startupLogger from './utility/startupLogger.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
@@ -64,6 +65,7 @@ await variantcache.loadAllVariants();
 
 // Restore live games from the database into memory before accepting new connections.
 gameRestart.restoreLiveGames();
+gameLifecycle.startPeriodicAbandonmentSweep();
 
 // Start the server
 const DEV_BUILD = process.env['NODE_ENV'] === 'development';

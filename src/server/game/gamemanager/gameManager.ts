@@ -185,8 +185,8 @@ function runReconnectSideEffects(
 	ourRole: Player,
 	wasAbsent: boolean,
 ): void {
-	/** Whether the opponent had been told they could claim (the claim window was set). */
-	const claimWindowWasSet = gameUtility.isClaimWindowSetForColor(servergame.match, ourRole);
+	/** Whether the opponent had been told they could claim, elapsed or not. */
+	const claimWindowWasSet = servergame.match.playerData[ourRole]!.disconnect.claim !== undefined;
 
 	disconnect.cancelTimer(servergame.match, ourRole);
 
@@ -236,10 +236,6 @@ function unsubscribeParticipant(ws: CustomWebSocket, involuntary: boolean): void
 			// Closed tab manually: the page is gone, taking the engine's worker with it.
 			freezeEngineClock(servergame);
 		}
-
-		// If this leaves BOTH players disconnected, start the timer that concludes the
-		// game if neither returns (no one is present to claim victory/draw).
-		gameLifecycle.maybeStartBothDisconnectedTimer(servergame);
 	} else {
 		// Post-conclusion: the game only lingers for the rematch handshake — no claim window applies.
 		leaveRematchWindow(servergame, role, involuntary);
@@ -267,20 +263,21 @@ function leaveRematchWindow(servergame: ServerGame, role: Player, involuntary: b
 	match.rematchOffers.delete(role);
 	gameSockets.sendToColor(match, typeutil.invertPlayer(role), 'game', 'opponentleft', undefined); // prettier-ignore
 
-	clearTimeout(playerdata.disconnect.startID);
-	delete playerdata.disconnect.startID;
+	clearTimeout(playerdata.disconnect.cushion?.id);
+	delete playerdata.disconnect.cushion;
 
 	if (!involuntary) {
 		// Gone immediately.
-		delete playerdata.disconnect.startTime;
 		gameLifecycle.evictIfBothLeft(servergame);
 	} else {
 		// Network drop — give them the reconnection cushion before considering them gone.
-		playerdata.disconnect.startID = setTimeout(() => {
-			delete playerdata.disconnect.startTime;
-			gameLifecycle.evictIfBothLeft(servergame);
-		}, disconnect.RECONNECT_CUSHION_MS);
-		playerdata.disconnect.startTime = Date.now() + disconnect.RECONNECT_CUSHION_MS;
+		playerdata.disconnect.cushion = {
+			id: setTimeout(() => {
+				delete playerdata.disconnect.cushion;
+				gameLifecycle.evictIfBothLeft(servergame);
+			}, disconnect.RECONNECT_CUSHION_MS),
+			endTime: Date.now() + disconnect.RECONNECT_CUSHION_MS,
+		};
 	}
 }
 

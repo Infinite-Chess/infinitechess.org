@@ -124,10 +124,7 @@ function initMatch(
 	for (const [c, { identifier }] of Object.entries(assignedPlayers)) {
 		playerData[Number(c) as Player] = {
 			identifier,
-			disconnect: {
-				timeOpponentMayClaim: undefined,
-				voluntary: undefined,
-			},
+			disconnect: {},
 			chatHistory: [],
 		};
 	}
@@ -222,24 +219,6 @@ function assignWhiteBlackPlayersFromSeek(
 /** Returns true if the game is against an engine opponent. */
 function isEngineGame(servergame: ServerGame): boolean {
 	return servergame.match.engineParticipant !== undefined;
-}
-
-/**
- * Returns true if the provided color's opponent has been told they can claim
- * victory/draw against them (i.e. the claim-window timestamp is set, whether or
- * not it has elapsed yet). NOT whether the 5-second reconnection cushion has started.
- */
-function isClaimWindowSetForColor(match: MatchInfo, role: Player): boolean {
-	return match.playerData[role]!.disconnect.timeOpponentMayClaim !== undefined;
-}
-
-/**
- * Returns true if the provided color is currently disconnected — either still in the
- * reconnection cushion, or with their opponent's claim window set.
- */
-function isColorDisconnected(match: MatchInfo, role: Player): boolean {
-	const { startTime, timeOpponentMayClaim } = match.playerData[role]!.disconnect;
-	return startTime !== undefined || timeOpponentMayClaim !== undefined;
 }
 
 /**
@@ -344,8 +323,6 @@ export default {
 	assignWhiteBlackPlayersFromSeek,
 	// Predicates
 	isEngineGame,
-	isClaimWindowSetForColor,
-	isColorDisconnected,
 	isGameBorderlineResignable,
 	// Clocks
 	getClockValues,

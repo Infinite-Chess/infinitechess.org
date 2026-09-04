@@ -259,7 +259,6 @@ function updateAllPlayerStatsInTransaction(
 /**
  * [INTERNAL] Applies a single player's aggregate-stat deltas to the `player_stats` table.
  * `sign: 1` counts a game (logging), `sign: -1` un-counts it (reversing an overturned game)
- * @throws If the user has no `player_stats` row — impossible unless they deleted their account mid-game.
  */
 function updateSinglePlayerStatsInTransaction(
 	user_id: number,

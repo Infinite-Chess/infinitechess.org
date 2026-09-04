@@ -129,6 +129,7 @@ const ChatNoticeCodeSchema = z.literal([
 	'disconnect-voluntary', 'disconnect-involuntary', 'reconnected',
 	'postgame-left', 'postgame-returned',
 	'cheat-detected',
+	'account-closed', 'account-terminated',
 ]); // prettier-ignore
 
 /** What every chat log entry carries, message or notice. */
