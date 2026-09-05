@@ -154,7 +154,7 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 ### Session flow
 
-56. If while we're working on something, you notice an unrelated issue or bug, do **not** distract me from the work we're currently focusing on. Park it, and bring it up only after the current work has been committed. The exception is an issue that is related to our current work. Otherwise, a simple "One issue parked." is enough.
+56. If while we're working on something, you notice an unrelated issue or bug, do **not** distract me from the work we're currently focusing on. Park it, and bring it up only after the current work has been committed. The exception is an issue inside any script we touched this session. Otherwise, a simple "One issue parked." is enough.
 
 57. Park issues by appending them to a scratch file outside the repo, if your harness gives you a writable location for one. It has to be a written file, never a mental note: your internal reasoning from earlier turns isn't retained, so a note you only _thought_ is gone by your next message. Re-read that file every time we commit. If you have no writable location outside the repo, keep the note as a single terse line at the end of your response instead.
 
