@@ -66,7 +66,7 @@ function getPageState(req: Request): AnalysisPageState | undefined {
 		gameId,
 		viewColor,
 		variantGroups,
-		...(meta && { meta }),
+		meta,
 	};
 }
 

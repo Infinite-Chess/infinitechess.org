@@ -398,12 +398,12 @@ function produceStaticGameState(id: number):
 			game,
 			state: gameStateBuilder.buildStaticState(game),
 			moveCount: game.moves.length,
-			...(game.match.engineParticipant && {
-				engineGame: {
-					engine: game.match.engineParticipant.engine,
-					strengthLevel: game.match.engineParticipant.strengthLevel,
-				},
-			}),
+			engineGame: game.match.engineParticipant
+				? {
+						engine: game.match.engineParticipant.engine,
+						strengthLevel: game.match.engineParticipant.strengthLevel,
+					}
+				: undefined,
 			ratingChanges: gameStateBuilder.getRatingChanges(game),
 		};
 

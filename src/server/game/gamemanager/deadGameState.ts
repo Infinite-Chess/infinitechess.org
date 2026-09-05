@@ -88,24 +88,25 @@ function produceStaticState(game_id: number):
 
 	const state = assembleStaticGameState(game, playerRows, engineParticipant);
 
-	/** Per signed-in player rating delta; populated only for rated games. */
-	const ratingChanges: PlayerGroup<number> = {};
+	/** Per signed-in player rating delta; undefined unless the game was rated. */
+	let ratingChanges: PlayerGroup<number> | undefined;
 	for (const row of playerRows) {
-		if (row.elo_change_from_game !== null)
-			ratingChanges[row.player_number as Player] = row.elo_change_from_game;
+		if (row.elo_change_from_game === null) continue;
+		ratingChanges ??= {};
+		ratingChanges[row.player_number as Player] = row.elo_change_from_game;
 	}
 
 	return {
 		state,
 		moveCount: game.move_count,
 		icn: game.icn,
-		...(engineParticipant && {
-			engineGame: {
-				engine: engineParticipant.engine,
-				strengthLevel: engineParticipant.strengthLevel,
-			},
-		}),
-		...(Object.keys(ratingChanges).length > 0 && { ratingChanges }),
+		engineGame: engineParticipant
+			? {
+					engine: engineParticipant.engine,
+					strengthLevel: engineParticipant.strengthLevel,
+				}
+			: undefined,
+		ratingChanges,
 	};
 }
 

@@ -121,12 +121,8 @@ function exportCurrentPosition(): { icn: string; variantOptions: VariantOptions 
 		position: position.position,
 		state_global: {
 			specialRights: position.state_global.specialRights ?? new Set(),
-			...(position.state_global.enpassant !== undefined && {
-				enpassant: position.state_global.enpassant,
-			}),
-			...(position.state_global.moveRuleState !== undefined && {
-				moveRuleState: position.state_global.moveRuleState,
-			}),
+			enpassant: position.state_global.enpassant,
+			moveRuleState: position.state_global.moveRuleState,
 		},
 	};
 

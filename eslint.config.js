@@ -87,6 +87,14 @@ export default [
 					allowExpressions: true, // Adds arrow functions as exceptions, as their return types are usually inferred
 				},
 			],
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector:
+						'ObjectExpression > SpreadElement > :matches(LogicalExpression, ConditionalExpression)',
+					message: 'Spread hides key typos. Use `key: cond ? value : undefined`.',
+				},
+			],
 		},
 	},
 	eslintConfigPrettier,

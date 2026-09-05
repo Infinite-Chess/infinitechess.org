@@ -90,7 +90,7 @@ function spawn(options: SpawnOptions): AnalysisWorker {
 		cmd: 'init',
 		hashMb: options.hashMb,
 		engineUrl: window.analysisPageData.engineAssets.engineUrl,
-		...(options.threads !== undefined && { threads: options.threads }),
+		threads: options.threads,
 	} satisfies AnalysisCommand);
 
 	return entry;

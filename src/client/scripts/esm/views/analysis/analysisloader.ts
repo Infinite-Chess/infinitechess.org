@@ -93,9 +93,7 @@ function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
 		variant: { code: variant, dateTimestamp },
 		dateTimestamp,
 		viewWhitePerspective: true,
-		...(slideLimit !== undefined && {
-			additional: { slideLimit },
-		}),
+		additional: slideLimit !== undefined ? { slideLimit } : undefined,
 	});
 }
 
@@ -109,7 +107,7 @@ function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint)
 	lastLoad = { replay: () => loadVariantOptions(variantOptions, slideLimit), players: {} };
 	const additional: Additional = {
 		variantOptions,
-		...(slideLimit !== undefined && { slideLimit }),
+		slideLimit,
 	};
 
 	// Retain the current board's orientation, defaulting to white's.

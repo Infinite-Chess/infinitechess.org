@@ -91,13 +91,13 @@ function createRematchGame(oldGame: ServerGame): void {
 		modifiers: oldMatch.modifiers, // A rematch inherits the original game's modifiers.
 		// The version is re-seeded rather than carried over — an engine update could have
 		// landed mid-game, in which case the old game's version is no longer what we'd serve.
-		...(oldMatch.engineParticipant && {
-			engineParticipant: {
-				...oldMatch.engineParticipant,
-				color: typeutil.invertPlayer(oldMatch.engineParticipant.color),
-				version: manifest.getEngineVersion(),
-			},
-		}),
+		engineParticipant: oldMatch.engineParticipant
+			? {
+					...oldMatch.engineParticipant,
+					color: typeutil.invertPlayer(oldMatch.engineParticipant.color),
+					version: manifest.getEngineVersion(),
+				}
+			: undefined,
 	};
 
 	gameLifecycle.evict(oldGame); // Removes the old game from memory (and unsubscribes its sockets).

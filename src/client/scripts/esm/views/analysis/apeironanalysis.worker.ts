@@ -256,8 +256,7 @@ async function runLoop(): Promise<void> {
 			// Decide whether the analysis of this position is finished.
 			let reason: Extract<AnalysisResponse, { type: 'done' }>['reason'] | undefined;
 			if (!summary || summary.lines.length === 0) reason = 'terminal';
-			else if (summary.lines.every((line) => line.mate !== undefined && line.mate !== null))
-				reason = 'mate';
+			else if (summary.lines.every((line) => line.mate !== undefined)) reason = 'mate';
 			else if (reachedDepth >= opts.maxDepth) reason = 'depth';
 
 			if (reason !== undefined) {
@@ -347,7 +346,6 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 		legalMoveCount: 0,
 		inCheck: false,
 		depth: 0,
-		...(msg.warmup && { warmup: true }),
 	};
 
 	try {
@@ -392,5 +390,5 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 		return;
 	}
 
-	postMessage({ type: 'evaluated', ...result } satisfies AnalysisResponse);
+	postMessage({ type: 'evaluated', warmup: msg.warmup, ...result } satisfies AnalysisResponse);
 }

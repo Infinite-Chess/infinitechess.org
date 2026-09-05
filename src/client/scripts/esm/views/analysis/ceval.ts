@@ -12,6 +12,8 @@ import type { EngineSupportCode } from '../../../../../shared/chess/engines/apei
 import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './analysisprotocol.js';
 
+import * as z from 'zod';
+
 import math from '../../../../../shared/util/math/math.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
@@ -28,18 +30,6 @@ import analysisworker from './analysisworker.js';
 import analysisenginebounds from './analysisenginebounds.js';
 
 // Types -----------------------------------------------------------------------
-
-/** Engine settings, persisted to localStorage. */
-interface CevalSettings {
-	/** Number of engine lines to search & display (1-5). */
-	multiPv: number;
-	/** Transposition table size in MB. */
-	hashMb: number;
-	/** Target search depth; the analysis stops here until "go deeper" is pressed. */
-	depth: number;
-	/** Lazy SMP search threads (1 = single-threaded). */
-	threads: number;
-}
 
 /** A PV line normalized for the UI. */
 export interface CevalLine {
@@ -92,6 +82,21 @@ interface RefreshAnalysisOptions {
 	/** Start this same position again from depth 1, keeping the on-screen cache visible. */
 	restartSearch?: boolean;
 }
+
+// Schemas ---------------------------------------------------------------------
+
+/** Engine settings in localStorage. Ranges omitted on purpose — {@link loadSettings} clamps. */
+type CevalSettings = z.infer<typeof CevalSettingsSchema>;
+const CevalSettingsSchema = z.strictObject({
+	/** Number of engine lines to search & display (1-5). */
+	multiPv: z.int(),
+	/** Transposition table size in MB. */
+	hashMb: z.int(),
+	/** Target search depth; the analysis stops here until "go deeper" is pressed. */
+	depth: z.int(),
+	/** Lazy SMP search threads (1 = single-threaded). */
+	threads: z.int(),
+});
 
 // Constants -------------------------------------------------------------------
 
@@ -199,17 +204,17 @@ const queuedLegalMovesRequests: { requestId: number; icn: string }[] = [];
 // Settings persistence --------------------------------------------------------
 
 function loadSettings(): CevalSettings {
-	// Only an object is mergable. The clamps below actually sanitize the fields.
-	const stored: unknown = LocalStorage.loadItem(STORAGE_KEY);
-	const loaded: CevalSettings = {
-		...DEFAULT_SETTINGS,
-		...(typeof stored === 'object' && stored !== null ? stored : {}),
-	};
-	// Sanitize against the allowed ranges.
+	const raw: unknown = LocalStorage.loadItem(STORAGE_KEY);
+	const parsed = CevalSettingsSchema.safeParse(raw);
+	if (raw !== undefined && !parsed.success)
+		console.warn('[ceval] Discarding stored engine settings in a stale format.');
+	// Copied, never the constant itself — the clamps below mutate what they're given.
+	const loaded: CevalSettings = parsed.success ? parsed.data : { ...DEFAULT_SETTINGS };
+	// Ranges only — the schema already guaranteed integers.
 	loaded.multiPv = math.clamp(loaded.multiPv, 1, MAX_MULTI_PV);
 	if (!HASH_OPTIONS.includes(loaded.hashMb)) loaded.hashMb = DEFAULT_SETTINGS.hashMb;
-	loaded.depth = math.clamp(Math.round(loaded.depth), MIN_DEPTH, MAX_DEPTH);
-	loaded.threads = math.clamp(Math.round(loaded.threads), 1, maxThreads());
+	loaded.depth = math.clamp(loaded.depth, MIN_DEPTH, MAX_DEPTH);
+	loaded.threads = math.clamp(loaded.threads, 1, maxThreads());
 	return loaded;
 }
 
@@ -651,12 +656,12 @@ function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, termi
 	});
 
 	const lines: CevalLine[] = uniqueLines.map((line) => {
-		const cp = line.cp !== undefined && line.cp !== null ? (blackPov ? -line.cp : line.cp) : undefined; // prettier-ignore
-		const mate = line.mate !== undefined && line.mate !== null ? (blackPov ? -line.mate : line.mate) : undefined; // prettier-ignore
+		const cp = line.cp !== undefined ? (blackPov ? -line.cp : line.cp) : undefined;
+		const mate = line.mate !== undefined ? (blackPov ? -line.mate : line.mate) : undefined;
 		return {
 			moves: line.moves,
-			...(cp !== undefined && { cp }),
-			...(mate !== undefined && { mate }),
+			cp,
+			mate,
 			winningChances: lineWinningChances(cp, mate),
 		};
 	});
@@ -751,8 +756,8 @@ function seedPositionCache(seed: {
 
 	const line: CevalLine = {
 		moves: seed.moves,
-		...(seed.cp !== undefined && { cp: seed.cp }),
-		...(seed.mate !== undefined && { mate: seed.mate }),
+		cp: seed.cp,
+		mate: seed.mate,
 		winningChances: lineWinningChances(seed.cp, seed.mate),
 	};
 	positionCache.set(seed.icn, {

@@ -572,8 +572,9 @@ function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 			clearStallWatchdog(entry);
 			delete entry.assignment;
 			if (!msg.warmup) {
-				// `type` is dropped: it tags the message, and the rest IS the evaluation we store.
-				const { type: _type, ...evaluation } = msg;
+				// `type` and `warmup` tag the message; the rest IS the evaluation we store. Both
+				// must be dropped — the spread below would smuggle them past the parameter type.
+				const { type: _type, warmup: _warmup, ...evaluation } = msg;
 				receiveEvaluation({ ...evaluation, ...scoreFromInfo(entry.lastInfo) });
 			}
 			dispatchNext(entry);
@@ -683,8 +684,8 @@ function dispatchNext(entry: ReviewWorker): void {
 			icn,
 			maxDepth: reviewDepth,
 			mover: moverAtPly(index),
-			...(work.newChunk && { newChunk: true }),
-			...(work.warmup && { warmup: true }),
+			newChunk: work.newChunk,
+			warmup: work.warmup,
 		} satisfies AnalysisCommand);
 		armStallWatchdog(entry);
 		return;
@@ -763,8 +764,8 @@ function scoreFromInfo(info: AnalysisInfo | undefined): Partial<EvaluateResult> 
 	return {
 		depth: info.depth,
 		pv: line.moves.slice(0, MAX_PV_PLIES),
-		...(line.cp !== undefined && line.cp !== null && { cp: line.cp }),
-		...(line.mate !== undefined && line.mate !== null && { mate: line.mate }),
+		cp: line.cp,
+		mate: line.mate,
 	};
 }
 
@@ -816,8 +817,8 @@ function cachePositionEvaluation(index: number, result: EvaluateResult): void {
 		depth: result.depth,
 		moveIndex: index - 1,
 		moves: result.pv ?? [],
-		...(label.cp !== undefined && { cp: label.cp }),
-		...(label.mate !== undefined && { mate: label.mate }),
+		cp: label.cp,
+		mate: label.mate,
 	});
 }
 

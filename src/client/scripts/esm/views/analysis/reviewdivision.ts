@@ -83,7 +83,7 @@ function determine(initial: Map<CoordsKey, number> | undefined, moves: MoveFull[
 		if (index < moves.length) boardchanges.runChanges_Position(position, moves[index]!.changes);
 	}
 
-	return { ...(middle !== undefined && { middle }), ...(end !== undefined && { end }) };
+	return { middle, end };
 }
 
 /** Calculates the variants home ranks. */

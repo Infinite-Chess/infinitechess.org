@@ -6,7 +6,6 @@
  */
 
 import type { ActivePosition } from '../boardeditor';
-import type { EditorPositionData } from '../../../savedpositions/storetypes';
 
 import z from 'zod';
 
@@ -17,34 +16,33 @@ import storetypes from '../../../savedpositions/storetypes';
 import boardeditor from '../boardeditor';
 import validatorama from '../../../util/validatorama';
 
-// Types -----------------------------------------------------------------------
+// Schemas ---------------------------------------------------------------------
+
+/**
+ * Ties the stored shape to {@link ActivePosition}: catches a renamed or missing field,
+ * but NOT one added here and not to the type — which would reject every saved autosave.
+ */
+const ActivePositionSchema = z.union([
+	z.object({ name: z.string(), storage_type: z.literal('local') }),
+	z.object({ name: z.string(), storage_type: z.literal('cloud'), owner: z.string() }),
+]) satisfies z.ZodType<ActivePosition>;
 
 /**
  * Complete save state as written by the autosave.
  * active_position is optional because the user may not have a named/saved position open.
  */
-export interface EditorAutosaveState extends EditorPositionData {
-	active_position?: ActivePosition;
+export type EditorAutosaveState = z.infer<typeof AutosaveStateSchema>;
+const AutosaveStateSchema = z.strictObject({
+	active_position: ActivePositionSchema.optional(),
 	/** Whether the position has unsaved changes. */
-	dirty: boolean;
-}
+	dirty: z.boolean(),
+	...storetypes.positionDataFields,
+});
 
 // Constants -------------------------------------------------------------------
 
 /** Name of the IndexedDB key for the board editor autosave. */
 const EDITOR_AUTOSAVE_NAME = 'infinitechess-boardeditor-autosave';
-
-/** Schema for validating an AutosaveState */
-const AutosaveStateSchema = z.strictObject({
-	active_position: z
-		.union([
-			z.object({ name: z.string(), storage_type: z.literal('local') }),
-			z.object({ name: z.string(), storage_type: z.literal('cloud'), owner: z.string() }),
-		])
-		.optional(),
-	dirty: z.boolean(),
-	...storetypes.positionDataFields,
-}) satisfies z.ZodType<EditorAutosaveState>;
 
 // Variables -------------------------------------------------------------------
 

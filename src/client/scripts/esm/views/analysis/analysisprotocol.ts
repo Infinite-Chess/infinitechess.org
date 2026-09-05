@@ -40,8 +40,8 @@ export type AnalysisCommand =
 			maxDepth: number;
 			/** Side to move, needed to case a forced move's promotion abbreviation. */
 			mover: Player;
-			newChunk?: boolean;
-			warmup?: boolean;
+			newChunk?: true;
+			warmup?: true;
 	  }
 	/** Abort the in-flight search and stop the loop. */
 	| { cmd: 'stop' };
@@ -71,7 +71,11 @@ export type AnalysisResponse =
 	/** Compact move tokens ("x,y>x,y") answering a `legalmoves` command. */
 	| { type: 'legalmoves'; requestId: number; moves: string[] }
 	/** A finished `evaluate` command. */
-	| ({ type: 'evaluated' } & EvaluateResult)
+	| ({
+			type: 'evaluated';
+			/** Echoed for an unreported TT-warming search. */
+			warmup?: true;
+	  } & EvaluateResult)
 	/** The position is fully analyzed; `info` is the final summary. */
 	| {
 			type: 'done';
@@ -127,6 +131,4 @@ export const EvaluateResultSchema = z.strictObject({
 	inCheck: z.boolean(),
 	/** The deepest depth the search completed (0 for terminal/forced/unevaluated positions). */
 	depth: z.int(),
-	/** Echoed for an unreported TT-warming search. */
-	warmup: z.boolean().optional(),
 });

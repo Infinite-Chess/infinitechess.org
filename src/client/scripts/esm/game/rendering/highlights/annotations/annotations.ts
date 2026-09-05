@@ -189,7 +189,7 @@ function getPresetOverrides(): PresetAnnotes | undefined {
 	const squares = drawsquares.getPresetOverrides();
 	const rays = drawrays.getPresetOverrides();
 	if (!squares && !rays) return undefined;
-	return { ...(squares && { squares }), ...(rays && { rays }) };
+	return { squares, rays };
 }
 
 function resetState(): void {

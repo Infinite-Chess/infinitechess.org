@@ -32,8 +32,8 @@ ceval.onUpdate((update) => {
 	if (!node) return; // Stale update whose ply is no longer in the active line.
 	store(node.id, {
 		depth: update.depth,
-		...(line.cp !== undefined && { cp: line.cp }),
-		...(line.mate !== undefined && { mate: line.mate }),
+		cp: line.cp,
+		mate: line.mate,
 	});
 });
 

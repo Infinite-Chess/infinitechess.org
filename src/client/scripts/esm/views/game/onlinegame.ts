@@ -142,7 +142,7 @@ function loadGameFromState(state: GameStateFull, dead: boolean, longformat?: Lon
 		moves: state.moves,
 		gameConclusion: state.gameConclusion,
 		clockValues: state.clockValues,
-		...(slideLimit !== undefined && { slideLimit: BigInt(slideLimit) }),
+		slideLimit: slideLimit !== undefined ? BigInt(slideLimit) : undefined,
 	};
 
 	// A custom game has no variant code to build its position from — its ICN is the source of
