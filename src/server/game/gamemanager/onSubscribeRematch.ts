@@ -32,8 +32,7 @@ function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 		const ourRole = gameSockets.getRole(game, ws);
 		if (ourRole !== undefined) {
 			// Participant path: attach, then send the lean state (their rematch overlay).
-			gameManager.subscribeParticipant(game, ws, ourRole);
-			gameSockets.sendGameState(game, ourRole, 'lean', false);
+			gameManager.subscribeParticipant(game, ws, ourRole, 'lean');
 		} else {
 			// Spectator path: attach, but send no state (they only stay
 			// connected for the 'rematchstarted' message when a rematch is agreed).

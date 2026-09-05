@@ -25,13 +25,8 @@ function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
 		// Live game
 		const ourRole = gameSockets.getRole(game, ws);
 		if (ourRole !== undefined) {
-			// Participant path: attach, then send the current state.
-			const { evicted } = gameManager.subscribeParticipant(game, ws, ourRole);
-			// A takeover kicks the previous tab, terminating its engine worker mid-search. It can
-			// never finish that search, so rewind the engine's turn before this client resumes it.
-			if (evicted) gameManager.freezeEngineClock(game);
-			gameManager.resumeEngineClock(game);
-			gameSockets.sendGameState(game, ourRole, 'full', false);
+			// Participant path: attach, send the full state, run the reconnect side-effects.
+			gameManager.subscribeParticipant(game, ws, ourRole, 'full');
 		} else {
 			// Spectator path: attach, then send the role-agnostic state (no participantState overlay).
 			gameSockets.attachSpectator(game, ws);

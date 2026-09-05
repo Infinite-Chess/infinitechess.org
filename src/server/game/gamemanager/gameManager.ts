@@ -10,6 +10,7 @@
 
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
+import type { GameStateMessage } from '../../../shared/transport/clientbound.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { GameSetup, ServerGame } from './serverGameTypes.js';
 import type { EngineGamePageInfo, StaticGameState } from '../../../shared/transport/domain.js';
@@ -136,40 +137,43 @@ function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefin
 // Participant Subscription ----------------------------------------------------
 
 /**
- * Links their socket to this game and runs reconnect side-effects (cancels disconnect/claim timer).
- * @returns `evicted` — whether a socket already attached as that player was kicked to make room.
+ * The whole participant subscribe: evicts whatever socket was here, runs the
+ * reconnect side-effects, attaches theirs, then answers it with the game state.
+ * @param kind - `'full'` answers a `subscribe`, `'lean'` a `subscriberematch`.
+ * @throws If a database error occurs.
  */
 function subscribeParticipant(
 	servergame: ServerGame,
 	ws: CustomWebSocket,
 	ourRole: Player,
-): { evicted: boolean } {
+	kind: GameStateMessage['kind'],
+): void {
 	const match = servergame.match;
-	// 1. Attach their socket to the game for receiving updates
-	const playerData = match.playerData[ourRole];
-	if (playerData === undefined) {
-		console.error(`Cannot subscribe client to game when game does not expect color ${ourRole} to be present`); // prettier-ignore
-		return { evicted: false };
-	}
+	const playerData = match.playerData[ourRole]!;
 	const previousSocket = playerData.socket;
 	if (previousSocket) {
 		socketsend.send(previousSocket, 'game', 'supersededbytab', undefined);
 		gameSockets.detachParticipant(match, previousSocket);
 	}
+
+	// Must run before the attach. Its chat notices go only to attached sockets, so running it
+	// here keeps ours out of a delta — the state's log below is what carries it to us instead.
+	runReconnectSideEffects(servergame, ourRole, previousSocket === undefined);
+
 	playerData.socket = ws;
-
 	activePlayers.consumeNavigateNotice(playerData.identifier); // They've arrived; any pending lobby notice is moot.
-
-	// 2. Modify their socket metadata to add the 'game', subscription,
-	// and indicate what game the belong in and what color they are!
 	ws.metadata.subscriptions.game = {
 		id: match.id,
 		color: ourRole,
 	};
 
-	runReconnectSideEffects(servergame, ourRole, previousSocket === undefined);
+	// Must run before the state is built, which reads these clocks.
+	// A takeover kicks the previous tab, terminating its engine worker
+	// mid-search, so rewind the engine's turn before this client resumes it.
+	if (previousSocket) freezeEngineClock(servergame);
+	resumeEngineClock(servergame);
 
-	return { evicted: previousSocket !== undefined };
+	gameSockets.sendGameState(servergame, ourRole, kind, false);
 }
 
 /**
@@ -425,8 +429,6 @@ export default {
 	unsubscribeSpectator,
 	// Clocks
 	pushClock,
-	freezeEngineClock,
-	resumeEngineClock,
 	// SSR Page State
 	produceStaticGameState,
 };
