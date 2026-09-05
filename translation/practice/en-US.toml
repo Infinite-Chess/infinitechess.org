@@ -1,0 +1,29 @@
+# Translation component: checkmate practice page (/checkmatepractice).
+# Source template: src/server/views/checkmatepractice.njk
+
+title = "Checkmate Practice"
+progress_label = "Progress"
+logged_out_notice = "You must be logged in to earn badges."
+versus = "vs"
+you = "You"
+
+[difficulty]
+easy = "Easy"
+medium = "Medium"
+hard = "Hard"
+insane = "Insane"
+
+[actions]
+undo_move = "Undo move"
+restart = "Restart"
+back_to_list = "Back to the list"
+
+# Badge tooltips, written by the client as progress changes.
+[script.badges]
+logged_out = "You must be logged in to earn badges."
+bronze = "Checkmate Veteran: Complete 50% of all practice checkmates."
+silver = "Checkmate Pro: Complete 75% of all practice checkmates."
+gold = "Checkmate Master: Complete 100% of all practice checkmates."
+bronze_unearned = "Complete 50% of all practice checkmates to earn this badge."
+silver_unearned = "Complete 75% of all practice checkmates to earn this badge."
+gold_unearned = "Complete 100% of all practice checkmates to earn this badge."

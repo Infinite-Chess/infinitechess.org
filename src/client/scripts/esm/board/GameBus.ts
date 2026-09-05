@@ -27,6 +27,11 @@ interface GameBusEvents {
 	'game-unloaded': void;
 	/** Dispatched when games end, and the termination is shown on screen. */
 	'game-concluded': void;
+	/**
+	 * Dispatched when the local engine fails in an ONLINE engine game — it couldn't load,
+	 * or gave nothing playable. The server has to be told to resign it on our behalf.
+	 */
+	'engine-failed': void;
 
 	// =========== Moves ============
 

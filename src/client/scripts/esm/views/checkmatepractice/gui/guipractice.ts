@@ -1,448 +1,100 @@
 // src/client/scripts/esm/views/checkmatepractice/gui/guipractice.ts
 
 /**
- * Handles our Practice page, containing our practice selection menu.
+ * The checkmate selection overlay on the practice page: clicking a checkmate banner
+ * starts its game, and the progress bar, badges and beaten states repaint whenever
+ * the overlay is (re)opened.
  */
 
-import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import validcheckmates from '../../../../../../shared/chess/util/validcheckmates.js';
-import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
-import docutil from '../../../util/docutil.js';
-import svgcache from '../../../chess/rendering/svgcache.js';
 import validatorama from '../../../util/validatorama.js';
-import { SettingsBus } from '../../../util/SettingsBus.js';
-import checkmatepractice from '../checkmatepractice.js';
+import practicegame from '../practicegame.js';
 
-// Variables -------------------------------------------------------------------
+// Elements ----------------------------------------------------------------------
 
-const element_menuExternalLinks: HTMLElement = document.getElementById('menu-external-links')!;
+const element_selection = document.getElementById('practice-selection')!;
+const element_progressCount = document.getElementById('practice-progress-count')!;
+const element_progressFill = document.getElementById('practice-progress-fill')!;
+const elements_checkmates = document.querySelectorAll<HTMLElement>('.checkmate');
 
-const element_practiceSelection: HTMLElement = document.getElementById('practice-selection')!;
-const element_practiceBack: HTMLElement = document.getElementById('practice-back')!;
-const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
-const element_progress: HTMLElement = document.querySelector('.checkmate-progress')!;
-const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
-const element_checkmateList: HTMLElement = document.querySelector('.checkmate-list')!;
-const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
+// Constants ---------------------------------------------------------------------
 
-const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze');
-const element_checkmateBadgeBronzeImage = document.querySelector(
-	'#checkmate-badge-bronze img',
-) as HTMLElement;
-const elements_checkmateBadgeBronzeShine = document.querySelectorAll(
-	'#checkmate-badge-bronze .shine-clockwise, #checkmate-badge-bronze .shine-anticlockwise',
-);
-const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver');
-const element_checkmateBadgeSilverImage = document.querySelector(
-	'#checkmate-badge-silver img',
-) as HTMLElement;
-const elements_checkmateBadgeSilverShine = document.querySelectorAll(
-	'#checkmate-badge-silver .shine-clockwise, #checkmate-badge-silver .shine-anticlockwise',
-);
-const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold');
-const element_checkmateBadgeGoldImage = document.querySelector(
-	'#checkmate-badge-gold img',
-) as HTMLElement;
-const elements_checkmateBadgeGoldShine = document.querySelectorAll(
-	'#checkmate-badge-gold .shine-clockwise, #checkmate-badge-gold .shine-anticlockwise',
-);
+const NUM_CHECKMATES = Object.values(validcheckmates.BY_DIFFICULTY).flat().length;
 
-let checkmateSelectedID: string = validcheckmates.BY_DIFFICULTY.easy[0]!; // id of selected checkmate
-let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
-let generatedHTML: boolean = false;
-/** Whether the svgs of all the pieces in the checkmates list have been appended to the doc */
-let generatedIcons: boolean = false;
+/** Each badge's earn threshold (fraction of {@link NUM_CHECKMATES}) and tooltip texts. */
+const BADGES = [
+	{ id: 'checkmate-badge-bronze', threshold: 0.5, earned: () => t.practice.badges.bronze, unearned: () => t.practice.badges.bronze_unearned }, // prettier-ignore
+	{ id: 'checkmate-badge-silver', threshold: 0.75, earned: () => t.practice.badges.silver, unearned: () => t.practice.badges.silver_unearned }, // prettier-ignore
+	{ id: 'checkmate-badge-gold', threshold: 1, earned: () => t.practice.badges.gold, unearned: () => t.practice.badges.gold_unearned }, // prettier-ignore
+] as const;
 
-/** Variables for controlling the scrolling of the checkmate list */
-const SCROLL: {
-	mouseIsDown: boolean;
-	mouseMovedAfterClick: boolean;
-	scrollTop: number;
-	startY: number;
-	lastY: number;
-	velocity: number;
-	momentumInterval: ReturnType<typeof setInterval> | undefined;
-	friction: number;
-} = {
-	mouseIsDown: false,
-	mouseMovedAfterClick: true,
-	scrollTop: 0,
-	startY: 0,
-	lastY: 0,
-	velocity: 0,
-	momentumInterval: undefined,
-	friction: 0.9,
-};
+// Functions ---------------------------------------------------------------------
 
-/** Whether the practice page is open */
-let isOpen: boolean = false;
+/** Wires the checkmate banners and paints the initial progress. Runs once at page entry. */
+function init(): void {
+	for (const checkmate of elements_checkmates) {
+		checkmate.addEventListener('click', callback_checkmateClicked);
+	}
+	refreshProgress();
+}
 
-// Events ----------------------------------------------------------------------
+/** Starts the clicked checkmate's game and reveals the board under the overlay. */
+function callback_checkmateClicked(event: Event): void {
+	const id = (event.currentTarget as HTMLElement).dataset['id']!;
+	if (!practicegame.startCheckmatePractice(id)) return; // Refused: another load is in flight.
+	element_selection.classList.add('hidden');
+}
 
-// Set an event listener, for when the theme changes, to re-generate the icons, as their color may change
-SettingsBus.addEventListener('theme-change', () => {
-	removePieceIcons(); // Remove the existing icons
-	if (isOpen) addPieceIcons(); // Regenerate the icons so they can update their color, if the new theme has different color arguments
-});
-
-// Functions -------------------------------------------------------------------
-
+/** Reopens the selection overlay over the board, repainting the progress. */
 function open(): void {
-	isOpen = true;
-	element_practiceSelection.classList.remove('hidden');
-	element_menuExternalLinks.classList.remove('hidden');
-	if (!generatedHTML) createPracticeHTML();
-	if (!generatedIcons) addPieceIcons();
-	changeCheckmateSelected(checkmateSelectedID);
-	updateCheckmatesBeaten(checkmatepractice.getCompletedCheckmates());
-	initListeners();
+	refreshProgress();
+	element_selection.classList.remove('hidden');
 }
 
-function close(): void {
-	isOpen = false;
-	clearScrollMomentumInterval();
-	element_practiceSelection.classList.add('hidden');
-	element_menuExternalLinks.classList.add('hidden');
-	closeListeners();
-}
-
-/**
- * On first practice page load, generate list of checkmate HTML elements to be shown on page
- */
-function createPracticeHTML(): void {
-	for (const [difficulty, checkmates] of Object.entries(validcheckmates.BY_DIFFICULTY)) {
-		checkmates.forEach((checkmateID: string) => {
-			const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
-			if (!piecelist) return;
-
-			const checkmatePuzzle = document.createElement('div');
-			checkmatePuzzle.className = 'checkmate unselectable';
-			checkmatePuzzle.id = checkmateID;
-
-			const completionMark = document.createElement('div');
-			completionMark.className = 'completion-mark';
-
-			const piecelistW = document.createElement('div');
-			piecelistW.className = 'piecelistW';
-
-			const versusText = document.createElement('div');
-			versusText.className = 'checkmate-child versus';
-			versusText.textContent = translations.versus;
-
-			const piecelistB = document.createElement('div');
-			piecelistB.className = 'piecelistB';
-
-			const checkmateDifficulty = document.createElement('div');
-			checkmateDifficulty.className = 'checkmate-difficulty';
-			// @ts-ignore
-			checkmateDifficulty.textContent = translations[difficulty];
-
-			for (const entry of piecelist) {
-				const amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
-				const shortPiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-				const longPiece = icnposition.getTypeFromAbbr(shortPiece);
-
-				for (let j = 0; j < amount; j++) {
-					const pieceDiv = document.createElement('div');
-					pieceDiv.className = `checkmatepiece ${longPiece}`;
-
-					const containerDiv = document.createElement('div');
-					// prettier-ignore
-					const collation = (j === 0 ? "" : (shortPiece === "Q" || shortPiece === "AM" ? " collated" : " collated-strong"));
-					containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
-					containerDiv.appendChild(pieceDiv);
-
-					if (typeutil.getColorFromType(longPiece) === p.WHITE)
-						piecelistW.appendChild(containerDiv);
-					else piecelistB.appendChild(containerDiv);
-				}
-			}
-			checkmatePuzzle.appendChild(completionMark);
-			checkmatePuzzle.appendChild(piecelistW);
-			checkmatePuzzle.appendChild(versusText);
-			checkmatePuzzle.appendChild(piecelistB);
-			checkmatePuzzle.appendChild(checkmateDifficulty);
-			element_checkmates.appendChild(checkmatePuzzle);
-		});
-	}
-	generatedHTML = true;
-}
-
-async function addPieceIcons(): Promise<void> {
-	// let sprites = await svgcache.getSVGElements();
-	const spritenames = new Set<number>();
-	const sprites: { [pieceType: string]: SVGElement } = {};
-	for (const checkmate of element_checkmates.children) {
-		for (const piece of checkmate
-			.getElementsByClassName('piecelistW')[0]!
-			.getElementsByClassName('checkmatepiececontainer')) {
-			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
-			spritenames.add(Number(actualpiece.className.split(' ')[1]!));
-		}
-		const pieceBlack = checkmate
-			.getElementsByClassName('piecelistB')[0]!
-			.getElementsByClassName('checkmatepiececontainer')[0]!;
-		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
-		spritenames.add(Number(actualpieceBlack.className.split(' ')[1]!));
-	}
-	const spriteSVGs = await svgcache.getSVGElements([...spritenames]);
-	for (const svg of spriteSVGs) {
-		sprites[svg.id] = svg;
-	}
-	for (const checkmate of element_checkmates.children) {
-		for (const piece of checkmate
-			.getElementsByClassName('piecelistW')[0]!
-			.getElementsByClassName('checkmatepiececontainer')) {
-			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
-			actualpiece.appendChild(sprites[actualpiece.className.split(' ')[1]!]!.cloneNode(true));
-		}
-		const pieceBlack = checkmate
-			.getElementsByClassName('piecelistB')[0]!
-			.getElementsByClassName('checkmatepiececontainer')[0]!;
-		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
-		const spriteBlack = sprites[actualpieceBlack.className.split(' ')[1]!]!.cloneNode(true);
-		actualpieceBlack.appendChild(spriteBlack);
-	}
-	generatedIcons = true;
-}
-
-/**
- * Removes the piece icons from the checkmate lists.
- * Called when the theme changes.
- */
-function removePieceIcons(): void {
-	for (const checkmate of element_checkmates.children) {
-		for (const piece of checkmate
-			.getElementsByClassName('piecelistW')[0]!
-			.getElementsByClassName('checkmatepiececontainer')) {
-			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
-			while (actualpiece.firstChild) {
-				actualpiece.removeChild(actualpiece.firstChild);
-			}
-		}
-		const pieceBlack = checkmate
-			.getElementsByClassName('piecelistB')[0]!
-			.getElementsByClassName('checkmatepiececontainer')[0]!;
-		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
-		while (actualpieceBlack.firstChild) {
-			actualpieceBlack.removeChild(actualpieceBlack.firstChild);
-		}
-	}
-	generatedIcons = false; // Reset the icon generation flag
-}
-
-function initListeners(): void {
-	element_practiceBack.addEventListener('click', callback_practiceBack);
-	element_practicePlay.addEventListener('click', callback_practicePlay);
-	document.addEventListener('keydown', callback_keyPress);
-
-	document.addEventListener('mouseup', callback_mouseUp);
-	document.addEventListener('mousemove', callback_mouseMove);
-	element_checkmateList.addEventListener('mousedown', callback_mouseDown);
-	for (const element of element_checkmates.children) {
-		(element as HTMLElement).addEventListener('mouseup', callback_mouseUp);
-		element.addEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
-	}
-}
-
-function closeListeners(): void {
-	element_practiceBack.removeEventListener('click', callback_practiceBack);
-	element_practicePlay.removeEventListener('click', callback_practicePlay);
-	document.removeEventListener('keydown', callback_keyPress);
-
-	document.removeEventListener('mouseup', callback_mouseUp);
-	document.removeEventListener('mousemove', callback_mouseMove);
-	element_checkmateList.removeEventListener('mousedown', callback_mouseDown);
-	for (const element of element_checkmates.children) {
-		(element as HTMLElement).removeEventListener('mouseup', callback_mouseUp);
-		element.removeEventListener('dblclick', callback_practicePlay); // Simulate clicking "Play"
-	}
-}
-
-// Scrolling list with the left mouse button -----------------------------------
-
-function callback_mouseDown(event: MouseEvent): void {
-	SCROLL.mouseIsDown = true;
-	SCROLL.mouseMovedAfterClick = false;
-	SCROLL.startY = event.pageY - element_checkmateList.offsetTop;
-	SCROLL.scrollTop = element_checkmateList.scrollTop;
-
-	SCROLL.velocity = 0;
-	clearScrollMomentumInterval();
-}
-
-function callback_mouseUp(event: MouseEvent): void {
-	SCROLL.mouseIsDown = false;
-	if (!(event.currentTarget as HTMLElement).id) return; // mouse not on checkmate target
-	if (SCROLL.mouseMovedAfterClick) {
-		applyMomentum();
-		return;
-	}
-	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
-	indexSelected = docutil.getElementIndexWithinItsParent(event.currentTarget as HTMLElement);
-}
-
-function callback_mouseMove(event: MouseEvent): void {
-	SCROLL.mouseMovedAfterClick = true;
-	if (!SCROLL.mouseIsDown) return;
-	event.preventDefault();
-	const y = event.pageY - element_checkmateList.offsetTop;
-	const walkY = y - SCROLL.startY;
-	element_checkmateList.scrollTop = SCROLL.scrollTop - walkY;
-
-	SCROLL.velocity = event.pageY - SCROLL.lastY;
-	SCROLL.lastY = event.pageY;
-}
-
-function applyMomentum(): void {
-	SCROLL.momentumInterval = setInterval(() => {
-		if (Math.abs(SCROLL.velocity) < 0.5) {
-			clearScrollMomentumInterval();
-			return;
-		}
-		element_checkmateList.scrollTop -= SCROLL.velocity;
-		SCROLL.velocity *= SCROLL.friction;
-	}, 16); // Approx. 60fps
-}
-
-function clearScrollMomentumInterval(): void {
-	clearInterval(SCROLL.momentumInterval);
-	SCROLL.momentumInterval = undefined;
-}
-
-// End of scrolling ------------------------------------------------------------
-
-function changeCheckmateSelected(checkmateid: string): void {
-	for (const element of element_checkmates.children) {
-		if (checkmateid === element.id) {
-			element.classList.add('selected');
-			checkmateSelectedID = checkmateid;
-			element.scrollIntoView({ behavior: 'instant', block: 'nearest' });
-		} else {
-			element.classList.remove('selected');
-		}
-	}
-}
-
-/**
- * Updates each checkmate practice element's 'beaten' class, along with the progress bar on top.
- * Checkmates that have the 'beaten' class are green with a checkmark on the left.
- * @param completedCheckmates - A list of checkmate strings we have beaten: `[ "2Q-1k", "3R-1k", "2CH-1k"]`
- */
-function updateCheckmatesBeaten(completedCheckmates: string[]): void {
+/** Repaints each banner's beaten state, the progress bar, and the badges. */
+function refreshProgress(): void {
+	const completedCheckmates = practicegame.getCompletedCheckmates();
 	let numCompleted = 0;
-	for (const element of element_checkmates.children) {
-		// What is the id string of this checkmate?
-		const id_string = element.id; // "2Q-1k"
-		// If this id is inside our list of beaten checkmates, add the beaten class
-		if (completedCheckmates.includes(id_string)) {
-			element.classList.add('beaten');
-			numCompleted++;
-		} else element.classList.remove('beaten');
+	for (const checkmate of elements_checkmates) {
+		const beaten = completedCheckmates.includes(checkmate.dataset['id']!);
+		checkmate.classList.toggle('beaten', beaten);
+		if (beaten) numCompleted++;
 	}
 
-	// Update the progress and progress bar
-	const numTotal = Object.values(validcheckmates.BY_DIFFICULTY).flat().length;
-	element_progress.textContent = `${numCompleted} / ${numTotal}`;
-	const percentageBeaten = (100 * numCompleted) / numTotal;
-	element_progressBar.style.background = `linear-gradient(to right, rgba(0, 163, 0, 0.3) ${percentageBeaten}%, transparent ${percentageBeaten}%)`;
+	element_progressCount.textContent = `${numCompleted} / ${NUM_CHECKMATES}`;
+	element_progressFill.style.width = `${(100 * numCompleted) / NUM_CHECKMATES}%`;
 
-	// Update the badges
-	updateBadges(numCompleted, numTotal);
+	updateBadges(numCompleted);
 }
 
 /**
- * Updates the styling of the badges on the progress bar,
- * to grey-out the unearned ones and shine the earned ones.
- * And also update their tooltips.
- * @param numCompleted - Number of checkmates completed
- * @param numTotal - Total number of checkmates
+ * Greys out the unearned badges, shines the earned ones, and updates their tooltips.
+ * Badges can only be earned while logged in — progress lives on the account.
  */
-function updateBadges(numCompleted: number, numTotal: number): void {
+function updateBadges(numCompleted: number): void {
 	const areLoggedIn = validatorama.areWeLoggedIn();
 
-	// Configuration for each badge type
-	const badgeConfigs = [
-		{
-			element: element_checkmateBadgeBronze,
-			image: element_checkmateBadgeBronzeImage,
-			shines: elements_checkmateBadgeBronzeShine,
-			threshold: 0.5,
-			earnedKey: 'checkmate_bronze',
-			unearnedKey: 'checkmate_bronze_unearned',
-		},
-		{
-			element: element_checkmateBadgeSilver,
-			image: element_checkmateBadgeSilverImage,
-			shines: elements_checkmateBadgeSilverShine,
-			threshold: 0.75,
-			earnedKey: 'checkmate_silver',
-			unearnedKey: 'checkmate_silver_unearned',
-		},
-		{
-			element: element_checkmateBadgeGold,
-			image: element_checkmateBadgeGoldImage,
-			shines: elements_checkmateBadgeGoldShine,
-			threshold: 1,
-			earnedKey: 'checkmate_gold',
-			unearnedKey: 'checkmate_gold_unearned',
-		},
-	] as const;
-
-	badgeConfigs.forEach((config) => {
-		if (!config.element || !config.image) return;
-
-		const isEarned = numCompleted >= config.threshold * numTotal && areLoggedIn;
+	for (const badge of BADGES) {
+		const element = document.getElementById(badge.id)!;
+		const isEarned = areLoggedIn && numCompleted >= badge.threshold * NUM_CHECKMATES;
 		const tooltip = isEarned
-			? translations[config.earnedKey]
+			? badge.earned()
 			: areLoggedIn
-				? translations[config.unearnedKey]
-				: translations.checkmate_logged_out;
+				? badge.unearned()
+				: t.practice.badges.logged_out;
 
-		config.element.setAttribute('data-tooltip', tooltip); // Update tooltip
-		config.image.classList.toggle('unearned', !isEarned); // Update badge appearance
-		config.shines?.forEach((shine) => shine.classList.toggle('hidden', !isEarned)); // Update shine elements
-	});
+		element.setAttribute('data-tooltip', tooltip);
+		element.querySelector('img')!.classList.toggle('unearned', !isEarned);
+		element
+			.querySelectorAll('.shine-clockwise, .shine-anticlockwise')
+			.forEach((shine) => shine.classList.toggle('hidden', !isEarned));
+	}
 }
 
-function callback_practiceBack(_event: Event): void {
-	close();
-}
-
-function callback_practicePlay(): void {
-	close();
-	checkmatepractice.startCheckmatePractice(checkmateSelectedID);
-}
-
-/** If enter is pressed, click Play. Or if arrow keys are pressed, move up and down selection */
-function callback_keyPress(event: KeyboardEvent): void {
-	if (event.key === 'Enter') callback_practicePlay();
-	else if (event.key === 'ArrowDown') moveDownSelection(event);
-	else if (event.key === 'ArrowUp') moveUpSelection(event);
-}
-
-function moveDownSelection(event: Event): void {
-	event.preventDefault();
-	if (indexSelected >= element_checkmates.children.length - 1) return;
-	clearScrollMomentumInterval();
-	indexSelected++;
-	const newSelectionElement = element_checkmates.children[indexSelected]!;
-	changeCheckmateSelected(newSelectionElement.id);
-}
-
-function moveUpSelection(event: Event): void {
-	event.preventDefault();
-	if (indexSelected <= 0) return;
-	clearScrollMomentumInterval();
-	indexSelected--;
-	const newSelectionElement = element_checkmates.children[indexSelected]!;
-	changeCheckmateSelected(newSelectionElement.id);
-}
-
-// Exports ---------------------------------------------------------------------
+// Exports -------------------------------------------------------------------------
 
 export default {
+	init,
 	open,
 };

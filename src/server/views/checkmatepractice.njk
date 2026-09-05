@@ -1,16 +1,225 @@
 {% extends "layout.njk" %}
 
-{% set pageName = "Checkmate Practice" %}
+{% set t = templateT('practice') %}
+{% set pageName = t.title %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ manifest['css/game.css'] }}" />
+<link rel="stylesheet" href="{{ manifest['css/checkmatepractice.css'] }}" />
+{% endblock %}
 
 {% block head %}
+{# Engine assets (workers can't resolve the manifest themselves) + the page's script strings. #}
 <script>window.checkmatePracticePageData = {
 	workerUrl: "{{ manifest['scripts/esm/game/chess/engines/enginecheckmatepractice.worker.ts'] }}",
 	engineUrl: "{{ manifest['engine'] }}"
 };</script>
+<script>window.t = Object.assign(window.t || {}, { practice: {{ scriptT('practice') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
 {% include "components/header/header.njk" %}
-<main></main>
-{% include "components/footer/footer.njk" %}
+{% from "components/user.njk" import usernameEmbed %}
+
+{# The board (sidebar + canvas) always occupies the page so the canvas has its real size from
+   the first frame; the selection screen is an overlay on top, hidden while a game is played. #}
+<main class="game practice">
+
+	{# ── Left side bar ─────────────────────────────────────────────────── #}
+	<aside class="sidebar scrollbar-thin">
+
+		{# Board-view navigation + view toggles. Managed by guiboardcontrols.ts #}
+		<div class="board-controls unselectable">
+			<div class="ctrl-row">
+				{# Board-view navigation #}
+				<div class="ctrl-group">
+					<button class="btn-bare icon-btn tooltip-d" id="btn-board-back" data-tooltip="Undo transition">
+						<svg><use href="#svg-board-back"/></svg>
+					</button>
+					<button class="btn-bare icon-btn tooltip-d" id="btn-board-expand" data-tooltip="Fit entire game">
+						<svg><use href="#svg-board-expand"/></svg>
+					</button>
+					<button class="btn-bare icon-btn tooltip-d" id="btn-board-recenter" data-tooltip="Recenter">
+						<svg><use href="#svg-board-recenter"/></svg>
+					</button>
+				</div>
+				{# Annotation tools - mobile only #}
+				<div class="ctrl-group mobile-only">
+					<button class="btn-bare icon-btn tooltip-d" id="btn-annotations" data-tooltip="Draw annotations">
+						<svg><use href="#svg-pencil"/></svg>
+					</button>
+					{# Erase / Collapse-rays share one slot (mutually exclusive) #}
+					<button class="btn-bare icon-btn tooltip-d" id="btn-erase" data-tooltip="Erase annotations">
+						<svg><use href="#svg-erase"/></svg>
+					</button>
+					<button class="btn-bare icon-btn tooltip-d hidden" id="btn-collapse" data-tooltip="Collapse rays">
+						<svg><use href="#svg-collapse"/></svg>
+					</button>
+				</div>
+				{# View toggles #}
+				<div class="ctrl-group">
+					{# Arrow-indicators mode - cycles defense → all → all+hippogonals → off #}
+					<button class="btn-bare icon-btn tooltip-d" id="btn-arrows" data-tooltip="Arrow indicators: Defense (tab)">
+						<svg>
+							<use href="#svg-arrows-off" class="hidden"/>
+							<use href="#svg-arrows-defense"/>
+							<use href="#svg-arrows-all" class="hidden"/>
+							<use href="#svg-arrows-hippogonals" class="hidden"/>
+						</svg>
+					</button>
+					{# Perspective - desktop-only #}
+					<button class="btn-bare icon-btn tooltip-d desktop-only" id="btn-perspective" data-tooltip="Toggle perspective view">
+						<svg><use href="#svg-perspective"/></svg>
+					</button>
+				</div>
+			</div>
+
+			{# Coordinate fields - the board coordinates currently being hovered over #}
+			<div class="coords">
+				<span class="coord">
+					<span class="coord-label">X</span>
+					<input class="coord-value" id="coord-x" type="text" value="0"/>
+				</span>
+				<span class="coord">
+					<span class="coord-label">Y</span>
+					<input class="coord-value" id="coord-y" type="text" value="0"/>
+				</span>
+			</div>
+		</div>
+
+		{# Material bars + match panel #}
+		<div class="play-group">
+
+			{# Top side's captured material. Managed by guimaterial.ts #}
+			<div class="material" id="material-top"></div>
+
+			{# Match panel - moves list, practice actions #}
+			<div class="match-panel panel">
+
+				{# Top username container — the practice bot. Untimed, so the clocks stay hidden. #}
+				<div class="player-bar" id="player-bar-top">
+					{{ usernameEmbed(botName) }}
+					<span class="clock hidden"></span>
+				</div>
+
+				{# Moves list + game-over result. Managed by guimoveslist.ts #}
+				<div class="moves unselectable">
+					<div class="moves-nav">
+						<button class="btn-bare move-btn" id="btn-move-first" title="Rewind to start" disabled><svg class="move-icon"><use href="#svg-move-first"/></svg></button>
+						<button class="btn-bare move-btn" id="btn-move-prev" title="Previous move" disabled><svg class="move-icon"><use href="#svg-move-prev"/></svg></button>
+						<button class="btn-bare move-btn" id="btn-move-next" title="Next move" disabled><svg class="move-icon"><use href="#svg-move-next"/></svg></button>
+						<button class="btn-bare move-btn" id="btn-move-last" title="Skip to latest" disabled><svg class="move-icon"><use href="#svg-move-last"/></svg></button>
+					</div>
+					<div class="moves-table scrollbar-thin">
+						{# Game result — shown after last move #}
+						<div class="game-result hidden">
+							<span class="result-score"></span>
+							<span class="result-text"></span>
+						</div>
+					</div>
+				</div>
+
+				{# Practice actions — undo / restart / back to the list. Managed by guipracticeactions.ts.
+				   All three share one padded viewBox so they scale alike and none clips its stroke. #}
+				<div class="game-actions unselectable">
+					<div class="actions-practice">
+						<button class="action-btn tooltip-d" id="btn-practice-undo" data-tooltip="{{ t.actions.undo_move }}" disabled>
+							<svg class="action-icon" viewBox="-1 -1 26 26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 15 2 9 8 3"/><path d="M2 9h12a6 6 0 0 1 0 12h-3"/></svg>
+						</button>
+						<button class="action-btn tooltip-d" id="btn-practice-restart" data-tooltip="{{ t.actions.restart }}">
+							<svg class="action-icon" viewBox="-1 -1 26 26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+						</button>
+						<button class="action-btn tooltip-d" id="btn-practice-back" data-tooltip="{{ t.actions.back_to_list }}">
+							<svg class="action-icon" viewBox="-1 -1 26 26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="5" x2="22" y2="5"/><line x1="9" y1="12" x2="22" y2="12"/><line x1="9" y1="19" x2="22" y2="19"/><line x1="3" y1="5" x2="3" y2="5"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="19" x2="3" y2="19"/></svg>
+						</button>
+					</div>
+				</div>
+
+				{# Bottom username container — you. #}
+				<div class="player-bar" id="player-bar-bottom">
+					{{ usernameEmbed(t.you) }}
+					<span class="clock hidden"></span>
+				</div>
+
+			</div>{# .match-panel #}
+
+			{# Bottom side's captured material #}
+			<div class="material" id="material-bottom"></div>
+
+		</div>{# .play-group #}
+
+	</aside>
+
+	{# Board canvas #}
+	<div class="canvas-container bg-checkerboard-dimmed">
+		{# The background is visible until the client reveals the canvas when the game is fully loaded #}
+		<canvas class="board-canvas visibility-hidden" id="board-canvas"></canvas>
+		{# Promotion UI #}
+		<div id="promote" class="hidden">
+			<div id="promote-white" class="promotecolor hidden"></div>
+			<div id="promote-black" class="promotecolor hidden"></div>
+		</div>
+	</div>
+
+	{# ── Checkmate selection overlay ───────────────────────────────────── #}
+	{# Covers the board while picking a checkmate. Managed by guipractice.ts #}
+	<section class="practice-selection" id="practice-selection">
+		<div class="practice-content">
+
+			<header class="practice-header">
+				<h1 class="practice-title">{{ t.title }}</h1>
+				<div class="progress-panel panel">
+					<div class="progress-row">
+						<span class="progress-label">{{ t.progress_label }}</span>
+						<span class="progress-count" id="practice-progress-count"></span>
+					</div>
+					{# The fill width and badge states/tooltips are written by guipractice.ts. #}
+					<div class="progress-track">
+						<div class="progress-fill" id="practice-progress-fill"></div>
+						{% for metal in ['bronze', 'silver', 'gold'] %}
+						<span class="badge tooltip-d" id="checkmate-badge-{{ metal }}">
+							<div class="shine-clockwise hidden"></div>
+							<div class="shine-anticlockwise hidden"></div>
+							<picture>
+								<source srcset="/img/badges/checkmate-badge-{{ metal }}.avif" type="image/avif"/>
+								<source srcset="/img/badges/checkmate-badge-{{ metal }}.webp" type="image/webp"/>
+								<img class="unearned" src="/img/badges/checkmate-badge-{{ metal }}.png" alt="{{ metal }} badge"/>
+							</picture>
+						</span>
+						{% endfor %}
+					</div>
+					{% if not memberInfo.signedIn %}
+					<p class="practice-notice">{{ t.logged_out_notice }}</p>
+					{% endif %}
+				</div>
+			</header>
+
+			{% for group in groups %}
+			<section class="difficulty-group">
+				<h2 class="difficulty-title">{{ t.difficulty[group.difficulty] }}</h2>
+				<div class="checkmates">
+					{% for checkmate in group.checkmates %}
+					{# The piece icons are `| safe`: this markup is our own svg asset files, never input. #}
+					<button class="checkmate unselectable" data-id="{{ checkmate.id }}">
+						<span class="mate-pieces white">
+							{%- for icon in checkmate.white %}<span class="mate-piece{{ ' collated' if icon.collated }}">{{ icon.svg | safe }}</span>{% endfor -%}
+						</span>
+						<span class="mate-versus">{{ t.versus }}</span>
+						<span class="mate-pieces black">
+							{%- for icon in checkmate.black %}<span class="mate-piece{{ ' collated' if icon.collated }}">{{ icon.svg | safe }}</span>{% endfor -%}
+						</span>
+						<svg class="mate-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+					</button>
+					{% endfor %}
+				</div>
+			</section>
+			{% endfor %}
+
+		</div>
+	</section>
+</main>
+{% endblock %}
+
+{% block script %}
+<script type="module" src="{{ manifest['scripts/esm/views/checkmatepractice/checkmatepractice.ts'] }}"></script>
 {% endblock %}

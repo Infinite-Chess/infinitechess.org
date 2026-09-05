@@ -1,8 +1,9 @@
 // src/client/scripts/esm/game/chess/gamesession.ts
 
 /**
- * The current game session's lightweight state: what *kind* of game is loaded (local / online /
- * engine / editor), whether it's still loading, and the shared load-finish / unload lifecycle.
+ * The current game session's lightweight state: what *kind* of game is loaded (online /
+ * practice / analysis / editor), whether it's still loading, and the shared load-finish /
+ * unload lifecycle.
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
@@ -44,6 +45,12 @@ type GameSession =
 			/** Our role in the game. Undefined if we're not a participant (spectator). */
 			role?: Player;
 	  }
+	| {
+			/** A local game against the checkmate-practice bot. Nothing is transmitted. */
+			type: 'practice';
+			/** Our role in the game. */
+			role: Player;
+	  }
 	| { type: 'analysis' | 'editor' };
 
 // Variables -------------------------------------------------------------------
@@ -61,9 +68,9 @@ function getGameType(): GameSession['type'] {
 	return session.type;
 }
 
-/** Returns our role in the game, if a participant, in either an online/engine game. */
+/** Returns our role in the game, if a participant, in either an online/practice game. */
 function getRole(): Player | undefined {
-	if (session.type === 'online') return session.role;
+	if (session.type === 'online' || session.type === 'practice') return session.role;
 	throw Error("Can't get our color in this type of game: " + session.type);
 }
 
@@ -71,6 +78,7 @@ function getRole(): Player | undefined {
 function isItOurTurn(): boolean {
 	switch (session.type) {
 		case 'online':
+		case 'practice':
 			return gameslot.getGamefile()!.whosTurn === session.role;
 		case 'editor':
 		case 'analysis':

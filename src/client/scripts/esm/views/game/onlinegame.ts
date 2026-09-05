@@ -28,7 +28,9 @@ import enginegame from '../../game/chess/enginegame.js';
 import gameactions from './gui/guigameactions.js';
 import gamesession from '../../game/chess/gamesession.js';
 import guigamemeta from '../../game/gui/guigamemeta.js';
+import { GameBus } from '../../board/GameBus.js';
 import { SocketBus } from '../../socket/SocketBus.js';
+import socketintents from '../../socket/socketintents.js';
 import guidisconnect from './gui/guidisconnect.js';
 import guispectators from './gui/guispectators.js';
 
@@ -70,6 +72,10 @@ SocketBus.addEventListener('closed', () => {
 });
 SocketBus.addEventListener('reconnect', () => {
 	if (stage !== 'detached') subscribeToGame();
+});
+// Only ever dispatched in an online game, so it needs no game-type gate of its own.
+GameBus.addEventListener('engine-failed', () => {
+	socketintents.submit('game', 'engineresign', undefined, () => gameslot.isGameLive());
 });
 
 // Sync ------------------------------------------------------------------------

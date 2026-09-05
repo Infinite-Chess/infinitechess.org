@@ -356,7 +356,8 @@ function buildRuleLines(
 		return {
 			kind: 'promotion',
 			prefix,
-			svgs: pieces.map((piece) => pieceSvgCache.get(piece)),
+			// Inlined as `piece-silhouette`s, whose CSS repaints them — so which variant is moot.
+			svgs: pieces.map((piece) => pieceSvgCache.get(piece, p.BLACK)),
 			suffix,
 		};
 	});

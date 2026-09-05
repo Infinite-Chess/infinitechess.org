@@ -33,7 +33,6 @@ import enginewasm from './engines/enginewasm.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from './gamesession.js';
 import movesequence from './movesequence.js';
-import socketintents from '../../socket/socketintents.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import enginelegalmoves from '../debug/enginelegalmoves.js';
 
@@ -134,7 +133,7 @@ function onEngineReady(): void {
 function failEngineLoad(error: Error): void {
 	console.error(error);
 	if (gamesession.getGameType() === 'online') {
-		resignFailedEngine();
+		GameBus.dispatch('engine-failed');
 		toast.show('The engine failed to load and has resigned the game.', { error: true });
 	} else toast.show('The engine failed to load. Please refresh.', { error: true });
 	terminate();
@@ -219,7 +218,7 @@ function makeEngineMove(tokenMove: string | null): void {
 		// find any legal moves, or thought it was checkmate), or an error occurred.
 		// In this case, resign for the engine.
 		console.log(`Engine returned a null move. Resigning the game...`);
-		if (gamesession.getGameType() === 'online') resignFailedEngine();
+		if (gamesession.getGameType() === 'online') GameBus.dispatch('engine-failed');
 		else {
 			gamefile.gameConclusion = { condition: 'resignation', victor: gamesession.getRole()! };
 			gameslot.concludeGame();
@@ -228,7 +227,7 @@ function makeEngineMove(tokenMove: string | null): void {
 	}
 
 	// Can rarely happen if the server forced us to resync, undoing our move.
-	if (gamePageData.role === gamefile.whosTurn) {
+	if (gamesession.getRole() === gamefile.whosTurn) {
 		console.error(`Engine returned a move when it was our turn. Ignoring it: ${tokenMove}`);
 		return;
 	}
@@ -241,7 +240,7 @@ function makeEngineMove(tokenMove: string | null): void {
 				`Engine submitted an illegal move. Please report this bug! Move "${tokenMove}" is illegal for reason: ${moveValidationResults.reason}`,
 				{ error: true, durationMultiplier: 100 },
 			);
-			if (gamesession.getGameType() === 'online') resignFailedEngine();
+			if (gamesession.getGameType() === 'online') GameBus.dispatch('engine-failed');
 			return false; // Don't physically play next premove
 		}
 
@@ -259,11 +258,6 @@ function makeEngineMove(tokenMove: string | null): void {
 	});
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
-}
-
-/** Asks the server to resign the engine in the current online game. */
-function resignFailedEngine(): void {
-	socketintents.submit('game', 'engineresign', undefined, () => gameslot.isGameLive());
 }
 
 /** Requests engine-generated legal moves for the currently viewed position. */
