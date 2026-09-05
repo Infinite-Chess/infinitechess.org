@@ -18,6 +18,11 @@ import type { SeekVariant, OutSeekVariant } from '../../../shared/chess/util/var
 export interface AuthSeek extends BaseSeek {
 	/** Contains the identifier of the owner of the seek, whether a member or browser. */
 	owner: AuthMemberInfo;
+	/**
+	 * The tab that created the seek, remembered so it's the one taken into
+	 * the game when the seek is accepted, rather than another of theirs.
+	 */
+	ownerTab: string;
 	variant: SeekVariant;
 }
 

@@ -57,6 +57,21 @@ const HEARTBEAT_INTERVAL_MS = 10000;
 const ECHO_TIMEOUT_MS = 5000;
 
 /**
+ * The tab id the client generates and attaches to every upgrade request it makes.
+ * It names one browser tab across every socket that tab opens.
+ */
+const TAB_ID = {
+	/** The query parameter it rides on. */
+	PARAM: 'tab',
+	/**
+	 * Its length, in base-62. Client-generated, so it can't be checked for
+	 * uniqueness; it needn't be unguessable either, it isn't relied on
+	 * for identity, but improved UX.
+	 */
+	LENGTH: 8,
+} as const;
+
+/**
  * Every closure reason that can go on the wire, and the code each is sent with.
  *
  * BOTH sides see BOTH groups. `ws` populates the server's 'close' event purely from the
@@ -75,6 +90,8 @@ const CLOSURE_REASONS = {
 	UNIDENTIFIABLE_IP: 'Unable to identify client IP address',
 	/** 1008. Automated scanner and prober bots often omit it. */
 	USER_AGENT_REQUIRED: 'User agent is required',
+	/** 1008. Every client of ours names its tab on the upgrade request. */
+	TAB_ID_REQUIRED: 'Tab id is required',
 	/** 1008. The client has cookies disabled. */
 	AUTHENTICATION_NEEDED: 'Authentication needed',
 	/** 1008. Logging out, deleting the account, or resetting the password. */
@@ -156,6 +173,7 @@ export default {
 	PROTOCOL_VERSION,
 	HEARTBEAT_INTERVAL_MS,
 	ECHO_TIMEOUT_MS,
+	TAB_ID,
 	CLOSURE_REASONS,
 	// Functions
 	isClosureReason,

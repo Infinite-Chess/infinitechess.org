@@ -80,7 +80,7 @@ function getSeekFromWebsocketMessageContents(
 
 	let id: string;
 	do {
-		id = uuid.generateID_Base36(domain.SEEK_ID_LENGTH);
+		id = uuid.generateID_Base62(domain.SEEK_ID_LENGTH);
 	} while (activeSeeks.hasID(id));
 
 	const owner = ws.metadata.memberInfo;
@@ -102,6 +102,7 @@ function getSeekFromWebsocketMessageContents(
 	return {
 		id,
 		owner,
+		ownerTab: ws.metadata.tabId,
 		player,
 		variant: messageContents.variant,
 		time: messageContents.time,

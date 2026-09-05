@@ -98,12 +98,9 @@ export interface DeadGameState extends StaticGameState {
 
 /** The number of digits generated seek IDs are. */
 const SEEK_ID_LENGTH = 5;
-/** Seek ID: Base36 alphanumeric, fixed length of 5. */
+/** A seek's id. */
 export type SeekId = z.infer<typeof SeekIdSchema>;
-const SeekIdSchema = z
-	.string()
-	.length(SEEK_ID_LENGTH)
-	.regex(/^[0-9a-z]+$/);
+const SeekIdSchema = z.string();
 
 /** Shared info for all lobby game seek types. (excludes variant) */
 export type BaseSeek = z.infer<typeof BaseSeekSchema>;

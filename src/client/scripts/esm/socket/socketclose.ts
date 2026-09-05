@@ -88,6 +88,10 @@ function onclose(code: number, reason: string): void {
 			// A browser always sends one, so this means our request never reached the server intact.
 			console.error('User agent missing when establishing socket.');
 			break;
+		case socketutil.CLOSURE_REASONS.TAB_ID_REQUIRED:
+			// We attach one to every upgrade request, so ours never reached the server intact.
+			console.error('Tab id missing when establishing socket.');
+			break;
 		case socketutil.CLOSURE_REASONS.AUTHENTICATION_NEEDED:
 			// Called when the server closes our websocket due to missing authentication.
 			toast.show(t.shared.socket.cookies_required, { error: true });

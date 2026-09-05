@@ -7,19 +7,13 @@
 
 import type { Request, Response } from 'express';
 
-import domain from '../../shared/transport/domain.js';
-
 import activeSeeks from '../game/seeksmanager/activeSeeks.js';
 
 /** `GET /api/seek-preview/:seekId` — returns `{ icn }` of a custom (ICN) lobby seek for hover previews. */
 function get(req: Request, res: Response): void {
 	const seekId = req.params['seekId']!;
 
-	if (!domain.SeekIdSchema.safeParse(seekId).success) {
-		res.status(400).send('Invalid seek ID format.');
-		return;
-	}
-
+	// No shape check: an id is only compared for equality, so a malformed one 404s below.
 	const seek = activeSeeks.getByID(seekId);
 	if (seek === undefined) {
 		res.status(404).send('Seek not found.');

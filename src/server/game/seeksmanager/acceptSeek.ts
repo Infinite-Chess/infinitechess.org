@@ -63,7 +63,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 
-	const player1Socket = lobbyManager.findSocketFromOwner(seek.owner); // Could be undefined occasionally
+	const player1Socket = lobbyManager.findSocketFromOwner(seek.owner, seek.ownerTab); // Could be undefined occasionally
 	const player2Socket = ws;
 
 	// Assign each player a color based on their seek info. Add their socket just encase

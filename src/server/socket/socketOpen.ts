@@ -27,6 +27,11 @@ import requestContext from '../utility/requestContext.js';
 import reqTranslations from '../config/reqTranslations.js';
 import identityResolver from '../auth/identityResolver.js';
 
+// Constants -------------------------------------------------------------------
+
+/** The exact shape of a tab id our client issues: base-62 characters, of a fixed length. */
+const TAB_ID_PATTERN = new RegExp(`^[0-9A-Za-z]{${socketutil.TAB_ID.LENGTH}}$`);
+
 // Functions -------------------------------------------------------------------
 
 /** Gates and completes every websocket upgrade request: validation, metadata, listeners. */
@@ -125,6 +130,13 @@ function closeIfInvalidAndAddMetadata(
 		return;
 	}
 
+	const tabId = parseTabID(req);
+	if (tabId === undefined) {
+		// Every client of ours attaches one, so this is a hand-crafted upgrade request.
+		socket.close(1008, socketutil.CLOSURE_REASONS.TAB_ID_REQUIRED);
+		return;
+	}
+
 	// Initialize the metadata and cast to a custom websocket object
 	const ws = socket as CustomWebSocket; // Cast WebSocket to CustomWebSocket
 
@@ -135,6 +147,7 @@ function closeIfInvalidAndAddMetadata(
 		userAgent,
 		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
 		id: socketRegistry.generateUniqueID(), // Sets the ws.metadata.id property of the websocket
+		tabId,
 		IP: clientIP,
 		echoTimers: {},
 	};
@@ -143,6 +156,23 @@ function closeIfInvalidAndAddMetadata(
 	ws.t = reqTranslations.build(reqLanguage.resolve(req));
 
 	return ws;
+}
+
+/**
+ * Reads the tab id the client attached to its upgrade request — see {@link socketutil.TAB_ID}.
+ *
+ * Client-supplied, so it's held to the exact shape we issue. Faking another tab's id wins
+ * nothing: every use of it also matches on the socket's own identity, so the most a client
+ * can misdirect is its own navigation.
+ * @returns The id, or undefined if they sent none, or a malformed one.
+ */
+function parseTabID(req: IncomingMessage): string | undefined {
+	// An upgrade request's url is path-only, so it needs a base to be parsed against.
+	const tabId = new URL(req.url ?? '', 'wss://localhost').searchParams.get(
+		socketutil.TAB_ID.PARAM,
+	);
+	if (tabId === null || !TAB_ID_PATTERN.test(tabId)) return undefined;
+	return tabId;
 }
 
 /**
