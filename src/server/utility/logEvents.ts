@@ -121,10 +121,6 @@ async function addAndPrint(message: string, logName: string): Promise<void> {
  * @param logName - The base name of the log file, without the `.txt` extension.
  */
 async function add(message: string, logName: string): Promise<void> {
-	if (typeof message !== 'string')
-		return console.trace('Cannot log message when it is not a string.');
-	if (!logName) return console.trace('Log name MUST be provided when logging an event!');
-
 	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
 	// Tag the line with the ID of the request/socket-message that triggered
 	// it, if any, so all log lines it produced (across files) can be joined.
