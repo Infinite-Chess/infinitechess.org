@@ -58,7 +58,7 @@ async function handle(req: Request, res: Response): Promise<void> {
 		const detail = jsutil.getErrorMessage(error);
 		// Log the detailed error for server-side debugging.
 		logEvents.addAndPrint(
-			`Error during handle for user "${logEvents.escapeLogNewlines(String(req.body.username))}": ${detail}`,
+			`Error during handle for user "${logEvents.escapeUntrusted(String(req.body.username))}": ${detail}`,
 			'errLog',
 		);
 		// Send a generic error response to the client.

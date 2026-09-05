@@ -18,7 +18,7 @@ async function createAndLoginUser(): Promise<{
 	cookie: string;
 }> {
 	userCounter++;
-	const username = `ChessMaster-${userCounter}`;
+	const username = `ChessMaster${userCounter}`;
 	const user_id = await accountSeeder.generate({
 		username,
 		email: `${username}@example.com`,

@@ -9,22 +9,7 @@ import type { CustomWebSocket } from './socketTypes.js';
 
 import logEvents from '../utility/logEvents.js';
 
-// Constants -------------------------------------------------------------------
-
-/** Message beyond this length will be truncated in the logs to prevent log bloat. */
-const MAX_LOGGED_MESSAGE_LENGTH = 2048;
-
 // Functions -------------------------------------------------------------------
-
-/**
- * Truncates a message's contents if it exceeds {@link MAX_LOGGED_MESSAGE_LENGTH},
- * appending a marker noting how many characters were cut.
- */
-function truncateMessage(messageData: string): string {
-	if (messageData.length <= MAX_LOGGED_MESSAGE_LENGTH) return messageData;
-	const omitted = messageData.length - MAX_LOGGED_MESSAGE_LENGTH;
-	return `${messageData.slice(0, MAX_LOGGED_MESSAGE_LENGTH)}…[truncated, ${omitted} more chars]`;
-}
 
 /** Logs a newly-opened socket's metadata into `wsInLog`. */
 function logOpen(ws: CustomWebSocket): void {
@@ -39,7 +24,7 @@ function logOpen(ws: CustomWebSocket): void {
  */
 function logIn(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;
-	const logThis = `From socket of ID "${socketID}":   ${logEvents.escapeLogNewlines(truncateMessage(messageData))}`;
+	const logThis = `From socket of ID "${socketID}":   ${logEvents.escapeUntrusted(messageData)}`;
 	logEvents.add(logThis, 'wsInLog');
 }
 
@@ -49,7 +34,7 @@ function logIn(ws: CustomWebSocket, messageData: string): void {
  */
 function logOut(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;
-	const logThis = `To socket of ID "${socketID}":   ${truncateMessage(messageData)}`;
+	const logThis = `To socket of ID "${socketID}":   ${logEvents.truncate(messageData)}`;
 	logEvents.add(logThis, 'wsOutLog');
 }
 

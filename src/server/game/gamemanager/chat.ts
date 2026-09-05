@@ -74,7 +74,7 @@ function findTextFault(text: string): string | undefined {
 /** Logs a refused message to hackLog. Nothing is sent back to the client. */
 function reject(servergame: ServerGame, ourRole: Player, reason: string, text: string): void {
 	logEvents.add(
-		`Refused ${typeutil.strcolors[ourRole]}'s chat message in game ${servergame.match.id} (${reason}): "${logEvents.escapeLogNewlines(text)}"`,
+		`Refused ${typeutil.strcolors[ourRole]}'s chat message in game ${servergame.match.id} (${reason}): "${logEvents.escapeUntrusted(text)}"`,
 		'hackLog',
 	);
 }

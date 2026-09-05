@@ -99,7 +99,7 @@ async function handleForgot(req: Request, res: Response): Promise<void> {
 			}
 		} else {
 			logEvents.addAndPrint(
-				`No member exists with the email (${logEvents.escapeLogNewlines(email)}). Not sending password reset email.`,
+				`No member exists with the email (${logEvents.escapeUntrusted(email)}). Not sending password reset email.`,
 				'loginAttempts',
 			);
 		}

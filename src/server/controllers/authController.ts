@@ -12,6 +12,8 @@ import type { MemberRecord } from '../database/memberManager.js';
 
 import bcrypt from 'bcrypt';
 
+import validators from '../../shared/util/validators.js';
+
 import logEvents from '../utility/logEvents.js';
 import memberManager from '../database/memberManager.js';
 import authRatelimiter from './authRatelimiter.js';
@@ -32,14 +34,12 @@ async function testPasswordForRequest(
 	const formData = verifyBodyHasLoginFormData(req, res);
 	if (!formData) return undefined; // Reponse already sent
 
-	const { claimedUsername, claimedPassword } = formData;
+	const { claimedIdentifier, isEmail, claimedPassword } = formData;
 
-	// Emails always contain '@' and are stored lowercase; usernames can never contain '@'.
-	const isEmail = claimedUsername.includes('@');
 	const searchKey = isEmail ? 'email' : 'username';
 	// Lowercased here (not by the data layer): memberManager.getDataByCriteria is column-agnostic, so an
 	// email search value must be normalized by the caller to match the stored lowercase emails.
-	const searchValue = isEmail ? claimedUsername.toLowerCase() : claimedUsername;
+	const searchValue = isEmail ? claimedIdentifier.toLowerCase() : claimedIdentifier;
 
 	// Rate limit keyed on the CLAIMED identifier BEFORE the database lookup, so a real
 	// account and a nonexistent one are throttled identically. Otherwise the lockout cooldown
@@ -60,10 +60,7 @@ async function testPasswordForRequest(
 			record !== undefined && (await bcrypt.compare(claimedPassword, record.hashed_password));
 		if (!match) {
 			const attemptedIdentity = record?.username ?? searchValue;
-			logEvents.add(
-				`Failed login attempt for "${logEvents.escapeLogNewlines(attemptedIdentity)}".`,
-				'loginAttempts',
-			);
+			logEvents.add(`Failed login attempt for "${attemptedIdentity}".`, 'loginAttempts');
 			res.status(401).json({
 				message: req.t.responses.auth.invalid_credentials,
 			}); // Unauthorized — generic message to avoid account enumeration
@@ -84,14 +81,16 @@ async function testPasswordForRequest(
 }
 
 /**
- * Tests if the request body has valid `username` and `password` properties.
+ * Tests if the request body has valid `username` and `password` properties,
+ * the identifier being shaped like something that could actually be registered.
  * If not, this auto-sends a response to the client with an error.
- * @returns The claimed username and password, or undefined if the body is invalid.
+ * @returns The claimed identifier and password, plus whether the identifier is an
+ * email, or undefined if the body is invalid.
  */
 function verifyBodyHasLoginFormData(
 	req: Request,
 	res: Response,
-): { claimedUsername: string; claimedPassword: string } | undefined {
+): { claimedIdentifier: string; isEmail: boolean; claimedPassword: string } | undefined {
 	const { username, password } = req.body;
 
 	if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
@@ -100,7 +99,27 @@ function verifyBodyHasLoginFormData(
 		return undefined;
 	}
 
-	return { claimedUsername: username, claimedPassword: password };
+	// Emails always contain '@' and are stored lowercase; usernames can never contain '@'.
+	const isEmail = username.includes('@');
+
+	// An identifier failing the register form's rules can never match an account. Rejecting
+	// it here keeps unbounded, arbitrary text out of the rate limiter's keys and the logs.
+	if (!isIdentifierShapeValid(username, isEmail)) {
+		res.status(401).json({
+			// The same generic message a wrong password gets, so it can't be told apart.
+			message: req.t.responses.auth.invalid_credentials,
+		});
+		return undefined;
+	}
+
+	return { claimedIdentifier: username, isEmail, claimedPassword: password };
+}
+
+/** Whether the claimed identifier could be a registered email or username. */
+function isIdentifierShapeValid(identifier: string, isEmail: boolean): boolean {
+	return isEmail
+		? validators.validateEmail(identifier) === validators.EmailValidationResult.Ok
+		: validators.validateUsername(identifier) === validators.UsernameValidationResult.Ok;
 }
 
 // Exports ---------------------------------------------------------------------

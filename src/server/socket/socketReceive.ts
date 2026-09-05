@@ -75,7 +75,7 @@ function parseAndValidateMessage(messageStr: string): ServerboundMessage | null 
 		// Should only be reachable from explicitly crafted messages, but thus far
 		// no bots have exploited this. Safe to log in case it's ever a legit bug.
 		logEvents.add(
-			`Incoming websocket message is not JSON parseable. Message: "${logEvents.escapeLogNewlines(messageStr)}"`,
+			`Incoming websocket message is not JSON parseable. Message: "${logEvents.escapeUntrusted(messageStr)}"`,
 			'errLog',
 		);
 		return null;

@@ -1,7 +1,8 @@
 // src/server/controllers/authRatelimiter.ts
 
 /**
- * The script rate limits login/authentication attempts by a combination of username and IP address
+ * The script rate limits login/authentication attempts by a combination of the claimed
+ * identifier — a username or an email — and the client's IP address.
  */
 
 import type { Request, Response } from 'express';
@@ -22,22 +23,12 @@ type LoginAttemptData = {
 
 // Variables -------------------------------------------------------------------
 
-/** Maximum consecutive login attempts allowed for each username-IP
+/** Maximum consecutive login attempts allowed for each identifier-IP
  * combination before they will be locked out temporarily. */
 const MAX_LOGIN_ATTEMPTS = 3;
 /** The amount of time the cooldown is incremented by, after failing by {@link MAX_LOGIN_ATTEMPTS} *again*... */
 const LOGIN_COOLDOWN_INCREMENTOR_SECS = 5;
-/**
- * A hash that stores login attempts for each ip and user.
- * `{
- *  "username_IP": {
-*      attempts: 0,
-*      cooldownTimeSecs: 0,
-*      lastAttemptTime: 0,
-       deleteTimeoutID,
- *  }
- * }`
- */
+/** A hash that stores login attempts for each ip and user. */
 const loginAttemptData: Record<string, LoginAttemptData> = {};
 /**
  * The time, in milliseconds, to delete a browser agent from the
@@ -97,14 +88,16 @@ function limitLogin(req: Request, res: Response, browserAgent: string): boolean 
 }
 
 /**
- * Generates the rate-limit tracking key for a login attempt: raw username + client IP,
- * concatenated with no separator.
+ * Generates the rate-limit tracking key for a login attempt:
+ * the claimed identifier joined to the client IP by a colon.
+ * @param identifier - Shape-check before it gets here: alphanumeric or a valid
+ * email, never a newline, so it's safe to log verbatim.
  */
-function getBrowserAgent(req: Request, username: string): string {
+function getBrowserAgent(req: Request, identifier: string): string {
 	const clientIP = ip.get(req);
-	// The colon separates username from IP; usernames are strictly alphanumeric,
-	// so no concatenation of two different pairs can collide.
-	return `${username}:${clientIP}`;
+	// The IP is server-derived and always last, so no crafted
+	// identifier can forge the key of another client.
+	return `${identifier}:${clientIP}`;
 }
 
 /**
@@ -167,14 +160,14 @@ function startTimerToDeleteBrowserAgent(browserAgent: string): void {
  * Handles the rate limiting scenario when an incorrect password is entered.
  * Temporarily locks them out if they've entered too many incorrect passwords.
  * @param browserAgent - The browser agent string.
- * @param username - The username.
+ * @param identifier - Shape-check before it gets here, so it is safe to log verbatim.
  */
-function onIncorrectPassword(browserAgent: string, username: string): void {
+function onIncorrectPassword(browserAgent: string, identifier: string): void {
 	if (loginAttemptData[browserAgent]!.attempts < MAX_LOGIN_ATTEMPTS) return; // Don't lock them yet
 	// Lock them!
 	loginAttemptData[browserAgent]!.cooldownTimeSecs += LOGIN_COOLDOWN_INCREMENTOR_SECS;
 	logEvents.addAndPrint(
-		`${username} got login locked for ${loginAttemptData[browserAgent]!.cooldownTimeSecs} seconds`,
+		`${identifier} got login locked for ${loginAttemptData[browserAgent]!.cooldownTimeSecs} seconds`,
 		'loginAttempts',
 	);
 }
