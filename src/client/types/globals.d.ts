@@ -1,6 +1,7 @@
 // src/client/types/globals.d.ts
 
 import type { Player } from '../../shared/chess/util/typeutil.js';
+import type { EngineAssets } from '../../shared/chess/util/engineregistry.js';
 import type { GamePageData } from '../../shared/transport/domain.js';
 import type { TranslationsObject } from '../../types/translations.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
@@ -90,19 +91,12 @@ declare global {
 		gameId: number | null;
 		/** The side to orient the board to: the URL's color segment, else the side the viewer played on. */
 		viewColor: Player;
-		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`), from the manifest. */
-		engineUrl: string;
-		/** Hashed URL of the analysis engine worker script (from the asset manifest). */
-		workerUrl: string;
+		/** Assets for the analysis engine worker. */
+		engineAssets: EngineAssets;
 	};
 
 	/** Engine assets for the checkmate-practice page. */
-	var checkmatePracticePageData: {
-		/** Hashed URL of the checkmate-practice engine worker script (from the asset manifest). */
-		workerUrl: string;
-		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`), from the manifest. */
-		engineUrl: string;
-	};
+	var checkmatePracticePageData: EngineAssets;
 
 	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */
 	var turnstile: Turnstile;

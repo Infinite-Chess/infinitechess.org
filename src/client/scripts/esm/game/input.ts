@@ -205,10 +205,13 @@ type LogicalPointer = {
  * Allowing us to perform simulated clicks or double click drags with any of them.
  */
 interface ClickInfo {
-	/** The id of the LOGICAL pointer that most recently pressed this mouse button. */
-	pointerId?: string;
-	/** The id of the PHYSICAL pointer tied to the logical pointer that most recently pressed this mouse button. */
-	physicalId?: string;
+	/** The pointer that most recently pressed this mouse button. */
+	pointer?: {
+		/** The id of the LOGICAL pointer. */
+		logicalId: string;
+		/** The id of the PHYSICAL pointer it belongs to. */
+		physicalId: string;
+	};
 	/** Whether the last action for this Button was from a touch. */
 	isTouch: boolean;
 	/** Whether this mouse button was pushed down THIS FRAME */
@@ -412,14 +415,12 @@ function CreateInputListener(
 		// Generate a unique logical ID for the action.
 		const logicalId = getLogicalPointerId(e, targetButton);
 		const physicalId = getPhysicalPointerId(e);
-		targetButtonInfo.pointerId = logicalId;
-		targetButtonInfo.physicalId = physicalId;
+		targetButtonInfo.pointer = { logicalId, physicalId };
 		targetButtonInfo.isTouch = !(e instanceof MouseEvent); // CAN'T USE instanceof Touch because it's not defined in Safari!
 		targetButtonInfo.isDown = true;
 		targetButtonInfo.isHeld = true;
 		const relativeMousePos = getRelativeMousePosition([e.clientX, e.clientY], element);
 		targetButtonInfo.position = [...relativeMousePos];
-		// if (targetButton === Mouse.LEFT) pointersDown.push(targetButtonInfo.pointerId!);
 		// Push them down anyway no matter which type of click.
 		// So that you can still pinch the board when fingers act as right clicks.
 		pointersDown.push(logicalId);
@@ -483,8 +484,7 @@ function CreateInputListener(
 		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
 		const logicalId = getLogicalPointerId(e, targetButton);
 		const physicalId = getPhysicalPointerId(e);
-		targetButtonInfo.pointerId = logicalId;
-		targetButtonInfo.physicalId = physicalId;
+		targetButtonInfo.pointer = { logicalId, physicalId };
 		targetButtonInfo.isTouch = !(e instanceof MouseEvent); // CAN'T USE instanceof Touch because it's not defined in Safari!
 		targetButtonInfo.isDown = false;
 		targetButtonInfo.isHeld = false;
@@ -493,7 +493,7 @@ function CreateInputListener(
 
 		// Remove the pointer from the list of pointers down too, if it's in there.
 		// This can happen if it was added & removed in a single frame.
-		const index = pointersDown.indexOf(targetButtonInfo.pointerId!);
+		const index = pointersDown.indexOf(logicalId);
 		if (index !== -1) pointersDown.splice(index, 1);
 
 		// Mark the LOGICAL pointer as no longer held.
@@ -546,7 +546,7 @@ function CreateInputListener(
 			const targetButtonInfo = clickInfo[targetButton];
 
 			// Only update the click info's delta since down if the physical pointer that most recently performed that click action matches
-			if (targetButtonInfo.physicalId !== physicalPointerId) return;
+			if (targetButtonInfo.pointer?.physicalId !== physicalPointerId) return;
 
 			// Update the delta since down
 			targetButtonInfo.deltaSinceDown[0] += Math.abs(delta[0]);
@@ -780,14 +780,15 @@ function CreateInputListener(
 	return {
 		element,
 		atleastOneInput: (): boolean => atleastOneInputThisFrame,
-		isMouseDown: (button: MouseButton): boolean => clickInfo[button].isDown ?? false,
+		isMouseDown: (button: MouseButton): boolean => clickInfo[button].isDown,
 		claimMouseDown: (button: MouseButton): void => {
 			// console.error("Claiming mouse down: ", MouseNames[button]);
 			clickInfo[button].isDown = false;
 			// Also remove the pointer from the list of pointers down this frame.
-			const pointerId = clickInfo[button].pointerId;
-			const index = pointersDown.indexOf(pointerId!);
-			// console.error("Claiming pointer down1: ", pointerId);
+			const logicalId = clickInfo[button].pointer?.logicalId;
+			if (logicalId === undefined) return; // Never pressed yet, so nothing is down to claim.
+			const index = pointersDown.indexOf(logicalId);
+			// console.error("Claiming pointer down1: ", logicalId);
 			if (index !== -1) pointersDown.splice(index, 1);
 		},
 		claimPointerDown: (pointerId: string): void => {
@@ -799,7 +800,7 @@ function CreateInputListener(
 			pointersDown.splice(index, 1);
 			// Also claim the mouse down if this pointer is the most recent pointer that performed that action.
 			Object.values(clickInfo).forEach((buttonInfo) => {
-				if (buttonInfo.pointerId === pointerId) buttonInfo.isDown = false;
+				if (buttonInfo.pointer?.logicalId === pointerId) buttonInfo.isDown = false;
 			});
 		},
 		claimMouseClick: (button: MouseButton): void => {
@@ -809,15 +810,16 @@ function CreateInputListener(
 		},
 		cancelMouseClick: (button: MouseButton): number =>
 			(clickInfo[button].timeDownMillisHistory.length = 0),
-		isMouseHeld: (button: MouseButton): boolean => clickInfo[button].isHeld ?? false,
+		isMouseHeld: (button: MouseButton): boolean => clickInfo[button].isHeld,
 		isMouseTouch: (button: MouseButton): boolean => clickInfo[button].isTouch,
 		isPointerTouch: (pointerId: string): boolean =>
 			logicalPointers[pointerId]?.physical.isTouch ?? false,
-		getMouseId: (button: MouseButton): string | undefined => clickInfo[button].pointerId,
+		getMouseId: (button: MouseButton): string | undefined =>
+			clickInfo[button].pointer?.logicalId,
 		getMousePhysicalId: (button: MouseButton): string | undefined =>
-			clickInfo[button].physicalId,
+			clickInfo[button].pointer?.physicalId,
 		getMousePosition: (button: MouseButton): DoubleCoords | undefined => {
-			const logicalId = clickInfo[button].pointerId;
+			const logicalId = clickInfo[button].pointer?.logicalId;
 			if (!logicalId) return undefined;
 			const logicalPointer = logicalPointers[logicalId];
 			/**

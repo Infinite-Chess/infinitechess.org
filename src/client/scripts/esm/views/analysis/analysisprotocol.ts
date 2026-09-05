@@ -113,7 +113,7 @@ export type EvaluateResult = z.infer<typeof EvaluateResultSchema>;
  * {@link EvaluateResult} type. Score is from the side-to-move's perspective; both
  * absent on a terminal position (no legal moves).
  */
-export const EvaluateResultSchema = z.object({
+export const EvaluateResultSchema = z.strictObject({
 	requestId: z.int(),
 	/** Centipawns. Absent when mating or terminal. */
 	cp: z.number().optional(),

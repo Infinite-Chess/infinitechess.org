@@ -15,8 +15,10 @@
 <script>window.analysisPageData = {
 	gameId: {{ gameId | json | safe }},
 	viewColor: {{ viewColor | json | safe }},
-	engineUrl: "{{ manifest['engine'] }}",
-	workerUrl: "{{ manifest['scripts/esm/views/analysis/apeironanalysis.worker.ts'] }}"
+	engineAssets: {
+		engineUrl: "{{ manifest['engine'] }}",
+		workerUrl: "{{ manifest['scripts/esm/views/analysis/apeironanalysis.worker.ts'] }}"
+	}
 };</script>
 {% endblock %}
 

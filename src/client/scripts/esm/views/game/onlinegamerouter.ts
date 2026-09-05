@@ -198,7 +198,8 @@ function getClockValues(contents: ClientboundGameMessage): ClockValues | undefin
 
 /** Modifies the clock values to account for ping. */
 function adjustClockValuesForPing(clockValues: ClockValues): void {
-	if (!clockValues.colorTicking) return; // No clock is ticking (< 2 moves, or game is over), don't adjust for ping
+	const ticking = clockValues.ticking;
+	if (!ticking) return; // No clock is ticking (< 2 moves, or game is over), don't adjust for ping
 
 	// console.log(`Adjusting clock values for ping. Ping is ${pingmanager.getPing()}.`);
 
@@ -207,21 +208,17 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 	const halfPing = pingmanager.getHalfPing();
 	if (halfPing > 2500)
 		console.error('Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!'); // prettier-ignore
-	// console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${clockValues.colorTicking}'s clock.`);
+	// console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${ticking.color}'s clock.`);
 
-	if (clockValues.clocks[clockValues.colorTicking] === undefined)
-		throw Error(`Invalid color "${clockValues.colorTicking}" to modify clock value to account for ping.`); // prettier-ignore
-	clockValues.clocks[clockValues.colorTicking] = Math.max(
-		0,
-		clockValues.clocks[clockValues.colorTicking]! - halfPing,
-	);
+	const remaining = clockValues.clocks[ticking.color];
+	if (remaining === undefined)
+		throw Error(`Invalid color "${ticking.color}" to modify clock value to account for ping.`); // prettier-ignore
 
+	const adjusted = Math.max(0, remaining - halfPing);
+	clockValues.clocks[ticking.color] = adjusted;
 	// Flag what time the player who's clock is ticking will lose on time.
 	// Do this because while while the gamefile is being constructed, the time left may become innacurate.
-	clockValues.timeColorTickingLosesAt =
-		Date.now() + clockValues.clocks[clockValues.colorTicking]!;
-
-	return;
+	ticking.losesAt = Date.now() + adjusted;
 }
 
 /** Keeps the chat's send history up to date, at receipt. See {@link receiveMessage}. */

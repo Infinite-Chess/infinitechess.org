@@ -138,7 +138,7 @@ function getTempoPlayer(basegame: GameFile): Player | undefined {
 	if (gamesession.getGameType() === 'analysis')
 		return moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1);
 	if (gamefileutility.isGameOver(basegame)) return undefined;
-	return basegame.clocks?.colorTicking ?? basegame.whosTurn;
+	return basegame.clocks?.ticking?.color ?? basegame.whosTurn;
 }
 
 /** Highlights the bar of the player whose turn it is via `.tempo`. */
@@ -158,8 +158,8 @@ function rescheduleLowtime(clocks: ClockData): void {
 	clearTimeout(lowtimeTimeoutID);
 	lowtimeTimeoutID = undefined;
 	if (hasPlayedLowtimeSound) return;
-	if (clocks.colorTicking === undefined) return;
-	if (clocks.colorTicking !== gamesession.getRole()) return;
+	if (clocks.ticking === undefined) return;
+	if (clocks.ticking.color !== gamesession.getRole()) return;
 
 	const timeRemaining = clock.getColorTickingTrueTimeRemaining(clocks);
 	if (timeRemaining === null || timeRemaining === undefined) return;

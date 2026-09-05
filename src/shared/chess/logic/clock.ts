@@ -36,30 +36,20 @@ export type ClockData = {
 		/** The increment used, in seconds. */
 		increment: number;
 	};
-} & (
-	| {
-			/** We need this separate from gamefile's "whosTurn", because when we are
-			 * in an online game and we make a move, we want our Clock to continue
-			 * ticking until we receive the Clock information back from the server!*/
-			colorTicking: Player;
-			/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
-			 * When set to undefined no clocks are ticking*/
-			timeRemainAtTurnStart: number;
-			/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch.*/
-			timeAtTurnStart: number;
-	  }
-	| {
-			/** We need this separate from gamefile's "whosTurn", because when we are
-			 * in an online game and we make a move, we want our Clock to continue
-			 * ticking until we receive the Clock information back from the server!*/
-			colorTicking: undefined;
-			/** The amount of time in millis the current player had at the beginning of their turn, in milliseconds.
-			 * When set to undefined no clocks are ticking*/
-			timeRemainAtTurnStart: undefined;
-			/** The time at the beginning of the current player's turn, in milliseconds elapsed since the Unix epoch.*/
-			timeAtTurnStart: undefined;
-	  }
-);
+	/** The clock currently ticking down. Absent when clocks are stopped/paused. */
+	ticking?: {
+		/**
+		 * We need this separate from gamefile's "whosTurn", because when we are
+		 * in an online game and we make a move, we want our Clock to continue
+		 * ticking until we receive the Clock information back from the server!
+		 */
+		color: Player;
+		/** The time this color's turn began, in milliseconds elapsed since the Unix epoch. */
+		startedAt: number;
+		/** The time in millis this color had remaining when their turn began. */
+		timeRemainingAtStart: number;
+	};
+};
 
 // Functions -------------------------------------------------------------------
 
@@ -79,10 +69,6 @@ function init(players: Iterable<Player>, time_control: TimeControl): ClockDepend
 			increment: clockPartsSplit.increment,
 		},
 		currentTime: {},
-
-		colorTicking: undefined,
-		timeAtTurnStart: undefined,
-		timeRemainAtTurnStart: undefined,
 	};
 
 	// start both players with the default.
@@ -99,24 +85,21 @@ function init(players: Iterable<Player>, time_control: TimeControl): ClockDepend
  * @param clockValues - The new clock values to set.
  */
 function edit(currentClocks: ClockData, clockValues: ClockValues): void {
-	const colorTicking = clockValues.colorTicking;
+	const ticking = clockValues.ticking;
 	const now = Date.now();
 
-	if (colorTicking !== undefined) {
+	if (ticking !== undefined) {
 		// Adjust the clock value according to the precalculated time they will lost by timeout.
-		if (clockValues.timeColorTickingLosesAt === undefined)
+		if (ticking.losesAt === undefined)
 			throw Error('clockValues should have been modified to account for ping BEFORE editing the clocks. Use adjustClockValuesForPing() beore edit()'); // prettier-ignore
-		const colorTickingTrueTimeRemaining = clockValues.timeColorTickingLosesAt - now;
-		clockValues.clocks[colorTicking] = colorTickingTrueTimeRemaining;
+		const timeRemainingAtStart = ticking.losesAt - now;
+		clockValues.clocks[ticking.color] = timeRemainingAtStart;
+		currentClocks.ticking = { color: ticking.color, startedAt: now, timeRemainingAtStart };
+	} else {
+		delete currentClocks.ticking;
 	}
 
-	currentClocks.colorTicking = colorTicking;
 	currentClocks.currentTime = { ...clockValues.clocks };
-
-	if (colorTicking !== undefined) {
-		currentClocks.timeAtTurnStart = now;
-		currentClocks.timeRemainAtTurnStart = currentClocks.currentTime[colorTicking];
-	}
 }
 
 /**
@@ -189,7 +172,7 @@ function clocksAtMoveIndex(
 }
 
 /**
- * Call after flipping whosTurn. Flips colorTicking in local games.
+ * Call after flipping whosTurn. Flips the ticking color in local games.
  * @param gamefile - The minimum properties needed from the gamefile to push the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
  * @returns The time in milliseconds the player who just moved has remaining, if the clocks are ticking.
  */
@@ -205,20 +188,22 @@ function push(gamefile: {
 	if (!moveutil.isGameResignable(gamefile)) return clocks.currentTime[prevcolor]!;
 
 	// Add increment to the previous player's clock and capture their remaining time to later insert into move.
-	if (clocks.timeAtTurnStart !== undefined) {
+	if (clocks.ticking !== undefined) {
 		// Update current values
-		const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
+		const timePassedSinceTurnStart = Date.now() - clocks.ticking.startedAt;
 
-		clocks.currentTime[clocks.colorTicking] =
-			clocks.timeRemainAtTurnStart - timePassedSinceTurnStart;
+		clocks.currentTime[clocks.ticking.color] =
+			clocks.ticking.timeRemainingAtStart - timePassedSinceTurnStart;
 		// 3+ moves
-		clocks.currentTime[prevcolor]! += timeutil.toMillis(clocks.startTime.increment!, 'seconds');
+		clocks.currentTime[prevcolor]! += timeutil.toMillis(clocks.startTime.increment, 'seconds');
 	}
 
 	// Set up clocksticking for the new turn.
-	clocks.colorTicking = gamefile.whosTurn;
-	clocks.timeRemainAtTurnStart = clocks.currentTime[gamefile.whosTurn]!;
-	clocks.timeAtTurnStart = Date.now();
+	clocks.ticking = {
+		color: gamefile.whosTurn,
+		startedAt: Date.now(),
+		timeRemainingAtStart: clocks.currentTime[gamefile.whosTurn]!,
+	};
 
 	return clocks.currentTime[prevcolor];
 }
@@ -228,10 +213,13 @@ function stop(basegame: ClockDependant): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
 
-	if (clocks.colorTicking === undefined) return; // Clocks already stopped
+	if (clocks.ticking === undefined) return; // Clocks already stopped
 
-	const timeSpent = Date.now() - clocks.timeAtTurnStart;
-	clocks.currentTime[clocks.colorTicking] = Math.max(clocks.timeRemainAtTurnStart - timeSpent, 0);
+	const timeSpent = Date.now() - clocks.ticking.startedAt;
+	clocks.currentTime[clocks.ticking.color] = Math.max(
+		clocks.ticking.timeRemainingAtStart - timeSpent,
+		0,
+	);
 
 	endGame(basegame);
 }
@@ -239,10 +227,7 @@ function stop(basegame: ClockDependant): void {
 /** Stops the ticking clock, freezing both players' remaining time. */
 function endGame(basegame: ClockDependant): void {
 	if (basegame.untimed) return;
-	const clocks = basegame.clocks;
-	delete clocks.timeRemainAtTurnStart;
-	delete clocks.timeAtTurnStart;
-	delete clocks.colorTicking;
+	delete basegame.clocks.ticking;
 }
 
 /**
@@ -264,13 +249,13 @@ function update(
 		return;
 
 	const clocks = basegame.clocks;
-	if (clocks.timeAtTurnStart === undefined) return;
+	if (clocks.ticking === undefined) return;
 
 	// Update current values
-	const timePassedSinceTurnStart = Date.now() - clocks.timeAtTurnStart;
+	const timePassedSinceTurnStart = Date.now() - clocks.ticking.startedAt;
 
-	clocks.currentTime[clocks.colorTicking] = Math.ceil(
-		clocks.timeRemainAtTurnStart - timePassedSinceTurnStart,
+	clocks.currentTime[clocks.ticking.color] = Math.ceil(
+		clocks.ticking.timeRemainingAtStart - timePassedSinceTurnStart,
 	);
 
 	for (const [playerStr, time] of Object.entries(clocks.currentTime)) {
@@ -290,23 +275,18 @@ function update(
  * every frame if the user unfocuses the window.
  */
 function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined {
-	if (clocks.colorTicking === undefined) return;
-	const timeElapsedSinceTurnStartMs = Date.now() - clocks.timeAtTurnStart;
-	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMs;
+	if (clocks.ticking === undefined) return;
+	const timeElapsedSinceTurnStartMs = Date.now() - clocks.ticking.startedAt;
+	return clocks.ticking.timeRemainingAtStart - timeElapsedSinceTurnStartMs;
 }
 
-/** Snapshots the clocks into the {@link ClockValues} shape sent to clients. */
+/**
+ * Snapshots the clocks into the {@link ClockValues} shape sent to clients.
+ * The flag deadline is deliberately omitted — only the receiver can stamp one.
+ */
 function createEdit(clocks: ClockData): ClockValues {
-	const tickingData: Omit<ClockValues, 'clocks'> = {};
-	if (clocks.colorTicking !== undefined) {
-		tickingData.colorTicking = clocks.colorTicking;
-		tickingData.timeColorTickingLosesAt = clocks.timeAtTurnStart + clocks.timeRemainAtTurnStart;
-	}
-
-	return {
-		clocks: clocks.currentTime,
-		...tickingData,
-	};
+	if (clocks.ticking === undefined) return { clocks: clocks.currentTime };
+	return { clocks: clocks.currentTime, ticking: { color: clocks.ticking.color } };
 }
 
 // Exports ---------------------------------------------------------------------

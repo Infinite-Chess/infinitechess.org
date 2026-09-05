@@ -156,7 +156,7 @@ function getPageState(req: Request): GamePageState | undefined {
 		const workerUrl = assets[`scripts/esm/game/chess/engines/${engineGame.engine}.worker.ts`];
 		const engineUrl = assets['engine'];
 		if (!workerUrl || !engineUrl) throw new Error('Engine assets missing from asset manifest.');
-		engineGame = { ...engineGame, workerUrl, engineUrl };
+		engineGame = { ...engineGame, engineAssets: { workerUrl, engineUrl } };
 	}
 
 	const viewColor = resolveViewColor(req, role);

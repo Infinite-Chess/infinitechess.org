@@ -281,8 +281,8 @@ function confirmNavigationAwayFromGame(event: MouseEvent): void {
 
 /** Boots the engine worker for an online engine game. */
 function startEngineGame(engineGame: EngineGamePageInfo, ourRole: Player): void {
-	const { workerUrl, engineUrl } = engineGame;
-	if (!workerUrl || !engineUrl) throw new Error('Engine assets are missing from the game page.');
+	const engineAssets = engineGame.engineAssets;
+	if (!engineAssets) throw new Error('Engine assets are missing from the game page.');
 	// The server only ever creates online engine games against apeiron
 	// (createEngineGame.ts) — no other engine's config can be built from page data.
 	if (engineGame.engine !== 'apeiron')
@@ -297,8 +297,7 @@ function startEngineGame(engineGame: EngineGamePageInfo, ourRole: Player): void 
 				strengthLevel: engineGame.strengthLevel,
 			},
 		},
-		workerUrl,
-		engineUrl,
+		engineAssets,
 	});
 }
 

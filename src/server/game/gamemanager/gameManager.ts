@@ -326,7 +326,7 @@ function armAutoTimeLoss(servergame: ServerGame): void {
 		servergame.untimed ||
 		gamefileutility.isGameOver(servergame) ||
 		!moveutil.isGameResignable(servergame) ||
-		servergame.clocks.colorTicking === undefined
+		servergame.clocks.ticking === undefined
 	)
 		return;
 
@@ -334,7 +334,7 @@ function armAutoTimeLoss(servergame: ServerGame): void {
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	servergame.match.autoTimeLossTimeoutID = setTimeout(
 		() => gameLifecycle.concludeOnTime(servergame),
-		Math.max(servergame.clocks.timeRemainAtTurnStart, 0),
+		Math.max(servergame.clocks.ticking.timeRemainingAtStart, 0),
 	);
 }
 
@@ -344,13 +344,13 @@ function freezeEngineClock(servergame: ServerGame): void {
 	if (
 		engine === undefined || // Not an engine game
 		servergame.untimed || // No clocks
-		servergame.clocks.colorTicking === undefined || // Already frozen
+		servergame.clocks.ticking === undefined || // Already frozen
 		servergame.whosTurn !== engine.color || // Not the engine's turn
 		gamefileutility.isGameOver(servergame)
 	)
 		return;
 
-	servergame.clocks.currentTime[engine.color] = servergame.clocks.timeRemainAtTurnStart;
+	servergame.clocks.currentTime[engine.color] = servergame.clocks.ticking.timeRemainingAtStart;
 	clock.endGame(servergame);
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	liveGameValues.onEngineClockChanged(servergame);
@@ -363,7 +363,7 @@ function resumeEngineClock(servergame: ServerGame): void {
 	if (
 		engine === undefined || // Not an engine game
 		servergame.untimed || // No clocks
-		servergame.clocks.colorTicking !== undefined || // Already ticking
+		servergame.clocks.ticking !== undefined || // Already ticking
 		servergame.whosTurn !== engine.color || // Not the engine's turn
 		gamefileutility.isGameOver(servergame) ||
 		!moveutil.isGameResignable(servergame)
@@ -373,8 +373,7 @@ function resumeEngineClock(servergame: ServerGame): void {
 	const remaining = servergame.clocks.currentTime[engine.color]!;
 	clock.edit(servergame.clocks, {
 		clocks: { ...servergame.clocks.currentTime },
-		colorTicking: engine.color,
-		timeColorTickingLosesAt: Date.now() + remaining,
+		ticking: { color: engine.color, losesAt: Date.now() + remaining },
 	});
 	armAutoTimeLoss(servergame);
 	liveGameValues.onEngineClockChanged(servergame);

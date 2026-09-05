@@ -6,7 +6,10 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineAndConfig } from '../../../../../shared/chess/util/engineregistry.js';
+import type {
+	EngineAndConfig,
+	EngineAssets,
+} from '../../../../../shared/chess/util/engineregistry.js';
 import type {
 	ApeironMoveRequest,
 	CheckmatePracticeMoveRequest,
@@ -63,13 +66,11 @@ function initEngineGame(options: {
 	youAreColor: Player;
 	/** Which engine the game is against, with the config its worker expects. */
 	engine: EngineAndConfig;
-	/** Hashed URL of the engine's worker script. */
-	workerUrl: string;
 	/**
-	 * Served engine-glue URL (`manifest['engine']`) for wasm-engine workers that load it at
-	 * runtime (apeiron). Sent to the worker as an init message, with the thread count.
+	 * The engine's asset URLs. The glue is sent to the worker as an init
+	 * message with the thread count, for wasm engines that load it at runtime.
 	 */
-	engineUrl: string;
+	engineAssets: EngineAssets;
 }): void {
 	console.log(`Starting engine game with engine "${options.engine.name}".`);
 
@@ -78,7 +79,7 @@ function initEngineGame(options: {
 		return failEngineLoad(new Error("Cannot finish loading engine game because web workers aren't supported.")); // prettier-ignore
 	}
 
-	const worker = new Worker(options.workerUrl, {
+	const worker = new Worker(options.engineAssets.workerUrl, {
 		type: 'module',
 	}); // module type allows the web worker to import methods and types from other scripts.
 	engine = {
@@ -109,7 +110,7 @@ function initEngineGame(options: {
 	};
 	if (engineregistry.REGISTRY[options.engine.name].hasGlue)
 		worker.postMessage({
-			engineUrl: options.engineUrl,
+			engineUrl: options.engineAssets.engineUrl,
 			threads: getEngineThreadCount(),
 		} satisfies EngineInitRequest);
 }

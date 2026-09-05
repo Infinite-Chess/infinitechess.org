@@ -158,8 +158,7 @@ function startEngineGame(options: {
 			onLogicalLoaded: () =>
 				enginegame.initEngineGame({
 					...options,
-					workerUrl: window.checkmatePracticePageData.workerUrl,
-					engineUrl: window.checkmatePracticePageData.engineUrl,
+					engineAssets: window.checkmatePracticePageData,
 				}),
 			concludeIfOver: true,
 		},

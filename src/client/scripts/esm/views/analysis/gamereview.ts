@@ -10,6 +10,7 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
+import type { EngineAssets } from '../../../../../shared/chess/util/engineregistry.js';
 import type { MoveEvalLabel } from './moveevals.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
@@ -120,8 +121,7 @@ interface ReviewListeners {
 /** Persisted engine output. Classifications are deliberately recomputed on restore. */
 interface CachedGameReview {
 	schemaVersion: number;
-	engineUrl: string;
-	workerUrl: string;
+	engineAssets: EngineAssets;
 	depth: number;
 	results: EvaluateResult[];
 }
@@ -212,6 +212,8 @@ const MIN_POSITIONS_PER_CHUNK = 2;
 const MAX_REVIEW_DEPTH = 15;
 /** Depth floor, however many rounds a review takes. */
 const MIN_REVIEW_DEPTH = 9;
+/** Transposition-table size handed to each review worker. */
+const REVIEW_HASH_MB = 16;
 /**
  * Force-invalidates all persisted reviews. Bump when the stored shape changes in a way
  * zod can't reject (same shape, new meaning), NOT for interpretation changes — the cache
@@ -225,10 +227,9 @@ const REVIEW_CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
 // Schemas ---------------------------------------------------------------------
 
 /** Validates a persisted review's shape (see {@link CachedGameReview}). */
-const CachedGameReviewSchema = z.object({
+const CachedGameReviewSchema = z.strictObject({
 	schemaVersion: z.literal(REVIEW_CACHE_SCHEMA_VERSION),
-	engineUrl: z.string(),
-	workerUrl: z.string(),
+	engineAssets: z.strictObject({ workerUrl: z.string(), engineUrl: z.string() }),
 	depth: z.int(),
 	results: z.array(EvaluateResultSchema),
 });
@@ -467,7 +468,7 @@ function restoreCachedReview(): boolean {
 	}
 
 	reviewDepth = cached.depth;
-	results = cached.results.map((result) => ({ ...result, pv: result.pv?.slice() }));
+	results = cached.results;
 	evaluatedCount = results.length;
 	for (let index = 0; index < results.length; index++) {
 		icnByPosition[index] = serializePosition(index);
@@ -489,14 +490,15 @@ function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 	if (raw === undefined) return undefined;
 	const parsed = CachedGameReviewSchema.safeParse(raw);
 	if (!parsed.success) {
-		console.warn('[game review] Could not parse the local review cache:', parsed.error);
+		const codes = [...new Set(parsed.error.issues.map((issue) => issue.code))].join(', ');
+		console.warn(`[game review] Discarding a local review cache in a stale format (${codes}).`); // prettier-ignore
 		return undefined;
 	}
 	const cached = parsed.data;
 
 	if (
-		cached.engineUrl !== window.analysisPageData.engineUrl ||
-		cached.workerUrl !== window.analysisPageData.workerUrl ||
+		cached.engineAssets.engineUrl !== window.analysisPageData.engineAssets.engineUrl ||
+		cached.engineAssets.workerUrl !== window.analysisPageData.engineAssets.workerUrl ||
 		cached.depth < reviewDepth ||
 		// Load-bearing despite the game id key implying it: a mismatch desyncs `results` from
 		// the other per-position arrays, which every consumer indexes as parallel.
@@ -514,8 +516,7 @@ function persistCompletedReview(): void {
 	if (!key || results.some((result) => result === undefined)) return;
 	const cached: CachedGameReview = {
 		schemaVersion: REVIEW_CACHE_SCHEMA_VERSION,
-		engineUrl: window.analysisPageData.engineUrl,
-		workerUrl: window.analysisPageData.workerUrl,
+		engineAssets: window.analysisPageData.engineAssets,
 		depth: reviewDepth,
 		results: results as EvaluateResult[],
 	};
@@ -540,7 +541,7 @@ function spawnWorker(): void {
 	const entry: ReviewWorker = {
 		// No `threads`: review workers search single-threaded — parallelism is across positions.
 		engine: analysisworker.spawn({
-			hashMb: 16,
+			hashMb: REVIEW_HASH_MB,
 			onMessage: (msg) => handleWorkerMessage(entry, msg),
 			onFault: (fault, reason) => handleWorkerFault(entry, fault, reason),
 		}),
@@ -570,7 +571,11 @@ function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 		case 'evaluated':
 			clearStallWatchdog(entry);
 			delete entry.assignment;
-			if (!msg.warmup) receiveEvaluation({ ...msg, ...scoreFromInfo(entry.lastInfo) });
+			if (!msg.warmup) {
+				// `type` is dropped: it tags the message, and the rest IS the evaluation we store.
+				const { type: _type, ...evaluation } = msg;
+				receiveEvaluation({ ...evaluation, ...scoreFromInfo(entry.lastInfo) });
+			}
 			dispatchNext(entry);
 			break;
 	}

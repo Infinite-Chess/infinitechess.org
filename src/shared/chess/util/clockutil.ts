@@ -49,18 +49,21 @@ const ClockValuesSchema = z.strictObject({
 	/** Each color's remaining time in milliseconds, keyed by player number. */
 	clocks: typeschemas.GenPlayerGroupSchema(z.number()),
 	/**
-	 * If a player's timer is currently counting down, this should be specified.
-	 * No clock is ticking if less than 2 moves are played, or if the game is over.
-	 * The color specified should have their time immediately accommodated for ping.
+	 * The clock counting down, if any. None ticks if fewer
+	 * than 2 moves are played, or if the game is over.
 	 */
-	colorTicking: typeschemas.PlayerSchema.optional(),
-	/**
-	 * The timestamp the color ticking (if there is one) will lose by timeout.
-	 * This should be calculated AFTER we adjust the clock values for ping.
-	 * The server should NOT specify this when sending the clock information
-	 * to the client, because the server and client's clocks are not always in sync.
-	 */
-	timeColorTickingLosesAt: z.number().optional(),
+	ticking: z
+		.strictObject({
+			/** Whose clock it is. Their time must be accommodated for ping immediately on receipt. */
+			color: typeschemas.PlayerSchema,
+			/**
+			 * When this color flags, as epoch ms. Never sent over the wire — the two machines'
+			 * clocks aren't in sync, so a sender's timestamp is meaningless to a receiver. The
+			 * receiver stamps it in its OWN clock domain after adjusting for ping.
+			 */
+			losesAt: z.number().optional(),
+		})
+		.optional(),
 });
 
 // Functions -------------------------------------------------------------------

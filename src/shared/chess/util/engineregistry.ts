@@ -5,7 +5,7 @@
  * worker expects.
  */
 
-// Types -----------------------------------------------------------------------
+// Engine Entry ----------------------------------------------------------------
 
 /** A single engine entry object in the engine dictionary. */
 export interface Engine {
@@ -30,6 +30,19 @@ export interface Engine {
 
 /** Union of all valid engine names, derived from the keys of {@link REGISTRY}. */
 export type ValidEngine = keyof typeof REGISTRY;
+
+// Engine Assets ---------------------------------------------------------------
+
+/**
+ * The hashed asset URLs a page needs to boot an engine worker. Workers can't
+ * resolve the asset manifest themselves, so the server hands these to the page.
+ */
+export interface EngineAssets {
+	/** Hashed URL of the worker script hosting the engine. */
+	workerUrl: string;
+	/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`). */
+	engineUrl: string;
+}
 
 // Engine Config ---------------------------------------------------------------
 

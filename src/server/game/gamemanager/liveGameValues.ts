@@ -166,8 +166,8 @@ function onMoveSubmitted(servergame: ServerGame): void {
 	};
 
 	if (!servergame.untimed) {
-		gameUpdates.color_ticking = servergame.clocks.colorTicking ?? null;
-		gameUpdates.clock_snapshot_time = servergame.clocks.timeAtTurnStart ?? null;
+		gameUpdates.color_ticking = servergame.clocks.ticking?.color ?? null;
+		gameUpdates.clock_snapshot_time = servergame.clocks.ticking?.startedAt ?? null;
 	}
 
 	persist(() => {
@@ -251,8 +251,8 @@ function onEngineClockChanged(servergame: ServerGame): void {
 		// Only the ticking state is written: freezing rewinds the engine's turn rather
 		// than charging it, so no player's remaining time changes across either event.
 		liveGamesManager.update(servergame.match.id, {
-			color_ticking: servergame.clocks.colorTicking ?? null,
-			clock_snapshot_time: servergame.clocks.timeAtTurnStart ?? null,
+			color_ticking: servergame.clocks.ticking?.color ?? null,
+			clock_snapshot_time: servergame.clocks.ticking?.startedAt ?? null,
 		}),
 	);
 }

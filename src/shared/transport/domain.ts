@@ -14,11 +14,11 @@
  * vocabulary it describes.
  */
 
-import type { ValidEngine } from '../chess/util/engineregistry.js';
 import type { TimeControl } from '../chess/util/clockutil.js';
 import type { GameConclusion } from '../chess/util/typeschemas.js';
 import type { GameStateVariant } from '../chess/util/variantselection.js';
 import type { Player, PlayerGroup } from '../chess/util/typeutil.js';
+import type { EngineAssets, ValidEngine } from '../chess/util/engineregistry.js';
 
 import * as z from 'zod';
 
@@ -127,15 +127,10 @@ export interface EngineGamePageInfo {
 	/** The engine's strength level for this game. */
 	strengthLevel: number;
 	/**
-	 * Hashed URL of the checkmate-practice engine worker script (from the asset manifest).
+	 * The assets needed to run the engine client-side.
 	 * Present only while the game is still live — a concluded engine game has nothing left to run.
 	 */
-	workerUrl?: string;
-	/**
-	 * Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`), from the manifest.
-	 * Present only while the game is still live — a concluded engine game has nothing left to run.
-	 */
-	engineUrl?: string;
+	engineAssets?: EngineAssets;
 }
 
 /** Static game-page data injected by the server. */

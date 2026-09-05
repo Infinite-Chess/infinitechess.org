@@ -249,12 +249,10 @@ function getClockValues(servergame: ServerGame & { untimed: false }): ClockValue
 function updateClockValues(servergame: ServerGame & { untimed: false }): void {
 	const now = Date.now();
 	if (!moveutil.isGameResignable(servergame) || gamefileutility.isGameOver(servergame)) return;
-	if (servergame.clocks.colorTicking === undefined) return;
-	if (servergame.clocks.timeAtTurnStart === undefined)
-		throw new Error('cannot update clock values when timeAtTurnStart is not defined!');
+	if (servergame.clocks.ticking === undefined) return;
 
-	const timeElapsedSinceTurnStart = now - servergame.clocks.timeAtTurnStart;
-	const newTime = servergame.clocks.timeRemainAtTurnStart! - timeElapsedSinceTurnStart;
+	const timeElapsedSinceTurnStart = now - servergame.clocks.ticking.startedAt;
+	const newTime = servergame.clocks.ticking.timeRemainingAtStart - timeElapsedSinceTurnStart;
 	const playerdata = servergame.clocks.currentTime;
 	if (playerdata[servergame.whosTurn] === undefined) {
 		logEvents.addAndPrint(

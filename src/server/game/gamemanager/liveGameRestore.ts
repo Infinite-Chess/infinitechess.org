@@ -180,7 +180,7 @@ function restoreSingleGame(
 		clockValues,
 	);
 
-	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
+	// Note: clock ticking state (color, startedAt) is already set correctly
 	// by clock.edit() inside initGame() via the clockValues we pass in.
 
 	// 4. Reconstruct MatchInfo
@@ -272,17 +272,12 @@ function reconstructClockValues(
 
 	// The engine's ticking state is restored verbatim: a restart doesn't close the client's
 	// tab, so an engine that was thinking kept thinking, and is charged for the downtime.
-	const colorTicking =
-		gameRow.color_ticking === null ? undefined : (gameRow.color_ticking as Player);
-	const timeColorTickingLosesAt =
-		colorTicking !== undefined
-			? gameRow.clock_snapshot_time! + clocks[colorTicking]!
-			: undefined;
+	if (gameRow.color_ticking === null) return { clocks };
 
+	const color = gameRow.color_ticking as Player;
 	return {
 		clocks,
-		colorTicking,
-		timeColorTickingLosesAt,
+		ticking: { color, losesAt: gameRow.clock_snapshot_time! + clocks[color]! },
 	};
 }
 
@@ -374,8 +369,8 @@ function computePendingTimers(
 	};
 
 	// Auto time loss timer for timed, ongoing games
-	if (!servergame.untimed && servergame.clocks.colorTicking !== undefined) {
-		const tickingTime = servergame.clocks.currentTime[servergame.clocks.colorTicking]!;
+	if (!servergame.untimed && servergame.clocks.ticking !== undefined) {
+		const tickingTime = servergame.clocks.currentTime[servergame.clocks.ticking.color]!;
 		timers.autoTimeLossMs = Math.max(tickingTime, 0);
 	}
 
