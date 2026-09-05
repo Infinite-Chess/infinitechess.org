@@ -9,6 +9,8 @@
  * Counterpart of the server's socketSubs, which holds the authoritative side.
  */
 
+import socketconnection from './socketconnection.js';
+
 /** The routes carrying a server-pushed stream we subscribe to. Excludes 'general', the protocol route. */
 export type SubscribedRoute = 'lobby' | 'game';
 
@@ -31,12 +33,18 @@ function isSubbedTo(sub: SubscribedRoute): boolean {
 	return subs[sub];
 }
 
+/** Records whether we're subbed to one route. The idle-close timer derives from it. */
+function setSub(sub: SubscribedRoute, subbed: boolean): void {
+	subs[sub] = subbed;
+	socketconnection.syncIdleCloseTimer();
+}
+
 /**
  * Marks ourself as subscribed to a subscription list.
  * @param sub - The name of the sub to add
  */
 function addSub(sub: SubscribedRoute): void {
-	subs[sub] = true;
+	setSub(sub, true);
 }
 
 /**
@@ -46,7 +54,7 @@ function addSub(sub: SubscribedRoute): void {
  * @param sub - The name of the sub to delete
  */
 function deleteSub(sub: SubscribedRoute): void {
-	subs[sub] = false;
+	setSub(sub, false);
 }
 
 /**
@@ -54,7 +62,7 @@ function deleteSub(sub: SubscribedRoute): void {
  * Called when the websocket closes, since the server drops all subs on its side.
  */
 function clearAllSubs(): void {
-	for (const sub of Object.keys(subs) as SubscribedRoute[]) subs[sub] = false;
+	for (const sub of Object.keys(subs) as SubscribedRoute[]) setSub(sub, false);
 }
 
 // Exports ---------------------------------------------------------------------

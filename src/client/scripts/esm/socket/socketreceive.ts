@@ -62,7 +62,7 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	// Not a receipt...
 
-	void socketsend.sendEcho(message.id);
+	socketsend.sendEcho(message.id);
 
 	switch (message.route) {
 		case 'general':

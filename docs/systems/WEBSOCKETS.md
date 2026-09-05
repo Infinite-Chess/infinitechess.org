@@ -457,8 +457,8 @@ makes no difference whether they were one version behind or two.
   `broadcastToSpectators` / `broadcastToEveryone`, which resolve the sockets and call through.
 - **`ws.t`, not raw strings.** `toast`/`toast-error` values are user-facing and must already be
   translated server-side from the socket's bound translations.
-- **The idle auto-close is 10 s with zero subscriptions**, reset on every outgoing message. A tab
-  with no subs will not hold a socket open.
+- **The idle auto-close is 10s with zero subscriptions**, armed off subscription state alone.
+  Traffic never refreshes it.
 - **Malformed-frame errors from `ws` are swallowed** (`WS_ERR_*` in `socketOpen.onerror`) — flaky
   client stacks echoing 1006 onto the wire are benign and would otherwise flood errLog. Oversized
   messages are the exception and land in hackLog.

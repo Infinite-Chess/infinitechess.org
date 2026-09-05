@@ -43,7 +43,7 @@ let consecutiveFailures = 0;
 /** The timer ID for a pending scheduleReconnect() call, or undefined if none is pending. */
 let reconnectTimerId: number | undefined;
 /** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
-let timeoutIDToAutoClose: number;
+let timeoutIDToAutoClose: number | undefined;
 
 // Listeners -------------------------------------------------------------------
 
@@ -83,6 +83,12 @@ window.addEventListener('pageshow', (event) => {
 /** Returns the current websocket instance, or undefined if not connected. */
 function getSocket(): WebSocket | undefined {
 	return socket;
+}
+
+/** Sets or clears the socket. The idle-close timer derives from it. */
+function setSocket(ws: WebSocket | undefined): void {
+	socket = ws;
+	syncIdleCloseTimer();
 }
 
 // Socket Lifecycle ------------------------------------------------------------
@@ -157,7 +163,7 @@ async function openSocket(): Promise<boolean> {
 		const ws = new WebSocket(url);
 		ws.onopen = () => {
 			clearTimeout(noResponseTimer);
-			socket = ws;
+			setSocket(ws);
 			resolve(true);
 		};
 		ws.onerror = (_event) => {
@@ -166,21 +172,22 @@ async function openSocket(): Promise<boolean> {
 		};
 		ws.onmessage = (event: MessageEvent) => socketreceive.onmessage(event);
 		ws.onclose = (event: CloseEvent) => {
-			socket = undefined;
+			setSocket(undefined);
 			socketclose.onclose(event.code, event.reason);
 		};
 	});
 }
 
 /**
- * If we have zero subscriptions, resets the timer to auto-close the socket.
- * Called every time we put a message on the wire.
+ * Arms the timer that auto-closes the socket while nothing is subscribed, or cancels it.
+ * Call on any change to its two inputs: the socket's existence, and our subscription state.
  */
-function resetIdleCloseTimer(): void {
+function syncIdleCloseTimer(): void {
 	clearTimeout(timeoutIDToAutoClose);
-	if (socketsubs.zeroSubs()) {
-		timeoutIDToAutoClose = window.setTimeout(() => closeSocket(), AUTO_CLOSE_CUSHION);
-	}
+	timeoutIDToAutoClose = undefined;
+	if (!socket) return; // Nothing to close.
+	if (!socketsubs.zeroSubs()) return; // Still in use.
+	timeoutIDToAutoClose = window.setTimeout(() => closeSocket(), AUTO_CLOSE_CUSHION);
 }
 
 /** Closes the socket. Called when it's no longer in use (no active subscriptions). */
@@ -202,7 +209,7 @@ function closeSocket(): void {
 function dropSocket(): void {
 	if (!socket) return;
 	const dropped = socket;
-	socket = undefined;
+	setSocket(undefined);
 	// Anything this socket does from here — a late close, a message once the network returns —
 	// is moot, and must not reach a session that has since opened a replacement.
 	dropped.onclose = null;
@@ -229,7 +236,7 @@ function resubAll(): void {
 export default {
 	getSocket,
 	establishSocket,
-	resetIdleCloseTimer,
+	syncIdleCloseTimer,
 	closeSocket,
 	dropSocket,
 	scheduleReconnect,
