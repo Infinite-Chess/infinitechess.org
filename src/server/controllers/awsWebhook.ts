@@ -189,7 +189,7 @@ function processNotification(snsMessage: unknown): void {
 			if (bounceType === 'Permanent') blacklistRecipients(bouncedRecipients);
 			else
 				logEvents.add(
-					`[AWS WEBHOOK] Bounce Type is not Permanent. No action taken: ${logEvents.escapeLogNewlines(bounceType)}`, // prettier-ignore
+					`[AWS WEBHOOK] Bounce Type is not Permanent. No action taken: ${logEvents.escapeUntrusted(bounceType)}`, // prettier-ignore
 					'awsNotifications',
 				);
 			break;
@@ -199,7 +199,7 @@ function processNotification(snsMessage: unknown): void {
 		case 'Complaint':
 			for (const { emailAddress } of notification.complaint.complainedRecipients) {
 				logEvents.add(
-					`[AWS WEBHOOK] Complaint: ${logEvents.escapeLogNewlines(emailAddress)}`,
+					`[AWS WEBHOOK] Complaint: ${logEvents.escapeUntrusted(emailAddress)}`,
 					'awsNotifications',
 				);
 			}
@@ -211,7 +211,7 @@ function processNotification(snsMessage: unknown): void {
 function blacklistRecipients(recipients: Recipients): void {
 	for (const { emailAddress } of recipients) {
 		logEvents.add(
-			`[AWS WEBHOOK] Hard Bounce: ${logEvents.escapeLogNewlines(emailAddress)}`,
+			`[AWS WEBHOOK] Hard Bounce: ${logEvents.escapeUntrusted(emailAddress)}`,
 			'awsNotifications',
 		);
 		try {

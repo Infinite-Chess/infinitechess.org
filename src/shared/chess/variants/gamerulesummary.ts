@@ -17,9 +17,9 @@ import type { GameruleWinCondition } from '../util/winconutil.js';
 
 import modutil from '../util/modutil.js';
 import piecethemes from '../util/piecethemes.js';
+import interpolate from '../../util/interpolate.js';
 import variantregistry from './variantregistry.js';
-import typeutil, { Player, RawType, players } from '../../util/typeutil.js';
-import { interpolate, splitAroundPlaceholder } from '../../util/interpolate.js';
+import typeutil, { Player, RawType, players } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ export function summarizeGameRules(
 	const pushText = (text: string): number => items.push({ kind: 'text', text });
 
 	// 4D movement — first
-	if (variantCode !== undefined && variantregistry.getVariantGroup(variantCode) === '4D') {
+	if (variantCode !== undefined && variantregistry.getGroup(variantCode) === '4D') {
 		pushText(tp.four_d_movement);
 	}
 
@@ -71,7 +71,7 @@ export function summarizeGameRules(
 			pushText(tp.black_moves_first);
 		} else {
 			const order = gameRules.turnOrder.map((p) => sharedT.sides[typeutil.strcolors[p]]).join(', '); // prettier-ignore
-			pushText(interpolate(tp.turn_order, { order }));
+			pushText(interpolate.interpolate(tp.turn_order, { order }));
 		}
 	}
 
@@ -94,12 +94,12 @@ export function summarizeGameRules(
 			const label = sharedT.conditions[cond] ?? cond;
 			if (condPlayers.length === playerCount) {
 				// All players share this win condition
-				pushText(interpolate(tp.win_by, { label }));
+				pushText(interpolate.interpolate(tp.win_by, { label }));
 			} else {
 				// Only specific players have this win condition
 				for (const player of condPlayers) {
 					const color = typeutil.strcolors[player];
-					pushText(interpolate(sharedT.game_result.color_wins_by, { color: sharedT.sides[color], label })); // prettier-ignore
+					pushText(interpolate.interpolate(sharedT.game_result.color_wins_by, { color: sharedT.sides[color], label })); // prettier-ignore
 				}
 			}
 		}
@@ -119,7 +119,10 @@ export function summarizeGameRules(
 		if (pieces.length > 0) {
 			// The icons sit mid-sentence, so the line is split around the
 			// placeholder standing in for them rather than interpolated.
-			const [prefix, suffix] = splitAroundPlaceholder(tp.promotion_rule, 'pieces');
+			const [prefix, suffix] = interpolate.splitAroundPlaceholder(
+				tp.promotion_rule,
+				'pieces',
+			);
 			items.push({ kind: 'promotion', prefix, pieces, suffix });
 		}
 	}
@@ -127,7 +130,7 @@ export function summarizeGameRules(
 	// Move rule — show if not default (100)
 	if (gameRules.moveRule !== 100) {
 		if (gameRules.moveRule === undefined) pushText(tp.no_move_rule);
-		else pushText(interpolate(tp.move_rule, { plies: gameRules.moveRule }));
+		else pushText(interpolate.interpolate(tp.move_rule, { plies: gameRules.moveRule }));
 	}
 
 	// Slide limit gamerule - SKIP. Covered below as a modifier.
@@ -137,20 +140,20 @@ export function summarizeGameRules(
 	const enpassant = state_global?.enpassant;
 	if (enpassant !== undefined) {
 		const [x, y] = enpassant.square;
-		pushText(interpolate(tp.en_passant, { x: String(x), y: String(y) }));
+		pushText(interpolate.interpolate(tp.en_passant, { x: String(x), y: String(y) }));
 	}
 
 	// Game state: move rule counter
 	const moveRuleState = state_global?.moveRuleState;
 	if (moveRuleState !== undefined && moveRuleState !== 0) {
-		pushText(interpolate(tp.plies_since_capture, { n: moveRuleState }));
+		pushText(interpolate.interpolate(tp.plies_since_capture, { n: moveRuleState }));
 	}
 
 	// Modifiers — last
 	for (const modifier of modifiers ?? []) {
 		if (modifier.kind === 'slide-limit') {
 			const descVars = modutil.getModifierDescriptionVars(modifier);
-			pushText(interpolate(tp.slide_limit_rule, descVars));
+			pushText(interpolate.interpolate(tp.slide_limit_rule, descVars));
 		} else {
 			throw new Error(`Unknown modifier kind ${modifier.kind}`);
 		}

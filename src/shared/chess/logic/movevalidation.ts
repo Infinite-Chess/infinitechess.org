@@ -21,7 +21,7 @@ import specialdetect from './specialdetect.js';
 import boardutil, { Piece } from './boardutil.js';
 import icnmoves, { MoveCoords } from './icn/icnmoves.js';
 import movepiece, { CoordsTagged, MoveTagged } from './movepiece.js';
-import typeutil, { Player, RawType, rawTypes as r } from '../../util/typeutil.js';
+import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -257,7 +257,7 @@ function validateConclusion(
 // Exports ---------------------------------------------------------------------
 
 export default {
-	isTokenMoveLegal,
 	isOpponentsMoveLegal,
+	isTokenMoveLegal,
 	validateMove,
 };

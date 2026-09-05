@@ -1,11 +1,11 @@
-// src/shared/chess/util/engine.ts
+// src/shared/chess/util/engineregistry.ts
 
 /**
  * The centralized data structure for all engines, and the config shape each one's
  * worker expects.
  */
 
-// Types -----------------------------------------------------------------------
+// Engine Entry ----------------------------------------------------------------
 
 /** A single engine entry object in the engine dictionary. */
 export interface Engine {
@@ -28,8 +28,21 @@ export interface Engine {
 	needsMoveHistory: boolean;
 }
 
-/** Union of all valid engine names, derived from the keys of {@link ENGINE_DICTIONARY}. */
-export type ValidEngine = keyof typeof ENGINE_DICTIONARY;
+/** Union of all valid engine names, derived from the keys of {@link REGISTRY}. */
+export type ValidEngine = keyof typeof REGISTRY;
+
+// Engine Assets ---------------------------------------------------------------
+
+/**
+ * The hashed asset URLs a page needs to boot an engine worker. Workers can't
+ * resolve the asset manifest themselves, so the server hands these to the page.
+ */
+export interface EngineAssets {
+	/** Hashed URL of the worker script hosting the engine. */
+	workerUrl: string;
+	/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`). */
+	engineUrl: string;
+}
 
 // Engine Config ---------------------------------------------------------------
 
@@ -62,7 +75,7 @@ export type EngineAndConfig =
  * Centralized data structure for all engine properties.
  * Add a new entry here when adding a new engine.
  */
-export const ENGINE_DICTIONARY = {
+const REGISTRY = {
 	engineCheckmatePractice: {
 		defaultTimeLimitPerMoveMillis: 500,
 		displayName: 'Practice Bot',
@@ -85,9 +98,9 @@ export const ENGINE_DICTIONARY = {
  * Returns a formatted engine name string (e.g. "Apeiron (Level 3)").
  * If the provided strength level is the maximum for the engine, it is omitted.
  */
-export function getFormattedEngineName(engineName: ValidEngine, strengthLevel?: number): string {
-	const name = ENGINE_DICTIONARY[engineName].displayName;
-	const maxLevel = ENGINE_DICTIONARY[engineName].maxStrengthLevel;
+function getFormattedName(engineName: ValidEngine, strengthLevel?: number): string {
+	const name = REGISTRY[engineName].displayName;
+	const maxLevel = REGISTRY[engineName].maxStrengthLevel;
 	return strengthLevel !== undefined && strengthLevel !== maxLevel
 		? `${name} (Level ${strengthLevel})`
 		: name;
@@ -98,14 +111,24 @@ export function getFormattedEngineName(engineName: ValidEngine, strengthLevel?: 
  * e.g. "Apeiron 2.1" — or just the bare name when the version is empty
  * (e.g. an engine-release fetch failed at build time).
  */
-export function getVersionedEngineName(engineName: ValidEngine, version: string): string {
-	const name = ENGINE_DICTIONARY[engineName].displayName;
-	return version ? `${name} ${formatEngineVersionMajorMinor(version)}` : name;
+function getVersionedName(engineName: ValidEngine, version: string): string {
+	const name = REGISTRY[engineName].displayName;
+	return version ? `${name} ${formatVersionMajorMinor(version)}` : name;
 }
 
 /** Trims a semver to major.minor, dropping a zero minor too, e.g. "2.0.1" -> "2", "2.1.0" -> "2.1". */
-function formatEngineVersionMajorMinor(version: string): string {
+function formatVersionMajorMinor(version: string): string {
 	const [major, minor] = version.split('.');
 	if (major === undefined || minor === undefined || minor === '0') return major ?? version;
 	return `${major}.${minor}`;
 }
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	// Constants
+	REGISTRY,
+	// Functions
+	getFormattedName,
+	getVersionedName,
+};

@@ -6,7 +6,7 @@
  */
 
 import timeutil from '../../shared/util/timeutil.js';
-import { PlayerGroup, Player, players as p } from '../../shared/util/typeutil.js';
+import { PlayerGroup, Player, players as p } from '../../shared/chess/util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

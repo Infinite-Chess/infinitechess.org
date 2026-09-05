@@ -21,13 +21,13 @@
 
 		<div class="auth-field">
 			<label for="username">{{ t.username_label }}</label>
-			{# maxlength 320: the email max length from validateEmail() in validators.ts (larger than the 20-char username max). #}
-			{{ textInput("username", "username", "text", "username", 320) }}
+			{# This field accepts a username OR an email, so it takes the larger email cap. #}
+			{{ textInput("username", "username", "text", "username", maxLengths.EMAIL) }}
 		</div>
 
 		<div class="auth-field">
 			<label for="password">{{ t.password_label }}</label>
-			{{ passwordInput("password", "password", "current-password") }}
+			{{ passwordInput("password", "password", "current-password", maxLengths.PASSWORD) }}
 		</div>
 
 		<div class="login-options">

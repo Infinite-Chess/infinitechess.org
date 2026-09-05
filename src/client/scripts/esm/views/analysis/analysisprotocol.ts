@@ -9,7 +9,7 @@
  * Workers bundle separately and stay zod-free only while importing from here `import type`.
  */
 
-import type { Player } from '../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import * as z from 'zod';
 
@@ -96,7 +96,7 @@ export interface AnalysisInfo {
 }
 
 /** One PV of an info update. Moves are compact ICN tokens ("x,y>x,y=Q"). */
-export interface AnalysisLine {
+interface AnalysisLine {
 	moves: string[];
 	/** Centipawns from the side-to-move's perspective. Absent when mating. */
 	cp?: number;
@@ -113,7 +113,7 @@ export type EvaluateResult = z.infer<typeof EvaluateResultSchema>;
  * {@link EvaluateResult} type. Score is from the side-to-move's perspective; both
  * absent on a terminal position (no legal moves).
  */
-export const EvaluateResultSchema = z.object({
+export const EvaluateResultSchema = z.strictObject({
 	requestId: z.int(),
 	/** Centipawns. Absent when mating or terminal. */
 	cp: z.number().optional(),

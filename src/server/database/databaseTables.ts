@@ -237,6 +237,28 @@ function generate(): void {
 		);
 	`);
 
+	// Chat Entries table — one row per typed message OR static event notice, interleaved
+	db.run(`
+		CREATE TABLE IF NOT EXISTS chat_entries (
+			message_id    INTEGER PRIMARY KEY,
+			game_id       INTEGER NOT NULL, -- No foreign key: a row is written before the game's "games" row exists, so deletion is manual
+			player_number INTEGER NOT NULL, -- The sender, or the player a notice is about
+			message       TEXT, -- The typed text; null for a notice (complementary to notice)
+			notice        TEXT, -- The event code; null for a message (complementary to message)
+			sent_at       INTEGER NOT NULL, -- Epoch ms the server recorded it
+
+			-- Add a CHECK constraint to ensure consistency:
+			-- EXACTLY one is non-NULL, which is what makes a row readable as a message or a notice
+			CHECK (
+				(message IS NOT NULL AND notice IS NULL)
+				OR
+				(message IS NULL AND notice IS NOT NULL)
+			)
+		);
+	`);
+	// Covers a per-game read: one ordered range scan, no table rows fetched.
+	db.run(`CREATE INDEX IF NOT EXISTS idx_chat_entries_game ON chat_entries (game_id, message_id);`); // prettier-ignore
+
 	// --- Live Games ---
 
 	// The live-game tables below are documented in docs/systems/LIVE_GAME_PERSISTENCE.md.
@@ -257,7 +279,7 @@ function generate(): void {
 			clock_snapshot_time        INTEGER,
 			draw_offer_state           INTEGER,
 			validate_moves             BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1)),
-			both_disconnected_end_time INTEGER, -- Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected.
+			empty_since                INTEGER, -- Epoch ms every human was found gone; the abandonment countdown starts. NULL otherwise.
 			mod_slide_limit            INTEGER -- Slide Limit modifier: max squares a sliding piece may travel. NULL = modifier inactive.
 		);
 	`);

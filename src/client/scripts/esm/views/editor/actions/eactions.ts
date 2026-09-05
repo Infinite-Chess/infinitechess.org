@@ -23,7 +23,7 @@ import type { ActivePosition } from '../boardeditor';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 import type { EditorSaveState, StorageType } from '../../../savedpositions/storetypes';
 
-import typeutil from '../../../../../../shared/util/typeutil';
+import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';

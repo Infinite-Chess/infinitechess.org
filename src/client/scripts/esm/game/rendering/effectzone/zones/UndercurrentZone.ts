@@ -6,20 +6,18 @@
  * It has NO visual effect, but it does introduce the first ambience.
  */
 
-import type { Zone } from '../Zone';
-import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
+import type { UniformValue } from '../../../../webgl/Renderable';
 
+import { BaseZone } from '../BaseZone';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 
-export class UndercurrentZone implements Zone {
+export class UndercurrentZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 1;
 
-	/** The soundscape player for this zone. */
-	private ambience: SoundscapePlayer;
-
 	constructor() {
+		super();
 		// Load the ambience...
 
 		// Initialize the player with the config.
@@ -30,19 +28,7 @@ export class UndercurrentZone implements Zone {
 		// No dynamic state to update for a pass-through zone.
 	}
 
-	public getUniforms(): Record<string, any> {
+	public getUniforms(): Record<string, UniformValue> {
 		return {};
-	}
-
-	public getPasses(): PostProcessPass[] {
-		return [];
-	}
-
-	public fadeInAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeIn(transitionDurationMs);
-	}
-
-	public fadeOutAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeOut(transitionDurationMs);
 	}
 }

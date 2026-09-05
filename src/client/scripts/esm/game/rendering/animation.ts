@@ -16,7 +16,7 @@ import bdcoords from '../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
-import typeutil, { RawType, TypeGroup } from '../../../../../shared/util/typeutil.js';
+import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import meshes from '../../board/rendering/meshes.js';
 import camera from '../../board/rendering/camera.js';
@@ -596,7 +596,9 @@ function getCurrentAnimationPosition(
 		bd.fromNumber(segment.yRatio),
 	);
 
-	const addOrSubtract: Function = segmentInfo.forward ? bd.add : bd.subtract;
+	const addOrSubtract: (a: BigDecimal, b: BigDecimal) => BigDecimal = segmentInfo.forward
+		? bd.add
+		: bd.subtract;
 
 	return [
 		addOrSubtract(startPoint[0], xTraversalAlongSegment),

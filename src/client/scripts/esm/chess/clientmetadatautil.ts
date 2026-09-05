@@ -5,23 +5,17 @@
  */
 
 import type { GameFile } from '../../../../shared/chess/logic/gamefile.js';
-import type { Condition } from '../../../../shared/chess/util/winconutil.js';
-import type { GameConclusion } from '../../../../shared/chess/util/typeschemas.js';
 import type {
 	MetaData,
 	Rating,
 	SourceVariantMetaData,
 } from '../../../../shared/chess/util/metadatautil.js';
 
-import * as z from 'zod';
-
 import timeutil from '../../../../shared/util/timeutil.js';
 import winconutil from '../../../../shared/chess/util/winconutil.js';
-import typeschemas from '../../../../shared/chess/util/typeschemas.js';
 import metadatautil from '../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../shared/chess/variants/variantregistry.js';
 import { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
-import { players as p } from '../../../../shared/util/typeutil.js';
 
 // Functions -------------------------------------------------------------------
 
@@ -61,34 +55,10 @@ function buildSourceVariantMetadata(gamefile: GameFile): SourceVariantMetaData {
 	if (!gamefile.variant) return {};
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(gamefile.dateTimestamp);
 	return {
-		Variant: variantregistry.getVariantName(gamefile.variant.code, t.shared),
+		Variant: variantregistry.getName(gamefile.variant.code, t.shared),
 		UTCDate,
 		UTCTime,
 	};
-}
-
-/** Calculates the game conclusion from the Result metadata and termination CODE. */
-function getGameConclusionFromResultAndTermination(
-	result: string,
-	termination: Condition,
-): GameConclusion {
-	// prettier-ignore
-	const victor =
-		result === '1-0' ? p.WHITE :
-		result === '0-1' ? p.BLACK :
-		result === '1/2-1/2' ? null :
-		result === '*' ? undefined :
-		((): never => { throw Error(`Unsupported result (${result})!`); })();
-
-	const gameConclusion: any = { condition: termination };
-	// Only attach victor if it is defined
-	if (victor !== undefined) gameConclusion.victor = victor;
-
-	// Make sure it's type safe
-	const parseResult = typeschemas.GameConclusionSchema.safeParse(gameConclusion);
-	if (!parseResult.success)
-		throw new Error(`When parsing GameConclusion from metadata, condition "${termination}" and victor "${victor}" is an invalid combination. ZodError: ${z.prettifyError(parseResult.error)}`); // prettier-ignore
-	return parseResult.data;
 }
 
 /**
@@ -114,10 +84,10 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 	Variant?: string;
 }): VariantCode | undefined {
 	if (!metadata.Variant) return undefined;
-	const resolved = variantregistry.resolveVariantCode(metadata.Variant);
+	const resolved = variantregistry.resolveCode(metadata.Variant);
 	if (resolved !== undefined) {
 		// Normalize to English display name
-		metadata.Variant = variantregistry.getVariantName(resolved, t.shared);
+		metadata.Variant = variantregistry.getName(resolved, t.shared);
 	} else {
 		// Unrecognized Variant: Treat as if no variant was specified
 		delete metadata.Variant;
@@ -130,7 +100,6 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 export default {
 	buildMetaDataFromGamefile,
 	buildSourceVariantMetadata,
-	getGameConclusionFromResultAndTermination,
 	getRatingFromWhiteBlackElo,
 	resolveAndNormalizeVariantFromMetadata,
 };

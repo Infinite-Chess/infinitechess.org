@@ -7,9 +7,9 @@
  * dev-utils/sounds/SoundscapeGenerator.html
  */
 
-import AudioUtils from './AudioUtils';
-import AudioManager from './AudioManager';
-import { LayerConfig, SoundLayer } from './SoundLayer';
+import AudioUtils from './AudioUtils.js';
+import AudioManager from './AudioManager.js';
+import { LayerConfig, SoundLayer } from './SoundLayer.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -19,7 +19,7 @@ export interface SoundscapeConfig {
 	layers: LayerConfig[];
 }
 
-// Constants  ------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * The length of the shared noise buffer for this soundscape's layers, in seconds.
@@ -33,20 +33,17 @@ const NOISE_DURATION_SECS = 10;
 export class SoundscapePlayer {
 	private readonly config: SoundscapeConfig;
 
-	private audioContext: AudioContext;
+	private readonly audioContext: AudioContext;
 	/** The master gain node controlling overall volume of the soundscape. */
-	private masterGain: GainNode;
+	private readonly masterGain: GainNode;
 	/** All the individual sound layers in this soundscape. */
 	private layers: SoundLayer[] = [];
 
-	/** A shared noise source for all layers to use. Reduces CPU and memory usage. */
-	private sharedNoiseSource: AudioBufferSourceNode | null = null;
-
 	/**
-	 * Whether the player has been initialized and is ready to play.
-	 * We only initialize when playing is actually needed, as it's expensive.
+	 * A shared noise source for all layers to use. Reduces CPU and memory usage.
+	 * Null until expensive initialization is performed lazilly.
 	 */
-	private playerReady: boolean = false;
+	private sharedNoiseSource: AudioBufferSourceNode | null = null;
 
 	constructor(config: SoundscapeConfig) {
 		this.config = config;
@@ -54,43 +51,44 @@ export class SoundscapePlayer {
 		this.masterGain = this.audioContext.createGain();
 	}
 
-	/**
-	 * Initializes the audio graph, creates all nodes, and starts sources.
-	 * This is called only once. This is the expensive part of the process.
-	 */
+	/** Builds the audio graph, creates all nodes, and starts every source at volume 0. */
 	private initializeAndPlay(): void {
 		this.masterGain.gain.value = 0.0; // Always start silent
 		this.masterGain.connect(AudioManager.getDestination()); // Connect to the global master gain
 
-		// Create the shared raw noise buffer data source
-		const bufferSize = NOISE_DURATION_SECS * this.audioContext.sampleRate;
-		const sharedNoiseBuffer = this.audioContext.createBuffer(
-			2,
-			bufferSize,
-			this.audioContext.sampleRate,
-		); // 2 channels for stereo sound (unique noise in each ear)
-		for (let c = 0; c < 2; c++) {
-			const channelData = sharedNoiseBuffer.getChannelData(c);
-			for (let i = 0; i < bufferSize; i++) {
-				channelData[i] = Math.random() * 2 - 1;
-			}
-		}
-		this.sharedNoiseSource = this.audioContext.createBufferSource();
-		this.sharedNoiseSource.buffer = sharedNoiseBuffer;
-		this.sharedNoiseSource.loop = true;
+		const sharedNoiseSource = this.createSharedNoiseSource();
 
 		// Build each layer
 		this.config.layers.forEach((layerConfig) => {
-			const layer = new SoundLayer(this.audioContext!, layerConfig, this.sharedNoiseSource!);
-			layer.connect(this.masterGain!);
+			const layer = new SoundLayer(this.audioContext, layerConfig, sharedNoiseSource);
+			layer.connect(this.masterGain);
 			this.layers.push(layer);
 		});
 
 		// Start all sources (at volume 0)
-		this.sharedNoiseSource.start(0);
+		sharedNoiseSource.start(0);
 		this.layers.forEach((layer) => layer.start());
 
-		this.playerReady = true;
+		// Stored last, since a non-null source is what marks the player initialized.
+		this.sharedNoiseSource = sharedNoiseSource;
+	}
+
+	/** Creates the looping stereo noise source that every noise layer draws from. */
+	private createSharedNoiseSource(): AudioBufferSourceNode {
+		const bufferSize = NOISE_DURATION_SECS * this.audioContext.sampleRate;
+		// 2 channels for stereo sound (unique noise in each ear)
+		const buffer = this.audioContext.createBuffer(2, bufferSize, this.audioContext.sampleRate);
+		for (let c = 0; c < 2; c++) {
+			const channelData = buffer.getChannelData(c);
+			for (let i = 0; i < bufferSize; i++) {
+				channelData[i] = Math.random() * 2 - 1;
+			}
+		}
+
+		const source = this.audioContext.createBufferSource();
+		source.buffer = buffer;
+		source.loop = true;
+		return source;
 	}
 
 	/**
@@ -98,26 +96,23 @@ export class SoundscapePlayer {
 	 * The player can be started again with fadeIn().
 	 */
 	public stop(): void {
-		if (!this.playerReady) return; // Not even initialized, nothing to do.
+		if (!this.sharedNoiseSource) return; // Not even initialized, nothing to do.
 
-		this.sharedNoiseSource!.stop(0);
+		this.sharedNoiseSource.stop(0);
 		this.layers.forEach((layer) => layer.stop());
 
 		// Disconnect everything to be garbage collected
 		this.masterGain.disconnect();
-		this.sharedNoiseSource?.disconnect();
+		this.sharedNoiseSource.disconnect();
 
-		// Reset state
-		this.playerReady = false; // Allow re-initialization on next fadeIn
+		// Reset state. Nulling the source is what allows re-initialization on the next fadeIn().
+		this.sharedNoiseSource = null;
 		this.layers = [];
 	}
 
 	/** Fades in the soundscape to a specified target volume, initializing it if necessary. */
 	public fadeIn(durationMillis: number): void {
-		// Initialize now if not already done.
-		// Saves compute until the soundscape is actually NEEDED,
-		// as the initialization is expensive.
-		if (!this.playerReady) this.initializeAndPlay();
+		if (!this.sharedNoiseSource) this.initializeAndPlay();
 
 		AudioUtils.applyPerceptualFade(
 			this.audioContext,
@@ -129,7 +124,7 @@ export class SoundscapePlayer {
 
 	/** Fades out the ambience to silence. The player remains active at zero volume. */
 	public fadeOut(durationMillis: number): void {
-		if (!this.playerReady) return; // Hasn't initialized, nothing to fade out.
+		if (!this.sharedNoiseSource) return; // Hasn't initialized, nothing to fade out.
 
 		AudioUtils.applyPerceptualFade(
 			this.audioContext,

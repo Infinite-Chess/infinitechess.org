@@ -4,7 +4,7 @@
  * Client entry for the checkmate practice page (/checkmatepractice).
  */
 
-import { players as p } from '../../../../../shared/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameloop from '../../game/gameloop.js';
 import gamesession from '../../game/chess/gamesession.js';

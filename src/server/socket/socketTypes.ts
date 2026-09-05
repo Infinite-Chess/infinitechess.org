@@ -6,7 +6,7 @@
  */
 
 import type WebSocket from 'ws';
-import type { Player } from '../../shared/util/typeutil.js';
+import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 import type { AuthMemberInfo, ParsedCookies } from '../types.js';
 
@@ -44,6 +44,8 @@ export interface CustomWebSocket extends WebSocket {
 		memberInfo: AuthMemberInfo;
 		/** The id of their websocket. */
 		id: string;
+		/** Which of the user's browser tabs this socket belongs to. See `TAB_ID` in socketutil.ts. */
+		tabId: string;
 		/** The socket's IP address. */
 		IP: string;
 		/** The timeout ID that can be used to cancel the timer that will

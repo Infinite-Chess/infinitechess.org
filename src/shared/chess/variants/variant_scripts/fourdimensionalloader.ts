@@ -13,7 +13,7 @@ import bimath from '../../../util/math/bimath.js';
 import movesets from '../../logic/movesets.js';
 import coordutil from '../../../util/coordutil.js';
 import gen4dposition from './gen4dposition.js';
-import { rawTypes as r } from '../../../util/typeutil.js';
+import { rawTypes as r } from '../../util/typeutil.js';
 import fourdimensionalmoves from '../../logic/fourdimensionalmoves.js';
 
 // Moveset Overrides -----------------------------------------------------------
@@ -235,7 +235,9 @@ function getKingVicinity(board_spacing: bigint, strong_kings_and_queens: boolean
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Moveset Overrides
 	gen4DMoveset,
+	// Special Vicinity Overrides
 	getPawnVicinity,
 	getKnightVicinity,
 	getKingVicinity,

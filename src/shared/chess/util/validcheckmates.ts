@@ -8,7 +8,7 @@
 // Constants -------------------------------------------------------------------
 
 /** Every practice-mode checkmate, grouped by difficulty. */
-const VALID_CHECKMATES = {
+const BY_DIFFICULTY = {
 	easy: [
 		'2Q-1k',
 		'3R-1k',
@@ -54,6 +54,4 @@ const VALID_CHECKMATES = {
 
 // Exports ---------------------------------------------------------------------
 
-export default {
-	VALID_CHECKMATES,
-};
+export default { BY_DIFFICULTY };

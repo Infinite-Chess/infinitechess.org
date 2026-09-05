@@ -27,7 +27,7 @@ import type {
 import jsutil from '../../../../../../shared/util/jsutil.js';
 
 import engineicn from './engineicn.js';
-import { loadEngineWasm, getPromotionAbbr } from './enginewasm.js';
+import enginewasm from './enginewasm.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -69,7 +69,7 @@ self.onmessage = async function (
 async function initWasm(msg: EngineInitRequest): Promise<void> {
 	try {
 		console.debug('[Engine] Initializing Apeiron WASM module');
-		({ wasm } = await loadEngineWasm<GameplayWasmModule>(msg.engineUrl, msg.threads));
+		({ wasm } = await enginewasm.load<GameplayWasmModule>(msg.engineUrl, msg.threads));
 
 		console.debug('[Engine] Apeiron WASM module initialized');
 		postMessage('readyok' satisfies EngineInitResponse);
@@ -130,7 +130,7 @@ function respondToMoveRequest(data: ApeironMoveRequest): void {
 		const to = bestMoveResult.to;
 		let moveString = `${from}>${to}`;
 		if (bestMoveResult.promotion) {
-			moveString += `=${getPromotionAbbr(bestMoveResult.promotion, engineColor)}`;
+			moveString += `=${enginewasm.getPromotionAbbr(bestMoveResult.promotion, engineColor)}`;
 		}
 
 		postMessage({ type: 'move', data: moveString } satisfies EngineResponse);

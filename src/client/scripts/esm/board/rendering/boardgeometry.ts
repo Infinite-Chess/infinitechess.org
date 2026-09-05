@@ -24,7 +24,7 @@ import boardpos from './boardpos.js';
 // Constants -------------------------------------------------------------------
 
 /** Without this, the center of tiles would be their bottom-left corner. Range: 0-1 */
-const squareCenter: number = 0.5;
+const SQUARE_CENTER: number = 0.5;
 
 // BigDecimal constants
 const ONE = bd.fromBigInt(1n);
@@ -52,7 +52,7 @@ let boundingBox_debugMode: BoundingBox;
 
 // Updating --------------------------------------------------------------------
 
-// Recalculate board velicity, scale, and other common variables.
+/** Recalculates all three cached bounding boxes of the board. */
 function recalcVariables(): void {
 	recalcBoundingBox();
 }
@@ -76,11 +76,11 @@ function recalcBoundingBox(): void {
 // Public API ------------------------------------------------------------------
 
 function getSquareCenter(): BigDecimal {
-	return bd.fromNumber(squareCenter);
+	return bd.fromNumber(SQUARE_CENTER);
 }
 
 function getSquareCenterAsNumber(): number {
-	return squareCenter;
+	return SQUARE_CENTER;
 }
 
 /**

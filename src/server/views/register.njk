@@ -24,22 +24,20 @@
 
 		<div class="auth-field">
 			<label for="username">{{ t.username_label }}</label>
-			{# maxlength 20: the username max length from validateUsername() in validators.ts. #}
-			{{ textInput("username", "username", "text", "username", 20) }}
+			{{ textInput("username", "username", "text", "username", maxLengths.USERNAME) }}
 			{# Populated by register.ts on a failed format / availability check. #}
 			<p class="auth-error hidden" id="username-error"></p>
 		</div>
 
 		<div class="auth-field">
 			<label for="password">{{ t.password_label }}</label>
-			{{ passwordInput("password", "password", "new-password") }}
+			{{ passwordInput("password", "password", "new-password", maxLengths.PASSWORD) }}
 			<p class="auth-error hidden" id="password-error"></p>
 		</div>
 
 		<div class="auth-field">
 			<label for="email">{{ t.email_label }}</label>
-			{# maxlength 320: the email max length from validateEmail() in validators.ts. #}
-			{{ textInput("email", "email", "email", "email", 320) }}
+			{{ textInput("email", "email", "email", "email", maxLengths.EMAIL) }}
 			<p class="auth-error hidden" id="email-error"></p>
 		</div>
 

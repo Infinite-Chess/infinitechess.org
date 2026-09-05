@@ -14,25 +14,25 @@
  * vocabulary it describes.
  */
 
-import type { ValidEngine } from '../chess/util/engine.js';
 import type { TimeControl } from '../chess/util/clockutil.js';
 import type { GameConclusion } from '../chess/util/typeschemas.js';
 import type { GameStateVariant } from '../chess/util/variantselection.js';
-import type { Player, PlayerGroup } from '../util/typeutil.js';
+import type { Player, PlayerGroup } from '../chess/util/typeutil.js';
+import type { EngineAssets, ValidEngine } from '../chess/util/engineregistry.js';
 
 import * as z from 'zod';
 
+import clockutil from '../chess/util/clockutil.js';
 import typeschemas from '../chess/util/typeschemas.js';
-import { RatingSchema } from '../chess/util/metadatautil.js';
-import { TimeControlSchema } from '../chess/util/clockutil.js';
-import { OutSeekVariantSchema } from '../chess/util/variantselection.js';
-import { GameModifierSchema, GameModifier } from '../chess/util/modutil.js';
+import metadatautil from '../chess/util/metadatautil.js';
+import variantselection from '../chess/util/variantselection.js';
+import modutil, { GameModifier } from '../chess/util/modutil.js';
 
 // Common Helper Schemas -------------------------------------------------------
 
 /** Whether a game is casual or rated. */
 export type GameMode = z.infer<typeof GameModeSchema>;
-export const GameModeSchema = z.enum(['casual', 'rated']);
+const GameModeSchema = z.enum(['casual', 'rated']);
 
 /** The username container of an seek sent by the server. DIFFERENT FROM UsernameContainerProperties!!!! */
 export type ServerUsernameContainer = z.infer<typeof ServerUsernameContainerSchema>;
@@ -40,13 +40,13 @@ const ServerUsernameContainerSchema = z.strictObject({
 	type: z.enum(['player', 'guest', 'engine']),
 	username: z.string(),
 	/** The rating of the user. Falls back to the INFINITY leaderboard. */
-	rating: RatingSchema.optional(),
+	rating: metadatautil.RatingSchema.optional(),
 });
 
 // Game Helper Schemas ---------------------------------------------------------
 
 /** The id of an online game. */
-export const GameIDSchema = z.number().int().nonnegative();
+const GameIDSchema = z.number().int().nonnegative();
 
 // Game State Types ------------------------------------------------------------
 
@@ -97,13 +97,10 @@ export interface DeadGameState extends StaticGameState {
 // Seek Schemas ----------------------------------------------------------------
 
 /** The number of digits generated seek IDs are. */
-export const SEEK_ID_LENGTH = 5;
-/** Seek ID: Base36 alphanumeric, fixed length of 5. */
+const SEEK_ID_LENGTH = 5;
+/** A seek's id. */
 export type SeekId = z.infer<typeof SeekIdSchema>;
-export const SeekIdSchema = z
-	.string()
-	.length(SEEK_ID_LENGTH)
-	.regex(/^[0-9a-z]+$/);
+const SeekIdSchema = z.string();
 
 /** Shared info for all lobby game seek types. (excludes variant) */
 export type BaseSeek = z.infer<typeof BaseSeekSchema>;
@@ -111,15 +108,15 @@ const BaseSeekSchema = z.strictObject({
 	id: SeekIdSchema,
 	player: ServerUsernameContainerSchema,
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
-	time: TimeControlSchema,
+	time: clockutil.TimeControlSchema,
 	mode: GameModeSchema,
-	modifiers: z.array(GameModifierSchema).optional(),
+	modifiers: z.array(modutil.GameModifierSchema).optional(),
 });
 
 /** The version of seeks broadcast to lobby viewers. */
 export type OutSeek = z.infer<typeof OutSeekSchema>;
-export const OutSeekSchema = BaseSeekSchema.extend({
-	variant: OutSeekVariantSchema,
+const OutSeekSchema = BaseSeekSchema.extend({
+	variant: variantselection.OutSeekVariantSchema,
 });
 
 // SSR Page Data ---------------------------------------------------------------
@@ -130,15 +127,10 @@ export interface EngineGamePageInfo {
 	/** The engine's strength level for this game. */
 	strengthLevel: number;
 	/**
-	 * Hashed URL of the checkmate-practice engine worker script (from the asset manifest).
+	 * The assets needed to run the engine client-side.
 	 * Present only while the game is still live — a concluded engine game has nothing left to run.
 	 */
-	workerUrl?: string;
-	/**
-	 * Content-versioned URL of the unbundled engine glue (`/engine/<hash>/apeiron.js`), from the manifest.
-	 * Present only while the game is still live — a concluded engine game has nothing left to run.
-	 */
-	engineUrl?: string;
+	engineAssets?: EngineAssets;
 }
 
 /** Static game-page data injected by the server. */
@@ -149,5 +141,23 @@ export interface GamePageData extends StaticGameSetup {
 	role?: Player;
 	/** The side of the board the viewer sees it from, overridable by the URL's color segment. */
 	viewColor: Player;
+	/**
+	 * Each color's display name, so a live chat entry can label its sender.
+	 * The same values the SSR'd player list shows, so the two can't disagree.
+	 */
+	playerNames: PlayerGroup<string>;
 	engineGame?: EngineGamePageInfo;
 }
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	// Common Helper Schemas
+	GameModeSchema,
+	// Game Helper Schemas
+	GameIDSchema,
+	// Seek Schemas
+	SEEK_ID_LENGTH,
+	SeekIdSchema,
+	OutSeekSchema,
+};

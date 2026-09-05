@@ -195,7 +195,7 @@ function loadGameWithBoard(
 			gamefile.whosTurn,
 			'checkmate',
 		);
-		const checkResults = checkdetection.detectCheck(gamefile, gamefile.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
+		const checkResults = checkdetection.detect(gamefile, gamefile.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
 		gamefile.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
 		if (trackChecks) gamefile.state.local.checks = checkResults.checks ?? [];
 	}
@@ -226,8 +226,8 @@ function initGameFile(
 		additional.variantOptions?.gameRules ?? variantrules.getGameRulesOfVariant(variant); // Already a fresh copy
 
 	// Slide Limit modifier override. Onto a shallow copy, so the caller's rules stay untouched —
-	// initBoard deep-copies from here, so the gamefile shares no nested objects with them either.
-	// Must precede initBoard, which builds the movesets from the slide limit.
+	// boardinit.init deep-copies from here, so the gamefile shares no nested objects with them either.
+	// Must precede boardinit.init, which builds the movesets from the slide limit.
 	if (additional.slideLimit !== undefined)
 		gameRules = { ...gameRules, slideLimit: additional.slideLimit };
 
@@ -253,7 +253,7 @@ function initGameFile(
 		additional.gameConclusion,
 		additional.clockValues,
 	);
-	const boardsim = boardinit.initBoard(gameRules, variant, {
+	const boardsim = boardinit.init(gameRules, variant, {
 		variantOptions: additional.variantOptions,
 		editor: additional.editor,
 	});

@@ -10,8 +10,8 @@
  */
 
 import flashtoast from '../components/flashtoast.js';
+import accountform from '../components/accountform.js';
 import { serverfetch } from '../util/serverfetch.js';
-import { emailFormatError, setFieldError } from '../components/accountformaterrors.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -163,7 +163,7 @@ function handleVisibilityChange(): void {
 
 /** Shows an inline error beneath the change-email field, or clears it when called with no message. */
 function setEmailError(message?: string): void {
-	setFieldError(newEmailError, message, newEmailInput);
+	accountform.setFieldError(newEmailError, message, newEmailInput);
 }
 
 /**
@@ -172,7 +172,7 @@ function setEmailError(message?: string): void {
  */
 function validateNewEmail(revealErrors: boolean): void {
 	const message =
-		newEmailInput.value.length === 0 ? undefined : emailFormatError(newEmailInput.value);
+		newEmailInput.value.length === 0 ? undefined : accountform.emailError(newEmailInput.value);
 	newEmailValid = newEmailInput.value.length > 0 && message === undefined;
 	if (revealErrors) setEmailError(message);
 	else if (newEmailValid) setEmailError();

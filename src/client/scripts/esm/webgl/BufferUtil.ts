@@ -33,7 +33,7 @@ const DRAW_HINT = 'STATIC_DRAW';
  * @param changedIndicesStart - The index in the vertex data marking the first value changed.
  * @param changedIndicesCount - The number of indices in the vertex data that were changed, beginning at {@link changedIndicesStart}.
  */
-function updateBufferIndices(
+function updateIndices(
 	gl: WebGL2RenderingContext,
 	buffer: WebGLBuffer,
 	data: TypedArray,
@@ -66,7 +66,7 @@ function updateBufferIndices(
  * @param data - The vertex data to be copied into the buffer.
  * @returns The created WebGL buffer.
  */
-function createBufferFromData(gl: WebGL2RenderingContext, data: TypedArray): WebGLBuffer {
+function createFromData(gl: WebGL2RenderingContext, data: TypedArray): WebGLBuffer {
 	const buffer = gl.createBuffer()!; // Create an empty buffer for the model's vertex data.
 	gl.bindBuffer(gl.ARRAY_BUFFER, buffer); // Bind the buffer before we work with it. This is pretty much instantaneous no matter the buffer size.
 	// Copy our vertex data into the buffer.
@@ -74,11 +74,15 @@ function createBufferFromData(gl: WebGL2RenderingContext, data: TypedArray): Web
 	// this FREEZES the screen for a moment before unfreezing. Not good for user experience!
 	// When this happens, work with smaller meshes.
 	// And always modify the buffer data on the gpu directly when you can,
-	// using updateBufferIndices(), to avoid having to create another model!
+	// using updateIndices(), to avoid having to create another model!
 	gl.bufferData(gl.ARRAY_BUFFER, data, gl[DRAW_HINT]);
 	gl.bindBuffer(gl.ARRAY_BUFFER, null); // Unbind the buffer
 
 	return buffer;
 }
 
-export { updateBufferIndices, createBufferFromData };
+export default {
+	// Functions
+	updateIndices,
+	createFromData,
+};

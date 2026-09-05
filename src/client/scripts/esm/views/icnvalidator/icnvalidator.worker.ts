@@ -7,36 +7,37 @@
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
+import type {
+	ChunkResults,
+	ValidationRequest,
+	ValidationResponse,
+	VariantErrorType,
+} from './icnvalidatorprotocol.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
-import { IllegalMoveError } from '../../../../../shared/chess/logic/movepiece.js';
 
-// Define types
-interface WorkerMessage {
-	chunkId: number;
-	games: { index: number; icn: string }[];
-}
+// Message Handling ------------------------------------------------------------
 
 // Listen for the main thread to send data
-self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
+self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
 	const { chunkId, games } = e.data;
 
-	const localResults = {
-		success: true,
+	const localResults: ChunkResults = {
 		successfulCount: 0,
 		icnconverterErrors: 0,
 		formulatorErrors: 0,
 		illegalMoveErrors: 0,
 		terminationMismatchErrors: 0,
-		errors: [] as any[],
-		variantErrors: {} as Record<string, any>,
+		errors: [],
+		variantErrors: {},
 	};
 
 	// Helper for variant stats
-	const incrementVariantError = (variantName: string, type: string): void => {
+	const incrementVariantError = (variantName: string, type: VariantErrorType): void => {
 		if (!localResults.variantErrors[variantName]) {
 			localResults.variantErrors[variantName] = {
 				total: 0,
@@ -46,8 +47,8 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 				termination: 0,
 			};
 		}
-		localResults.variantErrors[variantName].total++;
-		localResults.variantErrors[variantName][type]++;
+		localResults.variantErrors[variantName]!.total++;
+		localResults.variantErrors[variantName]![type]++;
 	};
 
 	// Process the batch
@@ -83,7 +84,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 				game = await gameformulator.formulateGame(longFormat, undefined, true);
 			} catch (error) {
 				const message = jsutil.getErrorMessage(error);
-				const illegalMove = error instanceof IllegalMoveError;
+				const illegalMove = error instanceof movepiece.IllegalMoveError;
 				if (illegalMove) localResults.illegalMoveErrors++;
 				else localResults.formulatorErrors++;
 				localResults.errors.push({
@@ -141,16 +142,17 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 				10 ===
 			0
 		) {
-			self.postMessage({ type: 'progress', chunkId, count: 10 });
+			self.postMessage({ type: 'progress', chunkId, count: 10 } satisfies ValidationResponse);
 		}
 	}
 
 	// Send final results for this chunk
-	self.postMessage({ type: 'done', chunkId, results: localResults });
+	self.postMessage({ type: 'done', chunkId, results: localResults } satisfies ValidationResponse);
 };
 
-// --- Helper Logic ---
+// Termination Validation ------------------------------------------------------
 
+/** Throws if the game's Termination/Result metadata disagrees with how the game actually ended. */
 function validateTermination(
 	termination: string | undefined,
 	result: string | undefined,

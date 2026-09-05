@@ -8,8 +8,8 @@
 import type { Coords } from '../../util/coordutil.js';
 
 import bimath from '../../util/math/bimath.js';
-import typeutil from '../../util/typeutil.js';
-import { rawTypes as r } from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -47,4 +47,9 @@ function isValidPair(aCoords: Coords, aType: number, bCoords: Coords, bType: num
 
 // Exports ---------------------------------------------------------------------
 
-export default { MIN_DISTANCE, isValidPair };
+export default {
+	// Constants
+	MIN_DISTANCE,
+	// Functions
+	isValidPair,
+};

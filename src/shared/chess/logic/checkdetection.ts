@@ -7,17 +7,17 @@
  */
 
 import type { Board } from './boardinit.js';
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { CheckInfo } from './state.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { Coords, CoordsKey } from '../../util/coordutil.js';
 
-import typeutil from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import boardutil from './boardutil.js';
 import coordutil from '../../util/coordutil.js';
 import legalmoves from './legalmoves.js';
 import organizedpieces from './organizedpieces.js';
-import { players as p } from '../../util/typeutil.js';
+import { players as p } from '../util/typeutil.js';
 import vectors, { Vec2 } from '../../util/math/vectors.js';
 
 // Functions -------------------------------------------------------------------
@@ -28,7 +28,7 @@ import vectors, { Vec2 } from '../../util/math/vectors.js';
  * @param trackChecks - If true, the results object will contain a list of check pairs for the player's royals. This is useful for calculating blocking moves that may resolve the check. Should be true if we're using checkmate, and left out if we're using royal capture, to save compute.
  * @returns An object containing information such as whether the given color is in check in the current position, which royals are in check, and if applicable, the check pairs (each checked royal with its attacker).
  */
-function detectCheck(
+function detect(
 	boardsim: Board,
 	color: Player,
 	trackChecks?: boolean,
@@ -314,7 +314,4 @@ function doesLineAttackSquare(
 
 // Exports ---------------------------------------------------------------------
 
-export default {
-	detectCheck,
-	doesLineAttackSquare,
-};
+export default { detect };

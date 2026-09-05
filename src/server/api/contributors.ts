@@ -39,6 +39,13 @@ interface Contributor {
 	contributionCount: number;
 }
 
+// Constants -------------------------------------------------------------------
+
+const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
+
+/** The interval to use GitHub's API to refresh the contributor list. */
+const INTERVAL_TO_REFRESH_CONTRIBUTORS_MS = 1000 * 60 * 60 * 3; // 3 hours
+
 // Schemas ---------------------------------------------------------------------
 
 /** The raw contributor shape GitHub's API returns. */
@@ -50,13 +57,6 @@ const GitHubContributorSchema = z.array(
 		contributions: z.number(),
 	}),
 );
-
-// Constants -------------------------------------------------------------------
-
-const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
-
-/** The interval to use GitHub's API to refresh the contributor list. */
-const INTERVAL_TO_REFRESH_CONTRIBUTORS_MS = 1000 * 60 * 60 * 3; // 3 hours
 
 // State -----------------------------------------------------------------------
 

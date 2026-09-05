@@ -1,10 +1,8 @@
 // src/client/scripts/esm/views/leaderboard.ts
 
-/*
- * This script:
- *
- * * Fetches the data of the leaderboard page we're viewing
- * so we can display that info.
+/**
+ * Builds the leaderboard page's ranking table, loading 50 players at a time as
+ * "Show more" is pressed, and showing our own world ranking above it when signed in.
  */
 
 import type { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
@@ -126,7 +124,6 @@ async function populateTable(n_players: number): Promise<void> {
 		}
 
 		const results = await response.json();
-		console.log(results);
 
 		// Now populate the "your global rank" text at the top if possible
 		if (!initialized && results.requesterData?.rank_string !== undefined) {

@@ -20,7 +20,7 @@ const elements_checkmates = document.querySelectorAll<HTMLElement>('.checkmate')
 
 // Constants ---------------------------------------------------------------------
 
-const NUM_CHECKMATES = Object.values(validcheckmates.VALID_CHECKMATES).flat().length;
+const NUM_CHECKMATES = Object.values(validcheckmates.BY_DIFFICULTY).flat().length;
 
 /** Each badge's earn threshold (fraction of {@link NUM_CHECKMATES}) and tooltip texts. */
 const BADGES = [

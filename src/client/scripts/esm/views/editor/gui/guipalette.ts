@@ -5,11 +5,14 @@
  * Handles palette initialization, piece/color selection, and palette listener wiring.
  */
 
-import type { Player } from '../../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import gamerules from '../../../../../../shared/chess/util/gamerules.js';
 import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
-import typeutil, { rawTypes as r, players as p } from '../../../../../../shared/util/typeutil.js';
+import typeutil, {
+	rawTypes as r,
+	players as p,
+} from '../../../../../../shared/chess/util/typeutil.js';
 
 import svgcache from '../../../chess/rendering/svgcache.js';
 import gameslot from '../../../game/chess/gameslot.js';

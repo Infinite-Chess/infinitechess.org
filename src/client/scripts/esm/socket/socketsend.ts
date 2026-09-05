@@ -183,11 +183,13 @@ async function send<R extends OutRoute, A extends OutAction<R>, V extends OutVal
 
 /**
  * Acknowledges a message we received from the server.
- * Echoes are never echoed back, so they skip the id and echo timer {@link send} attaches.
+ * Echoes are never echoed back, so they also skip the id and echo timer {@link send} attaches.
  */
-async function sendEcho(id: MessageID): Promise<void> {
-	const socket = await acquireSocket();
-	if (!socket) return;
+function sendEcho(id: MessageID): void {
+	// Get the direct socket instead of going through acquireSocket:
+	// Id spaces are per-socket, so an echo is meaningless for a new socket.
+	const socket = socketconnection.getSocket();
+	if (!socket || socket.readyState !== WebSocket.OPEN) return; // Closing, or already replaced.
 
 	transmit(socket, JSON.stringify({ route: 'echo', contents: id }));
 }
@@ -202,7 +204,6 @@ async function acquireSocket(): Promise<WebSocket | undefined> {
 	const socket = socketconnection.getSocket();
 	if (!socket || socket.readyState !== WebSocket.OPEN) return; // Died while we awaited it.
 
-	socketconnection.resetIdleCloseTimer();
 	return socket;
 }
 

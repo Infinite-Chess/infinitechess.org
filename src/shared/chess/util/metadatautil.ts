@@ -8,22 +8,15 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from './typeutil.js';
 import type { TimeControl } from './clockutil.js';
 
 import * as z from 'zod';
 
 import timeutil from '../../util/timeutil.js';
-import { players as p } from '../../util/typeutil.js';
+import { players as p } from './typeutil.js';
 
 // Types -----------------------------------------------------------------------
-
-/** A player's rating value and whether we are confident about it. */
-export type Rating = z.infer<typeof RatingSchema>;
-export const RatingSchema = z.strictObject({
-	value: z.number(),
-	confident: z.boolean(),
-});
 
 /**
  * ICN (Infinite Chess Notation) metadata for a game, inspired by PGN notation.
@@ -82,6 +75,15 @@ const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
  * movesets, `UTCDate`/`UTCTime` pin which revision of that variant applies.
  */
 const SOURCE_VARIANT_METADATA = ['Variant', 'UTCDate', 'UTCTime'] as const satisfies readonly MetadataKey[]; // prettier-ignore
+
+// Schemas ---------------------------------------------------------------------
+
+/** A player's rating value and whether we are confident about it. */
+export type Rating = z.infer<typeof RatingSchema>;
+const RatingSchema = z.strictObject({
+	value: z.number(),
+	confident: z.boolean(),
+});
 
 // Functions -------------------------------------------------------------------
 
@@ -152,8 +154,12 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
 	GUEST_NAME_ICN_METADATA,
 	SOURCE_VARIANT_METADATA,
+	// Schemas
+	RatingSchema,
+	// Functions
 	trimToSourceVariantMetadata,
 	resolveTimestampFromMetadata,
 	getResultFromVictor,

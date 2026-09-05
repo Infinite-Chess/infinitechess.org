@@ -11,7 +11,7 @@
 import type { SeekId } from '../../../shared/transport/domain.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 
 import logEvents from '../../utility/logEvents.js';
 import socketsend from '../../socket/socketSend.js';
@@ -30,13 +30,13 @@ import lobbySubscribers from './lobbySubscribers.js';
  */
 function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 	if (activePlayers.hasSocket(ws)) {
-		return socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
+		return socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.already_in_game);
 	}
 
 	// Does the seek still exist?
 	const seek = activeSeeks.getByID(messageContents);
 	if (!seek) {
-		socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.game_aborted);
+		socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.game_aborted);
 		return;
 	}
 
@@ -50,7 +50,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	// Make sure it's legal for them to accept. (Not legal if they are a guest, and the seek is RATED)
 	if (seek.mode === 'rated' && !user.signedIn) {
-		return socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.rated_requires_signin);
+		return socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.rated_requires_signin);
 	}
 
 	// Accept the seek!
@@ -63,7 +63,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 
-	const player1Socket = lobbyManager.findSocketFromOwner(seek.owner); // Could be undefined occasionally
+	const player1Socket = lobbyManager.findSocketFromOwner(seek.owner, seek.ownerTab); // Could be undefined occasionally
 	const player2Socket = ws;
 
 	// Assign each player a color based on their seek info. Add their socket just encase
@@ -90,6 +90,7 @@ function accept(ws: CustomWebSocket, messageContents: SeekId): void {
 				variant: seek.variant,
 				time: seek.time,
 				rated: seek.mode === 'rated',
+				private: false, // Hardcoded until the "Challenge a friend" flow ships.
 				modifiers: seek.modifiers,
 			},
 			assignments,

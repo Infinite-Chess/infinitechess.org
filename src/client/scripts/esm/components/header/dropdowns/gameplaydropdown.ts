@@ -1,6 +1,8 @@
 // src/client/scripts/esm/components/header/dropdowns/gameplaydropdown.ts
 
-// This script allows us to enable or disable premoves and dragging pieces
+/**
+ * Enable or disable premoves and dragging pieces.
+ */
 
 import preferences from '../../../util/preferences.js';
 

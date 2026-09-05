@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/accountformaterrors.ts
+// src/client/scripts/esm/components/accountform.ts
 
 /**
  * Shared field helpers for the account form pages (login, register, register-awaiting,
@@ -9,12 +9,13 @@
  */
 
 import validators from '../../../../shared/util/validators.js';
+import interpolate from '../../../../shared/util/interpolate.js';
 
 /** The localized format error for a username, or undefined if valid. */
-export function usernameFormatError(value: string): string | undefined {
+function usernameError(value: string): string | undefined {
 	switch (validators.validateUsername(value)) {
 		case validators.UsernameValidationResult.UsernameTooShort:
-			return t.shared.account.username_short;
+			return interpolate.interpolate(t.shared.account.username_short, { min: validators.MIN_USERNAME_LENGTH }); // prettier-ignore
 		case validators.UsernameValidationResult.UsernameAlphanumeric:
 			return t.shared.account.username_alphanumeric;
 		default:
@@ -23,7 +24,7 @@ export function usernameFormatError(value: string): string | undefined {
 }
 
 /** The localized format error for an email, or undefined if valid. */
-export function emailFormatError(value: string): string | undefined {
+function emailError(value: string): string | undefined {
 	switch (validators.validateEmail(value.trim())) {
 		case validators.EmailValidationResult.InvalidFormat:
 			return t.shared.account.email_invalid;
@@ -33,10 +34,10 @@ export function emailFormatError(value: string): string | undefined {
 }
 
 /** The localized format error for a password, or undefined if valid. */
-export function passwordFormatError(value: string): string | undefined {
+function passwordError(value: string): string | undefined {
 	switch (validators.validatePassword(value)) {
 		case validators.PasswordValidationResult.PasswordTooShort:
-			return t.shared.account.password_short;
+			return interpolate.interpolate(t.shared.account.password_short, { min: validators.MIN_PASSWORD_LENGTH }); // prettier-ignore
 		default:
 			return undefined;
 	}
@@ -46,7 +47,7 @@ export function passwordFormatError(value: string): string | undefined {
  * Shows `message` in `errorElement`, or clears it when omitted. Pass `input` to also toggle its
  * `input-error` class (field-level errors); omit it for form-level errors.
  */
-export function setFieldError(
+function setFieldError(
 	errorElement: HTMLParagraphElement,
 	message?: string,
 	input?: HTMLInputElement,
@@ -55,3 +56,10 @@ export function setFieldError(
 	errorElement.classList.toggle('hidden', message === undefined);
 	input?.classList.toggle('input-error', message !== undefined);
 }
+
+export default {
+	usernameError,
+	emailError,
+	passwordError,
+	setFieldError,
+};

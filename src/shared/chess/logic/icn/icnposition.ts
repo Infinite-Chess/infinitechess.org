@@ -14,8 +14,8 @@
 import type { CoordsKey } from '../../../util/coordutil.js';
 
 import jsutil from '../../../util/jsutil.js';
-import typeutil from '../../../util/typeutil.js';
-import { rawTypes as r, ext as e, RawType, Player } from '../../../util/typeutil.js';
+import typeutil from '../../util/typeutil.js';
+import { rawTypes as r, ext as e, RawType, Player } from '../../util/typeutil.js';
 
 // Dictionaries ----------------------------------------------------------------
 
@@ -285,13 +285,12 @@ export default {
 	PIECE_CODES_RAW,
 	PIECE_CODES_RAW_INVERTED,
 	// Regular Expressions
-	WHOLE_NUMBER_SOURCE,
 	COUNTING_NUMBER_SOURCE,
+	WHOLE_NUMBER_SOURCE,
 	INTEGER_SOURCE,
 	COORDS_KEY_REGEX_SOURCE,
 	PIECE_CODE_REGEX_SOURCE,
 	getPieceAbbrevRegexSource,
-	getPieceEntryRegexSource,
 	// Getting & Parsing Abbreviations
 	getAbbrFromType,
 	getTypeFromAbbr,

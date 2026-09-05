@@ -21,6 +21,7 @@ import coordutil from '../../../../../shared/util/coordutil.js';
 
 import camera from './camera.js';
 import deltatime from '../deltatime.js';
+import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
 
 // Types -----------------------------------------------------------------------
@@ -72,7 +73,7 @@ export interface BoardPos {
 // Constants -------------------------------------------------------------------
 
 /** The furthest we can be zoomed IN. */
-const maximumScale = bd.fromBigInt(5n); // Default: 5.0
+const MAXIMUM_SCALE = bd.fromBigInt(5n); // Default: 5.0
 
 const ZERO = bd.fromBigInt(0n);
 const ONE = bd.fromBigInt(1n);
@@ -85,7 +86,7 @@ const ONE = bd.fromBigInt(1n);
  * @param onVisualChange - Flags the render loop when the position/scale changes.
  */
 function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
-	// Variables -------------------------------------------------------------
+	// Variables -------------------------------------------------------------------
 
 	/**
 	 * The position of the board in front of the camera.
@@ -104,13 +105,13 @@ function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
 	/** The current board scale (zoom) velocity. */
 	let scaleVel: number = 0;
 
-	// Initialization ------------------------------------------------
+	// Initialization --------------------------------------------------------------
 
 	function wireGlobalListeners(): void {
-		document.addEventListener('transition-start', eraseMomentum);
+		GameBus.addEventListener('transition-start', eraseMomentum);
 	}
 
-	// Getters -------------------------------------------------------
+	// Getters ---------------------------------------------------------------------
 
 	function getBoardPos(): BDCoords {
 		return coordutil.copyBDCoords(boardPos);
@@ -132,7 +133,7 @@ function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
 		return scaleVel;
 	}
 
-	// Setters ----------------------------------------------------------------------------------------
+	// Setters ---------------------------------------------------------------------
 
 	function setBoardPos(newPos: BDCoords): void {
 		// Enforce fixed point model. Catches bugs during development.
@@ -152,8 +153,8 @@ function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
 		// console.error("New scale:", bd.toApproximateString(newScale));
 
 		// Cap the scale
-		if (bd.compare(newScale, maximumScale) > 0) {
-			newScale = maximumScale;
+		if (bd.compare(newScale, MAXIMUM_SCALE) > 0) {
+			newScale = MAXIMUM_SCALE;
 			scaleVel = 0; // Cut the scale momentum immediately
 		}
 
@@ -178,7 +179,7 @@ function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
 		scaleVel = newScaleVel;
 	}
 
-	// Other Utility --------------------------------------------------------
+	// Other Utility ---------------------------------------------------------------
 
 	function eraseMomentum(): void {
 		panVel = [0, 0];
@@ -197,9 +198,9 @@ function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
 		return bd.compare(boardScale, cam.getScaleWhenTilesInvisible()) < 0;
 	}
 
-	// Updating -------------------------------------------------------------------
+	// Updating --------------------------------------------------------------------
 
-	// Called from game.updateBoard()
+	/** Advances the board position and scale by one frame of momentum. */
 	function update(): void {
 		panBoard();
 		recalcScale();

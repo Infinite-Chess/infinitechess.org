@@ -11,8 +11,8 @@
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MovePacket } from '../../../../../shared/chess/util/typeschemas.js';
+import type { GameStateFull } from '../../../../../shared/transport/clientbound.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
-import type { GameStateMessage } from '../../../../../shared/transport/clientbound.js';
 import type { MoveRecord, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
@@ -28,6 +28,7 @@ import gamesession from '../../game/chess/gamesession.js';
 import guigamemeta from '../../game/gui/guigamemeta.js';
 import { GameBus } from '../../board/GameBus.js';
 import movesequence from '../../game/chess/movesequence.js';
+import guispectators from './gui/guispectators.js';
 import movesendreceive from './movesendreceive.js';
 
 // Functions -------------------------------------------------------------------
@@ -41,7 +42,7 @@ import movesendreceive from './movesendreceive.js';
 function handleGameState(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
-	message: GameStateMessage,
+	message: GameStateFull,
 ): boolean {
 	const claimedGameConclusion = message.gameConclusion;
 	if (message.finalized) onlinegame.onFinalized();
@@ -69,6 +70,8 @@ function handleGameState(
 
 	// A finalized rated game carries its deltas — show them.
 	if (message.ratingChanges) guigamemeta.showRatingChanges(message.ratingChanges);
+
+	guispectators.updateSpectatorCount(message.spectators);
 
 	return true;
 }
@@ -218,6 +221,4 @@ function findLastestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MoveP
 
 // Exports ---------------------------------------------------------------------
 
-export default {
-	handleGameState,
-};
+export default { handleGameState };

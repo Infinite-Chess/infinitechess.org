@@ -47,19 +47,57 @@ const LOG_RETENTION_MS = 1000 * 60 * 60 * 24 * 30 * 6; // ~6 months
 /** How often the retention sweep runs. */
 const LOG_CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
-// Logging ---------------------------------------------------------------------
+/** Untrusted text longer than this is cut down before it reaches a log line. */
+const MAX_LOGGED_TEXT_LENGTH = 2048;
+
+/**
+ * Control characters no log line may contain verbatim: C0, DEL and C1, minus the
+ * `\t`, `\n` and `\r` that trusted content legitimately uses. Logs are read in a
+ * terminal, where a raw ESC from untrusted data would recolor it, clear it, or
+ * overwrite text to hide a record.
+ */
+// eslint-disable-next-line no-control-regex
+const UNSAFE_LOG_CHARACTERS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g;
+
+// Text ------------------------------------------------------------------------
+
+/**
+ * Prepares untrusted, client-controlled text for a log line: capped first, then
+ * newline-escaped, so the cap counts the client's characters, not our escaping of them.
+ *
+ * The standard path for anything a client supplied. Reach for {@link truncate} or
+ * {@link escapeLogNewlines} alone only where one of the two is deliberately unwanted.
+ */
+function escapeUntrusted(str: string): string {
+	return escapeLogNewlines(truncate(str));
+}
 
 /**
  * Escapes `\r`/`\n` to their literal forms so a raw newline in untrusted,
  * client-controlled data can't terminate the current log line and forge extra
  * records (log injection). Records are one newline-delimited line each.
  *
- * Call for ONLY the untrusted portion, so trusted multi-line
- * content (e.g. stack traces) on the same line stays readable.
+ * Call on the untrusted value alone, never the assembled line, so trusted
+ * multi-line content (e.g. stack traces) beside it stays readable.
  */
 function escapeLogNewlines(str: string): string {
 	return str.replace(/\r/g, '\\r').replace(/\n/g, '\\n');
 }
+
+/**
+ * Caps untrusted text at {@link MAX_LOGGED_TEXT_LENGTH}, marking how much was cut,
+ * so one client-supplied string can't bloat a log file.
+ *
+ * Call BEFORE escaping, so the cap counts the client's own characters, and on the
+ * untrusted value alone, never the assembled line, so the rest of it survives a cut.
+ */
+function truncate(str: string): string {
+	if (str.length <= MAX_LOGGED_TEXT_LENGTH) return str;
+	const omitted = str.length - MAX_LOGGED_TEXT_LENGTH;
+	return `${str.slice(0, MAX_LOGGED_TEXT_LENGTH)}…[truncated, ${omitted} more chars]`;
+}
+
+// Writing ---------------------------------------------------------------------
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file,
@@ -68,10 +106,13 @@ function escapeLogNewlines(str: string): string {
  * @param logName - The base name of the log file, without the `.txt` extension.
  */
 async function addAndPrint(message: string, logName: string): Promise<void> {
-	if (logName === 'errLog') console.error(message);
-	else console.log(message); // Prevents non error logs from going to PM2's error logs.
+	// Sanitized here too — the console is a terminal, and `add` can't reach what it prints.
+	// Sanitizing the same text twice is a no-op; the first pass leaves nothing to escape.
+	const sanitized = sanitizeLogText(message);
+	if (logName === 'errLog') console.error(sanitized);
+	else console.log(sanitized); // Prevents non error logs from going to PM2's error logs.
 
-	await add(message, logName);
+	await add(sanitized, logName);
 }
 
 /**
@@ -80,15 +121,11 @@ async function addAndPrint(message: string, logName: string): Promise<void> {
  * @param logName - The base name of the log file, without the `.txt` extension.
  */
 async function add(message: string, logName: string): Promise<void> {
-	if (typeof message !== 'string')
-		return console.trace('Cannot log message when it is not a string.');
-	if (!logName) return console.trace('Log name MUST be provided when logging an event!');
-
 	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
 	// Tag the line with the ID of the request/socket-message that triggered
 	// it, if any, so all log lines it produced (across files) can be joined.
 	const requestID = requestContext.getID() ?? requestContext.REQUEST_ID_PLACEHOLDER;
-	const logItem = `${dateTime}  ${requestID}   ${message}\n`;
+	const logItem = `${dateTime}  ${requestID}   ${sanitizeLogText(message)}\n`;
 
 	try {
 		const filePath = resolveLogPath(logName);
@@ -97,6 +134,18 @@ async function add(message: string, logName: string): Promise<void> {
 	} catch (err: unknown) {
 		console.error('Error logging event:', err);
 	}
+}
+
+/**
+ * Renders control characters inert as their `\uXXXX` form. Applied to every line
+ * at the sink, so no caller can forget it, and whitespace-only escaping stays a
+ * separate, opt-in concern — see {@link escapeLogNewlines}.
+ */
+function sanitizeLogText(str: string): string {
+	return str.replace(
+		UNSAFE_LOG_CHARACTERS,
+		(char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`,
+	);
 }
 
 /**
@@ -149,8 +198,13 @@ function purgeOldRotatedLogs(): void {
 
 export default {
 	LOGS_DIR,
-	add,
-	addAndPrint,
+	// Text
+	escapeUntrusted,
 	escapeLogNewlines,
+	truncate,
+	// Writing
+	addAndPrint,
+	add,
+	// Cleanup
 	startPeriodicLogCleanup,
 };

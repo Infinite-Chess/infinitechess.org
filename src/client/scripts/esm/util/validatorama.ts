@@ -1,6 +1,6 @@
 // src/client/scripts/esm/util/validatorama.ts
 
-/*
+/**
  * Exposes our login state and username/user_id, read from the `memberInfo` cookie. Auth itself
  * rides on the httpOnly refresh-token cookie (auto-sent same-site).
  */

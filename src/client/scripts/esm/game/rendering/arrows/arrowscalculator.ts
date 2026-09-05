@@ -26,13 +26,13 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import bimath from '../../../../../../shared/util/math/bimath.js';
 import bounds from '../../../../../../shared/util/math/bounds.js';
-import typeutil from '../../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
-import { rawTypes as r } from '../../../../../../shared/util/typeutil.js';
+import { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import organizedpieces, { LineKey } from '../../../../../../shared/chess/logic/organizedpieces.js';
 

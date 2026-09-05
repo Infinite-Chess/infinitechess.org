@@ -9,6 +9,7 @@ import onlinegame from './onlinegame.js';
 import gamesession from '../../game/chess/gamesession.js';
 import deadgameloader from './deadgameloader.js';
 
+import './gui/guichat.js';
 import './onlinegamerouter.js';
 import './gui/guigameactions.js';
 import '../../game/gui/guigamemeta.js';
@@ -36,7 +37,7 @@ function start(): void {
 		onlinegame.subscribeToGame(); // Naturally requests the full game state which bootstraps the game
 	} else {
 		// Dead (memory-evicted) game: fetch its state over HTTP and render it — no socket opened.
-		deadgameloader.loadDeadGame();
+		deadgameloader.load();
 	}
 
 	gameloop.start();

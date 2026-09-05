@@ -1,6 +1,6 @@
 // src/client/scripts/esm/webgl/TextureLoader.ts
 
-/*
+/**
  * Loads WebGL textures from HTMLImageElements.
  *
  * Notes:

@@ -10,7 +10,7 @@ import type { AudioParamDescriptor } from '../worklet-types';
 
 declare abstract class AudioWorkletProcessor {
 	static get parameterDescriptors(): AudioParamDescriptor[];
-	constructor(options?: any);
+	constructor(options?: AudioWorkletNodeOptions);
 	abstract process(
 		inputs: Float32Array[][],
 		outputs: Float32Array[][],

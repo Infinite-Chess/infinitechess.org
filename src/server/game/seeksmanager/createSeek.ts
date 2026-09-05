@@ -15,6 +15,7 @@ import type { MetaData, Rating } from '../../../shared/chess/util/metadatautil.j
 import type { CreateSeekMessage } from '../../../shared/transport/serverbound.js';
 
 import uuid from '../../../shared/util/uuid.js';
+import domain from '../../../shared/transport/domain.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import gamelimits from '../../../shared/chess/util/gamelimits.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
@@ -23,14 +24,9 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantmodule from '../../../shared/chess/logic/variantmodule.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
-import { SEEK_ID_LENGTH } from '../../../shared/transport/domain.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 import { validatePosition } from '../../../shared/chess/logic/positionlegality.js';
-import {
-	PositionRejection,
-	localizeRejection,
-	getRejection,
-} from '../../../shared/chess/game/playability.js';
+import playability, { PositionRejection } from '../../../shared/chess/game/playability.js';
 
 import socketsend from '../../socket/socketSend.js';
 import activeSeeks from './activeSeeks.js';
@@ -48,12 +44,12 @@ import leaderboardsManager from '../../database/leaderboardsManager.js';
 function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 	if (activePlayers.hasSocket(ws)) {
 		// Can't create seek because they are already in a game
-		return socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
+		return socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.already_in_game);
 	}
 
 	// Reject rated seeks from signed-out users
 	if (messageContents.mode === 'rated' && !ws.metadata.memberInfo.signedIn) {
-		socketsend.send(ws, 'general', 'notify', ws.t.responses.seeks.rated_requires_signin);
+		socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.rated_requires_signin);
 		return;
 	}
 
@@ -67,7 +63,7 @@ function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 		activeSeeks.add(seek);
 	} catch {
 		// DB error (already logged)
-		socketsend.send(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
+		socketsend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
 	}
 }
 
@@ -84,7 +80,7 @@ function getSeekFromWebsocketMessageContents(
 
 	let id: string;
 	do {
-		id = uuid.generateID_Base36(SEEK_ID_LENGTH);
+		id = uuid.generateID_Base62(domain.SEEK_ID_LENGTH);
 	} while (activeSeeks.hasID(id));
 
 	const owner = ws.metadata.memberInfo;
@@ -106,6 +102,7 @@ function getSeekFromWebsocketMessageContents(
 	return {
 		id,
 		owner,
+		ownerTab: ws.metadata.tabId,
 		player,
 		variant: messageContents.variant,
 		time: messageContents.time,
@@ -125,7 +122,7 @@ function validateVariant(ws: CustomWebSocket, variant: SeekVariant, engineGame: 
 	if (variant.kind !== 'custom') return true;
 	const rejection = validateIcnSeekContent(variant.position, engineGame);
 	if (rejection === null) return true;
-	socketsend.send(ws, 'general', 'notify', localizeRejection(ws.t, rejection));
+	socketsend.send(ws, 'general', 'toast', playability.localizeRejection(ws.t, rejection));
 	return false;
 }
 
@@ -161,7 +158,7 @@ function validateIcnSeekContent(content: string, engineGame: boolean): PositionR
 	// Legal, but the game still has to be playable from here. Built on the board the real game
 	// gets — the ICN's own world border, which an engine game must carry — then discarded.
 	const constructed = gameformulator.constructPosition(variantOptions);
-	return getRejection(constructed, { seek: true, engine: engineGame });
+	return playability.getRejection(constructed, { seek: true, engine: engineGame });
 }
 
 /**
@@ -176,7 +173,7 @@ function validateSeekMetadata(metadata: MetaData): PositionRejection | null {
 	if (Object.keys(metadata).some((key) => !permitted.includes(key)))
 		return { kind: 'position', code: 'invalid_icn' };
 	if (metadata.Variant === undefined) return null;
-	const code = variantregistry.resolveVariantCode(metadata.Variant);
+	const code = variantregistry.resolveCode(metadata.Variant);
 	if (code === undefined) return { kind: 'position', code: 'invalid_icn' };
 	// Every variant module is preloaded at server startup.
 	if (variantmodule.hasCustomMovement(variantcache.getModule(code))) {

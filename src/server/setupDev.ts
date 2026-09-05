@@ -16,7 +16,7 @@ import 'dotenv/config'; // Imports all properties of process.env, if it exists
 // Functions -------------------------------------------------------------------
 
 /** Seeds the dev accounts and prints the local URL. Does nothing in production. */
-export function initDevEnvironment(): void {
+function init(): void {
 	if (process.env['NODE_ENV'] === 'production') return;
 
 	ensureDevelopmentAccounts();
@@ -28,7 +28,7 @@ export function initDevEnvironment(): void {
 /** Creates the standard development accounts (idempotent). */
 async function ensureDevelopmentAccounts(): Promise<void> {
 	if (!memberManager.isUsernameTaken('owner')) {
-		const user_id = await accountSeeder.generateAccount({
+		const user_id = await accountSeeder.generate({
 			username: 'Owner',
 			email: '4@gmail.com',
 			password: '1',
@@ -38,18 +38,18 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 
 		// Give Owner checkmate progression for debugging purposes
 		// Bronze
-		// const checkmates_beaten = Object.values(validcheckmates.VALID_CHECKMATES.easy).toString()
-		// 	+ "," + Object.values(validcheckmates.VALID_CHECKMATES.medium).toString();
+		// const checkmates_beaten = Object.values(validcheckmates.BY_DIFFICULTY.easy).toString()
+		// 	+ "," + Object.values(validcheckmates.BY_DIFFICULTY.medium).toString();
 		// Silver
-		// const checkmates_beaten = Object.values(validcheckmates.VALID_CHECKMATES.easy).toString()
-		// 	+ "," + Object.values(validcheckmates.VALID_CHECKMATES.medium).toString()
-		// 	+ "," + Object.values(validcheckmates.VALID_CHECKMATES.hard).toString();
+		// const checkmates_beaten = Object.values(validcheckmates.BY_DIFFICULTY.easy).toString()
+		// 	+ "," + Object.values(validcheckmates.BY_DIFFICULTY.medium).toString()
+		// 	+ "," + Object.values(validcheckmates.BY_DIFFICULTY.hard).toString();
 		// Gold
-		const checkmates_beaten = Object.values(validcheckmates.VALID_CHECKMATES).flat().join(',');
+		const checkmates_beaten = Object.values(validcheckmates.BY_DIFFICULTY).flat().join(',');
 		memberManager.updateColumns(user_id, { checkmates_beaten });
 	}
 	if (!memberManager.isUsernameTaken('admin')) {
-		const user_id = await accountSeeder.generateAccount({
+		const user_id = await accountSeeder.generate({
 			username: 'Admin',
 			email: '3@gmail.com',
 			password: '1',
@@ -57,7 +57,7 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 		roles.add(user_id, 'admin');
 	}
 	if (!memberManager.isUsernameTaken('patron')) {
-		const user_id = await accountSeeder.generateAccount({
+		const user_id = await accountSeeder.generate({
 			username: 'Patron',
 			email: '2@gmail.com',
 			password: '1',
@@ -65,10 +65,14 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 		roles.add(user_id, 'patron');
 	}
 	if (!memberManager.isUsernameTaken('member')) {
-		await accountSeeder.generateAccount({
+		await accountSeeder.generate({
 			username: 'Member',
 			email: '1@gmail.com',
 			password: '1',
 		});
 	}
 }
+
+// Exports ---------------------------------------------------------------------
+
+export default { init };

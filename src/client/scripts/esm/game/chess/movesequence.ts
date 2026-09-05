@@ -25,7 +25,7 @@ import piecemodels from '../../board/rendering/piecemodels.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from './gamesession.js';
 import frametracker from '../../board/rendering/frametracker.js';
-import { animateMove, meshChanges } from './graphicalchanges.js';
+import graphicalchanges from './graphicalchanges.js';
 
 // Global Moving ---------------------------------------------------------------
 
@@ -109,7 +109,7 @@ function makeMoveAndAnimate(
 	options: { doGameOverChecks?: boolean } = {},
 ): MoveFull {
 	const move = makeMove(gamefile, mesh, moveTagged, options);
-	if (mesh) animateMove(move.changes, true);
+	if (mesh) graphicalchanges.animateMove(move.changes, true);
 	return move;
 }
 
@@ -127,7 +127,7 @@ function makeMoveAndAnimate(
 function runMeshChanges(boardsim: GameFile, mesh: Mesh, edit: Edit, forward: boolean): void {
 	if (boardsim.pieces.newlyRegenerated)
 		piecemodels.regenAll(gamescene.getGameContext(), boardsim, mesh);
-	else boardchanges.runChanges(mesh, edit.changes, meshChanges, forward); // Graphical changes
+	else boardchanges.runChanges(mesh, edit.changes, graphicalchanges.meshChanges, forward); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 }
 
@@ -138,7 +138,7 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
 	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
-	if (mesh) boardchanges.runChanges(mesh, lastMove.changes, meshChanges, false); // Graphical changes
+	if (mesh) boardchanges.runChanges(mesh, lastMove.changes, graphicalchanges.meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	gamefile.gameConclusion = undefined; // Un-conclude the game if it was concluded
 	GameBus.dispatch('moves-changed'); // Backward chokepoint for the committed move list (mirrors makeMove).
@@ -167,7 +167,7 @@ function viewMove(
 	movepiece.applyMove(gamefile, move, forward, updateTurn); // Apply the logical changes.
 
 	if (mesh) {
-		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
+		boardchanges.runChanges(mesh, move.changes, graphicalchanges.meshChanges, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	}
 }
@@ -196,7 +196,7 @@ function viewIndex(
 		GameBus.dispatch('view-move');
 		// Only clear any previous animations if we viewed a different index.
 		animation.clearAnimations();
-		if (animateFinal && mesh) animateMove(lastMove.changes, forward);
+		if (animateFinal && mesh) graphicalchanges.animateMove(lastMove.changes, forward);
 	}
 }
 
@@ -235,7 +235,7 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	GameBus.dispatch('view-move');
-	animateMove(move.changes, forward); // Animate
+	graphicalchanges.animateMove(move.changes, forward); // Animate
 }
 
 // --------------------------------------------------------------------------------------------------------------------------

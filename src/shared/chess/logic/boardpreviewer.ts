@@ -9,7 +9,7 @@
  * never simulate on it.
  */
 
-import type { RawType } from '../../util/typeutil.js';
+import type { RawType } from '../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { OrganizedPiecesBase } from './organizedpieces.js';
@@ -71,7 +71,7 @@ export type BoardPreview = {
 // Functions -------------------------------------------------------------------
 
 /** Creates a new {@link BoardPreview} from the provided arguments. */
-function initBoardPreview(
+function init(
 	/** The rules to base the board on. */
 	gameRulesIn: GameRules,
 	variant: LoadedVariant | undefined,
@@ -147,6 +147,4 @@ function initBoardPreview(
 
 // Exports ---------------------------------------------------------------------
 
-export default {
-	initBoardPreview,
-};
+export default { init };

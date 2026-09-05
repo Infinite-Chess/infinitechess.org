@@ -10,13 +10,15 @@
 
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { GameSetup, ServerGame } from './serverGameTypes.js';
 
-import typeutil from '../../../shared/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import chat from './chat.js';
 import manifest from '../../config/manifest.js';
+import logEvents from '../../utility/logEvents.js';
 import socketsend from '../../socket/socketSend.js';
 import gameManager from './gameManager.js';
 import gameSockets from './gameSockets.js';
@@ -49,9 +51,11 @@ function offerRematch(servergame: ServerGame, ourRole: Player): void {
 
 	if (match.rematchOffers.has(opponentColor)) {
 		// Both players have offered — start the rematch!
+		chat.appendNotice(servergame, ourRole, 'rematch-accepted');
 		createRematchGame(servergame);
 	} else {
 		// Relay the offer to the opponent (their rematch button starts glowing).
+		chat.appendNotice(servergame, ourRole, 'rematch-offered');
 		gameSockets.sendToColor(match, opponentColor, 'game', 'rematchoffer', undefined);
 	}
 }
@@ -59,8 +63,8 @@ function offerRematch(servergame: ServerGame, ourRole: Player): void {
 /**
  * Creates a rematch of a concluded game: same variant/time/rated (and same engine/difficulty,
  * if any), participants swapped to the opposite colors. Tears down the old game, starts the
- * fresh one, and navigates all still-connected players to it. Silently aborts if either player
- * is already in another game.
+ * fresh one, and navigates all still-connected players to it. Aborts and logs if either
+ * player is already in another game.
  * @param oldGame - The concluded game a rematch has been agreed upon for.
  */
 function createRematchGame(oldGame: ServerGame): void {
@@ -71,7 +75,10 @@ function createRematchGame(oldGame: ServerGame): void {
 	// `undefined` here; only a genuine new game they've joined (a different id) blocks the rematch.
 	for (const data of Object.values(oldMatch.playerData)) {
 		const inGameID = activePlayers.getGameID(data.identifier);
-		if (inGameID !== undefined && inGameID !== oldMatch.id) return; // Buttons just stay disabled.
+		if (inGameID !== undefined && inGameID !== oldMatch.id) {
+			logEvents.addAndPrint(`Cannot start rematch of game ${oldMatch.id} because a participant is already in game ${inGameID}!`, 'errLog'); // prettier-ignore
+			return; // Buttons just stay disabled.
+		}
 	}
 
 	// Capture identities (swapped colors) and connected sockets before tearing down the old game.
@@ -93,6 +100,7 @@ function createRematchGame(oldGame: ServerGame): void {
 		variant: oldMatch.variant,
 		time: oldMatch.clock,
 		rated: oldMatch.rated,
+		private: oldMatch.private,
 		modifiers: oldMatch.modifiers, // A rematch inherits the original game's modifiers.
 		// The version is re-seeded rather than carried over — an engine update could have
 		// landed mid-game, in which case the old game's version is no longer what we'd serve.
@@ -121,7 +129,7 @@ function createRematchGame(oldGame: ServerGame): void {
 
 	// Alert all connected players of the new game (they auto navigate)
 	for (const { socket, role } of toNavigate)
-		socketsend.send(socket, 'game', 'ingame', { id: newGameID, role });
+		socketsend.send(socket, 'game', 'rematchstarted', { id: newGameID, role });
 }
 
 // Exports ---------------------------------------------------------------------

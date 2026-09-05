@@ -1,14 +1,22 @@
 // src/client/scripts/esm/game/gui/guiclock.ts
 
+/**
+ * Drives the two player bars: the clock text, the `.tempo` highlight on whoever is
+ * on the move, and the `.lowtime` warning.
+ *
+ * The two bars are SSR'd as top and bottom. Which player gets which depends on the
+ * side we're viewing from, since that side is always the bottom bar.
+ */
+
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
-import type { Player, PlayerGroup } from '../../../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
-import { players as p } from '../../../../../shared/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import gamesound from '../../board/gamesound.js';
@@ -130,7 +138,7 @@ function getTempoPlayer(basegame: GameFile): Player | undefined {
 	if (gamesession.getGameType() === 'analysis')
 		return moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1);
 	if (gamefileutility.isGameOver(basegame)) return undefined;
-	return basegame.clocks?.colorTicking ?? basegame.whosTurn;
+	return basegame.clocks?.ticking?.color ?? basegame.whosTurn;
 }
 
 /** Highlights the bar of the player whose turn it is via `.tempo`. */
@@ -150,8 +158,8 @@ function rescheduleLowtime(clocks: ClockData): void {
 	clearTimeout(lowtimeTimeoutID);
 	lowtimeTimeoutID = undefined;
 	if (hasPlayedLowtimeSound) return;
-	if (clocks.colorTicking === undefined) return;
-	if (clocks.colorTicking !== gamesession.getRole()) return;
+	if (clocks.ticking === undefined) return;
+	if (clocks.ticking.color !== gamesession.getRole()) return;
 
 	const timeRemaining = clock.getColorTickingTrueTimeRemaining(clocks);
 	if (timeRemaining === null || timeRemaining === undefined) return;

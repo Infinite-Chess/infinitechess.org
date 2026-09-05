@@ -7,7 +7,7 @@
 
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { MoveTagged } from './movepiece.js';
 import type { CoordsTagged } from './movepiece.js';
@@ -20,7 +20,7 @@ import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
 import vectors from '../../util/math/vectors.js';
-import typeutil from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import bdcoords from '../../util/bdcoords.js';
 import moveutil from './moveutil.js';
 import boardutil from './boardutil.js';
@@ -31,12 +31,12 @@ import castlingutil from './castlingutil.js';
 import checkresolver from './checkresolver.js';
 import gamefileutility from './gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
-import { players as p, rawTypes as r } from '../../util/typeutil.js';
+import { players as p } from '../util/typeutil.js';
 
-// Functions -------------------------------------------------------------------
+// EVERY one of the move-appending functions needs to include enough information in the
+// special move tag to be able to undo any of them!
 
-// EVERY one of these functions needs to include enough information in the special move tag
-// to be able to undo any of them!
+// King Special Moves ----------------------------------------------------------
 
 /**
  * Appends legal king special moves to the provided legal individual moves list. (castling)
@@ -148,6 +148,8 @@ function kings(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 
 	return individualMoves;
 }
+
+// Pawn Special Moves ----------------------------------------------------------
 
 /**
  * Appends legal pawn moves to the provided legal individual moves list.
@@ -318,6 +320,8 @@ function appendPawnMoveAndAttachPromoteTag(
 	individualMoves.push(landCoords);
 }
 
+// Rose Special Moves ----------------------------------------------------------
+
 /**
  * Appends legal moves for the rose piece to the provided legal individual moves list.
  * @param boardsim - The boardsim
@@ -428,6 +432,8 @@ function roses(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 	}
 }
 
+// Shared Helpers --------------------------------------------------------------
+
 /**
  * Tests if the piece at the given coordinates has it's special move rights.
  * @param boardsim - The boardsim
@@ -439,18 +445,7 @@ function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
 	return boardsim.state.global.specialRights.has(key);
 }
 
-// Returns true if the type is a pawn and the coords it moved to is a promotion line
-
-/** Returns true if a pawn moved onto a promotion line. */
-function isPawnPromotion(gameRules: GameRules, type: number, coordsClicked: Coords): boolean {
-	if (typeutil.getRawType(type) !== r.PAWN) return false;
-	if (!gameRules.promotion) return false; // This game doesn't have promotion.
-
-	const color = typeutil.getColorFromType(type);
-	const promotionRanks = gameRules.promotion.ranks[color];
-
-	return promotionRanks?.includes(coordsClicked[1]) || false;
-}
+// Special Tag Transferral -----------------------------------------------------
 
 /**
  * Transfers the move-retained special tags from the provided coordinates to the move.
@@ -495,11 +490,14 @@ function transferSpecialTag<K extends keyof SpecialTags>(
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// King Special Moves
 	kings,
+	// Pawn Special Moves
 	pawns,
-	roses,
 	getEnPassantGamefileProperty,
-	isPawnPromotion,
+	// Rose Special Moves
+	roses,
+	// Special Tag Transferral
 	transferSpecialTags_FromCoordsToMove,
 	transferSpecialTags_FromCoordsToCoords,
 };

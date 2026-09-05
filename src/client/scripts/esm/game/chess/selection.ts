@@ -16,7 +16,7 @@ import type {
 } from '../../../../../shared/chess/logic/movepiece.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
-import typeutil from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
@@ -24,12 +24,11 @@ import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import coordutil, { Coords } from '../../../../../shared/util/coordutil.js';
-import { rawTypes as r, players as p } from '../../../../../shared/util/typeutil.js';
+import { rawTypes as r, players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import mouse from '../mouse.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
-import config from '../config.js';
 import camera from '../../board/rendering/camera.js';
 import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
@@ -46,7 +45,8 @@ import movesequence from './movesequence.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
-import { animateMove } from './graphicalchanges.js';
+import { VIDEO_MODE } from '../config.js';
+import graphicalchanges from './graphicalchanges.js';
 import { listener_canvas } from '../listeners.js';
 
 // Types -----------------------------------------------------------------------
@@ -562,7 +562,7 @@ function moveGamefilePiece(gamefile: GameFile, mesh: Mesh | undefined, coords: C
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	const animateMain = !wasBeingDragged;
-	animateMove(changes, true, animateMain, isPremove);
+	graphicalchanges.animateMove(changes, true, animateMain, isPremove);
 
 	if (!isPremove) GameBus.dispatch('user-move-played');
 
@@ -602,7 +602,7 @@ function renderGhostPiece(): void {
 		!hoverSquareLegal ||
 		draganimation.areDraggingPiece() ||
 		listener_canvas.isMouseTouch(mouseKeybind) ||
-		config.VIDEO_MODE
+		VIDEO_MODE
 	)
 		return;
 	const rawType = typeutil.getRawType(pieceSelected.type);

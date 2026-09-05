@@ -6,21 +6,25 @@
  * tracking which checkmates have been beaten.
  */
 
-import type { Player } from '../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineAndConfig } from '../../../../../shared/chess/util/engine.js';
+import type { EngineAndConfig } from '../../../../../shared/chess/util/engineregistry.js';
 import type { Coords, CoordsKey } from '../../../../../shared/util/coordutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
-import typeutil from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
 import variantrules from '../../../../../shared/chess/logic/variantrules.js';
+import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
-import { ENGINE_DICTIONARY } from '../../../../../shared/chess/util/engine.js';
-import { players as p, ext as e, rawTypes as r } from '../../../../../shared/util/typeutil.js';
+import {
+	players as p,
+	ext as e,
+	rawTypes as r,
+} from '../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../components/toast.js';
 import docutil from '../../util/docutil.js';
@@ -133,7 +137,7 @@ function startCheckmatePractice(checkmateSelectedID: string): boolean {
 		config: {
 			checkmateSelectedID,
 			engineTimeLimitPerMoveMillis:
-				ENGINE_DICTIONARY.engineCheckmatePractice.defaultTimeLimitPerMoveMillis,
+				engineregistry.REGISTRY.engineCheckmatePractice.defaultTimeLimitPerMoveMillis,
 		},
 	} satisfies EngineAndConfig;
 
@@ -162,8 +166,7 @@ function startEngineGame(options: {
 			onLogicalLoaded: () =>
 				enginegame.initEngineGame({
 					...options,
-					workerUrl: window.checkmatePracticePageData.workerUrl,
-					engineUrl: window.checkmatePracticePageData.engineUrl,
+					engineAssets: window.checkmatePracticePageData,
 				}),
 			concludeIfOver: true,
 		},
@@ -177,7 +180,7 @@ function startEngineGame(options: {
  */
 function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, number> {
 	// error if user somehow submitted invalid checkmate ID
-	if (!Object.values(validcheckmates.VALID_CHECKMATES).flat().includes(checkmateID))
+	if (!Object.values(validcheckmates.BY_DIFFICULTY).flat().includes(checkmateID))
 		throw Error('User tried to play invalid checkmate practice.');
 
 	// place the black king not so far away for specific variants
@@ -290,7 +293,8 @@ function getCompletedCheckmates(): string[] {
 		completedCheckmates = decodeURIComponent(cookieCheckmates).match(/[^,]+/g) || []; // match() returns null if no matches
 	} else {
 		// Else, use LocalStorage as a fallback
-		completedCheckmates = LocalStorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
+		completedCheckmates =
+			(LocalStorage.loadItem(nameOfCompletedCheckmatesInStorage) as string[]) || [];
 	}
 	return completedCheckmates;
 }
@@ -302,7 +306,7 @@ function getCompletedCheckmates(): string[] {
 async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 	if (!completedCheckmates)
 		throw Error('Cannot mark checkmate beaten when it was never initialized!');
-	if (!Object.values(validcheckmates.VALID_CHECKMATES).flat().includes(checkmatePracticeID))
+	if (!Object.values(validcheckmates.BY_DIFFICULTY).flat().includes(checkmatePracticeID))
 		throw Error('User completed invalid checkmate practice.');
 
 	// Add the checkmate ID to the beaten list

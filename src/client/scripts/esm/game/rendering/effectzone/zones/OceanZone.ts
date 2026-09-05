@@ -1,17 +1,23 @@
 // src/client/scripts/esm/game/rendering/effectzone/zones/OceanZone.ts
 
-import type { Zone } from '../Zone';
+/**
+ * A faintly blue board with three water ripples drifting in a slow circle.
+ */
+
+import type { UniformValue } from '../../../../webgl/Renderable';
 import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
 
 import camera from '../../../../board/rendering/camera';
 import deltatime from '../../../../board/deltatime.js';
+import { GameBus } from '../../../../board/GameBus';
+import { BaseZone } from '../BaseZone';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 import { RippleSource, WaterPass } from '../../../../webgl/postprocessing/passes/WaterPass';
 
-export class OceanZone implements Zone {
+export class OceanZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 10;
 
@@ -20,16 +26,13 @@ export class OceanZone implements Zone {
 	/** The post-processing pass that renders the water ripple effect from continuous sources. */
 	private waterPass: WaterPass;
 
-	/** The soundscape player for this zone. */
-	private ambience: SoundscapePlayer;
-
 	/** The distance from the center of the screen (in world units) to place the ripples. */
 	private readonly RIPPLE_DISTANCE: number = 100;
 
 	/** The speed at which the circle of ripples rotates, in radians per second. */
 	private readonly ROTATION_SPEED: number = 0.02;
 
-	// State ---------------------------------------------------
+	// ============ State ============
 
 	/** The state of the three persistent ripple sources. */
 	private readonly sources: RippleSource[];
@@ -41,6 +44,7 @@ export class OceanZone implements Zone {
 	private circleRotationAngle: number = 0;
 
 	constructor(programManager: ProgramManager) {
+		super();
 		this.colorGradePass = new ColorGradePass(programManager);
 		this.colorGradePass.saturation = 0.6;
 		this.colorGradePass.tint = [0.9, 0.95, 1.0]; // Slight blue
@@ -58,7 +62,7 @@ export class OceanZone implements Zone {
 		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
 
 		// Create event listener for screen resize to update water pass resolution.
-		document.addEventListener('canvas_resize', (event) => {
+		GameBus.addEventListener('canvas-resize', (event) => {
 			const { width, height } = event.detail;
 			this.waterPass.setResolution(width, height);
 		});
@@ -105,22 +109,14 @@ export class OceanZone implements Zone {
 		this.waterPass.time = performance.now();
 	}
 
-	public getUniforms(): Record<string, any> {
+	public getUniforms(): Record<string, UniformValue> {
 		// This zone's visual effect is purely from a post-processing pass,
 		// so it does not need to send any uniforms to the main board shader.
 		return {};
 	}
 
-	public getPasses(): PostProcessPass[] {
+	public override getPasses(): PostProcessPass[] {
 		// Return the water pass to be rendered by the pipeline.
 		return [this.colorGradePass, this.waterPass];
-	}
-
-	public fadeInAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeIn(transitionDurationMs);
-	}
-
-	public fadeOutAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeOut(transitionDurationMs);
 	}
 }

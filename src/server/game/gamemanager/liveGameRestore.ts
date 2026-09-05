@@ -16,12 +16,12 @@
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
-import type { ValidEngine } from '../../../shared/chess/util/engine.js';
+import type { ValidEngine } from '../../../shared/chess/util/engineregistry.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { SlideLimitValue } from '../../../shared/chess/util/modutil.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
 import type { ClockValues, TimeControl } from '../../../shared/chess/util/clockutil.js';
@@ -35,6 +35,7 @@ import logEvents from '../../utility/logEvents.js';
 import gameUtility from './gameUtility.js';
 import memberManager from '../../database/memberManager.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
+import chatEntriesManager from '../../database/chatEntriesManager.js';
 import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
 import liveEngineGamesManager from '../../database/liveEngineGamesManager.js';
 
@@ -59,11 +60,6 @@ export interface PendingTimers {
 	 * turn should fire after this many ms. 0 means immediately.
 	 */
 	autoTimeLossMs?: number;
-	/**
-	 * If defined, the epoch-ms deadline of the persisted both-disconnected timer to
-	 * revive exactly (fires immediately if already past). Undefined if none was persisted.
-	 */
-	bothDisconnectedEndTime?: number;
 }
 
 /** Represents the disconnect state of a player that needs to be restored. */
@@ -115,7 +111,7 @@ function restoreAll(): RestoredGame[] {
 					`Live game ${gameRow.game_id} has invalid participant rows. Skipping restoration.`,
 					'errLog',
 				);
-				liveGamesManager.remove(gameRow.game_id);
+				dropUnrestorableGame(gameRow.game_id);
 				continue;
 			}
 
@@ -128,7 +124,7 @@ function restoreAll(): RestoredGame[] {
 				'errLog',
 			);
 			// Delete the corrupt game from the database so it doesn't block future restarts.
-			liveGamesManager.remove(gameRow.game_id);
+			dropUnrestorableGame(gameRow.game_id);
 		}
 	}
 
@@ -144,6 +140,12 @@ function groupRowsByGame<T extends { game_id: number }>(rows: T[]): Map<number, 
 		grouped.set(row.game_id, gameRows);
 	}
 	return grouped;
+}
+
+/** Drops a live game that can't be restored, along with the chat rows that would be orphaned. */
+function dropUnrestorableGame(game_id: number): void {
+	liveGamesManager.remove(game_id);
+	chatEntriesManager.removeOfGame(game_id);
 }
 
 /** Restores a single live game from its database rows. */
@@ -178,7 +180,7 @@ function restoreSingleGame(
 		clockValues,
 	);
 
-	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
+	// Note: clock ticking state (color, startedAt) is already set correctly
 	// by clock.edit() inside initGame() via the clockValues we pass in.
 
 	// 4. Reconstruct MatchInfo
@@ -190,7 +192,7 @@ function restoreSingleGame(
 	const servergame: ServerGame = gameUtility.initServerGame(game, construction, match, moves);
 
 	// 6. Compute pending timers
-	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame);
+	const pendingTimers = computePendingTimers(playerRows, servergame);
 
 	return { servergame, pendingTimers };
 }
@@ -270,17 +272,12 @@ function reconstructClockValues(
 
 	// The engine's ticking state is restored verbatim: a restart doesn't close the client's
 	// tab, so an engine that was thinking kept thinking, and is charged for the downtime.
-	const colorTicking =
-		gameRow.color_ticking === null ? undefined : (gameRow.color_ticking as Player);
-	const timeColorTickingLosesAt =
-		colorTicking !== undefined
-			? gameRow.clock_snapshot_time! + clocks[colorTicking]!
-			: undefined;
+	if (gameRow.color_ticking === null) return { clocks };
 
+	const color = gameRow.color_ticking as Player;
 	return {
 		clocks,
-		colorTicking,
-		timeColorTickingLosesAt,
+		ticking: { color, losesAt: gameRow.clock_snapshot_time! + clocks[color]! },
 	};
 }
 
@@ -311,12 +308,10 @@ function reconstructMatchInfo(
 		playerData[row.player_number as Player] = {
 			identifier: identity,
 			lastOfferPly: row.last_draw_offer_ply ?? undefined,
-			disconnect: {
-				startID: undefined,
-				startTime: row.disconnect_cushion_end_time ?? undefined,
-				timeOpponentMayClaim: undefined,
-				voluntary: undefined,
-			},
+			// Left empty: reinstateTimers arms the cushion and claim window
+			// from `pendingTimers`, which carries the persisted deadlines.
+			disconnect: {},
+			chatHistory: [], // The chat limits deliberately reset on a restart.
 		};
 	}
 
@@ -325,7 +320,8 @@ function reconstructMatchInfo(
 		variant,
 		timeCreated: gameRow.time_created,
 		timeEnded: undefined, // Only ongoing games are restored — none have ended.
-		rated: gameRow.rated === 1,
+		rated: Boolean(gameRow.rated),
+		private: Boolean(gameRow.private),
 		modifiers:
 			gameRow.mod_slide_limit !== null
 				? [{ kind: 'slide-limit', value: gameRow.mod_slide_limit as SlideLimitValue }]
@@ -347,6 +343,9 @@ function reconstructMatchInfo(
 		freed: false,
 		finalized: false,
 		rematchOffers: new Set(), // Ephemeral — rematch offers never survive a restart.
+		// The abandonment sweep picks the countdown back up from here, and re-stamps
+		// from scratch if the shutdown happened while somebody was still connected.
+		emptySince: gameRow.empty_since ?? undefined,
 	};
 }
 
@@ -360,7 +359,6 @@ function parseMoves(movesString: string): MoveRecord[] {
 
 /** Computes which timers need to be started after restoration. */
 function computePendingTimers(
-	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
 	servergame: ServerGame,
 ): PendingTimers {
@@ -371,14 +369,9 @@ function computePendingTimers(
 	};
 
 	// Auto time loss timer for timed, ongoing games
-	if (!servergame.untimed && servergame.clocks.colorTicking !== undefined) {
-		const tickingTime = servergame.clocks.currentTime[servergame.clocks.colorTicking]!;
+	if (!servergame.untimed && servergame.clocks.ticking !== undefined) {
+		const tickingTime = servergame.clocks.currentTime[servergame.clocks.ticking.color]!;
 		timers.autoTimeLossMs = Math.max(tickingTime, 0);
-	}
-
-	// Both-disconnected timer deadline (game-level), if one was persisted.
-	if (gameRow.both_disconnected_end_time !== null) {
-		timers.bothDisconnectedEndTime = gameRow.both_disconnected_end_time;
 	}
 
 	// Per-player disconnect state
@@ -391,7 +384,7 @@ function computePendingTimers(
 			timers.disconnectTimers[player] = {
 				type: 'timer',
 				remainingMs: Math.max(remaining, 0),
-				voluntary: row.disconnect_voluntary === 1,
+				voluntary: Boolean(row.disconnect_voluntary),
 			};
 		} else if (row.disconnect_cushion_end_time !== null) {
 			// Case 2: Still in the 5-second cushion period
@@ -399,7 +392,7 @@ function computePendingTimers(
 			timers.disconnectTimers[player] = {
 				type: 'cushion',
 				remainingMs: Math.max(remaining, 0),
-				voluntary: row.disconnect_voluntary === 1,
+				voluntary: Boolean(row.disconnect_voluntary),
 			};
 		} else {
 			// Case 3: Was connected before restart. Give them a fresh disconnect timer

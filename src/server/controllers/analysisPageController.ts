@@ -7,13 +7,13 @@
  */
 
 import type { Request } from 'express';
-import type { Player } from '../../shared/util/typeutil.js';
+import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { VariantCode } from '../../shared/chess/util/variantcodes.js';
 import type { VariantGroup } from '../../shared/chess/variants/variantregistry.js';
 import type { GameMetaViewModel } from './gamePageController.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
-import { players as p } from '../../shared/util/typeutil.js';
+import { players as p } from '../../shared/chess/util/typeutil.js';
 
 import gamesManager from '../database/gamesManager.js';
 import gamePageController from './gamePageController.js';
@@ -35,7 +35,7 @@ interface AnalysisPageState {
 // Constants -------------------------------------------------------------------
 
 /** Cache all variant groups and their variants. */
-const variantGroups = variantregistry.getVariantGroupsWithVariants();
+const variantGroups = variantregistry.getGroupsWithVariants();
 
 // Functions -------------------------------------------------------------------
 

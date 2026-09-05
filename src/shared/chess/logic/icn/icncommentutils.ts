@@ -200,9 +200,10 @@ function getMillisFromClkTimeValue(clkValueString: string): number {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// General Command Functions
 	combineCommentAndCommands,
 	extractCommandsFromComment,
-
+	// Parsing 'clk' Command Sequences
 	createClkCommandObject,
 	getMillisFromClkTimeValue,
 };

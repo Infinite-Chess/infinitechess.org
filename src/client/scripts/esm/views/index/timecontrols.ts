@@ -1,13 +1,13 @@
 // src/client/scripts/esm/views/index/timecontrols.ts
 
+/**
+ * Manages the time control section of the game setup modal:
+ * the timed/untimed toggle, base+increment sliders, and preset buttons.
+ */
+
 import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
 
 import clockutil from '../../../../../shared/chess/util/clockutil';
-
-/**
- * This script manages the time control section of the game setup modal:
- * the timed/untimed toggle, base+increment sliders, and preset buttons.
- */
 
 // Constants -------------------------------------------------------------------
 

@@ -22,8 +22,6 @@ function addEventListeners(): void {
 	document.addEventListener('copy', onCopy);
 	document.addEventListener('cut', onCut);
 	document.addEventListener('paste', onPaste);
-	document.addEventListener('copy-game', onCopyGame);
-	document.addEventListener('paste-game', onPasteGame);
 }
 
 // Handlers --------------------------------------------------------------------
@@ -34,8 +32,7 @@ function onCopy(): void {
 	if (window.getSelection()?.toString()) return; // Don't copy if the user has text selected in the UI
 
 	if (etoolmanager.getTool() !== 'selection-tool') {
-		// Copy game notation
-		document.dispatchEvent(new Event('copy-game'));
+		eactions.copy(); // Copy the full position as game notation
 	} else if (selectiontool.isExistingSelection()) {
 		// Copy current selection
 		const gamefile = gameslot.getGamefile()!;
@@ -65,8 +62,7 @@ function onPaste(): void {
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 
 	if (etoolmanager.getTool() !== 'selection-tool') {
-		// Paste game notation
-		document.dispatchEvent(new Event('paste-game'));
+		eactions.paste(); // Paste game notation from the clipboard
 	} else if (selectiontool.isExistingSelection()) {
 		// Paste clipboard at current selection
 		const gamefile = gameslot.getGamefile()!;
@@ -74,16 +70,6 @@ function onPaste(): void {
 		const selectionBox = selectiontool.getSelectionIntBox()!;
 		stransformations.Paste(gamefile, mesh, selectionBox);
 	}
-}
-
-/** Board Editor handler for the 'copy-game' custom event. Copies the full position as game notation. */
-function onCopyGame(): void {
-	eactions.copy();
-}
-
-/** Board Editor handler for the 'paste-game' custom event. Pastes game notation from the clipboard. */
-function onPasteGame(): void {
-	eactions.paste();
 }
 
 // Exports ---------------------------------------------------------------------

@@ -27,6 +27,11 @@ import requestContext from '../utility/requestContext.js';
 import reqTranslations from '../config/reqTranslations.js';
 import identityResolver from '../auth/identityResolver.js';
 
+// Constants -------------------------------------------------------------------
+
+/** The exact shape of a tab id our client issues: base-62 characters, of a fixed length. */
+const TAB_ID_REGEX = new RegExp(`^[0-9A-Za-z]{${socketutil.TAB_ID.LENGTH}}$`);
+
 // Functions -------------------------------------------------------------------
 
 /** Gates and completes every websocket upgrade request: validation, metadata, listeners. */
@@ -42,20 +47,20 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	// socket and terminate all the IP's sockets for now!
 	requestMeter.recordRecent();
 	if (requestMeter.meter(ws.metadata.IP, ws.metadata.userAgent) !== undefined) {
-		ws.close(1009, socketutil.ClosureReasons.TOO_MANY_REQUESTS);
+		ws.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_REQUESTS);
 		return socketRegistry.terminateAllOfIP(ws.metadata.IP);
 	}
 
 	// Check if ip has too many connections
 	if (socketRegistry.doesClientHaveMaxCount(ws.metadata.IP)) {
 		console.log(`Client IP ${ws.metadata.IP} has too many sockets! Not connecting this one.`);
-		return ws.close(1009, socketutil.ClosureReasons.TOO_MANY_SOCKETS);
+		return ws.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_SOCKETS);
 	}
 
 	// Initialize who they are. Member? Browser ID?...
 	// Validates their refresh-token cookie against the database. If they are signed
 	// in, adds their user_id, username, and roles to the socket metadata's memberInfo.
-	ws.metadata.memberInfo = identityResolver.resolveIdentity(
+	ws.metadata.memberInfo = identityResolver.resolve(
 		ws.metadata.memberInfo,
 		ws.metadata.cookies.jwt,
 		ws.metadata.IP,
@@ -66,7 +71,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 		socketRegistry.doesSessionHaveMaxCount(ws.metadata.cookies.jwt!)
 	) {
 		console.log(`Member "${ws.metadata.memberInfo.username}" has too many sockets for this session! Not connecting this one.`); // prettier-ignore
-		return ws.close(1009, socketutil.ClosureReasons.TOO_MANY_SOCKETS);
+		return ws.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_SOCKETS);
 	}
 
 	socketRegistry.add(ws);
@@ -98,21 +103,21 @@ function closeIfInvalidAndAddMetadata(
 			`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`,
 			'hackLog',
 		);
-		socket.close(1008, socketutil.ClosureReasons.ORIGIN_ERROR);
+		socket.close(1008, socketutil.CLOSURE_REASONS.ORIGIN_ERROR);
 		return;
 	}
 
 	const clientIP = ip.get(req);
 	if (clientIP === undefined) {
 		logEvents.add('Unable to identify IP address from websocket connection!', 'hackLog');
-		socket.close(1008, socketutil.ClosureReasons.UNIDENTIFIABLE_IP);
+		socket.close(1008, socketutil.CLOSURE_REASONS.UNIDENTIFIABLE_IP);
 		return;
 	}
 
 	const userAgent = req.headers['user-agent'];
 	if (!userAgent) {
 		// Occasionally, automated scanner and vulnerability prober bots will omit the user agent.
-		socket.close(1008, socketutil.ClosureReasons.USER_AGENT_REQUIRED);
+		socket.close(1008, socketutil.CLOSURE_REASONS.USER_AGENT_REQUIRED);
 		return;
 	}
 
@@ -121,7 +126,14 @@ function closeIfInvalidAndAddMetadata(
 	const cookies = parseCookie(req.headers.cookie ?? '');
 	if (cookies['browser-id'] === undefined) {
 		// Can happen if the client has cookies disabled
-		socket.close(1008, socketutil.ClosureReasons.AUTHENTICATION_NEEDED);
+		socket.close(1008, socketutil.CLOSURE_REASONS.AUTHENTICATION_NEEDED);
+		return;
+	}
+
+	const tabId = parseTabID(req);
+	if (tabId === undefined) {
+		// Every client of ours attaches one, so this is a hand-crafted upgrade request.
+		socket.close(1008, socketutil.CLOSURE_REASONS.TAB_ID_REQUIRED);
 		return;
 	}
 
@@ -135,6 +147,7 @@ function closeIfInvalidAndAddMetadata(
 		userAgent,
 		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
 		id: socketRegistry.generateUniqueID(), // Sets the ws.metadata.id property of the websocket
+		tabId,
 		IP: clientIP,
 		echoTimers: {},
 	};
@@ -146,8 +159,18 @@ function closeIfInvalidAndAddMetadata(
 }
 
 /**
- * Adds the 'message', 'close', and 'error' event listeners to the socket
+ * Reads the tab id the client attached to its upgrade request — see {@link socketutil.TAB_ID}.
+ * Only held to the shape we expect. Faking another tab's id wins nothing: it's only for UX.
+ * @returns The id, or undefined if they sent none, or a malformed one.
  */
+function parseTabID(req: IncomingMessage): string | undefined {
+	// url is guaranteed because Node always sets it on a server request.
+	const tabId = new URL(req.url!, 'wss://localhost').searchParams.get(socketutil.TAB_ID.PARAM);
+	if (tabId === null || !TAB_ID_REGEX.test(tabId)) return undefined;
+	return tabId;
+}
+
+/** Adds the 'message', 'close', and 'error' event listeners to the socket. */
 function addListenersToSocket(ws: CustomWebSocket): void {
 	ws.on('message', (message: Buffer<ArrayBufferLike>) => {
 		// Each incoming message gets its own correlation ID,

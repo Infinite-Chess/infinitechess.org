@@ -16,7 +16,7 @@ import type { MovePacket } from '../../chess/util/typeschemas.js';
 import type { MoveSpecialTags, SpecialTags } from './moveutil.js';
 
 import state from './state.js';
-import typeutil from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import moveutil from './moveutil.js';
 import icnmoves from './icn/icnmoves.js';
 import coordutil from '../../util/coordutil.js';
@@ -29,7 +29,7 @@ import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
 import movevalidation from './movevalidation.js';
 import organizedpieces from './organizedpieces.js';
-import { rawTypes as r } from '../../util/typeutil.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -90,11 +90,13 @@ export interface MoveFull extends Edit, MoveTagged, MoveRecord {
 	comment?: string;
 }
 
+// Errors ----------------------------------------------------------------------
+
 /**
  * Thrown by {@link makeAllMovesInGame} when a move fails legality validation.
  * Lets callers tell an illegal move apart from a game that couldn't be constructed at all.
  */
-export class IllegalMoveError extends Error {}
+class IllegalMoveError extends Error {}
 
 // Move Generating -------------------------------------------------------------
 
@@ -360,11 +362,7 @@ function createCheckState(boardsim: Board, move: MoveFull): void {
 	// Only track checks if we're using checkmate win condition.
 	const trackChecks = boardsim.gameRules.winConditions[oppositeColor]!.includes('checkmate');
 
-	const checkResults = checkdetection.detectCheck(
-		boardsim,
-		whosTurnItWasAtMoveIndex,
-		trackChecks,
-	); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
+	const checkResults = checkdetection.detect(boardsim, whosTurnItWasAtMoveIndex, trackChecks);
 	const futureInCheck = checkResults.check === false ? false : checkResults.royalsInCheck;
 	// Passing in the boardsim into this method tells state.ts to immediately apply the state change.
 	state.createCheckState(move, boardsim.state.local.inCheck, futureInCheck, boardsim.state); // Passes in the boardsim as an argument
@@ -565,18 +563,25 @@ function simulateMoveWrapper<R>(boardsim: Board, moveTagged: MoveTagged, callbac
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Errors
+	IllegalMoveError,
+	// Move Generating
+	generateAndMakeMove,
 	generateMove,
 	calcMovesChanges,
 	queueSpecialRightDeletionStateChanges,
 	hasCastlingPartner,
+	// Forwarding
 	makeMove,
-	generateAndMakeMove,
-	goToMove,
-	runActionAtGameFront,
-	makeAllMovesInGame,
 	applyMove,
 	applyEdit,
+	makeAllMovesInGame,
+	// Rewinding
 	rewindMove,
+	// Dynamic
+	goToMove,
+	runActionAtGameFront,
+	// Move Wrappers
 	simulateEditWrapper,
 	simulateMoveWrapper,
 };

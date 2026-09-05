@@ -30,7 +30,7 @@ async function handle(req: Request, res: Response): Promise<void> {
 			res.sendStatus(500);
 			return;
 		}
-		socketRegistry.closeAllOfSession(refreshToken, 1008, socketutil.ClosureReasons.LOGGED_OUT);
+		socketRegistry.closeAllOfSession(refreshToken, 1008, socketutil.CLOSURE_REASONS.LOGGED_OUT);
 	}
 
 	res.sendStatus(200);

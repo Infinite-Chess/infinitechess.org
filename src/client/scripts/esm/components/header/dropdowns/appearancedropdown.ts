@@ -1,9 +1,18 @@
 // src/client/scripts/esm/components/header/dropdowns/appearancedropdown.ts
 
+/**
+ * Pick the site's light/dark theme and board colors, choose whether legal
+ * moves show as dots or squares, and toggle coordinates, the starfield, and
+ * advanced effects.
+ *
+ * Board color swatches are generated here as checkerboard images, one per theme.
+ */
+
 import themes from '../../../../../../shared/components/header/themes.js';
 
 import colorutil from '../../../util/colorutil.js';
 import preferences from '../../../util/preferences.js';
+import { SettingsBus } from '../../../util/SettingsBus';
 import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerator.js';
 
 // Document Elements -----------------------------------------------------------
@@ -58,7 +67,7 @@ function initThemeToggle(): void {
 		localStorage.setItem(THEME_KEY, next);
 		themeIndicator.textContent = next === THEME_DARK ? td.theme_dark : td.theme_light;
 		// Notify listeners (e.g. the register page's Turnstile widget) of the light/dark switch.
-		document.dispatchEvent(new CustomEvent('color-scheme-change'));
+		SettingsBus.dispatch('color-scheme-change');
 	});
 }
 
@@ -77,7 +86,7 @@ function toggleLegalMoveShape(): void {
 	preferences.setLegalMovesShape(next);
 	legalMoveIndicator.textContent =
 		next === 'squares' ? td.legal_moves_squares : td.legal_moves_dots;
-	document.dispatchEvent(new CustomEvent('legalmove-shape-change'));
+	SettingsBus.dispatch('legalmove-shape-change');
 }
 
 function getCurrentTheme(): Theme {
@@ -168,8 +177,7 @@ function selectBoardColor(event: Event): void {
 
 	updateBoardColorSelection();
 
-	// Dispatch a custom event for theme change so that any game code present can pick it up.
-	document.dispatchEvent(new Event('theme-change'));
+	SettingsBus.dispatch('theme-change');
 }
 /** Outlines the current board color selection */
 function updateBoardColorSelection(): void {

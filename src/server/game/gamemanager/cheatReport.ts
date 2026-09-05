@@ -9,15 +9,16 @@
  * the game — stage 3 of the life cycle — is what closes the reporting window.
  */
 
-import type { Player } from '../../../shared/util/typeutil.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './serverGameTypes.js';
 import type { ReportMessage } from '../../../shared/transport/serverbound.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type { GameStateMessage } from '../../../shared/transport/clientbound.js';
 
-import typeutil from '../../../shared/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 
+import chat from './chat.js';
 import logEvents from '../../utility/logEvents.js';
 import gameLogger from './gameLogger.js';
 import socketsend from '../../socket/socketSend.js';
@@ -42,7 +43,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 			servergame.match,
 			ourRole,
 			'general',
-			'printerror',
+			'print-error',
 			'Cannot report opponent: this game has already been finalized.',
 		);
 		return;
@@ -57,7 +58,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 			servergame.match,
 			ourRole,
 			'general',
-			'printerror',
+			'print-error',
 			'Cannot report opponent in this game.',
 		);
 		return;
@@ -75,7 +76,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 			servergame.match,
 			ourRole,
 			'general',
-			'printerror',
+			'print-error',
 			"Silly goose. You can't report yourself for cheating! You played that move!",
 		);
 		return;
@@ -95,13 +96,13 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	for (const [colorStr, { socket: ws }] of Object.entries(servergame.match.playerData)) {
 		if (!ws) continue; // Not connected, can't send message
 		if (Number(colorStr) === opponentColor) {
-			socketsend.send(ws, 'general', 'notifyerror', ws.t.responses.game.you_cheated);
+			socketsend.send(ws, 'general', 'toast-error', ws.t.responses.game.you_cheated);
 		} else {
-			socketsend.send(ws, 'general', 'notify', ws.t.responses.game.opponent_cheated);
+			socketsend.send(ws, 'general', 'toast', ws.t.responses.game.opponent_cheated);
 		}
 	}
 	for (const ws of servergame.spectators) {
-		socketsend.send(ws, 'general', 'notify', ws.t.responses.game.cheat_detected);
+		socketsend.send(ws, 'general', 'toast', ws.t.responses.game.cheat_detected);
 	}
 
 	concludeReportedGame(servergame, { condition: 'aborted' }, colorThatPlayedPerpetratingMove);
@@ -122,17 +123,20 @@ function concludeReportedGame(
 	const wasLogged = servergame.match.freed;
 	const originalConclusion = servergame.gameConclusion;
 
+	// Ahead of the conclusion, so it lands in the log the states below carry.
+	chat.appendNotice(servergame, cheaterColor, 'cheat-detected');
+
 	gameLifecycle.applyConclusion(servergame, conclusion);
 
 	// Everyone gets the full state, not just the conclusion, because the popped move may still be
 	// sitting on their board: the cheater played it, so they're a move ahead of the server (whosTurn
 	// included), and any spectator who joined after it was played has it too — an initial load
 	// replays the move list unvalidated, so they never ran the check that refuses it live.
-	const base = gameStateBuilder.buildStateBase(servergame);
+	const state = gameStateBuilder.buildFullState(servergame);
 	for (const [color, data] of Object.entries(servergame.match.playerData)) {
 		if (data.socket === undefined) continue; // Not connected, can't send message
 		const message: GameStateMessage = {
-			...base,
+			...state,
 			participantState: gameStateBuilder.getParticipantState(
 				servergame,
 				Number(color) as Player,
@@ -142,9 +146,10 @@ function concludeReportedGame(
 	}
 
 	// Spectators get the same state, minus the participant overlay.
-	gameSockets.broadcastToSpectators(servergame, 'gamestate', base);
+	gameSockets.broadcastToSpectators(servergame, 'gamestate', state);
 
 	gameLifecycle.free(servergame);
+	gameLifecycle.finalize(servergame); // Max of one report per game.
 
 	// Update the already-logged game record to reflect the overturn (aborted, one fewer move...).
 	if (wasLogged) gameLogger.updateOverturned(servergame, originalConclusion!, cheaterColor);

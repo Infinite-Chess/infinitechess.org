@@ -11,19 +11,19 @@
 import type { Piece } from './boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { MoveRunning } from './specialmove.js';
 import type { CoordsTagged } from './movepiece.js';
 
 import state from './state.js';
 import bimath from '../../util/math/bimath.js';
-import typeutil from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
 import boardutil from './boardutil.js';
 import legalmoves from './legalmoves.js';
 import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
-import { players as p } from '../../util/typeutil.js';
+import { players as p } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -436,8 +436,11 @@ function kingLegalMoves(
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Pawn Legal Move Calculation and Execution
 	fourDimensionalPawnMove,
 	doFourDimensionalPawnMove,
+	// Knight Legal Move Calculation
 	fourDimensionalKnightMove,
+	// King Legal Move Calculation
 	fourDimensionalKingMove,
 };

@@ -12,13 +12,14 @@ import type { Board } from '../../../shared/chess/logic/boardinit.js';
 import type { Rating } from '../../../shared/chess/util/metadatautil.js';
 import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
-import type { ValidEngine } from '../../../shared/chess/util/engine.js';
+import type { ValidEngine } from '../../../shared/chess/util/engineregistry.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
 import type { GameModifier } from '../../../shared/chess/util/modutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { ChatHistoryEntry } from '../../../shared/util/chatlimits.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 
 // Types -----------------------------------------------------------------------
@@ -30,40 +31,30 @@ import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/
  */
 export type PlayerRatingResult = { ratingAtGame: Rating; change: number };
 
-/** Contains information about this player's disconnection and claim-window timer. */
+/** Contains information about this player's disconnection and their opponent's claim window. */
 export type PlayerDisconnect = {
 	/**
-	 * The timeout id of the timer that will OPEN the opponent's claim window.
-	 * This is triggered if their socket unexpectedly closes,
-	 * and lasts for 5 seconds to give them a chance to reconnect.
+	 * The 5-second reconnection cushion currently running,
+	 * armed when their socket involuntarily closes.
 	 */
-	startID?: NodeJS.Timeout;
+	cushion?: {
+		/** Timeout id, so the cushion can be cancelled. */
+		id: NodeJS.Timeout;
+		/** Epoch-ms the cushion expires. Persisted, so a restart can revive it. */
+		endTime: number;
+	};
 	/**
-	 * The epoch-ms timestamp when the 5-second reconnection cushion expires.
-	 * Set alongside startID when the cushion timer is started.
-	 * Used for persistence: on server restart, this allows reviving the cushion timer.
+	 * The opponent's claim window against this disconnected player,
+	 * armed once the cushion above elapses. Nothing fires on it —
+	 * an arriving claim is validated on-demand against `openTime`.
 	 */
-	startTime?: number;
-} & (
-	| {
-			/**
-			 * The epoch-ms timestamp from which the OPPONENT is allowed to claim
-			 * victory or a draw against this disconnected player. The claim is
-			 * validated on-demand against this timestamp when it arrives. Once
-			 * this is in the past, the opponent's claim window is open.
-			 */
-			timeOpponentMayClaim: number;
-			/**
-			 * Whether the player disconnected voluntarily.
-			 * If not, they are given extra time to reconnect.
-			 */
-			voluntary: boolean;
-	  }
-	| {
-			timeOpponentMayClaim: undefined;
-			voluntary: undefined;
-	  }
-);
+	claim?: {
+		/** Epoch-ms the window opens. Once this is in the past, the opponent may claim. */
+		openTime: number;
+		/** Whether they disconnected voluntarily. If not, the window opens later. */
+		voluntary: boolean;
+	};
+};
 
 /** Information about a single player in an online game. */
 export interface PlayerData {
@@ -81,6 +72,8 @@ export interface PlayerData {
 	lastOfferPly?: number;
 	/** Contains information about this players disconnection and opponent ability to claim victory. */
 	disconnect: PlayerDisconnect;
+	/** Their last few chat messages, which `chatlimits` checks each new one against. */
+	chatHistory: ChatHistoryEntry[];
 }
 
 /** Identifies the engine a human is playing against. */
@@ -104,6 +97,8 @@ export interface MatchInfo {
 	timeEnded?: number;
 	/** Whether the match is rated. */
 	rated: boolean;
+	/** Whether the match is private (created from "Challenge a friend" flow). */
+	private: boolean;
 	/**
 	 * The time control `s+s` of the game (e.g. `"600+5"` or `"-"` for untimed).
 	 * Guaranteed defined here because we can't read it from MetaData since it is optional there.
@@ -111,7 +106,7 @@ export interface MatchInfo {
 	clock: TimeControl;
 	/** The modifiers configuration applied to this game. Absent if none. */
 	modifiers?: GameModifier[];
-	/** The data held for each player */
+	/** The data held for each human player. An engine occupies `engineParticipant` instead. */
 	playerData: PlayerGroup<PlayerData>;
 	/** Present only for games against an engine. Its moves arrive over the human's socket. */
 	engineParticipant?: EngineInfo & { color: Player };
@@ -124,8 +119,8 @@ export interface MatchInfo {
 	drawOfferState?: Player;
 
 	/**
-	 * Whether or not the game has concluded at all, which then frees players
-	 * to join a new game, and logs the game into the db. Freed !== finalized.
+	 * Whether the post-conclusion work has run: players released to join
+	 * a new game, and the game logged to the db. Freed !== finalized.
 	 */
 	freed: boolean;
 	/**
@@ -150,16 +145,10 @@ export interface MatchInfo {
 	finalizeTimeoutID?: NodeJS.Timeout;
 
 	/**
-	 * The ID of the timer that concludes the game once BOTH players have been
-	 * disconnected for too long (neither is present to claim victory/draw).
-	 * Started when the second player disconnects; cancelled if either reconnects.
+	 * The epoch-ms the abandonment sweep found this game with
+	 * nobody connected to it. Persisted, so a restart resumes it.
 	 */
-	bothDisconnectedTimeoutID?: NodeJS.Timeout;
-	/**
-	 * The epoch-ms timestamp the {@link bothDisconnectedTimeoutID} timer fires.
-	 * Persisted so the timer can be revived (or fired) on server restart.
-	 */
-	bothDisconnectedEndTime?: number;
+	emptySince?: number;
 }
 
 /** The game stored in the server */
@@ -180,7 +169,7 @@ export type ServerGame = Game & {
 } & ValidationDependant;
 
 /** The servergame variables that depend on whether the server is performing legal move validation. */
-export type ValidationDependant =
+type ValidationDependant =
 	| ({
 			/**
 			 * Whether the server is performing move validation for this game.
@@ -215,6 +204,8 @@ export interface GameSetup {
 	variant: SeekVariant;
 	time: TimeControl;
 	rated: boolean;
+	/** Whether the game is private (created from "Challenge a friend" flow). */
+	private: boolean;
 	/** The modifiers to apply to the game. Absent if none. */
 	modifiers?: GameModifier[];
 	engineParticipant?: MatchInfo['engineParticipant'];

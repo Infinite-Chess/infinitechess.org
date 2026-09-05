@@ -188,7 +188,11 @@ function verifyBodyHasRegisterFormData(
 function formatRegistrationLogMeta(req: Request, username: unknown, email: unknown): string {
 	const clientIP = ip.get(req) ?? 'Unknown ip';
 	const agent = req.headers['user-agent']!;
-	return logEvents.escapeLogNewlines([clientIP, username ?? '', email ?? '', agent].join('   '));
+	// Escaped per field, so an oversized username can't push the others out of the line.
+	const fields = [clientIP, username ?? '', email ?? '', agent].map((field) =>
+		logEvents.escapeUntrusted(String(field)),
+	);
+	return fields.join('   ');
 }
 
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */

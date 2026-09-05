@@ -27,13 +27,13 @@ import camera from '../../board/rendering/camera.js';
 import arrows from './arrows/arrows.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import primitives from '../../board/rendering/primitives.js';
+import glyphatlas from './text/glyphatlas.js';
 import perspective from './perspective.js';
 import preferences from '../../util/preferences.js';
 import textrenderer from './text/textrenderer.js';
 import boardgeometry from '../../board/rendering/boardgeometry.js';
 import arrowscalculator from './arrows/arrowscalculator.js';
 import { createRenderable } from '../../board/rendering/renderable.js';
-import { ATLAS_DESCENDER_FRACTION } from './text/glyphatlas.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -184,10 +184,10 @@ function render(): void {
 		: arrowLocations;
 
 	// X-axis: file labels centered on each file column, fixed at the bottom of the screen.
-	// Shifted down by ATLAS_DESCENDER_FRACTION so the invisible descender space goes below
+	// Shifted down by glyphatlas.DESCENDER_FRACTION so the invisible descender space goes below
 	// the screen edge rather than adding unwanted gap above the visible characters.
 	const fileWorldY =
-		screenBox.bottom + paddingWorld + sizeWorld * (0.5 - ATLAS_DESCENDER_FRACTION);
+		screenBox.bottom + paddingWorld + sizeWorld * (0.5 - glyphatlas.DESCENDER_FRACTION);
 	const firstFile = ceilToMultiple(tileBox.left, stepBig);
 
 	// Y-axis: rank labels left-aligned from the left edge of the screen, at each rank row.

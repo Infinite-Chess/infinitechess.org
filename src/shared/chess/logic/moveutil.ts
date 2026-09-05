@@ -6,7 +6,7 @@
 
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { EnPassant } from './state.js';
 import type { MoveCoords } from './icn/icnmoves.js';
@@ -154,13 +154,6 @@ function areWeViewingLatestMove(boardsim: Board): boolean {
 }
 
 /**
- * Returns total ply count (or half-moves) of the game so far.
- */
-function getPlyCount(moves: MoveFull[]): number {
-	return moves.length;
-}
-
-/**
  * Flags the gamefile's very last move as a "mate".
  */
 function flagLastMoveAsMate(boardsim: Board): void {
@@ -232,7 +225,6 @@ export default {
 	getCurrentMove,
 	getMoveFromIndex,
 	areWeViewingLatestMove,
-	getPlyCount,
 	flagLastMoveAsMate,
 	isGameResignable,
 	getColorThatPlayedMoveIndex,

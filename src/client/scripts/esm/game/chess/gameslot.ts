@@ -8,7 +8,7 @@
  */
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
-import type { Player } from '../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameConstructionOptions } from '../../../../../shared/chess/game/gameformulator.js';
 import type { GameFile, LoadedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 
@@ -20,7 +20,7 @@ import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
-import typeutil, { players as p } from '../../../../../shared/util/typeutil.js';
+import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import arrows from '../rendering/arrows/arrows.js';
 import { gl } from '../../board/rendering/webgl.js';
@@ -40,6 +40,7 @@ import perspective from '../rendering/perspective.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
+import { SettingsBus } from '../../util/SettingsBus.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 // Types -----------------------------------------------------------------------
@@ -75,7 +76,7 @@ const delayOfLatestMoveAnimationOnRejoinMs = 150;
 // Listeners -------------------------------------------------------------------
 
 // Regenerate piece textures and rebuild the promotion UI whenever the theme changes.
-document.addEventListener('theme-change', () => {
+SettingsBus.addEventListener('theme-change', () => {
 	const gamefile = loadedGamefile;
 	if (!gamefile) return;
 	imagecache.deleteImageCache();
@@ -170,7 +171,7 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 
 	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.pieces);
 	// Disable miniimages if there's too many pieces
-	if (pieceCount > miniimagerenderer.pieceCountToDisableMiniImages) miniimage.disable();
+	if (pieceCount > miniimagerenderer.MAX_PIECE_COUNT) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
 	if (pieceCount > arrows.MAX_PIECES || loadedGamefile.pieces.slides.length > arrows.MAX_LINES)
 		arrows.setMode(0);
@@ -181,8 +182,6 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 		drawsquares.setPresetOverrides(loadOptions.presetAnnotes.squares);
 	if (loadOptions.presetAnnotes?.rays)
 		drawrays.setPresetOverrides(loadOptions.presetAnnotes.rays);
-
-	GameBus.dispatch('game-loaded');
 }
 
 /** Loads all of the graphical components of a game */

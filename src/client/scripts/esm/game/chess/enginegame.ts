@@ -1,10 +1,15 @@
 // src/client/scripts/esm/game/chess/enginegame.ts
 
-// This module keeps track of the data of the engine game we are currently in.
+/**
+ * Keeps track of the data of the engine game we are currently in.
+ */
 
-import type { Player } from '../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineAndConfig } from '../../../../../shared/chess/util/engine.js';
+import type {
+	EngineAndConfig,
+	EngineAssets,
+} from '../../../../../shared/chess/util/engineregistry.js';
 import type {
 	ApeironMoveRequest,
 	CheckmatePracticeMoveRequest,
@@ -16,27 +21,26 @@ import type {
 import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-import { ENGINE_DICTIONARY } from '../../../../../shared/chess/util/engine.js';
-import typeutil, { players as p } from '../../../../../shared/util/typeutil.js';
+import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
+import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../components/toast.js';
 import gameslot from './gameslot.js';
 import premoves from './premoves.js';
 import selection from './selection.js';
 import engineicn from './engines/engineicn.js';
+import enginewasm from './engines/enginewasm.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from './gamesession.js';
 import movesequence from './movesequence.js';
-import socketintents from '../../socket/socketintents.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import enginelegalmoves from '../debug/enginelegalmoves.js';
-import { maxEngineThreads, THREAD_CAP } from './engines/enginewasm.js';
 
 // State -----------------------------------------------------------------------
 
 /**
  * The engine worker of the game we're in, if any.
- * `name` keys its {@link ENGINE_DICTIONARY} entry, for the properties that vary per engine.
+ * `name` keys its {@link engineregistry.REGISTRY} entry, for the properties that vary per engine.
  * `ready` flips true on its 'readyok' message; until then it answers nothing.
  * `config` is sent to the worker with every move request.
  * `color` is the side the engine plays — ours inverted.
@@ -61,13 +65,11 @@ function initEngineGame(options: {
 	youAreColor: Player;
 	/** Which engine the game is against, with the config its worker expects. */
 	engine: EngineAndConfig;
-	/** Hashed URL of the engine's worker script. */
-	workerUrl: string;
 	/**
-	 * Served engine-glue URL (`manifest['engine']`) for wasm-engine workers that load it at
-	 * runtime (apeiron). Sent to the worker as an init message, with the thread count.
+	 * The engine's asset URLs. The glue is sent to the worker as an init
+	 * message with the thread count, for wasm engines that load it at runtime.
 	 */
-	engineUrl: string;
+	engineAssets: EngineAssets;
 }): void {
 	console.log(`Starting engine game with engine "${options.engine.name}".`);
 
@@ -76,7 +78,7 @@ function initEngineGame(options: {
 		return failEngineLoad(new Error("Cannot finish loading engine game because web workers aren't supported.")); // prettier-ignore
 	}
 
-	const worker = new Worker(options.workerUrl, {
+	const worker = new Worker(options.engineAssets.workerUrl, {
 		type: 'module',
 	}); // module type allows the web worker to import methods and types from other scripts.
 	engine = {
@@ -105,9 +107,9 @@ function initEngineGame(options: {
 	worker.onerror = (e: ErrorEvent): void => {
 		failEngineLoad(new Error('Worker failed to load: ' + e.message));
 	};
-	if (ENGINE_DICTIONARY[options.engine.name].hasGlue)
+	if (engineregistry.REGISTRY[options.engine.name].hasGlue)
 		worker.postMessage({
-			engineUrl: options.engineUrl,
+			engineUrl: options.engineAssets.engineUrl,
 			threads: getEngineThreadCount(),
 		} satisfies EngineInitRequest);
 }
@@ -131,7 +133,7 @@ function onEngineReady(): void {
 function failEngineLoad(error: Error): void {
 	console.error(error);
 	if (gamesession.getGameType() === 'online') {
-		resignFailedEngine();
+		GameBus.dispatch('engine-failed');
 		toast.show('The engine failed to load and has resigned the game.', { error: true });
 	} else toast.show('The engine failed to load. Please refresh.', { error: true });
 	terminate();
@@ -155,7 +157,7 @@ function onMovePlayed(): void {
 	// plus every move to replay onto it.
 	const longformIn = gamecompressor.compressGamefile(
 		gamefile,
-		!ENGINE_DICTIONARY[engine.name].needsMoveHistory,
+		!engineregistry.REGISTRY[engine.name].needsMoveHistory,
 	);
 
 	if (gamefile.gameConclusion) return;
@@ -216,7 +218,7 @@ function makeEngineMove(tokenMove: string | null): void {
 		// find any legal moves, or thought it was checkmate), or an error occurred.
 		// In this case, resign for the engine.
 		console.log(`Engine returned a null move. Resigning the game...`);
-		if (gamesession.getGameType() === 'online') resignFailedEngine();
+		if (gamesession.getGameType() === 'online') GameBus.dispatch('engine-failed');
 		else {
 			gamefile.gameConclusion = { condition: 'resignation', victor: gamesession.getRole()! };
 			gameslot.concludeGame();
@@ -238,7 +240,7 @@ function makeEngineMove(tokenMove: string | null): void {
 				`Engine submitted an illegal move. Please report this bug! Move "${tokenMove}" is illegal for reason: ${moveValidationResults.reason}`,
 				{ error: true, durationMultiplier: 100 },
 			);
-			if (gamesession.getGameType() === 'online') resignFailedEngine();
+			if (gamesession.getGameType() === 'online') GameBus.dispatch('engine-failed');
 			return false; // Don't physically play next premove
 		}
 
@@ -256,11 +258,6 @@ function makeEngineMove(tokenMove: string | null): void {
 	});
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
-}
-
-/** Asks the server to resign the engine in the current online game. */
-function resignFailedEngine(): void {
-	socketintents.submit('game', 'engineresign', undefined, () => gameslot.isGameLive());
 }
 
 /** Requests engine-generated legal moves for the currently viewed position. */
@@ -287,7 +284,7 @@ function requestGeneratedMoves(gamefile: GameFile): void {
  * cross-origin isolation (SharedArrayBuffer); without it the engine runs single-threaded.
  */
 function getEngineThreadCount(): number {
-	return maxEngineThreads(THREAD_CAP, 1);
+	return enginewasm.maxThreads(1);
 }
 
 /** Stops the active engine worker and clears its session state. */

@@ -16,15 +16,15 @@ import type {
 import type {
 	InGameMessage,
 	LobbyStateMessage,
-	SeeksMessage,
+	SeeksListMessage,
 } from '../../../../../shared/transport/clientbound.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
 
 import modutil from '../../../../../shared/chess/util/modutil.js';
-import gameurl from '../../../../../shared/util/gameurl.js';
+import gameurl from '../../../../../shared/chess/util/gameurl.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import { players } from '../../../../../shared/util/typeutil.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
@@ -43,7 +43,7 @@ const patch = init([attributesModule, classModule]);
 // Types -----------------------------------------------------------------------
 
 /** The structure for a single seek in the lobby, with client-side rendering info. */
-export type LobbySeek = BaseSeek &
+type LobbySeek = BaseSeek &
 	({ variant: VariantInfo } | { variant: { group: 'custom' } }) & {
 		isOurs: boolean;
 	};
@@ -172,7 +172,7 @@ const trackNewSeeks = (() => {
  * so seeks returning after a reconnect aren't treated as new and replay arrival sounds.
  */
 function onSeekListUpdate(
-	{ seekslist: seeks, ourseekid }: SeeksMessage,
+	{ seekslist: seeks, ourseekid }: SeeksListMessage,
 	preserveNewSeekTracker = false,
 ): void {
 	const previousSeekIds = [...seekMap.keys()];
@@ -279,7 +279,7 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 	const isOurs = seek.id === ourSeekId;
 	if (seek.variant.kind === 'preset') {
 		const variant: VariantInfo = {
-			group: variantregistry.getVariantGroup(seek.variant.code),
+			group: variantregistry.getGroup(seek.variant.code),
 			code: seek.variant.code,
 		};
 		return { ...seek, variant, isOurs };
@@ -303,7 +303,7 @@ function createSeek(options: CreateSeekMessage): void {
  * socket is required, gating bots. Navigation happens on the server's `ingame` push.
  */
 function createEngineGame(body: CreateEngineGameMessage): void {
-	socketintents.submit('lobby', 'createengine', body, () => gameIdWeAreIn === undefined);
+	socketintents.submit('lobby', 'createenginegame', body, () => gameIdWeAreIn === undefined);
 }
 
 /** Sends a cancelseek message for our current seek. */
@@ -414,7 +414,7 @@ function createSeekListVNode(seeks: LobbySeek[], newSeekIds: Set<string>): VNode
 function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	const playerRating = createPlayerRatingVNode(seek.player.rating);
 	const sideDot = createSideDotVNode(seek.color);
-	const variantIcon = variantregistry.getVariantGroupIconId(seek.variant.group);
+	const variantIcon = variantregistry.getGroupIconId(seek.variant.group);
 	const variantName =
 		seek.variant.group === 'custom'
 			? t.shared.variant_groups.custom.display_label

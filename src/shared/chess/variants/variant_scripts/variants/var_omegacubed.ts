@@ -4,12 +4,12 @@
  * Omega^3 showcase variant.
  */
 
-import type { RawType } from '../../../../util/typeutil.js';
+import type { RawType } from '../../../util/typeutil.js';
 import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
 import { BoundingBox } from '../../../../util/math/bounds.js';
 import coordutil, { Coords, CoordsKey } from '../../../../util/coordutil.js';
-import { ext as e, players as p, rawTypes as r } from '../../../../util/typeutil.js';
+import { ext as e, players as p, rawTypes as r } from '../../../util/typeutil.js';
 
 // Variant Contract ------------------------------------------------------------
 

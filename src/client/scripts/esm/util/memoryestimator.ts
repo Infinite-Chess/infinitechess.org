@@ -21,11 +21,11 @@ import bimath from '../../../../shared/util/math/bimath.js';
  *
  * @author Gemini 2.5 Pro
  */
-export function estimateMemorySizeOf(obj: any): string {
-	const visited = new Set<any>(); // Tracks visited objects, to handle cycles and prevent double-counting.
+export function estimateMemorySizeOf(obj: unknown): string {
+	const visited = new Set<object>(); // Tracks visited objects, to handle cycles and prevent double-counting.
 
 	/** The estimated byte size of one value, recursing into objects. */
-	function roughSizeOfObject(value: any): number {
+	function roughSizeOfObject(value: unknown): number {
 		let bytes = 0;
 
 		// Primitive types
@@ -104,7 +104,7 @@ export function estimateMemorySizeOf(obj: any): string {
 					bytes += 8; // Assumed pointer/reference overhead
 
 					// Size of the value (recursive call)
-					bytes += roughSizeOfObject(value[key]);
+					bytes += roughSizeOfObject((value as Record<string, unknown>)[key]);
 				}
 			}
 		}

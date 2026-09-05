@@ -12,13 +12,13 @@
  * is present, rendering is delegated to it, reusing the primitives exported here.
  */
 
-import type { RawType } from '../../../../../shared/util/typeutil.js';
+import type { RawType } from '../../../../../shared/chess/util/typeutil.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
-import typeutil from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
 import gameresultutil from '../../../../../shared/chess/util/gameresultutil.js';
 
@@ -114,7 +114,7 @@ GameBus.addEventListener('game-concluded', () => {
 });
 GameBus.addEventListener('game-unloaded', () => clearMovesTable());
 
-// =============================== Move Navigation ===============================
+// Move Navigation -------------------------------------------------------------
 
 function isOkayToNavigate(): boolean {
 	return Date.now() - lastNav >= minimumNavIntervalMs; // True if enough time has passed!
@@ -215,24 +215,24 @@ function updateNavButtons(): void {
 	element_Last.disabled = !incrementingLegal;
 }
 
-holdrepeat.makeHoldRepeatable(element_Prev, callback_Prev);
-holdrepeat.makeHoldRepeatable(element_Next, callback_Next);
+holdrepeat.make(element_Prev, callback_Prev);
+holdrepeat.make(element_Next, callback_Next);
 element_First.addEventListener('click', jumpToStart);
 element_Last.addEventListener('click', jumpToEnd);
 
-// =============================== Game Result ===============================
+// Game Result -----------------------------------------------------------------
 
 /** Populates and reveals the `.game-result` banner with the game's conclusion. */
 function showGameResult(): void {
 	const gamefile = gameslot.getGamefile()!;
 
-	const { score, text } = gameresultutil.getResultDisplay(gamefile.gameConclusion!, t.shared);
+	const { score, text } = gameresultutil.getDisplay(gamefile.gameConclusion!, t.shared);
 	element_ResultScore.textContent = score;
 	element_ResultText.textContent = text;
 	element_GameResult.classList.remove('hidden');
 }
 
-// =============================== Moves Table ===============================
+// Moves Table -----------------------------------------------------------------
 
 /**
  * Visible move text is capped to this many characters (CSS ellipsis truncates further);
@@ -480,7 +480,7 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 	scrollToCurrentPly(); // Clicking a ply in the flat list centers it, matching the nav controls.
 }
 
-// ===========================================================================
+// Exports ---------------------------------------------------------------------
 
 export default {
 	registerRenderer,

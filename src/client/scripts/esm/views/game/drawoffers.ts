@@ -13,7 +13,6 @@ import type { DrawOfferInfo } from '../../../../../shared/transport/clientbound.
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import gamelimits from '../../../../../shared/chess/util/gamelimits.js';
 
-import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
 import gamesound from '../../board/gamesound.js';
 import gameactions from './gui/guigameactions.js';
@@ -79,12 +78,6 @@ function onOpponentExtendedOffer(): void {
 	gamesound.playBase();
 }
 
-/** Is called when our opponent declines our draw offer */
-function onOpponentDeclinedOffer(): void {
-	// TODO: Log into chat window instead.
-	toast.show(`Opponent declined draw offer.`);
-}
-
 /**
  * Extends a draw offer in our current game.
  * All legality checks have already passed!
@@ -96,8 +89,6 @@ function extendOffer(): void {
 	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.moves.length;
 	gameactions.updateOfferDrawButton(); // It's now too soon to offer again — disable the button.
-	// TODO: Log into chat window instead.
-	toast.show(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
 }
 
 /**
@@ -125,8 +116,6 @@ function callback_declineDraw(): void {
 	closeDraw();
 	// Notify the server
 	socketintents.submit('game', 'declinedraw', undefined, () => gameslot.isGameLive() && isAcceptingDraw); // prettier-ignore
-	// TODO: Log into chat window instead.
-	toast.show(`Draw declined`);
 }
 
 /**
@@ -157,7 +146,6 @@ export default {
 	callback_AcceptDraw,
 	callback_declineDraw,
 	onOpponentExtendedOffer,
-	onOpponentDeclinedOffer,
 	extendOffer,
 	set,
 };

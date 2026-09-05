@@ -45,7 +45,7 @@ const SLIDE_LIMIT_VALUES = [
 
 /** The full configuration for a single game modifier, chosen on a seek and carried onto its game. */
 export type GameModifier = z.infer<typeof GameModifierSchema>;
-export const GameModifierSchema = z.discriminatedUnion('kind', [
+const GameModifierSchema = z.discriminatedUnion('kind', [
 	z.strictObject({
 		kind: z.literal('slide-limit'),
 		value: z.literal(SLIDE_LIMIT_VALUES),
@@ -78,6 +78,8 @@ function getModifierDescriptionVars(modifier: GameModifier): ModifierDescription
 export default {
 	// Constants
 	SLIDE_LIMIT_VALUES,
+	// Schemas
+	GameModifierSchema,
 	// Functions
 	getModifierIconId,
 	getModifierDescriptionVars,

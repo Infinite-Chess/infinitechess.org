@@ -10,12 +10,12 @@
  * never touched here.
  */
 
-import type { Player, PlayerGroup } from '../../../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gameresultutil from '../../../../../shared/chess/util/gameresultutil.js';
-import { players as p } from '../../../../../shared/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import { GameBus } from '../../board/GameBus.js';
@@ -35,7 +35,7 @@ const element_MetaPlayerEmbeds = document.querySelectorAll('.meta-players .meta-
 
 GameBus.addEventListener('game-concluded', showResultBanner);
 
-// =============================== Started X ago ===============================
+// Started X ago ---------------------------------------------------------------
 
 /** Re-derives `#meta-started` no more than once a minute (the string only changes by the minute). */
 const REFRESH_INTERVAL_MS = 1000 * 60;
@@ -51,19 +51,19 @@ setInterval(() => {
 	element_Started.textContent = timeutil.getRelativeTimeStringIntl(createdMs, lang);
 }, REFRESH_INTERVAL_MS);
 
-// =============================== Result Banner ===============================
+// Result Banner ---------------------------------------------------------------
 
 /** Populates and reveals the `.result-banner` with the game's conclusion. */
 function showResultBanner(): void {
 	const gamefile = gameslot.getGamefile()!;
 
-	const { score, text } = gameresultutil.getResultDisplay(gamefile.gameConclusion!, t.shared);
+	const { score, text } = gameresultutil.getDisplay(gamefile.gameConclusion!, t.shared);
 	element_BannerScore.textContent = score;
 	element_BannerText.textContent = text;
 	element_ResultBanner.classList.remove('hidden');
 }
 
-// =============================== Rating Changes ===============================
+// Rating Changes --------------------------------------------------------------
 
 /**
  * Appends each player's rating-change delta (e.g. `+27`) beside their rating in the
@@ -83,7 +83,7 @@ function showRatingChanges(ratingChanges: PlayerGroup<number>): void {
 	}
 }
 
-// ===========================================================================
+// Exports ---------------------------------------------------------------------
 
 export default {
 	showRatingChanges,

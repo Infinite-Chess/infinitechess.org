@@ -14,13 +14,13 @@
  * The move list's per-ply glyphs are guimovetree's job (it owns that DOM).
  */
 
-import type { Player } from '../../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { LapseKey, MoveReview, ReviewOutcome } from '../gamereview.js';
 
 import math from '../../../../../../shared/util/math/math.js';
 import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
-import { players as p } from '../../../../../../shared/util/typeutil.js';
+import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
 import ceval from '../ceval.js';
@@ -30,6 +30,7 @@ import gamereview from '../gamereview.js';
 import guimovetree from './guimovetree.js';
 import { GameBus } from '../../../board/GameBus.js';
 import analysisloader from '../analysisloader.js';
+import { SettingsBus } from '../../../util/SettingsBus';
 
 // Elements --------------------------------------------------------------------
 
@@ -77,7 +78,7 @@ function init(): void {
 	});
 	// The eval line's color is read from the canvas's CSS `color` at draw time, so a light/dark
 	// switch needs an explicit redraw — nothing else touches the graph until the next interaction.
-	document.addEventListener('color-scheme-change', () => {
+	SettingsBus.addEventListener('color-scheme-change', () => {
 		if (isGraphVisible()) drawGraph();
 	});
 	GameBus.addEventListener('view-move', () => {

@@ -28,6 +28,11 @@ function incoming(req: IncomingMessage): void {
 	// Distinguish websocket upgrade requests (GETs to '/' with an Upgrade header)
 	const method = req.headers.upgrade ? `${req.method} (WS upgrade)` : req.method;
 
+	// Client-supplied values are logged in full on purpose: an oversized request is
+	// an attack signal, we'd want to preserve evidence. Node's parser rejects CR/LF
+	// and control bytes in the target and in header values already, so log injection
+	// is unreachable, and its 16 KB header budget bounds the line.
+
 	// Bodies are high-PII and left out
 	const logThis = `${origin}   ${clientIP}   ${method}   ${sanitizedUrl}   ${agent}`;
 	logEvents.add(logThis, 'reqLog');

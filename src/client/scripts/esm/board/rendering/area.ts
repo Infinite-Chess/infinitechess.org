@@ -20,6 +20,8 @@ import camera from './camera.js';
 import meshes from './meshes.js';
 import boardgeometry from './boardgeometry.js';
 
+// Types -----------------------------------------------------------------------
+
 /**
  * An area object, containing the information {@link Transition} needs
  * to teleport/transition to this location on the board.
@@ -33,17 +35,19 @@ export interface Area {
 	boundingBox: BoundingBoxBD;
 }
 
+// Constants -------------------------------------------------------------------
+
 const TWO = bd.fromNumber(2.0);
 
 /**
  * Minimum padding between an area's pieces and the edge of
  * the screen, as a percentage of the screen WIDTH/HEIGHT.
  */
-const padding: number = 0.04;
+const PADDING: number = 0.04;
 /**
  * When we're zoomed out (mini images visible), content is constrained within this
  * fixed-size virtual pixel region in the center of the screen, canvas-size-independent.
- * Falls back to standard {@link padding} when the canvas is smaller than this size.
+ * Falls back to standard {@link PADDING} when the canvas is smaller than this size.
  */
 const MINIIMAGE_CONTENT_SIZE_VPIXELS: number = 600;
 
@@ -60,7 +64,9 @@ const AREA_MIN_HEIGHT_SQUARES: number = 10; // Divided by screen width
  * amount of padding, so we need to iterate it a few times for more accuracy.
  * MUST BE GREATER THAN 0!
  */
-const iterationsToRecalcPadding: number = 10;
+const PADDING_RECALC_ITERATIONS: number = 10;
+
+// Padding ---------------------------------------------------------------------
 
 /**
  * Returns a new bounding box, with added padding so the pieces
@@ -82,10 +88,10 @@ function applyPaddingToBox(box: BoundingBoxBD, cam: Camera = camera): BoundingBo
 	let scaleBD: BigDecimal = calcScaleToMatchSides(paddedBox, cam);
 
 	// Iterate until we have desired padding
-	for (let i = 0; i < iterationsToRecalcPadding; i++) {
+	for (let i = 0; i < PADDING_RECALC_ITERATIONS; i++) {
 		// Zoomed-in area: use standard padding, which is a percentage of the canvas size.
-		let paddingHorzPixels: number = canvasWidth * padding;
-		let paddingVertPixels: number = canvasHeight * padding;
+		let paddingHorzPixels: number = canvasWidth * PADDING;
+		let paddingVertPixels: number = canvasHeight * PADDING;
 
 		if (bd.compare(scaleBD, cam.getScaleWhenZoomedOut()) < 0) {
 			// Zoomed-out area: constrain content to a fixed-size pixel region regardless of canvas
@@ -122,6 +128,8 @@ function applyPaddingToBox(box: BoundingBoxBD, cam: Camera = camera): BoundingBo
 
 	return paddedBox;
 }
+
+// Area Calculation ------------------------------------------------------------
 
 /**
  * Calculates an Area object from the given bounding box.
@@ -223,6 +231,8 @@ function calculateFromUnpaddedBox(box: BoundingBoxBD, cam: Camera = camera): Are
 	const paddedBox = applyPaddingToBox(box, cam);
 	return calculateFromBox(paddedBox, cam);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	calculateFromCoordsList,

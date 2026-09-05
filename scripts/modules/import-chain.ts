@@ -1,22 +1,18 @@
-// scripts/imports/import-chain.ts
+// scripts/modules/import-chain.ts
 
 /**
- * Studies the entire import chain of a single script, grouped by depth.
+ * Outputs the entire import chain of a single script, grouped by depth, to a
+ * markdown file "<script-name>.import-chain.md" in the current directory. Used
+ * to eyeball whether any scripts that shouldn't be imported on a page are
+ * leaking in.
  *
- * Uses esbuild's metafile (the SAME resolution as the real build) to walk every
+ * Uses esbuild's metafile (the same resolution as the real build) to walk every
  * transitive import under src/, then runs a breadth-first search from the entry
  * point. Each module is reported at its SHORTEST distance from the entry; if a
  * module is reachable by several paths, every importer ("parent") is still shown.
  *
- * Purpose: spot modules that leak onto a page they shouldn't — typically a deep
- * import the entry point never asks for directly — so dependencies can be
- * refactored to stay healthy.
- *
  * Usage:
- *   npx tsx scripts/import-chain.ts <path-to-script>
- *
- * Writes the depth-grouped markdown report to "<script-name>.import-chain.md"
- * in the current directory.
+ *   npx tsx scripts/modules/import-chain.ts <path-to-script>
  */
 
 import fs from 'node:fs';
@@ -28,7 +24,7 @@ import esbuild from 'esbuild';
 const entryArg = process.argv[2];
 
 if (!entryArg) {
-	console.error('Usage: tsx scripts/import-chain.ts <path-to-script>');
+	console.error('Usage: tsx scripts/modules/import-chain.ts <path-to-script>');
 	process.exit(1);
 }
 

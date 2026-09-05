@@ -265,7 +265,7 @@ function canOfferRematch(): boolean {
 function setRematchState(rematch: RematchOfferInfo): void {
 	// Not a lost-offer bug. Either the game just concluded, before we could have offered at all,
 	// or we're on a fresh socket, and the server withdrew our offer the instant the old one
-	// closed (onPostGameLeave) — so there is never a standing offer of ours to clear here.
+	// closed (leaveRematchWindow) — so there is never a standing offer of ours to clear here.
 	weOfferedRematch = false;
 	opponentOfferedRematch = rematch.offered;
 	opponentPresentPostGame = rematch.present;
@@ -299,15 +299,15 @@ function onOpponentReturn(): void {
 	updateRematchButton();
 }
 
-/** Unsubscribed from the game — clear all rematch offer state and disable the button. */
-function onUnsub(): void {
+/** Detached from the game — clear all rematch offer state and disable the button. */
+function onDetached(): void {
 	weOfferedRematch = false;
 	opponentOfferedRematch = false;
 	opponentPresentPostGame = false;
 	updateRematchButton();
 }
 
-// =================================================================================
+// Listeners -------------------------------------------------------------------
 
 /** Wires the click listeners for every `.game-actions` button present in the DOM. */
 function initListeners(): void {
@@ -325,6 +325,8 @@ function initListeners(): void {
 
 initListeners();
 
+// Exports ---------------------------------------------------------------------
+
 export default {
 	refresh,
 	updateOfferDrawButton,
@@ -332,5 +334,5 @@ export default {
 	onOpponentRematchOffer,
 	onOpponentLeft,
 	onOpponentReturn,
-	onUnsub,
+	onDetached,
 };

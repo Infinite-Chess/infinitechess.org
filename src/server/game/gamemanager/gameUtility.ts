@@ -14,7 +14,7 @@ import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { ClockValues } from '../../../shared/chess/util/clockutil.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 import type {
 	EngineInfo,
@@ -36,8 +36,8 @@ import variantrules from '../../../shared/chess/logic/variantrules.js';
 import apeironborder from '../../../shared/chess/logic/apeironborder.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
-import { players as p } from '../../../shared/util/typeutil.js';
-import { isGameServerValidated } from '../../../shared/chess/variants/servervalidation.js';
+import { players as p } from '../../../shared/chess/util/typeutil.js';
+import servervalidation from '../../../shared/chess/variants/servervalidation.js';
 
 import logEvents from '../../utility/logEvents.js';
 
@@ -45,7 +45,7 @@ import logEvents from '../../utility/logEvents.js';
 
 /**
  * The registry code of the variant a game is played with, or `null` if it's a custom position —
- * the shape both the `variant` columns and `variantregistry.getVariantName` take.
+ * the shape both the `variant` columns and `variantregistry.getName` take.
  */
 function getVariantCode(variant: SeekVariant): VariantCode | null {
 	return variant.kind === 'preset' ? variant.code : null;
@@ -101,10 +101,10 @@ function resolveGameConstruction(
 		variant: loaded,
 		gameRules,
 		variantOptions,
-		validateMoves: isGameServerValidated(variant, loaded),
+		validateMoves: servervalidation.isGameValidated(variant, loaded),
 	};
 
-	// Slide Limit modifier override. Must precede initBoard(),
+	// Slide Limit modifier override. Must precede boardinit.init(),
 	// which reads gameRules.slideLimit to narrow the sliding movesets.
 	if (slideLimit !== undefined) construction.gameRules.slideLimit = BigInt(slideLimit);
 
@@ -124,10 +124,8 @@ function initMatch(
 	for (const [c, { identifier }] of Object.entries(assignedPlayers)) {
 		playerData[Number(c) as Player] = {
 			identifier,
-			disconnect: {
-				timeOpponentMayClaim: undefined,
-				voluntary: undefined,
-			},
+			disconnect: {},
+			chatHistory: [],
 		};
 	}
 
@@ -138,6 +136,7 @@ function initMatch(
 		engineParticipant: setup.engineParticipant,
 		timeCreated: Date.now(),
 		rated: setup.rated,
+		private: setup.private,
 		modifiers: setup.modifiers,
 		clock: setup.time,
 		freed: false,
@@ -159,7 +158,7 @@ function initServerGame(
 ): ServerGame {
 	const { variant, gameRules, variantOptions, validateMoves } = construction;
 	if (validateMoves) {
-		const boardsim = boardinit.initBoard(gameRules, variant, { variantOptions });
+		const boardsim = boardinit.init(gameRules, variant, { variantOptions });
 		// The same load the client runs, so both ends settle on identical
 		// win conditions and starting check state. Spread last, so the servergame's
 		// rules are the board's own copy — never a second one.
@@ -223,24 +222,6 @@ function isEngineGame(servergame: ServerGame): boolean {
 }
 
 /**
- * Returns true if the provided color's opponent has been told they can claim
- * victory/draw against them (i.e. the claim-window timestamp is set, whether or
- * not it has elapsed yet). NOT whether the 5-second reconnection cushion has started.
- */
-function isClaimWindowSetForColor(match: MatchInfo, role: Player): boolean {
-	return match.playerData[role]!.disconnect.timeOpponentMayClaim !== undefined;
-}
-
-/**
- * Returns true if the provided color is currently disconnected — either still in the
- * reconnection cushion, or with their opponent's claim window set.
- */
-function isColorDisconnected(match: MatchInfo, role: Player): boolean {
-	const { startTime, timeOpponentMayClaim } = match.playerData[role]!.disconnect;
-	return startTime !== undefined || timeOpponentMayClaim !== undefined;
-}
-
-/**
  * Tests if the game has just become resignable with the latest move (exactly 2 moves have been played).
  * @returns *true* if the game has just become resignable after the last move.
  */
@@ -268,12 +249,10 @@ function getClockValues(servergame: ServerGame & { untimed: false }): ClockValue
 function updateClockValues(servergame: ServerGame & { untimed: false }): void {
 	const now = Date.now();
 	if (!moveutil.isGameResignable(servergame) || gamefileutility.isGameOver(servergame)) return;
-	if (servergame.clocks.colorTicking === undefined) return;
-	if (servergame.clocks.timeAtTurnStart === undefined)
-		throw new Error('cannot update clock values when timeAtTurnStart is not defined!');
+	if (servergame.clocks.ticking === undefined) return;
 
-	const timeElapsedSinceTurnStart = now - servergame.clocks.timeAtTurnStart;
-	const newTime = servergame.clocks.timeRemainAtTurnStart! - timeElapsedSinceTurnStart;
+	const timeElapsedSinceTurnStart = now - servergame.clocks.ticking.startedAt;
+	const newTime = servergame.clocks.ticking.timeRemainingAtStart - timeElapsedSinceTurnStart;
 	const playerdata = servergame.clocks.currentTime;
 	if (playerdata[servergame.whosTurn] === undefined) {
 		logEvents.addAndPrint(
@@ -342,8 +321,6 @@ export default {
 	assignWhiteBlackPlayersFromSeek,
 	// Predicates
 	isEngineGame,
-	isClaimWindowSetForColor,
-	isColorDisconnected,
 	isGameBorderlineResignable,
 	// Clocks
 	getClockValues,

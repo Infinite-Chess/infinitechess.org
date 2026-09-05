@@ -7,9 +7,9 @@
 
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
 import type { GameruleWinCondition } from './winconutil.js';
-import type { Player, RawType, PlayerGroup } from '../../util/typeutil.js';
+import type { Player, RawType, PlayerGroup } from './typeutil.js';
 
-import typeutil, { rawTypes as r, players as p, neutralRawTypes } from '../../util/typeutil.js';
+import typeutil, { rawTypes as r, players as p, neutralRawTypes } from './typeutil.js';
 
 // Types -----------------------------------------------------------------------
 

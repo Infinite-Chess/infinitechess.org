@@ -1,7 +1,9 @@
 // src/client/scripts/esm/components/header/dropdowns/languagedropdown.ts
 
-// This script selects new languages when we click a language in the language dropdown,
-// storing the choice in the "lang" cookie that the server reads to localize each page.
+/**
+ * Selects a new language when we click one in the language dropdown, storing the
+ * choice in the "lang" cookie that the server reads to localize each page.
+ */
 
 import docutil from '../../../util/docutil.js';
 

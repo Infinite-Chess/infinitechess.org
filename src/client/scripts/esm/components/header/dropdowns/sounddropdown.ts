@@ -1,6 +1,8 @@
 // src/client/scripts/esm/components/header/dropdowns/sounddropdown.ts
 
-// This script manages the sound settings dropdown
+/**
+ * Set the master volume and turn zone ambience on or off.
+ */
 
 import preferences from '../../../util/preferences.js';
 

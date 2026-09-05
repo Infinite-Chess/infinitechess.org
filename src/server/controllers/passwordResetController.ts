@@ -88,7 +88,7 @@ async function handleForgot(req: Request, res: Response): Promise<void> {
 					[userId, hashedTokenForDb, expiresAt],
 				);
 
-				const baseUrl = urlUtils.getAppBaseUrl();
+				const baseUrl = urlUtils.getAppBase();
 				const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
 
 				logEvents.add(
@@ -99,7 +99,7 @@ async function handleForgot(req: Request, res: Response): Promise<void> {
 			}
 		} else {
 			logEvents.addAndPrint(
-				`No member exists with the email (${logEvents.escapeLogNewlines(email)}). Not sending password reset email.`,
+				`No member exists with the email (${logEvents.escapeUntrusted(email)}). Not sending password reset email.`,
 				'loginAttempts',
 			);
 		}
@@ -228,7 +228,7 @@ async function handleReset(req: Request, res: Response): Promise<void> {
 
 		// Every session is now dead, so close their sockets with the same reason logging
 		// out uses — the client reloads and re-auths off whatever session it has left.
-		socketRegistry.closeAllOfMember(member.user_id, 1008, socketutil.ClosureReasons.LOGGED_OUT);
+		socketRegistry.closeAllOfMember(member.user_id, 1008, socketutil.CLOSURE_REASONS.LOGGED_OUT); // prettier-ignore
 
 		// Issue a fresh session to this browser — the device that proved control
 		// of the account by clicking the email link and setting the new password.

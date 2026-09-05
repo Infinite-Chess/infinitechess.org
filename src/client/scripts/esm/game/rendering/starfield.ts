@@ -9,7 +9,7 @@ import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
-import { rawTypes as r } from '../../../../../shared/util/typeutil.js';
+import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 import camera from '../../board/rendering/camera.js';
 import docutil from '../../util/docutil.js';
@@ -20,6 +20,7 @@ import preferences from '../../util/preferences.js';
 import perspective from './perspective.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import boardgeometry from '../../board/rendering/boardgeometry.js';
+import { SettingsBus } from '../../util/SettingsBus.js';
 import { AttributeInfoInstanced } from '../../webgl/Renderable.js';
 import { createRenderable_Instanced_GivenInfo } from '../../board/rendering/renderable.js';
 
@@ -119,7 +120,7 @@ let desiredNumStars: number = 0;
 // Initialization --------------------------------------------------------------
 
 /** Event listener for when we toggle Starfield in the settings dropdown. */
-document.addEventListener('starfield-toggle', (e) => {
+SettingsBus.addEventListener('starfield-toggle', (e) => {
 	const enabled: boolean = e.detail;
 	if (enabled) init();
 	else terminate();
@@ -228,7 +229,7 @@ function update(): void {
 		// console.log("Starfield visible, requesting render.");
 	}
 
-	// Update the desired number of stars for this frame ---
+	// Update the desired number of stars for this frame
 	desiredNumStars = getDesiredNumStars();
 
 	const deltaTimeSecs = deltatime.get();

@@ -10,7 +10,7 @@
  * Each layer can have its own volume control, and each parameter can be modulated by an LFO.
  */
 
-import { createLFO, LFOConfig } from './LFOFactory';
+import { createLFO, LFOConfig } from './LFOFactory.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ export interface LayerConfig {
 }
 
 /** The configuration for the audio source of a layer. */
-export type SourceConfig = NoiseSourceConfig | OscillatorSourceConfig;
+type SourceConfig = NoiseSourceConfig | OscillatorSourceConfig;
 
 /** Configuration for a noise source. */
 export interface NoiseSourceConfig {
@@ -30,7 +30,7 @@ export interface NoiseSourceConfig {
 }
 
 /** Configuration for an oscillator source with optional LFO modulation. */
-export interface OscillatorSourceConfig {
+interface OscillatorSourceConfig {
 	type: 'oscillator';
 	wave: 'sine' | 'square' | 'sawtooth' | 'triangle';
 	freq: ModulatedParamConfig;
@@ -63,9 +63,7 @@ interface ModulatedParamConfig {
 
 // SoundLayer Class ------------------------------------------------------------
 
-/**
- * Represents the complete audio graph for a single layer in a soundscape.
- */
+/** Represents the complete audio graph for a single layer in a soundscape. */
 export class SoundLayer {
 	private readonly outputGain: GainNode;
 	/** All unique oscillators and LFOs that need to be started and stopped for this layer. */
@@ -78,70 +76,67 @@ export class SoundLayer {
 	) {
 		this.outputGain = context.createGain();
 		this.outputGain.gain.value = config.volume.base;
+		this.modulate(context, config.volume, this.outputGain.gain);
 
-		if (config.volume.lfo) {
-			// The volume for this layer is modulated by an LFO
-			const lfo = createLFO(context, config.volume.lfo);
-			lfo.source.connect(lfo.gain).connect(this.outputGain.gain);
-			this.allNodesToStart.push(lfo.source as OscillatorNode | AudioBufferSourceNode);
+		const source = this.createSource(context, config.source, sharedNoiseSource);
+		const chainEnd = this.buildFilterChain(context, config.filters, source);
+		chainEnd.connect(this.outputGain);
+	}
+
+	/**
+	 * Rides an LFO on top of an AudioParam, if the config asks for one.
+	 * The param's base value must already be set — the LFO offsets it rather than replacing it.
+	 */
+	private modulate(context: AudioContext, config: ModulatedParamConfig, param: AudioParam): void {
+		if (!config.lfo) return;
+		const lfo = createLFO(context, config.lfo);
+		lfo.source.connect(lfo.gain).connect(param);
+		this.allNodesToStart.push(lfo.source);
+	}
+
+	/** Creates this layer's source: the shared noise source, or an oscillator of its own. */
+	private createSource(
+		context: AudioContext,
+		config: SourceConfig,
+		sharedNoiseSource: AudioBufferSourceNode,
+	): AudioNode {
+		// The player manages the shared noise source, so we don't start/stop it here.
+		if (config.type === 'noise') return sharedNoiseSource;
+
+		const osc = context.createOscillator();
+		osc.type = config.wave;
+		osc.frequency.value = config.freq.base;
+		osc.detune.value = config.detune.base;
+		this.modulate(context, config.freq, osc.frequency);
+		this.modulate(context, config.detune, osc.detune);
+
+		this.allNodesToStart.push(osc);
+		return osc;
+	}
+
+	/** Chains the filters onto the source in series, returning the last node of the chain. */
+	private buildFilterChain(
+		context: AudioContext,
+		configs: FilterConfig[],
+		source: AudioNode,
+	): AudioNode {
+		let currentNode: AudioNode = source;
+
+		for (const config of configs) {
+			const filter = context.createBiquadFilter();
+			filter.type = config.type;
+			filter.frequency.value = config.frequency.base;
+			filter.Q.value = config.Q.base;
+			filter.gain.value = config.gain.base;
+			this.modulate(context, config.frequency, filter.frequency);
+			this.modulate(context, config.Q, filter.Q);
+			this.modulate(context, config.gain, filter.gain);
+
+			currentNode.connect(filter);
+			currentNode = filter;
 		}
 
-		let currentNode: AudioNode;
-
-		if (config.source.type === 'noise') {
-			currentNode = sharedNoiseSource;
-			// The shared noise source is managed by the player, so we don't add it to our start/stop list.
-		} else {
-			// type === 'oscillator'
-			const oscConfig: OscillatorSourceConfig = config.source;
-			const osc = context.createOscillator();
-			osc.type = oscConfig.wave;
-			osc.frequency.value = oscConfig.freq.base;
-			osc.detune.value = oscConfig.detune.base;
-
-			if (oscConfig.freq.lfo) {
-				const lfo = createLFO(context, oscConfig.freq.lfo);
-				lfo.source.connect(lfo.gain).connect(osc.frequency);
-				this.allNodesToStart.push(lfo.source as OscillatorNode | AudioBufferSourceNode);
-			}
-			if (oscConfig.detune.lfo) {
-				const lfo = createLFO(context, oscConfig.detune.lfo);
-				lfo.source.connect(lfo.gain).connect(osc.detune);
-				this.allNodesToStart.push(lfo.source as OscillatorNode | AudioBufferSourceNode);
-			}
-
-			currentNode = osc;
-			this.allNodesToStart.push(osc);
-		}
-
-		config.filters.forEach((filterConfig) => {
-			const filterNode = context.createBiquadFilter();
-			filterNode.type = filterConfig.type;
-			filterNode.frequency.value = filterConfig.frequency.base;
-			filterNode.Q.value = filterConfig.Q.base;
-			filterNode.gain.value = filterConfig.gain.base;
-
-			if (filterConfig.frequency.lfo) {
-				const lfo = createLFO(context, filterConfig.frequency.lfo);
-				lfo.source.connect(lfo.gain).connect(filterNode.frequency);
-				this.allNodesToStart.push(lfo.source as OscillatorNode | AudioBufferSourceNode);
-			}
-			if (filterConfig.Q.lfo) {
-				const lfo = createLFO(context, filterConfig.Q.lfo);
-				lfo.source.connect(lfo.gain).connect(filterNode.Q);
-				this.allNodesToStart.push(lfo.source as OscillatorNode | AudioBufferSourceNode);
-			}
-			if (filterConfig.gain.lfo) {
-				const lfo = createLFO(context, filterConfig.gain.lfo);
-				lfo.source.connect(lfo.gain).connect(filterNode.gain);
-				this.allNodesToStart.push(lfo.source as OscillatorNode | AudioBufferSourceNode);
-			}
-
-			currentNode.connect(filterNode);
-			currentNode = filterNode;
-		});
-
-		currentNode.connect(this.outputGain);
+		return currentNode;
 	}
 
 	/** Connects this layer's output to a destination node. */

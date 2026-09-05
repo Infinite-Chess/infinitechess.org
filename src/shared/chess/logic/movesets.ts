@@ -9,14 +9,14 @@ import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
-import type { RawTypeGroup, Player, RawType } from '../../util/typeutil.js';
+import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
 
 import bimath from '../../util/math/bimath.js';
 import vectors from '../../util/math/vectors.js';
 import legalmoves from './legalmoves.js';
 import specialdetect from './specialdetect.js';
 import { primalityTest } from '../../util/math/isprime.js';
-import { rawTypes as r } from '../../util/typeutil.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
 /** A Movesets object containing the movesets for every piece type in a game */
 export type Movesets = RawTypeGroup<PieceMoveset>;
@@ -91,7 +91,7 @@ type SlidingMoves = {
  * The start and end coords arguments are useful for the Huygen, as it can
  * calculate the distance traveled, and then test if it's prime.
  *
- * The gamefile and detectCheck method may be used for the Royal Queen,
+ * The gamefile and checkdetection.detect method may be used for the Royal Queen,
  * as it can test if the squares are check for positive.
  */
 export type IgnoreFunction = (startCoords: Coords, endCoords: Coords) => boolean;
@@ -350,5 +350,4 @@ export default {
 	defaultIgnoreFunction,
 	getPieceDefaultMovesets,
 	convertRawMovesetsToPieceMovesets,
-	isVectorColinear,
 };

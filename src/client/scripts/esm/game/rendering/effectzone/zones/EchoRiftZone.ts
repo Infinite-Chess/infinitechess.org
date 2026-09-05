@@ -1,18 +1,23 @@
 // src/client/scripts/esm/game/rendering/effectzone/zones/EchoRiftZone.ts
 
-import type { Zone } from '../Zone';
+/**
+ * A dark, colorless board seen through cracked glass. The cracks re-form at
+ * random intervals with a snap, over a low rumble.
+ */
+
+import type { UniformValue } from '../../../../webgl/Renderable';
 import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
 
 import gamesound from '../../../../board/gamesound';
 import PerlinNoise from '../../../../util/PerlinNoise';
 import preferences from '../../../../util/preferences';
-import AudioManager from '../../../../audio/AudioManager';
+import { BaseZone } from '../BaseZone';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass';
 import { VoronoiDistortionPass } from '../../../../webgl/postprocessing/passes/VoronoiDistortionPass';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
-export class EchoRiftZone implements Zone {
+export class EchoRiftZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 8;
 
@@ -20,9 +25,6 @@ export class EchoRiftZone implements Zone {
 
 	/** Post Processing Effect bending light through a crystalline voronoi distortion pattern structure. */
 	private voronoiDistortionPass: VoronoiDistortionPass;
-
-	/** The soundscape player for this zone. */
-	private ambience: SoundscapePlayer;
 
 	/** A 1D Perlin noise generator for randomizing color grade properties. */
 	private noiseGenerator: (t: number) => number;
@@ -43,6 +45,7 @@ export class EchoRiftZone implements Zone {
 	private maxMillisBetweenCracks: number = 4000;
 
 	constructor(programManager: ProgramManager) {
+		super();
 		this.voronoiDistortionPass = new VoronoiDistortionPass(programManager);
 
 		this.colorGradePass = new ColorGradePass(programManager);
@@ -123,22 +126,12 @@ export class EchoRiftZone implements Zone {
 			this.baseBrightness + noiseValue * this.brightnessVariation;
 	}
 
-	public getUniforms(): Record<string, any> {
+	public getUniforms(): Record<string, UniformValue> {
 		return {};
 	}
 
-	public getPasses(): PostProcessPass[] {
+	public override getPasses(): PostProcessPass[] {
 		return [this.voronoiDistortionPass, this.colorGradePass];
 		// return [this.colorGradePass];
-	}
-
-	public fadeInAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeIn(transitionDurationMs);
-		AudioManager.fadeInDownsampler(transitionDurationMs);
-	}
-
-	public fadeOutAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeOut(transitionDurationMs);
-		AudioManager.fadeOutDownsampler(transitionDurationMs);
 	}
 }

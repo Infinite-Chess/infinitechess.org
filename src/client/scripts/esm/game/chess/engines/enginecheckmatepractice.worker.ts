@@ -23,13 +23,13 @@ import vectors from '../../../../../../shared/util/math/vectors.js';
 import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import { primalityTest } from '../../../../../../shared/util/math/isprime.js';
-import { detectInsufficientMaterial } from '../../../../../../shared/chess/logic/insufficientmaterial.js';
+import insufficientmaterial from '../../../../../../shared/chess/logic/insufficientmaterial.js';
 import {
 	rawTypes as r,
 	ext as e,
 	players as p,
 	numTypes,
-} from '../../../../../../shared/util/typeutil.js';
+} from '../../../../../../shared/chess/util/typeutil.js';
 
 /**
  * The subset of the game this engine reads, rebuilt from the compressed position the
@@ -65,7 +65,7 @@ self.onmessage = function (e: MessageEvent<CheckmatePracticeMoveRequest>): void 
 };
 
 /** Seeded RNG function, will be initialized in runEngine() */
-let rand: Function;
+let rand: () => number;
 
 /** Whether the engine has already been initialized for the current game */
 let engineInitialized: boolean = false;
@@ -1692,7 +1692,7 @@ function runIterativeDeepening(
 						).pieces,
 					};
 
-					if (detectInsufficientMaterial(dummy_board)) break;
+					if (insufficientmaterial.detect(dummy_board)) break;
 				}
 
 				// special case for 3B3B-1k variant after piece capture

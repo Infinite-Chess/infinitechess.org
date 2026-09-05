@@ -5,10 +5,10 @@
  * pawns reach the promotion line.
  */
 
-import type { Player, PlayerGroup, RawType } from '../../../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil.js';
 
-import typeutil from '../../../../../shared/util/typeutil.js';
-import { players as p } from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';

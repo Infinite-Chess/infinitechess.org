@@ -10,16 +10,18 @@
 
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { GameStateMessage } from '../../../shared/transport/clientbound.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { GameSetup, ServerGame } from './serverGameTypes.js';
 import type { EngineGamePageInfo, StaticGameState } from '../../../shared/transport/domain.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
-import typeutil from '../../../shared/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
+import chat from './chat.js';
 import logEvents from '../../utility/logEvents.js';
 import disconnect from './disconnect.js';
 import socketsend from '../../socket/socketSend.js';
@@ -109,11 +111,9 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 		if (!gamefileutility.isGameOver(servergame)) continue; // Only concluded games linger for a rematch.
 		for (const [c, data] of Object.entries(servergame.match.playerData)) {
 			if (!memberInfoUtil.eq(data.identifier, identifier)) continue;
-			if (data.socket) {
-				socketsend.send(data.socket, 'game', 'unsub', undefined); // Unsub the game on their old tab.
-				gameSockets.detachParticipant(servergame.match, data.socket);
-			}
-			onPostGameLeave(servergame, Number(c) as Player, false);
+			// Detach the game on their old tab. leaveRematchWindow detaches us server-side.
+			if (data.socket) socketsend.send(data.socket, 'game', 'detached', undefined);
+			leaveRematchWindow(servergame, Number(c) as Player, false);
 			return; // A player can only be a participant of one lingering game.
 		}
 	}
@@ -130,47 +130,50 @@ function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefin
 	const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
 	logEvents.addAndPrint(`Error creating game: ${details}`, 'errLog');
 	for (const ws of sockets) {
-		if (ws) socketsend.send(ws, 'general', 'notifyerror', ws.t.responses.errors.server_error);
+		if (ws) socketsend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
 	}
 }
 
 // Participant Subscription ----------------------------------------------------
 
 /**
- * Links their socket to this game and runs reconnect side-effects (cancels disconnect/claim timer).
- * @returns `evicted` — whether a socket already attached as that player was kicked to make room.
+ * The whole participant subscribe: evicts whatever socket was here, runs the
+ * reconnect side-effects, attaches theirs, then answers it with the game state.
+ * @param kind - `'full'` answers a `subscribe`, `'lean'` a `subscriberematch`.
+ * @throws If a database error occurs.
  */
 function subscribeParticipant(
 	servergame: ServerGame,
 	ws: CustomWebSocket,
 	ourRole: Player,
-): { evicted: boolean } {
+	kind: GameStateMessage['kind'],
+): void {
 	const match = servergame.match;
-	// 1. Attach their socket to the game for receiving updates
-	const playerData = match.playerData[ourRole];
-	if (playerData === undefined) {
-		console.error(`Cannot subscribe client to game when game does not expect color ${ourRole} to be present`); // prettier-ignore
-		return { evicted: false };
-	}
+	const playerData = match.playerData[ourRole]!;
 	const previousSocket = playerData.socket;
 	if (previousSocket) {
-		socketsend.send(previousSocket, 'game', 'leavegame', undefined);
+		socketsend.send(previousSocket, 'game', 'supersededbytab', undefined);
 		gameSockets.detachParticipant(match, previousSocket);
 	}
+
+	// Must run before the attach. Its chat notices go only to attached sockets, so running it
+	// here keeps ours out of a delta — the state's log below is what carries it to us instead.
+	runReconnectSideEffects(servergame, ourRole, previousSocket === undefined);
+
 	playerData.socket = ws;
-
 	activePlayers.consumeNavigateNotice(playerData.identifier); // They've arrived; any pending lobby notice is moot.
-
-	// 2. Modify their socket metadata to add the 'game', subscription,
-	// and indicate what game the belong in and what color they are!
 	ws.metadata.subscriptions.game = {
 		id: match.id,
 		color: ourRole,
 	};
 
-	runReconnectSideEffects(servergame, ourRole);
+	// Must run before the state is built, which reads these clocks.
+	// A takeover kicks the previous tab, terminating its engine worker
+	// mid-search, so rewind the engine's turn before this client resumes it.
+	if (previousSocket) freezeEngineClock(servergame);
+	resumeEngineClock(servergame);
 
-	return { evicted: previousSocket !== undefined };
+	gameSockets.sendGameState(servergame, ourRole, kind, false);
 }
 
 /**
@@ -178,10 +181,16 @@ function subscribeParticipant(
  * While live: clears any disconnect/claim timer and notifies live-game tracking they reconnected.
  * Post-conclusion (game lingering for a rematch): clears the reconnection cushion and tells the
  * opponent we're back so their rematch button re-enables.
+ * @param wasAbsent - Whether they held no socket before this one. A refresh or a second tab
+ * replaces a socket already there.
  */
-function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void {
-	/** Whether the opponent had been told they could claim (the claim window was set). */
-	const claimWindowWasSet = gameUtility.isClaimWindowSetForColor(servergame.match, ourRole);
+function runReconnectSideEffects(
+	servergame: ServerGame,
+	ourRole: Player,
+	wasAbsent: boolean,
+): void {
+	/** Whether the opponent had been told they could claim, elapsed or not. */
+	const claimWindowWasSet = servergame.match.playerData[ourRole]!.disconnect.claim !== undefined;
 
 	disconnect.cancelTimer(servergame.match, ourRole);
 
@@ -190,10 +199,17 @@ function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void 
 		liveGameValues.onPlayerReconnected(servergame, ourRole);
 		// Alert their opponent we have returned, if they were informed of the disconnect
 		if (claimWindowWasSet) {
-			gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentdisconnectreturn', undefined); // prettier-ignore
+			gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentreconnect', undefined); // prettier-ignore
+			// Pairs structurally with the disconnect notice: a claim window is only ever set
+			// inside startClaimTimer, and cancelTimer clears it, so the two can't repeat.
+			chat.appendNotice(servergame, ourRole, 'reconnected');
 		}
-	} else {
+	} else if (wasAbsent) {
+		// Alert their opponent we're back, only if they were told we left. A second tab
+		// supersedes a socket that was already here, which never sends `opponentleft` —
+		// leaveRematchWindow is the sole clearer of that socket, and the only sender of it.
 		gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentreturn', undefined); // prettier-ignore
+		chat.appendNotice(servergame, ourRole, 'postgame-returned');
 	}
 }
 
@@ -210,9 +226,9 @@ function unsubscribeParticipant(ws: CustomWebSocket, involuntary: boolean): void
 	const servergame = activeGames.getByID(gameID)!;
 
 	const role = gameSockets.getRole(servergame, ws)!;
-	gameSockets.detachParticipant(servergame.match, ws);
 
 	if (!gamefileutility.isGameOver(servergame)) {
+		gameSockets.detachParticipant(servergame.match, ws);
 		// Game is ongoing: inform the opponent they disconnected.
 		if (involuntary) {
 			// Internet interruption. Give them 5 seconds before opening the opponent's claim window.
@@ -224,44 +240,48 @@ function unsubscribeParticipant(ws: CustomWebSocket, involuntary: boolean): void
 			// Closed tab manually: the page is gone, taking the engine's worker with it.
 			freezeEngineClock(servergame);
 		}
-
-		// If this leaves BOTH players disconnected, start the timer that concludes the
-		// game if neither returns (no one is present to claim victory/draw).
-		gameLifecycle.maybeStartBothDisconnectedTimer(servergame);
 	} else {
 		// Post-conclusion: the game only lingers for the rematch handshake — no claim window applies.
-		onPostGameLeave(servergame, role, involuntary);
+		leaveRematchWindow(servergame, role, involuntary);
 	}
 }
 
 /**
- * Game is concluded: Handles a player leaving a concluded game's rematch window.
- * Withdraws their rematch offer and informs the opponent, then memory-evicts
- * either now or after a short cushion timer if it was involuntary.
+ * Takes a player out of a concluded game's rematch window: detaches their socket, withdraws any
+ * rematch offer of theirs, and informs their opponent. The game is then memory-evicted if that
+ * leaves nobody — at once, or after a reconnection cushion when the leave was involuntary.
  * Entry points: Socket close, client choice, or joined new game.
  */
-function onPostGameLeave(servergame: ServerGame, role: Player, involuntary: boolean): void {
+function leaveRematchWindow(servergame: ServerGame, role: Player, involuntary: boolean): void {
 	const match = servergame.match;
+	const playerdata = match.playerData[role]!;
+
+	// Joining a new game calls this a second time to collapse the cushion below, by
+	// which point there is no socket left to take — and no departure to announce.
+	if (playerdata.socket) {
+		chat.appendNotice(servergame, role, 'postgame-left');
+		gameSockets.detachParticipant(match, playerdata.socket);
+	}
 
 	// Withdraw their rematch offer, if any, and tell the opponent they've left (disable + unglow).
 	match.rematchOffers.delete(role);
 	gameSockets.sendToColor(match, typeutil.invertPlayer(role), 'game', 'opponentleft', undefined); // prettier-ignore
 
-	const playerdata = match.playerData[role]!;
-	clearTimeout(playerdata.disconnect.startID);
-	delete playerdata.disconnect.startID;
+	clearTimeout(playerdata.disconnect.cushion?.id);
+	delete playerdata.disconnect.cushion;
 
 	if (!involuntary) {
 		// Gone immediately.
-		delete playerdata.disconnect.startTime;
 		gameLifecycle.evictIfBothLeft(servergame);
 	} else {
 		// Network drop — give them the reconnection cushion before considering them gone.
-		playerdata.disconnect.startID = setTimeout(() => {
-			delete playerdata.disconnect.startTime;
-			gameLifecycle.evictIfBothLeft(servergame);
-		}, disconnect.RECONNECT_CUSHION_MS);
-		playerdata.disconnect.startTime = Date.now() + disconnect.RECONNECT_CUSHION_MS;
+		playerdata.disconnect.cushion = {
+			id: setTimeout(() => {
+				delete playerdata.disconnect.cushion;
+				gameLifecycle.evictIfBothLeft(servergame);
+			}, disconnect.RECONNECT_CUSHION_MS),
+			endTime: Date.now() + disconnect.RECONNECT_CUSHION_MS,
+		};
 	}
 }
 
@@ -273,7 +293,9 @@ function onPostGameLeave(servergame: ServerGame, role: Player, involuntary: bool
 function unsubscribeSpectator(ws: CustomWebSocket): void {
 	const gameID = ws.metadata.subscriptions.spectating?.id;
 	if (gameID === undefined) return; // Not spectating any game
-	gameSockets.detachSpectator(activeGames.getByID(gameID)!, ws);
+	const servergame = activeGames.getByID(gameID)!;
+	gameSockets.detachSpectator(servergame, ws);
+	gameSockets.broadcastSpectatorCount(servergame);
 }
 
 // Clocks ----------------------------------------------------------------------
@@ -304,7 +326,7 @@ function armAutoTimeLoss(servergame: ServerGame): void {
 		servergame.untimed ||
 		gamefileutility.isGameOver(servergame) ||
 		!moveutil.isGameResignable(servergame) ||
-		servergame.clocks.colorTicking === undefined
+		servergame.clocks.ticking === undefined
 	)
 		return;
 
@@ -312,7 +334,7 @@ function armAutoTimeLoss(servergame: ServerGame): void {
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	servergame.match.autoTimeLossTimeoutID = setTimeout(
 		() => gameLifecycle.concludeOnTime(servergame),
-		Math.max(servergame.clocks.timeRemainAtTurnStart, 0),
+		Math.max(servergame.clocks.ticking.timeRemainingAtStart, 0),
 	);
 }
 
@@ -322,13 +344,13 @@ function freezeEngineClock(servergame: ServerGame): void {
 	if (
 		engine === undefined || // Not an engine game
 		servergame.untimed || // No clocks
-		servergame.clocks.colorTicking === undefined || // Already frozen
+		servergame.clocks.ticking === undefined || // Already frozen
 		servergame.whosTurn !== engine.color || // Not the engine's turn
 		gamefileutility.isGameOver(servergame)
 	)
 		return;
 
-	servergame.clocks.currentTime[engine.color] = servergame.clocks.timeRemainAtTurnStart;
+	servergame.clocks.currentTime[engine.color] = servergame.clocks.ticking.timeRemainingAtStart;
 	clock.endGame(servergame);
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	liveGameValues.onEngineClockChanged(servergame);
@@ -341,7 +363,7 @@ function resumeEngineClock(servergame: ServerGame): void {
 	if (
 		engine === undefined || // Not an engine game
 		servergame.untimed || // No clocks
-		servergame.clocks.colorTicking !== undefined || // Already ticking
+		servergame.clocks.ticking !== undefined || // Already ticking
 		servergame.whosTurn !== engine.color || // Not the engine's turn
 		gamefileutility.isGameOver(servergame) ||
 		!moveutil.isGameResignable(servergame)
@@ -351,8 +373,7 @@ function resumeEngineClock(servergame: ServerGame): void {
 	const remaining = servergame.clocks.currentTime[engine.color]!;
 	clock.edit(servergame.clocks, {
 		clocks: { ...servergame.clocks.currentTime },
-		colorTicking: engine.color,
-		timeColorTickingLosesAt: Date.now() + remaining,
+		ticking: { color: engine.color, losesAt: Date.now() + remaining },
 	});
 	armAutoTimeLoss(servergame);
 	liveGameValues.onEngineClockChanged(servergame);
@@ -407,8 +428,6 @@ export default {
 	unsubscribeSpectator,
 	// Clocks
 	pushClock,
-	freezeEngineClock,
-	resumeEngineClock,
 	// SSR Page State
 	produceStaticGameState,
 };

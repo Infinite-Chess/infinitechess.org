@@ -84,18 +84,20 @@ function unsubscribe(ws: CustomWebSocket, involuntary?: boolean): void {
 }
 
 /**
- * Returns the first socket subscribed to the seeks list that matches the member/browser property.
- * Typically called when you need to inform a player their seek was accepted.
- * @returns The websocket, if found, otherwise undefined.
+ * Finds the lobby-subscribed socket that belongs to the given user's tab, falling
+ * back to their most recently subscribed tab.
+ * @param ownerTab - The tab that created the seek.
+ * @returns The websocket, if found. It may not be if the user disconnected
+ * involuntarily and are within that 5-second cushion before their seek is deleted.
  */
-function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined {
-	// Iterate through all sockets, until you find one that matches the authentication of our seek owner
+function findSocketFromOwner(owner: AuthMemberInfo, ownerTab: string): CustomWebSocket | undefined {
+	let newest: CustomWebSocket | undefined;
 	for (const ws of lobbySubscribers.getAll()) {
-		if (memberInfoUtil.eq(owner, ws.metadata.memberInfo)) return ws;
+		if (!memberInfoUtil.eq(owner, ws.metadata.memberInfo)) continue;
+		if (ws.metadata.tabId === ownerTab) return ws;
+		newest = ws; // The set iterates in subscription order, so the last match is the newest.
 	}
-	// They must have disconnected involuntarily, and be within
-	// that 5-second cushion before their seek is deleted.
-	return;
+	return newest;
 }
 
 // Seek Cushion ----------------------------------------------------------------

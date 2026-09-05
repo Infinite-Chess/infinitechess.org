@@ -46,7 +46,7 @@ type Transition =
 			isZoom: false;
 	  });
 
-export type ZoomTransition = {
+type ZoomTransition = {
 	/** The destination board location. */
 	destinationCoords: BDCoords;
 	/** The destination board location. */
@@ -219,7 +219,7 @@ function onTransitionStart(): void {
 	originCoords = boardpos.getBoardPos();
 	originScale = boardpos.getBoardScale();
 
-	document.dispatchEvent(new CustomEvent('transition-start'));
+	GameBus.dispatch('transition-start');
 }
 
 /** Starts a Zooming Transition. */

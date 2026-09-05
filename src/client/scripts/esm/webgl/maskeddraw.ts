@@ -12,6 +12,8 @@
 
 import { ProgramManager } from './ProgramManager.js';
 
+// Types -----------------------------------------------------------------------
+
 /** One independent stencil-masker, as returned by {@link createMaskedDraw}. */
 export interface MaskedDraw {
 	/**
@@ -31,10 +33,10 @@ export interface MaskedDraw {
 	 * 							Has no effect if only one mask type is provided.
 	 */
 	execute(
-		_drawInclusionMaskFunc: Function | undefined,
-		_drawExclusionMaskFunc: Function | undefined,
-		_drawContentFunc: Function,
-		_intersectionMode: 'and' | 'or',
+		drawInclusionMaskFunc: (() => void) | undefined,
+		drawExclusionMaskFunc: (() => void) | undefined,
+		drawContentFunc: () => void,
+		intersectionMode: 'and' | 'or',
 	): void;
 }
 
@@ -86,9 +88,9 @@ function createMaskedDraw(gl: WebGL2RenderingContext, programManager: ProgramMan
 	}
 
 	function execute(
-		drawInclusionMaskFunc: Function | undefined,
-		drawExclusionMaskFunc: Function | undefined,
-		drawContentFunc: Function,
+		drawInclusionMaskFunc: (() => void) | undefined,
+		drawExclusionMaskFunc: (() => void) | undefined,
+		drawContentFunc: () => void,
 		intersectionMode: 'and' | 'or',
 	): void {
 		if (!drawExclusionMaskFunc && !drawInclusionMaskFunc)
@@ -212,9 +214,9 @@ function onFrameStart(): void {
 
 /** Runs a masked draw on the game masker. See {@link MaskedDraw.execute}. */
 function execute(
-	drawInclusionMaskFunc: Function | undefined,
-	drawExclusionMaskFunc: Function | undefined,
-	drawContentFunc: Function,
+	drawInclusionMaskFunc: (() => void) | undefined,
+	drawExclusionMaskFunc: (() => void) | undefined,
+	drawContentFunc: () => void,
 	intersectionMode: 'and' | 'or',
 ): void {
 	gameInstance.execute(
@@ -225,5 +227,8 @@ function execute(
 	);
 }
 
+// Exports ---------------------------------------------------------------------
+
 export { createMaskedDraw };
+
 export default { init, onFrameStart, execute };

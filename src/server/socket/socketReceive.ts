@@ -53,7 +53,7 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 	// Their message is evidence the connection is alive
 	socketsend.rescheduleHeartbeatTimer(ws);
 	try {
-		messageRouter.routeIncomingSocketMessage(ws, message);
+		messageRouter.route(ws, message);
 	} finally {
 		// Acked even if the handler threw. The client releases its lock on this action when
 		// the ack lands, and an action stuck outstanding forever is worse than one acked
@@ -75,7 +75,7 @@ function parseAndValidateMessage(messageStr: string): ServerboundMessage | null 
 		// Should only be reachable from explicitly crafted messages, but thus far
 		// no bots have exploited this. Safe to log in case it's ever a legit bug.
 		logEvents.add(
-			`Incoming websocket message is not JSON parseable. Message: "${logEvents.escapeLogNewlines(messageStr)}"`,
+			`Incoming websocket message is not JSON parseable. Message: "${logEvents.escapeUntrusted(messageStr)}"`,
 			'errLog',
 		);
 		return null;
@@ -102,7 +102,7 @@ function logAndRateLimitMessage(ws: CustomWebSocket, rawMessage: string): boolea
 	requestMeter.recordRecent();
 	if (requestMeter.meter(ws.metadata.IP, ws.metadata.userAgent) !== undefined) {
 		// Rate limited; close the socket.
-		ws.close(1009, socketutil.ClosureReasons.TOO_MANY_REQUESTS);
+		ws.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_REQUESTS);
 		return false;
 	}
 	return true;

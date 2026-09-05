@@ -17,6 +17,9 @@ const FADE_CURVE_RESOLUTION = 100;
  */
 const FADE_RAMP_CURVATURE = 0.4;
 
+/** The floor applied to fade endpoints, since an exponential ramp cannot touch zero. */
+const MIN_GAIN = 0.00001;
+
 // Utility ---------------------------------------------------------------------
 
 /**
@@ -43,7 +46,6 @@ function applyPerceptualFade(
 	// Anchor the start point to prevent popping
 	gainParam.setValueAtTime(startVolume, now);
 
-	const MIN_GAIN = 0.00001;
 	const effectiveStart = Math.max(startVolume, MIN_GAIN);
 	const effectiveTarget = Math.max(targetVolume, MIN_GAIN);
 
@@ -70,7 +72,7 @@ function applyPerceptualFade(
 
 		const value = linearPoint * (1 - currentRatio) + exponentialPoint * currentRatio;
 
-		// 6. Schedule the ramp segment
+		// Schedule the ramp segment
 		gainParam.linearRampToValueAtTime(value, scheduledTime);
 	}
 }

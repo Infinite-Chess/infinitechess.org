@@ -11,38 +11,6 @@ import * as z from 'zod';
 
 import { VARIANT_CODES } from './variantcodes.js';
 
-// Schemas ---------------------------------------------------------------------
-
-/** One of the site's own variants, named by its code. The half every selection shares. */
-type PresetVariant = z.infer<typeof PresetVariantSchema>;
-const PresetVariantSchema = z.strictObject({
-	kind: z.literal('preset'),
-	code: z.enum(VARIANT_CODES),
-});
-
-/**
- * The variant selection as sent by the client when creating a seek, and the form a seek stores.
- * A saved position (cloud or local) is resolved to its ICN client-side and travels as 'custom'.
- */
-export type SeekVariant = z.infer<typeof SeekVariantSchema>;
-export const SeekVariantSchema = z.discriminatedUnion('kind', [
-	PresetVariantSchema,
-	z.strictObject({
-		kind: z.literal('custom'),
-		position: z.string().min(1),
-	}),
-]);
-
-/**
- * The variant as broadcast to lobby viewers. ICN seeks omit the content so the
- * full ICN text is not sent to every connected client.
- */
-export type OutSeekVariant = z.infer<typeof OutSeekVariantSchema>;
-export const OutSeekVariantSchema = z.discriminatedUnion('kind', [
-	PresetVariantSchema,
-	z.strictObject({ kind: z.literal('custom') }),
-]);
-
 // Types -----------------------------------------------------------------------
 
 /**
@@ -61,3 +29,39 @@ export type GameStateVariant =
 			 */
 			position?: string;
 	  };
+
+// Schemas ---------------------------------------------------------------------
+
+/** One of the site's own variants, named by its code. The half every selection shares. */
+type PresetVariant = z.infer<typeof PresetVariantSchema>;
+const PresetVariantSchema = z.strictObject({
+	kind: z.literal('preset'),
+	code: z.enum(VARIANT_CODES),
+});
+
+/**
+ * The variant selection as sent by the client when creating a seek, and the form a seek stores.
+ * A saved position (cloud or local) is resolved to its ICN client-side and travels as 'custom'.
+ */
+export type SeekVariant = z.infer<typeof SeekVariantSchema>;
+const SeekVariantSchema = z.discriminatedUnion('kind', [
+	PresetVariantSchema,
+	z.strictObject({
+		kind: z.literal('custom'),
+		position: z.string().min(1),
+	}),
+]);
+
+/**
+ * The variant as broadcast to lobby viewers. ICN seeks omit the content so the
+ * full ICN text is not sent to every connected client.
+ */
+export type OutSeekVariant = z.infer<typeof OutSeekVariantSchema>;
+const OutSeekVariantSchema = z.discriminatedUnion('kind', [
+	PresetVariantSchema,
+	z.strictObject({ kind: z.literal('custom') }),
+]);
+
+// Exports ---------------------------------------------------------------------
+
+export default { SeekVariantSchema, OutSeekVariantSchema };

@@ -9,7 +9,7 @@
 import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { Coords } from '../../../../../../shared/util/coordutil.js';
 
-import typeutil from '../../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';

@@ -6,12 +6,12 @@
 
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { GameConclusion } from '../util/typeschemas.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 
-import typeutil from '../../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import gamerules from '../util/gamerules.js';
 
 // Methods ---------------------------------------------------------------------

@@ -6,7 +6,6 @@
 
 // Constants -------------------------------------------------------------------
 
-const BASE_36_CHARSET: string = '0123456789abcdefghijklmnopqrstuvwxyz';
 /**
  * The base62 alphabet. Ordering must NEVER change — numeric-id
  * conversion depends on it, so stored ids would decode differently.
@@ -17,30 +16,15 @@ const BASE_62_CHARSET: string = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijk
 
 /** Generates a random ID of the provided length, with the characters 0-9, a-z, and A-Z. */
 function generateID_Base62(length: number): string {
-	return generateIDWithCharset(length, BASE_62_CHARSET);
-}
-
-/** Generates a random ID of the provided length, with the characters 0-9, a-z. */
-function generateID_Base36(length: number): string {
-	return generateIDWithCharset(length, BASE_36_CHARSET);
-}
-
-/**
- * Generates a random ID of the provided length using the specified character set.
- * @param length - The length of the desired ID
- * @param characters - The character set to use for generating the ID
- */
-function generateIDWithCharset(length: number, characters: string): string {
 	let result = '';
-	const charactersLength = characters.length;
 	for (let i = 0; i < length; i++) {
-		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+		result += BASE_62_CHARSET.charAt(Math.floor(Math.random() * BASE_62_CHARSET.length));
 	}
 	return result;
 }
 
 /**
- * Generates a **UNIQUE** ID of the provided length, with the characters 0-9 and a-z.
+ * Generates a **UNIQUE** ID of the provided length, with the characters 0-9, a-z, and A-Z.
  * The provided object should contain the keys of the existing IDs.
  * @param length - The length of the desired ID
  * @param object - The object that contains keys of the existing IDs.
@@ -114,7 +98,6 @@ function base62ToBase10(base62Str: string): number {
 
 export default {
 	generateID_Base62,
-	generateID_Base36,
 	genUniqueID,
 	generateNumbID,
 	base10ToBase62,

@@ -48,7 +48,7 @@ import selectedpiecehighlightline from './highlights/selectedpiecehighlightline.
 import { PostProcessingPipeline } from '../../webgl/postprocessing/PostProcessingPipeline.js';
 import Renderable, { createRenderable } from '../../board/rendering/renderable.js';
 
-// State ---------------------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Manager of our Shaders */
 let programManager: ProgramManager;
@@ -65,7 +65,7 @@ let effectZoneManager: EffectZoneManager | undefined;
 //  */
 // let colorFlowRenderer: ColorFlowRenderer;
 
-// Setup ---------------------------------------------------------------------------------
+// Setup -----------------------------------------------------------------------
 
 /** Builds the game's render context and every manager drawing through it. */
 function init(canvas: HTMLCanvasElement): void {
@@ -89,7 +89,7 @@ function init(canvas: HTMLCanvasElement): void {
 	WaterRipples.init(programManager, gl.canvas.width, gl.canvas.height);
 
 	// Update the pipeline on canvas resize
-	document.addEventListener('canvas_resize', (event) => {
+	GameBus.addEventListener('canvas-resize', (event) => {
 		const { width, height } = event.detail;
 		pipeline.resize(width, height);
 	});
@@ -100,7 +100,7 @@ function getGameContext(): RenderContext {
 	return gameContext;
 }
 
-// Update --------------------------------------------------------------------------------
+// Update ----------------------------------------------------------------------
 
 /** Advances the effect zone to whichever zone the visible board now falls in. */
 function updateEffectZone(): void {
@@ -118,7 +118,7 @@ function getFurthestTileVisible(): bigint {
 	return furthest;
 }
 
-// Render --------------------------------------------------------------------------------
+// Render ----------------------------------------------------------------------
 
 /** Renders everthing in-game, and applies post processing effects to the final image. */
 function render(): void {
@@ -234,7 +234,7 @@ function renderOutlineofScreenBox(): void {
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
-// Exports -------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	init,

@@ -28,11 +28,7 @@ import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { validatePosition } from '../../../../../shared/chess/logic/positionlegality.js';
 import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import {
-	PositionRejection,
-	localizeRejection,
-	getRejection,
-} from '../../../../../shared/chess/game/playability.js';
+import playability, { PositionRejection } from '../../../../../shared/chess/game/playability.js';
 
 import savesapi from '../../savedpositions/savesapi.js';
 import savestore from '../../savedpositions/savestore.js';
@@ -41,7 +37,6 @@ import validatorama from '../../util/validatorama.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import modifierselector from './modifierselector.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
-
 import variantpreviewtooltip from './variantpreviewtooltip.js';
 
 // Types -----------------------------------------------------------------------
@@ -534,11 +529,8 @@ function setSelectorDisplay(name: string, iconId: string): void {
 
 /** Updates the selector button's icon and name to reflect the given preset variant. */
 function applyVariantToSelector(code: VariantCode): void {
-	const variantGroup = variantregistry.getVariantGroup(code);
-	setSelectorDisplay(
-		t.shared.variants[code],
-		variantregistry.getVariantGroupIconId(variantGroup),
-	);
+	const variantGroup = variantregistry.getGroup(code);
+	setSelectorDisplay(t.shared.variants[code], variantregistry.getGroupIconId(variantGroup));
 }
 
 /** Updates the selector button's icon and name to reflect a custom (non-preset) selection. */
@@ -599,7 +591,7 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 		rejection = playabilityRejection(constructed);
 	}
 	if (rejection !== null) {
-		showError(element_variantDisplay, localizeRejection(t, rejection));
+		showError(element_variantDisplay, playability.localizeRejection(t, rejection));
 		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
 		return;
 	}
@@ -670,9 +662,9 @@ function withEngineBorder(options: VariantOptions): VariantOptions {
 	return { ...options, gameRules: { ...options.gameRules, worldBorder } };
 }
 
-/** {@link getRejection} under the contexts this selector is currently in. */
+/** {@link playability.getRejection} under the contexts this selector is currently in. */
 function playabilityRejection(constructed: GameFile): PositionRejection | null {
-	return getRejection(constructed, {
+	return playability.getRejection(constructed, {
 		seek: config.isSeekContext,
 		engine: engineOnly,
 	});
@@ -757,7 +749,8 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 
 	// The moves-applied gamefile is kept either way, so a rejected position still previews.
 	if (rejection !== null) {
-		if (revealErrors) showError(element_icnInputWrap, localizeRejection(t, rejection));
+		if (revealErrors)
+			showError(element_icnInputWrap, playability.localizeRejection(t, rejection));
 		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
 		return;
 	}

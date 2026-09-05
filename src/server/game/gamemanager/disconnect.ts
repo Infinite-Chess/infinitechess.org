@@ -10,11 +10,12 @@
  * the disconnected player reconnects.
  */
 
-import type { Player } from '../../../shared/util/typeutil.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { MatchInfo, ServerGame } from './serverGameTypes.js';
 
-import typeutil from '../../../shared/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 
+import chat from './chat.js';
 import gameSockets from './gameSockets.js';
 import liveGameValues from './liveGameValues.js';
 
@@ -46,11 +47,10 @@ const CLAIM_DELAY_INVOLUNTARY_MS = 60_000; // 60 seconds
  * their disconnect claim timer is started and opponent notified.
  */
 function startCushionTimer(servergame: ServerGame, role: Player): void {
-	servergame.match.playerData[role]!.disconnect.startID = setTimeout(
-		() => startClaimTimer(servergame, role, true),
-		RECONNECT_CUSHION_MS,
-	);
-	servergame.match.playerData[role]!.disconnect.startTime = Date.now() + RECONNECT_CUSHION_MS;
+	servergame.match.playerData[role]!.disconnect.cushion = {
+		id: setTimeout(() => startClaimTimer(servergame, role, true), RECONNECT_CUSHION_MS),
+		endTime: Date.now() + RECONNECT_CUSHION_MS,
+	};
 	liveGameValues.onPlayerDisconnected(servergame, role); // Persist the state to the db
 }
 
@@ -67,17 +67,21 @@ function startClaimTimer(servergame: ServerGame, role: Player, involuntary: bool
 	const opponentRole = typeutil.invertPlayer(role);
 
 	// Clear the cushion state since we're transitioning to the open claim window.
-	delete playerdata.disconnect.startTime;
+	delete playerdata.disconnect.cushion;
 
-	playerdata.disconnect.timeOpponentMayClaim = now + timeUntilClaimable;
-	playerdata.disconnect.voluntary = !involuntary;
+	playerdata.disconnect.claim = {
+		openTime: now + timeUntilClaimable,
+		voluntary: !involuntary,
+	};
 
 	// Alert their opponent when they'll be able to claim victory by disconnection.
 	const value = {
 		millisUntilClaimable: timeUntilClaimable,
 		voluntary: !involuntary,
 	};
-	gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value); // prettier-ignore
+	gameSockets.sendToColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value);
+
+	chat.appendNotice(servergame, role, involuntary ? 'disconnect-involuntary' : 'disconnect-voluntary'); // prettier-ignore
 
 	liveGameValues.onPlayerDisconnected(servergame, role); // Persist the state to the db
 }
@@ -94,22 +98,18 @@ function cancelAllTimers(match: MatchInfo): void {
 
 /**
  * Cancels the player's disconnect state (cushion + open claim window) if they were
- * disconnected. Also cancels the game-level both-disconnected timer, since a reconnect
- * means the two players are no longer both gone. Called when they reconnect/refresh.
+ * disconnected. Also clears the game's empty-since stamp, since someone being
+ * present means it is no longer empty. Called when they reconnect/refresh.
  */
 function cancelTimer(match: MatchInfo, ourRole: Player): void {
 	const playerdata = match.playerData[ourRole]!;
 
-	clearTimeout(playerdata.disconnect.startID);
-	delete playerdata.disconnect.startID;
-	delete playerdata.disconnect.startTime;
-	delete playerdata.disconnect.timeOpponentMayClaim;
-	delete playerdata.disconnect.voluntary;
+	clearTimeout(playerdata.disconnect.cushion?.id);
+	delete playerdata.disconnect.cushion;
+	delete playerdata.disconnect.claim;
 
-	// A reconnect (or game over) means the players are no longer both disconnected.
-	clearTimeout(match.bothDisconnectedTimeoutID);
-	delete match.bothDisconnectedTimeoutID;
-	delete match.bothDisconnectedEndTime;
+	// A reconnect (or game over) means the game is no longer empty.
+	delete match.emptySince;
 }
 
 // Exports ---------------------------------------------------------------------

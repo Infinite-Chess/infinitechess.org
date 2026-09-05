@@ -8,7 +8,7 @@
  */
 
 import type { Color } from '../../../../../../shared/types/color.js';
-import type { Player } from '../../../../../../shared/util/typeutil.js';
+import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
@@ -88,16 +88,21 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
  *
  * Using an offset means the vertex data ALWAYS remains less than 10000!
  */
-const highlightedMovesRegenRange = 10_000n;
+const REGEN_RANGE = 10_000n;
 
 /** The distance, in perspective mode, we want to aim to render legal moves highlights out to, or farther. */
 const PERSPECTIVE_VIEW_RANGE = 1000;
-/** Amount of screens in number the render range bounding box should try to aim for beyond the screen. */
-const multiplier = 4;
-/**
- * In perspective mode, visible range is considered 1000. This is the multiplier to that for the render range bounding box.
- */
-const multiplier_perspective = 2;
+
+/** How far beyond the visible view the render range bounding box should aim for. */
+const SCREEN_MULTIPLIER = {
+	/** A multiplier to the screen's dimensions. */
+	FLAT: 4,
+	/**
+	 * A multiplier to {@link PERSPECTIVE_VIEW_RANGE}, since in perspective
+	 * mode the screen dimensions don't describe what's visible.
+	 */
+	PERSPECTIVE: 2,
+} as const;
 
 const ZERO: BigDecimal = bd.fromBigInt(0n);
 
@@ -122,7 +127,7 @@ let boundingBoxOfRenderRange: BoundingBox | undefined;
  * How much the vertex data of the highlight models has been offset, to make their numbers
  * close to zero, to avoid floating point imprecision.
  *
- * This is the nearest multiple of {@link highlightedMovesRegenRange} our camera is at.
+ * This is the nearest multiple of {@link REGEN_RANGE} our camera is at.
  */
 let model_Offset: Coords = [0n, 0n];
 
@@ -162,11 +167,8 @@ function updateRenderRange(): boolean {
 		top: space.roundCoord(bd.add(boardPos[1], halfNewHeight)),
 	};
 
-	/** Update our offset to the nearest grid-point multiple of {@link highlightedMovesRegenRange} */
-	model_Offset = geometry.roundPointToNearestGridpoint(
-		boardpos.getBoardPos(),
-		highlightedMovesRegenRange,
-	);
+	/** Update our offset to the nearest grid-point multiple of {@link REGEN_RANGE} */
+	model_Offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 
 	// console.log("Shifted offset of highlights.");
 
@@ -196,8 +198,9 @@ function isViewRangeContainedInRenderRange(): boolean {
 		const renderRangeWidth: number =
 			Number(boundingBoxOfRenderRange.right - boundingBoxOfRenderRange.left) + 1;
 
-		// multiplier needs to be squared cause otherwise when we zoom in it regenerates the render box every frame.
-		if (width * multiplier * multiplier < renderRangeWidth) return false;
+		// The multiplier needs to be squared cause otherwise when we zoom in it regenerates the render box every frame.
+		if (width * SCREEN_MULTIPLIER.FLAT * SCREEN_MULTIPLIER.FLAT < renderRangeWidth)
+			return false;
 	}
 
 	const floatingRenderRangeBox =
@@ -221,7 +224,7 @@ function getBoundingBoxOfPerspectiveView(): BoundingBoxBD {
 /** [PERSPECTIVE] Returns the target dimensions of the legal move highlights box. */
 function getDimensionsOfPerspectiveViewRange(): DoubleCoords {
 	const width = PERSPECTIVE_VIEW_RANGE * 2;
-	const newWidth = width * multiplier_perspective;
+	const newWidth = width * SCREEN_MULTIPLIER.PERSPECTIVE;
 	return [newWidth, newWidth];
 }
 
@@ -233,8 +236,8 @@ function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 	const width: number = Number(boundingBoxOfView.right - boundingBoxOfView.left) + 1; // Need to +1 since the board bounding box just includes the integer squares, not floating point edges.
 	const height: number = Number(boundingBoxOfView.top - boundingBoxOfView.bottom) + 1;
 
-	const newWidth = width * multiplier;
-	const newHeight = height * multiplier;
+	const newWidth = width * SCREEN_MULTIPLIER.FLAT;
+	const newHeight = height * SCREEN_MULTIPLIER.FLAT;
 
 	if (boardpos.areZoomedOut())
 		throw Error("Don't recalculate legal move highlights box zoomed out!"); // Don't want to generate a stupidly large model

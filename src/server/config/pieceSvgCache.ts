@@ -11,14 +11,14 @@
  * whose CSS repaints every fill and stroke.
  */
 
-import type { RawType, Player, PlayerGroup } from '../../shared/util/typeutil.js';
+import type { RawType, Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
 
 import piecethemes from '../../shared/chess/util/piecethemes.js';
-import typeutil, { players, rawTypes } from '../../shared/util/typeutil.js';
+import typeutil, { players, rawTypes } from '../../shared/chess/util/typeutil.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

@@ -7,9 +7,9 @@
  */
 
 import icnposition from '../../shared/chess/logic/icn/icnposition.js';
+import engineregistry from '../../shared/chess/util/engineregistry.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
-import { ENGINE_DICTIONARY } from '../../shared/chess/util/engine.js';
-import typeutil, { players as p } from '../../shared/util/typeutil.js';
+import typeutil, { players as p } from '../../shared/chess/util/typeutil.js';
 
 import pieceSvgCache from '../config/pieceSvgCache.js';
 
@@ -48,11 +48,11 @@ interface PieceIconViewModel {
 
 /** The checkmate list is static, so the whole view model is built once. */
 const state: PracticePageState = {
-	groups: Object.entries(validcheckmates.VALID_CHECKMATES).map(([difficulty, checkmates]) => ({
+	groups: Object.entries(validcheckmates.BY_DIFFICULTY).map(([difficulty, checkmates]) => ({
 		difficulty,
 		checkmates: checkmates.map((id) => buildCheckmateViewModel(id)),
 	})),
-	botName: ENGINE_DICTIONARY.engineCheckmatePractice.displayName,
+	botName: engineregistry.REGISTRY.engineCheckmatePractice.displayName,
 };
 
 // Functions -------------------------------------------------------------------

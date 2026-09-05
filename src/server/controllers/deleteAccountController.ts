@@ -11,12 +11,11 @@ import jsutil from '../../shared/util/jsutil.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import logEvents from '../utility/logEvents.js';
-import activeGames from '../game/gamemanager/activeGames.js';
 import memberManager from '../database/memberManager.js';
+import gameLifecycle from '../game/gamemanager/gameLifecycle.js';
 import sessionManager from '../auth/sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import authController from './authController.js';
-import { getTranslation } from '../utility/translate.js';
 
 /** `DELETE /api/members/:member` — deletes the caller's own account after re-verifying their password. */
 async function removeAccount(req: Request, res: Response): Promise<void> {
@@ -31,21 +30,6 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 	// The resolved identity comes straight from the DB, with the canonical user_id and username.
 	const identity = await authController.testPasswordForRequest(req, res);
 	if (!identity) return; // Response already sent
-
-	// Do not allow account deletion if user is currently playing a game
-	// THIS DOES NOT PREVENT AN ADMIN MANUALLY DELETING THEIR ACCOUNT
-	// If that is done while they are in the middle of a rated game,
-	// errors will happen when the game is deleted.
-	if (activeGames.hasMember(identity.username)) {
-		logEvents.addAndPrint(
-			`User ${identity.username} requested account deletion while being listed in some active game.`,
-			'deletedAccounts.txt',
-		);
-		res.status(403).json({
-			message: getTranslation('server.javascript.ws-deleting_account_in_game', req.lang),
-		});
-		return;
-	}
 
 	// DELETE ACCOUNT..
 
@@ -74,19 +58,21 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 }
 
 /**
- * Deletes a user's account by user_id, terminates all their
- * login session, and closes all their open websockets.
+ * Deletes a user's account by user_id. It first ensures any game they're in is terminated
+ * and logged, and closes all their sockets. The `members` row is deleted last, so no game
+ * or socket logic is still running that could read a member that no longer exists.
  * @throws If a database error occurs during the deletion process.
  */
 function deleteAccount(user_id: number, reason_deleted: DeleteReason): void {
-	memberManager.remove(user_id, reason_deleted);
+	// Their live game must be logged BEFORE the member row goes.
+	gameLifecycle.concludeForAccountDeletion(user_id, reason_deleted === 'user request');
 
 	// Close their sockets, delete their seeks...
-	socketRegistry.closeAllOfMember(user_id, 1008, socketutil.ClosureReasons.LOGGED_OUT);
+	socketRegistry.closeAllOfMember(user_id, 1008, socketutil.CLOSURE_REASONS.LOGGED_OUT);
 
-	// Account deleting automatically invalidates all their sessions,
-	// because their refresh tokens are deleted.
+	// Account deleting automatically invalidates all their sessions, because their refresh tokens are deleted.
 	// However, they will have to refresh the page for their page and navigation links to update.
+	memberManager.remove(user_id, reason_deleted);
 }
 
 // Exports ---------------------------------------------------------------------

@@ -52,7 +52,7 @@ interface SpawnOptions {
 /** Spawns a worker against the page's engine build and posts its `init`. */
 function spawn(options: SpawnOptions): AnalysisWorker {
 	const entry: AnalysisWorker = {
-		worker: new Worker(window.analysisPageData.workerUrl, { type: 'module' }),
+		worker: new Worker(window.analysisPageData.engineAssets.workerUrl, { type: 'module' }),
 		ready: false,
 	};
 
@@ -89,7 +89,7 @@ function spawn(options: SpawnOptions): AnalysisWorker {
 	entry.worker.postMessage({
 		cmd: 'init',
 		hashMb: options.hashMb,
-		engineUrl: window.analysisPageData.engineUrl,
+		engineUrl: window.analysisPageData.engineAssets.engineUrl,
 		...(options.threads !== undefined && { threads: options.threads }),
 	} satisfies AnalysisCommand);
 

@@ -2,6 +2,8 @@
 
 import { vi, afterAll } from 'vitest';
 
+import logEvents from '../server/utility/logEvents.js';
+
 // Set up environment variables for testing.
 // Prevents `test` workflow job failing due to missing secrets.
 process.env['REFRESH_TOKEN_SECRET'] = 'test_refresh_secret';
@@ -16,16 +18,10 @@ console.log = vi.fn();
 console.error = vi.fn();
 console.warn = vi.fn();
 
-// Mock Logger to prevent file writes. Stub only the
-// file-writing log functions; keep real pure helpers.
-vi.mock('../server/utility/logEvents.js', async (importOriginal) => {
-	const actual = await importOriginal<typeof import('../server/utility/logEvents.js')>();
-	return {
-		...actual,
-		logEvents: vi.fn(), // Do nothing
-		logEventsAndPrint: vi.fn(), // Do nothing
-	};
-});
+// Stub only the file-writing log functions, so tests never touch logs/.
+// Spied rather than module-mocked so a wrong name is a compile error.
+vi.spyOn(logEvents, 'add').mockResolvedValue(undefined);
+vi.spyOn(logEvents, 'addAndPrint').mockResolvedValue(undefined);
 
 // Restore console functions after tests finish so Vitest can print the summary
 afterAll(() => {

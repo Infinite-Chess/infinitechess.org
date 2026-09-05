@@ -20,7 +20,11 @@ import camera from './camera.js';
 import boardpos from './boardpos.js';
 import boardgeometry from './boardgeometry.js';
 
+// Constants -------------------------------------------------------------------
+
 const HALF: BigDecimal = bd.fromNumber(0.5);
+
+// World Space to Grid Space ---------------------------------------------------
 
 /**
  * Since the camera is fixed in place, with the board moving and scaling below it,
@@ -62,7 +66,12 @@ function roundCoords(coords: BDCoords): Coords {
 	return [roundCoord(coords[0]), roundCoord(coords[1])];
 }
 
-// Takes a square coordinate, returns the world-space location of the square's VISUAL center! Dependant on board.getSquareCenter().
+// Grid Space to World Space ---------------------------------------------------
+
+/**
+ * Takes a square coordinate, returns the world-space location of the
+ * square's VISUAL center. Depends on boardgeometry.getSquareCenter().
+ */
 function convertCoordToWorldSpace(
 	coords: BDCoords,
 	position: BDCoords = boardpos.getBoardPos(),
@@ -97,6 +106,8 @@ function convertCoordToWorldSpace_IgnoreSquareCenter(
 	return [getAxis(coords[0], position[0]), getAxis(coords[1], position[1])];
 }
 
+// Pixel Conversions -----------------------------------------------------------
+
 /**
  * Converts a measurement of virtual screen pixels to world space units. Dependant on the current screen height.
  * @param cam - The camera to measure against. Defaults to the game camera.
@@ -119,6 +130,8 @@ function convertWorldSpaceToGrid(value: number): BigDecimal {
 	// value / scale
 	return bd.divideFloating(valueBD, scale);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	convertWorldSpaceToCoords,

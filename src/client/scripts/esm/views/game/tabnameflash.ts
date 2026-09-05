@@ -14,20 +14,26 @@ import movesound from '../../game/movesound.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from '../../game/chess/gamesession.js';
 
+// Constants -------------------------------------------------------------------
+
 /** Number of millis to wait before reminding us a 2nd time it's our move by playing a sound effect. */
 const MOVE_SOUND_REMINDER_MS: number = 1000 * 20; // 20 seconds
 
 /** The original tab title. We will always revert to this after temporarily changing the name name to alert player's it's their move. */
-const originalDocumentTitle: string = document.title;
+const ORIGINAL_TITLE: string = document.title;
 
 /** How rapidly the tab title should flash "YOUR MOVE" */
-const periodicityMs = 1500;
+const FLASH_INTERVAL_MS = 1500;
+
+// State -----------------------------------------------------------------------
 
 /** The ID of the timeout that can be used to cancel the timer that flips the tab title between "YOUR MOVE" and the default title. */
 let timeoutID: ReturnType<typeof setTimeout> | undefined;
 
 /** The ID of the timeout that can be used to cancel the timer that will play a move sound effect to help you realize it's your move. Typically about 20 seconds. */
 let moveSound_timeoutID: ReturnType<typeof setTimeout> | undefined;
+
+// Listeners -------------------------------------------------------------------
 
 GameBus.addEventListener('game-loaded', () =>
 	gamesession.isItOurTurn() ? onOurTurn() : onOpponentsTurn(),
@@ -44,6 +50,8 @@ document.addEventListener('visibilitychange', () => {
 	cancelFlashTabTimer();
 	cancelMoveSound();
 });
+
+// Functions -------------------------------------------------------------------
 
 /** It's now our turn: flash the tab name and schedule a reminder sound. */
 function onOurTurn(): void {
@@ -65,17 +73,17 @@ function flashTabNameYOUR_MOVE(parity: boolean): void {
 	if (!document.hidden) {
 		// The page is no longer hidden, restore the tab's original title,
 		// and stop flashing "YOUR MOVE"
-		document.title = originalDocumentTitle;
+		document.title = ORIGINAL_TITLE;
 		return;
 	}
 
-	document.title = parity ? 'YOUR MOVE' : originalDocumentTitle;
+	document.title = parity ? 'YOUR MOVE' : ORIGINAL_TITLE;
 	// Set a timer for the next toggle
-	timeoutID = setTimeout(flashTabNameYOUR_MOVE, periodicityMs, !parity);
+	timeoutID = setTimeout(flashTabNameYOUR_MOVE, FLASH_INTERVAL_MS, !parity);
 }
 
 function cancelFlashTabTimer(): void {
-	document.title = originalDocumentTitle;
+	document.title = ORIGINAL_TITLE;
 	clearTimeout(timeoutID);
 	timeoutID = undefined;
 }

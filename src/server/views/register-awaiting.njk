@@ -48,9 +48,8 @@
 		{# Change-email control. Hidden behind the "Check email correctness" toggle  #}
 		<div class="register-change-email auth-field{% if not blacklisted %} hidden{% endif %}" id="change-email">
 			<label for="new-email">{{ t.change_email.label }}</label>
-			{# maxlength 320: the email max length from validateEmail() in validators.ts #}
 			{# textInput autoescapes `value`, so the user-controlled email can't inject HTML #}
-			{{ textInput("new-email", "new-email", "email", "email", 320, required=false, value=email) }}
+			{{ textInput("new-email", "new-email", "email", "email", maxLengths.EMAIL, required=false, value=email) }}
 			<p class="auth-error hidden" id="new-email-error"></p>
 			<button class="btn-primary auth-field-submit" id="change-email-submit">{{ t.change_email.submit }}</button>
 		</div>

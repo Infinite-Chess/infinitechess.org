@@ -13,13 +13,14 @@ import variantcache from '../shared/chess/variants/variantcache.js';
 
 import db from './database/database.js';
 import app from './app.js';
+import setupDev from './setupDev.js';
 import logEvents from './utility/logEvents.js';
 import gameRestart from './game/gamemanager/gameRestart.js';
 import certOptions from './config/certOptions.js';
 import socketServer from './socket/socketServer.js';
 import databaseInit from './database/databaseInit.js';
+import gameLifecycle from './game/gamemanager/gameLifecycle.js';
 import startupLogger from './utility/startupLogger.js';
-import { initDevEnvironment } from './setupDev.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
@@ -48,7 +49,7 @@ process.on('uncaughtException', (error: unknown) => {
 
 databaseInit.init();
 // Ensure our workspace is ready for the dev environment
-initDevEnvironment();
+setupDev.init();
 logEvents.startPeriodicLogCleanup();
 
 const httpsServer = https.createServer(certOptions.get(), app);
@@ -64,6 +65,7 @@ await variantcache.loadAllVariants();
 
 // Restore live games from the database into memory before accepting new connections.
 gameRestart.restoreLiveGames();
+gameLifecycle.startPeriodicAbandonmentSweep();
 
 // Start the server
 const DEV_BUILD = process.env['NODE_ENV'] === 'development';

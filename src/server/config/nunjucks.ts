@@ -12,8 +12,8 @@ import path from 'path';
 import nunjucks from 'nunjucks';
 import { fileURLToPath } from 'node:url';
 
-import { players as p } from '../../shared/util/typeutil.js';
-import { getVersionedEngineName } from '../../shared/chess/util/engine.js';
+import engineregistry from '../../shared/chess/util/engineregistry.js';
+import { players as p } from '../../shared/chess/util/typeutil.js';
 
 import manifest from './manifest.js';
 
@@ -70,7 +70,7 @@ function setManifestGlobals(env: nunjucks.Environment, assets: Record<string, st
 	env.addGlobal('manifest', assets);
 	env.addGlobal(
 		'engineNameVersioned',
-		getVersionedEngineName('apeiron', manifest.getEngineVersion()),
+		engineregistry.getVersionedName('apeiron', manifest.getEngineVersion()),
 	);
 }
 

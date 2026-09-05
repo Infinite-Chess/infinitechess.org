@@ -7,13 +7,13 @@
 import type { Movesets } from '../../../logic/movesets.js';
 import type { CoordsKey } from '../../../../util/coordutil.js';
 import type { GameRuleModifications } from '../../../logic/variantmodule.js';
-import type { RawType, RawTypeGroup } from '../../../../util/typeutil.js';
+import type { RawType, RawTypeGroup } from '../../../util/typeutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../../../logic/specialmove.js';
 
 import gen4dposition from '../gen4dposition.js';
 import fourdimensionalmoves from '../../../logic/fourdimensionalmoves.js';
 import fourdimensionalloader from '../fourdimensionalloader.js';
-import { players as p, rawTypes as r } from '../../../../util/typeutil.js';
+import { players as p, rawTypes as r } from '../../../util/typeutil.js';
 
 export function getPosition(): { position: Map<CoordsKey, number> } {
 	return {

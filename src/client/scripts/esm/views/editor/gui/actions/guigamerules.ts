@@ -14,7 +14,7 @@ import boardutil from '../../../../../../../shared/chess/logic/boardutil';
 import gamerules from '../../../../../../../shared/chess/util/gamerules';
 import icnposition from '../../../../../../../shared/chess/logic/icn/icnposition';
 import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
-import typeutil, { RawType } from '../../../../../../../shared/util/typeutil';
+import typeutil, { RawType } from '../../../../../../../shared/chess/util/typeutil';
 
 import gameslot from '../../../../game/chess/gameslot';
 import boardeditor from '../../boardeditor';

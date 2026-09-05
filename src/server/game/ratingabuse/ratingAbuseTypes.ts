@@ -20,7 +20,7 @@ export type AbusePlayerGamesRecord = Pick<
 >;
 
 /** The entries of a {@link GamesRecord} the rating abuse calculation reads. */
-export type AbuseGamesRecord = Pick<
+type AbuseGamesRecord = Pick<
 	GamesRecord,
 	| 'game_id'
 	| 'date'
@@ -42,7 +42,7 @@ export type AbuseGameInfo = AbusePlayerGamesRecord &
 	};
 
 /** The entries of a MemberRecord the rating abuse calculation reads. */
-export type AbuseMemberRecord = {
+type AbuseMemberRecord = {
 	username: string;
 	user_id: number;
 	joined: string;

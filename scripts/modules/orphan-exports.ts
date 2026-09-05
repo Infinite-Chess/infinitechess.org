@@ -1,9 +1,10 @@
-// scripts/orphan-exports.ts
+// scripts/modules/orphan-exports.ts
 
 /**
  * Exported symbols with no reference anywhere outside their own file.
  *
- *   npx tsx scripts/orphan-exports.ts [src/shared | src/server | src/client | any path prefix]
+ * Usage:
+ *   npx tsx scripts/modules/orphan-exports.ts [src/shared | src/server | src/client | any path prefix]
  *
  * Nothing should be exported — types included — without a consumer outside its module, so every
  * hit is either a dead `export` keyword to drop or a symbol whose module is the wrong home.
@@ -42,6 +43,13 @@ function exportedNames(f: string): string[] {
 	const sf = ts.createSourceFile(f, text.get(f)!, ts.ScriptTarget.Latest, true);
 	const names: string[] = [];
 	for (const stmt of sf.statements) {
+		// `export { a, b }` carries no export modifier, so it must be matched first.
+		if (ts.isExportDeclaration(stmt) && !stmt.moduleSpecifier) {
+			if (stmt.exportClause && ts.isNamedExports(stmt.exportClause)) {
+				for (const el of stmt.exportClause.elements) names.push(el.name.text);
+			}
+			continue;
+		}
 		const mods = ts.canHaveModifiers(stmt) ? ts.getModifiers(stmt) : undefined;
 		if (!mods?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)) continue;
 		if (ts.isVariableStatement(stmt)) {

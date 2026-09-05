@@ -12,7 +12,7 @@ import socketSubs from './socketSubs.js';
 // Functions -------------------------------------------------------------------
 
 /** Routes a validated 'general' message to the handler for its action. */
-function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGeneralMessage): void {
+function route(ws: CustomWebSocket, message: ServerboundGeneralMessage): void {
 	// Route them according to their action
 	switch (message.action) {
 		case 'sub':
@@ -28,4 +28,4 @@ function routeGeneralMessage(ws: CustomWebSocket, message: ServerboundGeneralMes
 
 // Exports ---------------------------------------------------------------------
 
-export default { routeGeneralMessage };
+export default { route };

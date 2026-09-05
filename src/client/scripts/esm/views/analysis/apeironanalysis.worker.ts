@@ -40,7 +40,7 @@ import type {
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
-import { loadEngineWasm, getPromotionAbbr } from '../../game/chess/engines/enginewasm.js';
+import enginewasm from '../../game/chess/engines/enginewasm.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -128,7 +128,7 @@ let reachedDepth = 0;
  */
 async function init(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promise<void> {
 	try {
-		const loaded = await loadEngineWasm<AnalysisWasmModule>(
+		const loaded = await enginewasm.load<AnalysisWasmModule>(
 			msg.engineUrl,
 			msg.threads ?? 1,
 			(module) => module.set_hash_size(msg.hashMb),
@@ -367,7 +367,7 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 			// Forced move: don't search; the review carries the eval over from its neighbors.
 			const move = legalMoves[0]!;
 			const promotion = move.promotion
-				? `=${getPromotionAbbr(move.promotion, msg.mover)}`
+				? `=${enginewasm.getPromotionAbbr(move.promotion, msg.mover)}`
 				: '';
 			result.pv = [`${move.from}>${move.to}${promotion}`];
 		} else if (legalMoves.length > 1) {

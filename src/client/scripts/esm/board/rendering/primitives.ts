@@ -161,25 +161,6 @@ function DashedRect(left: number, bottom: number, right: number, top: number, th
 
 // =========================================== Circles ================================================
 
-/** [LINE_LOOP] Generates vertex data for the outline of a hollow circle. */
-// function Circle_LINES(x: number, y: number, radius: number, r: number, g: number, b: number, a: number, resolution: number): number[] { // res is resolution
-// 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a circle.");
-
-// 	const data: number[] = [];
-
-// 	for (let i = 0; i < resolution; i++) {
-// 		const theta = (i / resolution) * 2 * Math.PI;
-
-// 		const thisX = x + radius * Math.cos(theta);
-// 		const thisY = y + radius * Math.sin(theta);
-
-// 		// Points around the circle
-// 		data.push(thisX, thisY, r, g, b, a);
-// 	}
-
-// 	return data;
-// }
-
 /** [TRIANGLES] Generates vertex data for a solid-colored circle composed of triangles. */
 // prettier-ignore
 function Circle(x: number, y: number, radius: number, resolution: number, [r,g,b,a]: Color): number[] {
@@ -225,41 +206,6 @@ function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g
 
 	return data;
 }
-
-/** [TRIANGLES] Generates vertex data for a solid-colored ring. */
-// function RingSolid(x: number, y: number, inRad: number, outRad: number, resolution: number, [r,g,b,a]: Color): number[] {
-// 	if (resolution < 3) throw Error("Resolution must be 3+ to get data of a ring.");
-
-// 	const data: number[] = [];
-
-// 	for (let i = 0; i < resolution; i++) {
-// 		const theta = (i / resolution) * 2 * Math.PI;
-// 		const nextTheta = ((i + 1) / resolution) * 2 * Math.PI;
-
-// 		const innerX = x + inRad * Math.cos(theta);
-// 		const innerY = y + inRad * Math.sin(theta);
-// 		const outerX = x + outRad * Math.cos(theta);
-// 		const outerY = y + outRad * Math.sin(theta);
-
-// 		const innerXNext = x + inRad * Math.cos(nextTheta);
-// 		const innerYNext = y + inRad * Math.sin(nextTheta);
-// 		const outerXNext = x + outRad * Math.cos(nextTheta);
-// 		const outerYNext = y + outRad * Math.sin(nextTheta);
-
-// 		// Add triangles for the current and next segments
-// 		data.push(
-// 			innerX, innerY, r, g, b, a,
-// 			outerX, outerY, r, g, b, a,
-// 			innerXNext, innerYNext, r, g, b, a,
-
-// 			outerX, outerY, r, g, b, a,
-// 			outerXNext, outerYNext, r, g, b, a,
-// 			innerXNext, innerYNext, r, g, b, a
-// 		);
-// 	}
-
-// 	return data;
-// }
 
 /** [TRIANGLES] Generates vertex data for a ring with color gradients between the inner and outer edges. */
 // prettier-ignore

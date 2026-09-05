@@ -1,21 +1,23 @@
 // src/client/scripts/esm/game/rendering/effectzone/zones/StaticZone.ts
 
-import type { Zone } from '../Zone';
+/**
+ * A grey board covered in large TV static, flickering to a new
+ * pattern several times a second.
+ */
+
+import type { UniformValue } from '../../../../webgl/Renderable';
 import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
 
-import AudioManager from '../../../../audio/AudioManager';
+import { BaseZone } from '../BaseZone';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
-export class StaticZone implements Zone {
+export class StaticZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 7;
 
 	private colorGradePass: ColorGradePass;
-
-	/** The soundscape player for this zone. */
-	private ambience: SoundscapePlayer;
 
 	/** How many pixels wide the white noise texture is. */
 	private readonly TEXTURE_WIDTH = 256;
@@ -36,6 +38,7 @@ export class StaticZone implements Zone {
 	private uvOffset: [number, number] = [0, 0];
 
 	constructor(programManager: ProgramManager) {
+		super();
 		this.colorGradePass = new ColorGradePass(programManager);
 		this.colorGradePass.saturation = 0.35; // Default: 0.5
 		this.colorGradePass.brightness = -0.2; // Default: -0.15
@@ -87,7 +90,7 @@ export class StaticZone implements Zone {
 		}
 	}
 
-	public getUniforms(): Record<string, any> {
+	public getUniforms(): Record<string, UniformValue> {
 		return {
 			u7_strength: this.strength,
 			u7_uvOffset: this.uvOffset,
@@ -96,17 +99,7 @@ export class StaticZone implements Zone {
 		};
 	}
 
-	public getPasses(): PostProcessPass[] {
+	public override getPasses(): PostProcessPass[] {
 		return [this.colorGradePass];
-	}
-
-	public fadeInAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeIn(transitionDurationMs);
-		AudioManager.fadeInDownsampler(transitionDurationMs);
-	}
-
-	public fadeOutAmbience(transitionDurationMs: number): void {
-		this.ambience.fadeOut(transitionDurationMs);
-		AudioManager.fadeOutDownsampler(transitionDurationMs);
 	}
 }

@@ -7,7 +7,7 @@
 import type { Piece } from './boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
-import type { Player } from '../../util/typeutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
@@ -22,7 +22,7 @@ import specialdetect from './specialdetect.js';
 import checkresolver from './checkresolver.js';
 import organizedpieces from './organizedpieces.js';
 import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
-import typeutil, { players as p, rawTypes as r } from '../../util/typeutil.js';
+import typeutil, { players as p, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -59,7 +59,7 @@ export interface LegalMoves {
  */
 const MAX_BRUTE_SIMULATIONS = 200n;
 
-// Functions -------------------------------------------------------------------
+// Reading a Moveset -----------------------------------------------------------
 
 /**
  * Gets the moveset of the type of piece specified.
@@ -85,6 +85,8 @@ function getBlockingFuncFromPieceMoveset(pieceMoveset: PieceMoveset): BlockingFu
 function getIgnoreFuncFromPieceMoveset(pieceMoveset: PieceMoveset): IgnoreFunction {
 	return pieceMoveset.ignore || movesets.defaultIgnoreFunction;
 }
+
+// Move Generation Steps -------------------------------------------------------
 
 /**
  * Creates an empty LegalMoves object for a piece.
@@ -222,94 +224,7 @@ function removeObstructedSlidingMoves(
 	}
 }
 
-/**
- * Tests whether the provided coordinates can POSSIBLY be landed on
- * (bar legality check), and whether they should block further movement.
- *
- * 0 => Allowed, and doesn't block further movement (empty square, or premove)
- * 1 => Allowed, but BLOCKS further movement (enemy piece)
- * 2 => Blocked, and BLOCKS further movement (friendly piece or void or outside border)
- *
- * @param premove - Exempts the `capturing` requirement from being fulfilled, and allows capturing friendlies.
- * @param capturing - Whether the move is required to be a capture (pawn diagonal move). Default: false. Setting this to false DOES NOT require the move to be non-capturing.
- */
-function testSquareValidity(
-	boardsim: Board,
-	coords: Coords,
-	friendlyColor: Player,
-	premove: boolean,
-	capturing: boolean,
-): 0 | 1 | 2 {
-	// Test whether the given square lies out of bounds of the position.
-	const worldBorder = boardsim.gameRules.worldBorder;
-	if (worldBorder !== undefined && !bounds.boxContainsSquare(worldBorder, coords)) return 2;
-
-	const typeOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, coords);
-
-	if (typeOnSquare === undefined) {
-		if (premove) return 0; // No piece, premove means capture could end up happening => legal move
-		if (capturing) return 2; // Not a capture, yet capture is required => not legal
-		return 0; // No piece, in bounds => legal move
-	}
-
-	return testCaptureValidity(friendlyColor, typeOnSquare, premove);
-}
-
-/**
- * Tests whether the provided piece type can POSSIBLY be captured
- * (bar legality check), and whether they should block further movement.
- *
- * 0 => Allowed, and doesn't block further movement (premove)
- * 1 => Allowed, but BLOCKS further movement (enemy piece)
- * 2 => Blocked, and BLOCKS further movement (friendly piece or void)
- *
- * @param premove - Allows capturing friendlies.
- */
-function testCaptureValidity(
-	friendlyColor: Player,
-	typeOnSquare: number,
-	premove: boolean,
-): 0 | 1 | 2 {
-	const rawType = typeutil.getRawType(typeOnSquare);
-	if (rawType === r.VOID) return 2; // Void, NEVER legal
-
-	if (premove) return 0; // There is a non-void piece, but we're premoving => legal move
-
-	const colorOfPiece = typeutil.getColorFromType(typeOnSquare);
-	if (friendlyColor === colorOfPiece) return 2; // Friendly piece, not legal
-
-	return 1; // Enemy piece, legal move, but blocks further movement
-}
-
-/**
- * Calculates and generates all legal moves of a piece in the provided boardsim.
- * @returns The legal moves of that piece
- */
-function calculateAll(boardsim: Board, piece: Piece): LegalMoves {
-	const moveset = getPieceMoveset(boardsim, piece.type);
-	const moves = getEmptyLegalMoves(moveset);
-	appendPotentialMoves(piece, moveset, moves);
-	removeObstructedMoves(boardsim, piece, moveset, moves, false);
-	appendSpecialMoves(boardsim, piece, moveset, moves, false);
-	checkresolver.removeCheckInvalidMoves(boardsim, piece, moves);
-	return moves;
-}
-
-/**
- * Calculates all possible premoves of a piece in the provided boardsim.
- * * Jumps can't be obstructed.
- * * Slides can't be blocked.
- * * No check pruning is made.
- */
-function calculateAllPremoves(boardsim: Board, piece: Piece): LegalMoves {
-	const moveset = getPieceMoveset(boardsim, piece.type);
-	const moves = getEmptyLegalMoves(moveset);
-	appendPotentialMoves(piece, moveset, moves);
-	removeObstructedMoves(boardsim, piece, moveset, moves, true); // true to only remove void and world border obstructions
-	appendSpecialMoves(boardsim, piece, moveset, moves, true); // true to add all possible moves
-	// SKIP removing check invalids!
-	return moves;
-}
+// Slide Limits ----------------------------------------------------------------
 
 /**
  * Takes in specified organized list, direction of the slide, the current moveset...
@@ -454,6 +369,101 @@ function calcPiecesLegalSlideLimitOnSpecificLine(
 		false,
 	);
 }
+
+// Square Validity -------------------------------------------------------------
+
+/**
+ * Tests whether the provided coordinates can POSSIBLY be landed on
+ * (bar legality check), and whether they should block further movement.
+ *
+ * 0 => Allowed, and doesn't block further movement (empty square, or premove)
+ * 1 => Allowed, but BLOCKS further movement (enemy piece)
+ * 2 => Blocked, and BLOCKS further movement (friendly piece or void or outside border)
+ *
+ * @param premove - Exempts the `capturing` requirement from being fulfilled, and allows capturing friendlies.
+ * @param capturing - Whether the move is required to be a capture (pawn diagonal move). Default: false. Setting this to false DOES NOT require the move to be non-capturing.
+ */
+function testSquareValidity(
+	boardsim: Board,
+	coords: Coords,
+	friendlyColor: Player,
+	premove: boolean,
+	capturing: boolean,
+): 0 | 1 | 2 {
+	// Test whether the given square lies out of bounds of the position.
+	const worldBorder = boardsim.gameRules.worldBorder;
+	if (worldBorder !== undefined && !bounds.boxContainsSquare(worldBorder, coords)) return 2;
+
+	const typeOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, coords);
+
+	if (typeOnSquare === undefined) {
+		if (premove) return 0; // No piece, premove means capture could end up happening => legal move
+		if (capturing) return 2; // Not a capture, yet capture is required => not legal
+		return 0; // No piece, in bounds => legal move
+	}
+
+	return testCaptureValidity(friendlyColor, typeOnSquare, premove);
+}
+
+/**
+ * Tests whether the provided piece type can POSSIBLY be captured
+ * (bar legality check), and whether they should block further movement.
+ *
+ * 0 => Allowed, and doesn't block further movement (premove)
+ * 1 => Allowed, but BLOCKS further movement (enemy piece)
+ * 2 => Blocked, and BLOCKS further movement (friendly piece or void)
+ *
+ * @param premove - Allows capturing friendlies.
+ */
+function testCaptureValidity(
+	friendlyColor: Player,
+	typeOnSquare: number,
+	premove: boolean,
+): 0 | 1 | 2 {
+	const rawType = typeutil.getRawType(typeOnSquare);
+	if (rawType === r.VOID) return 2; // Void, NEVER legal
+
+	if (premove) return 0; // There is a non-void piece, but we're premoving => legal move
+
+	const colorOfPiece = typeutil.getColorFromType(typeOnSquare);
+	if (friendlyColor === colorOfPiece) return 2; // Friendly piece, not legal
+
+	return 1; // Enemy piece, legal move, but blocks further movement
+}
+
+// Full Move Generation --------------------------------------------------------
+
+/**
+ * Calculates and generates all legal moves of a piece in the provided boardsim.
+ * @returns The legal moves of that piece
+ */
+function calculateAll(boardsim: Board, piece: Piece): LegalMoves {
+	const moveset = getPieceMoveset(boardsim, piece.type);
+	const moves = getEmptyLegalMoves(moveset);
+	appendPotentialMoves(piece, moveset, moves);
+	removeObstructedMoves(boardsim, piece, moveset, moves, false);
+	appendSpecialMoves(boardsim, piece, moveset, moves, false);
+	checkresolver.removeCheckInvalidMoves(boardsim, piece, moves);
+	return moves;
+}
+
+/**
+ * Calculates all possible premoves of a piece in the provided boardsim.
+ * * Jumps can't be obstructed.
+ * * Slides can't be blocked.
+ * * No check pruning is made.
+ */
+function calculateAllPremoves(boardsim: Board, piece: Piece): LegalMoves {
+	const moveset = getPieceMoveset(boardsim, piece.type);
+	const moves = getEmptyLegalMoves(moveset);
+	appendPotentialMoves(piece, moveset, moves);
+	removeObstructedMoves(boardsim, piece, moveset, moves, true); // true to only remove void and world border obstructions
+	appendSpecialMoves(boardsim, piece, moveset, moves, true); // true to add all possible moves
+	// SKIP removing check invalids!
+	return moves;
+}
+
+// Querying Legal Moves --------------------------------------------------------
 
 /**
  * Checks if the provided move start and end coords is one of the
@@ -625,24 +635,25 @@ function hasAtleast1Move(moves: LegalMoves, boardsim: Board, piece: Piece): bool
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Reading a Moveset
 	getPieceMoveset,
-
 	getBlockingFuncFromPieceMoveset,
 	getIgnoreFuncFromPieceMoveset,
-
+	// Move Generation Steps
 	getEmptyLegalMoves,
 	appendPotentialMoves,
-	removeObstructedMoves,
 	appendSpecialMoves,
-	testSquareValidity,
-	testCaptureValidity,
-
-	calculateAll,
-	calculateAllPremoves,
-
+	removeObstructedMoves,
+	// Slide Limits
 	slide_CalcLegalLimit,
 	calcPiecesLegalSlideLimitOnSpecificLine,
-
+	// Square Validity
+	testSquareValidity,
+	testCaptureValidity,
+	// Full Move Generation
+	calculateAll,
+	calculateAllPremoves,
+	// Querying Legal Moves
 	checkIfMoveLegal,
 	doSlideRangesContainSquare,
 	doesSlidingMovesetContainSquare,

@@ -262,11 +262,14 @@ function applyGlobalState(gamestate: GlobalGameState, state: StateChange, forwar
 // Exports ---------------------------------------------------------------------
 
 export default {
-	applyMove,
-	applyGlobalStateChanges,
+	// Creating Local State Changes
 	createCheckState,
 	createChecksState,
+	// Creating Global State Changes
 	createEnPassantState,
 	createSpecialRightsState,
 	createMoveRuleState,
+	// Applying State Changes
+	applyMove,
+	applyGlobalStateChanges,
 };

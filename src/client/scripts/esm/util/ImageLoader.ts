@@ -1,5 +1,12 @@
 // src/client/scripts/esm/util/ImageLoader.ts
 
+/**
+ * Fetches images, with optional retries.
+ *
+ * Goes through fetch rather than setting img.src directly, since that is what
+ * allows a failed load to be retried.
+ */
+
 import { retryFetch, RetryFetchOptions } from './fetchretrier';
 
 class ImageLoader {

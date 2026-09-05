@@ -13,7 +13,7 @@ import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
 import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
-import { players as p } from '../../../../../../shared/util/typeutil.js';
+import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
 import ceval from '../ceval.js';
 import toast from '../../../components/toast.js';

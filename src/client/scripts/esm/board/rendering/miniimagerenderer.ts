@@ -10,11 +10,11 @@ import type { Color } from '../../../../../shared/types/color.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
-import typeutil from '../../../../../shared/util/typeutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
-import { players as p, TypeGroup } from '../../../../../shared/util/typeutil.js';
+import { players as p, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import space from './space.js';
 import instancedshapes from './instancedshapes.js';
@@ -26,11 +26,11 @@ import { RenderableInstanced, AttributeInfoInstanced } from '../../webgl/Rendera
  * The maximum number of pieces in a game before mini image rendering is disabled
  * for all pieces that aren't underneath an annotation, animated, or selected.
  */
-const pieceCountToDisableMiniImages = 40_000;
+const MAX_PIECE_COUNT = 40_000;
 
 const MINI_IMAGE_OPACITY: number = 0.6;
 
-const attribInfo: AttributeInfoInstanced = {
+const ATTRIB_INFO: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [
 		{ name: 'a_position', numComponents: 2 },
 		{ name: 'a_texturecoord', numComponents: 2 },
@@ -100,7 +100,7 @@ function render(
 		models[type] = ctx.renderable.createRenderable_Instanced_GivenInfo(
 			vertexData,
 			new Float32Array(thisInstanceData),
-			attribInfo,
+			ATTRIB_INFO,
 			'TRIANGLES',
 			'miniImages',
 			[{ texture, uniformName: 'u_sampler' }],
@@ -117,7 +117,7 @@ function render(
 			models_hovered[type] = ctx.renderable.createRenderable_Instanced_GivenInfo(
 				vertexData_hovered,
 				new Float32Array(hoveredData),
-				attribInfo,
+				ATTRIB_INFO,
 				'TRIANGLES',
 				'miniImages',
 				[{ texture, uniformName: 'u_sampler' }],
@@ -150,7 +150,7 @@ function render(
 // Exports ---------------------------------------------------------------------
 
 export default {
-	pieceCountToDisableMiniImages,
+	MAX_PIECE_COUNT,
 	buildInstanceData,
 	render,
 };

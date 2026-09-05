@@ -14,7 +14,7 @@ import type { ServerGame } from './serverGameTypes.js';
 import type { MovePacket } from '../../../shared/chess/util/typeschemas.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { Player, PlayerGroup } from '../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
 	SourceVariantMetaData,
 	MetaData,
@@ -26,31 +26,35 @@ import type {
 	ServerUsernameContainer,
 } from '../../../shared/transport/domain.js';
 import type {
+	ChatLogEntry,
 	GameConclusionMessage,
-	GameStateBase,
+	GameStateFull,
 	GameStateMessage,
+	LeanParticipantState,
 	ParticipantState,
 	RematchOfferInfo,
 } from '../../../shared/transport/clientbound.js';
 
 import uuid from '../../../shared/util/uuid.js';
-import gameurl from '../../../shared/util/gameurl.js';
+import gameurl from '../../../shared/chess/util/gameurl.js';
 import timeutil from '../../../shared/util/timeutil.js';
-import typeutil from '../../../shared/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import engineregistry from '../../../shared/chess/util/engineregistry.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
-import { players as p } from '../../../shared/util/typeutil.js';
+import { players as p } from '../../../shared/chess/util/typeutil.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
-import { getFormattedEngineName } from '../../../shared/chess/util/engine.js';
 
 import tconfig from '../../config/translationConfig.js';
 import drawOffers from './drawOffers.js';
 import gameUtility from './gameUtility.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
+import chatEntryMapper from './chatEntryMapper.js';
 import ratingCalculation from '../../utility/ratingCalculation.js';
+import chatEntriesManager from '../../database/chatEntriesManager.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
 import componentTranslationLoader from '../../config/componentTranslationLoader.js';
 
@@ -129,7 +133,7 @@ function buildStaticState(servergame: ServerGame): StaticGameState {
 		const { color, engine, strengthLevel } = match.engineParticipant;
 		players[color] = {
 			type: 'engine',
-			username: getFormattedEngineName(engine, strengthLevel),
+			username: engineregistry.getFormattedName(engine, strengthLevel),
 		};
 	}
 
@@ -186,7 +190,7 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 	const scriptT = componentTranslationLoader.getScript('shared', tconfig.DEFAULT_LANGUAGE); // Game metadata should only ever be in English
 	const variantCode = gameUtility.getVariantCode(match.variant);
 	// Names the GAME: a custom game is a "Custom Variant" game no matter what it's a position of.
-	const variantEnglishName = variantregistry.getVariantName(variantCode, scriptT);
+	const variantEnglishName = variantregistry.getName(variantCode, scriptT);
 	// These name the POSITION instead: which variant, at which revision of it, it was lifted from —
 	// a date that may long predate this game, so a custom game's are carried over verbatim from its
 	// seek rather than derived from its start. The game's own start time is a `games` table column.
@@ -202,7 +206,7 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 
 	const getPlayerName = (color: Player): string => {
 		if (match.engineParticipant?.color === color)
-			return getFormattedEngineName(
+			return engineregistry.getFormattedName(
 				match.engineParticipant.engine,
 				match.engineParticipant.strengthLevel,
 			);
@@ -254,46 +258,59 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 // Wire Messages ---------------------------------------------------------------
 
 /**
- * Builds the recipient-agnostic {@link GameStateBase} — the live move list, clocks, conclusion, and
- * finalized flag. The core of every `gamestate` message — the `subscribe` reply and live pushes.
+ * Builds the recipient-agnostic {@link GameStateFull} — the live move list, clocks, conclusion,
+ * spectator count, and finalized flag, with no participant overlay. What a spectator receives,
+ * and the core every participant's `full` reply is assembled from.
  * @param forceSync - Set true ONLY when the server rejected the client's last move,
  * to force their move list to match exactly. Omitted from the message when false.
  */
-function buildStateBase(servergame: ServerGame, forceSync = false): GameStateBase {
-	const base: GameStateBase = {
+function buildFullState(servergame: ServerGame, forceSync = false): GameStateFull {
+	const state: GameStateFull = {
+		kind: 'full',
 		finalized: servergame.match.finalized,
 		moves: servergame.moves.map((m) => simplifyMove(m)),
+		spectators: servergame.spectators.size,
 	};
-	if (!servergame.untimed) base.clockValues = gameUtility.getClockValues(servergame);
-	if (servergame.gameConclusion !== undefined) base.gameConclusion = servergame.gameConclusion;
+	if (!servergame.untimed) state.clockValues = gameUtility.getClockValues(servergame);
+	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
 	const ratingChanges = getRatingChanges(servergame);
-	if (ratingChanges) base.ratingChanges = ratingChanges;
-	if (forceSync) base.forceSync = true;
-	return base;
+	if (ratingChanges) state.ratingChanges = ratingChanges;
+	if (forceSync) state.forceSync = true;
+	return state;
 }
 
 /**
- * Builds a full {@link GameStateMessage} for one participant: the agnostic base plus their
- * participant overlay. Used for every participant `gamestate` message (subscribe reply and pushes).
+ * Builds one participant's `gamestate`: their participant overlay, plus — for a `full` reply —
+ * the whole agnostic base. The shape follows what they REQUESTED, never the game's own stage.
+ * @param kind - `'full'` answers a `subscribe`, `'lean'` a `subscriberematch`.
+ * @param forceSync - Meaningful to a `full` reply only. See {@link buildFullState}.
+ * @throws If a database error occurs.
  */
 function buildStateMessage(
 	servergame: ServerGame,
 	role: Player,
+	kind: GameStateMessage['kind'],
 	forceSync: boolean,
 ): GameStateMessage {
-	return {
-		...buildStateBase(servergame, forceSync),
-		participantState: getParticipantState(servergame, role),
-	};
+	if (kind === 'full') {
+		const participantState = getParticipantState(servergame, role);
+		return { ...buildFullState(servergame, forceSync), participantState };
+	} else {
+		const participantState = getLeanParticipantState(servergame, role);
+		return { kind, spectators: servergame.spectators.size, participantState };
+	}
 }
 
 /**
  * Builds the `gameconclusion` message: the result plus the game's clock values.
  * MUST set servergame.gameConclusion first!
+ * @param role - The recipient, if a participant: their rematch overlay is attached,
+ * born with this very conclusion.
  */
-function buildConclusionMessage(servergame: ServerGame): GameConclusionMessage {
+function buildConclusionMessage(servergame: ServerGame, role?: Player): GameConclusionMessage {
 	const message: GameConclusionMessage = { gameConclusion: servergame.gameConclusion! };
 	if (!servergame.untimed) message.clockValues = gameUtility.getClockValues(servergame);
+	if (role !== undefined) message.rematch = getRematchOfferInfo(servergame, role)!; // Guaranteed defined — the conclusion is set by the time we're called.
 	return message;
 }
 
@@ -308,36 +325,45 @@ function simplifyMove(move: MoveRecord): MovePacket {
 
 // Participant Overlay ---------------------------------------------------------
 
-/** Builds a participant's private state overlay (clocks, rematch offers) for their resyncs. */
+/**
+ * Builds a participant's private state overlay (clocks, rematch offers) for their resyncs.
+ * @throws If a database error occurs.
+ */
 function getParticipantState(servergame: ServerGame, role: Player): ParticipantState {
 	const opponentRole = typeutil.invertPlayer(role);
 	const now = Date.now();
 	const match = servergame.match;
-	const opponentData = match.playerData[opponentRole];
+	const opponentClaim = match.playerData[opponentRole]?.disconnect.claim; // An engine opponent has no entry
 
-	const participantState: ParticipantState = {
+	return {
 		drawOffer: {
 			unconfirmed: drawOffers.isExtendedBy(match, opponentRole), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
 			lastOfferPly: drawOffers.getLastOfferPly(match, role), // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
 		},
+		// Present once their opponent has disconnected and the claim window is set.
+		disconnect: opponentClaim
+			? {
+					millisUntilClaimable: opponentClaim.openTime - now,
+					voluntary: opponentClaim.voluntary,
+				}
+			: undefined,
+		// Once the game is over it lingers for the rematch handshake — send enough to
+		// restore the rematch button's state (glow / disabled) on a page refresh.
+		rematch: getRematchOfferInfo(servergame, role),
+		chat: buildChatLog(servergame),
 	};
+}
 
-	// Include other relevant stuff if defined...
-
-	// If their opponent has disconnected and the claim window is set, send them that info too.
-	if (opponentData?.disconnect.timeOpponentMayClaim !== undefined) {
-		participantState.disconnect = {
-			millisUntilClaimable: opponentData.disconnect.timeOpponentMayClaim - now,
-			voluntary: opponentData.disconnect.voluntary,
-		};
-	}
-
-	// Once the game is over it lingers for the rematch handshake — send enough to
-	// restore the rematch button's state (glow / disabled) on a page refresh.
-	const rematch = getRematchOfferInfo(servergame, role);
-	if (rematch !== undefined) participantState.rematch = rematch;
-
-	return participantState;
+/**
+ * Builds the overlay a LEAN state carries. Its game is always concluded, so a draw offer and a
+ * disconnect claim are both already closed — only the rematch handshake and the chat remain.
+ * @throws If a database error occurs.
+ */
+function getLeanParticipantState(servergame: ServerGame, role: Player): LeanParticipantState {
+	return {
+		rematch: getRematchOfferInfo(servergame, role)!, // Guaranteed defined — a lean state only ever answers a concluded game.
+		chat: buildChatLog(servergame),
+	};
 }
 
 /**
@@ -356,6 +382,19 @@ function getRematchOfferInfo(servergame: ServerGame, role: Player): RematchOffer
 	};
 }
 
+/**
+ * The whole chat log, which the client also replays to rebuild its own send-rule mirror.
+ * Undefined (never empty) for an engine game, which has no chat at all — so no query runs.
+ * @throws If a database error occurs.
+ */
+function buildChatLog(servergame: ServerGame): ChatLogEntry[] | undefined {
+	if (gameUtility.isEngineGame(servergame)) return undefined;
+	// One reading serves the whole log, so its entries share one measuring moment.
+	const now = Date.now();
+	const records = chatEntriesManager.getOfGame(servergame.match.id);
+	return records.map((record, i) => chatEntryMapper.toLogEntry(record, i, now));
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -366,7 +405,7 @@ export default {
 	// ICN Metadata
 	buildMetadata,
 	// Wire Messages
-	buildStateBase,
+	buildFullState,
 	buildStateMessage,
 	buildConclusionMessage,
 	simplifyMove,

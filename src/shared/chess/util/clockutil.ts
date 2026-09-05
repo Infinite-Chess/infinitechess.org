@@ -11,37 +11,6 @@ import typeschemas from './typeschemas.js';
 
 // Types -----------------------------------------------------------------------
 
-/**
- * The clock value for the game, `s+s`, where the left side is
- * start time in seconds, and the right is increment in seconds.
- * Untimed = `-`
- */
-export type TimeControl = z.infer<typeof TimeControlSchema>;
-export const TimeControlSchema = z.union([
-	z.templateLiteral([z.int().positive(), '+', z.int().nonnegative()]),
-	z.literal('-'),
-]);
-
-/** The values of each color's clock, and which one is currently counting down, if any. */
-export type ClockValues = z.infer<typeof ClockValuesSchema>;
-export const ClockValuesSchema = z.strictObject({
-	/** Each color's remaining time in milliseconds, keyed by player number. */
-	clocks: typeschemas.GenPlayerGroupSchema(z.number()),
-	/**
-	 * If a player's timer is currently counting down, this should be specified.
-	 * No clock is ticking if less than 2 moves are played, or if the game is over.
-	 * The color specified should have their time immediately accommodated for ping.
-	 */
-	colorTicking: typeschemas.PlayerSchema.optional(),
-	/**
-	 * The timestamp the color ticking (if there is one) will lose by timeout.
-	 * This should be calculated AFTER we adjust the clock values for ping.
-	 * The server should NOT specify this when sending the clock information
-	 * to the client, because the server and client's clocks are not always in sync.
-	 */
-	timeColorTickingLosesAt: z.number().optional(),
-});
-
 /** The speed category of a game, based on its time control. */
 export type SpeedCategory = 'bullet' | 'blitz' | 'rapid' | 'classical' | 'infinite';
 
@@ -55,11 +24,47 @@ const VALID_BASE_MINUTES = [
 ]; // prettier-ignore
 
 /** Valid increment values in seconds, matching the game setup modal's increment slider ticks. */
-export const VALID_INCREMENT_SECS = [
+const VALID_INCREMENT_SECS = [
 	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
 	25, 30, 35, 40, 45,
 	60,
 ]; // prettier-ignore
+
+// Schemas ---------------------------------------------------------------------
+
+/**
+ * The clock value for the game, `s+s`, where the left side is
+ * start time in seconds, and the right is increment in seconds.
+ * Untimed = `-`
+ */
+export type TimeControl = z.infer<typeof TimeControlSchema>;
+const TimeControlSchema = z.union([
+	z.templateLiteral([z.int().positive(), '+', z.int().nonnegative()]),
+	z.literal('-'),
+]);
+
+/** The values of each color's clock, and which one is currently counting down, if any. */
+export type ClockValues = z.infer<typeof ClockValuesSchema>;
+const ClockValuesSchema = z.strictObject({
+	/** Each color's remaining time in milliseconds, keyed by player number. */
+	clocks: typeschemas.GenPlayerGroupSchema(z.number()),
+	/**
+	 * The clock counting down, if any. None ticks if fewer
+	 * than 2 moves are played, or if the game is over.
+	 */
+	ticking: z
+		.strictObject({
+			/** Whose clock it is. Their time must be accommodated for ping immediately on receipt. */
+			color: typeschemas.PlayerSchema,
+			/**
+			 * When this color flags, as epoch ms. Never sent over the wire — the two machines'
+			 * clocks aren't in sync, so a sender's timestamp is meaningless to a receiver. The
+			 * receiver stamps it in its OWN clock domain after adjusting for ping.
+			 */
+			losesAt: z.number().optional(),
+		})
+		.optional(),
+});
 
 // Functions -------------------------------------------------------------------
 
@@ -197,6 +202,9 @@ export default {
 	// Constants
 	VALID_BASE_MINUTES,
 	VALID_INCREMENT_SECS,
+	// Schemas
+	TimeControlSchema,
+	ClockValuesSchema,
 	// Functions
 	isTimedControlValid,
 	getTextContentFromTimeRemain,

@@ -1,7 +1,14 @@
 // src/client/scripts/esm/game/rendering/effectzone/soundscapes/UndercurrentSoundscape.ts
 
-import { LayerConfig } from '../../../../audio/SoundLayer';
-import { SoundscapeConfig } from '../../../../audio/SoundscapePlayer';
+/**
+ * A shared soundscape used by several zones: a deep, steady rumble.
+ *
+ * Exported both as a finished soundscape and in pieces, since some zones play
+ * it as-is while others layer it underneath sounds of their own.
+ */
+
+import { LayerConfig } from '../../../../audio/SoundLayer.js';
+import { SoundscapeConfig } from '../../../../audio/SoundscapePlayer.js';
 
 /** The source of the Undercurrent soundscape layer is white noise. */
 const source: LayerConfig['source'] = {

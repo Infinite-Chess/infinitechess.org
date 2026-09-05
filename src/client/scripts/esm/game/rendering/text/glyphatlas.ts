@@ -57,7 +57,7 @@ const FONT_FAMILY = 'sans-serif';
  * The baseline sits (ascent − descent) / 2 = 0.3 × FONT_SIZE below the em midpoint,
  * so the fraction of the cell below the baseline is 0.5 − 0.3 × (FONT_SIZE / CELL_HEIGHT).
  */
-const ATLAS_DESCENDER_FRACTION = 0.5 - 0.3 * (FONT_SIZE / CELL_HEIGHT); // ≈ 0.26
+const DESCENDER_FRACTION = 0.5 - 0.3 * (FONT_SIZE / CELL_HEIGHT); // ≈ 0.26
 
 /**
  * Fraction of the glyph cell height from the em-midpoint (drawing y) up to the top of a digit glyph.
@@ -65,7 +65,7 @@ const ATLAS_DESCENDER_FRACTION = 0.5 - 0.3 * (FONT_SIZE / CELL_HEIGHT); // ≈ 0
  * so the distance from midpoint to digit top ≈ (0.72 − 0.3) × FONT_SIZE = 0.42 × FONT_SIZE.
  * As a fraction of CELL_HEIGHT: 0.42 × (FONT_SIZE / CELL_HEIGHT).
  */
-const ATLAS_ASCENT_FRACTION = 0.42 * (FONT_SIZE / CELL_HEIGHT);
+const ASCENT_FRACTION = 0.42 * (FONT_SIZE / CELL_HEIGHT);
 
 /**
  * Horizontal padding (pixels) added on each side of a glyph cell to prevent
@@ -248,7 +248,7 @@ function initGlyphAtlas(): void {
  *
  * Lazily initialises the atlas on first call, which takes ~1 ms.
  */
-function getAtlasTexture(): WebGLTexture {
+function getTexture(): WebGLTexture {
 	if (atlasTexture === undefined) initGlyphAtlas();
 	return atlasTexture!;
 }
@@ -259,11 +259,18 @@ function getAtlasTexture(): WebGLTexture {
  *
  * Lazily initialises the atlas on first call.
  */
-function getGlyphMetrics(char: string): GlyphMetrics {
+function getMetrics(char: string): GlyphMetrics {
 	if (metricsTable === undefined) initGlyphAtlas();
 	return metricsTable!.get(char) ?? metricsTable!.get(REPLACEMENT_CHAR)!; // fallback to replacement char for unsupported glyphs
 }
 
 // Exports ---------------------------------------------------------------------
 
-export { getAtlasTexture, getGlyphMetrics, ATLAS_DESCENDER_FRACTION, ATLAS_ASCENT_FRACTION };
+export default {
+	// Constants
+	DESCENDER_FRACTION,
+	ASCENT_FRACTION,
+	// API
+	getTexture,
+	getMetrics,
+};

@@ -11,13 +11,21 @@
 // Types -----------------------------------------------------------------------
 
 /**
- * Constrains a value to EXACTLY `Shape`, rejecting undeclared properties.
+ * Constrains a value to EXACTLY `Shape`: any property `Shape` doesn't declare resolves to
+ * `never`, so it can't be assigned. TypeScript's own excess-property check only fires on
+ * fresh object literals, so a message assembled into a variable first would otherwise carry
+ * extras onto the wire unnoticed. Applied to a send function's value parameter, this catches
+ * them however the caller built the value.
  *
- * TypeScript's own excess property check only fires on fresh object literals, so a message
- * built into a variable first would smuggle extra properties onto the wire. Applied to a
- * send function's value parameter, this catches them however the caller assembled the value.
+ * A union `Shape` narrows to the single member `V` is, and `V` is checked against that member's
+ * keys alone — not the union's shared keys (which rejects a member's own keys), nor every
+ * member's keys (which accepts a sibling's).
  */
-export type Exact<V, Shape> = V & { [K in keyof V]: K extends keyof Shape ? V[K] : never };
+export type Exact<V, Shape> = Shape extends unknown
+	? V extends Shape
+		? V & { [K in keyof V]: K extends keyof Shape ? V[K] : never }
+		: never
+	: never;
 
 /**
  * A map of route name → the union of messages that route carries.
@@ -49,6 +57,21 @@ const HEARTBEAT_INTERVAL_MS = 10000;
 const ECHO_TIMEOUT_MS = 5000;
 
 /**
+ * The tab id the client generates and attaches to every upgrade request it makes.
+ * It names one browser tab across every socket that tab opens.
+ */
+const TAB_ID = {
+	/** The query parameter it rides on. */
+	PARAM: 'tab',
+	/**
+	 * Its length, in base-62. Client-generated, so it can't be checked for
+	 * uniqueness; it needn't be unguessable either, it isn't relied on
+	 * for identity, but improved UX.
+	 */
+	LENGTH: 8,
+} as const;
+
+/**
  * Every closure reason that can go on the wire, and the code each is sent with.
  *
  * BOTH sides see BOTH groups. `ws` populates the server's 'close' event purely from the
@@ -56,7 +79,7 @@ const ECHO_TIMEOUT_MS = 5000;
  * it received, so a reason the server sent still comes back to it. Don't strike the
  * server-sent reasons from {@link INVOLUNTARY_CLOSURE_REASONS} as unreachable server-side; they aren't.
  */
-const ClosureReasons = {
+const CLOSURE_REASONS = {
 	// Sent by the server:
 
 	/** 1000. Can read this even if we disable our own network in dev tools. */
@@ -67,6 +90,8 @@ const ClosureReasons = {
 	UNIDENTIFIABLE_IP: 'Unable to identify client IP address',
 	/** 1008. Automated scanner and prober bots often omit it. */
 	USER_AGENT_REQUIRED: 'User agent is required',
+	/** 1008. Every client of ours names its tab on the upgrade request. */
+	TAB_ID_REQUIRED: 'Tab id is required',
 	/** 1008. The client has cookies disabled. */
 	AUTHENTICATION_NEEDED: 'Authentication needed',
 	/** 1008. Logging out, deleting the account, or resetting the password. */
@@ -85,10 +110,10 @@ const ClosureReasons = {
 } as const;
 
 /** A reason one end gave the other for closing the socket. */
-export type ClosureReason = (typeof ClosureReasons)[keyof typeof ClosureReasons];
+export type ClosureReason = (typeof CLOSURE_REASONS)[keyof typeof CLOSURE_REASONS];
 
 /** The reason values, for {@link isClosureReason} to test membership against. */
-const CLOSURE_REASON_VALUES: ReadonlySet<string> = new Set(Object.values(ClosureReasons));
+const CLOSURE_REASON_VALUES: ReadonlySet<string> = new Set(Object.values(CLOSURE_REASONS));
 
 // Closures that carry no reason at all:
 // 1009 ""  Message exceeded MAX_PAYLOAD_BYTES (see socketServer.ts). The `ws` library
@@ -114,9 +139,9 @@ const CLOSURE_REASON_VALUES: ReadonlySet<string> = new Set(Object.values(Closure
 // so IMMEDIATELY tell their opponent they disconnected!
 const INVOLUNTARY_CLOSURE_CODES: number[] = [1006];
 const INVOLUNTARY_CLOSURE_REASONS: ClosureReason[] = [
-	ClosureReasons.CONNECTION_EXPIRED,
-	ClosureReasons.TOO_MANY_SOCKETS,
-	ClosureReasons.CLOSED_BY_CLIENT_RENEW,
+	CLOSURE_REASONS.CONNECTION_EXPIRED,
+	CLOSURE_REASONS.TOO_MANY_SOCKETS,
+	CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW,
 ];
 
 // Functions -------------------------------------------------------------------
@@ -144,10 +169,13 @@ function wasSocketClosureInvoluntary(code: number, reason: string): boolean {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
 	PROTOCOL_VERSION,
 	HEARTBEAT_INTERVAL_MS,
 	ECHO_TIMEOUT_MS,
-	ClosureReasons,
+	TAB_ID,
+	CLOSURE_REASONS,
+	// Functions
 	isClosureReason,
 	wasSocketClosureInvoluntary,
 };

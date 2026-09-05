@@ -1,5 +1,10 @@
 // src/client/scripts/esm/webgl/ProgramManager.ts
 
+/**
+ * The catalogue of every shader the game has, and a per-context cache that compiles
+ * each one only on first use.
+ */
+
 import vsSource_color from '../../../shaders/color/vertex.glsl';
 import fsSource_color from '../../../shaders/color/fragment.glsl';
 import fsSource_water from '../../../shaders/water/fragment.glsl';

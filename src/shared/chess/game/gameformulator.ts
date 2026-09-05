@@ -136,7 +136,7 @@ async function resolveConstructionOptions(
 async function loadVariantOfLongFormat(
 	longFormat: LongFormatOut,
 ): Promise<LoadedVariant | undefined> {
-	const code = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
+	const code = variantregistry.resolveCode(longFormat.metadata.Variant);
 	if (code === undefined) return undefined;
 	await variantcache.ensureVariantLoaded(code);
 	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
@@ -157,7 +157,7 @@ function constructionOptionsFromLongFormat(
 ): PositionedConstructionOptions {
 	// The ICN's date is both the game's start and the variant revision it declares itself of.
 	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
-	const code = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
+	const code = variantregistry.resolveCode(longFormat.metadata.Variant);
 
 	const additional: PositionedConstructionOptions['additional'] = {
 		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat, positionSource),

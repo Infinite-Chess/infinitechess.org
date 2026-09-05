@@ -8,11 +8,11 @@
  * timestamp (see disconnect.ts).
  */
 
-import type { Player } from '../../../shared/util/typeutil.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './serverGameTypes.js';
 
 import moveutil from '../../../shared/chess/logic/moveutil.js';
-import typeutil from '../../../shared/util/typeutil.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import logEvents from '../../utility/logEvents.js';
@@ -29,9 +29,9 @@ function mayClaimAgainstOpponent(servergame: ServerGame, ourColor: Player): bool
 	if (!moveutil.isGameResignable(servergame)) return false; // Nothing to claim before resignable.
 
 	const opponentColor = typeutil.invertPlayer(ourColor);
-	const claimTime = servergame.match.playerData[opponentColor]?.disconnect.timeOpponentMayClaim;
-	if (claimTime === undefined) return false; // Opponent isn't in an open-able claim window.
-	return Date.now() >= claimTime; // The window has opened.
+	const claim = servergame.match.playerData[opponentColor]?.disconnect.claim;
+	if (claim === undefined) return false; // Opponent isn't in an open-able claim window.
+	return Date.now() >= claim.openTime; // The window has opened.
 }
 
 /** Called when a client tries to claim victory against their disconnected opponent. */

@@ -684,6 +684,7 @@
 	align-items: center;
 	padding-right: 4px;
 	border-bottom: 1px solid var(--c-border-muted);
+	cursor: pointer;
 }
 
 /* Expand/collapse toggle: fills the bar left of the report flag */
@@ -699,7 +700,6 @@
 	width: 16px;
 	height: 16px;
 	color: var(--c-text-muted);
-	transition: transform 0.15s ease;
 }
 
 .chat-title {
@@ -720,8 +720,14 @@
 	padding: 8px 12px;
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
-	font-size: 0.9em;
+	gap: 5px;
+	font-size: 0.8em;
+	overflow-wrap: anywhere;
+}
+
+/* The sender's name, ahead of their message. */
+.chat-sender {
+	font-weight: 600;
 }
 
 /* Static event notice (draw/rematch offers & rejections). */
@@ -729,6 +735,13 @@
 	font-style: italic;
 	text-align: center;
 	color: var(--c-text-muted);
+}
+
+/* Why a predicted send was refused. Never a server round trip. */
+.chat-error {
+	padding: 4px 12px;
+	font-size: 0.8em;
+	color: var(--c-error);
 }
 
 .chat-input {
@@ -742,6 +755,10 @@
 	outline: none;
 }
 
+.chat-input:disabled {
+	cursor: not-allowed;
+}
+
 .chat.collapsed {
 	flex: 0 0 auto;
 	min-height: 0;
@@ -752,6 +769,7 @@
 }
 
 .chat.collapsed .chat-log,
+.chat.collapsed .chat-error,
 .chat.collapsed .chat-input {
 	display: none;
 }

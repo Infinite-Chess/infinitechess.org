@@ -8,6 +8,7 @@
 
 import express, { NextFunction, Request, RequestHandler, Response } from 'express';
 
+import validators from '../../shared/util/validators.js';
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import send404 from '../middleware/send404.js';
@@ -22,9 +23,18 @@ import verifyAccountController from '../controllers/verifyAccountController.js';
 import passwordResetController from '../controllers/passwordResetController.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
 
-// Helpers ---------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 const router = express.Router();
+
+/** The `maxlength` every auth form input renders with. */
+const AUTH_INPUT_MAX_LENGTHS = {
+	USERNAME: validators.MAX_USERNAME_LENGTH,
+	EMAIL: validators.MAX_EMAIL_LENGTH,
+	PASSWORD: validators.MAX_PASSWORD_LENGTH,
+};
+
+// Helpers ---------------------------------------------------------------------
 
 /**
  * Exposes the base render context to the template. Nunjucks merges res.locals into every
@@ -68,7 +78,7 @@ function getRandomSplashText(req: Request): string {
 }
 
 /** Cache all variant groups and their variants. */
-const variantGroups = variantregistry.getVariantGroupsWithVariants();
+const variantGroups = variantregistry.getGroupsWithVariants();
 
 // Pages -----------------------------------------------------------------------
 
@@ -95,18 +105,18 @@ page(
 );
 page('/news(.html)?', (_req: Request, res: Response) => res.render('news.njk'));
 page('/leaderboard(.html)?', (_req: Request, res: Response) => res.render('leaderboard.njk'));
-page('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk'));
-page('/forgot-password(.html)?', (_req: Request, res: Response) => res.render('forgotpassword.njk')); // prettier-ignore
+page('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk', { maxLengths: AUTH_INPUT_MAX_LENGTHS })); // prettier-ignore
+page('/forgot-password(.html)?', (_req: Request, res: Response) => res.render('forgotpassword.njk', { maxLengths: AUTH_INPUT_MAX_LENGTHS })); // prettier-ignore
 page('/register(.html)?', (req: Request, res: Response) => {
 	// Redirect to check-your-email page if register is pending
 	if (registerController.getAwaitingPageState(req)) res.redirect('/register/awaiting');
-	else res.render('register.njk', { turnstileSiteKey: turnstile.SITE_KEY });
+	else res.render('register.njk', { turnstileSiteKey: turnstile.SITE_KEY, maxLengths: AUTH_INPUT_MAX_LENGTHS }); // prettier-ignore
 });
 page('/register/awaiting(.html)?', (req: Request, res: Response) => {
 	const state = registerController.getAwaitingPageState(req);
 	// Redirect to register page if no register is pending
 	if (state === null) res.redirect('/register');
-	else res.render('register-awaiting.njk', state);
+	else res.render('register-awaiting.njk', { ...state, maxLengths: AUTH_INPUT_MAX_LENGTHS });
 });
 page('/verify/:token', (req: Request, res: Response) => {
 	// The token sits in the URL; keep it out of any Referer
@@ -118,7 +128,7 @@ page('/reset-password/:token', (req: Request, res: Response) => {
 	// The token sits in the URL; keep it out of any Referer
 	// header sent to third-party resources to avoid leaking it.
 	res.setHeader('Referrer-Policy', 'no-referrer');
-	res.render('resetpassword.njk', passwordResetController.getPageState(req));
+	res.render('resetpassword.njk', { ...passwordResetController.getPageState(req), maxLengths: AUTH_INPUT_MAX_LENGTHS }); // prettier-ignore
 });
 page('/terms(.html)?', (_req: Request, res: Response) => res.render('terms.njk'));
 page('/privacy(.html)?', (_req: Request, res: Response) => res.render('privacy.njk'));

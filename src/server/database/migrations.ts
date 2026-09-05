@@ -26,7 +26,7 @@ function run(): void {
 	addPositionColumnToLiveGamesIfNeeded();
 	renameDisconnectResignTimeColumnIfNeeded();
 	renameDisconnectByChoiceColumnIfNeeded();
-	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
+	addEmptySinceColumnToLiveGamesIfNeeded();
 	dropLiveGamesConclusionColumnsIfPresent();
 	dropPlayerGamesClockAtEndColumnIfPresent();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
@@ -197,14 +197,14 @@ function renameDisconnectByChoiceColumnIfNeeded(): void {
 /**
  * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
  *
- * Adds the nullable `both_disconnected_end_time` column to `live_games` — the epoch ms the
- * both-disconnected timer concludes the game (draw by abandonment, or abort) when neither
- * player is present to claim. Fresh DBs get the column from `generate()`.
+ * Adds the nullable `empty_since` column to `live_games` — the epoch ms a game was found
+ * with nobody connected to it, from which its abandonment timeout is measured.
+ * Fresh DBs get the column from `generate()`.
  */
-function addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded(): void {
-	if (db.columnExists('live_games', 'both_disconnected_end_time')) return; // Already migrated.
-	db.run('ALTER TABLE live_games ADD COLUMN both_disconnected_end_time INTEGER');
-	console.log('Temporary DB migration: added live_games.both_disconnected_end_time column.');
+function addEmptySinceColumnToLiveGamesIfNeeded(): void {
+	if (db.columnExists('live_games', 'empty_since')) return; // Already migrated.
+	db.run('ALTER TABLE live_games ADD COLUMN empty_since INTEGER');
+	console.log('Temporary DB migration: added live_games.empty_since column.');
 }
 
 /**

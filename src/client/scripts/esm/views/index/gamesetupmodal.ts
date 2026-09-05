@@ -8,7 +8,7 @@ import type { GameMode } from '../../../../../shared/transport/domain.js';
 import type { ModalMode } from '../../handoffs/gamesetuphandoff.js';
 import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
 
-import { players } from '../../../../../shared/util/typeutil.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 import leaderboardregistry from '../../../../../shared/chess/variants/leaderboardregistry.js';
 
 import lobby from './lobby.js';
@@ -132,7 +132,7 @@ function initModal(): void {
 }
 
 /** Reads current seek options and disables the Rated button if a rated game is not permitted. */
-export function syncRatedButton(): void {
+function syncRatedButton(): void {
 	const variant = variantselector.getSeekVariant();
 	const time: TimeControl = timecontrols.getTimeControl();
 	const color = getSelectedColor();

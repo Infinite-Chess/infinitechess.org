@@ -20,7 +20,7 @@ import socketconnection from './socketconnection.js';
 // Constants -------------------------------------------------------------------
 
 /** Time before attempting resub after too many requests. */
-const timeToResubAfterTooManyRequestsMs = 10000;
+const RESUB_DELAY_MS = 10000;
 
 // Variables -------------------------------------------------------------------
 
@@ -73,37 +73,41 @@ function onclose(code: number, reason: string): void {
 	}
 
 	switch (trimmedReason) {
-		case socketutil.ClosureReasons.CONNECTION_EXPIRED:
+		case socketutil.CLOSURE_REASONS.CONNECTION_EXPIRED:
 			socketconnection.resubAll();
 			break;
 		// Our own frames, echoed back by the server. The RENEW one can't actually reach us —
 		// dropSocket() detaches onclose before sending it — but the switch is exhaustive.
-		case socketutil.ClosureReasons.CLOSED_BY_CLIENT:
-		case socketutil.ClosureReasons.CLOSED_BY_CLIENT_RENEW:
+		case socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT:
+		case socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW:
 			break;
-		case socketutil.ClosureReasons.UNIDENTIFIABLE_IP:
+		case socketutil.CLOSURE_REASONS.UNIDENTIFIABLE_IP:
 			console.error('Unable to identify IP when establishing socket.');
 			break;
-		case socketutil.ClosureReasons.USER_AGENT_REQUIRED:
+		case socketutil.CLOSURE_REASONS.USER_AGENT_REQUIRED:
 			// A browser always sends one, so this means our request never reached the server intact.
 			console.error('User agent missing when establishing socket.');
 			break;
-		case socketutil.ClosureReasons.AUTHENTICATION_NEEDED:
+		case socketutil.CLOSURE_REASONS.TAB_ID_REQUIRED:
+			// We attach one to every upgrade request, so ours never reached the server intact.
+			console.error('Tab id missing when establishing socket.');
+			break;
+		case socketutil.CLOSURE_REASONS.AUTHENTICATION_NEEDED:
 			// Called when the server closes our websocket due to missing authentication.
 			toast.show(t.shared.socket.cookies_required, { error: true });
 			break;
-		case socketutil.ClosureReasons.LOGGED_OUT:
+		case socketutil.CLOSURE_REASONS.LOGGED_OUT:
 			validatorama.reloadAfterLogout();
 			break;
-		case socketutil.ClosureReasons.TOO_MANY_REQUESTS:
+		case socketutil.CLOSURE_REASONS.TOO_MANY_REQUESTS:
 			console.error('Too many requests when establishing socket.');
 			enterTimeout();
 			break;
-		case socketutil.ClosureReasons.TOO_MANY_SOCKETS:
+		case socketutil.CLOSURE_REASONS.TOO_MANY_SOCKETS:
 			console.error('Too many sockets when establishing socket.');
-			window.setTimeout(() => socketconnection.resubAll(), timeToResubAfterTooManyRequestsMs);
+			window.setTimeout(() => socketconnection.resubAll(), RESUB_DELAY_MS);
 			break;
-		case socketutil.ClosureReasons.ORIGIN_ERROR:
+		case socketutil.CLOSURE_REASONS.ORIGIN_ERROR:
 			console.error('Origin error when establishing socket.');
 			enterTimeout();
 			break;
@@ -120,7 +124,7 @@ function onclose(code: number, reason: string): void {
 function enterTimeout(): void {
 	if (inTimeout) return;
 	inTimeout = true;
-	window.setTimeout(() => leaveTimeout(), timeToResubAfterTooManyRequestsMs);
+	window.setTimeout(() => leaveTimeout(), RESUB_DELAY_MS);
 }
 
 /** Timeout from sending too many requests is over, try to reconnect. */

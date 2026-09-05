@@ -18,8 +18,8 @@ import type { Vec3 } from '../../../../shared/util/math/vectors.js';
 import type { TypedArray } from './BufferUtil.js';
 
 import mat4 from './gl-matrix.js';
+import BufferUtil from './BufferUtil.js';
 import { ShaderProgram } from './ShaderProgram.js';
-import { createBufferFromData, updateBufferIndices } from './BufferUtil.js';
 import { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js';
 
 // Types -----------------------------------------------------------------------
@@ -31,7 +31,7 @@ export type Mat4 = Float32Array;
  * The minimum a camera must provide for a factory to render with it. Kept narrow so
  * this layer stays free of the board's camera, which satisfies it structurally.
  */
-export interface ViewSource {
+interface ViewSource {
 	getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 };
 }
 
@@ -74,6 +74,12 @@ export type AttributeInfoInstanced = {
 	instanceDataAttribInfo: AttributeInfo;
 };
 
+/**
+ * A value a custom uniform may be set to. Numbers become floats,
+ * booleans become ints, and arrays of 2-4 become the matching vec.
+ */
+export type UniformValue = number | boolean | [number, number] | [number, number, number] | [number, number, number, number]; // prettier-ignore
+
 /** A texture, along with its given uniform name in the desired shader. */
 export interface TextureInfo {
 	texture: WebGLTexture;
@@ -99,7 +105,7 @@ interface BaseRenderable {
 	 * @param [scale] - The scaling transformation, default [1,1,1]
 	 * @param uniforms - Custom uniform values, for example, 'u_size'.
 	 */
-	render: (position?: Vec3, scale?: Vec3, uniforms?: Record<string, any>) => void;
+	render: (position?: Vec3, scale?: Vec3, uniforms?: Record<string, UniformValue>) => void;
 }
 
 /** A renderable model. */
@@ -248,7 +254,7 @@ function createRenderableFactory(
 
 		const vertexCount = data.length / stride;
 
-		const buffer = createBufferFromData(gl, data);
+		const buffer = BufferUtil.createFromData(gl, data);
 
 		const shaderProgram = programManager.get(shader);
 
@@ -265,11 +271,11 @@ function createRenderableFactory(
 		return {
 			data,
 			updateBufferIndices: (changedIndicesStart: number, changedIndicesCount: number): void =>
-				updateBufferIndices(gl, buffer, data, changedIndicesStart, changedIndicesCount),
+				BufferUtil.updateIndices(gl, buffer, data, changedIndicesStart, changedIndicesCount), // prettier-ignore
 			render: (
 				position: Vec3 = [0, 0, 0],
 				scale: Vec3 = [1, 1, 1],
-				uniforms: Record<string, any> = {},
+				uniforms: Record<string, UniformValue> = {},
 			): void =>
 				prepareAndExecuteRender(
 					shaderProgram,
@@ -310,8 +316,8 @@ function createRenderableFactory(
 		const vertexCount = vertexData.length / vertexDataStride; // The vertex count of our vertex data of one single instance
 		const instanceCount = instanceData.length / instanceDataStride;
 
-		const vertexBuffer = createBufferFromData(gl, vertexData);
-		const instanceBuffer = createBufferFromData(gl, instanceData);
+		const vertexBuffer = BufferUtil.createFromData(gl, vertexData);
+		const instanceBuffer = BufferUtil.createFromData(gl, instanceData);
 
 		const shaderProgram = programManager.get(shader);
 
@@ -347,28 +353,16 @@ function createRenderableFactory(
 				changedIndicesStart: number,
 				changedIndicesCount: number,
 			): void =>
-				updateBufferIndices(
-					gl,
-					vertexBuffer,
-					vertexData,
-					changedIndicesStart,
-					changedIndicesCount,
-				),
+				BufferUtil.updateIndices(gl, vertexBuffer, vertexData, changedIndicesStart, changedIndicesCount), // prettier-ignore
 			updateBufferIndices_InstanceBuffer: (
 				changedIndicesStart: number,
 				changedIndicesCount: number,
 			): void =>
-				updateBufferIndices(
-					gl,
-					instanceBuffer,
-					instanceData,
-					changedIndicesStart,
-					changedIndicesCount,
-				),
+				BufferUtil.updateIndices(gl, instanceBuffer, instanceData, changedIndicesStart, changedIndicesCount), // prettier-ignore
 			render: (
 				position: Vec3 = [0, 0, 0],
 				scale: Vec3 = [1, 1, 1],
-				uniforms: Record<string, any> = {},
+				uniforms: Record<string, UniformValue> = {},
 			): void =>
 				prepareAndExecuteRender(
 					shaderProgram,
@@ -397,7 +391,7 @@ function createRenderableFactory(
 		vao: WebGLVertexArrayObject,
 		position: Vec3,
 		scale: Vec3,
-		uniforms: Record<string, any>,
+		uniforms: Record<string, UniformValue>,
 		textures: TextureInfo[],
 		drawCallback: () => void,
 	): void {
@@ -482,7 +476,7 @@ function createRenderableFactory(
 		shaderProgram: ShaderProgram<A, U>,
 		position: Vec3,
 		scale: Vec3,
-		uniforms: Record<string, any>,
+		uniforms: Record<string, UniformValue>,
 		textures: TextureInfo[],
 	): void {
 		// Calculate the final Model-View-Projection matrix for this object

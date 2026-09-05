@@ -1,10 +1,8 @@
 // src/client/scripts/esm/game/config.ts
 
-/** This script contains our game configurations. */
+/**
+ * Global game configuration flags.
+ */
 
-/** Video mode disables the rendering of some items, making making recordings more immersive. */
-const VIDEO_MODE: boolean = false;
-
-export default {
-	VIDEO_MODE,
-};
+/** Video mode disables the rendering of some items, making recordings more immersive. */
+export const VIDEO_MODE: boolean = false;

@@ -10,12 +10,15 @@
 
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { CoordsKey } from '../../../../../shared/util/coordutil.js';
-import type { Player, PlayerGroup, RawType } from '../../../../../shared/util/typeutil.js';
+import type { Player, PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil.js';
 
 import math from '../../../../../shared/util/math/math.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
-import typeutil, { players as p, rawTypes as r } from '../../../../../shared/util/typeutil.js';
+import typeutil, {
+	players as p,
+	rawTypes as r,
+} from '../../../../../shared/chess/util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -42,10 +45,7 @@ interface PhaseProfile {
 // Division --------------------------------------------------------------------
 
 /** Finds opening/middlegame/endgame boundaries from each replayed board position. */
-function determineDivision(
-	initial: Map<CoordsKey, number> | undefined,
-	moves: MoveFull[],
-): ReviewDivision {
+function determine(initial: Map<CoordsKey, number> | undefined, moves: MoveFull[]): ReviewDivision {
 	if (!initial?.size) return {};
 	const position = new Map(initial);
 	const homeRanks = getHomeRanks(position);
@@ -329,4 +329,4 @@ function phaseMetrics(
 	};
 }
 
-export default { determineDivision };
+export default { determine };
