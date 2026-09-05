@@ -146,12 +146,13 @@ they are stored separately from human players.
 | **Game found empty / re-occupied**                                               | `empty_since`                                                                    | —                                                                                                   |
 | **Abandonment timeout** (draw by abandonment / abort / engine win by disconnect) | DELETE row (game logged to permanent tables)                                     | (cascades)                                                                                          |
 | **Game finalized** (result locked in)                                            | — (row already deleted at conclusion; only the in-memory `finalized` flag flips) | —                                                                                                   |
-| **Game evicted** (both players left the rematch window)                          | — (row already removed at conclusion)                                            | —                                                                                                   |
+| **Game evicted** (rematch window closed)                                         | — (row already removed at conclusion)                                            | —                                                                                                   |
 
 ### Game conclusion & the rematch window
 
 The moment a game concludes it is **logged to the permanent `games`/`player_games` tables**, and
 its `live_games` row (plus cascaded participant rows) is **deleted**. The game **lingers in
-memory** to host the rematch handshake and cheat-report window until both players leave, at
-which point it is evicted from memory. Rematch offers, the `finalized` flag, and post-game
-reconnection cushions are all ephemeral (never persisted).
+memory** to host the rematch handshake and cheat-report window, and is evicted once that window
+closes — both players left it, a rematch was agreed, or one of them joined a different game.
+Rematch offers, the `finalized` flag, and post-game reconnection cushions are all ephemeral
+(never persisted).

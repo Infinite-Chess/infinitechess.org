@@ -103,17 +103,18 @@ function createGame(
 }
 
 /**
- * When a player joins a new game: force them to leave their previous concluded game
- * still lingering for a rematch. Their old opponent's rematch option is withdrawn.
+ * When a player joins a new game: evict the concluded game they were lingering in for a
+ * rematch. Prevents back-navigation into a live game a rematch can't happen in anymore.
  */
 function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 	for (const servergame of activeGames.getAll()) {
 		if (!gamefileutility.isGameOver(servergame)) continue; // Only concluded games linger for a rematch.
 		for (const [c, data] of Object.entries(servergame.match.playerData)) {
 			if (!memberInfoUtil.eq(data.identifier, identifier)) continue;
-			// Detach the game on their old tab. leaveRematchWindow detaches us server-side.
-			if (data.socket) socketsend.send(data.socket, 'game', 'detached', undefined);
-			leaveRematchWindow(servergame, Number(c) as Player, false);
+			// Their departure was voluntary, so announce it if still connected.
+			const role = Number(c) as Player;
+			if (data.socket) chat.appendNotice(servergame, role, 'postgame-left');
+			gameLifecycle.evict(servergame);
 			return; // A player can only be a participant of one lingering game.
 		}
 	}
@@ -250,25 +251,18 @@ function unsubscribeParticipant(ws: CustomWebSocket, involuntary: boolean): void
  * Takes a player out of a concluded game's rematch window: detaches their socket, withdraws any
  * rematch offer of theirs, and informs their opponent. The game is then memory-evicted if that
  * leaves nobody — at once, or after a reconnection cushion when the leave was involuntary.
- * Entry points: Socket close, client choice, or joined new game.
+ * Entry points: Socket close, or client choice.
  */
 function leaveRematchWindow(servergame: ServerGame, role: Player, involuntary: boolean): void {
 	const match = servergame.match;
 	const playerdata = match.playerData[role]!;
 
-	// Joining a new game calls this a second time to collapse the cushion below, by
-	// which point there is no socket left to take — and no departure to announce.
-	if (playerdata.socket) {
-		chat.appendNotice(servergame, role, 'postgame-left');
-		gameSockets.detachParticipant(match, playerdata.socket);
-	}
+	chat.appendNotice(servergame, role, 'postgame-left');
+	gameSockets.detachParticipant(match, playerdata.socket!); // Guaranteed: our sole caller returns unless it still holds this game's subscription.
 
 	// Withdraw their rematch offer, if any, and tell the opponent they've left (disable + unglow).
 	match.rematchOffers.delete(role);
 	gameSockets.sendToColor(match, typeutil.invertPlayer(role), 'game', 'opponentleft', undefined); // prettier-ignore
-
-	clearTimeout(playerdata.disconnect.cushion?.id);
-	delete playerdata.disconnect.cushion;
 
 	if (!involuntary) {
 		// Gone immediately.

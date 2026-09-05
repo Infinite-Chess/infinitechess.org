@@ -7,7 +7,8 @@
  * 1. **Concluded** — the result is set and broadcast, and the clocks stop.
  * 2. **Freed** — both players may join a new game, and the game is logged to the database.
  * 3. **Finalized** — the result is locked in; cheat reports are no longer accepted.
- * 4. **Evicted** — both players have left the rematch window, so it drops out of memory.
+ * 4. **Evicted** — the rematch window closed (both left, a rematch started, or one of them
+ *    joined another game), so it drops out of memory.
  */
 
 import type { RatingData } from '../../utility/ratingCalculation.js';
@@ -244,19 +245,18 @@ function finalize(servergame: ServerGame): void {
 // 4. Eviction -----------------------------------------------------------------
 
 /**
- * Evicts a concluded, lingering game from memory once both players have left. Finalizes the
- * result first (in case both left before the finalize cushion elapsed), then removes it from
- * the active games list. Idempotent against a double eviction.
+ * Evicts a concluded, lingering game from memory: Finalizes, cancels active timers, removes
+ * it from the active games, closing the rematch window. Idempotent against a double eviction.
  */
 function evict(servergame: ServerGame): void {
 	if (activeGames.getByID(servergame.match.id) === undefined) return; // Already evicted.
 
 	finalize(servergame); // Lock in the result now if both players left before the finalize cushion elapsed.
+	disconnect.cancelAllTimers(servergame.match); // Post-game reconnection cushions die with the game.
 
 	activeGames.remove(servergame.match.id);
 
-	// Both players have already left, but a spectator (or a stray old-tab socket)
-	// may still be attached — tell any remaining socket it is detached.
+	// Tell whoever is still attached they are detached (game evicted, no further updates coming).
 	gameSockets.broadcastToEveryone(servergame, 'detached', undefined);
 	gameSockets.detachEveryone(servergame);
 

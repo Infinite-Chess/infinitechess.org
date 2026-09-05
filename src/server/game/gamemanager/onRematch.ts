@@ -18,12 +18,10 @@ import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import chat from './chat.js';
 import manifest from '../../config/manifest.js';
-import logEvents from '../../utility/logEvents.js';
 import socketsend from '../../socket/socketSend.js';
 import gameManager from './gameManager.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
-import activePlayers from './activePlayers.js';
 import gameLifecycle from './gameLifecycle.js';
 
 // Functions -------------------------------------------------------------------
@@ -63,23 +61,12 @@ function offerRematch(servergame: ServerGame, ourRole: Player): void {
 /**
  * Creates a rematch of a concluded game: same variant/time/rated (and same engine/difficulty,
  * if any), participants swapped to the opposite colors. Tears down the old game, starts the
- * fresh one, and navigates all still-connected players to it. Aborts and logs if either
- * player is already in another game.
+ * fresh one, and navigates all still-connected players to it. Do not call if either player
+ * has since joined a new game.
  * @param oldGame - The concluded game a rematch has been agreed upon for.
  */
 function createRematchGame(oldGame: ServerGame): void {
 	const oldMatch = oldGame.match;
-
-	// A rematch can't start if either player has meanwhile joined a DIFFERENT game. A concluded
-	// game frees its players from the active-players list, so a lingering participant reads as
-	// `undefined` here; only a genuine new game they've joined (a different id) blocks the rematch.
-	for (const data of Object.values(oldMatch.playerData)) {
-		const inGameID = activePlayers.getGameID(data.identifier);
-		if (inGameID !== undefined && inGameID !== oldMatch.id) {
-			logEvents.addAndPrint(`Cannot start rematch of game ${oldMatch.id} because a participant is already in game ${inGameID}!`, 'errLog'); // prettier-ignore
-			return; // Buttons just stay disabled.
-		}
-	}
 
 	// Capture identities (swapped colors) and connected sockets before tearing down the old game.
 	const swapped: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }> = {};
