@@ -84,23 +84,19 @@ function unsubscribe(ws: CustomWebSocket, involuntary?: boolean): void {
 }
 
 /**
- * Finds the lobby-subscribed socket to take into a game on the owner's behalf, a seek being
- * owned by the user rather than by any one of their tabs.
- * @param ownerTab - The tab that created the seek. Its socket wins; failing that, their most
- * recently subscribed tab takes it — the one they last proved they were on.
- * @returns The websocket, if found, otherwise undefined.
+ * Finds the lobby-subscribed socket that belongs to the given user's tab, falling
+ * back to their most recently subscribed tab.
+ * @param ownerTab - The tab that created the seek.
+ * @returns The websocket, if found. It may not be if the user disconnected
+ * involuntarily and are within that 5-second cushion before their seek is deleted.
  */
 function findSocketFromOwner(owner: AuthMemberInfo, ownerTab: string): CustomWebSocket | undefined {
 	let newest: CustomWebSocket | undefined;
 	for (const ws of lobbySubscribers.getAll()) {
 		if (!memberInfoUtil.eq(owner, ws.metadata.memberInfo)) continue;
-		// The creating tab, back on a fresh socket or not. Duplicating a tab copies its
-		// sessionStorage, hence its id, so the first match is the original of the two.
 		if (ws.metadata.tabId === ownerTab) return ws;
 		newest = ws; // The set iterates in subscription order, so the last match is the newest.
 	}
-	// Undefined if they've disconnected involuntarily, and are within
-	// that 5-second cushion before their seek is deleted.
 	return newest;
 }
 

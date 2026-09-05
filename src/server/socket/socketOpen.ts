@@ -30,7 +30,7 @@ import identityResolver from '../auth/identityResolver.js';
 // Constants -------------------------------------------------------------------
 
 /** The exact shape of a tab id our client issues: base-62 characters, of a fixed length. */
-const TAB_ID_PATTERN = new RegExp(`^[0-9A-Za-z]{${socketutil.TAB_ID.LENGTH}}$`);
+const TAB_ID_REGEX = new RegExp(`^[0-9A-Za-z]{${socketutil.TAB_ID.LENGTH}}$`);
 
 // Functions -------------------------------------------------------------------
 
@@ -160,24 +160,17 @@ function closeIfInvalidAndAddMetadata(
 
 /**
  * Reads the tab id the client attached to its upgrade request — see {@link socketutil.TAB_ID}.
- *
- * Client-supplied, so it's held to the exact shape we issue. Faking another tab's id wins
- * nothing: every use of it also matches on the socket's own identity, so the most a client
- * can misdirect is its own navigation.
+ * Only held to the shape we expect. Faking another tab's id wins nothing: it's only for UX.
  * @returns The id, or undefined if they sent none, or a malformed one.
  */
 function parseTabID(req: IncomingMessage): string | undefined {
-	// An upgrade request's url is path-only, so it needs a base to be parsed against.
-	const tabId = new URL(req.url ?? '', 'wss://localhost').searchParams.get(
-		socketutil.TAB_ID.PARAM,
-	);
-	if (tabId === null || !TAB_ID_PATTERN.test(tabId)) return undefined;
+	// url is guaranteed because Node always sets it on a server request.
+	const tabId = new URL(req.url!, 'wss://localhost').searchParams.get(socketutil.TAB_ID.PARAM);
+	if (tabId === null || !TAB_ID_REGEX.test(tabId)) return undefined;
 	return tabId;
 }
 
-/**
- * Adds the 'message', 'close', and 'error' event listeners to the socket
- */
+/** Adds the 'message', 'close', and 'error' event listeners to the socket. */
 function addListenersToSocket(ws: CustomWebSocket): void {
 	ws.on('message', (message: Buffer<ArrayBufferLike>) => {
 		// Each incoming message gets its own correlation ID,

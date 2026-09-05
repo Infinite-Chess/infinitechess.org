@@ -13,7 +13,6 @@ import activeSeeks from '../game/seeksmanager/activeSeeks.js';
 function get(req: Request, res: Response): void {
 	const seekId = req.params['seekId']!;
 
-	// No shape check: an id is only compared for equality, so a malformed one 404s below.
 	const seek = activeSeeks.getByID(seekId);
 	if (seek === undefined) {
 		res.status(404).send('Seek not found.');

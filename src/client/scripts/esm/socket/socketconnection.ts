@@ -30,13 +30,7 @@ const RECONNECT_DELAY_MS = [0, 2500, 5000] as const;
 /** sessionStorage key holding this tab's id. */
 const TAB_ID_KEY = 'tab-id';
 
-/**
- * This tab's id, sent on every upgrade request. See {@link socketutil.TAB_ID}.
- *
- * sessionStorage is per-tab and survives a reload, which is exactly the lifetime the id needs:
- * a reloaded tab still holds the seek it created whenever another tab of theirs keeps the
- * connection alive. Blocked storage costs only that, so we fall back to a memory-only id.
- */
+/** This tab's id, stored in sessionStorage, sent on every upgrade request. See {@link socketutil.TAB_ID}. */
 const OUR_TAB_ID: string = getTabID();
 
 // Variables -------------------------------------------------------------------
