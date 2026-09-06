@@ -8,6 +8,7 @@
 import type { MemberInfoCookie } from '../../../../shared/types/memberinfo.js';
 
 import docutil from './docutil.js';
+import navigate from './navigate.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -60,7 +61,7 @@ function readMemberInfoCookie(): void {
 function reloadAfterLogout(): void {
 	docutil.deleteCookie('memberInfo');
 	resetMemberInfo();
-	window.location.reload();
+	navigate.reload();
 }
 
 /** Resets our member info variables as if we were logged out. */

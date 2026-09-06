@@ -28,6 +28,7 @@ import docutil from '../../util/docutil.js';
 import guichat from './gui/guichat.js';
 import resyncer from './resyncer.js';
 import gameslot from '../../game/chess/gameslot.js';
+import navigate from '../../util/navigate.js';
 import gamesound from '../../board/gamesound.js';
 import drawoffers from './drawoffers.js';
 import onlinegame from './onlinegame.js';
@@ -75,7 +76,7 @@ function receiveMessage(contents: ClientboundGameMessage): void {
 		// The game isn't live in server memory (concluded + evicted, or never existed). Reload
 		// whatever our load state — no gamestate is coming, so the queue would never flush.
 		// Fresh SSR then serves the correct page: the dead review page, or the 404 page.
-		window.location.reload();
+		navigate.reload();
 		return;
 	}
 
@@ -291,7 +292,7 @@ function handleDetached(): void {
  */
 function handleSupersededByTab(): void {
 	flashtoast.queue('Another window connected to the game.');
-	window.location.assign('/');
+	navigate.assign('/');
 }
 
 /**
@@ -302,7 +303,7 @@ function handleSupersededByTab(): void {
 async function handleRematchStarted(rematch: GameNavigation): Promise<void> {
 	await gamesound.playNotifyToCompletion();
 	const viewColor = resolveRematchViewColor(rematch.role);
-	window.location.assign(gameurl.getGameUrl(rematch.id, viewColor));
+	navigate.assign(gameurl.getGameUrl(rematch.id, viewColor));
 }
 
 /**

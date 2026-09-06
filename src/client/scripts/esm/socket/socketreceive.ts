@@ -16,6 +16,7 @@ import socketutil from '../../../../shared/util/socketutil.js';
 import { ClientboundSchema } from '../../../../shared/transport/clientbound.js';
 
 import toast from '../components/toast.js';
+import navigate from '../util/navigate.js';
 import socketsend from './socketsend.js';
 import socketlogger from './socketlogger.js';
 import { SocketBus } from './SocketBus.js';
@@ -103,7 +104,7 @@ function ongeneralmessage(message: ClientboundGeneralMessage): void {
 		case 'protocolversion':
 			// Our code predates a protocol change. Reload to fetch the current scripts —
 			// they're content-hashed, so a plain reload is guaranteed to pull the new ones.
-			if (message.value !== socketutil.PROTOCOL_VERSION) location.reload();
+			if (message.value !== socketutil.PROTOCOL_VERSION) navigate.reload();
 			break;
 		default:
 			console.error('Unknown server action in general route.', message satisfies never);

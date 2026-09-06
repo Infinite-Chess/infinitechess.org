@@ -21,6 +21,7 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import guichat from './gui/guichat.js';
 import gameslot from '../../game/chess/gameslot.js';
+import navigate from '../../util/navigate.js';
 import drawoffers from './drawoffers.js';
 import socketsubs from '../../socket/socketsubs.js';
 import socketsend from '../../socket/socketsend.js';
@@ -216,15 +217,8 @@ function initOnlineGame(initialStage: GameStage, state: GameStateFull): void {
 	// A finalized rated game carries its deltas in the state.
 	if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
 
-	/**
-	 * Leave-game warning popups on every hyperlink.
-	 *
-	 * Add an listener for every single hyperlink on the page that will
-	 * confirm to us if we actually want to leave if we are in an online game.
-	 */
-	document.querySelectorAll('a').forEach((link) => {
-		link.addEventListener('click', confirmNavigationAwayFromGame);
-	});
+	// Leave-game warning on every way out of the page: back button, tab close, links.
+	window.addEventListener('beforeunload', warnBeforeLeavingGame);
 }
 
 /** Applies the overlay a FULL gamestate carries, absent when we're a spectator. */
@@ -251,32 +245,19 @@ function setLeanParticipantState(participantState: LeanParticipantState): void {
 }
 
 /**
- * Confirm that the user DOES actually want to leave the page if they are in an online game.
- *
- * Sometimes they could leave by accident, or even hit the "Logout" button by accident,
- * which just ejects them out of the game
- * @param event
+ * Confirms an unload that would abandon a live game, so a stray back button or misclicked
+ * "Logout" doesn't forfeit it. The browser owns the dialog's wording; a page can't supply one.
  */
-function confirmNavigationAwayFromGame(event: MouseEvent): void {
-	// Check if Command (Meta) or Ctrl key is held down
-	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
+function warnBeforeLeavingGame(event: BeforeUnloadEvent): void {
+	if (navigate.isAppInitiated()) return; // We're moving them, so it's not theirs to confirm.
 	if (!gameslot.isGameLive()) return;
 	if (gamesession.getRole() === undefined) return; // Spectator
 
-	const userConfirmed = confirm('Are you sure you want to leave the game?');
-	if (userConfirmed) return; // Follow link like normal. Server then starts a 10-second disconnect claim timer for disconnecting on purpose.
-	// Cancel the following of the link.
 	event.preventDefault();
 
-	/*
-	 * KEEP IN MIND that if we leave the pop-up open for 10 seconds,
-	 * JavaScript is frozen in that timeframe, which means as
-	 * far as the server can tell we're not communicating anymore,
-	 * so it automatically closes our websocket connection,
-	 * thinking we've disconnected, and starts a 60-second disconnect claim timer.
-	 *
-	 * As soon as we hit cancel, we are communicating again.
-	 */
+	// KEEP IN MIND that JavaScript is frozen while the dialog stands, so past 5-15 seconds
+	// the server stops hearing from us and treats it as an involuntary disconnect — the
+	// forgiving 60-second claim timer, which cancelling reconnects out of.
 }
 
 /** Boots the engine worker for an online engine game. */

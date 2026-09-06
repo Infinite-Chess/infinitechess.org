@@ -6,6 +6,8 @@
  * Also owns the socket instance, and the timer that closes it once idle.
  */
 
+import type { ClosureReason } from '../../../../shared/util/socketutil.js';
+
 import uuid from '../../../../shared/util/uuid.js';
 import socketutil from '../../../../shared/util/socketutil.js';
 
@@ -58,10 +60,11 @@ SocketBus.addEventListener('connection-lost', () => {
 	console.error('No connection.');
 });
 
-// Close the socket with a controlled code before the page is unloaded, so the server knows
-// to not give us a grace period for reconnection. CANNOT USE 'pagehide' because that doesn't
-// reliably fire the close event before we leave, but defers it for when we RETURN, causing reconnection issues.
-window.addEventListener('beforeunload', closeSocket);
+// Tell the server we left deliberately, so it withholds the grace period. NOT 'beforeunload':
+// it fires even for an unload the leave-game prompt may cancel, stranding a staying player on a
+// dead socket. Dropping, not closing: a bfcache freeze defers a close until we return, after
+// 'pageshow' has resubscribed — the late teardown would wipe those fresh subs.
+window.addEventListener('pagehide', () => dropSocket(socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT));
 
 // Network status handling. We do not repeatedly attempt to reconnect while the browser is offline.
 window.addEventListener('offline', () => {
@@ -69,7 +72,7 @@ window.addEventListener('offline', () => {
 	// Any scheduled attempt is now doomed; 'online' is what restarts us.
 	clearTimeout(reconnectTimerId);
 	reconnectTimerId = undefined;
-	dropSocket();
+	dropSocket(socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW);
 });
 window.addEventListener('online', () => {
 	console.log('Network connection regained.');
@@ -223,14 +226,13 @@ function closeSocket(): void {
 }
 
 /**
- * Tears the socket down at once, for when we've already concluded the connection is dead.
+ * Tears the socket down immediately, rather than waiting on a close event.
  *
  * Browsers expose no terminate(), and a severed network stalls the 'close' event for tens of
- * seconds while the closing handshake goes unanswered — yet every consequence of the
- * disconnection, telling the user included, waits on that event. So we send the close frame in
- * case the wire turns out to be fine, then stop listening and run the teardown ourselves.
+ * seconds — yet every consequence of the disconnection, telling the user included, waits on it.
+ * @param reason - Decides, on each side, whether this closure is one to recover from.
  */
-function dropSocket(): void {
+function dropSocket(reason: ClosureReason): void {
 	if (!socket) return;
 	const dropped = socket;
 	setSocket(undefined);
@@ -238,10 +240,10 @@ function dropSocket(): void {
 	// is moot, and must not reach a session that has since opened a replacement.
 	dropped.onclose = null;
 	dropped.onmessage = null;
-	// The reason is for the server alone, should the frame still land: it grants us the
-	// reconnection grace period, where a plain client closure would cost us our seek.
-	dropped.close(1000, socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW);
-	socketclose.onclose(1006, ''); // Report it as the abnormal closure it is.
+	// Still sent: if the wire is in fact fine, the server hears our reason and can withhold the
+	// grace period. If it isn't, this costs nothing — we're no longer waiting on the response.
+	dropped.close(1000, reason);
+	socketclose.onclose(1000, reason);
 }
 
 // Resubscription --------------------------------------------------------------

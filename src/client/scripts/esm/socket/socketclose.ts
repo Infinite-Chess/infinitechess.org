@@ -76,10 +76,12 @@ function onclose(code: number, reason: string): void {
 		case socketutil.CLOSURE_REASONS.CONNECTION_EXPIRED:
 			socketconnection.resubAll();
 			break;
-		// Our own frames, echoed back by the server. The RENEW one can't actually reach us —
-		// dropSocket() detaches onclose before sending it — but the switch is exhaustive.
+		// We closed on purpose and want nothing reopened: leaving the page, or going idle.
 		case socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT:
+			break;
+		// We dropped a socket we'd concluded was dead, and want it replaced.
 		case socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW:
+			socketconnection.scheduleReconnect();
 			break;
 		case socketutil.CLOSURE_REASONS.UNIDENTIFIABLE_IP:
 			console.error('Unable to identify IP when establishing socket.');

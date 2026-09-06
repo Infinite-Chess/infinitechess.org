@@ -88,7 +88,7 @@ function cancelTimerOfMessageID(ID: number): void {
 function onEchoTimeout(messageID: MessageID): void {
 	if (messageID) delete echoTimers[messageID];
 	console.log(`Renewing connection after we haven't received an echo for ${socketutil.ECHO_TIMEOUT_MS} ms...`); // prettier-ignore
-	socketconnection.dropSocket();
+	socketconnection.dropSocket(socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW);
 }
 
 /**
@@ -136,7 +136,7 @@ function clearPendingState(): void {
 function onHeartbeatTimeout(): void {
 	heartbeatTimerID = undefined;
 	console.log(`No message received for ${socketutil.HEARTBEAT_INTERVAL_MS + socketutil.ECHO_TIMEOUT_MS}ms. Assuming connection lost.`); // prettier-ignore
-	socketconnection.dropSocket();
+	socketconnection.dropSocket(socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW);
 }
 
 // Sending Messages ------------------------------------------------------------
