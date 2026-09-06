@@ -89,7 +89,7 @@ function submitMove(
 	// Make sure the move number matches up. If not, they've desynced, send them the current state.
 	const expectedMoveNumber = servergame.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
-		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${logEvents.truncate(JSON.stringify(messageContents))}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEvents.addAndPrint(errString, 'hackLog');
 		gameSockets.sendGameState(servergame, role, 'full', false);
 		return;
@@ -98,7 +98,7 @@ function submitMove(
 	// Verify the move is in the correct format
 	const moveParsed = doesMoveCheckOut(messageContents.move);
 	if (moveParsed === null) {
-		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		const errString = `Player sent a move in an invalid format. The message: ${logEvents.truncate(JSON.stringify(messageContents))}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEvents.addAndPrint(errString, 'hackLog');
 		socketsend.send(ws, 'general', 'print-error', 'Invalid move format.');
 		return;
@@ -106,7 +106,7 @@ function submitMove(
 
 	// Check if the move exceeds the soft distance cap based on game duration
 	if (!isMoveWithinDistanceCap(moveParsed, servergame.match.timeCreated)) {
-		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${logEvents.truncate(JSON.stringify(messageContents))}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEvents.addAndPrint(errString, 'hackLog');
 		// Force their move list to match ours, else they keep the rejected move
 		// and resubmit it on every resync, desynced for the rest of the game.
@@ -223,7 +223,7 @@ function applyClientReportedMove(
 	role: Player,
 ): MoveRecord | undefined {
 	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, role)) {
-		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${logEvents.truncate(JSON.stringify(messageContents))}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEvents.addAndPrint(errString, 'hackLog');
 		socketsend.send(ws, 'general', 'print-error', 'Invalid game conclusion.');
 		return;

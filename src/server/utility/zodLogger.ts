@@ -22,7 +22,7 @@ import logEvents from './logEvents.js';
 function log(json: unknown, zodError: z.ZodError, contextMessage: string): void {
 	const treeifiedErrors = JSON.stringify(z.treeifyError(zodError), null, 2);
 	const logText = `${contextMessage} - Message contents:
-${jsonutil.ensureJSONString(json, 2)}
+${logEvents.escapeUntrusted(jsonutil.ensureJSONString(json, 2))}
 
 Zod treeified errors:
 ${treeifiedErrors}

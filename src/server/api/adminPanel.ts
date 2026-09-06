@@ -367,7 +367,7 @@ function logCommand(command: string, req: Request): void {
 	if (req.memberInfo?.signedIn) {
 		logEvents.addAndPrint(
 			`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` +
-				command,
+				logEvents.escapeLogNewlines(command),
 			'adminCommands',
 		);
 	} else throw new Error('Admin SHOULD have been logged in by this point. DANGEROUS');
@@ -376,7 +376,10 @@ function logCommand(command: string, req: Request): void {
 function sendAndLogResponse(res: Response, code: number, message: string): void {
 	res.status(code).send(message);
 	// Also log the sent response
-	logEvents.addAndPrint('Result:   ' + message + '\n', 'adminCommands');
+	logEvents.addAndPrint(
+		'Result:   ' + logEvents.escapeLogNewlines(message) + '\n',
+		'adminCommands',
+	);
 }
 
 // Exports ---------------------------------------------------------------------

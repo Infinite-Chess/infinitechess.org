@@ -36,7 +36,7 @@ const FIXED_ARRAY_INFO = {
  * allowing us to stringify special objects like BigInts, Maps and TypedArrays.
  * Use {@link parseReviver} to parse back.
  */
-function stringifyReplacer(_key: string, value: any): any {
+function stringifyReplacer(_key: string, value: unknown): unknown {
 	// Stringify BigInts
 	if (typeof value === 'bigint')
 		return {
@@ -93,10 +93,11 @@ function parseReviver(_key: string, value: any): any {
  * @param input - The input to stringify.
  * @param spaces - If specified, the number of spaces to indent the output with (pretty-printing).
  */
-function ensureJSONString(input: any, spaces?: number): string {
+function ensureJSONString(input: unknown, spaces?: number): string {
 	if (typeof input === 'string') return input;
 	try {
-		return JSON.stringify(input, stringifyReplacer, spaces);
+		// undefined, functions and symbols stringify to JS `undefined`, not a string.
+		return JSON.stringify(input, stringifyReplacer, spaces) ?? String(input);
 	} catch {
 		return 'Error: Input could not be JSON stringified';
 	}

@@ -67,7 +67,7 @@ function read(req: Request): MemberInfoCookie | undefined {
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
 		logEvents.addAndPrint(
-			`memberInfo cookie was tampered: "${jsonutil.ensureJSONString(stringified)}"\n${detail}`,
+			`memberInfo cookie was tampered: "${logEvents.escapeUntrusted(jsonutil.ensureJSONString(stringified))}"\n${detail}`,
 			'errLog',
 		);
 		return undefined;

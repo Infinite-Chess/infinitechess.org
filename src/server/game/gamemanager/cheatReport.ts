@@ -52,7 +52,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	// Cheat reports are only valid in games that are not instantly deleted on conclusion.
 	// (i.e. games without server-side move validation AND are public)
 	if (servergame.validateMoves) {
-		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${gameUtility.getVariantCode(servergame.match.variant) ?? 'Custom'}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourRole}. Game ID: ${servergame.match.id}`;
+		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${gameUtility.getVariantCode(servergame.match.variant) ?? 'Custom'}. Report message: ${logEvents.truncate(JSON.stringify(messageContents))}. Reporter color: ${ourRole}. Game ID: ${servergame.match.id}`;
 		logEvents.add(errString, 'hackLog');
 		gameSockets.sendToColor(
 			servergame.match,
@@ -70,7 +70,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 		perpetratingMoveIndex,
 	);
 	if (colorThatPlayedPerpetratingMove === ourRole) {
-		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourRole}.\nThe game: ${gameUtility.getSimplifiedGameString(servergame)}`;
+		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${logEvents.truncate(JSON.stringify(messageContents))}. Reporter color: ${ourRole}.\nThe game: ${gameUtility.getSimplifiedGameString(servergame)}`;
 		logEvents.add(errString, 'hackLog');
 		gameSockets.sendToColor(
 			servergame.match,
@@ -89,7 +89,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
-	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason} Color who reported: ${ourRole}. Probably cheater color: ${opponentColor}.\nThe game: ${gameUtility.getSimplifiedGameString(servergame)}`;
+	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${logEvents.escapeUntrusted(messageContents.reason)} Color who reported: ${ourRole}. Probably cheater color: ${opponentColor}.\nThe game: ${gameUtility.getSimplifiedGameString(servergame)}`;
 	logEvents.add(errText, 'hackLog');
 
 	// Notify all players a cheat was detected

@@ -178,7 +178,7 @@ function getPosition(req: Request, res: Response): void {
 	} catch (error: unknown) {
 		const message = jsutil.getErrorMessage(error);
 		logEvents.addAndPrint(
-			`Error retrieving position for name "${positionName}": ${message}`,
+			`Error retrieving position for name "${logEvents.escapeLogNewlines(positionName)}": ${message}`,
 			'errLog',
 		);
 		res.status(500).json({
@@ -219,7 +219,7 @@ function deletePosition(req: Request, res: Response): void {
 	} catch (error: unknown) {
 		const message = jsutil.getErrorMessage(error);
 		logEvents.addAndPrint(
-			`Error deleting position "${positionName}" for user_id ${userId}: ${message}`,
+			`Error deleting position "${logEvents.escapeLogNewlines(positionName)}" for user_id ${userId}: ${message}`,
 			'errLog',
 		);
 		res.status(500).json({

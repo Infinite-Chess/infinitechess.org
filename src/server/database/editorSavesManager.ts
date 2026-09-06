@@ -7,6 +7,7 @@
 import type { RunResult } from 'better-sqlite3';
 
 import db from './database.js';
+import logEvents from '../utility/logEvents.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -72,7 +73,7 @@ function doesExist(user_id: number, name: string): boolean {
 	 `;
 	const row = db.call(
 		() => db.get<{ found: 0 | 1 }>(query, [user_id, name]),
-		`Error checking existence of saved position "${name}" for user_id ${user_id}`,
+		`Error checking existence of saved position "${logEvents.escapeLogNewlines(name)}" for user_id ${user_id}`,
 	);
 	return Boolean(row?.found);
 }
@@ -116,7 +117,7 @@ function add(
 				pawn_double_push === undefined ? -1 : pawn_double_push ? 1 : 0,
 				castling === undefined ? -1 : castling ? 1 : 0,
 			]),
-		`Error adding saved position for user_id ${user_id} with name "${name}"`,
+		`Error adding saved position for user_id ${user_id} with name "${logEvents.escapeLogNewlines(name)}"`,
 	);
 }
 
@@ -131,7 +132,7 @@ function getICN(name: string, user_id: number): EditorSavesIcnRecord | undefined
 	const query = `SELECT timestamp, icn, compression, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
 	return db.call(
 		() => db.get<EditorSavesIcnRecord>(query, [name, user_id]),
-		`Error retrieving ICN for name "${name}" and user_id ${user_id}`,
+		`Error retrieving ICN for name "${logEvents.escapeLogNewlines(name)}" and user_id ${user_id}`,
 	);
 }
 
@@ -147,7 +148,7 @@ function remove(name: string, user_id: number): RunResult {
 	const query = `DELETE FROM editor_saves WHERE name = ? AND user_id = ?`;
 	return db.call(
 		() => db.run(query, [name, user_id]),
-		`Error deleting position "${name}" for user_id ${user_id}`,
+		`Error deleting position "${logEvents.escapeLogNewlines(name)}" for user_id ${user_id}`,
 	);
 }
 
