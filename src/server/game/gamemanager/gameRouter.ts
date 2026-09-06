@@ -11,6 +11,7 @@ import type { ServerboundGameMessage } from '../../../shared/transport/serverbou
 
 import chat from './chat.js';
 import onRematch from './onRematch.js';
+import logEvents from '../../utility/logEvents.js';
 import onOfferDraw from './onOfferDraw.js';
 import activeGames from './activeGames.js';
 import cheatReport from './cheatReport.js';
@@ -40,9 +41,19 @@ function route(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
 	// resolved from the sender's identity, which can name a different game entirely (a socket
 	// spectating one game whose owner is playing another).
 	const subscription = ws.metadata.subscriptions.game;
-	// A detach (tab takeover, rematch-window exit, eviction) can't outrun
-	// an action already in flight. A spectator's action lands here too.
-	if (subscription === undefined) return;
+	if (subscription === undefined) {
+		if (!ws.metadata.subscriptions.spectating) {
+			// Participant. Expected, rare. A detach (tab takeover, rematch-window exit,
+			// eviction) can't outrun an action already in flight.
+			return;
+		} else {
+			// Spectator. Legitimate bug. This has happened before when logging out while
+			// on the game page, then hitting back to return to the game page in your logged
+			// in state, and attempting to play a move.
+			logEvents.addAndPrint(`Spectator attempted to send game action: "${logEvents.truncate(JSON.stringify(contents))}"`, 'errLog'); // prettier-ignore
+		}
+		return;
+	}
 
 	const servergame = activeGames.getByID(subscription.id)!; // Guaranteed: Eviction detaches every socket, live subscriptions always names a live game.
 	const color = subscription.color;
