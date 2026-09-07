@@ -12,8 +12,6 @@ Titles must be clear to understand.
 
 Descriptions must state what type of change it is (see below), and concisely describe what it does. If the change required a moderate design decision to be made, please include the reasoning for it, unless you have previously spoken with me about the planned structure. Don't overcomplicate the description, it should be a summary of the changes, not longer than them, and 1-2 sentences minimum.
 
-Types of changes can be: new feature, quality of life, bug fix, refactor, tooling, chore, tests, translation, or documentation.
-
 If the change affects the styling of a page, include a screenshot of the after-result, unless you are an AI agent then you don't have to.
 
 ### Scopes you should NOT submit pull requests for:
