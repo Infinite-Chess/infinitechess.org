@@ -13,18 +13,19 @@ For work that has to be designed before it can be built. The user decides well w
 
 Settle what the user _experiences_ first, all of it, before a single question about the design behind it. Names you coin — a constant, a route, a flag — are decisions too: ask.
 
-A question they didn't answer is still open. Re-ask it; don't quietly move on.
+Let a subject close before opening the next. An answer that rules an option out is a turn in a conversation, not a resolution — never chase it with "so that settles it, next question".
+
+A question they didn't answer is still open. Re-ask it whole: they skip questions it isn't yet their turn to answer, so a re-ask stripped of the detail they never read strands them.
 
 Read the code before you ask. Options must come from what the code actually does — a question built on a guess wastes their decision.
 
 ## What not to ask
 
 - Anything derivable from what's already decided.
-- Anything with one obviously correct answer. Decide it, say so in passing.
+- Anything already settled by the rulebook, IMPORT_RULES.md or MODULE_CONVENTIONS.md — one option following them and the other not IS the answer. Decide it, say so in passing.
+- Anything where neither option carries a benefit. A question you had to manufacture a reason for is not a question.
 - Two decisions you have coupled. Prove the coupling exists first; a constraint you assumed rather than checked is not a reason to bundle.
 - Anything you already asked.
-
-Never invent a question to fill a turn.
 
 ## The ledger
 
@@ -42,7 +43,9 @@ If they push back on a recommendation and their argument is better, say so plain
 
 ## Finishing
 
-When OPEN is empty, ask for the go-ahead — to implement, or to write the design into a document. Don't assume which.
+Before you believe OPEN is empty, plan the build. Walk every file you would touch as if you were about to write it — signatures, shapes, names, and a permanent home for anything new that satisfies IMPORT_RULES.md and MODULE_CONVENTIONS.md. Everything that walk surfaces is a question you failed to ask. Ask it. The agent who builds this makes no design decisions, so a hole you leave is one they will fill for you without the user's approval.
+
+Then ask for the go-ahead — to implement, or to write the design into a document. Don't assume which.
 
 A design document is read by an agent who must build the thing without re-asking the user anything. Mirror the interview: behavior in one section, the design behind it in the next, every decision carrying its reason and the code evidence. Rejected alternatives get the one criterion that killed them, and never more room than the requirements they lost to.
 
