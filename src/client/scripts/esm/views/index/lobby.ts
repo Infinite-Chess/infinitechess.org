@@ -112,6 +112,7 @@ gamesound.preload('notify');
 /** Sets up a single delegated click listener on the lobby table body. */
 function initLobbyClickHandler(): void {
 	element_lobbyTbody.addEventListener('click', (e) => {
+		if (gameIdWeAreIn !== undefined) return; // In a game (or about to navigate): the list stays up, but is uninteractable.
 		const row = (e.target as HTMLElement).closest<HTMLElement>('[data-seek-id]');
 		if (!row) return;
 		const seekId = row.getAttribute('data-seek-id')!;
