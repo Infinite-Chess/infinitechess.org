@@ -2,7 +2,8 @@
 
 /**
  * Exposes our login state and username/user_id, read from the `memberInfo` cookie. Auth itself
- * rides on the httpOnly refresh-token cookie (auto-sent same-site).
+ * rides on the httpOnly refresh-token cookie (auto-sent same-site). A login or logout in one
+ * tab reloads the browser's others.
  */
 
 import type { MemberInfoCookie } from '../../../../shared/types/memberinfo.js';
@@ -17,6 +18,9 @@ type MemberInfoState = ({ signedIn: true } & MemberInfoCookie) | { signedIn: fal
 
 // State -----------------------------------------------------------------------
 
+/** Pings the browser's other tabs, prompting them to re-check who they're rendered for. */
+const identityChannel = new BroadcastChannel('identity');
+
 /** The timeout ID for the timer to check session expiry. */
 let sessionExpiryTimer: number | undefined;
 
@@ -29,18 +33,21 @@ let memberInfo: MemberInfoState = { signedIn: false };
 
 	// Sets our memberInfo properties if we are logged in
 	readMemberInfoCookie();
+
+	// Empty payload on purpose: every tab answers by re-reading the cookie they all share.
+	identityChannel.postMessage(null);
 })();
 
 function initListeners(): void {
 	window.addEventListener('pageshow', resyncMemberInfo); // Fired on initial page load AND when hitting the back button to return.
+	identityChannel.addEventListener('message', resyncMemberInfo);
 }
 
 // Identity --------------------------------------------------------------------
 
 /**
- * Re-reads the cookie, reloading if our identity changed while the page sat frozen.
- * A bfcache restore hands back a DOM rendered for who we were then — a stale header,
- * and a game page still playing as a member the server now treats as a spectator.
+ * Re-reads the cookie, reloading if our identity changed since this page was rendered — leaving
+ * a stale header, and a game page still playing as a member the server now treats as a spectator.
  */
 function resyncMemberInfo(): void {
 	const previousUserId = getOurUserId();
