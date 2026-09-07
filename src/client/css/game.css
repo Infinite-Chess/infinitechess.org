@@ -768,14 +768,14 @@
 	border-bottom: none;
 }
 
+.chat.collapsed .chat-chevron {
+	transform: rotate(180deg);
+}
+
 .chat.collapsed .chat-log,
 .chat.collapsed .chat-error,
 .chat.collapsed .chat-input {
 	display: none;
-}
-
-.chat.collapsed .chat-chevron {
-	transform: rotate(180deg);
 }
 
 /* ========================
