@@ -15,14 +15,14 @@ import navigate from './navigate.js';
 /** Our identity (the cookie payload) when signed in, else just the flag. */
 type MemberInfoState = ({ signedIn: true } & MemberInfoCookie) | { signedIn: false };
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The timeout ID for the timer to check session expiry. */
 let sessionExpiryTimer: number | undefined;
 
 let memberInfo: MemberInfoState = { signedIn: false };
 
-// Functions -------------------------------------------------------------------
+// Initialization --------------------------------------------------------------
 
 (function init(): void {
 	initListeners();
@@ -32,7 +32,21 @@ let memberInfo: MemberInfoState = { signedIn: false };
 })();
 
 function initListeners(): void {
-	window.addEventListener('pageshow', readMemberInfoCookie); // Fired on initial page load AND when hitting the back button to return.
+	window.addEventListener('pageshow', resyncMemberInfo); // Fired on initial page load AND when hitting the back button to return.
+}
+
+// Identity --------------------------------------------------------------------
+
+/**
+ * Re-reads the cookie, reloading if our identity changed while the page sat frozen.
+ * A bfcache restore hands back a DOM rendered for who we were then — a stale header,
+ * and a game page still playing as a member the server now treats as a spectator.
+ */
+function resyncMemberInfo(): void {
+	const previousUserId = getOurUserId();
+	readMemberInfoCookie();
+	// Matches on the initial page load: the cookie this reads is the one the page was rendered from.
+	if (getOurUserId() !== previousUserId) navigate.reload();
 }
 
 /**
@@ -54,21 +68,13 @@ function readMemberInfoCookie(): void {
 	scheduleSessionLogout();
 }
 
-/**
- * Cleans up local auth state, then reloads the page to reflect the logged-out state.
- * Cleanup cancels the session-expiry timer so it can't fire again after the reset.
- */
-function reloadAfterLogout(): void {
-	docutil.deleteCookie('memberInfo');
-	resetMemberInfo();
-	navigate.reload();
-}
-
 /** Resets our member info variables as if we were logged out. */
 function resetMemberInfo(): void {
 	clearTimeout(sessionExpiryTimer); // Prevent ghost logout events after we've manually reset
 	memberInfo = { signedIn: false };
 }
+
+// Session End -----------------------------------------------------------------
 
 /** Calculates time until session expiry and sets a timer to check session status. */
 function scheduleSessionLogout(): void {
@@ -110,6 +116,18 @@ function checkSessionExpiry(): void {
 }
 
 /**
+ * Cleans up local auth state, then reloads the page to reflect the logged-out state.
+ * Cleanup cancels the session-expiry timer so it can't fire again after the reset.
+ */
+function reloadAfterLogout(): void {
+	docutil.deleteCookie('memberInfo');
+	resetMemberInfo();
+	navigate.reload();
+}
+
+// Getters ---------------------------------------------------------------------
+
+/**
  * Whether we are logged in based on whether the memberInfo cookie is present.
  */
 function areWeLoggedIn(): boolean {
@@ -132,11 +150,13 @@ function getOurUserId(): number | undefined {
 	return memberInfo.signedIn ? memberInfo.user_id : undefined;
 }
 
-// --------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
+	// Session End
+	reloadAfterLogout,
+	// Getters
 	areWeLoggedIn,
 	getOurUsername,
 	getOurUserId,
-	reloadAfterLogout,
 };
