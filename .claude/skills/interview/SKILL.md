@@ -9,7 +9,9 @@ For work that has to be designed before it can be built. The user decides well w
 
 ## The loop
 
-**One question per message. Never two.** Not "and also", not a second question after answering theirs, not a bundled either/or that hides two choices. If you write "and" in a question, split it.
+**One question per message. Never two.** Not "and also", not a second question after answering theirs, not a bundled either/or that hides two choices. If you write "and" in a question, split it. Never number them — you don't know the count until you're done.
+
+Settle what the user _experiences_ first, all of it, before a single question about the design behind it. Names you coin — a constant, a route, a flag — are decisions too: ask.
 
 A question they didn't answer is still open. Re-ask it; don't quietly move on.
 
@@ -42,6 +44,6 @@ If they push back on a recommendation and their argument is better, say so plain
 
 When OPEN is empty, ask for the go-ahead — to implement, or to write the design into a document. Don't assume which.
 
-A design document carries the reasoning, not just the conclusions: each decision, why it beat its alternatives, and the code evidence behind it. A future agent reading it must not need to ask the user anything you already asked.
+A design document is read by an agent who must build the thing without re-asking the user anything. Mirror the interview: behavior in one section, the design behind it in the next, every decision carrying its reason and the code evidence. Rejected alternatives get the one criterion that killed them, and never more room than the requirements they lost to.
 
 Remember to follow your output style.
