@@ -101,17 +101,33 @@ function startTimerToExpireSocket(ws: CustomWebSocket): void {
 
 /** Closes every socket connected from the given IP address. */
 function terminateAllOfIP(IP: string): void {
-	const connectionList = connectedIPs[IP];
-	if (connectionList === undefined) return; // They don't have any sockets to terminate!
-	for (const id of connectionList) {
-		const ws = websocketConnections[id];
-		ws?.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_REQUESTS);
-	}
+	forEachSocketInList(connectedIPs[IP], (ws) =>
+		ws.close(1009, socketutil.CLOSURE_REASONS.TOO_MANY_REQUESTS),
+	);
 }
 
-/** Closes all sockets a given member has open. */
-function closeAllOfSession(jwt: string, closureCode: number, closureReason: ClosureReason): void {
-	closeAllSocketsInList(connectedSessions[jwt], closureCode, closureReason);
+/** Closes every socket a session's given tab has open. */
+function closeSocketsOfTab(
+	jwt: string,
+	tabId: string,
+	closureCode: number,
+	closureReason: ClosureReason,
+): void {
+	forEachSocketInList(connectedSessions[jwt], (ws) => {
+		if (ws.metadata.tabId === tabId) ws.close(closureCode, closureReason);
+	});
+}
+
+/** Closes all sockets a session has open, except those of the given tab, if provided. */
+function closeOtherTabsOfSession(
+	jwt: string,
+	tabId: string | undefined,
+	closureCode: number,
+	closureReason: ClosureReason,
+): void {
+	forEachSocketInList(connectedSessions[jwt], (ws) => {
+		if (ws.metadata.tabId !== tabId) ws.close(closureCode, closureReason);
+	});
 }
 
 /** Closes all sockets associated with a given user ID. */
@@ -120,18 +136,17 @@ function closeAllOfMember(
 	closureCode: number,
 	closureReason: ClosureReason,
 ): void {
-	closeAllSocketsInList(connectedMembers[user_id], closureCode, closureReason);
+	forEachSocketInList(connectedMembers[user_id], (ws) => ws.close(closureCode, closureReason));
 }
 
-/** Closes every socket in the ID list. `slice()` copies it first, as closing mutates the list. */
-function closeAllSocketsInList(
+/** Visits every live socket in the ID list. `slice()` copies it first, as closing mutates the list. */
+function forEachSocketInList(
 	socketIDs: string[] | undefined,
-	closureCode: number,
-	closureReason: ClosureReason,
+	callback: (ws: CustomWebSocket) => void,
 ): void {
 	socketIDs?.slice().forEach((socketID) => {
 		const ws = websocketConnections[socketID];
-		if (ws) ws.close(closureCode, closureReason);
+		if (ws) callback(ws);
 	});
 }
 
@@ -164,7 +179,8 @@ export default {
 	remove,
 	// Terminating all sockets of criteria
 	terminateAllOfIP,
-	closeAllOfSession,
+	closeSocketsOfTab,
+	closeOtherTabsOfSession,
 	closeAllOfMember,
 	// Limiting the socket count
 	doesClientHaveMaxCount,

@@ -101,6 +101,10 @@ function onclose(code: number, reason: string): void {
 		case socketutil.CLOSURE_REASONS.LOGGED_OUT:
 			validatorama.reloadAfterLogout();
 			break;
+		// THIS tab asked for the logout, we are already navigating home. Reloading would
+		// cancel that navigation — this page stays alive until the logout request answers.
+		case socketutil.CLOSURE_REASONS.LOGGED_OUT_SELF:
+			break;
 		case socketutil.CLOSURE_REASONS.TOO_MANY_REQUESTS:
 			console.error('Too many requests when establishing socket.');
 			enterTimeout();

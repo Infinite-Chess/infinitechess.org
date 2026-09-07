@@ -10,6 +10,7 @@ import type { CustomWebSocket } from './socketTypes.js';
 
 import { parse as parseCookie } from 'cookie';
 
+import tabid from '../../shared/util/tabid.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import ip from '../utility/ip.js';
@@ -26,11 +27,6 @@ import socketRegistry from './socketRegistry.js';
 import requestContext from '../utility/requestContext.js';
 import reqTranslations from '../config/reqTranslations.js';
 import identityResolver from '../auth/identityResolver.js';
-
-// Constants -------------------------------------------------------------------
-
-/** The exact shape of a tab id our client issues: base-62 characters, of a fixed length. */
-const TAB_ID_REGEX = new RegExp(`^[0-9A-Za-z]{${socketutil.TAB_ID.LENGTH}}$`);
 
 // Functions -------------------------------------------------------------------
 
@@ -159,15 +155,15 @@ function closeIfInvalidAndAddMetadata(
 }
 
 /**
- * Reads the tab id the client attached to its upgrade request — see {@link socketutil.TAB_ID}.
+ * Reads the tab id the client attached to its upgrade request — see {@link tabid}.
  * Only held to the shape we expect. Faking another tab's id wins nothing: it's only for UX.
  * @returns The id, or undefined if they sent none, or a malformed one.
  */
 function parseTabID(req: IncomingMessage): string | undefined {
 	// url is guaranteed because Node always sets it on a server request.
-	const tabId = new URL(req.url!, 'wss://localhost').searchParams.get(socketutil.TAB_ID.PARAM);
-	if (tabId === null || !TAB_ID_REGEX.test(tabId)) return undefined;
-	return tabId;
+	const parsed = new URL(req.url!, 'wss://localhost').searchParams.get(tabid.PARAM);
+	if (parsed === null || !tabid.REGEX.test(parsed)) return undefined;
+	return parsed;
 }
 
 /** Adds the 'message', 'close', and 'error' event listeners to the socket. */

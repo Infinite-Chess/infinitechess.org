@@ -8,11 +8,12 @@
 
 import type { ClosureReason } from '../../../../shared/util/socketutil.js';
 
-import uuid from '../../../../shared/util/uuid.js';
+import tabid from '../../../../shared/util/tabid.js';
 import socketutil from '../../../../shared/util/socketutil.js';
 
 import thread from '../util/thread.js';
 import docutil from '../util/docutil.js';
+import ourtabid from '../util/ourtabid.js';
 import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
 import socketreceive from './socketreceive.js';
@@ -29,11 +30,6 @@ const AUTO_CLOSE_CUSHION = 10000;
  * Indexed by consecutive failure count; the last element repeats indefinitely.
  */
 const RECONNECT_DELAY_MS = [0, 2500, 5000] as const;
-/** sessionStorage key holding this tab's id. */
-const TAB_ID_KEY = 'tab-id';
-
-/** This tab's id, stored in sessionStorage, sent on every upgrade request. See {@link socketutil.TAB_ID}. */
-const OUR_TAB_ID: string = getTabID();
 
 // Variables -------------------------------------------------------------------
 
@@ -86,23 +82,6 @@ window.addEventListener('pageshow', (event) => {
 	console.log('Page was returned to using the back or forward button.');
 	resubAll();
 });
-
-// Tab Identity ----------------------------------------------------------------
-
-/** Reads this tab's stored id, generating and storing one on its first page load. */
-function getTabID(): string {
-	try {
-		const stored = sessionStorage.getItem(TAB_ID_KEY);
-		if (stored !== null) return stored;
-		const id = uuid.generateID_Base62(socketutil.TAB_ID.LENGTH);
-		sessionStorage.setItem(TAB_ID_KEY, id);
-		return id;
-	} catch {
-		// Storage is blocked. A fresh id each page load still names this tab
-		// for as long as the page lives, which covers every reconnect.
-		return uuid.generateID_Base62(socketutil.TAB_ID.LENGTH);
-	}
-}
 
 // Socket Access ---------------------------------------------------------------
 
@@ -186,7 +165,7 @@ async function openSocket(): Promise<boolean> {
 	return new Promise((resolve, _reject) => {
 		let url = `wss://${window.location.hostname}`;
 		if (window.location.port !== '443') url += `:${window.location.port}`;
-		url += `?${socketutil.TAB_ID.PARAM}=${OUR_TAB_ID}`;
+		url += `?${tabid.PARAM}=${ourtabid.ID}`;
 		const ws = new WebSocket(url);
 		ws.onopen = () => {
 			clearTimeout(noResponseTimer);

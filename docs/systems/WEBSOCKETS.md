@@ -5,8 +5,9 @@ schemas that are the single source of truth for both directions, receipts (echo/
 heartbeat that detects a dead connection, subscriptions, the intent layer that survives a
 disconnect, and what a closure costs you depending on whether you caused it.
 
-There is **exactly one socket per tab**, lazily opened by the first message that needs it and
-auto-closed once nothing is subscribed. All live gameplay, the lobby, and spectating ride it.
+There is **exactly one socket per tab** (nothing enforces that), lazily opened by the first
+message that needs it and auto-closed once nothing is subscribed. All live gameplay, the lobby,
+and spectating ride it.
 
 ## The wire
 
@@ -173,23 +174,27 @@ its handlers and runs the local teardown itself with a synthetic `(1006, '')`.
 
 ## Opening a connection
 
-`wss://<hostname>[:port]` — no path, no query, no subprotocol. Auth rides on cookies in the
-upgrade request. [socketOpen.ts](/src/server/socket/socketOpen.ts) gates every upgrade, in order:
+`wss://<hostname>[:port]?tab=<id>` — no path, no subprotocol, and one query param: the tab id
+([tabid.ts](/src/shared/util/tabid.ts)), naming which of the user's tabs this socket belongs to.
+Auth rides on cookies in the upgrade request. [socketOpen.ts](/src/server/socket/socketOpen.ts)
+gates every upgrade, in order:
 
 1. **Origin** must be present, and must equal `APP_BASE_URL` outside development → `1008 ORIGIN_ERROR`.
 2. **IP** resolvable → `1008 UNIDENTIFIABLE_IP`.
 3. **User-agent** present → `1008 USER_AGENT_REQUIRED` (scanner bots routinely omit it).
 4. **`browser-id` cookie** present → `1008 AUTHENTICATION_NEEDED` (i.e. cookies disabled).
-5. **`ws.metadata` attached** — subscriptions, cookies, userAgent, memberInfo, socket id, IP,
-   echo timers — along with `ws.t`, the request's resolved translations (the socket's mirror of
-   `req.t`).
-6. **Rate limit**, keyed on the metadata's `IP|user-agent` → `1009 TOO_MANY_REQUESTS`, and _every_
+5. **Tab id** present and the right shape → `1008 TAB_ID_REQUIRED`. Every client of ours sends one,
+   so a bad id means it wasn't our page.
+6. **`ws.metadata` attached** — subscriptions, cookies, userAgent, memberInfo, socket id, tabId,
+   IP, echo timers — along with `ws.t`, the request's resolved translations (the socket's mirror
+   of `req.t`).
+7. **Rate limit**, keyed on the metadata's `IP|user-agent` → `1009 TOO_MANY_REQUESTS`, and _every_
    socket from that IP is closed too.
-7. **IP socket cap**, max **10** → `1009 TOO_MANY_SOCKETS`.
-8. **Auth** resolved from the `jwt` refresh-token cookie (`resolveAuth_WebSocket`); no token simply
+8. **IP socket cap**, max **10** → `1009 TOO_MANY_SOCKETS`.
+9. **Auth** resolved from the `jwt` refresh-token cookie (`resolveAuth_WebSocket`); no token simply
    means guest, identified by `browser-id` alone.
-9. **Session socket cap**, max **5** per jwt → `1009 TOO_MANY_SOCKETS`. Signed-in sockets only,
-   which is why it can't run before step 8.
+10. **Session socket cap**, max **5** per jwt → `1009 TOO_MANY_SOCKETS`. Signed-in sockets only,
+    which is why it can't run before step 9.
 
 Finally the socket is registered, logged, given its listeners, and sent `general/protocolversion`.
 
@@ -211,7 +216,7 @@ games** — a move token is 4 coordinates, so 500 KB allows ~125 000 digits each
 
 ### Codes and reasons
 
-Reasons are a closed set in [socketutil.ts](/src/shared/util/socketutil.ts)'s `ClosureReasons`.
+Reasons are a closed set in [socketutil.ts](/src/shared/util/socketutil.ts)'s `CLOSURE_REASONS`.
 Both sides see both groups: a browser answers a close frame by echoing the code and reason it
 received, so a reason the _server_ sent still comes back to it.
 
@@ -221,8 +226,10 @@ received, so a reason the _server_ sent still comes back to it.
 | `ORIGIN_ERROR`           | 1008 | server  | ❌           |
 | `UNIDENTIFIABLE_IP`      | 1008 | server  | ❌           |
 | `USER_AGENT_REQUIRED`    | 1008 | server  | ❌           |
+| `TAB_ID_REQUIRED`        | 1008 | server  | ❌           |
 | `AUTHENTICATION_NEEDED`  | 1008 | server  | ❌           |
 | `LOGGED_OUT`             | 1008 | server  | ❌           |
+| `LOGGED_OUT_SELF`        | 1008 | server  | ❌           |
 | `TOO_MANY_REQUESTS`      | 1009 | server  | ❌           |
 | `TOO_MANY_SOCKETS`       | 1009 | server  | ✅           |
 | `CLOSED_BY_CLIENT`       | 1000 | client  | ❌           |
@@ -233,7 +240,8 @@ down / a terminated socket), `1001 ""` (tab closed without cleanup), `1002` / `1
 rejecting a malformed frame or bad UTF-8). **1006 is always involuntary.**
 
 `LOGGED_OUT` is pushed from outside the socket layer — logout, account deletion, and password
-reset all call `socketRegistry.closeAllOfSession` / `closeAllOfMember`.
+reset. Logout splits its session, though: the tab that asked gets `LOGGED_OUT_SELF` and ignores
+it, because reloading would cancel the navigation its own form already started.
 
 ### Voluntary vs. involuntary — what it costs you
 
@@ -293,11 +301,14 @@ abandonment, an abort if not yet resignable, or an engine win by disconnect in a
 | `TOO_MANY_REQUESTS` / `ORIGIN_ERROR` | Enter a 10 s timeout that blocks all connecting, then `resubAll()`                          |
 | `AUTHENTICATION_NEEDED`              | Toast: cookies required                                                                     |
 | `LOGGED_OUT`                         | `validatorama.reloadAfterLogout()`                                                          |
+| `LOGGED_OUT_SELF`                    | Nothing — this tab asked, and is already navigating home                                    |
 | `CLOSED_BY_CLIENT`                   | Nothing — our own frame coming back                                                         |
 | `CLOSED_BY_CLIENT_RENEW`             | Unreachable: `dropSocket()` detaches `onclose` before sending it                            |
 
-A `beforeunload` listener closes with `CLOSED_BY_CLIENT` so the server knows the departure was
-deliberate. `pagehide` is **not** usable: it defers the close event until the user _returns_.
+A `pagehide` listener drops — never closes — the socket with `CLOSED_BY_CLIENT`, so the server
+knows the departure was deliberate. `beforeunload` would fire on an unload the prompt cancels,
+stranding a staying player; a close would be deferred by a bfcache freeze until the user returns,
+wiping the subs `pageshow` had just remade.
 
 An `offline` listener drops the socket and suspends connecting until `online` is heard.
 
@@ -471,6 +482,7 @@ makes no difference whether they were one version behind or two.
 | Concern                                            | File                                                                                                                                                                                                                                          |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Shared constants, closure taxonomy, type helpers   | [socketutil.ts](/src/shared/util/socketutil.ts)                                                                                                                                                                                               |
+| Tab id: its query param, length, and shape         | [tabid.ts](/src/shared/util/tabid.ts)                                                                                                                                                                                                         |
 | Contracts                                          | [serverbound.ts](/src/shared/transport/serverbound.ts), [clientbound.ts](/src/shared/transport/clientbound.ts), [domain.ts](/src/shared/transport/domain.ts)                                                                                  |
 | **Server** — stand up server, payload/close limits | [socketServer.ts](/src/server/socket/socketServer.ts)                                                                                                                                                                                         |
 | Upgrade gating, metadata, listeners                | [socketOpen.ts](/src/server/socket/socketOpen.ts)                                                                                                                                                                                             |
@@ -491,5 +503,6 @@ makes no difference whether they were one version behind or two.
 | Local subscription record                          | [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts)                                                                                                                                                                                 |
 | Intent hold/lock layer                             | [socketintents.ts](/src/client/scripts/esm/socket/socketintents.ts)                                                                                                                                                                           |
 | Event bus                                          | [SocketBus.ts](/src/client/scripts/esm/socket/SocketBus.ts)                                                                                                                                                                                   |
+| This tab's own id                                  | [ourtabid.ts](/src/client/scripts/esm/util/ourtabid.ts)                                                                                                                                                                                       |
 | Game-route handling, stage machine, resync         | [onlinegamerouter.ts](/src/client/scripts/esm/views/game/onlinegamerouter.ts), [onlinegame.ts](/src/client/scripts/esm/views/game/onlinegame.ts), [resyncer.ts](/src/client/scripts/esm/views/game/resyncer.ts)                               |
 | Lobby-route handling                               | [index.ts](/src/client/scripts/esm/views/index/index.ts), [lobby.ts](/src/client/scripts/esm/views/index/lobby.ts)                                                                                                                            |

@@ -44,7 +44,7 @@ export interface CustomWebSocket extends WebSocket {
 		memberInfo: AuthMemberInfo;
 		/** The id of their websocket. */
 		id: string;
-		/** Which of the user's browser tabs this socket belongs to. See `TAB_ID` in socketutil.ts. */
+		/** Which of the user's browser tabs this socket belongs to. See tabid.ts. */
 		tabId: string;
 		/** The socket's IP address. */
 		IP: string;

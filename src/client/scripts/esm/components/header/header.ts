@@ -8,7 +8,9 @@
  * pulse aura animation on hover.
  */
 
-import { serverfetch } from '../../util/serverfetch.js';
+import tabid from '../../../../../shared/util/tabid.js';
+
+import ourtabid from '../../util/ourtabid.js';
 
 import './settings.js';
 import '../tooltips.js'; // Should be imported on EVERY page
@@ -73,27 +75,15 @@ function initNavDropdowns(): void {
 initNavDropdowns();
 
 /**
- * Wires up the logout button (only present when signed in). Logout mutates
- * server state (revokes the session) — then we redirect home client-side.
+ * Names this tab on the logout form (only present when signed in), so the server can close our
+ * own sockets with a reason that won't reload us mid-navigation. Without it the form still logs
+ * out fine — every socket simply gets the same reason.
  */
 function initLogout(): void {
-	const logoutButton = document.querySelector<HTMLButtonElement>('#logout-button');
-	if (!logoutButton) return; // Logged out: no button rendered.
+	const logoutForm = document.querySelector<HTMLFormElement>('#logout-form');
+	if (!logoutForm) return; // Logged out: no form rendered.
 
-	logoutButton.addEventListener('click', () => {
-		void (async (): Promise<void> => {
-			logoutButton.disabled = true;
-			try {
-				await serverfetch('/api/logout', { method: 'POST' });
-				// Any server response clears the session cookies, so land them home logged out.
-				window.location.assign('/');
-			} catch (e: unknown) {
-				// Network error: nothing changed server-side, so re-enable for a retry.
-				console.error('Logout request failed:', e);
-				logoutButton.disabled = false;
-			}
-		})();
-	});
+	logoutForm.action = `/api/logout?${tabid.PARAM}=${ourtabid.ID}`;
 }
 initLogout();
 
