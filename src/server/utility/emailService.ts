@@ -1,16 +1,21 @@
 // src/server/utility/emailService.ts
 
 /**
- * Constructs and dispatches the application's transactional emails — account
- * verification, password resets, password-changed notices, and rating-abuse alerts —
- * from localized templates, handed to `mailer.ts` for delivery.
+ * Constructs and dispatches the application's transactional emails, handing each to
+ * `mailer.ts` for delivery.
+ *
+ * Those addressed to a user — account verification, password reset, the password-changed
+ * notice — are rendered here from templates in that user's language. Those addressed to
+ * Naviary — rating-abuse alerts and chat reports — arrive already written, in English.
  *
  * Blacklist screening is deliberately NOT done here: the flows where it matters gate at
  * their own entrance (accountValidation, passwordResetController), because only the
  * caller can shape the reply a blocked address gets; a check here could merely drop the
- * mail. Notices to members' own stored addresses (password changed, rating abuse) are
- * never screened.
+ * mail. Nothing else needs it — a member's own stored address, and our own, are never
+ * screened.
  */
+
+import type { Attachment } from './mailer.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 import interpolate from '../../shared/util/interpolate.js';
@@ -167,6 +172,34 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 	}
 }
 
+/**
+ * Sends a reported game chat to our own infinite chess email address.
+ * @param subject - The reason reported, and nothing else, so urgent categories stand out.
+ * @param html - The styled report body.
+ * @param attachment - The same report in plain text, to hand straight to an AI agent.
+ */
+async function sendChatReportEmail(
+	subject: string,
+	html: string,
+	attachment: Attachment,
+): Promise<void> {
+	try {
+		const sent = await mailer.send('chat-report', {
+			to: mailer.EMAIL_FROM_ADDRESS ?? '',
+			subject,
+			html,
+			attachments: [attachment],
+		});
+		if (!sent) console.log("Didn't send chat report email.");
+	} catch (error: unknown) {
+		const detail = jsutil.getErrorStack(error);
+		logEvents.addAndPrint(
+			`Error during the sending of chat report email with subject "${subject}": ${detail}`,
+			'errLog',
+		);
+	}
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -174,4 +207,5 @@ export default {
 	sendPasswordResetEmail,
 	sendPasswordChangedEmail,
 	sendRatingAbuseEmail,
+	sendChatReportEmail,
 };

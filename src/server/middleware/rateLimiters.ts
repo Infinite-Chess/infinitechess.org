@@ -119,6 +119,14 @@ const gameState = rateLimit({
 	...DEFAULT_OPTIONS,
 });
 
+/** Chat Report Limiter. Every report incurs an email to Naviary. */
+const chatReport = rateLimit({
+	windowMs: 1000 * 60 * 60 * 24, // 1 day
+	max: 8,
+	...DEFAULT_OPTIONS,
+	handler: makeHandler('chat_reports'),
+});
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -132,4 +140,5 @@ export default {
 	editorLoad,
 	seekPreview,
 	gameState,
+	chatReport,
 };

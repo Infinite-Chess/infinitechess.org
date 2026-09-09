@@ -9,6 +9,7 @@ import type { PendingRegistrationRecord } from './pendingRegistrationManager.js'
 import jsonutil from '../../shared/util/jsonutil.js';
 
 import db from './database.js';
+import playerStatsManager from './playerStatsManager.js';
 import pendingRegistrationManager from './pendingRegistrationManager.js';
 
 // Types -----------------------------------------------------------------------
@@ -98,8 +99,7 @@ function add(username: string, email: string, hashedPassword: string): number {
 		db.run(membersQuery, params);
 
 		// Step 4: Insert into the 'player_stats' table.
-		const statsQuery = `INSERT INTO player_stats (user_id) VALUES (?)`;
-		db.run(statsQuery, [userId]);
+		playerStatsManager.insert(userId);
 
 		// If both inserts succeed, the transaction will commit and return the new user_id.
 		return userId;

@@ -17,12 +17,24 @@ import logEvents from './logEvents.js';
  * The category of an outgoing email, recorded in the sent-email log.
  * FUTURE: Add 'tos-update'
  */
-type EmailType = 'registration' | 'password-reset' | 'password-changed' | 'rating-abuse-alert';
+type EmailType =
+	| 'registration'
+	| 'password-reset'
+	| 'password-changed'
+	| 'rating-abuse-alert'
+	| 'chat-report';
+
+/** A file to ride along with an email. */
+export type Attachment = {
+	filename: string;
+	content: string;
+};
 
 /** Options for sending an email. */
 type SendMailOptions = {
 	to: string;
 	subject: string;
+	attachments?: Attachment[];
 } & ({ html: string } | { text: string });
 
 // Module Setup ----------------------------------------------------------------

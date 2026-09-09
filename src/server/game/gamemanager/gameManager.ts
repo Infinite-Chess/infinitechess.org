@@ -36,6 +36,20 @@ import liveGameValues from './liveGameValues.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
 import gameStateBuilder from './gameStateBuilder.js';
 
+// Types -----------------------------------------------------------------------
+
+/** A game id resolved to its static state, from memory if it's still live and from the DB if not. */
+export interface ResolvedGameState {
+	state: StaticGameState;
+	moveCount: number;
+	/** The in-memory game. Present only while it's live. */
+	game?: ServerGame;
+	/** Only concluded games have one — a live game's start position rides in its setup. */
+	icn?: string;
+	engineGame?: EngineGamePageInfo;
+	ratingChanges?: PlayerGroup<number>;
+}
+
 // Creation --------------------------------------------------------------------
 
 /**
@@ -381,17 +395,7 @@ function resumeEngineClock(servergame: ServerGame): void {
  * plus its ply count and liveness, for the SSR game page. `undefined` if no such game.
  * @throws If a database error occurs.
  */
-function produceStaticGameState(id: number):
-	| {
-			state: StaticGameState;
-			moveCount: number;
-			game?: ServerGame;
-			/** Only concluded games have one — a live game's start position rides in its setup. */
-			icn?: string;
-			engineGame?: EngineGamePageInfo;
-			ratingChanges?: PlayerGroup<number>;
-	  }
-	| undefined {
+function produceStaticGameState(id: number): ResolvedGameState | undefined {
 	const game = activeGames.getByID(id); // Defined if live
 	if (game !== undefined)
 		return {

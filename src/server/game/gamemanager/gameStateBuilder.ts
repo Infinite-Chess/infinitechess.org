@@ -14,6 +14,7 @@ import type { ServerGame } from './serverGameTypes.js';
 import type { MovePacket } from '../../../shared/chess/util/typeschemas.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { AuthMemberInfo } from '../../types.js';
+import type { ScriptTranslations } from '../../../shared/types/script-translations.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
 	SourceVariantMetaData,
@@ -158,6 +159,26 @@ function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 		timeCreated: match.timeCreated,
 		modifiers: match.modifiers,
 	};
+}
+
+/**
+ * Each color's display name, as ONE viewer reads them.
+ * @param role - The viewer's color, or undefined for a non-participant.
+ */
+function resolvePlayerNames(
+	state: StaticGameState,
+	role: Player | undefined,
+	sharedT: ScriptTranslations['shared'],
+): PlayerGroup<string> {
+	const names: PlayerGroup<string> = {};
+	for (const [strColor, container] of Object.entries(state.players)) {
+		const color = Number(strColor) as Player;
+		// A guest who is the viewer shows "(You)"; every other name is the container's own
+		// (members → username, other guests → the hardcoded "(Guest)" ICN name). Mirrors the lobby.
+		const isYouGuest = container.type === 'guest' && color === role;
+		names[color] = isYouGuest ? sharedT.user_status.you_indicator : container.username;
+	}
+	return names;
 }
 
 // ICN Metadata ----------------------------------------------------------------
@@ -402,6 +423,7 @@ export default {
 	getRatingChanges,
 	// SSR Page State
 	buildStaticState,
+	resolvePlayerNames,
 	// ICN Metadata
 	buildMetadata,
 	// Wire Messages

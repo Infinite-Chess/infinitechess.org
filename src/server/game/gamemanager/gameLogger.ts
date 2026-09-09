@@ -8,11 +8,12 @@
  * that reconstructs a concluded game from these columns.
  *
  * The Cheat-report overturn section stays HERE rather than in `cheatReport.ts`: it reverses
- * cell-for-cell what the log side wrote, and shares four of its helpers. Apart they would drift.
+ * cell-for-cell what the log side wrote, and shares three of its helpers. Apart they would drift.
  */
 
 import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { RatingData } from '../../utility/ratingCalculation.js';
+import type { PlayerOutcome } from '../../database/playerStatsManager.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
 import type { MatchInfo, PlayerData, ServerGame } from './serverGameTypes.js';
@@ -31,13 +32,9 @@ import gameStateBuilder from './gameStateBuilder.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
 import ratingCalculation from '../../utility/ratingCalculation.js';
 import engineGamesManager from '../../database/engineGamesManager.js';
+import playerStatsManager from '../../database/playerStatsManager.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
-
-// Types -----------------------------------------------------------------------
-
-/** A single player's outcome in a game, from that player's perspective. */
-type PlayerOutcome = 'wins' | 'losses' | 'draws' | 'aborted';
 
 // Functions -------------------------------------------------------------------
 
@@ -246,56 +243,13 @@ function updateAllPlayerStatsInTransaction(
 		const user_id = getUserID(match.playerData[player]);
 		if (!user_id) continue; // Guests don't have any stats to update.
 
-		updateSinglePlayerStatsInTransaction(user_id, {
+		playerStatsManager.applyGameDelta(user_id, {
 			moves_played_increment: playerMoveCounts[player]!,
 			outcome: getOutcomeForPlayer(victor, player),
 			is_rated: match.rated,
 			is_private: match.private,
 			sign: 1,
 		});
-	}
-}
-
-/**
- * [INTERNAL] Applies a single player's aggregate-stat deltas to the `player_stats` table.
- * `sign: 1` counts a game (logging), `sign: -1` un-counts it (reversing an overturned game)
- */
-function updateSinglePlayerStatsInTransaction(
-	user_id: number,
-	statsToUpdate: {
-		moves_played_increment: number;
-		outcome: PlayerOutcome;
-		is_rated: boolean;
-		is_private: boolean;
-		sign: 1 | -1;
-	},
-): void {
-	const op = statsToUpdate.sign === 1 ? '+' : '-'; // The arithmetic operator applied to every counter.
-
-	const setClauses: string[] = [`moves_played = moves_played ${op} ?`, `game_count = game_count ${op} 1`]; // prettier-ignore
-	const values: (number | string)[] = [statsToUpdate.moves_played_increment];
-
-	if (statsToUpdate.outcome === 'aborted') {
-		setClauses.push(`game_count_aborted = game_count_aborted ${op} 1`);
-	} else {
-		const ratedString: 'rated' | 'casual' = statsToUpdate.is_rated ? 'rated' : 'casual';
-		const publicity: 'public' | 'private' = statsToUpdate.is_private ? 'private' : 'public';
-		const outcome = statsToUpdate.outcome;
-		// The rated/casual, public/private, win/loss/draw, and combined outcome+rated/casual counters.
-		setClauses.push(`game_count_${ratedString} = game_count_${ratedString} ${op} 1`);
-		setClauses.push(`game_count_${publicity} = game_count_${publicity} ${op} 1`);
-		setClauses.push(`game_count_${outcome} = game_count_${outcome} ${op} 1`);
-		setClauses.push(`game_count_${outcome}_${ratedString} = game_count_${outcome}_${ratedString} ${op} 1`); // prettier-ignore
-	}
-
-	const query = `UPDATE player_stats SET ${setClauses.join(', ')} WHERE user_id = ?`;
-	values.push(user_id);
-
-	const result = db.run(query, values);
-
-	if (result.changes === 0) {
-		// This should be impossible. If it happens, it's a critical error.
-		throw new Error(`CRITICAL: User ${user_id} not found in player_stats during a stats update. This should not be possible. Did we allow them to delete their account mid-game?`); // prettier-ignore
 	}
 }
 
@@ -499,7 +453,7 @@ function reversePlayerStatsForOverturn(
 		const prePopMoves = postPopMoves + (player === cheaterColor ? 1 : 0);
 
 		// Un-count exactly what the original conclusion counted (its pre-pop move counts).
-		updateSinglePlayerStatsInTransaction(user_id, {
+		playerStatsManager.applyGameDelta(user_id, {
 			moves_played_increment: prePopMoves,
 			outcome: getOutcomeForPlayer(originalConclusion.victor, player),
 			is_rated: match.rated,
@@ -509,7 +463,7 @@ function reversePlayerStatsForOverturn(
 
 		// Re-count the game as aborted — unless it popped down to nothing (0 moves = never stored).
 		if (gameStillExists)
-			updateSinglePlayerStatsInTransaction(user_id, {
+			playerStatsManager.applyGameDelta(user_id, {
 				moves_played_increment: postPopMoves,
 				outcome: 'aborted',
 				is_rated: match.rated,

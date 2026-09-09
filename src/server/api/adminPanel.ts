@@ -14,6 +14,7 @@ import logEvents from '../utility/logEvents.js';
 import contributors from './contributors.js';
 import memberManager from '../database/memberManager.js';
 import blacklistManager from '../database/blacklistManager.js';
+import chatEntriesManager from '../database/chatEntriesManager.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
 import deleteAccountController from '../controllers/deleteAccountController.js';
 
@@ -26,11 +27,12 @@ const VALID_COMMANDS = [
 	'username',
 	'logout',
 	'userinfo',
+	'deletechat',
 	'updatecontributors',
 	'help',
 ] as const;
 
-// Functions -------------------------------------------------------------------
+// Dispatch --------------------------------------------------------------------
 
 /**
  * `POST /api/admin/command` — parses and runs an admin console command from the request body.
@@ -72,6 +74,9 @@ function processCommand(req: Request, res: Response): void {
 				return;
 			case 'userinfo':
 				getUserInfo(command, commandAndArgs, req, res);
+				return;
+			case 'deletechat':
+				deleteChatCommand(command, commandAndArgs, req, res);
 				return;
 			case 'updatecontributors':
 				updateContributorsCommand(command, req, res);
@@ -131,43 +136,7 @@ function parseArgumentsFromCommand(command: string): string[] {
 	return commandAndArgs;
 }
 
-function deleteCommand(
-	command: string,
-	commandAndArgs: string[],
-	req: Request,
-	res: Response,
-): void {
-	if (commandAndArgs.length < 3) {
-		res.status(422).send(
-			'Invalid number of arguments, expected 2, got ' + (commandAndArgs.length - 1) + '.',
-		);
-		return;
-	}
-	// Valid Syntax
-	logCommand(command, req);
-	const reason = commandAndArgs[2]!;
-	const usernameArgument = commandAndArgs[1]!;
-	const record = memberManager.getDataByCriteria(
-		['user_id', 'username', 'roles'],
-		'username',
-		usernameArgument,
-	);
-	if (record === undefined)
-		return sendAndLogResponse(res, 404, 'User ' + usernameArgument + ' does not exist.');
-
-	// They were found...
-	const adminsRoles = req.memberInfo?.signedIn ? req.memberInfo.roles : null;
-	const rolesOfAffectedUser = roles.parse(record.roles);
-	// Don't delete them if they are equal or higher than your status
-	if (!roles.areHigherInPriority(adminsRoles, rolesOfAffectedUser))
-		return sendAndLogResponse(res, 403, 'Forbidden to delete ' + record.username + '.');
-
-	if (!memberManager.isValidDeleteReason(reason))
-		throw Error(`Delete reason (${reason}) is invalid.`);
-	deleteAccountController.deleteAccount(record.user_id, reason);
-
-	sendAndLogResponse(res, 200, 'Successfully deleted user ' + record.username + '.');
-}
+// Account Commands ------------------------------------------------------------
 
 function banEmailCommand(
 	command: string,
@@ -223,35 +192,42 @@ function unbanEmailCommand(
 	sendAndLogResponse(res, 200, `Successfully unbanned ${email}.`);
 }
 
-function usernameCommand(
+function deleteCommand(
 	command: string,
 	commandAndArgs: string[],
 	req: Request,
 	res: Response,
 ): void {
-	if (commandAndArgs[1] === 'get') {
-		if (commandAndArgs.length < 3) {
-			res.status(422).send(
-				'Invalid number of arguments, expected 2, got ' + (commandAndArgs.length - 1) + '.',
-			);
-			return;
-		}
-		const parsedId = Number.parseInt(commandAndArgs[2]!);
-		if (Number.isNaN(parsedId)) {
-			res.status(422).send('User id must be an integer.');
-			return;
-		}
-		// Valid Syntax
-		logCommand(command, req);
-		const record = memberManager.getDataByCriteria(['username'], 'user_id', parsedId);
-		if (record === undefined)
-			sendAndLogResponse(res, 404, 'User with id ' + parsedId + ' does not exist.');
-		else sendAndLogResponse(res, 200, record.username);
-	} else if (commandAndArgs[1] === undefined) {
-		res.status(422).send('Expected get as a subcommand.');
-	} else {
-		res.status(422).send('Invalid subcommand, expected get, got ' + commandAndArgs[1] + '.');
+	if (commandAndArgs.length < 3) {
+		res.status(422).send(
+			'Invalid number of arguments, expected 2, got ' + (commandAndArgs.length - 1) + '.',
+		);
+		return;
 	}
+	// Valid Syntax
+	logCommand(command, req);
+	const reason = commandAndArgs[2]!;
+	const usernameArgument = commandAndArgs[1]!;
+	const record = memberManager.getDataByCriteria(
+		['user_id', 'username', 'roles'],
+		'username',
+		usernameArgument,
+	);
+	if (record === undefined)
+		return sendAndLogResponse(res, 404, 'User ' + usernameArgument + ' does not exist.');
+
+	// They were found...
+	const adminsRoles = req.memberInfo?.signedIn ? req.memberInfo.roles : null;
+	const rolesOfAffectedUser = roles.parse(record.roles);
+	// Don't delete them if they are equal or higher than your status
+	if (!roles.areHigherInPriority(adminsRoles, rolesOfAffectedUser))
+		return sendAndLogResponse(res, 403, 'Forbidden to delete ' + record.username + '.');
+
+	if (!memberManager.isValidDeleteReason(reason))
+		throw Error(`Delete reason (${reason}) is invalid.`);
+	deleteAccountController.deleteAccount(record.user_id, reason);
+
+	sendAndLogResponse(res, 200, 'Successfully deleted user ' + record.username + '.');
 }
 
 function logoutUser(command: string, commandAndArgs: string[], req: Request, res: Response): void {
@@ -277,6 +253,39 @@ function logoutUser(command: string, commandAndArgs: string[], req: Request, res
 	// Effectively terminates all login sessions of the user
 	refreshTokenManager.removeAllForUser(record.user_id);
 	sendAndLogResponse(res, 200, 'User ' + record.username + ' successfully logged out.'); // Use their case-sensitive username
+}
+
+// Inspection Commands ---------------------------------------------------------
+
+function usernameCommand(
+	command: string,
+	commandAndArgs: string[],
+	req: Request,
+	res: Response,
+): void {
+	if (commandAndArgs[1] === 'get') {
+		if (commandAndArgs.length < 3) {
+			res.status(422).send(
+				'Invalid number of arguments, expected 2, got ' + (commandAndArgs.length - 1) + '.',
+			);
+			return;
+		}
+		const parsedId = parseIntegerArgument(commandAndArgs[2]!);
+		if (parsedId === undefined) {
+			res.status(422).send('User id must be an integer.');
+			return;
+		}
+		// Valid Syntax
+		logCommand(command, req);
+		const record = memberManager.getDataByCriteria(['username'], 'user_id', parsedId);
+		if (record === undefined)
+			sendAndLogResponse(res, 404, 'User with id ' + parsedId + ' does not exist.');
+		else sendAndLogResponse(res, 200, record.username);
+	} else if (commandAndArgs[1] === undefined) {
+		res.status(422).send('Expected get as a subcommand.');
+	} else {
+		res.status(422).send('Invalid subcommand, expected get, got ' + commandAndArgs[1] + '.');
+	}
 }
 
 function getUserInfo(command: string, commandAndArgs: string[], req: Request, res: Response): void {
@@ -306,6 +315,40 @@ function getUserInfo(command: string, commandAndArgs: string[], req: Request, re
 	if (record === undefined) sendAndLogResponse(res, 404, 'User ' + username + ' does not exist.');
 	else sendAndLogResponse(res, 200, JSON.stringify(record));
 }
+
+// Content Commands ------------------------------------------------------------
+
+/** Erases a game's typed messages — the action a reviewed chat report ends in. */
+function deleteChatCommand(
+	command: string,
+	commandAndArgs: string[],
+	req: Request,
+	res: Response,
+): void {
+	if (commandAndArgs.length !== 2) {
+		res.status(422).send(
+			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
+		);
+		return;
+	}
+	// Valid Syntax
+	logCommand(command, req);
+	// Numeric, the form a chat report's email and attachment name carry.
+	const game_id = parseIntegerArgument(commandAndArgs[1]!);
+	if (game_id === undefined) {
+		sendAndLogResponse(res, 422, 'Game id must be an integer.');
+		return;
+	}
+
+	// The count is reported so a mistyped id reads as a miss, not a success.
+	const erased = chatEntriesManager.removeMessagesOfGame(game_id);
+	if (erased === 0)
+		return sendAndLogResponse(res, 404, 'Game ' + game_id + ' has no chat messages.');
+
+	sendAndLogResponse(res, 200, 'Deleted ' + erased + ' chat messages of game ' + game_id + '.');
+}
+
+// Maintenance Commands --------------------------------------------------------
 
 function updateContributorsCommand(command: string, req: Request, res: Response): void {
 	logCommand(command, req);
@@ -347,6 +390,11 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 		case 'userinfo':
 			res.status(200).send('Syntax: userinfo <username>\nPrints info about a user.');
 			return;
+		case 'deletechat':
+			res.status(200).send(
+				"Syntax: deletechat <game_id>\nErases a game's typed messages, leaving its event notices standing. The only command taking a game id rather than a user identifier.",
+			);
+			return;
 		case 'updatecontributors':
 			res.status(200).send(
 				'Syntax: updatecontributors\nManually update to the most recent contributors list from the Github API. Should be used for testing',
@@ -361,6 +409,15 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 			res.status(422).send('Unknown command.');
 			return;
 	}
+}
+
+// Helpers ---------------------------------------------------------------------
+
+/** Reads a whole-number command argument, or undefined if it isn't one. */
+function parseIntegerArgument(argument: string): number | undefined {
+	if (argument.trim() === '') return undefined; // '' would be interpreted as 0
+	const value = Number(argument);
+	return Number.isInteger(value) ? value : undefined;
 }
 
 function logCommand(command: string, req: Request): void {
