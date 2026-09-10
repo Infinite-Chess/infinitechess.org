@@ -129,7 +129,7 @@ const STORAGE_EXPIRY_MS = timeutil.toMillis(1, 'years');
 const DEFAULT_SETTINGS: CevalSettings = {
 	multiPv: 1,
 	hashMb: 16,
-	depth: 13,
+	depth: 20,
 	threads: DEFAULT_THREADS,
 };
 
