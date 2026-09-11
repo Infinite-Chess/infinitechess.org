@@ -5,6 +5,8 @@
  * respecting the current environment (development vs production).
  */
 
+import gameurl from '../../shared/chess/util/gameurl.js';
+
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 /**
@@ -21,6 +23,11 @@ function getAppBase(): string {
 	}
 }
 
+/** Builds the absolute `/game/:id` URL. Carries no perspective. */
+function getAbsoluteGameUrl(id: number): string {
+	return `${getAppBase()}${gameurl.getGameUrl(id)}`;
+}
+
 // Exports ---------------------------------------------------------------------
 
-export default { getAppBase };
+export default { getAppBase, getAbsoluteGameUrl };

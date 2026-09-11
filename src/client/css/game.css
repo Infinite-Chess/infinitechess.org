@@ -71,7 +71,7 @@
 	height: 70%;
 }
 
-.icon-btn:hover svg {
+.icon-btn:hover:not(:disabled) svg {
 	transform: scale(1.1);
 }
 
@@ -677,13 +677,12 @@
 	min-height: 220px;
 	display: flex;
 	flex-direction: column;
-	/* Overrides `.panel`, whose clipping would cut off the report menus — entirely so,
-	   while collapsed, when the panel is no taller than its bar. */
+	/* Overrides `.panel`, whose clipping would cut off the report menus entirely. */
 	overflow: visible;
 }
 
 .chat-bar {
-	position: relative; /* Anchors the report menus below the flag. */
+	position: relative; /* Anchors the report menus above the flag. */
 	display: flex;
 	align-items: center;
 	padding-right: 4px;
@@ -717,14 +716,8 @@
 	color: var(--c-border-2);
 }
 
-/* Greyed while a report is in flight, and for the rest of the visit once one lands. */
 #btn-report:disabled {
-	opacity: 0.4;
 	cursor: default;
-}
-
-#btn-report:disabled:hover svg {
-	transform: none;
 }
 
 .chat-log {
@@ -759,8 +752,6 @@
 
 .chat-input {
 	padding: 7px 12px;
-	/* Rounds itself, since `.chat` gave up `.panel`'s clipping. Inside the 1px border. */
-	border-radius: 0 0 5px 5px;
 	background: var(--c-surface-2);
 	color: var(--c-text-emphasis);
 	font-size: 14px;
@@ -804,8 +795,8 @@
 .report-menu {
 	position: absolute;
 	right: 2px;
-	top: calc(100% + 5px);
-	min-width: 170px;
+	bottom: calc(100% + 5px);
+	min-width: 200px;
 	border: 1px solid var(--c-border);
 	border-radius: 4px;
 	background: var(--c-surface);
@@ -813,8 +804,10 @@
 }
 
 .report-menu-title {
+	contain: inline-size;
 	padding: 7px 10px;
-	background: linear-gradient(180deg, var(--c-elev-face-2) 0%, var(--c-surface-2) 100%);
+	border-bottom: 1px solid var(--c-border-muted);
+	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
 	color: var(--c-text-emphasis);
 	font-size: 0.84em;
 	font-weight: 700;
@@ -822,9 +815,11 @@
 }
 
 .report-menu button {
+	padding: 7px 12px;
 	background: transparent;
 	color: inherit;
 	font: inherit;
+	font-size: 0.86em;
 	cursor: pointer;
 }
 
@@ -833,35 +828,20 @@
 	color: var(--c-text-emphasis);
 }
 
-/* Menu 1 — the reasons. Its title is divided off; menu 2's runs straight into the reason. */
-#report-reason-menu .report-menu-title {
-	border-bottom: 1px solid var(--c-border-muted);
-}
-
+/* Menu 1 — the reasons. */
 #report-reason-menu button {
 	display: block;
 	width: 100%;
-	padding: 7px 12px;
-	font-size: 0.86em;
 	text-align: left;
 }
 
-/* Menu 2 — the chosen reason, quoted back verbatim on its own line. */
-.report-menu-reason {
-	padding: 8px 12px 10px;
-	font-size: 0.86em;
-	text-align: center;
-}
-
+/* Menu 2 — the confirmation's Cancel and Report. */
 .report-menu-actions {
 	display: flex;
-	border-top: 1px solid var(--c-border-muted);
 }
 
 .report-menu-actions button {
 	flex: 1;
-	padding: 7px 12px;
-	font-size: 0.86em;
 }
 
 #btn-report-submit {

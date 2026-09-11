@@ -13,29 +13,29 @@ import logEvents from './logEvents.js';
 
 // Types -----------------------------------------------------------------------
 
+/** The category of an alert we send to our own address. */
+export type AlertEmailType = 'rating-abuse-alert' | 'chat-report';
+
 /**
  * The category of an outgoing email, recorded in the sent-email log.
  * FUTURE: Add 'tos-update'
  */
-type EmailType =
-	| 'registration'
-	| 'password-reset'
-	| 'password-changed'
-	| 'rating-abuse-alert'
-	| 'chat-report';
+type EmailType = 'registration' | 'password-reset' | 'password-changed' | AlertEmailType;
 
 /** A file to ride along with an email. */
-export type Attachment = {
+type Attachment = {
 	filename: string;
 	content: string;
 };
 
-/** Options for sending an email. */
-type SendMailOptions = {
-	to: string;
+/** An email's content: everything but who it's addressed to. */
+export type MailContent = {
 	subject: string;
 	attachments?: Attachment[];
 } & ({ html: string } | { text: string });
+
+/** Options for sending an email. */
+type SendMailOptions = { to: string } & MailContent;
 
 // Module Setup ----------------------------------------------------------------
 

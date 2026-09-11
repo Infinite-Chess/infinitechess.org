@@ -279,15 +279,14 @@
 				{# The flag's two menus, both starting hidden. Driven by guichatreport.ts,
 				   which reads `data-reason` off the clicked row. #}
 				<div class="report-menu hidden" id="report-reason-menu">
-					<div class="report-menu-title">Report the chat</div>
+					<div class="report-menu-title">Report chat</div>
 					{% for reason in chat.reportReasons %}
 					<button type="button" data-reason="{{ reason.code }}">{{ reason.label }}</button>
 					{% endfor %}
 				</div>
 				<div class="report-menu hidden" id="report-confirm-menu">
-					<div class="report-menu-title">Report the chat for</div>
-					{# The client writes the chosen label here, verbatim. #}
-					<div class="report-menu-reason" id="report-chosen-reason"></div>
+					{# The client writes the chosen label into the span, verbatim. #}
+					<div class="report-menu-title">Report chat for "<span id="report-chosen-reason"></span>"?</div>
 					<div class="report-menu-actions">
 						<button type="button" id="btn-report-cancel">Cancel</button>
 						<button type="button" id="btn-report-submit">Report</button>

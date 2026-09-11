@@ -37,7 +37,6 @@ import type {
 } from '../../../shared/transport/clientbound.js';
 
 import uuid from '../../../shared/util/uuid.js';
-import gameurl from '../../../shared/chess/util/gameurl.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
@@ -50,6 +49,7 @@ import { players as p } from '../../../shared/chess/util/typeutil.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
 import tconfig from '../../config/translationConfig.js';
+import urlUtils from '../../utility/urlUtils.js';
 import drawOffers from './drawOffers.js';
 import gameUtility from './gameUtility.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
@@ -237,7 +237,7 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 
 	const metadata: MetaData = {
 		Event: `${match.rated ? 'Rated' : 'Casual'} ${variantEnglishName} infinite chess game${match.engineParticipant ? ' against an engine' : ''}`,
-		Site: gameurl.getAbsoluteGameUrl(match.id),
+		Site: urlUtils.getAbsoluteGameUrl(match.id),
 		GameId: uuid.base10ToBase62(match.id),
 		Round: '-',
 		White: getPlayerName(p.WHITE),

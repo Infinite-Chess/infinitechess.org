@@ -15,17 +15,18 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 
 import { format } from 'date-fns';
 
-import gameurl from '../../../shared/chess/util/gameurl.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import chatentry from '../../../shared/components/chatentry.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 
 import tconfig from '../../config/translationConfig.js';
+import urlUtils from '../../utility/urlUtils.js';
 import logEvents from '../../utility/logEvents.js';
 import emailService from '../../utility/emailService.js';
 import gamesManager from '../../database/gamesManager.js';
 import memberManager from '../../database/memberManager.js';
+import emailTemplates from '../../utility/emailTemplates.js';
 import chatEntryMapper from './chatEntryMapper.js';
 import gameStateBuilder from './gameStateBuilder.js';
 import playerStatsManager from '../../database/playerStatsManager.js';
@@ -54,7 +55,7 @@ interface ChatReport {
 }
 
 /** How far down a timestamp is carried in the report. */
-type MomentPrecision = 'second' | 'minute' | 'day';
+type MomentPrecision = 'minute' | 'day';
 
 /** One `label  value` line of the email. */
 interface ReportRow {
@@ -71,13 +72,23 @@ interface ReportSection {
 	rows: ReportRow[];
 }
 
+/** What one line of the chat is: an event notice, or a message by one side of the report. */
+type TranscriptLineKind = 'notice' | 'reporter' | 'reported';
+
+/** One line of the chat. */
+interface TranscriptLine {
+	text: string;
+	/** Decides the line's color in the HTML body. */
+	kind: TranscriptLineKind;
+}
+
 /** The whole report, so the HTML body and the `.txt` attachment can never disagree. */
 interface ReportView {
-	/** The reason's label — the email's subject and its heading. */
-	heading: string;
+	/** The reason's label. */
+	reason: string;
 	sections: ReportSection[];
 	/** The chat, timestamped to the second, as the reporter saw it. */
-	transcript: string[];
+	transcript: TranscriptLine[];
 }
 
 // Constants -------------------------------------------------------------------
@@ -101,10 +112,16 @@ const TEXT_LABEL_WIDTH = 14;
 /** Heads the transcript, because "You" throughout it means the reporter. */
 const TRANSCRIPT_HEADING = 'CHAT — as the reporter saw it';
 
+/** The inline style each {@link TranscriptLineKind} is drawn with in the HTML body. */
+const TRANSCRIPT_LINE_STYLES: Record<TranscriptLineKind, string> = {
+	notice: 'color:#777777;font-style:italic;',
+	reporter: 'color:#1f5fa8;',
+	reported: 'color:#b3261e;',
+};
+
 /** The `date-fns` pattern each {@link MomentPrecision} prints a timestamp with. */
 const MOMENT_FORMATS: Record<MomentPrecision, string> = {
-	second: 'd MMM yyyy, HH:mm:ss',
-	minute: 'd MMM yyyy, HH:mm',
+	minute: 'd MMM yyyy, h:mm a',
 	day: 'd MMM yyyy',
 };
 
@@ -118,7 +135,11 @@ function submit(report: ChatReport): void {
 	void logEvents.add(buildLogLine(report.game_id, view), 'chatReportLog');
 
 	const attachment = { filename: `chat-report-${report.game_id}.txt`, content: buildText(view) };
-	void emailService.sendChatReportEmail(view.heading, buildHtml(view), attachment);
+	void emailService.sendAlertToSelf('chat-report', {
+		subject: buildTitle(view),
+		html: buildHtml(view),
+		attachments: [attachment],
+	});
 }
 
 // Composition -----------------------------------------------------------------
@@ -153,7 +174,7 @@ function buildView(report: ChatReport): ReportView {
 	if (reportedRows) sections.push({ heading: 'REPORTED PLAYER', rows: reportedRows });
 
 	return {
-		heading: REPORT_REASONS.find((r) => r.code === report.reason)!.label,
+		reason: REPORT_REASONS.find((r) => r.code === report.reason)!.label,
 		sections,
 		transcript: buildTranscript(report, sharedT),
 	};
@@ -195,18 +216,22 @@ function buildGameRows(report: ChatReport, sharedT: ScriptTranslations['shared']
 		setup.variant.kind === 'preset'
 			? sharedT.variants[setup.variant.code]
 			: sharedT.variant_groups.custom.display_label;
+	// The page's label is blank when untimed, leaning on the infinity icon. Text has no icon.
+	const timeControl = clockutil.isClockValueInfinite(setup.timeControl)
+		? sharedT.speeds.infinite
+		: clockutil.getTimeControlLabel(setup.timeControl);
 
 	return [
 		// Shown numeric, linked base62. A numeric id in the href wouldn't 404 — "193" is
 		// itself valid base62, and would silently resolve to a different game.
-		{ label: 'Game id', value: String(game_id), link: gameurl.getAbsoluteGameUrl(game_id) },
-		{ label: 'Played', value: formatMoment(setup.timeCreated, 'minute') },
+		{ label: 'Game id', value: String(game_id), link: urlUtils.getAbsoluteGameUrl(game_id) },
+		{ label: 'Played', value: formatMoment(setup.timeCreated) },
 		{ label: 'Variant', value: variant },
 		{
 			label: 'Mode',
 			value: resolved.state.rated ? sharedT.game_modes.rated : sharedT.game_modes.casual,
 		},
-		{ label: 'Time control', value: clockutil.getTimeControlLabel(setup.timeControl) },
+		{ label: 'Time control', value: timeControl },
 		{ label: 'Visibility', value: isGamePrivate(report) ? 'Private' : 'Public' },
 	];
 }
@@ -226,12 +251,12 @@ function isGamePrivate(report: ChatReport): boolean {
 function buildReportedPlayerRows(user_id: number): ReportRow[] | undefined {
 	const member = memberManager.getDataByCriteria(['joined', 'last_seen'], 'user_id', user_id);
 	if (member === undefined) return undefined;
-	const stats = playerStatsManager.getData(user_id, ['game_count']);
+	const stats = playerStatsManager.getData(user_id, ['game_count', 'game_count_aborted'])!;
 
 	return [
 		{ label: 'Joined', value: formatMoment(timeutil.sqliteToTimestamp(member.joined), 'day') },
-		{ label: 'Games', value: String(stats?.game_count ?? 0) },
-		{ label: 'Last seen', value: formatMoment(timeutil.sqliteToTimestamp(member.last_seen), 'minute') }, // prettier-ignore
+		{ label: 'Games', value: String(stats.game_count - stats.game_count_aborted) }, // Exclude aborted games
+		{ label: 'Last seen', value: formatMoment(timeutil.sqliteToTimestamp(member.last_seen)) },
 	];
 }
 
@@ -239,12 +264,21 @@ function buildReportedPlayerRows(user_id: number): ReportRow[] | undefined {
  * The chat from the reporter's point of view, so "You" throughout means the reporter.
  * Notices are kept: abuse usually follows a declined draw or a disconnect.
  */
-function buildTranscript(report: ChatReport, sharedT: ScriptTranslations['shared']): string[] {
+function buildTranscript(
+	report: ChatReport,
+	sharedT: ScriptTranslations['shared'],
+): TranscriptLine[] {
 	const { reporterRole } = report;
 	const names = gameStateBuilder.resolvePlayerNames(report.resolved.state, reporterRole, sharedT);
-	return report.entries.map((record, i) => {
-		const parts = chatentry.toParts(chatEntryMapper.toEntry(record, i), reporterRole, names);
-		return `${format(record.sent_at, 'HH:mm:ss')}  ${parts.prefix ?? ''}${parts.body}`;
+	return report.entries.map((record, i): TranscriptLine => {
+		const entry = chatEntryMapper.toEntry(record, i);
+		const parts = chatentry.toParts(entry, reporterRole, names);
+		const time = format(record.sent_at, 'HH:mm:ss');
+		// Marked in the text itself, so the notice stands out in the `.txt` too.
+		if (parts.cssClass === 'chat-notice')
+			return { text: `${time}  — ${parts.body} —`, kind: 'notice' };
+		const kind = entry.player === reporterRole ? 'reporter' : 'reported';
+		return { text: `${time}  ${parts.prefix}${parts.body}`, kind };
 	});
 }
 
@@ -252,7 +286,7 @@ function buildTranscript(report: ChatReport, sharedT: ScriptTranslations['shared
  * A raw timestamp as a date a human reads — no database value ever reaches the report.
  * @param precision - How far down to carry it.
  */
-function formatMoment(timestamp: number, precision: MomentPrecision = 'second'): string {
+function formatMoment(timestamp: number, precision: MomentPrecision = 'minute'): string {
 	return format(timestamp, MOMENT_FORMATS[precision]);
 }
 
@@ -264,7 +298,14 @@ function formatMoment(timestamp: number, precision: MomentPrecision = 'second'):
  */
 function buildLogLine(game_id: number, view: ReportView): string {
 	const [reportedBy, reported] = view.sections[0]!.rows;
-	return `Game ${game_id} | By ${reportedBy!.value} | Against ${reported!.value} | ${view.heading}`;
+	return `Game ${game_id} | By ${reportedBy!.value} | Against ${reported!.value} | ${view.reason}`;
+}
+
+// The Title -------------------------------------------------------------------
+
+/** The email's subject, and the heading of both its body and its attachment. */
+function buildTitle(view: ReportView): string {
+	return `Chat Report: ${view.reason}`;
 }
 
 // The HTML Body ---------------------------------------------------------------
@@ -279,12 +320,12 @@ function buildHtml(view: ReportView): string {
 	);
 	blocks.push(
 		buildHtmlHeading(TRANSCRIPT_HEADING),
-		`<pre style="margin:0;padding:14px 16px;background-color:#f4f2ef;border-radius:6px;font-family:Consolas,Menlo,monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;">${view.transcript.map((line) => escapeHtml(line)).join('\n')}</pre>`,
+		`<pre style="margin:0;padding:14px 16px;background-color:#f4f2ef;border-radius:6px;font-family:Consolas,Menlo,monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;">${view.transcript.map((line) => buildHtmlTranscriptLine(line)).join('\n')}</pre>`,
 	);
 
 	return `
 		<div style="font-family:Arial,Helvetica,sans-serif;color:#1e1e1e;">
-			<h1 style="margin:0 0 20px;font-size:24px;font-weight:bold;">${escapeHtml(view.heading)}</h1>
+			<h1 style="margin:0 0 20px;font-size:24px;font-weight:bold;">${escapeHtml(buildTitle(view))}</h1>
 			${blocks.join('\n')}
 		</div>
 	`;
@@ -300,7 +341,7 @@ function buildHtmlHeading(text: string | undefined): string {
 function buildHtmlRows(rows: ReportRow[]): string {
 	const cells = rows.map((row) => {
 		const link = row.link
-			? ` <a href="${escapeHtml(row.link)}" style="color:#383838;">[open]</a>`
+			? ` <a href="${escapeHtml(row.link)}" style="color:${emailTemplates.ACCENT_COLOR};">[open]</a>`
 			: '';
 		return `<tr>
 			<td style="padding:2px 18px 2px 0;color:#777777;font-size:14px;white-space:nowrap;vertical-align:top;">${escapeHtml(row.label)}</td>
@@ -308,6 +349,11 @@ function buildHtmlRows(rows: ReportRow[]): string {
 		</tr>`;
 	});
 	return `<table role="presentation" cellpadding="0" cellspacing="0" border="0">${cells.join('')}</table>`;
+}
+
+/** One line of the chat, colored by its kind. */
+function buildHtmlTranscriptLine(line: TranscriptLine): string {
+	return `<span style="${TRANSCRIPT_LINE_STYLES[line.kind]}">${escapeHtml(line.text)}</span>`;
 }
 
 /** Renders text inert as HTML. The transcript is user input and is never trusted. */
@@ -330,8 +376,8 @@ function buildText(view: ReportView): string {
 		const rows = buildTextRows(section.rows);
 		return section.heading !== undefined ? `${section.heading}\n${rows}` : rows;
 	});
-	const transcript = `${TRANSCRIPT_HEADING}\n${view.transcript.join('\n')}`;
-	return [view.heading, ...blocks, transcript].join('\n\n');
+	const transcript = `${TRANSCRIPT_HEADING}\n${view.transcript.map((line) => line.text).join('\n')}`;
+	return [buildTitle(view), ...blocks, transcript].join('\n\n');
 }
 
 /** One group of `label  value` lines, the labels padded so the values form a column. */

@@ -51,11 +51,6 @@ function getViewColorCode(viewColor: Player): ViewColorCode {
 	throw new Error(`Player ${viewColor} is not a perspective a URL can express.`);
 }
 
-/** Builds the absolute `/game/:id` URL. Carries no perspective. */
-function getAbsoluteGameUrl(id: number): string {
-	return `https://www.infinitechess.org${getGameUrl(id)}`;
-}
-
 /**
  * Builds the `/analysis/:id` URL.
  * @param id - The numeric game id (encoded into the base62 URL).
@@ -70,6 +65,5 @@ function getAnalysisUrl(id: number, viewColor?: Player): string {
 export default {
 	parseViewColorCode,
 	getGameUrl,
-	getAbsoluteGameUrl,
 	getAnalysisUrl,
 };

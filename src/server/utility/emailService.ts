@@ -15,7 +15,7 @@
  * screened.
  */
 
-import type { Attachment } from './mailer.js';
+import type { AlertEmailType, MailContent } from './mailer.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 import interpolate from '../../shared/util/interpolate.js';
@@ -150,51 +150,15 @@ async function sendPasswordChangedEmail(recipientEmail: string, language: string
 	}
 }
 
-/**
- * API to send an email warning about rating abuse to our own infinite chess email address
- * @param messageSubject - email subject text
- * @param messageText - email body text
- */
-async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
+/** Sends an alert, already written, to our own infinite chess email address. */
+async function sendAlertToSelf(type: AlertEmailType, content: MailContent): Promise<void> {
 	try {
-		const sent = await mailer.send('rating-abuse-alert', {
-			to: mailer.EMAIL_FROM_ADDRESS ?? '',
-			subject: messageSubject,
-			text: messageText,
-		});
-		if (!sent) console.log("Didn't send rating abuse email.");
+		const sent = await mailer.send(type, { to: mailer.EMAIL_FROM_ADDRESS ?? '', ...content });
+		if (!sent) console.log(`Didn't send ${type} email.`);
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
 		logEvents.addAndPrint(
-			`Error during the sending of rating abuse email with subject "${messageSubject}": ${detail}`,
-			'errLog',
-		);
-	}
-}
-
-/**
- * Sends a reported game chat to our own infinite chess email address.
- * @param subject - The reason reported, and nothing else, so urgent categories stand out.
- * @param html - The styled report body.
- * @param attachment - The same report in plain text, to hand straight to an AI agent.
- */
-async function sendChatReportEmail(
-	subject: string,
-	html: string,
-	attachment: Attachment,
-): Promise<void> {
-	try {
-		const sent = await mailer.send('chat-report', {
-			to: mailer.EMAIL_FROM_ADDRESS ?? '',
-			subject,
-			html,
-			attachments: [attachment],
-		});
-		if (!sent) console.log("Didn't send chat report email.");
-	} catch (error: unknown) {
-		const detail = jsutil.getErrorStack(error);
-		logEvents.addAndPrint(
-			`Error during the sending of chat report email with subject "${subject}": ${detail}`,
+			`Error during the sending of ${type} email with subject "${content.subject}": ${detail}`,
 			'errLog',
 		);
 	}
@@ -206,6 +170,5 @@ export default {
 	sendEmailConfirmation,
 	sendPasswordResetEmail,
 	sendPasswordChangedEmail,
-	sendRatingAbuseEmail,
-	sendChatReportEmail,
+	sendAlertToSelf,
 };

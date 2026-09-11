@@ -80,7 +80,7 @@ function append(entry: ChatEntry): void {
 	const div = document.createElement('div');
 	div.className = parts.cssClass;
 	// A notice has no sender. Everything goes on as text — never `innerHTML`, since it's user input.
-	if (parts.prefix !== undefined) {
+	if (parts.cssClass === 'chat-message') {
 		const sender = document.createElement('span');
 		sender.className = 'chat-sender';
 		sender.textContent = parts.prefix; // Carries its own trailing space.

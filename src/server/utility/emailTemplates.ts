@@ -22,7 +22,7 @@ type ActionEmailContent = {
 
 // Constants -------------------------------------------------------------------
 
-/** Header/button accent color: a dark neutral grey. */
+/** Header, button and link accent color: a dark neutral grey. */
 const ACCENT_COLOR = '#383838';
 /** Page background behind the email card: a warm off-white. */
 const PAGE_BG_COLOR = '#f1eeea';
