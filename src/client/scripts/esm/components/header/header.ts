@@ -47,7 +47,6 @@ function initHamburger(): void {
 		panel.classList.toggle('open', open);
 		dimContent.classList.toggle('open', open);
 		dimHeader.classList.toggle('open', open);
-		panel.setAttribute('aria-hidden', open ? 'false' : 'true');
 		button.setAttribute('aria-expanded', open ? 'true' : 'false');
 	};
 
