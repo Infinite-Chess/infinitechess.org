@@ -31,7 +31,7 @@
 	align-items: stretch;
 	height: var(--header-height);
 	padding: 0;
-	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+	background: var(--elev-face-gradient);
 	border-bottom: 1px solid var(--c-border);
 	color: var(--c-text);
 	font-family: 'Noto Sans', Verdana, sans-serif;

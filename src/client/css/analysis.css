@@ -523,29 +523,7 @@
    Popup menus
    ============================ */
 
-.analysis-context-menu,
-.analysis-menu {
-	position: absolute;
-	border: 1px solid var(--c-border);
-	border-radius: 4px;
-	background: var(--c-surface);
-	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
-}
-
-.analysis-context-menu button,
-.analysis-menu button {
-	width: 100%;
-	background: transparent;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-
-.analysis-context-menu button:hover,
-.analysis-menu button:hover {
-	background: var(--c-hover-overlay);
-	color: var(--c-text-emphasis);
-}
+/* Both wear `.popup-menu` from global.css, which owns the look they share. */
 
 /* Move-tree right-click menu — built in JS, appended to <body>, positioned at the cursor. */
 .analysis-context-menu {
@@ -554,18 +532,9 @@
 	user-select: none;
 }
 
-.analysis-context-title {
-	padding: 7px 10px;
-	border-bottom: 1px solid var(--c-border-muted);
-	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
-	color: var(--c-text-emphasis);
-	font-size: 0.84em;
-	font-weight: 700;
-	text-align: center;
-}
-
 .analysis-context-menu button {
 	display: block;
+	width: 100%;
 	padding: 7px 12px;
 	font-size: 0.86em;
 	text-align: left;
@@ -579,6 +548,7 @@
 
 .analysis-menu button {
 	display: flex;
+	width: 100%;
 	align-items: center;
 	gap: 9px;
 	padding: 8px 10px;

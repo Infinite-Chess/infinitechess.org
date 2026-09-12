@@ -66,6 +66,9 @@ body {
 	/* Error/danger red. Theme-independent (identical in light and dark). */
 	--c-error: #e05555;
 
+	/* The raised face as one gradient. Needs no per-theme copy — its two colors are themed. */
+	--elev-face-gradient: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+
 	/* Tiled checkerboard backdrop pattern (home, login, game side bar, …). */
 	--checkerboard: repeating-conic-gradient(rgb(255, 217, 168) 0% 25%, rgb(222, 173, 117) 0% 50%)
 		50% / 200px 200px;
@@ -577,6 +580,40 @@ button:disabled {
 		padding: 2px;
 		border-radius: 7px;
 	}
+}
+
+/* ============================================================
+   Popup menu (shared by the game page's chat-report menus and the analysis page's)
+   ============================================================ */
+
+.popup-menu {
+	position: absolute;
+	border: 1px solid var(--c-border);
+	border-radius: 4px;
+	background: var(--c-surface);
+	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+}
+
+.popup-menu-title {
+	padding: 7px 10px;
+	border-bottom: 1px solid var(--c-border-muted);
+	background: var(--elev-face-gradient);
+	color: var(--c-text-emphasis);
+	font-size: 0.84em;
+	font-weight: 700;
+	text-align: center;
+}
+
+.popup-menu button {
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.popup-menu button:hover {
+	background: var(--c-hover-overlay);
+	color: var(--c-text-emphasis);
 }
 
 /* ==================================

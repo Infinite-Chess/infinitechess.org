@@ -361,9 +361,9 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 	closeAnalysisContextMenu();
 
 	const menu = document.createElement('div');
-	menu.classList.add('analysis-context-menu');
+	menu.classList.add('popup-menu', 'analysis-context-menu');
 	const title = document.createElement('div');
-	title.classList.add('analysis-context-title');
+	title.classList.add('popup-menu-title');
 	const moveIndex = formatMoveIndex(node.ply);
 	const moveText = icnmoves.getShortFormMoveFromMove(node.move!, {
 		compact: false,

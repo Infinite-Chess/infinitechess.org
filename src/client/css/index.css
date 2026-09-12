@@ -203,7 +203,7 @@ html[data-home-prompt='dismissed'] .new-prompt {
 	letter-spacing: 0.01em;
 	cursor: pointer;
 	color: var(--c-text-emphasis);
-	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+	background: var(--elev-face-gradient);
 	border: 1px solid var(--c-border);
 	box-shadow:
 		inset 0 1px 0 var(--c-elev-highlight),
@@ -214,8 +214,7 @@ html[data-home-prompt='dismissed'] .new-prompt {
 .lobby-btn:hover {
 	border-color: var(--c-border-2);
 	background:
-		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)),
-		linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)), var(--elev-face-gradient);
 }
 
 .lobby-btn:active {

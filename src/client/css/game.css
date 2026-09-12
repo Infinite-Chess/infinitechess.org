@@ -625,7 +625,7 @@
 .disconnect-buttons .action-btn {
 	padding: 8px 12px;
 	border-radius: 6px;
-	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+	background: var(--elev-face-gradient);
 	border: 1px solid var(--c-border);
 	box-shadow:
 		inset 0 1px 0 var(--c-elev-highlight),
@@ -635,8 +635,7 @@
 .disconnect-buttons .action-btn:hover {
 	border-color: var(--c-border-2);
 	background:
-		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)),
-		linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)), var(--elev-face-gradient);
 }
 
 .disconnect-buttons .action-btn:active {
@@ -787,45 +786,24 @@
 /* ================================
    Report menus
 
-   The flag's anchored dropdown: menu 1 picks a reason, clicking one REPLACES it with menu 2
-   to confirm. Their own classes deliberately, so the analysis page's near-identical
-   `.analysis-menu` can be tweaked without disturbing them.
+   The flag's anchored dropdown: menu 1 picks a reason, clicking one REPLACES it
+   with menu 2 to confirm. The shared look lives on `.popup-menu` in global.css.
    ================================ */
 
 .report-menu {
-	position: absolute;
 	right: 2px;
 	bottom: calc(100% + 5px);
 	min-width: 200px;
-	border: 1px solid var(--c-border);
-	border-radius: 4px;
-	background: var(--c-surface);
-	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
 }
 
+/* The reason's own wording can be long; don't let it widen the menu. */
 .report-menu-title {
 	contain: inline-size;
-	padding: 7px 10px;
-	border-bottom: 1px solid var(--c-border-muted);
-	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
-	color: var(--c-text-emphasis);
-	font-size: 0.84em;
-	font-weight: 700;
-	text-align: center;
 }
 
 .report-menu button {
 	padding: 7px 12px;
-	background: transparent;
-	color: inherit;
-	font: inherit;
 	font-size: 0.86em;
-	cursor: pointer;
-}
-
-.report-menu button:hover {
-	background: var(--c-hover-overlay);
-	color: var(--c-text-emphasis);
 }
 
 /* Menu 1 — the reasons. */

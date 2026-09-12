@@ -277,14 +277,14 @@
 					<svg><use href="#svg-flag"/></svg>
 				</button>
 				{# The flag's two menus. Driven by guichatreport.ts #}
-				<div class="report-menu hidden" id="report-reason-menu">
-					<div class="report-menu-title">Report chat</div>
+				<div class="popup-menu report-menu hidden" id="report-reason-menu">
+					<div class="popup-menu-title report-menu-title">Report chat</div>
 					{% for reason in chat.reportReasons %}
 					<button type="button" data-reason="{{ reason.code }}">{{ reason.label }}</button>
 					{% endfor %}
 				</div>
-				<div class="report-menu hidden" id="report-confirm-menu">
-					<div class="report-menu-title">Report chat for "<span id="report-chosen-reason"></span>"?</div>
+				<div class="popup-menu report-menu hidden" id="report-confirm-menu">
+					<div class="popup-menu-title report-menu-title">Report chat for "<span id="report-chosen-reason"></span>"?</div>
 					<div class="report-menu-actions">
 						<button type="button" id="btn-report-cancel">Cancel</button>
 						<button type="button" id="btn-report-submit">Report</button>
