@@ -20,15 +20,15 @@ import roles from './roles.js';
 import urlUtils from '../utility/urlUtils.js';
 import logEvents from '../utility/logEvents.js';
 import emailService from '../utility/emailService.js';
+import memberManager from '../database/memberManager.js';
 import sessionManager from '../auth/sessionManager.js';
 import socketRegistry from '../socket/socketRegistry.js';
 import blacklistManager from '../database/blacklistManager.js';
 import accountValidation from './accountValidation.js';
+import refreshTokenManager from '../database/refreshTokenManager.js';
+import passwordResetTokensManager from '../database/passwordResetTokensManager.js';
 
 // Types -----------------------------------------------------------------------
-
-/** The `password_reset_tokens` columns a reset-token lookup needs. */
-type TokenRecord = { user_id: number; hashed_token: string };
 
 /**
  * The member fields read inside the reset transaction,
@@ -42,12 +42,6 @@ type ResetTransactionResult = {
 };
 
 /**
- * How long a password-reset token stays valid, in milliseconds.
- * IF CHANGED: update the "1 hour" copy in the email toml component.
- */
-const PASSWORD_RESET_TOKEN_EXPIRY_MS: number = 1000 * 60 * 60; // 1 Hour
-
-/**
  * `POST /api/forgot-password` — looks up the member by email and, unless blacklisted, issues a
  * single-use reset token and emails the reset link. Always returns the same generic 200
  * (unknown, sendable, or blacklisted alike) to prevent email enumeration.
@@ -57,10 +51,11 @@ async function handleForgot(req: Request, res: Response): Promise<void> {
 	if (!email) return; // Response already sent
 
 	try {
-		// 1. Find user by email (case-insensitive)
-		const member = db.get<{ user_id: number }>(
-			'SELECT user_id FROM members WHERE email = ? COLLATE NOCASE',
-			[email],
+		// 1. Find user by email
+		const member = memberManager.getDataByCriteria(
+			['user_id'],
+			'email',
+			email.toLowerCase(), // Lowercased to match the stored (lowercase) rows
 		);
 
 		if (member) {
@@ -68,7 +63,7 @@ async function handleForgot(req: Request, res: Response): Promise<void> {
 			const userId: number = member.user_id;
 
 			// Invalidate any old tokens for this user.
-			db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
+			passwordResetTokensManager.removeAllForUser(userId);
 
 			// Blacklist gates only the send, never the response — a blacklisted member still
 			// falls through to the same generic 200, so it can't be told apart by the response.
@@ -80,13 +75,9 @@ async function handleForgot(req: Request, res: Response): Promise<void> {
 			} else {
 				// Generate a high-entropy token, store only its hash, and email the plain token.
 				const plainToken: string = crypto.randomBytes(32).toString('base64url');
-				const hashedTokenForDb: string = hashResetToken(plainToken);
-				const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MS;
+				const hashedToken: string = hashResetToken(plainToken);
 
-				db.run(
-					'INSERT INTO password_reset_tokens (user_id, hashed_token, expires_at) VALUES (?, ?, ?)',
-					[userId, hashedTokenForDb, expiresAt],
-				);
+				passwordResetTokensManager.add(userId, hashedToken);
 
 				const baseUrl = urlUtils.getAppBase();
 				const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
@@ -132,17 +123,9 @@ function hashResetToken(token: string): string {
  */
 function getPageState(req: Request): { state: 'valid' | 'invalid' } {
 	const token = req.params['token']!;
-	const match = findUnexpiredResetTokenRecord(token);
+	const hashedToken = hashResetToken(token);
+	const match = passwordResetTokensManager.findUnexpired(hashedToken);
 	return { state: match ? 'valid' : 'invalid' };
-}
-
-/** Finds the unexpired password-reset token row matching the given plain token, or returns undefined. */
-function findUnexpiredResetTokenRecord(token: string): TokenRecord | undefined {
-	const hashed_token = hashResetToken(token);
-	return db.get<TokenRecord>(
-		'SELECT user_id, hashed_token FROM password_reset_tokens WHERE hashed_token = ? AND expires_at > ?',
-		[hashed_token, Date.now()],
-	);
 }
 
 /**
@@ -159,11 +142,12 @@ async function handleReset(req: Request, res: Response): Promise<void> {
 	// Password strength rules (e.g., length)
 	if (!accountValidation.doPasswordFormatChecks(password, req, res)) return;
 
+	const hashedToken = hashResetToken(token);
+
 	try {
 		// Fast pre-check: reject clearly invalid/expired tokens before expensive bcrypt work.
 		// The authoritative one-time guarantee is still enforced in the transaction below.
-		const precheckTokenRecord = findUnexpiredResetTokenRecord(token);
-		if (!precheckTokenRecord) {
+		if (!passwordResetTokensManager.findUnexpired(hashedToken)) {
 			logEvents.add(`Invalid or expired password reset token presented.`, 'loginAttempts');
 			// The tokenInvalid flag tells the client to reload (re-SSRing the expired-link card).
 			res.status(400).json({ tokenInvalid: true });
@@ -175,38 +159,28 @@ async function handleReset(req: Request, res: Response): Promise<void> {
 			password,
 			accountValidation.PASSWORD_SALT_ROUNDS,
 		);
-		const hashedToken = precheckTokenRecord.hashed_token;
 
 		// In one transaction: atomically consume the token, update the password, and kill all existing sessions.
 		// If two requests race with the same token, only one can consume it.
 		const resetTransaction = db.transaction((): ResetTransactionResult | undefined => {
-			const consumedToken = db.get<{ user_id: number }>(
-				`DELETE FROM password_reset_tokens
-				 WHERE hashed_token = ? AND expires_at > ?
-				 RETURNING user_id`,
-				[hashedToken, Date.now()],
-			);
+			const consumedToken = passwordResetTokensManager.consume(hashedToken);
 
 			// ALREADY CONSUMED / expired token.
 			if (consumedToken === undefined) return undefined;
 
 			const user_id = consumedToken.user_id;
 
-			const updatedMember = db.get<{ username: string; roles: string | null; email: string }>(
-				`UPDATE members
-				 SET hashed_password = ?
-				 WHERE user_id = ?
-				 RETURNING username, roles, email`,
-				[hashedNewPassword, user_id],
-			);
+			memberManager.updateColumns(user_id, { hashed_password: hashedNewPassword });
 
-			if (updatedMember === undefined) {
-				// If the user doesn't exist, throw an error to roll back the transaction.
-				throw new Error(`Failed to update password for user_id (${user_id}), user may not exist.`); // prettier-ignore
-			}
+			// Always defined: a token row cascades away with its member, so consuming one proves it exists.
+			const updatedMember = memberManager.getDataByCriteria(
+				['username', 'roles', 'email'],
+				'user_id',
+				user_id,
+			)!;
 
 			// Terminate all of the user's active sessions (socket closures below).
-			db.run('DELETE FROM refresh_tokens WHERE user_id = ?', [user_id]);
+			refreshTokenManager.removeAllForUser(user_id);
 
 			return { user_id, ...updatedMember };
 		});

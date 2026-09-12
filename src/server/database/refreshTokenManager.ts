@@ -175,6 +175,25 @@ function removeAllForUser(userId: number): void {
 	);
 }
 
+/**
+ * Cleanup: deletes every refresh token that has naturally expired, plus every
+ * consumed one whose grace period has elapsed.
+ * @returns How many rows were deleted.
+ * @throws If a database error occurs.
+ */
+function removeExpired(): number {
+	const query = `
+		DELETE FROM refresh_tokens
+		WHERE expires_at < ?
+		   OR (consumed_at IS NOT NULL AND consumed_at < ?)
+	`;
+	const now = Date.now();
+	return db.call(
+		() => db.run(query, [now, now - GRACE_PERIOD_MS]).changes,
+		'Database error while sweeping expired refresh tokens',
+	);
+}
+
 // Validating presented tokens -------------------------------------------------
 
 /**
@@ -252,8 +271,6 @@ function resolveValidTokenRecord(token: string, IP?: string): RefreshTokenRecord
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// Constants
-	GRACE_PERIOD_MS,
 	// Finding
 	find,
 	findAllForUsers,
@@ -264,6 +281,7 @@ export default {
 	// Deleting
 	remove,
 	removeAllForUser,
+	removeExpired,
 	// Validating presented tokens
 	validate,
 };

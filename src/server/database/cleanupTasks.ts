@@ -11,6 +11,7 @@ import db from './database.js';
 import logEvents from '../utility/logEvents.js';
 import refreshTokenManager from './refreshTokenManager.js';
 import pendingRegistrationManager from './pendingRegistrationManager.js';
+import passwordResetTokensManager from './passwordResetTokensManager.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -28,8 +29,8 @@ function startPeriodic(): void {
 function performCleanupTasks(): void {
 	checkDatabaseIntegrity();
 	deleteExpiredPasswordResetTokens();
-	cleanUpExpiredRefreshTokens();
-	pendingRegistrationManager.removeExpired();
+	deleteExpiredRefreshTokens();
+	deleteExpiredPendingRegistrations();
 }
 
 // Individual cleanups ---------------------------------------------------------
@@ -56,17 +57,15 @@ function checkDatabaseIntegrity(): void {
 /** Periodically deletes expired password reset tokens from the database. */
 function deleteExpiredPasswordResetTokens(): void {
 	try {
-		const now = Date.now();
+		const deleted = passwordResetTokensManager.removeExpired();
 
-		const result = db.run('DELETE FROM password_reset_tokens WHERE expires_at < ?', [now]);
-
-		if (result.changes > 0) {
-			console.log(`Cleanup: Deleted ${result.changes} expired password reset tokens.`);
-		}
-	} catch (error) {
-		const errorMessage =
-			'Failed to delete expired password reset tokens: ' + jsutil.getErrorMessage(error);
-		logEvents.addAndPrint(errorMessage, 'errLog');
+		if (deleted > 0)
+			logEvents.addAndPrint(
+				`Cleanup: Deleted ${deleted} expired password reset tokens.`,
+				'cleanupLog',
+			);
+	} catch {
+		// Already logged to errLog by the manager. Swallowed so the remaining sweeps still run.
 	}
 }
 
@@ -75,29 +74,32 @@ function deleteExpiredPasswordResetTokens(): void {
  * 1. Tokens that have naturally expired.
  * 2. Tokens that were consumed (replaced) more than a short grace period ago.
  */
-function cleanUpExpiredRefreshTokens(): void {
+function deleteExpiredRefreshTokens(): void {
 	try {
-		const now = Date.now();
-		const consumptionThreshold = now - refreshTokenManager.GRACE_PERIOD_MS;
+		const deleted = refreshTokenManager.removeExpired();
 
-		const query = `
-            DELETE FROM refresh_tokens
-            WHERE expires_at < ?
-			   OR (consumed_at IS NOT NULL AND consumed_at < ?)
-        `;
-
-		const result = db.run(query, [now, consumptionThreshold]);
-
-		if (result.changes > 0) {
+		if (deleted > 0)
 			logEvents.addAndPrint(
-				`Cleanup: Deleted ${result.changes} expired/consumed refresh tokens.`,
-				'tokenCleanupLog',
+				`Cleanup: Deleted ${deleted} expired/consumed refresh tokens.`,
+				'cleanupLog',
 			);
-		}
-	} catch (error) {
-		const errorMessage =
-			'Failed to delete expired refresh tokens: ' + jsutil.getErrorMessage(error);
-		logEvents.addAndPrint(errorMessage, 'errLog');
+	} catch {
+		// Already logged to errLog by the manager. Swallowed so the remaining sweeps still run.
+	}
+}
+
+/** Periodically deletes pending registrations that were never verified in time. */
+function deleteExpiredPendingRegistrations(): void {
+	try {
+		const deleted = pendingRegistrationManager.removeExpired();
+
+		if (deleted > 0)
+			logEvents.addAndPrint(
+				`Cleanup: Deleted ${deleted} expired pending registrations.`,
+				'cleanupLog',
+			);
+	} catch {
+		// Already logged to errLog by the manager. Swallowed so the remaining sweeps still run.
 	}
 }
 

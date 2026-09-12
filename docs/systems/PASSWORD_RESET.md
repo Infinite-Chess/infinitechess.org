@@ -29,7 +29,8 @@ One secret, 32 random bytes (`crypto.randomBytes(32)`) base64url-encoded:
 - **SHA-256, not bcrypt**, on purpose: 256 bits of entropy can't be brute-forced regardless of
   hash speed, and a fast deterministic hash lets us look the row up by indexed equality
   (`hashed_token` is the PRIMARY KEY) instead of scanning + comparing. See `hashResetToken`.
-- Valid for **1 hour** (`PASSWORD_RESET_TOKEN_EXPIRY_MS`).
+- Valid for **1 hour** (`EXPIRY_MS` in
+  [passwordResetTokensManager.ts](/src/server/database/passwordResetTokensManager.ts)).
 - **At most one live token per user**: issuing a new one first `DELETE`s any existing rows for
   that `user_id`. Consuming is atomic in the reset transaction. Expiry is enforced in live
   queries (`expires_at > ?`), not just by the sweep.
@@ -53,7 +54,8 @@ routes ([password.ts](/src/server/routes/password.ts), mounted at `/api`) the pa
 [passwordResetController.ts](/src/server/controllers/passwordResetController.ts) `handleForgot`:
 
 1. Body check — `email` a non-empty string.
-2. Look up member by email (`COLLATE NOCASE`). If none → log, fall through to the generic `200`.
+2. Look up member by email, lowercased to match the stored (lowercase) rows. If none → log, fall
+   through to the generic `200`.
 3. If found: `DELETE` any old tokens for the user. Then **blacklist gates only the send**: a
    blacklisted address logs and skips the email but still falls through to the same `200`, so it
    can't be told apart. Otherwise generate the token, store its hash + `expires_at`, build
@@ -82,7 +84,7 @@ The GET is read-only and consumes nothing, so an email scanner pre-fetching it d
 1. `verifyBodyHasResetPasswordData` — both non-empty strings; `token` ≤ 100 chars
    (a valid token is 43 chars — rejects obviously invalid values before hashing).
 2. `doPasswordFormatChecks` — server-side strength re-check (client checks are UX only).
-3. Fast pre-check (`findUnexpiredResetTokenRecord`) — no match → `400 { tokenInvalid: true }`.
+3. Fast pre-check (`passwordResetTokensManager.findUnexpired`) — no match → `400 { tokenInvalid: true }`.
    **This flag tells the client to reload**, re-SSRing the expired-link card. This avoids doing
    bcrypt work for obviously invalid/expired tokens.
 4. bcrypt-hash the new password.
@@ -99,8 +101,8 @@ The GET is read-only and consumes nothing, so an email scanner pre-fetching it d
 
 ## The `password_reset_tokens` table
 
-Schema in [databaseTables.ts](/src/server/database/databaseTables.ts); all SQL lives inline in
-the controller.
+Schema in [databaseTables.ts](/src/server/database/databaseTables.ts); every query against it
+lives in [passwordResetTokensManager.ts](/src/server/database/passwordResetTokensManager.ts).
 
 | Column         | Notes                                                                            |
 | -------------- | -------------------------------------------------------------------------------- |
@@ -127,7 +129,8 @@ With no email credentials in `.env` (most devs), the server logs the password re
 
 | Concern                                                    | File                                                                                                                                     |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Both API handlers, page-state, token hash/lookup           | [passwordResetController.ts](/src/server/controllers/passwordResetController.ts)                                                         |
+| Both API handlers, page-state, token hashing               | [passwordResetController.ts](/src/server/controllers/passwordResetController.ts)                                                         |
+| Token table queries (issue, look up, consume, sweep)       | [passwordResetTokensManager.ts](/src/server/database/passwordResetTokensManager.ts)                                                      |
 | API routes (`/api/forgot-password`, `/api/reset-password`) | [password.ts](/src/server/routes/password.ts)                                                                                            |
 | Page routes (`/forgot-password`, `/reset-password/:token`) | [root.ts](/src/server/routes/root.ts)                                                                                                    |
 | Reset + changed emails                                     | [emailService.ts](/src/server/utility/emailService.ts)                                                                                   |

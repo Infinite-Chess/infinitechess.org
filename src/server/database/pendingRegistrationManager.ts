@@ -240,12 +240,13 @@ function removeExpiredFor(username: string, email: string): void {
 
 /**
  * Cleanup: deletes every pending registration whose `expires_at` is in the past.
+ * @returns How many rows were deleted.
  * @throws If a database error occurs.
  */
-function removeExpired(): void {
+function removeExpired(): number {
 	const query = `DELETE FROM pending_registrations WHERE expires_at <= ?`;
-	db.call(
-		() => db.run(query, [Date.now()]),
+	return db.call(
+		() => db.run(query, [Date.now()]).changes,
 		'Database error while sweeping expired pending registrations',
 	);
 }
