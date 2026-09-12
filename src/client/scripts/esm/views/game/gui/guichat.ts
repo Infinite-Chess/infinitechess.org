@@ -2,10 +2,6 @@
 
 /**
  * Manages the `.chat` panel on the game page: the collapse toggle, the log, and the input.
- *
- * Every element here may be absent. SSR omits the whole panel for anyone who isn't a
- * participant of a non-engine game, and omits the input once the game can no longer
- * be chatted in.
  */
 
 import type { ChatEntry, ChatLogEntry } from '../../../../../../shared/transport/clientbound.js';
@@ -29,13 +25,16 @@ const ERROR_TEXTS: Record<ChatRejection | 'disconnected', string> = {
 
 // Elements --------------------------------------------------------------------
 
+// Every element here may be absent. SSR omits the whole panel for anyone who isn't a
+// participant of a non-engine game, and omits the input once the game can no longer
+// be chatted in.
+
 const element_Chat = document.querySelector('.chat');
-const element_ChatBar = document.querySelector('.chat-bar');
+const element_ChatToggle = document.getElementById('btn-toggle-chat');
 const element_ChatLog = document.querySelector('.chat-log');
 const element_ChatError = document.querySelector('.chat-error');
 // Absent when the page loaded a game already over.
 const element_ChatInput = document.getElementById('chat-input') as HTMLInputElement | null;
-const element_Report = document.getElementById('btn-report');
 
 // State -----------------------------------------------------------------------
 
@@ -81,7 +80,7 @@ function append(entry: ChatEntry): void {
 	const div = document.createElement('div');
 	div.className = parts.cssClass;
 	// A notice has no sender. Everything goes on as text — never `innerHTML`, since it's user input.
-	if (parts.prefix !== undefined) {
+	if (parts.cssClass === 'chat-message') {
 		const sender = document.createElement('span');
 		sender.className = 'chat-sender';
 		sender.textContent = parts.prefix; // Carries its own trailing space.
@@ -91,6 +90,11 @@ function append(entry: ChatEntry): void {
 	element_ChatLog.append(div);
 
 	if (stickToBottom) scrollToBottom();
+}
+
+/** Whether the log holds at least one typed message. Notices don't count.*/
+function hasPlayerMessages(): boolean {
+	return Boolean(element_ChatLog?.querySelector('.chat-message'));
 }
 
 /** Whether the log is scrolled to its bottom, and so should follow whatever moves next. */
@@ -190,9 +194,8 @@ function onDetached(): void {
 
 // Listeners -------------------------------------------------------------------
 
-// Clicking the bar anywhere but the report button collapses/expands the panel.
-element_ChatBar?.addEventListener('click', (e) => {
-	if (element_Report?.contains(e.target as Node)) return;
+// The collapse toggle fills the whole bar left of the report flag, whose own menus occupy the rest.
+element_ChatToggle?.addEventListener('click', () => {
 	element_Chat?.classList.toggle('collapsed');
 });
 
@@ -226,6 +229,7 @@ export default {
 	// The Log
 	reconcile,
 	append,
+	hasPlayerMessages,
 	// The Send History
 	rebuildHistory,
 	recordEntry,

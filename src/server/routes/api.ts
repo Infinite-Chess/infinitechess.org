@@ -11,8 +11,8 @@ import type { Request, Response } from 'express';
 
 import express from 'express';
 
-import gameAPI from '../api/gameAPI.js';
 import authRouter from './auth.js';
+import gameRouter from './game.js';
 import newsRouter from './news.js';
 import adminRouter from './admin.js';
 import contributors from '../api/contributors.js';
@@ -48,8 +48,6 @@ router.get('/contributors', (_req: Request, res: Response) => {
 
 router.get('/seek-preview/:seekId', rateLimiters.seekPreview, seekPreviewAPI.get);
 
-router.get('/game/:id', rateLimiters.gameState, gameAPI.getState);
-
 // Endpoint called by the GitHub Actions deploy workflow before pm2 reload
 router.post('/prepare-restart', deployController.handlePrepareRestart);
 
@@ -58,6 +56,7 @@ router.post('/verify/:token', verifyAccountController.verifyPendingRegistration)
 // Routers that manage their own authentication --------------------------------
 
 router.use('/', authRouter); // login + logout (both public)
+router.use('/game', gameRouter);
 router.use('/editor-saves', editorSavesRouter);
 router.use('/news', newsRouter);
 router.use('/preferences', preferencesRouter);

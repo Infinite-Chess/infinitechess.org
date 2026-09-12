@@ -14,7 +14,7 @@ import db from './database.js';
 // Types -----------------------------------------------------------------------
 
 /** Structure of a complete chat_entries record. */
-interface ChatEntriesRecord extends ChatEntryData {
+export interface ChatEntriesRecord extends ChatEntryData {
 	/**
 	 * Orders the log. A sort key, not a position — every game
 	 * shares one sequence, so a single game's ids have gaps
@@ -82,7 +82,8 @@ function countOfGame(game_id: number): number {
 }
 
 /**
- * Deletes a game's whole chat log.
+ * Deletes a game's whole chat log, notices included.
+ * For a game whose record is going away entirely, never for moderation.
  * @throws If a database error occurs.
  */
 function removeOfGame(game_id: number): void {
@@ -92,6 +93,20 @@ function removeOfGame(game_id: number): void {
 	);
 }
 
+/**
+ * Deletes a game's typed messages, leaving its event notices standing. The moderation erase.
+ * @returns How many were erased. Zero may also mean there was no game.
+ * @throws If a database error occurs.
+ */
+function removeMessagesOfGame(game_id: number): number {
+	return db.call(
+		() =>
+			db.run('DELETE FROM chat_entries WHERE game_id = ? AND message IS NOT NULL', [game_id])
+				.changes,
+		`Error deleting chat messages of game ${game_id}`,
+	);
+}
+
 // Exports ---------------------------------------------------------------------
 
-export default { insert, getOfGame, countOfGame, removeOfGame };
+export default { insert, getOfGame, countOfGame, removeOfGame, removeMessagesOfGame };

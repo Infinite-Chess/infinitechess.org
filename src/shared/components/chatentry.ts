@@ -13,13 +13,19 @@ import type { ChatEntry, ChatNoticeCode } from '../transport/clientbound.js';
 // Types -----------------------------------------------------------------------
 
 /** One chat log entry, ready for a template or the DOM. */
-export interface ChatEntryParts {
-	cssClass: 'chat-message' | 'chat-notice';
-	/** The sender's name and colon, ending in the space before the message. Absent for a notice. */
-	prefix?: string;
-	/** The typed message, or the notice's sentence. */
-	body: string;
-}
+export type ChatEntryParts =
+	| {
+			cssClass: 'chat-message';
+			/** The sender's name and colon, ending in the space before the message. */
+			prefix: string;
+			/** The typed message. */
+			body: string;
+	  }
+	| {
+			cssClass: 'chat-notice';
+			/** The notice's sentence. */
+			body: string;
+	  };
 
 /** One sentence written twice: as the player it is about reads it, and as the other player does. */
 interface PerspectiveWordings {

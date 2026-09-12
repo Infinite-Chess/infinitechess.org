@@ -14,6 +14,7 @@ import type { ServerGame } from './serverGameTypes.js';
 import type { MovePacket } from '../../../shared/chess/util/typeschemas.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { AuthMemberInfo } from '../../types.js';
+import type { ScriptTranslations } from '../../../shared/types/script-translations.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
 	SourceVariantMetaData,
@@ -36,7 +37,6 @@ import type {
 } from '../../../shared/transport/clientbound.js';
 
 import uuid from '../../../shared/util/uuid.js';
-import gameurl from '../../../shared/chess/util/gameurl.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
@@ -49,6 +49,7 @@ import { players as p } from '../../../shared/chess/util/typeutil.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
 import tconfig from '../../config/translationConfig.js';
+import urlUtils from '../../utility/urlUtils.js';
 import drawOffers from './drawOffers.js';
 import gameUtility from './gameUtility.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
@@ -160,6 +161,26 @@ function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 	};
 }
 
+/**
+ * Each color's display name, as ONE viewer reads them.
+ * @param role - The viewer's color, or undefined for a non-participant.
+ */
+function resolvePlayerNames(
+	state: StaticGameState,
+	role: Player | undefined,
+	sharedT: ScriptTranslations['shared'],
+): PlayerGroup<string> {
+	const names: PlayerGroup<string> = {};
+	for (const [strColor, container] of Object.entries(state.players)) {
+		const color = Number(strColor) as Player;
+		// A guest who is the viewer shows "(You)"; every other name is the container's own
+		// (members → username, other guests → the hardcoded "(Guest)" ICN name). Mirrors the lobby.
+		const isYouGuest = container.type === 'guest' && color === role;
+		names[color] = isYouGuest ? sharedT.user_status.you_indicator : container.username;
+	}
+	return names;
+}
+
 // ICN Metadata ----------------------------------------------------------------
 
 /**
@@ -216,7 +237,7 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 
 	const metadata: MetaData = {
 		Event: `${match.rated ? 'Rated' : 'Casual'} ${variantEnglishName} infinite chess game${match.engineParticipant ? ' against an engine' : ''}`,
-		Site: gameurl.getAbsoluteGameUrl(match.id),
+		Site: urlUtils.getAbsoluteGameUrl(match.id),
 		GameId: uuid.base10ToBase62(match.id),
 		Round: '-',
 		White: getPlayerName(p.WHITE),
@@ -402,6 +423,7 @@ export default {
 	getRatingChanges,
 	// SSR Page State
 	buildStaticState,
+	resolvePlayerNames,
 	// ICN Metadata
 	buildMetadata,
 	// Wire Messages

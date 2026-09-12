@@ -39,6 +39,7 @@ import gameactions from './gui/guigameactions.js';
 import gamesession from '../../game/chess/gamesession.js';
 import guigamemeta from '../../game/gui/guigamemeta.js';
 import { GameBus } from '../../board/GameBus.js';
+import guichatreport from './gui/guichatreport.js';
 import { SocketBus } from '../../socket/SocketBus.js';
 import socketintents from '../../socket/socketintents.js';
 import guidisconnect from './gui/guidisconnect.js';
@@ -284,6 +285,7 @@ function handleDetached(): void {
 	onlinegame.onDetached(); // Prevents a reconnect from trying to re-subscribe.
 	gameactions.onDetached();
 	guichat.onDetached();
+	guichatreport.onDetached();
 }
 
 /**

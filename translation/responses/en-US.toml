@@ -10,6 +10,7 @@ server_error = "A server error occurred. Please try again."
 generic = "You have made too many requests, please try again later."
 account_creations = "Too many account creations are coming from this IP."
 email_requests = "You have requested too many emails. Try again later."
+chat_reports = "You have sent too many reports."
 
 [account] # Account-creation/validation responses the server alone emits (never needed client-side).
 username_taken = "That username is taken"

@@ -82,6 +82,7 @@ export interface ScriptTranslations {
 			generic: string;
 			account_creations: string;
 			email_requests: string;
+			chat_reports: string;
 		};
 		account: {
 			username_taken: string;

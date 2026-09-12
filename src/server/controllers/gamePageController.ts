@@ -35,12 +35,13 @@ import { players as p, Player, PlayerGroup } from '../../shared/chess/util/typeu
 
 import tconfig from '../config/translationConfig.js';
 import manifest from '../config/manifest.js';
+import chatReport from '../game/gamemanager/chatReport.js';
 import gameManager from '../game/gamemanager/gameManager.js';
 import gamesManager from '../database/gamesManager.js';
 import deadGameState from '../game/gamemanager/deadGameState.js';
 import pieceSvgCache from '../config/pieceSvgCache.js';
-import memberInfoUtil from '../auth/memberInfoUtil.js';
 import chatEntryMapper from '../game/gamemanager/chatEntryMapper.js';
+import gameStateBuilder from '../game/gamemanager/gameStateBuilder.js';
 import chatEntriesManager from '../database/chatEntriesManager.js';
 
 // Types -----------------------------------------------------------------------
@@ -56,6 +57,8 @@ interface GamePageState {
 	chat?: {
 		/** The whole log, already rendered into its display parts. */
 		entries: ChatEntryParts[];
+		/** The report flag's menu rows. Written once in `chatReport.ts`, looped here. */
+		reportReasons: typeof chatReport.REPORT_REASONS;
 		/** The chat input's attributes. Absent when the game can no longer be chatted in. */
 		input?: {
 			/** Its `disabled` attribute — a guest in a public game may read but never send. */
@@ -136,19 +139,7 @@ function getPageState(req: Request): GamePageState | undefined {
 	const { state, game, ratingChanges, moveCount } = resolved; // game is defined if live
 	let { engineGame } = resolved; // Gains the client's engine asset URLs below, if live
 
-	// Resolve the viewer's role in the game; undefined => spectator.
-	let role: Player | undefined;
-	if (game) {
-		for (const [strColor, { identifier }] of Object.entries(game.match.playerData)) {
-			if (memberInfoUtil.eqPartial(identifier, memberInfo)) {
-				role = Number(strColor) as Player;
-				break;
-			}
-		}
-	} else if (memberInfo.signedIn) {
-		// Dead games match members only; dead guests aren't identifiable.
-		role = deadGameState.resolveParticipantColor(id, memberInfo.user_id);
-	}
+	const role = gameManager.resolveParticipantRole(id, resolved, memberInfo); // undefined => spectator
 
 	// Only a live engine game still needs the assets to run the engine client-side.
 	if (engineGame && game) {
@@ -160,7 +151,7 @@ function getPageState(req: Request): GamePageState | undefined {
 	}
 
 	const viewColor = resolveViewColor(req, role);
-	const playerNames = resolvePlayerNames(state, role, req);
+	const playerNames = gameStateBuilder.resolvePlayerNames(state, role, req.t.shared);
 
 	return {
 		gamePageData: {
@@ -180,6 +171,7 @@ function getPageState(req: Request): GamePageState | undefined {
 			role !== undefined && engineGame === undefined
 				? {
 						entries: renderChatLog(id, role, playerNames),
+						reportReasons: chatReport.REPORT_REASONS,
 						// Only a live game can still be typed in, and only there is `private` knowable.
 						input: game
 							? {
@@ -236,23 +228,6 @@ function resolveViewColor(req: Request, role: Player | undefined): Player {
 	return gameurl.parseViewColorCode(req.params['color']) ?? role ?? p.WHITE;
 }
 
-/** Each color's display name. */
-function resolvePlayerNames(
-	state: StaticGameState,
-	role: Player | undefined,
-	req: Request,
-): PlayerGroup<string> {
-	const names: PlayerGroup<string> = {};
-	for (const [strColor, container] of Object.entries(state.players)) {
-		const color = Number(strColor) as Player;
-		// A guest who is the viewer shows "(You)"; every other name is the container's own
-		// (members → username, other guests → the hardcoded "(Guest)" ICN name). Mirrors the lobby.
-		const isYouGuest = container.type === 'guest' && color === role;
-		names[color] = isYouGuest ? req.t.shared.user_status.you_indicator : container.username;
-	}
-	return names;
-}
-
 /**
  * Reads a game's whole chat log and renders it for `game.njk`.
  * @throws If a database error occurs.
@@ -291,7 +266,7 @@ function buildGameMetaViewModel(
 		iconId: variantregistry.getGroupIconId(variantGroup),
 	};
 
-	const names = resolvePlayerNames(state, role, req);
+	const names = gameStateBuilder.resolvePlayerNames(state, role, req.t.shared);
 	const players: GameMetaViewModel['players'] = {};
 	for (const [strColor, container] of Object.entries(state.players)) {
 		const color = Number(strColor) as Player;

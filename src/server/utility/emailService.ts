@@ -1,16 +1,21 @@
 // src/server/utility/emailService.ts
 
 /**
- * Constructs and dispatches the application's transactional emails — account
- * verification, password resets, password-changed notices, and rating-abuse alerts —
- * from localized templates, handed to `mailer.ts` for delivery.
+ * Constructs and dispatches the application's transactional emails, handing each to
+ * `mailer.ts` for delivery.
+ *
+ * Those addressed to a user — account verification, password reset, the password-changed
+ * notice — are rendered here from templates in that user's language. Those addressed to
+ * Naviary — rating-abuse alerts and chat reports — arrive already written, in English.
  *
  * Blacklist screening is deliberately NOT done here: the flows where it matters gate at
  * their own entrance (accountValidation, passwordResetController), because only the
  * caller can shape the reply a blocked address gets; a check here could merely drop the
- * mail. Notices to members' own stored addresses (password changed, rating abuse) are
- * never screened.
+ * mail. Nothing else needs it — a member's own stored address, and our own, are never
+ * screened.
  */
+
+import type { AlertEmailType, MailContent } from './mailer.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 import interpolate from '../../shared/util/interpolate.js';
@@ -145,23 +150,15 @@ async function sendPasswordChangedEmail(recipientEmail: string, language: string
 	}
 }
 
-/**
- * API to send an email warning about rating abuse to our own infinite chess email address
- * @param messageSubject - email subject text
- * @param messageText - email body text
- */
-async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
+/** Sends an alert, already written, to our own infinite chess email address. */
+async function sendAlertToSelf(type: AlertEmailType, content: MailContent): Promise<void> {
 	try {
-		const sent = await mailer.send('rating-abuse-alert', {
-			to: mailer.EMAIL_FROM_ADDRESS ?? '',
-			subject: messageSubject,
-			text: messageText,
-		});
-		if (!sent) console.log("Didn't send rating abuse email.");
+		const sent = await mailer.send(type, { to: mailer.EMAIL_FROM_ADDRESS ?? '', ...content });
+		if (!sent) console.log(`Didn't send ${type} email.`);
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
 		logEvents.addAndPrint(
-			`Error during the sending of rating abuse email with subject "${messageSubject}": ${detail}`,
+			`Error during the sending of ${type} email with subject "${content.subject}": ${detail}`,
 			'errLog',
 		);
 	}
@@ -173,5 +170,5 @@ export default {
 	sendEmailConfirmation,
 	sendPasswordResetEmail,
 	sendPasswordChangedEmail,
-	sendRatingAbuseEmail,
+	sendAlertToSelf,
 };

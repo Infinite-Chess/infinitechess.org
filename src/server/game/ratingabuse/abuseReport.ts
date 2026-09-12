@@ -58,7 +58,10 @@ ${buildBody(ctx, verdict, true)}
 			SUSPICIOUS_USER_NOTIFICATION_BUFFER_MS
 	) {
 		const messageSubject = `Rating Abuse Warning: user ${ctx.username}, user_id ${ctx.user_id}`;
-		void emailService.sendRatingAbuseEmail(messageSubject, messageText);
+		void emailService.sendAlertToSelf('rating-abuse-alert', {
+			subject: messageSubject,
+			text: messageText,
+		});
 		// Update RatingAbuse table with last_alerted_at value
 		const last_alerted_at = timeutil.timestampToSqlite(Date.now());
 		ratingAbuseManager.updateColumns(ctx.user_id, ctx.leaderboard_id, { last_alerted_at });
