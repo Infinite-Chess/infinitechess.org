@@ -5,10 +5,9 @@
  * cleaning up each table in the database of stale data.
  */
 
-import jsutil from '../../shared/util/jsutil.js';
-
 import db from './database.js';
 import logEvents from '../utility/logEvents.js';
+import emailService from '../utility/emailService.js';
 import refreshTokenManager from './refreshTokenManager.js';
 import pendingRegistrationManager from './pendingRegistrationManager.js';
 import passwordResetTokensManager from './passwordResetTokensManager.js';
@@ -35,22 +34,28 @@ function performCleanupTasks(): void {
 
 // Individual cleanups ---------------------------------------------------------
 
-/** Checks the integrity of the SQLite database and logs it to the error log if the check fails. */
+/**
+ * Checks the integrity of the SQLite database, and emails Naviary every problem SQLite reports.
+ * Every line is needed to judge whether only indexes are damaged (`REINDEX` repairs those),
+ * or table pages too (restore a backup).
+ */
 function checkDatabaseIntegrity(): void {
 	try {
-		const result = db.get<{ integrity_check: string }>('PRAGMA integrity_check;');
-
-		if (result?.integrity_check !== 'ok')
-			logEvents.addAndPrint(
-				`Database integrity check failed: ${result?.integrity_check} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`,
-				'errLog',
-			);
-	} catch (error: unknown) {
-		const errorMessage = jsutil.getErrorMessage(error);
-		logEvents.addAndPrint(
-			`Error performing database integrity check: ${errorMessage} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`,
-			'errLog',
+		const rows = db.call(
+			() => db.all<{ integrity_check: string }>('PRAGMA integrity_check;'),
+			'Error performing database integrity check',
 		);
+		const problems = rows.map((row) => row.integrity_check);
+		if (problems.length === 1 && problems[0] === 'ok') return;
+
+		const message = `Database integrity check failed:\n${problems.join('\n')}`;
+		logEvents.addAndPrint(message, 'errLog');
+		void emailService.sendAlertToSelf('database-alert', {
+			subject: 'Database integrity check failed',
+			text: message,
+		});
+	} catch {
+		// Already logged to errLog, and emailed if a storage failure. Swallowed so the remaining sweeps still run.
 	}
 }
 

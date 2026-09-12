@@ -6,7 +6,8 @@
  *
  * Those addressed to a user — account verification, password reset, the password-changed
  * notice — are rendered here from templates in that user's language. Those addressed to
- * Naviary — rating-abuse alerts and chat reports — arrive already written, in English.
+ * Naviary — rating-abuse alerts, chat reports and database alerts — arrive already
+ * written, in English.
  *
  * Blacklist screening is deliberately NOT done here: the flows where it matters gate at
  * their own entrance (accountValidation, passwordResetController), because only the

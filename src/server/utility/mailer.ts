@@ -14,7 +14,7 @@ import logEvents from './logEvents.js';
 // Types -----------------------------------------------------------------------
 
 /** The category of an alert we send to our own address. */
-export type AlertEmailType = 'rating-abuse-alert' | 'chat-report';
+export type AlertEmailType = 'rating-abuse-alert' | 'chat-report' | 'database-alert';
 
 /**
  * The category of an outgoing email, recorded in the sent-email log.

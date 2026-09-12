@@ -16,6 +16,7 @@ import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
 import logEvents from '../utility/logEvents.js';
+import emailService from '../utility/emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,14 +32,18 @@ let activeBackup: Promise<void> | null = null;
 
 // Functions -------------------------------------------------------------------
 
-/** Schedules a database backup to run once every 24 hours. */
+/** Schedules a database backup to run once every 24 hours. A failure emails Naviary. */
 function startDaily(): void {
 	setInterval(async () => {
 		try {
 			await perform();
 		} catch (error: unknown) {
-			const message = jsutil.getErrorMessage(error);
-			logEvents.addAndPrint(`Daily database backup failed: ${message}`, 'errLog');
+			const message = `Daily database backup failed: ${jsutil.getErrorMessage(error)}`;
+			logEvents.addAndPrint(message, 'errLog');
+			void emailService.sendAlertToSelf('database-alert', {
+				subject: 'Daily database backup failed',
+				text: message,
+			});
 		}
 	}, BACKUP_INTERVAL_MS);
 }
