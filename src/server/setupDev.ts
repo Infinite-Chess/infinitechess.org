@@ -7,22 +7,21 @@
 
 import validcheckmates from '../shared/chess/util/validcheckmates.js';
 
+import env from './config/env.js';
 import roles from './controllers/roles.js';
 import memberManager from './database/memberManager.js';
 import accountSeeder from './controllers/accountSeeder.js';
-
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 // Functions -------------------------------------------------------------------
 
 /** Seeds the dev accounts and prints the local URL. Does nothing in production. */
 function init(): void {
-	if (process.env['NODE_ENV'] === 'production') return;
+	if (env.NODE_ENV === 'production') return;
 
 	ensureDevelopmentAccounts();
 
 	// Display the url to the page
-	console.log(`Local website is hosted at https://localhost:${process.env['HTTPSPORT_LOCAL']}/`);
+	console.log(`Local website is hosted at https://localhost:${env.HTTPSPORT_LOCAL}/`);
 }
 
 /** Creates the standard development accounts (idempotent). */

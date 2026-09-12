@@ -7,19 +7,19 @@
 
 import gameurl from '../../shared/chess/util/gameurl.js';
 
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
+import env from '../config/env.js';
 
 /**
  * Gets the base URL for the application, respecting the environment.
  * @returns The full base URL for the current environment.
  */
 function getAppBase(): string {
-	if (process.env['NODE_ENV'] !== 'production') {
+	if (env.NODE_ENV !== 'production') {
 		// In development, construct the localhost URL
-		return `https://localhost:${process.env['HTTPSPORT_LOCAL']}`;
+		return `https://localhost:${env.HTTPSPORT_LOCAL}`;
 	} else {
 		// In production, use the base URL from the environment variables
-		return process.env['APP_BASE_URL']!;
+		return env.APP_BASE_URL;
 	}
 }
 

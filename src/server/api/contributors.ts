@@ -17,13 +17,13 @@
 import fs from 'fs';
 import path from 'path';
 import * as z from 'zod';
-import process from 'node:process';
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { request, RequestOptions } from 'node:https';
 
 import jsutil from '../../shared/util/jsutil.js';
 
+import env from '../config/env.js';
 import zodLogger from '../utility/zodLogger.js';
 import logEvents from '../utility/logEvents.js';
 
@@ -75,8 +75,7 @@ const GitHubContributorSchema = z.array(
  */
 let contributors: Contributor[] = loadContributorsSnapshot();
 
-/** The id of the interval to update contributors. Can be used to cancel it if the API token isn't specified. */
-const intervalId = setInterval(refresh, INTERVAL_TO_REFRESH_CONTRIBUTORS_MS);
+setInterval(() => refresh(), INTERVAL_TO_REFRESH_CONTRIBUTORS_MS);
 
 // Functions -------------------------------------------------------------------
 
@@ -100,21 +99,8 @@ function loadContributorsSnapshot(): Contributor[] {
  * and updates our list!
  */
 function refresh(): void {
-	const { GITHUB_API_KEY, GITHUB_REPO } = process.env;
-
-	if (
-		GITHUB_API_KEY === undefined ||
-		GITHUB_REPO === undefined ||
-		GITHUB_API_KEY.length === 0 ||
-		GITHUB_REPO.length === 0
-	) {
-		logEvents.addAndPrint(
-			'Either Github API key not detected, or repository not specified. Stopping updating contributor list.',
-			'errLog',
-		);
-		clearInterval(intervalId);
-		return;
-	}
+	// Only production requires a GitHub key. Without one, the snapshot is never refreshed.
+	if (env.GITHUB_API_KEY === undefined) return;
 
 	// Create an AbortController for the request
 	const controller = new AbortController();
@@ -122,12 +108,12 @@ function refresh(): void {
 	const options: RequestOptions = {
 		method: 'GET',
 		hostname: 'api.github.com',
-		path: `/repos/${GITHUB_REPO}/contributors`,
+		path: `/repos/${env.GITHUB_REPO}/contributors`,
 		headers: {
 			Accept: 'application/vnd.github+json',
-			Authorization: `Bearer ${GITHUB_API_KEY}`,
+			Authorization: `Bearer ${env.GITHUB_API_KEY}`,
 			'X-GitHub-Api-Version': '2022-11-28',
-			'User-Agent': process.env['APP_BASE_URL'],
+			'User-Agent': env.APP_BASE_URL,
 		},
 		signal: controller.signal, // Abort when the request takes too long
 	};

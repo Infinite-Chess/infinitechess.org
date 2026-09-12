@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import engineregistry from '../../shared/chess/util/engineregistry.js';
 import { players as p } from '../../shared/chess/util/typeutil.js';
 
+import env from './env.js';
 import manifest from './manifest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -32,8 +33,8 @@ function configure(app: Application): void {
 	const nunjucksEnv = nunjucks.configure(path.join(__dirname, '../views'), {
 		autoescape: true,
 		express: app,
-		watch: process.env['NODE_ENV'] !== 'production', // Re-reads templates on change in dev mode
-		throwOnUndefined: process.env['NODE_ENV'] !== 'production',
+		watch: env.NODE_ENV !== 'production', // Re-reads templates on change in dev mode
+		throwOnUndefined: env.NODE_ENV !== 'production',
 	});
 
 	setManifestGlobals(nunjucksEnv, manifest.load());
@@ -51,7 +52,7 @@ function configure(app: Application): void {
 	// In dev, esbuild watch-mode rewrites manifest.json after every rebuild while the
 	// server keeps running. Watch the file and refresh the Nunjucks global only when
 	// it actually changes, so rendered HTML always references the current hashed filenames.
-	if (process.env['NODE_ENV'] !== 'production') {
+	if (env.NODE_ENV !== 'production') {
 		fs.watch(manifest.PATH, () => {
 			try {
 				setManifestGlobals(nunjucksEnv, manifest.load());
@@ -66,9 +67,12 @@ function configure(app: Application): void {
  * Sets the manifest-derived template globals: the raw asset manifest, plus the
  * analysis engine's display name with its build-stamped version (e.g. "Apeiron 2.1"),
  */
-function setManifestGlobals(env: nunjucks.Environment, assets: Record<string, string>): void {
-	env.addGlobal('manifest', assets);
-	env.addGlobal(
+function setManifestGlobals(
+	nunjucksEnv: nunjucks.Environment,
+	assets: Record<string, string>,
+): void {
+	nunjucksEnv.addGlobal('manifest', assets);
+	nunjucksEnv.addGlobal(
 		'engineNameVersioned',
 		engineregistry.getVersionedName('apeiron', manifest.getEngineVersion()),
 	);

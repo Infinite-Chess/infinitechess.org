@@ -1,8 +1,8 @@
-// build/env.ts
+// build/env-file.ts
 
 /**
- * Ensures the .env file exists, generating it with default values if it doesn't.
- * And ensures its contents are valid.
+ * Creates the .env file with default values if it doesn't exist.
+ * The server validates its contents at startup, in src/server/config/env.ts.
  */
 
 import fs from 'fs';
@@ -11,14 +11,8 @@ import dotenv from 'dotenv';
 
 const envPath = '.env';
 
-/** Ensure .env file exists and is valid. */
-export function setupEnv(): void {
-	ensureExists();
-	ensureValid();
-}
-
-/** Ensure .env exists, generating it with default values if it doesn't. */
-function ensureExists(): void {
+/** Creates .env with default values, if it doesn't exist. */
+export function createEnvFile(): void {
 	if (fs.existsSync(envPath)) return;
 
 	// Doesn't exist, generate it with default values
@@ -60,16 +54,4 @@ TURNSTILE_SECRET_KEY=
  */
 function generateSecret(length: number): string {
 	return crypto.randomBytes(length).toString('hex');
-}
-
-/** Ensures some existing environment variables are valid. */
-function ensureValid(): void {
-	const NODE_ENV = process.env['NODE_ENV'];
-	const validValues = ['development', 'production', 'test']; // 'test' only appears during Vitest unit testing.
-
-	if (NODE_ENV === undefined || !validValues.includes(NODE_ENV)) {
-		throw new Error(
-			`NODE_ENV environment variable must be either 'development', 'production', or 'test', received '${NODE_ENV}'.`,
-		);
-	}
 }

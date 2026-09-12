@@ -20,6 +20,7 @@ import { WebSocket } from 'ws';
 import uuid from '../../shared/util/uuid.js';
 import socketutil from '../../shared/util/socketutil.js';
 
+import env from '../config/env.js';
 import socketLogger from './socketLogger.js';
 
 // Types -----------------------------------------------------------------------
@@ -48,7 +49,7 @@ export type OutValue<R extends OutRoute, A extends OutAction<R>> = ActionValue<O
  */
 const SIMULATED_WEBSOCKET_LATENCY_MS = 0;
 // const SIMULATED_WEBSOCKET_LATENCY_MS = 1000; // Debug: 1 Second
-if (process.env['NODE_ENV'] !== 'development' && SIMULATED_WEBSOCKET_LATENCY_MS !== 0) {
+if (env.NODE_ENV !== 'development' && SIMULATED_WEBSOCKET_LATENCY_MS !== 0) {
 	throw new Error('SIMULATED_WEBSOCKET_LATENCY_MS must be 0 in production!!');
 }
 

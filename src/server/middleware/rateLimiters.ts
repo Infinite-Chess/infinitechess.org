@@ -9,6 +9,8 @@ import type { ScriptTranslations } from '../../shared/types/script-translations.
 
 import rateLimit from 'express-rate-limit';
 
+import env from '../config/env.js';
+
 // Options ---------------------------------------------------------------------
 
 /** Produces a rate-limit handler that responds with the given translation key. */
@@ -25,7 +27,7 @@ const DEFAULT_OPTIONS = {
 	legacyHeaders: false, // Disable the outdated `X-RateLimit-*` headers
 	// Integration tests share one IP and blow past per-IP caps,
 	// so all limiters are inert under vitest.
-	skip: (): boolean => process.env['NODE_ENV'] === 'test',
+	skip: (): boolean => env.NODE_ENV === 'test',
 	handler: makeHandler('generic'),
 };
 

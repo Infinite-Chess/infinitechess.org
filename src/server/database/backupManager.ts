@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url';
 import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
+import env from '../config/env.js';
 import logEvents from '../utility/logEvents.js';
 import emailService from '../utility/emailService.js';
 
@@ -67,7 +68,7 @@ function perform(): Promise<void> {
  * @throws If the SQLite backup or directory creation fails.
  */
 async function doBackup(): Promise<void> {
-	if (process.env['NODE_ENV'] === 'test') return; // In-memory DB — nothing to back up.
+	if (env.NODE_ENV === 'test') return; // In-memory DB — nothing to back up.
 
 	fs.mkdirSync(BACKUPS_DIR, { recursive: true });
 

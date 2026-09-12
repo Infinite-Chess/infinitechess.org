@@ -14,6 +14,7 @@ import tabid from '../../shared/util/tabid.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import ip from '../utility/ip.js';
+import env from '../config/env.js';
 import reqLogger from '../utility/reqLogger.js';
 import logEvents from '../utility/logEvents.js';
 import socketsend from './socketSend.js';
@@ -91,12 +92,9 @@ function closeIfInvalidAndAddMetadata(
 ): CustomWebSocket | undefined {
 	// In DEV_BUILD, allow all origins.
 	const origin = req.headers.origin;
-	if (
-		origin === undefined ||
-		(process.env['NODE_ENV'] !== 'development' && origin !== process.env['APP_BASE_URL'])
-	) {
+	if (origin === undefined || (env.NODE_ENV !== 'development' && origin !== env.APP_BASE_URL)) {
 		logEvents.add(
-			`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`,
+			`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${env.APP_BASE_URL}"`,
 			'hackLog',
 		);
 		socket.close(1008, socketutil.CLOSURE_REASONS.ORIGIN_ERROR);

@@ -11,6 +11,7 @@ import type { Request, Response } from 'express';
 
 import jsutil from '../../shared/util/jsutil.js';
 
+import env from '../config/env.js';
 import logEvents from '../utility/logEvents.js';
 import backupManager from '../database/backupManager.js';
 
@@ -19,8 +20,9 @@ import backupManager from '../database/backupManager.js';
  * Runs all pre-deploy work (currently a DB backup) and only returns 200 once it's safe to reload.
  */
 async function handlePrepareRestart(req: Request, res: Response): Promise<void> {
-	const secret = process.env['RESTART_SECRET'];
-	if (!secret) {
+	// Always set in production (env.ts requires it), so this only fires outside production.
+	const secret = env.RESTART_SECRET;
+	if (secret === undefined) {
 		logEvents.addAndPrint(
 			'POST /api/prepare-restart called but RESTART_SECRET is not set.',
 			'errLog',

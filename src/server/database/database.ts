@@ -20,6 +20,7 @@ import { fileURLToPath } from 'url';
 import jsutil from '../../shared/util/jsutil.js';
 import jsonutil from '../../shared/util/jsonutil.js';
 
+import env from '../config/env.js';
 import logEvents from '../utility/logEvents.js';
 import emailService from '../utility/emailService.js';
 
@@ -46,7 +47,7 @@ const __dirname: string = path.dirname(__filename);
 
 // Create or connect to the SQLite database file
 const DB_LOCATION: string =
-	process.env['NODE_ENV'] === 'test'
+	env.NODE_ENV === 'test'
 		? ':memory:' // For integration tests, use in-memory database
 		: path.join(__dirname, '../../../', 'database.db'); // Normal database file
 const db = new Database(DB_LOCATION);

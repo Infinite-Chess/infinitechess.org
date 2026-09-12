@@ -8,13 +8,12 @@
 import type { Request, Response, NextFunction } from 'express';
 
 import ip from '../utility/ip.js';
+import env from '../config/env.js';
 import banned from '../database/banned.js';
 import logEvents from '../utility/logEvents.js';
 import requestMeter from '../utility/requestMeter.js';
 import respondError from './respondError.js';
 import renderContext from '../utility/renderContext.js';
-
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 // Constants -------------------------------------------------------------------
 
@@ -23,7 +22,7 @@ import 'dotenv/config'; // Imports all properties of process.env, if it exists
  * It will be hosted on a different port for local host,
  * and a few other minor adjustments.
  */
-const DEV_BUILD = process.env['NODE_ENV'] === 'development';
+const DEV_BUILD = env.NODE_ENV === 'development';
 
 /** Whether we are currently rate limiting connections.
  * Only disable temporarily for development purposes. */

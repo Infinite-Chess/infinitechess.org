@@ -9,6 +9,7 @@
  */
 
 import db from './database.js';
+import env from '../config/env.js';
 
 // Functions -------------------------------------------------------------------
 
@@ -316,7 +317,7 @@ function generate(): void {
 
 /** Wipes all data from all tables. ONLY call in a test environment! */
 function clear(): void {
-	if (process.env['NODE_ENV'] !== 'test') {
+	if (env.NODE_ENV !== 'test') {
 		return console.error('CANNOT CLEAR DATABASE TABLES OUTSIDE OF TEST ENVIRONMENT!');
 	}
 
