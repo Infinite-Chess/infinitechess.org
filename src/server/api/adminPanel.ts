@@ -11,6 +11,7 @@ import validators from '../../shared/util/validators.js';
 
 import roles from '../controllers/roles.js';
 import logEvents from '../utility/logEvents.js';
+import activeGames from '../game/gamemanager/activeGames.js';
 import contributors from './contributors.js';
 import memberManager from '../database/memberManager.js';
 import blacklistManager from '../database/blacklistManager.js';
@@ -339,6 +340,10 @@ function deleteChatCommand(
 		sendAndLogResponse(res, 422, 'Game id must be an integer.');
 		return;
 	}
+
+	// Erasing rows renumbers the positional index clients render by, breaking chat until a reload.
+	if (activeGames.getByID(game_id) !== undefined)
+		return sendAndLogResponse(res, 409, 'Game ' + game_id + " is still in memory. Try again once it is evicted."); // prettier-ignore
 
 	// The count is reported so a mistyped id reads as a miss, not a success.
 	const erased = chatEntriesManager.removeMessagesOfGame(game_id);
