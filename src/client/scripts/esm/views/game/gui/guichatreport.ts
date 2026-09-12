@@ -3,9 +3,6 @@
 /**
  * The chat's report flag on the game page: its two-step dropdown, the POST, and
  * disabling the flag once a report lands.
- *
- * Every element here may be absent — SSR omits the whole chat panel for anyone who
- * isn't a participant of a non-engine game, the only people who may report.
  */
 
 import uuid from '../../../../../../shared/util/uuid.js';
@@ -17,13 +14,16 @@ import { serverfetch } from '../../../util/serverfetch.js';
 
 // Constants -------------------------------------------------------------------
 
-/** The one failure told apart from the rest, so hitting the cap doesn't read as a dead button. */
+/** The one failure told apart from the rest, so hitting the cap doesn't disable the button. */
 const RATE_LIMITED_STATUS = 429;
 
 /** What every other failure reads as. Hardcoded — a network failure carries no server reply. */
 const FAILURE_TEXT = 'Failed to submit report.';
 
 // Elements --------------------------------------------------------------------
+
+// Every element here may be absent — SSR omits the whole chat panel for anyone who
+// isn't a participant of a non-engine game, the only people who may report.
 
 const element_Report = document.getElementById('btn-report') as HTMLButtonElement | null;
 const element_ReasonMenu = document.getElementById('report-reason-menu');
@@ -73,7 +73,7 @@ async function submit(): Promise<void> {
 	// this only spares an honest user the round trip.
 	if (!guichat.hasPlayerMessages()) return toast.show(FAILURE_TEXT, { error: true });
 
-	setFlagEnabled(false); // On commit, not on reply — nothing can be reported twice.
+	setFlagEnabled(false);
 
 	const response = await postReport(reason);
 	if (response === undefined) return failReport(FAILURE_TEXT); // The network never answered.
@@ -106,7 +106,7 @@ async function postReport(reason: string): Promise<Response | undefined> {
 	}
 }
 
-/** Says why the report didn't land, and hands the flag back so it can be tried again. */
+/** Says why the report didn't land, and enables the flag so it can be tried again. */
 function failReport(text: string): void {
 	toast.show(text, { error: true });
 	setFlagEnabled(true);
@@ -154,6 +154,11 @@ document.addEventListener('pointerdown', (e) => {
 	)
 		return;
 	closeMenus();
+});
+
+// So does Escape, as on the analysis page's context menu.
+document.addEventListener('keydown', (e) => {
+	if (e.key === 'Escape') closeMenus();
 });
 
 // Exports ---------------------------------------------------------------------

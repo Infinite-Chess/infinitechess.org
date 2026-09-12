@@ -86,6 +86,10 @@ interface TranscriptLine {
 interface ReportView {
 	/** The reason's label. */
 	reason: string;
+	/** Who sent the report, as {@link describePlayer} renders them. */
+	reporter: string;
+	/** Who they reported, rendered alike. */
+	reported: string;
 	sections: ReportSection[];
 	/** The chat, timestamped to the second, as the reporter saw it. */
 	transcript: TranscriptLine[];
@@ -159,7 +163,6 @@ function buildView(report: ChatReport): ReportView {
 	const reported = describePlayer(report, reportedRole, userIds, sharedT);
 
 	const sections: ReportSection[] = [
-		// KEEP the two people first: `buildLogLine` reads them off by position.
 		{
 			rows: [
 				{ label: 'Reported by', value: reporter },
@@ -175,6 +178,8 @@ function buildView(report: ChatReport): ReportView {
 
 	return {
 		reason: REPORT_REASONS.find((r) => r.code === report.reason)!.label,
+		reporter,
+		reported,
 		sections,
 		transcript: buildTranscript(report, sharedT),
 	};
@@ -195,7 +200,7 @@ function resolveUserIds(report: ChatReport): PlayerGroup<number> {
 	return ids;
 }
 
-/** One person, as `Naviary (12) · White`, or `(Guest) · Black` for a guest. */
+/** One person, as `Naviary (1237859) · White`, or `(Guest) · Black` for a guest. */
 function describePlayer(
 	report: ChatReport,
 	color: Player,
@@ -249,11 +254,12 @@ function isGamePrivate(report: ChatReport): boolean {
  * Undefined once their account is gone, leaving no members row to read.
  */
 function buildReportedPlayerRows(user_id: number): ReportRow[] | undefined {
-	const member = memberManager.getDataByCriteria(['joined', 'last_seen'], 'user_id', user_id);
+	const member = memberManager.getDataByCriteria(['email', 'joined', 'last_seen'], 'user_id', user_id); // prettier-ignore
 	if (member === undefined) return undefined;
 	const stats = playerStatsManager.getData(user_id, ['game_count', 'game_count_aborted'])!;
 
 	return [
+		{ label: 'Email', value: member.email },
 		{ label: 'Joined', value: formatMoment(timeutil.sqliteToTimestamp(member.joined), 'day') },
 		{ label: 'Games', value: String(stats.game_count - stats.game_count_aborted) }, // Exclude aborted games
 		{ label: 'Last seen', value: formatMoment(timeutil.sqliteToTimestamp(member.last_seen)) },
@@ -297,8 +303,7 @@ function formatMoment(timestamp: number, precision: MomentPrecision = 'minute'):
  * `chatReportLog` never rotates, so a multi-line entry would blur where each report ends.
  */
 function buildLogLine(game_id: number, view: ReportView): string {
-	const [reportedBy, reported] = view.sections[0]!.rows;
-	return `Game ${game_id} | By ${reportedBy!.value} | Against ${reported!.value} | ${view.reason}`;
+	return `Game ${game_id} | By ${view.reporter} | Against ${view.reported} | ${view.reason}`;
 }
 
 // The Title -------------------------------------------------------------------
@@ -356,7 +361,7 @@ function buildHtmlTranscriptLine(line: TranscriptLine): string {
 	return `<span style="${TRANSCRIPT_LINE_STYLES[line.kind]}">${escapeHtml(line.text)}</span>`;
 }
 
-/** Renders text inert as HTML. The transcript is user input and is never trusted. */
+/** Renders text inert as HTML. Chat messages are user input and are never trusted. */
 function escapeHtml(text: string): string {
 	return text
 		.replace(/&/g, '&amp;')

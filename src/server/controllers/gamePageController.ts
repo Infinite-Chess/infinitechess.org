@@ -40,7 +40,6 @@ import gameManager from '../game/gamemanager/gameManager.js';
 import gamesManager from '../database/gamesManager.js';
 import deadGameState from '../game/gamemanager/deadGameState.js';
 import pieceSvgCache from '../config/pieceSvgCache.js';
-import memberInfoUtil from '../auth/memberInfoUtil.js';
 import chatEntryMapper from '../game/gamemanager/chatEntryMapper.js';
 import gameStateBuilder from '../game/gamemanager/gameStateBuilder.js';
 import chatEntriesManager from '../database/chatEntriesManager.js';
@@ -140,19 +139,7 @@ function getPageState(req: Request): GamePageState | undefined {
 	const { state, game, ratingChanges, moveCount } = resolved; // game is defined if live
 	let { engineGame } = resolved; // Gains the client's engine asset URLs below, if live
 
-	// Resolve the viewer's role in the game; undefined => spectator.
-	let role: Player | undefined;
-	if (game) {
-		for (const [strColor, { identifier }] of Object.entries(game.match.playerData)) {
-			if (memberInfoUtil.eqPartial(identifier, memberInfo)) {
-				role = Number(strColor) as Player;
-				break;
-			}
-		}
-	} else if (memberInfo.signedIn) {
-		// Dead games match members only; dead guests aren't identifiable.
-		role = deadGameState.resolveParticipantColor(id, memberInfo.user_id);
-	}
+	const role = gameManager.resolveParticipantRole(id, resolved, memberInfo); // undefined => spectator
 
 	// Only a live engine game still needs the assets to run the engine client-side.
 	if (engineGame && game) {

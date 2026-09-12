@@ -8,11 +8,11 @@
  * concluded to evicted, and `gameRestart.ts` carries them across a server restart.
  */
 
-import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { GameStateMessage } from '../../../shared/transport/clientbound.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { GameSetup, ServerGame } from './serverGameTypes.js';
+import type { AuthMemberInfo, MemberInfo } from '../../types.js';
 import type { EngineGamePageInfo, StaticGameState } from '../../../shared/transport/domain.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
@@ -414,6 +414,28 @@ function produceStaticGameState(id: number): ResolvedGameState | undefined {
 	return deadGameState.produceStaticState(id); // undefined if the game doesn't exist
 }
 
+/**
+ * The color a viewer played in a game, or `undefined` if they weren't a participant.
+ * A live game matches guests and members alike; an evicted one members only,
+ * dead guests having no stored identifier.
+ * @throws If a database error occurs.
+ */
+function resolveParticipantRole(
+	id: number,
+	resolved: ResolvedGameState,
+	memberInfo: MemberInfo,
+): Player | undefined {
+	const { game } = resolved;
+	if (game) {
+		for (const [strColor, { identifier }] of Object.entries(game.match.playerData)) {
+			if (memberInfoUtil.eqPartial(identifier, memberInfo)) return Number(strColor) as Player;
+		}
+		return undefined;
+	}
+	if (!memberInfo.signedIn) return undefined;
+	return deadGameState.resolveParticipantColor(id, memberInfo.user_id);
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -428,4 +450,5 @@ export default {
 	pushClock,
 	// SSR Page State
 	produceStaticGameState,
+	resolveParticipantRole,
 };

@@ -276,8 +276,7 @@
 				<button class="btn-bare icon-btn" id="btn-report" title="Report the chat">
 					<svg><use href="#svg-flag"/></svg>
 				</button>
-				{# The flag's two menus, both starting hidden. Driven by guichatreport.ts,
-				   which reads `data-reason` off the clicked row. #}
+				{# The flag's two menus. Driven by guichatreport.ts #}
 				<div class="report-menu hidden" id="report-reason-menu">
 					<div class="report-menu-title">Report chat</div>
 					{% for reason in chat.reportReasons %}
@@ -285,7 +284,6 @@
 					{% endfor %}
 				</div>
 				<div class="report-menu hidden" id="report-confirm-menu">
-					{# The client writes the chosen label into the span, verbatim. #}
 					<div class="report-menu-title">Report chat for "<span id="report-chosen-reason"></span>"?</div>
 					<div class="report-menu-actions">
 						<button type="button" id="btn-report-cancel">Cancel</button>

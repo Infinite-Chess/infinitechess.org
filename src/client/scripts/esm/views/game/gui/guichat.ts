@@ -2,10 +2,6 @@
 
 /**
  * Manages the `.chat` panel on the game page: the collapse toggle, the log, and the input.
- *
- * Every element here may be absent. SSR omits the whole panel for anyone who isn't a
- * participant of a non-engine game, and omits the input once the game can no longer
- * be chatted in.
  */
 
 import type { ChatEntry, ChatLogEntry } from '../../../../../../shared/transport/clientbound.js';
@@ -28,6 +24,10 @@ const ERROR_TEXTS: Record<ChatRejection | 'disconnected', string> = {
 };
 
 // Elements --------------------------------------------------------------------
+
+// Every element here may be absent. SSR omits the whole panel for anyone who isn't a
+// participant of a non-engine game, and omits the input once the game can no longer
+// be chatted in.
 
 const element_Chat = document.querySelector('.chat');
 const element_ChatToggle = document.getElementById('btn-toggle-chat');
