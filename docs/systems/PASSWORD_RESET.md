@@ -92,7 +92,7 @@ The GET is read-only and consumes nothing, so an email scanner pre-fetching it d
    `UPDATE members ...`, and terminates all of the user's active sessions. If the token was
    consumed by a concurrent request between pre-check and transaction, the delete returns
    no row and the request returns `400 { tokenInvalid: true }`.
-6. Mint a fresh session for **this** browser (`createNewSession`) — it just proved control of
+6. Mint a fresh session for **this** browser (`sessionManager.create`) — it just proved control of
    the account — and fire-and-forget `sendPasswordChangedEmail` (an out-of-band "your password
    changed" security receipt).
 7. `res.sendStatus(200)`. The session cookie is now set, so the client
@@ -117,7 +117,7 @@ A daily sweep ([cleanupTasks.ts](/src/server/database/cleanupTasks.ts) →
 
 ## Rate limits
 
-`POST /api/forgot-password` → `forgotPasswordLimiter`
+`POST /api/forgot-password` → `rateLimiters.forgotPassword`
 ([rateLimiters.ts](/src/server/middleware/rateLimiters.ts)): **8 / hour**. `POST
 /api/reset-password` has **no** limiter (the 256-bit token is the gate).
 
@@ -135,7 +135,7 @@ With no email credentials in `.env` (most devs), the server logs the password re
 | Page routes (`/forgot-password`, `/reset-password/:token`) | [root.ts](/src/server/routes/root.ts)                                                                                                    |
 | Reset + changed emails                                     | [emailService.ts](/src/server/utility/emailService.ts)                                                                                   |
 | Password format rules / salt rounds                        | [accountValidation.ts](/src/server/controllers/accountValidation.ts)                                                                     |
-| Session issuance / session teardown                        | [sessionManager.ts](/src/server/controllers/sessionManager.ts) / [refreshTokenManager.ts](/src/server/database/refreshTokenManager.ts)   |
+| Session issuance / session teardown                        | [sessionManager.ts](/src/server/auth/sessionManager.ts) / [refreshTokenManager.ts](/src/server/database/refreshTokenManager.ts)          |
 | Email blacklist                                            | [blacklistManager.ts](/src/server/database/blacklistManager.ts)                                                                          |
 | Table schema                                               | [databaseTables.ts](/src/server/database/databaseTables.ts)                                                                              |
 | Expiry sweep                                               | [cleanupTasks.ts](/src/server/database/cleanupTasks.ts)                                                                                  |
