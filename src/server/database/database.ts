@@ -7,6 +7,10 @@
  *
  * Also owns the column cache — every table's real columns, read out of SQLite once the
  * schema is final.
+ *
+ * Only `database/` may run a query through this: every table's reads and writes belong in
+ * that table's manager. Modules above may import it for `transaction` alone, for a
+ * cross-table write that has no single manager to live in — never for a query.
  */
 
 import path from 'path';
