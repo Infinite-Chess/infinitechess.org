@@ -3,7 +3,7 @@
 /**
  * The entry point: wires up global error handlers, initializes the database and dev
  * environment, starts the HTTP/HTTPS servers and websocket server, and handles
- * graceful shutdown on SIGINT/SIGTERM/SIGUSR2.
+ * graceful shutdown on SIGINT/SIGTERM/SIGUSR2/SIGHUP.
  */
 
 import https from 'https';
@@ -45,6 +45,33 @@ process.on('uncaughtException', (error: unknown) => {
 		.finally(() => process.exit(1));
 });
 
+// Closing ---------------------------------------------------------------------
+
+// Registered before startup, since the database is already open by now. Without these,
+// a stop mid-startup takes the signal's default action and skips closing the database.
+
+let cleanupDone = false;
+
+process.on('SIGUSR2', () => handleCleanup('SIGUSR2')); // A file was saved (nodemon auto restarts)
+process.on('SIGINT', () => handleCleanup('SIGINT')); // Ctrl>C was pressed (force terminates nodemon)
+process.on('SIGTERM', () => handleCleanup('SIGTERM')); // PM2 graceful shutdown
+process.on('SIGHUP', () => handleCleanup('SIGHUP')); // The terminal was closed
+
+/** Stops timers, persists/closes games and the database, then exits. Idempotent. */
+function handleCleanup(signal: string): void {
+	if (cleanupDone) return; // Sometimes this is called twice
+	cleanupDone = true;
+	console.log('Closing...');
+
+	startupLogger.stopped(signal);
+
+	gameRestart.prepForShutdown();
+
+	db.close(); // Close the database when the server is shutting down.
+
+	process.exit(0);
+}
+
 // Startup ---------------------------------------------------------------------
 
 databaseInit.init();
@@ -79,26 +106,3 @@ httpsServer.listen(HTTPSPORT, () => {
 
 // WebSocket server
 socketServer.start(httpsServer);
-
-// Closing ---------------------------------------------------------------------
-
-let cleanupDone = false;
-
-process.on('SIGUSR2', () => handleCleanup('SIGUSR2')); // A file was saved (nodemon auto restarts)
-process.on('SIGINT', () => handleCleanup('SIGINT')); // Ctrl>C was pressed (force terminates nodemon)
-process.on('SIGTERM', () => handleCleanup('SIGTERM')); // PM2 graceful shutdown
-
-/** Stops timers, persists/closes games and the database, then exits. Idempotent. */
-function handleCleanup(signal: string): void {
-	if (cleanupDone) return; // Sometimes this is called twice
-	cleanupDone = true;
-	console.log('Closing...');
-
-	startupLogger.stopped(signal);
-
-	gameRestart.prepForShutdown();
-
-	db.close(); // Close the database when the server is shutting down.
-
-	process.exit(0);
-}
