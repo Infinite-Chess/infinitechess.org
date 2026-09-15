@@ -197,6 +197,4 @@ jobs:
           fi
           echo "Server is healthy."
         env:
-          NODE_ENV: development
           HTTPPORT_LOCAL: 3000
-          REFRESH_TOKEN_SECRET: ci-smoke-test-placeholder

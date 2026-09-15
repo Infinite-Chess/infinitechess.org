@@ -10,13 +10,9 @@
 
 import { buildClient } from './client';
 import { buildServer } from './server';
-import { createEnvFile } from './env-file';
 import { downloadEngineWasm, copyEngineToDist } from './engine-wasm';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
-
-// Ensure .env exists. The server validates its contents at startup.
-createEnvFile();
 
 /** Whether additional minifying of bundled scripts and css files should be skipped. */
 const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');
