@@ -59,8 +59,8 @@ ${buildBody(ctx, verdict, true)}
 	) {
 		const messageSubject = `Rating Abuse Warning: user ${ctx.username}, user_id ${ctx.user_id}`;
 		void emailService.sendAlertToSelf('rating-abuse-alert', {
-			subject: messageSubject,
-			text: messageText,
+			title: messageSubject,
+			sections: [{ kind: 'code', lines: [{ text: messageText }] }],
 		});
 		// Update RatingAbuse table with last_alerted_at value
 		const last_alerted_at = timeutil.timestampToSqlite(Date.now());

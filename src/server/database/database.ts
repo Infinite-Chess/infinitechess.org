@@ -292,8 +292,11 @@ function alertStorageFailure(description: string, detail: string): void {
 	if (now - lastStorageAlertAt < STORAGE_ALERT_COOLDOWN_MS) return;
 	lastStorageAlertAt = now;
 	void emailService.sendAlertToSelf('database-alert', {
-		subject: `Database storage failure: ${description}`,
-		text: `${description}: ${detail}\n\nAny further storage failures within the hour are in errLog only.`,
+		title: `Database storage failure: ${description}`,
+		sections: [
+			{ heading: 'ERROR', kind: 'code', lines: [{ text: detail }] },
+			{ kind: 'rows', rows: [{ label: 'Cooldown', value: 'Further failures within the hour are in errLog only' }] }, // prettier-ignore
+		],
 	});
 }
 

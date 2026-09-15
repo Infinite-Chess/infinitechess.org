@@ -51,8 +51,10 @@ function checkDatabaseIntegrity(): void {
 		const message = `Database integrity check failed:\n${problems.join('\n')}`;
 		logEvents.addAndPrint(message, 'errLog');
 		void emailService.sendAlertToSelf('database-alert', {
-			subject: 'Database integrity check failed',
-			text: message,
+			title: 'Database integrity check failed',
+			sections: [
+				{ heading: 'PROBLEMS', kind: 'code', lines: problems.map((text) => ({ text })) },
+			],
 		});
 	} catch {
 		// Already logged to errLog, and emailed if a storage failure. Swallowed so the remaining sweeps still run.

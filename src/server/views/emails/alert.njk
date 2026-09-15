@@ -1,0 +1,32 @@
+{# An alert emailed to ourselves, rendered from an AlertView (see emailTemplates.ts). Dark, to be easy
+   on the eyes, and full-width: the centered card of user-facing emails is dressing an alert needs none of. #}
+{% set toneStyles = { "muted": "color:#9aa0a6;font-style:italic;", "blue": "color:#8ab4f8;", "red": "color:#f28b82;" } %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1b1b1b;">
+	<tr>
+		<td style="padding:20px 16px;font-family:Arial,Helvetica,sans-serif;color:#e3e3e3;">
+			<h1 style="margin:0 0 20px;font-size:24px;font-weight:bold;">{{ title }}</h1>
+			{%- for section in sections %}
+			<div{% if not loop.first %} style="margin-top:28px;"{% endif %}>
+			{%- if section.heading %}
+			<h2 style="margin:0 0 8px;color:#9aa0a6;font-size:12px;font-weight:bold;letter-spacing:0.08em;">{{ section.heading }}</h2>
+			{%- endif %}
+			{%- if section.kind == "rows" %}
+			<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+				{%- for row in section.rows %}
+				<tr>
+					<td style="padding:2px 18px 2px 0;color:#9aa0a6;font-size:14px;white-space:nowrap;vertical-align:top;">{{ row.label }}</td>
+					<td style="padding:2px 0;font-size:14px;">{{ row.value }}{% if row.link %} <a href="{{ row.link }}" style="color:#8ab4f8;">[open]</a>{% endif %}</td>
+				</tr>
+				{%- endfor %}
+			</table>
+			{%- else %}
+			{# Every dot is wrapped in a span, so Gmail can't autolink the file paths of a stack trace.
+			   Escaped first, so the spans are the only markup that goes through unescaped. #}
+			<pre style="margin:0;padding:14px 16px;background-color:#262626;border-radius:6px;font-family:Consolas,Menlo,monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;">{% for line in section.lines %}{% if not loop.first %}
+{% endif %}<span{% if line.tone %} style="{{ toneStyles[line.tone] }}"{% endif %}>{{ line.text | escape | replace(".", "<span>.</span>") | safe }}</span>{% endfor %}</pre>
+			{%- endif %}
+			</div>
+			{%- endfor %}
+		</td>
+	</tr>
+</table>

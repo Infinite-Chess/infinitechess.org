@@ -1,10 +1,12 @@
 // src/server/utility/emailTemplates.ts
 
 /**
- * Renders application emails into HTML and plain-text from already-resolved,
- * localized content. The presentation layer behind emailService; knows
- * the on-brand layout.
+ * Renders application emails into HTML and plain-text. The presentation layer behind
+ * emailService: user-facing emails from already-resolved, localized content on the
+ * on-brand layout, and alerts to ourselves from an {@link AlertView}.
  */
+
+import nunjucks from '../config/nunjucks.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -20,6 +22,32 @@ type ActionEmailContent = {
 	tagline: string;
 };
 
+/** One `label  value` line of an alert. */
+export interface AlertRow {
+	label: string;
+	value: string;
+	/** A URL the value links to, shown as `[open]` beside it. */
+	link?: string;
+}
+
+/** One line of an alert's monospace block. */
+export interface AlertLine {
+	text: string;
+	/** The color it's drawn in. Plain when absent. */
+	tone?: 'muted' | 'blue' | 'red';
+}
+
+/** One group of an alert: label/value rows, or a monospace block of lines. */
+export type AlertSection = {
+	heading?: string;
+} & ({ kind: 'rows'; rows: AlertRow[] } | { kind: 'code'; lines: AlertLine[] });
+
+/** An alert emailed to ourselves: its title, which is also its subject, and the sections under it. */
+export interface AlertView {
+	title: string;
+	sections: AlertSection[];
+}
+
 // Constants -------------------------------------------------------------------
 
 /** Header, button and link accent color: a dark neutral grey. */
@@ -28,6 +56,8 @@ const ACCENT_COLOR = '#383838';
 const PAGE_BG_COLOR = '#f1eeea';
 /** Sign-off appended to every email's plain-text alternative. */
 const SIGNATURE = '— InfiniteChess.org';
+/** Columns the label of each `label  value` line is padded to in an alert's plain text. */
+const ALERT_TEXT_LABEL_WIDTH = 14;
 
 // Shared Layout ---------------------------------------------------------------
 
@@ -140,6 +170,35 @@ function renderActionEmail(opts: ActionEmailContent): { html: string; text: stri
 	};
 }
 
+// Alerts ----------------------------------------------------------------------
+
+/** Renders an alert as HTML. */
+function renderAlertHtml(view: AlertView): string {
+	return nunjucks.render('emails/alert.njk', view);
+}
+
+/** Renders an alert as plain text. */
+function renderAlertText(view: AlertView): string {
+	const blocks = view.sections.map((section) => {
+		const body =
+			section.kind === 'rows'
+				? buildAlertTextRows(section.rows)
+				: section.lines.map((line) => line.text).join('\n');
+		return section.heading !== undefined ? `${section.heading}\n${body}` : body;
+	});
+	return [view.title, ...blocks].join('\n\n');
+}
+
+/** One group of `label  value` lines, the labels padded so the values form a column. */
+function buildAlertTextRows(rows: AlertRow[]): string {
+	return rows
+		.map((row) => {
+			const value = row.link ? `${row.value}  ${row.link}` : row.value;
+			return `${row.label.padEnd(ALERT_TEXT_LABEL_WIDTH)}${value}`;
+		})
+		.join('\n');
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -151,4 +210,7 @@ export default {
 	buildPlainText,
 	// Renderers (HTML + text)
 	renderActionEmail,
+	// Alerts
+	renderAlertHtml,
+	renderAlertText,
 };

@@ -24,19 +24,20 @@ export type AlertEmailType = 'rating-abuse-alert' | 'chat-report' | 'database-al
 type EmailType = 'registration' | 'password-reset' | 'password-changed' | AlertEmailType;
 
 /** A file to ride along with an email. */
-type Attachment = {
+export type Attachment = {
 	filename: string;
 	content: string;
 };
 
-/** An email's content: everything but who it's addressed to. */
-export type MailContent = {
-	subject: string;
-	attachments?: Attachment[];
-} & ({ html: string } | { text: string });
-
 /** Options for sending an email. */
-type SendMailOptions = { to: string } & MailContent;
+type SendMailOptions = {
+	to: string;
+	subject: string;
+	html: string;
+	/** The plain-text alternative, for clients that don't render HTML. */
+	text?: string;
+	attachments?: Attachment[];
+};
 
 // Module Setup ----------------------------------------------------------------
 

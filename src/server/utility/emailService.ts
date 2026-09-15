@@ -6,8 +6,8 @@
  *
  * Those addressed to a user — account verification, password reset, the password-changed
  * notice — are rendered here from templates in that user's language. Those addressed to
- * Naviary — rating-abuse alerts, chat reports and database alerts — arrive already
- * written, in English.
+ * Naviary — rating-abuse alerts, chat reports and database alerts — arrive as an alert
+ * view already written in English, and all share one look.
  *
  * Blacklist screening is deliberately NOT done here: the flows where it matters gate at
  * their own entrance (accountValidation, passwordResetController), because only the
@@ -16,7 +16,8 @@
  * screened.
  */
 
-import type { AlertEmailType, MailContent } from './mailer.js';
+import type { AlertView } from './emailTemplates.js';
+import type { AlertEmailType, Attachment } from './mailer.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 import interpolate from '../../shared/util/interpolate.js';
@@ -152,15 +153,24 @@ async function sendPasswordChangedEmail(recipientEmail: string, language: string
 	}
 }
 
-/** Sends an alert, already written, to our own infinite chess email address. */
-async function sendAlertToSelf(type: AlertEmailType, content: MailContent): Promise<void> {
+/** Renders an alert and sends it to our own infinite chess email address. */
+async function sendAlertToSelf(
+	type: AlertEmailType,
+	view: AlertView,
+	attachments?: Attachment[],
+): Promise<void> {
 	try {
-		const sent = await mailer.send(type, { to: env.EMAIL_FROM_ADDRESS ?? '', ...content });
+		const sent = await mailer.send(type, {
+			to: env.EMAIL_FROM_ADDRESS ?? '',
+			subject: view.title,
+			html: emailTemplates.renderAlertHtml(view),
+			attachments,
+		});
 		if (!sent) console.log(`Didn't send ${type} email.`);
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
 		logEvents.addAndPrint(
-			`Error during the sending of ${type} email with subject "${content.subject}": ${detail}`,
+			`Error during the sending of ${type} email with subject "${view.title}": ${detail}`,
 			'errLog',
 		);
 	}

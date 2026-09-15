@@ -12,6 +12,7 @@ import type { ResolvedGameState } from './gameManager.js';
 import type { ChatEntriesRecord } from '../../database/chatEntriesManager.js';
 import type { ScriptTranslations } from '../../../shared/types/script-translations.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { AlertLine, AlertRow, AlertSection, AlertView } from '../../utility/emailTemplates.js';
 
 import { format } from 'date-fns';
 
@@ -57,42 +58,14 @@ interface ChatReport {
 /** How far down a timestamp is carried in the report. */
 type MomentPrecision = 'minute' | 'day';
 
-/** One `label  value` line of the email. */
-interface ReportRow {
-	label: string;
-	value: string;
-	/** A URL the value links to, shown as `[open]` beside it. */
-	link?: string;
-}
-
-/** One headed group of `label  value` lines. */
-interface ReportSection {
-	/** Absent on the opening group alone, which is read first under the report's own heading. */
-	heading?: string;
-	rows: ReportRow[];
-}
-
-/** What one line of the chat is: an event notice, or a message by one side of the report. */
-type TranscriptLineKind = 'notice' | 'reporter' | 'reported';
-
-/** One line of the chat. */
-interface TranscriptLine {
-	text: string;
-	/** Decides the line's color in the HTML body. */
-	kind: TranscriptLineKind;
-}
-
-/** The whole report, so the HTML body and the `.txt` attachment can never disagree. */
-interface ReportView {
+/** The whole report: the alert it's emailed as, plus the parts its log line names. */
+interface ReportView extends AlertView {
 	/** The reason's label. */
 	reason: string;
 	/** Who sent the report, as {@link describePlayer} renders them. */
 	reporter: string;
 	/** Who they reported, rendered alike. */
 	reported: string;
-	sections: ReportSection[];
-	/** The chat, timestamped to the second, as the reporter saw it. */
-	transcript: TranscriptLine[];
 }
 
 // Constants -------------------------------------------------------------------
@@ -110,18 +83,8 @@ const REPORT_REASONS = [
 	{ code: 'other', label: 'Other' },
 ] as const;
 
-/** Columns the label column of each `label  value` line is padded to in the plain-text report. */
-const TEXT_LABEL_WIDTH = 14;
-
 /** Heads the transcript, because "You" throughout it means the reporter. */
 const TRANSCRIPT_HEADING = 'CHAT — as the reporter saw it';
-
-/** The inline style each {@link TranscriptLineKind} is drawn with in the HTML body. */
-const TRANSCRIPT_LINE_STYLES: Record<TranscriptLineKind, string> = {
-	notice: 'color:#777777;font-style:italic;',
-	reporter: 'color:#1f5fa8;',
-	reported: 'color:#b3261e;',
-};
 
 /** The `date-fns` pattern each {@link MomentPrecision} prints a timestamp with. */
 const MOMENT_FORMATS: Record<MomentPrecision, string> = {
@@ -138,12 +101,11 @@ function submit(report: ChatReport): void {
 	// Logged first: the append is local and instant, while the email can hang on SES.
 	void logEvents.add(buildLogLine(report.game_id, view), 'chatReportLog');
 
-	const attachment = { filename: `chat-report-${report.game_id}.txt`, content: buildText(view) };
-	void emailService.sendAlertToSelf('chat-report', {
-		subject: buildTitle(view),
-		html: buildHtml(view),
-		attachments: [attachment],
-	});
+	const attachment = {
+		filename: `chat-report-${report.game_id}.txt`,
+		content: emailTemplates.renderAlertText(view),
+	};
+	void emailService.sendAlertToSelf('chat-report', view, [attachment]);
 }
 
 // Composition -----------------------------------------------------------------
@@ -162,27 +124,24 @@ function buildView(report: ChatReport): ReportView {
 	const reporter = describePlayer(report, reporterRole, userIds, sharedT);
 	const reported = describePlayer(report, reportedRole, userIds, sharedT);
 
-	const sections: ReportSection[] = [
+	const sections: AlertSection[] = [
 		{
+			kind: 'rows',
 			rows: [
 				{ label: 'Reported by', value: reporter },
 				{ label: 'Reported', value: reported },
 				{ label: 'Sent', value: formatMoment(Date.now()) },
 			],
 		},
-		{ heading: 'GAME', rows: buildGameRows(report, sharedT) },
+		{ heading: 'GAME', kind: 'rows', rows: buildGameRows(report, sharedT) },
 	];
 	// A guest has no members row to read the block's fields from.
 	const reportedRows = reportedId !== undefined ? buildReportedPlayerRows(reportedId) : undefined;
-	if (reportedRows) sections.push({ heading: 'REPORTED PLAYER', rows: reportedRows });
+	if (reportedRows) sections.push({ heading: 'REPORTED PLAYER', kind: 'rows', rows: reportedRows }); // prettier-ignore
+	sections.push({ heading: TRANSCRIPT_HEADING, kind: 'code', lines: buildTranscript(report, sharedT) }); // prettier-ignore
 
-	return {
-		reason: REPORT_REASONS.find((r) => r.code === report.reason)!.label,
-		reporter,
-		reported,
-		sections,
-		transcript: buildTranscript(report, sharedT),
-	};
+	const reason = REPORT_REASONS.find((r) => r.code === report.reason)!.label;
+	return { title: `Chat Report: ${reason}`, reason, reporter, reported, sections };
 }
 
 /** Each color's `user_id`. A guest has none; their `browser_id` is never shown, no command acts on one. */
@@ -214,7 +173,7 @@ function describePlayer(
 }
 
 /** The game's own properties. Every one is knowable live AND dead, so nothing here branches on that. */
-function buildGameRows(report: ChatReport, sharedT: ScriptTranslations['shared']): ReportRow[] {
+function buildGameRows(report: ChatReport, sharedT: ScriptTranslations['shared']): AlertRow[] {
 	const { game_id, resolved } = report;
 	const { setup } = resolved.state;
 	const variant =
@@ -253,7 +212,7 @@ function isGamePrivate(report: ChatReport): boolean {
  * What is known about the reported member, to decide an action without opening another tab.
  * Undefined once their account is gone, leaving no members row to read.
  */
-function buildReportedPlayerRows(user_id: number): ReportRow[] | undefined {
+function buildReportedPlayerRows(user_id: number): AlertRow[] | undefined {
 	const member = memberManager.getDataByCriteria(['email', 'joined', 'last_seen'], 'user_id', user_id); // prettier-ignore
 	if (member === undefined) return undefined;
 	const stats = playerStatsManager.getData(user_id, ['game_count', 'game_count_aborted'])!;
@@ -270,21 +229,18 @@ function buildReportedPlayerRows(user_id: number): ReportRow[] | undefined {
  * The chat from the reporter's point of view, so "You" throughout means the reporter.
  * Notices are kept: abuse usually follows a declined draw or a disconnect.
  */
-function buildTranscript(
-	report: ChatReport,
-	sharedT: ScriptTranslations['shared'],
-): TranscriptLine[] {
+function buildTranscript(report: ChatReport, sharedT: ScriptTranslations['shared']): AlertLine[] {
 	const { reporterRole } = report;
 	const names = gameStateBuilder.resolvePlayerNames(report.resolved.state, reporterRole, sharedT);
-	return report.entries.map((record, i): TranscriptLine => {
+	return report.entries.map((record, i): AlertLine => {
 		const entry = chatEntryMapper.toEntry(record, i);
 		const parts = chatentry.toParts(entry, reporterRole, names);
 		const time = format(record.sent_at, 'HH:mm:ss');
 		// Marked in the text itself, so the notice stands out in the `.txt` too.
 		if (parts.cssClass === 'chat-notice')
-			return { text: `${time}  — ${parts.body} —`, kind: 'notice' };
-		const kind = entry.player === reporterRole ? 'reporter' : 'reported';
-		return { text: `${time}  ${parts.prefix}${parts.body}`, kind };
+			return { text: `${time}  — ${parts.body} —`, tone: 'muted' };
+		const tone = entry.player === reporterRole ? 'blue' : 'red';
+		return { text: `${time}  ${parts.prefix}${parts.body}`, tone };
 	});
 }
 
@@ -304,95 +260,6 @@ function formatMoment(timestamp: number, precision: MomentPrecision = 'minute'):
  */
 function buildLogLine(game_id: number, view: ReportView): string {
 	return `Game ${game_id} | By ${view.reporter} | Against ${view.reported} | ${view.reason}`;
-}
-
-// The Title -------------------------------------------------------------------
-
-/** The email's subject, and the heading of both its body and its attachment. */
-function buildTitle(view: ReportView): string {
-	return `Chat Report: ${view.reason}`;
-}
-
-// The HTML Body ---------------------------------------------------------------
-
-/**
- * The report as styled HTML. Deliberately not on `emailTemplates.buildEmailShell`, whose
- * card is fixed at 600px — too narrow for a 140-character transcript line.
- */
-function buildHtml(view: ReportView): string {
-	const blocks = view.sections.map(
-		(section) => `${buildHtmlHeading(section.heading)}${buildHtmlRows(section.rows)}`,
-	);
-	blocks.push(
-		buildHtmlHeading(TRANSCRIPT_HEADING),
-		`<pre style="margin:0;padding:14px 16px;background-color:#f4f2ef;border-radius:6px;font-family:Consolas,Menlo,monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;">${view.transcript.map((line) => buildHtmlTranscriptLine(line)).join('\n')}</pre>`,
-	);
-
-	return `
-		<div style="font-family:Arial,Helvetica,sans-serif;color:#1e1e1e;">
-			<h1 style="margin:0 0 20px;font-size:24px;font-weight:bold;">${escapeHtml(buildTitle(view))}</h1>
-			${blocks.join('\n')}
-		</div>
-	`;
-}
-
-/** A section heading, or nothing at all for the opening group, which has none. */
-function buildHtmlHeading(text: string | undefined): string {
-	if (text === undefined) return '';
-	return `<h2 style="margin:28px 0 8px;color:#777777;font-size:12px;font-weight:bold;letter-spacing:0.08em;">${escapeHtml(text)}</h2>`;
-}
-
-/** One group of `label  value` lines as a two-column table. */
-function buildHtmlRows(rows: ReportRow[]): string {
-	const cells = rows.map((row) => {
-		const link = row.link
-			? ` <a href="${escapeHtml(row.link)}" style="color:${emailTemplates.ACCENT_COLOR};">[open]</a>`
-			: '';
-		return `<tr>
-			<td style="padding:2px 18px 2px 0;color:#777777;font-size:14px;white-space:nowrap;vertical-align:top;">${escapeHtml(row.label)}</td>
-			<td style="padding:2px 0;font-size:14px;">${escapeHtml(row.value)}${link}</td>
-		</tr>`;
-	});
-	return `<table role="presentation" cellpadding="0" cellspacing="0" border="0">${cells.join('')}</table>`;
-}
-
-/** One line of the chat, colored by its kind. */
-function buildHtmlTranscriptLine(line: TranscriptLine): string {
-	return `<span style="${TRANSCRIPT_LINE_STYLES[line.kind]}">${escapeHtml(line.text)}</span>`;
-}
-
-/** Renders text inert as HTML. Chat messages are user input and are never trusted. */
-function escapeHtml(text: string): string {
-	return text
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;');
-}
-
-// The Text Attachment ---------------------------------------------------------
-
-/**
- * The whole report in plain text, to drop straight into an AI agent to judge. The full
- * report, not a bare chat dump — the agent needs the metadata as much as the messages.
- */
-function buildText(view: ReportView): string {
-	const blocks = view.sections.map((section) => {
-		const rows = buildTextRows(section.rows);
-		return section.heading !== undefined ? `${section.heading}\n${rows}` : rows;
-	});
-	const transcript = `${TRANSCRIPT_HEADING}\n${view.transcript.map((line) => line.text).join('\n')}`;
-	return [buildTitle(view), ...blocks, transcript].join('\n\n');
-}
-
-/** One group of `label  value` lines, the labels padded so the values form a column. */
-function buildTextRows(rows: ReportRow[]): string {
-	return rows
-		.map((row) => {
-			const value = row.link ? `${row.value}  ${row.link}` : row.value;
-			return `${row.label.padEnd(TEXT_LABEL_WIDTH)}${value}`;
-		})
-		.join('\n');
 }
 
 // Exports ---------------------------------------------------------------------
