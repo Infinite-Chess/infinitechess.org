@@ -25,7 +25,7 @@ scripts disagree, study more siblings before trusting either.
 
 - Line 1 is the file-path comment (hook-written). Lines 3–7+: a doc-comment describing
   what the script **is**, not where it's used.
-- Sections in order: imports → Types → Constants → State → functional groups → Exports.
+- Sections in order: imports → Types → Constants → Schemas → State → functional groups → Exports.
   Every section gets a `// Section name -------` divider — never `=====` bars, never
   `// --- Name ---`. Pad the dashes so the line is exactly 80 characters.
 - Constants UPPER_SNAKE_CASE; mutable state camelCase under `// State`.
