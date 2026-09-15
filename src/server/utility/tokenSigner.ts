@@ -15,7 +15,7 @@ import type { Role } from '../types.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
+import env from '../config/env.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -27,9 +27,6 @@ export interface TokenPayload {
 }
 
 // Constants -------------------------------------------------------------------
-
-if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN_SECRET');
-const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 
 /** The lifetime of a standard session refresh token, if never renewed. */
 const DEFAULT_SESSION_EXPIRY_MS = 1000 * 60 * 60 * 24 * 2; // 48 hours
@@ -57,7 +54,7 @@ function sign(
 ): string {
 	const payload = generatePayload(user_id, username, roles);
 	const refreshTokenExpirySecs = expiryMillis / 1000;
-	return jwt.sign(payload, REFRESH_TOKEN_SECRET, {
+	return jwt.sign(payload, env.REFRESH_TOKEN_SECRET, {
 		// Longer-lived than access tokens, and stored in an httpOnly cookie
 		expiresIn: refreshTokenExpirySecs,
 		// Makes every token unique, even when signed for the same user within
@@ -80,7 +77,7 @@ function generatePayload(user_id: number, username: string, roles: Role[] | null
 function verify(token: string): TokenPayload | null {
 	try {
 		// Can cast because we know we originally signed it as an object, not a string.
-		const jwtPayload = jwt.verify(token, REFRESH_TOKEN_SECRET) as jwt.JwtPayload;
+		const jwtPayload = jwt.verify(token, env.REFRESH_TOKEN_SECRET) as jwt.JwtPayload;
 		return {
 			user_id: jwtPayload['user_id'],
 			username: jwtPayload['username'],

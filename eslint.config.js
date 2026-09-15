@@ -97,5 +97,21 @@ export default [
 			],
 		},
 	},
+	{
+		// Server code reads env variables only through config/env.ts, which loads .env and validates it.
+		files: ['src/server/**/*.ts'],
+		ignores: ['src/server/config/env.ts'],
+		rules: {
+			'no-restricted-properties': [
+				'error',
+				{
+					object: 'process',
+					property: 'env',
+					message:
+						'Read env variables through config/env.ts, which loads and validates them.',
+				},
+			],
+		},
+	},
 	eslintConfigPrettier,
 ];

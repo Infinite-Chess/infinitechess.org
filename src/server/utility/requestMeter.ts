@@ -12,12 +12,13 @@
 
 import jsutil from '../../shared/util/jsutil.js';
 
+import env from '../config/env.js';
 import logEvents from './logEvents.js';
 
 // Constants -------------------------------------------------------------------
 
 /** The maximum number of requests/messages allowed per client, per minute. */
-const MAX_REQUESTS_PER_MINUTE = process.env['NODE_ENV'] === 'development' ? 400 : 200; // Default: 400 / 200
+const MAX_REQUESTS_PER_MINUTE = env.NODE_ENV === 'development' ? 400 : 200; // Default: 400 / 200
 
 /** How often expired entries are cleared out of {@link rateLimitHash}. */
 const RATE_UPDATE_INTERVAL_MS = 1000; // 1 second

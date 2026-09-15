@@ -11,9 +11,8 @@ why an asset 404s or a template can't resolve its hashed filename.
 
 [build/index.ts](/build/index.ts) orchestrates, in order:
 
-1. `setupEnv()` — ensures a valid `.env` exists.
-2. `downloadEngineWasm() + copyEngineToDist()` — **awaited** (client bundle has a `.wasm` dependency on it).
-3. `Promise.all([buildClient, buildServer])`.
+1. `downloadEngineWasm() + copyEngineToDist()` — **awaited** (client bundle has a `.wasm` dependency on it).
+2. `Promise.all([buildClient, buildServer])`.
 
 Two modes, chosen by the `--dev` flag on `build/index.ts`:
 
@@ -109,8 +108,6 @@ splits by how each asset is invalidated:
 
 - **`generate:types`** (runs before every build/dev): `tsx` scripts generate TypeScript types
   from the translation TOMLs. See [TRANSLATIONS.md](/docs/systems/TRANSLATIONS.md).
-- **[build/env.ts](/build/env.ts)**: auto-generates `.env` with random token secrets if
-  absent; validates `NODE_ENV ∈ {development, production, test}`.
 - **[build/engine-wasm.ts](/build/engine-wasm.ts)**: downloads the latest Apeiron WASM
   release from GitHub into `src/client/pkg/apeiron/pkg/` (version-stamped). Network-failure
   tolerant — falls back to the existing local copy.

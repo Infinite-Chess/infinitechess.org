@@ -6,7 +6,7 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
+import env from '../config/env.js';
 
 function secureRedirect(req: Request, res: Response, next: NextFunction): void {
 	// 1-year is minimum remember time with preload parameter. Preload means google will always pre-tell clickers-of-your-site to connect via https.
@@ -16,10 +16,7 @@ function secureRedirect(req: Request, res: Response, next: NextFunction): void {
 
 	// Force redirect to https...
 
-	const httpsPort =
-		process.env['NODE_ENV'] !== 'production'
-			? ':' + (process.env['HTTPSPORT_LOCAL'] || '3443')
-			: '';
+	const httpsPort = env.NODE_ENV !== 'production' ? `:${env.HTTPSPORT_LOCAL}` : '';
 	res.redirect(`https://${req.hostname}${httpsPort}${req.url}`);
 }
 

@@ -12,6 +12,7 @@ import type { IncomingMessage } from 'http';
 import jsutil from '../../shared/util/jsutil.js';
 
 import ip from '../utility/ip.js';
+import env from '../config/env.js';
 import logEvents from '../utility/logEvents.js';
 
 // Types -----------------------------------------------------------------------
@@ -41,22 +42,16 @@ const TEST_SECRET_KEY = '1x0000000000000000000000000000000AA'; // Always passes 
 // const TEST_SECRET_KEY = '2x0000000000000000000000000000000AA'; // Always fails validation
 // const TEST_SECRET_KEY = '3x0000000000000000000000000000000AA'; // Returns "token already spent" error
 
-// In production the real Turnstile keys are mandatory. Fail fast if missing.
-if (process.env['NODE_ENV'] === 'production') {
-	if (!process.env['TURNSTILE_SITE_KEY']) throw new Error('Missing TURNSTILE_SITE_KEY');
-	if (!process.env['TURNSTILE_SECRET_KEY']) throw new Error('Missing TURNSTILE_SECRET_KEY');
-}
-
 /**
- * The public Turnstile site key, rendered into the widget. Pulled from the env in
- * production (asserted present above); falls back to the always-pass test key otherwise.
+ * The public Turnstile site key, rendered into the widget. Always set in production
+ * (env.ts requires it); falls back to the always-pass test key otherwise.
  */
-const SITE_KEY: string = process.env['TURNSTILE_SITE_KEY'] || TEST_SITE_KEY;
+const SITE_KEY: string = env.TURNSTILE_SITE_KEY ?? TEST_SITE_KEY;
 /**
- * The server-only Turnstile secret key, used to verify tokens. Pulled from the env in
- * production (asserted present above); falls back to the always-pass test secret otherwise.
+ * The server-only Turnstile secret key, used to verify tokens. Always set in production
+ * (env.ts requires it); falls back to the always-pass test secret otherwise.
  */
-const SECRET_KEY: string = process.env['TURNSTILE_SECRET_KEY'] || TEST_SECRET_KEY;
+const SECRET_KEY: string = env.TURNSTILE_SECRET_KEY ?? TEST_SECRET_KEY;
 
 /** Cloudflare's token verification endpoint. */
 const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';

@@ -12,6 +12,8 @@ import path from 'path';
 
 import jsutil from '../../shared/util/jsutil.js';
 
+import env from '../config/env.js';
+
 const BANNED_PATH = path.resolve('database/banned.json');
 
 ensureBannedFileExists: {
@@ -40,7 +42,7 @@ let bannedJSON: {
 try {
 	bannedJSON = JSON.parse(fs.readFileSync(BANNED_PATH, 'utf-8'));
 } catch (error: unknown) {
-	if (process.env['VITEST']) {
+	if (env.NODE_ENV === 'test') {
 		console.warn('Mocking banned.json for test environment');
 		bannedJSON = {
 			IPs: {},

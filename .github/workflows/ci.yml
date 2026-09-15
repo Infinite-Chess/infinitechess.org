@@ -6,7 +6,6 @@ on:
     branches:
       - main
       - prod
-      - distance-display
     paths-ignore:
       - '*.md'
       - 'docs/**'
@@ -197,6 +196,4 @@ jobs:
           fi
           echo "Server is healthy."
         env:
-          NODE_ENV: development
           HTTPPORT_LOCAL: 3000
-          REFRESH_TOKEN_SECRET: ci-smoke-test-placeholder

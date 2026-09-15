@@ -1,12 +1,13 @@
 // src/tests/testsSetup.ts
 
+/**
+ * Runs inside every test process, before each test file: silences console output,
+ * and stubs the log functions so tests never write log files.
+ */
+
 import { vi, afterAll } from 'vitest';
 
 import logEvents from '../server/utility/logEvents.js';
-
-// Set up environment variables for testing.
-// Prevents `test` workflow job failing due to missing secrets.
-process.env['REFRESH_TOKEN_SECRET'] = 'test_refresh_secret';
 
 // Stop Console Bloat
 // Store the original functions so we can restore them after

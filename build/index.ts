@@ -8,15 +8,11 @@
  * 					Further, all css files are minified by lightningcss.
  */
 
-import { setupEnv } from './env';
 import { buildClient } from './client';
 import { buildServer } from './server';
 import { downloadEngineWasm, copyEngineToDist } from './engine-wasm';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
-
-// Ensure .env file exists and has valid contents
-setupEnv();
 
 /** Whether additional minifying of bundled scripts and css files should be skipped. */
 const USE_DEVELOPMENT_BUILD = process.argv.includes('--dev');

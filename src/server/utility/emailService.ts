@@ -6,7 +6,8 @@
  *
  * Those addressed to a user — account verification, password reset, the password-changed
  * notice — are rendered here from templates in that user's language. Those addressed to
- * Naviary — rating-abuse alerts and chat reports — arrive already written, in English.
+ * Naviary — rating-abuse alerts, chat reports and database alerts — arrive already
+ * written, in English.
  *
  * Blacklist screening is deliberately NOT done here: the flows where it matters gate at
  * their own entrance (accountValidation, passwordResetController), because only the
@@ -20,6 +21,7 @@ import type { AlertEmailType, MailContent } from './mailer.js';
 import jsutil from '../../shared/util/jsutil.js';
 import interpolate from '../../shared/util/interpolate.js';
 
+import env from '../config/env.js';
 import mailer from './mailer.js';
 import urlUtils from './urlUtils.js';
 import logEvents from './logEvents.js';
@@ -153,7 +155,7 @@ async function sendPasswordChangedEmail(recipientEmail: string, language: string
 /** Sends an alert, already written, to our own infinite chess email address. */
 async function sendAlertToSelf(type: AlertEmailType, content: MailContent): Promise<void> {
 	try {
-		const sent = await mailer.send(type, { to: mailer.EMAIL_FROM_ADDRESS ?? '', ...content });
+		const sent = await mailer.send(type, { to: env.EMAIL_FROM_ADDRESS ?? '', ...content });
 		if (!sent) console.log(`Didn't send ${type} email.`);
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);

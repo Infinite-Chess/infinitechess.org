@@ -12,6 +12,7 @@ import jsutil from '../shared/util/jsutil.js';
 import variantcache from '../shared/chess/variants/variantcache.js';
 
 import db from './database/database.js';
+import env from './config/env.js';
 import app from './app.js';
 import setupDev from './setupDev.js';
 import logEvents from './utility/logEvents.js';
@@ -21,8 +22,6 @@ import socketServer from './socket/socketServer.js';
 import databaseInit from './database/databaseInit.js';
 import gameLifecycle from './game/gamemanager/gameLifecycle.js';
 import startupLogger from './utility/startupLogger.js';
-
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 // Global Error Handlers -------------------------------------------------------
 
@@ -95,9 +94,9 @@ gameRestart.restoreLiveGames();
 gameLifecycle.startPeriodicAbandonmentSweep();
 
 // Start the server
-const DEV_BUILD = process.env['NODE_ENV'] === 'development';
-const HTTPPORT = DEV_BUILD ? process.env['HTTPPORT_LOCAL'] : process.env['HTTPPORT'];
-const HTTPSPORT = DEV_BUILD ? process.env['HTTPSPORT_LOCAL'] : process.env['HTTPSPORT'];
+const DEV_BUILD = env.NODE_ENV === 'development';
+const HTTPPORT = DEV_BUILD ? env.HTTPPORT_LOCAL : env.HTTPPORT;
+const HTTPSPORT = DEV_BUILD ? env.HTTPSPORT_LOCAL : env.HTTPSPORT;
 app.listen(HTTPPORT, () => console.log(`HTTP listening on port ${HTTPPORT}`));
 httpsServer.listen(HTTPSPORT, () => {
 	console.log(`HTTPS listening on port ${HTTPSPORT}`);

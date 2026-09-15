@@ -20,11 +20,24 @@ import { fileURLToPath } from 'url';
 import jsutil from '../../shared/util/jsutil.js';
 import jsonutil from '../../shared/util/jsonutil.js';
 
+import env from '../config/env.js';
 import logEvents from '../utility/logEvents.js';
+import emailService from '../utility/emailService.js';
 
 // Types -----------------------------------------------------------------------
 
 type SupportedColumnTypes = string | number | boolean | null;
+
+// Constants -------------------------------------------------------------------
+
+/**
+ * SQLite error code prefixes (covering their extended codes) meaning the database file or its
+ * disk failed, not one query. Every query touching the damage fails too, so they're urgent.
+ */
+const STORAGE_FAILURE_CODES = ['SQLITE_CORRUPT', 'SQLITE_NOTADB', 'SQLITE_FULL', 'SQLITE_IOERR', 'SQLITE_READONLY', 'SQLITE_CANTOPEN']; // prettier-ignore
+
+/** Minimum gap between storage-failure alerts, so a failure repeating on every query sends one email. */
+const STORAGE_ALERT_COOLDOWN_MS = 1000 * 60 * 60; // 1 hour
 
 // Connection ------------------------------------------------------------------
 
@@ -34,7 +47,7 @@ const __dirname: string = path.dirname(__filename);
 
 // Create or connect to the SQLite database file
 const DB_LOCATION: string =
-	process.env['NODE_ENV'] === 'test'
+	env.NODE_ENV === 'test'
 		? ':memory:' // For integration tests, use in-memory database
 		: path.join(__dirname, '../../../', 'database.db'); // Normal database file
 const db = new Database(DB_LOCATION);
@@ -55,6 +68,9 @@ const stmtCache: Record<string, Database.Statement> = {};
 
 /** Every table's column names, filled by {@link cacheAllColumns} once the schema is final. */
 const columnCache = new Map<string, readonly string[]>();
+
+/** When the last storage-failure alert was emailed. Kept in memory: the database is what failed. */
+let lastStorageAlertAt = 0;
 
 // Query Calls -----------------------------------------------------------------
 
@@ -242,12 +258,13 @@ function transaction<Args extends unknown[], Return>(
 	return db.transaction(callback);
 }
 
-// Error Handling & Maintenance ------------------------------------------------
+// Error Handling --------------------------------------------------------------
 
 /**
  * Wraps a db call in a try/catch: on error, logs the description + full stack to errLog, then rethrows.
+ * A storage failure also emails Naviary.
  * @param fn - The db call to execute.
- * @param description - Human-readable label for the operation. Goes into errLog if it fails. Exclude ending punctation.
+ * @param description - Human-readable label for the operation. Goes into errLog if it fails. Exclude ending punctuation.
  * @throws Re-throws the error after logging, if a database error occurs.
  */
 function call<T>(fn: () => T, description: string): T {
@@ -256,9 +273,31 @@ function call<T>(fn: () => T, description: string): T {
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
 		logEvents.addAndPrint(`${description}: ${detail}`, 'errLog');
+		if (isStorageFailure(error)) alertStorageFailure(description, detail);
 		throw error;
 	}
 }
+
+/** Whether an error means the database file or its disk failed, rather than the one query. */
+function isStorageFailure(error: unknown): boolean {
+	return (
+		error instanceof Database.SqliteError &&
+		STORAGE_FAILURE_CODES.some((code) => error.code.startsWith(code))
+	);
+}
+
+/** Emails Naviary about a storage failure, at most once per {@link STORAGE_ALERT_COOLDOWN_MS}. */
+function alertStorageFailure(description: string, detail: string): void {
+	const now = Date.now();
+	if (now - lastStorageAlertAt < STORAGE_ALERT_COOLDOWN_MS) return;
+	lastStorageAlertAt = now;
+	void emailService.sendAlertToSelf('database-alert', {
+		subject: `Database storage failure: ${description}`,
+		text: `${description}: ${detail}\n\nAny further storage failures within the hour are in errLog only.`,
+	});
+}
+
+// Maintenance -----------------------------------------------------------------
 
 /**
  * Creates a consistent point-in-time backup of the database to the given file path
@@ -285,7 +324,6 @@ export default {
 	run,
 	get,
 	all,
-	call,
 	// Schema Introspection
 	cacheAllColumns,
 	columnExists,
@@ -295,7 +333,9 @@ export default {
 	runRowUpdate,
 	// Transactions
 	transaction,
-	// Error Handling & Maintenance
+	// Error Handling
+	call,
+	// Maintenance
 	backup,
 	close,
 };

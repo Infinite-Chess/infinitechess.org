@@ -9,12 +9,13 @@ import nodemailer from 'nodemailer';
 import { fromEnv } from '@aws-sdk/credential-providers';
 import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
 
+import env from '../config/env.js';
 import logEvents from './logEvents.js';
 
 // Types -----------------------------------------------------------------------
 
 /** The category of an alert we send to our own address. */
-export type AlertEmailType = 'rating-abuse-alert' | 'chat-report';
+export type AlertEmailType = 'rating-abuse-alert' | 'chat-report' | 'database-alert';
 
 /**
  * The category of an outgoing email, recorded in the sent-email log.
@@ -39,17 +40,11 @@ type SendMailOptions = { to: string } & MailContent;
 
 // Module Setup ----------------------------------------------------------------
 
-const AWS_REGION = process.env['AWS_REGION'];
-/** Who our sent emails will appear as if they're from. */
-const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
-const AWS_ACCESS_KEY_ID = process.env['AWS_ACCESS_KEY_ID'];
-const AWS_SECRET_ACCESS_KEY = process.env['AWS_SECRET_ACCESS_KEY'];
-
 // Create SES client
 const sesClient =
-	AWS_REGION && EMAIL_FROM_ADDRESS && AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY
+	env.AWS_REGION && env.EMAIL_FROM_ADDRESS && env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY
 		? new SESv2Client({
-				region: AWS_REGION,
+				region: env.AWS_REGION,
 				credentials: fromEnv(),
 			})
 		: null;
@@ -78,7 +73,7 @@ async function send(type: EmailType, options: SendMailOptions): Promise<boolean>
 	}
 
 	const info = await transporter.sendMail({
-		from: `"Infinite Chess" <${EMAIL_FROM_ADDRESS}>`,
+		from: `"Infinite Chess" <${env.EMAIL_FROM_ADDRESS}>`,
 		...options,
 	});
 
@@ -90,4 +85,4 @@ async function send(type: EmailType, options: SendMailOptions): Promise<boolean>
 
 // Exports ---------------------------------------------------------------------
 
-export default { EMAIL_FROM_ADDRESS, send };
+export default { send };

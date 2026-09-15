@@ -83,6 +83,30 @@ interface RefreshAnalysisOptions {
 	restartSearch?: boolean;
 }
 
+// Constants -------------------------------------------------------------------
+
+/** The engine's maximum search depth — the ceiling that "go deeper" runs toward. */
+const MAX_DEPTH = 64;
+/** Lowest selectable target depth. */
+const MIN_DEPTH = 1;
+/** Hash size choices in MB (engine caps its TT at 64MB). */
+const HASH_OPTIONS: number[] = [16, 32, 64];
+const MAX_MULTI_PV = 5;
+/** UI update throttle. */
+const THROTTLE_MS = 60;
+/** Crashes on the same position before we give up on it (2 = retry once, then flag it un-analyzable). */
+const CRASHES_BEFORE_GIVING_UP = 2;
+
+const STORAGE_KEY = 'ceval';
+/** How long persisted settings live in local storage; refreshed on every save. */
+const STORAGE_EXPIRY_MS = timeutil.toMillis(1, 'years');
+const DEFAULT_SETTINGS: CevalSettings = {
+	multiPv: 1,
+	hashMb: 16,
+	depth: 20,
+	threads: enginewasm.maxThreads(),
+};
+
 // Schemas ---------------------------------------------------------------------
 
 /** Engine settings in localStorage. Ranges omitted on purpose — {@link loadSettings} clamps. */
@@ -98,41 +122,6 @@ const CevalSettingsSchema = z.strictObject({
 	threads: z.int(),
 });
 
-// Constants -------------------------------------------------------------------
-
-/** The engine's maximum search depth — the ceiling that "go deeper" runs toward. */
-const MAX_DEPTH = 64;
-/** Lowest selectable target depth. */
-const MIN_DEPTH = 1;
-/** Hash size choices in MB (engine caps its TT at 64MB). */
-const HASH_OPTIONS: number[] = [16, 32, 64];
-const MAX_MULTI_PV = 5;
-/** UI update throttle. */
-const THROTTLE_MS = 60;
-/** Crashes on the same position before we give up on it (2 = retry once, then flag it un-analyzable). */
-const CRASHES_BEFORE_GIVING_UP = 2;
-/** Whether the served engine build supports Lazy SMP (a single-threaded build exports no
- * `initThreadPool`). The worker reports it on load; assume true until then. */
-let engineSupportsThreads = true;
-
-/** Most threads the user can pick: the engine thread cap when threading is usable, else 1 (locked). */
-function maxThreads(): number {
-	if (!engineSupportsThreads) return 1;
-	return enginewasm.maxThreads();
-}
-
-const DEFAULT_THREADS = maxThreads();
-
-const STORAGE_KEY = 'ceval';
-/** How long persisted settings live in local storage; refreshed on every save. */
-const STORAGE_EXPIRY_MS = timeutil.toMillis(1, 'years');
-const DEFAULT_SETTINGS: CevalSettings = {
-	multiPv: 1,
-	hashMb: 16,
-	depth: 20,
-	threads: DEFAULT_THREADS,
-};
-
 // State -----------------------------------------------------------------------
 
 /**
@@ -146,6 +135,12 @@ let search: AnalysisWorker | undefined;
  * Cleared by the next spawn, so it never outlives a retry.
  */
 let engineUnloadable = false;
+
+/**
+ * Whether the served engine build supports Lazy SMP (a single-threaded build exports
+ * no `initThreadPool`). The worker reports it on load; assume true until then.
+ */
+let engineSupportsThreads = true;
 
 /** An idle helper worker that only answers legal-moves queries, so they never queue behind the search. */
 let legal: AnalysisWorker | undefined;
@@ -216,6 +211,12 @@ function loadSettings(): CevalSettings {
 	loaded.depth = math.clamp(loaded.depth, MIN_DEPTH, MAX_DEPTH);
 	loaded.threads = math.clamp(loaded.threads, 1, maxThreads());
 	return loaded;
+}
+
+/** Most threads the user can pick: the engine thread cap when threading is usable, else 1 (locked). */
+function maxThreads(): number {
+	if (!engineSupportsThreads) return 1;
+	return enginewasm.maxThreads();
 }
 
 function persistSettings(): void {

@@ -16,6 +16,14 @@ import storetypes from '../../../savedpositions/storetypes';
 import boardeditor from '../boardeditor';
 import validatorama from '../../../util/validatorama';
 
+// Constants -------------------------------------------------------------------
+
+/** Name of the IndexedDB key for the board editor autosave. */
+const EDITOR_AUTOSAVE_NAME = 'infinitechess-boardeditor-autosave';
+
+/** Number of milliseconds for period of position autosave */
+const AUTOSAVE_INTERVAL_MS = 10000;
+
 // Schemas ---------------------------------------------------------------------
 
 /**
@@ -39,15 +47,7 @@ const AutosaveStateSchema = z.strictObject({
 	...storetypes.positionDataFields,
 });
 
-// Constants -------------------------------------------------------------------
-
-/** Name of the IndexedDB key for the board editor autosave. */
-const EDITOR_AUTOSAVE_NAME = 'infinitechess-boardeditor-autosave';
-
-// Variables -------------------------------------------------------------------
-
-/** Number of milliseconds for period of position autosave */
-const AUTOSAVE_INTERVAL_MS = 10000;
+// State -----------------------------------------------------------------------
 
 /** Interval object for position autosave */
 let positionAutosaveTimer: number | undefined;
