@@ -22,8 +22,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Environment -----------------------------------------------------------------
 
-// Templates live in src/server/views/, copied to dist/ by cpx. Outside production they're re-read on
-// every render rather than watched: a watcher would keep alive any process that imports this.
+/** The environment every page and email renders through. */
 const nunjucksEnv = new nunjucks.Environment(
 	new nunjucks.FileSystemLoader(path.join(__dirname, '../views'), {
 		noCache: env.NODE_ENV !== 'production',

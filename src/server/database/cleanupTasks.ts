@@ -53,7 +53,7 @@ function checkDatabaseIntegrity(): void {
 		void emailService.sendAlertToSelf('database-alert', {
 			title: 'Database integrity check failed',
 			sections: [
-				{ heading: 'PROBLEMS', kind: 'code', lines: problems.map((text) => ({ text })) },
+				{ heading: 'PROBLEMS', kind: 'mono', lines: problems.map((text) => ({ text })) },
 			],
 		});
 	} catch {

@@ -294,7 +294,7 @@ function alertStorageFailure(description: string, detail: string): void {
 	void emailService.sendAlertToSelf('database-alert', {
 		title: `Database storage failure: ${description}`,
 		sections: [
-			{ heading: 'ERROR', kind: 'code', lines: [{ text: detail }] },
+			{ heading: 'ERROR', kind: 'mono', lines: [{ text: detail }] },
 			{ kind: 'rows', rows: [{ label: 'Cooldown', value: 'Further failures within the hour are in errLog only' }] }, // prettier-ignore
 		],
 	});

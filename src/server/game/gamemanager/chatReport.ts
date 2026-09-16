@@ -138,7 +138,7 @@ function buildView(report: ChatReport): ReportView {
 	// A guest has no members row to read the block's fields from.
 	const reportedRows = reportedId !== undefined ? buildReportedPlayerRows(reportedId) : undefined;
 	if (reportedRows) sections.push({ heading: 'REPORTED PLAYER', kind: 'rows', rows: reportedRows }); // prettier-ignore
-	sections.push({ heading: TRANSCRIPT_HEADING, kind: 'code', lines: buildTranscript(report, sharedT) }); // prettier-ignore
+	sections.push({ heading: TRANSCRIPT_HEADING, kind: 'mono', lines: buildTranscript(report, sharedT) }); // prettier-ignore
 
 	const reason = REPORT_REASONS.find((r) => r.code === report.reason)!.label;
 	return { title: `Chat Report: ${reason}`, reason, reporter, reported, sections };

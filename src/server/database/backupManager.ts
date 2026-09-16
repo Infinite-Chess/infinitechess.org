@@ -45,7 +45,7 @@ function startDaily(): void {
 			logEvents.addAndPrint(`Daily database backup failed: ${detail}`, 'errLog');
 			void emailService.sendAlertToSelf('database-alert', {
 				title: 'Daily database backup failed',
-				sections: [{ heading: 'ERROR', kind: 'code', lines: [{ text: detail }] }],
+				sections: [{ heading: 'ERROR', kind: 'mono', lines: [{ text: detail }] }],
 			});
 		}
 	}, BACKUP_INTERVAL_MS);

@@ -10,6 +10,8 @@ import nunjucks from '../config/nunjucks.js';
 
 // Types -----------------------------------------------------------------------
 
+// --- User Emails ---
+
 /** Content for an action email (verification, password reset) */
 type ActionEmailContent = {
 	preheader: string;
@@ -22,7 +24,21 @@ type ActionEmailContent = {
 	tagline: string;
 };
 
-/** One `label  value` line of an alert. */
+// --- Alert Emails ---
+
+/** An alert emailed to ourselves. */
+export interface AlertView {
+	/** Also the email's subject. */
+	title: string;
+	sections: AlertSection[];
+}
+
+/** One group of an alert: label/value rows, or a monospace block of lines. */
+export type AlertSection = {
+	heading?: string;
+} & ({ kind: 'rows'; rows: AlertRow[] } | { kind: 'mono'; lines: AlertLine[] });
+
+/** One `label  value` row of an alert. */
 export interface AlertRow {
 	label: string;
 	value: string;
@@ -37,17 +53,6 @@ export interface AlertLine {
 	tone?: 'muted' | 'blue' | 'red';
 }
 
-/** One group of an alert: label/value rows, or a monospace block of lines. */
-export type AlertSection = {
-	heading?: string;
-} & ({ kind: 'rows'; rows: AlertRow[] } | { kind: 'code'; lines: AlertLine[] });
-
-/** An alert emailed to ourselves: its title, which is also its subject, and the sections under it. */
-export interface AlertView {
-	title: string;
-	sections: AlertSection[];
-}
-
 // Constants -------------------------------------------------------------------
 
 /** Header, button and link accent color: a dark neutral grey. */
@@ -56,10 +61,8 @@ const ACCENT_COLOR = '#383838';
 const PAGE_BG_COLOR = '#f1eeea';
 /** Sign-off appended to every email's plain-text alternative. */
 const SIGNATURE = '— InfiniteChess.org';
-/** Columns the label of each `label  value` line is padded to in an alert's plain text. */
-const ALERT_TEXT_LABEL_WIDTH = 14;
 
-// Shared Layout ---------------------------------------------------------------
+// User Emails -----------------------------------------------------------------
 
 /**
  * Wraps body content in the shared, on-brand email layout: off-white page,
@@ -100,8 +103,6 @@ function buildEmailShell(preheader: string, tagline: string, bodyHtml: string): 
 		</table>
 	`;
 }
-
-// HTML Builders ---------------------------------------------------------------
 
 /**
  * Builds an action email — heading, intro line, prominent button, fallback link,
@@ -145,8 +146,6 @@ function buildReceiptEmailHtml(opts: {
 	return buildEmailShell(opts.preheader, opts.tagline, body);
 }
 
-// Plain-Text ------------------------------------------------------------------
-
 /**
  * Builds an email's plain-text alternative from its content blocks, joined by blank lines
  * with the signature appended. Inline tags are stripped so HTML emphasis doesn't leak in.
@@ -160,8 +159,6 @@ function stripInlineTags(html: string): string {
 	return html.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
 }
 
-// Renderers (HTML + text) -----------------------------------------------------
-
 /** Renders an action email (verification, password reset) in both HTML and plain-text. */
 function renderActionEmail(opts: ActionEmailContent): { html: string; text: string } {
 	return {
@@ -170,7 +167,7 @@ function renderActionEmail(opts: ActionEmailContent): { html: string; text: stri
 	};
 }
 
-// Alerts ----------------------------------------------------------------------
+// Alert Emails ----------------------------------------------------------------
 
 /** Renders an alert as HTML. */
 function renderAlertHtml(view: AlertView): string {
@@ -191,10 +188,11 @@ function renderAlertText(view: AlertView): string {
 
 /** One group of `label  value` lines, the labels padded so the values form a column. */
 function buildAlertTextRows(rows: AlertRow[]): string {
+	const labelWidth = Math.max(...rows.map((row) => row.label.length)) + 2;
 	return rows
 		.map((row) => {
 			const value = row.link ? `${row.value}  ${row.link}` : row.value;
-			return `${row.label.padEnd(ALERT_TEXT_LABEL_WIDTH)}${value}`;
+			return `${row.label.padEnd(labelWidth)}${value}`;
 		})
 		.join('\n');
 }
@@ -204,13 +202,11 @@ function buildAlertTextRows(rows: AlertRow[]): string {
 export default {
 	// Constants
 	ACCENT_COLOR,
-	// HTML Builders
+	// User Emails
 	buildReceiptEmailHtml,
-	// Plain-Text
 	buildPlainText,
-	// Renderers (HTML + text)
 	renderActionEmail,
-	// Alerts
+	// Alert Emails
 	renderAlertHtml,
 	renderAlertText,
 };
