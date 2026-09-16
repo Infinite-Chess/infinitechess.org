@@ -1,21 +1,24 @@
 {# An alert emailed to ourselves, rendered from an AlertView (see emailTemplates.ts). Dark, to be easy
    on the eyes, and full-width: the centered card of user-facing emails is dressing an alert needs none of. #}
-{% set toneStyles = { "muted": "color:#9aa0a6;font-style:italic;", "blue": "color:#8ab4f8;", "red": "color:#f28b82;" } %}
+{%- set textColor = "#e3e3e3" %}
+{%- set mutedColor = "#9aa0a6" %}
+{%- set blueColor = "#8ab4f8" %}
+{% set toneStyles = { "muted": "color:" + mutedColor + ";font-style:italic;", "blue": "color:" + blueColor + ";", "red": "color:#f28b82;" } %}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1b1b1b;">
 	<tr>
-		<td style="padding:20px 16px;font-family:Arial,Helvetica,sans-serif;color:#e3e3e3;">
+		<td style="padding:20px 16px;font-family:Arial,Helvetica,sans-serif;color:{{ textColor }};">
 			<h1 style="margin:0 0 20px;font-size:24px;font-weight:bold;">{{ title }}</h1>
 			{%- for section in sections %}
 			<div{% if not loop.first %} style="margin-top:28px;"{% endif %}>
 			{%- if section.heading %}
-			<h2 style="margin:0 0 8px;color:#9aa0a6;font-size:12px;font-weight:bold;letter-spacing:0.08em;">{{ section.heading }}</h2>
+			<h2 style="margin:0 0 8px;color:{{ mutedColor }};font-size:12px;font-weight:bold;letter-spacing:0.08em;">{{ section.heading }}</h2>
 			{%- endif %}
 			{%- if section.kind == "rows" %}
 			<table role="presentation" cellpadding="0" cellspacing="0" border="0">
 				{%- for row in section.rows %}
 				<tr>
-					<td style="padding:2px 18px 2px 0;color:#9aa0a6;font-size:14px;white-space:nowrap;vertical-align:top;">{{ row.label }}</td>
-					<td style="padding:2px 0;font-size:14px;">{{ row.value }}{% if row.link %} <a href="{{ row.link }}" style="color:#8ab4f8;">[open]</a>{% endif %}</td>
+					<td style="padding:2px 18px 2px 0;color:{{ mutedColor }};font-size:14px;white-space:nowrap;vertical-align:top;">{{ row.label }}</td>
+					<td style="padding:2px 0;color:{{ textColor }};font-size:14px;">{{ row.value }}{% if row.link %} <a href="{{ row.link }}" style="color:{{ blueColor }};">[open]</a>{% endif %}</td>
 				</tr>
 				{%- endfor %}
 			</table>
