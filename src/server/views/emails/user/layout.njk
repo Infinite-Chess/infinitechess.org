@@ -1,0 +1,32 @@
+{# The on-brand layout every user-facing email extends: off-white page, dark accent header with
+   branding, white body card under a heading, and footer. #}
+{% set accentColor = "#383838" %}
+{# Preheader: inbox preview text, hidden in the body. #}
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{{ preheader }}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1eeea;">
+	<tr>
+		<td align="center" style="padding:24px 12px;">
+			<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;font-family:Arial,Helvetica,sans-serif;">
+				{# Header #}
+				<tr>
+					<td align="center" style="background-color:{{ accentColor }};border-radius:12px 12px 0 0;padding:28px 24px;">
+						<div style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:0.5px;"><span style="font-size:26px;">&#937;</span> InfiniteChess.org</div>
+					</td>
+				</tr>
+				{# Body #}
+				<tr>
+					<td style="background-color:#ffffff;padding:40px 40px 32px;">
+						<h1 style="margin:0 0 16px;color:#1e1e1e;font-size:24px;font-weight:bold;">{{ heading }}</h1>
+						{% block content %}{% endblock %}
+					</td>
+				</tr>
+				{# Footer #}
+				<tr>
+					<td align="center" style="padding:24px 24px 8px;">
+						<p style="margin:0;color:#999999;font-size:12px;line-height:1.6;">InfiniteChess.org &mdash; {{ tagline }}</p>
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>

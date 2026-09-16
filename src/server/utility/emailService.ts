@@ -5,7 +5,7 @@
  * `mailer.ts` for delivery.
  *
  * Those addressed to a user — account verification, password reset, the password-changed
- * notice — are rendered here from templates in that user's language. Those addressed to
+ * notice — are written here in that user's language. Those addressed to
  * Naviary — rating-abuse alerts, chat reports and database alerts — arrive as an alert
  * view already written in English, and all share one look.
  *
@@ -125,24 +125,20 @@ async function sendPasswordChangedEmail(recipientEmail: string, language: string
 	try {
 		const email = componentTranslationLoader.getScript('email', language);
 		const t = email.reset_receipt;
-		const resetLink = `<a href="${forgotPassUrl}" target="_blank" style="color:${emailTemplates.ACCENT_COLOR};text-decoration:underline;">${t.reset_link_text}</a>`;
+		const { html, text } = emailTemplates.renderPasswordChangedEmail({
+			preheader: t.preheader,
+			heading: t.heading,
+			body: t.body,
+			warning: t.warning,
+			resetLinkText: t.reset_link_text,
+			resetUrl: forgotPassUrl,
+			tagline: email.common.tagline,
+		});
 		await mailer.send('password-changed', {
 			to: recipientEmail,
 			subject: t.subject,
-			html: emailTemplates.buildReceiptEmailHtml({
-				preheader: t.preheader,
-				heading: t.heading,
-				body: t.body,
-				warning: interpolate.interpolate(t.warning, { resetLink }),
-				tagline: email.common.tagline,
-			}),
-			// Plain text: the warning's link becomes its bare label, with the URL on its own line.
-			text: emailTemplates.buildPlainText([
-				t.heading,
-				t.body,
-				interpolate.interpolate(t.warning, { resetLink: t.reset_link_text }),
-				forgotPassUrl,
-			]),
+			html,
+			text,
 		});
 	} catch (error: unknown) {
 		const detail = jsutil.getErrorStack(error);
