@@ -6,6 +6,8 @@
  * on-brand layout, and alerts to ourselves from an {@link AlertView}.
  */
 
+import { format, formatDistanceToNowStrict } from 'date-fns';
+
 import interpolate from '../../shared/util/interpolate.js';
 
 import nunjucks from '../config/nunjucks.js';
@@ -57,14 +59,25 @@ export interface AlertView {
 	sections: AlertSection[];
 }
 
-/** One group of an alert: label/value rows, or a monospace block of lines. */
+/**
+ * One group of an alert: label/value rows, a table with column headers,
+ * or a monospace block of lines.
+ */
 export type AlertSection = {
 	heading?: string;
-} & ({ kind: 'rows'; rows: AlertRow[] } | { kind: 'mono'; lines: AlertLine[] });
+} & (
+	| { kind: 'rows'; rows: AlertRow[] }
+	| { kind: 'table'; columns: string[]; rows: AlertCell[][] }
+	| { kind: 'mono'; lines: AlertLine[] }
+);
 
 /** One `label  value` row of an alert. */
-export interface AlertRow {
+export interface AlertRow extends AlertCell {
 	label: string;
+}
+
+/** One value of an alert, optionally linked. */
+export interface AlertCell {
 	value: string;
 	/** A URL the value links to, shown as `[open]` beside it. */
 	link?: string;
@@ -129,24 +142,58 @@ function renderAlertHtml(view: AlertView): string {
 /** Renders an alert as plain text. */
 function renderAlertText(view: AlertView): string {
 	const blocks = view.sections.map((section) => {
-		const body =
-			section.kind === 'rows'
-				? buildAlertTextRows(section.rows)
-				: section.lines.map((line) => line.text).join('\n');
+		const body = buildAlertTextBody(section);
 		return section.heading !== undefined ? `${section.heading}\n${body}` : body;
 	});
 	return [view.title, ...blocks].join('\n\n');
 }
 
-/** One group of `label  value` lines, the labels padded so the values form a column. */
-function buildAlertTextRows(rows: AlertRow[]): string {
-	const labelWidth = Math.max(...rows.map((row) => row.label.length)) + 2;
-	return rows
-		.map((row) => {
-			const value = row.link ? `${row.value}  ${row.link}` : row.value;
-			return `${row.label.padEnd(labelWidth)}${value}`;
-		})
+/** One section's body as plain text, without its heading. */
+function buildAlertTextBody(section: AlertSection): string {
+	switch (section.kind) {
+		case 'rows':
+			return alignTextColumns(section.rows.map((row) => [row.label, cellToText(row)]));
+		case 'table':
+			return alignTextColumns([
+				section.columns,
+				...section.rows.map((cells) => cells.map((cell) => cellToText(cell))),
+			]);
+		case 'mono':
+			return section.lines.map((line) => line.text).join('\n');
+	}
+}
+
+/** A cell as plain text, its link spelled out beside the value. */
+function cellToText(cell: AlertCell): string {
+	return cell.link ? `${cell.value}  ${cell.link}` : cell.value;
+}
+
+/** Joins lines of cells, padding every column but the last so the next one lines up. */
+function alignTextColumns(lines: string[][]): string {
+	const widths = lines[0]!.map((_, i) => Math.max(...lines.map((cells) => cells[i]!.length)));
+	return lines
+		.map((cells) =>
+			cells
+				.map((cell, i) => (i < cells.length - 1 ? cell.padEnd(widths[i]! + 2) : cell))
+				.join(''),
+		)
 		.join('\n');
+}
+
+/** A raw timestamp as a date and time a human reads — no database value ever reaches an alert. */
+function formatMoment(timestamp: number): string {
+	return format(timestamp, 'MMM d, yyyy, h:mm a');
+}
+
+/** A past timestamp as a date and time, followed by how long ago it was: `Sep 16, 2026, 3:50 PM (3 minutes ago)`. */
+function formatMomentWithAge(timestamp: number): string {
+	return `${formatMoment(timestamp)} (${formatDistanceToNowStrict(timestamp)} ago)`;
+}
+
+/** A past timestamp as its day, followed by how many whole days ago it was: `Sep 14, 2026 (2 days ago)`. */
+function formatDayWithAge(timestamp: number): string {
+	const age = formatDistanceToNowStrict(timestamp, { unit: 'day', roundingMethod: 'floor' });
+	return `${format(timestamp, 'MMM d, yyyy')} (${age} ago)`;
 }
 
 // Exports ---------------------------------------------------------------------
@@ -158,4 +205,7 @@ export default {
 	// Alert Emails
 	renderAlertHtml,
 	renderAlertText,
+	formatMoment,
+	formatMomentWithAge,
+	formatDayWithAge,
 };

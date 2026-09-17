@@ -1,117 +1,185 @@
 // src/server/game/ratingabuse/abuseReport.ts
 
 /**
- * Renders the outcome of a rating-abuse measurement: writes it to `ratingAbuseLog`,
- * and emails Naviary when a flagged player clears the notification buffer.
+ * Renders a flagged rating-abuse measurement: the log line and email it becomes.
  *
  * The only place a measurement becomes words — edit the wording here.
- * Every report shares one body, so the log and the email can never disagree.
  */
 
-import type { AbuseReportContext, SuspicionVerdict } from './ratingAbuseTypes.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { Condition } from '../../../shared/chess/util/winconutil.js';
+import type { AlertSection, AlertView } from '../../utility/emailTemplates.js';
+import type {
+	AbuseEvidence,
+	AbuseGameInfo,
+	AbuseReportContext,
+	SuspicionRecord,
+	SuspicionVerdict,
+} from './ratingAbuseTypes.js';
+
+import { formatDistanceStrict } from 'date-fns';
 
 import timeutil from '../../../shared/util/timeutil.js';
+import clockutil from '../../../shared/chess/util/clockutil.js';
+import winconutil from '../../../shared/chess/util/winconutil.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
 
+import urlUtils from '../../utility/urlUtils.js';
 import logEvents from '../../utility/logEvents.js';
+import abuseChecks from './abuseChecks.js';
 import emailService from '../../utility/emailService.js';
-import ratingAbuseManager from '../../database/ratingAbuseManager.js';
+import memberManager from '../../database/memberManager.js';
+import emailTemplates from '../../utility/emailTemplates.js';
+import playerStatsManager from '../../database/playerStatsManager.js';
+
+// Types -----------------------------------------------------------------------
+
+/** The whole report: the alert it's emailed as, plus the parts its log line names. */
+interface AbuseView extends AlertView {
+	/** The flagged player, as `Troll42 (2004411)`. */
+	player: string;
+	/** Their total suspicion weight, to two decimals. */
+	suspicion: string;
+	/** Their net rating change, as `+126 over 5 games`. */
+	ratingChange: string;
+}
 
 // Constants -------------------------------------------------------------------
 
-/** Buffer time for sending the next email. If a user is found suspicious several times in that interval, no email is sent. */
-const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MS = 1000 * 60 * 60 * 24; // 24 hours
+/** Each check's name, as the email lists it. */
+const CHECK_LABELS = {
+	think_time: 'Unused clock',
+	same_opponents: 'Same opponents',
+	ip_addresses: 'Shared IP address',
+	logged_out: 'Logged out mid-game',
+	opponent_account_age: 'New opponent accounts',
+} as const satisfies Record<SuspicionRecord['category'], string>;
 
 // Reports ---------------------------------------------------------------------
 
-/**
- * Reports a completed measurement: logs it either way, and — when the player
- * was flagged — emails Naviary, unless one was already sent within the buffer.
- * @param lastAlertedAt - When this player was last emailed about, from the rating_abuse table.
- */
-function reportMeasurement(
-	ctx: AbuseReportContext,
-	verdict: SuspicionVerdict,
-	lastAlertedAt: string | null,
-): void {
-	if (!verdict.suspicious) {
-		void logEvents.add(
-			`Innocent? Suspicion total weight: ${verdict.totalWeight}. ` +
-				`${describeMeasurement(ctx)}, and user seems innocent. ` +
-				buildBody(ctx, verdict, false),
-			'ratingAbuseLog',
-		);
-		return;
-	}
+/** Delivers a flagged measurement: one summarised line to `ratingAbuseLog`, then the full evidence by email. */
+function reportFlagged(ctx: AbuseReportContext, verdict: SuspicionVerdict): void {
+	const view = buildView(ctx, verdict);
 
-	const messageText = `
->>>>>> GUILTY??? Suspicion total weight: ${verdict.totalWeight}.
-${describeMeasurement(ctx)}, and user might be cheating!
-${buildBody(ctx, verdict, true)}
-	`;
-	console.log(`User ${ctx.username} is under suspicion of rating abuse (weight: ${verdict.totalWeight})! - Check ratingAbuseLog.txt for more details.`); // prettier-ignore
-	void logEvents.add('\n' + messageText, 'ratingAbuseLog');
+	void logEvents.add(buildLogLine(view), 'ratingAbuseLog');
 
-	// If enough time has passed from the last alarm for that user, send an email about his rating abuse
-	if (
-		lastAlertedAt === null ||
-		Date.now() - timeutil.sqliteToTimestamp(lastAlertedAt) >=
-			SUSPICIOUS_USER_NOTIFICATION_BUFFER_MS
-	) {
-		const messageSubject = `Rating Abuse Warning: user ${ctx.username}, user_id ${ctx.user_id}`;
-		void emailService.sendAlertToSelf('rating-abuse-alert', {
-			title: messageSubject,
-			sections: [{ kind: 'mono', lines: [{ text: messageText }] }],
-		});
-		// Update RatingAbuse table with last_alerted_at value
-		const last_alerted_at = timeutil.timestampToSqlite(Date.now());
-		ratingAbuseManager.updateColumns(ctx.user_id, ctx.leaderboard_id, { last_alerted_at });
-	}
+	const attachment = {
+		filename: `rating-abuse-${ctx.user_id}.txt`,
+		content: emailTemplates.renderAlertText(view),
+	};
+	void emailService.sendAlertToSelf('rating-abuse-alert', view, [attachment]);
 }
 
-/**
- * Reports a measurement abandoned before any check ran, because the player LOST
- * elo over the interval. Logged only — a player shedding rating is never flagged.
- */
-function reportNoRatingGain(
-	user_id: number,
-	username: string,
-	leaderboard_id: number,
-	netRatingChange: number,
-	gameIds: number[],
-	gameInterval: number,
-): void {
-	void logEvents.add(
-		`Innocent: Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id}, but user net rating change ${netRatingChange} is not positive in the last ${gameInterval} games. Game IDs: ${JSON.stringify(gameIds)}.`,
-		'ratingAbuseLog',
-	);
+// The Email -------------------------------------------------------------------
+
+/** A flagged measurement as the alert Naviary is emailed. */
+function buildView(ctx: AbuseReportContext, verdict: SuspicionVerdict): AbuseView {
+	const player = `${ctx.username} (${ctx.user_id})`;
+	const suspicion = verdict.totalWeight.toFixed(2);
+	const ratingChange = `${metadatautil.getWhiteBlackRatingDiff(ctx.netRatingChange)} over ${ctx.evidence.games.length} games`;
+	const threshold = abuseChecks.SUSPICION_THRESHOLD.toFixed(1);
+	// The account exists: the player has just finished a game.
+	// Rated games are finalized immediately, no window for them to delete their account before the abuse check.
+	const joined = memberManager.getDataByCriteria(['joined'], 'user_id', ctx.user_id)!.joined;
+	const gameCount = playerStatsManager.getUnabortedGameCount(ctx.user_id)!;
+	return {
+		title: `Rating Abuse: ${ctx.username} (${suspicion})`,
+		player,
+		suspicion,
+		ratingChange,
+		sections: [
+			{
+				kind: 'rows',
+				rows: [
+					{ label: 'Sent', value: emailTemplates.formatMoment(Date.now()) },
+					{ label: 'Player', value: player, link: urlUtils.getAbsoluteMemberUrl(ctx.username) }, // prettier-ignore
+					{ label: 'Suspicion', value: `${suspicion} (flagged at ${threshold})` },
+					{ label: 'Rating change', value: ratingChange },
+					{ label: 'Time span', value: formatTimeSpan(ctx.evidence.games) },
+					{ label: 'Joined', value: emailTemplates.formatDayWithAge(timeutil.sqliteToTimestamp(joined)) }, // prettier-ignore
+					{ label: 'Games', value: String(gameCount) },
+				],
+			},
+			{
+				heading: 'WHY FLAGGED',
+				kind: 'rows',
+				rows: verdict.records.map((record) => ({
+					label: CHECK_LABELS[record.category],
+					value: `${record.weight.toFixed(2)} / ${abuseChecks.CHECK_MAX_WEIGHTS[record.category]}`,
+				})),
+			},
+			buildGamesSection(ctx.evidence),
+			buildOpponentsSection(ctx.evidence),
+		],
+	};
 }
 
-// Composition -----------------------------------------------------------------
-
-/** The one-line preamble naming who was measured, on what, and to what effect. */
-function describeMeasurement(ctx: AbuseReportContext): string {
-	return `Ran suspicion check for user ${ctx.username} with user_id ${ctx.user_id} on leaderboard ${ctx.leaderboard_id} with net rating change ${ctx.netRatingChange} in the last ${ctx.gameIds.length} games`;
+/** How long passed between the first and last of the games starting, like `58 minutes` or `3 days`. */
+function formatTimeSpan(games: AbuseGameInfo[]): string {
+	const starts = games.map((game) => timeutil.sqliteToTimestamp(game.date));
+	return formatDistanceStrict(Math.min(...starts), Math.max(...starts));
 }
 
-/**
- * The evidence dump shared by every report, so the log and the email never diverge.
- * @param pretty - Whether to indent the JSON. Set for the emailed (flagged) report, which is read by a human.
- */
-function buildBody(ctx: AbuseReportContext, verdict: SuspicionVerdict, pretty: boolean): string {
-	const indent = pretty ? 2 : undefined;
-	const sep = pretty ? '\n' : ' ';
-	return [
-		`Suspicion level record: ${JSON.stringify(verdict.records, undefined, indent)}.`,
-		`Opponent user_id_list: ${JSON.stringify(ctx.evidence.opponentIds)}.`,
-		`OpponentInfoList: ${JSON.stringify(ctx.evidence.opponents, undefined, indent)}.`,
-		`Game_id_list: ${JSON.stringify(ctx.gameIds)}.`,
-		`GameInfo list: ${JSON.stringify(ctx.evidence.games, undefined, indent)}.`,
-	].join(sep);
+/** The measured games, one row each, oldest first. */
+function buildGamesSection(evidence: AbuseEvidence): AlertSection {
+	const chronological = evidence.games.toSorted((a, b) => timeutil.sqliteToTimestamp(a.date) - timeutil.sqliteToTimestamp(b.date)); // prettier-ignore
+	return {
+		heading: 'GAMES',
+		kind: 'table',
+		columns: ['Game', 'Played', 'Opponent', 'Time control', 'Result', 'Rating', 'Moves', 'Ended by', 'Clock unused'], // prettier-ignore
+		rows: chronological.map((game) => [
+			{ value: String(game.game_id), link: urlUtils.getAbsoluteGameUrl(game.game_id, game.player_number as Player) }, // prettier-ignore
+			{ value: emailTemplates.formatMoment(timeutil.sqliteToTimestamp(game.date)) },
+			{ value: describeOpponent(evidence, game.game_id) },
+			{ value: clockutil.getTimeControlLabel(clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds)) }, // prettier-ignore
+			{ value: game.score === 1 ? 'Win' : game.score === 0 ? 'Loss' : 'Draw' },
+			{ value: metadatautil.getWhiteBlackRatingDiff(game.elo_change_from_game!) },
+			{ value: String(game.move_count) },
+			// The termination column is plain TEXT.
+			{ value: winconutil.getTerminationInEnglish(game.moveRule, game.termination as Condition) }, // prettier-ignore
+			{ value: `${Math.round(100 * game.unusedClockFraction)}%` },
+		]),
+	};
+}
+
+/** The username a game was against. Their account may have since been deleted. */
+function describeOpponent(evidence: AbuseEvidence, game_id: number): string {
+	const opponent_id = evidence.opponentIdByGame[game_id]!;
+	const opponent = evidence.opponents.find((member) => member.user_id === opponent_id);
+	return opponent?.username ?? '(deleted)';
+}
+
+/** Everyone the player faced, most-played first. */
+function buildOpponentsSection(evidence: AbuseEvidence): AlertSection {
+	const frequency = evidence.opponentFrequency;
+	const opponents = evidence.opponents.toSorted((a, b) => frequency[b.user_id]! - frequency[a.user_id]!); // prettier-ignore
+	return {
+		heading: 'OPPONENTS',
+		kind: 'table',
+		columns: ['Opponent', 'Games vs player', 'Joined', 'Total games', 'Shared IP'],
+		rows: opponents.map((opponent) => [
+			{ value: `${opponent.username} (${opponent.user_id})`, link: urlUtils.getAbsoluteMemberUrl(opponent.username) }, // prettier-ignore
+			{ value: String(frequency[opponent.user_id]!) },
+			{ value: emailTemplates.formatDayWithAge(timeutil.sqliteToTimestamp(opponent.joined)) },
+			{ value: String(playerStatsManager.getUnabortedGameCount(opponent.user_id)!) },
+			{ value: describeSharedIp(evidence.opponentSharesIp[opponent.user_id]) },
+		]),
+	};
+}
+
+/** Whether the player shares an IP address with an opponent, or `—` when either has none to compare. */
+function describeSharedIp(sharesIp: boolean | undefined): string {
+	if (sharesIp === undefined) return '—';
+	return sharesIp ? 'Yes' : 'No';
+}
+
+// The Log Line ----------------------------------------------------------------
+
+/** The report as one line: player, suspicion, rating change. The email carries the evidence. */
+function buildLogLine(view: AbuseView): string {
+	return `${view.player} | Suspicion ${view.suspicion} | ${view.ratingChange}`;
 }
 
 // Exports ---------------------------------------------------------------------
 
-export default {
-	reportMeasurement,
-	reportNoRatingGain,
-};
+export default { reportFlagged };

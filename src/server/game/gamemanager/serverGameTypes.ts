@@ -95,7 +95,7 @@ export interface MatchInfo {
 	timeCreated: number;
 	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. */
 	timeEnded?: number;
-	/** Whether the match is rated. */
+	/** Whether the match is rated. A rated game is always server validated. */
 	rated: boolean;
 	/** Whether the match is private (created from "Challenge a friend" flow). */
 	private: boolean;

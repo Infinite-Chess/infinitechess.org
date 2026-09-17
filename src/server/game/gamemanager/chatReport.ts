@@ -55,9 +55,6 @@ interface ChatReport {
 	entries: ChatEntriesRecord[];
 }
 
-/** How far down a timestamp is carried in the report. */
-type MomentPrecision = 'minute' | 'day';
-
 /** The whole report: the alert it's emailed as, plus the parts its log line names. */
 interface ReportView extends AlertView {
 	/** The reason's label. */
@@ -82,15 +79,6 @@ const REPORT_REASONS = [
 	{ code: 'child-safety', label: 'Child safety' },
 	{ code: 'other', label: 'Other' },
 ] as const;
-
-/** Heads the transcript, because "You" throughout it means the reporter. */
-const TRANSCRIPT_HEADING = 'CHAT — as the reporter saw it';
-
-/** The `date-fns` pattern each {@link MomentPrecision} prints a timestamp with. */
-const MOMENT_FORMATS: Record<MomentPrecision, string> = {
-	minute: 'd MMM yyyy, h:mm a',
-	day: 'd MMM yyyy',
-};
 
 // Submission ------------------------------------------------------------------
 
@@ -119,26 +107,17 @@ function buildView(report: ChatReport): ReportView {
 	// Online games are strictly two-player, so the reported player is always the other one.
 	const reportedRole = typeutil.invertPlayer(reporterRole);
 	const userIds = resolveUserIds(report);
-	const reportedId = userIds[reportedRole];
 
 	const reporter = describePlayer(report, reporterRole, userIds, sharedT);
 	const reported = describePlayer(report, reportedRole, userIds, sharedT);
 
 	const sections: AlertSection[] = [
-		{
-			kind: 'rows',
-			rows: [
-				{ label: 'Reported by', value: reporter },
-				{ label: 'Reported', value: reported },
-				{ label: 'Sent', value: formatMoment(Date.now()) },
-			],
-		},
+		{ kind: 'rows', rows: [{ label: 'Sent', value: emailTemplates.formatMoment(Date.now()) }] },
+		{ heading: 'REPORTER', kind: 'rows', rows: buildPlayerRows(reporter, userIds[reporterRole], false) }, // prettier-ignore
+		{ heading: 'REPORTED PLAYER', kind: 'rows', rows: buildPlayerRows(reported, userIds[reportedRole], true) }, // prettier-ignore
 		{ heading: 'GAME', kind: 'rows', rows: buildGameRows(report, sharedT) },
+		{ heading: 'CHAT — as the reporter saw it', kind: 'mono', lines: buildTranscript(report, sharedT) }, // prettier-ignore
 	];
-	// A guest has no members row to read the block's fields from.
-	const reportedRows = reportedId !== undefined ? buildReportedPlayerRows(reportedId) : undefined;
-	if (reportedRows) sections.push({ heading: 'REPORTED PLAYER', kind: 'rows', rows: reportedRows }); // prettier-ignore
-	sections.push({ heading: TRANSCRIPT_HEADING, kind: 'mono', lines: buildTranscript(report, sharedT) }); // prettier-ignore
 
 	const reason = REPORT_REASONS.find((r) => r.code === report.reason)!.label;
 	return { title: `Chat Report: ${reason}`, reason, reporter, reported, sections };
@@ -172,9 +151,35 @@ function describePlayer(
 	return `${identity} · ${sharedT.sides[typeutil.strcolors[color]]}`;
 }
 
+/**
+ * One player's block: who they are, and what their account shows.
+ * A guest, or an account deleted since, has no members row, so gets only the Player row.
+ * @param player - As {@link describePlayer} renders them.
+ * @param isReported - Whether they're the reported player, whose email and last visit are shown too.
+ */
+function buildPlayerRows(
+	player: string,
+	user_id: number | undefined,
+	isReported: boolean,
+): AlertRow[] {
+	const nameOnly: AlertRow[] = [{ label: 'Player', value: player }];
+	if (user_id === undefined) return nameOnly;
+	const member = memberManager.getDataByCriteria(['username', 'email', 'joined', 'last_seen'], 'user_id', user_id); // prettier-ignore
+	if (member === undefined) return nameOnly;
+
+	const playerRow = { label: 'Player', value: player, link: urlUtils.getAbsoluteMemberUrl(member.username) }; // prettier-ignore
+	const joinedRow = { label: 'Joined', value: emailTemplates.formatDayWithAge(timeutil.sqliteToTimestamp(member.joined)) }; // prettier-ignore
+	const gamesRow = { label: 'Games', value: String(playerStatsManager.getUnabortedGameCount(user_id)!) }; // prettier-ignore
+	if (!isReported) return [playerRow, joinedRow, gamesRow];
+
+	const emailRow = { label: 'Email', value: member.email };
+	const lastSeenRow = { label: 'Last seen', value: emailTemplates.formatMomentWithAge(timeutil.sqliteToTimestamp(member.last_seen)) }; // prettier-ignore
+	return [playerRow, emailRow, joinedRow, gamesRow, lastSeenRow];
+}
+
 /** The game's own properties. Every one is knowable live AND dead, so nothing here branches on that. */
 function buildGameRows(report: ChatReport, sharedT: ScriptTranslations['shared']): AlertRow[] {
-	const { game_id, resolved } = report;
+	const { game_id, resolved, reporterRole } = report;
 	const { setup } = resolved.state;
 	const variant =
 		setup.variant.kind === 'preset'
@@ -188,8 +193,8 @@ function buildGameRows(report: ChatReport, sharedT: ScriptTranslations['shared']
 	return [
 		// Shown numeric, linked base62. A numeric id in the href wouldn't 404 — "193" is
 		// itself valid base62, and would silently resolve to a different game.
-		{ label: 'Game id', value: String(game_id), link: urlUtils.getAbsoluteGameUrl(game_id) },
-		{ label: 'Played', value: formatMoment(setup.timeCreated) },
+		{ label: 'Game id', value: String(game_id), link: urlUtils.getAbsoluteGameUrl(game_id, reporterRole) }, // prettier-ignore
+		{ label: 'Played', value: emailTemplates.formatMomentWithAge(setup.timeCreated) },
 		{ label: 'Variant', value: variant },
 		{
 			label: 'Mode',
@@ -209,23 +214,6 @@ function isGamePrivate(report: ChatReport): boolean {
 }
 
 /**
- * What is known about the reported member, to decide an action without opening another tab.
- * Undefined once their account is gone, leaving no members row to read.
- */
-function buildReportedPlayerRows(user_id: number): AlertRow[] | undefined {
-	const member = memberManager.getDataByCriteria(['email', 'joined', 'last_seen'], 'user_id', user_id); // prettier-ignore
-	if (member === undefined) return undefined;
-	const stats = playerStatsManager.getData(user_id, ['game_count', 'game_count_aborted'])!;
-
-	return [
-		{ label: 'Email', value: member.email },
-		{ label: 'Joined', value: formatMoment(timeutil.sqliteToTimestamp(member.joined), 'day') },
-		{ label: 'Games', value: String(stats.game_count - stats.game_count_aborted) }, // Exclude aborted games
-		{ label: 'Last seen', value: formatMoment(timeutil.sqliteToTimestamp(member.last_seen)) },
-	];
-}
-
-/**
  * The chat from the reporter's point of view, so "You" throughout means the reporter.
  * Notices are kept: abuse usually follows a declined draw or a disconnect.
  */
@@ -242,14 +230,6 @@ function buildTranscript(report: ChatReport, sharedT: ScriptTranslations['shared
 		const tone = entry.player === reporterRole ? 'blue' : 'red';
 		return { text: `${time}  ${parts.prefix}${parts.body}`, tone };
 	});
-}
-
-/**
- * A raw timestamp as a date a human reads — no database value ever reaches the report.
- * @param precision - How far down to carry it.
- */
-function formatMoment(timestamp: number, precision: MomentPrecision = 'minute'): string {
-	return format(timestamp, MOMENT_FORMATS[precision]);
 }
 
 // The Log Line ----------------------------------------------------------------

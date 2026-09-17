@@ -83,7 +83,6 @@ function generate(): void {
 			user_id                     INTEGER NOT NULL,
 			leaderboard_id              INTEGER NOT NULL,
 			game_count_since_last_check INTEGER,
-			last_alerted_at             TIMESTAMP,
 
 			PRIMARY KEY (user_id, leaderboard_id),
 			FOREIGN KEY (user_id, leaderboard_id)

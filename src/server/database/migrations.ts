@@ -31,6 +31,7 @@ function run(): void {
 	dropPlayerGamesClockAtEndColumnIfPresent();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
 	addModifierColumnsIfNeeded();
+	dropRatingAbuseLastAlertedAtColumnIfPresent();
 }
 
 // Individual migrations -------------------------------------------------------
@@ -271,6 +272,20 @@ function addModifierColumnsIfNeeded(): void {
 		db.run(`ALTER TABLE ${table} ADD COLUMN mod_slide_limit INTEGER`);
 		console.log(`Temporary DB migration: added ${table}.mod_slide_limit column.`);
 	}
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
+ *
+ * The `last_alerted_at` column throttled rating abuse emails to one per player per day.
+ * Every flagged measurement is now emailed, so the column is vestigial and needs removing
+ * from old DBs. This only logs when the column is found and deleted.
+ */
+function dropRatingAbuseLastAlertedAtColumnIfPresent(): void {
+	if (!db.columnExists('rating_abuse', 'last_alerted_at')) return; // Already migrated.
+
+	db.run('ALTER TABLE rating_abuse DROP COLUMN last_alerted_at');
+	console.log('Temporary DB migration: deleted rating_abuse.last_alerted_at column.');
 }
 
 // Exports ---------------------------------------------------------------------

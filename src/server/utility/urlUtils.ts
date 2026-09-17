@@ -5,6 +5,8 @@
  * respecting the current environment (development vs production).
  */
 
+import type { Player } from '../../shared/chess/util/typeutil.js';
+
 import gameurl from '../../shared/chess/util/gameurl.js';
 
 import env from '../config/env.js';
@@ -23,11 +25,24 @@ function getAppBase(): string {
 	}
 }
 
-/** Builds the absolute `/game/:id` URL. Carries no perspective. */
-function getAbsoluteGameUrl(id: number): string {
-	return `${getAppBase()}${gameurl.getGameUrl(id)}`;
+/**
+ * Builds the absolute `/game/:id` URL.
+ * @param viewColor - The side to view the board from. Omit to use the side of whoever opens the link.
+ */
+function getAbsoluteGameUrl(id: number, viewColor?: Player): string {
+	return `${getAppBase()}${gameurl.getGameUrl(id, viewColor)}`;
+}
+
+/**
+ * Builds the absolute `/member/:username` profile URL.
+ *
+ * SUBJECT TO CHANGE when we redesign the member profile page.
+ * At that time we may want to decide on and finalize the URL structure.
+ */
+function getAbsoluteMemberUrl(username: string): string {
+	return `${getAppBase()}/member/${username.toLowerCase()}`;
 }
 
 // Exports ---------------------------------------------------------------------
 
-export default { getAppBase, getAbsoluteGameUrl };
+export default { getAppBase, getAbsoluteGameUrl, getAbsoluteMemberUrl };

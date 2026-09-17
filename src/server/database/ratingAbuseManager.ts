@@ -13,7 +13,6 @@ interface RatingAbuseRecord {
 	user_id: number;
 	leaderboard_id: number;
 	game_count_since_last_check: number | null;
-	last_alerted_at: string | null;
 }
 
 type RatingAbuseColumn = keyof RatingAbuseRecord;
@@ -65,7 +64,7 @@ function isEntryIn(user_id: number, leaderboard_id: number): boolean {
  * Fetches specified columns of a single (user_id, leaderboard_id) from the rating_abuse table based on (user_id, leaderboard_id)
  * @param user_id - The user_id of the player
  * @param leaderboard_id - The leaderboard_id
- * @param columns - The columns to retrieve (e.g., ['game_count_since_last_check', 'last_alerted_at'])
+ * @param columns - The columns to retrieve (e.g., ['game_count_since_last_check'])
  * @returns An object containing the requested columns.
  * @throws If invalid arguments are provided, if no match is found, or if a database error occurs.
  */
