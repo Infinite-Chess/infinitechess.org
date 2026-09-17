@@ -331,8 +331,8 @@ function concludeAbandoned(servergame: ServerGame): void {
 // Account Deletion ------------------------------------------------------------
 
 /**
- * Ends and finalizes the user's un-logged game, if they're in one, so nothing needing their
- * `player_stats` or `leaderboards` rows is left pending when the cascade takes them.
+ * Ends the user's live game, if they're in one, so its record isn't lost.
+ * If it's logged after their account is gone, a rated game's log fails and rolls back for both players.
  * @param voluntary - Their own deletion, which resigns them. An admin's aborts instead to
  * not shuffle ratings on an ending they didn't choose.
  */
@@ -350,9 +350,6 @@ function concludeForAccountDeletion(user_id: number, voluntary: boolean): void {
 			? { victor: typeutil.invertPlayer(role), condition: 'resignation' }
 			: { condition: 'aborted' };
 	conclude(servergame, conclusion);
-	// Lock the result in NOW to not risk a cheat report not just overturning
-	// it, but throwing when reversing `player_stats` for both players.
-	finalize(servergame);
 }
 
 // Exports ---------------------------------------------------------------------

@@ -54,7 +54,7 @@ function addUser(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: 
  * This function throws errors on failure, making it suitable for use
  * inside a database transaction which can catch the error and roll back.
  * Callers outside of transactions should implement their own error handling.
- * @throws If the user is not found or if a database error occurs.
+ * @throws If a database error occurs.
  */
 function updatePlayerRating(
 	user_id: number,
@@ -69,14 +69,10 @@ function updatePlayerRating(
 			rd_last_update_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
 		WHERE user_id = ? AND leaderboard_id = ?
 	`;
-	db.call(() => {
-		const result = db.run(query, [elo, rd, user_id, leaderboard_id]);
-
-		// If the UPDATE affected no rows, it's a critical failure for a transaction.
-		// We must throw an error to trigger a rollback.
-		if (result.changes === 0)
-			throw new Error(`User with ID "${user_id}" not found on leaderboard "${leaderboard_id}" for update.`); // prettier-ignore
-	}, `Error updating leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}"`);
+	db.call(
+		() => db.run(query, [elo, rd, user_id, leaderboard_id]),
+		`Error updating leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}"`,
+	);
 }
 
 /**

@@ -90,7 +90,9 @@ function getUnabortedGameCount(user_id: number): number | undefined {
 
 /**
  * Applies one game's deltas to a member's counters, in whichever direction `sign` points.
- * @throws If the member has no stats row, or if a database error occurs.
+ * A no-op for a deleted account, whose row cascaded away with its member — e.g. a cheat
+ * report overturning a game its opponent deleted their account during the finalize cushion.
+ * @throws If a database error occurs.
  */
 function applyGameDelta(user_id: number, delta: GameDelta): void {
 	db.call(() => {
@@ -115,12 +117,7 @@ function applyGameDelta(user_id: number, delta: GameDelta): void {
 		const query = `UPDATE player_stats SET ${setClauses.join(', ')} WHERE user_id = ?`;
 		values.push(user_id);
 
-		const result = db.run(query, values);
-		if (result.changes === 0) {
-			// Unreachable: account deletion logs and finalizes their live game BEFORE the
-			// members row cascades this one away. Reaching it means that order broke.
-			throw new Error(`CRITICAL: User ${user_id} has no player_stats row during a stats update.`); // prettier-ignore
-		}
+		db.run(query, values);
 	}, `Error applying a game's stat deltas for user_id "${user_id}"`);
 }
 
