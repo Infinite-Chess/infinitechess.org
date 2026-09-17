@@ -7,6 +7,7 @@
 import type { Rating } from '../../../../shared/chess/util/metadatautil.js';
 import type { ServerUsernameContainer } from '../../../../shared/transport/domain.js';
 
+import memberurl from '../../../../shared/util/memberurl.js';
 import metadatautil from '../../../../shared/chess/util/metadatautil.js';
 
 import docutil from '../util/docutil.js';
@@ -89,7 +90,7 @@ function createUsernameContainer(
 	if (type === 'player') {
 		// Hyperlink
 		const usernameHyper = document.createElement('a');
-		usernameHyper.href = `/member/${username.value.toLowerCase()}`;
+		usernameHyper.href = memberurl.getMemberUrl(username.value);
 		usernameHyper.textContent = username.value;
 		if (username.openInNewWindow) usernameHyper.target = '_blank';
 		usernameHyper.classList.add('username');

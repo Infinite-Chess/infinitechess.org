@@ -8,6 +8,7 @@
 import type { Player } from '../../shared/chess/util/typeutil.js';
 
 import gameurl from '../../shared/chess/util/gameurl.js';
+import memberurl from '../../shared/util/memberurl.js';
 
 import env from '../config/env.js';
 
@@ -33,14 +34,9 @@ function getAbsoluteGameUrl(id: number, viewColor?: Player): string {
 	return `${getAppBase()}${gameurl.getGameUrl(id, viewColor)}`;
 }
 
-/**
- * Builds the absolute `/member/:username` profile URL.
- *
- * SUBJECT TO CHANGE when we redesign the member profile page.
- * At that time we may want to decide on and finalize the URL structure.
- */
+/** Builds the absolute `/member/:username` profile URL. */
 function getAbsoluteMemberUrl(username: string): string {
-	return `${getAppBase()}/member/${username.toLowerCase()}`;
+	return `${getAppBase()}${memberurl.getMemberUrl(username)}`;
 }
 
 // Exports ---------------------------------------------------------------------

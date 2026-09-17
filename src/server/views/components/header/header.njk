@@ -235,7 +235,7 @@
 
 	<div class="header-actions">
 		{% if memberInfo and memberInfo.signedIn %}
-		<a class="header-icon-btn tooltip-d" href="/member/{{ memberInfo.username }}" data-tooltip="{{ t.actions.profile }}">
+		<a class="header-icon-btn tooltip-d" href="{{ getMemberUrl(memberInfo.username) }}" data-tooltip="{{ t.actions.profile }}">
 			<svg class="svg-profile" viewBox="0 0 2000 2000"><use href="#svg-profile"/></svg>
 		</a>
 		{# A form, not a fetch: so the leave-game prompt comes BEFORE the request, so cancelling logs nobody out. #}

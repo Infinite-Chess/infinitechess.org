@@ -12,6 +12,7 @@ import path from 'path';
 import nunjucks from 'nunjucks';
 import { fileURLToPath } from 'node:url';
 
+import memberurl from '../../shared/util/memberurl.js';
 import engineregistry from '../../shared/chess/util/engineregistry.js';
 import { players as p } from '../../shared/chess/util/typeutil.js';
 
@@ -42,6 +43,7 @@ function configure(app: Application): void {
 
 	setManifestGlobals(manifest.load());
 	nunjucksEnv.addGlobal('p', p); // Player-color constants, so templates reference WHITE/BLACK by name
+	nunjucksEnv.addGlobal('getMemberUrl', memberurl.getMemberUrl);
 
 	// Serializes a value to JSON safe for inline <script> injection.
 	// Escapes <, > and & to Unicode escapes so no HTML tag sequence can form.
@@ -53,7 +55,7 @@ function configure(app: Application): void {
 	);
 
 	// In dev, esbuild watch-mode rewrites manifest.json after every rebuild while the
-	// server keeps running. Watch the file and refresh the Nunjucks global only when
+	// server keeps running. Watch the file and refresh the manifest globals only when
 	// it actually changes, so rendered HTML always references the current hashed filenames.
 	if (env.NODE_ENV !== 'production') {
 		fs.watch(manifest.PATH, () => {
@@ -68,7 +70,7 @@ function configure(app: Application): void {
 
 /**
  * Sets the manifest-derived template globals: the raw asset manifest, plus the
- * analysis engine's display name with its build-stamped version (e.g. "Apeiron 2.1"),
+ * analysis engine's display name with its build-stamped version (e.g. "Apeiron 2.1").
  */
 function setManifestGlobals(assets: Record<string, string>): void {
 	nunjucksEnv.addGlobal('manifest', assets);
