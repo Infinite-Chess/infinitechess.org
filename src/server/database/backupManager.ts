@@ -22,6 +22,8 @@ import emailService from '../utility/emailService.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Constants -------------------------------------------------------------------
+
 const BACKUPS_DIR = path.join(__dirname, '../../../backups');
 const MAX_BACKUP_AGE_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 const BACKUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
@@ -39,11 +41,11 @@ function startDaily(): void {
 		try {
 			await perform();
 		} catch (error: unknown) {
-			const message = `Daily database backup failed: ${jsutil.getErrorMessage(error)}`;
-			logEvents.addAndPrint(message, 'errLog');
+			const detail = jsutil.getErrorStack(error);
+			logEvents.addAndPrint(`Daily database backup failed: ${detail}`, 'errLog');
 			void emailService.sendAlertToSelf('database-alert', {
-				subject: 'Daily database backup failed',
-				text: message,
+				title: 'Daily database backup failed',
+				sections: [{ heading: 'ERROR', kind: 'mono', lines: [{ text: detail }] }],
 			});
 		}
 	}, BACKUP_INTERVAL_MS);

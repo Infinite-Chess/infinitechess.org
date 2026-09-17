@@ -1,0 +1,51 @@
+{# An alert emailed to ourselves. Dark and full-width: it needs none of the user-facing layout's dressing. #}
+{%- set textColor = "#e3e3e3" %}
+{%- set mutedColor = "#9aa0a6" %}
+{%- set blueColor = "#8ab4f8" %}
+{% set toneStyles = { "muted": "color:" + mutedColor + ";font-style:italic;", "blue": "color:" + blueColor + ";", "red": "color:#f28b82;" } %}
+{%- macro cellValue(cell) %}{{ cell.value }}{% if cell.link %} <a href="{{ cell.link }}" style="color:{{ blueColor }};">[open]</a>{% endif %}{% endmacro %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#1b1b1b;">
+	<tr>
+		<td style="padding:20px 16px;font-family:Arial,Helvetica,sans-serif;line-height:1.2;color:{{ textColor }};">
+			<h1 style="margin:0 0 20px;font-size:24px;font-weight:bold;">{{ title }}</h1>
+			{%- for section in sections %}
+			<div{% if not loop.first %} style="margin-top:28px;"{% endif %}>
+			{%- if section.heading %}
+			<h2 style="margin:0 0 8px;color:{{ mutedColor }};font-size:12px;font-weight:bold;letter-spacing:0.08em;">{{ section.heading }}</h2>
+			{%- endif %}
+			{%- if section.kind == "rows" %}
+			<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+				{%- for row in section.rows %}
+				<tr>
+					<td style="padding:2px 18px 2px 0;color:{{ mutedColor }};font-size:14px;white-space:nowrap;vertical-align:top;">{{ row.label }}</td>
+					<td style="padding:2px 0;color:{{ textColor }};font-size:14px;">{{ cellValue(row) }}</td>
+				</tr>
+				{%- endfor %}
+			</table>
+			{%- elif section.kind == "table" %}
+			<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+				<tr>
+					{%- for column in section.columns %}
+					<td style="padding:6px 10px;color:{{ mutedColor }};font-size:12px;font-weight:bold;white-space:nowrap;">{{ column }}</td>
+					{%- endfor %}
+				</tr>
+				{%- for row in section.rows %}
+				<tr>
+					{%- set shading = "background-color:#212121;" if loop.index % 2 == 1 else "" %}
+					{%- for cell in row %}
+					<td style="padding:5px 10px;{{ shading }}color:{{ textColor }};font-size:14px;white-space:nowrap;">{{ cellValue(cell) }}</td>
+					{%- endfor %}
+				</tr>
+				{%- endfor %}
+			</table>
+			{%- elif section.kind == "mono" %}
+			{# Every dot is wrapped in a span, so Gmail can't autolink the file paths of a stack trace.
+			   Escaped first, so the spans are the only markup that goes through unescaped. #}
+			<pre style="margin:0;padding:14px 16px;background-color:#262626;border-radius:6px;font-family:Consolas,Menlo,monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;">{% for line in section.lines %}{% if not loop.first %}
+{% endif %}<span{% if line.tone %} style="{{ toneStyles[line.tone] }}"{% endif %}>{{ line.text | escape | replace(".", "<span>.</span>") | safe }}</span>{% endfor %}</pre>
+			{%- endif %}
+			</div>
+			{%- endfor %}
+		</td>
+	</tr>
+</table>

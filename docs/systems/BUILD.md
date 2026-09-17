@@ -68,7 +68,7 @@ Templates and binary/static assets are **not** processed by esbuild. They're cop
 `cpx` (`prod:assets` / `dev:assets --watch`): `png,jpg,webp,avif,svg,ico,gif,mp3,wav,opus,glsl,
 md,woff2,woff,njk`. **`.njk` templates are copied, not compiled** → `dist/server/views/`. So a
 new route referencing a new `.njk` works as soon as cpx copies it; in dev, the `--watch` cpx
-propagates edits and Nunjucks re-reads (`watch: true` in non-prod).
+propagates edits and Nunjucks re-reads them on every render (`noCache` in non-prod).
 
 ## The manifest — the link between build output and templates
 

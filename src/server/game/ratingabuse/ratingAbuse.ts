@@ -11,8 +11,8 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from '../gamemanager/serverGameTypes.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
+import type { LongFormatOut } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
-import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 import type {
 	AbuseEvidence,
 	AbuseGameInfo,
@@ -21,7 +21,6 @@ import type {
 } from './ratingAbuseTypes.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
-import jsutil from '../../../shared/util/jsutil.js';
 import gamerules from '../../../shared/chess/util/gamerules.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
@@ -82,8 +81,7 @@ function measureAfterGame(servergame: ServerGame): void {
  * @throws If a database error occurs.
  */
 function measurePlayer(user_id: number, username: string, leaderboard_id: number): void {
-	const due = consumeCheckInterval(user_id, leaderboard_id);
-	if (due === undefined) return; // Not enough games played since the last check yet.
+	if (!consumeCheckInterval(user_id, leaderboard_id)) return; // Not enough games played since the last check yet.
 
 	// Retrieve the most recent ranked non-aborted games from the player_games table
 	const recentPlayerGamesEntries = playerGamesManager.getRecentNRatedForUser(
@@ -100,10 +98,7 @@ function measurePlayer(user_id: number, username: string, leaderboard_id: number
 	const gameIds = recentPlayerGamesEntries.map((recent_game) => recent_game.game_id);
 
 	// The player has lost elo the past GAME_INTERVAL_TO_MEASURE games. No cause for concern, early exit
-	if (netRatingChange <= 0) {
-		abuseReport.reportNoRatingGain(user_id, username, leaderboard_id, netRatingChange, gameIds, GAME_INTERVAL_TO_MEASURE); // prettier-ignore
-		return;
-	}
+	if (netRatingChange <= 0) return;
 
 	const evidence: AbuseEvidence = {
 		games: buildGameInfoList(recentPlayerGamesEntries, gameIds),
@@ -111,19 +106,17 @@ function measurePlayer(user_id: number, username: string, leaderboard_id: number
 	};
 
 	const verdict = abuseChecks.runAll(evidence);
+	if (!verdict.suspicious) return;
 
-	const ctx = { user_id, username, leaderboard_id, netRatingChange, gameIds, evidence };
-	abuseReport.reportMeasurement(ctx, verdict, due.lastAlertedAt);
+	const ctx = { user_id, username, netRatingChange, evidence };
+	abuseReport.reportFlagged(ctx, verdict);
 }
 
 /**
  * Counts this game against the player's check interval, resetting the counter when it trips.
- * @returns Their `last_alerted_at` when a check is now due, otherwise undefined.
+ * @returns Whether a check is now due.
  */
-function consumeCheckInterval(
-	user_id: number,
-	leaderboard_id: number,
-): { lastAlertedAt: string | null } | undefined {
+function consumeCheckInterval(user_id: number, leaderboard_id: number): boolean {
 	// If player is not in rating_abuse table, add him to it
 	if (!ratingAbuseManager.isEntryIn(user_id, leaderboard_id))
 		ratingAbuseManager.addEntry(user_id, leaderboard_id);
@@ -131,7 +124,6 @@ function consumeCheckInterval(
 	// Access the player rating_abuse data
 	const rating_abuse_data = ratingAbuseManager.getData(user_id, leaderboard_id, [
 		'game_count_since_last_check',
-		'last_alerted_at',
 	]);
 	// Increment game_count_since_last_check by 1
 	const game_count_since_last_check = 1 + (rating_abuse_data.game_count_since_last_check || 0);
@@ -139,18 +131,18 @@ function consumeCheckInterval(
 	// Early exit condition if the newly incremented game_count_since_last_check is still below the GAME_INTERVAL_TO_MEASURE threshhold
 	if (game_count_since_last_check < GAME_INTERVAL_TO_MEASURE) {
 		ratingAbuseManager.updateColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
-		return undefined;
+		return false;
 	}
 
 	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0 from now on
 	ratingAbuseManager.updateColumns(user_id, leaderboard_id, { game_count_since_last_check: 0 });
 
-	return { lastAlertedAt: rating_abuse_data.last_alerted_at ?? null };
+	return true;
 }
 
 // Evidence Gathering ----------------------------------------------------------
 
-/** Joins the player's recent games against the `games` table, deriving each one's final clock. */
+/** Joins the player's recent games against the `games` table, deriving how much of their clock each left unused. */
 function buildGameInfoList(
 	recentPlayerGamesEntries: AbusePlayerGamesRecord[],
 	gameIds: number[],
@@ -166,63 +158,39 @@ function buildGameInfoList(
 		'icn',
 		'result',
 	]);
-	const games_table_game_id_list = recentGamesEntries.map((recent_game) => recent_game.game_id);
 
-	// Combine the information about the games into a single gameInfoList object
-	const gameInfoList: AbuseGameInfo[] = [];
-	for (let i = 0; i < gameIds.length; i++) {
-		const j = games_table_game_id_list.indexOf(gameIds[i]!);
-		// If the same game_id exists in both lists of retrieved database entries, add this game as a single object to gameInfoList
-		if (j > -1) {
-			const playerEntry = recentPlayerGamesEntries[i]!;
-			const gameRow = recentGamesEntries[j]!;
-			const { icn: _icn, ...gameEntry } = gameRow;
-			gameInfoList.push({
-				...playerEntry,
-				...gameEntry,
-				finalClockMs: deriveFinalClockOfPlayer(
-					gameRow,
-					playerEntry.player_number as Player,
-				),
-			});
-		} else {
-			void logEvents.addAndPrint(
-				`Found game_id ${gameIds[i]!} in player_games table but not it games table, during rating abuse calculation`,
-				'errLog',
-			);
-		}
-	}
-	return gameInfoList;
+	return recentPlayerGamesEntries.map((playerEntry) => {
+		const { icn, ...gameEntry } = recentGamesEntries.find((g) => g.game_id === playerEntry.game_id)!; // prettier-ignore
+		const longformat = icnconverter.ShortToLong_Format(icn);
+		// Rated games are always timed, so the player has a final clock.
+		const finalClockMs = deriveFinalClockOfPlayer(gameEntry, longformat, playerEntry.player_number as Player)!; // prettier-ignore
+		return {
+			...playerEntry,
+			...gameEntry,
+			unusedClockFraction: deriveUnusedClockFraction(gameEntry, finalClockMs),
+			moveRule: longformat.gameRules.moveRule,
+		};
+	});
 }
 
 /** Gathers who the player faced across those games, how often, their IP addresses, and their accounts. */
 function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvidence {
 	// Get a list of the user_ids of the previous opponents of the player
-	const opponentPlayerGamesEntries = playerGamesManager.getOpponentsOfUser(user_id, gameIds, ['user_id']); // prettier-ignore
-	const opponentIds = opponentPlayerGamesEntries.map((entry) => entry.user_id!);
-	const unique_user_id_list = [...new Set(opponentIds)];
+	const opponentPlayerGamesEntries = playerGamesManager.getOpponentsOfUser(user_id, gameIds, ['game_id', 'user_id']); // prettier-ignore
+	const opponentIdByGame = Object.fromEntries(opponentPlayerGamesEntries.map((entry) => [entry.game_id, entry.user_id!])); // prettier-ignore
+	const unique_user_id_list = [...new Set(Object.values(opponentIdByGame))];
 
-	// Dictionary of frequencies of user_ids in opponentIds
+	// How many of the games each opponent accounts for
 	const opponentFrequency: Record<number, number> = {};
-	for (const opponent_id of opponentIds) {
+	for (const opponent_id of Object.values(opponentIdByGame)) {
 		opponentFrequency[opponent_id] = (opponentFrequency[opponent_id] || 0) + 1;
 	}
 
 	// Get the refresh tokens of the user and all his opponents
-	let refreshTokenEntries: RefreshTokenRecord[];
-	try {
-		refreshTokenEntries = refreshTokenManager.findAllForUsers([
-			user_id,
-			...unique_user_id_list,
-		]);
-	} catch (error: unknown) {
-		const message = jsutil.getErrorMessage(error);
-		void logEvents.addAndPrint(
-			`Error fetching refresh token entries for users "${JSON.stringify([user_id, ...unique_user_id_list])}": ${message}`,
-			'errLog',
-		);
-		refreshTokenEntries = [];
-	}
+	const refreshTokenEntries = refreshTokenManager.findAllForUsers([
+		user_id,
+		...unique_user_id_list,
+	]);
 
 	// Extract the IP addresses of the user and his opponents from the refresh tokens
 	const ipAddresses: string[] = []; // ip_addresses of the user
@@ -239,39 +207,37 @@ function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvi
 			opponentIpAddresses[refreshToken.user_id]!.push(refreshToken.ip_address);
 		}
 	}
-
-	// Get relevant MemberRecords of the opponents from the members table
-	let opponents: AbuseEvidence['opponents'] = [];
-	try {
-		opponents = memberManager.getMultipleDataByCriteria(
-			['username', 'user_id', 'joined'],
-			'user_id',
-			unique_user_id_list,
-		);
-	} catch (error: unknown) {
-		const message = jsutil.getErrorMessage(error);
-		void logEvents.addAndPrint(
-			`Error fetching records for opponents during rating abuse calculation for user_id ${user_id}: ${message}`,
-			'errLog',
-		);
+	// Compare them, wherever both sides have IP addresses to compare
+	const opponentSharesIp: Record<number, boolean> = {};
+	if (ipAddresses.length > 0) {
+		for (const [opponent_id, opponentIps] of Object.entries(opponentIpAddresses)) {
+			opponentSharesIp[Number(opponent_id)] = opponentIps.some((ip) =>
+				ipAddresses.includes(ip),
+			);
+		}
 	}
 
-	return { opponentIds, opponentFrequency, ipAddresses, opponentIpAddresses, opponents };
+	// Get relevant MemberRecords of the opponents from the members table
+	const opponents = memberManager.getMultipleDataByCriteria(
+		['username', 'user_id', 'joined'],
+		'user_id',
+		unique_user_id_list,
+	);
+
+	return { opponentIdByGame, opponentFrequency, ipAddresses, opponentSharesIp, opponents };
 }
 
 /**
  * Reads a player's remaining time at the end of a concluded game off its ICN's `clk` stamps.
  * A player who was still on the move when the game ended reads as their last stamp, matching
  * how PGN records final clocks. Undefined if the game was untimed.
+ * @param longformat - The game's parsed ICN.
  */
 function deriveFinalClockOfPlayer(
-	game: Pick<
-		GamesRecord,
-		'icn' | 'result' | 'termination' | 'base_time_seconds' | 'increment_seconds'
-	>,
+	game: Pick<GamesRecord, 'result' | 'termination' | 'base_time_seconds' | 'increment_seconds'>,
+	longformat: LongFormatOut,
 	player: Player,
 ): number | undefined {
-	const longformat = icnconverter.ShortToLong_Format(game.icn);
 	const players = gamerules.getUniquePlayersInTurnOrder(longformat.gameRules.turnOrder);
 	const timeControl = clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds);
 	const { clocks } = clock.init(players, timeControl);
@@ -287,6 +253,18 @@ function deriveFinalClockOfPlayer(
 		{ moves, gameRules: longformat.gameRules, gameConclusion, clocks },
 		moves.length - 1,
 	)[player];
+}
+
+/** The fraction of their own clock a player left unused in a game, in [0, 1]. */
+function deriveUnusedClockFraction(
+	game: Pick<GamesRecord, 'base_time_seconds' | 'increment_seconds' | 'move_count'>,
+	finalClockMs: number,
+): number {
+	/** The player's own clock budget: their base time, plus the increment earned on their share of the moves. */
+	const available_clock_ms =
+		1000 * (game.base_time_seconds! + 0.5 * game.increment_seconds! * (game.move_count - 1));
+	// Capped, since the halved increment is an average — whoever moved more than their share earns above it.
+	return Math.min(1, finalClockMs / available_clock_ms);
 }
 
 // Exports ---------------------------------------------------------------------

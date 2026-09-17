@@ -33,7 +33,7 @@ function parseViewColorCode(segment: string | undefined): Player | undefined {
 /**
  * Builds the `/game/:id` URL.
  * @param id - The numeric game id (encoded into the base62 URL).
- * @param viewColor - The side to view the board from. Omit to view from the viewer's own.
+ * @param viewColor - The side to view the board from. Omit to use the side of whoever opens the link.
  */
 function getGameUrl(id: number, viewColor?: Player): string {
 	return `/game/${uuid.base10ToBase62(id)}${getViewColorSegment(viewColor)}`;
@@ -54,7 +54,7 @@ function getViewColorCode(viewColor: Player): ViewColorCode {
 /**
  * Builds the `/analysis/:id` URL.
  * @param id - The numeric game id (encoded into the base62 URL).
- * @param viewColor - The side to view the board from. Omit to view from the viewer's own.
+ * @param viewColor - The side to view the board from. Omit to use the side of whoever opens the link.
  */
 function getAnalysisUrl(id: number, viewColor?: Player): string {
 	return `/analysis/${uuid.base10ToBase62(id)}${getViewColorSegment(viewColor)}`;

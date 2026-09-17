@@ -18,7 +18,6 @@
  * ( ) Low total rated loss count
  * ( ) Opponents have low total casual matches, and low total rated wins
  * ( ) Excessive resignation terminations
- * ( ) Cheat reports against them
  */
 
 import type { AbuseEvidence, SuspicionRecord, SuspicionVerdict } from './ratingAbuseTypes.js';
@@ -28,7 +27,16 @@ import timeutil from '../../../shared/util/timeutil.js';
 // Constants -------------------------------------------------------------------
 
 /** Total suspicion score which is enough to mark a user as suspicious. */
-const SUSPICION_TOTAL_WEIGHT_THRESHHOLD = 1.0;
+const SUSPICION_THRESHOLD = 1.0;
+
+/** The most each check can weigh. */
+const CHECK_MAX_WEIGHTS = {
+	think_time: 0.8,
+	same_opponents: 0.5,
+	ip_addresses: 0.5,
+	logged_out: 0.5,
+	opponent_account_age: 0.3,
+} as const satisfies Record<SuspicionRecord['category'], number>;
 
 /** Games won with at least this fraction of the player's own clock still unused have a nonzero suspicion score. */
 const SUSPICIOUS_UNUSED_CLOCK_FRACTION = 0.8;
@@ -52,7 +60,7 @@ function runAll(evidence: AbuseEvidence): SuspicionVerdict {
 	return {
 		records,
 		totalWeight,
-		suspicious: totalWeight >= SUSPICION_TOTAL_WEIGHT_THRESHHOLD,
+		suspicious: totalWeight >= SUSPICION_THRESHOLD,
 	};
 }
 
@@ -66,38 +74,27 @@ function runAll(evidence: AbuseEvidence): SuspicionVerdict {
  */
 function checkThinkTime(evidence: AbuseEvidence, records: SuspicionRecord[]): void {
 	let weight = 0;
-	let comment = '';
 	for (const gameInfo of evidence.games) {
 		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
 
-		/** The player's own clock budget: their base time, plus the increment earned on their share of the moves. */
-		const available_clock_ms =
-			1000 *
-			(gameInfo.base_time_seconds! +
-				0.5 * gameInfo.increment_seconds! * (gameInfo.move_count - 1));
-		// Capped, since the halved increment is an average — whoever moved more than their share earns above it.
-		const unused_fraction = Math.min(1, gameInfo.finalClockMs! / available_clock_ms);
+		const unused_fraction = gameInfo.unusedClockFraction;
 
 		// Game is suspicious if the player barely touched their clock
 		if (unused_fraction >= SUSPICIOUS_UNUSED_CLOCK_FRACTION) {
 			weight +=
 				(unused_fraction - SUSPICIOUS_UNUSED_CLOCK_FRACTION) /
 				(1 - SUSPICIOUS_UNUSED_CLOCK_FRACTION); // rescale to [0, 1]
-			comment += `In game ${gameInfo.game_id} with time control ${gameInfo.base_time_seconds! / 60}m+${gameInfo.increment_seconds}s, player left ${(100 * unused_fraction).toFixed(0)}% of their clock unused. `;
 		}
 	}
 	if (weight > 0)
 		records.push({
 			category: 'think_time',
-			weight: (weight / evidence.games.length) * 0.8, // Rescale to [0, 0.8]
-			comment,
+			weight: (weight / evidence.games.length) * CHECK_MAX_WEIGHTS.think_time, // Rescale to [0, max]
 		});
 }
 
 /** Check if the user is playing against the same opponents many times. */
 function checkOpponentSameness(evidence: AbuseEvidence, records: SuspicionRecord[]): void {
-	if (evidence.opponentIds.length === 0) return;
-
 	let weight = 0;
 	for (const frequency of Object.values(evidence.opponentFrequency)) {
 		// Player is suspicious if he played against the same opponent several times
@@ -106,7 +103,7 @@ function checkOpponentSameness(evidence: AbuseEvidence, records: SuspicionRecord
 	if (weight > 0)
 		records.push({
 			category: 'same_opponents',
-			weight: (weight / evidence.opponentIds.length ** 2) * 0.5, // rescale to [0, 0.5]
+			weight: (weight / evidence.games.length ** 2) * CHECK_MAX_WEIGHTS.same_opponents, // rescale to [0, max]
 		});
 }
 
@@ -114,45 +111,26 @@ function checkOpponentSameness(evidence: AbuseEvidence, records: SuspicionRecord
 function checkIPAddresses(evidence: AbuseEvidence, records: SuspicionRecord[]): void {
 	// Player logged out mid game
 	if (evidence.ipAddresses.length === 0) {
-		records.push({
-			category: 'ip_addresses',
-			weight: 0.5,
-			comment: 'Player logged out mid-game.',
-		});
+		records.push({ category: 'logged_out', weight: CHECK_MAX_WEIGHTS.logged_out });
 		return;
-	} else if (
-		evidence.opponentIds.length === 0 ||
-		Object.keys(evidence.opponentIpAddresses).length === 0
-	)
-		return;
+	}
 
 	let weight = 0;
-	let comment = 'Opponents using same IP address: ';
-	for (const user_id in evidence.opponentIpAddresses) {
+	for (const [user_id, sharesIp] of Object.entries(evidence.opponentSharesIp)) {
 		// Player is suspicious if he uses a same IP adress as an opponent
-		const common_ip_addresses = evidence.ipAddresses.filter((ip_address) =>
-			evidence.opponentIpAddresses[user_id]!.includes(ip_address),
-		);
-		if (common_ip_addresses.length > 0) {
-			weight += evidence.opponentFrequency[user_id] ?? 0;
-			comment += `${user_id},`;
-		}
+		if (sharesIp) weight += evidence.opponentFrequency[Number(user_id)]!;
 	}
 	if (weight > 0)
 		records.push({
 			category: 'ip_addresses',
-			weight: (weight / evidence.opponentIds.length) * 0.5, // rescale to [0, 0.5]
-			comment,
+			weight: (weight / evidence.games.length) * CHECK_MAX_WEIGHTS.ip_addresses, // rescale to [0, max]
 		});
 }
 
 /** Check if the user's opponents have newly created accounts. */
 function checkOpponentAccountAge(evidence: AbuseEvidence, records: SuspicionRecord[]): void {
-	if (evidence.opponentIds.length === 0) return;
-
 	const current_time_ms = Date.now();
 	let weight = 0;
-	let comment = 'Newly joined opponents: ';
 	for (const opponentInfo of evidence.opponents) {
 		// Player is suspicious if his opponent's account is less than a week old
 		const account_age_ms = Math.max(
@@ -161,20 +139,22 @@ function checkOpponentAccountAge(evidence: AbuseEvidence, records: SuspicionReco
 		);
 		if (account_age_ms < SUSPICIOUS_ACCOUNT_AGE_MS) {
 			const fraction = account_age_ms / SUSPICIOUS_ACCOUNT_AGE_MS; // fraction is in the interval [0, 1]
-			weight += (1 - fraction) * (evidence.opponentFrequency[opponentInfo.user_id] ?? 0);
-			comment += `${opponentInfo.user_id},`;
+			weight += (1 - fraction) * evidence.opponentFrequency[opponentInfo.user_id]!;
 		}
 	}
 	if (weight > 0)
 		records.push({
 			category: 'opponent_account_age',
-			weight: (weight / evidence.opponentIds.length) * 0.3, // rescale to [0, 0.3]
-			comment,
+			weight: (weight / evidence.games.length) * CHECK_MAX_WEIGHTS.opponent_account_age, // rescale to [0, max]
 		});
 }
 
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
+	SUSPICION_THRESHOLD,
+	CHECK_MAX_WEIGHTS,
+	// Verdict
 	runAll,
 };

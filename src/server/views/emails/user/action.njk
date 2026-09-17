@@ -1,0 +1,18 @@
+{# An email asking the user to act: intro line, prominent button, fallback link, and footnote.
+   Used by account verification and password reset. #}
+{% extends "emails/user/layout.njk" %}
+
+{% block content %}
+<p style="margin:0 0 28px;color:#444444;font-size:16px;line-height:1.6;">{{ intro }}</p>
+{# Table-cell button: renders in clients that ignore CSS on links. #}
+<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;">
+	<tr>
+		<td bgcolor="{{ accentColor }}" style="border-radius:6px;">
+			<a href="{{ url }}" target="_blank" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:16px;font-weight:bold;text-decoration:none;">{{ buttonLabel }}</a>
+		</td>
+	</tr>
+</table>
+<p style="margin:0 0 8px;color:#777777;font-size:13px;line-height:1.6;">{{ fallbackText }}</p>
+<p style="margin:0 0 24px;font-size:13px;line-height:1.6;word-break:break-all;"><a href="{{ url }}" target="_blank" style="color:{{ accentColor }};text-decoration:underline;">{{ url }}</a></p>
+<p style="margin:0;color:#999999;font-size:13px;line-height:1.6;">{{ footnote }}</p>
+{% endblock %}

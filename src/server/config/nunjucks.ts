@@ -1,8 +1,8 @@
 // src/server/config/nunjucks.ts
 
 /**
- * Configures Nunjucks as the view engine for the Express app,
- * and injects the asset manifest as a template global.
+ * Owns the one Nunjucks environment, which renders both the site's pages and its emails,
+ * and configures it as the Express app's view engine.
  */
 
 import type { Application } from 'express';
@@ -20,24 +20,27 @@ import manifest from './manifest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Environment -----------------------------------------------------------------
+
+/** The environment every page and email renders through. */
+const nunjucksEnv = new nunjucks.Environment(
+	new nunjucks.FileSystemLoader(path.join(__dirname, '../views'), {
+		noCache: env.NODE_ENV !== 'production',
+	}),
+	{ autoescape: true, throwOnUndefined: env.NODE_ENV !== 'production' },
+);
+
+// Express ---------------------------------------------------------------------
+
 /**
  * Configures Nunjucks as the view engine for the given Express app,
  * and injects the asset manifest as a template global.
  */
 function configure(app: Application): void {
 	app.set('view engine', 'njk');
+	nunjucksEnv.express(app);
 
-	// Configure Nunjucks as the view engine.
-	// Templates live in src/server/views/ — copied to dist/server/views/ by the cpx
-	// build step. Nunjucks watches dist/server/views/ in dev; cpx propagates src edits.
-	const nunjucksEnv = nunjucks.configure(path.join(__dirname, '../views'), {
-		autoescape: true,
-		express: app,
-		watch: env.NODE_ENV !== 'production', // Re-reads templates on change in dev mode
-		throwOnUndefined: env.NODE_ENV !== 'production',
-	});
-
-	setManifestGlobals(nunjucksEnv, manifest.load());
+	setManifestGlobals(manifest.load());
 	nunjucksEnv.addGlobal('p', p); // Player-color constants, so templates reference WHITE/BLACK by name
 
 	// Serializes a value to JSON safe for inline <script> injection.
@@ -55,7 +58,7 @@ function configure(app: Application): void {
 	if (env.NODE_ENV !== 'production') {
 		fs.watch(manifest.PATH, () => {
 			try {
-				setManifestGlobals(nunjucksEnv, manifest.load());
+				setManifestGlobals(manifest.load());
 			} catch (_err) {
 				// File may be mid-write; the next 'change' event will pick it up.
 			}
@@ -67,10 +70,7 @@ function configure(app: Application): void {
  * Sets the manifest-derived template globals: the raw asset manifest, plus the
  * analysis engine's display name with its build-stamped version (e.g. "Apeiron 2.1"),
  */
-function setManifestGlobals(
-	nunjucksEnv: nunjucks.Environment,
-	assets: Record<string, string>,
-): void {
+function setManifestGlobals(assets: Record<string, string>): void {
 	nunjucksEnv.addGlobal('manifest', assets);
 	nunjucksEnv.addGlobal(
 		'engineNameVersioned',
@@ -78,6 +78,18 @@ function setManifestGlobals(
 	);
 }
 
+// Rendering -------------------------------------------------------------------
+
+/** Renders a template outside of any request, such as an email body. */
+function render(templateName: string, context: object): string {
+	return nunjucksEnv.render(templateName, context);
+}
+
 // Exports ---------------------------------------------------------------------
 
-export default { configure };
+export default {
+	// Express
+	configure,
+	// Rendering
+	render,
+};

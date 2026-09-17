@@ -79,6 +79,16 @@ function getData<K extends PlayerStatsColumn>(
 }
 
 /**
+ * How many games a member has played, aborted ones excluded.
+ * @returns The count, or `undefined` if the account no longer exists.
+ * @throws If a database error occurs.
+ */
+function getUnabortedGameCount(user_id: number): number | undefined {
+	const stats = getData(user_id, ['game_count', 'game_count_aborted']);
+	return stats && stats.game_count - stats.game_count_aborted;
+}
+
+/**
  * Applies one game's deltas to a member's counters, in whichever direction `sign` points.
  * @throws If the member has no stats row, or if a database error occurs.
  */
@@ -120,5 +130,6 @@ export default {
 	// Methods
 	insert,
 	getData,
+	getUnabortedGameCount,
 	applyGameDelta,
 };

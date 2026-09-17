@@ -35,10 +35,12 @@ type AbuseGamesRecord = Pick<
 export type AbuseGameInfo = AbusePlayerGamesRecord &
 	AbuseGamesRecord & {
 		/**
-		 * The player's remaining millis at game end, derived from
-		 * the ICN's clock stamps. Undefined if the game was untimed.
+		 * The fraction of all the time the player was given to think — base time plus the increment
+		 * earned on their moves — they left unused, in [0, 1]. Derived from the ICN's clock stamps.
 		 */
-		finalClockMs: number | undefined;
+		unusedClockFraction: number;
+		/** The game's `moveRule` gamerule, read off its ICN. */
+		moveRule: number | undefined;
 	};
 
 /** The entries of a MemberRecord the rating abuse calculation reads. */
@@ -52,14 +54,17 @@ type AbuseMemberRecord = {
 
 /** Who the player faced across the measured games, and the identities behind them. */
 export type IdentityEvidence = {
-	/** Opponent user_ids, one entry per game played against them. */
-	opponentIds: number[];
+	/** Each game's opponent user_id, keyed by game_id. */
+	opponentIdByGame: Record<number, number>;
 	/** How many of those recent games each opponent user_id accounts for. */
 	opponentFrequency: Record<number, number>;
 	/** IP addresses seen on the player's own refresh tokens. */
 	ipAddresses: string[];
-	/** IP addresses seen on each opponent's refresh tokens, keyed by user_id. */
-	opponentIpAddresses: Record<number, string[]>;
+	/**
+	 * Whether the player shares an IP address with each opponent, keyed by user_id.
+	 * An opponent has no entry when either side has no IP address to compare.
+	 */
+	opponentSharesIp: Record<number, boolean>;
 	/** Account details of each unique opponent. */
 	opponents: AbuseMemberRecord[];
 };
@@ -72,9 +77,8 @@ export type AbuseEvidence = IdentityEvidence & {
 
 /** One check's finding: how suspicious a single monitored characteristic looks. */
 export type SuspicionRecord = {
-	category: 'think_time' | 'same_opponents' | 'ip_addresses' | 'opponent_account_age';
+	category: 'think_time' | 'same_opponents' | 'ip_addresses' | 'logged_out' | 'opponent_account_age'; // prettier-ignore
 	weight: number;
-	comment?: string;
 };
 
 /** The combined outcome of running every check over one player's evidence. */
@@ -90,9 +94,7 @@ export type SuspicionVerdict = {
 export type AbuseReportContext = {
 	user_id: number;
 	username: string;
-	leaderboard_id: number;
 	/** The player's net elo change across the measured games. */
 	netRatingChange: number;
-	gameIds: number[];
 	evidence: AbuseEvidence;
 };
