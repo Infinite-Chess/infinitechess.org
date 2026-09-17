@@ -12,7 +12,6 @@ import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from '../gamemanager/serverGameTypes.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
 import type { LongFormatOut } from '../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type {
 	AbuseEvidence,
 	AbuseGameInfo,
@@ -23,7 +22,6 @@ import type {
 import clock from '../../../shared/chess/logic/clock.js';
 import gamerules from '../../../shared/chess/util/gamerules.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
-import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
@@ -32,6 +30,7 @@ import abuseChecks from './abuseChecks.js';
 import abuseReport from './abuseReport.js';
 import gameUtility from '../gamemanager/gameUtility.js';
 import gamesManager from '../../database/gamesManager.js';
+import deadGameState from '../gamemanager/deadGameState.js';
 import memberManager from '../../database/memberManager.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
 import ratingAbuseManager from '../../database/ratingAbuseManager.js';
@@ -244,10 +243,7 @@ function deriveFinalClockOfPlayer(
 	if (clocks === undefined) return undefined; // Untimed game — it has no clocks to read.
 
 	const moves = longformat.moves ?? [];
-	const gameConclusion = {
-		condition: game.termination,
-		victor: metadatautil.getVictorFromResult(game.result),
-	} as GameConclusion; // The columns are plain TEXT; this mirrors deadGameState's read.
+	const gameConclusion = deadGameState.decodeConclusion(game);
 
 	return clock.clocksAtMoveIndex(
 		{ moves, gameRules: longformat.gameRules, gameConclusion, clocks },

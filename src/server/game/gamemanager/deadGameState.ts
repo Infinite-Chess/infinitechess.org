@@ -131,6 +131,32 @@ function produceGameState(game_id: number): DeadGameState | undefined {
 }
 
 /**
+ * Reads the engine participant of a concluded game.
+ * @returns The participant, or `undefined` if the game had no engine (human vs human).
+ * @throws If a database error occurs.
+ */
+function getEngineParticipant(game_id: number): EngineParticipant | undefined {
+	const row = engineGamesManager.getOfGame(game_id, [
+		'player_number',
+		'engine',
+		'strength_level',
+	])[0];
+	if (!row) return undefined;
+	return {
+		color: row.player_number as Player,
+		engine: row.engine as ValidEngine,
+		strengthLevel: row.strength_level,
+		container: {
+			type: 'engine',
+			username: engineregistry.getFormattedName(
+				row.engine as ValidEngine,
+				row.strength_level,
+			),
+		},
+	};
+}
+
+/**
  * Maps already-fetched DB rows into the {@link StaticGameState} base,
  * so both readers above share one field mapping.
  */
@@ -170,11 +196,6 @@ function assembleStaticGameState(
 		playerContainers[color] = container;
 	}
 
-	const gameConclusion = {
-		condition: game.termination,
-		victor: metadatautil.getVictorFromResult(game.result),
-	} as GameConclusion;
-
 	return {
 		setup: {
 			// A null `variant` column marks a custom game; its position comes from the ICN (parsed client-side), never here.
@@ -191,34 +212,17 @@ function assembleStaticGameState(
 		},
 		rated: Boolean(game.rated),
 		players: playerContainers,
-		gameConclusion,
+		gameConclusion: decodeConclusion(game),
 	};
 }
 
-/**
- * Reads the engine participant of a concluded game.
- * @returns The participant, or `undefined` if the game had no engine (human vs human).
- * @throws If a database error occurs.
- */
-function getEngineParticipant(game_id: number): EngineParticipant | undefined {
-	const row = engineGamesManager.getOfGame(game_id, [
-		'player_number',
-		'engine',
-		'strength_level',
-	])[0];
-	if (!row) return undefined;
+/** Rebuilds the {@link GameConclusion} a games row was logged from. */
+function decodeConclusion(game: Pick<GamesRecord, 'termination' | 'result'>): GameConclusion {
+	// The columns are plain TEXT, but are only ever written by gameLogger's encodeConclusion.
 	return {
-		color: row.player_number as Player,
-		engine: row.engine as ValidEngine,
-		strengthLevel: row.strength_level,
-		container: {
-			type: 'engine',
-			username: engineregistry.getFormattedName(
-				row.engine as ValidEngine,
-				row.strength_level,
-			),
-		},
-	};
+		condition: game.termination,
+		victor: metadatautil.getVictorFromResult(game.result),
+	} as GameConclusion;
 }
 
 // Exports ---------------------------------------------------------------------
@@ -227,4 +231,5 @@ export default {
 	resolveParticipantColor,
 	produceStaticState,
 	produceGameState,
+	decodeConclusion,
 };

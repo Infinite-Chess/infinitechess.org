@@ -13,6 +13,7 @@
 
 import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { RatingData } from '../../utility/ratingCalculation.js';
+import type { GamesRecord } from '../../database/gamesManager.js';
 import type { PlayerOutcome } from '../../database/playerStatsManager.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
@@ -21,6 +22,7 @@ import type { MatchInfo, PlayerData, ServerGame } from './serverGameTypes.js';
 import jsutil from '../../../shared/util/jsutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
@@ -79,13 +81,14 @@ function log(servergame: ServerGame): RatingData | undefined {
  * Either ALL operations succeed, or NONE do.
  */
 function logGameInTransaction(servergame: ServerGame): RatingData | undefined {
-	const { victor, condition: termination } = servergame.gameConclusion!;
+	const conclusion = servergame.gameConclusion!;
+	const victor = conclusion.victor;
 
 	// --- Part 1: Handle Rating Updates ---
 	const ratingData = updateLeaderboardsInTransaction(servergame.match, victor);
 
 	// --- Part 2: Create Game Records in games and player_games tables ---
-	addGameRecordsInTransaction(servergame, victor, termination, ratingData);
+	addGameRecordsInTransaction(servergame, conclusion, ratingData);
 
 	// --- Part 3: Update Player Stats ---
 	updateAllPlayerStatsInTransaction(servergame, victor);
@@ -162,11 +165,11 @@ function updateLeaderboardsInTransaction(
 /** [INTERNAL] Adds the records to the `games`, `player_games` and `engine_games` tables. Throws on error. */
 function addGameRecordsInTransaction(
 	servergame: ServerGame,
-	victor: Player | null | undefined,
-	termination: string,
+	conclusion: GameConclusion,
 	ratingData: RatingData | undefined,
 ): void {
 	const match = servergame.match;
+	const victor = conclusion.victor;
 	const { baseTimeSeconds: base_time_seconds, incrementSeconds: increment_seconds } =
 		clockutil.splitTimeControl(match.clock);
 
@@ -189,8 +192,7 @@ function addGameRecordsInTransaction(
 		rated: match.rated ? 1 : 0,
 		leaderboard_id: leaderboardregistry.ofVariant(match.variant) ?? null,
 		private: match.private ? 1 : 0,
-		result: metadata.Result!,
-		termination,
+		...encodeConclusion(conclusion),
 		move_count: servergame.moves.length,
 		time_duration_millis: match.timeEnded ? match.timeEnded - match.timeCreated : null,
 		icn, // Use the pre-generated ICN
@@ -259,6 +261,14 @@ function updateAllPlayerStatsInTransaction(
 function getUserID(data: PlayerData | undefined): number | undefined {
 	if (!data) return undefined;
 	return data.identifier.signedIn ? data.identifier.user_id : undefined;
+}
+
+/** The `games` columns a {@link GameConclusion} is logged as. deadGameState's `decodeConclusion` reverses it. */
+function encodeConclusion(conclusion: GameConclusion): Pick<GamesRecord, 'termination' | 'result'> {
+	return {
+		termination: conclusion.condition,
+		result: metadatautil.getResultFromVictor(conclusion.victor),
+	};
 }
 
 /** A player's score in a concluded game: `undefined` victor = aborted (null score), `null` = draw. */
@@ -408,8 +418,7 @@ function updateGameRecordForOverturn(servergame: ServerGame): void {
 	const icn = getICNOfGame(servergame, metadata);
 
 	gamesManager.update(match.id, {
-		result: metadata.Result!,
-		termination: servergame.gameConclusion!.condition,
+		...encodeConclusion(servergame.gameConclusion!),
 		move_count: servergame.moves.length,
 		icn,
 	});
