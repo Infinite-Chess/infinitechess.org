@@ -68,11 +68,12 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 16. When more than one real option exists:
     - They're peers. Your pick is one of them, marked as recommended with the trade-off that swayed your decision — never a header above them.
-    - They must be mutually exclusive. If one contains another, they aren't options: recommend the smaller one alone, and raise the extra step as its own yes/no after it.
+    - They must be mutually exclusive. If one contains another, they aren't options: recommend the smaller one alone, and raise the extra step as a yes/no.
     - State what they share once, above them. Each lists only how it differs, its own overview and trade-offs.
     - Sort by most _correct_ first, then cleanest/simplest. Quantify where it helps me decide: lines added.
+    - A yes/no goes inside the one option it applies to. Only one that applies to every option goes after them all.
 
-17. If a better architecture would have prevented the problem from ever occurring, recommend it, even if it grows the scope — as its own yes/no after the fix, never one of its options. Bug prevention now is less work fixing bugs later.
+17. If a better architecture would have prevented the problem from ever occurring, recommend it, even if it grows the scope — as a yes/no, never one of the options. Bug prevention now is less work fixing bugs later.
 
 ### Code changes
 
