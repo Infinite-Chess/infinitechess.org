@@ -274,7 +274,8 @@ function onEngineStatus(status: CevalStatus): void {
 		setGaugeVisible(false);
 		element_Stats.textContent = 'Engine failed to load';
 		updateProgress(undefined);
-		if (changed) toast.show('The engine failed to load.', { error: true });
+		// A deploy can change the content-hashed engine files mid-page.
+		if (changed) toast.show('The engine failed to load. Try refreshing.', { error: true });
 	} else if (status.kind === 'blocked') {
 		setGaugeVisible(false);
 		clearPanelReadout(t.shared.position_errors.engine[status.reason].label);
