@@ -5,6 +5,7 @@
  *
  * It uses SQLite's Online Backup API (via better-sqlite3's db.backup())
  * to produce a single consistent .db snapshot while the database is live.
+ * Each backup is preceded by an integrity check of the live database.
  */
 
 import fs from 'fs';
@@ -52,8 +53,8 @@ function startDaily(): void {
 }
 
 /**
- * Creates a timestamped backup of the database in the `backups/` directory,
- * then purges any backups older than 30 days.
+ * Checks the database's integrity, creates a timestamped backup of it in the
+ * `backups/` directory, then purges any backups older than 30 days if the check passed.
  * If a backup is already in progress, returns the same promise so callers join it.
  * @throws If the SQLite backup or directory creation fails.
  */
@@ -72,6 +73,8 @@ function perform(): Promise<void> {
 async function doBackup(): Promise<void> {
 	if (env.NODE_ENV === 'test') return; // In-memory DB — nothing to back up.
 
+	const integrityPassed = passesIntegrityCheck();
+
 	fs.mkdirSync(BACKUPS_DIR, { recursive: true });
 
 	const dateFormatted = format(new Date(), 'yyyy-MM-dd_HH-mm-ss');
@@ -83,7 +86,39 @@ async function doBackup(): Promise<void> {
 
 	console.log(`Database backup created: ${path.basename(destPath)} (${elapsed}ms)`);
 
-	purgeOldBackups();
+	// A corrupt database makes corrupt backups, so purging then
+	// would delete the last good ones after MAX_BACKUP_AGE_MS days.
+	if (integrityPassed) purgeOldBackups();
+}
+
+/**
+ * Checks the integrity of the SQLite database, and emails Naviary every problem SQLite reports.
+ * Every line is needed to judge whether only indexes are damaged (`REINDEX` repairs those),
+ * or table pages too (restore a backup).
+ * @returns Whether SQLite reported no problems.
+ */
+function passesIntegrityCheck(): boolean {
+	try {
+		const rows = db.call(
+			() => db.all<{ integrity_check: string }>('PRAGMA integrity_check;'),
+			'Error performing database integrity check',
+		);
+		const problems = rows.map((row) => row.integrity_check);
+		if (problems.length === 1 && problems[0] === 'ok') return true;
+
+		const message = `Database integrity check failed:\n${problems.join('\n')}`;
+		logEvents.addAndPrint(message, 'errLog');
+		void emailService.sendAlertToSelf('database-alert', {
+			title: 'Database integrity check failed',
+			sections: [
+				{ heading: 'PROBLEMS', kind: 'mono', lines: problems.map((text) => ({ text })) },
+			],
+		});
+		return false;
+	} catch {
+		// Already logged to errLog, and emailed if a storage failure. A check that couldn't run isn't a pass.
+		return false;
+	}
 }
 
 /** Deletes backup files in `backups/` that are older than 30 days. */
