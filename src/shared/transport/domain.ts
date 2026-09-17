@@ -56,7 +56,7 @@ const GameIDSchema = z.number().int().nonnegative();
 /**
  * The static setup of a game: how it was configured at creation — variant, clock settings,
  * modifiers, creation time. Unchanging for the game's whole life. SSR'd into `gamePageData`
- * (and the `setup` of {@link StaticGameState} for the side bar / dead-game HTTP), so it is
+ * (and the `setup` of {@link GameStateCore} for the side bar / dead-game HTTP), so it is
  * never sent over the subscribe socket — the client already has it by game-load time.
  */
 export interface StaticGameSetup {
@@ -69,24 +69,27 @@ export interface StaticGameSetup {
 }
 
 /**
- * A game's {@link StaticGameSetup} plus its display fields (rated, players) and current conclusion.
- * Used by the SSR side bar and the dead-game HTTP path. Everything here is static & unchanging
- * since the game's inception EXCEPT the gameConclusion.
+ * A game's {@link StaticGameSetup} plus its conclusion. Everything here is
+ * unchanging since the game's inception EXCEPT the gameConclusion.
  */
-export interface StaticGameState {
+export interface GameStateCore {
 	// Kept whole so it can be forwarded to the client channel without field-by-field copying.
 	setup: StaticGameSetup;
+	gameConclusion?: GameConclusion;
+}
+
+/** A game's core state plus the display fields the SSR'd side bar renders. */
+export interface StaticGameState extends GameStateCore {
 	rated: boolean;
 	/** Per-color username container, with rating embedded per player. */
 	players: PlayerGroup<ServerUsernameContainer>;
-	gameConclusion?: GameConclusion;
 }
 
 /**
  * The full state of a DEAD (concluded) game, served over HTTP (`GET /api/game/:id`).
  * Built from DB columns only — the server does not parse the ICN.
  */
-export interface DeadGameState extends StaticGameState {
+export interface DeadGameState extends GameStateCore {
 	/**
 	 * Source of truth for moves + clock stamps (+ start position
 	 * only for custom-position games); the client parses it.

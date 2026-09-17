@@ -17,6 +17,7 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 import type {
 	DeadGameState,
 	EngineGamePageInfo,
+	GameStateCore,
 	ServerUsernameContainer,
 	StaticGameState,
 } from '../../../shared/transport/domain.js';
@@ -48,7 +49,7 @@ type EngineParticipant = {
 /** Display name for a player whose account was deleted (their `player_games` row remains, but no `members` row). */
 const DELETED_USER_DISPLAY_NAME = '(Deleted User)';
 
-/** The `games` columns needed to assemble a {@link StaticGameState}. */
+/** The `games` columns needed to assemble a {@link GameStateCore}. */
 const STATIC_GAME_COLUMNS = ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination', 'mod_slide_limit'] as const; // prettier-ignore
 /** The `player_games` columns needed to assemble a {@link StaticGameState}. */
 const STATIC_PLAYER_COLUMNS = ['player_number', 'user_id', 'elo_at_game', 'rating_deviation_at_game'] as const; // prettier-ignore
@@ -111,9 +112,9 @@ function produceStaticState(game_id: number):
 }
 
 /**
- * Builds the full {@link DeadGameState} for a concluded game from the database — the static base
- * plus the `icn`, which the client also reads the final clocks off of. Rating deltas are NOT included:
- * the client displays them from SSR (see {@link produceStaticState}), never from this HTTP payload.
+ * Builds the full {@link DeadGameState} for a concluded game — its core state plus the
+ * `icn`, which the client also reads the final clocks off of. Players and rating deltas
+ * are absent because both pages that fetch this already have them SSR'd.
  * @returns The state, or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */
@@ -121,11 +122,8 @@ function produceGameState(game_id: number): DeadGameState | undefined {
 	const game = gamesManager.getData(game_id, [...STATIC_GAME_COLUMNS, 'icn']);
 	if (game === undefined) return undefined;
 
-	const playerRows = playerGamesManager.getOfGame(game_id, [...STATIC_PLAYER_COLUMNS]);
-	const engineParticipant = getEngineParticipant(game_id);
-
 	return {
-		...assembleStaticGameState(game, playerRows, engineParticipant),
+		...assembleGameStateCore(game),
 		icn: game.icn,
 	};
 }
@@ -156,10 +154,29 @@ function getEngineParticipant(game_id: number): EngineParticipant | undefined {
 	};
 }
 
-/**
- * Maps already-fetched DB rows into the {@link StaticGameState} base,
- * so both readers above share one field mapping.
- */
+/** Maps a `games` row into the {@link GameStateCore} both readers build on. */
+function assembleGameStateCore(
+	game: Pick<GamesRecord, (typeof STATIC_GAME_COLUMNS)[number]>,
+): GameStateCore {
+	return {
+		setup: {
+			// A null `variant` column marks a custom game; its position comes from the ICN (parsed client-side), never here.
+			variant:
+				game.variant !== null
+					? { kind: 'preset', code: game.variant as VariantCode }
+					: { kind: 'custom' },
+			timeControl: clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds),
+			timeCreated: timeutil.sqliteToTimestamp(game.date),
+			modifiers:
+				game.mod_slide_limit !== null
+					? [{ kind: 'slide-limit', value: game.mod_slide_limit as SlideLimitValue }]
+					: undefined,
+		},
+		gameConclusion: decodeConclusion(game),
+	};
+}
+
+/** Maps already-fetched DB rows into the {@link StaticGameState} the SSR'd side bar renders. */
 function assembleStaticGameState(
 	game: Pick<GamesRecord, (typeof STATIC_GAME_COLUMNS)[number]>,
 	playerRows: Pick<PlayerGamesRecord, (typeof STATIC_PLAYER_COLUMNS)[number]>[],
@@ -197,22 +214,9 @@ function assembleStaticGameState(
 	}
 
 	return {
-		setup: {
-			// A null `variant` column marks a custom game; its position comes from the ICN (parsed client-side), never here.
-			variant:
-				game.variant !== null
-					? { kind: 'preset', code: game.variant as VariantCode }
-					: { kind: 'custom' },
-			timeControl: clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds),
-			timeCreated: timeutil.sqliteToTimestamp(game.date),
-			modifiers:
-				game.mod_slide_limit !== null
-					? [{ kind: 'slide-limit', value: game.mod_slide_limit as SlideLimitValue }]
-					: undefined,
-		},
+		...assembleGameStateCore(game),
 		rated: Boolean(game.rated),
 		players: playerContainers,
-		gameConclusion: decodeConclusion(game),
 	};
 }
 

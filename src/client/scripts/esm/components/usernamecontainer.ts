@@ -1,7 +1,12 @@
 // src/client/scripts/esm/components/usernamecontainer.ts
 
 /**
- * This script provides functionalities for the username container that contains the players' username, elo etc.
+ * DEPRECATED — the old website's client-built username container (username, elo, rating delta).
+ *
+ * The redesign SSRs its containers instead, through the `usernameEmbed` macro in
+ * `components/user.njk`. The leaderboard is the last page still building them here, and
+ * should be superseded by that macro, after which this script is deleted. Do not migrate
+ * or extend this script — take inspiration from its delta display only.
  */
 
 import type { Rating } from '../../../../shared/chess/util/metadatautil.js';
