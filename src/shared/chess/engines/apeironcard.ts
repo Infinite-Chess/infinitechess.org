@@ -15,7 +15,7 @@ import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
 import boardutil from '../logic/boardutil.js';
 import apeironborder from '../logic/apeironborder.js';
-import typeutil, { RawType, rawTypes as r, players as p } from '../util/typeutil.js';
+import typeutil, { RawType, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -24,7 +24,6 @@ export type EngineSupportCode =
 	| 'unsupported_variant'
 	| 'unsupported_win_rule'
 	| 'too_many_promotions'
-	| 'too_many_pieces'
 	| 'unsupported_piece'
 	| 'border_too_large'
 	| 'out_of_bounds';
@@ -32,9 +31,6 @@ export type EngineSupportCode =
 type SupportedResult = { supported: true } | { supported: false; reason: EngineSupportCode };
 
 // Constants -------------------------------------------------------------------
-
-/** Max non-neutral pieces the engine handles before it bogs down (excludes voids/obstacles). */
-const MAX_PIECES = 1000;
 
 /**
  * Adding a variant here obliges its module to declare `getPositionBox`, unless it declares a
@@ -71,21 +67,6 @@ function checkPromotions(gameRules: GameRules): SupportedResult {
 	return { supported: true };
 }
 
-/** No more than {@link MAX_PIECES} non-neutral pieces. */
-function checkPieceCount(nonNeutralCount: number): SupportedResult {
-	if (nonNeutralCount > MAX_PIECES) return { supported: false, reason: 'too_many_pieces' };
-	return { supported: true };
-}
-
-/** Non-neutral piece count of a position map, short-circuiting once it exceeds the cap. */
-function checkPositionPieceCount(types: Iterable<number>): SupportedResult {
-	let count = 0;
-	for (const type of types) {
-		if (typeutil.getColorFromType(type) !== p.NEUTRAL && ++count > MAX_PIECES) break;
-	}
-	return checkPieceCount(count);
-}
-
 /** Every piece type present must be one the engine can move. */
 function checkPieceTypes(rawTypes: Iterable<RawType>): SupportedResult {
 	for (const rawType of rawTypes) {
@@ -117,11 +98,6 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 	) {
 		return { supported: false, reason: 'border_too_large' };
 	}
-
-	const pieceCountResult = checkPieceCount(
-		boardutil.getPieceCountOfGame(gamefile.pieces, { ignoreColors: new Set([p.NEUTRAL]) }),
-	);
-	if (!pieceCountResult.supported) return pieceCountResult;
 
 	// No piece may lie outside the border. Only reachable for a border generated around this position
 	// and then clipped by the cap — an explicit one is validated upstream in validatePosition.
@@ -161,19 +137,14 @@ function checkGameRules(gamefile: GameFile): SupportedResult {
 }
 
 /**
- * Whether the engine can analyze the CURRENTLY VIEWED position (analysis-board local eval). The
- * piece count/types checked are the current board's — a capture or move can bring a position that
- * was unplayable (too many pieces / an unsupported piece) back into range, so we don't disqualify
- * a game for something at another ply. Out-of-bounds is handled separately by the caller.
+ * Whether the engine can analyze the CURRENTLY VIEWED position (analysis-board local eval).
+ * The piece types checked are the current board's — a capture can bring a position that
+ * was unplayable (an unsupported piece) back into range, so we don't disqualify a game
+ * for something at another ply. Out-of-bounds is handled separately by the caller.
  */
 function isAnalysisSupported(gamefile: GameFile): SupportedResult {
 	const gameRulesResult = checkGameRules(gamefile);
 	if (!gameRulesResult.supported) return gameRulesResult;
-
-	const pieceCountResult = checkPieceCount(
-		boardutil.getPieceCountOfGame(gamefile.pieces, { ignoreColors: new Set([p.NEUTRAL]) }),
-	);
-	if (!pieceCountResult.supported) return pieceCountResult;
 
 	const allRawTypes = new Set<RawType>();
 	for (const idx of gamefile.pieces.coords.values()) {
@@ -185,25 +156,13 @@ function isAnalysisSupported(gamefile: GameFile): SupportedResult {
 
 /**
  * Whether the engine can review the WHOLE game (Game Review evaluates every mainline position).
- * Uses the STARTING position's non-neutral count — the maximum, since pieces only ever decrease —
- * and every piece type that appears across the game (start pieces plus promotion targets). Out-of-
- * bounds positions are NOT disqualifying: the review skips those individually (pieces can return
- * in range), which is why this deliberately performs no world-border check.
+ * Uses every piece type that appears across the game (start pieces plus promotion targets).
+ * Out-of-bounds positions are NOT disqualifying: the review skips those individually (pieces
+ * can return in range), which is why this deliberately performs no world-border check.
  */
 function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 	const gameRulesResult = checkGameRules(gamefile);
 	if (!gameRulesResult.supported) return gameRulesResult;
-
-	// Quickly check if the current position's piece count is already too
-	// high, before counting every single piece in the start position.
-	const currentPieceCount = boardutil.getPieceCountOfGame(gamefile.pieces, {
-		ignoreColors: new Set([p.NEUTRAL]),
-	});
-	if (currentPieceCount > MAX_PIECES) return { supported: false, reason: 'too_many_pieces' };
-
-	// Now we have set a realistic upper bound
-	const pieceCountResult = checkPositionPieceCount(gamefile.startSnapshot.position.values());
-	if (!pieceCountResult.supported) return pieceCountResult;
 
 	return checkPieceTypes(gamefile.existingRawTypes);
 }

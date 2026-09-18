@@ -161,10 +161,6 @@ message = "The engine doesn't support this win condition."
 label = "Too many promotions"
 message = "The engine supports at most one promotion line per player."
 
-[position_errors.engine.too_many_pieces]
-label = "Too many pieces"
-message = "The engine doesn't support this many pieces."
-
 [position_errors.engine.unsupported_piece]
 label = "Unsupported piece"
 message = "The engine doesn't support one of these pieces."

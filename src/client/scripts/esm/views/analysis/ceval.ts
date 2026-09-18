@@ -584,8 +584,8 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 
 /**
  * Why the engine can't analyze `gamefile`'s viewed position, or undefined when it can.
- * The engine can't handle some positions at all (4D/5D variants, too many pieces, unsupported
- * pieces/win conditions). Bounds are separate: an out-of-range VIEWED position blocks too, but
+ * The engine can't handle some positions at all (4D/5D variants, unsupported pieces/win
+ * conditions). Bounds are separate: an out-of-range VIEWED position blocks too, but
  * out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
  */
 function computeBlockReason(gamefile: GameFile): EngineSupportCode | undefined {
