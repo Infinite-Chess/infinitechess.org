@@ -53,6 +53,4 @@ function makeSafe(seek: AuthSeek): OutSeek {
 
 // Exports ---------------------------------------------------------------------
 
-export default {
-	makeSafe,
-};
+export default { makeSafe };
