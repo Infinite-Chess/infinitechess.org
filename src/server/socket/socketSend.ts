@@ -30,8 +30,8 @@ import socketLogger from './socketLogger.js';
 type OutMessages = {
 	general: ClientboundGeneralMessage;
 	lobby: ClientboundLobbyMessage;
-	game: ClientboundGameMessage;
 	challenge: ClientboundChallengeMessage;
+	game: ClientboundGameMessage;
 };
 
 /** A route we may send on. */

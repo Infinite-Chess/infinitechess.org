@@ -16,7 +16,7 @@ import type { GameStateMessage } from '../../../shared/transport/clientbound.js'
 import type { MatchInfo, ServerGame } from './serverGameTypes.js';
 import type { OutAction, OutRoute, OutValue } from '../../socket/socketSend.js';
 
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import gameUtility from './gameUtility.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
 import gameStateBuilder from './gameStateBuilder.js';
@@ -88,7 +88,7 @@ function sendToColor<R extends OutRoute, A extends OutAction<R>, V extends OutVa
 ): void {
 	const ws = match.playerData[role]?.socket;
 	if (!ws) return; // They are not connected, can't send message
-	socketsend.send(ws, sub, action, value);
+	socketSend.send(ws, sub, action, value);
 }
 
 /** Broadcasts a message to every connected participant of the game. */
@@ -108,7 +108,7 @@ function broadcastToSpectators<A extends OutAction<'game'>, V extends OutValue<'
 	value: Exact<V, OutValue<'game', A>>,
 ): void {
 	for (const ws of servergame.spectators) {
-		socketsend.send(ws, 'game', action, value);
+		socketSend.send(ws, 'game', action, value);
 	}
 }
 
@@ -142,7 +142,7 @@ function sendGameState(
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message
 
 	const messageContents = gameStateBuilder.buildStateMessage(servergame, role, kind, forceSync);
-	socketsend.send(playerdata.socket, 'game', 'gamestate', messageContents);
+	socketSend.send(playerdata.socket, 'game', 'gamestate', messageContents);
 }
 
 /** Broadcasts the game's live spectator count to everyone attached. */

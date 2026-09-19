@@ -27,7 +27,7 @@ import leaderboardregistry from '../../../shared/chess/variants/leaderboardregis
 import { validatePosition } from '../../../shared/chess/logic/positionlegality.js';
 import playability, { PositionRejection } from '../../../shared/chess/game/playability.js';
 
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import seekUtility from './seekUtility.js';
 import activeSeeks from './activeSeeks.js';
 import activeGames from '../gamemanager/activeGames.js';
@@ -46,12 +46,12 @@ import leaderboardsManager from '../../database/leaderboardsManager.js';
 function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 	if (activePlayers.hasSocket(ws)) {
 		// Can't create seek because they are already in a game
-		return socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.already_in_game);
+		return socketSend.send(ws, 'general', 'toast', ws.t.responses.seeks.already_in_game);
 	}
 
 	// Reject rated seeks from signed-out users
 	if (messageContents.mode === 'rated' && !ws.metadata.memberInfo.signedIn) {
-		socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.rated_requires_signin);
+		socketSend.send(ws, 'general', 'toast', ws.t.responses.seeks.rated_requires_signin);
 		return;
 	}
 
@@ -59,19 +59,16 @@ function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 		const seek = getSeekFromWebsocketMessageContents(ws, messageContents);
 		if (!seek) return; // Message contained invalid seek parameters. Error already sent to the client.
 
-		// Replace any existing seek this user owns — the subsequent add() broadcasts the new state.
-		activeSeeks.deleteOfOwner(ws.metadata.memberInfo, { dontBroadcast: true });
-
 		activeSeeks.add(seek);
 
 		if (seekUtility.isPrivate(seek)) {
 			// Its owner isn't on its challenge page yet — they're sent there now.
-			challengeManager.armExpiry(seek);
-			socketsend.send(ws, 'lobby', 'challengecreated', seek.id);
+			challengeManager.markOwnerAway(seek, false);
+			socketSend.send(ws, 'lobby', 'challengecreated', seek.id);
 		}
 	} catch {
 		// DB error (already logged)
-		socketsend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
+		socketSend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
 	}
 }
 
@@ -126,7 +123,7 @@ function validateVariant(ws: CustomWebSocket, variant: SeekVariant, engineGame: 
 	if (variant.kind !== 'custom') return true;
 	const rejection = validateIcnSeekContent(variant.position, engineGame);
 	if (rejection === null) return true;
-	socketsend.send(ws, 'general', 'toast', playability.localizeRejection(ws.t, rejection));
+	socketSend.send(ws, 'general', 'toast', playability.localizeRejection(ws.t, rejection));
 	return false;
 }
 

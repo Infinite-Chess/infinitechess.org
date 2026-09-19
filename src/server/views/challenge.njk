@@ -32,9 +32,9 @@
 
 		{# The owner, and the side they chose — no dot for Random. #}
 		<div class="challenge-owner">
-			{{ usernameEmbed(ownerName, ownerElo) }}
-			{% if ownerSide is defined %}
-			<span class="side-dot{{ ' black' if ownerSide == p.BLACK }}" title="{{ s.seek.owner_side_black if ownerSide == p.BLACK else s.seek.owner_side_white }}"></span>
+			{{ usernameEmbed(owner.name, owner.elo) }}
+			{% if owner.side is defined %}
+			<span class="side-dot{{ ' black' if owner.side == p.BLACK }}" title="{{ s.seek.owner_side_black if owner.side == p.BLACK else s.seek.owner_side_white }}"></span>
 			{% endif %}
 		</div>
 
@@ -46,7 +46,7 @@
 
 		{{ seekProperties(properties) }}
 
-		{# The start position, always from White's side. Sized before any script runs. #}
+		{# The start position, always from White's view. Sized before any script runs. #}
 		<canvas id="challenge-preview" width="256" height="256"></canvas>
 
 		{% if share %}

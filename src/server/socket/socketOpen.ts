@@ -17,7 +17,7 @@ import ip from '../utility/ip.js';
 import env from '../config/env.js';
 import reqLogger from '../utility/reqLogger.js';
 import logEvents from '../utility/logEvents.js';
-import socketsend from './socketSend.js';
+import socketSend from './socketSend.js';
 import errorGuard from '../utility/errorGuard.js';
 import socketClose from './socketClose.js';
 import reqLanguage from '../config/reqLanguage.js';
@@ -78,7 +78,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	addListenersToSocket(ws);
 
 	// Announce our protocol version, so a client running pre-protocol-change code knows to refresh.
-	socketsend.send(ws, 'general', 'protocolversion', socketutil.PROTOCOL_VERSION);
+	socketSend.send(ws, 'general', 'protocolversion', socketutil.PROTOCOL_VERSION);
 }
 
 /**

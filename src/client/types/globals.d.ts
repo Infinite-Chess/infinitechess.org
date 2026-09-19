@@ -1,10 +1,13 @@
 // src/client/types/globals.d.ts
 
-import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { EngineAssets } from '../../shared/chess/util/engineregistry.js';
 import type { TranslationsObject } from '../../types/translations.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
-import type { ChallengePageData, GamePageData } from '../../shared/transport/domain.js';
+import type {
+	AnalysisPageData,
+	ChallengePageData,
+	GamePageData,
+} from '../../shared/transport/domain.js';
 
 /**
  * Legacy i18next-era client translations. Backs the global `translations` object
@@ -79,24 +82,17 @@ declare global {
 	 */
 	var $downsamplerProcessorUrl: string;
 
+	/** SSR→client data for the challenge page (/game/:id before its game exists), injected by challenge.njk. */
+	var challengePageData: ChallengePageData;
+
 	/**
 	 * SSR→client data for the game page (/game/:id), injected by game.njk.
 	 * Includes all static information about a game.
 	 */
 	var gamePageData: GamePageData;
 
-	/** SSR→client data for the challenge page (/game/:id before its game exists), injected by challenge.njk. */
-	var challengePageData: ChallengePageData;
-
 	/** SSR→client data for the analysis page (/analysis/:id?/:color?), injected by analysis.njk. */
-	var analysisPageData: {
-		/** Numeric id of a game to auto-load, or null for a fresh board. */
-		gameId: number | null;
-		/** The side to orient the board to: the URL's color segment, else the side the viewer played on. */
-		viewColor: Player;
-		/** Assets for the analysis engine worker. */
-		engineAssets: EngineAssets;
-	};
+	var analysisPageData: AnalysisPageData;
 
 	/** Engine assets for the checkmate-practice page. */
 	var checkmatePracticePageData: EngineAssets;

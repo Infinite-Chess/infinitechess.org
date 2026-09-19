@@ -24,17 +24,19 @@ import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import chat from './chat.js';
 import logEvents from '../../utility/logEvents.js';
 import disconnect from './disconnect.js';
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
 import activeGames from './activeGames.js';
 import activeSeeks from '../seeksmanager/activeSeeks.js';
+import lobbyManager from '../seeksmanager/lobbyManager.js';
 import inGameStatus from '../seeksmanager/inGameStatus.js';
 import activePlayers from './activePlayers.js';
 import gameLifecycle from './gameLifecycle.js';
 import deadGameState from './deadGameState.js';
 import liveGameValues from './liveGameValues.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
+import lobbySubscribers from '../seeksmanager/lobbySubscribers.js';
 import gameStateBuilder from './gameStateBuilder.js';
 
 // Types -----------------------------------------------------------------------
@@ -76,11 +78,13 @@ function createGame(gameID: number, setup: GameSetup, assignments: PlayerAssignm
 
 	const game = gamefile.initGame(setup.time, dateTimestamp, construction.gameRules);
 	const match = gameUtility.initMatch(setup, gameID, assignments);
-
 	const servergame: ServerGame = gameUtility.initServerGame(game, construction, match);
+
 	// Clear seeks here because every game creation path passes through here.
 	// After construction succeeds & before in-game notifs.
-	clearPlayerSeeks(gameID, assignments);
+	const identifiers = Object.values(assignments).map(({ identifier }) => identifier);
+	activeSeeks.deleteForGame(gameID, identifiers);
+
 	for (const [strcolor, { identifier, socket }] of Object.entries(assignments)) {
 		// A player with no socket to push to is owed the navigate notice on their next seek-page subscribe.
 		activePlayers.add(
@@ -98,15 +102,20 @@ function createGame(gameID: number, setup: GameSetup, assignments: PlayerAssignm
 	// state and therefore requires the game row to already exist.
 	liveGameValues.onGameCreated(servergame);
 
-	for (const [strcolor, { identifier, socket }] of Object.entries(assignments)) {
+	for (const [strcolor, { identifier, socket, leftVoluntarily }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
 		// Alert all their seek-page clients they are in a game. Only the socket that
 		// asked for this game is taken into it; their other tabs get the rejoin banner.
 		inGameStatus.broadcast(identifier, socket);
-		// Give them 5 seconds to navigate to the game page and re-connect
-		// before they're considered disconnected.
-		disconnect.startCushionTimer(servergame, player);
+		// Someone who left their challenge seek page by choice has no navigation to make, so
+		// their opponent is told now. Everyone else gets 5 seconds to arrive at the game page.
+		if (socket === undefined && leftVoluntarily)
+			disconnect.startClaimTimer(servergame, player, false);
+		else disconnect.startCushionTimer(servergame, player);
 	}
+
+	// Last: a socket removed from the lobby would no longer receive the pushes above.
+	leaveLobby(assignments);
 
 	if (activeGames.PRINT_GAMES) {
 		console.log('Starting new game:');
@@ -132,13 +141,14 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 	}
 }
 
-/** Removes the accepted seek and every participant's other seek. */
-function clearPlayerSeeks(gameID: number, assignments: PlayerAssignments): void {
-	let changed = activeSeeks.deleteByID(gameID, { dontBroadcast: true, becomingGame: true });
-	for (const { identifier } of Object.values(assignments)) {
-		if (activeSeeks.deleteOfOwner(identifier, { dontBroadcast: true })) changed = true;
+/** Takes each entering tab out of the lobby, telling its remaining viewers the new count. */
+function leaveLobby(assignments: PlayerAssignments): void {
+	let changed = false;
+	for (const { socket } of Object.values(assignments)) {
+		// A challenge page's socket, or one of a rematch, was never a lobby subscriber.
+		if (socket && lobbySubscribers.remove(socket)) changed = true;
 	}
-	if (changed) activeSeeks.broadcast();
+	if (changed) lobbyManager.broadcastViewerCount();
 }
 
 /**
@@ -153,7 +163,7 @@ function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefin
 	const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
 	logEvents.addAndPrint(`Error creating game: ${details}`, 'errLog');
 	for (const ws of sockets) {
-		if (ws) socketsend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
+		if (ws) socketSend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
 	}
 }
 
@@ -175,7 +185,7 @@ function subscribeParticipant(
 	const playerData = match.playerData[ourRole]!;
 	const previousSocket = playerData.socket;
 	if (previousSocket) {
-		socketsend.send(previousSocket, 'game', 'supersededbytab', undefined);
+		socketSend.send(previousSocket, 'game', 'supersededbytab', undefined);
 		gameSockets.detachParticipant(match, previousSocket);
 	}
 

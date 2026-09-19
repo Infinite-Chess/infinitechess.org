@@ -22,8 +22,8 @@ const subscribedClients: Set<CustomWebSocket> = new Set();
 
 // Functions -------------------------------------------------------------------
 
-/** Returns an iterator over all sockets currently subscribed to the lobby. */
-function getAll(): SetIterator<CustomWebSocket> {
+/** Every socket currently subscribed to the lobby. */
+function getAll(): Iterable<CustomWebSocket> {
 	return subscribedClients.values();
 }
 
@@ -54,12 +54,14 @@ function add(ws: CustomWebSocket): void {
 /**
  * Removes a socket from the lobby subscriber list.
  * DOES NOT delete any of their existing seeks! That should be done before.
+ * @returns Whether it was subscribed, and so the viewer count changed.
  */
-function remove(ws: CustomWebSocket): void {
-	if (!subscribedClients.has(ws)) return; // Cannot unsub socket from lobby because they aren't subbed.
+function remove(ws: CustomWebSocket): boolean {
+	if (!subscribedClients.has(ws)) return false; // Cannot unsub socket from lobby because they aren't subbed.
 
 	subscribedClients.delete(ws);
 	delete ws.metadata.subscriptions.lobby;
+	return true;
 }
 
 /** Returns the number of sockets currently subscribed to the lobby. */

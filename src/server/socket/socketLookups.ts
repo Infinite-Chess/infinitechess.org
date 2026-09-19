@@ -1,6 +1,8 @@
 // src/server/socket/socketLookups.ts
 
-/** Finds a user's sockets within a set of subscribed sockets. */
+/**
+ * Finds a user's sockets within a set of subscribed sockets.
+ */
 
 import type { AuthMemberInfo } from '../types.js';
 import type { CustomWebSocket } from './socketTypes.js';

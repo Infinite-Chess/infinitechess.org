@@ -34,8 +34,8 @@ interface SocketBusEvents {
 
 	// --- Incoming server messages ---
 	lobby: ClientboundLobbyMessage;
-	game: ClientboundGameMessage;
 	challenge: ClientboundChallengeMessage;
+	game: ClientboundGameMessage;
 }
 
 export const SocketBus: EventBus<SocketBusEvents> = new EventBus<SocketBusEvents>();

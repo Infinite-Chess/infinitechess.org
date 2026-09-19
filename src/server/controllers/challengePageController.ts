@@ -9,7 +9,11 @@
 import type { Request } from 'express';
 import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { SeekPropertiesViewModel } from './seekProperties.js';
-import type { ChallengePageData, ServerUsernameContainer } from '../../shared/transport/domain.js';
+import type {
+	ChallengePageData,
+	ServerUsernameContainer,
+	StaticGameSetup,
+} from '../../shared/transport/domain.js';
 
 import encodeQR from 'qr';
 
@@ -28,11 +32,14 @@ import seekProperties from './seekProperties.js';
 interface ChallengePageState {
 	/** Serialized into the page as `window.challengePageData`. */
 	challengePageData: ChallengePageData;
-	/** The owner's display name, and their formatted rating if they have one. */
-	ownerName: string;
-	ownerElo?: string;
-	/** The side the owner chose to play. Absent when they left it to chance. */
-	ownerSide?: Player;
+	owner: {
+		/** Their display name. */
+		name: string;
+		/** Their formatted rating. Absent for a guest. */
+		elo?: string;
+		/** The side they chose to play. Absent when they left it to chance. */
+		side?: Player;
+	};
 	/** The icon id of each modifier the seek carries. */
 	modifierIconIds: string[];
 	properties: SeekPropertiesViewModel;
@@ -58,7 +65,7 @@ function getPageState(req: Request): ChallengePageState | undefined {
 	const memberInfo = req.memberInfo!;
 	const isOwner = memberInfoUtil.eqPartial(seek.owner, memberInfo);
 	// The setup the game will have. A seek's variant already carries its position.
-	const setup = {
+	const setup: StaticGameSetup = {
 		variant: seek.variant,
 		timeControl: seek.time,
 		timeCreated: Date.now(),
@@ -67,9 +74,11 @@ function getPageState(req: Request): ChallengePageState | undefined {
 
 	return {
 		challengePageData: { id, variant: seek.variant },
-		ownerName: resolveOwnerName(seek.player, isOwner, req),
-		ownerElo: seek.player.rating ? metadatautil.getFormattedElo(seek.player.rating) : undefined,
-		ownerSide: seek.color ?? undefined,
+		owner: {
+			name: resolveOwnerName(seek.player, isOwner, req),
+			elo: seek.player.rating ? metadatautil.getFormattedElo(seek.player.rating) : undefined,
+			side: seek.color ?? undefined,
+		},
 		modifierIconIds: (seek.modifiers ?? []).map((m) => modutil.getModifierIconId(m.kind)),
 		properties: seekProperties.build(setup, seek.mode === 'rated', undefined, req),
 		share: isOwner ? buildShare(id) : undefined,

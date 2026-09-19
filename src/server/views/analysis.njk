@@ -9,17 +9,8 @@
 {% endblock %}
 
 {% block head %}
-{# SSR→client channel: optional game id to auto-load and the side to view it from, plus
-   the hashed engine-worker asset URL (workers can't resolve the manifest themselves)
-   and the runtime-copied multithreaded engine package location. #}
-<script>window.analysisPageData = {
-	gameId: {{ gameId | json | safe }},
-	viewColor: {{ viewColor | json | safe }},
-	engineAssets: {
-		engineUrl: "{{ manifest['engine'] }}",
-		workerUrl: "{{ manifest['scripts/esm/views/analysis/apeironanalysis.worker.ts'] }}"
-	}
-};</script>
+{# SSR→client channel: the game to auto-load, the side to view it from, and the engine's assets. #}
+<script>window.analysisPageData = {{ analysisPageData | json | safe }};</script>
 {% endblock %}
 
 {% block body %}
@@ -134,7 +125,7 @@
 
 		{% if meta %}
 		<div class="game-meta panel">
-			{{ seekProperties(meta) }}
+			{{ seekProperties(meta.seekProperties) }}
 
 			<div class="meta-foot">
 				<time id="meta-started" data-created="{{ meta.timeCreated }}">{{ meta.startedAgo }}</time>

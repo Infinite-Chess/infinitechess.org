@@ -16,7 +16,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { LobbyStateMessage } from '../../../shared/transport/clientbound.js';
 
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import activeSeeks from './activeSeeks.js';
 import activePlayers from '../gamemanager/activePlayers.js';
 import socketLookups from '../../socket/socketLookups.js';
@@ -110,7 +110,7 @@ function deleteSeeksIfNotConnected(info: AuthMemberInfo): void {
 	if (socketLookups.hasUser(lobbySubscribers.getAll(), info)) return;
 
 	// Proceed with deleting the seek if not connected
-	activeSeeks.deleteOfOwner(info, { sparePrivate: true });
+	activeSeeks.deleteOfOwner(info, true);
 }
 
 // Broadcasts ------------------------------------------------------------------
@@ -141,7 +141,7 @@ function sendClientLobbyState(ws: CustomWebSocket): void {
 		viewercount,
 		ingame,
 	};
-	socketsend.send(ws, 'lobby', 'lobbystate', message); // In order: socket, sub, action, value
+	socketSend.send(ws, 'lobby', 'lobbystate', message); // In order: socket, sub, action, value
 }
 
 /**
@@ -153,7 +153,7 @@ function broadcastViewerCount(skipWs?: CustomWebSocket): void {
 	const count = lobbySubscribers.getCount();
 	for (const ws of lobbySubscribers.getAll()) {
 		if (ws === skipWs) continue;
-		socketsend.send(ws, 'lobby', 'viewercount', count);
+		socketSend.send(ws, 'lobby', 'viewercount', count);
 	}
 }
 

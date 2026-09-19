@@ -12,13 +12,13 @@
 import socketconnection from './socketconnection.js';
 
 /** The routes carrying a server-pushed stream we subscribe to. Excludes 'general', the protocol route. */
-export type SubscribedRoute = 'lobby' | 'game' | 'challenge';
+export type SubscribedRoute = 'lobby' | 'challenge' | 'game';
 
 /** Whether we are subscribed to each route's stream. */
 const subs: Record<SubscribedRoute, boolean> = {
 	lobby: false,
-	game: false,
 	challenge: false,
+	game: false,
 };
 
 /** Returns true if we're currently not subscribed to anything. */

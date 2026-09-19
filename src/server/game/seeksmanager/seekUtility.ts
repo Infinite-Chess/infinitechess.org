@@ -26,28 +26,33 @@ export interface AuthSeek extends BaseSeek {
 	ownerTab: string;
 	variant: SeekVariant;
 	/**
-	 * Present only on a "Challenge a friend" invite — absent from the lobby, reachable only
-	 * by its URL. Its presence is what makes the seek private.
+	 * Whether the seek is private, created through the "Challenge a friend" flow.
+	 * Absent from the lobby, reachable only by its URL.
 	 */
-	private?: {
-		/**
-		 * Deletes the seek once the owner has been away for 10 minutes.
-		 * Armed only while they have no challenge socket connected.
-		 */
-		expiry?: NodeJS.Timeout;
-		/** The sockets currently viewing this challenge's page. */
-		subscribers: Set<CustomWebSocket>;
+	private?: PrivateSeekState;
+}
+
+/** The live state of a private seek: who's watching its page, and the clock that ends it. */
+interface PrivateSeekState {
+	/** The sockets currently viewing this challenge's page. */
+	subscribers: Set<CustomWebSocket>;
+	/** Present exactly while the owner has no challenge page open. */
+	ownerAway?: {
+		/** Deletes the seek once they've been away too long. */
+		expiry: NodeJS.Timeout;
+		/** Whether they closed their last page by choice, rather than dropping offline. */
+		leftVoluntarily: boolean;
 	};
 }
 
 /** A seek known to be a "Challenge a friend" invite. */
 export interface PrivateSeek extends AuthSeek {
-	private: NonNullable<AuthSeek['private']>;
+	private: PrivateSeekState;
 }
 
 // Functions -------------------------------------------------------------------
 
-/** Whether the seek is a "Challenge a friend" invite. */
+/** Whether the seek is a "Challenge a friend" invite, narrowing its type to `PrivateSeek`. */
 function isPrivate(seek: AuthSeek): seek is PrivateSeek {
 	return seek.private !== undefined;
 }

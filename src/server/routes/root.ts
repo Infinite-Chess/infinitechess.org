@@ -12,6 +12,7 @@ import validators from '../../shared/util/validators.js';
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import send404 from '../middleware/send404.js';
+import manifest from '../config/manifest.js';
 import turnstile from '../controllers/turnstile.js';
 import resolveAuth from '../middleware/resolveAuth.js';
 import renderContext from '../utility/renderContext.js';
@@ -34,6 +35,9 @@ const AUTH_INPUT_MAX_LENGTHS = {
 	PASSWORD: validators.MAX_PASSWORD_LENGTH,
 };
 
+/** The checkmate-practice engine's worker script, as keyed in the asset manifest. */
+const PRACTICE_WORKER_SOURCE = 'scripts/esm/game/chess/engines/enginecheckmatepractice.worker.ts';
+
 // Helpers ---------------------------------------------------------------------
 
 /**
@@ -50,8 +54,7 @@ function attachRenderContext(req: Request, res: Response, next: NextFunction): v
  * Marks a response cross-origin isolated (COOP + COEP), which is what unlocks
  * `SharedArrayBuffer` — required by the multi-threaded (Lazy SMP) analysis engine build.
  *
- * Applied to analysis and game pages (and the challenge page sharing the game's URL),
- * whose assets are all same-origin.
+ * Applied to analysis and game pages, whose engine assets are all same-origin.
  * Other pages may load cross-origin resources that don't send CORP.
  */
 function crossOriginIsolation(_req: Request, res: Response, next: NextFunction): void {
@@ -89,9 +92,10 @@ page('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.n
 page(
 	'/game/:id/:color(w|b)?',
 	(req: Request, res: Response) => {
-		// Before its game exists, the id names a private seek, whose page ignores the color segment.
+		// Before its game exists, the id names a private seek.
 		const challengeState = challengePageController.getPageState(req);
 		if (challengeState !== undefined) return res.render('challenge.njk', challengeState);
+		// Not a private seek, it must be a game id.
 		const state = gamePageController.getPageState(req);
 		if (state === undefined) return send404(req, res); // Malformed or nonexistent id
 		res.render('game.njk', state);
@@ -140,7 +144,7 @@ page('/member(.html)?/:member', (_req: Request, res: Response) => res.render('me
 page('/admin(.html)?', (_req: Request, res: Response) => res.render('admin.njk'));
 page('/icnvalidator(.html)?', (_req: Request, res: Response) => res.render('icnvalidator.njk')); // prettier-ignore
 page('/tutorial(.html)?', (_req: Request, res: Response) => res.render('tutorial.njk'));
-page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render('checkmatepractice.njk')); // prettier-ignore
+page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render('checkmatepractice.njk', { checkmatePracticePageData: manifest.getEngineAssets(PRACTICE_WORKER_SOURCE) })); // prettier-ignore
 page('/editor(.html)?', (_req: Request, res: Response) => res.render('editor.njk'));
 page('/patron(.html)?', (_req: Request, res: Response) => res.render('patron.njk'));
 

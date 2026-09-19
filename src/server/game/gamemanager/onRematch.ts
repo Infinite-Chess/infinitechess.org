@@ -17,7 +17,7 @@ import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import chat from './chat.js';
 import manifest from '../../config/manifest.js';
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import gameManager from './gameManager.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
@@ -108,7 +108,7 @@ function createRematchGame(oldGame: ServerGame): void {
 
 		// Alert all connected players of the new game (they auto navigate)
 		for (const { socket, role } of toNavigate)
-			socketsend.send(socket, 'game', 'rematchstarted', { id: newGameID, role });
+			socketSend.send(socket, 'game', 'rematchstarted', { id: newGameID, role });
 	} catch (error: unknown) {
 		// The old game is already evicted, so there's nothing left to navigate anyone back to.
 		gameManager.onGameCreationError(

@@ -32,8 +32,8 @@ export type MessageID = number;
 type OutMessages = {
 	general: ServerboundGeneralMessage;
 	lobby: ServerboundLobbyMessage;
-	game: ServerboundGameMessage;
 	challenge: ServerboundChallengeMessage;
+	game: ServerboundGameMessage;
 };
 
 /** A route we may send on. */

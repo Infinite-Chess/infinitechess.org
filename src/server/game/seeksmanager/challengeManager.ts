@@ -16,7 +16,7 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { PlayerAssignments } from '../gamemanager/serverGameTypes.js';
 import type { ChallengeStateMessage } from '../../../shared/transport/clientbound.js';
 
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import seekUtility from './seekUtility.js';
 import activeSeeks from './activeSeeks.js';
 import gameSockets from '../gamemanager/gameSockets.js';
@@ -42,22 +42,23 @@ const EXPIRY_MS = 1000 * 60 * 10; // 10 minutes
  */
 function subscribe(ws: CustomWebSocket, id: number): void {
 	// A page views one challenge. Only a hand-crafted client re-subscribes an attached socket.
-	if (ws.metadata.subscriptions.challenge) unsubscribe(ws);
+	if (ws.metadata.subscriptions.challenge) unsubscribe(ws, false);
 
 	const seek = activeSeeks.getByID(id);
+	// A public seek's id lands here only from a hand-crafted client, and is answered `gone`.
 	if (seek === undefined || !seekUtility.isPrivate(seek)) {
-		socketsend.send(ws, 'challenge', 'challengestate', resolveClosedState(ws, id));
+		socketSend.send(ws, 'challenge', 'challengestate', resolveClosedState(ws, id));
 		return;
 	}
 
 	seek.private.subscribers.add(ws);
 	ws.metadata.subscriptions.challenge = { id };
 	// The owner is present again.
-	if (memberInfoUtil.eq(ws.metadata.memberInfo, seek.owner)) cancelExpiry(seek);
+	if (memberInfoUtil.eq(ws.metadata.memberInfo, seek.owner)) markOwnerPresent(seek);
 
 	const entry = activePlayers.getEntry(ws.metadata.memberInfo);
 	const ingame = entry && { id: entry.gameID, role: entry.role };
-	socketsend.send(ws, 'challenge', 'challengestate', { kind: 'open', ingame });
+	socketSend.send(ws, 'challenge', 'challengestate', { kind: 'open', ingame });
 }
 
 /**
@@ -74,7 +75,7 @@ function resolveClosedState(ws: CustomWebSocket, id: number): ChallengeStateMess
 	else if (gamesManager.isLogged(id)) {
 		// Dead guests aren't identifiable, so a guest player is treated as an onlooker.
 		role = user.signedIn ? deadGameState.resolveParticipantColor(id, user.user_id) : undefined;
-	} else return { kind: 'gone' }; // The game page would 404.
+	} else return { kind: 'gone' }; // The game page would 404 (not in memory, and not in the database).
 
 	if (role === undefined) return { kind: 'game' }; // An onlooker
 	// Only the player's tab owed the navigate goes in, consuming it. Their others go home.
@@ -83,8 +84,12 @@ function resolveClosedState(ws: CustomWebSocket, id: number): ChallengeStateMess
 	return owed ? { kind: 'game', role } : { kind: 'gone' };
 }
 
-/** Detaches a subscribed socket, starting expiry if it was the owner's last connection. */
-function unsubscribe(ws: CustomWebSocket): void {
+/**
+ * Detaches a subscribed socket, starting expiry if it was the owner's last connection.
+ * @param involuntary - Whether the socket closed on its own, rather than at the client's
+ * request. Remembered for the owner, whose absence decides how a late accepter is told.
+ */
+function unsubscribe(ws: CustomWebSocket, involuntary: boolean): void {
 	const id = ws.metadata.subscriptions.challenge!.id; // Guaranteed: only called on a subscribed socket.
 	delete ws.metadata.subscriptions.challenge;
 
@@ -93,20 +98,29 @@ function unsubscribe(ws: CustomWebSocket): void {
 	seek.private.subscribers.delete(ws);
 
 	const isOwner = memberInfoUtil.eq(ws.metadata.memberInfo, seek.owner);
-	if (isOwner && !socketLookups.hasUser(seek.private.subscribers, seek.owner)) armExpiry(seek);
+	if (isOwner && !socketLookups.hasUser(seek.private.subscribers, seek.owner)) {
+		markOwnerAway(seek, !involuntary);
+	}
 }
 
-// Expiry ----------------------------------------------------------------------
+// Owner Absence ---------------------------------------------------------------
 
-/** Starts the owner-away clock: the seek is deleted unless an owner challenge socket connects in time. */
-function armExpiry(seek: PrivateSeek): void {
-	seek.private.expiry = setTimeout(() => activeSeeks.deleteByID(seek.id), EXPIRY_MS);
+/**
+ * Starts the owner-away clock: the seek is deleted unless an owner challenge socket connects in time.
+ * @param leftVoluntarily - Whether they closed their last page by choice. False at creation,
+ * where they haven't opened it yet: an unexplained absence is treated as a lost connection.
+ */
+function markOwnerAway(seek: PrivateSeek, leftVoluntarily: boolean): void {
+	seek.private.ownerAway = {
+		expiry: setTimeout(() => activeSeeks.deleteByID(seek.id), EXPIRY_MS),
+		leftVoluntarily,
+	};
 }
 
-/** Stops the owner-away clock, if running. */
-function cancelExpiry(seek: PrivateSeek): void {
-	clearTimeout(seek.private.expiry);
-	delete seek.private.expiry;
+/** The owner is back: stops their away clock, if running. */
+function markOwnerPresent(seek: PrivateSeek): void {
+	clearTimeout(seek.private.ownerAway?.expiry);
+	delete seek.private.ownerAway;
 }
 
 // Broadcasts ------------------------------------------------------------------
@@ -122,7 +136,7 @@ function broadcastGameStart(
 	assignments: PlayerAssignments,
 ): void {
 	for (const ws of subscribers) {
-		socketsend.send(ws, 'challenge', 'challengestate', resolveGameStart(ws, assignments));
+		socketSend.send(ws, 'challenge', 'challengestate', resolveGameStart(ws, assignments));
 	}
 }
 
@@ -144,8 +158,8 @@ export default {
 	// Subscribing
 	subscribe,
 	unsubscribe,
-	// Expiry
-	armExpiry,
+	// Owner Absence
+	markOwnerAway,
 	// Broadcasts
 	broadcastGameStart,
 };

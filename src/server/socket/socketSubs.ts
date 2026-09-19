@@ -47,16 +47,15 @@ function unsub(ws: CustomWebSocket, key: SubscriptionKey, involuntary: boolean):
 		case 'lobby':
 			lobbyManager.unsubscribe(ws, involuntary);
 			break;
+		case 'challenge':
+			challengeManager.unsubscribe(ws, involuntary);
+			break;
 		case 'game':
 			gameManager.unsubscribeParticipant(ws, involuntary);
 			break;
 		case 'spectating':
 			// Read-only spectator: no cushion/auto-resign, just detach.
 			gameManager.unsubscribeSpectator(ws);
-			break;
-		case 'challenge':
-			// No cushion: the challenge outlives its page, closing only starts the owner-away clock.
-			challengeManager.unsubscribe(ws);
 			break;
 		default:
 			console.error('UNKNOWN subscription list to unsubscribe client from!', key satisfies never); // prettier-ignore

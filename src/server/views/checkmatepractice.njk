@@ -3,10 +3,8 @@
 {% set pageName = "Checkmate Practice" %}
 
 {% block head %}
-<script>window.checkmatePracticePageData = {
-	workerUrl: "{{ manifest['scripts/esm/game/chess/engines/enginecheckmatepractice.worker.ts'] }}",
-	engineUrl: "{{ manifest['engine'] }}"
-};</script>
+{# SSR→client channel: the engine's assets. #}
+<script>window.checkmatePracticePageData = {{ checkmatePracticePageData | json | safe }};</script>
 {% endblock %}
 
 {% block body %}

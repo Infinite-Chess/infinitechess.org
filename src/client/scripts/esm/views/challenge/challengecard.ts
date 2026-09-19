@@ -4,8 +4,9 @@
  * Runs the challenge card: the page's state, the card's controls, the accept and
  * cancel intents, and leaving the page once the challenge is gone or became a game.
  *
- * The card is SSR'd per viewer — the owner gets Copy link and Cancel, anyone else Accept and
- * its reason lines — so each control is reached by its id, and is absent from the other's page.
+ * The card is SSR'd per viewer — the owner gets Copy link and Cancel, anyone else Accept
+ * and its reason lines — so each control element is reached by its id, and is absent
+ * from the other's page.
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
@@ -29,17 +30,17 @@ const COPIED_CONFIRMATION_MS = 1500;
 
 // Elements --------------------------------------------------------------------
 
-/** Owner only. */
+// --- Owner only ---
+
 const element_copy = document.getElementById('challenge-copy');
-/** Owner only. */
 const element_cancel = document.getElementById('challenge-cancel') as HTMLButtonElement | null;
-/** Visitor only. */
+
+// --- Visitor only ---
+
 const element_accept = document.getElementById('challenge-accept') as HTMLButtonElement | null;
-/** Visitor only. */
 const element_ingame = document.getElementById('challenge-ingame');
-/** Visitor only. */
 const element_ingameJoin = document.getElementById('challenge-ingame-join');
-/** Visitor only, and only when they can never accept: signed out, and the challenge is rated. */
+/** Only present when they can never accept: signed out, and the challenge is rated. */
 const element_signinRequired = document.getElementById('challenge-signin-required');
 
 // State -----------------------------------------------------------------------
@@ -122,9 +123,8 @@ function updateButtons(): void {
 		element_accept.disabled =
 			isLeaving() || !eligible || socketintents.isOutstanding('challenge', 'accept');
 	}
-	if (element_cancel) {
+	if (element_cancel)
 		element_cancel.disabled = isLeaving() || socketintents.isOutstanding('challenge', 'cancel');
-	}
 }
 
 /** Asks the server to start the game against the owner. */
@@ -137,10 +137,7 @@ function cancel(): void {
 	socketintents.submit('challenge', 'cancel', undefined, () => stateKind === 'open');
 }
 
-/**
- * Copies the challenge's link, then briefly confirms it inline by marking the control
- * `.copied` — what that looks like is the stylesheet's to decide.
- */
+/** Copies the challenge's link, then briefly confirms it inline by marking the control `.copied`. */
 async function copyLink(control: HTMLElement): Promise<void> {
 	const url = control.dataset['url']!; // Guaranteed: SSR'd with the link.
 	if (!(await docutil.copyToClipboard(url))) return;

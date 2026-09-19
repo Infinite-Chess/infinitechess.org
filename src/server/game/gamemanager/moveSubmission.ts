@@ -30,7 +30,7 @@ import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import logEvents from '../../utility/logEvents.js';
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import onOfferDraw from './onOfferDraw.js';
 import gameManager from './gameManager.js';
 import gameSockets from './gameSockets.js';
@@ -61,7 +61,7 @@ function submitMove(
 	// They can't submit a move if they aren't subscribed to a game
 	if (!ws.metadata.subscriptions.game) {
 		console.error('Player tried to submit a move when not subscribed. They should only send move when they are in sync, not right after the socket opens.'); // prettier-ignore
-		socketsend.send(
+		socketSend.send(
 			ws,
 			'general',
 			'print-error',
@@ -100,7 +100,7 @@ function submitMove(
 	if (moveParsed === null) {
 		const errString = `Player sent a move in an invalid format. The message: ${logEvents.truncate(JSON.stringify(messageContents))}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEvents.addAndPrint(errString, 'hackLog');
-		socketsend.send(ws, 'general', 'print-error', 'Invalid move format.');
+		socketSend.send(ws, 'general', 'print-error', 'Invalid move format.');
 		return;
 	}
 
@@ -112,7 +112,7 @@ function submitMove(
 		// and resubmit it on every resync, desynced for the rest of the game.
 		gameSockets.sendGameState(servergame, role, 'full', true);
 		// Send toast-error last to override any previous toasts
-		socketsend.send(
+		socketSend.send(
 			ws,
 			'general',
 			'toast-error',
@@ -150,14 +150,14 @@ function broadcastMove(
 		// Game not over: send the move-submitter only the updated clocks.
 		if (!servergame.untimed) {
 			const message = gameUtility.getClockValues(servergame);
-			socketsend.send(ws, 'game', 'clock', message);
+			socketSend.send(ws, 'game', 'clock', message);
 		}
 	} else {
 		// The game ended: apply the conclusion (stops the clocks),
 		// then send the submitter the conclusion message.
 		gameLifecycle.applyConclusion(servergame, servergame.gameConclusion);
 		const conclusionMessage = gameStateBuilder.buildConclusionMessage(servergame, role);
-		socketsend.send(ws, 'game', 'gameconclusion', conclusionMessage);
+		socketSend.send(ws, 'game', 'gameconclusion', conclusionMessage);
 	}
 
 	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
@@ -188,7 +188,7 @@ function applyServerValidatedMove(
 		// Send the sender the current game state to correct their board if a bug somehow caused this
 		gameSockets.sendGameState(servergame, role, 'full', true); // forceSync true to force their move list to match ours
 		// Send toast-error last to override any previous toasts
-		socketsend.send(
+		socketSend.send(
 			ws,
 			'general',
 			'toast-error',
@@ -225,7 +225,7 @@ function applyClientReportedMove(
 	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, role)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${logEvents.truncate(JSON.stringify(messageContents))}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEvents.addAndPrint(errString, 'hackLog');
-		socketsend.send(ws, 'general', 'print-error', 'Invalid game conclusion.');
+		socketSend.send(ws, 'general', 'print-error', 'Invalid game conclusion.');
 		return;
 	}
 

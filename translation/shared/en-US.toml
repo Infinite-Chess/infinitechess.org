@@ -1,8 +1,9 @@
 # Translation component: shared codes-and-labels
 # Auto-injected sitewide via layout.njk. Contains display labels for "codes" used
-# across many pages: variant codes, variant group codes, time-control speed
-# categories, game modes, sides, win conditions, modifiers, the narrative
-# phrasing used in the variant preview tooltip, etc.
+# across many pages — variant codes, variant group codes, time-control speed
+# categories, game modes, sides, win conditions, modifiers — plus the UI strings
+# more than one page shows: form errors, the variant selector, seek and preview
+# tooltip phrasing, etc.
 script_only = true
 
 [errors]

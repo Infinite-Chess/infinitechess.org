@@ -179,7 +179,7 @@ const INTERACTIVE_BOARD_PAGES = [
 ];
 
 /** Pages holding a live websocket — who may reach the transport contract. */
-const SOCKET_PAGES = ['views/index/', 'views/game/', 'views/challenge/'];
+const SOCKET_PAGES = ['views/index/', 'views/challenge/', 'views/game/'];
 
 const RULES: Rule[] = [
 	{

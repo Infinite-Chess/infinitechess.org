@@ -215,4 +215,6 @@ export interface GameSetup {
 export type PlayerAssignments = PlayerGroup<{
 	identifier: AuthMemberInfo;
 	socket?: CustomWebSocket;
+	/** Whether a socketless player is away by choice: their opponent is then told immediately. */
+	leftVoluntarily?: boolean;
 }>;

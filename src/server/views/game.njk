@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block head %}
-{# SSR→client game setup and participant state. #}
+{# SSR→client channel: the game's setup, and the viewer's role in it. #}
 <script>window.gamePageData = {{ gamePageData | json | safe }};</script>
 {% endblock %}
 
@@ -88,7 +88,7 @@
 		<div class="game-meta panel">
 
 			{# Original seek's properties — SSR-OWNED. #}
-			{{ seekProperties(meta) }}
+			{{ seekProperties(meta.seekProperties) }}
 
 			{# Started X ago + live spectator count. `#meta-started` carries the creation epoch so the
 			   client can re-derive the ticking string. The client sets the spectator count, hiding it if none. #}

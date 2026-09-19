@@ -90,6 +90,19 @@ const ServerboundLobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('createenginegame'), value: CreateEngineGameMessageSchema }),
 ]);
 
+// Challenge Route -------------------------------------------------------------
+
+/**
+ * Every message the client may send on the 'challenge' route.
+ * `accept` and `cancel` carry no id: they act on the challenge this socket subscribed to.
+ */
+export type ServerboundChallengeMessage = z.infer<typeof ServerboundChallengeSchema>;
+const ServerboundChallengeSchema = z.discriminatedUnion('action', [
+	z.strictObject({ action: z.literal('subscribe'), value: domain.GameIDSchema }), // The page's own id.
+	z.strictObject({ action: z.literal('accept') }), // Visitor accepts this page's challenge.
+	z.strictObject({ action: z.literal('cancel') }), // Owner cancels it.
+]);
+
 // Game Route ------------------------------------------------------------------
 
 /** Client → server websocket payload reporting an opponent for an illegal move. */
@@ -127,19 +140,6 @@ const ServerboundGameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('submitmove'), value: SubmitMoveMessageSchema }),
 ]);
 
-// Challenge Route -------------------------------------------------------------
-
-/**
- * Every message the client may send on the 'challenge' route. `accept` and `cancel` carry no
- * id: they act on the challenge this socket subscribed to, so it can't act on one it never did.
- */
-export type ServerboundChallengeMessage = z.infer<typeof ServerboundChallengeSchema>;
-const ServerboundChallengeSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('subscribe'), value: domain.GameIDSchema }), // The page's own id.
-	z.strictObject({ action: z.literal('accept') }), // Visitor accepts this page's challenge.
-	z.strictObject({ action: z.literal('cancel') }), // Owner cancels it.
-]);
-
 // Envelope --------------------------------------------------------------------
 
 /**
@@ -154,26 +154,10 @@ const RoutedEnvelope = { id: z.int(), needsack: z.literal(true).optional() };
 /** A routed (non-echo) message, wrapped in the envelope it travels in. */
 export type ServerboundRoutedMessage = z.infer<typeof ServerboundRoutedSchema>;
 const ServerboundRoutedSchema = z.discriminatedUnion('route', [
-	z.strictObject({
-		...RoutedEnvelope,
-		route: z.literal('general'),
-		contents: ServerboundGeneralSchema,
-	}),
-	z.strictObject({
-		...RoutedEnvelope,
-		route: z.literal('lobby'),
-		contents: ServerboundLobbySchema,
-	}),
-	z.strictObject({
-		...RoutedEnvelope,
-		route: z.literal('game'),
-		contents: ServerboundGameSchema,
-	}),
-	z.strictObject({
-		...RoutedEnvelope,
-		route: z.literal('challenge'),
-		contents: ServerboundChallengeSchema,
-	}),
+	z.strictObject({ ...RoutedEnvelope, route: z.literal('general'), contents: ServerboundGeneralSchema }), // prettier-ignore
+	z.strictObject({ ...RoutedEnvelope, route: z.literal('lobby'), contents: ServerboundLobbySchema }), // prettier-ignore
+	z.strictObject({ ...RoutedEnvelope, route: z.literal('challenge'), contents: ServerboundChallengeSchema }), // prettier-ignore
+	z.strictObject({ ...RoutedEnvelope, route: z.literal('game'), contents: ServerboundGameSchema }), // prettier-ignore
 ]);
 
 /** The client's echo of a message we sent them. Carries only the id being echoed. */

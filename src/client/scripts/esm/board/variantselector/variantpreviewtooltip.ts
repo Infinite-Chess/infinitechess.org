@@ -1,9 +1,11 @@
 // src/client/scripts/esm/board/variantselector/variantpreviewtooltip.ts
 
 /**
- * Renders a floating tooltip containing a small WebGL board preview and
- * gamerule summary when the user hovers over a variant preview (eye) icon.
- * Supports both preset variant codes and custom saved positions.
+ * The floating variant-preview tooltip shown when the user hovers or taps a preview (eye)
+ * icon: its DOM, anchor interaction, positioning, gamerule summary, and discarding shows
+ * that went stale mid-load. Supports both preset variant codes and custom saved positions.
+ *
+ * `previewboards.ts` builds the board it shows, and `previewrenderer.ts` draws it.
  */
 
 import type RenderContext from '../rendering/RenderContext.js';

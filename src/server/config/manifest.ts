@@ -5,6 +5,8 @@
  * source files to their content-hashed output names, and exposes the engine version.
  */
 
+import type { EngineAssets } from '../../shared/chess/util/engineregistry.js';
+
 import fs from 'fs';
 import path from 'path';
 
@@ -39,6 +41,15 @@ function getEngineVersion(): string {
 	return version;
 }
 
+/** Returns the hashed URLs a client needs to run the engine inside the given worker script. */
+function getEngineAssets(workerSource: string): EngineAssets {
+	const assets = get();
+	const workerUrl = assets[workerSource];
+	const engineUrl = assets['engine'];
+	if (!workerUrl || !engineUrl) throw new Error('Engine assets missing from asset manifest.');
+	return { workerUrl, engineUrl };
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -46,6 +57,6 @@ export default {
 	PATH,
 	// Functions
 	load,
-	get,
 	getEngineVersion,
+	getEngineAssets,
 };

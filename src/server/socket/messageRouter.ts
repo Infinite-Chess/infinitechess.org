@@ -24,11 +24,11 @@ function route(ws: CustomWebSocket, message: ServerboundRoutedMessage): void {
 		case 'lobby':
 			lobbyRouter.route(ws, message.contents);
 			break;
-		case 'game':
-			gameRouter.route(ws, message.contents);
-			break;
 		case 'challenge':
 			challengeRouter.route(ws, message.contents);
+			break;
+		case 'game':
+			gameRouter.route(ws, message.contents);
 			break;
 		default:
 			console.error('UNKNOWN web socket route received!', message satisfies never);

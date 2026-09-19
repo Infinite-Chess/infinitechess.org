@@ -1,7 +1,7 @@
 // src/client/scripts/esm/views/challenge/challengepreview.ts
 
 /**
- * Draws the challenge's start position into the card's preview canvas, once, from White's side.
+ * Draws the challenge's start position into the card's preview canvas, once, from White's view.
  *
  * The page's only asynchronous, asset-loading, WebGL-owning part.
  */
@@ -35,8 +35,12 @@ async function draw(): Promise<void> {
 
 /** Builds the seek's start position: a preset's, or its custom ICN's. */
 async function buildBoard(variant: SeekVariant): Promise<BoardPreview> {
-	if (variant.kind === 'preset') return previewboards.ofPreset(variant.code);
-	const longFormat = icnconverter.ShortToLong_Format(variant.position);
-	// Seeks are server-validated to always include an explicit position.
-	return previewboards.ofPosition(icnimport.variantOptionsFromLongFormat(longFormat));
+	if (variant.kind === 'preset') {
+		return previewboards.ofPreset(variant.code);
+	} else {
+		// Seeks are server-validated to always include an explicit position.
+		const longFormat = icnconverter.ShortToLong_Format(variant.position);
+		const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat);
+		return previewboards.ofPosition(variantOptions);
+	}
 }

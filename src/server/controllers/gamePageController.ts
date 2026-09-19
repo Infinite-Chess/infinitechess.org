@@ -57,11 +57,10 @@ interface GamePageState {
 	};
 }
 
-/**
- * Display-ready static game-meta fields, precomputed since Nunjucks can't call the shared
- * utils. Opens with the properties of the seek the game was created from.
- */
-export interface GameMetaViewModel extends SeekPropertiesViewModel {
+/** Display-ready static game-meta fields, precomputed since Nunjucks can't call the shared utils. */
+export interface GameMetaViewModel {
+	/** The properties of the seek the game was created from. */
+	seekProperties: SeekPropertiesViewModel;
 	/** Whether the game is timed. Drives whether the SSR'd `.clock` elements start hidden. */
 	timed: boolean;
 	/** Epoch ms the game was created; the client re-derives the ticking relative string. */
@@ -113,11 +112,8 @@ function getPageState(req: Request): GamePageState | undefined {
 
 	// Only a live engine game still needs the assets to run the engine client-side.
 	if (engineGame && game) {
-		const assets = manifest.get();
-		const workerUrl = assets[`scripts/esm/game/chess/engines/${engineGame.engine}.worker.ts`];
-		const engineUrl = assets['engine'];
-		if (!workerUrl || !engineUrl) throw new Error('Engine assets missing from asset manifest.');
-		engineGame = { ...engineGame, engineAssets: { workerUrl, engineUrl } };
+		const workerSource = `scripts/esm/game/chess/engines/${engineGame.engine}.worker.ts`;
+		engineGame = { ...engineGame, engineAssets: manifest.getEngineAssets(workerSource) };
 	}
 
 	const viewColor = resolveViewColor(req, role);
@@ -250,7 +246,7 @@ function buildGameMetaViewModel(
 	const locale = tconfig.getDateLocale(req.lang);
 
 	return {
-		...seekProperties.build(setup, state.rated, deadIcn, req),
+		seekProperties: seekProperties.build(setup, state.rated, deadIcn, req),
 		bars: { top, bottom: viewColor },
 		timed: !clockutil.isClockValueInfinite(setup.timeControl),
 		timeCreated: setup.timeCreated,

@@ -8,7 +8,7 @@
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import activeSeeks from './activeSeeks.js';
 import activePlayers from '../gamemanager/activePlayers.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
@@ -25,21 +25,23 @@ import lobbySubscribers from './lobbySubscribers.js';
 function broadcast(user: AuthMemberInfo, navigatingSocket?: CustomWebSocket): void {
 	const entry = activePlayers.getEntry(user);
 
+	// Lobby tabs
 	for (const ws of lobbySubscribers.getAll()) {
 		if (!memberInfoUtil.eq(user, ws.metadata.memberInfo)) continue;
-		if (entry === undefined) socketsend.send(ws, 'lobby', 'outgame', undefined);
+		if (entry === undefined) socketSend.send(ws, 'lobby', 'outgame', undefined);
 		else
-			socketsend.send(ws, 'lobby', 'ingame', {
+			socketSend.send(ws, 'lobby', 'ingame', {
 				id: entry.gameID,
 				role: entry.role,
 				navigate: ws === navigatingSocket,
 			});
 	}
 
+	// Challenge-page tabs
 	for (const ws of activeSeeks.getAllChallengeSockets()) {
 		if (!memberInfoUtil.eq(user, ws.metadata.memberInfo)) continue;
-		if (entry === undefined) socketsend.send(ws, 'challenge', 'outgame', undefined);
-		else socketsend.send(ws, 'challenge', 'ingame', { id: entry.gameID, role: entry.role });
+		if (entry === undefined) socketSend.send(ws, 'challenge', 'outgame', undefined);
+		else socketSend.send(ws, 'challenge', 'ingame', { id: entry.gameID, role: entry.role });
 	}
 }
 

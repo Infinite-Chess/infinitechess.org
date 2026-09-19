@@ -63,13 +63,13 @@ const INTENT_LIFETIME_MS = 10000;
 // Variables -------------------------------------------------------------------
 
 /** Intents held per route, in submission order. Only ever non-empty while that route is out of sync. */
-const held: Record<SubscribedRoute, Intent[]> = { lobby: [], game: [], challenge: [] };
+const held: Record<SubscribedRoute, Intent[]> = { lobby: [], challenge: [], game: [] };
 
 /**
  * Which routes we currently hold the server's authoritative state for.
  * Being subscribed isn't enough — an intent's validity check reads that state.
  */
-const synced: Record<SubscribedRoute, boolean> = { lobby: false, game: false, challenge: false };
+const synced: Record<SubscribedRoute, boolean> = { lobby: false, challenge: false, game: false };
 
 /**
  * The locks of intents the server hasn't finished with, mapped to the id of the message
