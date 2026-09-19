@@ -55,13 +55,16 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 		// Invalid variant; error already sent to the client.
 		if (!createSeek.validateVariant(ws, body.variant, true)) return;
 
+		// Issued before their seeks are deleted, so a db error doesn't cost them their seek too.
+		const gameID = activeGames.issueUniqueId();
+
 		// Delete their existing seeks
 		activeSeeks.deleteOfUser(ws.metadata.memberInfo);
 
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
 		const engineColor = typeutil.invertPlayer(humanColor);
 		gameManager.createGame(
-			activeGames.issueUniqueId(),
+			gameID,
 			{
 				variant: body.variant,
 				time: body.time,

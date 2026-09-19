@@ -60,7 +60,6 @@ export interface ResolvedGameState {
  * @param gameID - The id the game is created under, from {@link activeGames.issueUniqueId}.
  * @param setup - The variant, time control, and rated flag of the game to start.
  * @param assignments - The color each player has, and their socket if connected.
- * @throws If a database error occurs.
  */
 function createGame(gameID: number, setup: GameSetup, assignments: PlayerAssignments): void {
 	// Joining a new game counts as leaving any concluded game still lingering for a rematch.
@@ -130,8 +129,9 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 }
 
 /**
- * Handles a throw from {@link createGame}: logs it, then tells each connected
- * participant a server error prevented their game from starting.
+ * Handles a throw while starting a game — a database error issuing its id, or an unexpected
+ * internal failure in {@link createGame}: logs it, then tells each connected participant a
+ * server error prevented their game from starting.
  * @param error - The error thrown.
  * @param sockets - Every socket awaiting the game, undefined entries skipped.
  */
