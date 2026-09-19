@@ -116,9 +116,10 @@ needs a script change.
 | `challenge-accept` | Accept button (visitor) | Sends `accept`; greys while in flight or ineligible |
 | `challenge-ingame` | The in-game line (visitor), starts hidden | Reveals / hides it |
 | `challenge-ingame-join` | Its "Rejoin game" link | Sets `href` |
+| `challenge-signin-required` | The signed-out reason line (visitor, rated only) | Reads its presence: on `outgame`, Accept stays disabled while it exists |
 
-The QR, the heading, the seek properties, the rule lines and the signed-out reason line are
-server-rendered only, and no script touches them.
+The QR, the heading, the seek properties and the rule lines are server-rendered only, and no
+script touches them.
 
 Left to the layout pass (section 3): placement of every element; whether owner and visitor cards
 are one shape or two; what the copy control looks like, and so its label and key; whether the card
