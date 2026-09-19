@@ -14,7 +14,7 @@ import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.
 
 import {
 	summarizeGameRules,
-	type RuleSummaryItem,
+	RuleSummaryItem,
 } from '../../../../../shared/chess/variants/gamerulesummary.js';
 
 import svgcache from '../../chess/rendering/svgcache.js';
@@ -168,13 +168,15 @@ async function showForBoard(
 	variantCode: VariantCode | undefined,
 	modifiers: GameModifier[] | undefined,
 ): Promise<void> {
-	element_name.textContent = name;
-	await populateRules(boardsim, variantCode, modifiers);
+	const rules = await buildRules(boardsim, variantCode, modifiers);
 	const ctx = await (previewCtx ??= previewrenderer.createContext(element_canvas));
 	await previewrenderer.load(ctx, boardsim);
 
 	if (token !== showToken || !anchor.isConnected) return; // They have since left hover, hovered over another tooltip anchor, or the anchor has been removed from the DOM mid-load.
 
+	element_name.textContent = name;
+	element_rules.classList.toggle('hidden', !rules.hasChildNodes());
+	element_rulesBody.replaceChildren(rules);
 	positionTooltip(ctx, anchor, placement);
 	previewrenderer.render(ctx, boardsim);
 	element_tooltip.classList.remove('visibility-hidden');
@@ -206,12 +208,12 @@ function positionTooltip(
 	ctx.camera.syncCanvasDimensions();
 }
 
-/** Populates the gamerule modifications list above the canvas. */
-async function populateRules(
+/** Builds the rule summary. Off-DOM so a stale async preview cannot change the visible tooltip. */
+async function buildRules(
 	boardsim: BoardPreview,
 	variantCode: VariantCode | undefined,
 	modifiers: GameModifier[] | undefined,
-): Promise<void> {
+): Promise<DocumentFragment> {
 	const items = summarizeGameRules(
 		boardsim.gameRules,
 		boardsim.startSnapshot.state_global,
@@ -220,16 +222,16 @@ async function populateRules(
 		t.shared,
 	);
 
-	element_rules.classList.toggle('hidden', items.length === 0);
-	element_rulesBody.replaceChildren();
+	const fragment = document.createDocumentFragment();
 	for (const [i, item] of items.entries()) {
-		if (i > 0) element_rulesBody.append(' ');
-		if (item.kind === 'text') element_rulesBody.append(item.text);
+		if (i > 0) fragment.append(' ');
+		if (item.kind === 'text') fragment.append(item.text);
 		else {
 			const promotionLine = await buildPromotionLine(item);
-			element_rulesBody.appendChild(promotionLine);
+			fragment.appendChild(promotionLine);
 		}
 	}
+	return fragment;
 }
 
 /** Draws a summary's promotion line, its pieces as inline silhouette icons. */
@@ -244,7 +246,7 @@ async function buildPromotionLine(
 	return span;
 }
 
-// Exports ---------------------------------------------------------------------
+// Anchor Interaction ----------------------------------------------------------
 
 /** Returns true if the given node is inside the tooltip element. */
 function containsNode(node: Node): boolean {
@@ -270,6 +272,8 @@ function attachAnchor(element: HTMLElement, show: (anchor: HTMLElement) => void)
 		show(element);
 	});
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	showForPosition,

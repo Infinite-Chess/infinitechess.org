@@ -2,10 +2,17 @@
 
 /* The challenge page: a single centered card over the checkerboard background. */
 
+.challenge-owner {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+}
+
 /* Pinned, since drawing resizes the canvas's backing buffer to the device's pixel ratio. */
 #challenge-preview {
-	width: 256px;
-	height: 256px;
+	width: min(256px, 100%);
+	height: auto;
+	aspect-ratio: 1;
 }
 
 /* Variant, speed and modifier icons. */

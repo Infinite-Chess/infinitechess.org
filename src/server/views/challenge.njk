@@ -26,14 +26,12 @@
 {% set s = scriptT('shared') %}
 {% set responses = scriptT('responses') %}
 
-{# The plain card. Scripts reach it only through its ids, so a layout may move or restyle
-   any element, but never rename or remove an id. #}
 <main class="bg-checkerboard-dimmed page-centered">
 	<div class="auth-card">
 		<h1 class="auth-title">{{ tsIndex.lobby_buttons.challenge_friend if share else t.title }}</h1>
 
 		{# The owner, and the side they chose — no dot for Random. #}
-		<div>
+		<div class="challenge-owner">
 			{{ usernameEmbed(ownerName, ownerElo) }}
 			{% if ownerSide is defined %}
 			<span class="side-dot{{ ' black' if ownerSide == p.BLACK }}" title="{{ s.seek.owner_side_black if ownerSide == p.BLACK else s.seek.owner_side_white }}"></span>

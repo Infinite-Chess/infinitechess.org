@@ -1,11 +1,11 @@
 // src/server/game/seeksmanager/seekUtility.ts
 
 /**
- * The shape of a seek as the server holds it, the check for a private one, and
- * the projection that strips it of sensitive data for the wire.
+ * Defines the server's public and private seek types, identifies private challenges,
+ * and projects seeks into lobby data without sensitive owner details or full positions.
  *
- * Pure vocabulary — no state, no side effects. `createSeek.ts` builds these,
- * and `activeSeeks.ts` owns the collection of them.
+ * Stateless types and transformations: `activeSeeks.ts` owns the collection and its
+ * lifecycle, while this module defines the data it holds and exposes to clients.
  */
 
 import type { AuthMemberInfo } from '../../types.js';
@@ -13,9 +13,9 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { BaseSeek, OutSeek } from '../../../shared/transport/domain.js';
 import type { SeekVariant, OutSeekVariant } from '../../../shared/chess/util/variantselection.js';
 
-// Type Definitions ------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
-/** A lobby game seek, WITH the owner's sensitive information. */
+/** An open public or private seek, including the owner's identity. */
 export interface AuthSeek extends BaseSeek {
 	/** Contains the identifier of the owner of the seek, whether a member or browser. */
 	owner: AuthMemberInfo;

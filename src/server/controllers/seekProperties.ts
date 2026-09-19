@@ -35,7 +35,7 @@ export interface SeekPropertiesViewModel {
 	rules: RuleLineViewModel[];
 	/** Speed category icon id + display name, for the speed badge. */
 	speed: { iconId: string; name: string };
-	/** User-facing time control label in `m+s` format, e.g. `"10+4"` or `"-"`. */
+	/** User-facing `m+s` label, or empty for untimed games. */
 	timeControl: string;
 	/** "Rated" or "Casual". */
 	mode: string;

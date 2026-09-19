@@ -1,12 +1,13 @@
 // src/server/game/seeksmanager/challengeManager.ts
 
 /**
- * Turns a connection into a challenge-page viewer and back: subscribing a socket to a
- * private seek, answering it with the page's state, unsubscribing it, the owner-away
- * expiry timer, and telling the page's sockets where to go once the challenge became a game.
+ * Turns a connection into a challenge-page viewer and back: subscribing a socket,
+ * sending the page's state, and unsubscribing it. Keeps a private challenge open while
+ * its owner is present, with a grace period when their last challenge page disconnects.
  *
- * `activeSeeks.ts` owns the seeks, the page sockets riding on each private one,
- * and the `gone` push every deletion sends them.
+ * `activeSeeks.ts` owns the seeks and their page sockets, including detaching viewers
+ * and sending `gone` when a seek is deleted. This module manages subscriptions and
+ * expiry, and directs players and onlookers to the game when a challenge is accepted.
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
@@ -82,10 +83,7 @@ function resolveClosedState(ws: CustomWebSocket, id: number): ChallengeStateMess
 	return owed ? { kind: 'game', role } : { kind: 'gone' };
 }
 
-/**
- * Detaches a socket from the challenge it views, starting the owner-away clock
- * if it was the owner's last challenge socket. Entry point: socket closure.
- */
+/** Detaches a subscribed socket, starting expiry if it was the owner's last connection. */
 function unsubscribe(ws: CustomWebSocket): void {
 	const id = ws.metadata.subscriptions.challenge!.id; // Guaranteed: only called on a subscribed socket.
 	delete ws.metadata.subscriptions.challenge;

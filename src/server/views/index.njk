@@ -103,34 +103,8 @@
 							<div>{{ t.lobby.table.time }}</div>
 							<div>{{ t.lobby.table.mode }}</div>
 						</div>
-						{# Open seeks are listed in here #}
-						<div id="lobby-tbody">
-							{# Example lobby row #}
-							{# <div class="seek-row" title="Accept seek" data-seek-id="123">
-								<div class="lobby-cell">
-									<div class="cell-flex">
-										<span class="username-embed">
-											<span class="username">Naviary</span>
-											<span class="elo">1854</span>
-										</span>
-										<div class="side-dot black" title="Invite owner chooses to be black"></div>
-									</div>
-								</div>
-								<div class="lobby-cell">
-									<div class="cell-flex">
-										<svg class="cell-icon svg-pawn"><use href="#svg-pawn"></use></svg>
-										Classical
-									</div>
-								</div>
-								<div class="lobby-cell">
-									<div class="cell-flex">
-										<svg class="cell-icon svg-speed-rapid"><use href="#svg-speed-rapid"></use></svg>
-										10+4
-									</div>
-								</div>
-								<div class="lobby-cell">Rated</div>
-							</div> #}
-						</div>
+						{# Seek row markup is defined by createSeekRowVNode() in src/client/scripts/esm/views/index/lobby.ts. #}
+						<div id="lobby-tbody"></div>
 					</div>
 				</div>
 			</section>

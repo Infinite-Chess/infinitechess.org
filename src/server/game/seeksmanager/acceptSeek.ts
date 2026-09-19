@@ -55,17 +55,6 @@ function accept(ws: CustomWebSocket, id: number): void {
 		return socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.rated_requires_signin);
 	}
 
-	// Accept the seek!
-
-	let deletedAnySeek = false;
-	// Delete the seek accepted.
-	if (activeSeeks.deleteByID(id, { dontBroadcast: true, becomingGame: true }))
-		deletedAnySeek = true;
-	// Delete their existing seeks
-	if (activeSeeks.deleteOfUser(user, { dontBroadcast: true })) deletedAnySeek = true;
-
-	// Start the game! Notify both players and tell them they've been subscribed to a game!
-
 	// A private seek's owner waits on its challenge page, a public one's on the lobby.
 	const ownerSockets = seek.private ? seek.private.subscribers : lobbySubscribers.getAll();
 	const player1Socket = socketLookups.findOfOwner(ownerSockets, seek.owner, seek.ownerTab); // Could be undefined occasionally
@@ -73,21 +62,16 @@ function accept(ws: CustomWebSocket, id: number): void {
 
 	// Assign each player a color based on their seek info. Add their socket just in case
 	const assignments: PlayerAssignments = {};
-	let seek_accepter: Player | undefined;
 	for (const [strcolor, identifier] of Object.entries(
 		gameUtility.assignWhiteBlackPlayersFromSeek(seek.color, seek.owner, ws.metadata.memberInfo),
 	)) {
 		const player = Number(strcolor) as Player;
 		const is_seek_accepter = memberInfoUtil.eq(identifier, player2Socket.metadata.memberInfo);
-		if (is_seek_accepter) seek_accepter = player;
 		assignments[player] = {
 			identifier,
 			socket: is_seek_accepter ? player2Socket : player1Socket,
 		};
 	}
-
-	if (seek_accepter === undefined)
-		throw Error("Seek accepter doesn't exist on accepted 2 player seek");
 
 	try {
 		gameManager.createGame(
@@ -117,9 +101,6 @@ function accept(ws: CustomWebSocket, id: number): void {
 		lobbySubscribers.remove(player2Socket);
 		lobbyManager.broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
 	}
-
-	// Both deletions above were silenced so they collapse into this single broadcast.
-	if (deletedAnySeek) activeSeeks.broadcast();
 }
 
 // Exports ---------------------------------------------------------------------

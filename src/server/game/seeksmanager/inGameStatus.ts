@@ -3,8 +3,6 @@
 /**
  * Tells a user's seek pages whether they're in a game: their lobby tabs, which show the
  * rejoin banner (or navigate), and their challenge-page tabs, which may not accept while in one.
- *
- * One function reaching both audiences, so a caller can't update one and forget the other.
  */
 
 import type { AuthMemberInfo } from '../../types.js';

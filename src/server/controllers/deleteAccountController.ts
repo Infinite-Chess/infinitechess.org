@@ -11,6 +11,7 @@ import jsutil from '../../shared/util/jsutil.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import logEvents from '../utility/logEvents.js';
+import activeSeeks from '../game/seeksmanager/activeSeeks.js';
 import memberManager from '../database/memberManager.js';
 import gameLifecycle from '../game/gamemanager/gameLifecycle.js';
 import sessionManager from '../auth/sessionManager.js';
@@ -66,8 +67,9 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 function deleteAccount(user_id: number, reason_deleted: DeleteReason): void {
 	// Their live game must be logged BEFORE the member row goes.
 	gameLifecycle.concludeForAccountDeletion(user_id, reason_deleted === 'user request');
+	activeSeeks.deleteOfUser(user_id);
 
-	// Close their sockets, delete their seeks...
+	// Close their sockets.
 	socketRegistry.closeAllOfMember(user_id, 1008, socketutil.CLOSURE_REASONS.LOGGED_OUT);
 
 	// Account deleting automatically invalidates all their sessions, because their refresh tokens are deleted.

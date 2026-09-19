@@ -1,16 +1,14 @@
 // src/server/game/seeksmanager/activeSeeks.ts
 
 /**
- * Owns the collection of open seeks — the lobby's public ones and the private challenges —
- * every way of looking one up — by id, or by the user who owns it — and the broadcast
- * that pushes the live list out.
+ * This script owns the collection of open seeks — public lobby seeks and private challenges —
+ * their lookups, and the live seek list sent to lobby viewers.
  *
- * The seeksmanager counterpart of `activeGames.ts` — but unlike it, mutating this
- * collection broadcasts by default: a stale lobby list is visible to every viewer.
- * `lobbyManager.ts` sends every other lobby-bound message.
+ * The seeksmanager counterpart of `activeGames.ts`. Mutations broadcast the lobby list by
+ * default; grouped deletions can suppress those updates and broadcast once when complete.
  *
- * A private seek's page sockets live on the seek itself, so deleting one here is also
- * what detaches them, however it died.
+ * Each private seek owns its page subscriptions and expiry timer, so deleting it also
+ * detaches its viewers and stops its timer.
  */
 
 import type { OutSeek } from '../../../shared/transport/domain.js';
@@ -22,11 +20,6 @@ import socketsend from '../../socket/socketSend.js';
 import seekUtility from './seekUtility.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
 import lobbySubscribers from './lobbySubscribers.js';
-
-// Constants -------------------------------------------------------------------
-
-/** Whether to log new seek creations/deletions to the console */
-const PRINT_SEEK_CHANGES = true;
 
 // State -----------------------------------------------------------------------
 
@@ -40,16 +33,13 @@ function add(seek: AuthSeek): void {
 	seeks.push(seek);
 
 	broadcast();
-
-	if (PRINT_SEEK_CHANGES) console.log(`Created seek for user ${JSON.stringify(seek.owner)}`);
 }
 
 /**
  * Deletes a seek from the collection by its id, typically when it is cancelled or accepted.
  * @param options.dontBroadcast - If true, prevents broadcasting the changes to all clients. [false]
  * @param options.becomingGame - States that the seek isn't dying, but graduating into a live game
- * under its own id. No `gone` push goes out to a private seek's page sockets —
- * `challengeManager.ts` tells them where to go once that game exists. [false]
+ * under its own id, suppressing the `gone` push to its viewers.
  * @returns Whether a seek was deleted.
  */
 function deleteByID(id: number, { dontBroadcast = false, becomingGame = false } = {}): boolean {
@@ -61,8 +51,6 @@ function deleteByID(id: number, { dontBroadcast = false, becomingGame = false } 
 
 	if (!dontBroadcast) broadcast();
 
-	if (PRINT_SEEK_CHANGES) console.log(`Deleted seek for user ${JSON.stringify(seek.owner)}`);
-
 	return true;
 }
 
@@ -72,7 +60,7 @@ function deleteByID(id: number, { dontBroadcast = false, becomingGame = false } 
  * @param options.sparePrivate - If true, keeps their private seek, which outlives their leaving the lobby. [false]
  * @returns Whether any seek was deleted.
  */
-function deleteOfUser(
+function deleteOfOwner(
 	info: AuthMemberInfo,
 	{ dontBroadcast = false, sparePrivate = false } = {},
 ): boolean {
@@ -85,18 +73,21 @@ function deleteOfUser(
 		seeks.splice(i, 1); // Delete the seek
 		releasePrivate(seek, false);
 		deletedSeek = true;
-		if (PRINT_SEEK_CHANGES)
-			console.log(`${info.signedIn ? `Deleted member's seek. Username: ${info.username}` : `Deleted browser's seek. Browser: ${info.browser_id}`}`); // prettier-ignore
 	}
 
 	if (deletedSeek && !dontBroadcast) broadcast(); // Broadcast the change if an seek was deleted
 	return deletedSeek;
 }
 
+/** Deletes any open seek owned by the given user, even if they're offline. */
+function deleteOfUser(user_id: number): void {
+	const seek = seeks.find((seek) => seek.owner.signedIn && seek.owner.user_id === user_id);
+	if (seek) deleteOfOwner(seek.owner);
+}
+
 /**
- * Detaches a just-deleted private seek's page sockets, telling each it's gone unless the
- * seek is becoming a game, and stops its expiry timer — left armed, it would fire against
- * the freed id once reissued, deleting an innocent challenge.
+ * Stops a deleted seek's expiry timer and detaches its viewers.
+ * @param becomingGame - If true, suppresses the `gone` notification because the seek became a game.
  */
 function releasePrivate(seek: AuthSeek, becomingGame: boolean): void {
 	if (!seek.private) return;
@@ -154,6 +145,7 @@ export default {
 	// Membership
 	add,
 	deleteByID,
+	deleteOfOwner,
 	deleteOfUser,
 	// Lookups
 	getByID,

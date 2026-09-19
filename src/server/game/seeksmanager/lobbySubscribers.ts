@@ -2,21 +2,18 @@
 
 /**
  * Owns the set of sockets currently subscribed to the lobby.
+ * Keeps membership in sync with each socket's lobby subscription flag and exposes
+ * the audience for lobby broadcasts.
  *
- * A dependency-free leaf: it knows sockets, not seeks. `lobbyManager.ts` drives
- * subscription and reads this set to address its broadcasts, and `activeSeeks.ts`
- * reads it to push the live seek list.
+ * Handles socket membership and message delivery. `lobbyManager.ts` handles subscription
+ * side effects; `activeSeeks.ts` owns the seeks and their list broadcasts.
  */
 
 import type { Exact } from '../../../shared/util/socketutil.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { OutAction, OutValue } from '../../socket/socketSend.js';
 
-import socketsend from '../../socket/socketSend.js';
-
-// Constants -------------------------------------------------------------------
-
-const PRINT_SUBSCRIBER_COUNT = false;
+import socketSend from '../../socket/socketSend.js';
 
 // State -----------------------------------------------------------------------
 
@@ -25,16 +22,14 @@ const subscribedClients: Set<CustomWebSocket> = new Set();
 
 // Functions -------------------------------------------------------------------
 
-/**
- * Returns an iterator over all sockets currently subscribed to the lobby.
- */
+/** Returns an iterator over all sockets currently subscribed to the lobby. */
 function getAll(): SetIterator<CustomWebSocket> {
 	return subscribedClients.values();
 }
 
 /**
  * Broadcasts a message to all lobby subscribers.
- * Currently uncalled — reserved for pushing the live spectatable-games list to the home page.
+ * KEEP. It will be used when spectating is added to the lobby.
  * @param action - The action of the socket message
  * @param message - The message contents
  */
@@ -43,21 +38,17 @@ function broadcastToAll<A extends OutAction<'lobby'>, V extends OutValue<'lobby'
 	message: Exact<V, OutValue<'lobby', A>>,
 ): void {
 	for (const ws of subscribedClients) {
-		socketsend.send(ws, 'lobby', action, message); // In order: socket, sub, action, value
+		socketSend.send(ws, 'lobby', action, message); // In order: socket, sub, action, value
 	}
 }
 
-/**
- * Adds a new socket to the lobby subscriber list.
- */
+/** Adds a new socket to the lobby subscriber list. */
 function add(ws: CustomWebSocket): void {
 	if (subscribedClients.has(ws))
 		return console.error('Cannot sub socket to lobby because they already are!');
 
 	subscribedClients.add(ws);
 	ws.metadata.subscriptions.lobby = true;
-
-	if (PRINT_SUBSCRIBER_COUNT) console.log(`Lobby subscriber count: ${subscribedClients.size}`);
 }
 
 /**
@@ -65,15 +56,10 @@ function add(ws: CustomWebSocket): void {
  * DOES NOT delete any of their existing seeks! That should be done before.
  */
 function remove(ws: CustomWebSocket): void {
-	if (!ws)
-		return console.error("Can't remove socket from lobby subs list because it's undefined!");
-
 	if (!subscribedClients.has(ws)) return; // Cannot unsub socket from lobby because they aren't subbed.
 
 	subscribedClients.delete(ws);
 	delete ws.metadata.subscriptions.lobby;
-
-	if (PRINT_SUBSCRIBER_COUNT) console.log(`Lobby subscriber count: ${subscribedClients.size}`);
 }
 
 /** Returns the number of sockets currently subscribed to the lobby. */

@@ -269,6 +269,10 @@ Involuntary means _the client had no control_, and buys a grace period:
 The server drops **all** subscriptions on close regardless: without a socket to push to, a
 subscription is meaningless. The grace periods live in the game/lobby managers, not the socket.
 
+Lobby departures only delete public seeks. Private challenges expire after their owner has
+no challenge-page connection for 10 minutes. Starting any game, including a rematch, removes
+the participants' remaining seeks; account deletion removes the member's seeks immediately.
+
 ### Disconnection consequences in a live game
 
 Owned by [disconnect.ts](/src/server/game/gamemanager/disconnect.ts) and
@@ -346,7 +350,7 @@ Client-side, [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts) track
 authoritative state: it exists so a reconnect knows what to re-request, and so the socket knows
 when it may auto-close. It is wiped on every close.
 
-A second socket subscribing as the same player **evicts the first**: the old tab gets
+A second socket subscribing as the same player **in a game** evicts the first: the old tab gets
 `supersededbytab` and navigates home.
 
 ### Game (re)subscription: `subscribe` vs. `subscriberematch`

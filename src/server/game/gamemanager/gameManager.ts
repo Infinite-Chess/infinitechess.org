@@ -28,6 +28,7 @@ import socketsend from '../../socket/socketSend.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
 import activeGames from './activeGames.js';
+import activeSeeks from '../seeksmanager/activeSeeks.js';
 import inGameStatus from '../seeksmanager/inGameStatus.js';
 import activePlayers from './activePlayers.js';
 import gameLifecycle from './gameLifecycle.js';
@@ -77,6 +78,9 @@ function createGame(gameID: number, setup: GameSetup, assignments: PlayerAssignm
 	const match = gameUtility.initMatch(setup, gameID, assignments);
 
 	const servergame: ServerGame = gameUtility.initServerGame(game, construction, match);
+	// Clear seeks here because every game creation path passes through here.
+	// After construction succeeds & before in-game notifs.
+	clearPlayerSeeks(gameID, assignments);
 	for (const [strcolor, { identifier, socket }] of Object.entries(assignments)) {
 		// A player with no socket to push to is owed the navigate notice on their next seek-page subscribe.
 		activePlayers.add(
@@ -126,6 +130,15 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 			return; // A player can only be a participant of one lingering game.
 		}
 	}
+}
+
+/** Removes the accepted seek and every participant's other seek. */
+function clearPlayerSeeks(gameID: number, assignments: PlayerAssignments): void {
+	let changed = activeSeeks.deleteByID(gameID, { dontBroadcast: true, becomingGame: true });
+	for (const { identifier } of Object.values(assignments)) {
+		if (activeSeeks.deleteOfOwner(identifier, { dontBroadcast: true })) changed = true;
+	}
+	if (changed) activeSeeks.broadcast();
 }
 
 /**

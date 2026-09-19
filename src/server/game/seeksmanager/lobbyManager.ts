@@ -110,7 +110,7 @@ function deleteSeeksIfNotConnected(info: AuthMemberInfo): void {
 	if (socketLookups.hasUser(lobbySubscribers.getAll(), info)) return;
 
 	// Proceed with deleting the seek if not connected
-	activeSeeks.deleteOfUser(info, { sparePrivate: true });
+	activeSeeks.deleteOfOwner(info, { sparePrivate: true });
 }
 
 // Broadcasts ------------------------------------------------------------------

@@ -568,7 +568,6 @@ function createSideDotVNode(color: LobbySeek['color']): VNode | null {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	renderSeekList,
 	clearSeekList,
 	handleLobbyState,
 	onSeekListUpdate,
