@@ -1,14 +1,15 @@
 // src/server/game/seeksmanager/seekUtility.ts
 
 /**
- * The shape of a seek as the server holds it, and the projection that strips
- * it of sensitive data for the wire.
+ * The shape of a seek as the server holds it, the check for a private one, and
+ * the projection that strips it of sensitive data for the wire.
  *
  * Pure vocabulary — no state, no side effects. `createSeek.ts` builds these,
  * and `activeSeeks.ts` owns the collection of them.
  */
 
 import type { AuthMemberInfo } from '../../types.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { BaseSeek, OutSeek } from '../../../shared/transport/domain.js';
 import type { SeekVariant, OutSeekVariant } from '../../../shared/chess/util/variantselection.js';
 
@@ -24,9 +25,32 @@ export interface AuthSeek extends BaseSeek {
 	 */
 	ownerTab: string;
 	variant: SeekVariant;
+	/**
+	 * Present only on a "Challenge a friend" invite — absent from the lobby, reachable only
+	 * by its URL. Its presence is what makes the seek private.
+	 */
+	private?: {
+		/**
+		 * Deletes the seek once the owner has been away for 10 minutes.
+		 * Armed only while they have no challenge socket connected.
+		 */
+		expiry?: NodeJS.Timeout;
+		/** The sockets currently viewing this challenge's page. */
+		subscribers: Set<CustomWebSocket>;
+	};
+}
+
+/** A seek known to be a "Challenge a friend" invite. */
+export interface PrivateSeek extends AuthSeek {
+	private: NonNullable<AuthSeek['private']>;
 }
 
 // Functions -------------------------------------------------------------------
+
+/** Whether the seek is a "Challenge a friend" invite. */
+function isPrivate(seek: AuthSeek): seek is PrivateSeek {
+	return seek.private !== undefined;
+}
 
 /**
  * Projects a seek into the form broadcast to lobby viewers, dropping the owner's
@@ -53,4 +77,4 @@ function makeSafe(seek: AuthSeek): OutSeek {
 
 // Exports ---------------------------------------------------------------------
 
-export default { makeSafe };
+export default { isPrivate, makeSafe };

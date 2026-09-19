@@ -18,6 +18,7 @@ import renderContext from '../utility/renderContext.js';
 import gamePageController from '../controllers/gamePageController.js';
 import registerController from '../controllers/registerController.js';
 import analysisPageController from '../controllers/analysisPageController.js';
+import challengePageController from '../controllers/challengePageController.js';
 import verifyAccountController from '../controllers/verifyAccountController.js';
 import passwordResetController from '../controllers/passwordResetController.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
@@ -49,7 +50,8 @@ function attachRenderContext(req: Request, res: Response, next: NextFunction): v
  * Marks a response cross-origin isolated (COOP + COEP), which is what unlocks
  * `SharedArrayBuffer` — required by the multi-threaded (Lazy SMP) analysis engine build.
  *
- * Applied to analysis and game pages, whose engine assets are all same-origin.
+ * Applied to analysis and game pages (and the challenge page sharing the game's URL),
+ * whose assets are all same-origin.
  * Other pages may load cross-origin resources that don't send CORP.
  */
 function crossOriginIsolation(_req: Request, res: Response, next: NextFunction): void {
@@ -87,6 +89,9 @@ page('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.n
 page(
 	'/game/:id/:color(w|b)?',
 	(req: Request, res: Response) => {
+		// Before its game exists, the id names a private seek, whose page ignores the color segment.
+		const challengeState = challengePageController.getPageState(req);
+		if (challengeState !== undefined) return res.render('challenge.njk', challengeState);
 		const state = gamePageController.getPageState(req);
 		if (state === undefined) return send404(req, res); // Malformed or nonexistent id
 		res.render('game.njk', state);

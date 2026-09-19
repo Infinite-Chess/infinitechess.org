@@ -36,6 +36,11 @@ export interface CustomWebSocket extends WebSocket {
 				/** The id of the game they're spectating. */
 				id: number;
 			};
+			/** Will be defined if they are viewing an open private seek's challenge page. */
+			challenge?: {
+				/** The id of the private seek. */
+				id: number;
+			};
 		};
 		/** The parsed cookie object */
 		cookies: ParsedCookies;

@@ -28,7 +28,7 @@ import gameLogger from './gameLogger.js';
 import gameSockets from './gameSockets.js';
 import ratingAbuse from '../ratingabuse/ratingAbuse.js';
 import activeGames from './activeGames.js';
-import lobbyManager from '../seeksmanager/lobbyManager.js';
+import inGameStatus from '../seeksmanager/inGameStatus.js';
 import gamesManager from '../../database/gamesManager.js';
 import activePlayers from './activePlayers.js';
 import liveGameValues from './liveGameValues.js';
@@ -148,8 +148,8 @@ function free(servergame: ServerGame): void {
 	// Free the participants
 	for (const data of Object.values(servergame.match.playerData)) {
 		activePlayers.remove(data.identifier, servergame.match.id);
-		// Their lobby-subscribed clients may now hide their "in game" banner, if shown.
-		lobbyManager.broadcastMemberInGameStatus(data.identifier);
+		// Their seek-page clients may now hide their "in game" banner, if shown.
+		inGameStatus.broadcast(data.identifier);
 	}
 
 	// Log the game into the database the instant it concludes.

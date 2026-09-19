@@ -7,7 +7,7 @@ disconnect, and what a closure costs you depending on whether you caused it.
 
 There is **exactly one socket per tab** (nothing enforces that), lazily opened by the first
 message that needs it and auto-closed once nothing is subscribed. All live gameplay, the lobby,
-and spectating ride it.
+the challenge page, and spectating ride it.
 
 ## The wire
 
@@ -15,7 +15,7 @@ Every frame is JSON with a `route` discriminator. Four shapes exist, two per dir
 
 | Direction       | Shape                                                    | Notes                                                     |
 | --------------- | -------------------------------------------------------- | --------------------------------------------------------- |
-| server → client | `{ id, route, contents: { action, value? } }`            | `route` ∈ `general` \| `lobby` \| `game`                  |
+| server → client | `{ id, route, contents: { action, value? } }`            | `route` ∈ `general` \| `lobby` \| `game` \| `challenge`   |
 | server → client | `{ route: 'echo' \| 'ack', contents: <id> }`             | A receipt. Carries no id of its own, is never echoed back |
 | client → server | `{ id, route, contents: { action, value? }, needsack? }` | `needsack` is `true` or absent — never `false`            |
 | client → server | `{ route: 'echo', contents: <id> }`                      | A receipt                                                 |
@@ -24,16 +24,19 @@ Every frame is JSON with a `route` discriminator. Four shapes exist, two per dir
 directions have independent id spaces** — an id only ever means "the message I sent under it".
 `value` is omitted entirely for actions carrying none (never `null`).
 
-### The three routes
+### The four routes
 
 - **`general`** — protocol/UX traffic that belongs to no stream: heartbeat ping, protocol version,
   toasts and console relays, and the lobby sub/unsub verbs.
 - **`lobby`** — the seek list, viewer count, and in-game status.
 - **`game`** — everything about one live game.
+- **`challenge`** — one "Challenge a friend" page: a private seek, open at `/game/<id>` until
+  someone accepts it, and where each of its tabs goes after.
 
 Note the asymmetry: `sub`/`unsub` for the **lobby** are `general` actions, while attaching to a
-**game** is `game`/`subscribe` (it needs an id) and detaching happens on socket close or by
-server command. Leaving a game is a page navigation, so there is no in-place game unsub verb.
+**game** or **challenge** is that route's `subscribe` (it needs an id) and detaching happens on
+socket close or by server command. Leaving either is a page navigation, so neither has an
+in-place unsub verb.
 
 ## Schemas — the single source of truth
 
@@ -49,7 +52,7 @@ drag zod schemas the client only needs as _types_ into its bundle.
 
 A schema belongs in these files only if it exists **solely** as websocket message contents.
 Domain values also used by HTTP or SSR (`TimeControl`, `MovePacket`, `OutSeek`, `ClockValues`,
-`SeekId`…) live in [domain.ts](/src/shared/transport/domain.ts) and are imported by both.
+the game id…) live in [domain.ts](/src/shared/transport/domain.ts) and are imported by both.
 
 Everything is a `z.discriminatedUnion` of `z.strictObject`s, so an unknown action or an extra
 property is a validation failure, not silently-ignored data.
@@ -72,9 +75,10 @@ what makes `socketSend.send(ws, 'game', 'move', …)` fully type-checked on rout
    entirely if the action carries none.
 2. Handle it. Server: that route's router ([generalRouter.ts](/src/server/socket/generalRouter.ts),
    [lobbyrouter.ts](/src/server/game/seeksmanager/lobbyrouter.ts),
-   [gamerouter.ts](/src/server/game/gamemanager/gamerouter.ts)). Client: the `general` switch in
-   [socketreceive.ts](/src/client/scripts/esm/socket/socketreceive.ts), or a `SocketBus` listener
-   for `lobby`/`game`.
+   [gamerouter.ts](/src/server/game/gamemanager/gamerouter.ts),
+   [challengeRouter.ts](/src/server/game/seeksmanager/challengeRouter.ts)). Client: the `general`
+   switch in [socketreceive.ts](/src/client/scripts/esm/socket/socketreceive.ts), or a `SocketBus`
+   listener for `lobby`/`game`/`challenge`.
 3. Send it through that direction's send function — never `socket.send` directly.
 4. **Bump `PROTOCOL_VERSION`** — unless prod is already behind it (see below).
 
@@ -85,49 +89,54 @@ compile error rather than a silent no-op.
 
 ### Serverbound (client → server)
 
-| Route     | Action                                     | Payload                                                           |
-| --------- | ------------------------------------------ | ----------------------------------------------------------------- |
-| `general` | `sub` / `unsub`                            | `'lobby'` — the only subbable value                               |
-| `lobby`   | `createseek`                               | variant, time, color, mode, modifiers (rated combos re-validated) |
-| `lobby`   | `cancelseek` / `acceptseek`                | `SeekId`                                                          |
-| `lobby`   | `createenginegame`                         | variant, time, color, strengthLevel                               |
-| `game`    | `subscribe`                                | game id — attach + get full state                                 |
-| `game`    | `subscriberematch`                         | game id — attach + get the lean state                             |
-| `game`    | `submitmove`                               | `{ move, moveNumber, gameConclusion? }`                           |
-| `game`    | `abort` / `resign` / `engineresign`        | —                                                                 |
-| `game`    | `claimvictory` / `claimdraw`               | —                                                                 |
-| `game`    | `offerdraw` / `acceptdraw` / `declinedraw` | —                                                                 |
-| `game`    | `offerrematch`                             | —                                                                 |
-| `game`    | `submitchatmessage`                        | The typed chat message                                            |
-| `game`    | `report`                                   | `{ reason, opponentsMoveNumber }`                                 |
+| Route       | Action                                     | Payload                                                                    |
+| ----------- | ------------------------------------------ | -------------------------------------------------------------------------- |
+| `general`   | `sub` / `unsub`                            | `'lobby'` — the only subbable value                                        |
+| `lobby`     | `createseek`                               | variant, time, color, mode, modifiers, private (rated combos re-validated) |
+| `lobby`     | `cancelseek` / `acceptseek`                | seek id — the id its game will have                                        |
+| `lobby`     | `createenginegame`                         | variant, time, color, strengthLevel                                        |
+| `game`      | `subscribe`                                | game id — attach + get full state                                          |
+| `game`      | `subscriberematch`                         | game id — attach + get the lean state                                      |
+| `game`      | `submitmove`                               | `{ move, moveNumber, gameConclusion? }`                                    |
+| `game`      | `abort` / `resign` / `engineresign`        | —                                                                          |
+| `game`      | `claimvictory` / `claimdraw`               | —                                                                          |
+| `game`      | `offerdraw` / `acceptdraw` / `declinedraw` | —                                                                          |
+| `game`      | `offerrematch`                             | —                                                                          |
+| `game`      | `submitchatmessage`                        | The typed chat message                                                     |
+| `game`      | `report`                                   | `{ reason, opponentsMoveNumber }`                                          |
+| `challenge` | `subscribe`                                | the page's id — attach (if still an open private seek) + get its state     |
+| `challenge` | `accept` / `cancel`                        | — acts on the challenge this socket subscribed to                          |
 
 ### Clientbound (server → client)
 
-| Route     | Action                                     | Meaning                                                                                             |
-| --------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| `general` | `ping`                                     | Heartbeat. Expects only the echo every message gets                                                 |
-| `general` | `protocolversion`                          | Sent the instant the socket opens; mismatch → client reloads                                        |
-| `general` | `toast` / `toast-error`                    | Toast. **Already translated server-side** (`ws.t`)                                                  |
-| `general` | `print` / `print-error`                    | Console relay                                                                                       |
-| `lobby`   | `lobbystate`                               | Full snapshot on subscribe: seeks, our seek id, viewer count, in-game status                        |
-| `lobby`   | `seekslist` / `viewercount`                | Live deltas                                                                                         |
-| `lobby`   | `ingame` / `outgame`                       | We are (not) in a game. `ingame.navigate` decides _this tab_ goes there vs. shows the rejoin banner |
-| `game`    | `gamestate`                                | `full`: board + participant overlay — `subscribe` and any resync. `lean`: overlay + spectators      |
-| `game`    | `move`                                     | Opponent's move + move number + clocks + any conclusion                                             |
-| `game`    | `clock`                                    | Clock values alone                                                                                  |
-| `game`    | `spectatorcount`                           | Live spectator count                                                                                |
-| `game`    | `gameconclusion`                           | Non-move-triggered conclusion (for those who can't desync)                                          |
-| `game`    | `gameratingchange`                         | Per-player rating deltas                                                                            |
-| `game`    | `finalized`                                | Result locked in permanently                                                                        |
-| `game`    | `detached`                                 | Detached from the game — stop expecting updates                                                     |
-| `game`    | `notlive`                                  | The id you subscribed to isn't live → client reloads into SSR                                       |
-| `game`    | `supersededbytab`                          | Another tab took over this game; this tab goes home                                                 |
-| `game`    | `opponentdisconnect` / `opponentreconnect` | Claim window opened / cancelled                                                                     |
-| `game`    | `drawoffer`                                | Opponent extended a draw offer (a decline reaches them as a chat notice instead)                    |
-| `game`    | `rematchoffer`                             | Opponent offered a rematch                                                                          |
-| `game`    | `chatentry`                                | One chat log entry — a typed message or a static notice. **Participants only**                      |
-| `game`    | `opponentleft` / `opponentreturn`          | Opponent left/returned to the post-game rematch window                                              |
-| `game`    | `rematchstarted`                           | A rematch was agreed — navigate to the new game                                                     |
+| Route       | Action                                     | Meaning                                                                                                                                   |
+| ----------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `general`   | `ping`                                     | Heartbeat. Expects only the echo every message gets                                                                                       |
+| `general`   | `protocolversion`                          | Sent the instant the socket opens; mismatch → client reloads                                                                              |
+| `general`   | `toast` / `toast-error`                    | Toast. **Already translated server-side** (`ws.t`)                                                                                        |
+| `general`   | `print` / `print-error`                    | Console relay                                                                                                                             |
+| `lobby`     | `lobbystate`                               | Full snapshot on subscribe: seeks, our seek id, viewer count, in-game status                                                              |
+| `lobby`     | `seekslist` / `viewercount`                | Live deltas                                                                                                                               |
+| `lobby`     | `ingame` / `outgame`                       | We are (not) in a game. `ingame.navigate` decides _this tab_ goes there vs. shows the rejoin banner                                       |
+| `lobby`     | `challengecreated`                         | Our private seek exists — only the creating tab is told, and goes to its challenge page                                                   |
+| `challenge` | `challengestate`                           | The page's whole state, on subscribe and whenever its fate changes: `open`, `gone` (go home), or `game` (go in, with our role if we play) |
+| `challenge` | `ingame` / `outgame`                       | We are (not) in another game, which bars accepting. Never navigates                                                                       |
+| `game`      | `gamestate`                                | `full`: board + participant overlay — `subscribe` and any resync. `lean`: overlay + spectators                                            |
+| `game`      | `move`                                     | Opponent's move + move number + clocks + any conclusion                                                                                   |
+| `game`      | `clock`                                    | Clock values alone                                                                                                                        |
+| `game`      | `spectatorcount`                           | Live spectator count                                                                                                                      |
+| `game`      | `gameconclusion`                           | Non-move-triggered conclusion (for those who can't desync)                                                                                |
+| `game`      | `gameratingchange`                         | Per-player rating deltas                                                                                                                  |
+| `game`      | `finalized`                                | Result locked in permanently                                                                                                              |
+| `game`      | `detached`                                 | Detached from the game — stop expecting updates                                                                                           |
+| `game`      | `notlive`                                  | The id you subscribed to isn't live → client reloads into SSR                                                                             |
+| `game`      | `supersededbytab`                          | Another tab took over this game; this tab goes home                                                                                       |
+| `game`      | `opponentdisconnect` / `opponentreconnect` | Claim window opened / cancelled                                                                                                           |
+| `game`      | `drawoffer`                                | Opponent extended a draw offer (a decline reaches them as a chat notice instead)                                                          |
+| `game`      | `rematchoffer`                             | Opponent offered a rematch                                                                                                                |
+| `game`      | `chatentry`                                | One chat log entry — a typed message or a static notice. **Participants only**                                                            |
+| `game`      | `opponentleft` / `opponentreturn`          | Opponent left/returned to the post-game rematch window                                                                                    |
+| `game`      | `rematchstarted`                           | A rematch was agreed — navigate to the new game                                                                                           |
 
 ## Receipts: echo vs. ack
 
@@ -255,6 +264,7 @@ Involuntary means _the client had no control_, and buys a grace period:
 | `game` (live)      | Opponent's claim window opens **immediately**; engine clock frozen | **5 s cushion**, then the claim window opens         |
 | `game` (concluded) | Rematch offer withdrawn, opponent told, evict check now            | Same, after a **5 s cushion**                        |
 | `spectating`       | Just detach — no timers, no opponent to notify                     | Same                                                 |
+| `challenge`        | Just detach; the owner's last one starts the 10 min expiry         | Same                                                 |
 
 The server drops **all** subscriptions on close regardless: without a socket to push to, a
 subscription is meaningless. The grace periods live in the game/lobby managers, not the socket.
@@ -318,18 +328,21 @@ and the first outgoing message lazily reopens the socket. A bfcache restore (`pa
 
 ## Subscriptions
 
-| Key          | Server metadata | Attach                               | Detach                                               |
-| ------------ | --------------- | ------------------------------------ | ---------------------------------------------------- |
-| `lobby`      | `boolean`       | `general`/`sub` `'lobby'`            | `general`/`unsub`, or socket close                   |
-| `game`       | `{ id, color }` | `game`/`subscribe` (participant)     | Socket close, or server `detached`/`supersededbytab` |
-| `spectating` | `{ id }`        | `game`/`subscribe` (non-participant) | Socket close, or server `detached`                   |
+| Key          | Server metadata | Attach                                           | Detach                                               |
+| ------------ | --------------- | ------------------------------------------------ | ---------------------------------------------------- |
+| `lobby`      | `boolean`       | `general`/`sub` `'lobby'`                        | `general`/`unsub`, or socket close                   |
+| `game`       | `{ id, color }` | `game`/`subscribe` (participant)                 | Socket close, or server `detached`/`supersededbytab` |
+| `spectating` | `{ id }`        | `game`/`subscribe` (non-participant)             | Socket close, or server `detached`                   |
+| `challenge`  | `{ id }`        | `challenge`/`subscribe` (open private seek only) | Socket close, or the seek's deletion                 |
 
 **Clients may only ever request `lobby`.** `sub` accepts nothing else; the game keys are
 attached server-side by `subscribe`, which resolves participant-vs-spectator itself from
 `getSocketRoleInGame()` (subscription metadata, falling back to identity for a fresh reconnect).
+Likewise `challenge` is attached by its own `subscribe`, and only while the id names an open
+private seek — anything else is answered where to go, and nothing is retained.
 
-Client-side, [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts) tracks only `lobby` and
-`game` booleans — a spectator's attachment is also `game`. This is a **local intent record**, not
+Client-side, [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts) tracks only `lobby`,
+`game` and `challenge` booleans — a spectator's attachment is also `game`. This is a **local intent record**, not
 authoritative state: it exists so a reconnect knows what to re-request, and so the socket knows
 when it may auto-close. It is wiped on every close.
 
@@ -395,21 +408,22 @@ Messages arriving before the gamefile's logical part exists are **queued** and r
 [SocketBus.ts](/src/client/scripts/esm/socket/SocketBus.ts) is the client's typed event bus; nothing
 imports a socket handler directly, handlers self-register.
 
-| Event             | Fired when                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| `opening`         | A connection attempt starts                                                                |
-| `closed`          | The socket closed, for any reason                                                          |
-| `connection-lost` | Right after `closed`, if involuntary and we had subs (so its handlers override `closed`'s) |
-| `reconnect`       | Subsystems should re-subscribe                                                             |
-| `ping`            | An echo returned; detail is the RTT in ms                                                  |
-| `intents`         | Intent lock or route readiness changed                                                     |
-| `lobby` / `game`  | A validated incoming message for that route                                                |
+| Event                          | Fired when                                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| `opening`                      | A connection attempt starts                                                                |
+| `closed`                       | The socket closed, for any reason                                                          |
+| `connection-lost`              | Right after `closed`, if involuntary and we had subs (so its handlers override `closed`'s) |
+| `reconnect`                    | Subsystems should re-subscribe                                                             |
+| `ping`                         | An echo returned; detail is the RTT in ms                                                  |
+| `intents`                      | Intent lock or route readiness changed                                                     |
+| `lobby` / `game` / `challenge` | A validated incoming message for that route                                                |
 
 ## The intent layer (client)
 
 [socketintents.ts](/src/client/scripts/esm/socket/socketintents.ts) sits above the raw transport for
-**user-triggered** actions (create/cancel/accept seek, create engine game, abort, resign, engine
-resign, claim victory/draw, draw offers, rematch offers). Two problems it solves:
+**user-triggered** actions (create/cancel/accept seek, create engine game, accept/cancel a
+challenge, abort, resign, engine resign, claim victory/draw, draw offers, rematch offers). Two
+problems it solves:
 
 1. **A click must survive a disconnect** — but must not be replayed blindly, because by the time we
    reconnect the world may have moved on. So an intent that can't go out now is _held_, and
@@ -479,30 +493,33 @@ makes no difference whether they were one version behind or two.
 
 ## File map
 
-| Concern                                            | File                                                                                                                                                                                                                                          |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Shared constants, closure taxonomy, type helpers   | [socketutil.ts](/src/shared/util/socketutil.ts)                                                                                                                                                                                               |
-| Tab id: its query param, length, and shape         | [tabid.ts](/src/shared/util/tabid.ts)                                                                                                                                                                                                         |
-| Contracts                                          | [serverbound.ts](/src/shared/transport/serverbound.ts), [clientbound.ts](/src/shared/transport/clientbound.ts), [domain.ts](/src/shared/transport/domain.ts)                                                                                  |
-| **Server** — stand up server, payload/close limits | [socketServer.ts](/src/server/socket/socketServer.ts)                                                                                                                                                                                         |
-| Upgrade gating, metadata, listeners                | [socketOpen.ts](/src/server/socket/socketOpen.ts)                                                                                                                                                                                             |
-| Registry, caps, expiry, mass-closure               | [socketRegistry.ts](/src/server/socket/socketRegistry.ts)                                                                                                                                                                                     |
-| Send, receipts, echo timers, heartbeat             | [socketSend.ts](/src/server/socket/socketSend.ts)                                                                                                                                                                                             |
-| Validate, meter, echo, route                       | [socketReceive.ts](/src/server/socket/socketReceive.ts)                                                                                                                                                                                       |
-| Close teardown                                     | [socketClose.ts](/src/server/socket/socketClose.ts)                                                                                                                                                                                           |
-| Subscription attach/detach                         | [socketSubs.ts](/src/server/socket/socketSubs.ts)                                                                                                                                                                                             |
-| Routers                                            | [messageRouter.ts](/src/server/socket/messageRouter.ts), [generalRouter.ts](/src/server/socket/generalRouter.ts), [lobbyrouter.ts](/src/server/game/seeksmanager/lobbyrouter.ts), [gamerouter.ts](/src/server/game/gamemanager/gamerouter.ts) |
-| `CustomWebSocket` shape                            | [socketTypes.ts](/src/server/socket/socketTypes.ts)                                                                                                                                                                                           |
-| Game socket attach/detach, send helpers, broadcast | [gamesockets.ts](/src/server/game/gamemanager/gamesockets.ts)                                                                                                                                                                                 |
-| Disconnect cushion + claim windows                 | [disconnect.ts](/src/server/game/gamemanager/disconnect.ts), [claimdisconnect.ts](/src/server/game/gamemanager/claimdisconnect.ts)                                                                                                            |
-| Lobby subscriber set + broadcasts                  | [lobbysubscribers.ts](/src/server/game/seeksmanager/lobbysubscribers.ts), [lobbymanager.ts](/src/server/game/seeksmanager/lobbymanager.ts)                                                                                                    |
-| **Client** — connection lifecycle, reconnect       | [socketconnection.ts](/src/client/scripts/esm/socket/socketconnection.ts)                                                                                                                                                                     |
-| Send, echo timers, inactivity watchdog             | [socketsend.ts](/src/client/scripts/esm/socket/socketsend.ts)                                                                                                                                                                                 |
-| Validate, echo, dispatch                           | [socketreceive.ts](/src/client/scripts/esm/socket/socketreceive.ts)                                                                                                                                                                           |
-| Close handling, reconnect policy, timeouts         | [socketclose.ts](/src/client/scripts/esm/socket/socketclose.ts)                                                                                                                                                                               |
-| Local subscription record                          | [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts)                                                                                                                                                                                 |
-| Intent hold/lock layer                             | [socketintents.ts](/src/client/scripts/esm/socket/socketintents.ts)                                                                                                                                                                           |
-| Event bus                                          | [SocketBus.ts](/src/client/scripts/esm/socket/SocketBus.ts)                                                                                                                                                                                   |
-| This tab's own id                                  | [ourtabid.ts](/src/client/scripts/esm/util/ourtabid.ts)                                                                                                                                                                                       |
-| Game-route handling, stage machine, resync         | [onlinegamerouter.ts](/src/client/scripts/esm/views/game/onlinegamerouter.ts), [onlinegame.ts](/src/client/scripts/esm/views/game/onlinegame.ts), [resyncer.ts](/src/client/scripts/esm/views/game/resyncer.ts)                               |
-| Lobby-route handling                               | [index.ts](/src/client/scripts/esm/views/index/index.ts), [lobby.ts](/src/client/scripts/esm/views/index/lobby.ts)                                                                                                                            |
+| Concern                                            | File                                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shared constants, closure taxonomy, type helpers   | [socketutil.ts](/src/shared/util/socketutil.ts)                                                                                                                                                                                                                                                                       |
+| Tab id: its query param, length, and shape         | [tabid.ts](/src/shared/util/tabid.ts)                                                                                                                                                                                                                                                                                 |
+| Contracts                                          | [serverbound.ts](/src/shared/transport/serverbound.ts), [clientbound.ts](/src/shared/transport/clientbound.ts), [domain.ts](/src/shared/transport/domain.ts)                                                                                                                                                          |
+| **Server** — stand up server, payload/close limits | [socketServer.ts](/src/server/socket/socketServer.ts)                                                                                                                                                                                                                                                                 |
+| Upgrade gating, metadata, listeners                | [socketOpen.ts](/src/server/socket/socketOpen.ts)                                                                                                                                                                                                                                                                     |
+| Registry, caps, expiry, mass-closure               | [socketRegistry.ts](/src/server/socket/socketRegistry.ts)                                                                                                                                                                                                                                                             |
+| Send, receipts, echo timers, heartbeat             | [socketSend.ts](/src/server/socket/socketSend.ts)                                                                                                                                                                                                                                                                     |
+| Validate, meter, echo, route                       | [socketReceive.ts](/src/server/socket/socketReceive.ts)                                                                                                                                                                                                                                                               |
+| Close teardown                                     | [socketClose.ts](/src/server/socket/socketClose.ts)                                                                                                                                                                                                                                                                   |
+| Subscription attach/detach                         | [socketSubs.ts](/src/server/socket/socketSubs.ts)                                                                                                                                                                                                                                                                     |
+| Routers                                            | [messageRouter.ts](/src/server/socket/messageRouter.ts), [generalRouter.ts](/src/server/socket/generalRouter.ts), [lobbyrouter.ts](/src/server/game/seeksmanager/lobbyrouter.ts), [gamerouter.ts](/src/server/game/gamemanager/gamerouter.ts), [challengeRouter.ts](/src/server/game/seeksmanager/challengeRouter.ts) |
+| `CustomWebSocket` shape                            | [socketTypes.ts](/src/server/socket/socketTypes.ts)                                                                                                                                                                                                                                                                   |
+| Game socket attach/detach, send helpers, broadcast | [gamesockets.ts](/src/server/game/gamemanager/gamesockets.ts)                                                                                                                                                                                                                                                         |
+| Disconnect cushion + claim windows                 | [disconnect.ts](/src/server/game/gamemanager/disconnect.ts), [claimdisconnect.ts](/src/server/game/gamemanager/claimdisconnect.ts)                                                                                                                                                                                    |
+| Lobby subscriber set + broadcasts                  | [lobbysubscribers.ts](/src/server/game/seeksmanager/lobbysubscribers.ts), [lobbymanager.ts](/src/server/game/seeksmanager/lobbymanager.ts)                                                                                                                                                                            |
+| Challenge-page subscribe, expiry, pushes           | [challengeManager.ts](/src/server/game/seeksmanager/challengeManager.ts), [activeSeeks.ts](/src/server/game/seeksmanager/activeSeeks.ts)                                                                                                                                                                              |
+| In-game status to lobby + challenge pages          | [inGameStatus.ts](/src/server/game/seeksmanager/inGameStatus.ts)                                                                                                                                                                                                                                                      |
+| **Client** — connection lifecycle, reconnect       | [socketconnection.ts](/src/client/scripts/esm/socket/socketconnection.ts)                                                                                                                                                                                                                                             |
+| Send, echo timers, inactivity watchdog             | [socketsend.ts](/src/client/scripts/esm/socket/socketsend.ts)                                                                                                                                                                                                                                                         |
+| Validate, echo, dispatch                           | [socketreceive.ts](/src/client/scripts/esm/socket/socketreceive.ts)                                                                                                                                                                                                                                                   |
+| Close handling, reconnect policy, timeouts         | [socketclose.ts](/src/client/scripts/esm/socket/socketclose.ts)                                                                                                                                                                                                                                                       |
+| Local subscription record                          | [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts)                                                                                                                                                                                                                                                         |
+| Intent hold/lock layer                             | [socketintents.ts](/src/client/scripts/esm/socket/socketintents.ts)                                                                                                                                                                                                                                                   |
+| Event bus                                          | [SocketBus.ts](/src/client/scripts/esm/socket/SocketBus.ts)                                                                                                                                                                                                                                                           |
+| This tab's own id                                  | [ourtabid.ts](/src/client/scripts/esm/util/ourtabid.ts)                                                                                                                                                                                                                                                               |
+| Game-route handling, stage machine, resync         | [onlinegamerouter.ts](/src/client/scripts/esm/views/game/onlinegamerouter.ts), [onlinegame.ts](/src/client/scripts/esm/views/game/onlinegame.ts), [resyncer.ts](/src/client/scripts/esm/views/game/resyncer.ts)                                                                                                       |
+| Lobby-route handling                               | [index.ts](/src/client/scripts/esm/views/index/index.ts), [lobby.ts](/src/client/scripts/esm/views/index/lobby.ts)                                                                                                                                                                                                    |
+| Challenge-route handling                           | [challenge.ts](/src/client/scripts/esm/views/challenge/challenge.ts), [challengecard.ts](/src/client/scripts/esm/views/challenge/challengecard.ts)                                                                                                                                                                    |

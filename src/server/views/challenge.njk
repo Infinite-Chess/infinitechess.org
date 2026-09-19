@@ -1,0 +1,77 @@
+{% extends "layout.njk" %}
+
+{% set t = templateT('challenge') %}
+{% set pageName = t.title %}
+
+{% block bodyClass %}sticky-footer{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ manifest['css/challenge.css'] }}" />
+{% endblock %}
+
+{% block head %}
+{# SSR→client channel: the challenge's id, and the variant its preview draws. #}
+<script>window.challengePageData = {{ challengePageData | json | safe }};</script>
+{% endblock %}
+
+{% block body %}
+{% include "components/header/header.njk" %}
+
+{% from "components/user.njk" import usernameEmbed %}
+{% from "components/seekproperties.njk" import seekProperties %}
+
+{# Borrowed strings: the home page's, the shared codes-and-labels, and the server responses. #}
+{% set tIndex = templateT('index') %}
+{% set tsIndex = scriptT('index') %}
+{% set s = scriptT('shared') %}
+{% set responses = scriptT('responses') %}
+
+{# The plain card. Scripts reach it only through its ids, so a layout may move or restyle
+   any element, but never rename or remove an id. #}
+<main class="bg-checkerboard-dimmed page-centered">
+	<div class="auth-card">
+		<h1 class="auth-title">{{ tsIndex.lobby_buttons.challenge_friend if share else t.title }}</h1>
+
+		{# The owner, and the side they chose — no dot for Random. #}
+		<div>
+			{{ usernameEmbed(ownerName, ownerElo) }}
+			{% if ownerSide is defined %}
+			<span class="side-dot{{ ' black' if ownerSide == p.BLACK }}" title="{{ s.seek.owner_side_black if ownerSide == p.BLACK else s.seek.owner_side_white }}"></span>
+			{% endif %}
+		</div>
+
+		{% if modifierIconIds.length %}
+		<div>
+			{% for iconId in modifierIconIds %}<svg class="modifier-icon {{ iconId }}"><use href="#{{ iconId }}"/></svg>{% endfor %}
+		</div>
+		{% endif %}
+
+		{{ seekProperties(properties) }}
+
+		{# The start position, always from White's side. Sized before any script runs. #}
+		<canvas id="challenge-preview" width="256" height="256"></canvas>
+
+		{% if share %}
+		{# Owner: share the link, or withdraw the challenge. #}
+		<button class="btn-primary" id="challenge-copy" data-url="{{ share.url }}">{{ t.copy_link }}</button>
+		{# Only the QR is `| safe`: it's markup we generated from our own URL, never input. #}
+		<div class="challenge-qr">{{ share.qrSvg | safe }}</div>
+		<button class="btn-primary" id="challenge-cancel">{{ t.cancel }}</button>
+		{% else %}
+		{# Visitor: accept, with the reason when they can't. #}
+		<button class="btn-primary" id="challenge-accept"{% if signinRequired %} disabled{% endif %}>{{ t.accept }}</button>
+		{# Revealed by the client while we're in another game, which points the link at it. #}
+		<p class="hidden" id="challenge-ingame">{{ tIndex.lobby.ingame_banner }} <a class="auth-link" id="challenge-ingame-join">{{ tIndex.lobby.ingame_join }}</a></p>
+		{% if signinRequired %}
+		<p id="challenge-signin-required">{{ responses.seeks.rated_requires_signin }}</p>
+		{% endif %}
+		{% endif %}
+	</div>
+</main>
+
+{% include "components/footer/footer.njk" %}
+{% endblock %}
+
+{% block script %}
+<script type="module" src="{{ manifest['scripts/esm/views/challenge/challenge.ts'] }}"></script>
+{% endblock %}

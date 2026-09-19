@@ -11,6 +11,7 @@ import type { CustomWebSocket } from './socketTypes.js';
 
 import gameManager from '../game/gamemanager/gameManager.js';
 import lobbyManager from '../game/seeksmanager/lobbyManager.js';
+import challengeManager from '../game/seeksmanager/challengeManager.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -52,6 +53,10 @@ function unsub(ws: CustomWebSocket, key: SubscriptionKey, involuntary: boolean):
 		case 'spectating':
 			// Read-only spectator: no cushion/auto-resign, just detach.
 			gameManager.unsubscribeSpectator(ws);
+			break;
+		case 'challenge':
+			// No cushion: the challenge outlives its page, closing only starts the owner-away clock.
+			challengeManager.unsubscribe(ws);
 			break;
 		default:
 			console.error('UNKNOWN subscription list to unsubscribe client from!', key satisfies never); // prettier-ignore

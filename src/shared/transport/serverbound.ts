@@ -57,6 +57,8 @@ const CreateSeekMessageSchema = z
 			.array(modutil.GameModifierSchema)
 			.max(modutil.GameModifierSchema.options.length)
 			.optional(),
+		/** A "Challenge a friend" invite: hidden from the lobby, reachable only by its URL. */
+		private: z.boolean(),
 	})
 	.refine(
 		(val) =>
@@ -83,8 +85,8 @@ const CreateEngineGameMessageSchema = z.strictObject({
 export type ServerboundLobbyMessage = z.infer<typeof ServerboundLobbySchema>;
 const ServerboundLobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('createseek'), value: CreateSeekMessageSchema }),
-	z.strictObject({ action: z.literal('cancelseek'), value: domain.SeekIdSchema }),
-	z.strictObject({ action: z.literal('acceptseek'), value: domain.SeekIdSchema }),
+	z.strictObject({ action: z.literal('cancelseek'), value: domain.GameIDSchema }),
+	z.strictObject({ action: z.literal('acceptseek'), value: domain.GameIDSchema }),
 	z.strictObject({ action: z.literal('createenginegame'), value: CreateEngineGameMessageSchema }),
 ]);
 
@@ -125,6 +127,19 @@ const ServerboundGameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('submitmove'), value: SubmitMoveMessageSchema }),
 ]);
 
+// Challenge Route -------------------------------------------------------------
+
+/**
+ * Every message the client may send on the 'challenge' route. `accept` and `cancel` carry no
+ * id: they act on the challenge this socket subscribed to, so it can't act on one it never did.
+ */
+export type ServerboundChallengeMessage = z.infer<typeof ServerboundChallengeSchema>;
+const ServerboundChallengeSchema = z.discriminatedUnion('action', [
+	z.strictObject({ action: z.literal('subscribe'), value: domain.GameIDSchema }), // The page's own id.
+	z.strictObject({ action: z.literal('accept') }), // Visitor accepts this page's challenge.
+	z.strictObject({ action: z.literal('cancel') }), // Owner cancels it.
+]);
+
 // Envelope --------------------------------------------------------------------
 
 /**
@@ -153,6 +168,11 @@ const ServerboundRoutedSchema = z.discriminatedUnion('route', [
 		...RoutedEnvelope,
 		route: z.literal('game'),
 		contents: ServerboundGameSchema,
+	}),
+	z.strictObject({
+		...RoutedEnvelope,
+		route: z.literal('challenge'),
+		contents: ServerboundChallengeSchema,
 	}),
 ]);
 

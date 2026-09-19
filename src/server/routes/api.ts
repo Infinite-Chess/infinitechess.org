@@ -46,7 +46,7 @@ router.get('/contributors', (_req: Request, res: Response) => {
 	res.json(contributors.get());
 });
 
-router.get('/seek-preview/:seekId', rateLimiters.seekPreview, seekPreviewAPI.get);
+router.get('/seek-preview/:id', rateLimiters.seekPreview, seekPreviewAPI.get);
 
 // Endpoint called by the GitHub Actions deploy workflow before pm2 reload
 router.post('/prepare-restart', deployController.handlePrepareRestart);

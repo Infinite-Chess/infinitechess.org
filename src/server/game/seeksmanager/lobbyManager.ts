@@ -19,7 +19,7 @@ import type { LobbyStateMessage } from '../../../shared/transport/clientbound.js
 import socketsend from '../../socket/socketSend.js';
 import activeSeeks from './activeSeeks.js';
 import activePlayers from '../gamemanager/activePlayers.js';
-import memberInfoUtil from '../../auth/memberInfoUtil.js';
+import socketLookups from '../../socket/socketLookups.js';
 import lobbySubscribers from './lobbySubscribers.js';
 
 // Constants -------------------------------------------------------------------
@@ -83,23 +83,6 @@ function unsubscribe(ws: CustomWebSocket, involuntary?: boolean): void {
 	else timersBrowser[owner.browser_id] = timeout;
 }
 
-/**
- * Finds the lobby-subscribed socket that belongs to the given user's tab, falling
- * back to their most recently subscribed tab.
- * @param ownerTab - The tab that created the seek.
- * @returns The websocket, if found. It may not be if the user disconnected
- * involuntarily and are within that 5-second cushion before their seek is deleted.
- */
-function findSocketFromOwner(owner: AuthMemberInfo, ownerTab: string): CustomWebSocket | undefined {
-	let newest: CustomWebSocket | undefined;
-	for (const ws of lobbySubscribers.getAll()) {
-		if (!memberInfoUtil.eq(owner, ws.metadata.memberInfo)) continue;
-		if (ws.metadata.tabId === ownerTab) return ws;
-		newest = ws; // The set iterates in subscription order, so the last match is the newest.
-	}
-	return newest;
-}
-
 // Seek Cushion ----------------------------------------------------------------
 
 /**
@@ -117,20 +100,17 @@ function cancelCushionTimer(ws: CustomWebSocket): void {
 }
 
 /**
- * Deletes the user's seeks, but only if they no longer have an active connection —
+ * Deletes the user's lobby seeks, but only if they no longer have an active connection —
  * another tab of theirs may still be subscribed, or they may have reconnected
  * within the cushion. Runs when the cushion elapses, or on a voluntary unsub.
+ * A private seek is spared: navigating to its own challenge page leaves the lobby.
  */
 function deleteSeeksIfNotConnected(info: AuthMemberInfo): void {
 	// Don't delete seek if there is an active connection
-	const hasActiveConnection = lobbySubscribers.hasUser(info);
-	if (hasActiveConnection) {
-		// console.log(`${signedIn ? `Member "${identifier}"` : `Browser "${identifier}"`} is still connected, not deleting seek.`);
-		return;
-	}
+	if (socketLookups.hasUser(lobbySubscribers.getAll(), info)) return;
 
 	// Proceed with deleting the seek if not connected
-	activeSeeks.deleteOfUser(info);
+	activeSeeks.deleteOfUser(info, { sparePrivate: true });
 }
 
 // Broadcasts ------------------------------------------------------------------
@@ -148,15 +128,12 @@ function sendClientLobbyState(ws: CustomWebSocket): void {
 	// If they're already in a game, tell them. They're only taken into it if we still owe them
 	// the notice (their seek was accepted during a disconnect cushion, so they never got the
 	// push at creation) — otherwise they just get the banner to rejoin it.
-	const gameID = activePlayers.getGameID(ws.metadata.memberInfo);
-	const ingame =
-		gameID !== undefined
-			? {
-					id: gameID,
-					role: activePlayers.getRole(ws.metadata.memberInfo),
-					navigate: activePlayers.consumeNavigateNotice(ws.metadata.memberInfo),
-				}
-			: undefined;
+	const entry = activePlayers.getEntry(ws.metadata.memberInfo);
+	const ingame = entry && {
+		id: entry.gameID,
+		role: entry.role,
+		navigate: activePlayers.consumeNavigateNotice(ws.metadata.memberInfo),
+	};
 
 	const message: LobbyStateMessage = {
 		seekslist,
@@ -180,39 +157,12 @@ function broadcastViewerCount(skipWs?: CustomWebSocket): void {
 	}
 }
 
-/**
- * Broadcasts the member's current in-game status to ALL their lobby-subscribed sockets, so
- * every open lobby tab shows/hides its in-game banner (or navigates). Call right after adding
- * them to, or removing them from, the active games list.
- * @param navigatingSocket - The socket that asked for the game, if any. It's taken into the
- * game page, while their other lobby tabs merely show the banner to rejoin it.
- */
-function broadcastMemberInGameStatus(
-	user: AuthMemberInfo,
-	navigatingSocket?: CustomWebSocket,
-): void {
-	const gameID = activePlayers.getGameID(user);
-	const role = activePlayers.getRole(user);
-	for (const ws of lobbySubscribers.getAll()) {
-		if (!memberInfoUtil.eq(user, ws.metadata.memberInfo)) continue;
-		if (gameID !== undefined)
-			socketsend.send(ws, 'lobby', 'ingame', {
-				id: gameID,
-				role,
-				navigate: ws === navigatingSocket,
-			});
-		else socketsend.send(ws, 'lobby', 'outgame', undefined);
-	}
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
 	// Subscribing
 	subscribe,
 	unsubscribe,
-	findSocketFromOwner,
 	// Broadcasts
 	broadcastViewerCount,
-	broadcastMemberInGameStatus,
 };

@@ -55,8 +55,8 @@ const ViewerCountSchema = z.number().nonnegative();
 export type SeeksListMessage = z.infer<typeof SeeksListMessageSchema>;
 const SeeksListMessageSchema = z.strictObject({
 	seekslist: z.array(domain.OutSeekSchema),
-	/** The id of our own open seek, absent if we have none. Always one of {@link SeeksListMessage.seekslist}. */
-	ourseekid: domain.SeekIdSchema.optional(),
+	/** The id of our own open lobby seek, absent if we have none. Always one of {@link SeeksListMessage.seekslist}. */
+	ourseekid: domain.GameIDSchema.optional(),
 });
 
 /** Tells us we're in a game — carried by the lobby state on subscribe, and pushed live thereafter. */
@@ -81,6 +81,33 @@ const ClientboundLobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('seekslist'), value: SeeksListMessageSchema }),
 	z.strictObject({ action: z.literal('viewercount'), value: ViewerCountSchema }),
 	z.strictObject({ action: z.literal('ingame'), value: InGameMessageSchema }),
+	z.strictObject({ action: z.literal('outgame') }),
+	z.strictObject({ action: z.literal('challengecreated'), value: domain.GameIDSchema }), // Navigate to /game/<id>.
+]);
+
+// Challenge Route -------------------------------------------------------------
+
+/** A game we're in, whose rejoin link points at our side of it. */
+export type InGameChallenge = z.infer<typeof InGameChallengeSchema>;
+const InGameChallengeSchema = GameNavigationSchema.required();
+
+/** The challenge page's whole state — the reply to every subscribe, and pushed again when its fate changes. */
+export type ChallengeStateMessage = z.infer<typeof ChallengeStateMessageSchema>;
+const ChallengeStateMessageSchema = z.discriminatedUnion('kind', [
+	/** Nobody has accepted. `ingame` is present while we're in another game, which bars accepting. */
+	z.strictObject({ kind: z.literal('open'), ingame: InGameChallengeSchema.optional() }),
+	/** Nothing is here for this tab anymore. */
+	z.strictObject({ kind: z.literal('gone') }),
+	/** The challenge became a game. `role` is present if we play in it, absent for an onlooker. */
+	z.strictObject({ kind: z.literal('game'), role: typeschemas.PlayerSchema.optional() }),
+]);
+
+/** Every message the server may send on the 'challenge' route. */
+export type ClientboundChallengeMessage = z.infer<typeof ClientboundChallengeSchema>;
+const ClientboundChallengeSchema = z.discriminatedUnion('action', [
+	z.strictObject({ action: z.literal('challengestate'), value: ChallengeStateMessageSchema }),
+	// Never navigates anyone, so unlike the lobby's it carries no `navigate` flag.
+	z.strictObject({ action: z.literal('ingame'), value: InGameChallengeSchema }),
 	z.strictObject({ action: z.literal('outgame') }),
 ]);
 
@@ -342,4 +369,9 @@ export const ClientboundSchema = z.discriminatedUnion('route', [
 	}),
 	z.strictObject({ id: z.int(), route: z.literal('lobby'), contents: ClientboundLobbySchema }),
 	z.strictObject({ id: z.int(), route: z.literal('game'), contents: ClientboundGameSchema }),
+	z.strictObject({
+		id: z.int(),
+		route: z.literal('challenge'),
+		contents: ClientboundChallengeSchema,
+	}),
 ]);

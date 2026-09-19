@@ -2,9 +2,9 @@
 
 import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { EngineAssets } from '../../shared/chess/util/engineregistry.js';
-import type { GamePageData } from '../../shared/transport/domain.js';
 import type { TranslationsObject } from '../../types/translations.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
+import type { ChallengePageData, GamePageData } from '../../shared/transport/domain.js';
 
 /**
  * Legacy i18next-era client translations. Backs the global `translations` object
@@ -84,6 +84,9 @@ declare global {
 	 * Includes all static information about a game.
 	 */
 	var gamePageData: GamePageData;
+
+	/** SSR→client data for the challenge page (/game/:id before its game exists), injected by challenge.njk. */
+	var challengePageData: ChallengePageData;
 
 	/** SSR→client data for the analysis page (/analysis/:id?/:color?), injected by analysis.njk. */
 	var analysisPageData: {

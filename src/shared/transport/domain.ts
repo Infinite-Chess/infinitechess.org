@@ -16,9 +16,9 @@
 
 import type { TimeControl } from '../chess/util/clockutil.js';
 import type { GameConclusion } from '../chess/util/typeschemas.js';
-import type { GameStateVariant } from '../chess/util/variantselection.js';
 import type { Player, PlayerGroup } from '../chess/util/typeutil.js';
 import type { EngineAssets, ValidEngine } from '../chess/util/engineregistry.js';
+import type { GameStateVariant, SeekVariant } from '../chess/util/variantselection.js';
 
 import * as z from 'zod';
 
@@ -99,16 +99,11 @@ export interface DeadGameState extends GameStateCore {
 
 // Seek Schemas ----------------------------------------------------------------
 
-/** The number of digits generated seek IDs are. */
-const SEEK_ID_LENGTH = 5;
-/** A seek's id. */
-export type SeekId = z.infer<typeof SeekIdSchema>;
-const SeekIdSchema = z.string();
-
-/** Shared info for all lobby game seek types. (excludes variant) */
+/** Shared info for all seek types, public and private. (excludes variant) */
 export type BaseSeek = z.infer<typeof BaseSeekSchema>;
 const BaseSeekSchema = z.strictObject({
-	id: SeekIdSchema,
+	/** The id the game will have once the seek is accepted, reserved at creation. */
+	id: GameIDSchema,
 	player: ServerUsernameContainerSchema,
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
 	time: clockutil.TimeControlSchema,
@@ -152,6 +147,14 @@ export interface GamePageData extends StaticGameSetup {
 	engineGame?: EngineGamePageInfo;
 }
 
+/** Static challenge-page data injected by the server. */
+export interface ChallengePageData {
+	/** The id of the private seek, and of the game it becomes once accepted. */
+	id: number;
+	/** The seek's own variant: a preset's code, or a custom position's ICN. */
+	variant: SeekVariant;
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -160,7 +163,5 @@ export default {
 	// Game Helper Schemas
 	GameIDSchema,
 	// Seek Schemas
-	SEEK_ID_LENGTH,
-	SeekIdSchema,
 	OutSeekSchema,
 };

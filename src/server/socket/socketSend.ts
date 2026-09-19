@@ -10,6 +10,7 @@
 import type { CustomWebSocket } from './socketTypes.js';
 import type { ActionValue, Exact, RouteAction } from '../../shared/util/socketutil.js';
 import type {
+	ClientboundChallengeMessage,
 	ClientboundGameMessage,
 	ClientboundGeneralMessage,
 	ClientboundLobbyMessage,
@@ -30,6 +31,7 @@ type OutMessages = {
 	general: ClientboundGeneralMessage;
 	lobby: ClientboundLobbyMessage;
 	game: ClientboundGameMessage;
+	challenge: ClientboundChallengeMessage;
 };
 
 /** A route we may send on. */

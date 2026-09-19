@@ -2,7 +2,8 @@
 
 /**
  * Handles the `createseek` lobby action: validating a client's proposed terms
- * — variant, position, time control — before their seek is offered to the lobby.
+ * — variant, position, time control — before their seek is offered to the lobby,
+ * or privately to whoever opens its challenge page.
  *
  * The gatekeeper for what may be played: a custom ICN position is parsed and judged
  * here, for engine games too. Accepted seeks are handed to `activeSeeks.ts`.
@@ -14,8 +15,6 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { MetaData, Rating } from '../../../shared/chess/util/metadatautil.js';
 import type { CreateSeekMessage } from '../../../shared/transport/serverbound.js';
 
-import uuid from '../../../shared/util/uuid.js';
-import domain from '../../../shared/transport/domain.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import gamelimits from '../../../shared/chess/util/gamelimits.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
@@ -29,9 +28,12 @@ import { validatePosition } from '../../../shared/chess/logic/positionlegality.j
 import playability, { PositionRejection } from '../../../shared/chess/game/playability.js';
 
 import socketsend from '../../socket/socketSend.js';
+import seekUtility from './seekUtility.js';
 import activeSeeks from './activeSeeks.js';
+import activeGames from '../gamemanager/activeGames.js';
 import activePlayers from '../gamemanager/activePlayers.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
+import challengeManager from './challengeManager.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
 
 // Functions -------------------------------------------------------------------
@@ -61,6 +63,12 @@ function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 		activeSeeks.deleteOfUser(ws.metadata.memberInfo, { dontBroadcast: true });
 
 		activeSeeks.add(seek);
+
+		if (seekUtility.isPrivate(seek)) {
+			// Its owner isn't on its challenge page yet — they're sent there now.
+			challengeManager.armExpiry(seek);
+			socketsend.send(ws, 'lobby', 'challengecreated', seek.id);
+		}
 	} catch {
 		// DB error (already logged)
 		socketsend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
@@ -77,11 +85,6 @@ function getSeekFromWebsocketMessageContents(
 	messageContents: CreateSeekMessage,
 ): AuthSeek | void {
 	// Verify their seek contains the required properties...
-
-	let id: string;
-	do {
-		id = uuid.generateID_Base62(domain.SEEK_ID_LENGTH);
-	} while (activeSeeks.hasID(id));
 
 	const owner = ws.metadata.memberInfo;
 
@@ -100,7 +103,7 @@ function getSeekFromWebsocketMessageContents(
 	if (!validateVariant(ws, messageContents.variant, false)) return;
 
 	return {
-		id,
+		id: activeGames.issueUniqueId(), // The id its game will have.
 		owner,
 		ownerTab: ws.metadata.tabId,
 		player,
@@ -109,6 +112,7 @@ function getSeekFromWebsocketMessageContents(
 		mode: messageContents.mode,
 		color: messageContents.color,
 		modifiers: messageContents.modifiers,
+		private: messageContents.private ? { subscribers: new Set() } : undefined,
 	};
 }
 

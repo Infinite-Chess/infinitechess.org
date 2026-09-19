@@ -21,6 +21,7 @@ import createSeek from './createSeek.js';
 import socketsend from '../../socket/socketSend.js';
 import gameManager from '../gamemanager/gameManager.js';
 import activeSeeks from './activeSeeks.js';
+import activeGames from '../gamemanager/activeGames.js';
 import lobbyManager from './lobbyManager.js';
 import activePlayers from '../gamemanager/activePlayers.js';
 import lobbySubscribers from './lobbySubscribers.js';
@@ -60,6 +61,7 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
 		const engineColor = typeutil.invertPlayer(humanColor);
 		gameManager.createGame(
+			activeGames.issueUniqueId(),
 			{
 				variant: body.variant,
 				time: body.time,

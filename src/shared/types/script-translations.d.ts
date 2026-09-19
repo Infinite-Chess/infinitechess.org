@@ -223,6 +223,10 @@ export interface ScriptTranslations {
 			green: string;
 			neutral: string;
 		};
+		seek: {
+			owner_side_white: string;
+			owner_side_black: string;
+		};
 		modifiers: {
 			'slide-limit': {
 				name: string;

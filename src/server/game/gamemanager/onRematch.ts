@@ -8,10 +8,9 @@
  * handshake — an engine always accepts, so the human's offer starts it outright.
  */
 
-import type { AuthMemberInfo } from '../../types.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { GameSetup, ServerGame } from './serverGameTypes.js';
+import type { GameSetup, PlayerAssignments, ServerGame } from './serverGameTypes.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
@@ -22,6 +21,7 @@ import socketsend from '../../socket/socketSend.js';
 import gameManager from './gameManager.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
+import activeGames from './activeGames.js';
 import gameLifecycle from './gameLifecycle.js';
 
 // Functions -------------------------------------------------------------------
@@ -69,7 +69,7 @@ function createRematchGame(oldGame: ServerGame): void {
 	const oldMatch = oldGame.match;
 
 	// Capture identities (swapped colors) and connected sockets before tearing down the old game.
-	const swapped: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }> = {};
+	const swapped: PlayerAssignments = {};
 	/** Everyone taken into the rematch, each with the color they play it as (spectators: none). */
 	const toNavigate: { socket: CustomWebSocket; role?: Player }[] = [];
 	for (const [c, data] of Object.entries(oldMatch.playerData)) {
@@ -102,21 +102,20 @@ function createRematchGame(oldGame: ServerGame): void {
 
 	gameLifecycle.evict(oldGame); // Removes the old game from memory (and unsubscribes its sockets).
 
-	let newGameID: number;
 	try {
-		newGameID = gameManager.createGame(setup, swapped);
+		const newGameID = activeGames.issueUniqueId();
+		gameManager.createGame(newGameID, setup, swapped);
+
+		// Alert all connected players of the new game (they auto navigate)
+		for (const { socket, role } of toNavigate)
+			socketsend.send(socket, 'game', 'rematchstarted', { id: newGameID, role });
 	} catch (error: unknown) {
 		// The old game is already evicted, so there's nothing left to navigate anyone back to.
 		gameManager.onGameCreationError(
 			error,
 			toNavigate.map((n) => n.socket),
 		);
-		return;
 	}
-
-	// Alert all connected players of the new game (they auto navigate)
-	for (const { socket, role } of toNavigate)
-		socketsend.send(socket, 'game', 'rematchstarted', { id: newGameID, role });
 }
 
 // Exports ---------------------------------------------------------------------

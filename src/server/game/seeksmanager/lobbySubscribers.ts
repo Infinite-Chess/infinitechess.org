@@ -9,12 +9,10 @@
  */
 
 import type { Exact } from '../../../shared/util/socketutil.js';
-import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { OutAction, OutValue } from '../../socket/socketSend.js';
 
 import socketsend from '../../socket/socketSend.js';
-import memberInfoUtil from '../../auth/memberInfoUtil.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -83,17 +81,6 @@ function getCount(): number {
 	return subscribedClients.size;
 }
 
-/**
- * Checks if a member or browser ID has at least one active connection.
- * @returns true if the member or browser ID has at least one active connection, false otherwise.
- */
-function hasUser(info: AuthMemberInfo): boolean {
-	for (const ws of subscribedClients) {
-		if (memberInfoUtil.eq(ws.metadata.memberInfo, info)) return true;
-	}
-	return false;
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -102,5 +89,4 @@ export default {
 	add,
 	remove,
 	getCount,
-	hasUser,
 };

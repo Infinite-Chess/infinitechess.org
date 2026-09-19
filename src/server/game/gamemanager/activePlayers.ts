@@ -24,8 +24,8 @@ interface ActiveGameEntry {
 	/**
 	 * Whether they still have to be told to navigate to the game page. Armed at game creation
 	 * for a player with no socket to push to (e.g. their seek was accepted while their connection
-	 * was interrupted), and consumed by whichever comes first: their next lobby subscribe, or
-	 * their arrival at the game page.
+	 * was interrupted), and consumed by whichever comes first: their next lobby or challenge-page
+	 * subscribe, or their arrival at the game page.
 	 */
 	awaitingNavigateNotice: boolean;
 }
@@ -118,20 +118,6 @@ function getEntryOfUser(user_id: number): ActiveGameEntry | undefined {
 }
 
 /**
- * Gets a game by player.
- * @param player - The player object containing all the memberinfo
- * @returns The game they are in, if they belong in one, otherwise undefined.
- */
-function getGameID(player: AuthMemberInfo): number | undefined {
-	return getEntry(player)?.gameID;
-}
-
-/** The color a player is playing as in their active game, if they're in one. */
-function getRole(player: AuthMemberInfo): Player | undefined {
-	return getEntry(player)?.role;
-}
-
-/**
  * Reads and clears whether the player still has to be told to navigate to their active game.
  * Returns false if they're in no game, or already know about it.
  */
@@ -148,8 +134,7 @@ export default {
 	add,
 	remove,
 	hasSocket,
+	getEntry,
 	getEntryOfUser,
-	getGameID,
-	getRole,
 	consumeNavigateNotice,
 };

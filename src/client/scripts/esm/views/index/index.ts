@@ -46,6 +46,9 @@ function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 		case 'outgame':
 			lobby.onOutGame();
 			break;
+		case 'challengecreated':
+			lobby.onChallengeCreated(contents.value);
+			break;
 		default:
 			console.error("Unknown action received from server in 'lobby' route.", contents satisfies never); // prettier-ignore
 	}

@@ -1,0 +1,28 @@
+/* src/client/css/challenge.css */
+
+/* The challenge page: a single centered card over the checkerboard background. */
+
+/* Pinned, since drawing resizes the canvas's backing buffer to the device's pixel ratio. */
+#challenge-preview {
+	width: 256px;
+	height: 256px;
+}
+
+/* Variant, speed and modifier icons. */
+.meta-icon,
+.modifier-icon {
+	width: 1.389em;
+	aspect-ratio: 1;
+}
+
+/* Fixed black-on-white, whatever the theme, so it always scans. */
+.challenge-qr svg {
+	display: block;
+	background: #fff;
+	fill: #000;
+}
+
+/* The inline copy confirmation, shown briefly once the link is copied. */
+#challenge-copy.copied::after {
+	content: ' ✓';
+}

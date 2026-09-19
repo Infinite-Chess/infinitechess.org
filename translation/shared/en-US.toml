@@ -119,6 +119,10 @@ yellow = "Yellow"
 green = "Green"
 neutral = "Neutral"
 
+[seek] # Descriptions of a seek's properties, shown on the lobby row and the challenge card.
+owner_side_white = "Invite owner chooses to be white"
+owner_side_black = "Invite owner chooses to be black"
+
 [modifiers.slide-limit]
 name = "Slide Limit"
 description = "All pieces have a maximum distance they can slide in one move."

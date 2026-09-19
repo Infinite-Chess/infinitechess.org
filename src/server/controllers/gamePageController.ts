@@ -8,29 +8,17 @@
  */
 
 import type { Request } from 'express';
-import type { GameRules } from '../../shared/chess/util/gamerules.js';
-import type { SpeedCategory } from '../../shared/chess/util/clockutil.js';
 import type { ChatEntryParts } from '../../shared/components/chatentry.js';
-import type { GlobalGameState } from '../../shared/chess/logic/state.js';
-import type {
-	GamePageData,
-	StaticGameSetup,
-	StaticGameState,
-} from '../../shared/transport/domain.js';
+import type { SeekPropertiesViewModel } from './seekProperties.js';
+import type { GamePageData, StaticGameState } from '../../shared/transport/domain.js';
 
 import gameurl from '../../shared/chess/util/gameurl.js';
 import timeutil from '../../shared/util/timeutil.js';
 import clockutil from '../../shared/chess/util/clockutil.js';
-import icnimport from '../../shared/chess/logic/icn/icnimport.js';
 import chatentry from '../../shared/components/chatentry.js';
 import chatlimits from '../../shared/util/chatlimits.js';
 import metadatautil from '../../shared/chess/util/metadatautil.js';
-import variantcache from '../../shared/chess/variants/variantcache.js';
-import icnconverter from '../../shared/chess/logic/icn/icnconverter.js';
-import variantrules from '../../shared/chess/logic/variantrules.js';
 import gameresultutil from '../../shared/chess/util/gameresultutil.js';
-import variantregistry from '../../shared/chess/variants/variantregistry.js';
-import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.js';
 import { players as p, Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
 
 import tconfig from '../config/translationConfig.js';
@@ -39,7 +27,7 @@ import chatReport from '../game/gamemanager/chatReport.js';
 import gameManager from '../game/gamemanager/gameManager.js';
 import gamesManager from '../database/gamesManager.js';
 import deadGameState from '../game/gamemanager/deadGameState.js';
-import pieceSvgCache from '../config/pieceSvgCache.js';
+import seekProperties from './seekProperties.js';
 import chatEntryMapper from '../game/gamemanager/chatEntryMapper.js';
 import gameStateBuilder from '../game/gamemanager/gameStateBuilder.js';
 import chatEntriesManager from '../database/chatEntriesManager.js';
@@ -69,21 +57,11 @@ interface GamePageState {
 	};
 }
 
-/** Display-ready static game-meta fields, precomputed since Nunjucks can't call the shared utils. */
-export interface GameMetaViewModel {
-	/** Variant group icon id + display name (custom games fall back to a generic icon/name). */
-	variant: { iconId: string; name: string };
-	/**
-	 * How this game's rules depart from the standard ones. Empty when it plays entirely
-	 * by the defaults, in which case the page omits the row. Matches, line for line, what
-	 * the variant preview tooltip showed on the seek this game was created from.
-	 */
-	rules: RuleLineViewModel[];
-	/** Speed category icon id + category, for the speed badge. */
-	speed: { iconId: string; category: SpeedCategory };
-	/** User-facing time control label in `m+s` format, e.g. `"10+4"` or `"-"`. */
-	timeControl: string;
-	rated: boolean;
+/**
+ * Display-ready static game-meta fields, precomputed since Nunjucks can't call the shared
+ * utils. Opens with the properties of the seek the game was created from.
+ */
+export interface GameMetaViewModel extends SeekPropertiesViewModel {
 	/** Whether the game is timed. Drives whether the SSR'd `.clock` elements start hidden. */
 	timed: boolean;
 	/** Epoch ms the game was created; the client re-derives the ticking relative string. */
@@ -112,14 +90,6 @@ export interface GameMetaViewModel {
 	 */
 	resignable: boolean;
 }
-
-/**
- * One line of the gamerule summary, ready to print. A promotion
- * line's pieces arrive as the raw `<svg>` markup to inline.
- */
-type RuleLineViewModel =
-	| { kind: 'text'; text: string }
-	| { kind: 'promotion'; prefix: string; svgs: string[]; suffix: string };
 
 // Page State ------------------------------------------------------------------
 
@@ -256,15 +226,6 @@ function buildGameMetaViewModel(
 	req: Request,
 ): GameMetaViewModel {
 	const { setup } = state;
-	const variantGroup =
-		setup.variant.kind === 'preset' ? variantregistry.getGroup(setup.variant.code) : 'custom';
-	const variant = {
-		name:
-			setup.variant.kind === 'preset'
-				? req.t.shared.variants[setup.variant.code]
-				: req.t.shared.variant_groups.custom.display_label,
-		iconId: variantregistry.getGroupIconId(variantGroup),
-	};
 
 	const names = gameStateBuilder.resolvePlayerNames(state, role, req.t.shared);
 	const players: GameMetaViewModel['players'] = {};
@@ -289,16 +250,9 @@ function buildGameMetaViewModel(
 	const locale = tconfig.getDateLocale(req.lang);
 
 	return {
-		variant,
-		rules: buildRuleLines(setup, deadIcn, req),
+		...seekProperties.build(setup, state.rated, deadIcn, req),
 		bars: { top, bottom: viewColor },
-		speed: {
-			iconId: clockutil.getSpeedIconId(setup.timeControl),
-			category: clockutil.getSpeedCategory(setup.timeControl),
-		},
 		timed: !clockutil.isClockValueInfinite(setup.timeControl),
-		timeControl: clockutil.getTimeControlLabel(setup.timeControl),
-		rated: state.rated,
 		timeCreated: setup.timeCreated,
 		startedAgo: timeutil.getRelativeTimeString(setup.timeCreated, locale),
 		result: state.gameConclusion
@@ -308,64 +262,6 @@ function buildGameMetaViewModel(
 		moveCount,
 		resignable: moveCount > 1,
 	};
-}
-
-// Gamerule summary ------------------------------------------------------------
-
-/**
- * Summarizes how a game's rules depart from the standard ones, resolving
- * each promotion piece to the SVG markup the page inlines for it.
- */
-function buildRuleLines(
-	setup: StaticGameSetup,
-	deadIcn: string | undefined,
-	req: Request,
-): RuleLineViewModel[] {
-	const { gameRules, state_global } = resolveGameRules(setup, deadIcn);
-	const variantCode = setup.variant.kind === 'preset' ? setup.variant.code : undefined;
-	const items = summarizeGameRules(gameRules, state_global, variantCode, setup.modifiers, req.t.shared); // prettier-ignore
-
-	return items.map((item): RuleLineViewModel => {
-		if (item.kind === 'text') return item;
-		const { prefix, pieces, suffix } = item;
-		return {
-			kind: 'promotion',
-			prefix,
-			svgs: pieces.map((piece) => pieceSvgCache.get(piece)),
-			suffix,
-		};
-	});
-}
-
-/**
- * Resolves the rules a game is played by, the same way game construction does: a preset
- * variant rebuilds them from its module, a custom position reads them off its ICN.
- * @param icn - The custom game's ICN. Ignored for a preset, which carries its own rules.
- */
-function resolveGameRules(
-	setup: StaticGameSetup,
-	deadIcn: string | undefined,
-): { gameRules: GameRules; state_global: GlobalGameState | undefined } {
-	if (setup.variant.kind === 'preset') {
-		const loaded = {
-			code: setup.variant.code,
-			mod: variantcache.getModule(setup.variant.code), // Every module is preloaded at startup
-			dateTimestamp: setup.timeCreated,
-		};
-		// A preset always starts clean, so it has no global state worth summarizing.
-		return {
-			gameRules: variantrules.getGameRulesOfVariant(loaded),
-			state_global: undefined,
-		};
-	}
-	// A live game carries its start position in its setup; a concluded
-	// one's is the database record. One of the two is always present.
-	const icn = setup.variant.position ?? deadIcn;
-	if (icn === undefined) throw new Error('Custom game has no ICN to read its rules from.');
-
-	const longFormat = icnconverter.ShortToLong_Format(icn);
-	const { gameRules, state_global } = icnimport.variantOptionsFromLongFormat(longFormat);
-	return { gameRules, state_global };
 }
 
 // Exports ---------------------------------------------------------------------

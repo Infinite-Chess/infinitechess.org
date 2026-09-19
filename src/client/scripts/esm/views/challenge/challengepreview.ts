@@ -1,0 +1,42 @@
+// src/client/scripts/esm/views/challenge/challengepreview.ts
+
+/**
+ * Draws the challenge's start position into the card's preview canvas, once, from White's side.
+ *
+ * The page's only asynchronous, asset-loading, WebGL-owning part.
+ */
+
+import type { SeekVariant } from '../../../../../shared/chess/util/variantselection.js';
+import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
+
+import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+
+import previewboards from '../../board/previewboards.js';
+import previewrenderer from '../../board/rendering/previewrenderer.js';
+
+// Elements --------------------------------------------------------------------
+
+const element_preview = document.getElementById('challenge-preview') as HTMLCanvasElement;
+
+// Init ------------------------------------------------------------------------
+
+void draw();
+
+// Functions -------------------------------------------------------------------
+
+/** Draws the challenge's start position into the preview canvas. */
+async function draw(): Promise<void> {
+	const boardsim = await buildBoard(window.challengePageData.variant);
+	const ctx = await previewrenderer.createContext(element_preview);
+	await previewrenderer.load(ctx, boardsim);
+	previewrenderer.render(ctx, boardsim);
+}
+
+/** Builds the seek's start position: a preset's, or its custom ICN's. */
+async function buildBoard(variant: SeekVariant): Promise<BoardPreview> {
+	if (variant.kind === 'preset') return previewboards.ofPreset(variant.code);
+	const longFormat = icnconverter.ShortToLong_Format(variant.position);
+	// Seeks are server-validated to always include an explicit position.
+	return previewboards.ofPosition(icnimport.variantOptionsFromLongFormat(longFormat));
+}

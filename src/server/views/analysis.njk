@@ -25,6 +25,7 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 {% from "components/user.njk" import usernameEmbed %}
+{% from "components/seekproperties.njk" import seekProperties %}
 {% from "components/variantselector.njk" import variantSelector %}
 {% set tsIndex = scriptT('index') %}
 
@@ -133,32 +134,7 @@
 
 		{% if meta %}
 		<div class="game-meta panel">
-			<div class="meta-info">
-				<span class="meta-item">
-					<svg class="meta-icon {{ meta.variant.iconId }}"><use href="#{{ meta.variant.iconId }}"/></svg>
-					<span class="meta-variant">{{ meta.variant.name }}</span>
-				</span>
-				&bull;
-				<span class="meta-item" title="{{ meta.speed.category | capitalize }}">
-					<svg class="meta-icon {{ meta.speed.iconId }}"><use href="#{{ meta.speed.iconId }}"/></svg>
-					<span>{{ meta.timeControl }}</span>
-				</span>
-				&bull;
-				<span>{{ "Rated" if meta.rated else "Casual" }}</span>
-			</div>
-
-			{# Gamerule modifications. Omitted entirely when the game plays by the standard rules. #}
-			{% if meta.rules.length %}
-			<p class="meta-rules">
-				{%- for line in meta.rules %}{{ " " if not loop.first }}
-				{%- if line.kind == "text" %}{{ line.text }}
-				{%- else %}<span class="promotion-icons piece-silhouette">{{ line.prefix }}
-					{# Only the piece icons are `| safe`: this markup is our own svg asset files, never input. #}
-					{%- for svg in line.svgs %}{{ svg | safe }}{% endfor %}{{ line.suffix }}</span>
-				{%- endif %}
-				{%- endfor -%}
-			</p>
-			{% endif %}
+			{{ seekProperties(meta) }}
 
 			<div class="meta-foot">
 				<time id="meta-started" data-created="{{ meta.timeCreated }}">{{ meta.startedAgo }}</time>

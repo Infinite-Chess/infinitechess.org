@@ -8,7 +8,7 @@
 import type { VNode } from 'snabbdom';
 import type { Rating } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantInfo } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { BaseSeek, OutSeek, SeekId } from '../../../../../shared/transport/domain.js';
+import type { BaseSeek, OutSeek } from '../../../../../shared/transport/domain.js';
 import type {
 	CreateSeekMessage,
 	CreateEngineGameMessage,
@@ -29,6 +29,7 @@ import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
 import docutil from '../../util/docutil.js';
+import navigate from '../../util/navigate.js';
 import idleness from './idleness.js';
 import gamesound from '../../board/gamesound.js';
 import socketsubs from '../../socket/socketsubs.js';
@@ -78,12 +79,12 @@ const GRACE_MS = 667;
 
 // State -----------------------------------------------------------------------
 
-/** The ID of our current seek, if we have one. */
-let ourSeekId: SeekId | undefined;
+/** The ID of our current lobby seek, if we have one. */
+let ourSeekId: number | undefined;
 /** Live map of all current seeks by id, for fast click-handler lookup. */
-const seekMap = new Map<string, OutSeek>();
+const seekMap = new Map<number, OutSeek>();
 /** Seeks mid grace period, mapped to the timer that ends it. */
-const graceTimers = new Map<string, number>();
+const graceTimers = new Map<number, number>();
 /** When each row last lost its occupant. Its grace always ends {@link GRACE_MS} after this. */
 const rowVacatedTimes: number[] = [];
 
@@ -115,7 +116,7 @@ function initLobbyClickHandler(): void {
 		if (gameIdWeAreIn !== undefined) return; // In a game (or about to navigate): the list stays up, but is uninteractable.
 		const row = (e.target as HTMLElement).closest<HTMLElement>('[data-seek-id]');
 		if (!row) return;
-		const seekId = row.getAttribute('data-seek-id')!;
+		const seekId = Number(row.getAttribute('data-seek-id')!);
 		if (graceTimers.has(seekId)) return; // Mid grace period
 		if (!seekMap.has(seekId)) return;
 		if (seekId === ourSeekId) cancel(seekId);
@@ -139,12 +140,12 @@ function handleLobbyState(state: LobbyStateMessage): void {
 const trackNewSeeks = (() => {
 	const COOLDOWN_SECS = 10;
 	const recentUsers: Record<string, boolean> = {};
-	let idsInLastList = new Set<string>();
+	let idsInLastList = new Set<number>();
 
-	return function (seekList: OutSeek[]): Set<string> {
+	return function (seekList: OutSeek[]): Set<number> {
 		let played = false;
-		const newIds = new Set<string>();
-		const idsToAnimate = new Set<string>();
+		const newIds = new Set<number>();
+		const idsToAnimate = new Set<number>();
 		for (const seek of seekList) {
 			newIds.add(seek.id);
 			if (idsInLastList.has(seek.id)) continue;
@@ -185,7 +186,7 @@ function onSeekListUpdate(
 	// Adopted before anything below reads it — ownership drives the arrival sounds and rendering.
 	ourSeekId = ourseekid;
 
-	const newSeekIds = preserveNewSeekTracker ? new Set<string>() : trackNewSeeks(seeks);
+	const newSeekIds = preserveNewSeekTracker ? new Set<number>() : trackNewSeeks(seeks);
 	if (ourSeekId !== undefined && newSeekIds.has(ourSeekId)) gamesound.playMarimba();
 
 	armGracePeriods(previousSeekIds, previousOurSeekId, seeks);
@@ -206,8 +207,8 @@ function onSeekListUpdate(
  * @param previousOurSeekId - The id of our seek, as of the previous update.
  */
 function armGracePeriods(
-	previousSeekIds: string[],
-	previousOurSeekId: SeekId | undefined,
+	previousSeekIds: number[],
+	previousOurSeekId: number | undefined,
 	seeks: OutSeek[],
 ): void {
 	const now = Date.now();
@@ -247,7 +248,7 @@ async function onInGame(ingame: InGameMessage): Promise<void> {
 	gameIdWeAreIn = ingame.id;
 	if (ingame.navigate) {
 		await gamesound.playNotifyToCompletion();
-		window.location.assign(gameurl.getGameUrl(ingame.id, ingame.role));
+		navigate.assign(gameurl.getGameUrl(ingame.id, ingame.role));
 	} else {
 		// We already know of this game (another tab of ours, or a page-load mid-game): stay on
 		// the lobby, but show a banner letting them rejoin. The server pushes 'outgame' once it ends.
@@ -299,6 +300,11 @@ function createSeek(options: CreateSeekMessage): void {
 	socketintents.submit('lobby', 'createseek', options, () => gameIdWeAreIn === undefined);
 }
 
+/** Called when the server has created our "Challenge a friend" invite: go wait on its page. */
+function onChallengeCreated(id: number): void {
+	navigate.assign(gameurl.getGameUrl(id));
+}
+
 /**
  * Asks the server to create an engine (vs computer) game over the websocket — an open
  * socket is required, gating bots. Navigation happens on the server's `ingame` push.
@@ -308,13 +314,13 @@ function createEngineGame(body: CreateEngineGameMessage): void {
 }
 
 /** Sends a cancelseek message for our current seek. */
-function cancel(seekId: SeekId): void {
+function cancel(seekId: number): void {
 	// Nothing to cancel if it's no longer ours by the time we're back in sync.
 	socketintents.submit('lobby', 'cancelseek', seekId, () => seekId === ourSeekId);
 }
 
 /** Sends an acceptseek message for an opponent's seek. */
-function accept(seekId: SeekId): void {
+function accept(seekId: number): void {
 	socketintents.submit('lobby', 'acceptseek', seekId, () => gameIdWeAreIn === undefined && seekMap.has(seekId)); // prettier-ignore
 }
 
@@ -386,7 +392,7 @@ function exitIdle(): void {
 // Snabbdom Rendering ----------------------------------------------------------
 
 /** Patches the lobby table body with the latest seek rows. */
-function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<string>()): void {
+function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<number>()): void {
 	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks, newSeekIds));
 }
 
@@ -400,7 +406,7 @@ function clearSeekList(): void {
 }
 
 /** Creates the keyed snabbdom div vnode for the current seek list. */
-function createSeekListVNode(seeks: LobbySeek[], newSeekIds: Set<string>): VNode {
+function createSeekListVNode(seeks: LobbySeek[], newSeekIds: Set<number>): VNode {
 	return h(
 		'div#lobby-tbody',
 		seeks.map((s) => createSeekRowVNode(s, newSeekIds.has(s.id))),
@@ -555,8 +561,8 @@ function createPlayerRatingVNode(rating: Rating | undefined): VNode | null {
 function createSideDotVNode(color: LobbySeek['color']): VNode | null {
 	if (color === null) return null;
 	const selector = color === players.BLACK ? 'div.side-dot.black' : 'div.side-dot';
-	const colorName = color === players.WHITE ? 'white' : color === players.BLACK ? 'black' : (() => { throw new Error(`Invalid color: ${color}`); })(); // prettier-ignore
-	return h(selector, { attrs: { title: `Invite owner chooses to be ${colorName}` } });
+	const title = color === players.WHITE ? t.shared.seek.owner_side_white : color === players.BLACK ? t.shared.seek.owner_side_black : (() => { throw new Error(`Invalid color: ${color}`); })(); // prettier-ignore
+	return h(selector, { attrs: { title } });
 }
 
 // Exports ---------------------------------------------------------------------
@@ -570,6 +576,7 @@ export default {
 	onInGame,
 	onOutGame,
 	createSeek,
+	onChallengeCreated,
 	createEngineGame,
 	subscribe,
 	exitIdle,

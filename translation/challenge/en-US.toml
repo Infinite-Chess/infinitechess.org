@@ -1,0 +1,7 @@
+# Translation component: challenge page (/game/:id, before the game exists).
+# Source template: src/server/views/challenge.njk
+
+title = "Challenge"        # Visitor's heading, and the browser tab title.
+accept = "Accept"
+cancel = "Cancel"
+copy_link = "Copy link"
