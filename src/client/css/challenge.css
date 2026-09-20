@@ -254,6 +254,8 @@
 		   so the sides are left to each item rather than paid by the card. */
 		--inset: 28px;
 		flex-direction: column;
+		/* Keep the canvas's backing-buffer size out of the card's intrinsic width. */
+		width: 100%;
 		max-width: 420px;
 		/* The column's tightest pair: the seek line and its gamerules, as in the wide layout. */
 		gap: 8px;

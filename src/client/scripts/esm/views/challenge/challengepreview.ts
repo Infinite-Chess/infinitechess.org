@@ -2,8 +2,6 @@
 
 /**
  * Draws the challenge's start position into the card's preview canvas, from White's view.
- *
- * The page's only asynchronous, asset-loading, WebGL-owning part.
  */
 
 import type { SeekVariant } from '../../../../../shared/chess/util/variantselection.js';
@@ -26,19 +24,15 @@ void draw();
 // Functions -------------------------------------------------------------------
 
 /**
- * Draws the challenge's start position into the preview canvas, and at every canvas
- * resize — a preview camera wires no resize listeners of its own.
- *
- * The canvas is SSR'd hidden for the reason `createContext` gives. `visibility`, not
- * `display`, so the card never reflows and the canvas keeps a width to draw at.
+ * Loads the preview and redraws it on resize. Visibility stays hidden until the
+ * first draw, reserving layout space and measurable canvas dimensions while loading.
  */
 async function draw(): Promise<void> {
 	const boardsim = await buildBoard(window.challengePageData.variant);
 	const ctx = await previewrenderer.createContext(element_preview);
 	await previewrenderer.load(ctx, boardsim);
 
-	// A ResizeObserver reports the canvas's starting size too, so its first
-	// callback is what performs the initial draw. Revealing is idempotent.
+	// ResizeObserver also delivers the initial size, triggering the first draw.
 	new ResizeObserver(() => {
 		previewrenderer.render(ctx, boardsim);
 		element_preview.classList.remove('visibility-hidden');

@@ -897,8 +897,7 @@ button:disabled {
 	align-items: center;
 }
 
-/* Sized off the sentence, so a summary set larger gets larger icons with it.
-   Both values are what the former 14px and -2px worked out to at 11px text. */
+/* Scale promotion icons with the surrounding rule text. */
 .promotion-icons svg {
 	width: 1.27em;
 }

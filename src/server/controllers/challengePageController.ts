@@ -103,19 +103,10 @@ function resolveOwnerName(
 	return viewerIsOwner ? userStatus.you_indicator : userStatus.guest_indicator;
 }
 
-/**
- * The challenge's canonical link, and its QR code as inline SVG. One string, so the two
- * can't disagree.
- *
- * The code's width is its module count times a whole number of pixels, so every module edge
- * lands on a pixel. Sizing it to a round width instead would leave the edges mid-pixel,
- * which the browser either blurs or rounds unevenly — both read as a fuzzy code. The count
- * varies with the link's length, so only the server — which just encoded it — can do this.
- */
+/** Builds the canonical share link and its QR code, sized to whole CSS pixels per module. */
 function buildShare(id: number): { url: string; qrSvg: string; qrSizePx: number } {
 	const url = urlUtils.getAbsoluteGameUrl(id);
-	// `border` is the white quiet zone in modules. 2 is the narrowest a scanner is specified
-	// to need, and the card frames the code in white anyway.
+	// The compact two-module quiet zone is intentional and camera-tested.
 	const options = { ecc: 'medium', border: 2 } as const;
 	/*
 	 * The module count steps by 4 with the link's length: 27-42 characters encode to 33
