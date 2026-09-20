@@ -21,6 +21,9 @@
     <link rel="icon" href="/img/favicon/favicon-light.png" media="(prefers-color-scheme: light)" />
     <link rel="icon" href="/img/favicon/favicon-dark.png" media="(prefers-color-scheme: dark)" />
 
+    {# Load the font a bit faster, decreasing time you see the fallback font paint #}
+    <link rel="preload" href="/fonts/noto-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+
     {# Global stylesheet: CSS variables, font-face, and shared utility classes #}
     <link rel="stylesheet" href="{{ manifest['css/global.css'] }}" />
 
