@@ -61,7 +61,7 @@ async function createContext(canvas: HTMLCanvasElement): Promise<RenderContext> 
 /** Loads any not-yet-cached images and textures the board needs into the context. */
 async function load(ctx: RenderContext, boardsim: BoardPreview): Promise<void> {
 	await imagecache.initImagesForGame(boardsim);
-	await ctx.textures.initTexturesForGame(ctx.gl, boardsim);
+	ctx.textures.initTexturesForGame(ctx.gl, boardsim);
 }
 
 /** Draws the board's start position into the context, framed to fit its canvas. */

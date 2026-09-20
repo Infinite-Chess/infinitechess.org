@@ -29,7 +29,7 @@ export interface TextureCache {
 	 * @param gl - The WebGL2 rendering context.
 	 * @param boardsim - The board containing the list of piece types used.
 	 */
-	initTexturesForGame(gl: WebGL2RenderingContext, boardsim: BoardPreview): Promise<void>;
+	initTexturesForGame(gl: WebGL2RenderingContext, boardsim: BoardPreview): void;
 	/**
 	 * Retrieves a WebGLTexture from the cache.
 	 * ASSUMES `initTexturesForGame` has been called successfully for the current game.
@@ -49,10 +49,7 @@ function createTextureCache(): TextureCache {
 	/** Internal cache storing WebGLTexture objects, keyed by piece type. */
 	const textureCache: TypeGroup<WebGLTexture> = {};
 
-	async function initTexturesForGame(
-		gl: WebGL2RenderingContext,
-		boardsim: BoardPreview,
-	): Promise<void> {
+	function initTexturesForGame(gl: WebGL2RenderingContext, boardsim: BoardPreview): void {
 		// 1. Determine required piece types (mirroring imagecache logic, filter SVG-less)
 		const types = boardsim.existingTypes.filter(
 			(t: number) => !piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(t)),
