@@ -63,10 +63,17 @@ const TEN = bd.fromBigInt(10n);
 
 /** Creates one tile renderer bound to the given {@link RenderContext}. */
 function createBoardTiles(ctx: RenderContext): BoardTiles {
-	/** 2x2 Opaque, no mipmaps. Used in perspective mode. Medium moire, medium blur, no antialiasing. */
-	let tilesTexture_2: WebGLTexture | undefined; // Opaque, no mipmaps
-	/** 256x256 Opaque, yes mipmaps. Used in 2D mode. Zero moire, yes antialiasing. */
-	let tilesTexture_256mips: WebGLTexture | undefined;
+	/** Theme-derived checkerboard textures. */
+	let tileTextures:
+		| {
+				/** Non-mipmapped 2x2 texture used for fractal and perspective
+				 * boards. Medium moire, medium blur, no antialiasing. */
+				lowResolution: WebGLTexture;
+				/** Mipmapped 256x256 texture used for the antialiased
+				 * 2D board. Zero moire, yes antialiasing. */
+				mipmapped: WebGLTexture;
+		  }
+		| undefined;
 
 	/**
 	 * A mask texture for the tiles, used to apply Zone effects to selective light/dark tiles.
@@ -75,10 +82,8 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 	 */
 	let tilesMask: WebGLTexture | undefined;
 
-	/** Color [r,g,b,a] of the light tiles. */
-	let lightTiles: Color;
-	/** Color [r,g,b,a] of the dark tiles. */
-	let darkTiles: Color;
+	/** Current light and dark tile colors in [r,g,b,a]. */
+	let tileColors: { light: Color; dark: Color };
 
 	/** The most recent texture generation. Replaced by every theme change. */
 	let texturesReady: Promise<void> = Promise.resolve();
@@ -119,19 +124,19 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 	}
 
 	async function initTextures(): Promise<void> {
-		const lightTilesCssColor = colorutil.arrayToCssColor(lightTiles);
-		const darkTilesCssColor = colorutil.arrayToCssColor(darkTiles);
+		const lightTilesCssColor = colorutil.arrayToCssColor(tileColors.light);
+		const darkTilesCssColor = colorutil.arrayToCssColor(tileColors.dark);
 
 		// Generate both images in parallel
-		const [tilesTexture_2_IMG, tilesTexture_256mips_IMG] = await Promise.all([
+		const [lowResolutionImage, mipmappedImage] = await Promise.all([
 			checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 2),
 			checkerboardgenerator.createCheckerboardIMG(lightTilesCssColor, darkTilesCssColor, 256),
 		]);
 
-		tilesTexture_2 = TextureLoader.loadTexture(ctx.gl, tilesTexture_2_IMG, { mipmaps: false });
-		tilesTexture_256mips = TextureLoader.loadTexture(ctx.gl, tilesTexture_256mips_IMG, {
-			mipmaps: true,
-		});
+		tileTextures = {
+			lowResolution: TextureLoader.loadTexture(ctx.gl, lowResolutionImage, { mipmaps: false }), // prettier-ignore
+			mipmapped: TextureLoader.loadTexture(ctx.gl, mipmappedImage, { mipmaps: true }),
+		};
 
 		frametracker.onVisualChange();
 	}
@@ -141,8 +146,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		newLightTiles = preferences.getColorOfLightTiles(),
 		newDarkTiles = preferences.getColorOfDarkTiles(),
 	): Promise<void> {
-		lightTiles = newLightTiles; // true for white
-		darkTiles = newDarkTiles; // false for dark
+		tileColors = { light: newLightTiles, dark: newDarkTiles };
 		updateSkyColor();
 		frametracker.onVisualChange();
 		return initTextures();
@@ -150,9 +154,9 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 
 	/** Updates the sky color to match the current board color. */
 	function updateSkyColor(): void {
-		const avgR = (lightTiles[0] + darkTiles[0]) / 2;
-		const avgG = (lightTiles[1] + darkTiles[1]) / 2;
-		const avgB = (lightTiles[2] + darkTiles[2]) / 2;
+		const avgR = (tileColors.light[0] + tileColors.dark[0]) / 2;
+		const avgG = (tileColors.light[1] + tileColors.dark[1]) / 2;
+		const avgB = (tileColors.light[2] + tileColors.dark[2]) / 2;
 
 		// BEFORE STAR FIELD ANIMATION
 		// const dimAmount = 0.27; // Default: 0.27
@@ -189,10 +193,10 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		const z = getRelativeZ();
 		const cameraZ = ctx.camera.getPosition(true)[2];
 
-		const r = (lightTiles[0] + darkTiles[0]) / 2;
-		const g = (lightTiles[1] + darkTiles[1]) / 2;
-		const b = (lightTiles[2] + darkTiles[2]) / 2;
-		const a = (lightTiles[3] + darkTiles[3]) / 2;
+		const r = (tileColors.light[0] + tileColors.dark[0]) / 2;
+		const g = (tileColors.light[1] + tileColors.dark[1]) / 2;
+		const b = (tileColors.light[2] + tileColors.dark[2]) / 2;
+		const a = (tileColors.light[3] + tileColors.dark[3]) / 2;
 
 		const data = primitives.BoxTunnel(-dist, -dist, cameraZ, dist, dist, z, r, g, b, a);
 		data.push(...primitives.Quad_Color3D(-dist, -dist, dist, dist, z, [r, g, b, a])); // Floor of the box
@@ -265,6 +269,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		opacity: number = 1.0,
 	): Renderable | undefined {
 		if (!tilesMask) return; // Mask texture not loaded yet
+		if (!tileTextures) return; // Tile textures not loaded yet
 
 		const boardScale = ctx.boardpos.getBoardScale();
 
@@ -272,8 +277,9 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		const isFractal = !bd.areEqual(zoom, ONE);
 		// Fractal boards get the texture with no antialiasing, but some moire.
 		const boardTexture =
-			isFractal || ctx.camera.isCameraRotated() ? tilesTexture_2 : tilesTexture_256mips;
-		if (!boardTexture) return; // Texture not loaded yet
+			isFractal || ctx.camera.isCameraRotated()
+				? tileTextures.lowResolution
+				: tileTextures.mipmapped;
 
 		/** The scale of the RENDERED board. Final result should always be within a small, visible range. */
 		const zoomTimesScale = bd.toNumber(bd.multiplyFloating(boardScale, zoom));
