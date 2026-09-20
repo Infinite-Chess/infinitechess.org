@@ -205,7 +205,10 @@ element_ChatInput?.addEventListener('keydown', (e) => {
 	e.preventDefault();
 	submit();
 });
-element_ChatInput?.addEventListener('input', () => hideError());
+element_ChatInput?.addEventListener('input', () => {
+	hideError();
+	element_ChatInput?.removeAttribute('placeholder'); // Retire the placeholder on first character typed
+});
 
 // The reader's own scrolling is the only thing that decides whether the log follows its bottom.
 element_ChatLog?.addEventListener('scroll', () => {
