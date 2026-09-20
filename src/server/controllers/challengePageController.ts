@@ -17,7 +17,6 @@ import type {
 
 import encodeQR from 'qr';
 
-import modutil from '../../shared/chess/util/modutil.js';
 import metadatautil from '../../shared/chess/util/metadatautil.js';
 
 import urlUtils from '../utility/urlUtils.js';
@@ -40,14 +39,22 @@ interface ChallengePageState {
 		/** The side they chose to play. Absent when they left it to chance. */
 		side?: Player;
 	};
-	/** The icon id of each modifier the seek carries. */
-	modifierIconIds: string[];
 	properties: SeekPropertiesViewModel;
 	/** The link to share, and its QR code as inline SVG. Present only for the owner. */
-	share?: { url: string; qrSvg: string };
+	share?: {
+		url: string;
+		qrSvg: string;
+		/** The width to render the QR at. See {@link buildShare}. */
+		qrSizePx: number;
+	};
 	/** Whether the viewer can never accept: they're signed out, and the challenge is rated. */
 	signinRequired: boolean;
 }
+
+// Constants -------------------------------------------------------------------
+
+/** How wide each of the QR code's modules is drawn. See {@link buildShare}. */
+const QR_MODULE_PX = 4;
 
 // Page State ------------------------------------------------------------------
 
@@ -79,7 +86,6 @@ function getPageState(req: Request): ChallengePageState | undefined {
 			elo: seek.player.rating ? metadatautil.getFormattedElo(seek.player.rating) : undefined,
 			side: seek.color ?? undefined,
 		},
-		modifierIconIds: (seek.modifiers ?? []).map((m) => modutil.getModifierIconId(m.kind)),
 		properties: seekProperties.build(setup, seek.mode === 'rated', undefined, req),
 		share: isOwner ? buildShare(id) : undefined,
 		signinRequired: !memberInfo.signedIn && seek.mode === 'rated',
@@ -97,10 +103,34 @@ function resolveOwnerName(
 	return viewerIsOwner ? userStatus.you_indicator : userStatus.guest_indicator;
 }
 
-/** The challenge's canonical link, and its QR code as inline SVG. One string, so the two can't disagree. */
-function buildShare(id: number): { url: string; qrSvg: string } {
+/**
+ * The challenge's canonical link, and its QR code as inline SVG. One string, so the two
+ * can't disagree.
+ *
+ * The code's width is its module count times a whole number of pixels, so every module edge
+ * lands on a pixel. Sizing it to a round width instead would leave the edges mid-pixel,
+ * which the browser either blurs or rounds unevenly — both read as a fuzzy code. The count
+ * varies with the link's length, so only the server — which just encoded it — can do this.
+ */
+function buildShare(id: number): { url: string; qrSvg: string; qrSizePx: number } {
 	const url = urlUtils.getAbsoluteGameUrl(id);
-	return { url, qrSvg: encodeQR(url, 'svg', { ecc: 'medium', border: 4 }) };
+	// `border` is the white quiet zone in modules. 2 is the narrowest a scanner is specified
+	// to need, and the card frames the code in white anyway.
+	const options = { ecc: 'medium', border: 2 } as const;
+	/*
+	 * The module count steps by 4 with the link's length: 27-42 characters encode to 33
+	 * modules, 43 to 62 encode to 37. Production links run 36-39 characters — a 35-character
+	 * base plus a 1-4 character base62 id, which `GAME_ID_UPPER_CAP` holds to 62^4 — so every
+	 * code is 33 modules wide, with 4 characters of headroom. Only a longer domain or path can
+	 * spend that; a longer id can't. Past it, every QR grows by 4 modules at once.
+	 */
+	// Both forms encode the same grid, so `raw` gives the `svg`'s own module count.
+	const modules = encodeQR(url, 'raw', options).length;
+	return {
+		url,
+		qrSvg: encodeQR(url, 'svg', options),
+		qrSizePx: modules * QR_MODULE_PX,
+	};
 }
 
 // Exports ---------------------------------------------------------------------

@@ -16,7 +16,7 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 {% from "components/user.njk" import usernameEmbed %}
-{% from "components/seekproperties.njk" import seekProperties %}
+{% from "components/seekproperties.njk" import seekProperties, seekRules %}
 {% from "components/variantselector.njk" import variantSelector %}
 {% set tsIndex = scriptT('index') %}
 
@@ -126,6 +126,7 @@
 		{% if meta %}
 		<div class="game-meta panel">
 			{{ seekProperties(meta.seekProperties) }}
+			{{ seekRules(meta.seekProperties.rules) }}
 
 			<div class="meta-foot">
 				<time id="meta-started" data-created="{{ meta.timeCreated }}">{{ meta.startedAgo }}</time>

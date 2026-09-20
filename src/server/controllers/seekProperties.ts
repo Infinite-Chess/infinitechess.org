@@ -8,6 +8,7 @@
 
 import type { Request } from 'express';
 import type { GameRules } from '../../shared/chess/util/gamerules.js';
+import type { VariantIcon } from '../../shared/chess/variants/varianticons.js';
 import type { StaticGameSetup } from '../../shared/transport/domain.js';
 import type { GlobalGameState } from '../../shared/chess/logic/state.js';
 
@@ -18,6 +19,7 @@ import icnconverter from '../../shared/chess/logic/icn/icnconverter.js';
 import variantrules from '../../shared/chess/logic/variantrules.js';
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import { summarizeGameRules } from '../../shared/chess/variants/gamerulesummary.js';
+import { resolveVariantIcons } from '../../shared/chess/variants/varianticons.js';
 
 import pieceSvgCache from '../config/pieceSvgCache.js';
 
@@ -25,8 +27,8 @@ import pieceSvgCache from '../config/pieceSvgCache.js';
 
 /** Display-ready seek properties, precomputed since Nunjucks can't call the shared utils. */
 export interface SeekPropertiesViewModel {
-	/** Variant group icon id + display name (custom games fall back to a generic icon/name). */
-	variant: { iconId: string; name: string };
+	/** The variant's icons and display name (a custom game falls back to a generic pair). */
+	variant: { icons: VariantIcon[]; name: string };
 	/**
 	 * How the rules depart from the standard ones. Empty when it plays entirely by the
 	 * defaults, in which case the page omits the row. Matches, line for line, what the
@@ -65,11 +67,11 @@ function build(
 		setup.variant.kind === 'preset' ? variantregistry.getGroup(setup.variant.code) : 'custom';
 	return {
 		variant: {
-			name:
-				setup.variant.kind === 'preset'
-					? req.t.shared.variants[setup.variant.code]
-					: req.t.shared.variant_groups.custom.display_label,
-			iconId: variantregistry.getGroupIconId(variantGroup),
+			name: variantregistry.getDisplayName(
+				setup.variant.kind === 'preset' ? setup.variant.code : null,
+				req.t.shared,
+			),
+			icons: resolveVariantIcons(variantGroup, setup.modifiers),
 		},
 		rules: buildRuleLines(setup, deadIcn, req),
 		speed: {

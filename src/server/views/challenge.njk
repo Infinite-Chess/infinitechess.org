@@ -18,7 +18,8 @@
 {% include "components/header/header.njk" %}
 
 {% from "components/user.njk" import usernameEmbed %}
-{% from "components/seekproperties.njk" import seekProperties %}
+{% from "components/forms.njk" import successGlyph %}
+{% from "components/seekproperties.njk" import seekProperties, seekRules %}
 
 {# Borrowed strings: the home page's, the shared codes-and-labels, and the server responses. #}
 {% set tIndex = templateT('index') %}
@@ -27,43 +28,67 @@
 {% set responses = scriptT('responses') %}
 
 <main class="bg-checkerboard-dimmed page-centered">
-	<div class="auth-card">
-		<h1 class="auth-title">{{ tsIndex.lobby_buttons.challenge_friend if share else t.title }}</h1>
+	<div class="card challenge-card">
 
-		{# The owner, and the side they chose — no dot for Random. #}
-		<div class="challenge-owner">
-			{{ usernameEmbed(owner.name, owner.elo) }}
-			{% if owner.side is defined %}
-			<span class="side-dot{{ ' black' if owner.side == p.BLACK }}" title="{{ s.seek.owner_side_black if owner.side == p.BLACK else s.seek.owner_side_white }}"></span>
-			{% endif %}
+		{# The ticket's stub: the start position the game opens on. #}
+		<div class="challenge-stub">
+			{# Always from White's view. Sized before any script runs, and revealed by
+			   challengepreview.ts once it holds the position rather than a blank buffer. #}
+			<canvas class="visibility-hidden" id="challenge-preview" width="256" height="256"></canvas>
+			{# The owner's card captions the preview with the gamerules; the visitor's reads them under the seek. #}
+			{% if share %}{{ seekRules(properties.rules) }}{% endif %}
 		</div>
 
-		{% if modifierIconIds.length %}
-		<div>
-			{% for iconId in modifierIconIds %}<svg class="modifier-icon {{ iconId }}"><use href="#{{ iconId }}"/></svg>{% endfor %}
+		<div class="challenge-main">
+			<h1 class="auth-title">{{ tsIndex.lobby_buttons.challenge_friend if share else t.visitor_title }}</h1>
+
+			{# The seek, read in the lobby row's order: who, what, how long, for what.
+			   The owner opens the line; the macro renders the rest. Its `seekRules`
+			   half is placed per viewer, so it is called separately. #}
+			<div class="challenge-props">
+				{% call seekProperties(properties) %}
+				<span class="meta-item">
+					{{ usernameEmbed(owner.name, owner.elo) }}
+					{% if owner.side is defined %}
+					{# No dot for Random. #}
+					<span class="side-dot{{ ' black' if owner.side == p.BLACK }}" title="{{ s.seek.owner_side_black if owner.side == p.BLACK else s.seek.owner_side_white }}"></span>
+					{% endif %}
+				</span>
+				{% endcall %}
+				{% if not share %}{{ seekRules(properties.rules) }}{% endif %}
+			</div>
+
+			<div class="challenge-actions">
+				{% if share %}
+				{# Owner: what to do next, then the link, or the same link as a code to scan. #}
+				<p class="challenge-lede">{{ t.share_prompt }}</p>
+				<div class="challenge-share">
+					<button class="challenge-copy" id="challenge-copy" data-url="{{ share.url }}" title="{{ t.copy_link }}">
+						<svg class="challenge-copy-icon"><use href="#svg-clipboard"/></svg>
+						<span class="challenge-copy-url">{{ share.url }}</span>
+						<span class="challenge-copy-done">{{ successGlyph() }}{{ t.copied }}</span>
+					</button>
+					<div class="challenge-scan">
+						<p class="challenge-qr-hint">{{ t.qr_prompt }}</p>
+						{# Only the QR is `| safe`: it's markup we generated from our own URL, never input.
+						   Its width is server-computed so each module lands on whole pixels. #}
+						<div class="challenge-qr" style="width: {{ share.qrSizePx }}px">{{ share.qrSvg | safe }}</div>
+					</div>
+				</div>
+				<button class="challenge-btn challenge-cancel" id="challenge-cancel">{{ t.cancel }}</button>
+				{% else %}
+				{# Visitor: accept, with the one reason they can't. Signing in wins: it's settled
+				   at render and bars accepting outright, so the in-game line would only add noise. #}
+				<button class="btn-primary challenge-btn" id="challenge-accept"{% if signinRequired %} disabled{% endif %}>{{ t.accept }}</button>
+				{% if signinRequired %}
+				<p class="challenge-reason" id="challenge-signin-required">{{ responses.seeks.rated_requires_signin }}</p>
+				{% else %}
+				{# Revealed by the client while we're in another game, which points the link at it. #}
+				<p class="challenge-reason hidden" id="challenge-ingame">{{ tIndex.lobby.ingame_banner }} <a class="auth-link" id="challenge-ingame-join">{{ tIndex.lobby.ingame_join }}</a></p>
+				{% endif %}
+				{% endif %}
+			</div>
 		</div>
-		{% endif %}
-
-		{{ seekProperties(properties) }}
-
-		{# The start position, always from White's view. Sized before any script runs. #}
-		<canvas id="challenge-preview" width="256" height="256"></canvas>
-
-		{% if share %}
-		{# Owner: share the link, or withdraw the challenge. #}
-		<button class="btn-primary" id="challenge-copy" data-url="{{ share.url }}">{{ t.copy_link }}</button>
-		{# Only the QR is `| safe`: it's markup we generated from our own URL, never input. #}
-		<div class="challenge-qr">{{ share.qrSvg | safe }}</div>
-		<button class="btn-primary" id="challenge-cancel">{{ t.cancel }}</button>
-		{% else %}
-		{# Visitor: accept, with the reason when they can't. #}
-		<button class="btn-primary" id="challenge-accept"{% if signinRequired %} disabled{% endif %}>{{ t.accept }}</button>
-		{# Revealed by the client while we're in another game, which points the link at it. #}
-		<p class="hidden" id="challenge-ingame">{{ tIndex.lobby.ingame_banner }} <a class="auth-link" id="challenge-ingame-join">{{ tIndex.lobby.ingame_join }}</a></p>
-		{% if signinRequired %}
-		<p id="challenge-signin-required">{{ responses.seeks.rated_requires_signin }}</p>
-		{% endif %}
-		{% endif %}
 	</div>
 </main>
 

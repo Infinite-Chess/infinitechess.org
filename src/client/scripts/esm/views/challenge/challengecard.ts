@@ -38,6 +38,7 @@ const element_cancel = document.getElementById('challenge-cancel') as HTMLButton
 // --- Visitor only ---
 
 const element_accept = document.getElementById('challenge-accept') as HTMLButtonElement | null;
+/** Absent from the owner's page, and when the sign-in reason below is showing — only one reason shows. */
 const element_ingame = document.getElementById('challenge-ingame');
 const element_ingameJoin = document.getElementById('challenge-ingame-join');
 /** Only present when they can never accept: signed out, and the challenge is rated. */
@@ -90,21 +91,18 @@ async function enterGame(role: Player | undefined): Promise<void> {
 	navigate.assign(gameurl.getGameUrl(window.challengePageData.id, role));
 }
 
-/**
- * We're in another game: reveal the line pointing at it. Only ever pushed to a visitor —
- * the owner can't be in a game while their challenge is open.
- */
+/** We're in another game: reveal the line pointing at it, and bar accepting. */
 function onInGame(ingame: InGameChallenge): void {
 	inGame = true;
-	element_ingameJoin!.setAttribute('href', gameurl.getGameUrl(ingame.id, ingame.role));
-	element_ingame!.classList.remove('hidden');
+	element_ingameJoin?.setAttribute('href', gameurl.getGameUrl(ingame.id, ingame.role));
+	element_ingame?.classList.remove('hidden');
 	updateButtons();
 }
 
 /** We're in no game. Also what the owner's page lands on with every `open` state. */
 function onOutGame(): void {
 	inGame = false;
-	element_ingame?.classList.add('hidden'); // Absent from the owner's page.
+	element_ingame?.classList.add('hidden');
 	updateButtons();
 }
 

@@ -1,11 +1,18 @@
-{# A seek's properties: variant, time control, rated or casual, and its gamerule modifications.
-   Renders a `SeekPropertiesViewModel` (src/server/controllers/seekProperties.ts). #}
+{# A seek's properties, in parts, so a page may place them apart.
+   All render off a `SeekPropertiesViewModel` (src/server/controllers/seekProperties.ts). #}
 
+{# Variant, time control, and rated or casual. Called with `{% call %}`, the block's
+   content opens the line, bulleted off the variant — the challenge card's owner. #}
 {% macro seekProperties(props) %}
 <div class="meta-info">
+	{% if caller %}{{ caller() }}
+	•
+	{% endif %}
 	<span class="meta-item">
-		<svg class="meta-icon {{ props.variant.iconId }}"><use href="#{{ props.variant.iconId }}"/></svg>
-		<span class="meta-variant">{{ props.variant.name }}</span>
+		<span class="variant-icons">
+			{%- for icon in props.variant.icons %}<svg class="meta-icon {{ 'modifier-icon ' if icon.isModifier }}{{ icon.id }}"><use href="#{{ icon.id }}"/></svg>{% endfor -%}
+		</span>
+		<span>{{ props.variant.name }}</span>
 	</span>
 	•
 	<span class="meta-item" title="{{ props.speed.name }}">
@@ -15,12 +22,14 @@
 	•
 	<span>{{ props.mode }}</span>
 </div>
+{% endmacro %}
 
-{# Gamerule modifications. Omitted when it plays by the standard rules.
+{# Gamerule modifications. Renders nothing when it plays by the standard rules.
    Matches the gamerule modifications variant preview tooltips show on the seek. #}
-{% if props.rules.length %}
+{% macro seekRules(rules) %}
+{% if rules.length %}
 <p class="meta-rules">
-	{%- for line in props.rules %}{{ " " if not loop.first }}
+	{%- for line in rules %}{{ " " if not loop.first }}
 	{%- if line.kind == "text" %}{{ line.text }}
 	{%- else %}<span class="promotion-icons piece-silhouette">{{ line.prefix }}
 		{# Only the piece icons are `| safe`: this markup is our own svg asset files, never input. #}

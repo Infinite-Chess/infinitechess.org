@@ -21,12 +21,12 @@ import type {
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
 
-import modutil from '../../../../../shared/chess/util/modutil.js';
 import gameurl from '../../../../../shared/chess/util/gameurl.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
+import { resolveVariantIcons } from '../../../../../shared/chess/variants/varianticons.js';
 
 import docutil from '../../util/docutil.js';
 import navigate from '../../util/navigate.js';
@@ -421,11 +421,10 @@ function createSeekListVNode(seeks: LobbySeek[], newSeekIds: Set<number>): VNode
 function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	const playerRating = createPlayerRatingVNode(seek.player.rating);
 	const sideDot = createSideDotVNode(seek.color);
-	const variantIcon = variantregistry.getGroupIconId(seek.variant.group);
-	const variantName =
-		seek.variant.group === 'custom'
-			? t.shared.variant_groups.custom.display_label
-			: t.shared.variants[seek.variant.code];
+	const variantName = variantregistry.getDisplayName(
+		seek.variant.group === 'custom' ? null : seek.variant.code,
+		t.shared,
+	);
 	const speedIcon = clockutil.getSpeedIconId(seek.time);
 	const speedCategory = clockutil.getSpeedCategory(seek.time);
 	const speedTitle = t.shared.speeds[speedCategory];
@@ -477,14 +476,14 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 						},
 					},
 					[
-						h('div.variant-icons', createVariantCellIconVNodes(variantIcon, seek)),
+						h('div.variant-icons', createVariantCellIconVNodes(seek)),
 						h('span', variantName),
 					],
 				),
 			]),
 			h('div.lobby-cell', [
 				h('div.cell-flex', [
-					h('svg.cell-icon', { class: { [speedIcon]: true } }, [
+					h('svg.meta-icon', { class: { [speedIcon]: true } }, [
 						h('title', speedTitle),
 						h('use', { attrs: { href: `#${speedIcon}` } }),
 					]),
@@ -499,28 +498,14 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	);
 }
 
-/**
- * Returns the icon vnodes for the variant cell.
- * For standard-group seeks with modifiers, only the modifier icons are shown (group icon omitted).
- */
-function createVariantCellIconVNodes(variantIcon: string, seek: LobbySeek): VNode[] {
-	const modifiers = seek.modifiers ?? [];
-	const showGroupIcon = !(seek.variant.group === 'standard' && modifiers.length > 0);
-	return [
-		...(showGroupIcon
-			? [
-					h('svg.cell-icon', { class: { [variantIcon]: true } }, [
-						h('use', { attrs: { href: `#${variantIcon}` } }),
-					]),
-				]
-			: []),
-		...modifiers.map((m) => {
-			const iconId = modutil.getModifierIconId(m.kind);
-			return h('svg.cell-icon.modifier-icon', { class: { [iconId]: true } }, [
-				h('use', { attrs: { href: `#${iconId}` } }),
-			]);
-		}),
-	];
+/** Returns the icon vnodes for the variant cell. */
+function createVariantCellIconVNodes(seek: LobbySeek): VNode[] {
+	const icons = resolveVariantIcons(seek.variant.group, seek.modifiers);
+	return icons.map((icon) =>
+		h('svg.meta-icon', { class: { 'modifier-icon': icon.isModifier, [icon.id]: true } }, [
+			h('use', { attrs: { href: `#${icon.id}` } }),
+		]),
+	);
 }
 
 /** Spawns a body-level overlay aligned to the row that pulses outward and fades. */

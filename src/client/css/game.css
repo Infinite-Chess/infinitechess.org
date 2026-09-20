@@ -164,26 +164,9 @@
 	flex: 0 0 auto;
 }
 
-/* Original seek's properties */
+/* Original seek's properties. global.css lays the line out; this is its size here. */
 .meta-info {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 0.5em;
 	font-size: 14px;
-}
-
-.meta-item {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.3em;
-}
-
-/* Variant + speed icons */
-.meta-icon {
-	width: 1.389em;
-	aspect-ratio: 1;
-	flex-shrink: 0;
 }
 
 /* Gamerule modifications */

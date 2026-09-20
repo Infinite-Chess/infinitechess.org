@@ -179,18 +179,14 @@ async function showForBoard(
 	element_name.textContent = name;
 	element_rules.classList.toggle('hidden', !rules.hasChildNodes());
 	element_rulesBody.replaceChildren(rules);
-	positionTooltip(ctx, anchor, placement);
+	positionTooltip(anchor, placement);
 	previewrenderer.render(ctx, boardsim);
 	element_tooltip.classList.remove('visibility-hidden');
 	currentAnchor = anchor;
 }
 
 /** Positions the tooltip relative to the anchor. */
-function positionTooltip(
-	ctx: RenderContext,
-	anchor: HTMLElement,
-	placement: 'left' | 'below',
-): void {
+function positionTooltip(anchor: HTMLElement, placement: 'left' | 'below'): void {
 	const rect = anchor.getBoundingClientRect();
 
 	const preferredLeft =
@@ -205,9 +201,6 @@ function positionTooltip(
 	// Read natural height after horizontal constraints are applied (canvas shrinks with width via aspect-ratio).
 	const tooltipH = element_tooltip.offsetHeight;
 	element_tooltip.style.top = `${Math.min(preferredTop, window.innerHeight - tooltipH - EDGE_PAD)}px`;
-
-	// Sync canvas dimensions to the potential new preview dimensions
-	ctx.camera.syncCanvasDimensions();
 }
 
 /** Builds the rule summary. Off-DOM so a stale async preview cannot change the visible tooltip. */

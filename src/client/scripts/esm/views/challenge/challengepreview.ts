@@ -1,7 +1,7 @@
 // src/client/scripts/esm/views/challenge/challengepreview.ts
 
 /**
- * Draws the challenge's start position into the card's preview canvas, once, from White's view.
+ * Draws the challenge's start position into the card's preview canvas, from White's view.
  *
  * The page's only asynchronous, asset-loading, WebGL-owning part.
  */
@@ -25,12 +25,24 @@ void draw();
 
 // Functions -------------------------------------------------------------------
 
-/** Draws the challenge's start position into the preview canvas. */
+/**
+ * Draws the challenge's start position into the preview canvas, and at every canvas
+ * resize — a preview camera wires no resize listeners of its own.
+ *
+ * The canvas is SSR'd hidden for the reason `createContext` gives. `visibility`, not
+ * `display`, so the card never reflows and the canvas keeps a width to draw at.
+ */
 async function draw(): Promise<void> {
 	const boardsim = await buildBoard(window.challengePageData.variant);
 	const ctx = await previewrenderer.createContext(element_preview);
 	await previewrenderer.load(ctx, boardsim);
-	previewrenderer.render(ctx, boardsim);
+
+	// A ResizeObserver reports the canvas's starting size too, so its first
+	// callback is what performs the initial draw. Revealing is idempotent.
+	new ResizeObserver(() => {
+		previewrenderer.render(ctx, boardsim);
+		element_preview.classList.remove('visibility-hidden');
+	}).observe(element_preview);
 }
 
 /** Builds the seek's start position: a preset's, or its custom ICN's. */

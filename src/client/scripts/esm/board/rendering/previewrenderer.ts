@@ -34,7 +34,10 @@ const PREVIEW_ENTITY_WIDTH_VPIXELS = 20;
 
 // Functions -------------------------------------------------------------------
 
-/** Builds a preview's render context on the given canvas, with its own WebGL context. */
+/**
+ * Builds a preview's render context on the given canvas, with its own WebGL context.
+ * The canvas turns opaque black here, so a visible one must stay hidden until {@link render}.
+ */
 async function createContext(canvas: HTMLCanvasElement): Promise<RenderContext> {
 	const gl = webgl.createContext(canvas);
 	const camera = createCamera(); // No hooks; inert toward game-loop globals.
@@ -63,6 +66,9 @@ async function load(ctx: RenderContext, boardsim: BoardPreview): Promise<void> {
 
 /** Draws the board's start position into the context, framed to fit its canvas. */
 function render(ctx: RenderContext, boardsim: BoardPreview): void {
+	// The canvas may have resized since the last draw, and the framing below reads its aspect.
+	ctx.camera.syncCanvasDimensions();
+
 	const { gameRules } = boardsim;
 
 	const mesh: Mesh = { offset: [0n, 0n], inverted: false, types: {} };

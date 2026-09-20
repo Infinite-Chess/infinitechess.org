@@ -16,7 +16,7 @@
 
 {# ── Macros ────────────────────────────────────────────#}
 {% from "components/user.njk" import usernameEmbed %}
-{% from "components/seekproperties.njk" import seekProperties %}
+{% from "components/seekproperties.njk" import seekProperties, seekRules %}
 
 {# Regions tagged "SSR-OWNED" are rendered from `meta` + `gamePageData` and must never be
    re-rendered by the client — it only writes live deltas into them (clocks, `tempo`, `eloChange`). #}
@@ -89,6 +89,7 @@
 
 			{# Original seek's properties — SSR-OWNED. #}
 			{{ seekProperties(meta.seekProperties) }}
+			{{ seekRules(meta.seekProperties.rules) }}
 
 			{# Started X ago + live spectator count. `#meta-started` carries the creation epoch so the
 			   client can re-derive the ticking string. The client sets the spectator count, hiding it if none. #}

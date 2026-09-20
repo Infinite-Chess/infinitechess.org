@@ -229,12 +229,28 @@ function resolveCode(variantName: string | undefined): VariantCode | undefined {
 }
 
 /**
- * Returns the English display name of the given variant code.
- * @param variantCode - The variant code to look up.
- * @param sharedT - The shared translations object, used to translate 'Custom Variant'.
+ * Returns the English name of the given variant code, for metadata and notation.
+ * Use {@link getDisplayName} for anything a user reads.
+ * @param variantCode - The variant code to look up. Null for a custom position.
  */
-function getName(variantCode: VariantCode | null, sharedT: ScriptTranslations['shared']): string {
+function getEnglishName(
+	variantCode: VariantCode | null,
+	sharedT: ScriptTranslations['shared'],
+): string {
 	return variantCode ? REGISTRY[variantCode].name : sharedT.variant_groups.custom.display_label; // Translate 'Custom Variant'
+}
+
+/**
+ * Returns the translated name a variant is shown by.
+ * @param variantCode - The variant code to look up. Null for a custom position.
+ */
+function getDisplayName(
+	variantCode: VariantCode | null,
+	sharedT: ScriptTranslations['shared'],
+): string {
+	return variantCode
+		? sharedT.variants[variantCode]
+		: sharedT.variant_groups.custom.display_label;
 }
 
 /** Returns the group of the given variant code. */
@@ -277,7 +293,8 @@ function getVariantsForGroup(group: VariantGroup): VariantCode[] {
 export default {
 	getGroupIconId,
 	resolveCode,
-	getName,
+	getEnglishName,
+	getDisplayName,
 	getGroup,
 	getLoader,
 	getGroupsWithVariants,
