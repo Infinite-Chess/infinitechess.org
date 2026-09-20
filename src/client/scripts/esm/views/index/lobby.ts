@@ -49,8 +49,9 @@ type LobbySeek = BaseSeek &
 		isOurs: boolean;
 	};
 
-// Constants -------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
+const element_lobbyWrap = document.getElementById('lobby-wrap')!;
 const element_lobbyTbody = document.getElementById('lobby-tbody')!;
 const element_lobbyIdleOverlay = document.getElementById('lobby-overlay')!;
 const element_lobbyIngameOverlay = document.getElementById('lobby-ingame-overlay')!;
@@ -62,7 +63,6 @@ const elements_disabledWhileInGame = [
 	document.getElementById('btn-challenge-friend')!,
 	document.getElementById('btn-play-ai')!,
 ];
-let tbodyVNode: VNode | Element = element_lobbyTbody;
 
 // Constants -------------------------------------------------------------------
 
@@ -78,6 +78,9 @@ const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const GRACE_MS = 667;
 
 // State -----------------------------------------------------------------------
+
+/** The seek list's snabbdom tree, replaced by each patch. Starts as the empty element it renders into. */
+let tbodyVNode: VNode | Element = element_lobbyTbody;
 
 /** The ID of our current lobby seek, if we have one. */
 let ourSeekId: number | undefined;
@@ -510,6 +513,8 @@ function createVariantCellIconVNodes(seek: LobbySeek): VNode[] {
 function spawnSeekPulse(row: HTMLElement, isOurs: boolean): void {
 	requestAnimationFrame(() => {
 		if (!row.isConnected) return; // A row removed before this frame measures as 0
+		// A clipped row's pulse would float over the page outside the list, anchored to nothing visible.
+		if (!isRowFullyVisible(row)) return;
 		const overlay = document.createElement('div');
 		overlay.className = 'seek-pulse-overlay';
 		const box = document.createElement('div');
@@ -539,6 +544,14 @@ function spawnSeekPulse(row: HTMLElement, isOurs: boolean): void {
 		};
 		requestAnimationFrame(loop);
 	});
+}
+
+/** Whether the whole row is inside the lobby's scroll box. */
+function isRowFullyVisible(row: HTMLElement): boolean {
+	const rect = row.getBoundingClientRect();
+	const wrap = element_lobbyWrap.getBoundingClientRect();
+	// The list only scrolls vertically, so only its top and bottom edges can clip a row.
+	return rect.top >= wrap.top && rect.bottom <= wrap.bottom;
 }
 
 /** Fetches and shows the variant preview tooltip for a seek row's variant cell. */
