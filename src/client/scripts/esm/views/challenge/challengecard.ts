@@ -38,7 +38,7 @@ const element_cancel = document.getElementById('challenge-cancel') as HTMLButton
 // --- Visitor only ---
 
 const element_accept = document.getElementById('challenge-accept') as HTMLButtonElement | null;
-/** Absent from the owner's page, and when the sign-in reason below is showing — only one reason shows. */
+/** Absent from the owner's page, and when the sign-in reason below is showing. */
 const element_ingame = document.getElementById('challenge-ingame');
 const element_ingameJoin = document.getElementById('challenge-ingame-join');
 /** Only present when they can never accept: signed out, and the challenge is rated. */

@@ -65,12 +65,10 @@ function build(
 ): SeekPropertiesViewModel {
 	const variantGroup =
 		setup.variant.kind === 'preset' ? variantregistry.getGroup(setup.variant.code) : 'custom';
+	const variantCode = setup.variant.kind === 'preset' ? setup.variant.code : null;
 	return {
 		variant: {
-			name: variantregistry.getDisplayName(
-				setup.variant.kind === 'preset' ? setup.variant.code : null,
-				req.t.shared,
-			),
+			name: variantregistry.getDisplayName(variantCode, req.t.shared),
 			icons: resolveVariantIcons(variantGroup, setup.modifiers),
 		},
 		rules: buildRuleLines(setup, deadIcn, req),

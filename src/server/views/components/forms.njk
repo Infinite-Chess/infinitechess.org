@@ -19,7 +19,6 @@
 </div>
 {% endmacro %}
 
-{# Status glyphs: a checkmark for success, an X for failure/expiry. Sized and stroked by
-   whatever holds them, since .glyph carries no rules of its own. #}
+{# Status glyphs: a checkmark for success, an X for failure/expiry. Sized by their specific holders. #}
 {% macro successGlyph() %}<svg class="glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>{% endmacro %}
 {% macro errorGlyph() %}<svg class="glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>{% endmacro %}

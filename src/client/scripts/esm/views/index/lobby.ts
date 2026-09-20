@@ -421,10 +421,8 @@ function createSeekListVNode(seeks: LobbySeek[], newSeekIds: Set<number>): VNode
 function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	const playerRating = createPlayerRatingVNode(seek.player.rating);
 	const sideDot = createSideDotVNode(seek.color);
-	const variantName = variantregistry.getDisplayName(
-		seek.variant.group === 'custom' ? null : seek.variant.code,
-		t.shared,
-	);
+	const variantCode = seek.variant.group === 'custom' ? null : seek.variant.code;
+	const variantName = variantregistry.getDisplayName(variantCode, t.shared);
 	const speedIcon = clockutil.getSpeedIconId(seek.time);
 	const speedCategory = clockutil.getSpeedCategory(seek.time);
 	const speedTitle = t.shared.speeds[speedCategory];

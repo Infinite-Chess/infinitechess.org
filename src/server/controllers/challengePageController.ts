@@ -40,15 +40,18 @@ interface ChallengePageState {
 		side?: Player;
 	};
 	properties: SeekPropertiesViewModel;
-	/** The link to share, and its QR code as inline SVG. Present only for the owner. */
-	share?: {
-		url: string;
-		qrSvg: string;
-		/** The width to render the QR at. See {@link buildShare}. */
-		qrSizePx: number;
-	};
+	/** Present only for the owner. */
+	share?: ChallengeShare;
 	/** Whether the viewer can never accept: they're signed out, and the challenge is rated. */
 	signinRequired: boolean;
+}
+
+/** The link to share, and its QR code as inline SVG. */
+interface ChallengeShare {
+	url: string;
+	qrSvg: string;
+	/** The width to render the QR at. See {@link buildShare}. */
+	qrSizePx: number;
 }
 
 // Constants -------------------------------------------------------------------
@@ -104,7 +107,7 @@ function resolveOwnerName(
 }
 
 /** Builds the canonical share link and its QR code, sized to whole CSS pixels per module. */
-function buildShare(id: number): { url: string; qrSvg: string; qrSizePx: number } {
+function buildShare(id: number): ChallengeShare {
 	const url = urlUtils.getAbsoluteGameUrl(id);
 	// The compact two-module quiet zone is intentional and camera-tested.
 	const options = { ecc: 'medium', border: 2 } as const;

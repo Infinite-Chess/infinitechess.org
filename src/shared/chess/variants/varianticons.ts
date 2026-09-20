@@ -20,16 +20,14 @@ import variantregistry from './variantregistry.js';
 export type VariantIcon = {
 	/** The SVG symbol id. */
 	id: string;
-	/** Modifier icons render slightly larger than a group's, so each renderer must tell them apart. */
+	/** Modifier icons (at least the slide limit icon) render slightly
+	 * larger than a group's, so each renderer must tell them apart. */
 	isModifier: boolean;
 };
 
 // Functions -------------------------------------------------------------------
 
-/**
- * Returns the icons identifying a variant and its modifiers, in display order.
- * A modified 'standard' game drops its group icon.
- */
+/** Returns the icons identifying a variant and its modifiers, in display order. */
 export function resolveVariantIcons(
 	group: VariantGroup | 'custom',
 	modifiers: GameModifier[] | undefined,
@@ -38,6 +36,7 @@ export function resolveVariantIcons(
 		id: modutil.getModifierIconId(m.kind),
 		isModifier: true,
 	}));
+	// A modified 'standard' game drops its group icon.
 	if (group === 'standard' && icons.length > 0) return icons;
 	return [{ id: variantregistry.getGroupIconId(group), isModifier: false }, ...icons];
 }

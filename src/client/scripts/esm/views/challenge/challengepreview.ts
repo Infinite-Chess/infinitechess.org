@@ -25,8 +25,8 @@ void init();
 // Functions -------------------------------------------------------------------
 
 /**
- * Loads the preview, then draws it at every size and theme it is shown at. Visibility stays
- * hidden until the first draw, reserving layout space and measurable canvas dimensions while loading.
+ * Loads the preview, then draws it at every size and theme it is shown at. Visibility stays hidden
+ * until the first draw, reserving layout space and measurable canvas dimensions while loading.
  */
 async function init(): Promise<void> {
 	const boardsim = await buildBoard(window.challengePageData.variant);

@@ -32,9 +32,8 @@
 
 		{# The ticket's stub: the start position the game opens on. #}
 		<div class="challenge-stub">
-			{# Always from White's view. Sized before any script runs, and revealed by
-			   challengepreview.ts once it holds the position rather than a blank buffer. #}
-			<canvas class="visibility-hidden" id="challenge-preview" width="256" height="256"></canvas>
+			{# Revealed by challengepreview.ts once it holds the position rather than a blank buffer. #}
+			<canvas class="visibility-hidden" id="challenge-preview"></canvas>
 			{# The owner's card captions the preview with the gamerules; the visitor's reads them under the seek. #}
 			{% if share %}{{ seekRules(properties.rules) }}{% endif %}
 		</div>
@@ -60,7 +59,7 @@
 
 			<div class="challenge-actions">
 				{% if share %}
-				{# Owner: what to do next, then the link, or the same link as a code to scan. #}
+				{# Owner: what to do next, then the link, then the QR code. #}
 				<p class="challenge-lede">{{ t.share_prompt }}</p>
 				<div class="challenge-share">
 					<button class="challenge-copy" id="challenge-copy" data-url="{{ share.url }}" title="{{ t.copy_link }}">
@@ -77,8 +76,7 @@
 				</div>
 				<button class="challenge-btn challenge-cancel" id="challenge-cancel">{{ t.cancel }}</button>
 				{% else %}
-				{# Visitor: accept, with the one reason they can't. Signing in wins: it's settled
-				   at render and bars accepting outright, so the in-game line would only add noise. #}
+				{# Visitor: accept, with the reason they maybe can't. Signing in trumps in-game. #}
 				<button class="btn-primary challenge-btn" id="challenge-accept"{% if signinRequired %} disabled{% endif %}>{{ t.accept }}</button>
 				{% if signinRequired %}
 				<p class="challenge-reason" id="challenge-signin-required">{{ responses.seeks.rated_requires_signin }}</p>

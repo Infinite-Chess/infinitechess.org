@@ -1,24 +1,11 @@
 /* src/client/css/challenge.css */
 
-/*
- * The challenge page: one centered card laid out landscape.
- * The stub on the left is the start position hugging the card's edge, over the gamerule
- * summary; the larger half on the right names the challenge, reads the seek back in the
- * lobby row's order, and carries the link, its QR, and the controls.
- */
-
-/* The card lays out its two halves itself. Each half owns its own padding, so the
-   preview can run to the edge; the stub's own background is what divides them. */
-.challenge-card {
-	flex-direction: row;
-	width: fit-content;
-}
+/* The challenge page: its card, the start position preview, the seek, and the controls. */
 
 /* ==================================
    The stub
    ================================== */
 
-/* Both children take only the height they need, stacked from the top of the stub. */
 .challenge-stub {
 	/* Matches width of variant preview tooltip canvas (400px - 12px padding * 2) */
 	flex: 0 0 376px;
@@ -28,19 +15,10 @@
 	background: var(--c-surface-2);
 }
 
-/* Pinned, since drawing resizes the canvas's backing buffer to the device's pixel ratio.
-   The square aspect reserves its height before any script runs. */
 #challenge-preview {
-	display: block;
 	width: 100%;
 	height: auto;
 	aspect-ratio: 1;
-}
-
-/* Gamerule modifications. */
-.meta-rules {
-	color: var(--c-text);
-	font-size: 0.8em;
 }
 
 /* On the owner's card they caption the preview; on the visitor's they read under the seek. */
@@ -54,7 +32,6 @@
    ================================== */
 
 .challenge-main {
-	flex: 1;
 	display: flex;
 	flex-direction: column;
 	gap: 22px;
@@ -63,10 +40,9 @@
 	padding: 32px 34px;
 }
 
-/* The shared title centers itself; here it heads a left-aligned column. */
+/* The shared title centers itself; manually left-align it. */
 .challenge-main .auth-title {
 	justify-content: flex-start;
-	text-align: left;
 }
 
 /* ==================================
@@ -80,10 +56,16 @@
 	gap: 8px;
 }
 
-/* global.css lays the line out; this is its size and weight here. */
+/* Manually specify size and weight. */
 .meta-info {
 	color: var(--c-text-emphasis);
 	font-size: 0.95em;
+}
+
+/* Gamerule modifications. Rendered under the seek for a visitor, in the stub for the owner. */
+.meta-rules {
+	color: var(--c-text);
+	font-size: 0.8em;
 }
 
 /* ==================================
@@ -98,11 +80,15 @@
 	margin-top: auto;
 }
 
-/* What to do next, above the control that does it. */
+/* What to do next. */
 .challenge-lede {
 	color: var(--c-text-muted);
 	font-size: 0.95em;
 }
+
+/* ==================================
+   The share block
+   ================================== */
 
 /* The link, then the same invite as a code to scan. */
 .challenge-share {
@@ -111,21 +97,13 @@
 	gap: 14px;
 }
 
-/* The code sits out at the card's edge, its prompt reading into it. */
-.challenge-scan {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 18px;
-}
-
 /* The link itself is the copy control: the whole pill is clickable. */
 .challenge-copy {
 	display: flex;
 	align-items: center;
 	gap: 0.55em;
 	width: 100%;
-	padding: 11px 13px;
+	padding: 10px 12px;
 	background: var(--c-surface-2);
 	border: 1px solid var(--c-border);
 	border-radius: 6px;
@@ -141,7 +119,7 @@
 	color: var(--c-text-emphasis);
 }
 
-/* The clipboard, and the checkmark that takes its place. */
+/* The clipboard, and the checkmark that replaces it. */
 .challenge-copy-icon,
 .challenge-copy-done .glyph {
 	width: 1.3em;
@@ -183,28 +161,33 @@
 	display: flex;
 }
 
+.challenge-scan {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+}
+
 .challenge-qr-hint {
 	color: var(--c-text-muted);
 	font-size: 0.9em;
 }
 
-/* Fixed black-on-white, whatever the theme, so it always scans.
-   The quiet zone is already inside the SVG's viewBox. */
 .challenge-qr {
 	flex-shrink: 0;
 	background: #fff;
 }
 
-/* Fills the box, whose width the server sized to a whole number of pixels per module. */
+/* The server pre-sized the width. */
 .challenge-qr svg {
 	display: block;
-	width: 100%;
-	height: auto;
-	fill: #000;
 }
 
-/* The one box both actions stand in. .btn-primary leaves the browser's own line-height and
-   carries no border, so without this the same padding would build two different heights. */
+/* ==================================
+   The buttons
+   ================================== */
+
+/* One box both actions stand in. */
 .challenge-btn {
 	width: 100%;
 	padding: 10px;
@@ -215,8 +198,7 @@
 	cursor: pointer;
 }
 
-/* Quiet counterpart to .btn-primary, for withdrawing rather than committing.
-   Sits a little further off the QR than the share block's own rows do. */
+/* Quiet counterpart to .btn-primary, for canceling. */
 .challenge-cancel {
 	margin-top: 6px;
 	background: none;
@@ -234,7 +216,7 @@
 	transform: translateY(1px);
 }
 
-/* Why Accept is disabled. Never given a `display`, so `.hidden` still hides the in-game line. */
+/* Why Accept is disabled. */
 .challenge-reason {
 	color: var(--c-text-muted);
 	font-size: 0.9em;
@@ -244,20 +226,16 @@
    Narrow
    ================================== */
 
-/* Too thin for two halves: the card becomes one column and the preview a full-bleed
-   hero under the heading. The three wrappers drop out with `display: contents`, so
-   their children lay out as the card's own items and can be ordered as one list —
-   which is also what moves the owner's gamerule caption under the seek. */
+/* One column, the preview a full-bleed hero. The wrappers drop out with `display: contents`,
+   so their children lay out as the card's own items, orderable as one list. */
 @media (max-width: 800px) {
 	.challenge-card {
-		/* How far the card's content sits in from its edges. The preview alone ignores it,
-		   so the sides are left to each item rather than paid by the card. */
+		/* How far the card's content sits in from its edges (except the preview). */
 		--inset: 28px;
 		flex-direction: column;
 		/* Keep the canvas's backing-buffer size out of the card's intrinsic width. */
 		width: 100%;
 		max-width: 420px;
-		/* The column's tightest pair: the seek line and its gamerules, as in the wide layout. */
 		gap: 8px;
 		padding: var(--inset) 0;
 	}
@@ -284,8 +262,6 @@
 		order: 4;
 	}
 
-	/* A rule divides describing the challenge from acting on it. Inset by a margin, not
-	   padding, so it stops where the text does — a border spans its box's padding too. */
 	.challenge-actions {
 		order: 5;
 		margin-inline: var(--inset);
@@ -293,21 +269,17 @@
 		border-top: 1px solid var(--c-border-muted);
 	}
 
-	/* Every other pair opens a section, so it takes the gap up to 20px. */
 	#challenge-preview,
 	.meta-info,
 	.challenge-actions {
 		margin-top: 12px;
 	}
 
-	/* Each item insets itself, so the preview alone runs edge to edge. */
 	.auth-title,
 	.meta-info {
 		padding-inline: var(--inset);
 	}
 
-	/* Scoped to the card, not the stub, so the one rule also outranks the owner's
-	   wide caption — both roles read the gamerules the same way here. */
 	.challenge-card .meta-rules {
 		padding-inline: var(--inset);
 		text-align: left;

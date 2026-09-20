@@ -1,11 +1,11 @@
 # Translation component: challenge page (/game/:id, before the game exists).
 # Source template: src/server/views/challenge.njk
 
-title = "Challenge"                # The browser tab title, for owner and visitor alike.
-visitor_title = "Open Challenge"   # The visitor's heading. The owner's is index's `challenge_friend`.
+title = "Challenge" # The browser tab title
+visitor_title = "Open Challenge" # The visitor's heading. The owner's is index's `challenge_friend`.
+share_prompt = "Send this link to your friend to play:"
+copy_link = "Copy link" # The link's tooltip
+copied = "Copied"
+qr_prompt = "Or have them scan this QR code:"
 accept = "Accept"
 cancel = "Cancel"
-copy_link = "Copy link"                                  # The copy control's tooltip; the control itself shows the link.
-copied = "Copied"                                        # Replaces the link for a moment once it's copied.
-share_prompt = "Send this link to your friend to play:"  # What the owner does next.
-qr_prompt = "Or have them scan this QR code:"

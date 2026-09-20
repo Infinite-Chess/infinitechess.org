@@ -88,7 +88,6 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		texturesReady = resetColor();
 	});
 
-	/** See {@link BoardTiles.ready}. */
 	function ready(): Promise<void> {
 		return texturesReady;
 	}

@@ -278,8 +278,7 @@ button:disabled {
    Auth card (shared by the login & register pages)
    ============================================================ */
 
-/* A raised panel lifted off the page. Carries the surface only — whoever wears it
-   sizes it and lays out its contents. */
+/* A raised panel lifted off the page. Generic - surface only. */
 .card,
 .auth-card {
 	display: flex;
@@ -290,8 +289,7 @@ button:disabled {
 	overflow: hidden;
 }
 
-/* The card holding an auth form. Each page's own stylesheet positions it
-   (centered over the checkerboard); these rules size the card itself. */
+/* A card holding an auth form. */
 .auth-card {
 	flex-direction: column;
 	gap: 20px;
@@ -510,16 +508,13 @@ button:disabled {
 /* ============================================================
    Seek properties — the variant / time control / mode line a seek reads as, on a
    lobby row, the game and analysis pages' meta card, and the challenge card.
-   Lives here so the `seekProperties` macro lays out the same on any page that
-   renders it. Each page sets its own type size and color over the top.
+   Each page sets its own type size and color over the top.
    ============================================================ */
 
 .meta-info {
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;
-	/* Rows are deliberately tighter than columns: the icons already make each
-	   wrapped line tall, so an equal row gap reads as a paragraph break. */
 	gap: 0.2em 0.5em;
 }
 

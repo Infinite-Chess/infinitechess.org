@@ -55,7 +55,7 @@ function buildSourceVariantMetadata(gamefile: GameFile): SourceVariantMetaData {
 	if (!gamefile.variant) return {};
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(gamefile.dateTimestamp);
 	return {
-		Variant: variantregistry.getEnglishName(gamefile.variant.code, t.shared),
+		Variant: variantregistry.getEnglishName(gamefile.variant.code),
 		UTCDate,
 		UTCTime,
 	};
@@ -87,7 +87,7 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 	const resolved = variantregistry.resolveCode(metadata.Variant);
 	if (resolved !== undefined) {
 		// Normalize to English display name
-		metadata.Variant = variantregistry.getEnglishName(resolved, t.shared);
+		metadata.Variant = variantregistry.getEnglishName(resolved);
 	} else {
 		// Unrecognized Variant: Treat as if no variant was specified
 		delete metadata.Variant;

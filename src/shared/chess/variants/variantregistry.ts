@@ -53,6 +53,10 @@ const VARIANT_GROUP_ICONS: Record<VariantGroup | 'custom', string> = {
 /** An array of all valid variant groups. */
 const VARIANT_GROUPS = Object.keys(VARIANT_GROUP_ICONS) as VariantGroup[];
 
+/** What a custom position is named in notation. Hardcoded like every
+ * {@link VariantRegistryEntry.name}: notation never translates. */
+const CUSTOM_ENGLISH_NAME = 'Custom Variant';
+
 // Variant Registry ------------------------------------------------------------
 
 const REGISTRY = {
@@ -233,11 +237,8 @@ function resolveCode(variantName: string | undefined): VariantCode | undefined {
  * Use {@link getDisplayName} for anything a user reads.
  * @param variantCode - The variant code to look up. Null for a custom position.
  */
-function getEnglishName(
-	variantCode: VariantCode | null,
-	sharedT: ScriptTranslations['shared'],
-): string {
-	return variantCode ? REGISTRY[variantCode].name : sharedT.variant_groups.custom.display_label; // Translate 'Custom Variant'
+function getEnglishName(variantCode: VariantCode | null): string {
+	return variantCode ? REGISTRY[variantCode].name : CUSTOM_ENGLISH_NAME;
 }
 
 /**

@@ -66,7 +66,7 @@ async function load(ctx: RenderContext, boardsim: BoardPreview): Promise<void> {
 
 /** Draws the board's start position into the context, framed to fit its canvas. */
 function render(ctx: RenderContext, boardsim: BoardPreview): void {
-	// The canvas may have resized since the last draw, and the framing below reads its aspect.
+	// The canvas may have resized since the last draw
 	ctx.camera.syncCanvasDimensions();
 
 	const { gameRules } = boardsim;
