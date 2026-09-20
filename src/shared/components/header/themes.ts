@@ -6,7 +6,6 @@
  */
 
 import type { Color } from '../../types/color.js';
-import type { PieceColorGroup } from '../../chess/util/piecethemes.js';
 
 import jsutil from '../../util/jsutil.js';
 
@@ -27,7 +26,6 @@ const checkHighlightColor = 'checkHighlightColor';
 const boxOutlineColor = 'boxOutlineColor';
 const annoteSquareColor = 'annoteSquareColor';
 const annoteArrowColor = 'annoteArrowColor';
-const pieceTheme = 'pieceTheme';
 
 // Types -----------------------------------------------------------------------
 
@@ -43,7 +41,6 @@ interface ThemeProperties {
 	[boxOutlineColor]: Color;
 	[annoteSquareColor]: Color;
 	[annoteArrowColor]: Color;
-	[pieceTheme]: Partial<PieceColorGroup>;
 }
 
 /** What a theme is, and the properties it may override. */
@@ -74,7 +71,6 @@ const DEFAULTS: ThemeProperties = {
 	[boxOutlineColor]: [1, 1, 1, 0.45],
 	[annoteSquareColor]: [1, 0, 0, 0.35], // .43 with no .08 offset to squares.   This matches the Ray color exactly, though
 	[annoteArrowColor]: [1, 0.65, 0.15, 0.8],
-	[pieceTheme]: {},
 };
 
 /** The theme a user is given until they pick another. */
@@ -277,35 +273,6 @@ const THEMES: { [themeName: string]: Theme } = {
 	// 	[a]: [0.95, 0.95, 0.95, 1],
 	// 	[b]: [0.49, 0.42, 0.68, 1],
 	// },
-
-	// Holiday themes
-
-	// halloween: {
-	// 	[lightTiles]: [1, 0.65, 0.4, 1],
-	// 	[darkTiles]: [1, 0.4, 0, 1],
-	// 	[legalMovesHighlightColor_Friendly]: [0.6, 0, 1, 0.55],
-	// 	[legalMovesHighlightColor_Opponent]: [0, 0.5, 0, 0.35],
-	// 	[legalMovesHighlightColor_Premove]: [1, 0.15, 0, 0.65],
-	// 	[lastMoveHighlightColor]: [0.5, 0.2, 0, 0.75],
-	// 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0.5, 0.76],
-	// 	[pieceTheme]: {
-	// 		[players.WHITE]: [0.6, 0.5, 0.45, 1],
-	// 		[players.BLACK]: [0.8, 0, 1, 1],
-	// 	},
-	// },
-	// christmas: {
-	// 	[lightTiles]: [0.60, 0.93, 1, 1],
-	// 	[darkTiles]: [0 / 255, 199 / 255, 238 / 255, 1],
-	// 	[legalMovesHighlightColor_Friendly]: [0, 0, 1, 0.35],
-	// 	[legalMovesHighlightColor_Opponent]: [1, 0.7, 0, 0.35],
-	// 	[legalMovesHighlightColor_Premove]: [0.25, 0, 0.7, 0.3],
-	// 	[lastMoveHighlightColor]: [0, 0, 0.3, 0.35],
-	// 	[checkHighlightColor]: /* checkHighlightColor */ [1, 0, 0, 0.7],
-	// 	[pieceTheme]: {
-	// 		[players.WHITE]: [0.4, 1, 0.4, 1],
-	// 		[players.BLACK]: [1, 0.2, 0.2, 1],
-	// 	},
-	// }
 };
 
 // Functions -------------------------------------------------------------------

@@ -40,7 +40,6 @@ import perspective from '../rendering/perspective.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import { SettingsBus } from '../../util/SettingsBus.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 // Types -----------------------------------------------------------------------
@@ -72,25 +71,6 @@ let animateLastMoveTimeoutID: ReturnType<typeof setTimeout> | undefined;
  * move is animated, after rejoining a game.
  */
 const delayOfLatestMoveAnimationOnRejoinMs = 150;
-
-// Listeners -------------------------------------------------------------------
-
-// Regenerate piece textures and rebuild the promotion UI whenever the theme changes.
-SettingsBus.addEventListener('theme-change', () => {
-	const gamefile = loadedGamefile;
-	if (!gamefile) return;
-	imagecache.deleteImageCache();
-	// texturecache.deleteTextureCache(gl);
-	imagecache.initImagesForGame(gamefile).then(() => {
-		// Regenerate piece textures with the new tinted images
-		texturecache.initTexturesForGame(gl, gamefile);
-		piecemodels.regenAll(gamescene.getGameContext(), gamefile, mesh!);
-	});
-	// Reinit the promotion UI
-	guipromotion.resetUI();
-	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(gamefile.gameRules.turnOrder);
-	guipromotion.initUI(gamefile.gameRules.promotion?.pieces, uniquePlayers);
-});
 
 // Functions -------------------------------------------------------------------
 

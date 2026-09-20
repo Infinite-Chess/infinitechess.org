@@ -20,8 +20,6 @@ import type { RawType } from '../../../../../shared/chess/util/typeutil.js';
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
 
-import preferences from '../../util/preferences.js';
-
 // Variables -------------------------------------------------------------------
 
 /** Stores fetched SVG elements, keyed by their unique svg id (e.g., 'pawn-white'). These ids are on the svg elements themselves. */
@@ -179,7 +177,7 @@ function getNeededSVGLocations(types: number[]): Set<string> {
 
 /**
  * Retrieves and prepares cloned SVG elements for the specified piece types from the cache.
- * It automatically applies our theme's tint as well.
+ * It automatically applies the player's tint as well.
  * @param types - An array of piece type numbers to get SVGs for.
  * @param [width] - Optional width to set on the SVG elements.
  * @param [height] - Optional height to set on the SVG elements.
@@ -189,8 +187,8 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 	let failed: boolean = false;
 	const svgs: SVGElement[] = [];
 	l: for (const type of types) {
-		const tint = preferences.getTintColorOfType(type);
 		const [raw, c] = typeutil.splitType(type);
+		const tint = piecethemes.getBaseColorForType(raw, c);
 		const baseId = `${typeutil.getRawTypeStr(raw)}`;
 		const colorExts: string[] = piecethemes.getSVGColorPriority(c);
 		for (const c of colorExts) {

@@ -178,7 +178,6 @@ function genVoidModel(
 	mesh: Mesh,
 	type: number,
 ): MeshData {
-	// const voidColor = preferences.getTintColorOfType(type); // Black, from the pieceTheme
 	const voidColor = ctx.gl.getParameter(ctx.gl.COLOR_CLEAR_VALUE); // Same color as the sky / void space star field. HAS NO AFFECT SINCE IT'S A MASK.
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(voidColor);
 	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);

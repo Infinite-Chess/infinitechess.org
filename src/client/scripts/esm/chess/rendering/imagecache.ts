@@ -6,8 +6,8 @@
  * It assumes that `initImagesForGame` is called before any
  * attempt to retrieve an image using `getPieceImage`.
  *
- * Images depend only on piece type and theme, never the loaded game,
- * so the cache persists across games. Only a theme change invalidates it.
+ * Images depend only on piece type, never the loaded game,
+ * so the cache persists across games.
  */
 
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
@@ -105,16 +105,9 @@ function getPieceImage(type: number): HTMLImageElement {
 	return image;
 }
 
-/** Clears the image cache. Call this when the piece theme changes. */
-function deleteImageCache(): void {
-	// console.log("Deleting image cache.");
-	cachedImages = {};
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
 	initImagesForGame,
 	getPieceImage,
-	deleteImageCache,
 };

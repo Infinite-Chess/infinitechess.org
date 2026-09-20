@@ -13,9 +13,7 @@ import type { Color } from '../../../../shared/types/color.js';
 
 import themes from '../../../../shared/components/header/themes.js';
 import jsutil from '../../../../shared/util/jsutil.js';
-import typeutil from '../../../../shared/chess/util/typeutil.js';
 import timeutil from '../../../../shared/util/timeutil.js';
-import piecethemes, { PieceColorGroup } from '../../../../shared/chess/util/piecethemes.js';
 
 import docutil from './docutil.js';
 import LocalStorage from './LocalStorage.js';
@@ -407,39 +405,6 @@ function getAnnoteArrowColor(): Color {
 	return themes.getPropertyOfTheme(boardColorName, 'annoteArrowColor');
 }
 
-/** Returns the tint color for a piece of the given type, according to our current theme. */
-function getTintColorOfType(type: number): Color {
-	const [r, p] = typeutil.splitType(type);
-
-	const baseColor: Color = piecethemes.getBaseColorForType(r, p);
-
-	const boardColorName: string = getBoardColor();
-	const themePieceColors: Partial<PieceColorGroup> = themes.getPropertyOfTheme(
-		boardColorName,
-		'pieceTheme',
-	);
-	const tint: Color = themePieceColors[p] ?? [1, 1, 1, 1];
-
-	// Multiply the colors together to get the final color
-	return [
-		baseColor[0] * tint[0],
-		baseColor[1] * tint[1],
-		baseColor[2] * tint[2],
-		baseColor[3] * tint[3],
-	];
-}
-
-// /**
-//  * Determines the theme based on the current date.
-//  * @returns The theme for the current date ('halloween', 'christmas', or 'default').
-//  */
-// function getHollidayTheme() {
-// 	if (timeutil.isCurrentDateWithinRange(10, 25, 10, 31)) return 'halloween'; // Halloween week (October 25 to 31)
-// 	// if (timeutil.isCurrentDateWithinRange(11, 23, 11, 29)) return 'thanksgiving'; // Thanksgiving week (November 23 to 29)
-// 	if (timeutil.isCurrentDateWithinRange(12, 19, 12, 25)) return 'christmas'; // Christmas week (December 19 to 25)
-// 	return themes.DEFAULT_THEME; // Default theme if not in a holiday week
-// }
-
 /*
  * The commented stuff below is ONLY used for fast
  * modifying of theme players using the keyboard keys!
@@ -590,7 +555,6 @@ export default {
 	getBoxOutlineColor,
 	getAnnoteSquareColor,
 	getAnnoteArrowColor,
-	getTintColorOfType,
 
 	// Only used for temporarily micro adjusting theme properties & colors
 	// update,
