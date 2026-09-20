@@ -209,9 +209,9 @@ const MAX_POSITIONS_PER_CHUNK = 5;
 const MIN_POSITIONS_PER_CHUNK = 2;
 
 /** Depth of a review whose chunks all run in one parallel round. */
-const MAX_REVIEW_DEPTH = 15;
+const MAX_REVIEW_DEPTH = 19;
 /** Depth floor, however many rounds a review takes. */
-const MIN_REVIEW_DEPTH = 9;
+const MIN_REVIEW_DEPTH = 13;
 /** Transposition-table size handed to each review worker. */
 const REVIEW_HASH_MB = 16;
 /**
