@@ -12,6 +12,7 @@ import type { ServerboundRoutedMessage } from '../../shared/transport/serverboun
 import gameRouter from '../game/gamemanager/gameRouter.js';
 import lobbyRouter from '../game/seeksmanager/lobbyRouter.js';
 import generalRouter from './generalRouter.js';
+import challengeRouter from '../game/seeksmanager/challengeRouter.js';
 
 /** Routes a validated socket message to the handler for its route. */
 function route(ws: CustomWebSocket, message: ServerboundRoutedMessage): void {
@@ -22,6 +23,9 @@ function route(ws: CustomWebSocket, message: ServerboundRoutedMessage): void {
 			break;
 		case 'lobby':
 			lobbyRouter.route(ws, message.contents);
+			break;
+		case 'challenge':
+			challengeRouter.route(ws, message.contents);
 			break;
 		case 'game':
 			gameRouter.route(ws, message.contents);

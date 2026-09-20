@@ -9,6 +9,7 @@
 import type {
 	ClientboundLobbyMessage,
 	ClientboundGameMessage,
+	ClientboundChallengeMessage,
 } from '../../../../shared/transport/clientbound.js';
 
 import { EventBus } from '../../../../shared/util/EventBus.js';
@@ -33,6 +34,7 @@ interface SocketBusEvents {
 
 	// --- Incoming server messages ---
 	lobby: ClientboundLobbyMessage;
+	challenge: ClientboundChallengeMessage;
 	game: ClientboundGameMessage;
 }
 

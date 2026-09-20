@@ -12,7 +12,6 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import leaderboardregistry from '../../../../../shared/chess/variants/leaderboardregistry.js';
 
 import lobby from './lobby.js';
-import toast from '../../components/toast.js';
 import timecontrols from './timecontrols.js';
 import variantselector from '../../board/variantselector/variantselector.js';
 import modifierselector from '../../board/variantselector/modifierselector.js';
@@ -108,9 +107,8 @@ function initModal(): void {
 	});
 
 	element_modalSubmit.addEventListener('click', () => {
-		if (currentMode === 'online') handleOnlineSeek();
-		else if (currentMode === 'friend')
-			toast.show('Friend challenge flow not implemented yet', { error: true });
+		if (currentMode === 'online') handleSeek(false);
+		else if (currentMode === 'friend') handleSeek(true);
 		else if (currentMode === 'computer') handleComputerGame();
 		else console.error('Invalid modal mode:', currentMode);
 	});
@@ -156,8 +154,11 @@ function getSelectedColor(): typeof players.WHITE | typeof players.BLACK | null 
 	throw new Error(`Invalid side selection: ${sideVal}`);
 }
 
-/** Reads the online seek form state and sends a createseek request via the lobby. */
-function handleOnlineSeek(): void {
+/**
+ * Reads the seek form state and sends a createseek request via the lobby.
+ * @param isPrivate - Whether it's a "Challenge a friend" invite, rather than a lobby seek.
+ */
+function handleSeek(isPrivate: boolean): void {
 	const variant = variantselector.getSeekVariant();
 	if (variant === null) return; // Invalid selection (e.g. unparsable icn or illegal position)
 
@@ -175,6 +176,7 @@ function handleOnlineSeek(): void {
 		color,
 		mode,
 		modifiers: modifiers.length > 0 ? modifiers : undefined,
+		private: isPrivate,
 	});
 	close();
 }

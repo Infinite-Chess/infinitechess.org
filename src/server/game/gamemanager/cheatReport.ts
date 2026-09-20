@@ -21,7 +21,7 @@ import moveutil from '../../../shared/chess/logic/moveutil.js';
 import chat from './chat.js';
 import logEvents from '../../utility/logEvents.js';
 import gameLogger from './gameLogger.js';
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
 import gameLifecycle from './gameLifecycle.js';
@@ -96,13 +96,13 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	for (const [colorStr, { socket: ws }] of Object.entries(servergame.match.playerData)) {
 		if (!ws) continue; // Not connected, can't send message
 		if (Number(colorStr) === opponentColor) {
-			socketsend.send(ws, 'general', 'toast-error', ws.t.responses.game.you_cheated);
+			socketSend.send(ws, 'general', 'toast-error', ws.t.responses.game.you_cheated);
 		} else {
-			socketsend.send(ws, 'general', 'toast', ws.t.responses.game.opponent_cheated);
+			socketSend.send(ws, 'general', 'toast', ws.t.responses.game.opponent_cheated);
 		}
 	}
 	for (const ws of servergame.spectators) {
-		socketsend.send(ws, 'general', 'toast', ws.t.responses.game.cheat_detected);
+		socketSend.send(ws, 'general', 'toast', ws.t.responses.game.cheat_detected);
 	}
 
 	concludeReportedGame(servergame, { condition: 'aborted' }, colorThatPlayedPerpetratingMove);
@@ -142,7 +142,7 @@ function concludeReportedGame(
 				Number(color) as Player,
 			),
 		};
-		socketsend.send(data.socket, 'game', 'gamestate', message);
+		socketSend.send(data.socket, 'game', 'gamestate', message);
 	}
 
 	// Spectators get the same state, minus the participant overlay.

@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block head %}
-{# SSR→client game setup and participant state. #}
+{# SSR→client channel: the game's setup, and the viewer's role in it. #}
 <script>window.gamePageData = {{ gamePageData | json | safe }};</script>
 {% endblock %}
 
@@ -16,6 +16,7 @@
 
 {# ── Macros ────────────────────────────────────────────#}
 {% from "components/user.njk" import usernameEmbed %}
+{% from "components/seekproperties.njk" import seekProperties, seekRules %}
 
 {# Regions tagged "SSR-OWNED" are rendered from `meta` + `gamePageData` and must never be
    re-rendered by the client — it only writes live deltas into them (clocks, `tempo`, `eloChange`). #}
@@ -87,33 +88,8 @@
 		<div class="game-meta panel">
 
 			{# Original seek's properties — SSR-OWNED. #}
-			<div class="meta-info">
-				<span class="meta-item">
-					<svg class="meta-icon {{ meta.variant.iconId }}"><use href="#{{ meta.variant.iconId }}"/></svg>
-					<span class="meta-variant">{{ meta.variant.name }}</span>
-				</span>
-				•
-				<span class="meta-item" title="{{ meta.speed.category | capitalize }}">
-					<svg class="meta-icon {{ meta.speed.iconId }}"><use href="#{{ meta.speed.iconId }}"/></svg>
-					<span>{{ meta.timeControl }}</span>
-				</span>
-				•
-				<span>{{ "Rated" if meta.rated else "Casual" }}</span>
-			</div>
-
-			{# Gamerule modifications. Omitted when the game plays by the standard rules.
-			   Matches the gamerule modifications variant preview tooltips show on the seek. #}
-			{% if meta.rules.length %}
-			<p class="meta-rules">
-				{%- for line in meta.rules %}{{ " " if not loop.first }}
-				{%- if line.kind == "text" %}{{ line.text }}
-				{%- else %}<span class="promotion-icons piece-silhouette">{{ line.prefix }}
-					{# Only the piece icons are `| safe`: this markup is our own svg asset files, never input. #}
-					{%- for svg in line.svgs %}{{ svg | safe }}{% endfor %}{{ line.suffix }}</span>
-				{%- endif %}
-				{%- endfor -%}
-			</p>
-			{% endif %}
+			{{ seekProperties(meta.seekProperties) }}
+			{{ seekRules(meta.seekProperties.rules) }}
 
 			{# Started X ago + live spectator count. `#meta-started` carries the creation epoch so the
 			   client can re-derive the ticking string. The client sets the spectator count, hiding it if none. #}

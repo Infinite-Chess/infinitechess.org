@@ -12,12 +12,14 @@ import validators from '../../shared/util/validators.js';
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import send404 from '../middleware/send404.js';
+import manifest from '../config/manifest.js';
 import turnstile from '../controllers/turnstile.js';
 import resolveAuth from '../middleware/resolveAuth.js';
 import renderContext from '../utility/renderContext.js';
 import gamePageController from '../controllers/gamePageController.js';
 import registerController from '../controllers/registerController.js';
 import analysisPageController from '../controllers/analysisPageController.js';
+import challengePageController from '../controllers/challengePageController.js';
 import verifyAccountController from '../controllers/verifyAccountController.js';
 import passwordResetController from '../controllers/passwordResetController.js';
 import componentTranslationLoader from '../config/componentTranslationLoader.js';
@@ -32,6 +34,9 @@ const AUTH_INPUT_MAX_LENGTHS = {
 	EMAIL: validators.MAX_EMAIL_LENGTH,
 	PASSWORD: validators.MAX_PASSWORD_LENGTH,
 };
+
+/** The checkmate-practice engine's worker script, as keyed in the asset manifest. */
+const PRACTICE_WORKER_SOURCE = 'scripts/esm/game/chess/engines/enginecheckmatepractice.worker.ts';
 
 // Helpers ---------------------------------------------------------------------
 
@@ -87,6 +92,10 @@ page('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.n
 page(
 	'/game/:id/:color(w|b)?',
 	(req: Request, res: Response) => {
+		// Before its game exists, the id names a private seek.
+		const challengeState = challengePageController.getPageState(req);
+		if (challengeState !== undefined) return res.render('challenge.njk', challengeState);
+		// Not a private seek, it must be a game id.
 		const state = gamePageController.getPageState(req);
 		if (state === undefined) return send404(req, res); // Malformed or nonexistent id
 		res.render('game.njk', state);
@@ -135,7 +144,7 @@ page('/member(.html)?/:member', (_req: Request, res: Response) => res.render('me
 page('/admin(.html)?', (_req: Request, res: Response) => res.render('admin.njk'));
 page('/icnvalidator(.html)?', (_req: Request, res: Response) => res.render('icnvalidator.njk')); // prettier-ignore
 page('/tutorial(.html)?', (_req: Request, res: Response) => res.render('tutorial.njk'));
-page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render('checkmatepractice.njk')); // prettier-ignore
+page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render('checkmatepractice.njk', { checkmatePracticePageData: manifest.getEngineAssets(PRACTICE_WORKER_SOURCE) })); // prettier-ignore
 page('/editor(.html)?', (_req: Request, res: Response) => res.render('editor.njk'));
 page('/patron(.html)?', (_req: Request, res: Response) => res.render('patron.njk'));
 

@@ -9,6 +9,7 @@
 
 import type { ServerGame } from './serverGameTypes.js';
 
+import activeSeeks from '../seeksmanager/activeSeeks.js';
 import gamesManager from '../../database/gamesManager.js';
 import chatEntriesManager from '../../database/chatEntriesManager.js';
 
@@ -31,16 +32,20 @@ const activeGames: Record<number, ServerGame> = {};
 // Membership ------------------------------------------------------------------
 
 /**
- * Returns an id that is unique across the games table, the
- * live games in memory, and any chat entries still holding it.
- * The game will receive this same id in the database when it is logged.
+ * Returns an id that is unique across the games table, the live games in memory, the
+ * open seeks (each reserving the id of the game it becomes), and any chat entries still
+ * holding it. The game will receive this same id in the database when it is logged.
  * @throws If a database error occurs.
  */
 function issueUniqueId(): number {
 	let id: number;
 	do {
 		id = gamesManager.genUniqueID(); // This is already unique against all game_ids in the table.
-	} while (activeGames[id] !== undefined || chatEntriesManager.countOfGame(id) > 0); // Repeat until we have an id unique against all claimed ids.
+	} while (
+		activeGames[id] !== undefined ||
+		activeSeeks.getByID(id) !== undefined ||
+		chatEntriesManager.countOfGame(id) > 0 // Rare orphaned rows can survive failed cleanup.
+	);
 	return id;
 }
 

@@ -370,21 +370,6 @@ svg.bg-omega {
 	overflow: hidden;
 }
 
-.cell-icon {
-	width: 1.389em;
-	aspect-ratio: 1;
-	flex-shrink: 0;
-}
-
-.cell-icon.modifier-icon {
-	width: 1.5em;
-}
-
-.variant-icons {
-	display: flex;
-	align-items: center;
-}
-
 .seek-row:hover:not([aria-disabled='true']) {
 	color: var(--c-text-emphasis);
 	background: rgb(255 88 0 / 40%);

@@ -106,13 +106,13 @@ function detect(boardsim: Board): GameConclusion | undefined {
 		});
 
 		function addSurplus(flux: Flux): void {
-			// If there is a DEFICIT with this exact same key, delete that instead! It's been canceled-out.
+			// If there is a DEFICIT with this exact same key, delete that instead! It's been cancelled-out.
 			if (deficit.has(flux)) deficit.delete(flux);
 			else surplus.add(flux);
 		}
 
 		function addDeficit(flux: Flux): void {
-			// If there is a SURPLUS with this exact same key, delete that instead! It's been canceled-out.
+			// If there is a SURPLUS with this exact same key, delete that instead! It's been cancelled-out.
 			if (surplus.has(flux)) surplus.delete(flux);
 			else deficit.add(flux);
 		}

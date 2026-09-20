@@ -13,7 +13,7 @@ import { ServerboundSchema } from '../../shared/transport/serverbound.js';
 
 import zodLogger from '../utility/zodLogger.js';
 import logEvents from '../utility/logEvents.js';
-import socketsend from './socketSend.js';
+import socketSend from './socketSend.js';
 import requestMeter from '../utility/requestMeter.js';
 import socketLogger from './socketLogger.js';
 import messageRouter from './messageRouter.js';
@@ -42,23 +42,23 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 		// Deliberately unlogged and unmetered. An echo isn't traffic the client chose to send — we
 		// oblige one per message WE send — so charging their budget for our own send volume would
 		// close honest sockets. Safe: it's validated above, and handling one is an O(1) clearTimeout.
-		socketsend.cancelEchoTimer(ws, message.contents);
+		socketSend.cancelEchoTimer(ws, message.contents);
 		return;
 	}
 
 	if (!logAndRateLimitMessage(ws, messageStr)) return; // Rate limited; socket already closed.
 
 	// Send our own echo
-	socketsend.receipt(ws, 'echo', message.id);
+	socketSend.receipt(ws, 'echo', message.id);
 	// Their message is evidence the connection is alive
-	socketsend.rescheduleHeartbeatTimer(ws);
+	socketSend.rescheduleHeartbeatTimer(ws);
 	try {
 		messageRouter.route(ws, message);
 	} finally {
 		// Acked even if the handler threw. The client releases its lock on this action when
 		// the ack lands, and an action stuck outstanding forever is worse than one acked
 		// after failing — the ack promises the message was handled, not that it succeeded.
-		if (message.needsack) socketsend.receipt(ws, 'ack', message.id);
+		if (message.needsack) socketSend.receipt(ws, 'ack', message.id);
 	}
 }
 

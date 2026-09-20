@@ -1,27 +1,25 @@
 // src/server/game/seeksmanager/activeSeeks.ts
 
 /**
- * Owns the collection of open lobby seeks, every way of looking one up — by id,
- * or by the user who owns it — and the broadcast that pushes the live list out.
+ * This script owns the collection of open seeks — public lobby seeks and private challenges —
+ * their lookups, and the live seek list sent to lobby viewers.
  *
- * The seeksmanager counterpart of `activeGames.ts` — but unlike it, mutating this
- * collection broadcasts by default: a stale lobby list is visible to every viewer.
- * `lobbyManager.ts` sends every other lobby-bound message.
+ * The seeksmanager counterpart of `activeGames.ts`. Every mutation is a complete operation
+ * that broadcasts the lobby list once, if it changed.
+ *
+ * Each private seek owns its page subscriptions and expiry timer, so deleting it also
+ * detaches its viewers and stops its timer.
  */
 
+import type { OutSeek } from '../../../shared/transport/domain.js';
 import type { AuthSeek } from './seekUtility.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { OutSeek, SeekId } from '../../../shared/transport/domain.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import seekUtility from './seekUtility.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
 import lobbySubscribers from './lobbySubscribers.js';
-
-// Constants -------------------------------------------------------------------
-
-/** Whether to log new seek creations/deletions to the console */
-const PRINT_SEEK_CHANGES = true;
 
 // State -----------------------------------------------------------------------
 
@@ -30,96 +28,131 @@ const seeks: AuthSeek[] = [];
 
 // Membership ------------------------------------------------------------------
 
-/** Adds a newly created seek to the collection, and broadcasts the new list. */
+/** Adds a newly created seek, replacing any the owner already had — they hold one at a time. */
 function add(seek: AuthSeek): void {
+	const replacedPublic = removeOfOwner(seek.owner, false);
+
 	seeks.push(seek);
 
-	broadcast();
-
-	if (PRINT_SEEK_CHANGES) console.log(`Created seek for user ${JSON.stringify(seek.owner)}`);
+	if (replacedPublic || !seek.private) broadcast();
 }
 
-/**
- * Deletes a seek from the collection by its id, typically when it is cancelled or accepted.
- * @param options.dontBroadcast - If true, prevents broadcasting the changes to all clients. [false]
- * @returns Whether a seek was deleted.
- */
-function deleteByID(
-	id: string,
-	{ dontBroadcast = false }: { dontBroadcast?: boolean } = {},
-): boolean {
-	const index = seeks.findIndex((seek) => seek.id === id);
-	if (index === -1) return false; // No seek change
-
-	const seek = seeks.splice(index, 1)[0]!; // Delete the seek
-
-	if (!dontBroadcast) broadcast();
-
-	if (PRINT_SEEK_CHANGES) console.log(`Deleted seek for user ${JSON.stringify(seek.owner)}`);
-
-	return true;
+/** Deletes the seek of the given id, typically when its owner cancels it, or it expires. */
+function deleteByID(id: number): void {
+	if (removeByID(id, false)) broadcast();
 }
 
 /**
  * Deletes every seek owned by the given user, whether a member or a browser.
- * @param options.dontBroadcast - If true, prevents broadcasting the changes to all clients. [false]
- * @returns Whether any seek was deleted.
+ * @param sparePrivate - Keeps their private seek, which outlives their leaving the lobby.
  */
-function deleteOfUser(info: AuthMemberInfo, { dontBroadcast = false } = {}): boolean {
-	let deletedSeek = false;
+function deleteOfOwner(info: AuthMemberInfo, sparePrivate = false): void {
+	if (removeOfOwner(info, sparePrivate)) broadcast();
+}
+
+/** Deletes any open seek owned by the given user, even if they're offline. */
+function deleteOfUser(user_id: number): void {
+	const seek = seeks.find((seek) => seek.owner.signedIn && seek.owner.user_id === user_id);
+	if (seek) deleteOfOwner(seek.owner);
+}
+
+/**
+ * Deletes the seek that just became a live game under its own id,
+ * along with every participant's other seek.
+ * @param owners - The new game's players.
+ */
+function deleteForGame(gameID: number, owners: AuthMemberInfo[]): void {
+	let listChanged = removeByID(gameID, true);
+	for (const owner of owners) {
+		if (removeOfOwner(owner, false)) listChanged = true;
+	}
+	if (listChanged) broadcast();
+}
+
+/**
+ * Removes a seek by id, silently.
+ * @param becomingGame - States that the seek isn't dying, but graduating into a live game
+ * under its own id, suppressing the `gone` push to its viewers.
+ * @returns Whether the lobby's list changed: false if no seek, or only a private one, was removed.
+ */
+function removeByID(id: number, becomingGame: boolean): boolean {
+	const index = seeks.findIndex((seek) => seek.id === id);
+	if (index === -1) return false; // No seek change
+
+	const seek = seeks.splice(index, 1)[0]!; // Delete the seek
+	releasePrivate(seek, becomingGame);
+
+	return !seek.private;
+}
+
+/**
+ * Removes every seek owned by the given user, silently.
+ * @param sparePrivate - See {@link deleteOfOwner}.
+ * @returns Whether the lobby's list changed: false if no seek, or only a private one, was removed.
+ */
+function removeOfOwner(info: AuthMemberInfo, sparePrivate: boolean): boolean {
+	let listChanged = false;
 	for (let i = seeks.length - 1; i >= 0; i--) {
 		const seek = seeks[i]!;
 		if (!memberInfoUtil.eq(info, seek.owner)) continue;
+		if (sparePrivate && seek.private) continue;
 		// Match! Delete
 		seeks.splice(i, 1); // Delete the seek
-		deletedSeek = true;
-		if (PRINT_SEEK_CHANGES)
-			console.log(`${info.signedIn ? `Deleted member's seek. Username: ${info.username}` : `Deleted browser's seek. Browser: ${info.browser_id}`}`); // prettier-ignore
+		releasePrivate(seek, false);
+		if (!seek.private) listChanged = true;
 	}
 
-	if (deletedSeek && !dontBroadcast) broadcast(); // Broadcast the change if an seek was deleted
-	return deletedSeek;
+	return listChanged;
+}
+
+/**
+ * Stops a removed seek's expiry timer and detaches its viewers.
+ * @param becomingGame - If true, suppresses the `gone` notification because the seek became a game.
+ */
+function releasePrivate(seek: AuthSeek, becomingGame: boolean): void {
+	if (!seek.private) return;
+	clearTimeout(seek.private.ownerAway?.expiry);
+	for (const ws of seek.private.subscribers) {
+		delete ws.metadata.subscriptions.challenge;
+		if (!becomingGame) socketSend.send(ws, 'challenge', 'challengestate', { kind: 'gone' });
+	}
 }
 
 // Lookups ---------------------------------------------------------------------
 
-/**
- * Tests if any active seek already has the ID provided.
- * This is used during generation of a unique seek id.
- * @returns true if the ID is already in use, false if it's available
- */
-function hasID(id: string): boolean {
-	return getByID(id) !== undefined;
-}
-
-/** Finds the seek with the given ID, if it exists. */
-function getByID(id: string): AuthSeek | undefined {
+/** Finds the seek with the given ID, public or private, if it exists. */
+function getByID(id: number): AuthSeek | undefined {
 	return seeks.find((seek) => seek.id === id);
 }
 
 /**
- * Returns the id of the user's open seek, if they have one. A user
+ * Returns the id of the user's open lobby seek, if they have one. A user
  * holds at most one at a time — creating one replaces any existing.
  */
-function getIDOfUser(info: AuthMemberInfo): SeekId | undefined {
-	return seeks.find((seek) => memberInfoUtil.eq(info, seek.owner))?.id;
+function getIDOfUser(info: AuthMemberInfo): number | undefined {
+	return seeks.find((seek) => !seek.private && memberInfoUtil.eq(info, seek.owner))?.id;
 }
 
-/** The collection projected into the form lobby viewers receive, sensitive data removed. */
+/** The lobby's seeks projected into the form its viewers receive, sensitive data removed. */
 function getAllSafe(): OutSeek[] {
-	return seeks.map((seek) => seekUtility.makeSafe(seek));
+	return seeks.filter((seek) => !seek.private).map((seek) => seekUtility.makeSafe(seek));
+}
+
+/** Every socket currently viewing an open private seek's challenge page. */
+function* getAllChallengeSockets(): Iterable<CustomWebSocket> {
+	for (const seek of seeks) if (seek.private) yield* seek.private.subscribers;
 }
 
 // Broadcasts ------------------------------------------------------------------
 
 /**
  * Broadcasts a live seek list update to all subbed clients, each told which seek is theirs.
- * Call whenever a seek is added or deleted.
+ * Call whenever a public seek is added or deleted.
  */
 function broadcast(): void {
 	const seekslist = getAllSafe();
 	for (const subbedSocket of lobbySubscribers.getAll()) {
-		socketsend.send(subbedSocket, 'lobby', 'seekslist', {
+		socketSend.send(subbedSocket, 'lobby', 'seekslist', {
 			seekslist,
 			ourseekid: getIDOfUser(subbedSocket.metadata.memberInfo),
 		});
@@ -132,12 +165,12 @@ export default {
 	// Membership
 	add,
 	deleteByID,
+	deleteOfOwner,
 	deleteOfUser,
+	deleteForGame,
 	// Lookups
-	hasID,
 	getByID,
 	getIDOfUser,
 	getAllSafe,
-	// Broadcasts
-	broadcast,
+	getAllChallengeSockets,
 };

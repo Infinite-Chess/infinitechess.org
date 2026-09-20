@@ -6,8 +6,8 @@
  * The board's geometry queries (bounding box, tile width) live in {@link boardgeometry}.
  *
  * This is a FACTORY: {@link createBoardTiles} builds one tile renderer bound to a
- * {@link RenderContext}. The interactive game and the variant-preview tooltip each
- * own one, with their own tile textures in their own gl context.
+ * {@link RenderContext}. The interactive game and each static preview own one, with
+ * their own tile textures in their own gl context.
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
@@ -35,6 +35,8 @@ import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.j
 export interface BoardTiles {
 	/** Loads and generates this context's tile textures. */
 	init(): Promise<void>;
+	/** Resolves once the textures match the current theme. Awaited before redrawing. */
+	ready(): Promise<void>;
 	/** Renders the board tiles (solid cover + fractal boards). */
 	render(noiseTextures?: NoiseTextures, uniforms?: Record<string, UniformValue>): void;
 	/** Renders the solid grey cover behind the tiles. */
@@ -78,10 +80,17 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 	/** Color [r,g,b,a] of the dark tiles. */
 	let darkTiles: Color;
 
+	/** The most recent texture generation. Replaced by every theme change. */
+	let texturesReady: Promise<void> = Promise.resolve();
+
 	SettingsBus.addEventListener('theme-change', () => {
 		// console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
-		resetColor();
+		texturesReady = resetColor();
 	});
+
+	function ready(): Promise<void> {
+		return texturesReady;
+	}
 
 	// Initialization --------------------------------------------------------------
 
@@ -89,9 +98,9 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		// Generate the tiles mask texture
 		const maskPromise = initMaskTexture();
 		// Generation main tile textures
-		const texturesPromise = resetColor();
+		texturesReady = resetColor();
 
-		await Promise.all([maskPromise, texturesPromise]);
+		await Promise.all([maskPromise, texturesReady]);
 	}
 
 	/**
@@ -314,7 +323,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		return ctx.renderable.createRenderable_GivenInfo(data, attributeInfo, 'TRIANGLES', 'board_uber_shader', textures); // prettier-ignore
 	}
 
-	return { init, render, renderSolidCover };
+	return { init, ready, render, renderSolidCover };
 }
 
 export { createBoardTiles };

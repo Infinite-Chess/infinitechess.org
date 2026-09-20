@@ -210,3 +210,11 @@ export interface GameSetup {
 	modifiers?: GameModifier[];
 	engineParticipant?: MatchInfo['engineParticipant'];
 }
+
+/** The human players of a game being started, by color, each with their socket if connected. */
+export type PlayerAssignments = PlayerGroup<{
+	identifier: AuthMemberInfo;
+	socket?: CustomWebSocket;
+	/** Whether a socketless player is away by choice: their opponent is then told immediately. */
+	leftVoluntarily?: boolean;
+}>;

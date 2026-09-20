@@ -48,7 +48,6 @@ import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
-import tconfig from '../../config/translationConfig.js';
 import urlUtils from '../../utility/urlUtils.js';
 import drawOffers from './drawOffers.js';
 import gameUtility from './gameUtility.js';
@@ -57,7 +56,6 @@ import chatEntryMapper from './chatEntryMapper.js';
 import ratingCalculation from '../../utility/ratingCalculation.js';
 import chatEntriesManager from '../../database/chatEntriesManager.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
-import componentTranslationLoader from '../../config/componentTranslationLoader.js';
 
 // Ratings ---------------------------------------------------------------------
 
@@ -208,10 +206,9 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 		Object.assign(ratings, getRatingDataForGamePlayers(match.playerData, match.variant));
 	}
 
-	const scriptT = componentTranslationLoader.getScript('shared', tconfig.DEFAULT_LANGUAGE); // Game metadata should only ever be in English
 	const variantCode = gameUtility.getVariantCode(match.variant);
 	// Names the GAME: a custom game is a "Custom Variant" game no matter what it's a position of.
-	const variantEnglishName = variantregistry.getName(variantCode, scriptT);
+	const variantEnglishName = variantregistry.getEnglishName(variantCode);
 	// These name the POSITION instead: which variant, at which revision of it, it was lifted from —
 	// a date that may long predate this game, so a custom game's are carried over verbatim from its
 	// seek rather than derived from its start. The game's own start time is a `games` table column.

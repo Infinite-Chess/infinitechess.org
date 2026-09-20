@@ -1,0 +1,287 @@
+/* src/client/css/challenge.css */
+
+/* The challenge page: its card, the start position preview, the seek, and the controls. */
+
+/* ==================================
+   The stub
+   ================================== */
+
+.challenge-stub {
+	/* Matches width of variant preview tooltip canvas (400px - 12px padding * 2) */
+	flex: 0 0 376px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	background: var(--c-surface-2);
+}
+
+#challenge-preview {
+	width: 100%;
+	height: auto;
+	aspect-ratio: 1;
+}
+
+/* On the owner's card they caption the preview; on the visitor's they read under the seek. */
+.challenge-stub .meta-rules {
+	padding: 0 20px;
+	text-align: center;
+}
+
+/* ==================================
+   The main half
+   ================================== */
+
+.challenge-main {
+	display: flex;
+	flex-direction: column;
+	gap: 22px;
+	min-width: 0;
+	max-width: 478px;
+	padding: 32px 34px;
+}
+
+/* The shared title centers itself; manually left-align it. */
+.challenge-main .auth-title {
+	justify-content: flex-start;
+}
+
+/* ==================================
+   The seek line
+   ================================== */
+
+/* The seek, with the visitor's copy of the gamerules tucked under it. */
+.challenge-props {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+/* Manually specify size and weight. */
+.meta-info {
+	color: var(--c-text-emphasis);
+	font-size: 0.95em;
+}
+
+/* Gamerule modifications. Rendered under the seek for a visitor, in the stub for the owner. */
+.meta-rules {
+	color: var(--c-text);
+	font-size: 0.8em;
+}
+
+/* ==================================
+   Actions
+   ================================== */
+
+/* Pushed to the foot of the column, filling the height the stub's preview sets. */
+.challenge-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-top: auto;
+}
+
+/* What to do next. */
+.challenge-lede {
+	color: var(--c-text-muted);
+	font-size: 0.95em;
+}
+
+/* ==================================
+   The share block
+   ================================== */
+
+/* The link, then the same invite as a code to scan. */
+.challenge-share {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+/* The link itself is the copy control: the whole pill is clickable. */
+.challenge-copy {
+	display: flex;
+	align-items: center;
+	gap: 0.55em;
+	width: 100%;
+	padding: 10px 12px;
+	background: var(--c-surface-2);
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+	color: var(--c-text);
+	font: inherit;
+	font-size: 0.9em;
+	text-align: left;
+	cursor: pointer;
+}
+
+.challenge-copy:hover {
+	border-color: var(--c-border-2);
+	color: var(--c-text-emphasis);
+}
+
+/* The clipboard, and the checkmark that replaces it. */
+.challenge-copy-icon,
+.challenge-copy-done .glyph {
+	width: 1.3em;
+	aspect-ratio: 1;
+	flex-shrink: 0;
+}
+
+.challenge-copy-url {
+	flex: 1;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+/* The inline copy confirmation: the link and the clipboard give way to it for a moment. */
+.challenge-copy-done {
+	display: none;
+	align-items: center;
+	gap: 0.55em;
+	color: var(--c-text-emphasis);
+	font-weight: 700;
+}
+
+/* .glyph carries no rules of its own, so each holder strokes it. */
+.challenge-copy-done .glyph {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 3;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.challenge-copy.copied .challenge-copy-icon,
+.challenge-copy.copied .challenge-copy-url {
+	display: none;
+}
+
+.challenge-copy.copied .challenge-copy-done {
+	display: flex;
+}
+
+.challenge-scan {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+}
+
+.challenge-qr-hint {
+	color: var(--c-text-muted);
+	font-size: 0.9em;
+}
+
+.challenge-qr {
+	flex-shrink: 0;
+	background: #fff;
+}
+
+/* The server pre-sized the width. */
+.challenge-qr svg {
+	display: block;
+}
+
+/* ==================================
+   The buttons
+   ================================== */
+
+/* One box both actions stand in. */
+.challenge-btn {
+	width: 100%;
+	padding: 10px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+/* Quiet counterpart to .btn-primary, for canceling. */
+.challenge-cancel {
+	margin-top: 6px;
+	background: none;
+	border-color: var(--c-border);
+	color: var(--c-text-muted);
+	font-weight: 600;
+}
+
+.challenge-cancel:hover {
+	background: var(--c-hover-overlay);
+	color: var(--c-text);
+}
+
+.challenge-cancel:active {
+	transform: translateY(1px);
+}
+
+/* Why Accept is disabled. */
+.challenge-reason {
+	color: var(--c-text-muted);
+	font-size: 0.9em;
+}
+
+/* ==================================
+   Narrow
+   ================================== */
+
+/* One column, the preview a full-bleed hero. The wrappers drop out with `display: contents`,
+   so their children lay out as the card's own items, orderable as one list. */
+@media (max-width: 800px) {
+	.challenge-card {
+		/* How far the card's content sits in from its edges (except the preview). */
+		--inset: 28px;
+		flex-direction: column;
+		/* Keep the canvas's backing-buffer size out of the card's intrinsic width. */
+		width: 100%;
+		max-width: 420px;
+		gap: 8px;
+		padding: var(--inset) 0;
+	}
+
+	.challenge-stub,
+	.challenge-main,
+	.challenge-props {
+		display: contents;
+	}
+
+	.auth-title {
+		order: 1;
+	}
+
+	#challenge-preview {
+		order: 2;
+	}
+
+	.meta-info {
+		order: 3;
+	}
+
+	.meta-rules {
+		order: 4;
+	}
+
+	.challenge-actions {
+		order: 5;
+		margin-inline: var(--inset);
+		padding-top: 20px;
+		border-top: 1px solid var(--c-border-muted);
+	}
+
+	#challenge-preview,
+	.meta-info,
+	.challenge-actions {
+		margin-top: 12px;
+	}
+
+	.auth-title,
+	.meta-info {
+		padding-inline: var(--inset);
+	}
+
+	.challenge-card .meta-rules {
+		padding-inline: var(--inset);
+		text-align: left;
+	}
+}

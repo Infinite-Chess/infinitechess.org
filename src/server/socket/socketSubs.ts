@@ -11,6 +11,7 @@ import type { CustomWebSocket } from './socketTypes.js';
 
 import gameManager from '../game/gamemanager/gameManager.js';
 import lobbyManager from '../game/seeksmanager/lobbyManager.js';
+import challengeManager from '../game/seeksmanager/challengeManager.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -45,6 +46,9 @@ function unsub(ws: CustomWebSocket, key: SubscriptionKey, involuntary: boolean):
 	switch (key) {
 		case 'lobby':
 			lobbyManager.unsubscribe(ws, involuntary);
+			break;
+		case 'challenge':
+			challengeManager.unsubscribe(ws, involuntary);
 			break;
 		case 'game':
 			gameManager.unsubscribeParticipant(ws, involuntary);

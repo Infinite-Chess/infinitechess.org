@@ -18,12 +18,10 @@ import engineregistry, { ValidEngine } from '../../../shared/chess/util/enginere
 import manifest from '../../config/manifest.js';
 import logEvents from '../../utility/logEvents.js';
 import createSeek from './createSeek.js';
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import gameManager from '../gamemanager/gameManager.js';
-import activeSeeks from './activeSeeks.js';
-import lobbyManager from './lobbyManager.js';
+import activeGames from '../gamemanager/activeGames.js';
 import activePlayers from '../gamemanager/activePlayers.js';
-import lobbySubscribers from './lobbySubscribers.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -38,7 +36,7 @@ const ONLINE_ENGINE: ValidEngine = 'apeiron';
  */
 function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	if (activePlayers.hasSocket(ws))
-		return socketsend.send(ws, 'general', 'toast', ws.t.responses.seeks.already_in_game);
+		return socketSend.send(ws, 'general', 'toast', ws.t.responses.seeks.already_in_game);
 
 	// The properties zod can't constrain, since they depend on the engine's capabilities.
 	// Unreachable via the client (it validates first), so reaching here is a hand-crafted message.
@@ -54,12 +52,10 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 		// Invalid variant; error already sent to the client.
 		if (!createSeek.validateVariant(ws, body.variant, true)) return;
 
-		// Delete their existing seeks
-		activeSeeks.deleteOfUser(ws.metadata.memberInfo);
-
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
 		const engineColor = typeutil.invertPlayer(humanColor);
 		gameManager.createGame(
+			activeGames.issueUniqueId(),
 			{
 				variant: body.variant,
 				time: body.time,
@@ -74,10 +70,6 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 			},
 			{ [humanColor]: { identifier: ws.metadata.memberInfo, socket: ws } },
 		);
-
-		// Unsubscribe them from the lobby.
-		lobbySubscribers.remove(ws);
-		lobbyManager.broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
 	} catch (error: unknown) {
 		gameManager.onGameCreationError(error, [ws]);
 	}

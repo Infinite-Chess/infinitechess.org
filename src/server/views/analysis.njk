@@ -9,22 +9,14 @@
 {% endblock %}
 
 {% block head %}
-{# SSR→client channel: optional game id to auto-load and the side to view it from, plus
-   the hashed engine-worker asset URL (workers can't resolve the manifest themselves)
-   and the runtime-copied multithreaded engine package location. #}
-<script>window.analysisPageData = {
-	gameId: {{ gameId | json | safe }},
-	viewColor: {{ viewColor | json | safe }},
-	engineAssets: {
-		engineUrl: "{{ manifest['engine'] }}",
-		workerUrl: "{{ manifest['scripts/esm/views/analysis/apeironanalysis.worker.ts'] }}"
-	}
-};</script>
+{# SSR→client channel: the game to auto-load, the side to view it from, and the engine's assets. #}
+<script>window.analysisPageData = {{ analysisPageData | json | safe }};</script>
 {% endblock %}
 
 {% block body %}
 {% include "components/header/header.njk" %}
 {% from "components/user.njk" import usernameEmbed %}
+{% from "components/seekproperties.njk" import seekProperties, seekRules %}
 {% from "components/variantselector.njk" import variantSelector %}
 {% set tsIndex = scriptT('index') %}
 
@@ -133,32 +125,8 @@
 
 		{% if meta %}
 		<div class="game-meta panel">
-			<div class="meta-info">
-				<span class="meta-item">
-					<svg class="meta-icon {{ meta.variant.iconId }}"><use href="#{{ meta.variant.iconId }}"/></svg>
-					<span class="meta-variant">{{ meta.variant.name }}</span>
-				</span>
-				&bull;
-				<span class="meta-item" title="{{ meta.speed.category | capitalize }}">
-					<svg class="meta-icon {{ meta.speed.iconId }}"><use href="#{{ meta.speed.iconId }}"/></svg>
-					<span>{{ meta.timeControl }}</span>
-				</span>
-				&bull;
-				<span>{{ "Rated" if meta.rated else "Casual" }}</span>
-			</div>
-
-			{# Gamerule modifications. Omitted entirely when the game plays by the standard rules. #}
-			{% if meta.rules.length %}
-			<p class="meta-rules">
-				{%- for line in meta.rules %}{{ " " if not loop.first }}
-				{%- if line.kind == "text" %}{{ line.text }}
-				{%- else %}<span class="promotion-icons piece-silhouette">{{ line.prefix }}
-					{# Only the piece icons are `| safe`: this markup is our own svg asset files, never input. #}
-					{%- for svg in line.svgs %}{{ svg | safe }}{% endfor %}{{ line.suffix }}</span>
-				{%- endif %}
-				{%- endfor -%}
-			</p>
-			{% endif %}
+			{{ seekProperties(meta.seekProperties) }}
+			{{ seekRules(meta.seekProperties.rules) }}
 
 			<div class="meta-foot">
 				<time id="meta-started" data-created="{{ meta.timeCreated }}">{{ meta.startedAgo }}</time>

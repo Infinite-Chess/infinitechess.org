@@ -27,6 +27,7 @@ SocketBus.addEventListener('closed', () => lobby.clearSeekList());
 
 SocketBus.addEventListener('lobby', (e) => onLobbyMessage(e.detail));
 
+/** Routes incoming lobby messages to the lobby controls. */
 function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 	switch (contents.action) {
 		case 'lobbystate':
@@ -39,6 +40,9 @@ function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 			break;
 		case 'viewercount':
 			lobby.onViewerCountUpdate(contents.value);
+			break;
+		case 'challengecreated':
+			lobby.onChallengeCreated(contents.value);
 			break;
 		case 'ingame':
 			void lobby.onInGame(contents.value);

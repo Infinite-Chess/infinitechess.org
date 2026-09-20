@@ -1,20 +1,22 @@
 // src/server/controllers/analysisPageController.ts
 
 /**
- * Builds the SSR render state for the `/analysis/:id?/:color?` page: the optional game id
- * to auto-load (validated to exist) and the variant groups that populate the
- * variant dropdown, with display names resolved server-side.
+ * Builds the SSR render state for the `/analysis/:id?/:color?` page: the client
+ * `analysisPageData` channel (the optional game id to auto-load, validated to exist, and
+ * the engine's asset URLs) and the variant groups that populate the variant dropdown.
  */
 
 import type { Request } from 'express';
 import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { VariantCode } from '../../shared/chess/util/variantcodes.js';
 import type { VariantGroup } from '../../shared/chess/variants/variantregistry.js';
+import type { AnalysisPageData } from '../../shared/transport/domain.js';
 import type { GameMetaViewModel } from './gamePageController.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../shared/chess/util/typeutil.js';
 
+import manifest from '../config/manifest.js';
 import gamesManager from '../database/gamesManager.js';
 import gamePageController from './gamePageController.js';
 
@@ -22,10 +24,8 @@ import gamePageController from './gamePageController.js';
 
 /** The full render context for `analysis.njk`. */
 interface AnalysisPageState {
-	/** Numeric id of a game to auto-load client-side, or null for a fresh board. */
-	gameId: number | null;
-	/** The side the board is viewed from: the URL's color segment, else the side they played on. */
-	viewColor: Player;
+	/** Serialized into the page as `window.analysisPageData`. */
+	analysisPageData: AnalysisPageData;
 	/** Variant groups + their variants, in display order — feeds the shared variant selector macro. */
 	variantGroups: { group: VariantGroup; iconId: string; variants: VariantCode[] }[];
 	/** Game metadata shown when analysis is opened for a saved/live game. */
@@ -33,6 +33,9 @@ interface AnalysisPageState {
 }
 
 // Constants -------------------------------------------------------------------
+
+/** The analysis engine's worker script, as keyed in the asset manifest. */
+const ANALYSIS_WORKER_SOURCE = 'scripts/esm/views/analysis/apeironanalysis.worker.ts';
 
 /** Cache all variant groups and their variants. */
 const variantGroups = variantregistry.getGroupsWithVariants();
@@ -63,8 +66,11 @@ function getPageState(req: Request): AnalysisPageState | undefined {
 	}
 
 	return {
-		gameId,
-		viewColor,
+		analysisPageData: {
+			gameId,
+			viewColor,
+			engineAssets: manifest.getEngineAssets(ANALYSIS_WORKER_SOURCE),
+		},
 		variantGroups,
 		meta,
 	};

@@ -128,19 +128,20 @@ Two rule tables live in [import-rules.ts](/scripts/modules/import-rules.ts). The
 **`RULES`** — "which pages may reach this target", matched against page bundles. The page sets
 are built from two constants: `INTERACTIVE_BOARD_PAGES` (`views/game/`, `views/analysis/`,
 plus the dormant `views/editor/` and `views/checkmatepractice/`) and `SOCKET_PAGES`
-(`views/index/`, `views/game/`). Reachability only sees pages listed in `ESMEntryPoints`, so a
-dormant page is never tested and its listing here stays inert until that entry lands.
+(`views/index/`, `views/game/`, `views/challenge/`). Reachability only sees pages listed in
+`ESMEntryPoints`, so a dormant page is never tested and its listing here stays inert until that
+entry lands.
 
-| Target                  | Allowed pages                                                                                         |
-| ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| client `game/`          | INTERACTIVE_BOARD_PAGES                                                                               |
-| client `board/`         | INTERACTIVE_BOARD_PAGES, `views/index/`                                                               |
-| `shared/components/`    | INTERACTIVE_BOARD_PAGES, `views/index/`, `components/header/`                                         |
-| `shared/chess/util/`    | INTERACTIVE_BOARD_PAGES, `views/index/`, `components/header/`, engine workers (`game/chess/engines/`) |
-| `shared/chess/logic/`   | INTERACTIVE_BOARD_PAGES, `views/index/`, engine workers                                               |
-| `shared/chess/engines/` | `views/index/` (engine card), `views/analysis/`                                                       |
-| `shared/chess/game/`    | INTERACTIVE_BOARD_PAGES, `views/index/`                                                               |
-| `shared/transport/`     | SOCKET_PAGES                                                                                          |
+| Target                  | Allowed pages                                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| client `game/`          | INTERACTIVE_BOARD_PAGES                                                                                                   |
+| client `board/`         | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`                                                               |
+| `shared/components/`    | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`, `components/header/`                                         |
+| `shared/chess/util/`    | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`, `components/header/`, engine workers (`game/chess/engines/`) |
+| `shared/chess/logic/`   | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`, engine workers                                               |
+| `shared/chess/engines/` | `views/index/` (engine card), `views/analysis/`                                                                           |
+| `shared/chess/game/`    | INTERACTIVE_BOARD_PAGES, `views/index/`                                                                                   |
+| `shared/transport/`     | SOCKET_PAGES                                                                                                              |
 
 Only rungs get reachability rules — the "any page" ranks fix direction only, so they need none.
 The rules come in two scopes: the client's own island rungs, and `src/shared`'s rungs — which

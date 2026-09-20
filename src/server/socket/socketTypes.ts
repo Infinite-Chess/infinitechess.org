@@ -24,6 +24,11 @@ export interface CustomWebSocket extends WebSocket {
 		subscriptions: {
 			/** Whether they are subscribed to the lobby (seeks/spectating) list. */
 			lobby?: boolean;
+			/** Whether they are viewing an open private seek's challenge page. */
+			challenge?: {
+				/** The id of the private seek. */
+				id: number;
+			};
 			/** Will be defined if they are subscribed to, or in, a game. */
 			game?: {
 				/** The id of the game they're in. */

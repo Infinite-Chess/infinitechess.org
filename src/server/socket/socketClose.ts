@@ -8,7 +8,7 @@ import type { CustomWebSocket } from './socketTypes.js';
 
 import socketutil from '../../shared/util/socketutil.js';
 
-import socketsend from './socketSend.js';
+import socketSend from './socketSend.js';
 import socketSubs from './socketSubs.js';
 import socketRegistry from './socketRegistry.js';
 
@@ -29,7 +29,7 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	// SUBSCRIPTION service! Unsubbing them from their game will start their disconnect claim timer.
 	socketSubs.unsubFromAll(ws, involuntary);
 
-	socketsend.clearPendingState(ws);
+	socketSend.clearPendingState(ws);
 }
 
 // Exports ---------------------------------------------------------------------

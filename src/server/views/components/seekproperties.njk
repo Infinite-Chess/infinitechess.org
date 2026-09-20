@@ -1,0 +1,41 @@
+{# A seek's properties, in parts, so a page may place them apart.
+   All render off a `SeekPropertiesViewModel` (src/server/controllers/seekProperties.ts). #}
+
+{# Variant, time control, and rated or casual. Called with `{% call %}`, the block's
+   content opens the line, bulleted off the variant — the challenge card's owner. #}
+{% macro seekProperties(props) %}
+<div class="meta-info">
+	{% if caller %}{{ caller() }}
+	•
+	{% endif %}
+	<span class="meta-item">
+		<span class="variant-icons">
+			{%- for icon in props.variant.icons %}<svg class="meta-icon {{ 'modifier-icon ' if icon.isModifier }}{{ icon.id }}"><use href="#{{ icon.id }}"/></svg>{% endfor -%}
+		</span>
+		<span>{{ props.variant.name }}</span>
+	</span>
+	•
+	<span class="meta-item" title="{{ props.speed.name }}">
+		<svg class="meta-icon {{ props.speed.iconId }}"><use href="#{{ props.speed.iconId }}"/></svg>
+		<span>{{ props.timeControl }}</span>
+	</span>
+	•
+	<span>{{ props.mode }}</span>
+</div>
+{% endmacro %}
+
+{# Gamerule modifications. Renders nothing when it plays by the standard rules.
+   Matches the gamerule modifications variant preview tooltips show on the seek. #}
+{% macro seekRules(rules) %}
+{% if rules.length %}
+<p class="meta-rules">
+	{%- for line in rules %}{{ " " if not loop.first }}
+	{%- if line.kind == "text" %}{{ line.text }}
+	{%- else %}<span class="promotion-icons piece-silhouette">{{ line.prefix }}
+		{# Only the piece icons are `| safe`: this markup is our own svg asset files, never input. #}
+		{%- for svg in line.svgs %}{{ svg | safe }}{% endfor %}{{ line.suffix }}</span>
+	{%- endif %}
+	{%- endfor -%}
+</p>
+{% endif %}
+{% endmacro %}

@@ -4,10 +4,10 @@
  * Shared domain types and schemas between server and client: the vocabulary of games,
  * seeks and pages, independent of how it happens to be delivered.
  *
- * A schema belongs here if more than one transport needs it — HTTP, SSR, or both websocket
- * directions. A schema that exists ONLY as websocket message contents belongs with the
- * direction it travels instead: serverbound.ts (client → server) or clientbound.ts
- * (server → client), beside the route union that carries it.
+ * A type or schema belongs here if HTTP or SSR carries it, or if more than one transport
+ * does. One that exists ONLY as websocket message contents belongs with the direction it
+ * travels instead: serverbound.ts (client → server) or clientbound.ts (server → client),
+ * beside the route union that carries it.
  *
  * This file sits at the TOP of the shared ladder: nothing under chess/ may import from
  * here, so a schema the chess layer also needs is owned down there instead, beside the
@@ -16,9 +16,9 @@
 
 import type { TimeControl } from '../chess/util/clockutil.js';
 import type { GameConclusion } from '../chess/util/typeschemas.js';
-import type { GameStateVariant } from '../chess/util/variantselection.js';
 import type { Player, PlayerGroup } from '../chess/util/typeutil.js';
 import type { EngineAssets, ValidEngine } from '../chess/util/engineregistry.js';
+import type { GameStateVariant, SeekVariant } from '../chess/util/variantselection.js';
 
 import * as z from 'zod';
 
@@ -99,16 +99,11 @@ export interface DeadGameState extends GameStateCore {
 
 // Seek Schemas ----------------------------------------------------------------
 
-/** The number of digits generated seek IDs are. */
-const SEEK_ID_LENGTH = 5;
-/** A seek's id. */
-export type SeekId = z.infer<typeof SeekIdSchema>;
-const SeekIdSchema = z.string();
-
-/** Shared info for all lobby game seek types. (excludes variant) */
+/** Shared info for all seek types, public and private. (excludes variant) */
 export type BaseSeek = z.infer<typeof BaseSeekSchema>;
 const BaseSeekSchema = z.strictObject({
-	id: SeekIdSchema,
+	/** The id the game will have once the seek is accepted, reserved at creation. */
+	id: GameIDSchema,
 	player: ServerUsernameContainerSchema,
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
 	time: clockutil.TimeControlSchema,
@@ -124,16 +119,12 @@ const OutSeekSchema = BaseSeekSchema.extend({
 
 // SSR Page Data ---------------------------------------------------------------
 
-/** SSR→client channel info marking the game page's game as an engine game. */
-export interface EngineGamePageInfo {
-	engine: ValidEngine;
-	/** The engine's strength level for this game. */
-	strengthLevel: number;
-	/**
-	 * The assets needed to run the engine client-side.
-	 * Present only while the game is still live — a concluded engine game has nothing left to run.
-	 */
-	engineAssets?: EngineAssets;
+/** Static challenge-page data injected by the server. */
+export interface ChallengePageData {
+	/** The id of the private seek, and of the game it becomes once accepted. */
+	id: number;
+	/** The seek's own variant: a preset's code, or a custom position's ICN. */
+	variant: SeekVariant;
 }
 
 /** Static game-page data injected by the server. */
@@ -152,6 +143,28 @@ export interface GamePageData extends StaticGameSetup {
 	engineGame?: EngineGamePageInfo;
 }
 
+/** SSR→client channel info marking the game page's game as an engine game. */
+export interface EngineGamePageInfo {
+	engine: ValidEngine;
+	/** The engine's strength level for this game. */
+	strengthLevel: number;
+	/**
+	 * The assets needed to run the engine client-side.
+	 * Present only while the game is still live — a concluded engine game has nothing left to run.
+	 */
+	engineAssets?: EngineAssets;
+}
+
+/** Static analysis-page data injected by the server. */
+export interface AnalysisPageData {
+	/** Numeric id of a game to auto-load, or null for a fresh board. */
+	gameId: number | null;
+	/** The side to orient the board to: the URL's color segment, else the side the viewer played on. */
+	viewColor: Player;
+	/** Assets for the analysis engine worker. */
+	engineAssets: EngineAssets;
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -160,7 +173,5 @@ export default {
 	// Game Helper Schemas
 	GameIDSchema,
 	// Seek Schemas
-	SEEK_ID_LENGTH,
-	SeekIdSchema,
 	OutSeekSchema,
 };

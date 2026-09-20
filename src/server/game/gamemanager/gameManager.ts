@@ -11,9 +11,9 @@
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { GameStateMessage } from '../../../shared/transport/clientbound.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { GameSetup, ServerGame } from './serverGameTypes.js';
 import type { AuthMemberInfo, MemberInfo } from '../../types.js';
 import type { EngineGamePageInfo, StaticGameState } from '../../../shared/transport/domain.js';
+import type { GameSetup, PlayerAssignments, ServerGame } from './serverGameTypes.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
@@ -24,16 +24,19 @@ import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import chat from './chat.js';
 import logEvents from '../../utility/logEvents.js';
 import disconnect from './disconnect.js';
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
 import activeGames from './activeGames.js';
+import activeSeeks from '../seeksmanager/activeSeeks.js';
 import lobbyManager from '../seeksmanager/lobbyManager.js';
+import inGameStatus from '../seeksmanager/inGameStatus.js';
 import activePlayers from './activePlayers.js';
 import gameLifecycle from './gameLifecycle.js';
 import deadGameState from './deadGameState.js';
 import liveGameValues from './liveGameValues.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
+import lobbySubscribers from '../seeksmanager/lobbySubscribers.js';
 import gameStateBuilder from './gameStateBuilder.js';
 
 // Types -----------------------------------------------------------------------
@@ -55,20 +58,16 @@ export interface ResolvedGameState {
 /**
  * Creates and persists the `ServerGame`, then signals each requesting socket to navigate to
  * the game page (where they re-subscribe to the live game), arming a silent disconnect cushion
- * in the meantime. A player with no socket is told on their next lobby subscribe instead.
+ * in the meantime. A player with no socket is told on their next lobby or challenge-page
+ * subscribe instead.
+ * @param gameID - The id the game is created under, from {@link activeGames.issueUniqueId}.
  * @param setup - The variant, time control, and rated flag of the game to start.
  * @param assignments - The color each player has, and their socket if connected.
- * @returns The id of the newly created game.
- * @throws If a database error occurs.
  */
-function createGame(
-	setup: GameSetup,
-	assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }>,
-): number {
+function createGame(gameID: number, setup: GameSetup, assignments: PlayerAssignments): void {
 	// Joining a new game counts as leaving any concluded game still lingering for a rematch.
 	for (const { identifier } of Object.values(assignments)) forceLeaveLingeringGame(identifier);
 
-	const gameID = activeGames.issueUniqueId();
 	const dateTimestamp = Date.now();
 	const construction = gameUtility.resolveGameConstruction(
 		setup.variant,
@@ -79,10 +78,15 @@ function createGame(
 
 	const game = gamefile.initGame(setup.time, dateTimestamp, construction.gameRules);
 	const match = gameUtility.initMatch(setup, gameID, assignments);
-
 	const servergame: ServerGame = gameUtility.initServerGame(game, construction, match);
+
+	// Clear seeks here because every game creation path passes through here.
+	// After construction succeeds & before in-game notifs.
+	const identifiers = Object.values(assignments).map(({ identifier }) => identifier);
+	activeSeeks.deleteForGame(gameID, identifiers);
+
 	for (const [strcolor, { identifier, socket }] of Object.entries(assignments)) {
-		// A player with no socket to push to is owed the navigate notice on their next lobby subscribe.
+		// A player with no socket to push to is owed the navigate notice on their next seek-page subscribe.
 		activePlayers.add(
 			identifier,
 			servergame.match.id,
@@ -98,22 +102,25 @@ function createGame(
 	// state and therefore requires the game row to already exist.
 	liveGameValues.onGameCreated(servergame);
 
-	for (const [strcolor, { identifier, socket }] of Object.entries(assignments)) {
+	for (const [strcolor, { identifier, socket, leftVoluntarily }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
-		// Alert all their lobby-subscribed clients they are in a game. Only the socket that
+		// Alert all their seek-page clients they are in a game. Only the socket that
 		// asked for this game is taken into it; their other tabs get the rejoin banner.
-		lobbyManager.broadcastMemberInGameStatus(identifier, socket);
-		// Give them 5 seconds to navigate to the game page and re-connect
-		// before they're considered disconnected.
-		disconnect.startCushionTimer(servergame, player);
+		inGameStatus.broadcast(identifier, socket);
+		// Someone who left their challenge seek page by choice has no navigation to make, so
+		// their opponent is told now. Everyone else gets 5 seconds to arrive at the game page.
+		if (socket === undefined && leftVoluntarily)
+			disconnect.startClaimTimer(servergame, player, false);
+		else disconnect.startCushionTimer(servergame, player);
 	}
+
+	// Last: a socket removed from the lobby would no longer receive the pushes above.
+	leaveLobby(assignments);
 
 	if (activeGames.PRINT_GAMES) {
 		console.log('Starting new game:');
 		gameUtility.printGame(servergame);
 	}
-
-	return gameID;
 }
 
 /**
@@ -134,9 +141,20 @@ function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
 	}
 }
 
+/** Takes each entering tab out of the lobby, telling its remaining viewers the new count. */
+function leaveLobby(assignments: PlayerAssignments): void {
+	let changed = false;
+	for (const { socket } of Object.values(assignments)) {
+		// A challenge page's socket, or one of a rematch, was never a lobby subscriber.
+		if (socket && lobbySubscribers.remove(socket)) changed = true;
+	}
+	if (changed) lobbyManager.broadcastViewerCount();
+}
+
 /**
- * Handles a throw from {@link createGame}: logs it, then tells each connected
- * participant a server error prevented their game from starting.
+ * Handles a throw while starting a game — a database error issuing its id, or an unexpected
+ * internal failure in {@link createGame}: logs it, then tells each connected participant a
+ * server error prevented their game from starting.
  * @param error - The error thrown.
  * @param sockets - Every socket awaiting the game, undefined entries skipped.
  */
@@ -145,7 +163,7 @@ function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefin
 	const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
 	logEvents.addAndPrint(`Error creating game: ${details}`, 'errLog');
 	for (const ws of sockets) {
-		if (ws) socketsend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
+		if (ws) socketSend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
 	}
 }
 
@@ -167,7 +185,7 @@ function subscribeParticipant(
 	const playerData = match.playerData[ourRole]!;
 	const previousSocket = playerData.socket;
 	if (previousSocket) {
-		socketsend.send(previousSocket, 'game', 'supersededbytab', undefined);
+		socketSend.send(previousSocket, 'game', 'supersededbytab', undefined);
 		gameSockets.detachParticipant(match, previousSocket);
 	}
 

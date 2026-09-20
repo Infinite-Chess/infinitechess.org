@@ -53,6 +53,10 @@ const VARIANT_GROUP_ICONS: Record<VariantGroup | 'custom', string> = {
 /** An array of all valid variant groups. */
 const VARIANT_GROUPS = Object.keys(VARIANT_GROUP_ICONS) as VariantGroup[];
 
+/** What a custom position is named in notation. Hardcoded like every
+ * {@link VariantRegistryEntry.name}: notation never translates. */
+const CUSTOM_ENGLISH_NAME = 'Custom Variant';
+
 // Variant Registry ------------------------------------------------------------
 
 const REGISTRY = {
@@ -229,12 +233,25 @@ function resolveCode(variantName: string | undefined): VariantCode | undefined {
 }
 
 /**
- * Returns the English display name of the given variant code.
- * @param variantCode - The variant code to look up.
- * @param sharedT - The shared translations object, used to translate 'Custom Variant'.
+ * Returns the English name of the given variant code, for metadata and notation.
+ * Use {@link getDisplayName} for anything a user reads.
+ * @param variantCode - The variant code to look up. Null for a custom position.
  */
-function getName(variantCode: VariantCode | null, sharedT: ScriptTranslations['shared']): string {
-	return variantCode ? REGISTRY[variantCode].name : sharedT.variant_groups.custom.display_label; // Translate 'Custom Variant'
+function getEnglishName(variantCode: VariantCode | null): string {
+	return variantCode ? REGISTRY[variantCode].name : CUSTOM_ENGLISH_NAME;
+}
+
+/**
+ * Returns the translated name a variant is shown by.
+ * @param variantCode - The variant code to look up. Null for a custom position.
+ */
+function getDisplayName(
+	variantCode: VariantCode | null,
+	sharedT: ScriptTranslations['shared'],
+): string {
+	return variantCode
+		? sharedT.variants[variantCode]
+		: sharedT.variant_groups.custom.display_label;
 }
 
 /** Returns the group of the given variant code. */
@@ -277,7 +294,8 @@ function getVariantsForGroup(group: VariantGroup): VariantCode[] {
 export default {
 	getGroupIconId,
 	resolveCode,
-	getName,
+	getEnglishName,
+	getDisplayName,
 	getGroup,
 	getLoader,
 	getGroupsWithVariants,

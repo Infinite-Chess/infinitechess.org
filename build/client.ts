@@ -36,6 +36,7 @@ export const ESMEntryPoints = [
 	'src/client/css/login.css',
 	'src/client/css/register-awaiting.css',
 	'src/client/css/game.css',
+	'src/client/css/challenge.css',
 	'src/client/css/analysis.css',
 	'src/client/css/variantselector.css',
 
@@ -49,6 +50,7 @@ export const ESMEntryPoints = [
 	'src/client/scripts/esm/views/forgotpassword.ts',
 	'src/client/scripts/esm/views/resetpassword.ts',
 	'src/client/scripts/esm/views/game/game.ts',
+	'src/client/scripts/esm/views/challenge/challenge.ts',
 	'src/client/scripts/esm/views/analysis/analysis.ts',
 
 	// Workers

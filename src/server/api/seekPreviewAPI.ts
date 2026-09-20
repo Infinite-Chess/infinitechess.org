@@ -8,12 +8,17 @@
 import type { Request, Response } from 'express';
 
 import activeSeeks from '../game/seeksmanager/activeSeeks.js';
+import gamesManager from '../database/gamesManager.js';
 
-/** `GET /api/seek-preview/:seekId` — returns `{ icn }` of a custom (ICN) lobby seek for hover previews. */
+/** `GET /api/seek-preview/:id` — returns `{ icn }` of a custom (ICN) seek for hover previews. */
 function get(req: Request, res: Response): void {
-	const seekId = req.params['seekId']!;
+	const id = gamesManager.decodeID(req.params['id']!);
+	if (id === undefined) {
+		res.status(400).send('Invalid seek ID format.');
+		return;
+	}
 
-	const seek = activeSeeks.getByID(seekId);
+	const seek = activeSeeks.getByID(id);
 	if (seek === undefined) {
 		res.status(404).send('Seek not found.');
 		return;

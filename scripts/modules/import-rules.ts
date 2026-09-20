@@ -179,7 +179,7 @@ const INTERACTIVE_BOARD_PAGES = [
 ];
 
 /** Pages holding a live websocket — who may reach the transport contract. */
-const SOCKET_PAGES = ['views/index/', 'views/game/'];
+const SOCKET_PAGES = ['views/index/', 'views/challenge/', 'views/game/'];
 
 const RULES: Rule[] = [
 	{
@@ -190,12 +190,17 @@ const RULES: Rule[] = [
 	{
 		target: 'board/',
 		audience: 'pages that render a board, home page included',
-		allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/'],
+		allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/', 'views/challenge/'],
 	},
 	{
 		target: 'shared/components/',
 		audience: 'the app shell and the game pages',
-		allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/', 'components/header/'],
+		allowedEntries: [
+			...INTERACTIVE_BOARD_PAGES,
+			'views/index/',
+			'views/challenge/',
+			'components/header/',
+		],
 	},
 	{
 		target: 'shared/chess/util/',
@@ -203,6 +208,7 @@ const RULES: Rule[] = [
 		allowedEntries: [
 			...INTERACTIVE_BOARD_PAGES,
 			'views/index/',
+			'views/challenge/',
 			'components/header/',
 			'game/chess/engines/',
 		],
@@ -210,7 +216,12 @@ const RULES: Rule[] = [
 	{
 		target: 'shared/chess/logic/',
 		audience: 'the interactive pages and the engine workers',
-		allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/', 'game/chess/engines/'],
+		allowedEntries: [
+			...INTERACTIVE_BOARD_PAGES,
+			'views/index/',
+			'views/challenge/',
+			'game/chess/engines/',
+		],
 	},
 	{
 		target: 'shared/chess/engines/',

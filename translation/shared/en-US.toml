@@ -1,8 +1,9 @@
 # Translation component: shared codes-and-labels
 # Auto-injected sitewide via layout.njk. Contains display labels for "codes" used
-# across many pages: variant codes, variant group codes, time-control speed
-# categories, game modes, sides, win conditions, modifiers, the narrative
-# phrasing used in the variant preview tooltip, etc.
+# across many pages — variant codes, variant group codes, time-control speed
+# categories, game modes, sides, win conditions, modifiers — plus the UI strings
+# more than one page shows: form errors, the variant selector, seek and preview
+# tooltip phrasing, etc.
 script_only = true
 
 [errors]
@@ -118,6 +119,10 @@ blue = "Blue"
 yellow = "Yellow"
 green = "Green"
 neutral = "Neutral"
+
+[seek] # Descriptions of a seek's properties, shown on the lobby row and the challenge card.
+owner_side_white = "Invite owner chooses to be white"
+owner_side_black = "Invite owner chooses to be black"
 
 [modifiers.slide-limit]
 name = "Slide Limit"

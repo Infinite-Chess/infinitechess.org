@@ -1,13 +1,13 @@
 // src/server/game/seeksmanager/cancelSeek.ts
 
 /**
- * Handles the `cancelseek` lobby action: an owner withdrawing their own open seek.
+ * Handles the `cancelseek` lobby action and the challenge page's `cancel`: an owner
+ * withdrawing their own open seek.
  *
  * The seek simply leaves `activeSeeks.ts`. A seek deleted because its owner
  * dropped offline goes through `lobbyManager.ts`'s cushion instead.
  */
 
-import type { SeekId } from '../../../shared/transport/domain.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
 import logEvents from '../../utility/logEvents.js';
@@ -17,12 +17,9 @@ import memberInfoUtil from '../../auth/memberInfoUtil.js';
 /**
  * Cancels/deletes the specified seek.
  * @param ws - Their socket
- * @param messageContents - The incoming socket message that is the ID of the seek to be cancelled!
+ * @param id - The id of the seek to cancel.
  */
-function cancel(ws: CustomWebSocket, messageContents: SeekId): void {
-	// Value should be the ID of the seek to cancel!
-	const id = messageContents; // id of seek to delete
-
+function cancel(ws: CustomWebSocket, id: number): void {
 	const seek = activeSeeks.getByID(id);
 	// Already cancelled, they must have joined a game, OR CANCELLED on a different tab!
 	if (!seek) return;

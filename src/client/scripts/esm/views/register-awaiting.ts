@@ -9,6 +9,7 @@
  * address is PUT to /api/register/awaiting/email; success reloads the page, errors show inline.
  */
 
+import navigate from '../util/navigate.js';
 import flashtoast from '../components/flashtoast.js';
 import accountform from '../components/accountform.js';
 import { serverfetch } from '../util/serverfetch.js';
@@ -132,12 +133,12 @@ async function pollVerification(): Promise<void> {
 			if (result.status === 'verified') {
 				stopPolling();
 				flashtoast.queue(t.awaiting.account_activated);
-				window.location.assign('/');
+				navigate.assign('/');
 				return;
 			} else if (result.status === 'expired' || result.status === 'blacklisted') {
 				stopPolling();
 				// The server redirects 'expired' to /register when there's no pending registration
-				window.location.reload();
+				navigate.reload();
 				return;
 			}
 			// 'pending' → keep waiting.

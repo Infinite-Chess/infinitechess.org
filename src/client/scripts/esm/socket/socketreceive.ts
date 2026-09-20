@@ -72,6 +72,9 @@ function onmessage(serverMessage: MessageEvent): void {
 		case 'lobby':
 			SocketBus.dispatch('lobby', message.contents);
 			break;
+		case 'challenge':
+			SocketBus.dispatch('challenge', message.contents);
+			break;
 		case 'game':
 			SocketBus.dispatch('game', message.contents);
 			break;

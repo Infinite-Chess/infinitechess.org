@@ -10,6 +10,7 @@
 
 import type { ActionValue, Exact, RouteAction } from '../../../../shared/util/socketutil.js';
 import type {
+	ServerboundChallengeMessage,
 	ServerboundGameMessage,
 	ServerboundGeneralMessage,
 	ServerboundLobbyMessage,
@@ -31,6 +32,7 @@ export type MessageID = number;
 type OutMessages = {
 	general: ServerboundGeneralMessage;
 	lobby: ServerboundLobbyMessage;
+	challenge: ServerboundChallengeMessage;
 	game: ServerboundGameMessage;
 };
 

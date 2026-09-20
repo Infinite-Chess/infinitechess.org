@@ -10,7 +10,7 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import gameManager from './gameManager.js';
 import gameSockets from './gameSockets.js';
 import activeGames from './activeGames.js';
@@ -44,7 +44,7 @@ function subscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 		// missed the eviction while disconnected, so their view is stale by more than the
 		// rematch state — chat is appended right up to it. Reloading (`notlive`) then serves
 		// them fresh SSR: the dead review page, else the 404 page.
-		socketsend.send(ws, 'game', 'notlive', undefined);
+		socketSend.send(ws, 'game', 'notlive', undefined);
 	}
 }
 

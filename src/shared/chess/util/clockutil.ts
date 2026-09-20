@@ -12,7 +12,7 @@ import typeschemas from './typeschemas.js';
 // Types -----------------------------------------------------------------------
 
 /** The speed category of a game, based on its time control. */
-export type SpeedCategory = 'bullet' | 'blitz' | 'rapid' | 'classical' | 'infinite';
+type SpeedCategory = 'bullet' | 'blitz' | 'rapid' | 'classical' | 'infinite';
 
 // Constants -------------------------------------------------------------------
 

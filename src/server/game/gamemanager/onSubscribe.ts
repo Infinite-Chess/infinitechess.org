@@ -9,7 +9,7 @@
 
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 
-import socketsend from '../../socket/socketSend.js';
+import socketSend from '../../socket/socketSend.js';
 import gameManager from './gameManager.js';
 import gameSockets from './gameSockets.js';
 import activeGames from './activeGames.js';
@@ -31,7 +31,7 @@ function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
 			// Spectator path: attach, then send the role-agnostic state (no participantState overlay).
 			gameSockets.attachSpectator(game, ws);
 			const gameStateMessage = gameStateBuilder.buildFullState(game);
-			socketsend.send(ws, 'game', 'gamestate', gameStateMessage);
+			socketSend.send(ws, 'game', 'gamestate', gameStateMessage);
 			gameSockets.broadcastSpectatorCount(game);
 		}
 	} else {
@@ -39,7 +39,7 @@ function subscribeToGame(ws: CustomWebSocket, game_id: number): void {
 		// requested a full `subscribe`, so it may not yet have seen the conclusion — tell it to reload
 		// (`notlive`). Fresh SSR then serves the dead review page (if logged) or the 404 page, and a
 		// review client fetches the dead state over HTTP.
-		socketsend.send(ws, 'game', 'notlive', undefined);
+		socketSend.send(ws, 'game', 'notlive', undefined);
 	}
 }
 
