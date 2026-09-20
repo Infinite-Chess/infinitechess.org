@@ -23,6 +23,15 @@ import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 
 // Types -----------------------------------------------------------------------
 
+/**
+ * A mode of the arrow indicators.
+ * 0 = Off,
+ * 1 = Defense,
+ * 2 = All (orthogonals & diagonals)
+ * 3 = All (including hippogonals, only used in variants using hippogonals)
+ */
+type Mode = 0 | 1 | 2 | 3;
+
 /** An object containing all the arrow lines of a single frame. */
 export interface SlideArrows {
 	/** An object containing all existing arrows for a specific slide direction */
@@ -126,14 +135,14 @@ const MAX_LINES = 8;
 
 // State -----------------------------------------------------------------------
 
+/** The mode the arrow indicators on the edges of the screen is currently in. */
+let mode: Mode = 1;
+
 /**
- * The mode the arrow indicators on the edges of the screen is currently in.
- * 0 = Off,
- * 1 = Defense,
- * 2 = All (orthogonals & diagonals)
- * 3 = All (including hippogonals, only used in variants using hippogonals)
+ * The mode the user last rotated to. Games that can't support
+ * it lower {@link mode} only, so a game that does gets it back.
  */
-let mode: 0 | 1 | 2 | 3 = 1;
+let preferredMode: Mode = 1;
 
 /**
  * A list of all arrows present for the current frame.
@@ -169,12 +178,12 @@ let hintArrows: HintArrow[] = [];
 // Mode management -------------------------------------------------------------
 
 /** Returns the mode the arrow indicators on the edges of the screen is currently in. */
-function getMode(): typeof mode {
+function getMode(): Mode {
 	return mode;
 }
 
 /** Sets the current mode of the arrow indicators. */
-function setMode(value: typeof mode): void {
+function setMode(value: Mode): void {
 	if (value === mode) return;
 
 	mode = value;
@@ -185,24 +194,29 @@ function setMode(value: typeof mode): void {
 	GameBus.dispatch('arrow-mode-change');
 }
 
+/** Turns the arrows off for a game that can't render them, leaving the user's preference intact. */
+function forceModeOff(): void {
+	setMode(0);
+}
+
+/** Sets the mode to the user's preference, lowered to what the current game offers. */
+function applyPreferredMode(): void {
+	const cap = getModeCap();
+	setMode(preferredMode > cap ? cap : preferredMode);
+}
+
 /** The highest mode the current game offers. Hippogonal arrows are only offered in variants using them. */
 function getModeCap(): 2 | 3 {
 	return gameslot.getGamefile()!.pieces.hippogonalsPresent ? 3 : 2;
-}
-
-/** Lowers the mode to the current game's cap, if it exceeds it. The mode persists across games. */
-function clampModeToCap(): void {
-	const cap = getModeCap();
-	if (mode > cap) setMode(cap);
 }
 
 /** Rotates the current mode of the arrow indicators. */
 function toggleArrows(): void {
 	frametracker.onVisualChange();
 	// Have to do it weirdly like this, instead of using '++', because typescript complains that nextMode is of type number.
-	let nextMode: typeof mode =
-		mode === 0 ? 1 : mode === 1 ? 2 : mode === 2 ? 3 : /* mode === 3 ? */ 0;
+	let nextMode: Mode = mode === 0 ? 1 : mode === 1 ? 2 : mode === 2 ? 3 : /* mode === 3 ? */ 0;
 	if (nextMode > getModeCap()) nextMode = 0; // Wrap back to zero
+	preferredMode = nextMode; // Whatever they rotate to becomes their preference for future games.
 	setMode(nextMode);
 }
 
@@ -317,8 +331,8 @@ export default {
 	MAX_LINES,
 	// Mode management
 	getMode,
-	setMode,
-	clampModeToCap,
+	forceModeOff,
+	applyPreferredMode,
 	toggleArrows,
 	// Getters
 	getAllArrows,

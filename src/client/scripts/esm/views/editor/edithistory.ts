@@ -103,7 +103,7 @@ function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = 
 	const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
 	if (pieceCount > miniimagerenderer.MAX_PIECE_COUNT || pieceCount > arrows.MAX_PIECES) {
 		miniimage.disable();
-		arrows.setMode(0);
+		arrows.forceModeOff();
 	}
 
 	// Prune the oldest edits in the history if we exceed the cap, to help prevent memory crashes.
