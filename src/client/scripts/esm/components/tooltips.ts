@@ -271,6 +271,8 @@ function showTooltipFor(target: HTMLElement, direction: string): void {
 	if (positionLoopId !== undefined) cancelAnimationFrame(positionLoopId);
 	const loop = (): void => {
 		if (!tip.isConnected) return;
+		// A target removed mid-show fires no mouseout, and measures as 0. Hide it here instead.
+		if (!target.isConnected) return hideTooltipDiv();
 		updatePosition();
 		positionLoopId = requestAnimationFrame(loop);
 	};

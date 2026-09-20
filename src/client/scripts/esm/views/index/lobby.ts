@@ -509,19 +509,35 @@ function createVariantCellIconVNodes(seek: LobbySeek): VNode[] {
 /** Spawns a body-level overlay aligned to the row that pulses outward and fades. */
 function spawnSeekPulse(row: HTMLElement, isOurs: boolean): void {
 	requestAnimationFrame(() => {
-		const rect = row.getBoundingClientRect();
-		if (rect.width === 0 || rect.height === 0) return;
+		if (!row.isConnected) return; // A row removed before this frame measures as 0
 		const overlay = document.createElement('div');
 		overlay.className = 'seek-pulse-overlay';
-		overlay.style.left = `${rect.left}px`;
-		overlay.style.top = `${rect.top}px`;
-		overlay.style.width = `${rect.width}px`;
-		overlay.style.height = `${rect.height}px`;
 		const box = document.createElement('div');
 		box.className = isOurs ? 'seek-pulse-box ours' : 'seek-pulse-box';
 		overlay.appendChild(box);
 		document.body.appendChild(overlay);
 		box.addEventListener('animationend', () => overlay.remove(), { once: true });
+
+		/** Resizes the overlay onto the row's current rect. */
+		const updateBounds = (): void => {
+			const rect = row.getBoundingClientRect();
+			overlay.style.left = `${rect.left}px`;
+			overlay.style.top = `${rect.top}px`;
+			overlay.style.width = `${rect.width}px`;
+			overlay.style.height = `${rect.height}px`;
+		};
+		updateBounds();
+
+		// Keep the overlay on the row every frame, in case the page scrolls or resizes mid-pulse.
+		const loop = (): void => {
+			// Ends the loop once the animation's end removes the overlay.
+			if (!overlay.isConnected) return;
+			// A row removed mid-pulse measures as 0, which would collapse the overlay onto itself.
+			if (!row.isConnected) return overlay.remove();
+			updateBounds();
+			requestAnimationFrame(loop);
+		};
+		requestAnimationFrame(loop);
 	});
 }
 

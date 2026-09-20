@@ -51,13 +51,8 @@ const EDGE_PAD = 8;
 let previewCtx: Promise<RenderContext> | undefined;
 /** Incremented on every show/hide; compared after async work to discard stale renders. */
 let showToken = 0;
-/** The anchor element of the currently visible tooltip, if any. */
-let currentAnchor: HTMLElement | null = null;
-
-// Hide the tooltip if its anchor is removed from the DOM — otherwise pointerleave never fires and the tooltip is stranded.
-new MutationObserver(() => {
-	if (currentAnchor && !currentAnchor.isConnected) hide();
-}).observe(document.body, { childList: true, subtree: true });
+/** The frame request of the loop keeping the visible tooltip on its anchor. */
+let positionLoopId: number | undefined;
 
 // DOM elements created once and reused
 
@@ -156,7 +151,8 @@ async function showForVariantCode(
 function hide(): void {
 	showToken++;
 	element_tooltip.classList.add('visibility-hidden');
-	currentAnchor = null;
+	if (positionLoopId !== undefined) cancelAnimationFrame(positionLoopId);
+	positionLoopId = undefined;
 }
 
 /** Core show logic: positions the tooltip, renders the board, populates rules. */
@@ -182,7 +178,7 @@ async function showForBoard(
 	positionTooltip(anchor, placement);
 	previewrenderer.render(ctx, boardsim);
 	element_tooltip.classList.remove('visibility-hidden');
-	currentAnchor = anchor;
+	startPositionLoop(anchor, placement);
 }
 
 /** Positions the tooltip relative to the anchor. */
@@ -201,6 +197,31 @@ function positionTooltip(anchor: HTMLElement, placement: 'left' | 'below'): void
 	// Read natural height after horizontal constraints are applied (canvas shrinks with width via aspect-ratio).
 	const tooltipH = element_tooltip.offsetHeight;
 	element_tooltip.style.top = `${Math.min(preferredTop, window.innerHeight - tooltipH - EDGE_PAD)}px`;
+}
+
+/**
+ * Keeps the tooltip on its anchor while visible, for when the anchor moves without the
+ * pointer leaving it — the page scrolling.
+ */
+function startPositionLoop(anchor: HTMLElement, placement: 'left' | 'below'): void {
+	if (positionLoopId !== undefined) cancelAnimationFrame(positionLoopId);
+	let last = anchor.getBoundingClientRect();
+	const loop = (): void => {
+		// An anchor removed mid-show fires no pointerleave, and measures as 0. Hide it here instead.
+		if (!anchor.isConnected) return hide();
+		const rect = anchor.getBoundingClientRect();
+		if (
+			rect.left !== last.left ||
+			rect.top !== last.top ||
+			rect.width !== last.width ||
+			rect.height !== last.height
+		) {
+			positionTooltip(anchor, placement);
+			last = rect;
+		}
+		positionLoopId = requestAnimationFrame(loop);
+	};
+	positionLoopId = requestAnimationFrame(loop);
 }
 
 /** Builds the rule summary. Off-DOM so a stale async preview cannot change the visible tooltip. */
