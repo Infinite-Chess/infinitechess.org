@@ -7,14 +7,17 @@
 import type { GameMode } from '../../../../../shared/transport/domain.js';
 import type { ModalMode } from '../../handoffs/gamesetuphandoff.js';
 import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
+import type { GameOptions } from './gameoptionsstore.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import leaderboardregistry from '../../../../../shared/chess/variants/leaderboardregistry.js';
 
 import lobby from './lobby.js';
 import timecontrols from './timecontrols.js';
+import validatorama from '../../util/validatorama.js';
 import variantselector from '../../board/variantselector/variantselector.js';
 import modifierselector from '../../board/variantselector/modifierselector.js';
+import gameoptionsstore from './gameoptionsstore.js';
 import gamesetuphandoff from '../../handoffs/gamesetuphandoff.js';
 
 // Types -----------------------------------------------------------------------
@@ -50,7 +53,7 @@ const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTML
 	'data-level': document.querySelectorAll<HTMLElement>('[data-level]'),
 };
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The active game creation flow. */
 let currentMode: ModalMode;
@@ -58,39 +61,7 @@ let currentMode: ModalMode;
 // Initialization --------------------------------------------------------------
 
 initModal();
-void consumePendingHandoff();
-
-// Functions -------------------------------------------------------------------
-
-/** Initializes shared exclusive-selection behavior for all data-* toggle button groups. */
-function initToggleGroups(): void {
-	// Each [data-time], [data-mode], [data-side], [data-level] button is an exclusive-select group.
-	// Buttons sharing the same data-* attribute key form one group.
-	const groups: [ToggleGroupAttribute, (() => void)?][] = [
-		[
-			'data-time',
-			() => {
-				timecontrols.onTimeToggle();
-				syncRatedButton();
-			},
-		],
-		['data-mode'],
-		['data-side', syncRatedButton],
-		['data-level'],
-	];
-	for (const [attr, callback] of groups) {
-		element_buttonsByToggleGroup[attr].forEach((btn) => {
-			btn.addEventListener('click', () => {
-				// Keep exactly one active option per group.
-				element_buttonsByToggleGroup[attr].forEach((groupButton) =>
-					groupButton.classList.remove('active'),
-				);
-				btn.classList.add('active');
-				callback?.();
-			});
-		});
-	}
-}
+void initRememberedState();
 
 /** Wires modal open/close controls and initializes all interactive sections. */
 function initModal(): void {
@@ -114,20 +85,122 @@ function initModal(): void {
 	});
 
 	initToggleGroups();
-	timecontrols.initModalSliders();
-	timecontrols.onTimeToggle();
-	timecontrols.initPresets();
+	// Sliders save on commit, not change — one drag fires dozens of changes, each a whole-ICN write.
+	timecontrols.init({ onCommit: persist });
 	variantselector.initVariantGroupDropdown({
 		isSeekContext: true,
 		onChange: () => {
 			element_modalSubmit.disabled = !variantselector.isSelectionValid();
 			syncRatedButton();
+			persist();
 		},
 	});
 	variantselector.initIcnValidation();
-	modifierselector.initModifierSelector({ onChange: syncRatedButton });
+	modifierselector.initModifierSelector({ onChange: syncRatedButton, onCommit: persist });
 	syncRatedButton();
 }
+
+/** Initializes shared exclusive-selection behavior for all data-* toggle button groups. */
+function initToggleGroups(): void {
+	// Each [data-time], [data-mode], [data-side], [data-level] button is an exclusive-select group.
+	// Buttons sharing the same data-* attribute key form one group.
+	const groups: [ToggleGroupAttribute, (() => void)?][] = [
+		[
+			'data-time',
+			() => {
+				timecontrols.onTimeToggle();
+				syncRatedButton();
+			},
+		],
+		['data-mode'],
+		['data-side', syncRatedButton],
+		['data-level'],
+	];
+	for (const [attr, callback] of groups) {
+		element_buttonsByToggleGroup[attr].forEach((btn) => {
+			btn.addEventListener('click', () => {
+				setActiveToggle(attr, btn);
+				callback?.();
+				persist();
+			});
+		});
+	}
+}
+
+// Toggle groups ---------------------------------------------------------------
+
+/** Makes the given button the only active one in its toggle group. */
+function setActiveToggle(attr: ToggleGroupAttribute, btn: HTMLElement): void {
+	element_buttonsByToggleGroup[attr].forEach((groupButton) =>
+		groupButton.classList.remove('active'),
+	);
+	btn.classList.add('active');
+}
+
+/** The `data-*` value of the active button in the given toggle group. */
+function getToggleValue(attr: ToggleGroupAttribute): string {
+	return document.querySelector<HTMLElement>(`[${attr}].active`)!.getAttribute(attr)!;
+}
+
+// Remembered options ----------------------------------------------------------
+
+/**
+ * Restores the options remembered from the player's last visit, then consumes a pending
+ * handoff - that order, so a handoff's variant trumps. The model is initially closed on
+ * page load anyway, so the flash between the two is never seen.
+ */
+async function initRememberedState(): Promise<void> {
+	const options = await gameoptionsstore.read();
+	if (options !== undefined) applyOptions(options);
+	await consumePendingHandoff();
+}
+
+/** Applies the options remembered from the player's last visit. */
+function applyOptions(options: GameOptions): void {
+	applyToggleValue('data-time', options.toggles.time);
+	applyToggleValue('data-mode', options.toggles.mode);
+	applyToggleValue('data-side', options.toggles.side);
+	applyToggleValue('data-level', options.toggles.level);
+	timecontrols.onTimeToggle();
+	timecontrols.setMinutesAndIncrement(options.minutes, options.increment);
+	modifierselector.applyModifiers(options.modifiers);
+	// A cloud save can't be fetched while logged out, and trying would show a load failure
+	// that lies — nothing failed. Skipping it leaves the variant on Classical.
+	if (options.selection.kind !== 'cloud' || validatorama.areWeLoggedIn())
+		variantselector.restoreSelection(options.selection, options.icn);
+	// Keep both — restoreSelection saves before the ICN text lands, and the skip above never saves.
+	syncRatedButton();
+	persist();
+}
+
+/** Marks the button carrying the given value as the active one in its toggle group. */
+function applyToggleValue(attr: ToggleGroupAttribute, value: string): void {
+	const match = [...element_buttonsByToggleGroup[attr]].find(
+		(btn) => btn.getAttribute(attr) === value,
+	);
+	// A value no button carries any more (a stored option the markup has since dropped) changes nothing.
+	if (match !== undefined) setActiveToggle(attr, match);
+}
+
+/** Remembers every option the modal is currently set to, for the player's next visit. */
+function persist(): void {
+	const { minutes, increment } = timecontrols.getMinutesAndIncrement();
+	gameoptionsstore.save({
+		selection: variantselector.getSelection(),
+		icn: variantselector.getIcnText(),
+		modifiers: modifierselector.getGameModifiers(),
+		minutes,
+		increment,
+		toggles: {
+			time: getToggleValue('data-time'),
+			mode: getToggleValue('data-mode'),
+			side: getToggleValue('data-side'),
+			level: getToggleValue('data-level'),
+		},
+	});
+}
+
+// Form state ------------------------------------------------------------------
 
 /** Reads current seek options and disables the Rated button if a rated game is not permitted. */
 function syncRatedButton(): void {
@@ -138,21 +211,20 @@ function syncRatedButton(): void {
 
 	const allowed = leaderboardregistry.isRatedAllowed(variant, time, color, modifiers);
 	element_ratedButton.disabled = !allowed;
-	if (!allowed && element_ratedButton.classList.contains('active')) {
-		element_ratedButton.classList.remove('active');
-		element_casualButton.classList.add('active');
-	}
+	if (!allowed && element_ratedButton.classList.contains('active'))
+		setActiveToggle('data-mode', element_casualButton);
 }
 
 /** Returns the color the player has selected, or null for random. */
 function getSelectedColor(): typeof players.WHITE | typeof players.BLACK | null {
-	const sideBtn = document.querySelector<HTMLElement>('[data-side].active')!;
-	const sideVal = sideBtn.getAttribute('data-side')!;
+	const sideVal = getToggleValue('data-side');
 	if (sideVal === 'random') return null;
 	if (sideVal === 'white') return players.WHITE;
 	if (sideVal === 'black') return players.BLACK;
 	throw new Error(`Invalid side selection: ${sideVal}`);
 }
+
+// Creating the game -----------------------------------------------------------
 
 /**
  * Reads the seek form state and sends a createseek request via the lobby.
@@ -165,8 +237,7 @@ function handleSeek(isPrivate: boolean): void {
 	const time: TimeControl = timecontrols.getTimeControl();
 	const color = getSelectedColor();
 
-	const modeBtn = document.querySelector<HTMLElement>('[data-mode].active')!;
-	const mode: GameMode = modeBtn.getAttribute('data-mode') as GameMode;
+	const mode = getToggleValue('data-mode') as GameMode;
 
 	const modifiers = modifierselector.getGameModifiers();
 
@@ -189,12 +260,13 @@ function handleComputerGame(): void {
 	const time: TimeControl = timecontrols.getTimeControl();
 	const color = getSelectedColor();
 
-	const levelBtn = document.querySelector<HTMLElement>('[data-level].active')!;
-	const strengthLevel = Number(levelBtn.getAttribute('data-level')!);
+	const strengthLevel = Number(getToggleValue('data-level'));
 
 	lobby.createEngineGame({ variant, time, color, strengthLevel });
 	close();
 }
+
+// Opening and closing ---------------------------------------------------------
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
 function openModal(mode: ModalMode): void {
@@ -205,8 +277,7 @@ function openModal(mode: ModalMode): void {
 
 	element_rowGameMode.classList.toggle('hidden', mode === 'computer');
 	element_rowStrength.classList.toggle('hidden', mode !== 'computer');
-	// Computer games allow supported presets and validated custom positions.
-	variantselector.setEngineOnly(mode === 'computer');
+	variantselector.onModalOpen(mode === 'computer');
 
 	element_modalOverlay.classList.remove('hidden');
 
@@ -231,5 +302,7 @@ async function consumePendingHandoff(): Promise<void> {
 	openModal(handoff.mode);
 	await variantselector.applyIcn(handoff.icn);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { close };

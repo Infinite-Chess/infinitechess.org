@@ -9,6 +9,14 @@ import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js'
 
 import clockutil from '../../../../../shared/chess/util/clockutil';
 
+// Types -----------------------------------------------------------------------
+
+/** Callbacks a host wires to react to the time controls' state. */
+interface TimeControlsConfig {
+	/** Fired only on committed changes (a preset click, or release of either slider); hosts act on it. */
+	onCommit: () => void;
+}
+
 // Constants -------------------------------------------------------------------
 
 /** Mappings from slider index to actual time control values for both time control sliders. */
@@ -26,19 +34,36 @@ const element_sliderIncrement = document.getElementById('slider-increment') as H
 const element_incrementDisplay = document.getElementById('increment-display')!;
 const element_presetButtons = document.querySelectorAll<HTMLElement>('.preset-btn');
 
-// Functions -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
-/** Connects both time sliders to their value displays. */
-function initModalSliders(): void {
+/** Host callbacks, populated by {@link init}. */
+let config: TimeControlsConfig;
+
+// Initialization --------------------------------------------------------------
+
+/** Wires both time sliders and the preset buttons, then syncs the section to the active markup. */
+function init(hostConfig: TimeControlsConfig): void {
+	config = hostConfig;
+
 	linkSlider(element_sliderMinutes, element_minutesDisplay, (v) =>
 		String(TIME_CONTROL_SLIDER_MAPPINGS.BASE[Number(v)]!),
 	);
 	linkSlider(element_sliderIncrement, element_incrementDisplay, (v) =>
 		String(TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT[Number(v)]!),
 	);
+
+	element_presetButtons.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			applyPreset(btn);
+			config.onCommit();
+		});
+	});
+	const activePreset = document.querySelector<HTMLElement>('.preset-btn.active');
+	if (activePreset) applyPreset(activePreset);
+	onTimeToggle();
 }
 
-/** Binds slider input updates to a display formatter callback. */
+/** Binds a slider's live display updates, and its drag release as a commit. */
 function linkSlider(
 	slider: HTMLInputElement,
 	display: HTMLElement,
@@ -48,22 +73,22 @@ function linkSlider(
 		display.textContent = format(slider.value);
 		syncPresetHighlight();
 	});
+	slider.addEventListener('change', () => config.onCommit());
 }
 
-/** Applies a selected preset to both sliders and display labels. */
-function initPresets(): void {
-	element_presetButtons.forEach((btn) => {
-		btn.addEventListener('click', () => applyPreset(btn));
-	});
-	const activePreset = document.querySelector<HTMLElement>('.preset-btn.active');
-	if (activePreset) applyPreset(activePreset);
-}
+// Base and increment ----------------------------------------------------------
 
 /** Sets both sliders and their displays to the given preset button's values. */
 function applyPreset(btn: HTMLElement): void {
 	// Presets store literal minute/increment values, not slider indices.
-	const minutes = Number(btn.getAttribute('data-minutes'));
-	const increment = Number(btn.getAttribute('data-increment'));
+	setMinutesAndIncrement(
+		Number(btn.getAttribute('data-minutes')),
+		Number(btn.getAttribute('data-increment')),
+	);
+}
+
+/** Moves both sliders and their displays to the given base minutes and increment seconds. */
+function setMinutesAndIncrement(minutes: number, increment: number): void {
 	element_sliderMinutes.value = String(TIME_CONTROL_SLIDER_MAPPINGS.BASE.indexOf(minutes));
 	element_minutesDisplay.textContent = String(minutes);
 	element_sliderIncrement.value = String(
@@ -73,48 +98,54 @@ function applyPreset(btn: HTMLElement): void {
 	syncPresetHighlight();
 }
 
+/** The base minutes and increment seconds both sliders currently sit on. */
+function getMinutesAndIncrement(): { minutes: number; increment: number } {
+	return {
+		minutes: TIME_CONTROL_SLIDER_MAPPINGS.BASE[Number(element_sliderMinutes.value)]!,
+		increment: TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT[Number(element_sliderIncrement.value)]!,
+	};
+}
+
 /** Highlights the preset button that matches the current slider values. */
 function syncPresetHighlight(): void {
-	const currentMinutes = TIME_CONTROL_SLIDER_MAPPINGS.BASE[Number(element_sliderMinutes.value)]!;
-	const currentIncrement =
-		TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT[Number(element_sliderIncrement.value)]!;
+	const { minutes, increment } = getMinutesAndIncrement();
 	element_presetButtons.forEach((btn) => {
 		const match =
-			Number(btn.getAttribute('data-minutes')) === currentMinutes &&
-			Number(btn.getAttribute('data-increment')) === currentIncrement;
+			Number(btn.getAttribute('data-minutes')) === minutes &&
+			Number(btn.getAttribute('data-increment')) === increment;
 		btn.classList.toggle('active', match);
 	});
 }
 
+// Time mode -------------------------------------------------------------------
+
 /** Shows or hides the time slider section based on the active time mode. */
 function onTimeToggle(): void {
+	element_timeSliders.classList.toggle('is-collapsed', !isTimed());
+}
+
+/** Whether the time toggle group is set to a timed game, rather than an infinite one. */
+function isTimed(): boolean {
 	const activeBtn = document.querySelector<HTMLElement>('[data-time].active')!;
-	const isTimed = activeBtn.getAttribute('data-time') === 'timed';
-	element_timeSliders.classList.toggle('is-collapsed', !isTimed);
+	return activeBtn.getAttribute('data-time') === 'timed';
 }
 
 /** Returns the current time control value from the modal's slider/toggle state. */
 function getTimeControl(): TimeControl {
-	const activeBtn = document.querySelector<HTMLElement>('[data-time].active')!;
-	const timedVal = activeBtn.getAttribute('data-time')!;
-	if (timedVal === 'infinite') {
-		return '-';
-	} else if (timedVal === 'timed') {
-		const minutes = TIME_CONTROL_SLIDER_MAPPINGS.BASE[Number(element_sliderMinutes.value)]!;
-		const seconds = minutes * 60;
-		const increment =
-			TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT[Number(element_sliderIncrement.value)]!;
-		return `${seconds}+${increment}`;
-	} else {
-		throw new Error(`Invalid time mode: ${timedVal}`);
-	}
+	if (!isTimed()) return '-';
+	const { minutes, increment } = getMinutesAndIncrement();
+	return `${minutes * 60}+${increment}`;
 }
 
 // Exports ---------------------------------------------------------------------
 
 export default {
-	initModalSliders,
+	// Initialization
+	init,
+	// Base and increment
+	setMinutesAndIncrement,
+	getMinutesAndIncrement,
+	// Time mode
 	onTimeToggle,
-	initPresets,
 	getTimeControl,
 };

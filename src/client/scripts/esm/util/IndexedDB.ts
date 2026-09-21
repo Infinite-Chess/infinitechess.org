@@ -11,6 +11,8 @@
 
 import jsutil from '../../../../shared/util/jsutil.js';
 
+// Types -----------------------------------------------------------------------
+
 /** An entry in IndexedDB storage */
 interface Entry {
 	/** The actual value of the entry */
@@ -19,12 +21,18 @@ interface Entry {
 	expires?: number;
 }
 
+// Constants -------------------------------------------------------------------
+
 const DB_NAME = 'infinitechess';
 const DB_VERSION = 1;
 const STORE_NAME = 'entries';
 
+// State -----------------------------------------------------------------------
+
 let dbInstance: IDBDatabase | null = null;
 let dbInitPromise: Promise<IDBDatabase> | null = null;
+
+// Initialization --------------------------------------------------------------
 
 // Do this on load every time
 eraseExpiredItems().catch((error: unknown) => {
@@ -33,9 +41,12 @@ eraseExpiredItems().catch((error: unknown) => {
 	console.error('Error erasing expired IndexedDB items on init:', msg);
 });
 
+// Connection ------------------------------------------------------------------
+
 /**
  * Initializes the IndexedDB database.
  * Returns a promise that resolves to the database instance.
+ * @throws If IndexedDB is unavailable, or the database fails to open.
  */
 function initDB(): Promise<IDBDatabase> {
 	if (dbInstance) return Promise.resolve(dbInstance);
@@ -83,7 +94,25 @@ function initDB(): Promise<IDBDatabase> {
 	return dbInitPromise;
 }
 
-/** Run a readonly transaction and return the request result. */
+/** Reset the cached DB instance (close if open) so the next call to initDB() re-initializes. */
+function resetDBInstance(): void {
+	// Close the existing database connection if it’s open (ignore any close errors)
+	try {
+		dbInstance?.close();
+	} catch {
+		// Ignore
+	}
+	// Null out cached references so initDB() will run fresh
+	dbInstance = null;
+	dbInitPromise = null;
+}
+
+// Transactions ----------------------------------------------------------------
+
+/**
+ * Run a readonly transaction and return the request result.
+ * @throws If the database fails to open, or the transaction errors.
+ */
 async function withRead<T>(op: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
 	const db = await initDB();
 	return new Promise<T>((resolve, reject) => {
@@ -100,7 +129,10 @@ async function withRead<T>(op: (store: IDBObjectStore) => IDBRequest<T>): Promis
 	});
 }
 
-/** Run a readwrite transaction. Resolves when the transaction completes. */
+/**
+ * Run a readwrite transaction. Resolves when the transaction completes.
+ * @throws If the database fails to open, or the transaction errors.
+ */
 async function withWrite<R>(op: (store: IDBObjectStore) => IDBRequest<R>): Promise<void> {
 	const db = await initDB();
 	return new Promise<void>((resolve, reject) => {
@@ -118,12 +150,15 @@ async function withWrite<R>(op: (store: IDBObjectStore) => IDBRequest<R>): Promi
 	});
 }
 
+// Entries ---------------------------------------------------------------------
+
 /**
  * Saves an item in browser IndexedDB storage
  * @param key - The key-name to give this entry.
  * @param value - What to save
  * @param [expiryMillis] How long until this entry should be auto-deleted for being stale. Leave undefined to never expire.
  * @returns A promise that resolves when the item is saved
+ * @throws If IndexedDB is unavailable, or the write fails.
  */
 async function saveItem<T>(key: string, value: T, expiryMillis?: number): Promise<void> {
 	const timeExpires = expiryMillis !== undefined ? Date.now() + expiryMillis : undefined;
@@ -135,6 +170,7 @@ async function saveItem<T>(key: string, value: T, expiryMillis?: number): Promis
  * Loads an item from browser IndexedDB storage
  * @param key - The name/key of the item in storage
  * @returns A promise that resolves to the entry value, or undefined if not found
+ * @throws If IndexedDB is unavailable, or the read fails.
  */
 async function loadItem<T>(key: string): Promise<T | undefined> {
 	const save = await withRead<any>((store) => store.get(key));
@@ -154,10 +190,13 @@ async function loadItem<T>(key: string): Promise<T | undefined> {
  * Deletes an item from browser IndexedDB storage
  * @param key The name/key of the item in storage
  * @returns A promise that resolves when the item is deleted
+ * @throws If IndexedDB is unavailable, or the delete fails.
  */
 async function deleteItem(key: string): Promise<void> {
 	return withWrite((store) => store.delete(key));
 }
+
+// Expiry ----------------------------------------------------------------------
 
 /**
  * Checks if an entry has expired
@@ -186,6 +225,7 @@ function hasItemExpired(save: unknown): boolean {
 /**
  * Erases all expired items from IndexedDB storage
  * @returns A promise that resolves when all expired items are deleted
+ * @throws If IndexedDB is unavailable, or either transaction errors.
  */
 async function eraseExpiredItems(): Promise<void> {
 	const db = await initDB();
@@ -230,9 +270,12 @@ async function eraseExpiredItems(): Promise<void> {
 	}
 }
 
+// Whole store -----------------------------------------------------------------
+
 /**
  * Gets all keys present in the IndexedDB storage
  * @returns A promise that resolves to an array of all keys
+ * @throws If IndexedDB is unavailable, or the read fails.
  */
 async function getAllKeys(): Promise<string[]> {
 	const keys = await withRead<IDBValidKey[]>((store) => store.getAllKeys());
@@ -242,34 +285,28 @@ async function getAllKeys(): Promise<string[]> {
 /**
  * Erases all items from IndexedDB storage
  * @returns A promise that resolves when all items are deleted
+ * @throws If IndexedDB is unavailable, or the clear fails.
  */
 async function eraseAll(): Promise<void> {
 	return withWrite((store) => store.clear());
 }
 
-/** Reset the cached DB instance (close if open) so the next call to initDB() re-initializes. */
-function resetDBInstance(): void {
-	// Close the existing database connection if it’s open (ignore any close errors)
-	try {
-		dbInstance?.close();
-	} catch {
-		// Ignore
-	}
-	// Null out cached references so initDB() will run fresh
-	dbInstance = null;
-	dbInitPromise = null;
-}
+// Exports ---------------------------------------------------------------------
 
 export default {
-	saveItem,
-	loadItem,
-	deleteItem,
-	getAllKeys,
-	eraseExpiredItems,
-	eraseAll,
-	resetDBInstance,
 	// Unit test constants
 	DB_NAME,
 	DB_VERSION,
 	STORE_NAME,
+	// Connection
+	resetDBInstance,
+	// Entries
+	saveItem,
+	loadItem,
+	deleteItem,
+	// Expiry
+	eraseExpiredItems,
+	// Whole store
+	getAllKeys,
+	eraseAll,
 };

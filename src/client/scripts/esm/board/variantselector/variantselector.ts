@@ -42,7 +42,7 @@ import variantpreviewtooltip from './variantpreviewtooltip.js';
 // Types -----------------------------------------------------------------------
 
 /** The current variant selection. */
-type DisplaySelection =
+export type DisplaySelection =
 	| { kind: 'preset'; code: VariantCode }
 	| { kind: StorageType; name: string }
 	| { kind: 'icn' };
@@ -102,6 +102,30 @@ const element_btnCustomFromICN = document.getElementById('btn-custom-from-icn')!
 const element_btnCustomFromICNName =
 	element_btnCustomFromICN.querySelector<HTMLElement>('.group-name')!;
 
+// Constants -------------------------------------------------------------------
+
+/**
+ * How each saved-position backend is read: its reader, and the message shown when that read
+ * fails. Naming one by its {@link StorageType} is all a caller needs to select, preview, or
+ * restore a save from it.
+ */
+const SAVE_BACKENDS: Record<
+	StorageType,
+	{
+		read: (name: string) => Promise<{ variantOptions: VariantOptions }>;
+		errorMsg: string;
+	}
+> = {
+	cloud: {
+		read: cloudstore.readCloud,
+		errorMsg: t.shared.variant_selector.cloud_load_failed,
+	},
+	local: {
+		read: savestore.readLocal,
+		errorMsg: t.shared.variant_selector.local_load_failed,
+	},
+};
+
 // State -----------------------------------------------------------------------
 
 /** Host config, populated by {@link initVariantGroupDropdown}. */
@@ -137,13 +161,14 @@ let customContentVNode: VNode | Element = element_customVariantContent;
  */
 let icnResult: IcnResult | null = null;
 
-// Custom position caching
-// Very low chance a position is edited in another tab when it is sitting in the cache.
-
-/** Cache for fetched cloud save previews — keyed by position name. */
-const cloudPreviewCache = new Map<string, VariantOptions>();
-/** Cache for fetched local save previews — keyed by position name. */
-const localPreviewCache = new Map<string, VariantOptions>();
+/**
+ * Fetched save previews per backend, keyed by position name.
+ * Very low chance a position is edited in another tab when it is sitting in the cache.
+ */
+const previewCaches: Record<StorageType, Map<string, VariantOptions>> = {
+	cloud: new Map(),
+	local: new Map(),
+};
 
 const patch = init([attributesModule, classModule, eventListenersModule]);
 
@@ -286,13 +311,13 @@ function openVariantList(group: VariantGroup): void {
 }
 
 /**
- * Restricts the selector to what the engine can play (the computer-game flow), or lifts the
- * restriction. Hides unsupported preset variants — and any group left empty — rather than
- * erroring on submit; an unsupported current selection falls back to Classical. Custom
- * positions stay available, re-validated here against the newly active rules.
+ * Readies the selector for an opening modal: restricts it to what the engine can play for an
+ * engine game (custom positions stay available either way), then re-validates a custom selection
+ * where that could change its verdict. The only point a restored selection is parsed.
  */
-function setEngineOnly(restrict: boolean): void {
-	engineOnly = restrict;
+function onModalOpen(engineGame: boolean): void {
+	const rulesChanged = engineOnly !== engineGame;
+	engineOnly = engineGame;
 	element_variantListPanels.forEach((panel) => {
 		const group = panel.getAttribute('data-group') as GroupType;
 		if (group === 'custom') return;
@@ -312,7 +337,11 @@ function setEngineOnly(restrict: boolean): void {
 	if (selection.kind === 'preset') {
 		if (engineOnly && !apeironcard.SUPPORTED_VARIANTS.has(selection.code))
 			selectVariant('Classical');
-	} else revalidateCustomSelection();
+		return;
+	}
+	// Re-parsing a large position is expensive, and engineOnly is validity's only input that
+	// can change between opens. GIVE VALIDITY A NEW INPUT AND IT BELONGS IN THIS CONDITION.
+	if (rulesChanged || icnResult === null) revalidateCustomSelection();
 }
 
 /** Opens the custom variant panel and refreshes saved positions. */
@@ -398,8 +427,8 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`cloud-${s.name}`,
 			s.name,
-			() => selectCustomSave( 'cloud', s.name, cloudPreviewCache, cloudstore.readCloud, t.shared.variant_selector.cloud_load_failed), // prettier-ignore
-			(anchor) => handleSavePreview(anchor, s.name, cloudPreviewCache, cloudstore.readCloud),
+			() => selectCustomSave('cloud', s.name),
+			(anchor) => handleSavePreview(anchor, 'cloud', s.name),
 		),
 	);
 
@@ -407,8 +436,8 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`local-${s.position_name}`,
 			s.position_name,
-			() => selectCustomSave('local', s.position_name, localPreviewCache, savestore.readLocal, t.shared.variant_selector.local_load_failed), // prettier-ignore
-			(anchor) => handleSavePreview(anchor, s.position_name,  localPreviewCache, savestore.readLocal), // prettier-ignore
+			() => selectCustomSave('local', s.position_name),
+			(anchor) => handleSavePreview(anchor, 'local', s.position_name),
 		),
 	);
 
@@ -447,23 +476,16 @@ function selectVariant(code: VariantCode): void {
  * Selects a saved position (cloud or local) by kind and name, updating the selector display.
  * @param kind - Which storage backend the save lives in.
  * @param name - Position name used to look up and display the save.
- * @param cache - Preview cache to read from (cache hit) or write to (after fetch).
- * @param read - Async function that fetches the full save state by name.
- * @param errorMsg - Error message shown in the selector if the fetch fails.
  */
-function selectCustomSave(
-	kind: StorageType,
-	name: string,
-	cache: Map<string, VariantOptions>,
-	read: (n: string) => Promise<{ variantOptions: VariantOptions }>,
-	errorMsg: string,
-): void {
+function selectCustomSave(kind: StorageType, name: string): void {
 	selection = { kind, name };
 	applyCustomToSelector(name);
 	clearSavedPositionError();
 	hideCustomSection();
 	closeVariantDropdown();
 
+	const { read, errorMsg } = SAVE_BACKENDS[kind];
+	const cache = previewCaches[kind];
 	const cached = cache.get(name);
 	if (cached !== undefined) {
 		validateSavedPosition(cached);
@@ -501,6 +523,19 @@ async function applyIcn(icn: string): Promise<void> {
 	// Something rewrote the field while we validated — it has committed its own state, so ours is stale.
 	if (element_icnInput.value !== icn) return;
 	config.onCommit?.();
+}
+
+/**
+ * Puts a remembered selection back on page load. A From-ICN one is filled but not validated —
+ * {@link onModalOpen} does that, once, when the modal opens.
+ * @param icn - What the ICN field held; empty unless it's a From-ICN selection.
+ */
+function restoreSelection(restored: DisplaySelection, icn: string): void {
+	if (restored.kind === 'preset') selectVariant(restored.code);
+	else if (restored.kind === 'icn') {
+		openFromICN();
+		element_icnInput.value = icn;
+	} else selectCustomSave(restored.kind, restored.name);
 }
 
 /** Reveals the ICN input section and labels the selector with the From-ICN button's name. */
@@ -765,10 +800,8 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 function handleDisplayPreviewHover(anchor: HTMLElement): void {
 	if (selection.kind === 'preset') {
 		variantpreviewtooltip.showForVariantCode(anchor, selection.code, 'left', { engineGame: engineOnly }); // prettier-ignore
-	} else if (selection.kind === 'cloud') {
-		handleSavePreview(anchor, selection.name, cloudPreviewCache, cloudstore.readCloud);
-	} else if (selection.kind === 'local') {
-		handleSavePreview(anchor, selection.name, localPreviewCache, savestore.readLocal);
+	} else if (selection.kind === 'cloud' || selection.kind === 'local') {
+		handleSavePreview(anchor, selection.kind, selection.name);
 	} else if (selection.kind === 'icn') {
 		void variantpreviewtooltip.showForPosition(
 			anchor,
@@ -789,16 +822,12 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 /**
  * Fetches a save (cloud or local) and shows the preview tooltip anchored to the given element.
  * @param anchor - Element the tooltip is positioned relative to.
+ * @param kind - Which storage backend the save lives in.
  * @param positionName - Name of the position to fetch and preview.
- * @param cache - Preview cache to read from (cache hit) or write to (after fetch).
- * @param read - Async function that fetches the save state by position name.
  */
-function handleSavePreview(
-	anchor: HTMLElement,
-	positionName: string,
-	cache: Map<string, VariantOptions>,
-	read: (n: string) => Promise<{ variantOptions: VariantOptions }>,
-): void {
+function handleSavePreview(anchor: HTMLElement, kind: StorageType, positionName: string): void {
+	const { read } = SAVE_BACKENDS[kind];
+	const cache = previewCaches[kind];
 	void variantpreviewtooltip.showForPosition(
 		anchor,
 		positionName,
@@ -824,6 +853,11 @@ function getSelection(): DisplaySelection {
 	return selection;
 }
 
+/** The exact text sitting in the ICN input, valid or not. Empty unless From-ICN is open. */
+function getIcnText(): string {
+	return element_icnInput.value;
+}
+
 /** Whether the current selection resolves to a legal, loadable position. */
 function isSelectionValid(): boolean {
 	return selection.kind === 'preset' || !!icnResult?.isValid;
@@ -847,7 +881,7 @@ function getCustomPosition():
 	if (icnResult.kind === 'icn') {
 		return { kind: 'longFormat', longFormat: jsutil.deepCopyObject(icnResult.longFormat) };
 	}
-	// online / local saved position — the resolved options are loadable as-is (no moves).
+	// cloud / local saved position — the resolved options are loadable as-is (no moves).
 	return { kind: 'options', options: jsutil.deepCopyObject(icnResult.options) };
 }
 
@@ -883,15 +917,22 @@ function getSeekVariant(): SeekVariant | null {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Initialization
 	initVariantGroupDropdown,
 	initIcnValidation,
+	// Dropdown navigation
 	closeVariantDropdown,
-	setEngineOnly,
+	onModalOpen,
+	// Variant selection
+	applyIcn,
+	restoreSelection,
+	// Remembering Committed State
+	snapshotAccepted,
+	restoreAcceptedDisplay,
+	// Selection accessors
 	getSelection,
+	getIcnText,
 	isSelectionValid,
 	getCustomPosition,
 	getSeekVariant,
-	applyIcn,
-	snapshotAccepted,
-	restoreAcceptedDisplay,
 };
