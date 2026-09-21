@@ -3,7 +3,7 @@
 /* The variant + modifiers picker widget, shared by the home page's game-options
    modal (index.css) and the analysis board's setup panel (analysis.css). Markup is
    the shared Nunjucks macro in components/variantselector.njk; behaviour lives in
-   scripts/esm/components/variantselector/. */
+   scripts/esm/board/variantselector/. */
 
 /* ============================================================
    Widget layout container

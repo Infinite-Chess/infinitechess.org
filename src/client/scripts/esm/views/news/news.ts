@@ -1,4 +1,4 @@
-// src/client/scripts/esm/views/news.ts
+// src/client/scripts/esm/views/news/news.ts
 
 /**
  * This script runs on the news page.

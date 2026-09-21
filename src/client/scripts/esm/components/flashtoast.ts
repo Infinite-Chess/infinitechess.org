@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/flashtoast.ts
+// src/client/scripts/esm/components/flashtoast.ts
 
 /**
  * Cross-navigation "flash" toasts: queue a message on one page, then show it once

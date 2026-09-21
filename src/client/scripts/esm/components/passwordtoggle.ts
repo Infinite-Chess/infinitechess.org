@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/passwordtoggle.ts
+// src/client/scripts/esm/components/passwordtoggle.ts
 
 /**
  * Wires the show/hide toggles for password inputs rendered by the `passwordInput` njk macro
