@@ -139,22 +139,18 @@ const element_btnCustomFromICNName =
 // Constants -------------------------------------------------------------------
 
 /**
- * The two ceilings past which a keystroke stops judging the ICN and leaves the verdict to a
- * commit — blur, Enter, paste, or pressing submit. Both guard against stalling every keypress,
- * and they sit at the two points where cost is first knowable.
+ * The ICN length past which a keystroke stops judging the position, leaving the verdict to a
+ * commit — blur, Enter, paste, or pressing submit. Measured in characters rather than pieces
+ * because the piece count can't be known without parsing first, and parsing scales with the
+ * string: on a megabyte it is already far too slow to spend on a keypress.
  *
- * `CHARS` is checked BEFORE parsing. Parsing scales with the string and is itself far too slow
- * to spend on a keypress, so nothing may be spent ahead of this check. `PIECES` is checked once
- * the position is resolved but before a board is built, and catches a SHORT ICN that resolves to
- * a huge position — one naming only a variant, whose position comes from its module.
- *
- * On Naviary's machine, building the gamefile costs roughly 200 ms per 10,000 pieces. The two
- * limits are set to describe about the same size of position, at ~9 characters per piece.
+ * Set at the shortest ICN that can hold 5,000 pieces. The densest packing that exists — a square
+ * block hugging the origin — measures 37,281 characters there, so nothing under this cap can
+ * carry more. Building a gamefile costs roughly 200 ms per 10,000 pieces on Naviary's machine,
+ * putting 5,000 at about 100 ms. A position with distant coordinates spends more characters per
+ * piece and so defers sooner than its count alone would require.
  */
-const VALIDATE_LIVE_LIMITS = {
-	CHARS: 45_000,
-	PIECES: 5_000,
-} as const;
+const MAX_ICN_CHARS_TO_VALIDATE_LIVE = 37_000;
 
 /**
  * How each saved-position backend is read: its reader, and the message shown when that read
@@ -833,16 +829,16 @@ function clearError(outline: HTMLElement): void {
  *
  * @param revealErrors - Whether to surface invalid styling/error text. False while typing
  * (validity still updates); true on blur/paste so errors show once done.
- * @param live - Whether this is a keystroke rather than a commit. A position over either of
- * {@link VALIDATE_LIVE_LIMITS} is then left `unevaluated` for a commit to settle, instead of
- * stalling the keypress. A commit always reaches a verdict, however large the position.
+ * @param live - Whether this is a keystroke rather than a commit. An ICN over
+ * {@link MAX_ICN_CHARS_TO_VALIDATE_LIVE} is then left `unevaluated` for a commit to settle,
+ * instead of stalling the keypress. A commit always reaches a verdict, however large it is.
  */
 async function validateIcnInput(revealErrors: boolean, live = false): Promise<void> {
 	const value = element_icnInput.value;
 	// Deferring BEFORE the parse, and straight to `unevaluated` rather than by way of null:
 	// parsing is already too slow to spend on a keypress at this size, and blanking the result
 	// first would flick every host's validity off and back on again for each character typed.
-	if (live && value.length > VALIDATE_LIVE_LIMITS.CHARS) {
+	if (live && value.length > MAX_ICN_CHARS_TO_VALIDATE_LIVE) {
 		setIcnResult({ kind: 'unevaluated' });
 		return;
 	}
@@ -878,13 +874,6 @@ async function validateIcnInput(revealErrors: boolean, live = false): Promise<vo
 	});
 	// Awaiting the variant module let the user keep typing — discard a result they've moved past.
 	if (element_icnInput.value !== value) return;
-	if (
-		live &&
-		constructionOptions.additional.variantOptions.position.size > VALIDATE_LIVE_LIMITS.PIECES
-	) {
-		setIcnResult({ kind: 'unevaluated' });
-		return;
-	}
 
 	// Built through the same path the board loads by, so the gate validates the exact game that
 	// will be loaded — and hands that very game over to be loaded. Built regardless of
