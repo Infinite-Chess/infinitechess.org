@@ -9,6 +9,8 @@
  * dynamically so its variant-selector imports never run where the widget DOM is absent.
  */
 
+import modutil from '../../../../../shared/chess/util/modutil.js';
+
 import docutil from '../../util/docutil.js';
 import gamesession from '../../game/chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
@@ -21,7 +23,12 @@ function init(): void {
 	// Allow analyzing positions of any size.
 	variantselector.initVariantGroupDropdown({ isSeekContext: false, onCommit: loadSelection });
 	variantselector.initIcnValidation();
-	modifierselector.initModifierSelector({ onCommit: loadSelection });
+	// A modifier commit re-judges the selection before loading it: the Slide Limit rebuilds the
+	// movesets, so the game validated without it is not the game about to be played.
+	modifierselector.initModifierSelector({
+		onCommit: () =>
+			void variantselector.revalidateCustomSelection().then(() => loadSelection()),
+	});
 	// A move on the board abandons any un-committed selection (e.g. an opened, empty From-ICN
 	// field), so snap the display back to the variant actually loaded on the board.
 	GameBus.addEventListener('physical-move', () => variantselector.restoreAcceptedDisplay());
@@ -44,14 +51,6 @@ function onPaste(e: ClipboardEvent): void {
 	void variantselector.applyIcn(icn);
 }
 
-/** The active Slide Limit modifier as a bigint gamerule, or undefined if none is selected. */
-function getSelectedSlideLimit(): bigint | undefined {
-	for (const modifier of modifierselector.getGameModifiers()) {
-		if (modifier.kind === 'slide-limit') return BigInt(modifier.value);
-	}
-	return undefined;
-}
-
 /** Whether a load was refused mid-load, owed once the in-flight one finishes. */
 let loadOwed = false;
 
@@ -64,7 +63,7 @@ function loadSelection(): void {
 		return;
 	}
 
-	const slideLimit = getSelectedSlideLimit();
+	const slideLimit = modutil.slideLimitOf(modifierselector.getGameModifiers());
 	const selection = variantselector.getSelection();
 
 	if (selection.kind === 'preset') {
@@ -77,8 +76,9 @@ function loadSelection(): void {
 			// Saved position — its options are already resolved; load them directly.
 			void analysisloader.loadVariantOptions(custom.options, slideLimit);
 		} else {
-			// From-ICN — load the parsed position the validation gate already produced.
-			void analysisloader.pasteGame(custom.longFormat, undefined, undefined, slideLimit);
+			// From-ICN — put the very game the validation gate built onto the board, rather than
+			// building an identical second one. It was built with this same slide limit.
+			void analysisloader.pastePrebuiltGame(custom.gamefile, custom.longFormat, slideLimit);
 		}
 	}
 

@@ -77,26 +77,31 @@ function initModal(): void {
 		if (e.key === 'Escape') close();
 	});
 
-	element_modalSubmit.addEventListener('click', () => {
-		if (currentMode === 'online') handleSeek(false);
-		else if (currentMode === 'friend') handleSeek(true);
-		else if (currentMode === 'computer') handleComputerGame();
-		else console.error('Invalid modal mode:', currentMode);
-	});
+	element_modalSubmit.addEventListener('click', () => void submitModal());
 
 	initToggleGroups();
 	// Sliders save on commit, not change — one drag fires dozens of changes, each a whole-ICN write.
 	timecontrols.init({ onCommit: persist });
 	variantselector.initVariantGroupDropdown({
 		isSeekContext: true,
-		onChange: () => {
+		onValidityChange: () => {
 			element_modalSubmit.disabled = !variantselector.isSelectionValid();
 			syncRatedButton();
-			persist();
 		},
+		// Remembered as it is typed, so a half-written ICN survives a refresh. Deliberately not
+		// also on commit: committing changes neither the selection nor its text.
+		onEdit: persist,
 	});
 	variantselector.initIcnValidation();
-	modifierselector.initModifierSelector({ onChange: syncRatedButton, onCommit: persist });
+	// A modifier commit re-judges the position: the Slide Limit rebuilds the movesets, so a
+	// position judged without it is not the one that would be played.
+	modifierselector.initModifierSelector({
+		onChange: syncRatedButton,
+		onCommit: () => {
+			persist();
+			void variantselector.revalidateCustomSelection();
+		},
+	});
 	syncRatedButton();
 }
 
@@ -168,7 +173,7 @@ function applyOptions(options: GameOptions): void {
 	// that lies — nothing failed. Skipping it leaves the variant on Classical.
 	if (options.selection.kind !== 'cloud' || validatorama.areWeLoggedIn())
 		variantselector.restoreSelection(options.selection, options.icn);
-	// Keep both — restoreSelection saves before the ICN text lands, and the skip above never saves.
+	// Still needed: a skipped cloud save never reaches restoreSelection, so nothing saved itself.
 	syncRatedButton();
 	persist();
 }
@@ -204,7 +209,10 @@ function persist(): void {
 
 /** Reads current seek options and disables the Rated button if a rated game is not permitted. */
 function syncRatedButton(): void {
-	const variant = variantselector.getSeekVariant();
+	// Only a preset can be rated, so a custom selection is never resolved here — doing so would
+	// hand back the whole ICN it serializes to, only for rated-eligibility to refuse it anyway.
+	const isPreset = variantselector.getSelection().kind === 'preset';
+	const variant = isPreset ? variantselector.getSeekVariant() : null;
 	const time: TimeControl = timecontrols.getTimeControl();
 	const color = getSelectedColor();
 	const modifiers = modifierselector.getGameModifiers();
@@ -225,6 +233,26 @@ function getSelectedColor(): typeof players.WHITE | typeof players.BLACK | null 
 }
 
 // Creating the game -----------------------------------------------------------
+
+/**
+ * Runs the active flow's submit, first settling any verdict live validation deferred.
+ *
+ * A position too large to judge on every keystroke leaves the button enabled rather than
+ * greyed out with nothing having judged it — so pressing it is where that position gets judged.
+ * The error then lands in the ICN field and the button disables, as a live verdict would have.
+ */
+async function submitModal(): Promise<void> {
+	if (variantselector.isVerdictDeferred()) {
+		await variantselector.revalidateCustomSelection();
+		element_modalSubmit.disabled = !variantselector.isSelectionValid();
+		if (element_modalSubmit.disabled) return;
+	}
+
+	if (currentMode === 'online') handleSeek(false);
+	else if (currentMode === 'friend') handleSeek(true);
+	else if (currentMode === 'computer') handleComputerGame();
+	else console.error('Invalid modal mode:', currentMode);
+}
 
 /**
  * Reads the seek form state and sends a createseek request via the lobby.

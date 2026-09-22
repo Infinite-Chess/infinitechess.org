@@ -58,7 +58,9 @@ const FOUR_PLAYER_COLORS: number[] = [p.RED, p.BLUE, p.YELLOW, p.GREEN];
  *    {@link gamerules.isValidPromotionPiece}.
  *
  * Types pack into a Uint8Array as `player * numTypes + rawType`, so an out-of-range player
- * wraps to another piece instead of erroring — which is why this runs before anything is built.
+ * wraps to another piece instead of erroring — so run this before building a board from the
+ * position. The exception is a position that must first be reached by applying moves, which can
+ * only be judged after the board those moves ran on.
  *
  * @param variantOptions - The position and game rules to validate.
  * @param icnString - The position's ICN, used solely to check its length. Provide it in

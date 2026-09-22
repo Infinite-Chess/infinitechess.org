@@ -33,7 +33,7 @@ export interface GameConstructionOptions {
 	variant: DatedVariant | undefined;
 	/** The game's start timestamp in milliseconds since epoch. */
 	dateTimestamp: number;
-	/** Preset ray overrides for the variant's rays. */
+	/** Preset square and ray overrides, replacing the variant's own. */
 	presetAnnotes?: PresetAnnotes;
 	additional?: Additional;
 }
@@ -41,6 +41,7 @@ export interface GameConstructionOptions {
 /**
  * {@link GameConstructionOptions} carrying an explicit position — what parsing an ICN
  * always yields, since every ICN resolves to one (an empty position if it declares none).
+ * Lets a caller weigh the position before paying to build a board from it.
  */
 interface PositionedConstructionOptions extends GameConstructionOptions {
 	additional: Additional & { variantOptions: VariantOptions };
@@ -74,39 +75,23 @@ async function formulateGame(
 }
 
 /**
- * {@link formulateGame}, reporting construction failure instead of throwing. Failure is nearly always
- * a move that would crash the game — a missing piece on its start square, or promoting to a piece no
- * space was allocated for. An illegal-but-buildable position still returns a gamefile.
- * @param revealErrors - Whether the caller surfaces the failure to the user. Affects
- *   whether we console error here the internal error.
- * @returns The constructed gamefile, or `'moves_invalid'` if construction threw.
- */
-async function tryFormulateGame(
-	longFormat: LongFormatOut,
-	revealErrors: boolean,
-	overrides?: ConstructionOverrides,
-): Promise<GameFile | 'moves_invalid'> {
-	try {
-		return await formulateGame(longFormat, overrides);
-	} catch (e: unknown) {
-		if (revealErrors)
-			console.error("Pasted ICN's moves are invalid:", e instanceof Error ? e.message : e);
-		return 'moves_invalid';
-	}
-}
-
-/**
  * Constructs the gamefile of a moveless position, purely so callers can
  * inspect the game it produces (its computed conclusion, its engine support).
  * @param variant - The variant the position is of, when one is known — supplying its
  *   movesets, so the inspection sees how the pieces truly move. REQUIRES its module preloaded.
+ * @param slideLimit - The Slide Limit modifier the game will be played with, when one is
+ *   selected. It rebuilds the movesets, so omitting it inspects a game that won't be played.
  */
-function constructPosition(variantOptions: VariantOptions, variant?: DatedVariant): GameFile {
+function constructPosition(
+	variantOptions: VariantOptions,
+	variant?: DatedVariant,
+	slideLimit?: bigint,
+): GameFile {
 	return constructGame({
 		timeControl: '-',
 		variant,
 		dateTimestamp: Date.now(),
-		additional: { variantOptions },
+		additional: { variantOptions, slideLimit },
 	});
 }
 
@@ -122,7 +107,7 @@ function constructPosition(variantOptions: VariantOptions, variant?: DatedVarian
 async function resolveConstructionOptions(
 	longFormat: LongFormatOut,
 	overrides?: ConstructionOverrides,
-): Promise<GameConstructionOptions> {
+): Promise<PositionedConstructionOptions> {
 	const variant = await loadVariantOfLongFormat(longFormat);
 
 	const positionSource = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant);
@@ -178,7 +163,9 @@ function constructionOptionsFromLongFormat(
 /**
  * Builds the gamefile from already-resolved construction options.
  * REQUIRES the variant module preloaded whenever `options.variant` is defined.
- * @param validateMoves - If true, we'll throws an IllegalMoveError if any move played is illegal.
+ * @param validateMoves - If true, throws an IllegalMoveError if any move played is illegal.
+ * @throws If the game can't be built at all — nearly always a move that would crash it, such as
+ *   no piece on its start square, or promoting to a piece no space was allocated for.
  */
 function constructGame(options: GameConstructionOptions, validateMoves?: true): GameFile {
 	const variant = options.variant && {
@@ -198,8 +185,8 @@ function constructGame(options: GameConstructionOptions, validateMoves?: true): 
 
 export default {
 	formulateGame,
-	tryFormulateGame,
 	constructPosition,
 	resolveConstructionOptions,
 	constructionOptionsFromLongFormat,
+	constructGame,
 };

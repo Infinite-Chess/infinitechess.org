@@ -176,6 +176,7 @@ function loadGameFromState(state: GameStateFull, dead: boolean, longformat?: Lon
 
 	gamesession.loadGame(
 		{
+			kind: 'construct',
 			timeControl,
 			variant: datedVariant,
 			// The game's own start time — NOT the variant revision, which a custom

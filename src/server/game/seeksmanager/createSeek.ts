@@ -11,10 +11,12 @@
 
 import type { AuthSeek } from './seekUtility.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
+import type { GameModifier } from '../../../shared/chess/util/modutil.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { MetaData, Rating } from '../../../shared/chess/util/metadatautil.js';
 import type { CreateSeekMessage } from '../../../shared/transport/serverbound.js';
 
+import modutil from '../../../shared/chess/util/modutil.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import gamelimits from '../../../shared/chess/util/gamelimits.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
@@ -97,7 +99,7 @@ function getSeekFromWebsocketMessageContents(
 	const player = memberInfoUtil.buildServerUsernameContainer(owner, rating);
 
 	// Invalid variant; error already sent to the client.
-	if (!validateVariant(ws, messageContents.variant, false)) return;
+	if (!validateVariant(ws, messageContents.variant, false, messageContents.modifiers)) return;
 
 	return {
 		id: activeGames.issueUniqueId(), // The id its game will have.
@@ -118,10 +120,17 @@ function getSeekFromWebsocketMessageContents(
  * Sends the client an error on failure. Shared by seek creation and engine-game creation.
  * @param engineGame - Whether the engine will be the opponent. Its position is then judged on
  * the engine's board, and additionally on whether the engine can play it at all.
+ * @param modifiers - The modifiers the seek carries. The Slide Limit among them rebuilds the
+ * movesets, so the position must be judged with it or we judge a game that won't be played.
  */
-function validateVariant(ws: CustomWebSocket, variant: SeekVariant, engineGame: boolean): boolean {
+function validateVariant(
+	ws: CustomWebSocket,
+	variant: SeekVariant,
+	engineGame: boolean,
+	modifiers: GameModifier[] | undefined,
+): boolean {
 	if (variant.kind !== 'custom') return true;
-	const rejection = validateIcnSeekContent(variant.position, engineGame);
+	const rejection = validateIcnSeekContent(variant.position, engineGame, modifiers);
 	if (rejection === null) return true;
 	socketSend.send(ws, 'general', 'toast', playability.localizeRejection(ws.t, rejection));
 	return false;
@@ -130,9 +139,14 @@ function validateVariant(ws: CustomWebSocket, variant: SeekVariant, engineGame: 
 /**
  * Parses an ICN seek's content and runs the position legality and playability checks.
  * @param engineGame - See {@link validateVariant}.
+ * @param modifiers - See {@link validateVariant}.
  * @returns `null` if the ICN may be played, or the {@link PositionRejection} refusing it.
  */
-function validateIcnSeekContent(content: string, engineGame: boolean): PositionRejection | null {
+function validateIcnSeekContent(
+	content: string,
+	engineGame: boolean,
+	modifiers: GameModifier[] | undefined,
+): PositionRejection | null {
 	// Cheap pre-filter that bounds the parsing work. validatePosition re-checks below.
 	if (content.length > gamelimits.MAX_SERVER_VALIDATABLE_POSITION_LENGTH) {
 		return { kind: 'position', code: 'position_too_large' };
@@ -157,8 +171,13 @@ function validateIcnSeekContent(content: string, engineGame: boolean): PositionR
 	if (positionError !== null) return { kind: 'position', code: positionError };
 
 	// Legal, but the game still has to be playable from here. Built on the board the real game
-	// gets — the ICN's own world border, which an engine game must carry — then discarded.
-	const constructed = gameformulator.constructPosition(variantOptions);
+	// gets — the ICN's own world border, which an engine game must carry, and the modifiers
+	// chosen alongside it — then discarded.
+	const constructed = gameformulator.constructPosition(
+		variantOptions,
+		undefined,
+		modutil.slideLimitOf(modifiers),
+	);
 	return playability.getRejection(constructed, { seek: true, engine: engineGame });
 }
 

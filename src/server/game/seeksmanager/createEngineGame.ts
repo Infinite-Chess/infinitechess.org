@@ -49,8 +49,8 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	}
 
 	try {
-		// Invalid variant; error already sent to the client.
-		if (!createSeek.validateVariant(ws, body.variant, true)) return;
+		// Invalid variant; error already sent to the client. Engine games carry no modifiers.
+		if (!createSeek.validateVariant(ws, body.variant, true, undefined)) return;
 
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);
 		const engineColor = typeutil.invertPlayer(humanColor);

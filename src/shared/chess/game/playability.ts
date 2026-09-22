@@ -70,8 +70,9 @@ export type PositionRejection =
  * A played-out position may break rule 4 while staying perfectly viewable
  * — pieces get captured. So it lives here, not in positionlegality.
  *
- * @param gamefile - MUST be the exact board the game will load: moveless, carrying the real game's
- * world border (apeironborder's play border for engine games). Anything else judges a
+ * @param gamefile - Rule 1 judges the position at its front, so a moves-applied game is fine
+ * there. Rules 2-6 need the exact board the game will start from: moveless, carrying the real
+ * game's world border (apeironborder's play border for engine games). Anything else judges a
  * different game.
  * @param context - Which play contexts to judge it by beyond rule 1. Analysis is neither: it
  * loads finished and engine-unplayable games fine.
@@ -82,8 +83,9 @@ function getRejection(
 ): PositionRejection | null {
 	// --- Rule 1: King capture is not possible on turn 1 ---
 	if (gamerules.usesCheckmate(gamefile.gameRules)) {
-		// Whoever moves on turn 2 is the one turn 1 could have taken a royal from.
-		const secondToMove = moveutil.getWhosTurnAtMoveIndex(gamefile, 0);
+		// Whoever moves after the front position is the one its mover could take a royal from.
+		// The front, not ply 0: a game whose moves are already applied is judged where it stands. (FOR ANALYSIS PAGE)
+		const secondToMove = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length);
 		if (checkdetection.detect(gamefile, secondToMove, false).check) {
 			return { kind: 'position', code: 'king_capture_on_turn_1' };
 		}

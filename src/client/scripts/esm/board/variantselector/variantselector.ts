@@ -21,6 +21,7 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
+import modutil from '../../../../../shared/chess/util/modutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
@@ -54,8 +55,19 @@ interface VariantSelectorConfig {
 	 * seek-only hardening: rejecting oversized positions, 4D movement, and already game-over ones.
 	 */
 	isSeekContext: boolean;
-	/** Fires on every selection/validity change (live). Sync dependent UI (e.g. a submit button). */
-	onChange?: () => void;
+	/**
+	 * Fires whenever the selection's verdict moves — reached, retired, or deferred. Sync UI that
+	 * reflects legality (e.g. a submit button). Fires MORE than once per edit, since validating
+	 * retires the old verdict before it reaches a new one, so it is the wrong signal for anything
+	 * that should happen once per change.
+	 */
+	onValidityChange?: () => void;
+	/**
+	 * Fires once, and only when {@link getSelection} or {@link getIcnText} actually changed —
+	 * exactly what a host remembers between visits. Committing changes neither, so a host that
+	 * only persists wants this and not {@link onCommit}.
+	 */
+	onEdit?: () => void;
 	/** Fires only when a selection is committed (a discrete pick, or an ICN blur/paste). */
 	onCommit?: () => void;
 }
@@ -64,14 +76,36 @@ interface VariantSelectorConfig {
 type GroupType = VariantGroup | 'custom';
 
 /**
- * The last validated custom position. A From-ICN result caches its parse and moves-applied
- * gamefile so the seek flatten and preview don't rebuild them; the gamefile is kept even when
- * `isValid` is false (position illegal to play) so the preview still renders the true position
- * the moves lead to. Saved positions store options at rest, with no ICN to derive them from.
+ * The last validated custom position, holding everything validating it already produced so
+ * nothing downstream re-derives it. Kept even when `isValid` is false (position illegal to
+ * play) so the preview still renders the true position the moves lead to.
+ *
+ * - `played` is the flattened position a seek starts from — what the preview draws.
+ * - `seekIcn` is that position serialized; only built in a seek context, the sole place it's read.
+ * - A From-ICN result also holds the gamefile the moves were applied on, until the board takes it.
  */
 type IcnResult =
-	| { kind: 'saved'; isValid: boolean; options: VariantOptions }
-	| { kind: 'icn'; isValid: boolean; longFormat: LongFormatOut; gamefile: GameFile };
+	/** Too large to judge on every keystroke — the verdict waits for a commit. */
+	| { kind: 'unevaluated' }
+	| {
+			kind: 'saved';
+			isValid: boolean;
+			options: VariantOptions;
+			played: VariantOptions;
+			seekIcn?: string;
+	  }
+	| {
+			kind: 'icn';
+			isValid: boolean;
+			longFormat: LongFormatOut;
+			played: VariantOptions;
+			seekIcn?: string;
+			/**
+			 * The moves-applied game. Undefined once the board has taken it — it owns and mutates
+			 * it from there, so handing the same one out twice would serve an edited position.
+			 */
+			gamefile?: GameFile;
+	  };
 
 // Elements --------------------------------------------------------------------
 
@@ -103,6 +137,24 @@ const element_btnCustomFromICNName =
 	element_btnCustomFromICN.querySelector<HTMLElement>('.group-name')!;
 
 // Constants -------------------------------------------------------------------
+
+/**
+ * The two ceilings past which a keystroke stops judging the ICN and leaves the verdict to a
+ * commit — blur, Enter, paste, or pressing submit. Both guard against stalling every keypress,
+ * and they sit at the two points where cost is first knowable.
+ *
+ * `CHARS` is checked BEFORE parsing. Parsing scales with the string and is itself far too slow
+ * to spend on a keypress, so nothing may be spent ahead of this check. `PIECES` is checked once
+ * the position is resolved but before a board is built, and catches a SHORT ICN that resolves to
+ * a huge position — one naming only a variant, whose position comes from its module.
+ *
+ * On Naviary's machine, building the gamefile costs roughly 200 ms per 10,000 pieces. The two
+ * limits are set to describe about the same size of position, at ~9 characters per piece.
+ */
+const VALIDATE_LIVE_LIMITS = {
+	CHARS: 45_000,
+	PIECES: 5_000,
+} as const;
 
 /**
  * How each saved-position backend is read: its reader, and the message shown when that read
@@ -266,12 +318,17 @@ function initIcnValidation(): void {
 		config.onCommit?.();
 	});
 	element_icnInput.addEventListener('focus', () => clearError(element_icnInputWrap));
-	// Validate live so validity updates the moment the position is valid, but suppress
-	// error display until blur so we don't nag as the user types. No commit while typing.
 	element_icnInput.addEventListener('input', (e) => {
-		// A paste is a finished code, so reveal its errors instantly rather than waiting for blur.
-		const pasted = (e as InputEvent).inputType === 'insertFromPaste';
-		void validateIcnInput(pasted);
+		// A paste is a finished code, not a keystroke: judge it in full and reveal its errors now.
+		// A keystroke judges only where a host reads validity at all — one that doesn't (the
+		// analysis board, acting on commits alone) would pay for a verdict nothing looks at — and
+		// keeps its errors to itself, so we don't nag mid-ICN. Never a commit while typing.
+		if ((e as InputEvent).inputType === 'insertFromPaste') void validateIcnInput(true);
+		else if (config.onValidityChange !== undefined) void validateIcnInput(false, true);
+		// Announced AFTER validating, not before: an async function runs up to its first await
+		// synchronously, so a host reading validity from here sees this edit's answer, not the
+		// previous edit's.
+		config.onEdit?.();
 	});
 	// Enter commits the ICN (blur runs validate + commit) rather than inserting a newline.
 	element_icnInput.addEventListener('keydown', (e) => {
@@ -341,7 +398,7 @@ function onModalOpen(engineGame: boolean): void {
 	}
 	// Re-parsing a large position is expensive, and engineOnly is validity's only input that
 	// can change between opens. GIVE VALIDITY A NEW INPUT AND IT BELONGS IN THIS CONDITION.
-	if (rulesChanged || icnResult === null) revalidateCustomSelection();
+	if (rulesChanged || icnResult === null) void revalidateCustomSelection();
 }
 
 /** Opens the custom variant panel and refreshes saved positions. */
@@ -469,6 +526,7 @@ function selectVariant(code: VariantCode): void {
 	clearSavedPositionError();
 	hideCustomSection();
 	closeVariantDropdown();
+	config.onEdit?.(); // After hideCustomSection, which emptied the ICN field.
 	config.onCommit?.();
 }
 
@@ -483,6 +541,9 @@ function selectCustomSave(kind: StorageType, name: string): void {
 	clearSavedPositionError();
 	hideCustomSection();
 	closeVariantDropdown();
+	// Announced here rather than beside the commits below, which wait on the read: the selection
+	// changed the moment it was clicked, whether or not fetching it goes on to succeed.
+	config.onEdit?.();
 
 	const { read, errorMsg } = SAVE_BACKENDS[kind];
 	const cache = previewCaches[kind];
@@ -513,12 +574,15 @@ function openFromICN(): void {
 	clearSavedPositionError();
 	showCustomSection();
 	closeVariantDropdown();
+	config.onEdit?.(); // The selection changed, but no pick has been committed yet.
 }
 
 /** Programmatically selects Custom From-ICN, fills the input with the given ICN, and validates it. */
 async function applyIcn(icn: string): Promise<void> {
-	openFromICN();
+	// Filled BEFORE opening, so openFromICN's edit announcement already carries the new text —
+	// assigning `value` fires no input event of its own.
 	element_icnInput.value = icn;
+	openFromICN();
 	await validateIcnInput(true);
 	// Something rewrote the field while we validated — it has committed its own state, so ours is stale.
 	if (element_icnInput.value !== icn) return;
@@ -533,8 +597,9 @@ async function applyIcn(icn: string): Promise<void> {
 function restoreSelection(restored: DisplaySelection, icn: string): void {
 	if (restored.kind === 'preset') selectVariant(restored.code);
 	else if (restored.kind === 'icn') {
-		openFromICN();
+		// Filled first, as in applyIcn, so openFromICN's edit announcement carries the text.
 		element_icnInput.value = icn;
+		openFromICN();
 	} else selectCustomSave(restored.kind, restored.name);
 }
 
@@ -592,11 +657,12 @@ function restoreAcceptedDisplay(): void {
 	selection = loaded.selection;
 	element_variantDisplay.classList.remove('invalid');
 	if (selection.kind === 'icn') {
-		// Restore the field to the ICN that was actually loaded (discarding any invalid edits),
-		// then re-validate to refresh validity and clear the error highlight.
+		// Restore the field to the ICN that was actually loaded, discarding any invalid edits.
+		// Not re-judged: only a valid selection is ever snapshotted, so what goes back in already
+		// passed — and this runs on every board move, where rebuilding the game would be ruinous.
 		showCustomSection();
 		element_icnInput.value = loaded.icn!;
-		void validateIcnInput(false);
+		clearError(element_icnInputWrap);
 	} else {
 		hideCustomSection();
 		if (selection.kind === 'preset') applyVariantToSelector(selection.code);
@@ -607,39 +673,40 @@ function restoreAcceptedDisplay(): void {
 
 // Validation ------------------------------------------------------------------
 
-/** Sets icnResult and notifies the host of the change. */
+/** Sets icnResult and notifies the host the verdict moved. */
 function setIcnResult(result: IcnResult | null): void {
 	icnResult = result;
-	config.onChange?.();
+	config.onValidityChange?.();
 }
 
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(variantOptions: VariantOptions): void {
 	const played = withEngineBorder(variantOptions);
 	// Saved positions are authored in the editor, so they were never sourced from a variant.
-	let rejection = validateOptions(played, {});
+	const { rejection: positionRejection, seekIcn } = validateOptions(played, {});
 	// Legal position; it still has to be playable from here. Every context rejects a position
 	// whose king can be captured, and a seek context has further rules on top. Only then do we
 	// construct the transient gamefile those checks read off of, and we discard it after.
-	if (rejection === null) {
-		const constructed = gameformulator.constructPosition(played);
-		rejection = playabilityRejection(constructed);
-	}
-	if (rejection !== null) {
+	const rejection = positionRejection ?? playabilityRejection(played);
+
+	if (rejection !== null)
 		showError(element_variantDisplay, playability.localizeRejection(t, rejection));
-		setIcnResult({ kind: 'saved', options: variantOptions, isValid: false });
-		return;
-	}
-	clearError(element_variantDisplay);
-	setIcnResult({ kind: 'saved', options: variantOptions, isValid: true });
+	else clearError(element_variantDisplay);
+	setIcnResult({
+		kind: 'saved',
+		options: variantOptions,
+		played,
+		seekIcn,
+		isValid: rejection === null,
+	});
 }
 
 /**
- * Re-runs validation on the current custom selection, for when the rules
- * it's judged by have changed out from under an already-settled result.
+ * Re-runs validation on the current custom selection, for when the rules it's judged by have
+ * changed out from under an already-settled result. Resolves once the new verdict is in.
  */
-function revalidateCustomSelection(): void {
-	if (selection.kind === 'icn') void validateIcnInput(true);
+async function revalidateCustomSelection(): Promise<void> {
+	if (selection.kind === 'icn') await validateIcnInput(true);
 	else if (icnResult?.kind === 'saved') validateSavedPosition(icnResult.options);
 	// A saved position still being fetched has no result yet; it'll validate under the new rules.
 }
@@ -665,14 +732,17 @@ function variantOptionsToICN(options: VariantOptions, metadata: MetaData): strin
  * Validates a flattened position's legality, plus its ICN size in a seek context.
  * @param metadata - The tags the seek's ICN will carry — measured here so the size
  * checked is the size sent, which the server re-checks against the same threshold.
+ * @returns The rejection, or null if legal, alongside the ICN built to measure. That string
+ * is also the one the seek sends, so it's kept rather than serialized a second time on the way out.
  */
-function validateOptions(options: VariantOptions, metadata: MetaData): PositionRejection | null {
+function validateOptions(
+	options: VariantOptions,
+	metadata: MetaData,
+): { rejection: PositionRejection | null; seekIcn: string | undefined } {
 	// Serialize only for seeks — that's the sole consumer of the ICN here.
-	const code = validatePosition(
-		options,
-		config.isSeekContext ? variantOptionsToICN(options, metadata) : undefined,
-	);
-	return code === null ? null : { kind: 'position', code };
+	const seekIcn = config.isSeekContext ? variantOptionsToICN(options, metadata) : undefined;
+	const code = validatePosition(options, seekIcn);
+	return { rejection: code === null ? null : { kind: 'position', code }, seekIcn };
 }
 
 /**
@@ -697,12 +767,41 @@ function withEngineBorder(options: VariantOptions): VariantOptions {
 	return { ...options, gameRules: { ...options.gameRules, worldBorder } };
 }
 
-/** {@link playability.getRejection} under the contexts this selector is currently in. */
-function playabilityRejection(constructed: GameFile): PositionRejection | null {
-	return playability.getRejection(constructed, {
+/**
+ * {@link playability.getRejection} under the contexts this selector is currently in.
+ *
+ * Outside a seek the only check that runs is whether the player to move could capture a royal,
+ * which is asked of a board at its front — so a moves-applied game answers it as it stands, and
+ * that game is the very one analysis goes on to load. A seek's extra checks (already game-over,
+ * a player with no pieces, engine support) instead describe a FRESH game started from the
+ * flattened position, so they need that board, built here and discarded.
+ *
+ * @param played - The flattened position, on the border the game would be played with.
+ * @param movesApplied - The game the ICN's moves were applied on, when there is one.
+ */
+function playabilityRejection(
+	played: VariantOptions,
+	movesApplied?: GameFile,
+): PositionRejection | null {
+	const judged =
+		!config.isSeekContext && movesApplied !== undefined
+			? movesApplied
+			: gameformulator.constructPosition(played, movesApplied?.variant, selectedSlideLimit());
+	return playability.getRejection(judged, {
 		seek: config.isSeekContext,
 		engine: engineOnly,
 	});
+}
+
+/**
+ * The Slide Limit the game will be built with, read from the modifier selector beside us. It
+ * rebuilds the movesets, so every construction the gate makes must carry it or judge a board
+ * nobody plays on. Undefined for an engine game: `CreateEngineGameMessage` has no modifiers
+ * field, so one never reaches its game however the modal is set.
+ */
+function selectedSlideLimit(): bigint | undefined {
+	if (engineOnly) return undefined;
+	return modutil.slideLimitOf(modifierselector.getGameModifiers());
 }
 
 /** Clears any saved-position error state from the variant display. */
@@ -734,9 +833,19 @@ function clearError(outline: HTMLElement): void {
  *
  * @param revealErrors - Whether to surface invalid styling/error text. False while typing
  * (validity still updates); true on blur/paste so errors show once done.
+ * @param live - Whether this is a keystroke rather than a commit. A position over either of
+ * {@link VALIDATE_LIVE_LIMITS} is then left `unevaluated` for a commit to settle, instead of
+ * stalling the keypress. A commit always reaches a verdict, however large the position.
  */
-async function validateIcnInput(revealErrors: boolean): Promise<void> {
+async function validateIcnInput(revealErrors: boolean, live = false): Promise<void> {
 	const value = element_icnInput.value;
+	// Deferring BEFORE the parse, and straight to `unevaluated` rather than by way of null:
+	// parsing is already too slow to spend on a keypress at this size, and blanking the result
+	// first would flick every host's validity off and back on again for each character typed.
+	if (live && value.length > VALIDATE_LIVE_LIMITS.CHARS) {
+		setIcnResult({ kind: 'unevaluated' });
+		return;
+	}
 	// Nothing is resolved until this settles. Held results describe the previous value, and
 	// awaiting a variant module makes that window long enough to act on — so retire them now.
 	setIcnResult(null);
@@ -761,15 +870,35 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 
 	// Atleast the ICN is valid syntax, now let's check position, gamerules, and moves...
 
-	// Built through the same path the board loads by, so the gate validates the exact game that
-	// will be loaded. Built regardless of play-legality, so the preview always reflects the moves —
-	// a play-illegal position (e.g. king capturable) still previews faithfully once they're applied.
-	const constructed = await gameformulator.tryFormulateGame(longFormat, revealErrors);
+	// Resolving stops short of building a board, so the size of the one we'd build is known
+	// before paying for it. The slide limit rides along because it rebuilds the movesets, and a
+	// game judged without it is not the game that gets played.
+	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
+		slideLimit: selectedSlideLimit(),
+	});
 	// Awaiting the variant module let the user keep typing — discard a result they've moved past.
 	if (element_icnInput.value !== value) return;
-	if (constructed === 'moves_invalid') {
+	if (
+		live &&
+		constructionOptions.additional.variantOptions.position.size > VALIDATE_LIVE_LIMITS.PIECES
+	) {
+		setIcnResult({ kind: 'unevaluated' });
+		return;
+	}
+
+	// Built through the same path the board loads by, so the gate validates the exact game that
+	// will be loaded — and hands that very game over to be loaded. Built regardless of
+	// play-legality, so the preview always reflects the moves — a play-illegal position
+	// (e.g. king capturable) still previews faithfully once they're applied.
+	let constructed: GameFile;
+	try {
+		constructed = gameformulator.constructGame(constructionOptions);
+	} catch (e) {
 		// Construction crashed — the position can't be previewed or played.
-		if (revealErrors) showError(element_icnInputWrap, t.shared.position_errors.moves_invalid);
+		if (revealErrors) {
+			showError(element_icnInputWrap, t.shared.position_errors.moves_invalid);
+			console.error("Pasted ICN's moves are invalid:", e instanceof Error ? e.message : e);
+		}
 		setIcnResult(null);
 		return;
 	}
@@ -778,20 +907,15 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	// the server re-validates, judged on the board it gets rather than the one the moves ran on.
 	const played = withEngineBorder(gamecompressor.gamefileToPositionOptions(constructed));
 	const metadata = clientmetadatautil.buildSourceVariantMetadata(constructed);
-	const rejection =
-		validateOptions(played, metadata) ??
-		playabilityRejection(gameformulator.constructPosition(played, constructed.variant));
+	const { rejection: positionRejection, seekIcn } = validateOptions(played, metadata);
+	const rejection = positionRejection ?? playabilityRejection(played, constructed);
 
 	// The moves-applied gamefile is kept either way, so a rejected position still previews.
-	if (rejection !== null) {
-		if (revealErrors)
-			showError(element_icnInputWrap, playability.localizeRejection(t, rejection));
-		setIcnResult({ kind: 'icn', isValid: false, longFormat, gamefile: constructed });
-		return;
-	}
-	// Position is legal and playable.
-	clearError(element_icnInputWrap);
-	setIcnResult({ kind: 'icn', isValid: true, longFormat, gamefile: constructed });
+	const isValid = rejection === null;
+	if (isValid) clearError(element_icnInputWrap);
+	else if (revealErrors)
+		showError(element_icnInputWrap, playability.localizeRejection(t, rejection));
+	setIcnResult({ kind: 'icn', isValid, longFormat, played, seekIcn, gamefile: constructed });
 }
 
 // Preview tooltips ------------------------------------------------------------
@@ -807,12 +931,13 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 			anchor,
 			t.shared.variant_groups.custom.display_label,
 			async () => {
-				await validateIcnInput(true);
-				// Construction failed — show nothing rather than a lie of a starting position.
-				if (icnResult?.kind !== 'icn') return undefined;
-				return withEngineBorder(
-					gamecompressor.gamefileToPositionOptions(icnResult.gamefile),
-				);
+				// Judged only where nothing has judged it yet; otherwise validation's own flatten
+				// is reused, so no ICN is re-parsed and no board rebuilt just to draw a preview.
+				if (icnResult === null || icnResult.kind === 'unevaluated')
+					await revalidateCustomSelection();
+				// Still nothing legible to draw — show nothing rather than a lie of a position.
+				if (icnResult === null || icnResult.kind === 'unevaluated') return undefined;
+				return icnResult.played;
 			},
 			'left',
 		);
@@ -858,28 +983,46 @@ function getIcnText(): string {
 	return element_icnInput.value;
 }
 
-/** Whether the current selection resolves to a legal, loadable position. */
+/**
+ * Whether the selection's verdict was deferred past live validation, so a commit still owes it
+ * one. Lets a host settle it at the last moment instead of re-judging an already-settled position.
+ */
+function isVerdictDeferred(): boolean {
+	return icnResult?.kind === 'unevaluated';
+}
+
+/**
+ * Whether the current selection resolves to a legal, loadable position. An `unevaluated` one
+ * counts as valid: it was too large to judge live, so it is taken on trust until a commit
+ * settles it, rather than shown as broken when nothing has judged it either way.
+ */
 function isSelectionValid(): boolean {
-	return selection.kind === 'preset' || !!icnResult?.isValid;
+	if (selection.kind === 'preset') return true;
+	if (icnResult === null) return false;
+	return icnResult.kind === 'unevaluated' || icnResult.isValid;
 }
 
 /**
  * The current custom (non-preset) selection resolved for loading onto a board, or null if the
- * selection is a preset or not yet valid. A From-ICN selection returns the parse validation
- * already produced, so loading doesn't have to redo it; saved positions resolve to their
- * {@link VariantOptions}.
+ * selection is a preset or not yet valid.
  *
- * Both are deep-copied, since loading mutates them (e.g. gameRules.slideLimit)
- * and the cached originals outlive the load.
+ * A From-ICN selection hands over the very game validation built — CONSUMING it, since the board
+ * mutates what it is given — alongside the parse it came from, which the loader keeps so it can
+ * rebuild the pristine game later. A saved position resolves to its {@link VariantOptions},
+ * deep-copied because loading writes into them and the cached original outlives the load.
  */
 function getCustomPosition():
-	| { kind: 'longFormat'; longFormat: LongFormatOut }
+	| { kind: 'gamefile'; gamefile: GameFile; longFormat: LongFormatOut }
 	| { kind: 'options'; options: VariantOptions }
 	| null {
 	if (selection.kind === 'preset') return null;
-	if (!icnResult?.isValid) return null;
+	if (icnResult === null || icnResult.kind === 'unevaluated' || !icnResult.isValid) return null;
 	if (icnResult.kind === 'icn') {
-		return { kind: 'longFormat', longFormat: jsutil.deepCopyObject(icnResult.longFormat) };
+		// Already handed to a board — it has been played on since, so it is no longer this position.
+		const { gamefile, longFormat } = icnResult;
+		if (gamefile === undefined) return null;
+		icnResult.gamefile = undefined;
+		return { kind: 'gamefile', gamefile, longFormat };
 	}
 	// cloud / local saved position — the resolved options are loadable as-is (no moves).
 	return { kind: 'options', options: jsutil.deepCopyObject(icnResult.options) };
@@ -893,25 +1036,13 @@ function getSeekVariant(): SeekVariant | null {
 	if (selection.kind === 'preset') {
 		return { kind: 'preset', code: selection.code };
 	}
-	if (!icnResult?.isValid) return null;
+	if (icnResult === null || icnResult.kind === 'unevaluated' || !icnResult.isValid) return null;
 	// Every custom selection — saved position or From-ICN — travels as the ICN string it resolves
-	// to. A From-ICN selection sends the position its moves lead to, since a seek's ICN may not
-	// contain moves; a save's resolved options are already move-free. The engine's border is
-	// written in, since the server takes the ICN's own board as given and refuses one without.
-	const options = withEngineBorder(
-		icnResult.kind === 'icn'
-			? gamecompressor.gamefileToPositionOptions(icnResult.gamefile)
-			: icnResult.options,
-	);
-	// The source-variant tags ride along — an explicit position lifted from the middle of a
-	// balanced game is lopsided, and they are all that tells the game it starts otherwise.
-	const metadata =
-		icnResult.kind === 'icn'
-			? clientmetadatautil.buildSourceVariantMetadata(icnResult.gamefile)
-			: {};
-	const position = variantOptionsToICN(options, metadata);
-	if (!position) return null;
-	return { kind: 'custom', position };
+	// to. Validation built that string to measure it against the size cap, so the exact one it
+	// judged is the one sent: the flattened position, on the engine's border, carrying the
+	// source-variant tags that tell the game it didn't start from a balanced position.
+	if (!icnResult.seekIcn) return null;
+	return { kind: 'custom', position: icnResult.seekIcn };
 }
 
 // Exports ---------------------------------------------------------------------
@@ -929,9 +1060,12 @@ export default {
 	// Remembering Committed State
 	snapshotAccepted,
 	restoreAcceptedDisplay,
+	// Validation
+	revalidateCustomSelection,
 	// Selection accessors
 	getSelection,
 	getIcnText,
+	isVerdictDeferred,
 	isSelectionValid,
 	getCustomPosition,
 	getSeekVariant,

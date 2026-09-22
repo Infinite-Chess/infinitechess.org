@@ -59,6 +59,14 @@ function getModifierIconId(code: ModifierCode): string {
 	return MODIFIER_ICONS[code];
 }
 
+/** The Slide Limit modifier's distance as the gamerule it becomes, or undefined if unselected. */
+function slideLimitOf(modifiers: GameModifier[] | undefined): bigint | undefined {
+	for (const modifier of modifiers ?? []) {
+		if (modifier.kind === 'slide-limit') return BigInt(modifier.value);
+	}
+	return undefined;
+}
+
 /**
  * Returns the variables used to interpolate the description of a modifier.
  * They MUST match the variables in the respective translation template
@@ -82,5 +90,6 @@ export default {
 	GameModifierSchema,
 	// Functions
 	getModifierIconId,
+	slideLimitOf,
 	getModifierDescriptionVars,
 };

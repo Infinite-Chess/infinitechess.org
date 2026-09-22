@@ -146,6 +146,7 @@ function startEngineGame(options: {
 	gamesession.setSessionGame({ type: 'online', role: options.youAreColor });
 	gamesession.loadGame(
 		{
+			kind: 'construct',
 			timeControl: options.timeControl,
 			variant: undefined,
 			dateTimestamp: Date.now(),

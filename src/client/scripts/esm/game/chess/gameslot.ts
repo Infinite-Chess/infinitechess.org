@@ -9,6 +9,7 @@
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConstructionOptions } from '../../../../../shared/chess/game/gameformulator.js';
 import type { GameFile, LoadedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 
@@ -44,11 +45,27 @@ import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 // Types -----------------------------------------------------------------------
 
-/** Options for loading a game. */
-export interface LoadOptions extends GameConstructionOptions {
+/**
+ * Options for loading a game: either everything to construct one from, or one already built.
+ * A caller that had to construct the game to validate it hands that one over rather than
+ * paying for an identical second construction.
+ */
+export type LoadOptions = {
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
 	viewWhitePerspective: boolean;
-}
+} & (
+	| ({ kind: 'construct' } & GameConstructionOptions)
+	| {
+			kind: 'prebuilt';
+			/**
+			 * The finished gamefile to put on the board. The board OWNS it from here and mutates
+			 * it, so the handing-over caller must drop its own reference.
+			 */
+			gamefile: GameFile;
+			/** Preset square and ray overrides, which the built gamefile doesn't retain. */
+			presetAnnotes?: PresetAnnotes;
+	  }
+);
 
 // Variables -------------------------------------------------------------------
 
@@ -135,25 +152,19 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 
 /** Loads all of the logical components of a game */
 async function loadLogical(loadOptions: LoadOptions): Promise<void> {
-	let variant: LoadedVariant | undefined;
-	if (loadOptions.variant !== undefined) {
-		await variantcache.ensureVariantLoaded(loadOptions.variant.code);
-		variant = { ...loadOptions.variant, mod: variantcache.getModule(loadOptions.variant.code) };
-	}
-	loadedGamefile = gamefile.initGameFile(
-		loadOptions.timeControl,
-		loadOptions.dateTimestamp,
-		variant,
-		loadOptions.additional,
-	);
+	const game =
+		loadOptions.kind === 'prebuilt'
+			? loadOptions.gamefile
+			: await constructGamefile(loadOptions);
+	loadedGamefile = game;
 
 	viewColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
 
-	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.pieces);
+	const pieceCount = boardutil.getPieceCountOfGame(game.pieces);
 	// Disable miniimages if there's too many pieces
 	if (pieceCount > miniimagerenderer.MAX_PIECE_COUNT) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
-	if (pieceCount > arrows.MAX_PIECES || loadedGamefile.pieces.slides.length > arrows.MAX_LINES)
+	if (pieceCount > arrows.MAX_PIECES || game.pieces.slides.length > arrows.MAX_LINES)
 		arrows.forceModeOff();
 	else arrows.applyPreferredMode(); // A previous game may have forced them off, or lowered the mode
 
@@ -162,6 +173,21 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 		drawsquares.setPresetOverrides(loadOptions.presetAnnotes.squares);
 	if (loadOptions.presetAnnotes?.rays)
 		drawrays.setPresetOverrides(loadOptions.presetAnnotes.rays);
+}
+
+/** Builds the gamefile the options describe, loading the variant module it reads from first. */
+async function constructGamefile(options: GameConstructionOptions): Promise<GameFile> {
+	let variant: LoadedVariant | undefined;
+	if (options.variant !== undefined) {
+		await variantcache.ensureVariantLoaded(options.variant.code);
+		variant = { ...options.variant, mod: variantcache.getModule(options.variant.code) };
+	}
+	return gamefile.initGameFile(
+		options.timeControl,
+		options.dateTimestamp,
+		variant,
+		options.additional,
+	);
 }
 
 /** Loads all of the graphical components of a game */

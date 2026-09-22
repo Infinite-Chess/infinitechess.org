@@ -34,6 +34,7 @@ async function startBoardEditor(): Promise<void> {
 	const viewWhitePerspective = true;
 
 	gamesession.loadGame({
+		kind: 'construct',
 		timeControl: '-',
 		variant: { code: variantCode, dateTimestamp },
 		dateTimestamp,
@@ -78,6 +79,7 @@ async function startBoardEditorFromCustomPosition(
 	const viewWhitePerspective = true;
 
 	gamesession.loadGame({
+		kind: 'construct',
 		timeControl: '-',
 		variant: undefined, // Not specified for custom position
 		dateTimestamp,
