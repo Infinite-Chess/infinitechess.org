@@ -105,7 +105,7 @@ If two rules genuinely conflict for a given task, or one of them can't be follow
 
 31. **Cost on hot paths.** Judge per-frame, per-move and per-piece code on cost, not just correctness: no allocations inside loops, no repeated work that could be hoisted or computed once, no complexity scaling with position or move count where a bounded alternative exists. Cold paths — startup, one-shot, error — are judged on clarity instead; don't micro-optimize them.
 
-32. Type honesty. No `any`, no cast that contradicts a declared type, no widened union or non-null assertion standing in for a real invariant.
+32. Type honesty. No `any`, no cast that contradicts a declared type, no widened union or non-null assertion standing in for a real invariant. Values set, cleared or valid together share one discriminated union or object, so illegal combinations can't be typed.
 
 33. Never re-export a type; always reference the source.
 
