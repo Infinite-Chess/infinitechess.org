@@ -309,7 +309,7 @@ into the `LongFormatIn` shape the converter wants.
 | Goal                                              | Call                                                    |
 | ------------------------------------------------- | ------------------------------------------------------- |
 | Parsed ICN → playable gamefile                    | `gameformulator.formulateGame()`                        |
-| …weighing its size before building it             | `resolveConstructionOptions()` then `constructGame()`   |
+| …with a check between resolving and building      | `resolveConstructionOptions()` then `constructGame()`   |
 | Parsed ICN → `VariantOptions`                     | `icnimport.variantOptionsFromLongFormat()`              |
 | Resolve the position (explicit, or the variant's) | `icnimport.getPositionAndSpecialRightsFromLongFormat()` |
 | Parsed moves → wire `MovePacket`s                 | `icnimport.movePacketsFromParsed()`                     |
@@ -317,7 +317,7 @@ into the `LongFormatIn` shape the converter wants.
 `formulateGame` is async and throws — an `IllegalMoveError` when built with `validateMoves`, or a
 construction error for a move that can't be applied. It is `resolveConstructionOptions` (async,
 and where the variant module loads) followed by `constructGame` (sync, and where it throws);
-split them when the resolved position must be inspected before paying to build a board from it.
+split them when something must be checked after the await but before paying to build the board.
 
 Piecewise helpers, for when you hold one segment rather than a whole ICN:
 

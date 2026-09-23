@@ -172,7 +172,7 @@ function applyOptions(options: GameOptions): void {
 	// A cloud save can't be fetched while logged out, and trying would show a load failure
 	// that lies — nothing failed. Skipping it leaves the variant on Classical.
 	if (options.selection.kind !== 'cloud' || validatorama.areWeLoggedIn())
-		variantselector.restoreSelection(options.selection, options.icn);
+		variantselector.restoreSelection(options.selection);
 	// Still needed: a skipped cloud save never reaches restoreSelection, so nothing saved itself.
 	syncRatedButton();
 	persist();
@@ -192,7 +192,6 @@ function persist(): void {
 	const { minutes, increment } = timecontrols.getMinutesAndIncrement();
 	gameoptionsstore.save({
 		selection: variantselector.getSelection(),
-		icn: variantselector.getIcnText(),
 		modifiers: modifierselector.getGameModifiers(),
 		minutes,
 		increment,

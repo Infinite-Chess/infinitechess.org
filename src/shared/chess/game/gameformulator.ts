@@ -41,7 +41,6 @@ export interface GameConstructionOptions {
 /**
  * {@link GameConstructionOptions} carrying an explicit position — what parsing an ICN
  * always yields, since every ICN resolves to one (an empty position if it declares none).
- * Lets a caller weigh the position before paying to build a board from it.
  */
 interface PositionedConstructionOptions extends GameConstructionOptions {
 	additional: Additional & { variantOptions: VariantOptions };
@@ -107,7 +106,7 @@ function constructPosition(
 async function resolveConstructionOptions(
 	longFormat: LongFormatOut,
 	overrides?: ConstructionOverrides,
-): Promise<PositionedConstructionOptions> {
+): Promise<GameConstructionOptions> {
 	const variant = await loadVariantOfLongFormat(longFormat);
 
 	const positionSource = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant);

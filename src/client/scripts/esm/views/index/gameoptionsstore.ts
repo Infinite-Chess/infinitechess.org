@@ -29,15 +29,13 @@ const EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
 const SelectionSchema = z.union([
 	z.strictObject({ kind: z.literal('preset'), code: z.literal(VARIANT_CODES) }),
 	z.strictObject({ kind: z.enum(['cloud', 'local']), name: z.string() }),
-	z.strictObject({ kind: z.literal('icn') }),
+	z.strictObject({ kind: z.literal('icn'), icn: z.string() }),
 ]) satisfies z.ZodType<DisplaySelection>;
 
 /** Every game setup option remembered between visits to the lobby. */
 export type GameOptions = z.infer<typeof GameOptionsSchema>;
 const GameOptionsSchema = z.strictObject({
 	selection: SelectionSchema,
-	/** The From-ICN field's exact text, stored whether it parses or not so a broken paste survives. */
-	icn: z.string(),
 	modifiers: z.array(modutil.GameModifierSchema),
 	/** Base minutes per side, held to the base-time slider's ticks. */
 	minutes: z.number().refine((v) => clockutil.VALID_BASE_MINUTES.includes(v)),
