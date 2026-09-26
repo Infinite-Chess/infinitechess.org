@@ -18,7 +18,7 @@ import memberInfoCookie from './memberInfoCookie.js';
 
 // Types -----------------------------------------------------------------------
 
-export type Preferences = z.infer<typeof PreferencesSchema>;
+type Preferences = z.infer<typeof PreferencesSchema>;
 
 // Constants -------------------------------------------------------------------
 

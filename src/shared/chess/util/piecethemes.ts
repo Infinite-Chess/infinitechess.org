@@ -12,7 +12,7 @@ import { rawTypes as r, players as p } from './typeutil.js';
 // Types -----------------------------------------------------------------------
 
 /** A tint colour for every player. */
-export type PieceColorGroup = {
+type PieceColorGroup = {
 	[_team in Player]: Color;
 };
 

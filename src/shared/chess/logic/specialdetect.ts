@@ -62,40 +62,23 @@ function kings(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 	let left: bigint | null = null; // Piece directly left of king. (Infinity if none)
 	let right: bigint | null = null; // Piece directly right of king. (Infinity if none)
 
-	// If premoving, skip obstruction and check checks.
-	if (premove) {
-		// Find the closest CASTLEABLE piece on each side of the king.
-		for (const idx of row) {
-			const pieceCoords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
+	// Find the CLOSEST piece on each side of the king.
+	for (const idx of row) {
+		const pieceCoords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
 
-			if (!isPieceCastleable(pieceCoords)) continue; // Piece is not castleable, skip it
+		// Premoving skips obstruction, so it looks past non-castleable pieces
+		// to the closest CASTLEABLE one instead.
+		if (premove && !isPieceCastleable(pieceCoords)) continue;
 
-			if (pieceCoords[0] < kingX && (left === null || pieceCoords[0] > left))
-				left = pieceCoords[0];
-			else if (pieceCoords[0] > kingX && (right === null || pieceCoords[0] < right))
-				right = pieceCoords[0];
-		}
-
-		// THEN append the castling moves to the individual moves.
-		processSide(left, -1n, premove); // Castling left
-		processSide(right, 1n, premove); // Castling right
-	} else {
-		// Not premoving. Perform obsctruction and check checks as normal.
-
-		// Find the CLOSEST piece on each side of the king.
-		for (const idx of row) {
-			const pieceCoords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
-
-			if (pieceCoords[0] < kingX && (left === null || pieceCoords[0] > left))
-				left = pieceCoords[0];
-			else if (pieceCoords[0] > kingX && (right === null || pieceCoords[0] < right))
-				right = pieceCoords[0];
-		}
-
-		// THEN check if the piece is castleable.
-		processSide(left, -1n, premove); // Castling left
-		processSide(right, 1n, premove); // Castling right
+		if (pieceCoords[0] < kingX && (left === null || pieceCoords[0] > left))
+			left = pieceCoords[0];
+		else if (pieceCoords[0] > kingX && (right === null || pieceCoords[0] < right))
+			right = pieceCoords[0];
 	}
+
+	// THEN check if the piece is castleable, and append the castling moves.
+	processSide(left, -1n, premove); // Castling left
+	processSide(right, 1n, premove); // Castling right
 
 	/**
 	 * Returns whether the piece at the given coordinates is castleable.
@@ -264,6 +247,7 @@ function getEnPassantGamefileProperty(
 
 /**
  * Appends legal enpassant capture to the selected pawn's provided individual moves.
+ * Mirrored by `addPossibleEnPassant` in fourdimensionalmoves.ts: a change here must be made there too.
  * @param boardsim - The boardsim
  * @param individualMoves - The running list of legal individual moves
  * @param coords - The coordinates of the pawn selected, [x,y]

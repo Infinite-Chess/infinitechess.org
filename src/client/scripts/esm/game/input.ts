@@ -440,32 +440,10 @@ function CreateInputListener(
 		const now = Date.now();
 		targetButtonInfo.timeDownMillisHistory.push(now);
 		// Update double click draw ----------
-		const DOUBLE_CLICK_TIME_MS =
-			e instanceof MouseEvent
-				? CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MS
-				: CLICK_THRESHOLDS.TOUCH.DOUBLE_CLICK_TIME_MS; // CAN'T USE instanceof Touch because it's not defined in Safari!
+		const { DOUBLE_CLICK_TIME_MS } = getClickThresholds(e);
 		if (previousTimeDown && now - previousTimeDown < DOUBLE_CLICK_TIME_MS) {
 			// Mouse has been down at least once before.
-			// Now we now posDown will be defined, so we can calculate the distance to that last click down.
-			// Works for 2D mode, desktop & mobile
-			const posDown = targetButtonInfo.posDown;
-			const distMoved = posDown
-				? Math.max(
-						Math.abs(posDown[0] - relativeMousePos[0]),
-						Math.abs(posDown[1] - relativeMousePos[1]),
-					)
-				: 0;
-			// Works for 3D mode, desktop (mouse is locked in place then)
-			const delta = Math.max(
-				targetButtonInfo.deltaSinceDown[0],
-				targetButtonInfo.deltaSinceDown[1],
-			);
-			// console.log("Mouse delta:", delta);
-			const MOVE_VPIXELS =
-				e instanceof MouseEvent
-					? CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS
-					: CLICK_THRESHOLDS.TOUCH.MOVE_VPIXELS; // CAN'T USE instanceof Touch because it's not defined in Safari!
-			if (distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS) {
+			if (isWithinClickTolerance(targetButtonInfo, relativeMousePos, e)) {
 				// Only register the double click drag if the mouse hasn't moved too far from its last click down.
 				targetButtonInfo.doubleClickDrag = true;
 				// console.log("Mouse double click dragged: ", MouseNames[targetButton]);
@@ -503,30 +481,9 @@ function CreateInputListener(
 		// Update click --------------
 		const mouseHistory = targetButtonInfo.timeDownMillisHistory;
 		const timePassed = Date.now() - (mouseHistory[mouseHistory.length - 1] ?? 0); // Since the latest click
-		const TIME_MS =
-			e instanceof MouseEvent
-				? CLICK_THRESHOLDS.MOUSE.TIME_MS
-				: CLICK_THRESHOLDS.TOUCH.TIME_MS; // CAN'T USE instanceof Touch because it's not defined in Safari!
+		const { TIME_MS } = getClickThresholds(e);
 		if (timePassed < TIME_MS) {
-			// Works for 2D mode, desktop & mobile
-			const posDown = targetButtonInfo.posDown;
-			const distMoved = posDown
-				? Math.max(
-						Math.abs(posDown[0] - relativeMousePos[0]),
-						Math.abs(posDown[1] - relativeMousePos[1]),
-					)
-				: 0; // No click down to compare to. This can happen if you click down offscreen.
-			// Works for 3D mode, desktop (mouse is locked in place then)
-			const delta = Math.max(
-				targetButtonInfo.deltaSinceDown[0],
-				targetButtonInfo.deltaSinceDown[1],
-			);
-			// console.log("Mouse delta: ", delta);
-			const MOVE_VPIXELS =
-				e instanceof MouseEvent
-					? CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS
-					: CLICK_THRESHOLDS.TOUCH.MOVE_VPIXELS; // CAN'T USE instanceof Touch because it's not defined in Safari!
-			if (distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS) {
+			if (isWithinClickTolerance(targetButtonInfo, relativeMousePos, e)) {
 				targetButtonInfo.clicked = true;
 				// console.log("Mouse clicked: ", MouseNames[targetButton]);
 			}
@@ -923,6 +880,31 @@ function getRelativeMousePosition(
 	if (element instanceof Document) return coords; // No need to adjust if we're listening on the document.
 	const rect = element.getBoundingClientRect();
 	return [coords[0] - rect.left, coords[1] - rect.top];
+}
+
+/** The click thresholds for the mouse, or for a finger. */
+function getClickThresholds(
+	e: MouseEvent | Touch,
+): (typeof CLICK_THRESHOLDS)[keyof typeof CLICK_THRESHOLDS] {
+	return e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE : CLICK_THRESHOLDS.TOUCH; // CAN'T USE instanceof Touch because it's not defined in Safari!
+}
+
+/**
+ * Whether the pointer has stayed within the click tolerance since its last press down: by its position
+ * (2D mode, desktop & mobile) and by its movement (3D mode, where the mouse is locked in place).
+ */
+function isWithinClickTolerance(
+	info: ClickInfo,
+	position: DoubleCoords,
+	e: MouseEvent | Touch,
+): boolean {
+	const { MOVE_VPIXELS } = getClickThresholds(e);
+	const posDown = info.posDown;
+	const distMoved = posDown
+		? Math.max(Math.abs(posDown[0] - position[0]), Math.abs(posDown[1] - position[1]))
+		: 0; // No click down to compare to. This can happen if you click down offscreen.
+	const delta = Math.max(info.deltaSinceDown[0], info.deltaSinceDown[1]);
+	return distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS;
 }
 
 export { Mouse, CreateInputListener };

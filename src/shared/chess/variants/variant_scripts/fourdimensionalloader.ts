@@ -65,56 +65,29 @@ function gen4DMoveset(
 		},
 	};
 
-	for (let baseH = 1n; baseH >= -1n; baseH--) {
-		for (let baseV = 1n; baseV >= -1n; baseV--) {
-			for (let offsetH = 1n; offsetH >= -1n; offsetH--) {
-				for (let offsetV = 1n; offsetV >= -1n; offsetV--) {
-					const x = dim.BOARD_SPACING * baseH + offsetH;
-					const y = dim.BOARD_SPACING * baseV + offsetV;
+	for (const offset of fourdimensionalmoves.offsetsWithin(1n, () => true)) {
+		const [x, y] = fourdimensionalmoves.applyOffset([0n, 0n], offset, dim.BOARD_SPACING);
 
-					if (x < 0n) continue; // If the x coordinate is negative, skip this iteration
-					if (x === 0n && y <= 0n) continue; // Skip if x is 0 and y is negative
-					// Add the moves
+		if (x < 0n) continue; // If the x coordinate is negative, skip this iteration
+		if (x === 0n && y <= 0n) continue; // Skip if x is 0 and y is negative
+		// Add the moves
 
-					// allow any queen move if STRONG_KINGS_AND_QUEENS, else group her with bishops and rooks
-					if (strong_kings_and_queens)
-						rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
-							null,
-							null,
-						];
+		// allow any queen move if STRONG_KINGS_AND_QUEENS, else group her with bishops and rooks
+		if (strong_kings_and_queens)
+			rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
 
-					// Only add a bishop move if the move moves in two dimensions
-					if (
-						baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV ===
-						2n
-					) {
-						rawMovesets[r.BISHOP]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
-							null,
-							null,
-						];
-						if (!strong_kings_and_queens)
-							rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
-								null,
-								null,
-							];
-					}
-					// Only add a rook move if the move moves in one dimension
-					if (
-						baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV ===
-						1n
-					) {
-						rawMovesets[r.ROOK]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
-							null,
-							null,
-						];
-						if (!strong_kings_and_queens)
-							rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
-								null,
-								null,
-							];
-					}
-				}
-			}
+		const length = fourdimensionalmoves.lengthSquared(offset);
+		// Only add a bishop move if the move moves in two dimensions
+		if (length === 2n) {
+			rawMovesets[r.BISHOP]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
+			if (!strong_kings_and_queens)
+				rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
+		}
+		// Only add a rook move if the move moves in one dimension
+		if (length === 1n) {
+			rawMovesets[r.ROOK]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
+			if (!strong_kings_and_queens)
+				rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
 		}
 	}
 
@@ -131,43 +104,23 @@ function gen4DMoveset(
  * @returns
  */
 function getPawnVicinity(board_spacing: bigint, strong_pawns: boolean): Coords[] {
-	const individualMoves: Coords[] = [];
-
-	for (let baseH = 1n; baseH >= -1n; baseH--) {
-		for (let baseV = 1n; baseV >= -1n; baseV--) {
-			for (let offsetH = 1n; offsetH >= -1n; offsetH--) {
-				for (let offsetV = 1n; offsetV >= -1n; offsetV--) {
-					// only allow changing two things at once
-					if (
-						baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV !==
-						2n
-					)
-						continue;
-
-					// do not allow two moves forward
-					if (baseH * baseH + offsetH * offsetH === 2n) continue;
-
-					// do not allow two moves sideways
-					if (baseV * baseV + offsetV * offsetV === 2n) continue;
-
-					// disallow strong captures if pawns are weak
-					if (
-						!strong_pawns &&
-						(bimath.abs(baseH) !== bimath.abs(baseV) ||
-							bimath.abs(offsetH) !== bimath.abs(offsetV))
-					)
-						continue;
-
-					const x = board_spacing * baseH + offsetH;
-					const y = board_spacing * baseV + offsetV;
-					const endCoords = [x, y] as Coords;
-
-					individualMoves.push(endCoords);
-				}
-			}
-		}
-	}
-	return individualMoves;
+	const offsets = fourdimensionalmoves.offsetsWithin(1n, (offset) => {
+		const { baseH, baseV, offsetH, offsetV } = offset;
+		// only allow changing two things at once
+		if (fourdimensionalmoves.lengthSquared(offset) !== 2n) return false;
+		// do not allow two moves forward
+		if (baseH * baseH + offsetH * offsetH === 2n) return false;
+		// do not allow two moves sideways
+		if (baseV * baseV + offsetV * offsetV === 2n) return false;
+		// disallow strong captures if pawns are weak
+		return (
+			strong_pawns ||
+			(bimath.abs(baseH) === bimath.abs(baseV) && bimath.abs(offsetH) === bimath.abs(offsetV))
+		);
+	});
+	return offsets.map((offset) =>
+		fourdimensionalmoves.applyOffset([0n, 0n], offset, board_spacing),
+	);
 }
 
 /**
@@ -176,27 +129,9 @@ function getPawnVicinity(board_spacing: bigint, strong_pawns: boolean): Coords[]
  * @returns
  */
 function getKnightVicinity(board_spacing: bigint): Coords[] {
-	const individualMoves: Coords[] = [];
-
-	for (let baseH = 2n; baseH >= -2n; baseH--) {
-		for (let baseV = 2n; baseV >= -2n; baseV--) {
-			for (let offsetH = 2n; offsetH >= -2n; offsetH--) {
-				for (let offsetV = 2n; offsetV >= -2n; offsetV--) {
-					// If the squared distance to the tile is 5, then add the move
-					if (
-						baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV ===
-						5n
-					) {
-						const x = board_spacing * baseH + offsetH;
-						const y = board_spacing * baseV + offsetV;
-						const endCoords = [x, y] as Coords;
-						individualMoves.push(endCoords);
-					}
-				}
-			}
-		}
-	}
-	return individualMoves;
+	return fourdimensionalmoves.KNIGHT_OFFSETS.map((offset) =>
+		fourdimensionalmoves.applyOffset([0n, 0n], offset, board_spacing),
+	);
 }
 
 /**
@@ -206,30 +141,12 @@ function getKnightVicinity(board_spacing: bigint): Coords[] {
  * @returns
  */
 function getKingVicinity(board_spacing: bigint, strong_kings_and_queens: boolean): Coords[] {
-	const individualMoves: Coords[] = [];
-
-	for (let baseH = 1n; baseH >= -1n; baseH--) {
-		for (let baseV = 1n; baseV >= -1n; baseV--) {
-			for (let offsetH = 1n; offsetH >= -1n; offsetH--) {
-				for (let offsetV = 1n; offsetV >= -1n; offsetV--) {
-					// only allow moves that change one or two dimensions if triagonals and diagonals are disabled
-					if (
-						!strong_kings_and_queens &&
-						baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV > 2n
-					)
-						continue;
-
-					const x = board_spacing * baseH + offsetH;
-					const y = board_spacing * baseV + offsetV;
-					if (x === 0n && y === 0n) continue;
-					const endCoords = [x, y] as Coords;
-
-					individualMoves.push(endCoords);
-				}
-			}
-		}
-	}
-	return individualMoves;
+	const offsets = strong_kings_and_queens
+		? fourdimensionalmoves.STRONG_KING_OFFSETS
+		: fourdimensionalmoves.KING_OFFSETS;
+	return offsets.map((offset) =>
+		fourdimensionalmoves.applyOffset([0n, 0n], offset, board_spacing),
+	);
 }
 
 // Exports ---------------------------------------------------------------------

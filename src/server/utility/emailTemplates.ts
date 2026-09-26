@@ -77,7 +77,7 @@ export interface AlertRow extends AlertCell {
 }
 
 /** One value of an alert, optionally linked. */
-export interface AlertCell {
+interface AlertCell {
 	value: string;
 	/** A URL the value links to, shown as `[open]` beside it. */
 	link?: string;

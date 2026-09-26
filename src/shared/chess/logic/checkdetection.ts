@@ -7,9 +7,9 @@
  */
 
 import type { Board } from './boardinit.js';
-import type { Player } from '../util/typeutil.js';
 import type { CheckInfo } from './state.js';
 import type { CoordsTagged } from './movepiece.js';
+import type { Player, RawType } from '../util/typeutil.js';
 import type { Coords, CoordsKey } from '../../util/coordutil.js';
 
 import typeutil from '../util/typeutil.js';
@@ -106,26 +106,42 @@ function doesVicinityAttackSquare(
 	checks?: CheckInfo[],
 ): boolean {
 	for (const [coordsKey, thisVicinity] of Object.entries(boardsim.vicinity)) {
-		const thisSquare = coordutil.getCoordsFromKey(coordsKey as CoordsKey); // [1,2], [2,1], ...
-		// Subtract the offset of our square
-		const actualSquare: Coords = [square[0] - thisSquare[0], square[1] - thisSquare[1]];
+		const actualSquare = findOpponentAttacker(boardsim, square, coordsKey as CoordsKey, thisVicinity, friendlyColor); // prettier-ignore
+		if (actualSquare === undefined) continue;
 
-		// Fetch the piece type currently on that square
-		const typeOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, actualSquare);
-		if (typeOnSquare === undefined) continue; // Nothing there to capture us
-		// Is it the same color?
-		const [trimmedTypeOnSquare, typeOnSquareColor] = typeutil.splitType(typeOnSquare);
-		if (friendlyColor === typeOnSquareColor) continue; // A friendly can't capture us
-		if (typeOnSquareColor === p.NEUTRAL) continue; // Neutrals can't capture us either (GARGOYLE ALERT)
-
-		// Is that a match with any piece type on this vicinity square?
-		if ((thisVicinity as number[]).includes(trimmedTypeOnSquare)) {
-			checks?.push({ royal: square, attacker: actualSquare, slidingCheck: false });
-			return true; // There'll never be more than 1 short-range/jumping checks! UNLESS it's multiplayer, but multiplayer won't use checkmate anyway so checks won't be specified
-		}
+		checks?.push({ royal: square, attacker: actualSquare, slidingCheck: false });
+		return true; // There'll never be more than 1 short-range/jumping checks! UNLESS it's multiplayer, but multiplayer won't use checkmate anyway so checks won't be specified
 	}
 
 	return false; // No jumper attacks the square
+}
+
+/**
+ * The square an opponent piece could attack from, if one of the given types sits at the vicinity
+ * offset from `square`. Friendly and neutral pieces never attack.
+ * @param coordsKey - The vicinity offset, from the attacker to `square`.
+ * @param attackerTypes - The piece types that can attack from that offset.
+ */
+function findOpponentAttacker(
+	boardsim: Board,
+	square: Coords,
+	coordsKey: CoordsKey,
+	attackerTypes: RawType[],
+	friendlyColor: Player,
+): Coords | undefined {
+	const thisSquare = coordutil.getCoordsFromKey(coordsKey); // [1,2], [2,1], ...
+	// Subtract the offset of our square
+	const actualSquare: Coords = [square[0] - thisSquare[0], square[1] - thisSquare[1]];
+
+	// Fetch the piece type currently on that square
+	const typeOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, actualSquare);
+	if (typeOnSquare === undefined) return undefined; // Nothing there to capture us
+	const [trimmedTypeOnSquare, typeOnSquareColor] = typeutil.splitType(typeOnSquare);
+	if (friendlyColor === typeOnSquareColor) return undefined; // A friendly can't capture us
+	if (typeOnSquareColor === p.NEUTRAL) return undefined; // Neutrals can't capture us either (GARGOYLE ALERT)
+
+	// Is that a match with any piece type on this vicinity square?
+	return attackerTypes.includes(trimmedTypeOnSquare) ? actualSquare : undefined;
 }
 
 /**
@@ -142,61 +158,49 @@ function doesSpecialAttackSquare(
 	checks?: CheckInfo[],
 ): boolean {
 	for (const [coordsKey, thisVicinity] of Object.entries(boardsim.specialVicinity)) {
-		const thisSquare = coordutil.getCoordsFromKey(coordsKey as CoordsKey); // [1,2], [2,1], ...
-		// Subtract the offset of our square
-		const actualSquare: Coords = [square[0] - thisSquare[0], square[1] - thisSquare[1]];
+		const actualSquare = findOpponentAttacker(boardsim, square, coordsKey as CoordsKey, thisVicinity, friendlyColor); // prettier-ignore
+		if (actualSquare === undefined) continue;
 
-		// Fetch the piece type currently on that square
-		const typeOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, actualSquare);
-		if (typeOnSquare === undefined) continue; // Nothing there to capture us
-		// Is it the same color?
-		const [trimmedTypeOnSquare, typeOnSquareColor] = typeutil.splitType(typeOnSquare);
-		if (friendlyColor === typeOnSquareColor) continue; // A friendly can't capture us
-		if (typeOnSquareColor === p.NEUTRAL) continue; // Neutrals can't capture us either (GARGOYLE ALERT)
+		// This square can POTENTIALLY be captured via special move...
+		// Calculate that special piece's legal moves to see if it ACTUALLY can capture on that square
+		const pieceOnSquare = boardutil.getPieceFromCoords(boardsim.pieces, actualSquare)!;
 
-		// Is that a match with any piece type on this vicinity square?
-		if ((thisVicinity as number[]).includes(trimmedTypeOnSquare)) {
-			// This square can POTENTIALLY be captured via special move...
-			// Calculate that special piece's legal moves to see if it ACTUALLY can capture on that square
-			const pieceOnSquare = boardutil.getPieceFromCoords(boardsim.pieces, actualSquare)!;
+		const moveset = legalmoves.getPieceMoveset(boardsim, pieceOnSquare.type);
+		const specialPiecesLegalMoves = legalmoves.getEmptyLegalMoves(moveset);
+		legalmoves.appendSpecialMoves(
+			boardsim,
+			pieceOnSquare,
+			moveset,
+			specialPiecesLegalMoves,
+			false,
+		);
 
-			const moveset = legalmoves.getPieceMoveset(boardsim, pieceOnSquare.type);
-			const specialPiecesLegalMoves = legalmoves.getEmptyLegalMoves(moveset);
-			legalmoves.appendSpecialMoves(
+		if (
+			!legalmoves.checkIfMoveLegal(
 				boardsim,
-				pieceOnSquare,
-				moveset,
 				specialPiecesLegalMoves,
-				false,
-			);
-
-			if (
-				!legalmoves.checkIfMoveLegal(
-					boardsim,
-					specialPiecesLegalMoves,
-					actualSquare,
-					square,
-					friendlyColor,
-				)
+				actualSquare,
+				square,
+				friendlyColor,
 			)
-				continue; // This special piece can't make the capture THIS time... oof
+		)
+			continue; // This special piece can't make the capture THIS time... oof
 
-			if (checks) {
-				/**
-				 * If the `path` special flag is present (which it would be for Roses),
-				 * attach that to the CheckInfo, so that checkresolver can test if any
-				 * legal moves can block the path to stop this check.
-				 */
-				const checkInfo: CheckInfo = {
-					royal: square,
-					attacker: actualSquare,
-					slidingCheck: false,
-				};
-				if (square.path !== undefined) checkInfo.path = square.path;
-				checks.push(checkInfo);
-			}
-			return true; // There'll never be more than 1 short-range/jumping checks! UNLESS it's multiplayer, but multiplayer won't use checkmate anyway so checks won't be specified
+		if (checks) {
+			/**
+			 * If the `path` special flag is present (which it would be for Roses),
+			 * attach that to the CheckInfo, so that checkresolver can test if any
+			 * legal moves can block the path to stop this check.
+			 */
+			const checkInfo: CheckInfo = {
+				royal: square,
+				attacker: actualSquare,
+				slidingCheck: false,
+			};
+			if (square.path !== undefined) checkInfo.path = square.path;
+			checks.push(checkInfo);
 		}
+		return true; // There'll never be more than 1 short-range/jumping checks! UNLESS it's multiplayer, but multiplayer won't use checkmate anyway so checks won't be specified
 	}
 
 	return false; // No special mover attacks the square
