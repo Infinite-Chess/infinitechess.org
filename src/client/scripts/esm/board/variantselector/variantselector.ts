@@ -120,15 +120,12 @@ interface VariantSelectorConfig {
 	isSeekContext: boolean;
 	/**
 	 * Fires whenever the selection's verdict moves — reached, retired, or deferred. Sync UI that
-	 * reflects legality (e.g. a submit button). Fires MORE than once per edit, since validating
-	 * retires the old verdict before it reaches a new one, so it is the wrong signal for anything
-	 * that should happen once per change.
+	 * reflects legality (e.g. a submit button). More common than the edit fire.
 	 */
 	onValidityChange?: () => void;
 	/**
-	 * Fires once, and only when {@link getSelection} actually changed —
-	 * exactly what a host remembers between visits. Committing changes neither, so a host that
-	 * only persists wants this and not {@link onCommit}.
+	 * Fires once, and only when {@link getSelection} actually changed — exactly what a host
+	 * remembers between visits.
 	 */
 	onEdit?: () => void;
 	/** Fires only when a selection is committed (a discrete pick, or an ICN blur/paste). */
@@ -171,17 +168,13 @@ const element_btnCustomFromICNName =
 
 /**
  * The ICN length past which a keystroke stops judging the position, leaving the verdict to a
- * commit — blur, Enter, paste, or pressing submit. Measured in characters rather than pieces
- * because the piece count can't be known without parsing first, and parsing scales with the
- * string: on a megabyte it is already far too slow to spend on a keypress.
+ * commit — blur, Enter, paste, or pressing submit. Per-change position judgement becomes too
+ * slow after that point, incurring hitches while typing.
  *
- * Set at the shortest ICN that can hold 5,000 pieces. The densest packing that exists — a square
- * block hugging the origin — measures 37,281 characters there, so nothing under this cap can
- * carry more. Building a gamefile costs roughly 200 ms per 10,000 pieces on Naviary's machine,
- * putting 5,000 at about 100 ms. A position with distant coordinates spends more characters per
- * piece and so defers sooner than its count alone would require.
+ * 37,281 chars can hold at most 5,000 pieces. Building a gamefile costs roughly 200 ms per
+ * 10,000 pieces on Naviary's machine.
  */
-const MAX_ICN_CHARS_TO_VALIDATE_LIVE = 37_000;
+const MAX_ICN_CHARS_TO_VALIDATE_LIVE = 30_000;
 
 /**
  * How each saved-position backend is read: its reader, and the message shown when that read
@@ -821,14 +814,8 @@ function playabilityRejection(
 	});
 }
 
-/**
- * The Slide Limit the game will be built with, read from the modifier selector beside us. It
- * rebuilds the movesets, so every construction the gate makes must carry it or judge a board
- * nobody plays on. Undefined for an engine game: `CreateEngineGameMessage` has no modifiers
- * field, so one never reaches its game however the modal is set.
- */
+/** The Slide Limit the game will be built with, read from the modifier selector beside us. */
 function selectedSlideLimit(): bigint | undefined {
-	if (engineOnly) return undefined;
 	return modutil.slideLimitOf(modifierselector.getGameModifiers());
 }
 
@@ -894,9 +881,8 @@ async function validateIcnInput(revealErrors: boolean, live = false): Promise<vo
 
 	// Atleast the ICN is valid syntax, now let's check position, gamerules, and moves...
 
-	// Resolved apart from building, so a result the user typed past is dropped before paying for
-	// the board. The slide limit rides along because it rebuilds the movesets, and a game judged
-	// without it is not the game that gets played.
+	// Resolved apart from building, so a result the user typed past is dropped before paying for the
+	// board. The slide limit needs to ride along it rebuilds the movesets, which can change judgement.
 	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
 		slideLimit: selectedSlideLimit(),
 	});
@@ -1007,9 +993,8 @@ function isVerdictDeferred(): boolean {
 }
 
 /**
- * Whether the current selection resolves to a legal, loadable position. An `unevaluated` one
- * counts as valid: it was too large to judge live, so it is taken on trust until a commit
- * settles it, rather than shown as broken when nothing has judged it either way.
+ * Whether the current selection resolves to a legal, loadable position.
+ * An `unevaluated` one counts as valid until it can be judged on commit.
  */
 function isSelectionValid(): boolean {
 	if (selection.kind === 'preset') return true;
@@ -1020,17 +1005,15 @@ function isSelectionValid(): boolean {
 /**
  * The current custom (non-preset) selection resolved for loading onto a board, or null if the
  * selection is a preset or not yet valid.
- *
- * A From-ICN selection hands over the very game validation built — CONSUMING it, since the board
- * mutates what it is given — alongside the parse it came from, which the loader keeps so it can
- * rebuild the pristine game later. A saved position resolves to its {@link VariantOptions},
- * deep-copied because loading writes into them and the cached original outlives the load.
  */
 function getCustomPosition():
 	| { kind: 'gamefile'; gamefile: GameFile; longFormat: LongFormatOut }
 	| { kind: 'options'; options: VariantOptions }
 	| null {
 	if (selection.kind === 'preset') return null;
+	// A From-ICN selection hands over the very game validation built — CONSUMING it, since the board
+	// mutates what it is given — alongside the parse it came from, which the loader keeps so it can
+	// rebuild the pristine game later.
 	if (selection.kind === 'icn') {
 		const verdict = selection.verdict;
 		if (verdict === null || verdict === 'unevaluated' || !verdict.isValid) return null;
@@ -1042,6 +1025,8 @@ function getCustomPosition():
 	}
 	// cloud / local saved position — the resolved options are loadable as-is (no moves).
 	if (!selection.verdict?.isValid) return null;
+	// A saved position resolves to its VariantOptions, deep-copied because loading writes into them and
+	// the cached original outlives the load.
 	return { kind: 'options', options: jsutil.deepCopyObject(selection.verdict.options) };
 }
 
@@ -1058,7 +1043,7 @@ function getSeekVariant(): SeekVariant | null {
 	// Every custom selection — saved position or From-ICN — travels as the ICN string it resolves
 	// to. Validation built that string to measure it against the size cap, so the exact one it
 	// judged is the one sent: the flattened position, on the engine's border, carrying the
-	// source-variant tags that tell the game it didn't start from a balanced position.
+	// source-variant tags that tell the game whether it started from a balanced position.
 	if (!verdict.seekIcn) return null;
 	return { kind: 'custom', position: verdict.seekIcn };
 }

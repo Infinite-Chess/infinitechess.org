@@ -49,7 +49,7 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	}
 
 	try {
-		// Invalid variant; error already sent to the client. Engine games carry no modifiers.
+		// Invalid variant; error already sent to the client. Engine games carry no modifiers currently.
 		if (!createSeek.validateVariant(ws, body.variant, true, undefined)) return;
 
 		const humanColor = body.color ?? (Math.random() < 0.5 ? players.WHITE : players.BLACK);

@@ -158,7 +158,6 @@ async function pasteGame(
  * validate the ICN, handed over instead of built a second time. The board owns and mutates it
  * from here, so the selector must have dropped its own reference.
  * Requires an active 'analysis' session.
- *
  * @param longFormat - The parse the game was built from, for {@link recordPaste}.
  * @param slideLimit - The Slide Limit the game was BUILT with. Not applied here — the game
  * already carries it — only kept so a rebuild reaches the same board.

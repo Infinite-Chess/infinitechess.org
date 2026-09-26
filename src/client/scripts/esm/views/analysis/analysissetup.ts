@@ -23,9 +23,9 @@ function init(): void {
 	// Allow analyzing positions of any size.
 	variantselector.initVariantGroupDropdown({ isSeekContext: false, onCommit: loadSelection });
 	variantselector.initIcnValidation();
-	// A modifier commit re-judges the selection before loading it: the Slide Limit rebuilds the
-	// movesets, so the game validated without it is not the game about to be played.
 	modifierselector.initModifierSelector({
+		// A modifier commit re-judges the selection before loading it: the Slide Limit rebuilds the
+		// movesets, so the game validated without it is not the game about to be played.
 		onCommit: () =>
 			void variantselector.revalidateCustomSelection().then(() => loadSelection()),
 	});

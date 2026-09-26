@@ -79,7 +79,7 @@ async function formulateGame(
  * @param variant - The variant the position is of, when one is known — supplying its
  *   movesets, so the inspection sees how the pieces truly move. REQUIRES its module preloaded.
  * @param slideLimit - The Slide Limit modifier the game will be played with, when one is
- *   selected. It rebuilds the movesets, so omitting it inspects a game that won't be played.
+ * selected. It rebuilds the movesets, affecting validation.
  */
 function constructPosition(
 	variantOptions: VariantOptions,
@@ -163,8 +163,8 @@ function constructionOptionsFromLongFormat(
  * Builds the gamefile from already-resolved construction options.
  * REQUIRES the variant module preloaded whenever `options.variant` is defined.
  * @param validateMoves - If true, throws an IllegalMoveError if any move played is illegal.
- * @throws If the game can't be built at all — nearly always a move that would crash it, such as
- *   no piece on its start square, or promoting to a piece no space was allocated for.
+ * @throws If the game can't be built at all — nearly always a move that would crash it, such
+ * as no piece on its start square, or promoting to a piece no space was allocated for.
  */
 function constructGame(options: GameConstructionOptions, validateMoves?: true): GameFile {
 	const variant = options.variant && {

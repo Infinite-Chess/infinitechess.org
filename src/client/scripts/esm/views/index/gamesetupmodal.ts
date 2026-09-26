@@ -88,15 +88,15 @@ function initModal(): void {
 			element_modalSubmit.disabled = !variantselector.isSelectionValid();
 			syncRatedButton();
 		},
-		// Remembered as it is typed, so a half-written ICN survives a refresh. Deliberately not
-		// also on commit: committing changes neither the selection nor its text.
+		// Remembered as it is typed, so a half-written ICN survives a refresh.
+		// Deliberately not also on commit: committing changes neither the selection nor its text.
 		onEdit: persist,
 	});
 	variantselector.initIcnValidation();
-	// A modifier commit re-judges the position: the Slide Limit rebuilds the movesets, so a
-	// position judged without it is not the one that would be played.
 	modifierselector.initModifierSelector({
 		onChange: syncRatedButton,
+		// A modifier commit re-judges the position: the Slide Limit rebuilds the movesets, so a
+		// position judged without it is not the one that would be played.
 		onCommit: () => {
 			persist();
 			void variantselector.revalidateCustomSelection();
@@ -233,15 +233,11 @@ function getSelectedColor(): typeof players.WHITE | typeof players.BLACK | null 
 
 // Creating the game -----------------------------------------------------------
 
-/**
- * Runs the active flow's submit, first settling any verdict live validation deferred.
- *
- * A position too large to judge on every keystroke leaves the button enabled rather than
- * greyed out with nothing having judged it — so pressing it is where that position gets judged.
- * The error then lands in the ICN field and the button disables, as a live verdict would have.
- */
+/** Runs the active flow's submit, first settling any verdict live validation deferred. */
 async function submitModal(): Promise<void> {
 	if (variantselector.isVerdictDeferred()) {
+		// A position too large to judge on every keystroke leaves the button enabled rather than
+		// greyed out with nothing having judged it — so pressing it is where that position gets judged.
 		await variantselector.revalidateCustomSelection();
 		element_modalSubmit.disabled = !variantselector.isSelectionValid();
 		if (element_modalSubmit.disabled) return;

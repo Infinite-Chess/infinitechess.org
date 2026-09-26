@@ -84,7 +84,6 @@ function getRejection(
 	// --- Rule 1: King capture is not possible on turn 1 ---
 	if (gamerules.usesCheckmate(gamefile.gameRules)) {
 		// Whoever moves after the front position is the one its mover could take a royal from.
-		// The front, not ply 0: a game whose moves are already applied is judged where it stands.
 		const secondToMove = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length);
 		if (checkdetection.detect(gamefile, secondToMove, false).check) {
 			return { kind: 'position', code: 'king_capture_on_turn_1' };

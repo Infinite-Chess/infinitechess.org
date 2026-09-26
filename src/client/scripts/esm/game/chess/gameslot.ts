@@ -47,8 +47,7 @@ import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 /**
  * Options for loading a game: either everything to construct one from, or one already built.
- * A caller that had to construct the game to validate it hands that one over rather than
- * paying for an identical second construction.
+ * A caller that had to construct the game to validate it hands that one over to avoid double construction.
  */
 export type LoadOptions = {
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */

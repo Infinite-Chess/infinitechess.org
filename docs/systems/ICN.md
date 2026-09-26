@@ -315,9 +315,7 @@ into the `LongFormatIn` shape the converter wants.
 | Parsed moves → wire `MovePacket`s                 | `icnimport.movePacketsFromParsed()`                     |
 
 `formulateGame` is async and throws — an `IllegalMoveError` when built with `validateMoves`, or a
-construction error for a move that can't be applied. It is `resolveConstructionOptions` (async,
-and where the variant module loads) followed by `constructGame` (sync, and where it throws);
-split them when something must be checked after the await but before paying to build the board.
+construction error for a move that can't be applied.
 
 Piecewise helpers, for when you hold one segment rather than a whole ICN:
 

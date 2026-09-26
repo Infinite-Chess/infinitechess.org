@@ -121,7 +121,7 @@ function getSeekFromWebsocketMessageContents(
  * @param engineGame - Whether the engine will be the opponent. Its position is then judged on
  * the engine's board, and additionally on whether the engine can play it at all.
  * @param modifiers - The modifiers the seek carries. The Slide Limit among them rebuilds the
- * movesets, so the position must be judged with it or we judge a game that won't be played.
+ * movesets, which affects judgement.
  */
 function validateVariant(
 	ws: CustomWebSocket,
@@ -138,8 +138,6 @@ function validateVariant(
 
 /**
  * Parses an ICN seek's content and runs the position legality and playability checks.
- * @param engineGame - See {@link validateVariant}.
- * @param modifiers - See {@link validateVariant}.
  * @returns `null` if the ICN may be played, or the {@link PositionRejection} refusing it.
  */
 function validateIcnSeekContent(
@@ -171,8 +169,7 @@ function validateIcnSeekContent(
 	if (positionError !== null) return { kind: 'position', code: positionError };
 
 	// Legal, but the game still has to be playable from here. Built on the board the real game
-	// gets — the ICN's own world border, which an engine game must carry, and the modifiers
-	// chosen alongside it — then discarded.
+	// gets — the ICN's own world border, which an engine game must carry, and the modifiers — then discarded.
 	const constructed = gameformulator.constructPosition(
 		variantOptions,
 		undefined,
