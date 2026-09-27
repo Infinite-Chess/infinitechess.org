@@ -8,7 +8,6 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
-import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
@@ -48,7 +47,7 @@ function positionInBounds(position: Map<CoordsKey, number>, border: BoundingBox)
  */
 function getSafeStartPlies(gamefile: GameFile, moves: MoveFull[]): number[] {
 	const border = getEngineWorldBorder(gamefile);
-	const position = jsutil.deepCopyObject(gamefile.startSnapshot.position);
+	const position = new Map(gamefile.startSnapshot.position);
 	const safeStarts: number[] = new Array(moves.length + 1);
 
 	let lastOutOfBoundsPly = positionInBounds(position, border) ? -1 : 0;

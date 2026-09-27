@@ -182,7 +182,7 @@ function getTypeFromAbbr(pieceAbbr: string): number {
  */
 function getShortFormPosition(
 	position: Iterable<[CoordsKey, number]>,
-	specialRights: Set<CoordsKey>,
+	specialRights: ReadonlySet<CoordsKey>,
 ): string {
 	const pieces: string[] = []; // ['P1,2+','P2,2+', ...]
 	for (const [coordsKey, type] of position) {

@@ -116,7 +116,8 @@ function init(
 			inCheck: false,
 			checks: [],
 		},
-		global: jsutil.deepCopyObject(state_global),
+		// Shallow beyond the rights: moves replace the en passant object, never edit it.
+		global: { ...state_global, specialRights: new Set(specialRights) },
 	};
 
 	const { pieces, existingTypes, existingRawTypes, boundingBox } = organizedpieces.processInitialPosition(position, gameRules.turnOrder, editor, gameRules.promotion); // prettier-ignore

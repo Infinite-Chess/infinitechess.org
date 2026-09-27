@@ -45,9 +45,14 @@ interface LocalGameState {
  * for that persistence boundary, NOT because it's front-only — like local state, it's applied
  * on every ply viewed, so it always reflects the position on screen.
  */
-export interface GlobalGameState {
-	/** An object containing the information if each individual piece has its special move rights. */
+export interface GlobalGameState extends ReadonlyGlobalGameState {
 	specialRights: Set<CoordsKey>;
+}
+
+/** A {@link GlobalGameState} that may only be read, such as one a start snapshot shares by reference. */
+export interface ReadonlyGlobalGameState {
+	/** An object containing the information if each individual piece has its special move rights. */
+	specialRights: ReadonlySet<CoordsKey>;
 	/** If enpassant is allowed at the currently-viewed ply, this defines the coordinates. */
 	enpassant?: EnPassant;
 	/** The number of half-moves played since the last capture or pawn push. */

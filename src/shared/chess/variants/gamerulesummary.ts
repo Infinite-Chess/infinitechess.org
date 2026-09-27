@@ -11,9 +11,9 @@
 import type { GameRules } from '../util/gamerules.js';
 import type { VariantCode } from '../util/variantcodes.js';
 import type { GameModifier } from '../util/modutil.js';
-import type { GlobalGameState } from '../logic/state.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
+import type { ReadonlyGlobalGameState } from '../logic/state.js';
 
 import modutil from '../util/modutil.js';
 import piecethemes from '../util/piecethemes.js';
@@ -44,7 +44,7 @@ export type RuleSummaryItem =
  */
 export function summarizeGameRules(
 	gameRules: GameRules,
-	state_global: GlobalGameState | undefined,
+	state_global: ReadonlyGlobalGameState | undefined,
 	variantCode: VariantCode | undefined,
 	modifiers: GameModifier[] | undefined,
 	sharedT: ScriptTranslations['shared'],

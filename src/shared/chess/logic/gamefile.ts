@@ -13,9 +13,9 @@ import type { MovePacket } from '../../chess/util/typeschemas.js';
 import type { VariantCode } from '../util/variantcodes.js';
 import type { VariantModule } from './variantmodule.js';
 import type { GameConclusion } from '../util/typeschemas.js';
-import type { GlobalGameState } from './state.js';
 import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';
 import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js';
+import type { GlobalGameState, ReadonlyGlobalGameState } from './state.js';
 
 import clock from './clock.js';
 import movepiece from './movepiece.js';
@@ -45,12 +45,16 @@ export interface LoadedVariant extends DatedVariant {
 	mod: VariantModule;
 }
 
-/** The game's position as it was at move zero. */
+/**
+ * The game's position as it was at move zero. Its position and special rights are shared by
+ * reference with whatever the game was built from (e.g. a parsed ICN kept to rebuild it), so they
+ * are read-only — copy them before applying moves.
+ */
 export interface Snapshot {
 	/** In key format 'x,y':'type' */
-	position: Map<CoordsKey, number>;
+	position: ReadonlyMap<CoordsKey, number>;
 	/** The global state of the game beginning */
-	state_global: GlobalGameState;
+	state_global: ReadonlyGlobalGameState;
 	/** This is the full-move number at the start of the game. Used for converting to ICN notation. */
 	fullMove: number;
 	/** The bounding box surrounding the starting position, without padding. INTEGER coords, not floating. */

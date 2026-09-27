@@ -125,9 +125,9 @@ function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint)
  * Loads a game from the provided ICN longformat, replacing the current one.
  * Requires an active 'analysis' session.
  *
- * @param longFormat - The game as a parsed ICN. Its `gameRules` are copied during construction,
- * but its `position` and `state_global.specialRights` are retained by reference on the gamefile's
- * startSnapshot — callers must not mutate them afterward.
+ * @param longFormat - The game as a parsed ICN. Its `position` and `state_global.specialRights`
+ * are retained by reference on the gamefile's read-only startSnapshot — callers must not mutate
+ * them afterward.
  * @param gameConclusion - The game's conclusion, if it ended.
  * @param viewWhitePerspective - Board orientation override; defaults to retaining
  * the current game's perspective, or white's if this is the initial load.
