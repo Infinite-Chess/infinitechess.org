@@ -26,7 +26,7 @@ import { createRenderable_Instanced } from '../../../board/rendering/renderable.
 // Variables -------------------------------------------------------------------
 
 /** The color of the special rights indicator. */
-const SPECIAL_RIGHTS_COLOR: Color = [0, 1, 0.5, 0.3];
+const SPECIAL_RIGHTS_COLOR: Color = [0, 0.27, 0.15, 0.3];
 /* The color of the enpassant indicator. */
 const ENPASSANT_COLOR: Color = [0.5, 0, 1, 0.3];
 
