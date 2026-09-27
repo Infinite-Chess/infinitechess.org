@@ -147,7 +147,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 }
 
 /**
- * Generates vertex data for a plus sign using 5 non-overlapping rectangles
+ * Generates vertex data for a plus sign using 3 non-overlapping rectangles
  */
 function getDataPlusSign(color: Color): number[] {
 	// eslint-disable-next-line prefer-const
@@ -173,28 +173,6 @@ function getDataPlusSign(color: Color): number[] {
 		vertices.push(x1, y1, r, g, b, a);
 	};
 
-	// Vertical arm (top segment)
-	addQuad(
-		posX - halfEdge,
-		posY + armLength / 2, // top-left
-		posX + halfEdge,
-		posY + armLength / 2, // top-right
-		posX + halfEdge,
-		posY + halfEdge, // bottom-right
-		posX - halfEdge,
-		posY + halfEdge, // bottom-left
-	);
-	// Vertical arm (bottom segment)
-	addQuad(
-		posX - halfEdge,
-		posY - halfEdge, // top-left
-		posX + halfEdge,
-		posY - halfEdge, // top-right
-		posX + halfEdge,
-		posY - armLength / 2, // bottom-right
-		posX - halfEdge,
-		posY - armLength / 2, // bottom-left
-	);
 	// Horizontal arm (left segment)
 	addQuad(
 		posX - armLength / 2,
@@ -217,16 +195,16 @@ function getDataPlusSign(color: Color): number[] {
 		posX + halfEdge,
 		posY - halfEdge, // bottom-left
 	);
-	// Center square
+	// Vertical trunk
 	addQuad(
 		posX - halfEdge,
-		posY + halfEdge, // top-left
+		posY + armLength / 2, // top-left
 		posX + halfEdge,
-		posY + halfEdge, // top-right
+		posY + armLength / 2, // top-right
 		posX + halfEdge,
-		posY - halfEdge, // bottom-right
+		posY - armLength / 2, // bottom-right
 		posX - halfEdge,
-		posY - halfEdge, // bottom-left
+		posY - armLength / 2, // bottom-left
 	);
 
 	return vertices;
