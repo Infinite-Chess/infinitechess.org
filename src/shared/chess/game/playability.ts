@@ -36,7 +36,7 @@ type PositionRejectionCode =
 	| 'icn_missing_position'
 	| 'icn_contains_moves'
 	| 'moves_invalid'
-	| 'king_capture_on_turn_1'
+	| 'king_capture_possible'
 	| 'no_4d_movement'
 	| 'game_over'
 	| 'player_missing_pieces'
@@ -86,7 +86,7 @@ function getRejection(
 		// Whoever moves after the front position is the one its mover could take a royal from.
 		const secondToMove = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length);
 		if (checkdetection.detect(gamefile, secondToMove, false).check) {
-			return { kind: 'position', code: 'king_capture_on_turn_1' };
+			return { kind: 'position', code: 'king_capture_possible' };
 		}
 	}
 
