@@ -78,8 +78,10 @@ let isPremove = false;
 
 /** The tile the mouse is hovering over, OR the tile we just performed a simulated click over: `[x,y]` */
 let hoverSquare: CoordsTagged | undefined; // Current square mouse is hovering over
-/** Whether the {@link hoverSquare} is legal to move the selected piece to. */
+/** Whether the {@link hoverSquare} can trigger a legal move for the selected piece. */
 let hoverSquareLegal: boolean = false;
+/** The legal castle move when hovering over the rook it castles with. */
+let hoverCastleMove: CoordsTagged | undefined;
 
 /** If a pawn is currently promoting (waiting on the promotion UI selection),
  * this will be set to the square it's moving to: `[x,y]`. */
@@ -223,9 +225,20 @@ function update(): void {
  * to select it instead, but capture it.
  */
 function updateHoverSquareLegal(gamefile: GameFile): void {
+	hoverCastleMove = undefined;
 	if (!pieceSelected) return;
-	if (!hoverSquare) {
+	const hoveredSquare = hoverSquare;
+	if (!hoveredSquare) {
 		hoverSquareLegal = false;
+		return;
+	}
+	const castleMove = legalMoves!.individual.find(
+		(move) => move.castle && coordutil.areCoordsEqual(move.castle.coord, hoveredSquare),
+	);
+	if (castleMove) {
+		hoverSquareLegal =
+			canMovePieceType(pieceSelected.type) || gamesession.getGameType() === 'editor';
+		if (hoverSquareLegal) hoverCastleMove = castleMove;
 		return;
 	}
 	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
@@ -234,15 +247,15 @@ function updateHoverSquareLegal(gamefile: GameFile): void {
 		gamefile,
 		legalMoves!,
 		pieceSelected!.coords,
-		hoverSquare,
+		hoveredSquare,
 		colorOfSelectedPiece,
 	);
 	hoverSquareLegal =
 		(legal && canMovePieceType(pieceSelected!.type)) ||
 		(gamesession.getGameType() === 'editor' &&
-			!coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords) &&
+			!coordutil.areCoordsEqual(hoveredSquare, pieceSelected.coords) &&
 			(gamefile.gameRules.worldBorder === undefined ||
-				bounds.boxContainsSquare(gamefile.gameRules.worldBorder, hoverSquare))); // Allow ALL moves in board editor.
+				bounds.boxContainsSquare(gamefile.gameRules.worldBorder, hoveredSquare))); // Allow ALL moves in board editor.
 }
 
 // Piece Select / Drop / Move --------------------------------------------------
@@ -314,7 +327,7 @@ function testIfPieceDropped(gamefile: GameFile, mesh: Mesh | undefined): void {
 	const droppedOnOwnSquare = coordutil.areCoordsEqual(hoverSquare!, pieceSelected!.coords);
 	if (droppedOnOwnSquare && !draganimation.getDragParity()) unselectPiece();
 	else if (hoverSquareLegal)
-		moveGamefilePiece(gamefile, mesh, hoverSquare!); // It was dropped on a legal square. Make the move. Making a move automatically deselects the piece and cancels the drag.
+		moveGamefilePiece(gamefile, mesh, hoverCastleMove ?? hoverSquare!); // Making a move automatically deselects the piece and cancels the drag.
 	else draganimation.dropPiece(); // Drop it without moving it.
 }
 
@@ -329,7 +342,7 @@ function testIfPieceMoved(gamefile: GameFile, mesh: Mesh | undefined): void {
 	if (!mouse.isMouseClicked(mouseKeybind)) return; // Pointer did not click, couldn't have moved a piece.
 
 	if (!hoverSquareLegal) return; // Don't move it
-	moveGamefilePiece(gamefile, mesh, hoverSquare!);
+	moveGamefilePiece(gamefile, mesh, hoverCastleMove ?? hoverSquare!);
 
 	mouse.claimMouseClick(mouseKeybind); // Claim the mouse click so that annotations does use it to Collapse annotations.
 }

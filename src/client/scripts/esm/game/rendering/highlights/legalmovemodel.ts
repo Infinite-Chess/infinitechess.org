@@ -10,11 +10,11 @@
 import type { Color } from '../../../../../../shared/types/color.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
 import type { OrganizedPieces } from '../../../../../../shared/chess/logic/organizedpieces.js';
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
+import type { CoordsTagged, MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -357,11 +357,15 @@ function pushIndividual(
 	gamefile: GameFile,
 ): void {
 	// Get an array of the list of individual legal squares the current selected piece can move to
-	const legalIndividuals: Coords[] = legalMoves.individual;
+	const legalIndividuals: CoordsTagged[] = legalMoves.individual;
 
 	// For each of these squares, calculate it's buffer data
 	for (const coord of legalIndividuals) {
 		const offsetCoord = coordutil.subtractCoords(coord, model_Offset);
+		if (coord.castle) {
+			const offsetRookCoord = coordutil.subtractCoords(coord.castle.coord, model_Offset);
+			instanceData_NonCapture.push(...offsetRookCoord);
+		}
 		const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, coord);
 		if (isPieceOnCoords) instanceData_Capture.push(...offsetCoord);
 		else instanceData_NonCapture.push(...offsetCoord);
