@@ -35,17 +35,16 @@ intent behind it:
 Intent is the author's framing, not evidence. Pull out every claim it makes — what it fixes, what it
 changes — and verify each against the code. A claim with nothing behind it is a finding.
 
-## 2. Read everything
+## 2. Read everything — every step required
 
-Write the diff to a file in your scratchpad and read it in offset chunks until one ends on the final
-line. Readers truncate silently around 2000 lines, and a prefix that stops mid-file looks complete.
-Cross-check your file and line counts against `--stat` (or the PR's numbers). A hunk you never saw
-is a change you'll review as though it isn't there.
+Write the diff to a scratchpad file and read it in offset chunks until one ends on the final line —
+readers truncate silently around 2000 lines, and a prefix that stops mid-file looks complete.
+Cross-check your file and line counts against `--stat` (or the PR's numbers).
 
-Then read the actual source of everything the diff touches, **plus the neighbouring code it should
-have reused**, so you judge against reality rather than the diff's own framing. Read
-`docs/systems/IMPORT_RULES.md` and `docs/systems/MODULE_CONVENTIONS.md`, and any system doc the
-rulebook routes the touched area to.
+Then read **in full** — an earlier read this session doesn't count — every file the diff touches,
+**plus the neighbouring code it should have reused**, so you judge against reality rather than the
+diff's framing. Read `docs/systems/IMPORT_RULES.md`, `docs/systems/MODULE_CONVENTIONS.md`, and any
+system doc the rulebook routes the touched area to.
 
 ## 3. Judge the approach
 
