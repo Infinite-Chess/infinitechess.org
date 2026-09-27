@@ -28,8 +28,8 @@ import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { validatePosition } from '../../../../../shared/chess/logic/positionlegality.js';
-import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import playability, { PositionRejection } from '../../../../../shared/chess/game/playability.js';
+import icnconverter, { LongFormatOut, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
 
 import savesapi from '../../savedpositions/savesapi.js';
 import savestore from '../../savedpositions/savestore.js';
@@ -708,8 +708,9 @@ function setVerdict<S extends SaveSelectionState | IcnSelectionState>(
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(judged: SaveSelectionState, variantOptions: VariantOptions): void {
 	const played = withEngineBorder(variantOptions);
-	// Saved positions are authored in the editor, so they were never sourced from a variant.
-	const { rejection: positionRejection, seekIcn } = validateOptions(played, {});
+	// Saved positions are authored in the editor, so they were never
+	// sourced from a variant, and store no preset annotations.
+	const { rejection: positionRejection, seekIcn } = validateOptions(played, {}, undefined);
 	// Legal position; it still has to be playable from here. Every context rejects a position
 	// whose king can be captured, and a seek context has further rules on top. Only then do we
 	// construct the transient gamefile those checks read off of, and we discard it after.
@@ -735,11 +736,17 @@ async function revalidateCustomSelection(): Promise<void> {
 /**
  * Serializes a custom position's VariantOptions to its canonical compact ICN string.
  * @param metadata - The source-variant tags to declare, from {@link clientmetadatautil.buildSourceVariantMetadata}.
+ * @param presetAnnotes - The preset square and ray overrides to carry, if any.
  */
-function variantOptionsToICN(options: VariantOptions, metadata: MetaData): string {
+function variantOptionsToICN(
+	options: VariantOptions,
+	metadata: MetaData,
+	presetAnnotes: PresetAnnotes | undefined,
+): string {
 	return icnconverter.LongToShort_Format(
 		{
 			metadata,
+			presetAnnotes,
 			position: options.position,
 			gameRules: options.gameRules,
 			fullMove: options.fullMove,
@@ -753,15 +760,19 @@ function variantOptionsToICN(options: VariantOptions, metadata: MetaData): strin
  * Validates a flattened position's legality, plus its ICN size in a seek context.
  * @param metadata - The tags the seek's ICN will carry — measured here so the size
  * checked is the size sent, which the server re-checks against the same threshold.
+ * @param presetAnnotes - The preset annotations the seek's ICN will carry, measured likewise.
  * @returns The rejection, or null if legal, alongside the ICN built to measure. That string
  * is also the one the seek sends, so it's kept rather than serialized a second time on the way out.
  */
 function validateOptions(
 	options: VariantOptions,
 	metadata: MetaData,
+	presetAnnotes: PresetAnnotes | undefined,
 ): { rejection: PositionRejection | null; seekIcn: string | undefined } {
 	// Serialize only for seeks — that's the sole consumer of the ICN here.
-	const seekIcn = config.isSeekContext ? variantOptionsToICN(options, metadata) : undefined;
+	const seekIcn = config.isSeekContext
+		? variantOptionsToICN(options, metadata, presetAnnotes)
+		: undefined;
 	const code = validatePosition(options, seekIcn);
 	return { rejection: code === null ? null : { kind: 'position', code }, seekIcn };
 }
@@ -910,7 +921,7 @@ async function validateIcnInput(revealErrors: boolean, live = false): Promise<vo
 	// the server re-validates, judged on the board it gets rather than the one the moves ran on.
 	const played = withEngineBorder(gamecompressor.gamefileToPositionOptions(constructed));
 	const metadata = clientmetadatautil.buildSourceVariantMetadata(constructed);
-	const { rejection: positionRejection, seekIcn } = validateOptions(played, metadata);
+	const { rejection: positionRejection, seekIcn } = validateOptions(played, metadata, longFormat.presetAnnotes); // prettier-ignore
 	const rejection = positionRejection ?? playabilityRejection(played, constructed);
 
 	// The moves-applied gamefile is kept either way, so a rejected position still previews.

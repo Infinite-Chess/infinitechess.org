@@ -16,6 +16,7 @@ import type { ValidEngine } from '../../../shared/chess/util/engineregistry.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
 import type { GameModifier } from '../../../shared/chess/util/modutil.js';
+import type { PresetAnnotes } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { ChatHistoryEntry } from '../../../shared/util/chatlimits.js';
@@ -166,6 +167,8 @@ export type ServerGame = Game & {
 	 * leaderboard is already post-calc by then).
 	 */
 	ratingResults?: PlayerGroup<PlayerRatingResult>;
+	/** Preset square and ray overrides. Custom games only — a preset's come off its variant module. */
+	presetAnnotes?: PresetAnnotes;
 } & ValidationDependant;
 
 /** The servergame variables that depend on whether the server is performing legal move validation. */
@@ -192,6 +195,8 @@ export interface GameConstruction {
 	gameRules: GameRules;
 	/** The explicit start position. Custom games only — a preset's comes off its variant module. */
 	variantOptions?: VariantOptions;
+	/** Preset square and ray overrides. Custom games only — a preset's come off its variant module. */
+	presetAnnotes?: PresetAnnotes;
 	/** Whether the server tracks a board and validates every move against it. */
 	validateMoves: boolean;
 }
