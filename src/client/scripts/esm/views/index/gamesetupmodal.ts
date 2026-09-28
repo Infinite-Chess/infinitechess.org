@@ -218,7 +218,8 @@ function persist(): void {
 
 /** Reads current seek options and disables the Rated button if a rated game is not permitted. */
 function syncRatedButton(): void {
-	if (currentMode === undefined) return; // Privacy unknown until openModal; judging now could drop a saved Rated
+	// Privacy unknown until openModal, engine games unrated; judging either could drop a saved Rated
+	if (currentMode === undefined || currentMode === 'computer') return;
 
 	// Only a preset can be rated, so a custom selection is never resolved here — doing so would
 	// hand back the whole ICN it serializes to, only for rated-eligibility to refuse it anyway.
