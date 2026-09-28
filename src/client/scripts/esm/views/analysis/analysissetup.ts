@@ -54,7 +54,7 @@ function onPaste(e: ClipboardEvent): void {
 /** Whether a load was refused mid-load, owed once the in-flight one finishes. */
 let loadOwed = false;
 
-/** Loads the variant selector's current selection onto the board (fresh preset or custom ICN). */
+/** Loads the variant selector's current selection onto the board (fresh preset, saved position, or ICN). */
 function loadSelection(): void {
 	// Don't stomp an in-flight load — an unloaded gamefile would crash its graphical
 	// half. Owe it instead, so a modifier toggle made mid-load isn't silently swallowed.
@@ -72,14 +72,9 @@ function loadSelection(): void {
 		// Custom (saved position or ICN) — only load once it resolves to a legal position.
 		const custom = variantselector.getCustomPosition();
 		if (custom === null) return;
-		if (custom.kind === 'options') {
-			// Saved position — its options are already resolved; load them directly.
-			void analysisloader.loadVariantOptions(custom.options, slideLimit);
-		} else {
-			// From-ICN — put the very game the validation gate built onto the board, rather than
-			// building an identical second one. It was built with this same slide limit.
-			void analysisloader.pastePrebuiltGame(custom.gamefile, custom.longFormat, slideLimit);
-		}
+		// Put the very game the validation gate built onto the board, rather than
+		// building an identical second one. It was built with this same slide limit.
+		void analysisloader.pastePrebuiltGame(custom.gamefile, custom.source, slideLimit);
 	}
 
 	// Remember what's now loaded, so a later board move can revert the display to it.

@@ -19,7 +19,6 @@ import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic
 
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
-import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import modutil from '../../../../../shared/chess/util/modutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
@@ -92,24 +91,30 @@ interface Verdict {
 	played: VariantOptions;
 	/** That position serialized; only built in a seek context, the sole place it's read. */
 	seekIcn?: string;
+	/**
+	 * The game validation built, handed to a board instead of built a second time. Undefined once
+	 * a board has taken it — it owns and mutates it from there, so handing the same one out twice
+	 * would serve an edited position.
+	 */
+	gamefile?: GameFile;
 }
 
-/** A saved position's verdict. */
+/** A saved position's verdict. Its game is the board judged, only built once the position is legal. */
 interface SaveVerdict extends Verdict {
 	/** The save's options as stored — it has no ICN to derive them from. */
 	options: VariantOptions;
 }
 
-/** A From-ICN position's verdict. */
+/** A From-ICN position's verdict. Its game is the one the moves were applied on. */
 interface IcnVerdict extends Verdict {
 	/** The parse the game was built from, kept so the loader can rebuild it pristine. */
 	longFormat: LongFormatOut;
-	/**
-	 * The moves-applied game. Undefined once the board has taken it — it owns and mutates it
-	 * from there, so handing the same one out twice would serve an edited position.
-	 */
-	gamefile?: GameFile;
 }
+
+/** What a handed-over custom game is rebuilt pristine from, once it has been played on. */
+export type PrebuiltSource =
+	| { kind: 'icn'; longFormat: LongFormatOut }
+	| { kind: 'options'; options: VariantOptions };
 
 /** Callbacks a host wires to react to the selector's state. */
 interface VariantSelectorConfig {
@@ -713,13 +718,18 @@ function validateSavedPosition(judged: SaveSelectionState, variantOptions: Varia
 	const { rejection: positionRejection, seekIcn } = validateOptions(played, {}, undefined);
 	// Legal position; it still has to be playable from here. Every context rejects a position
 	// whose king can be captured, and a seek context has further rules on top. Only then do we
-	// construct the transient gamefile those checks read off of, and we discard it after.
-	const rejection = positionRejection ?? playabilityRejection(played);
+	// construct the gamefile those checks read off of — kept, so a board can load it as judged.
+	let rejection = positionRejection;
+	let gamefile: GameFile | undefined;
+	if (rejection === null) {
+		gamefile = gameformulator.constructPosition(played, undefined, selectedSlideLimit());
+		rejection = playabilityRejection(gamefile);
+	}
 
 	if (rejection !== null)
 		showError(element_variantDisplay, playability.localizeRejection(t, rejection));
 	else clearError(element_variantDisplay);
-	setVerdict(judged, { options: variantOptions, played, seekIcn, isValid: rejection === null });
+	setVerdict(judged, { options: variantOptions, played, seekIcn, gamefile, isValid: rejection === null }); // prettier-ignore
 }
 
 /**
@@ -799,26 +809,8 @@ function withEngineBorder(options: VariantOptions): VariantOptions {
 	return { ...options, gameRules: { ...options.gameRules, worldBorder } };
 }
 
-/**
- * {@link playability.getRejection} under the contexts this selector is currently in.
- *
- * Outside a seek the only check that runs is whether the player to move could capture a royal,
- * which is asked of a board at its front — so a moves-applied game answers it as it stands, and
- * that game is the very one analysis goes on to load. A seek's extra checks (already game-over,
- * a player with no pieces, engine support) instead describe a FRESH game started from the
- * flattened position, so they need that board, built here and discarded.
- *
- * @param played - The flattened position, on the border the game would be played with.
- * @param movesApplied - The game the ICN's moves were applied on, when there is one.
- */
-function playabilityRejection(
-	played: VariantOptions,
-	movesApplied?: GameFile,
-): PositionRejection | null {
-	const judged =
-		!config.isSeekContext && movesApplied !== undefined
-			? movesApplied
-			: gameformulator.constructPosition(played, movesApplied?.variant, selectedSlideLimit());
+/** Why the given board can't be played in this selector's current context, or null if it can. */
+function playabilityRejection(judged: GameFile): PositionRejection | null {
 	return playability.getRejection(judged, {
 		seek: config.isSeekContext,
 		engine: engineOnly,
@@ -922,14 +914,21 @@ async function validateIcnInput(revealErrors: boolean, live = false): Promise<vo
 	const played = withEngineBorder(gamecompressor.gamefileToPositionOptions(constructed));
 	const metadata = clientmetadatautil.buildSourceVariantMetadata(constructed);
 	const { rejection: positionRejection, seekIcn } = validateOptions(played, metadata, longFormat.presetAnnotes); // prettier-ignore
-	const rejection = positionRejection ?? playabilityRejection(played, constructed);
+	let rejection = positionRejection;
+	if (rejection === null) {
+		// A seek starts a FRESH game from the flattened position, so it judges that board. Outside a
+		// seek the only check reads the board's front, so the moves-applied game analysis loads will do.
+		const judged = config.isSeekContext
+			? gameformulator.constructPosition(played, constructed.variant, selectedSlideLimit())
+			: constructed;
+		rejection = playabilityRejection(judged);
+	}
 
 	// The moves-applied gamefile is kept either way, so a rejected position still previews.
-	const isValid = rejection === null;
-	if (isValid) clearError(element_icnInputWrap);
+	if (rejection === null) clearError(element_icnInputWrap);
 	else if (revealErrors)
 		showError(element_icnInputWrap, playability.localizeRejection(t, rejection));
-	setVerdict(judging, { isValid, longFormat, played, seekIcn, gamefile: constructed });
+	setVerdict(judging, { isValid: rejection === null, longFormat, played, seekIcn, gamefile: constructed }); // prettier-ignore
 }
 
 // Preview tooltips ------------------------------------------------------------
@@ -1014,31 +1013,22 @@ function isSelectionValid(): boolean {
 }
 
 /**
- * The current custom (non-preset) selection resolved for loading onto a board, or null if the
- * selection is a preset or not yet valid.
+ * The custom selection's game to load onto a board, with the source to rebuild it from, or null
+ * for a preset or a selection not yet valid. CONSUMES the game, so a second call returns null.
  */
-function getCustomPosition():
-	| { kind: 'gamefile'; gamefile: GameFile; longFormat: LongFormatOut }
-	| { kind: 'options'; options: VariantOptions }
-	| null {
+function getCustomPosition(): { gamefile: GameFile; source: PrebuiltSource } | null {
 	if (selection.kind === 'preset') return null;
-	// A From-ICN selection hands over the very game validation built — CONSUMING it, since the board
-	// mutates what it is given — alongside the parse it came from, which the loader keeps so it can
-	// rebuild the pristine game later.
-	if (selection.kind === 'icn') {
-		const verdict = selection.verdict;
-		if (verdict === null || verdict === 'unevaluated' || !verdict.isValid) return null;
-		// Already handed to a board — it has been played on since, so it is no longer this position.
-		const { gamefile, longFormat } = verdict;
-		if (gamefile === undefined) return null;
-		verdict.gamefile = undefined;
-		return { kind: 'gamefile', gamefile, longFormat };
-	}
-	// cloud / local saved position — the resolved options are loadable as-is (no moves).
-	if (!selection.verdict?.isValid) return null;
-	// A saved position resolves to its VariantOptions, deep-copied because loading writes into them and
-	// the cached original outlives the load.
-	return { kind: 'options', options: jsutil.deepCopyObject(selection.verdict.options) };
+	const verdict = selection.verdict;
+	if (verdict === null || verdict === 'unevaluated' || !verdict.isValid) return null;
+	// Already handed to a board — it has been played on since, so it is no longer this position.
+	const { gamefile } = verdict;
+	if (gamefile === undefined) return null;
+	verdict.gamefile = undefined;
+	const source: PrebuiltSource =
+		'longFormat' in verdict
+			? { kind: 'icn', longFormat: verdict.longFormat }
+			: { kind: 'options', options: verdict.options };
+	return { gamefile, source };
 }
 
 /**

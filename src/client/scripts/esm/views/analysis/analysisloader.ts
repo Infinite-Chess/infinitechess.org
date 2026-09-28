@@ -2,13 +2,15 @@
 
 /**
  * The analysis page's game loader: the small subset of load paths the analysis
- * board needs — a fresh local board of a variant, and pasting a game from ICN.
+ * board needs — a fresh local board of a variant, a custom position, a game pasted
+ * from ICN, and a finished game fetched by its id.
  */
 
 import type { VariantCode } from '../../../../../shared/chess/util/variantcodes.js';
 import type { DeadGameState } from '../../../../../shared/transport/domain.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
+import type { PrebuiltSource } from '../../board/variantselector/variantselector.js';
 import type {
 	Additional,
 	GameFile,
@@ -41,6 +43,7 @@ let lastLoad:
 	| { replay: () => Promise<void>; players: { White?: string; Black?: string } }
 	| undefined;
 
+/** The participants the currently-loaded game carried, empty for a fresh or custom position. */
 function getPastedPlayers(): { White?: string; Black?: string } {
 	return lastLoad?.players ?? {};
 }
@@ -105,7 +108,7 @@ function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
  * @param slideLimit - Optional Slide Limit modifier override (see the variant setup panel).
  */
 function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint): Promise<void> {
-	lastLoad = { replay: () => loadVariantOptions(variantOptions, slideLimit), players: {} };
+	recordOptions(variantOptions, slideLimit);
 	const additional: Additional = {
 		variantOptions,
 		slideLimit,
@@ -155,29 +158,38 @@ async function pasteGame(
 
 /**
  * Loads an already-constructed game onto the board — the one the variant selector built to
- * validate the ICN, handed over instead of built a second time. The board owns and mutates it
- * from here, so the selector must have dropped its own reference.
+ * validate the position, handed over instead of built a second time. The board owns and mutates
+ * it from here, so the selector must have dropped its own reference.
  * Requires an active 'analysis' session.
- * @param longFormat - The parse the game was built from, for {@link recordPaste}.
+ * @param source - What the game was built from, recorded so {@link reloadPristine} can rebuild it.
  * @param slideLimit - The Slide Limit the game was BUILT with. Not applied here — the game
  * already carries it — only kept so a rebuild reaches the same board.
  */
 function pastePrebuiltGame(
 	gamefile: GameFile,
-	longFormat: LongFormatOut,
+	source: PrebuiltSource,
 	slideLimit?: bigint,
 ): Promise<void> {
-	recordPaste(longFormat, undefined, undefined, slideLimit);
+	if (source.kind === 'icn') recordPaste(source.longFormat, undefined, undefined, slideLimit);
+	else recordOptions(source.options, slideLimit);
 
 	return gamesession.loadGame({
 		kind: 'prebuilt',
 		gamefile,
-		presetAnnotes: longFormat.presetAnnotes,
+		presetAnnotes: source.kind === 'icn' ? source.longFormat.presetAnnotes : undefined,
 		viewWhitePerspective: resolveViewPerspective(),
 	});
 }
 
 // Helpers ---------------------------------------------------------------------
+
+/**
+ * Records a custom position's options so {@link reloadPristine} can rebuild it through
+ * {@link loadVariantOptions}. Saved positions carry no participants.
+ */
+function recordOptions(variantOptions: VariantOptions, slideLimit?: bigint): void {
+	lastLoad = { replay: () => loadVariantOptions(variantOptions, slideLimit), players: {} };
+}
 
 /**
  * Canonicalizes a pasted ICN's metadata, then records what the game was made from so
@@ -215,7 +227,6 @@ export default {
 	reloadPristine,
 	loadGameById,
 	loadVariant,
-	loadVariantOptions,
 	pasteGame,
 	pastePrebuiltGame,
 };
