@@ -6,22 +6,25 @@
  * Manages the game rules of the board editor position.
  */
 
-import type { Edit } from '../../../../../shared/chess/logic/movepiece';
-import type { Piece } from '../../../../../shared/chess/logic/boardutil';
-import type { Coords } from '../../../../../shared/util/coordutil';
-import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds';
-import type { GameRules, Promotion } from '../../../../../shared/chess/util/gamerules';
-import type { PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil';
-import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil';
+import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
+import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
+import type { Coords } from '../../../../../shared/util/coordutil.js';
+import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds.js';
+import type { GameRules, Promotion } from '../../../../../shared/chess/util/gamerules.js';
+import type { PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil.js';
+import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 
-import boardutil from '../../../../../shared/chess/logic/boardutil';
-import gamerules from '../../../../../shared/chess/util/gamerules';
-import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
-import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
+import boardutil from '../../../../../shared/chess/logic/boardutil.js';
+import gamerules from '../../../../../shared/chess/util/gamerules.js';
+import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state.js';
+import typeutil, {
+	players as p,
+	rawTypes as r,
+} from '../../../../../shared/chess/util/typeutil.js';
 
-import gameslot from '../../game/chess/gameslot';
-import edithistory from './edithistory';
-import guigamerules from './gui/actions/guigamerules';
+import gameslot from '../../game/chess/gameslot.js';
+import edithistory from './edithistory.js';
+import guigamerules from './gui/actions/guigamerules.js';
 
 // Types -----------------------------------------------------------------------
 

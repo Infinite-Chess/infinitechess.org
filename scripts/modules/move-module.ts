@@ -4,8 +4,8 @@
  * `git mv`s one or more modules and rewrites every relative import specifier pointing
  * at them, plus the specifiers inside the moved files (vi.mock/vi.doMock module ids
  * included). Paths are recomputed from each file's NEW home, so no hand-counting "../".
- * Pass all moves in ONE run so they resolve against each other. Preserves each
- * specifier's .js/extensionless style.
+ * Pass all moves in ONE run so they resolve against each other. Rewritten
+ * specifiers always carry .js, the form Node's ESM resolver requires.
  *
  * It moves FILES only. Renaming a module's import identifier, and re-sorting the import
  * block, are yours — though the precommit hook re-sorts anyway.
@@ -44,8 +44,8 @@ function resolveSpec(fromDir: string, spec: string): string | null {
 	return null;
 }
 
-function toSpec(fromDir: string, target: string, hadJsExt: boolean): string {
-	let rel = path.relative(fromDir, target).replace(/\.ts$/, hadJsExt ? '.js' : '');
+function toSpec(fromDir: string, target: string): string {
+	let rel = path.relative(fromDir, target).replace(/\.ts$/, '.js');
 	if (!rel.startsWith('.')) rel = `./${rel}`;
 	return rel.split(path.sep).join('/');
 }
@@ -76,7 +76,7 @@ for (const file of files) {
 			if (target === null) return m;
 			const dest = newHome(target);
 			if (dest === target && newDir === oldDir) return m;
-			return `${lead}${q}${toSpec(newDir, dest, spec.endsWith('.js'))}${q}`;
+			return `${lead}${q}${toSpec(newDir, dest)}${q}`;
 		},
 	);
 
