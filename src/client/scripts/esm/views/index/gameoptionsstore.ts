@@ -55,9 +55,12 @@ const GameOptionsSchema = z.strictObject({
 
 // Functions -------------------------------------------------------------------
 
-/** Reads the remembered options, or undefined when there are none. */
+/** Reads the remembered options, or undefined when there are none or the read failed. */
 async function read(): Promise<GameOptions | undefined> {
-	const raw = await IndexedDB.loadItem(GAME_OPTIONS_NAME);
+	const raw = await IndexedDB.loadItem(GAME_OPTIONS_NAME).catch((err: unknown) => {
+		console.error('Failed to read game setup options:', err);
+		return undefined;
+	});
 	if (raw === undefined) return undefined;
 
 	const parsed = GameOptionsSchema.safeParse(raw);
