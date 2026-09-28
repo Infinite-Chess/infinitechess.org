@@ -159,7 +159,7 @@ async function PUTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 	try {
 		const response: Response = await serverfetch('/api/preferences', {
 			method: 'PUT',
-			// Still sends it if the page unloads before it fully leaves the browser, as on a slow network.
+			// Still sends it if the page unloads before it fully leaves the browser.
 			keepalive: true,
 			headers: {
 				'Content-Type': 'application/json',
