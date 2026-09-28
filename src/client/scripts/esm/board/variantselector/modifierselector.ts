@@ -8,6 +8,7 @@
 import type { ModifierCode, GameModifier } from '../../../../../shared/chess/util/modutil.js';
 
 import modutil from '../../../../../shared/chess/util/modutil.js';
+import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -28,6 +29,8 @@ const SLIDE_LIMIT_DEFAULT = 7;
 
 const element_modifierAddBtn = document.querySelector<SVGElement>('.modifier-add')!;
 const element_modifierDropdown = document.getElementById('modifier-dropdown')!;
+const element_modifierItems =
+	element_modifierDropdown.querySelectorAll<HTMLElement>('[data-modifier]');
 const element_modifiersSection = document.getElementById('modifiers-section')!;
 const element_modifiersList = document.getElementById('modifiers-list')!;
 const element_slideLimitSection = document.getElementById('slide-limit-section')!;
@@ -40,8 +43,10 @@ const element_slideLimitDisplay = document.getElementById('slide-limit-display')
 let config: ModifierSelectorConfig = {};
 
 const selectedModifiers = new Set<ModifierCode>();
+/** Whether the picker is restricted to modifiers the engine can play (the computer-game flow). */
+let engineOnly = false;
 
-// Functions -------------------------------------------------------------------
+// Initialization --------------------------------------------------------------
 
 /** Wires all modifier selector interactions. */
 function initModifierSelector(hostConfig: ModifierSelectorConfig = {}): void {
@@ -57,7 +62,7 @@ function initModifierSelector(hostConfig: ModifierSelectorConfig = {}): void {
 			closeModifierDropdown();
 	});
 
-	element_modifierDropdown.querySelectorAll<HTMLElement>('[data-modifier]').forEach((item) => {
+	element_modifierItems.forEach((item) => {
 		const code = item.getAttribute('data-modifier') as ModifierCode;
 		item.addEventListener('click', () => selectModifier(code));
 	});
@@ -77,6 +82,8 @@ function initModifierSelector(hostConfig: ModifierSelectorConfig = {}): void {
 	element_slideLimitDisplay.textContent = String(SLIDE_LIMIT_DEFAULT);
 }
 
+// Dropdown navigation ---------------------------------------------------------
+
 /** Toggles the modifier dropdown open/closed. */
 function toggleModifierDropdown(): void {
 	element_modifierDropdown.classList.toggle('open');
@@ -87,62 +94,42 @@ function closeModifierDropdown(): void {
 	element_modifierDropdown.classList.remove('open');
 }
 
+/**
+ * Restricts the picker to what the engine can play for an engine game,
+ * deselecting any selected modifier it can't.
+ */
+function onModalOpen(engineGame: boolean): void {
+	engineOnly = engineGame;
+	for (const code of selectedModifiers) {
+		if (!isAvailable(code)) deselectModifier(code);
+	}
+	refreshModifierItems();
+}
+
+/** Whether the modifier may be picked under the current restriction. */
+function isAvailable(code: ModifierCode): boolean {
+	return !engineOnly || apeironcard.SUPPORTED_MODIFIERS.has(code);
+}
+
+// Modifier selection ----------------------------------------------------------
+
 /** Adds a modifier to the selection, hides it from the dropdown, and refreshes the display. */
 function selectModifier(code: ModifierCode): void {
 	selectedModifiers.add(code);
-	element_modifierDropdown
-		.querySelector<HTMLElement>(`[data-modifier="${code}"]`)!
-		.classList.add('hidden');
 	closeModifierDropdown();
 	refreshModifiersSection();
-	refreshModifierAddBtn();
+	refreshModifierItems();
 	config.onChange?.();
 	config.onCommit?.();
 }
 
-/** Removes a modifier from the selection, reveals it in the dropdown, and refreshes the display. */
+/** Removes a modifier from the selection and refreshes the display. */
 function deselectModifier(code: ModifierCode): void {
 	selectedModifiers.delete(code);
-	element_modifierDropdown
-		.querySelector<HTMLElement>(`[data-modifier="${code}"]`)
-		?.classList.remove('hidden');
 	refreshModifiersSection();
-	refreshModifierAddBtn();
+	refreshModifierItems();
 	config.onChange?.();
 	config.onCommit?.();
-}
-
-/** Rebuilds the selected modifier chips and shows/hides modifier-specific sections. */
-function refreshModifiersSection(): void {
-	element_modifiersList.innerHTML = '';
-	for (const code of selectedModifiers) {
-		element_modifiersList.appendChild(createModifierChip(code));
-	}
-	element_modifiersSection.classList.toggle('hidden', selectedModifiers.size === 0);
-	element_slideLimitSection.classList.toggle('hidden', !selectedModifiers.has('slide-limit'));
-}
-
-function createModifierChip(code: ModifierCode): HTMLElement {
-	const name = t.shared.modifiers[code].name;
-	const iconId = modutil.getModifierIconId(code);
-	const chip = document.createElement('div');
-	chip.className = 'modifier-chip';
-	chip.dataset['modifier'] = code;
-	chip.title = name;
-	chip.innerHTML = `<svg class="${iconId}"><use href="#${iconId}"></use></svg><div class="modifier-chip-overlay">✕</div>`;
-	chip.addEventListener('click', () => deselectModifier(code));
-	return chip;
-}
-
-/** Shows the modifier-add button only when there are modifiers still available to add. */
-function refreshModifierAddBtn(): void {
-	element_modifierAddBtn.classList.toggle('hidden', !hasVisibleModifierItems());
-}
-
-function hasVisibleModifierItems(): boolean {
-	return [...element_modifierDropdown.querySelectorAll<HTMLElement>('[data-modifier]')].some(
-		(item) => !item.classList.contains('hidden'),
-	);
 }
 
 /**
@@ -159,14 +146,51 @@ function applyModifiers(modifiers: GameModifier[]): void {
 			element_slideLimitDisplay.textContent = String(modifier.value);
 		}
 	}
-	// Hide selected modifiers from the dropdown; reveal the rest.
-	element_modifierDropdown.querySelectorAll<HTMLElement>('[data-modifier]').forEach((item) => {
-		const code = item.getAttribute('data-modifier') as ModifierCode;
-		item.classList.toggle('hidden', selectedModifiers.has(code));
-	});
 	refreshModifiersSection();
-	refreshModifierAddBtn();
+	refreshModifierItems();
 }
+
+// Display ---------------------------------------------------------------------
+
+/** Rebuilds the selected modifier chips and shows/hides modifier-specific sections. */
+function refreshModifiersSection(): void {
+	element_modifiersList.innerHTML = '';
+	for (const code of selectedModifiers) {
+		element_modifiersList.appendChild(createModifierChip(code));
+	}
+	element_modifiersSection.classList.toggle('hidden', selectedModifiers.size === 0);
+	element_slideLimitSection.classList.toggle('hidden', !selectedModifiers.has('slide-limit'));
+}
+
+/** Builds the chip showing a selected modifier, which deselects it when clicked. */
+function createModifierChip(code: ModifierCode): HTMLElement {
+	const name = t.shared.modifiers[code].name;
+	const iconId = modutil.getModifierIconId(code);
+	const chip = document.createElement('div');
+	chip.className = 'modifier-chip';
+	chip.dataset['modifier'] = code;
+	chip.title = name;
+	chip.innerHTML = `<svg class="${iconId}"><use href="#${iconId}"></use></svg><div class="modifier-chip-overlay">✕</div>`;
+	chip.addEventListener('click', () => deselectModifier(code));
+	return chip;
+}
+
+/**
+ * Lists in the dropdown only the modifiers still available to add — unselected, and allowed
+ * under the current restriction — showing the add button only while any remain.
+ */
+function refreshModifierItems(): void {
+	let anyVisible = false;
+	element_modifierItems.forEach((item) => {
+		const code = item.getAttribute('data-modifier') as ModifierCode;
+		const visible = !selectedModifiers.has(code) && isAvailable(code);
+		item.classList.toggle('hidden', !visible);
+		if (visible) anyVisible = true;
+	});
+	element_modifierAddBtn.classList.toggle('hidden', !anyVisible);
+}
+
+// Selection accessors ---------------------------------------------------------
 
 /** Returns the complete configuration for every currently selected modifier. */
 function getGameModifiers(): GameModifier[] {
@@ -182,8 +206,13 @@ function getGameModifiers(): GameModifier[] {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Initialization
 	initModifierSelector,
+	// Dropdown navigation
 	closeModifierDropdown,
-	getGameModifiers,
+	onModalOpen,
+	// Modifier selection
 	applyModifiers,
+	// Selection accessors
+	getGameModifiers,
 };

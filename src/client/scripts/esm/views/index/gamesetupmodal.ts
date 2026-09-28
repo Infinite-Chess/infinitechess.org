@@ -300,6 +300,9 @@ function openModal(mode: ModalMode): void {
 
 	element_rowGameMode.classList.toggle('hidden', mode === 'computer');
 	element_rowStrength.classList.toggle('hidden', mode !== 'computer');
+	// Modifiers first: the position is re-judged with them, so any the engine can't play
+	// must be dropped before the variant selector re-judges it under the new rules.
+	modifierselector.onModalOpen(mode === 'computer');
 	variantselector.onModalOpen(mode === 'computer');
 
 	element_modalOverlay.classList.remove('hidden');
