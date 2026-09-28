@@ -7,7 +7,7 @@
 script_only = true
 
 [errors]
-# Generic fallback shown client-side when a server response misses emitting its own message.
+# Generic fallback shown client-side for a rare failure that has no message of its own.
 fallback = "Something went wrong. Please try again."
 # Shown client-side when a request fails to reach the server (network failure).
 network = "Network error. Please try again."

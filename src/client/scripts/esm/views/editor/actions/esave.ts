@@ -47,9 +47,17 @@ async function saveLocal(position_name: string): Promise<void> {
 			pawnDoublePush,
 			castling,
 		});
+		// A pending re-save supersedes this one, and reports once it lands.
+		if (!positionSavePending) {
+			boardeditor.markPositionClean();
+			eautosave.markPositionDirty();
+			void eautosave.autosaveCurrentPositionOnce();
+			toast.show(translations.editor.saved_in_browser);
+		}
 	} catch (err) {
 		// Don't crash the editor over failed save
 		console.error('Failed to save board editor position:', err);
+		toast.show(t.shared.errors.fallback, { error: true });
 	} finally {
 		positionSaveInFlight = false;
 
@@ -57,11 +65,6 @@ async function saveLocal(position_name: string): Promise<void> {
 		if (positionSavePending) {
 			positionSavePending = false;
 			await saveLocal(position_name);
-		} else {
-			boardeditor.markPositionClean();
-			eautosave.markPositionDirty();
-			void eautosave.autosaveCurrentPositionOnce();
-			toast.show(translations.editor.saved_in_browser);
 		}
 	}
 }
