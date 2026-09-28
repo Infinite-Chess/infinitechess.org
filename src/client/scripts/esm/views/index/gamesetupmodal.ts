@@ -136,7 +136,6 @@ function initToggleGroups(): void {
 			btn.addEventListener('click', () => {
 				setActiveToggle(attr, btn);
 				callback?.();
-				persist();
 			});
 		});
 	}
@@ -144,12 +143,13 @@ function initToggleGroups(): void {
 
 // Toggle groups ---------------------------------------------------------------
 
-/** Makes the given button the only active one in its toggle group. */
+/** Makes the given button the only active one in its toggle group, and remembers it. */
 function setActiveToggle(attr: ToggleGroupAttribute, btn: HTMLElement): void {
 	element_buttonsByToggleGroup[attr].forEach((groupButton) =>
 		groupButton.classList.remove('active'),
 	);
 	btn.classList.add('active');
+	persist();
 }
 
 /** The `data-*` value of the active button in the given toggle group. */
@@ -183,7 +183,8 @@ function applyOptions(options: GameOptions): void {
 	// that lies — nothing failed. Skipping it leaves the variant on Classical.
 	if (options.selection.kind !== 'cloud' || validatorama.areWeLoggedIn())
 		variantselector.restoreSelection(options.selection);
-	// Still needed: a skipped cloud save never reaches restoreSelection, so nothing saved itself.
+	// Still needed: a skipped cloud save never reaches restoreSelection,
+	// the only save made once everything else is restored.
 	persist();
 }
 
@@ -230,10 +231,8 @@ function syncRatedButton(): void {
 
 	const allowed = leaderboardregistry.isRatedAllowed(variant, time, color, modifiers, isPrivate);
 	element_ratedButton.disabled = !allowed;
-	if (!allowed && element_ratedButton.classList.contains('active')) {
+	if (!allowed && element_ratedButton.classList.contains('active'))
 		setActiveToggle('data-mode', element_casualButton);
-		persist();
-	}
 }
 
 /** Returns the color the player has selected, or null for random. */
