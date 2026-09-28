@@ -6,6 +6,8 @@
    src/client/css/variantselector.css.
 #}
 
+{% from "components/forms.njk" import successGlyph %}
+
 {% macro eyeIcon() %}<svg class="svg-eye preview"><use href="#svg-eye"></use></svg>{% endmacro %}
 
 {% macro variantGroupItem(group, iconId, name, description, arrow=true, id=none) %}
@@ -76,6 +78,18 @@
 		<div class="icn-input-wrap">
 			<textarea class="icn-input" id="icn-input" spellcheck="false"
 			          placeholder="{{ s.variant_selector.icn_placeholder }}" rows="1"></textarea>
+			{# Stands in for the field while its ICN is too long to show. #}
+			<div class="icn-held" id="icn-held" tabindex="0">
+				<span class="icn-held-label">{{ s.variant_selector.held_icn }}</span>
+				<span class="icn-held-size" id="icn-held-size"></span>
+				<button class="icn-held-copy tooltip-d" id="icn-held-copy" data-tooltip="{{ s.variant_selector.copy }}">
+					<svg class="icn-held-icon"><use href="#svg-clipboard"/></svg>
+					{{ successGlyph() }}
+				</button>
+				<button class="icn-held-clear tooltip-d" id="icn-held-clear" data-tooltip="{{ s.variant_selector.clear }}">
+					<svg><use href="#svg-x"/></svg>
+				</button>
+			</div>
 		</div>
 	</div>
 	<p id="icn-error-text" class="icn-error-text"></p>

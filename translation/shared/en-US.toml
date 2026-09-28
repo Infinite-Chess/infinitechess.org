@@ -36,10 +36,15 @@ custom_create_name = "Create"
 custom_create_desc = "Go to the board editor."
 custom_from_icn_name = "From ICN"
 custom_from_icn_desc = "Paste an accessible ICN code."
-icn_placeholder = "Paste ICN text here"
 saved_positions = "Saved positions"
 local_load_failed = "Failed to load local save."
 cloud_load_failed = "Failed to load cloud save."
+icn_placeholder = "Paste ICN text here"
+# Stands in for an ICN too long to show in the field.
+held_icn = "Pasted ICN"
+held_icn_size = "{size} characters" # {size} is a rounded count, e.g. "2.4M"
+copy = "Copy"
+clear = "Clear"
 
 [modifiers_section]
 label = "Modifiers:"

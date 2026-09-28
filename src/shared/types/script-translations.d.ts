@@ -142,10 +142,14 @@ export interface ScriptTranslations {
 			custom_create_desc: string;
 			custom_from_icn_name: string;
 			custom_from_icn_desc: string;
-			icn_placeholder: string;
 			saved_positions: string;
 			local_load_failed: string;
 			cloud_load_failed: string;
+			icn_placeholder: string;
+			held_icn: string;
+			held_icn_size: string;
+			copy: string;
+			clear: string;
 		};
 		modifiers_section: {
 			label: string;

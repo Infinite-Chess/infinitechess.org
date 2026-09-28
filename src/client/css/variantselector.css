@@ -248,6 +248,7 @@
    ============================================================ */
 
 .icn-input-wrap {
+	position: relative;
 	flex: 1;
 	padding: 0 10px;
 	background: var(--c-surface-2);
@@ -279,6 +280,98 @@
 
 .icn-input::-webkit-scrollbar {
 	display: none;
+}
+
+/* Stands in for an ICN too long to show. */
+.icn-held {
+	position: absolute;
+	inset: 0 10px;
+	display: none;
+	align-items: center;
+	gap: 6px;
+	font-size: 13px;
+	white-space: nowrap;
+	outline: none;
+}
+
+/* A little taller while held, giving its buttons room. */
+.icn-input-wrap.held {
+	padding-block: 3px;
+}
+
+.icn-input-wrap.held .icn-input {
+	visibility: hidden;
+}
+
+.icn-input-wrap.held .icn-held {
+	display: flex;
+}
+
+.icn-held-label {
+	color: var(--c-text-emphasis);
+	font-weight: 600;
+}
+
+.icn-held-size {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: var(--c-text-muted);
+}
+
+.icn-held-size::before {
+	content: '· ';
+}
+
+.icn-held-copy,
+.icn-held-clear {
+	display: flex;
+	align-items: center;
+	padding: 2px;
+	background: none;
+	color: var(--c-text-muted);
+	cursor: pointer;
+}
+
+.icn-held-copy:hover,
+.icn-held-clear:hover {
+	color: var(--c-text-emphasis);
+}
+
+/* The clipboard, and the checkmark that replaces it. */
+.icn-held-copy svg {
+	width: 1.37em;
+	height: 1.37em;
+}
+
+/* The copy confirmation. .glyph carries no rules of its own, so each holder strokes it. */
+.icn-held-copy .glyph {
+	display: none;
+	color: var(--c-text-emphasis);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 3;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.icn-held-copy.copied .icn-held-icon {
+	display: none;
+}
+
+.icn-held-copy.copied .glyph {
+	display: block;
+}
+
+/* Pulled in against the clipboard, making up for the empty margin around the X. */
+.icn-held-clear {
+	margin-left: -6px;
+}
+
+/* Larger than the clipboard, since the X only fills the middle half of its box. */
+.icn-held-clear svg {
+	width: 1.53em;
+	height: 1.53em;
 }
 
 .icn-error-text {

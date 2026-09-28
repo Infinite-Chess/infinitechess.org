@@ -72,7 +72,7 @@ function initModal(): void {
 		if (e.key === 'Escape') close();
 	});
 
-	element_modalSubmit.addEventListener('click', () => void submitModal());
+	element_modalSubmit.addEventListener('click', submitModal);
 
 	initToggleGroups();
 	// Sliders save on commit, not change — one drag fires dozens of changes, each a whole-ICN write.
@@ -247,16 +247,8 @@ function getSelectedColor(): typeof players.WHITE | typeof players.BLACK | null 
 
 // Creating the game -----------------------------------------------------------
 
-/** Runs the active flow's submit, first settling any verdict live validation deferred. */
-async function submitModal(): Promise<void> {
-	if (variantselector.isVerdictDeferred()) {
-		// A position too large to judge on every keystroke leaves the button enabled rather than
-		// greyed out with nothing having judged it — so pressing it is where that position gets judged.
-		await variantselector.revalidateCustomSelection();
-		element_modalSubmit.disabled = !variantselector.isSelectionValid();
-		if (element_modalSubmit.disabled) return;
-	}
-
+/** Runs the active flow's submit. */
+function submitModal(): void {
 	if (currentMode === 'online') handleSeek(false);
 	else if (currentMode === 'friend') handleSeek(true);
 	else if (currentMode === 'computer') handleComputerGame();

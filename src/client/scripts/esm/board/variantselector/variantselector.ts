@@ -22,6 +22,7 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 import bounds from '../../../../../shared/util/math/bounds.js';
 import modutil from '../../../../../shared/chess/util/modutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
+import interpolate from '../../../../../shared/util/interpolate.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
@@ -30,6 +31,7 @@ import { validatePosition } from '../../../../../shared/chess/logic/positionlega
 import playability, { PositionRejection } from '../../../../../shared/chess/game/playability.js';
 import icnconverter, { LongFormatOut, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
 
+import docutil from '../../util/docutil.js';
 import savesapi from '../../savedpositions/savesapi.js';
 import savestore from '../../savedpositions/savestore.js';
 import cloudstore from '../../savedpositions/cloudstore.js';
@@ -51,7 +53,7 @@ type SaveSelection = { kind: StorageType; name: string };
 /** A position pasted or typed into the From-ICN field. */
 type IcnSelection = {
 	kind: 'icn';
-	/** The field's exact text, valid or not, so a broken paste survives. */
+	/** The exact From-ICN text, valid or not, so a broken paste survives. */
 	icn: string;
 };
 
@@ -68,13 +70,12 @@ interface SaveSelectionState extends SaveSelection {
 }
 
 /**
- * A From-ICN position, with its verdict on the field's current text. It holds no text of its
- * own — the live text is the field itself.
+ * A From-ICN position, with its verdict on the current From-ICN text. It holds no text of its
+ * own — the live text is {@link getIcnText}.
  */
 interface IcnSelectionState {
 	kind: 'icn';
-	/** `'unevaluated'` when too large to judge on a keystroke — the verdict waits for a commit. */
-	verdict: IcnVerdict | 'unevaluated' | null;
+	verdict: IcnVerdict | null;
 }
 
 /** A From-ICN selection as accepted, with the ICN text it was loaded from. */
@@ -124,7 +125,7 @@ interface VariantSelectorConfig {
 	 */
 	isSeekContext: boolean;
 	/**
-	 * Fires whenever the selection's verdict moves — reached, retired, or deferred. Sync UI that
+	 * Fires whenever the selection's verdict moves — reached or retired. Sync UI that
 	 * reflects legality (e.g. a submit button). More common than the edit fire.
 	 */
 	onValidityChange?: () => void;
@@ -162,6 +163,11 @@ const element_variantGroupIcon = document.getElementById('variant-group-icon')!;
 const element_variantName = document.getElementById('variant-name')!;
 const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaElement;
 const element_icnInputWrap = document.querySelector('.icn-input-wrap') as HTMLElement;
+/** Stands in for the field while it holds an ICN too large to draw. */
+const element_icnHeld = document.getElementById('icn-held')!;
+const element_icnHeldSize = document.getElementById('icn-held-size')!;
+const element_icnHeldCopy = document.getElementById('icn-held-copy')!;
+const element_icnHeldClear = document.getElementById('icn-held-clear')!;
 const element_icnErrorText = document.getElementById('icn-error-text') as HTMLElement;
 const element_customVariantContent = document.getElementById('variant-custom-content')!;
 const element_btnCustomCreate = document.getElementById('btn-custom-create')!;
@@ -172,14 +178,23 @@ const element_btnCustomFromICNName =
 // Constants -------------------------------------------------------------------
 
 /**
- * The ICN length past which a keystroke stops judging the position, leaving the verdict to a
- * commit — blur, Enter, paste, or pressing submit. Per-change position judgement becomes too
- * slow after that point, incurring hitches while typing.
+ * The longest ICN the field shows. A longer one arriving all at once is held rather than
+ * drawn, since the browser re-lays out the field's whole text on every keystroke. Capping the
+ * field also caps the position judged on each keystroke, keeping that judgement hitch-free.
  *
  * 37,281 chars can hold at most 5,000 pieces. Building a gamefile costs roughly 200 ms per
  * 10,000 pieces on Naviary's machine.
  */
-const MAX_ICN_CHARS_TO_VALIDATE_LIVE = 30_000;
+const MAX_FIELD_ICN_CHARS = 30_000;
+
+/** How long the held ICN's copy button shows its confirmation. */
+const COPIED_CONFIRMATION_MS = 1500;
+
+/** Rounds a held ICN's length for display, e.g. "2.4M". */
+const ICN_SIZE_FORMAT = new Intl.NumberFormat(document.documentElement.lang, {
+	notation: 'compact',
+	maximumFractionDigits: 1,
+});
 
 /**
  * How each saved-position backend is read: its reader, and the message shown when that read
@@ -231,6 +246,14 @@ let loaded: {
 	/** The modifiers active at load, restored alongside the selection. */
 	modifiers: GameModifier[];
 } = { selection: { kind: 'preset', code: 'Classical' }, modifiers: [] };
+
+/**
+ * The From-ICN text while it's too large to draw in the field, held here in its place.
+ * Null while the field holds the text itself.
+ */
+let heldIcn: string | null = null;
+/** The timer ending the held ICN's copy confirmation, if it's showing. */
+let copiedTimer: number | undefined;
 
 let customContentVNode: VNode | Element = element_customVariantContent;
 
@@ -319,33 +342,51 @@ function initIcnValidation(): void {
 	/** Whether to ignore the "already loaded" check and force a commit on blur. */
 	let forceCommit = false;
 
-	// Blur/paste are "commit" points; live typing only updates validity (onChange), not a commit.
+	// Blur/paste are "commit" points; live typing only updates validity (onValidityChange), not a commit.
 	element_icnInput.addEventListener('blur', async () => {
-		const value = element_icnInput.value;
+		const value = getIcnText();
 		await validateIcnInput(true);
 		const wasForceCommit = forceCommit;
 		forceCommit = false;
 		// Validating can await a variant module, during which another selection may have rewritten
 		// the field and committed its own state. Ours is stale then — leave it alone.
-		if (element_icnInput.value !== value) return;
+		if (getIcnText() !== value) return;
 		// Skip the commit if the field still holds exactly the ICN already accepted — re-committing
 		// would reload the position, needlessly wiping any analysis branches made from it.
-		if (
-			!wasForceCommit &&
-			loaded.selection.kind === 'icn' &&
-			element_icnInput.value === loaded.selection.icn
-		)
+		if (!wasForceCommit && loaded.selection.kind === 'icn' && value === loaded.selection.icn)
 			return;
 		config.onCommit?.();
 	});
 	element_icnInput.addEventListener('focus', () => clearError(element_icnInputWrap));
+	// A paste too large to draw is held instead. The field can't be edited from there, so blurring
+	// commits it at once, handing focus to the held ICN so a further paste replaces it.
+	element_icnInput.addEventListener('paste', (e) => {
+		const pasted = e.clipboardData?.getData('text/plain') ?? '';
+		const { value, selectionStart, selectionEnd } = element_icnInput;
+		const result = value.slice(0, selectionStart) + pasted + value.slice(selectionEnd);
+		if (result.length <= MAX_FIELD_ICN_CHARS) return; // The field takes it, and its input event judges it
+		e.preventDefault();
+		setIcnText(result);
+		config.onEdit?.();
+		element_icnInput.blur();
+		element_icnHeld.focus();
+	});
+	element_icnHeld.addEventListener('paste', (e) => {
+		// Handled here — stops the page routing the same paste into the field too (analysis).
+		e.stopPropagation();
+		e.preventDefault();
+		const icn = e.clipboardData?.getData('text/plain').trim();
+		if (icn) void applyIcn(icn);
+	});
+	element_icnHeldCopy.addEventListener('click', () => void copyHeldIcn());
+	element_icnHeldClear.addEventListener('click', clearHeldIcn);
 	element_icnInput.addEventListener('input', (e) => {
 		// A paste is a finished code, not a keystroke: judge it in full and reveal its errors now.
 		// A keystroke judges only where a host reads validity at all — one that doesn't (the
 		// analysis board, acting on commits alone) would pay for a verdict nothing looks at — and
 		// keeps its errors to itself, so we don't nag mid-ICN. Never a commit while typing.
 		if ((e as InputEvent).inputType === 'insertFromPaste') void validateIcnInput(true);
-		else if (config.onValidityChange !== undefined) void validateIcnInput(false, true);
+		else if (config.onValidityChange !== undefined) void validateIcnInput(false);
 		config.onEdit?.();
 	});
 	// Enter commits the ICN (blur runs validate + commit) rather than inserting a newline.
@@ -599,11 +640,11 @@ function openFromICN(): void {
 async function applyIcn(icn: string): Promise<void> {
 	// Filled BEFORE opening, so openFromICN's edit announcement already carries the new text —
 	// assigning `value` fires no input event of its own.
-	element_icnInput.value = icn;
+	setIcnText(icn);
 	openFromICN();
 	await validateIcnInput(true);
 	// Something rewrote the field while we validated — it has committed its own state, so ours is stale.
-	if (element_icnInput.value !== icn) return;
+	if (getIcnText() !== icn) return;
 	config.onCommit?.();
 }
 
@@ -615,7 +656,7 @@ function restoreSelection(restored: DisplaySelection): void {
 	if (restored.kind === 'preset') selectVariant(restored.code);
 	else if (restored.kind === 'icn') {
 		// Filled first, as in applyIcn, so openFromICN's edit announcement carries the text.
-		element_icnInput.value = restored.icn;
+		setIcnText(restored.icn);
 		openFromICN();
 	} else selectCustomSave(restored.kind, restored.name);
 }
@@ -629,8 +670,49 @@ function showCustomSection(): void {
 /** Hides the ICN input section, clearing its field and error so re-opening From-ICN starts fresh. */
 function hideCustomSection(): void {
 	element_variantCustomSection.classList.add('hidden');
-	element_icnInput.value = '';
+	setIcnText('');
 	clearError(element_icnInputWrap);
+}
+
+// ICN text --------------------------------------------------------------------
+
+/** The From-ICN text: the held ICN, else the field's own. */
+function getIcnText(): string {
+	return heldIcn ?? element_icnInput.value;
+}
+
+/**
+ * Sets the From-ICN text, holding it in place of the field when it's over
+ * {@link MAX_FIELD_ICN_CHARS}. Anything shorter goes back in the field.
+ */
+function setIcnText(icn: string): void {
+	const hold = icn.length > MAX_FIELD_ICN_CHARS;
+	heldIcn = hold ? icn : null;
+	element_icnInput.value = hold ? '' : icn;
+	element_icnInputWrap.classList.toggle('held', hold);
+	if (hold) {
+		const size = ICN_SIZE_FORMAT.format(icn.length);
+		element_icnHeldSize.textContent = interpolate.interpolate(t.shared.variant_selector.held_icn_size, { size }); // prettier-ignore
+	}
+}
+
+/** Copies the held ICN, then briefly confirms it inline by marking the copy button `.copied`. */
+async function copyHeldIcn(): Promise<void> {
+	if (!(await docutil.copyToClipboard(getIcnText()))) return;
+	element_icnHeldCopy.classList.add('copied');
+	clearTimeout(copiedTimer);
+	copiedTimer = window.setTimeout(
+		() => element_icnHeldCopy.classList.remove('copied'),
+		COPIED_CONFIRMATION_MS,
+	);
+}
+
+/** Drops the held ICN, handing back an empty field to type or paste a new one into. */
+function clearHeldIcn(): void {
+	setIcnText('');
+	element_icnInput.focus();
+	void validateIcnInput(false);
+	config.onEdit?.();
 }
 
 // Selector display ------------------------------------------------------------
@@ -662,7 +744,7 @@ function snapshotAccepted(): void {
 	loaded = {
 		selection:
 			selection.kind === 'icn'
-				? { kind: 'icn', verdict: selection.verdict, icn: element_icnInput.value }
+				? { kind: 'icn', verdict: selection.verdict, icn: getIcnText() }
 				: { ...selection },
 		modifiers: modifierselector.getGameModifiers(),
 	};
@@ -675,7 +757,7 @@ function snapshotAccepted(): void {
 function restoreAcceptedDisplay(): void {
 	const accepted = loaded.selection;
 	// Its verdict comes back with it rather than being re-judged: this runs on every board move,
-	// where rebuilding the game would be ruinous. A From-ICN one leaves its text to the field.
+	// where rebuilding the game would be ruinous. A From-ICN one leaves its text to {@link setIcnText}.
 	setSelection(
 		accepted.kind === 'icn' ? { kind: 'icn', verdict: accepted.verdict } : { ...accepted },
 	);
@@ -683,7 +765,7 @@ function restoreAcceptedDisplay(): void {
 	if (accepted.kind === 'icn') {
 		// Restore the field to the ICN that was actually loaded, discarding any invalid edits.
 		showCustomSection();
-		element_icnInput.value = accepted.icn;
+		setIcnText(accepted.icn);
 		clearError(element_icnInputWrap);
 	} else {
 		hideCustomSection();
@@ -840,28 +922,18 @@ function clearError(outline: HTMLElement): void {
 }
 
 /**
- * Validates the current ICN textarea value and caches what validating it produced,
+ * Validates the current From-ICN text and caches what validating it produced,
  * notifying the host of the validity change.
  *
  * @param revealErrors - Whether to surface invalid styling/error text. False while typing
  * (validity still updates); true on blur/paste so errors show once done.
- * @param live - Whether this is a keystroke rather than a commit. An ICN over
- * {@link MAX_ICN_CHARS_TO_VALIDATE_LIVE} is then left `unevaluated` for a commit to settle,
- * instead of stalling the keypress. A commit always reaches a verdict, however large it is.
  */
-async function validateIcnInput(revealErrors: boolean, live = false): Promise<void> {
+async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	// The From-ICN selection this run judges, and writes its verdict onto. Only it has an ICN.
 	const judging = selection;
 	if (judging.kind !== 'icn') return;
-	const value = element_icnInput.value;
-	// Deferring BEFORE the parse, and straight to `unevaluated` rather than by way of null:
-	// parsing is already too slow to spend on a keypress at this size, and blanking the verdict
-	// first would flick every host's validity off and back on again for each character typed.
-	if (live && value.length > MAX_ICN_CHARS_TO_VALIDATE_LIVE) {
-		setVerdict(judging, 'unevaluated');
-		return;
-	}
-	// Nothing is resolved until this settles. The held verdict describes the previous value, and
+	const value = getIcnText();
+	// Nothing is resolved until this settles. The current verdict describes the previous value, and
 	// awaiting a variant module makes that window long enough to act on — so retire it now.
 	setVerdict(judging, null);
 	if (value === '') {
@@ -891,7 +963,7 @@ async function validateIcnInput(revealErrors: boolean, live = false): Promise<vo
 	});
 	// Awaiting the variant module let the user keep typing, or pick something else — discard a
 	// result they've moved past.
-	if (selection !== judging || element_icnInput.value !== value) return;
+	if (selection !== judging || getIcnText() !== value) return;
 
 	// Built through the same path the board loads by, so the gate validates the exact game that
 	// will be loaded — and hands that very game over to be loaded. Built regardless of
@@ -947,10 +1019,9 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 			async () => {
 				// Judged only where nothing has judged it yet; otherwise validation's own flatten
 				// is reused, so no ICN is re-parsed and no board rebuilt just to draw a preview.
-				if (hovered.verdict === null || hovered.verdict === 'unevaluated')
-					await revalidateCustomSelection();
+				if (hovered.verdict === null) await revalidateCustomSelection();
 				// Still nothing legible to draw — show nothing rather than a lie of a position.
-				if (hovered.verdict === null || hovered.verdict === 'unevaluated') return undefined;
+				if (hovered.verdict === null) return undefined;
 				return hovered.verdict.played;
 			},
 			'left',
@@ -990,26 +1061,14 @@ function handleSavePreview(anchor: HTMLElement, kind: StorageType, positionName:
 /** The current selection, without its verdict — a host stores it, and a verdict isn't storable. */
 function getSelection(): DisplaySelection {
 	if (selection.kind === 'preset') return selection;
-	if (selection.kind === 'icn') return { kind: 'icn', icn: element_icnInput.value };
+	if (selection.kind === 'icn') return { kind: 'icn', icn: getIcnText() };
 	return { kind: selection.kind, name: selection.name };
 }
 
-/**
- * Whether the selection's verdict was deferred past live validation, so a commit still owes it
- * one. Lets a host settle it at the last moment instead of re-judging an already-settled position.
- */
-function isVerdictDeferred(): boolean {
-	return selection.kind === 'icn' && selection.verdict === 'unevaluated';
-}
-
-/**
- * Whether the current selection resolves to a legal, loadable position.
- * An `unevaluated` one counts as valid until it can be judged on commit.
- */
+/** Whether the current selection resolves to a legal, loadable position. */
 function isSelectionValid(): boolean {
 	if (selection.kind === 'preset') return true;
-	if (selection.verdict === null) return false;
-	return selection.verdict === 'unevaluated' || selection.verdict.isValid;
+	return selection.verdict !== null && selection.verdict.isValid;
 }
 
 /**
@@ -1019,7 +1078,7 @@ function isSelectionValid(): boolean {
 function getCustomPosition(): { gamefile: GameFile; source: PrebuiltSource } | null {
 	if (selection.kind === 'preset') return null;
 	const verdict = selection.verdict;
-	if (verdict === null || verdict === 'unevaluated' || !verdict.isValid) return null;
+	if (verdict === null || !verdict.isValid) return null;
 	// Already handed to a board — it has been played on since, so it is no longer this position.
 	const { gamefile } = verdict;
 	if (gamefile === undefined) return null;
@@ -1040,7 +1099,7 @@ function getSeekVariant(): SeekVariant | null {
 		return { kind: 'preset', code: selection.code };
 	}
 	const verdict = selection.verdict;
-	if (verdict === null || verdict === 'unevaluated' || !verdict.isValid) return null;
+	if (verdict === null || !verdict.isValid) return null;
 	// Every custom selection — saved position or From-ICN — travels as the ICN string it resolves
 	// to. Validation built that string to measure it against the size cap, so the exact one it
 	// judged is the one sent: the flattened position, on the engine's border, carrying the
@@ -1068,7 +1127,6 @@ export default {
 	revalidateCustomSelection,
 	// Selection accessors
 	getSelection,
-	isVerdictDeferred,
 	isSelectionValid,
 	getCustomPosition,
 	getSeekVariant,
