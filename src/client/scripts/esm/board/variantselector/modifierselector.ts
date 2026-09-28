@@ -5,7 +5,11 @@
  * the modifier dropdown, selected modifiers display, and per-modifier settings (e.g. Slide Limit).
  */
 
-import type { ModifierCode, GameModifier } from '../../../../../shared/chess/util/modutil.js';
+import type {
+	ModifierCode,
+	GameModifier,
+	SlideLimitValue,
+} from '../../../../../shared/chess/util/modutil.js';
 
 import modutil from '../../../../../shared/chess/util/modutil.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
@@ -76,10 +80,7 @@ function initModifierSelector(hostConfig: ModifierSelectorConfig = {}): void {
 	});
 	element_slideLimitSlider.addEventListener('change', () => config.onCommit?.());
 
-	// Initialize slider display
-	const defaultIdx = modutil.SLIDE_LIMIT_VALUES.indexOf(SLIDE_LIMIT_DEFAULT);
-	element_slideLimitSlider.value = String(defaultIdx);
-	element_slideLimitDisplay.textContent = String(SLIDE_LIMIT_DEFAULT);
+	setSlideLimit(SLIDE_LIMIT_DEFAULT);
 }
 
 // Dropdown navigation ---------------------------------------------------------
@@ -140,11 +141,7 @@ function applyModifiers(modifiers: GameModifier[]): void {
 	selectedModifiers.clear();
 	for (const modifier of modifiers) {
 		selectedModifiers.add(modifier.kind);
-		if (modifier.kind === 'slide-limit') {
-			const idx = modutil.SLIDE_LIMIT_VALUES.indexOf(modifier.value);
-			element_slideLimitSlider.value = String(idx);
-			element_slideLimitDisplay.textContent = String(modifier.value);
-		}
+		if (modifier.kind === 'slide-limit') setSlideLimit(modifier.value);
 	}
 	refreshModifiersSection();
 	refreshModifierItems();
@@ -159,7 +156,9 @@ function refreshModifiersSection(): void {
 		element_modifiersList.appendChild(createModifierChip(code));
 	}
 	element_modifiersSection.classList.toggle('hidden', selectedModifiers.size === 0);
-	element_slideLimitSection.classList.toggle('hidden', !selectedModifiers.has('slide-limit'));
+	const slideLimitSelected = selectedModifiers.has('slide-limit');
+	element_slideLimitSection.classList.toggle('hidden', !slideLimitSelected);
+	if (!slideLimitSelected) setSlideLimit(SLIDE_LIMIT_DEFAULT); // Reset once removed.
 }
 
 /** Builds the chip showing a selected modifier, which deselects it when clicked. */
@@ -173,6 +172,12 @@ function createModifierChip(code: ModifierCode): HTMLElement {
 	chip.innerHTML = `<svg class="${iconId}"><use href="#${iconId}"></use></svg><div class="modifier-chip-overlay">✕</div>`;
 	chip.addEventListener('click', () => deselectModifier(code));
 	return chip;
+}
+
+/** Moves the Slide Limit slider, and its readout, to the given distance. */
+function setSlideLimit(value: SlideLimitValue): void {
+	element_slideLimitSlider.value = String(modutil.SLIDE_LIMIT_VALUES.indexOf(value));
+	element_slideLimitDisplay.textContent = String(value);
 }
 
 /**
