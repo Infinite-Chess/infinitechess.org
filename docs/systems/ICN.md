@@ -308,14 +308,14 @@ into the `LongFormatIn` shape the converter wants.
 
 | Goal                                              | Call                                                    |
 | ------------------------------------------------- | ------------------------------------------------------- |
-| Parsed ICN → playable gamefile                    | `gameformulator.formulateGame()` / `tryFormulateGame()` |
+| Parsed ICN → playable gamefile                    | `gameformulator.formulateGame()`                        |
+| …with a check between resolving and building      | `resolveConstructionOptions()` then `constructGame()`   |
 | Parsed ICN → `VariantOptions`                     | `icnimport.variantOptionsFromLongFormat()`              |
 | Resolve the position (explicit, or the variant's) | `icnimport.getPositionAndSpecialRightsFromLongFormat()` |
 | Parsed moves → wire `MovePacket`s                 | `icnimport.movePacketsFromParsed()`                     |
 
-Both formulators are async. `formulateGame` throws — an `IllegalMoveError` when built with
-`validateMoves`, or a construction error for a move that can't be applied; `tryFormulateGame`
-returns `'moves_invalid'` instead.
+`formulateGame` is async and throws — an `IllegalMoveError` when built with `validateMoves`, or a
+construction error for a move that can't be applied.
 
 Piecewise helpers, for when you hold one segment rather than a whole ICN:
 

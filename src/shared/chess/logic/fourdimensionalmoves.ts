@@ -41,6 +41,60 @@ export type Dimensions = {
 	MAX_Y: bigint;
 };
 
+/**
+ * One step across the 4D board: how many 2D boards it crosses horizontally and vertically
+ * (base), and how many squares it moves within a board (offset).
+ */
+type Offset4D = { baseH: bigint; baseV: bigint; offsetH: bigint; offsetV: bigint };
+
+// Constants -------------------------------------------------------------------
+
+/** Every knight leap: two steps along one axis and one along another. */
+const KNIGHT_OFFSETS = offsetsWithin(2n, (offset) => lengthSquared(offset) === 5n);
+
+/** Every king step changing at most two axes. */
+const KING_OFFSETS = offsetsWithin(1n, (offset) => {
+	const length = lengthSquared(offset);
+	return length > 0n && length <= 2n;
+});
+
+/** Every king step, including the triagonal and quadragonal steps of strong kings. */
+const STRONG_KING_OFFSETS = offsetsWithin(1n, (offset) => lengthSquared(offset) > 0n);
+
+// 4D Offsets ------------------------------------------------------------------
+
+/**
+ * Every offset reaching at most `reach` along each of the four axes that `keep` accepts, in a
+ * fixed order: each axis from `reach` down to `-reach`.
+ */
+function offsetsWithin(reach: bigint, keep: (offset: Offset4D) => boolean): Offset4D[] {
+	const offsets: Offset4D[] = [];
+	for (let baseH = reach; baseH >= -reach; baseH--) {
+		for (let baseV = reach; baseV >= -reach; baseV--) {
+			for (let offsetH = reach; offsetH >= -reach; offsetH--) {
+				for (let offsetV = reach; offsetV >= -reach; offsetV--) {
+					const offset = { baseH, baseV, offsetH, offsetV };
+					if (keep(offset)) offsets.push(offset);
+				}
+			}
+		}
+	}
+	return offsets;
+}
+
+/** The squared length of an offset, counting all four axes alike. */
+function lengthSquared({ baseH, baseV, offsetH, offsetV }: Offset4D): bigint {
+	return baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV;
+}
+
+/** The square an offset leads to from `coords`, on a real chessboard of 2D boards `boardSpacing` apart. */
+function applyOffset(coords: Coords, offset: Offset4D, boardSpacing: bigint): Coords {
+	return [
+		coords[0] + boardSpacing * offset.baseH + offset.offsetH,
+		coords[1] + boardSpacing * offset.baseV + offset.offsetV,
+	];
+}
+
 // Pawn Legal Move Calculation and Execution -----------------------------------
 
 /** Calculates the legal pawn moves in the four dimensional variant. */
@@ -179,6 +233,7 @@ function pawnLegalMoves(
 
 /**
  * Adds the en passant capture to the list of individual moves if it is possible.
+ * Mirrors `addPossibleEnPassant` in specialdetect.ts: a change here must be made there too.
  * @param individualMoves - The list of individual moves to add the en passant capture to
  * @param coords - The coordinates of the pawn
  * @param color - The color of the pawn
@@ -295,58 +350,42 @@ function fourDimensionalKnightMove(
 ): Coords[] {
 	const individualMoves: Coords[] = [];
 
-	for (let baseH = 2n; baseH >= -2n; baseH--) {
-		for (let baseV = 2n; baseV >= -2n; baseV--) {
-			for (let offsetH = 2n; offsetH >= -2n; offsetH--) {
-				for (let offsetV = 2n; offsetV >= -2n; offsetV--) {
-					// If the squared distance to the tile is 5, then add the move
-					if (
-						baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV ===
-						5n
-					) {
-						const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
-						const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
-						const endCoords: Coords = [x, y];
+	for (const offset of KNIGHT_OFFSETS) {
+		const endCoords = applyOffset(coords, offset, dim.BOARD_SPACING);
+		if (!isLandingAllowed(boardsim, endCoords, color, premove, dim)) continue;
 
-						// Don't allow the move if it's blocked by a friendly piece or void
-						if (
-							legalmoves.testSquareValidity(
-								boardsim,
-								endCoords,
-								color,
-								premove,
-								false,
-							) === 2
-						)
-							continue;
-
-						// do not allow knight to leave the 4D board
-						if (
-							endCoords[0] <= dim.MIN_X ||
-							endCoords[0] >= dim.MAX_X ||
-							endCoords[1] <= dim.MIN_Y ||
-							endCoords[1] >= dim.MAX_Y
-						)
-							continue;
-
-						// do not allow the knight to make move if (baseH, baseV) do not match change in 2D chessboard
-						if (
-							(endCoords[0] - dim.MIN_X) / dim.BOARD_SPACING -
-								(coords[0] - dim.MIN_X) / dim.BOARD_SPACING !==
-								baseH ||
-							(endCoords[1] - dim.MIN_Y) / dim.BOARD_SPACING -
-								(coords[1] - dim.MIN_Y) / dim.BOARD_SPACING !==
-								baseV
-						)
-							continue;
-						individualMoves.push(endCoords);
-					}
-				}
-			}
-		}
+		// do not allow the knight to make move if (baseH, baseV) do not match change in 2D chessboard
+		if (
+			(endCoords[0] - dim.MIN_X) / dim.BOARD_SPACING -
+				(coords[0] - dim.MIN_X) / dim.BOARD_SPACING !==
+				offset.baseH ||
+			(endCoords[1] - dim.MIN_Y) / dim.BOARD_SPACING -
+				(coords[1] - dim.MIN_Y) / dim.BOARD_SPACING !==
+				offset.baseV
+		)
+			continue;
+		individualMoves.push(endCoords);
 	}
 
 	return individualMoves;
+}
+
+/** Whether a piece may land on a square: not blocked by a friendly piece or void, and on the 4D board. */
+function isLandingAllowed(
+	boardsim: Board,
+	endCoords: Coords,
+	color: Player,
+	premove: boolean,
+	dim: Dimensions,
+): boolean {
+	if (legalmoves.testSquareValidity(boardsim, endCoords, color, premove, false) === 2)
+		return false;
+	return (
+		endCoords[0] > dim.MIN_X &&
+		endCoords[0] < dim.MAX_X &&
+		endCoords[1] > dim.MIN_Y &&
+		endCoords[1] < dim.MAX_Y
+	);
 }
 
 // King Legal Move Calculation -------------------------------------------------
@@ -385,49 +424,13 @@ function kingLegalMoves(
 	dim: Dimensions,
 	strong_kings_and_queens: boolean,
 ): Coords[] {
+	const offsets = strong_kings_and_queens ? STRONG_KING_OFFSETS : KING_OFFSETS;
 	const individualMoves: Coords[] = [];
 
-	for (let baseH = 1n; baseH >= -1n; baseH--) {
-		for (let baseV = 1n; baseV >= -1n; baseV--) {
-			for (let offsetH = 1n; offsetH >= -1n; offsetH--) {
-				for (let offsetV = 1n; offsetV >= -1n; offsetV--) {
-					// only allow moves that change one or two dimensions if triagonals and diagonals are disabled
-					if (
-						!strong_kings_and_queens &&
-						baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV > 2
-					)
-						continue;
-					if (baseH === 0n && baseV === 0n && offsetH === 0n && offsetV === 0n) continue;
-
-					const x = coords[0] + dim.BOARD_SPACING * baseH + offsetH;
-					const y = coords[1] + dim.BOARD_SPACING * baseV + offsetV;
-					const endCoords: Coords = [x, y];
-
-					// Do not allow the move if it's blocked by a friendly piece or void
-					if (
-						legalmoves.testSquareValidity(
-							boardsim,
-							endCoords,
-							color,
-							premove,
-							false,
-						) === 2
-					)
-						continue;
-
-					// do not allow king to leave the 4D board
-					if (
-						endCoords[0] <= dim.MIN_X ||
-						endCoords[0] >= dim.MAX_X ||
-						endCoords[1] <= dim.MIN_Y ||
-						endCoords[1] >= dim.MAX_Y
-					)
-						continue;
-
-					individualMoves.push(endCoords);
-				}
-			}
-		}
+	for (const offset of offsets) {
+		const endCoords = applyOffset(coords, offset, dim.BOARD_SPACING);
+		if (isLandingAllowed(boardsim, endCoords, color, premove, dim))
+			individualMoves.push(endCoords);
 	}
 
 	return individualMoves;
@@ -436,6 +439,14 @@ function kingLegalMoves(
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
+	KNIGHT_OFFSETS,
+	KING_OFFSETS,
+	STRONG_KING_OFFSETS,
+	// 4D Offsets
+	offsetsWithin,
+	lengthSquared,
+	applyOffset,
 	// Pawn Legal Move Calculation and Execution
 	fourDimensionalPawnMove,
 	doFourDimensionalPawnMove,

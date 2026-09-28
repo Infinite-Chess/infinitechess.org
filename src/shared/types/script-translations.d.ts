@@ -247,7 +247,7 @@ export interface ScriptTranslations {
 			consecutive_turns_with_checkmate: string;
 			invalid_promotion_piece: string;
 			moves_invalid: string;
-			king_capture_on_turn_1: string;
+			king_capture_possible: string;
 			no_4d_movement: string;
 			game_over: string;
 			player_missing_pieces: string;

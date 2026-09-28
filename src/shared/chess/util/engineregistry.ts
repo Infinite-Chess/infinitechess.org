@@ -8,7 +8,7 @@
 // Engine Entry ----------------------------------------------------------------
 
 /** A single engine entry object in the engine dictionary. */
-export interface Engine {
+interface Engine {
 	/**
 	 * The number of milliseconds the engine thinks when Time Control is unlimited.
 	 * May vary from engine to engine because of different engine speeds and requirements.

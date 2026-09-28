@@ -33,7 +33,7 @@ import type { MetaData } from '../../util/metadatautil.js';
 import type { UnboundedRectangle } from '../../../util/math/bounds.js';
 import type { GameRules, Promotion } from '../../util/gamerules.js';
 import type { GameruleWinCondition } from '../../util/winconutil.js';
-import type { EnPassant, GlobalGameState } from '../state.js';
+import type { EnPassant, GlobalGameState, ReadonlyGlobalGameState } from '../state.js';
 
 import jsutil from '../../../util/jsutil.js';
 import bimath from '../../../util/math/bimath.js';
@@ -46,29 +46,35 @@ import { players as p, RawType, Player, PlayerGroup } from '../../util/typeutil.
 
 // Types -----------------------------------------------------------------------
 
-/** Represents the game format coming IN to the converter. */
-export interface LongFormatIn extends LongFormatBase {
-	metadata: MetaData;
+/** What the converter reads to write an ICN. It never edits it. */
+interface ReadonlyLongFormatIn extends LongFormatBase {
 	moves?: MovePreprint[];
+	/** Required if you want the position specified in the ICN. Otherwise, Variant, UTCDate, and UTCTime metadata are required. */
+	position?: ReadonlyMap<CoordsKey, number>;
+	/** Same rules as for {@link ReadonlyLongFormatIn.position}, but for the specialRights. */
+	state_global: Partial<ReadonlyGlobalGameState>;
+}
+
+/** Represents the game format coming IN to the converter, editable by its builder before writing. */
+export interface LongFormatIn extends ReadonlyLongFormatIn {
+	position?: Map<CoordsKey, number>;
+	state_global: Partial<GlobalGameState>;
 }
 
 /** Represents the game format coming OUT of the converter. */
 export interface LongFormatOut extends LongFormatBase {
-	metadata: MetaData;
 	moves?: MoveParsed[];
+	/** Specified if the ICN contains the position. Otherwise, Variant metadata is required in the ICN. */
+	position?: Map<CoordsKey, number>;
+	/** Same rules as for {@link LongFormatOut.position}, but for the specialRights. */
+	state_global: Partial<GlobalGameState>;
 }
 
 /** Shared properties between in & out game formats. */
 interface LongFormatBase {
-	/**
-	 * IN => Required if you want the position specified in the ICN. Otherwise, Variant, UTCDate, and UTCTime metadata are required.
-	 * OUT => Specified if the ICN contains the position. Otherwise, Variant metadata is required in the ICN.
-	 */
-	position?: Map<CoordsKey, number>;
+	metadata: MetaData;
 	gameRules: GameRules;
 	fullMove: number;
-	/** Same rules as for {@link LongFormatBase['position']}, but for the specialRights. */
-	state_global: Partial<GlobalGameState>;
 	/** Overrides the variant's preset annotations, if specified. */
 	presetAnnotes?: PresetAnnotes;
 }
@@ -277,7 +283,7 @@ const MOVES_REGEX = new RegExp(
  * * make_new_lines => Include line breaks in the ICN, between metadata, and between move numbers.
  */
 function LongToShort_Format(
-	longformat: LongFormatIn,
+	longformat: ReadonlyLongFormatIn,
 	options: {
 		skipPosition?: boolean;
 		compact: boolean;

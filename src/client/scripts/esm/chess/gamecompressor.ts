@@ -18,15 +18,17 @@ import { LongFormatIn, PresetAnnotes } from '../../../../shared/chess/logic/icn/
 import clientmetadatautil from './clientmetadatautil.js';
 
 /**
- * Snapshots a gamefile's starting state, deep copied, ready for
+ * Snapshots a gamefile's starting state, copied, ready for
  * {@link GameToPosition} to apply moves to.
  */
 function buildStartState(gamefile: GameFile): VariantOptions {
+	const { position, state_global, fullMove } = gamefile.startSnapshot;
 	return {
-		position: jsutil.deepCopyObject(gamefile.startSnapshot.position),
+		position: new Map(position),
 		gameRules: jsutil.deepCopyObject(gamefile.gameRules),
-		fullMove: gamefile.startSnapshot.fullMove,
-		state_global: jsutil.deepCopyObject(gamefile.startSnapshot.state_global),
+		fullMove,
+		// Shallow beyond the rights: moves replace the en passant object, never edit it.
+		state_global: { ...state_global, specialRights: new Set(state_global.specialRights) },
 	};
 }
 

@@ -9,6 +9,10 @@
  *
  * It not only handles the logic of the gamefile,
  * but also prepares and opens the UI elements for that type of game.
+ *
+ * THE END STATE OF THE `redesign` branch has this module entirely DELETED!
+ * The loader functions are being progressively migrated to the relevant
+ * page's code when they are redesigned.
  */
 
 import type { MovePacket } from '../../../../../shared/chess/util/typeschemas.js';
@@ -34,6 +38,7 @@ async function startBoardEditor(): Promise<void> {
 	const viewWhitePerspective = true;
 
 	gamesession.loadGame({
+		kind: 'construct',
 		timeControl: '-',
 		variant: { code: variantCode, dateTimestamp },
 		dateTimestamp,
@@ -78,6 +83,7 @@ async function startBoardEditorFromCustomPosition(
 	const viewWhitePerspective = true;
 
 	gamesession.loadGame({
+		kind: 'construct',
 		timeControl: '-',
 		variant: undefined, // Not specified for custom position
 		dateTimestamp,

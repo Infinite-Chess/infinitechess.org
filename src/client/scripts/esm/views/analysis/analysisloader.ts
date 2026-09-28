@@ -2,16 +2,23 @@
 
 /**
  * The analysis page's game loader: the small subset of load paths the analysis
- * board needs — a fresh local board of a variant, and pasting a game from ICN.
+ * board needs — a fresh local board of a variant, a custom position, a game pasted
+ * from ICN, and a finished game fetched by its id.
  */
 
 import type { VariantCode } from '../../../../../shared/chess/util/variantcodes.js';
 import type { DeadGameState } from '../../../../../shared/transport/domain.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
-import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { PrebuiltSource } from '../../board/variantselector/variantselector.js';
+import type {
+	Additional,
+	GameFile,
+	VariantOptions,
+} from '../../../../../shared/chess/logic/gamefile.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
+import modutil from '../../../../../shared/chess/util/modutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -36,6 +43,7 @@ let lastLoad:
 	| { replay: () => Promise<void>; players: { White?: string; Black?: string } }
 	| undefined;
 
+/** The participants the currently-loaded game carried, empty for a fresh or custom position. */
 function getPastedPlayers(): { White?: string; Black?: string } {
 	return lastLoad?.players ?? {};
 }
@@ -61,13 +69,8 @@ async function loadGameById(gameId: number): Promise<void> {
 		const viewWhitePerspective = window.analysisPageData.viewColor === p.WHITE;
 		const longFormat = icnconverter.ShortToLong_Format(state.icn);
 		// The slide limit comes from the game's stored config, the ICN carries no modifiers.
-		const slideLimit = state.setup.modifiers?.find((m) => m.kind === 'slide-limit')?.value;
-		await pasteGame(
-			longFormat,
-			state.gameConclusion,
-			viewWhitePerspective,
-			slideLimit !== undefined ? BigInt(slideLimit) : undefined,
-		);
+		const slideLimit = modutil.slideLimitOf(state.setup.modifiers);
+		await pasteGame(longFormat, state.gameConclusion, viewWhitePerspective, slideLimit);
 		// Only a game fetched from the server gets a result banner. Deliberately NOT done for the other load paths.
 		gamesession.concludeGameIfOver();
 		guianalysisview.syncClockDisplayToViewedMove(true);
@@ -89,6 +92,7 @@ function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
 	lastLoad = { replay: () => loadVariant(variant, slideLimit), players: {} };
 	const dateTimestamp = Date.now();
 	return gamesession.loadGame({
+		kind: 'construct',
 		timeControl: '-',
 		variant: { code: variant, dateTimestamp },
 		dateTimestamp,
@@ -104,20 +108,18 @@ function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
  * @param slideLimit - Optional Slide Limit modifier override (see the variant setup panel).
  */
 function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint): Promise<void> {
-	lastLoad = { replay: () => loadVariantOptions(variantOptions, slideLimit), players: {} };
+	recordOptions(variantOptions, slideLimit);
 	const additional: Additional = {
 		variantOptions,
 		slideLimit,
 	};
 
-	// Retain the current board's orientation, defaulting to white's.
-	const vwp = gameslot.getGamefile() ? gameslot.areViewingWhite() : true;
-
 	return gamesession.loadGame({
+		kind: 'construct',
 		timeControl: '-',
 		variant: undefined, // Custom position — no preset variant; variantOptions drives everything.
 		dateTimestamp: Date.now(),
-		viewWhitePerspective: vwp,
+		viewWhitePerspective: resolveViewPerspective(),
 		additional,
 	});
 }
@@ -126,9 +128,9 @@ function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint)
  * Loads a game from the provided ICN longformat, replacing the current one.
  * Requires an active 'analysis' session.
  *
- * @param longFormat - The game as a parsed ICN. Its `gameRules` are copied during construction,
- * but its `position` and `state_global.specialRights` are retained by reference on the gamefile's
- * startSnapshot — callers must not mutate them afterward.
+ * @param longFormat - The game as a parsed ICN. Its `position` and `state_global.specialRights`
+ * are retained by reference on the gamefile's read-only startSnapshot — callers must not mutate
+ * them afterward.
  * @param gameConclusion - The game's conclusion, if it ended.
  * @param viewWhitePerspective - Board orientation override; defaults to retaining
  * the current game's perspective, or white's if this is the initial load.
@@ -140,33 +142,91 @@ async function pasteGame(
 	viewWhitePerspective?: boolean,
 	slideLimit?: bigint,
 ): Promise<void> {
-	// Normalize the ICN's Variant metadata to the English display name (or drop it if
-	// unrecognized), so the game we go on to display carries canonical metadata.
+	recordPaste(longFormat, gameConclusion, viewWhitePerspective, slideLimit);
+	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
+		gameConclusion,
+		slideLimit,
+	});
+
+	// Returned so callers can await the load (the gamefile only exists once it resolves).
+	return gamesession.loadGame({
+		kind: 'construct',
+		...constructionOptions,
+		viewWhitePerspective: resolveViewPerspective(viewWhitePerspective),
+	});
+}
+
+/**
+ * Loads an already-constructed game onto the board — the one the variant selector built to
+ * validate the position, handed over instead of built a second time. The board owns and mutates
+ * it from here, so the selector must have dropped its own reference.
+ * Requires an active 'analysis' session.
+ * @param source - What the game was built from, recorded so {@link reloadPristine} can rebuild it.
+ * @param slideLimit - The Slide Limit the game was BUILT with. Not applied here — the game
+ * already carries it — only kept so a rebuild reaches the same board.
+ */
+function pastePrebuiltGame(
+	gamefile: GameFile,
+	source: PrebuiltSource,
+	slideLimit?: bigint,
+): Promise<void> {
+	if (source.kind === 'icn') recordPaste(source.longFormat, undefined, undefined, slideLimit);
+	else recordOptions(source.options, slideLimit);
+
+	return gamesession.loadGame({
+		kind: 'prebuilt',
+		gamefile,
+		presetAnnotes: source.kind === 'icn' ? source.longFormat.presetAnnotes : undefined,
+		viewWhitePerspective: resolveViewPerspective(),
+	});
+}
+
+// Helpers ---------------------------------------------------------------------
+
+/**
+ * Records a custom position's options so {@link reloadPristine} can rebuild it through
+ * {@link loadVariantOptions}. Saved positions carry no participants.
+ */
+function recordOptions(variantOptions: VariantOptions, slideLimit?: bigint): void {
+	lastLoad = { replay: () => loadVariantOptions(variantOptions, slideLimit), players: {} };
+}
+
+/**
+ * Canonicalizes a pasted ICN's metadata, then records what the game was made from so
+ * {@link reloadPristine} can rebuild it. Always rebuilds through {@link pasteGame}, even where the
+ * game arrived already built — that one has been played on by the time a rebuild is asked for.
+ * Its parameters are {@link pasteGame}'s, since replaying is what they are kept for.
+ */
+function recordPaste(
+	longFormat: LongFormatOut,
+	gameConclusion?: GameConclusion,
+	viewWhitePerspective?: boolean,
+	slideLimit?: bigint,
+): void {
+	// English display name, or dropped if unrecognized, so a rebuild carries canonical metadata.
 	clientmetadatautil.resolveAndNormalizeVariantFromMetadata(longFormat.metadata);
 	const { White, Black } = longFormat.metadata;
 	lastLoad = {
 		replay: () => pasteGame(longFormat, gameConclusion, viewWhitePerspective, slideLimit),
 		players: { White, Black },
 	};
-	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
-		gameConclusion,
-		slideLimit,
-	});
-
-	// Explicit override (e.g. the loaded game's participant orientation) wins; otherwise retain
-	// the current game's perspective, defaulting to white's on the initial /analysis/:id load.
-	const vwp =
-		viewWhitePerspective ?? (gameslot.getGamefile() ? gameslot.areViewingWhite() : true);
-
-	// Returned so callers can await the load (the gamefile only exists once it resolves).
-	return gamesession.loadGame({ ...constructionOptions, viewWhitePerspective: vwp });
 }
+
+/**
+ * The perspective to load at: an explicit override (e.g. a loaded game's participant
+ * orientation), else the current board's, else white's on the page's first load.
+ */
+function resolveViewPerspective(override?: boolean): boolean {
+	return override ?? (gameslot.getGamefile() ? gameslot.areViewingWhite() : true);
+}
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getPastedPlayers,
 	reloadPristine,
 	loadGameById,
 	loadVariant,
-	loadVariantOptions,
 	pasteGame,
+	pastePrebuiltGame,
 };

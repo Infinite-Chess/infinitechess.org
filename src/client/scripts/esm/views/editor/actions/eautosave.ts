@@ -138,21 +138,25 @@ function stopPositionAutosave(): void {
 	}
 }
 
+/** Deletes the board editor autosave. */
 function clearAutosave(): void {
-	IndexedDB.deleteItem(EDITOR_AUTOSAVE_NAME).catch((err) => {
+	IndexedDB.deleteItem(EDITOR_AUTOSAVE_NAME).catch((err: unknown) => {
 		console.error('Failed to clear board editor autosave:', err);
 	});
 }
 
 /**
  * Reads and validates the autosave from IndexedDB.
- * Returns undefined if no autosave exists.
+ * Returns undefined if no autosave exists or the read failed.
  * Clears and returns undefined if the data is corrupted or if the active
  * position is a cloud save owned by a different user (e.g. after logout or
  * account switch).
  */
 async function loadAutosave(): Promise<EditorAutosaveState | undefined> {
-	const raw = await IndexedDB.loadItem(EDITOR_AUTOSAVE_NAME);
+	const raw = await IndexedDB.loadItem(EDITOR_AUTOSAVE_NAME).catch((err: unknown) => {
+		console.error('Failed to read board editor autosave:', err);
+		return undefined;
+	});
 	if (raw === undefined) return undefined;
 	const parsed = AutosaveStateSchema.safeParse(raw);
 	if (!parsed.success) {
@@ -162,7 +166,7 @@ async function loadAutosave(): Promise<EditorAutosaveState | undefined> {
 	}
 
 	// If the autosave belongs to a cloud save owned by a different user, discard it.
-	// Prevents accidentally trying to save the posiiton to a user that isn't logged in.
+	// Prevents accidentally trying to save the position to a user that isn't logged in.
 	const ap = parsed.data.active_position;
 	if (ap?.storage_type === 'cloud' && ap.owner !== validatorama.getOurUsername()) {
 		console.log('Clearing editor auto save from a different user.');

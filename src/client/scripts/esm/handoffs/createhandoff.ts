@@ -13,9 +13,12 @@ import IndexedDB from '../util/IndexedDB.js';
 
 /** One handoff slot, with its own storage key and lifetime. */
 export interface Handoff<T> {
-	/** Stashes a payload for the destination page to consume on its next load. */
+	/**
+	 * Stashes a payload for the destination page to consume on its next load.
+	 * @throws If the payload can't be written.
+	 */
 	save(payload: T): Promise<void>;
-	/** Consumes (reads and clears) a pending payload, or undefined if there is none. */
+	/** Consumes (reads and clears) a pending payload, or undefined if there is none or the read failed. */
 	take(): Promise<T | undefined>;
 }
 
@@ -32,7 +35,10 @@ export function createHandoff<T>(key: string, expiryMillis: number): Handoff<T> 
 			await IndexedDB.saveItem(key, payload, expiryMillis);
 		},
 		async take(): Promise<T | undefined> {
-			const payload = await IndexedDB.loadItem<T>(key);
+			const payload = await IndexedDB.loadItem<T>(key).catch((err: unknown) => {
+				console.error(`Failed to read handoff "${key}":`, err);
+				return undefined;
+			});
 			if (payload !== undefined) await IndexedDB.deleteItem(key);
 			return payload;
 		},

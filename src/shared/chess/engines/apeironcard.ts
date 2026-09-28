@@ -9,6 +9,7 @@
 import type { GameFile } from '../logic/gamefile.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { VariantCode } from '../util/variantcodes.js';
+import type { ModifierCode } from '../util/modutil.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 
 import bimath from '../../util/math/bimath.js';
@@ -38,6 +39,14 @@ type SupportedResult = { supported: true } | { supported: false; reason: EngineS
  * around it, and throws if neither is present.
  */
 const SUPPORTED_VARIANTS: Set<VariantCode> = new Set(['Classical', 'Confined_Classical', 'Classical_Plus', 'Core', 'CoaIP', 'CoaIP_HO', 'CoaIP_RO', 'CoaIP_NO', 'Palace', 'Pawndard', 'Standarch', 'Space_Classic', 'Space', 'Pawn_Horde', 'Knightline', 'Obstocean', 'Chess', 'Omega']); // prettier-ignore
+
+/**
+ * Game modifiers the engine can play (none at the moment).
+ *
+ * Adding one here obliges `CreateEngineGameMessageSchema` to carry
+ * modifiers, and engine game creation to validate the variant with them.
+ */
+const SUPPORTED_MODIFIERS: Set<ModifierCode> = new Set([]);
 
 /** Win conditions the engine understands; anything else may crash it. */
 const SUPPORTED_WIN_CONDITIONS: GameruleWinCondition[] = ['checkmate', 'royalcapture', 'allroyalscaptured', 'allpiecescaptured']; // prettier-ignore
@@ -172,6 +181,7 @@ function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 export default {
 	// Constants
 	SUPPORTED_VARIANTS,
+	SUPPORTED_MODIFIERS,
 	// Functions
 	isPlaySupported,
 	isAnalysisSupported,

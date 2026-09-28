@@ -403,40 +403,36 @@ function organizeImports(imports: Import[]): string {
 // File Processing -------------------------------------------------------------
 
 function processFile(filePath: string): boolean {
-	try {
-		const content = fs.readFileSync(filePath, 'utf-8');
-		const absoluteFilePath = path.resolve(filePath);
-		const { imports, beforeImports, afterImports } = extractImports(content, absoluteFilePath);
+	const content = fs.readFileSync(filePath, 'utf-8');
+	const absoluteFilePath = path.resolve(filePath);
+	const { imports, beforeImports, afterImports } = extractImports(content, absoluteFilePath);
 
-		if (imports.length === 0) {
-			return false;
-		}
+	if (imports.length === 0) {
+		return false;
+	}
 
-		const organizedImports = organizeImports(imports);
+	const organizedImports = organizeImports(imports);
 
-		// Build new content
-		let newContent = '';
+	// Build new content
+	let newContent = '';
 
-		// Add content before imports
-		if (beforeImports) {
-			newContent = beforeImports.trimEnd() + '\n\n';
-		}
+	// Add content before imports
+	if (beforeImports) {
+		newContent = beforeImports.trimEnd() + '\n\n';
+	}
 
-		// Add organized imports
-		newContent += organizedImports;
+	// Add organized imports
+	newContent += organizedImports;
 
-		// Add content after imports
-		if (afterImports) {
-			newContent += '\n\n' + afterImports.trimStart();
-		}
+	// Add content after imports
+	if (afterImports) {
+		newContent += '\n\n' + afterImports.trimStart();
+	}
 
-		// Write if changed
-		if (content !== newContent) {
-			fs.writeFileSync(filePath, newContent, 'utf-8');
-			return true;
-		}
-	} catch (error) {
-		console.error(`Error processing ${filePath}:`, error);
+	// Write if changed
+	if (content !== newContent) {
+		fs.writeFileSync(filePath, newContent, 'utf-8');
+		return true;
 	}
 
 	return false;

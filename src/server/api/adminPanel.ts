@@ -145,22 +145,8 @@ function banEmailCommand(
 	req: Request,
 	res: Response,
 ): void {
-	if (commandAndArgs.length !== 2) {
-		res.status(422).send(
-			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
-		);
-		return;
-	}
-	// Valid Syntax
-	logCommand(command, req);
-	const email = commandAndArgs[1]!;
-
-	// Validate email format
-	const validationResult = validators.validateEmail(email);
-	if (validationResult !== validators.EmailValidationResult.Ok) {
-		sendAndLogResponse(res, 422, 'Invalid email format.');
-		return;
-	}
+	const email = parseEmailArgument(command, commandAndArgs, req, res);
+	if (email === undefined) return; // Response already sent
 
 	blacklistManager.add(email, 'banned');
 	sendAndLogResponse(res, 200, `Successfully banned ${email}.`);
@@ -172,22 +158,8 @@ function unbanEmailCommand(
 	req: Request,
 	res: Response,
 ): void {
-	if (commandAndArgs.length !== 2) {
-		res.status(422).send(
-			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
-		);
-		return;
-	}
-	// Valid Syntax
-	logCommand(command, req);
-	const email = commandAndArgs[1]!;
-
-	// Validate email format
-	const validationResult = validators.validateEmail(email);
-	if (validationResult !== validators.EmailValidationResult.Ok) {
-		sendAndLogResponse(res, 422, 'Invalid email format.');
-		return;
-	}
+	const email = parseEmailArgument(command, commandAndArgs, req, res);
+	if (email === undefined) return; // Response already sent
 
 	blacklistManager.remove(email);
 	sendAndLogResponse(res, 200, `Successfully unbanned ${email}.`);
@@ -417,6 +389,35 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 }
 
 // Helpers ---------------------------------------------------------------------
+
+/**
+ * Reads the one email argument of a ban or unban command, and logs the command once its syntax is valid.
+ * @returns The email, or undefined if the arguments were invalid and the response is already sent.
+ */
+function parseEmailArgument(
+	command: string,
+	commandAndArgs: string[],
+	req: Request,
+	res: Response,
+): string | undefined {
+	if (commandAndArgs.length !== 2) {
+		res.status(422).send(
+			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
+		);
+		return undefined;
+	}
+	// Valid Syntax
+	logCommand(command, req);
+	const email = commandAndArgs[1]!;
+
+	// Validate email format
+	const validationResult = validators.validateEmail(email);
+	if (validationResult !== validators.EmailValidationResult.Ok) {
+		sendAndLogResponse(res, 422, 'Invalid email format.');
+		return undefined;
+	}
+	return email;
+}
 
 /** Reads a whole-number command argument, or undefined if it isn't one. */
 function parseIntegerArgument(argument: string): number | undefined {

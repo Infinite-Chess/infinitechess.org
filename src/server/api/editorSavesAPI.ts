@@ -144,16 +144,8 @@ function getPosition(req: Request, res: Response): void {
 	const userId = getSignedInUserIdOrRespond(req, res);
 	if (userId === undefined) return; // Response already sent
 
-	// Validate position_name from URL params with Zod
-	const parseResult = PositionNameParamSchema.safeParse(req.params);
-	if (!parseResult.success) {
-		// Not localized: unreachable via the client (the name comes from the validated saved list).
-		res.status(400).json({ message: 'The position name is invalid.' });
-		zodLogger.log(req.params, parseResult.error, `Invalid get position request params.`);
-		return;
-	}
-
-	const positionName = parseResult.data.position_name;
+	const positionName = getPositionNameOrRespond(req, res, 'get');
+	if (positionName === undefined) return; // Response already sent
 
 	try {
 		// Get the position from the database (filtered by user_id)
@@ -192,16 +184,8 @@ function deletePosition(req: Request, res: Response): void {
 	const userId = getSignedInUserIdOrRespond(req, res);
 	if (userId === undefined) return; // Response already sent
 
-	// Validate position_name from URL params with Zod
-	const parseResult = PositionNameParamSchema.safeParse(req.params);
-	if (!parseResult.success) {
-		// Not localized: unreachable via the client (the name comes from the validated saved list).
-		res.status(400).json({ message: 'The position name is invalid.' });
-		zodLogger.log(req.params, parseResult.error, `Invalid delete position request params.`);
-		return;
-	}
-
-	const positionName = parseResult.data.position_name;
+	const positionName = getPositionNameOrRespond(req, res, 'delete');
+	if (positionName === undefined) return; // Response already sent
 
 	try {
 		// Delete the position from the database (filtered by user_id)
@@ -228,6 +212,8 @@ function deletePosition(req: Request, res: Response): void {
 	}
 }
 
+// Helpers ---------------------------------------------------------------------
+
 /**
  * Guards an endpoint to signed-in members only. Responds with the appropriate error
  * (500 if auth middleware failed to set `memberInfo`, 401 if signed out) and returns
@@ -250,6 +236,26 @@ function getSignedInUserIdOrRespond(req: Request, res: Response): number | undef
 	}
 
 	return req.memberInfo.user_id;
+}
+
+/**
+ * Reads and validates the position name in the URL params, or responds with an error.
+ * @param action - What the request does with the position, for the log.
+ * @returns The position name, or undefined if the response is already sent.
+ */
+function getPositionNameOrRespond(
+	req: Request,
+	res: Response,
+	action: 'get' | 'delete',
+): string | undefined {
+	const parseResult = PositionNameParamSchema.safeParse(req.params);
+	if (!parseResult.success) {
+		// Not localized: unreachable via the client (the name comes from the validated saved list).
+		res.status(400).json({ message: 'The position name is invalid.' });
+		zodLogger.log(req.params, parseResult.error, `Invalid ${action} position request params.`);
+		return undefined;
+	}
+	return parseResult.data.position_name;
 }
 
 // Exports ---------------------------------------------------------------------

@@ -39,9 +39,9 @@ const SUBMIT_LABELS: Record<ModalMode, string> = {
 const element_modalOverlay = document.getElementById('modal-overlay')!;
 const element_modalClose = document.getElementById('modal-close')!;
 const element_modalSubmit = document.getElementById('modal-submit') as HTMLButtonElement;
-const element_btnCreateOnline = document.getElementById('btn-create-game')!;
-const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')!;
-const element_btnPlayComputer = document.getElementById('btn-play-ai')!;
+const element_btnCreateOnline = document.getElementById('btn-create-game') as HTMLButtonElement;
+const element_btnChallengeFriend = document.getElementById('btn-challenge-friend') as HTMLButtonElement; // prettier-ignore
+const element_btnPlayComputer = document.getElementById('btn-play-ai') as HTMLButtonElement;
 const element_rowGameMode = document.getElementById('row-game-mode')!;
 const element_ratedButton = document.querySelector<HTMLButtonElement>('[data-mode="rated"]')!;
 const element_casualButton = document.querySelector<HTMLButtonElement>('[data-mode="casual"]')!;
@@ -61,14 +61,9 @@ let currentMode: ModalMode;
 // Initialization --------------------------------------------------------------
 
 initModal();
-void initRememberedState();
 
 /** Wires modal open/close controls and initializes all interactive sections. */
 function initModal(): void {
-	element_btnCreateOnline.addEventListener('click', () => openModal('online'));
-	element_btnChallengeFriend.addEventListener('click', () => openModal('friend'));
-	element_btnPlayComputer.addEventListener('click', () => openModal('computer'));
-
 	element_modalClose.addEventListener('click', close);
 	element_modalOverlay.addEventListener('pointerdown', (e) => {
 		if (e.target === e.currentTarget) close();
@@ -77,27 +72,48 @@ function initModal(): void {
 		if (e.key === 'Escape') close();
 	});
 
-	element_modalSubmit.addEventListener('click', () => {
-		if (currentMode === 'online') handleSeek(false);
-		else if (currentMode === 'friend') handleSeek(true);
-		else if (currentMode === 'computer') handleComputerGame();
-		else console.error('Invalid modal mode:', currentMode);
-	});
+	element_modalSubmit.addEventListener('click', () => void submitModal());
 
 	initToggleGroups();
 	// Sliders save on commit, not change — one drag fires dozens of changes, each a whole-ICN write.
 	timecontrols.init({ onCommit: persist });
 	variantselector.initVariantGroupDropdown({
 		isSeekContext: true,
-		onChange: () => {
+		onValidityChange: () => {
 			element_modalSubmit.disabled = !variantselector.isSelectionValid();
 			syncRatedButton();
-			persist();
 		},
+		// Remembered as it is typed, so a half-written ICN survives a refresh.
+		// Deliberately not also on commit: committing changes neither the selection nor its text.
+		onEdit: persist,
 	});
 	variantselector.initIcnValidation();
-	modifierselector.initModifierSelector({ onChange: syncRatedButton, onCommit: persist });
+	modifierselector.initModifierSelector({
+		onChange: syncRatedButton,
+		// A modifier commit re-judges the position: the Slide Limit rebuilds the movesets, so a
+		// position judged without it is not the one that would be played.
+		onCommit: () => {
+			persist();
+			void variantselector.revalidateCustomSelection();
+		},
+	});
 	syncRatedButton();
+
+	// Last, since restoring writes into every section set up above.
+	const startupStateLoaded = loadStartupState();
+	for (const [button, mode] of [
+		[element_btnCreateOnline, 'online'],
+		[element_btnChallengeFriend, 'friend'],
+		[element_btnPlayComputer, 'computer'],
+	] as const) {
+		button.addEventListener('click', () => {
+			// Wait for the startup state, so that can't land on an open modal.
+			// Disabled by then (e.g. we're in a game) = click dropped.
+			void startupStateLoaded.then(() => {
+				if (!button.disabled) openModal(mode);
+			});
+		});
+	}
 }
 
 /** Initializes shared exclusive-selection behavior for all data-* toggle button groups. */
@@ -149,7 +165,7 @@ function getToggleValue(attr: ToggleGroupAttribute): string {
  * handoff - that order, so a handoff's variant trumps. The model is initially closed on
  * page load anyway, so the flash between the two is never seen.
  */
-async function initRememberedState(): Promise<void> {
+async function loadStartupState(): Promise<void> {
 	const options = await gameoptionsstore.read();
 	if (options !== undefined) applyOptions(options);
 	await consumePendingHandoff();
@@ -167,8 +183,8 @@ function applyOptions(options: GameOptions): void {
 	// A cloud save can't be fetched while logged out, and trying would show a load failure
 	// that lies — nothing failed. Skipping it leaves the variant on Classical.
 	if (options.selection.kind !== 'cloud' || validatorama.areWeLoggedIn())
-		variantselector.restoreSelection(options.selection, options.icn);
-	// Keep both — restoreSelection saves before the ICN text lands, and the skip above never saves.
+		variantselector.restoreSelection(options.selection);
+	// Still needed: a skipped cloud save never reaches restoreSelection, so nothing saved itself.
 	syncRatedButton();
 	persist();
 }
@@ -187,7 +203,6 @@ function persist(): void {
 	const { minutes, increment } = timecontrols.getMinutesAndIncrement();
 	gameoptionsstore.save({
 		selection: variantselector.getSelection(),
-		icn: variantselector.getIcnText(),
 		modifiers: modifierselector.getGameModifiers(),
 		minutes,
 		increment,
@@ -204,7 +219,10 @@ function persist(): void {
 
 /** Reads current seek options and disables the Rated button if a rated game is not permitted. */
 function syncRatedButton(): void {
-	const variant = variantselector.getSeekVariant();
+	// Only a preset can be rated, so a custom selection is never resolved here — doing so would
+	// hand back the whole ICN it serializes to, only for rated-eligibility to refuse it anyway.
+	const isPreset = variantselector.getSelection().kind === 'preset';
+	const variant = isPreset ? variantselector.getSeekVariant() : null;
 	const time: TimeControl = timecontrols.getTimeControl();
 	const color = getSelectedColor();
 	const modifiers = modifierselector.getGameModifiers();
@@ -225,6 +243,22 @@ function getSelectedColor(): typeof players.WHITE | typeof players.BLACK | null 
 }
 
 // Creating the game -----------------------------------------------------------
+
+/** Runs the active flow's submit, first settling any verdict live validation deferred. */
+async function submitModal(): Promise<void> {
+	if (variantselector.isVerdictDeferred()) {
+		// A position too large to judge on every keystroke leaves the button enabled rather than
+		// greyed out with nothing having judged it — so pressing it is where that position gets judged.
+		await variantselector.revalidateCustomSelection();
+		element_modalSubmit.disabled = !variantselector.isSelectionValid();
+		if (element_modalSubmit.disabled) return;
+	}
+
+	if (currentMode === 'online') handleSeek(false);
+	else if (currentMode === 'friend') handleSeek(true);
+	else if (currentMode === 'computer') handleComputerGame();
+	else console.error('Invalid modal mode:', currentMode);
+}
 
 /**
  * Reads the seek form state and sends a createseek request via the lobby.
@@ -277,6 +311,9 @@ function openModal(mode: ModalMode): void {
 
 	element_rowGameMode.classList.toggle('hidden', mode === 'computer');
 	element_rowStrength.classList.toggle('hidden', mode !== 'computer');
+	// Modifiers first: the position is re-judged with them, so any the engine can't play
+	// must be dropped before the variant selector re-judges it under the new rules.
+	modifierselector.onModalOpen(mode === 'computer');
 	variantselector.onModalOpen(mode === 'computer');
 
 	element_modalOverlay.classList.remove('hidden');

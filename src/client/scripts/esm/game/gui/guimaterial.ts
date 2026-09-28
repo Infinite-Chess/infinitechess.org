@@ -109,7 +109,7 @@ function isGameBalanced(gamefile: GameFile): boolean {
  * black counts, and no piece may belong to a player other than white/black (neutrals ignored).
  * Unbalanced positions (horde, showcase, asymmetric customs) disable the bars.
  */
-function isStartPositionBalanced(position: Map<CoordsKey, number>): boolean {
+function isStartPositionBalanced(position: ReadonlyMap<CoordsKey, number>): boolean {
 	/** rawType => white count − black count. Balanced iff every entry ends at 0. */
 	const diffs = new Map<RawType, number>();
 	for (const type of position.values()) {

@@ -13,6 +13,7 @@ import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { ClockValues } from '../../../shared/chess/util/clockutil.js';
+import type { PresetAnnotes } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
@@ -71,6 +72,7 @@ function resolveGameConstruction(
 	let loaded: LoadedVariant | undefined;
 	let gameRules: GameRules;
 	let variantOptions: VariantOptions | undefined;
+	let presetAnnotes: PresetAnnotes | undefined;
 
 	if (variant.kind === 'preset') {
 		loaded = {
@@ -90,6 +92,7 @@ function resolveGameConstruction(
 		const longFormat = icnconverter.ShortToLong_Format(variant.position);
 		const resolved = gameformulator.constructionOptionsFromLongFormat(longFormat);
 		variantOptions = resolved.additional.variantOptions;
+		presetAnnotes = resolved.presetAnnotes;
 		loaded = resolved.variant && {
 			...resolved.variant,
 			mod: variantcache.getModule(resolved.variant.code), // Every module is preloaded at startup
@@ -101,6 +104,7 @@ function resolveGameConstruction(
 		variant: loaded,
 		gameRules,
 		variantOptions,
+		presetAnnotes,
 		validateMoves: servervalidation.isGameValidated(variant, loaded),
 	};
 
@@ -156,19 +160,20 @@ function initServerGame(
 	match: MatchInfo,
 	moves: MoveRecord[] = [],
 ): ServerGame {
-	const { variant, gameRules, variantOptions, validateMoves } = construction;
+	const { variant, gameRules, variantOptions, presetAnnotes, validateMoves } = construction;
 	if (validateMoves) {
 		const boardsim = boardinit.init(gameRules, variant, { variantOptions });
 		// The same load the client runs, so both ends settle on identical
 		// win conditions and starting check state. Spread last, so the servergame's
 		// rules are the board's own copy — never a second one.
 		const loaded = gamefile.loadGameWithBoard(game, boardsim, moves);
-		return { ...loaded, match, spectators: new Set(), validateMoves: true };
+		return { ...loaded, match, presetAnnotes, spectators: new Set(), validateMoves: true };
 	} else {
 		return {
 			...game,
 			gameRules,
 			match,
+			presetAnnotes,
 			whosTurn: gameRules.turnOrder[moves.length % gameRules.turnOrder.length]!,
 			moves,
 			spectators: new Set(),

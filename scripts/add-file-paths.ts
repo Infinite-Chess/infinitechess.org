@@ -114,13 +114,7 @@ function main(): void {
 	// Filter for only .js, .ts, and .cjs files
 	const jsAndTsFiles = args.filter((file) => file.match(/\.(js|ts|cjs)$/));
 
-	for (const file of jsAndTsFiles) {
-		try {
-			processFile(file);
-		} catch (error) {
-			console.error(`Error processing ${file}:`, error);
-		}
-	}
+	for (const file of jsAndTsFiles) processFile(file);
 
 	console.log(`Updated path in ${jsAndTsFiles.length} files.`);
 }
