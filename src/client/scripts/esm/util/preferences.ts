@@ -4,8 +4,8 @@
  * The user's saved preferences — board theme, sound, perspective, animation and premove
  * settings — and the theme colors derived from whichever board theme is selected.
  *
- * Persisted to LocalStorage on every change, and pushed to the server when the settings
- * dropdown closes, so a logged-in user's settings follow them between devices. The header's
+ * Persisted to LocalStorage on every change, and pushed to the server on every change to a
+ * server-side one, so a logged-in user's settings follow them between devices. The header's
  * settings dropdowns are the only writers; everything else reads.
  */
 
@@ -49,6 +49,12 @@ interface ClientSidePreferences {
 	[key: string]: any;
 }
 
+/**
+ * Prefs saved on the server, so they follow a logged-in user between devices.
+ *
+ * Each change to one of these PUTs to the server immediately, which is cheap only because
+ * every one is a discrete click. A slider added here must push on release, not on every tick.
+ */
 interface ServerSidePreferences {
 	theme: string;
 	legal_moves: 'dots' | 'squares';
@@ -100,12 +106,6 @@ const DEFAULT_PREFERENCES: Preferences = {
 /** The user's preferences. */
 let preferences: Preferences;
 
-/**
- * Whether a change was made to the preferences since the last time we sent them over to the server.
- * We only change this to true if we change a preference that is stored on the server.
- */
-let changeWasMade: boolean = false;
-
 // Functions -------------------------------------------------------------------
 
 (function init(): void {
@@ -147,14 +147,8 @@ function savePreferences(): void {
 	LocalStorage.saveItem('preferences', preferences, oneYearInMs);
 }
 
-function onChangeMade(): void {
-	changeWasMade = true;
-}
-
-async function sendPrefsToServer(): Promise<void> {
+function sendPrefsToServer(): void {
 	if (!validatorama.areWeLoggedIn()) return; // Ensure user is logged in
-	if (!changeWasMade) return; // Only send if preferences were changed
-	changeWasMade = false; // Reset the flag after sending
 
 	console.log('Sending preferences to the server!');
 	const preparedPrefs: ServerSidePreferences = preparePrefs(); // Prepare the preferences to send
@@ -165,6 +159,8 @@ async function PUTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 	try {
 		const response: Response = await serverfetch('/api/preferences', {
 			method: 'PUT',
+			// Still sends it if the page unloads before it fully leaves the browser, as on a slow network.
+			keepalive: true,
 			headers: {
 				'Content-Type': 'application/json',
 			} as Record<string, string>,
@@ -199,8 +195,8 @@ function getBoardColor(): string {
 function setBoardColor(boardColor: string): void {
 	preferences.theme = boardColor;
 	// console.log('Set theme');
-	onChangeMade();
 	savePreferences();
+	sendPrefsToServer();
 }
 
 function getCoordinatesEnabled(): boolean {
@@ -231,8 +227,8 @@ function setLegalMovesShape(legal_moves: 'dots' | 'squares'): void {
 	if (typeof legal_moves !== 'string')
 		throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
-	onChangeMade();
 	savePreferences();
+	sendPrefsToServer();
 }
 
 function getDragEnabled(): boolean {
@@ -272,8 +268,8 @@ function getAnimationsMode(): boolean {
 
 function setAnimationsMode(animations_enabled: boolean): void {
 	preferences.animations = animations_enabled;
-	onChangeMade();
 	savePreferences();
+	sendPrefsToServer();
 }
 
 function getPerspectiveSensitivity(): number {
@@ -309,8 +305,8 @@ function getLingeringAnnotationsMode(): boolean {
 
 function setLingeringAnnotationsMode(value: boolean): void {
 	preferences.lingering_annotations = value;
-	onChangeMade();
 	savePreferences();
+	sendPrefsToServer();
 
 	SettingsBus.dispatch('lingering-annotations-toggle', value);
 }
@@ -546,7 +542,6 @@ export default {
 	setMasterVolume,
 	getAmbienceEnabled,
 	setAmbienceEnabled,
-	sendPrefsToServer,
 	getColorOfLightTiles,
 	getColorOfDarkTiles,
 	getLegalMoveHighlightColor,

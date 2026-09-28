@@ -2,7 +2,7 @@
 
 /**
  * Opens and closes the settings drop-down, and routes between it and its
- * sub-dropdowns. Closing it sends the changed preferences to the server.
+ * sub-dropdowns.
  *
  * Also keeps the --c-tile and --c-tile-2 stylesheet colors matched to the
  * chosen board theme, which the rest of the site's accents are built from.
@@ -106,7 +106,6 @@ function closeAllSettingsDropdowns(): void {
 
 	settingsDropdown.classList.add('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeSettingsListeners();
-	preferences.sendPrefsToServer();
 
 	subDropdowns.forEach(({ module }) => module.close());
 
