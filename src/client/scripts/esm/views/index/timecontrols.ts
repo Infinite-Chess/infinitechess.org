@@ -7,7 +7,7 @@
 
 import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
 
-import clockutil from '../../../../../shared/chess/util/clockutil';
+import clockutil from '../../../../../shared/chess/util/clockutil.js';
 
 // Types -----------------------------------------------------------------------
 

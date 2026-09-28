@@ -7,7 +7,7 @@
  * when hovering over the selection area's edges or fill handle.
  */
 
-import listeners from '../../../../game/listeners';
+import listeners from '../../../../game/listeners.js';
 
 // Types -----------------------------------------------------------------------
 

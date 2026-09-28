@@ -8,7 +8,7 @@
  * - remembers last position while open
  */
 
-import math from '../../../../../../shared/util/math/math';
+import math from '../../../../../../shared/util/math/math.js';
 
 import guiboardeditor from './guiboardeditor.js';
 

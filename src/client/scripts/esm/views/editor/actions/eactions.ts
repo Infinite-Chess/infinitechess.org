@@ -14,52 +14,52 @@
  * * Start local game from position
  */
 
-import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
-import type { Board } from '../../../../../../shared/chess/logic/boardinit';
+import type { Edit } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadatautil.js';
 import type { MovePacket } from '../../../../../../shared/chess/util/typeschemas.js';
-import type { MoveParsed } from '../../../../../../shared/chess/logic/icn/icnmoves';
-import type { ActivePosition } from '../boardeditor';
-import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
-import type { EditorSaveState, StorageType } from '../../../savedpositions/storetypes';
+import type { MoveParsed } from '../../../../../../shared/chess/logic/icn/icnmoves.js';
+import type { ActivePosition } from '../boardeditor.js';
+import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state.js';
+import type { EditorSaveState, StorageType } from '../../../savedpositions/storetypes.js';
 
-import typeutil from '../../../../../../shared/chess/util/typeutil';
-import movepiece from '../../../../../../shared/chess/logic/movepiece';
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
+import movepiece from '../../../../../../shared/chess/logic/movepiece.js';
 import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
-import variantcache from '../../../../../../shared/chess/variants/variantcache';
-import variantrules from '../../../../../../shared/chess/logic/variantrules';
-import { validatePosition } from '../../../../../../shared/chess/logic/positionlegality';
-import boardutil, { Piece } from '../../../../../../shared/chess/logic/boardutil';
-import coordutil, { Coords, CoordsKey } from '../../../../../../shared/util/coordutil';
+import variantcache from '../../../../../../shared/chess/variants/variantcache.js';
+import variantrules from '../../../../../../shared/chess/logic/variantrules.js';
+import { validatePosition } from '../../../../../../shared/chess/logic/positionlegality.js';
+import boardutil, { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
+import coordutil, { Coords, CoordsKey } from '../../../../../../shared/util/coordutil.js';
 import organizedpieces, {
 	OrganizedPieces,
-} from '../../../../../../shared/chess/logic/organizedpieces';
+} from '../../../../../../shared/chess/logic/organizedpieces.js';
 import icnconverter, {
 	LongFormatIn,
 	LongFormatOut,
-} from '../../../../../../shared/chess/logic/icn/icnconverter';
+} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import gamefile, {
 	Additional,
 	GameFile,
 	LoadedVariant,
 	VariantOptions,
-} from '../../../../../../shared/chess/logic/gamefile';
+} from '../../../../../../shared/chess/logic/gamefile.js';
 
 import toast from '../../../components/toast.js';
-import docutil from '../../../util/docutil';
-import gameslot from '../../../game/chess/gameslot';
-import gameloader from '../gameloader';
-import egamerules from '../egamerules';
-import annotations from '../../../game/rendering/highlights/annotations/annotations';
-import boardeditor from '../boardeditor';
-import edithistory from '../edithistory';
-import validatorama from '../../../util/validatorama';
-import selectiontool from '../tools/selection/selectiontool';
-import gamecompressor from '../../../chess/gamecompressor';
-import guiboardcontrols from '../../../game/gui/guiboardcontrols';
+import docutil from '../../../util/docutil.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import gameloader from '../gameloader.js';
+import egamerules from '../egamerules.js';
+import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
+import boardeditor from '../boardeditor.js';
+import edithistory from '../edithistory.js';
+import validatorama from '../../../util/validatorama.js';
+import selectiontool from '../tools/selection/selectiontool.js';
+import gamecompressor from '../../../chess/gamecompressor.js';
+import guiboardcontrols from '../../../game/gui/guiboardcontrols.js';
 import gamesetuphandoff from '../../../handoffs/gamesetuphandoff.js';
-import clientmetadatautil from '../../../chess/clientmetadatautil';
+import clientmetadatautil from '../../../chess/clientmetadatautil.js';
 
 // Constants -------------------------------------------------------------------
 

@@ -5,26 +5,26 @@
  * Mirrors esave.ts for cloud storage.
  */
 
-import type { EditorSaveState } from '../../../savedpositions/storetypes';
-import type { CloudSaveListRecord } from '../../../savedpositions/savesapi';
+import type { EditorSaveState } from '../../../savedpositions/storetypes.js';
+import type { CloudSaveListRecord } from '../../../savedpositions/savesapi.js';
 
 import jsutil from '../../../../../../shared/util/jsutil.js';
 
 import toast from '../../../components/toast.js';
-import esave from './esave';
-import eactions from './eactions';
-import savesapi from '../../../savedpositions/savesapi';
-import eautosave from './eautosave';
-import savestore from '../../../savedpositions/savestore';
-import egamerules from '../egamerules';
-import boardeditor from '../boardeditor';
-import validatorama from '../../../util/validatorama';
+import esave from './esave.js';
+import eactions from './eactions.js';
+import savesapi from '../../../savedpositions/savesapi.js';
+import eautosave from './eautosave.js';
+import savestore from '../../../savedpositions/savestore.js';
+import egamerules from '../egamerules.js';
+import boardeditor from '../boardeditor.js';
+import validatorama from '../../../util/validatorama.js';
 import cloudstore, {
 	ICNConversionError,
 	ICNDecompressionError,
 	ICNParseError,
 	PositionTooLargeError,
-} from '../../../savedpositions/cloudstore';
+} from '../../../savedpositions/cloudstore.js';
 
 // Actions ---------------------------------------------------------------------
 

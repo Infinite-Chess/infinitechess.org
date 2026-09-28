@@ -5,7 +5,7 @@
  * and into the CSS color strings the document expects.
  */
 
-import type { Color } from '../../../../shared/types/color';
+import type { Color } from '../../../../shared/types/color.js';
 
 // Types -----------------------------------------------------------------------
 

@@ -7,25 +7,25 @@
  * on the bottom-right corner of the selection box.
  */
 
-import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coordutil';
+import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coordutil.js';
 
-import bimath from '../../../../../../../shared/util/math/bimath';
-import vectors from '../../../../../../../shared/util/math/vectors';
+import bimath from '../../../../../../../shared/util/math/bimath.js';
+import vectors from '../../../../../../../shared/util/math/vectors.js';
 import bounds, {
 	BoundingBox,
 	DoubleBoundingBox,
-} from '../../../../../../../shared/util/math/bounds';
+} from '../../../../../../../shared/util/math/bounds.js';
 
-import mouse from '../../../../game/mouse';
-import space from '../../../../board/rendering/space';
-import sdrag from './sdrag';
-import arrows from '../../../../game/rendering/arrows/arrows';
-import scursor from './scursor';
-import gameslot from '../../../../game/chess/gameslot';
-import { Mouse } from '../../../../game/input';
-import selectiontool from './selectiontool';
-import stoolgraphics from './stoolgraphics';
-import stransformations from './stransformations';
+import mouse from '../../../../game/mouse.js';
+import space from '../../../../board/rendering/space.js';
+import sdrag from './sdrag.js';
+import arrows from '../../../../game/rendering/arrows/arrows.js';
+import scursor from './scursor.js';
+import gameslot from '../../../../game/chess/gameslot.js';
+import { Mouse } from '../../../../game/input.js';
+import selectiontool from './selectiontool.js';
+import stoolgraphics from './stoolgraphics.js';
+import stransformations from './stransformations.js';
 
 // State -----------------------------------------------------------------------
 

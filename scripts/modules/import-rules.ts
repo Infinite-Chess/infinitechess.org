@@ -20,7 +20,7 @@ import ts from 'typescript';
 import path from 'node:path';
 import esbuild, { Metafile } from 'esbuild';
 
-import { ESMEntryPoints } from '../../build/client';
+import { ESMEntryPoints } from '../../build/client.js';
 
 // Types -----------------------------------------------------------------------
 

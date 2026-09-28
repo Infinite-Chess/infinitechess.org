@@ -6,15 +6,15 @@
  * split apart, then settle. Wind howls.
  */
 
-import type { UniformValue } from '../../../../webgl/Renderable';
-import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
+import type { UniformValue } from '../../../../webgl/Renderable.js';
+import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
 
 import deltatime from '../../../../board/deltatime.js';
-import { BaseZone } from '../BaseZone';
-import { GlitchPass } from '../../../../webgl/postprocessing/passes/GlitchPass';
-import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass';
-import { ProgramManager } from '../../../../webgl/ProgramManager';
-import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
+import { BaseZone } from '../BaseZone.js';
+import { GlitchPass } from '../../../../webgl/postprocessing/passes/GlitchPass.js';
+import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
+import { ProgramManager } from '../../../../webgl/ProgramManager.js';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
 
 export class DustyWastesZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */

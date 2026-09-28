@@ -4,23 +4,23 @@
  * Manages the GUI popup window for the Game Rules of the Board Editor
  */
 
-import type { Edit } from '../../../../../../../shared/chess/logic/movepiece';
-import type { Coords } from '../../../../../../../shared/util/coordutil';
-import type { UnboundedRectangle } from '../../../../../../../shared/util/math/bounds';
-import type { GameruleWinCondition } from '../../../../../../../shared/chess/util/winconutil';
+import type { Edit } from '../../../../../../../shared/chess/logic/movepiece.js';
+import type { Coords } from '../../../../../../../shared/util/coordutil.js';
+import type { UnboundedRectangle } from '../../../../../../../shared/util/math/bounds.js';
+import type { GameruleWinCondition } from '../../../../../../../shared/chess/util/winconutil.js';
 
-import bounds from '../../../../../../../shared/util/math/bounds';
-import boardutil from '../../../../../../../shared/chess/logic/boardutil';
-import gamerules from '../../../../../../../shared/chess/util/gamerules';
-import icnposition from '../../../../../../../shared/chess/logic/icn/icnposition';
-import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
-import typeutil, { RawType } from '../../../../../../../shared/chess/util/typeutil';
+import bounds from '../../../../../../../shared/util/math/bounds.js';
+import boardutil from '../../../../../../../shared/chess/logic/boardutil.js';
+import gamerules from '../../../../../../../shared/chess/util/gamerules.js';
+import icnposition from '../../../../../../../shared/chess/logic/icn/icnposition.js';
+import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter.js';
+import typeutil, { RawType } from '../../../../../../../shared/chess/util/typeutil.js';
 
-import gameslot from '../../../../game/chess/gameslot';
-import boardeditor from '../../boardeditor';
-import edithistory from '../../edithistory';
-import guifloatingwindow from '../guifloatingwindow';
-import egamerules, { GameRulesGUIinfo } from '../../egamerules';
+import gameslot from '../../../../game/chess/gameslot.js';
+import boardeditor from '../../boardeditor.js';
+import edithistory from '../../edithistory.js';
+import guifloatingwindow from '../guifloatingwindow.js';
+import egamerules, { GameRulesGUIinfo } from '../../egamerules.js';
 
 // Elements --------------------------------------------------------------------
 

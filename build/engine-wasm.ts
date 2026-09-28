@@ -12,7 +12,7 @@ import crypto from 'node:crypto';
 import * as z from 'zod';
 import { unzipSync } from 'fflate';
 
-import zodLogger from '../src/server/utility/zodLogger';
+import zodLogger from '../src/server/utility/zodLogger.js';
 
 // Constants -------------------------------------------------------------------
 

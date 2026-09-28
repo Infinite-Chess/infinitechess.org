@@ -1,7 +1,7 @@
 // src/client/scripts/esm/webgl/postprocessing/passes/WaterRipplePass.ts
 
-import type { PostProcessPass } from '../PostProcessPass';
-import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+import type { PostProcessPass } from '../PostProcessPass.js';
+import type { ProgramManager, ProgramMap } from '../../ProgramManager.js';
 
 /** A simple structure to define a single droplet's state. */
 export interface RippleState {

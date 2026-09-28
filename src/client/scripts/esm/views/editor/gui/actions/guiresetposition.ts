@@ -4,9 +4,9 @@
  * Manages the GUI popup window for the Reset position button of the Board Editor
  */
 
-import eactions from '../../actions/eactions';
-import guifloatingwindow from '../guifloatingwindow';
-import { listener_document } from '../../../../game/listeners';
+import eactions from '../../actions/eactions.js';
+import guifloatingwindow from '../guifloatingwindow.js';
+import { listener_document } from '../../../../game/listeners.js';
 
 // Elements --------------------------------------------------------------------
 

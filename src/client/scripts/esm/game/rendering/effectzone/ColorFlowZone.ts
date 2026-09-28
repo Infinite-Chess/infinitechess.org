@@ -9,10 +9,10 @@
  * board_uber_shader/fragment.glsl.
  */
 
-import type { UniformValue } from '../../../webgl/Renderable';
+import type { UniformValue } from '../../../webgl/Renderable.js';
 
 import deltatime from '../../../board/deltatime.js';
-import { BaseZone } from './BaseZone';
+import { BaseZone } from './BaseZone.js';
 
 // Types -----------------------------------------------------------------------
 

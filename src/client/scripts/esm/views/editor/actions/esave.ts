@@ -4,14 +4,14 @@
  * Handles the saving of positions in boardeditor
  */
 
-import type { EditorSaveState } from '../../../savedpositions/storetypes';
+import type { EditorSaveState } from '../../../savedpositions/storetypes.js';
 
 import toast from '../../../components/toast.js';
-import eactions from './eactions';
-import eautosave from './eautosave';
-import savestore from '../../../savedpositions/savestore';
-import egamerules from '../egamerules';
-import boardeditor from '../boardeditor';
+import eactions from './eactions.js';
+import eautosave from './eautosave.js';
+import savestore from '../../../savedpositions/savestore.js';
+import egamerules from '../egamerules.js';
+import boardeditor from '../boardeditor.js';
 
 // State -----------------------------------------------------------------------
 

@@ -6,30 +6,30 @@
  * Manages all drawing tools
  */
 
-import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
-import type { Tool } from './etoolmanager';
-import type { GameFile } from '../../../../../../shared/chess/logic/gamefile';
+import type { Edit } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { Tool } from './etoolmanager.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 
-import state from '../../../../../../shared/chess/logic/state';
-import bounds from '../../../../../../shared/util/math/bounds';
-import boardutil, { Piece } from '../../../../../../shared/chess/logic/boardutil';
-import coordutil, { Coords } from '../../../../../../shared/util/coordutil';
+import state from '../../../../../../shared/chess/logic/state.js';
+import bounds from '../../../../../../shared/util/math/bounds.js';
+import boardutil, { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
+import coordutil, { Coords } from '../../../../../../shared/util/coordutil.js';
 import typeutil, {
 	Player,
 	players as p,
 	rawTypes as r,
-} from '../../../../../../shared/chess/util/typeutil';
+} from '../../../../../../shared/chess/util/typeutil.js';
 
-import mouse from '../../../game/mouse';
-import arrows from '../../../game/rendering/arrows/arrows';
-import gameslot from '../../../game/chess/gameslot';
-import selection from '../../../game/chess/selection';
-import { Mouse } from '../../../game/input';
-import egamerules from '../egamerules';
-import guipalette from '../gui/guipalette';
-import edithistory from '../edithistory';
-import { GameBus } from '../../../board/GameBus';
-import specialrighthighlights from '../../../game/rendering/highlights/specialrighthighlights';
+import mouse from '../../../game/mouse.js';
+import arrows from '../../../game/rendering/arrows/arrows.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import selection from '../../../game/chess/selection.js';
+import { Mouse } from '../../../game/input.js';
+import egamerules from '../egamerules.js';
+import guipalette from '../gui/guipalette.js';
+import edithistory from '../edithistory.js';
+import { GameBus } from '../../../board/GameBus.js';
+import specialrighthighlights from '../../../game/rendering/highlights/specialrighthighlights.js';
 
 // Events ----------------------------------------------------------------------
 

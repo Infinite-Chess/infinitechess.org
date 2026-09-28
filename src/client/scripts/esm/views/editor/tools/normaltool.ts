@@ -6,21 +6,21 @@
  * This tool can drag pieces around.
  */
 
-import type { Mesh } from '../../../board/rendering/piecemodels';
-import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
-import type { Board } from '../../../../../../shared/chess/logic/boardinit';
-import type { GameFile } from '../../../../../../shared/chess/logic/gamefile';
-import type { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnmoves';
+import type { Mesh } from '../../../board/rendering/piecemodels.js';
+import type { Edit } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 
-import state from '../../../../../../shared/chess/logic/state';
-import movepiece from '../../../../../../shared/chess/logic/movepiece';
-import boardutil from '../../../../../../shared/chess/logic/boardutil';
-import coordutil from '../../../../../../shared/util/coordutil';
+import state from '../../../../../../shared/chess/logic/state.js';
+import movepiece from '../../../../../../shared/chess/logic/movepiece.js';
+import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
 
-import selection from '../../../game/chess/selection';
-import edithistory from '../edithistory';
-import { GameBus } from '../../../board/GameBus';
-import movesequence from '../../../game/chess/movesequence';
+import selection from '../../../game/chess/selection.js';
+import edithistory from '../edithistory.js';
+import { GameBus } from '../../../board/GameBus.js';
+import movesequence from '../../../game/chess/movesequence.js';
 
 // Making Move Edits in the Game -----------------------------------------------
 

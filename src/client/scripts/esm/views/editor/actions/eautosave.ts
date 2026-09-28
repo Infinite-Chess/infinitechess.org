@@ -5,16 +5,16 @@
  * It autosaves periodically, but only if the position is dirty, aka if it has changed since last time.
  */
 
-import type { ActivePosition } from '../boardeditor';
+import type { ActivePosition } from '../boardeditor.js';
 
 import z from 'zod';
 
-import eactions from './eactions';
-import IndexedDB from '../../../util/IndexedDB';
-import egamerules from '../egamerules';
-import storetypes from '../../../savedpositions/storetypes';
-import boardeditor from '../boardeditor';
-import validatorama from '../../../util/validatorama';
+import eactions from './eactions.js';
+import IndexedDB from '../../../util/IndexedDB.js';
+import egamerules from '../egamerules.js';
+import storetypes from '../../../savedpositions/storetypes.js';
+import boardeditor from '../boardeditor.js';
+import validatorama from '../../../util/validatorama.js';
 
 // Constants -------------------------------------------------------------------
 

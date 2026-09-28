@@ -8,9 +8,9 @@
  * 					Further, all css files are minified by lightningcss.
  */
 
-import { buildClient } from './client';
-import { buildServer } from './server';
-import { downloadEngineWasm, copyEngineToDist } from './engine-wasm';
+import { buildClient } from './client.js';
+import { buildServer } from './server.js';
+import { downloadEngineWasm, copyEngineToDist } from './engine-wasm.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 

@@ -5,13 +5,13 @@
  * pattern several times a second.
  */
 
-import type { UniformValue } from '../../../../webgl/Renderable';
-import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
+import type { UniformValue } from '../../../../webgl/Renderable.js';
+import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
 
-import { BaseZone } from '../BaseZone';
-import { ProgramManager } from '../../../../webgl/ProgramManager';
-import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass';
-import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
+import { BaseZone } from '../BaseZone.js';
+import { ProgramManager } from '../../../../webgl/ProgramManager.js';
+import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
 
 export class StaticZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */

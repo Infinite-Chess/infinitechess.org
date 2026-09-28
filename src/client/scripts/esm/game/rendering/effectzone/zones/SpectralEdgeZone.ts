@@ -5,10 +5,10 @@
  * shifted apart in hue. Iridescence, turned right down.
  */
 
-import { ColorFlowZone } from '../ColorFlowZone';
-import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
-import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
-import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
+import { ColorFlowZone } from '../ColorFlowZone.js';
+import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape.js';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape.js';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
 
 export class SpectralEdgeZone extends ColorFlowZone {
 	constructor() {

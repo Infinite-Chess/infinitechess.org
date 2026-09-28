@@ -4,17 +4,17 @@
  * Low-level cloud read/write operations for board editor saves.
  */
 
-import type { LongFormatIn } from '../../../../shared/chess/logic/icn/icnconverter';
-import type { EditorSaveState } from './storetypes';
-import type { CloudPositionRecord, CloudSaveListRecord } from './savesapi';
+import type { LongFormatIn } from '../../../../shared/chess/logic/icn/icnconverter.js';
+import type { EditorSaveState } from './storetypes.js';
+import type { CloudPositionRecord, CloudSaveListRecord } from './savesapi.js';
 
 import jsutil from '../../../../shared/util/jsutil.js';
 import icnimport from '../../../../shared/chess/logic/icn/icnimport.js';
-import gamelimits from '../../../../shared/chess/util/gamelimits';
-import compression from '../../../../shared/util/compression';
-import icnconverter from '../../../../shared/chess/logic/icn/icnconverter';
+import gamelimits from '../../../../shared/chess/util/gamelimits.js';
+import compression from '../../../../shared/util/compression.js';
+import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
 
-import savesapi from './savesapi';
+import savesapi from './savesapi.js';
 
 // Error classes ---------------------------------------------------------------
 

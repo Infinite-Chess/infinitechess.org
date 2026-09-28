@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from 'vitest';
 
-import accountValidation from './accountValidation';
+import accountValidation from './accountValidation.js';
 
 describe('Profanity Filter', () => {
 	describe('Basic profanity detection', () => {

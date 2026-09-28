@@ -17,7 +17,7 @@ import fsSource_postPass from '../../../shaders/post_pass/fragment.glsl';
 import fsSource_vignette from '../../../shaders/vignette/fragment.glsl';
 import fsSource_sineWave from '../../../shaders/sine_wave/fragment.glsl';
 import fsSource_heatWave from '../../../shaders/heat_wave/fragment.glsl';
-import { ShaderProgram } from './ShaderProgram';
+import { ShaderProgram } from './ShaderProgram.js';
 import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
 import vsSource_miniImages from '../../../shaders/mini_images/vertex.glsl';
 import fsSource_miniImages from '../../../shaders/mini_images/fragment.glsl';

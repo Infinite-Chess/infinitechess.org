@@ -7,18 +7,18 @@
  * of the Selection Tool in the Board Editor
  */
 
-import type { Color } from '../../../../../../../shared/types/color';
-import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
-import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coordutil';
+import type { Color } from '../../../../../../../shared/types/color.js';
+import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds.js';
+import type { Coords, DoubleCoords } from '../../../../../../../shared/util/coordutil.js';
 
-import bounds from '../../../../../../../shared/util/math/bounds';
+import bounds from '../../../../../../../shared/util/math/bounds.js';
 
-import mouse from '../../../../game/mouse';
-import space from '../../../../board/rendering/space';
-import camera from '../../../../board/rendering/camera';
-import meshes from '../../../../board/rendering/meshes';
-import primitives from '../../../../board/rendering/primitives';
-import { createRenderable } from '../../../../board/rendering/renderable';
+import mouse from '../../../../game/mouse.js';
+import space from '../../../../board/rendering/space.js';
+import camera from '../../../../board/rendering/camera.js';
+import meshes from '../../../../board/rendering/meshes.js';
+import primitives from '../../../../board/rendering/primitives.js';
+import { createRenderable } from '../../../../board/rendering/renderable.js';
 
 // Constants -------------------------------------------------------------------
 

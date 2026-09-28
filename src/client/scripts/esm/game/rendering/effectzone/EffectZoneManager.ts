@@ -6,28 +6,28 @@
  * uniforms and post-process passes blended by progress.
  */
 
-import type { BaseZone } from './BaseZone';
-import type { BoardTiles } from '../../../board/rendering/boardtiles';
+import type { BaseZone } from './BaseZone.js';
+import type { BoardTiles } from '../../../board/rendering/boardtiles.js';
 import type { UniformValue } from '../../../webgl/Renderable.js';
-import type { PostProcessPass } from '../../../webgl/postprocessing/PostProcessPass';
+import type { PostProcessPass } from '../../../webgl/postprocessing/PostProcessPass.js';
 
-import ImageLoader from '../../../util/ImageLoader';
-import preferences from '../../../util/preferences';
-import frametracker from '../../../board/rendering/frametracker';
-import TextureLoader from '../../../webgl/TextureLoader';
-import { OceanZone } from './zones/OceanZone';
-import { StaticZone } from './zones/StaticZone';
-import { SettingsBus } from '../../../util/SettingsBus';
-import { EchoRiftZone } from './zones/EchoRiftZone';
-import { ProgramManager } from '../../../webgl/ProgramManager';
-import { EmberVergeZone } from './zones/EmberVergeZone';
-import { DustyWastesZone } from './zones/DustyWastesZone';
-import { IridescenceZone } from './zones/IridescenceZone';
-import { AshfallVocsZone } from './zones/AshfallVocsZone';
-import { TheBeginningZone } from './zones/TheBeginningZone';
-import { UndercurrentZone } from './zones/UndercurrentZone';
-import { SpectralEdgeZone } from './zones/SpectralEdgeZone';
-import { ContortionFieldZone } from './zones/ContortionFieldZone';
+import ImageLoader from '../../../util/ImageLoader.js';
+import preferences from '../../../util/preferences.js';
+import frametracker from '../../../board/rendering/frametracker.js';
+import TextureLoader from '../../../webgl/TextureLoader.js';
+import { OceanZone } from './zones/OceanZone.js';
+import { StaticZone } from './zones/StaticZone.js';
+import { SettingsBus } from '../../../util/SettingsBus.js';
+import { EchoRiftZone } from './zones/EchoRiftZone.js';
+import { ProgramManager } from '../../../webgl/ProgramManager.js';
+import { EmberVergeZone } from './zones/EmberVergeZone.js';
+import { DustyWastesZone } from './zones/DustyWastesZone.js';
+import { IridescenceZone } from './zones/IridescenceZone.js';
+import { AshfallVocsZone } from './zones/AshfallVocsZone.js';
+import { TheBeginningZone } from './zones/TheBeginningZone.js';
+import { UndercurrentZone } from './zones/UndercurrentZone.js';
+import { SpectralEdgeZone } from './zones/SpectralEdgeZone.js';
+import { ContortionFieldZone } from './zones/ContortionFieldZone.js';
 
 /**
  * Defines a zone in space that applies a specific visual effect to the board.

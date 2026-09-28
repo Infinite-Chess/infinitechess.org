@@ -1,7 +1,7 @@
 // src/client/scripts/esm/webgl/postprocessing/passes/VoronoiDistortionPass.ts
 
-import type { PostProcessPass } from '../PostProcessPass';
-import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+import type { PostProcessPass } from '../PostProcessPass.js';
+import type { ProgramManager, ProgramMap } from '../../ProgramManager.js';
 
 /**
  * A post-processing pass that distorts the image based on an animated

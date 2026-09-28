@@ -26,7 +26,7 @@
 import esbuild from 'esbuild';
 import { globSync } from 'node:fs';
 
-import { ESMEntryPoints } from '../../build/client';
+import { ESMEntryPoints } from '../../build/client.js';
 
 // Constants -------------------------------------------------------------------
 

@@ -5,9 +5,9 @@
  * shifted apart in hue.
  */
 
-import { ColorFlowZone } from '../ColorFlowZone';
-import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
-import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
+import { ColorFlowZone } from '../ColorFlowZone.js';
+import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape.js';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
 
 export class IridescenceZone extends ColorFlowZone {
 	constructor() {

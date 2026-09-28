@@ -4,22 +4,22 @@
  * This scripts managers the animated water ripple effect for extremely large moves.
  */
 
-import type { ProgramManager } from '../../webgl/ProgramManager';
-import type { PostProcessPass } from '../../webgl/postprocessing/PostProcessPass';
+import type { ProgramManager } from '../../webgl/ProgramManager.js';
+import type { PostProcessPass } from '../../webgl/postprocessing/PostProcessPass.js';
 
-import bounds from '../../../../../shared/util/math/bounds';
-import bdcoords from '../../../../../shared/util/bdcoords';
-import coordutil, { Coords } from '../../../../../shared/util/coordutil';
+import bounds from '../../../../../shared/util/math/bounds.js';
+import bdcoords from '../../../../../shared/util/bdcoords.js';
+import coordutil, { Coords } from '../../../../../shared/util/coordutil.js';
 
-import space from '../../board/rendering/space';
-import camera from '../../board/rendering/camera';
-import boardpos from '../../board/rendering/boardpos';
-import drawrays from './highlights/annotations/drawrays';
-import gameslot from '../chess/gameslot';
-import perspective from './perspective';
-import { GameBus } from '../../board/GameBus';
-import frametracker from '../../board/rendering/frametracker';
-import { RippleState, WaterRipplePass } from '../../webgl/postprocessing/passes/WaterRipplePass';
+import space from '../../board/rendering/space.js';
+import camera from '../../board/rendering/camera.js';
+import boardpos from '../../board/rendering/boardpos.js';
+import drawrays from './highlights/annotations/drawrays.js';
+import gameslot from '../chess/gameslot.js';
+import perspective from './perspective.js';
+import { GameBus } from '../../board/GameBus.js';
+import frametracker from '../../board/rendering/frametracker.js';
+import { RippleState, WaterRipplePass } from '../../webgl/postprocessing/passes/WaterRipplePass.js';
 
 // Constants -------------------------------------------------------------------
 

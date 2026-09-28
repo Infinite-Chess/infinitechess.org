@@ -1,8 +1,8 @@
 // src/tests/integrationUtils.ts
 
-import { testRequest } from './testRequest';
+import { testRequest } from './testRequest.js';
 
-import accountSeeder from '../server/controllers/accountSeeder';
+import accountSeeder from '../server/controllers/accountSeeder.js';
 
 // Variables -------------------------------------------------------------------
 

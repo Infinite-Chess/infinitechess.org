@@ -6,11 +6,11 @@
  * It has NO visual effect, but it does introduce the first ambience.
  */
 
-import type { UniformValue } from '../../../../webgl/Renderable';
+import type { UniformValue } from '../../../../webgl/Renderable.js';
 
-import { BaseZone } from '../BaseZone';
-import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
-import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
+import { BaseZone } from '../BaseZone.js';
+import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape.js';
 
 export class UndercurrentZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */

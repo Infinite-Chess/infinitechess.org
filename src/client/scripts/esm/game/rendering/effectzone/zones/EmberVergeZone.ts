@@ -5,9 +5,9 @@
  * tiles shifted apart in hue.
  */
 
-import { ColorFlowZone } from '../ColorFlowZone';
-import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
-import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
+import { ColorFlowZone } from '../ColorFlowZone.js';
+import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape.js';
 
 export class EmberVergeZone extends ColorFlowZone {
 	constructor() {

@@ -1,7 +1,7 @@
 // src/client/scripts/esm/webgl/postprocessing/passes/GlitchPass.ts
 
-import type { PostProcessPass } from '../PostProcessPass';
-import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+import type { PostProcessPass } from '../PostProcessPass.js';
+import type { ProgramManager, ProgramMap } from '../../ProgramManager.js';
 
 /**
  * A post-processing pass that applies a glitch effect,

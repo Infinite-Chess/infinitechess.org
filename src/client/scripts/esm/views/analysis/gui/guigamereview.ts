@@ -30,7 +30,7 @@ import gamereview from '../gamereview.js';
 import guimovetree from './guimovetree.js';
 import { GameBus } from '../../../board/GameBus.js';
 import analysisloader from '../analysisloader.js';
-import { SettingsBus } from '../../../util/SettingsBus';
+import { SettingsBus } from '../../../util/SettingsBus.js';
 
 // Elements --------------------------------------------------------------------
 

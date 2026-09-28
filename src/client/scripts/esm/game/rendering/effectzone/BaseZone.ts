@@ -7,9 +7,9 @@
  * passes. Subclasses supply the effect id, the per-frame update, and the shader uniforms.
  */
 
-import type { UniformValue } from '../../../webgl/Renderable';
-import type { PostProcessPass } from '../../../webgl/postprocessing/PostProcessPass';
-import type { SoundscapePlayer } from '../../../audio/SoundscapePlayer';
+import type { UniformValue } from '../../../webgl/Renderable.js';
+import type { PostProcessPass } from '../../../webgl/postprocessing/PostProcessPass.js';
+import type { SoundscapePlayer } from '../../../audio/SoundscapePlayer.js';
 
 export abstract class BaseZone {
 	/** The unique integer id this effect zone gets. */

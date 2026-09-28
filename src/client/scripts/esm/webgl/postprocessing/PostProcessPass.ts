@@ -1,6 +1,6 @@
 // src/client/scripts/esm/webgl/postprocessing/PostProcessPass.ts
 
-import type { ShaderProgram } from '../ShaderProgram';
+import type { ShaderProgram } from '../ShaderProgram.js';
 
 /** A Post Processing Effect applied to the whole screen after rendering the scene. */
 export interface PostProcessPass {

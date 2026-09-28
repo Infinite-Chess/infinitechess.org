@@ -7,7 +7,7 @@
  * allows a failed load to be retried.
  */
 
-import { retryFetch, RetryFetchOptions } from './fetchretrier';
+import { retryFetch, RetryFetchOptions } from './fetchretrier.js';
 
 class ImageLoader {
 	/** Default retry options if none are provided. */

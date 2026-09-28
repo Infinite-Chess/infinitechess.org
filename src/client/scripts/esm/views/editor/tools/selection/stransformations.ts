@@ -7,24 +7,24 @@
  * selection from the Selection Tool in the Board Editor
  */
 
-import type { Mesh } from '../../../../board/rendering/piecemodels';
-import type { Edit } from '../../../../../../../shared/chess/logic/movepiece';
-import type { GameFile } from '../../../../../../../shared/chess/logic/gamefile';
-import type { BoundingBox } from '../../../../../../../shared/util/math/bounds';
+import type { Mesh } from '../../../../board/rendering/piecemodels.js';
+import type { Edit } from '../../../../../../../shared/chess/logic/movepiece.js';
+import type { GameFile } from '../../../../../../../shared/chess/logic/gamefile.js';
+import type { BoundingBox } from '../../../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import bounds from '../../../../../../../shared/util/math/bounds';
-import bimath from '../../../../../../../shared/util/math/bimath';
-import typeutil from '../../../../../../../shared/chess/util/typeutil';
-import bdcoords from '../../../../../../../shared/util/bdcoords';
-import organizedpieces from '../../../../../../../shared/chess/logic/organizedpieces';
-import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors';
-import boardutil, { Piece } from '../../../../../../../shared/chess/logic/boardutil';
-import coordutil, { BDCoords, Coords } from '../../../../../../../shared/util/coordutil';
+import bounds from '../../../../../../../shared/util/math/bounds.js';
+import bimath from '../../../../../../../shared/util/math/bimath.js';
+import typeutil from '../../../../../../../shared/chess/util/typeutil.js';
+import bdcoords from '../../../../../../../shared/util/bdcoords.js';
+import organizedpieces from '../../../../../../../shared/chess/logic/organizedpieces.js';
+import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors.js';
+import boardutil, { Piece } from '../../../../../../../shared/chess/logic/boardutil.js';
+import coordutil, { BDCoords, Coords } from '../../../../../../../shared/util/coordutil.js';
 
-import edithistory from '../../edithistory';
-import selectiontool from './selectiontool';
+import edithistory from '../../edithistory.js';
+import selectiontool from './selectiontool.js';
 
 // Types -----------------------------------------------------------------------
 

@@ -5,16 +5,16 @@
  * and heat waves rising over it. Sizzles faintly.
  */
 
-import type { UniformValue } from '../../../../webgl/Renderable';
-import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
+import type { UniformValue } from '../../../../webgl/Renderable.js';
+import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
 
-import { BaseZone } from '../BaseZone';
-import { HeatWavePass } from '../../../../webgl/postprocessing/passes/HeatWavePass';
-import { VignettePass } from '../../../../webgl/postprocessing/passes/VignettePass';
-import { ProgramManager } from '../../../../webgl/ProgramManager';
-import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass';
-import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
-import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
+import { BaseZone } from '../BaseZone.js';
+import { HeatWavePass } from '../../../../webgl/postprocessing/passes/HeatWavePass.js';
+import { VignettePass } from '../../../../webgl/postprocessing/passes/VignettePass.js';
+import { ProgramManager } from '../../../../webgl/ProgramManager.js';
+import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape.js';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
 
 export class AshfallVocsZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */

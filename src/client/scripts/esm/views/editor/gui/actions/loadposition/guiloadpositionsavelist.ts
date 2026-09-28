@@ -6,22 +6,22 @@
  * and refreshing the list from local and cloud storage.
  */
 
-import type { CloudSaveListRecord } from '../../../../../savedpositions/savesapi';
+import type { CloudSaveListRecord } from '../../../../../savedpositions/savesapi.js';
 import type {
 	EditorAbridgedSaveState,
 	StorageType,
-} from '../../../../../savedpositions/storetypes';
+} from '../../../../../savedpositions/storetypes.js';
 
-import esave from '../../../actions/esave';
-import ecloud from '../../../actions/ecloud';
-import docutil from '../../../../../util/docutil';
-import eactions from '../../../actions/eactions';
-import savestore from '../../../../../savedpositions/savestore';
-import boardeditor from '../../../boardeditor';
-import { GameBus } from '../../../../../board/GameBus';
-import validatorama from '../../../../../util/validatorama';
-import guiloadposition from './guiloadposition';
-import guiloadpositionmodal from './guiloadpositionmodal';
+import esave from '../../../actions/esave.js';
+import ecloud from '../../../actions/ecloud.js';
+import docutil from '../../../../../util/docutil.js';
+import eactions from '../../../actions/eactions.js';
+import savestore from '../../../../../savedpositions/savestore.js';
+import boardeditor from '../../../boardeditor.js';
+import { GameBus } from '../../../../../board/GameBus.js';
+import validatorama from '../../../../../util/validatorama.js';
+import guiloadposition from './guiloadposition.js';
+import guiloadpositionmodal from './guiloadpositionmodal.js';
 
 // Types -----------------------------------------------------------------------
 

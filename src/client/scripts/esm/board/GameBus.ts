@@ -6,10 +6,10 @@
  * dispatch facts about game/piece/render state.
  */
 
-import type { Piece } from '../../../../shared/chess/logic/boardutil';
-import type { LegalMoves } from '../../../../shared/chess/logic/legalmoves';
+import type { Piece } from '../../../../shared/chess/logic/boardutil.js';
+import type { LegalMoves } from '../../../../shared/chess/logic/legalmoves.js';
 
-import { EventBus } from '../../../../shared/util/EventBus';
+import { EventBus } from '../../../../shared/util/EventBus.js';
 
 interface GameBusEvents {
 	// =========== Game Lifecycle ============

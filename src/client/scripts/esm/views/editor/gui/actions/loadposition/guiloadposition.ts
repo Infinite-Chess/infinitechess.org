@@ -5,14 +5,14 @@
  * Coordinates the floating window, save-as form, confirmation modal, and position list.
  */
 
-import gamelimits from '../../../../../../../../shared/chess/util/gamelimits';
+import gamelimits from '../../../../../../../../shared/chess/util/gamelimits.js';
 
-import esave from '../../../actions/esave';
-import savestore from '../../../../../savedpositions/savestore';
-import boardeditor from '../../../boardeditor';
-import guifloatingwindow from '../../guifloatingwindow';
-import guiloadpositionmodal from './guiloadpositionmodal';
-import guiloadpositionsavelist from './guiloadpositionsavelist';
+import esave from '../../../actions/esave.js';
+import savestore from '../../../../../savedpositions/savestore.js';
+import boardeditor from '../../../boardeditor.js';
+import guifloatingwindow from '../../guifloatingwindow.js';
+import guiloadpositionmodal from './guiloadpositionmodal.js';
+import guiloadpositionsavelist from './guiloadpositionsavelist.js';
 
 // Elements --------------------------------------------------------------------
 

@@ -4,9 +4,9 @@
  * A plain board — no visual effect, no ambience. The zone at the origin.
  */
 
-import type { UniformValue } from '../../../../webgl/Renderable';
+import type { UniformValue } from '../../../../webgl/Renderable.js';
 
-import { BaseZone } from '../BaseZone';
+import { BaseZone } from '../BaseZone.js';
 
 export class TheBeginningZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */

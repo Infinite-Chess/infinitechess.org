@@ -5,17 +5,17 @@
  * random intervals with a snap, over a low rumble.
  */
 
-import type { UniformValue } from '../../../../webgl/Renderable';
-import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
+import type { UniformValue } from '../../../../webgl/Renderable.js';
+import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
 
-import gamesound from '../../../../board/gamesound';
-import PerlinNoise from '../../../../util/PerlinNoise';
-import preferences from '../../../../util/preferences';
-import { BaseZone } from '../BaseZone';
-import { ProgramManager } from '../../../../webgl/ProgramManager';
-import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass';
-import { VoronoiDistortionPass } from '../../../../webgl/postprocessing/passes/VoronoiDistortionPass';
-import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
+import gamesound from '../../../../board/gamesound.js';
+import PerlinNoise from '../../../../util/PerlinNoise.js';
+import preferences from '../../../../util/preferences.js';
+import { BaseZone } from '../BaseZone.js';
+import { ProgramManager } from '../../../../webgl/ProgramManager.js';
+import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
+import { VoronoiDistortionPass } from '../../../../webgl/postprocessing/passes/VoronoiDistortionPass.js';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
 
 export class EchoRiftZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */

@@ -6,29 +6,29 @@
  * Acts similarly to that of Google Sheets
  */
 
-import type { Coords } from '../../../../../../../shared/util/coordutil';
+import type { Coords } from '../../../../../../../shared/util/coordutil.js';
 import type {
 	BoundingBox,
 	BoundingBoxBD,
 	DoubleBoundingBox,
-} from '../../../../../../../shared/util/math/bounds';
+} from '../../../../../../../shared/util/math/bounds.js';
 
-import bimath from '../../../../../../../shared/util/math/bimath';
-import boardutil from '../../../../../../../shared/chess/logic/boardutil';
+import bimath from '../../../../../../../shared/util/math/bimath.js';
+import boardutil from '../../../../../../../shared/chess/logic/boardutil.js';
 
-import mouse from '../../../../game/mouse';
-import sfill from './sfill';
-import sdrag from './sdrag';
-import arrows from '../../../../game/rendering/arrows/arrows';
-import meshes from '../../../../board/rendering/meshes';
-import gameslot from '../../../../game/chess/gameslot';
-import { Mouse } from '../../../../game/input';
-import { GameBus } from '../../../../board/GameBus';
-import etoolmanager from '../etoolmanager';
-import stoolgraphics from './stoolgraphics';
-import stransformations from './stransformations';
-import guipositionheader from '../../gui/guipositionheader';
-import { listener_document, listener_canvas } from '../../../../game/listeners';
+import mouse from '../../../../game/mouse.js';
+import sfill from './sfill.js';
+import sdrag from './sdrag.js';
+import arrows from '../../../../game/rendering/arrows/arrows.js';
+import meshes from '../../../../board/rendering/meshes.js';
+import gameslot from '../../../../game/chess/gameslot.js';
+import { Mouse } from '../../../../game/input.js';
+import { GameBus } from '../../../../board/GameBus.js';
+import etoolmanager from '../etoolmanager.js';
+import stoolgraphics from './stoolgraphics.js';
+import stransformations from './stransformations.js';
+import guipositionheader from '../../gui/guipositionheader.js';
+import { listener_document, listener_canvas } from '../../../../game/listeners.js';
 
 // State -----------------------------------------------------------------------
 

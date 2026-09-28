@@ -14,8 +14,8 @@ import path from 'path';
 import { fileURLToPath } from 'node:url';
 import { parse, TomlTable } from 'smol-toml';
 
-import tconfig from '../src/server/config/translationConfig';
-import componentTranslationLoader from '../src/server/config/componentTranslationLoader';
+import tconfig from '../src/server/config/translationConfig.js';
+import componentTranslationLoader from '../src/server/config/componentTranslationLoader.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

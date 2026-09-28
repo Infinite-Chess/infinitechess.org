@@ -4,7 +4,7 @@
  * Client-side wrappers for the editor saves server API endpoints.
  */
 
-import type { CompressionMode } from '../../../../shared/util/compression';
+import type { CompressionMode } from '../../../../shared/util/compression.js';
 
 import { serverfetch } from '../util/serverfetch.js';
 import { fetchWithDeduplication } from '../util/fetchdeduplicator.js';

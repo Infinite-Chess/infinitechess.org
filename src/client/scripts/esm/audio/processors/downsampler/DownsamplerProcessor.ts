@@ -1,6 +1,6 @@
 // src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts
 
-import type { AudioParamDescriptor } from '../worklet-types';
+import type { AudioParamDescriptor } from '../worklet-types.js';
 
 /*
  * These need to be declared in every audio worklet processor file,

@@ -1,9 +1,9 @@
 // src/client/scripts/esm/webgl/postprocessing/PostProcessingPipeline.ts
 
-import type { PostProcessPass } from './PostProcessPass';
+import type { PostProcessPass } from './PostProcessPass.js';
 
-import { ProgramManager } from '../ProgramManager';
-import { PassThroughPass } from './passes/PassThroughPass';
+import { ProgramManager } from '../ProgramManager.js';
+import { PassThroughPass } from './passes/PassThroughPass.js';
 
 /**
  * Manages the post-processing pipeline for a raw WebGL2 application.

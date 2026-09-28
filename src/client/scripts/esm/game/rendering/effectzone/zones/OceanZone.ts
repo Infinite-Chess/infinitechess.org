@@ -4,18 +4,18 @@
  * A faintly blue board with three water ripples drifting in a slow circle.
  */
 
-import type { UniformValue } from '../../../../webgl/Renderable';
-import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass';
+import type { UniformValue } from '../../../../webgl/Renderable.js';
+import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
 
-import camera from '../../../../board/rendering/camera';
+import camera from '../../../../board/rendering/camera.js';
 import deltatime from '../../../../board/deltatime.js';
-import { GameBus } from '../../../../board/GameBus';
-import { BaseZone } from '../BaseZone';
-import { ProgramManager } from '../../../../webgl/ProgramManager';
-import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass';
-import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
-import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
-import { RippleSource, WaterPass } from '../../../../webgl/postprocessing/passes/WaterPass';
+import { GameBus } from '../../../../board/GameBus.js';
+import { BaseZone } from '../BaseZone.js';
+import { ProgramManager } from '../../../../webgl/ProgramManager.js';
+import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
+import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape.js';
+import { RippleSource, WaterPass } from '../../../../webgl/postprocessing/passes/WaterPass.js';
 
 export class OceanZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */
