@@ -61,9 +61,7 @@ const CreateSeekMessageSchema = z
 		private: z.boolean(),
 	})
 	.refine(
-		(val) =>
-			val.mode !== 'rated' ||
-			leaderboardregistry.isRatedAllowed(val.variant, val.time, val.color, val.modifiers),
+		(val) => val.mode !== 'rated' || leaderboardregistry.isRatedAllowed(val.variant, val.time, val.color, val.modifiers, val.private), // prettier-ignore
 		{ error: 'Invalid seek parameters for a rated game.' },
 	);
 

@@ -55,8 +55,8 @@ const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTML
 
 // State -----------------------------------------------------------------------
 
-/** The active game creation flow. */
-let currentMode: ModalMode;
+/** The active game creation flow. Undefined until the modal first opens. */
+let currentMode: ModalMode | undefined;
 
 // Initialization --------------------------------------------------------------
 
@@ -97,7 +97,6 @@ function initModal(): void {
 			void variantselector.revalidateCustomSelection();
 		},
 	});
-	syncRatedButton();
 
 	// Last, since restoring writes into every section set up above.
 	const startupStateLoaded = loadStartupState();
@@ -185,7 +184,6 @@ function applyOptions(options: GameOptions): void {
 	if (options.selection.kind !== 'cloud' || validatorama.areWeLoggedIn())
 		variantselector.restoreSelection(options.selection);
 	// Still needed: a skipped cloud save never reaches restoreSelection, so nothing saved itself.
-	syncRatedButton();
 	persist();
 }
 
@@ -219,6 +217,8 @@ function persist(): void {
 
 /** Reads current seek options and disables the Rated button if a rated game is not permitted. */
 function syncRatedButton(): void {
+	if (currentMode === undefined) return; // Privacy unknown until openModal; judging now could drop a saved Rated
+
 	// Only a preset can be rated, so a custom selection is never resolved here — doing so would
 	// hand back the whole ICN it serializes to, only for rated-eligibility to refuse it anyway.
 	const isPreset = variantselector.getSelection().kind === 'preset';
@@ -226,11 +226,14 @@ function syncRatedButton(): void {
 	const time: TimeControl = timecontrols.getTimeControl();
 	const color = getSelectedColor();
 	const modifiers = modifierselector.getGameModifiers();
+	const isPrivate = currentMode === 'friend';
 
-	const allowed = leaderboardregistry.isRatedAllowed(variant, time, color, modifiers);
+	const allowed = leaderboardregistry.isRatedAllowed(variant, time, color, modifiers, isPrivate);
 	element_ratedButton.disabled = !allowed;
-	if (!allowed && element_ratedButton.classList.contains('active'))
+	if (!allowed && element_ratedButton.classList.contains('active')) {
 		setActiveToggle('data-mode', element_casualButton);
+		persist();
+	}
 }
 
 /** Returns the color the player has selected, or null for random. */
@@ -308,6 +311,7 @@ function openModal(mode: ModalMode): void {
 
 	currentMode = mode;
 	element_modalSubmit.textContent = SUBMIT_LABELS[mode];
+	syncRatedButton(); // Rated eligibility depends on whether the game is private
 
 	element_rowGameMode.classList.toggle('hidden', mode === 'computer');
 	element_rowStrength.classList.toggle('hidden', mode !== 'computer');

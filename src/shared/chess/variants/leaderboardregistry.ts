@@ -56,21 +56,20 @@ function ofVariant(variant: SeekVariant): Leaderboard | undefined {
 	return variant.kind === 'preset' ? BY_VARIANT[variant.code] : undefined;
 }
 
-/**
- * Returns `true` if the given seek options are eligible for a rated game.
- * Mirrors the server-side seek validation logic to avoid redundant checks.
- */
+/** Returns `true` if the given seek options are eligible for a rated game. */
 function isRatedAllowed(
 	variant: SeekVariant | null,
 	time: TimeControl,
 	color: Player | null,
 	modifiers: GameModifier[] | undefined,
+	isPrivate: boolean,
 ): boolean {
 	if (variant === null) return false;
 	if (variant.kind !== 'preset') return false; // Custom variants are never rated
 	if (!(variant.code in BY_VARIANT)) return false; // Variant needs a leaderboard
 	if (time === '-') return false; // Must be timed
-	if (color !== null) return false; // No specific color for rated **public** games
+	// A picked color may be rated only in private games, where a tournament bracket may assign it
+	if (color !== null && !isPrivate) return false;
 	if ((modifiers?.length ?? 0) > 0) return false; // No modifiers for rated
 	return true;
 }
