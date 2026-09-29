@@ -1,13 +1,13 @@
 # WebSocket System
 
-How the client and server talk over the live socket: the routed message envelope, the shared
-schemas that are the single source of truth for both directions, receipts (echo/ack), the
-heartbeat that detects a dead connection, subscriptions, the intent layer that survives a
-disconnect, and what a closure costs you depending on whether you caused it.
+How the client and server talk over the live socket: the routed message envelope, the shared schemas
+that are the single source of truth for both directions, receipts (echo/ack), the heartbeat that
+detects a dead connection, subscriptions, the intent layer that survives a disconnect, and what a
+closure costs you depending on whether you caused it.
 
-There is **exactly one socket per tab** (nothing enforces that), lazily opened by the first
-message that needs it and auto-closed once nothing is subscribed. All live gameplay, the lobby,
-the challenge page, and spectating ride it.
+There is **exactly one socket per tab** (nothing enforces that), lazily opened by the first message
+that needs it and auto-closed once nothing is subscribed. All live gameplay, the lobby, the
+challenge page, and spectating ride it.
 
 ## The wire
 
@@ -20,9 +20,9 @@ Every frame is JSON with a `route` discriminator. Four shapes exist, two per dir
 | client → server | `{ id, route, contents: { action, value? }, needsack? }` | `needsack` is `true` or absent — never `false`            |
 | client → server | `{ route: 'echo', contents: <id> }`                      | A receipt                                                 |
 
-`id` is a fresh 10-digit number (`uuid.generateNumbID(10)`) per routed message. **The two
-directions have independent id spaces** — an id only ever means "the message I sent under it".
-`value` is omitted entirely for actions carrying none (never `null`).
+`id` is a fresh 10-digit number (`uuid.generateNumbID(10)`) per routed message. **The two directions
+have independent id spaces** — an id only ever means "the message I sent under it". `value` is
+omitted entirely for actions carrying none (never `null`).
 
 ### The four routes
 
@@ -34,8 +34,8 @@ directions have independent id spaces** — an id only ever means "the message I
 
 Note the asymmetry: `sub`/`unsub` for the **lobby** are `general` actions, while attaching to a
 **game** or **challenge** is that route's `subscribe` (it needs an id) and detaching happens on
-socket close or by server command. Leaving either is a page navigation, so neither has an
-in-place unsub verb.
+socket close or by server command. Leaving either is a page navigation, so neither has an in-place
+unsub verb.
 
 ## Schemas — the single source of truth
 
@@ -46,12 +46,12 @@ Both contracts live in `shared/`, split by direction:
 | [serverbound.ts](/src/shared/transport/serverbound.ts) | everything the client may send | **value-imports** and validates at the edge | **type-imports only** (erased at build; stays out of the bundle) |
 | [clientbound.ts](/src/shared/transport/clientbound.ts) | everything the server may send | type-imports only                           | **value-imports** and validates at the edge                      |
 
-That split is the whole reason the two directions aren't one file: bundling them together would
-drag zod schemas the client only needs as _types_ into its bundle.
+That split is the whole reason the two directions aren't one file: bundling them together would drag
+zod schemas the client only needs as _types_ into its bundle.
 
-A schema belongs in these files only if it exists **solely** as websocket message contents.
-Domain values also used by HTTP or SSR (`TimeControl`, `MovePacket`, `OutSeek`, `ClockValues`,
-the game id…) live in [domain.ts](/src/shared/transport/domain.ts) and are imported by both.
+A schema belongs in these files only if it exists **solely** as websocket message contents. Domain
+values also used by HTTP or SSR (`TimeControl`, `MovePacket`, `OutSeek`, `ClockValues`, the game
+id…) live in [domain.ts](/src/shared/transport/domain.ts) and are imported by both.
 
 Everything is a `z.discriminatedUnion` of `z.strictObject`s, so an unknown action or an extra
 property is a validation failure, not silently-ignored data.
@@ -59,12 +59,13 @@ property is a validation failure, not silently-ignored data.
 ### Type plumbing
 
 [socketutil.ts](/src/shared/util/socketutil.ts) exports the helpers both send functions are built
-from: `MessageMap` (route → message union), `RouteAction<M,R>`, `ActionValue<M,R,A>`, and `Exact<V,Shape>`.
-`Exact` matters: TypeScript's excess-property check only fires on fresh object literals, so a
-message assembled into a variable first would smuggle extra keys onto the wire. `Exact` on the
-`value` parameter catches them however the caller built it.
+from: `MessageMap` (route → message union), `RouteAction<M,R>`, `ActionValue<M,R,A>`, and
+`Exact<V,Shape>`. `Exact` matters: TypeScript's excess-property check only fires on fresh object
+literals, so a message assembled into a variable first would smuggle extra keys onto the wire.
+`Exact` on the `value` parameter catches them however the caller built it.
 
-Each side then declares its own `OutMessages` map ([socketSend.ts](/src/server/socket/socketSend.ts),
+Each side then declares its own `OutMessages` map
+([socketSend.ts](/src/server/socket/socketSend.ts),
 [socketsend.ts](/src/client/scripts/esm/socket/socketsend.ts)) for the direction it sends, which is
 what makes `socketSend.send(ws, 'game', 'move', …)` fully type-checked on route/action/value.
 
@@ -153,8 +154,8 @@ The client's echo round-trip time is what feeds the ping meter
 adjustment ([pingmanager.ts](/src/client/scripts/esm/views/game/pingmanager.ts)).
 
 **Echoes are deliberately unlogged and unmetered server-side.** An echo isn't traffic the client
-chose to send — we oblige one per message _we_ send — so charging their rate budget for our own
-send volume would close honest sockets.
+chose to send — we oblige one per message _we_ send — so charging their rate budget for our own send
+volume would close honest sockets.
 
 ## Liveness: heartbeat + echo timers
 
@@ -168,14 +169,14 @@ Constants are shared in [socketutil.ts](/src/shared/util/socketutil.ts):
 | **Inactivity watchdog** | — (covered by the ping's own echo timer)                                                  | Rescheduled on **every** incoming message. Silent for 15s (10 s + 5 s) → `dropSocket()` |
 | **`offline` event**     | —                                                                                         | The network interface went away → `dropSocket()` at once                                |
 
-So a dead peer is detected in **≤15 s from either side**. The client's watchdog is only armed
-while it has subscriptions; an unsubscribed socket is closing on its own idle timer anyway.
+So a dead peer is detected in **≤15 s from either side**. The client's watchdog is only armed while
+it has subscriptions; an unsubscribed socket is closing on its own idle timer anyway.
 
 `terminate()` / `dropSocket()` rather than a graceful `close()` is deliberate: a closing handshake
-with a peer already concluded unreachable can only _stall_ the `close` event — and every
-consequence of the disconnection (dropping subscriptions, telling the opponent) waits on that
-event. `dropSocket()` still emits a close frame in case the wire turns out to be fine, but detaches
-its handlers and runs the local teardown itself with a synthetic `(1006, '')`.
+with a peer already concluded unreachable can only _stall_ the `close` event — and every consequence
+of the disconnection (dropping subscriptions, telling the opponent) waits on that event.
+`dropSocket()` still emits a close frame in case the wire turns out to be fine, but detaches its
+handlers and runs the local teardown itself with a synthetic `(1006, '')`.
 
 `ws`'s own `closeTimeout` is lowered to **2500 ms** (from 30 s) in
 [socketServer.ts](/src/server/socket/socketServer.ts) for the same reason.
@@ -187,15 +188,16 @@ its handlers and runs the local teardown itself with a synthetic `(1006, '')`.
 Auth rides on cookies in the upgrade request. [socketOpen.ts](/src/server/socket/socketOpen.ts)
 gates every upgrade, in order:
 
-1. **Origin** must be present, and must equal `APP_BASE_URL` outside development → `1008 ORIGIN_ERROR`.
+1. **Origin** must be present, and must equal `APP_BASE_URL` outside development →
+   `1008 ORIGIN_ERROR`.
 2. **IP** resolvable → `1008 UNIDENTIFIABLE_IP`.
 3. **User-agent** present → `1008 USER_AGENT_REQUIRED` (scanner bots routinely omit it).
 4. **`browser-id` cookie** present → `1008 AUTHENTICATION_NEEDED` (i.e. cookies disabled).
 5. **Tab id** present and the right shape → `1008 TAB_ID_REQUIRED`. Every client of ours sends one,
    so a bad id means it wasn't our page.
-6. **`ws.metadata` attached** — subscriptions, cookies, userAgent, memberInfo, socket id, tabId,
-   IP, echo timers — along with `ws.t`, the request's resolved translations (the socket's mirror
-   of `req.t`).
+6. **`ws.metadata` attached** — subscriptions, cookies, userAgent, memberInfo, socket id, tabId, IP,
+   echo timers — along with `ws.t`, the request's resolved translations (the socket's mirror of
+   `req.t`).
 7. **Rate limit**, keyed on the metadata's `IP|user-agent` → `1009 TOO_MANY_REQUESTS`, and _every_
    socket from that IP is closed too.
 8. **IP socket cap**, max **10** → `1009 TOO_MANY_SOCKETS`.
@@ -206,9 +208,10 @@ gates every upgrade, in order:
 
 Finally the socket is registered, logged, given its listeners, and sent `general/protocolversion`.
 
-**Sockets expire after 15 minutes** (`MAX_WEBSOCKET_AGE_MS`, [socketRegistry.ts](/src/server/socket/socketRegistry.ts)),
-closing with `1000 CONNECTION_EXPIRED` — which the client treats as involuntary and immediately
-reconnects through. Users must therefore re-present authentication at least every 15 minutes.
+**Sockets expire after 15 minutes** (`MAX_WEBSOCKET_AGE_MS`,
+[socketRegistry.ts](/src/server/socket/socketRegistry.ts)), closing with `1000 CONNECTION_EXPIRED` —
+which the client treats as involuntary and immediately reconnects through. Users must therefore
+re-present authentication at least every 15 minutes.
 
 ### Rate limit and payload cap
 
@@ -243,13 +246,13 @@ received, so a reason the _server_ sent still comes back to it.
 | `CLOSED_BY_CLIENT`       | 1000 | client  | ❌           |
 | `CLOSED_BY_CLIENT_RENEW` | 1000 | client  | ✅           |
 
-Reasonless closures: `1009 ""` (over `MAX_PAYLOAD_BYTES`), `1006 ""` (network failure / server
-down / a terminated socket), `1001 ""` (tab closed without cleanup), `1002` / `1007` (`ws`
-rejecting a malformed frame or bad UTF-8). **1006 is always involuntary.**
+Reasonless closures: `1009 ""` (over `MAX_PAYLOAD_BYTES`), `1006 ""` (network failure / server down
+/ a terminated socket), `1001 ""` (tab closed without cleanup), `1002` / `1007` (`ws` rejecting a
+malformed frame or bad UTF-8). **1006 is always involuntary.**
 
-`LOGGED_OUT` is pushed from outside the socket layer — logout, account deletion, and password
-reset. Logout splits its session, though: the tab that asked gets `LOGGED_OUT_SELF` and ignores
-it, because reloading would cancel the navigation its own form already started.
+`LOGGED_OUT` is pushed from outside the socket layer — logout, account deletion, and password reset.
+Logout splits its session, though: the tab that asked gets `LOGGED_OUT_SELF` and ignores it, because
+reloading would cancel the navigation its own form already started.
 
 ### Voluntary vs. involuntary — what it costs you
 
@@ -289,9 +292,9 @@ socket closes
                        └─ window elapsed → opponent may `claimvictory` / `claimdraw`
 ```
 
-The claim window is **just a timestamp**, validated on demand when a claim arrives — no timer
-fires on its own. The opponent may sit and do nothing, and loses the chance the instant the
-disconnected player returns.
+The claim window is **just a timestamp**, validated on demand when a claim arrives — no timer fires
+on its own. The opponent may sit and do nothing, and loses the chance the instant the disconnected
+player returns.
 
 If **both** players end up disconnected, a 5-minute timer concludes the game unattended: draw by
 abandonment, an abort if not yet resignable, or an engine win by disconnect in an engine game.
@@ -314,10 +317,10 @@ abandonment, an abort if not yet resignable, or an engine win by disconnect in a
 | `CLOSED_BY_CLIENT`                   | Nothing — our own frame coming back                                                         |
 | `CLOSED_BY_CLIENT_RENEW`             | Unreachable: `dropSocket()` detaches `onclose` before sending it                            |
 
-A `pagehide` listener drops — never closes — the socket with `CLOSED_BY_CLIENT`, so the server
-knows the departure was deliberate. `beforeunload` would fire on an unload the prompt cancels,
-stranding a staying player; a close would be deferred by a bfcache freeze until the user returns,
-wiping the subs `pageshow` had just remade.
+A `pagehide` listener drops — never closes — the socket with `CLOSED_BY_CLIENT`, so the server knows
+the departure was deliberate. `beforeunload` would fire on an unload the prompt cancels, stranding a
+staying player; a close would be deferred by a bfcache freeze until the user returns, wiping the
+subs `pageshow` had just remade.
 
 An `offline` listener drops the socket and suspends connecting until `online` is heard.
 
@@ -334,23 +337,23 @@ and the first outgoing message lazily reopens the socket. A bfcache restore (`pa
 | `game`       | `{ id, color }` | `game`/`subscribe` (participant)                 | Socket close, or server `detached`/`supersededbytab` |
 | `spectating` | `{ id }`        | `game`/`subscribe` (non-participant)             | Socket close, or server `detached`                   |
 
-**Clients may only ever request `lobby`.** `sub` accepts nothing else; the game keys are
-attached server-side by `subscribe`, which resolves participant-vs-spectator itself from
+**Clients may only ever request `lobby`.** `sub` accepts nothing else; the game keys are attached
+server-side by `subscribe`, which resolves participant-vs-spectator itself from
 `getSocketRoleInGame()` (subscription metadata, falling back to identity for a fresh reconnect).
 Likewise `challenge` is attached by its own `subscribe`.
 
 Client-side, [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts) tracks only `lobby`,
-`game` and `challenge` booleans — a spectator's attachment is also `game`. This is a **local intent record**, not
-authoritative state: it exists so a reconnect knows what to re-request, and so the socket knows
-when it may auto-close. It is wiped on every close.
+`game` and `challenge` booleans — a spectator's attachment is also `game`. This is a **local intent
+record**, not authoritative state: it exists so a reconnect knows what to re-request, and so the
+socket knows when it may auto-close. It is wiped on every close.
 
 A second socket subscribing as the same player **in a game** evicts the first: the old tab gets
 `supersededbytab` and navigates home.
 
 ### Game (re)subscription: `subscribe` vs. `subscriberematch`
 
-The client's [onlinegame.ts](/src/client/scripts/esm/views/game/onlinegame.ts) tracks a
-monotonic `stage`, which decides what a reconnect asks for:
+The client's [onlinegame.ts](/src/client/scripts/esm/views/game/onlinegame.ts) tracks a monotonic
+`stage`, which decides what a reconnect asks for:
 
 | Stage         | Meaning                                        | Reconnect sends                    |
 | ------------- | ---------------------------------------------- | ---------------------------------- |
@@ -359,22 +362,23 @@ monotonic `stage`, which decides what a reconnect asks for:
 | `'finalized'` | Result locked in; only rematch offers can move | `subscriberematch` (lean)          |
 | `'detached'`  | Nothing more is coming — evicted               | Nothing at all                     |
 
-Server-side replies: [onSubscribe.ts](/src/server/game/gamemanager/onSubscribe.ts) sends
-`gamestate` (with a `participantState` overlay for participants, without it for spectators), or
-`notlive` if the id isn't in memory — the client then reloads so SSR serves the dead review page or
-a 404. [onSubscribeRematch.ts](/src/server/game/gamemanager/onSubscribeRematch.ts) sends the **lean**
-`gamestate` (the rematch overlay + the chat log), or `notlive` if the game has since been evicted, so
-they reload into SSR the same way.
+Server-side replies: [onSubscribe.ts](/src/server/game/gamemanager/onSubscribe.ts) sends `gamestate`
+(with a `participantState` overlay for participants, without it for spectators), or `notlive` if the
+id isn't in memory — the client then reloads so SSR serves the dead review page or a 404.
+[onSubscribeRematch.ts](/src/server/game/gamemanager/onSubscribeRematch.ts) sends the **lean**
+`gamestate` (the rematch overlay + the chat log), or `notlive` if the game has since been evicted,
+so they reload into SSR the same way.
 
 A dead game is loaded over **HTTP**, not the socket
-([deadgameloader.ts](/src/client/scripts/esm/views/game/deadgameloader.ts)) — it
-normalizes the fetched state into the same `gamestate` shape and no socket is opened at all.
+([deadgameloader.ts](/src/client/scripts/esm/views/game/deadgameloader.ts)) — it normalizes the
+fetched state into the same `gamestate` shape and no socket is opened at all.
 
 ## Resync and desync
 
-`gamestate` is the universal repair message. [resyncer.ts](/src/client/scripts/esm/views/game/resyncer.ts)
-rewinds and forwards our board until it matches the server's move list, validates each opponent
-move as it goes (reporting cheating where the game permits it), and applies the conclusion.
+`gamestate` is the universal repair message.
+[resyncer.ts](/src/client/scripts/esm/views/game/resyncer.ts) rewinds and forwards our board until
+it matches the server's move list, validates each opponent move as it goes (reporting cheating where
+the game permits it), and applies the conclusion.
 
 - If the server's list is a strict **prefix** of ours, the game hasn't concluded, and we're allowed
   to submit the difference, we don't rewind — we just submit the missing moves.
@@ -389,10 +393,11 @@ move as it goes (reporting cheating where the game permits it), and applies the 
   leaving our board deliberately short of the server's. `inSync` goes back to false and the route is
   never marked synced, so held intents stay held.
 
-A refusal self-heals wherever a cheat report is possible: the server pops the offending move, aborts,
-and pushes a fresh `gamestate` to everyone ([cheatReport.ts](/src/server/game/gamemanager/cheatReport.ts)).
-Where it isn't (spectators, engine games, server-validated games), the board stays a move behind
-indefinitely — intended, not an oversight.
+A refusal self-heals wherever a cheat report is possible: the server pops the offending move,
+aborts, and pushes a fresh `gamestate` to everyone
+([cheatReport.ts](/src/server/game/gamemanager/cheatReport.ts)). Where it isn't (spectators, engine
+games, server-validated games), the board stays a move behind indefinitely — intended, not an
+oversight.
 
 Clock values in any incoming game message are ping-adjusted **at receipt** (half the last RTT
 subtracted from the ticking color) inside `onlinegamerouter.receiveMessage`, before any buffering,
@@ -429,8 +434,8 @@ problems it solves:
    its route resyncs. Held intents expire after **10 s** (a backstop; correctness comes from the
    validity check).
 2. **Impatient clicking must not multiply** — an intent stays _outstanding_, locked by
-   `` `${route}/${action}` ``, until its `ack` arrives. Submitting an already-outstanding action is a
-   no-op; submitting one still _held_ replaces it, so what goes out is the user's latest wish.
+   `` `${route}/${action}` ``, until its `ack` arrives. Submitting an already-outstanding action is
+   a no-op; submitting one still _held_ replaces it, so what goes out is the user's latest wish.
 
 A route is "ready" only when the socket is OPEN **and** we hold that route's synced state.
 `onRouteSynced(route)` must be called once the state is **applied**, not merely received — the
@@ -452,8 +457,8 @@ running pre-change code and `location.reload()`s — scripts are content-hashed,
 guaranteed to fetch the new ones.
 
 **Increment it by 1 whenever the socket messages change at all.** The exception is when prod is
-still behind the current value: that deploy will already force every client to refresh, and it
-makes no difference whether they were one version behind or two.
+still behind the current value: that deploy will already force every client to refresh, and it makes
+no difference whether they were one version behind or two.
 
 ## Logging and dev tooling
 
@@ -461,14 +466,15 @@ makes no difference whether they were one version behind or two.
   and every inbound message to `wsInLog/`, every outbound to `wsOutLog/`. Messages are truncated at
   2048 chars. Each upgrade gets an `R` correlation id, each inbound message a `W` one, so every log
   line a message produces shares an id.
-- **Client** ([socketlogger.ts](/src/client/scripts/esm/socket/socketlogger.ts)) is a dev toggle, off
-  by default — press `3` on the game page ([toggles.ts](/src/client/scripts/esm/game/debug/toggles.ts)).
-  On, it prints routed traffic and adds 1 s of simulated send latency. Echoes _we_ send are never
-  printed; incoming ones only if `alsoPrintIncomingEchos` is flipped.
+- **Client** ([socketlogger.ts](/src/client/scripts/esm/socket/socketlogger.ts)) is a dev toggle,
+  off by default — press `3` on the game page
+  ([toggles.ts](/src/client/scripts/esm/game/debug/toggles.ts)). On, it prints routed traffic and
+  adds 1 s of simulated send latency. Echoes _we_ send are never printed; incoming ones only if
+  `alsoPrintIncomingEchos` is flipped.
 - **Server-side simulated latency**: `SIMULATED_WEBSOCKET_LATENCY_MS` in
   [socketSend.ts](/src/server/socket/socketSend.ts). Guarded to throw if non-zero in production.
-- Malformed messages are logged (`logZodError` → errLog server-side, console client-side) and
-  **not replied to**. The client also skips echoing them — it can't know whether it should.
+- Malformed messages are logged (`logZodError` → errLog server-side, console client-side) and **not
+  replied to**. The client also skips echoing them — it can't know whether it should.
 
 ## Gotchas
 
@@ -485,8 +491,9 @@ makes no difference whether they were one version behind or two.
 - **Malformed-frame errors from `ws` are swallowed** (`WS_ERR_*` in `socketOpen.onerror`) — flaky
   client stacks echoing 1006 onto the wire are benign and would otherwise flood errLog. Oversized
   messages are the exception and land in hackLog.
-- **Sockets never survive a server restart.** [`gameRestart.prepForShutdown()`](/src/server/game/gamemanager/gameRestart.ts) detaches them all. Everyone
-  connected at shutdown gets a fresh 5 s cushion on restore; anyone already mid-cushion or
+- **Sockets never survive a server restart.**
+  [`gameRestart.prepForShutdown()`](/src/server/game/gamemanager/gameRestart.ts) detaches them all.
+  Everyone connected at shutdown gets a fresh 5 s cushion on restore; anyone already mid-cushion or
   mid-claim-window resumes the persisted remainder instead.
 
 ## File map

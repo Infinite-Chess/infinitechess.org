@@ -16,10 +16,10 @@ build time, and how an engine release auto-deploys the site. Pairs with
 
 ### Why rebuild from source on our fork?
 
-Security / supply-chain, same rationale as Lichess vs. Stockfish: we don't ship a binary an
-upstream author released — we rebuild it ourselves from source we've pulled, on infrastructure we
-control, so the served `.wasm` is reproducible from auditable source. The fork exists **only** to
-attach our build+release workflow to upstream's source.
+Security / supply-chain, same rationale as Lichess vs. Stockfish: we don't ship a binary an upstream
+author released — we rebuild it ourselves from source we've pulled, on infrastructure we control, so
+the served `.wasm` is reproducible from auditable source. The fork exists **only** to attach our
+build+release workflow to upstream's source.
 
 ## Flow at a glance
 
@@ -42,15 +42,16 @@ analysis and other pages serves the new engine at its new hashed URL; panel show
 
 Lives in `Infinite-Chess/apeiron`, **not** in this repo — but a local clone sits adjacent to this
 repo (sibling directory `../Infinite-Chess-apeiron`), we can read and edit it directly. Triggers on
-push to the fork's `main` (i.e. after we pull upstream) or manual `workflow_dispatch`. Upstream's own
-workflows — notably its auto-release that bumps the Cargo semver on an Elo threshold — are
+push to the fork's `main` (i.e. after we pull upstream) or manual `workflow_dispatch`. Upstream's
+own workflows — notably its auto-release that bumps the Cargo semver on an Elo threshold — are
 **disabled** on the fork, so a push runs only this workflow and never mutates the crate version
 (it's authored solely upstream). Steps:
 
 1. **Checkout** + install `wasm-pack`. (Rust toolchain is the runner default, pinned by the crate's
    `rust-toolchain.toml`.)
 2. **`wasm-pack build --target web`** → emits `pkg/`: `apeiron.js` (glue), `apeiron_bg.wasm`, type
-   defs, `package.json`, and — for the rayon multithreaded build — `snippets/wasm-bindgen-rayon-<hash>/src/workerHelpers.no-bundler.js`.
+   defs, `package.json`, and — for the rayon multithreaded build —
+   `snippets/wasm-bindgen-rayon-<hash>/src/workerHelpers.no-bundler.js`.
 3. **Read version from `Cargo.toml`** → compose the release tag `v${version}+build.${run_number}`.
 4. **Zip `pkg/`** (`cd pkg && zip -r ../apeiron-wasm.zip . -x ".*"`), preserving the nested
    `snippets/` tree.
@@ -72,30 +73,33 @@ The tag `v2.0.0+build.47` encodes both, and conflating them breaks things:
 
 Consumer side: `parseEngineVersion()` in [engine-wasm.ts](/build/engine-wasm.ts) strips the leading
 `v` and everything from `+` onward → the display semver. `getVersionedEngineName()` in
-[src/shared/chess/util/engine.ts](/src/shared/chess/util/engine.ts) trims that to major.minor for the panel.
+[src/shared/chess/util/engine.ts](/src/shared/chess/util/engine.ts) trims that to major.minor for
+the panel.
 
 ## Consumer download — [build/engine-wasm.ts](/build/engine-wasm.ts)
 
 Runs inside `npm run build` via [build/index.ts](/build/index.ts): `downloadEngineWasm()` is
 **awaited**, then `copyEngineToDist()`, **both before** the esbuild client build so the engine's
-hashed URL lands in the manifest (see [BUILD.md](/docs/systems/BUILD.md)). Engine binaries are
-**not committed** — `src/client/pkg/` is gitignored; they persist on disk across builds (`npm run
-clean` is `rimraf dist` only, and never touches `pkg/`).
+hashed URL lands in the manifest (see [BUILD.md](/docs/systems/BUILD.md)). Engine binaries are **not
+committed** — `src/client/pkg/` is gitignored; they persist on disk across builds (`npm run clean`
+is `rimraf dist` only, and never touches `pkg/`).
 
 `downloadEngineWasm()` logic, in order:
 
 1. **`.local-build` opt-out** — if `pkg/.local-build` exists, skip the download entirely and set the
    version to `'dev'`. This is how a dev running their own local engine build (or a symlinked engine
-   repo) keeps it from being overwritten by a release. Create it with `touch src/client/pkg/apeiron/pkg/.local-build`.
+   repo) keeps it from being overwritten by a release. Create it with
+   `touch src/client/pkg/apeiron/pkg/.local-build`.
 2. Read the `.engine-version` stamp (the tag of the copy on disk).
-3. **Fetch the latest release** from `LATEST_RELEASE_API_URL` (`…/Infinite-Chess/apeiron/releases/latest`),
-   zod-validated. On any network/validation failure: fall back to the existing local copy if present
-   (build proceeds with the old engine), else error out.
+3. **Fetch the latest release** from `LATEST_RELEASE_API_URL`
+   (`…/Infinite-Chess/apeiron/releases/latest`), zod-validated. On any network/validation failure:
+   fall back to the existing local copy if present (build proceeds with the old engine), else error
+   out.
 4. **Up-to-date check** — if the stamped tag equals the remote tag _and_ `apeiron_bg.wasm` +
    `apeiron.js` exist, do nothing.
-5. **New version** — find the asset `apeiron-wasm.zip`, fetch it fully into memory, `unzipSync`
-   (via `fflate`) **before** touching disk (so a bad download doesn't destroy the working copy),
-   then wipe `pkg/` wholesale and write every entry at its archive-relative path (recreating the
+5. **New version** — find the asset `apeiron-wasm.zip`, fetch it fully into memory, `unzipSync` (via
+   `fflate`) **before** touching disk (so a bad download doesn't destroy the working copy), then
+   wipe `pkg/` wholesale and write every entry at its archive-relative path (recreating the
    `snippets/` tree). Finally, stamp `.engine-version` with the new tag.
 
 The wipe (rather than overwrite-in-place) matters: without it, each release's hash-named `snippets/`
@@ -120,18 +124,19 @@ Runtime consumption:
   `window.analysisPageData.engineUrl`. The engine **name+version** is SSR'd separately — nunjucks
   computes an `engineNameVersioned` global from `manifest['engineVersion']` and injects it into the
   panel; the client never handles the version.
-- [ceval.ts](/src/client/scripts/esm/views/analysis/ceval.ts) spawns the worker and posts `cmd:'init'`
-  with `engineUrl`. [apeironanalysis.worker.ts](/src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts)
-  does `import(engineUrl)` → `wasm.default()` (loads the sibling `.wasm`). If the build exports
-  `initThreadPool` it runs multithreaded **Lazy SMP** (needs the `snippets/` and a cross-origin-isolated
-  page); otherwise it degrades to single-thread.
+- [ceval.ts](/src/client/scripts/esm/views/analysis/ceval.ts) spawns the worker and posts
+  `cmd:'init'` with `engineUrl`.
+  [apeironanalysis.worker.ts](/src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts) does
+  `import(engineUrl)` → `wasm.default()` (loads the sibling `.wasm`). If the build exports
+  `initThreadPool` it runs multithreaded **Lazy SMP** (needs the `snippets/` and a
+  cross-origin-isolated page); otherwise it degrades to single-thread.
 - This list isn't exhaustive — more consumers may exist, whether or not they are added here.
 
 ## Deploy — [.github/workflows/deploy.yml](/.github/workflows/deploy.yml)
 
-Runs on the **self-hosted** prod machine. Concurrency group `deploy` with `cancel-in-progress:
-false` — one deploy at a time; a second queues rather than being dropped. Two trigger paths, same
-job, differing only by which steps run:
+Runs on the **self-hosted** prod machine. Concurrency group `deploy` with
+`cancel-in-progress: false` — one deploy at a time; a second queues rather than being dropped. Two
+trigger paths, same job, differing only by which steps run:
 
 | Step                                                                          | On push to `prod` (code deploy) | On `workflow_dispatch` (engine release / manual) |
 | ----------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------ |
@@ -159,8 +164,8 @@ auto-reconnect). Engine download/extract time never touches users.
   the fork only pulls and rebuilds.
 - **A bugfix won't change the displayed version** (patch stays 0 by design) — but `+build.N` still
   increments, so it still ships. Don't "fix" the version not moving.
-- **`snippets/` in the release** is required for multithreading; verify it's inside the zip after any
-  `build-wasm.yml` change.
+- **`snippets/` in the release** is required for multithreading; verify it's inside the zip after
+  any `build-wasm.yml` change.
 
 ## File map
 

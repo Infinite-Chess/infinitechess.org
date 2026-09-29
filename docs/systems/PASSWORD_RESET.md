@@ -1,39 +1,39 @@
 # Password Reset
 
 How a user who forgot their password gets a new one: the forgot-password request, the emailed
-single-use token, and the set-new-password page that updates the password and logs them in.
-Covers the anti-enumeration rules, token storage/expiry, the `password_reset_tokens` table, and
-session teardown.
+single-use token, and the set-new-password page that updates the password and logs them in. Covers
+the anti-enumeration rules, token storage/expiry, the `password_reset_tokens` table, and session
+teardown.
 
 ## The core idea
 
 A reset is proven by control of the account's inbox. Requesting a reset stores a single-use,
-expiring **token** (only its hash, server-side) and emails the plain token as a link. Clicking
-the link opens a page that, only after the user submits a new password, updates the password and
-**logs that browser in**. No session is created on the request side.
+expiring **token** (only its hash, server-side) and emails the plain token as a link. Clicking the
+link opens a page that, only after the user submits a new password, updates the password and **logs
+that browser in**. No session is created on the request side.
 
 Two anti-enumeration rules drive the whole design:
 
-- **`POST /api/forgot-password` always returns the same generic `200`** — unknown email,
-  real email, and blacklisted email are indistinguishable from the response. The client swaps in
-  a generic "check your email" confirmation regardless.
-- Client-side email-format validation on the forgot page is **UX only** — it never reveals
-  whether an address is registered.
+- **`POST /api/forgot-password` always returns the same generic `200`** — unknown email, real email,
+  and blacklisted email are indistinguishable from the response. The client swaps in a generic
+  "check your email" confirmation regardless.
+- Client-side email-format validation on the forgot page is **UX only** — it never reveals whether
+  an address is registered.
 
 ## The token
 
 One secret, 32 random bytes (`crypto.randomBytes(32)`) base64url-encoded:
 
-- Lives **only** in the emailed link (`/reset-password/<token>`). The DB stores **only its
-  SHA-256 hash** — a DB leak can't recover the token.
-- **SHA-256, not bcrypt**, on purpose: 256 bits of entropy can't be brute-forced regardless of
-  hash speed, and a fast deterministic hash lets us look the row up by indexed equality
-  (`hashed_token` is the PRIMARY KEY) instead of scanning + comparing. See `hashResetToken`.
+- Lives **only** in the emailed link (`/reset-password/<token>`). The DB stores **only its SHA-256
+  hash** — a DB leak can't recover the token.
+- **SHA-256, not bcrypt**, on purpose: 256 bits of entropy can't be brute-forced regardless of hash
+  speed, and a fast deterministic hash lets us look the row up by indexed equality (`hashed_token`
+  is the PRIMARY KEY) instead of scanning + comparing. See `hashResetToken`.
 - Valid for **1 hour** (`EXPIRY_MS` in
   [passwordResetTokensManager.ts](/src/server/database/passwordResetTokensManager.ts)).
-- **At most one live token per user**: issuing a new one first `DELETE`s any existing rows for
-  that `user_id`. Consuming is atomic in the reset transaction. Expiry is enforced in live
-  queries (`expires_at > ?`), not just by the sweep.
+- **At most one live token per user**: issuing a new one first `DELETE`s any existing rows for that
+  `user_id`. Consuming is atomic in the reset transaction. Expiry is enforced in live queries
+  (`expires_at > ?`), not just by the sweep.
 
 ## Routes
 
@@ -63,46 +63,48 @@ routes ([password.ts](/src/server/routes/password.ts), mounted at `/api`) the pa
    (`sendPasswordResetEmail`).
 4. **Always `res.sendStatus(200)`.** Only a DB error returns non-200 (`500`).
 
-The client ([forgotpassword.ts](/src/client/scripts/esm/views/forgotpassword.ts)) hides the form
-and shows the generic confirmation on any `2xx`; a non-OK surfaces the server's message inline
-(e.g. the 429 rate-limit message).
+The client ([forgotpassword.ts](/src/client/scripts/esm/views/forgotpassword.ts)) hides the form and
+shows the generic confirmation on any `2xx`; a non-OK surfaces the server's message inline (e.g. the
+429 rate-limit message).
 
 ### 2. Open the link — `GET /reset-password/:token`
 
-Inert. `getPageState` hashes the `:token` param and checks for a matching unexpired
-row **without consuming it**, returning `{ state: 'valid' | 'invalid' }`. `valid` → renders the
-set-new-password form; `invalid`/expired → a dead-link card linking back to `/forgot-password`.
-The route sets `Referrer-Policy: no-referrer` so the token in the URL doesn't leak via `Referer`
-to third-party resources.
+Inert. `getPageState` hashes the `:token` param and checks for a matching unexpired row **without
+consuming it**, returning `{ state: 'valid' | 'invalid' }`. `valid` → renders the set-new-password
+form; `invalid`/expired → a dead-link card linking back to `/forgot-password`. The route sets
+`Referrer-Policy: no-referrer` so the token in the URL doesn't leak via `Referer` to third-party
+resources.
 
-The GET is read-only and consumes nothing, so an email scanner pre-fetching it does no harm. There is no risk of verifying their account like on the registration's verify page. The token is only spent when the user submits a new password.
+The GET is read-only and consumes nothing, so an email scanner pre-fetching it does no harm. There
+is no risk of verifying their account like on the registration's verify page. The token is only
+spent when the user submits a new password.
 
 ### 3. Set the password — `POST /api/reset-password`
 
 `handleReset` (body `{ token, password }`):
 
-1. `verifyBodyHasResetPasswordData` — both non-empty strings; `token` ≤ 100 chars
-   (a valid token is 43 chars — rejects obviously invalid values before hashing).
+1. `verifyBodyHasResetPasswordData` — both non-empty strings; `token` ≤ 100 chars (a valid token is
+   43 chars — rejects obviously invalid values before hashing).
 2. `doPasswordFormatChecks` — server-side strength re-check (client checks are UX only).
-3. Fast pre-check (`passwordResetTokensManager.findUnexpired`) — no match → `400 { tokenInvalid: true }`.
-   **This flag tells the client to reload**, re-SSRing the expired-link card. This avoids doing
-   bcrypt work for obviously invalid/expired tokens.
+3. Fast pre-check (`passwordResetTokensManager.findUnexpired`) — no match →
+   `400 { tokenInvalid: true }`. **This flag tells the client to reload**, re-SSRing the
+   expired-link card. This avoids doing bcrypt work for obviously invalid/expired tokens.
 4. bcrypt-hash the new password.
 5. In **one transaction**: atomically consume the token (with the same expiry guard), then
-   `UPDATE members ...`, and terminates all of the user's active sessions. If the token was
-   consumed by a concurrent request between pre-check and transaction, the delete returns
-   no row and the request returns `400 { tokenInvalid: true }`.
+   `UPDATE members ...`, and terminates all of the user's active sessions. If the token was consumed
+   by a concurrent request between pre-check and transaction, the delete returns no row and the
+   request returns `400 { tokenInvalid: true }`.
 6. Mint a fresh session for **this** browser (`sessionManager.create`) — it just proved control of
    the account — and fire-and-forget `sendPasswordChangedEmail` (an out-of-band "your password
    changed" security receipt).
 7. `res.sendStatus(200)`. The session cookie is now set, so the client
-   ([resetpassword.ts](/src/client/scripts/esm/views/resetpassword.ts)) queues a toast and
-   navigates to `/`. `tokenInvalid` → reload; any other non-OK → inline error.
+   ([resetpassword.ts](/src/client/scripts/esm/views/resetpassword.ts)) queues a toast and navigates
+   to `/`. `tokenInvalid` → reload; any other non-OK → inline error.
 
 ## The `password_reset_tokens` table
 
-Schema in [databaseTables.ts](/src/server/database/databaseTables.ts); every query against it
-lives in [passwordResetTokensManager.ts](/src/server/database/passwordResetTokensManager.ts).
+Schema in [databaseTables.ts](/src/server/database/databaseTables.ts); every query against it lives
+in [passwordResetTokensManager.ts](/src/server/database/passwordResetTokensManager.ts).
 
 | Column         | Notes                                                                            |
 | -------------- | -------------------------------------------------------------------------------- |
@@ -118,12 +120,13 @@ A daily sweep ([cleanupTasks.ts](/src/server/database/cleanupTasks.ts) →
 ## Rate limits
 
 `POST /api/forgot-password` → `rateLimiters.forgotPassword`
-([rateLimiters.ts](/src/server/middleware/rateLimiters.ts)): **8 / hour**. `POST
-/api/reset-password` has **no** limiter (the 256-bit token is the gate).
+([rateLimiters.ts](/src/server/middleware/rateLimiters.ts)): **8 / hour**.
+`POST /api/reset-password` has **no** limiter (the 256-bit token is the gate).
 
 ## Local dev
 
-With no email credentials in `.env` (most devs), the server logs the password reset URL to the console instead of sending an actual email.
+With no email credentials in `.env` (most devs), the server logs the password reset URL to the
+console instead of sending an actual email.
 
 ## File map
 

@@ -2,13 +2,13 @@
 
 How to read and write ICN: the string format that stores a whole infinite chess game — metadata,
 gamerules, starting position, and move list — in one dense, still human-readable line. It is
-modelled on [PGN](https://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm), and borrows
-PGN's metadata tags, move comments and embedded command sequences.
+modelled on [PGN](https://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm), and borrows PGN's
+metadata tags, move comments and embedded command sequences.
 
-ICN is the project's universal game interchange format. It is what the `games.icn` DB column
-stores, what copy/paste of a game or position produces and consumes, what a custom-position seek
-carries, what the board editor saves, what the WASM engine is fed, and what every variant's
-starting position is written as in source.
+ICN is the project's universal game interchange format. It is what the `games.icn` DB column stores,
+what copy/paste of a game or position produces and consumes, what a custom-position seek carries,
+what the board editor saves, what the WASM engine is fed, and what every variant's starting position
+is written as in source.
 
 ## A whole game in one string
 
@@ -34,20 +34,20 @@ match, and parsing ends with `Unexpected characters remaining in the ICN after p
 
 ## Section 1 — Metadata
 
-`[Key "Value"]`, space- or newline-separated. Key is `[a-zA-Z]+`; value is 1–200 characters and
-may not contain `"`. The 200 cap is deliberate to prevent a forgotten closing quote letting the
-regex swallow the whole ICN.
+`[Key "Value"]`, space- or newline-separated. Key is `[a-zA-Z]+`; value is 1–200 characters and may
+not contain `"`. The 200 cap is deliberate to prevent a forgotten closing quote letting the regex
+swallow the whole ICN.
 
 Recognized keys, and the exact order the writer emits them in (`METADATA_ORDERING`): `Event`,
 `Site`, `GameId`, `Variant`, `Round`, `UTCDate`, `UTCTime`, `TimeControl`, `White`, `Black`,
 `WhiteID`, `BlackID`, `WhiteElo`, `BlackElo`, `WhiteRatingDiff`, `BlackRatingDiff`, `Result`,
-`Termination`. Field meanings live on the `MetaData` interface in [metadatautil.ts](/src/shared/chess/util/metadatautil.ts).
+`Termination`. Field meanings live on the `MetaData` interface in
+[metadatautil.ts](/src/shared/chess/util/metadatautil.ts).
 
-**`Variant`, `UTCDate` and `UTCTime` are load-bearing** — the _source-variant
-tags_. When an ICN omits the position section, they are the only way to reconstruct it: the
-variant code names the position, the date/time picks which historical revision of it applies. All
-three are **required** when writing with `skipPosition: true`, `LongToShort_Format` otherwise throws
-without them.
+**`Variant`, `UTCDate` and `UTCTime` are load-bearing** — the _source-variant tags_. When an ICN
+omits the position section, they are the only way to reconstruct it: the variant code names the
+position, the date/time picks which historical revision of it applies. All three are **required**
+when writing with `skipPosition: true`, `LongToShort_Format` otherwise throws without them.
 
 Writing an ICN with a metadata key absent from `METADATA_ORDERING` throws. Parsing one on the way in
 keeps it.
@@ -79,11 +79,12 @@ Colon-joined player codes, one full turn cycle: `w:b`. **`w` is shorthand for `w
 | Code   | `w`     | `b`     | `r`   | `bu`   | `y`      | `g`     |
 
 The turn order is what defines _which players are in the game_, so it also drives how many entries
-the promotion and win-condition fields must carry. Players may move more than once in a row (`w:w:b:b`).
+the promotion and win-condition fields must carry. Players may move more than once in a row
+(`w:w:b:b`).
 
-The first player listed is the one to move — from the position this ICN carries, _before_ its
-move list, not after. Flattening a game into a position rotates the order one step per ply, so a
-mid-game snapshot opens with whoever moves next.
+The first player listed is the one to move — from the position this ICN carries, _before_ its move
+list, not after. Flattening a game into a position rotates the order one step per ply, so a mid-game
+snapshot opens with whoever moves next.
 
 ### En passant square
 
@@ -92,8 +93,8 @@ parse from the last player in the turn order — the one who just moved (white �
 square above; black ⇒ one below).
 
 **Lossy case:** the writer emits this field only when the square and the pawn are exactly 1 rank
-apart. In 4D variants they can be further, and the field is skipped with a console warning — the
-en passant right is lost on round trip.
+apart. In 4D variants they can be further, and the field is skipped with a console warning — the en
+passant right is lost on round trip.
 
 ### Move rule
 
@@ -103,8 +104,8 @@ other throws.
 
 ### Full move counter
 
-The move number the _first_ move in the move list belongs to. `1` for a fresh game; higher when
-the ICN starts mid-game.
+The move number the _first_ move in the move list belongs to. `1` for a fresh game; higher when the
+ICN starts mid-game.
 
 ### Promotion
 
@@ -118,7 +119,8 @@ order, followed by an optional shared `;`-list of raw piece codes.
 ```
 
 The piece list is written **only when it differs from the default** `q,r,b,n`. Its codes are the
-colorless [raw piece codes](#piece-abbreviations-used-by-the-position-promotion-and-move-fields) (lowercase).
+colorless [raw piece codes](#piece-abbreviations-used-by-the-position-promotion-and-move-fields)
+(lowercase).
 
 > **Legacy format.** Older ICNs repeated the piece list per player — `(8;q,r,b,n|1;q,r,b,n)`. The
 > parser still accepts it by taking the last list it sees. Current output writes the shared list
@@ -144,9 +146,8 @@ checkmate,koth                           all players, two conditions each
 ```
 
 Valid values (`GAMERULE_WIN_CONDITIONS` in [winconutil.ts](/src/shared/chess/util/winconutil.ts)):
-`checkmate`, `royalcapture`, `allroyalscaptured`, `allpiecescaptured`, `koth`. Every other
-condition in that file is an outcome, not a rule, and surfaces in the `Termination` metadata
-instead.
+`checkmate`, `royalcapture`, `allroyalscaptured`, `allpiecescaptured`, `koth`. Every other condition
+in that file is an outcome, not a rule, and surfaces in the `Termination` metadata instead.
 
 `checkmate` for everyone is the default and is **omitted entirely**.
 
@@ -215,8 +216,8 @@ Convert with `icnposition.getAbbrFromType(type)` / `icnposition.getTypeFromAbbr(
 
 ## Section 3 — Moves
 
-A move ranges from bare-minimum to fully dressed. Everything past the coordinates is decoration
-that the parser reads and discards:
+A move ranges from bare-minimum to fully dressed. Everything past the coordinates is decoration that
+the parser reads and discards:
 
 ```
 1,7>2,8=Q                          compact (canonical)
@@ -238,8 +239,8 @@ live-games moves column all hold.
 | Annotation glyph   | `!`, `?`, `!!`, `?!`, … | no       | 1–2 chars of `[!?]`. Cosmetic, discarded                          |
 | Comment            | `{...}`                 | no       | May not contain `}`                                               |
 
-A single optional space is permitted between all parts except the piece abbreviation and
-the start coords.
+A single optional space is permitted between all parts except the piece abbreviation and the start
+coords.
 
 **Why `=` is required:** promotion to a colored piece is written `=3Q`. Without the `=`, `2,8=3Q`
 and an end coordinate of `2,83` would be indistinguishable.
@@ -250,8 +251,8 @@ long move, en passant the pawn's diagonal one. Which special move it was is re-d
 ### Delimiters and move numbers
 
 Moves are separated by `|` (or `|` with spaces). When move numbers are enabled, each turn cycle
-instead opens with `N. ` and the moves within it stay `|`-separated — and with line breaks on,
-each cycle is its own line:
+instead opens with `N. ` and the moves within it stay `|`-separated — and with line breaks on, each
+cycle is its own line:
 
 ```
 1. P4,2 > 4,4 | p4,7 > 4,6
@@ -273,15 +274,16 @@ sequences**, `[%command value]`, in any position within it — handled by
 ```
 
 **`clk` is the only command we recognize.** Every `[%...]` sequence is stripped from the comment;
-unknown ones are then silently dropped — external engines/tools may write their own commands, an
-ICN carrying them is still valid. What is left is trimmed, with its runs of whitespace collapsed.
+unknown ones are then silently dropped — external engines/tools may write their own commands, an ICN
+carrying them is still valid. What is left is trimmed, with its runs of whitespace collapsed.
 
 `clk`'s value is `H:MM:SS.D` — the time the mover had left _after_ moving, truncated down to the
 nearest 100 ms so a replay shows exactly the digits the player saw. Any other shape throws.
 
 ## Writing an ICN
 
-`LongToShort_Format(longformat, options)` — see [icnconverter.ts](/src/shared/chess/logic/icn/icnconverter.ts).
+`LongToShort_Format(longformat, options)` — see
+[icnconverter.ts](/src/shared/chess/logic/icn/icnconverter.ts).
 
 | Option           | Effect                                                                                       |
 | ---------------- | -------------------------------------------------------------------------------------------- |
@@ -299,8 +301,8 @@ preset variants, and live-game persistence writes moves alone with clock comment
 
 Feeding it a gamefile takes one step first —
 `gamecompressor.compressGamefile(gamefile, copySinglePosition?, presetAnnotes?)`
-([gamecompressor.ts](/src/client/scripts/esm/chess/gamecompressor.ts)) snapshots a gamefile
-into the `LongFormatIn` shape the converter wants.
+([gamecompressor.ts](/src/client/scripts/esm/chess/gamecompressor.ts)) snapshots a gamefile into the
+`LongFormatIn` shape the converter wants.
 
 ## Reading an ICN
 
@@ -350,8 +352,8 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 - **Moves are tested before the position, then again after.** A move opens exactly like a piece
   entry — `P1,7x2,8` starts with `P1,7` — so testing the position first would swallow that much of a
   moves-only ICN and then throw on the `x`. Consequently a position must always precede its moves.
-- **The position is parsed piece-by-piece, not in one regex match.** Positions run to megabytes;
-  one giant match would blow the regex engine. It is intentionally not a single pattern.
+- **The position is parsed piece-by-piece, not in one regex match.** Positions run to megabytes; one
+  giant match would blow the regex engine. It is intentionally not a single pattern.
 - **The move regex is possessive throughout** (via the `possessive()` lookahead/backreference
   trick). ICN is parsed from untrusted input on the server, and its stack of optional move parts is
   where catastrophic backtracking would bite. Keep new move patterns possessive.

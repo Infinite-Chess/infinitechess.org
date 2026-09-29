@@ -1,8 +1,8 @@
 # Build System
 
 How `src/` becomes the runnable `dist/`: esbuild bundling, entry points, the asset manifest,
-content-hash caching, and the cpx asset copy. Covers adding new pages/assets and debugging
-why an asset 404s or a template can't resolve its hashed filename.
+content-hash caching, and the cpx asset copy. Covers adding new pages/assets and debugging why an
+asset 404s or a template can't resolve its hashed filename.
 
 ## Pipeline at a glance
 
@@ -11,7 +11,8 @@ why an asset 404s or a template can't resolve its hashed filename.
 
 [build/index.ts](/build/index.ts) orchestrates, in order:
 
-1. `downloadEngineWasm() + copyEngineToDist()` — **awaited** (client bundle has a `.wasm` dependency on it).
+1. `downloadEngineWasm() + copyEngineToDist()` — **awaited** (client bundle has a `.wasm` dependency
+   on it).
 2. `Promise.all([buildClient, buildServer])`.
 
 Two modes, chosen by the `--dev` flag on `build/index.ts`:
@@ -24,14 +25,15 @@ Two modes, chosen by the `--dev` flag on `build/index.ts`:
 
 esbuild **transpiles only — it does not type-check.** Type safety comes from `tsc -b`
 (`npm run type-check`), driven by project references in [tsconfig.json](/tsconfig.json) →
-[src/shared/tsconfig.json](/src/shared/tsconfig.json), [src/client/tsconfig.json](/src/client/tsconfig.json)
-and [src/server/tsconfig.json](/src/server/tsconfig.json). Shared is type-checked once; client and server
-reference it instead of re-including it, so its errors are never reported twice. Client includes `client/`;
-server includes `server/ + tests/ + scripts/ + build/`; both reach `shared/ + types/` through the reference.
-Every project is `composite`, so an import reaching outside a project's `include` (or its references') is an
-error — this split is what enforces the client/server/shared import rules. Shared is the only project that
-emits — declaration files alone, into `dist/tsc/shared/` (a referenced project may not be `noEmit`); client
-and server are `noEmit`.
+[src/shared/tsconfig.json](/src/shared/tsconfig.json),
+[src/client/tsconfig.json](/src/client/tsconfig.json) and
+[src/server/tsconfig.json](/src/server/tsconfig.json). Shared is type-checked once; client and
+server reference it instead of re-including it, so its errors are never reported twice. Client
+includes `client/`; server includes `server/ + tests/ + scripts/ + build/`; both reach
+`shared/ + types/` through the reference. Every project is `composite`, so an import reaching
+outside a project's `include` (or its references') is an error — this split is what enforces the
+client/server/shared import rules. Shared is the only project that emits — declaration files alone,
+into `dist/tsc/shared/` (a referenced project may not be `noEmit`); client and server are `noEmit`.
 
 ## Client build — [build/client.ts](/build/client.ts)
 
@@ -44,82 +46,81 @@ Bundled with **esbuild**. Two esbuild contexts:
 
 ### ⚠️ Entry points are a manual list
 
-`ESMEntryPoints` (and `CJSEntryPoints`) in [build/client.ts](/build/client.ts) are
-hand-maintained arrays. **An ES module or CSS file is only built if it is an entry point or is
-imported (transitively) by one.** When you add a page, you must add BOTH its stylesheet
+`ESMEntryPoints` (and `CJSEntryPoints`) in [build/client.ts](/build/client.ts) are hand-maintained
+arrays. **An ES module or CSS file is only built if it is an entry point or is imported
+(transitively) by one.** When you add a page, you must add BOTH its stylesheet
 (`src/client/css/foo.css`) and its client script (`src/client/scripts/esm/views/foo.ts`) to
-`ESMEntryPoints`, or they silently won't be built and the template's manifest lookup will fail.
-CSS files are listed as entry points directly (esbuild treats `.css` as bundleable).
+`ESMEntryPoints`, or they silently won't be built and the template's manifest lookup will fail. CSS
+files are listed as entry points directly (esbuild treats `.css` as bundleable).
 
 Output is **content-hashed** (`[name]-[hash]`) so URLs are cache-bustable. Two options worth
-knowing: `external: ['/fonts/*']` (font URLs in CSS are absolute web paths, not disk files —
-esbuild would otherwise fail to resolve them) and `.glsl` files load as text with comments
-stripped (relevant when adding shaders).
+knowing: `external: ['/fonts/*']` (font URLs in CSS are absolute web paths, not disk files — esbuild
+would otherwise fail to resolve them) and `.glsl` files load as text with comments stripped
+(relevant when adding shaders).
 
 ## Server build — [build/server.ts](/build/server.ts)
 
-esbuild with `bundle: false` — every `.ts`/`.js` under `src/server/**` and `src/shared/**`
-(glob, excluding `*.test.*`) is **transpiled 1:1** into `dist/` (ESM, sourcemaps on). No bundling,
-no minification. Output mirrors the source tree.
+esbuild with `bundle: false` — every `.ts`/`.js` under `src/server/**` and `src/shared/**` (glob,
+excluding `*.test.*`) is **transpiled 1:1** into `dist/` (ESM, sourcemaps on). No bundling, no
+minification. Output mirrors the source tree.
 
 ## Non-bundled assets — `cpx`
 
 Templates and binary/static assets are **not** processed by esbuild. They're copied verbatim by
-`cpx` (`prod:assets` / `dev:assets --watch`): `png,jpg,webp,avif,svg,ico,gif,mp3,wav,opus,glsl,
-md,woff2,woff,njk`. **`.njk` templates are copied, not compiled** → `dist/server/views/`. So a
-new route referencing a new `.njk` works as soon as cpx copies it; in dev, the `--watch` cpx
-propagates edits and Nunjucks re-reads them on every render (`noCache` in non-prod).
+`cpx` (`prod:assets` / `dev:assets --watch`):
+`png,jpg,webp,avif,svg,ico,gif,mp3,wav,opus,glsl, md,woff2,woff,njk`. **`.njk` templates are copied,
+not compiled** → `dist/server/views/`. So a new route referencing a new `.njk` works as soon as cpx
+copies it; in dev, the `--watch` cpx propagates edits and Nunjucks re-reads them on every render
+(`noCache` in non-prod).
 
 ## The manifest — the link between build output and templates
 
 Because filenames are content-hashed, templates can't hardcode them. The flow:
 
-1. The ESM build emits a `metafile`; `ManifestPlugin` calls `writeManifest()` on every
-   (re)build's `onEnd`. (CJS has no manifest)
-2. `dist/manifest.json` maps **logical name → hashed web path**, e.g.
-   `"scripts/esm/views/login.ts"` → `"/scripts/esm/views/login-ABCD1234.js"` and
-   `"css/login.css"` → `"/css/login-XXXX.css"`. (Keys strip `src/client/`; only true entry
-   points are included — shared chunks are skipped.) It also carries the engine package URL
-   and build version under `engine` and `engineVersion`.
+1. The ESM build emits a `metafile`; `ManifestPlugin` calls `writeManifest()` on every (re)build's
+   `onEnd`. (CJS has no manifest)
+2. `dist/manifest.json` maps **logical name → hashed web path**, e.g. `"scripts/esm/views/login.ts"`
+   → `"/scripts/esm/views/login-ABCD1234.js"` and `"css/login.css"` → `"/css/login-XXXX.css"`. (Keys
+   strip `src/client/`; only true entry points are included — shared chunks are skipped.) It also
+   carries the engine package URL and build version under `engine` and `engineVersion`.
 3. [src/server/config/manifest.ts](/src/server/config/manifest.ts) loads and caches it;
-   [src/server/config/nunjucks.ts](/src/server/config/nunjucks.ts) exposes it as the Nunjucks
-   global `manifest`. Templates reference assets via `{{ manifest['css/login.css'] }}` /
+   [src/server/config/nunjucks.ts](/src/server/config/nunjucks.ts) exposes it as the Nunjucks global
+   `manifest`. Templates reference assets via `{{ manifest['css/login.css'] }}` /
    `{{ manifest['scripts/esm/views/login.ts'] }}`. **The lookup key is the logical name, not the
    hashed one.**
-4. Dev only: nunjucks `fs.watch`es the manifest and refreshes the global on change, so HTML
-   always points at the current hash after a rebuild.
+4. Dev only: nunjucks `fs.watch`es the manifest and refreshes the global on change, so HTML always
+   points at the current hash after a rebuild.
 
 ## Caching
 
-Everything in `dist/client/` is served by
-[staticAssets.ts](/src/server/middleware/staticAssets.ts) with a 1-year cache. The strategy
-splits by how each asset is invalidated:
+Everything in `dist/client/` is served by [staticAssets.ts](/src/server/middleware/staticAssets.ts)
+with a 1-year cache. The strategy splits by how each asset is invalidated:
 
 - **`.js` / `.css`** → `Cache-Control: immutable`. Safe to cache forever because the filename is
-  content-hashed over the built output (`login-ABCD1234.js`): any change to that output yields a
-  new hash → a new URL, so the old cached copy is never re-requested (Formatting and
-  comment-only source edits compile to identical output). Templates resolve the current hash via the
-  manifest, so the right URL ships automatically — nothing manual.
-- **Everything else** (images, svg, audio, fonts) → cached 1 year but **not** immutable, since
-  these filenames are stable. To bust them after editing the file, manually bump `?v=N` on the
-  URL in the template.
+  content-hashed over the built output (`login-ABCD1234.js`): any change to that output yields a new
+  hash → a new URL, so the old cached copy is never re-requested (Formatting and comment-only source
+  edits compile to identical output). Templates resolve the current hash via the manifest, so the
+  right URL ships automatically — nothing manual.
+- **Everything else** (images, svg, audio, fonts) → cached 1 year but **not** immutable, since these
+  filenames are stable. To bust them after editing the file, manually bump `?v=N` on the URL in the
+  template.
 
 ## Other build inputs
 
-- **`generate:types`** (runs before every build/dev): `tsx` scripts generate TypeScript types
-  from the translation TOMLs. See [TRANSLATIONS.md](/docs/systems/TRANSLATIONS.md).
-- **[build/engine-wasm.ts](/build/engine-wasm.ts)**: downloads the latest Apeiron WASM
-  release from GitHub into `src/client/pkg/apeiron/pkg/` (version-stamped). Network-failure
-  tolerant — falls back to the existing local copy.
+- **`generate:types`** (runs before every build/dev): `tsx` scripts generate TypeScript types from
+  the translation TOMLs. See [TRANSLATIONS.md](/docs/systems/TRANSLATIONS.md).
+- **[build/engine-wasm.ts](/build/engine-wasm.ts)**: downloads the latest Apeiron WASM release from
+  GitHub into `src/client/pkg/apeiron/pkg/` (version-stamped). Network-failure tolerant — falls back
+  to the existing local copy.
 
 ## `npm run dev`
 
-`clean` then `concurrently` runs four watchers: `dev:build` (esbuild `--dev` watch),
-`dev:tsc` (`tsc -b --watch --noEmit`, type errors only — separate from esbuild), `dev:assets`
-(cpx `--watch`), and `dev:server` (`wait-on dist/server/server.js dist/manifest.json` then
-`nodemon`). It waits on **both** files because the client and server are independent parallel
-builds: `server.js` alone can appear before the manifest, and the server hard-throws at startup
-if the manifest is missing (see [nunjucks.ts](/src/server/config/nunjucks.ts)).
+`clean` then `concurrently` runs four watchers: `dev:build` (esbuild `--dev` watch), `dev:tsc`
+(`tsc -b --watch --noEmit`, type errors only — separate from esbuild), `dev:assets` (cpx `--watch`),
+and `dev:server` (`wait-on dist/server/server.js dist/manifest.json` then `nodemon`). It waits on
+**both** files because the client and server are independent parallel builds: `server.js` alone can
+appear before the manifest, and the server hard-throws at startup if the manifest is missing (see
+[nunjucks.ts](/src/server/config/nunjucks.ts)).
 
 ## Adding a new page — checklist
 

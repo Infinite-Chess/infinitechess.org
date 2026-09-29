@@ -1,10 +1,16 @@
 # Copying Infinite Chess
 
-Any file in this project that does not state otherwise and is not listed as an exception below is part of Infinite Chess and copyright © 2023-2026 Naviary (InfiniteChess.org).
+Any file in this project that does not state otherwise and is not listed as an exception below is
+part of Infinite Chess and copyright © 2023-2026 Naviary (InfiniteChess.org).
 
-Infinite Chess is free software; you can redistribute and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version. Any works derived from this software must also be released under the same license.
+Infinite Chess is free software; you can redistribute and/or modify it under the terms of the GNU
+Affero General Public License as published by the Free Software Foundation; either version 3 of the
+License, or (at your option) any later version. Any works derived from this software must also be
+released under the same license.
 
-Infinite Chess is distributed WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.en.html) for more details.
+Infinite Chess is distributed WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+[GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.en.html) for more details.
 
 See [LICENSE](../LICENSE) for a copy of the GNU Affero General Public License.
 

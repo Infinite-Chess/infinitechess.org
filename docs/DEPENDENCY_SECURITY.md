@@ -1,13 +1,13 @@
 # Dependency Security — Accepted Advisories Register
 
-`npm audit` findings we **knowingly leave unpatched**, with the reason and the exact
-condition to revisit. Plain `npm audit` has no allowlist, so these recur on every
-audit — **check here first before "fixing" them.** Expected audit baseline = exactly
-the rows below; anything beyond them is new.
+`npm audit` findings we **knowingly leave unpatched**, with the reason and the exact condition to
+revisit. Plain `npm audit` has no allowlist, so these recur on every audit — **check here first
+before "fixing" them.** Expected audit baseline = exactly the rows below; anything beyond them is
+new.
 
-**Prod constraint driving these:** the build box (2014 Intel iMac, **macOS Big Sur /
-11**, runs `npm run build` on deploy) can't upgrade past **Node 22 / Big Sur**. Never
-adopt a dep requiring Node > 22 or macOS > 11.
+**Prod constraint driving these:** the build box (2014 Intel iMac, **macOS Big Sur / 11**, runs
+`npm run build` on deploy) can't upgrade past **Node 22 / Big Sur**. Never adopt a dep requiring
+Node > 22 or macOS > 11.
 
 ## Accepted advisories
 
