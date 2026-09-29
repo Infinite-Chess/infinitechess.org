@@ -48,16 +48,9 @@ jobs:
           node-version: 22
           cache: 'npm'
 
-      # Required by CLAUDE_CODE_SUBPROCESS_ENV_SCRUB below
-      - name: Install bubblewrap
-        run: sudo apt-get install -y bubblewrap
-
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
-        env:
-          # Hides secrets from the commands Claude runs
-          CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: 1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
