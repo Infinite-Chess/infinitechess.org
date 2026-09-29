@@ -358,28 +358,6 @@ function initIcnValidation(): void {
 		config.onCommit?.();
 	});
 	element_icnInput.addEventListener('focus', () => clearError(element_icnInputWrap));
-	// A paste too large to draw is held instead. The field can't be edited from there, so blurring
-	// commits it at once, handing focus to the held ICN so a further paste replaces it.
-	element_icnInput.addEventListener('paste', (e) => {
-		const pasted = e.clipboardData?.getData('text/plain') ?? '';
-		const { value, selectionStart, selectionEnd } = element_icnInput;
-		const result = value.slice(0, selectionStart) + pasted + value.slice(selectionEnd);
-		if (result.length <= MAX_FIELD_ICN_CHARS) return; // The field takes it, and its input event judges it
-		e.preventDefault();
-		setIcnText(result);
-		config.onEdit?.();
-		element_icnInput.blur();
-		element_icnHeld.focus();
-	});
-	element_icnHeld.addEventListener('paste', (e) => {
-		// Handled here — stops the page routing the same paste into the field too (analysis).
-		e.stopPropagation();
-		e.preventDefault();
-		const icn = e.clipboardData?.getData('text/plain').trim();
-		if (icn) void applyIcn(icn);
-	});
-	element_icnHeldCopy.addEventListener('click', () => void copyHeldIcn());
-	element_icnHeldClear.addEventListener('click', clearHeldIcn);
 	element_icnInput.addEventListener('input', (e) => {
 		// A paste is a finished code, not a keystroke: judge it in full and reveal its errors now.
 		// A keystroke judges only where a host reads validity at all — one that doesn't (the
@@ -396,6 +374,30 @@ function initIcnValidation(): void {
 		forceCommit = true; // The enter key overrides the "already loaded" check
 		element_icnInput.blur();
 	});
+	// A paste too large to draw is held instead. The field can't be edited from there, so blurring
+	// commits it at once, handing focus to the held ICN so a further paste replaces it.
+	element_icnInput.addEventListener('paste', (e) => {
+		const pasted = e.clipboardData?.getData('text/plain') ?? '';
+		const { value, selectionStart, selectionEnd } = element_icnInput;
+		const result = value.slice(0, selectionStart) + pasted + value.slice(selectionEnd);
+		if (result.length <= MAX_FIELD_ICN_CHARS) return; // The field takes it, and its input event judges it
+		e.preventDefault();
+		setIcnText(result);
+		config.onEdit?.();
+		element_icnInput.blur();
+		element_icnHeld.focus();
+	});
+
+	// The held ICN's own controls.
+	element_icnHeld.addEventListener('paste', (e) => {
+		// Handled here — stops the page routing the same paste into the field too (analysis).
+		e.stopPropagation();
+		e.preventDefault();
+		const icn = e.clipboardData?.getData('text/plain').trim();
+		if (icn) void applyIcn(icn);
+	});
+	element_icnHeldCopy.addEventListener('click', () => void copyHeldIcn());
+	element_icnHeldClear.addEventListener('click', clearHeldIcn);
 }
 
 // Dropdown navigation ---------------------------------------------------------
