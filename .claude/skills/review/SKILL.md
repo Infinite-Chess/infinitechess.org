@@ -107,6 +107,9 @@ ranked by correctness then simplicity, honest trade-offs, your pick. Wait for th
 carrying on — never bank decisions up for the end, where they arrive buried. Once the user commits
 to an option, that is the single direction the finding takes.
 
+The exception is when your reply ends the session, as in an `@claude` run. There is no one to ask,
+so make each call yourself, carry it through, and name it atop the reply.
+
 ## 6. Act and report
 
 **Working tree or commits.** Fix everything with one clear, correct answer without asking:
@@ -118,8 +121,9 @@ review. Re-run the checks until they pass. Report briefly:
 - What you suspect but couldn't prove, and what would prove it.
 - Nothing about what you checked and found good.
 
-**PR.** Change nothing in the code. Write the full review to a markdown file in the project root,
-standing alone for the PR author — no meta-commentary about the review process:
+**PR.** Change nothing in the code. Write the full review to a markdown file in the project root and
+give only a brief summary in chat — or, if your reply ends the session, make the reply the review.
+It stands alone for the PR author, with no meta-commentary about the review process:
 
 - Ordered by severity.
 - One concrete directive per finding — never a menu of options.
@@ -127,5 +131,3 @@ standing alone for the PR author — no meta-commentary about the review process
 - Each failure stated concretely: what input or state, and what goes wrong.
 - Confirmed separated from suspected; for each suspicion, what would prove it.
 - Nothing about what was found good.
-
-In chat, give only a brief summary.
