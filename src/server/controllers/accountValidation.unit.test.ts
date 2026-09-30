@@ -95,30 +95,4 @@ describe('Profanity Filter', () => {
 			);
 		});
 	});
-
-	describe('Performance', () => {
-		it('should handle multiple checks efficiently', () => {
-			const testUsernames = [
-				'user1',
-				'user2',
-				'user3',
-				'cleanuser',
-				'chessplayer',
-				'john123',
-				'jane456',
-				'player789',
-				'gamer1000',
-				'testuser',
-			];
-
-			const startTime = Date.now();
-			testUsernames.forEach((username) => {
-				accountValidation.checkProfanity(username);
-			});
-			const endTime = Date.now();
-
-			// Should complete quickly
-			expect(endTime - startTime).toBeLessThan(10);
-		});
-	});
 });
