@@ -16,8 +16,8 @@ Never fabricate findings to have something to report. If the code is genuinely g
 
 ## 1. Pin down the target
 
-The user names one. If they don't, it's the working tree. Collect the diff **and** every scrap of
-intent behind it:
+The user names one. If they don't, it's either the working tree, or the PR if it's an `@claude` run.
+Collect the diff **and** every scrap of intent behind it:
 
 | Target           | Diff                                                                                                | Intent                                                                                     |
 | ---------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
@@ -107,8 +107,8 @@ ranked by correctness then simplicity, honest trade-offs, your pick. Wait for th
 carrying on — never bank decisions up for the end, where they arrive buried. Once the user commits
 to an option, that is the single direction the finding takes.
 
-The exception is when your reply ends the session, as in an `@claude` run. There is no one to ask,
-so make each call yourself, carry it through, and name it atop the reply.
+The exception is when your reply ends the session, as in an `@claude` run. Use your best judgement
+to make the call, carry it through.
 
 ## 6. Act and report
 
