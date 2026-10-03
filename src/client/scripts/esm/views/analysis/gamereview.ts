@@ -188,7 +188,7 @@ const CLASSIFICATION_DISPLAY: Record<ClassificationKey, { label: string; symbol:
 const LAPSE_KEYS = ['inaccuracy', 'mistake', 'blunder'] as const satisfies readonly ClassificationKey[]; // prettier-ignore
 export type LapseKey = (typeof LAPSE_KEYS)[number];
 
-/** Whether a classification is a lapse: glyphed in the move list, clickable in the stats, dotted on the graph. */
+/** Whether a classification is a lapse. */
 function isLapseKey(key: string): key is LapseKey {
 	return (LAPSE_KEYS as readonly string[]).includes(key);
 }

@@ -68,7 +68,8 @@ function init(): void {
 	});
 	gamereview.onClassified((review) => {
 		updateStats();
-		if (review.classification && gamereview.isLapseKey(review.classification)) addLapseVariation(review); // prettier-ignore
+		if (review.classification && gamereview.isLapseKey(review.classification))
+			addLapseVariation(review);
 		if (isGraphVisible()) drawGraph();
 	});
 	gamereview.onFinished(onReviewFinished);
