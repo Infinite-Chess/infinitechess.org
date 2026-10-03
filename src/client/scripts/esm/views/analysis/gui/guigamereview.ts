@@ -203,10 +203,10 @@ function addBlunderVariation(review: MoveReview): void {
 
 function updateProgress(): void {
 	if (element_Progress.classList.contains('hidden')) return;
-	const { evaluated, total, depth } = gamereview.getSummary();
+	const { evaluated, total } = gamereview.getSummary();
 	const pct = total > 0 ? (evaluated / total) * 100 : 0;
 	element_ProgressFill.style.width = `${pct}%`;
-	element_ProgressText.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total} · depth ${depth}`;
+	element_ProgressText.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total}`;
 }
 
 function onReviewFinished(outcome: ReviewOutcome): void {

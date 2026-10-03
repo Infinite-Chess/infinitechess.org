@@ -32,12 +32,12 @@ export type AnalysisCommand =
 	| { cmd: 'go'; opts: GoOptions }
 	/** One-shot legal-move enumeration, for the debug move overlay. */
 	| { cmd: 'legalmoves'; requestId: number; icn: string }
-	/** One-shot position evaluation to a fixed depth, for the game review. */
+	/** One-shot position evaluation within a node budget, for the game review. */
 	| {
 			cmd: 'evaluate';
 			requestId: number;
 			icn: string;
-			maxDepth: number;
+			maxNodes: number;
 			/** Side to move, needed to case a forced move's promotion abbreviation. */
 			mover: Player;
 			newChunk?: true;

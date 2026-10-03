@@ -99,8 +99,6 @@ interface ReviewSummary {
 	/** Positions evaluated so far / total. */
 	evaluated: number;
 	total: number;
-	/** The per-position search depth this review runs at. */
-	depth: number;
 }
 
 /**
@@ -128,7 +126,7 @@ interface ReviewListeners {
 interface CachedGameReview {
 	schemaVersion: number;
 	engineAssets: EngineAssets;
-	depth: number;
+	nodes: number;
 	results: EvaluateResult[];
 }
 
@@ -214,10 +212,11 @@ const MAX_POSITIONS_PER_CHUNK = 5;
 /** Chunk size floor, keeping each warmup amortized. The trailing chunk may still be shorter. */
 const MIN_POSITIONS_PER_CHUNK = 2;
 
-/** Depth of a review whose chunks all run in one parallel round. */
-const MAX_REVIEW_DEPTH = 19;
-/** Depth floor, however many rounds a review takes. */
-const MIN_REVIEW_DEPTH = 13;
+/** Nodes a whole review shares out across its positions, taking about 30s on 4 workers. */
+const REVIEW_TOTAL_NODES = 20_000_000;
+/** Node budget range per position: games past 100 plies get the floor, under 50 plies the ceiling. */
+const MIN_POSITION_NODES = 200_000;
+const MAX_POSITION_NODES = 400_000;
 /** Transposition-table size handed to each review worker. */
 const REVIEW_HASH_MB = 16;
 /**
@@ -236,7 +235,7 @@ const REVIEW_CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
 const CachedGameReviewSchema = z.strictObject({
 	schemaVersion: z.literal(REVIEW_CACHE_SCHEMA_VERSION),
 	engineAssets: z.strictObject({ workerUrl: z.string(), engineUrl: z.string() }),
-	depth: z.int(),
+	nodes: z.int(),
 	results: z.array(EvaluateResultSchema),
 });
 
@@ -261,8 +260,6 @@ let safeStartByIndex: number[] = [];
 let longformIn: LongFormatIn | undefined;
 /** Turn order captured at review start, for mover resolution. */
 let turnOrder: Player[] = [];
-/** Search depth for this review. */
-let reviewDepth = 0;
 let division: ReviewDivision = {};
 
 /** Per-position engine results, indexed 0 (start position) … N (final position). */
@@ -347,17 +344,15 @@ function gameAccuracy(moves: WeightedAccuracy[]): number {
 	return (moves.length / harmonicSum + weightedSum / weightSum) / 2;
 }
 
-// Depth heuristic -------------------------------------------------------------
+// Node budget -----------------------------------------------------------------
 
-/**
- * Per-position search depth. Each doubling of the chunk-rounds a worker must run serially
- * costs one ply, since a ply roughly doubles a search — so total review time stays bounded
- * regardless of game length or core count.
- */
-function pickReviewDepth(totalChunks: number, workerCount: number): number {
-	const rounds = Math.ceil(totalChunks / workerCount); // >= 1: pickWorkerCount caps workers at chunks.
-	return Math.max(MIN_REVIEW_DEPTH, MAX_REVIEW_DEPTH - Math.ceil(Math.log2(rounds)));
+/** Nodes searched per position, like lichess's fishnet, but more for shorter games. */
+function getPositionNodes(): number {
+	const totalPositions = mainlineNodes.length + 1;
+	return math.clamp(Math.round(REVIEW_TOTAL_NODES / totalPositions), MIN_POSITION_NODES, MAX_POSITION_NODES); // prettier-ignore
 }
+
+// Chunking --------------------------------------------------------------------
 
 /**
  * Fishnet-style chunks: positions run from the game end toward the start. Each chunk
@@ -436,7 +431,6 @@ function resetState(): void {
 	safeStartByIndex = [];
 	longformIn = undefined;
 	turnOrder = [];
-	reviewDepth = 0;
 	division = {};
 	results = [];
 	effectiveWhiteCp = [];
@@ -470,7 +464,6 @@ function start(): void {
 	chunkQueue = buildReverseChunks(totalPositions, threads);
 	// One worker per thread, never more than there are chunks to hand out.
 	const workerCount = math.clamp(threads, 1, chunkQueue.length);
-	reviewDepth = pickReviewDepth(chunkQueue.length, workerCount);
 
 	results = new Array(totalPositions).fill(undefined);
 	effectiveWhiteCp = new Array(totalPositions).fill(undefined);
@@ -503,7 +496,6 @@ function restoreCachedReview(): boolean {
 		return false;
 	}
 
-	reviewDepth = cached.depth;
 	results = cached.results;
 	evaluatedCount = results.length;
 	for (let index = 0; index < results.length; index++) {
@@ -519,7 +511,7 @@ function restoreCachedReview(): boolean {
 
 /**
  * Validates a persisted review and confirms it's compatible with the current engine —
- * same engine/worker URLs, deep enough, and one result per position of the current
+ * same engine/worker URLs, a big enough node budget, and one result per position of the current
  * mainline. Returns undefined when unusable.
  */
 function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
@@ -535,7 +527,7 @@ function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 	if (
 		cached.engineAssets.engineUrl !== window.analysisPageData.engineAssets.engineUrl ||
 		cached.engineAssets.workerUrl !== window.analysisPageData.engineAssets.workerUrl ||
-		cached.depth < reviewDepth ||
+		cached.nodes < getPositionNodes() ||
 		// Load-bearing despite the game id key implying it: a mismatch desyncs `results` from
 		// the other per-position arrays, which every consumer indexes as parallel.
 		cached.results.length !== mainlineNodes.length + 1
@@ -553,7 +545,7 @@ function persistCompletedReview(): void {
 	const cached: CachedGameReview = {
 		schemaVersion: REVIEW_CACHE_SCHEMA_VERSION,
 		engineAssets: window.analysisPageData.engineAssets,
-		depth: reviewDepth,
+		nodes: getPositionNodes(),
 		results: results as EvaluateResult[],
 	};
 	try {
@@ -718,7 +710,7 @@ function dispatchNext(entry: ReviewWorker): void {
 			cmd: 'evaluate',
 			requestId: index, // The position index doubles as the request id.
 			icn,
-			maxDepth: reviewDepth,
+			maxNodes: getPositionNodes(),
 			mover: moverAtPly(index),
 			newChunk: work.newChunk,
 			warmup: work.warmup,
@@ -865,7 +857,7 @@ function cacheForcedPositionEvaluation(index: number): void {
 	if (!result || result.legalMoveCount !== 1 || !icn) return;
 	const label: MoveEvalLabel = {
 		cp: effectiveWhiteCp[index]!,
-		depth: reviewDepth,
+		depth: carriedEvalDepth(index),
 	};
 	if (index > 0) {
 		const node = mainlineNodes[index - 1];
@@ -873,11 +865,24 @@ function cacheForcedPositionEvaluation(index: number): void {
 	}
 	ceval.seedPositionCache({
 		icn,
-		depth: reviewDepth,
+		depth: label.depth,
 		moveIndex: index - 1,
 		moves: result.pv ?? [],
 		cp: label.cp!,
 	});
+}
+
+/** The search depth behind a carried eval: that of the nearest earlier position with its own score. */
+function carriedEvalDepth(index: number): number {
+	for (let i = index - 1; i >= 0; i--) {
+		if (searchedCp(results[i]!) !== undefined) return results[i]!.depth;
+	}
+	return 0; // Carried from the start position's default eval.
+}
+
+/** A position's own score, or undefined when it carries the previous one's (forced or failed). */
+function searchedCp(result: EvaluateResult): number | undefined {
+	return result.legalMoveCount === 1 ? undefined : stmCp(result);
 }
 
 /**
@@ -927,10 +932,9 @@ function resolveWhiteCp(index: number): number | undefined {
 		return effectiveWhiteCp[index];
 	}
 
-	const cp = stmCp(result);
-	// Forced moves aren't searched, and failed positions have no score:
-	// carry the previous position's eval (the start position defaults to 0).
-	if (result.legalMoveCount === 1 || cp === undefined) {
+	const cp = searchedCp(result);
+	if (cp === undefined) {
+		// Carry the previous position's eval (the start position defaults to 0).
 		effectiveWhiteCp[index] = index > 0 ? resolveWhiteCp(index - 1) : 0;
 		return effectiveWhiteCp[index];
 	}
@@ -1028,7 +1032,7 @@ function getSummary(): ReviewSummary {
 			losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / losses.length : 0;
 	}
 
-	return { summaries, evaluated: evaluatedCount, total: results.length, depth: reviewDepth };
+	return { summaries, evaluated: evaluatedCount, total: results.length };
 }
 
 // Queries for the renderers ---------------------------------------------------

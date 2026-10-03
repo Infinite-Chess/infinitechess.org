@@ -66,16 +66,17 @@ interface AnalysisWasmEngine extends WasmEngine {
 	set_position: (icn: string) => void;
 	is_in_check: () => boolean;
 	/**
-	 * Runs iterative deepening from `start_depth` toward `max_depth`, invoking `onInfo` after
-	 * each completed depth and returning the final one. Blocks until it finishes, exhausts
-	 * `slice_ms` (0 = unbounded), or the page writes the shared stop flag.
+	 * Runs iterative deepening from `start_depth` toward `max_depth` (default 64), invoking
+	 * `onInfo` after each completed depth and returning the final one. Blocks until it finishes,
+	 * exhausts `slice_ms` (0 = unbounded) or `max_nodes`, or the page writes the shared stop flag.
 	 */
 	analyse: (
 		options: {
 			multi_pv: number;
-			max_depth: number;
+			max_depth?: number;
 			start_depth: number;
 			slice_ms: number;
+			max_nodes?: number;
 		},
 		onInfo: (info: AnalysisInfo) => void,
 	) => AnalysisInfo | null;
@@ -374,7 +375,7 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 			// search that never returns (wedged past the engine's stop-flag poll, and killed by
 			// gamereview's watchdog) still yields its best answer.
 			evaluationEngine.analyse(
-				{ multi_pv: 1, max_depth: msg.maxDepth, start_depth: 1, slice_ms: 0 },
+				{ multi_pv: 1, start_depth: 1, slice_ms: 0, max_nodes: msg.maxNodes },
 				(info: AnalysisInfo) => {
 					postMessage({ type: 'info', requestId: msg.requestId, info } satisfies AnalysisResponse); // prettier-ignore
 				},
