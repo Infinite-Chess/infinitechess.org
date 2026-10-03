@@ -665,12 +665,6 @@ function failReview(outcome: 'failed' | 'unavailable'): void {
 	for (const listener of listeners.finished) listener(outcome);
 }
 
-/** Whether position `index` is itself within the engine's safe coordinate range (evaluable). */
-function positionIsEvaluable(index: number): boolean {
-	// safeStartByIndex[index] > index exactly when ply `index` is the latest out-of-bounds position.
-	return safeStartByIndex[index]! <= index;
-}
-
 /** Returns a partly-worked chunk to the queue, so whichever worker takes it re-warms its own TT. */
 function requeueChunk(chunk: ReviewWorkItem[]): void {
 	if (chunk.length === 0) return;
@@ -718,6 +712,12 @@ function dispatchNext(entry: ReviewWorker): void {
 		armStallWatchdog(entry);
 		return;
 	}
+}
+
+/** Whether position `index` is itself within the engine's safe coordinate range (evaluable). */
+function positionIsEvaluable(index: number): boolean {
+	// safeStartByIndex[index] > index exactly when ply `index` is the latest out-of-bounds position.
+	return safeStartByIndex[index]! <= index;
 }
 
 /** Canonical ICN for the position after `index` mainline plies. */
@@ -795,12 +795,6 @@ function scoreFromInfo(info: AnalysisInfo | undefined): Partial<EvaluateResult> 
 		cp: line.cp,
 		mate: line.mate,
 	};
-}
-
-/** The result's score from the side-to-move's perspective, as an effective cp. */
-function stmCp(result: EvaluateResult): number | undefined {
-	if (result.mate !== undefined) return result.mate > 0 ? MATE_CP : -MATE_CP;
-	return result.cp;
 }
 
 function receiveEvaluation(result: EvaluateResult): void {
@@ -911,6 +905,12 @@ function resolveWhiteCp(index: number): number | undefined {
 /** A position's own score, or undefined when it carries the previous one's (forced or failed). */
 function searchedCp(result: EvaluateResult): number | undefined {
 	return result.legalMoveCount === 1 ? undefined : stmCp(result);
+}
+
+/** The result's score from the side-to-move's perspective, as an effective cp. */
+function stmCp(result: EvaluateResult): number | undefined {
+	if (result.mate !== undefined) return result.mate > 0 ? MATE_CP : -MATE_CP;
+	return result.cp;
 }
 
 /**
