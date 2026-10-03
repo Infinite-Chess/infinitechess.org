@@ -7,7 +7,6 @@
 
 import type { Player, RawType } from '../../../../../../shared/chess/util/typeutil.js';
 
-import math from '../../../../../../shared/util/math/math.js';
 import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import typeutil, { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
 
@@ -45,8 +44,8 @@ export interface WasmMove {
 
 // Wasm Loading ----------------------------------------------------------------
 
-/** Hard cap on Lazy SMP threads used by engine features. */
-const THREAD_CAP = 4;
+/** Most Lazy SMP threads an engine feature uses without the user choosing more. */
+const DEFAULT_THREAD_CAP = 4;
 
 /**
  * Whether this browser can run a multithreaded engine build. Requires cross-origin
@@ -83,10 +82,15 @@ async function load<T extends EngineWasmModule>(
 	return { wasm, output, multithreaded };
 }
 
+/** Returns {@link maxThreads}, capped for features that pick the thread count on the user's behalf. */
+function defaultThreads(reserve: number = 0): number {
+	return Math.min(maxThreads(reserve), DEFAULT_THREAD_CAP);
+}
+
 /** Returns the usable hardware-thread count after an optional reservation. */
 function maxThreads(reserve: number = 0): number {
 	if (!BROWSER_SUPPORTS_THREADS) return 1;
-	return math.clamp((navigator.hardwareConcurrency || 2) - reserve, 1, THREAD_CAP);
+	return Math.max(1, (navigator.hardwareConcurrency || 2) - reserve);
 }
 
 // Piece Codes -----------------------------------------------------------------
@@ -119,6 +123,7 @@ function getPromotionAbbr(engineCode: string, mover: Player): string {
 export default {
 	// Wasm Loading
 	load,
+	defaultThreads,
 	maxThreads,
 	// Piece Codes
 	getPromotionAbbr,

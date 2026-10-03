@@ -285,12 +285,12 @@ function requestGeneratedMoves(gamefile: GameFile): void {
 }
 
 /**
- * Lazy SMP search threads for the engine: the hardware thread count minus one
- * (leaving the main thread breathing room), capped at 4. Threading requires
- * cross-origin isolation (SharedArrayBuffer); without it the engine runs single-threaded.
+ * Lazy SMP search threads for the engine: {@link enginewasm.defaultThreads}, reserving one
+ * hardware thread for the main thread. Threading requires cross-origin isolation
+ * (SharedArrayBuffer); without it the engine runs single-threaded.
  */
 function getEngineThreadCount(): number {
-	return enginewasm.maxThreads(1);
+	return enginewasm.defaultThreads(1);
 }
 
 /** Stops the active engine worker and clears its session state. */

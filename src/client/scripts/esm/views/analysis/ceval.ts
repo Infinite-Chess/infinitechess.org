@@ -104,7 +104,7 @@ const DEFAULT_SETTINGS: CevalSettings = {
 	multiPv: 1,
 	hashMb: 16,
 	depth: 20,
-	threads: enginewasm.maxThreads(),
+	threads: enginewasm.defaultThreads(),
 };
 
 // Schemas ---------------------------------------------------------------------
@@ -213,7 +213,7 @@ function loadSettings(): CevalSettings {
 	return loaded;
 }
 
-/** Most threads the user can pick: the engine thread cap when threading is usable, else 1 (locked). */
+/** Most threads the user can pick: every hardware thread when threading is usable, else 1 (locked). */
 function maxThreads(): number {
 	if (!engineSupportsThreads) return 1;
 	return enginewasm.maxThreads();
