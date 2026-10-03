@@ -133,8 +133,8 @@ followed, tell me.
     assertion standing in for a real invariant. Values set, cleared or valid together share one
     discriminated union or object, so illegal combinations can't be typed.
 
-23. **Cost on hot paths.** Judge per-frame, per-move and per-piece code on cost, not just
-    correctness. Optimize where we can.
+23. Judge hot-path code (per frame, move or piece) on cost, not just correctness. Optimize where we
+    can.
 
 ### Comments
 
