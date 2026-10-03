@@ -855,9 +855,10 @@ function cacheForcedPositionEvaluation(index: number): void {
 	const result = results[index];
 	const icn = icnByPosition[index];
 	if (!result || result.legalMoveCount !== 1 || !icn) return;
+	const source = carrySourceIndex(index);
 	const label: MoveEvalLabel = {
 		cp: effectiveWhiteCp[index]!,
-		depth: carriedEvalDepth(index),
+		depth: source === -1 ? 0 : results[source]!.depth,
 	};
 	if (index > 0) {
 		const node = mainlineNodes[index - 1];
@@ -872,12 +873,16 @@ function cacheForcedPositionEvaluation(index: number): void {
 	});
 }
 
-/** The search depth behind a carried eval: that of the nearest earlier position with its own score. */
-function carriedEvalDepth(index: number): number {
+/**
+ * The position a carried eval comes from: the nearest earlier one not carrying,
+ * or -1 for the start position's default.
+ */
+function carrySourceIndex(index: number): number {
 	for (let i = index - 1; i >= 0; i--) {
-		if (searchedCp(results[i]!) !== undefined) return results[i]!.depth;
+		const result = results[i];
+		if (!result || !positionIsEvaluable(i) || searchedCp(result) !== undefined) return i;
 	}
-	return 0; // Carried from the start position's default eval.
+	return -1;
 }
 
 /** A position's own score, or undefined when it carries the previous one's (forced or failed). */
@@ -934,8 +939,8 @@ function resolveWhiteCp(index: number): number | undefined {
 
 	const cp = searchedCp(result);
 	if (cp === undefined) {
-		// Carry the previous position's eval (the start position defaults to 0).
-		effectiveWhiteCp[index] = index > 0 ? resolveWhiteCp(index - 1) : 0;
+		const source = carrySourceIndex(index);
+		effectiveWhiteCp[index] = source === -1 ? 0 : resolveWhiteCp(source);
 		return effectiveWhiteCp[index];
 	}
 
