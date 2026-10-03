@@ -29,7 +29,7 @@ on a guess wastes their decision.
 ## What not to ask
 
 - Anything derivable from what's already decided.
-- Anything already settled by the rulebook, IMPORT_RULES.md or MODULE_CONVENTIONS.md — one option
+- Anything already settled by the rulebook, the module conventions or IMPORT_RULES.md — one option
   following them and the other not IS the answer. Decide it, say so in passing.
 - Anything where neither option carries a benefit. A question you had to manufacture a reason for is
   not a question.
@@ -62,8 +62,8 @@ If they push back on a recommendation and their argument is better, say so plain
 
 Before you believe OPEN is empty, plan the build. Walk every file you would touch as if you were
 about to write it — signatures, shapes, names, and a permanent home for anything new that satisfies
-IMPORT_RULES.md and MODULE_CONVENTIONS.md. Everything that walk surfaces is a question you failed to
-ask. Ask it. The agent who builds this makes no design decisions, so a hole you leave is one they
+IMPORT_RULES.md and the module conventions. Everything that walk surfaces is a question you failed
+to ask. Ask it. The agent who builds this makes no design decisions, so a hole you leave is one they
 will fill for you without the user's approval.
 
 Then ask for the go-ahead — to implement, or to write the design into a document. Don't assume
