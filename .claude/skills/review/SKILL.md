@@ -95,31 +95,20 @@ had to review, however large the diff.
   load-bearing: no history, no defensive trivia.
 - **Net lines.** Could anything have been done more simply, in fewer lines?
 
-## 5. Decisions go to the user first
+## 5. Design decisions
 
-Any moderate-or-larger design decision — the shape of a new system, a schema or interface awkward to
-undo, extend-versus-build-alongside, anything setting a precedent, any ambiguous fix — goes to the
-user, even when the answer looks clear to you. The test isn't your confidence; it's how hard the
-call would be to walk back. One that's hard to make is a sign of an architecture binding it, per
-rule 10: find that first.
+A finding that carries a design decision follows rules 5 and 6: read every touched and related file
+in full, come to your own recommendation, and present it to the user.
 
-Raise each **the moment you hit it**, inline in chat, per rule 6, one at a time per rule 3. Wait for
-the call before carrying on — never bank decisions up for the end, where they arrive buried. Once
-the user decides, that is the single direction the finding takes.
-
-The exception is when your reply ends the session, as in an `@claude` run. Use your best judgement
-to make the call, carry it through.
+The exception is when your reply ends the session, as in an `@claude` run: proceed with your own
+recommendation instead.
 
 ## 6. Act and report
 
-**Working tree or commits.** Fix everything with one clear, correct answer without asking:
-unambiguous bugs, stale comments, a duplicate that should call the existing helper, convention
-breaks, type or lint errors, dead code. Fixes land uncommitted in the working tree for the user to
-review. Re-run the checks until they pass. Report briefly:
-
-- What you changed: one line per fix, with a link to the file and line, grouped so it scans.
-- What you suspect but couldn't prove, and what would prove it.
-- Nothing about what you checked and found good.
+**Working tree or commits.** Make every fix that carries no design decision without asking, per
+rule 6. Fixes land uncommitted in the working tree for the user to review; get the checks passing
+per rule 33. Report briefly what you changed: one line per fix, linked to its file and line, grouped
+so it scans.
 
 **PR.** Change nothing in the code. Write the full review to a markdown file in the project root and
 give only a brief summary in chat — or, if your reply ends the session, make the reply the review.
@@ -129,5 +118,3 @@ It stands alone for the PR author, with no meta-commentary about the review proc
 - One concrete directive per finding — never a menu of options.
 - File and line cited for every point.
 - Each failure stated concretely: what input or state, and what goes wrong.
-- Confirmed separated from suspected; for each suspicion, what would prove it.
-- Nothing about what was found good.
