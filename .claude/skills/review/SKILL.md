@@ -112,7 +112,11 @@ so it scans.
 
 **PR.** Change nothing in the code. Write the full review to a markdown file in the project root and
 give only a brief summary in chat — or, if your reply ends the session, make the reply the review.
-It stands alone for the PR author, with no meta-commentary about the review process:
+Ensure separation of the brief overview, findings the author is required to fix, and any notes for
+the maintainers if they merge (exclude entirely if none).
+
+**Findings, for the PR author:** only what they must change. They stand alone, with no
+meta-commentary about the review process:
 
 - Ordered by severity.
 - One concrete directive per finding — never a menu of options.
