@@ -337,7 +337,7 @@ function getVariationChildren(node: AnalysisMoveNode): AnalysisMoveNode[] {
 gamereview.onClassified(scheduleReconcile);
 moveevals.onLabel(scheduleReconcile);
 // A review that ends without finishing drops the classifications it did make, so repaint once
-// more to clear their glyphs. Its eval labels and grafted blunder variations deliberately stay —
+// more to clear their glyphs. Its eval labels and grafted lapse variations deliberately stay —
 // unlike the glyphs, both are real engine output that outlives the review that produced it.
 gamereview.onFinished(scheduleReconcile);
 
