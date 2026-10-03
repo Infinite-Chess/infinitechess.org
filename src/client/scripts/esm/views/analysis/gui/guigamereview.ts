@@ -51,8 +51,8 @@ const statCells: { [player: number]: Partial<Record<StatKey, HTMLElement>> } = {
 
 type StatKey = 'accuracy' | 'inaccuracy' | 'mistake' | 'blunder' | 'acpl';
 
-/** Plies of the engine's best line grafted as a variation beneath a reviewed blunder. */
-const BLUNDER_VARIATION_MAX_PLIES = 6;
+/** Plies of the engine's best line grafted as a variation beneath a reviewed lapse. */
+const LAPSE_VARIATION_MAX_PLIES = 6;
 
 /** The loaded game's mainline, snapshotted at load (bar-delimited move tokens) for edit detection. */
 let pristineMainline = '';
@@ -68,7 +68,8 @@ function init(): void {
 	});
 	gamereview.onClassified((review) => {
 		updateStats();
-		if (review.classification === 'blunder') addBlunderVariation(review);
+		if (review.classification && gamereview.isLapseKey(review.classification))
+			addLapseVariation(review);
 		if (isGraphVisible()) drawGraph();
 	});
 	gamereview.onFinished(onReviewFinished);
@@ -91,7 +92,7 @@ function init(): void {
 	GameBus.addEventListener('game-unloaded', closeReview);
 	GameBus.addEventListener('game-loaded', snapshotPristineMainline);
 	// Deliberately later than the snapshot: the moves list is already interactive during the
-	// graphical load, and a review started then silently loses its blunder variations (see
+	// graphical load, and a review started then silently loses its lapse variations (see
 	// guimovetree.addVariation), so the button mustn't be offered until the load is over.
 	GameBus.addEventListener('graphical-loaded', revealButtonIfReviewable);
 }
@@ -192,11 +193,11 @@ function openReview(): void {
 	drawGraph();
 }
 
-/** Grafts the engine's best line beneath a classified blunder as a variation. */
-function addBlunderVariation(review: MoveReview): void {
+/** Grafts the engine's best line beneath a classified lapse as a variation, like lichess. */
+function addLapseVariation(review: MoveReview): void {
 	if (!review.pv?.length) return;
 	const parent = gamereview.getMainlineNodes()[review.ply]?.parent;
-	if (parent) guimovetree.addVariation(parent, review.pv.slice(0, BLUNDER_VARIATION_MAX_PLIES));
+	if (parent) guimovetree.addVariation(parent, review.pv.slice(0, LAPSE_VARIATION_MAX_PLIES));
 }
 
 // Progress --------------------------------------------------------------------
