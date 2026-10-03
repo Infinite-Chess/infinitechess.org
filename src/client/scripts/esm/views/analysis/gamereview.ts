@@ -850,46 +850,6 @@ function cachePositionEvaluation(index: number, result: EvaluateResult): void {
 	});
 }
 
-/** Gives a one-legal-move position its carried eval once the in-order pass resolves it. */
-function cacheForcedPositionEvaluation(index: number): void {
-	const result = results[index];
-	const icn = icnByPosition[index];
-	if (!result || result.legalMoveCount !== 1 || !icn) return;
-	const source = carrySourceIndex(index);
-	const label: MoveEvalLabel = {
-		cp: effectiveWhiteCp[index]!,
-		depth: source === -1 ? 0 : results[source]!.depth,
-	};
-	if (index > 0) {
-		const node = mainlineNodes[index - 1];
-		if (node) moveevals.store(node.id, label);
-	}
-	ceval.seedPositionCache({
-		icn,
-		depth: label.depth,
-		moveIndex: index - 1,
-		moves: result.pv ?? [],
-		cp: label.cp!,
-	});
-}
-
-/**
- * The position a carried eval comes from: the nearest earlier one not carrying,
- * or -1 for the start position's default.
- */
-function carrySourceIndex(index: number): number {
-	for (let i = index - 1; i >= 0; i--) {
-		const result = results[i];
-		if (!result || !positionIsEvaluable(i) || searchedCp(result) !== undefined) return i;
-	}
-	return -1;
-}
-
-/** A position's own score, or undefined when it carries the previous one's (forced or failed). */
-function searchedCp(result: EvaluateResult): number | undefined {
-	return result.legalMoveCount === 1 ? undefined : stmCp(result);
-}
-
 /**
  * Classifies every move whose surrounding positions are now evaluated, strictly in
  * ply order — forced/unevaluated positions carry the previous position's eval, so
@@ -946,6 +906,46 @@ function resolveWhiteCp(index: number): number | undefined {
 
 	effectiveWhiteCp[index] = mover === p.WHITE ? cp : -cp;
 	return effectiveWhiteCp[index];
+}
+
+/** A position's own score, or undefined when it carries the previous one's (forced or failed). */
+function searchedCp(result: EvaluateResult): number | undefined {
+	return result.legalMoveCount === 1 ? undefined : stmCp(result);
+}
+
+/**
+ * The position a carried eval comes from: the nearest earlier one not carrying,
+ * or -1 for the start position's default.
+ */
+function carrySourceIndex(index: number): number {
+	for (let i = index - 1; i >= 0; i--) {
+		const result = results[i];
+		if (!result || !positionIsEvaluable(i) || searchedCp(result) !== undefined) return i;
+	}
+	return -1;
+}
+
+/** Gives a one-legal-move position its carried eval once the in-order pass resolves it. */
+function cacheForcedPositionEvaluation(index: number): void {
+	const result = results[index];
+	const icn = icnByPosition[index];
+	if (!result || result.legalMoveCount !== 1 || !icn) return;
+	const source = carrySourceIndex(index);
+	const label: MoveEvalLabel = {
+		cp: effectiveWhiteCp[index]!,
+		depth: source === -1 ? 0 : results[source]!.depth,
+	};
+	if (index > 0) {
+		const node = mainlineNodes[index - 1];
+		if (node) moveevals.store(node.id, label);
+	}
+	ceval.seedPositionCache({
+		icn,
+		depth: label.depth,
+		moveIndex: index - 1,
+		moves: result.pv ?? [],
+		cp: label.cp!,
+	});
 }
 
 function classifyMove(i: number, before: EvaluateResult, after: EvaluateResult): MoveReview {
