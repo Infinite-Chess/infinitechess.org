@@ -78,10 +78,16 @@ export interface MoveReview {
 	isBestMove: boolean;
 }
 
+/** A move's accuracy [0,100], and its weight in the volatility-weighted game accuracy. */
+interface WeightedAccuracy {
+	accuracy: number;
+	weight: number;
+}
+
 /** One side's review summary, updated live as moves classify. */
 interface PlayerReviewSummary {
 	counts: Record<ClassificationKey, number>;
-	/** Blended (harmonic + arithmetic mean) game accuracy [0,100]. */
+	/** Blended (harmonic + volatility-weighted mean) game accuracy [0,100]. */
 	accuracy: number;
 	/** Average centipawn loss. */
 	acpl: number;
@@ -298,17 +304,47 @@ function cpToWinProb(cp: number): number {
 function moveAccuracyPercent(wpBefore: number, wpAfter: number): number {
 	const wpLossPct = (wpBefore - wpAfter) * 100;
 	if (wpLossPct <= 0) return 100;
-	return math.clamp(103.1668 * Math.exp(-0.04354 * wpLossPct) - 3.1669, 0, 100);
+	// The +1 is lichess's uncertainty bonus, for the imperfect analysis.
+	return math.clamp(103.1668 * Math.exp(-0.04354 * wpLossPct) - 3.1669 + 1, 0, 100);
 }
 
-/** Lichess-style game accuracy: blend of harmonic and arithmetic means. */
-function gameAccuracy(accuracies: number[]): number {
-	if (accuracies.length === 0) return 0;
+/**
+ * A move's weight in the game accuracy (lichess): the spread of white's win% over the window of
+ * positions ending just after it, so moves in volatile stretches count for more. Unlike lichess,
+ * unevaluated window positions are skipped rather than dropping the move.
+ */
+function volatilityWeight(ply: number): number {
+	const size = math.clamp(Math.floor(mainlineNodes.length / 10), 2, 8);
+	const start = Math.max(0, ply + 2 - size);
+	// Never empty: a classified move's own two endpoints are always evaluated.
+	let count = 0;
+	let sum = 0;
+	let sumOfSquares = 0;
+	for (let i = start; i < start + size; i++) {
+		const cp = effectiveWhiteCp[i];
+		if (cp === undefined) continue;
+		const winPct = cpToWinProb(cp) * 100;
+		count++;
+		sum += winPct;
+		sumOfSquares += winPct * winPct;
+	}
+	const mean = sum / count;
+	const variance = Math.max(0, sumOfSquares / count - mean * mean); // Rounding can dip it below 0.
+	return math.clamp(Math.sqrt(variance), 0.5, 12);
+}
+
+/** Lichess game accuracy: the mean of a volatility-weighted mean and a harmonic mean floored at 1%. */
+function gameAccuracy(moves: WeightedAccuracy[]): number {
+	if (moves.length === 0) return 0;
 	let harmonicSum = 0;
-	for (const acc of accuracies) harmonicSum += 1 / Math.max(acc, 0.1);
-	const harmonic = accuracies.length / harmonicSum;
-	const arithmetic = accuracies.reduce((a, b) => a + b, 0) / accuracies.length;
-	return (harmonic + arithmetic) / 2;
+	let weightedSum = 0;
+	let weightSum = 0;
+	for (const { accuracy, weight } of moves) {
+		harmonicSum += 1 / Math.max(accuracy, 1);
+		weightedSum += accuracy * weight;
+		weightSum += weight;
+	}
+	return (moves.length / harmonicSum + weightedSum / weightSum) / 2;
 }
 
 // Depth heuristic -------------------------------------------------------------
@@ -958,7 +994,7 @@ function finishReview(): void {
 
 /** Builds the live review standing from the classifications so far. */
 function getSummary(): ReviewSummary {
-	const accuracies: PlayerGroup<number[]> = { [p.WHITE]: [], [p.BLACK]: [] };
+	const accuracies: PlayerGroup<WeightedAccuracy[]> = { [p.WHITE]: [], [p.BLACK]: [] };
 	const cpLosses: PlayerGroup<number[]> = { [p.WHITE]: [], [p.BLACK]: [] };
 	const summaries: PlayerGroup<PlayerReviewSummary> = {};
 
@@ -978,7 +1014,7 @@ function getSummary(): ReviewSummary {
 		summary.counts[review.classification]++;
 		if (review.classification === 'forced') continue; // Excluded from accuracy/acpl.
 
-		accuracies[review.color]!.push(review.accuracy);
+		accuracies[review.color]!.push({ accuracy: review.accuracy, weight: volatilityWeight(review.ply) }); // prettier-ignore
 		const moverSign = review.color === p.WHITE ? 1 : -1;
 		const cpBefore = math.clamp(moverSign * effectiveWhiteCp[review.ply]!, -ACPL_CLAMP, ACPL_CLAMP); // prettier-ignore
 		const cpAfter = math.clamp(moverSign * effectiveWhiteCp[review.ply + 1]!, -ACPL_CLAMP, ACPL_CLAMP); // prettier-ignore
