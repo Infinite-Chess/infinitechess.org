@@ -43,8 +43,8 @@ Cross-check your file and line counts against `--stat` (or the PR's numbers).
 
 Then read **in full** — an earlier read this session doesn't count — every file the diff touches,
 **plus the neighbouring code it should have reused**, so you judge against reality rather than the
-diff's framing. Read `docs/systems/IMPORT_RULES.md`, `docs/systems/MODULE_CONVENTIONS.md`, and any
-system doc the rulebook routes the touched area to.
+diff's framing. Read `docs/systems/IMPORT_RULES.md`, and any system doc rule 26 routes the touched
+area to.
 
 ## 3. Judge the approach
 
@@ -100,12 +100,12 @@ had to review, however large the diff.
 Any moderate-or-larger design decision — the shape of a new system, a schema or interface awkward to
 undo, extend-versus-build-alongside, anything setting a precedent, any ambiguous fix — goes to the
 user, even when the answer looks clear to you. The test isn't your confidence; it's how hard the
-call would be to walk back.
+call would be to walk back. One that's hard to make is a sign of an architecture binding it, per
+rule 10: find that first.
 
-Raise each **the moment you hit it**, inline in chat, per rules 13-16: the problem, the options
-ranked by correctness then simplicity, honest trade-offs, your pick. Wait for the call before
-carrying on — never bank decisions up for the end, where they arrive buried. Once the user commits
-to an option, that is the single direction the finding takes.
+Raise each **the moment you hit it**, inline in chat, per rule 6, one at a time per rule 3. Wait for
+the call before carrying on — never bank decisions up for the end, where they arrive buried. Once
+the user decides, that is the single direction the finding takes.
 
 The exception is when your reply ends the session, as in an `@claude` run. Use your best judgement
 to make the call, carry it through.

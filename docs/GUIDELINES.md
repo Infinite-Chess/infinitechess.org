@@ -41,9 +41,8 @@ required to fulfill the user's prompt).
 The use of AI to help you write and modify code is permitted, but you must carefully review and
 polish its output to ensure the quality of the code meets all standards of the project!
 
-All coding standards are defined in [AGENTS.md](../AGENTS.md) and
-[docs/systems/MODULE_CONVENTIONS.md](./systems/MODULE_CONVENTIONS.md) — read both and follow them
-for every contribution. A few operational notes they don't cover:
+All coding standards are defined in [AGENTS.md](../AGENTS.md) — read it and follow it for every
+contribution. A few operational notes it doesn't cover:
 
 - `// prettier-ignore`s are permitted to bypass the prettifier, for any one code block, if your
   style is easier to read.
