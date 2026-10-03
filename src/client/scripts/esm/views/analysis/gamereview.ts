@@ -309,8 +309,8 @@ function moveAccuracyPercent(wpBefore: number, wpAfter: number): number {
 }
 
 /**
- * Lichess game accuracy: the mean of a volatility-weighted mean and a harmonic mean. The
- * harmonic mean floors each move at 1%, so a single blunder can't outweigh the rest of the game.
+ * Lichess game accuracy: the mean of a volatility-weighted mean and a harmonic mean, which
+ * floors each move at 1% like lichess's.
  */
 function gameAccuracy(moves: WeightedAccuracy[]): number {
 	if (moves.length === 0) return 0;
@@ -327,20 +327,27 @@ function gameAccuracy(moves: WeightedAccuracy[]): number {
 
 /**
  * A move's weight in the game accuracy (lichess): the spread of white's win% over the window of
- * positions ending just after it, so moves in volatile stretches count for more. Undefined while
- * a position in the window is unevaluated.
+ * positions ending just after it, so moves in volatile stretches count for more. Unlike lichess,
+ * unevaluated window positions are skipped rather than dropping the move: out-of-bounds positions
+ * never get evaluated, and a running review fills windows out of order.
  */
-function volatilityWeight(ply: number): number | undefined {
+function volatilityWeight(ply: number): number {
 	const size = math.clamp(Math.floor(mainlineNodes.length / 10), 2, 8);
 	const start = Math.max(0, ply + 2 - size);
-	const winPcts: number[] = [];
+	// Never empty: a classified move's own two endpoints are always evaluated.
+	let count = 0;
+	let sum = 0;
+	let sumOfSquares = 0;
 	for (let i = start; i < start + size; i++) {
 		const cp = effectiveWhiteCp[i];
-		if (cp === undefined) return undefined;
-		winPcts.push(cpToWinProb(cp) * 100);
+		if (cp === undefined) continue;
+		const winPct = cpToWinProb(cp) * 100;
+		count++;
+		sum += winPct;
+		sumOfSquares += winPct * winPct;
 	}
-	const mean = winPcts.reduce((a, b) => a + b, 0) / size;
-	const variance = winPcts.reduce((sum, wp) => sum + (wp - mean) ** 2, 0) / size;
+	const mean = sum / count;
+	const variance = Math.max(0, sumOfSquares / count - mean * mean); // Rounding can dip it below 0.
 	return math.clamp(Math.sqrt(variance), 0.5, 12);
 }
 
@@ -1011,8 +1018,7 @@ function getSummary(): ReviewSummary {
 		summary.counts[review.classification]++;
 		if (review.classification === 'forced') continue; // Excluded from accuracy/acpl.
 
-		const weight = volatilityWeight(review.ply);
-		if (weight !== undefined) accuracies[review.color]!.push({ accuracy: review.accuracy, weight }); // prettier-ignore
+		accuracies[review.color]!.push({ accuracy: review.accuracy, weight: volatilityWeight(review.ply) }); // prettier-ignore
 		const moverSign = review.color === p.WHITE ? 1 : -1;
 		const cpBefore = math.clamp(moverSign * effectiveWhiteCp[review.ply]!, -ACPL_CLAMP, ACPL_CLAMP); // prettier-ignore
 		const cpAfter = math.clamp(moverSign * effectiveWhiteCp[review.ply + 1]!, -ACPL_CLAMP, ACPL_CLAMP); // prettier-ignore
