@@ -309,27 +309,9 @@ function moveAccuracyPercent(wpBefore: number, wpAfter: number): number {
 }
 
 /**
- * Lichess game accuracy: the mean of a volatility-weighted mean and a harmonic mean, which
- * floors each move at 1% like lichess's.
- */
-function gameAccuracy(moves: WeightedAccuracy[]): number {
-	if (moves.length === 0) return 0;
-	let harmonicSum = 0;
-	let weightedSum = 0;
-	let weightSum = 0;
-	for (const { accuracy, weight } of moves) {
-		harmonicSum += 1 / Math.max(accuracy, 1);
-		weightedSum += accuracy * weight;
-		weightSum += weight;
-	}
-	return (moves.length / harmonicSum + weightedSum / weightSum) / 2;
-}
-
-/**
  * A move's weight in the game accuracy (lichess): the spread of white's win% over the window of
  * positions ending just after it, so moves in volatile stretches count for more. Unlike lichess,
- * unevaluated window positions are skipped rather than dropping the move: out-of-bounds positions
- * never get evaluated, and a running review fills windows out of order.
+ * unevaluated window positions are skipped rather than dropping the move.
  */
 function volatilityWeight(ply: number): number {
 	const size = math.clamp(Math.floor(mainlineNodes.length / 10), 2, 8);
@@ -349,6 +331,20 @@ function volatilityWeight(ply: number): number {
 	const mean = sum / count;
 	const variance = Math.max(0, sumOfSquares / count - mean * mean); // Rounding can dip it below 0.
 	return math.clamp(Math.sqrt(variance), 0.5, 12);
+}
+
+/** Lichess game accuracy: the mean of a volatility-weighted mean and a harmonic mean floored at 1%. */
+function gameAccuracy(moves: WeightedAccuracy[]): number {
+	if (moves.length === 0) return 0;
+	let harmonicSum = 0;
+	let weightedSum = 0;
+	let weightSum = 0;
+	for (const { accuracy, weight } of moves) {
+		harmonicSum += 1 / Math.max(accuracy, 1);
+		weightedSum += accuracy * weight;
+		weightSum += weight;
+	}
+	return (moves.length / harmonicSum + weightedSum / weightSum) / 2;
 }
 
 // Depth heuristic -------------------------------------------------------------
