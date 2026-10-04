@@ -23,7 +23,6 @@ import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
 import primitives from '../../../board/rendering/primitives.js';
 import gamereview from '../gamereview.js';
-import { GameBus } from '../../../board/GameBus.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import TextureLoader from '../../../webgl/TextureLoader.js';
 import svgtoimageconverter from '../../../util/svgtoimageconverter.js';
@@ -62,18 +61,6 @@ const OFFSET_Y_FRACTION = 0.42;
 const textureCache: Partial<Record<LapseKey, WebGLTexture | null>> = {};
 /** Classifications whose texture is currently loading, to avoid duplicate builds. */
 const loading = new Set<LapseKey>();
-
-// Init ------------------------------------------------------------------------
-
-GameBus.addEventListener('render-above-pieces', render);
-
-// The engine classifies moves asynchronously; if it lands on the move the user is currently
-// viewing, force a redraw so the badge (and reviewarrow's arrow) don't wait for an unrelated one.
-gamereview.onClassified((review) => {
-	const gamefile = gameslot.getGamefile();
-	if (gamefile && movetree.getCurrentNode(gamefile)?.id === review.nodeId)
-		frametracker.onVisualChange();
-});
 
 // Functions -------------------------------------------------------------------
 
@@ -180,3 +167,9 @@ function buildBadgeSvg(fill: string, glyphPath: string): string {
 		'</svg>'
 	);
 }
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	render,
+};

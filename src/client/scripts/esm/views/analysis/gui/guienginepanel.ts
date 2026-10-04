@@ -104,9 +104,6 @@ function init(): void {
 		const wanted = localStorage.getItem(ENABLED_STORAGE_KEY) !== 'false';
 		if (wanted && !ceval.isEnabled()) setEngineEnabled(true);
 	});
-
-	// Draw engine arrows on top of the pieces each frame.
-	GameBus.addEventListener('render-above-pieces', () => enginearrows.render());
 }
 
 function setEngineEnabled(value: boolean): void {

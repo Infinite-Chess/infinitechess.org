@@ -18,19 +18,29 @@ import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 import analysisenginebounds from '../analysisenginebounds.js';
 
+// Constants -------------------------------------------------------------------
+
 const BORDER_COLOR: Color = [1, 0.05, 0.05, 0.9];
 const HALF = bd.fromNumber(0.5);
 
+// State -----------------------------------------------------------------------
+
+/** Whether the border is shown, toggled by the engine debug keybind. */
 let enabled = false;
 
-GameBus.addEventListener('engine-debug', toggle);
-GameBus.addEventListener('render-below-pieces', render);
+// Init ------------------------------------------------------------------------
 
+GameBus.addEventListener('engine-debug', toggle);
+
+// Functions -------------------------------------------------------------------
+
+/** Shows or hides the border. */
 function toggle(): void {
 	enabled = !enabled;
 	frametracker.onVisualChange();
 }
 
+/** Renders the border's visible edges, if enabled. */
 function render(): void {
 	if (!enabled) return;
 
@@ -57,6 +67,7 @@ function render(): void {
 	if (data.length > 0) createRenderable(data, 2, 'LINES', 'color', true).render();
 }
 
+/** Appends a vertical edge at column `xSquare`, spanning the given rows. */
 function addVerticalLine(
 	data: number[],
 	xSquare: bigint,
@@ -71,6 +82,7 @@ function addVerticalLine(
 	pushLine(data, x, y1, x, y2);
 }
 
+/** Appends a horizontal edge at row `ySquare`, spanning the given columns. */
 function addHorizontalLine(
 	data: number[],
 	ySquare: bigint,
@@ -85,16 +97,25 @@ function addHorizontalLine(
 	pushLine(data, x1, y, x2, y);
 }
 
+/** Returns the square's lower or upper edge coordinate. */
 function edgeFromSquare(square: bigint, isMinEdge: boolean): BigDecimal {
 	const center = bd.fromBigInt(square);
 	return isMinEdge ? bd.subtract(center, HALF) : bd.add(center, HALF);
 }
 
+/** Converts a board coordinate on one axis to world space. */
 function toWorld(coord: BigDecimal, axis: 0 | 1): number {
 	const boardPos = boardpos.getBoardPos();
 	return bd.toNumber(bd.subtract(coord, boardPos[axis])) * boardpos.getBoardScaleAsNumber();
 }
 
+/** Appends one colored line segment's vertex data. */
 function pushLine(data: number[], x1: number, y1: number, x2: number, y2: number): void {
 	data.push(x1, y1, ...BORDER_COLOR, x2, y2, ...BORDER_COLOR);
 }
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	render,
+};

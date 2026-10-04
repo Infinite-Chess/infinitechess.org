@@ -14,17 +14,12 @@ import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
 import gamereview from '../gamereview.js';
 import drawarrows from '../../../game/rendering/highlights/annotations/drawarrows.js';
-import { GameBus } from '../../../board/GameBus.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 
 // Constants -------------------------------------------------------------------
 
 /** Best-move arrow color: chessground's paleGreen brush (#15781B at 40% opacity), as lichess uses. */
 const COLOR: Color = [0.08, 0.47, 0.11, 0.4];
-
-// Init ------------------------------------------------------------------------
-
-GameBus.addEventListener('render-above-pieces', render);
 
 // Functions -------------------------------------------------------------------
 
@@ -44,3 +39,9 @@ function render(): void {
 	const data = drawarrows.getDataArrow(drawarrows.createArrow(startCoords, endCoords), COLOR);
 	createRenderable(data, 2, 'TRIANGLES', 'color', true).render();
 }
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	render,
+};
