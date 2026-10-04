@@ -27,6 +27,7 @@ import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -645,7 +646,7 @@ function handleWorkerFault(entry: ReviewWorker, fault: AnalysisWorkerFault, reas
 		// Settle for the depths it did complete, so the review continues. With none, the
 		// evaluation is empty: its eval carries over and adjacent moves classify as unknown.
 		requeueChunk(chunk);
-		receiveEvaluation({ requestId: assignment.index, legalMoveCount: 2, inCheck: false, depth: 0, ...scoreFromInfo(lastInfo) }); // prettier-ignore
+		receiveEvaluation({ requestId: assignment.index, legalMoveCount: 2, depth: 0, ...scoreFromInfo(lastInfo) }); // prettier-ignore
 	}
 
 	if (chunkQueue.length > 0) {
@@ -688,9 +689,18 @@ function dispatchNext(entry: ReviewWorker): void {
 		// (its coords overflow i64). Skip it — record an empty eval for real positions so it's
 		// treated like a failed one: its eval carries over and moves crossing it stay unclassified.
 		if (!positionIsEvaluable(index)) {
-			if (!work.warmup) receiveEvaluation({ requestId: index, legalMoveCount: 2, inCheck: false, depth: 0 }); // prettier-ignore
+			if (!work.warmup) receiveEvaluation({ requestId: index, legalMoveCount: 2, depth: 0 }); // prettier-ignore
 			if (status !== 'running') return; // receiveEvaluation may have finished the review.
 			continue; // Pull the next work item for this worker.
+		}
+		// The game's own rules ended it here: its result scores it, so there's nothing to search.
+		if (terminalVictorAt(index) !== undefined) {
+			if (!work.warmup) {
+				icnByPosition[index] = serializePosition(index);
+				receiveEvaluation({ requestId: index, legalMoveCount: 0, depth: 0 });
+			}
+			if (status !== 'running') return;
+			continue;
 		}
 
 		entry.assignment = work;
@@ -718,6 +728,18 @@ function dispatchNext(entry: ReviewWorker): void {
 function positionIsEvaluable(index: number): boolean {
 	// safeStartByIndex[index] > index exactly when ply `index` is the latest out-of-bounds position.
 	return safeStartByIndex[index]! <= index;
+}
+
+/**
+ * The winner (or null for a draw) when the game's rules ended it at position `index`, which only
+ * the final mainline position can be. Undefined when the game goes on, or ended off the board.
+ */
+function terminalVictorAt(index: number): Player | null | undefined {
+	if (index !== mainlineNodes.length) return undefined;
+	const conclusion = mainlineNodes.at(-1)?.gameConclusion;
+	if (!conclusion || !winconutil.isConclusionMoveTriggered(conclusion.condition))
+		return undefined;
+	return conclusion.victor ?? null;
 }
 
 /** Canonical ICN for the position after `index` mainline plies. */
@@ -819,8 +841,9 @@ function cachePositionEvaluation(index: number, result: EvaluateResult): void {
 	const sign = mover === p.WHITE ? 1 : -1;
 	let label: MoveEvalLabel | undefined;
 	if (result.legalMoveCount === 0) {
-		label = result.inCheck
-			? { mate: mover === p.WHITE ? -1 : 1, depth: result.depth }
+		const victor = terminalVictorAt(index);
+		label = victor
+			? { mate: victor === p.WHITE ? 1 : -1, depth: result.depth }
 			: { cp: 0, depth: result.depth };
 	} else if (result.mate !== undefined) {
 		label = { mate: sign * result.mate, depth: result.depth };
@@ -886,8 +909,9 @@ function resolveWhiteCp(index: number): number | undefined {
 	const mover = moverAtPly(index);
 
 	if (result.legalMoveCount === 0) {
-		// Terminal: checkmate is a loss for the side to move; stalemate is a draw.
-		effectiveWhiteCp[index] = result.inCheck ? (mover === p.WHITE ? -MATE_CP : MATE_CP) : 0;
+		// Terminal: the game's result scores it, a win as a mate.
+		const victor = terminalVictorAt(index);
+		effectiveWhiteCp[index] = victor ? (victor === p.WHITE ? MATE_CP : -MATE_CP) : 0;
 		return effectiveWhiteCp[index];
 	}
 

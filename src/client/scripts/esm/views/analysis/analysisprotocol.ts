@@ -115,7 +115,7 @@ export type EvaluateResult = z.infer<typeof EvaluateResultSchema>;
 /**
  * The result of a one-shot `evaluate` command, and the source of truth for the
  * {@link EvaluateResult} type. Score is from the side-to-move's perspective; both
- * absent on a terminal position (no legal moves).
+ * absent on a terminal position.
  */
 export const EvaluateResultSchema = z.strictObject({
 	requestId: z.int(),
@@ -125,10 +125,8 @@ export const EvaluateResultSchema = z.strictObject({
 	mate: z.number().optional(),
 	/** The engine's best line as compact move tokens ("x,y>x,y=Q"). Absent on terminal positions. */
 	pv: z.array(z.string()).optional(),
-	/** 0 = terminal (checkmate/stalemate), 1 = forced move (not searched). */
+	/** 0 = terminal (the game's rules ended it here), 1 = forced move (not searched). */
 	legalMoveCount: z.int(),
-	/** Whether the side to move is in check (distinguishes checkmate from stalemate when terminal). */
-	inCheck: z.boolean(),
 	/** The deepest depth the search completed (0 for terminal/forced/unevaluated positions). */
 	depth: z.int(),
 });
