@@ -765,6 +765,11 @@ function serializePosition(index: number): string {
 	return engineicn.serialize(rebased);
 }
 
+/** The player to move at position `index` (= the mover of mainline move `index`). */
+function moverAtPly(index: number): Player {
+	return turnOrder[index % turnOrder.length]!;
+}
+
 // Stall watchdog --------------------------------------------------------------
 
 /** (Re)arms the stall watchdog over a worker's in-flight search. */
@@ -798,11 +803,6 @@ function abortStalledSearch(entry: ReviewWorker): void {
 }
 
 // Result processing -----------------------------------------------------------
-
-/** The player to move at position `index` (= the mover of mainline move `index`). */
-function moverAtPly(index: number): Player {
-	return turnOrder[index % turnOrder.length]!;
-}
 
 /**
  * A searched position's score, taken from the deepest depth its worker streamed.
