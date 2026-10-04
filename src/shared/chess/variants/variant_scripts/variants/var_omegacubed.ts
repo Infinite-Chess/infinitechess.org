@@ -31,10 +31,6 @@ export function getGeneratorRules(): { pawnDoublePush: boolean; castleWith?: Raw
 	return { pawnDoublePush: false };
 }
 
-export function getPositionBox(): BoundingBox {
-	return { left: -500n, right: 500n, bottom: -501n, top: 500n };
-}
-
 // Generator -------------------------------------------------------------------
 
 /**

@@ -33,11 +33,17 @@ type SupportedResult = { supported: true } | { supported: false; reason: EngineS
 // Constants -------------------------------------------------------------------
 
 /**
- * Variants the engine can't replay (4D movement). Every other variant must declare
- * `getPositionBox`, unless it declares a `worldBorder` of its own — `apeironborder.forVariant`
- * has no other way to space a border around it, and throws if neither is present.
+ * Variants the engine can't use: the 4D ones it can't replay, and Omega³/Omega⁴, whose thousands
+ * of pieces make it too slow to be of any use. Every other variant must declare `getPositionBox`,
+ * unless it declares a `worldBorder` of its own — `apeironborder.forVariant` has no other way to
+ * space a border around it, and throws if neither is present.
  */
-const UNSUPPORTED_VARIANTS: Set<VariantCode> = new Set(['4x4x4x4_Chess', '5D_Chess']);
+const UNSUPPORTED_VARIANTS: Set<VariantCode> = new Set([
+	'4x4x4x4_Chess',
+	'5D_Chess',
+	'Omega_Cubed',
+	'Omega_Fourth',
+]);
 
 /**
  * Game modifiers the engine can play (none at the moment).
