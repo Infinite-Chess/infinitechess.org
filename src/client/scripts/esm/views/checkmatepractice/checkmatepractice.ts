@@ -129,8 +129,8 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 
 /**
  * TRIPWIRE — these games currently run on an unbounded board. Every other engine game is played
- * inside a world border, resolved where its gamerules are (`apeironcard.worldBorderForBox` for an
- * explicit position, `worldBorderForVariant` for a preset). Whoever redesigns this page must give
+ * inside a world border, resolved where its gamerules are (`apeironborder.forBox` for an
+ * explicit position, `apeironborder.forVariant` for a preset). Whoever redesigns this page must give
  * its positions one too, or the engine is handed the very board it is promised never to get.
  *
  * The border distance this engine used to declare, kept for whoever gives it one again:

@@ -5,6 +5,7 @@
  */
 
 import type { RawType } from '../../../util/typeutil.js';
+import type { BoundingBox } from '../../../../util/math/bounds.js';
 import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
 import coordutil, { Coords, CoordsKey } from '../../../../util/coordutil.js';
@@ -28,6 +29,10 @@ export function gameruleModifications(): GameRuleModifications {
 
 export function getGeneratorRules(): { pawnDoublePush: boolean; castleWith?: RawType } {
 	return { pawnDoublePush: false };
+}
+
+export function getPositionBox(): BoundingBox {
+	return { left: -866n, right: 567n, bottom: -997n, top: 500n };
 }
 
 // Generator -------------------------------------------------------------------

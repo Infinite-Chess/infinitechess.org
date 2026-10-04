@@ -33,11 +33,11 @@ type SupportedResult = { supported: true } | { supported: false; reason: EngineS
 // Constants -------------------------------------------------------------------
 
 /**
- * Adding a variant here obliges its module to declare `getPositionBox`, unless it declares a
- * `worldBorder` of its own — {@link worldBorderForVariant} has no other way to space a border
- * around it, and throws if neither is present.
+ * Variants the engine can't replay (4D movement). Every other variant must declare
+ * `getPositionBox`, unless it declares a `worldBorder` of its own — `apeironborder.forVariant`
+ * has no other way to space a border around it, and throws if neither is present.
  */
-const SUPPORTED_VARIANTS: Set<VariantCode> = new Set(['Classical', 'Confined_Classical', 'Classical_Plus', 'Core', 'CoaIP', 'CoaIP_HO', 'CoaIP_RO', 'CoaIP_NO', 'Palace', 'Pawndard', 'Standarch', 'Space_Classic', 'Space', 'Pawn_Horde', 'Knightline', 'Obstocean', 'Chess', 'Omega']); // prettier-ignore
+const UNSUPPORTED_VARIANTS: Set<VariantCode> = new Set(['4x4x4x4_Chess', '5D_Chess']);
 
 /**
  * Game modifiers the engine can play (none at the moment).
@@ -122,7 +122,7 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
  * (blocking/re-basing).
  */
 function checkGameRules(gamefile: GameFile): SupportedResult {
-	if (gamefile.variant !== undefined && !SUPPORTED_VARIANTS.has(gamefile.variant.code))
+	if (gamefile.variant !== undefined && UNSUPPORTED_VARIANTS.has(gamefile.variant.code))
 		return { supported: false, reason: 'unsupported_variant' };
 
 	return checkWinConditions(gamefile.gameRules);
@@ -163,7 +163,7 @@ function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 
 export default {
 	// Constants
-	SUPPORTED_VARIANTS,
+	UNSUPPORTED_VARIANTS,
 	SUPPORTED_MODIFIERS,
 	// Functions
 	isPlaySupported,
