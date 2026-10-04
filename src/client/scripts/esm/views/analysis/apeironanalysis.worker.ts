@@ -221,7 +221,11 @@ async function runLoop(): Promise<void> {
 	try {
 		while (analysing) {
 			syncPosition();
+			// The engine clears the stop flag as each search starts, so a stop written while the
+			// position synced would be swallowed: take any queued command before searching.
 			const gen = generation;
+			await yieldToMessageQueue();
+			if (gen !== generation) continue;
 			const opts = goOptions;
 			const requestId = opts.requestId;
 
