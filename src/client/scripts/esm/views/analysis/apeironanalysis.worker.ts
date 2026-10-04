@@ -64,7 +64,6 @@ interface AnalysisWasmModule extends EngineWasmModule {
 interface AnalysisWasmEngine extends WasmEngine {
 	/** Moves the instance to a new position, keeping the warm transposition table. */
 	set_position: (icn: string) => void;
-	is_in_check: () => boolean;
 	/**
 	 * Runs iterative deepening from `start_depth` toward `max_depth` (default 64), invoking
 	 * `onInfo` after each completed depth and returning the final one. Blocks until it finishes,
@@ -345,7 +344,6 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 	const result: EvaluateResult = {
 		requestId: msg.requestId,
 		legalMoveCount: 0,
-		inCheck: false,
 		depth: 0,
 	};
 
@@ -360,7 +358,6 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 
 		const legalMoves: WasmMove[] = evaluationEngine.get_legal_moves_js();
 		result.legalMoveCount = legalMoves.length;
-		result.inCheck = evaluationEngine.is_in_check();
 
 		if (legalMoves.length === 1) {
 			// Forced move: don't search; the review carries the eval over from its neighbors.
