@@ -19,6 +19,7 @@ import ceval from '../ceval.js';
 import toast from '../../../components/toast.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
+import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
 import animation from '../../../game/rendering/animation.js';
 import guimovetree from './guimovetree.js';
@@ -306,7 +307,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	}
 
 	const best = update.lines[0];
-	element_Eval.textContent = best ? formatEval(best) : '…';
+	element_Eval.textContent = best ? moveevals.format(best) : '…';
 	element_Stats.textContent = formatStats(update);
 	// Offer "go deeper" once the target depth is reached and there's still room to go.
 	// Show if at least one PV line is non-terminal (not mate/game end).
@@ -319,13 +320,6 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	updateProgress(update);
 	renderLines(update.lines);
 	enginearrows.update(update);
-}
-
-/** Formats a white-POV line eval for display, e.g. "+1.4", "-0.3", "#5", "#-3". */
-function formatEval(line: CevalLine): string {
-	if (line.mate !== undefined) return line.mate > 0 ? `#${line.mate}` : `#-${Math.abs(line.mate)}`; // prettier-ignore
-	const pawns = (line.cp ?? 0) / 100;
-	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`;
 }
 
 /**
@@ -412,7 +406,7 @@ function renderLines(lines: CevalLine[]): void {
 
 		const evalSpan = document.createElement('span');
 		evalSpan.className = 'line-eval';
-		evalSpan.textContent = formatEval(line);
+		evalSpan.textContent = moveevals.format(line);
 
 		const movesSpan = document.createElement('span');
 		movesSpan.className = 'line-moves';

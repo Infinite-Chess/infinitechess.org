@@ -10,14 +10,24 @@ import ceval from './ceval.js';
 import movetree from './movetree.js';
 import { GameBus } from '../../board/GameBus.js';
 
-export interface MoveEvalLabel {
+// Types -----------------------------------------------------------------------
+
+/** A white-POV score: centipawns, or full moves to mate. */
+interface Score {
 	cp?: number;
 	mate?: number;
+}
+
+export interface MoveEvalLabel extends Score {
 	depth: number;
 }
 
+// State -----------------------------------------------------------------------
+
 const labels = new Map<number, MoveEvalLabel>();
 const listeners = new Set<(nodeId: number) => void>();
+
+// Store -----------------------------------------------------------------------
 
 GameBus.addEventListener('game-unloaded', clear);
 
@@ -53,16 +63,35 @@ function store(nodeId: number, label: MoveEvalLabel): boolean {
 	return true;
 }
 
+/** The node's deepest known label. */
 function get(nodeId: number): MoveEvalLabel | undefined {
 	return labels.get(nodeId);
 }
 
+/** Drops every label, for when the game unloads. */
 function clear(): void {
 	labels.clear();
 }
 
+/** Subscribes to every stored label. */
 function onLabel(listener: (nodeId: number) => void): void {
 	listeners.add(listener);
 }
 
-export default { store, get, onLabel };
+// Formatting ------------------------------------------------------------------
+
+/** Formats a score like lichess, e.g. "+1.4", "-0.3", "#5", "#-3". Rounds before signing, so ±4 cp reads "0.0". */
+function format(score: Score): string {
+	if (score.mate !== undefined) return `#${score.mate}`;
+	const pawns = Math.round((score.cp ?? 0) / 10) / 10;
+	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`;
+}
+
+export default {
+	// Store
+	store,
+	get,
+	onLabel,
+	// Formatting
+	format,
+};
