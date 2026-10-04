@@ -1,12 +1,12 @@
 // src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts
 
 /**
- * The web worker script for the ICN Validator Tool.
+ * The ICN validator's worker. Takes one chunk of games and runs each through the
+ * site's ICN parser, game builder and termination check, tallying every failure.
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 import type {
 	ChunkResults,
 	ValidationRequest,
@@ -17,12 +17,13 @@ import type {
 import jsutil from '../../../../../shared/util/jsutil.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
+
+import terminationcheck from './terminationcheck.js';
 
 // Message Handling ------------------------------------------------------------
 
-// Listen for the main thread to send data
+/** Validates the chunk of games the page sends, posting progress along the way and the tallies at the end. */
 self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
 	const { chunkId, games } = e.data;
 
@@ -100,7 +101,7 @@ self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
 
 			// Stage 3: Termination Check
 			try {
-				validateTermination(termination, result, game.gameConclusion);
+				terminationcheck.validate(termination, result, game.gameConclusion);
 			} catch (error) {
 				const message = jsutil.getErrorMessage(error);
 				localResults.terminationMismatchErrors++;
@@ -132,7 +133,7 @@ self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
 			});
 		}
 
-		// Report progress every 50 games (optional optimization to keep UI responsive)
+		// Report progress every 10 games
 		if (
 			(localResults.successfulCount +
 				localResults.icnconverterErrors +
@@ -149,57 +150,3 @@ self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
 	// Send final results for this chunk
 	self.postMessage({ type: 'done', chunkId, results: localResults } satisfies ValidationResponse);
 };
-
-// Termination Validation ------------------------------------------------------
-
-/** Throws if the game's Termination/Result metadata disagrees with how the game actually ended. */
-function validateTermination(
-	termination: string | undefined,
-	result: string | undefined,
-	gameConclusion: GameConclusion | undefined,
-): void {
-	if (termination === 'Maximum moves reached') {
-		if (gameConclusion !== undefined)
-			throw new Error(`Termination is "Maximum moves reached" but game is over: ${JSON.stringify(gameConclusion)}`); // prettier-ignore
-		return;
-	}
-	// Adjudication terminations are suffixed with their eval threshold, e.g. "Max-ply adjudication (|eval| >= 1000 cp)"
-	if (
-		termination &&
-		(termination.startsWith('Material adjudication') ||
-			termination.startsWith('Max-ply adjudication'))
-	) {
-		if (gameConclusion !== undefined)
-			throw new Error(`Termination is "${termination}", but game is over: ${JSON.stringify(gameConclusion)}`); // prettier-ignore
-		return;
-	}
-	if (gameConclusion === undefined) {
-		if (termination)
-			throw new Error(`Game isn't over, but Termination is specified: "${termination}"`);
-		return;
-	}
-
-	const { victor, condition } = gameConclusion;
-
-	const conditionMappings: Record<string, string> = {
-		Checkmate: 'checkmate',
-		'All pieces captured': 'allpiecescaptured',
-		'Royal capture': 'royalcapture',
-		'All royals captured': 'allroyalscaptured',
-		Stalemate: 'stalemate',
-		'Threefold repetition': 'repetition',
-		'50-move rule': 'moverule',
-		'Insufficient material': 'insuffmat',
-	};
-
-	if (termination && termination in conditionMappings) {
-		if (condition !== conditionMappings[termination])
-			throw new Error(`Game is over by ${condition}, but Termination is "${termination}"`);
-	} else if (termination) {
-		throw new Error(`Disallowed Termination metadata: "${termination}"`);
-	}
-
-	if (victor !== undefined && result && victor !== metadatautil.getVictorFromResult(result)) {
-		throw new Error(`Result "${result}" does not match victor ${victor}`);
-	}
-}
