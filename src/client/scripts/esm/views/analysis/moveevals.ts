@@ -6,9 +6,9 @@
  * Also the one formatter every eval display on the page shares.
  */
 
-import ceval from './ceval.js';
 import movetree from './movetree.js';
 import { GameBus } from '../../board/GameBus.js';
+import ceval, { CevalUpdate } from './ceval.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -27,13 +27,15 @@ export interface MoveEvalLabel extends Score {
 const labels = new Map<number, MoveEvalLabel>();
 const listeners = new Set<(nodeId: number) => void>();
 
-// Store -----------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-unloaded', clear);
+ceval.onUpdate((update) => storeCevalUpdate(update));
 
-// Normal analysis updates this on every streamed depth. The ceval cache already
-// suppresses depth regressions; this guard also protects labels seeded by a review.
-ceval.onUpdate((update) => {
+// Store -----------------------------------------------------------------------
+
+/** Stores every streamed depth of normal analysis. The depth guard in {@link store} protects labels seeded by a review. */
+function storeCevalUpdate(update: CevalUpdate | undefined): void {
 	if (!update) return;
 	const line = update.lines[0];
 	if (!line) return;
@@ -45,7 +47,7 @@ ceval.onUpdate((update) => {
 		cp: line.cp,
 		mate: line.mate,
 	});
-});
+}
 
 /** Stores a label only when it is at least as deep as the node's current best. */
 function store(nodeId: number, label: MoveEvalLabel): boolean {
@@ -86,6 +88,8 @@ function format(score: Score): string {
 	const pawns = Math.round((score.cp ?? 0) / 10) / 10;
 	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Store
