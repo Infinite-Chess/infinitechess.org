@@ -67,8 +67,8 @@ const loading = new Set<LapseKey>();
 
 GameBus.addEventListener('render-above-pieces', render);
 
-// The engine classifies moves asynchronously; if it lands on the move the user is
-// currently viewing, force a redraw so the badge doesn't wait for an unrelated one.
+// The engine classifies moves asynchronously; if it lands on the move the user is currently
+// viewing, force a redraw so the badge (and reviewarrow's arrow) don't wait for an unrelated one.
 gamereview.onClassified((review) => {
 	const gamefile = gameslot.getGamefile();
 	if (gamefile && movetree.getCurrentNode(gamefile)?.id === review.nodeId)
