@@ -42,10 +42,10 @@ interface GameplayWasmModule extends EngineWasmModule {
 /** One wasm engine instance, bound to the position it was constructed at. */
 interface GameplayEngine extends WasmEngine {
 	/**
-	 * Searches for the best move, bounded by `timeLimit` ms, optionally consulting
-	 * the opening book. Null when the search produced no move.
+	 * Searches for the best move, bounded by `timeLimit` ms; `silent` skips the search's
+	 * console logging. Null when the search produced no move.
 	 */
-	get_best_move_with_time: (timeLimit: number, useBook: boolean) => WasmMove | null;
+	get_best_move_with_time: (timeLimit: number, silent: boolean) => WasmMove | null;
 }
 
 // State -----------------------------------------------------------------------
