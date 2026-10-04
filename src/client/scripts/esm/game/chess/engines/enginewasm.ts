@@ -7,6 +7,7 @@
 
 import type { Player, RawType } from '../../../../../../shared/chess/util/typeutil.js';
 
+import math from '../../../../../../shared/util/math/math.js';
 import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import typeutil, { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
 
@@ -46,6 +47,8 @@ export interface WasmMove {
 
 /** Most Lazy SMP threads an engine feature uses without the user choosing more. */
 const DEFAULT_THREAD_CAP = 4;
+/** The engine's own thread cap, the most its 512 MB memory fits beside a 64 MB hash. */
+const MAX_THREAD_CAP = 20;
 
 /**
  * Whether this browser can run a multithreaded engine build. Requires cross-origin
@@ -87,10 +90,10 @@ function defaultThreads(reserve: number = 0): number {
 	return Math.min(maxThreads(reserve), DEFAULT_THREAD_CAP);
 }
 
-/** Returns the usable hardware-thread count after an optional reservation. */
+/** Returns the usable hardware-thread count after an optional reservation, up to the engine's cap. */
 function maxThreads(reserve: number = 0): number {
 	if (!BROWSER_SUPPORTS_THREADS) return 1;
-	return Math.max(1, (navigator.hardwareConcurrency || 2) - reserve);
+	return math.clamp((navigator.hardwareConcurrency || 2) - reserve, 1, MAX_THREAD_CAP);
 }
 
 // Piece Codes -----------------------------------------------------------------

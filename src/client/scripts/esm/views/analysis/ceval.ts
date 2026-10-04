@@ -213,7 +213,7 @@ function loadSettings(): CevalSettings {
 	return loaded;
 }
 
-/** Most threads the user can pick: every hardware thread when threading is usable, else 1 (locked). */
+/** Most threads the user can pick: {@link enginewasm.maxThreads} when threading is usable, else 1 (locked). */
 function maxThreads(): number {
 	if (!engineSupportsThreads) return 1;
 	return enginewasm.maxThreads();
