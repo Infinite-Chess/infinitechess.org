@@ -498,7 +498,12 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	// This position crashed the engine too many times — never send it again (that just re-crashes
 	// the worker). Checked ahead of the spawn below, so a dead position never costs a wasm load.
 	if (isPositionDead(icn)) {
+		// As the cached branch below: stop the prior search for good and drop its tail,
+		// or it resumes and its updates land on this dead position's display.
 		interruptSearch();
+		send({ cmd: 'stop' });
+		activeRequestId++;
+		analyzed = undefined;
 		latestUpdate = undefined;
 		lastAnalyzedIcn = icn;
 		emitNow();
