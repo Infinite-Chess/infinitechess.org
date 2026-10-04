@@ -26,6 +26,7 @@ import toast from '../../../components/toast.js';
 import ceval from '../ceval.js';
 import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
+import moveevals from '../moveevals.js';
 import gamereview from '../gamereview.js';
 import guimovetree from './guimovetree.js';
 import { GameBus } from '../../../board/GameBus.js';
@@ -666,7 +667,7 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 		const classification = review?.classification
 			? ` · ${gamereview.CLASSIFICATION_DISPLAY[review.classification].label}`
 			: '';
-		element_GraphTooltipEval.textContent = `Advantage: ${formatAdvantage(cp!)}${classification}`;
+		element_GraphTooltipEval.textContent = `Advantage: ${moveevals.format({ cp })}${classification}`;
 	}
 	element_GraphTooltip.classList.remove('hidden');
 
@@ -685,10 +686,6 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 		pointY < graphHeight / 2
 			? `${Math.max(TOOLTIP_TOP_MARGIN, graphHeight - tooltipHeight - TOOLTIP_BOTTOM_MARGIN)}px` // Point is up top — tooltip goes near the bottom.
 			: `${TOOLTIP_TOP_MARGIN}px`; // Point is down low — tooltip goes near the top.
-}
-
-function formatAdvantage(cp: number): string {
-	return `${cp > 0 ? '+' : ''}${(cp / 100).toFixed(1)}`.replace('-', '−');
 }
 
 export default { init };

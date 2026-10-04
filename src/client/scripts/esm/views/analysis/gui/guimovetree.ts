@@ -12,7 +12,6 @@
 import type { VNode } from 'snabbdom';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
-import type { MoveEvalLabel } from '../moveevals.js';
 import type { GameConclusion } from '../../../../../../shared/chess/util/typeschemas.js';
 import type { AnalysisMoveNode } from '../movetree.js';
 
@@ -172,7 +171,7 @@ function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean, isMainline: b
 			h(
 				'span.review-eval',
 				{ attrs: { title: `Evaluation at depth ${evalLabel.depth}` } },
-				formatEvalLabel(evalLabel),
+				moveevals.format(evalLabel).replace('-', '−'), // Like lichess, only the move list uses a true minus.
 			),
 		);
 
@@ -340,14 +339,6 @@ moveevals.onLabel(scheduleReconcile);
 // more to clear their glyphs. Its eval labels and grafted lapse variations deliberately stay —
 // unlike the glyphs, both are real engine output that outlives the review that produced it.
 gamereview.onFinished(scheduleReconcile);
-
-/** Formats a white-POV score like lichess's inline move eval. */
-function formatEvalLabel(label: MoveEvalLabel): string {
-	if (label.mate !== undefined)
-		return label.mate > 0 ? `#${label.mate}` : `#−${Math.abs(label.mate)}`;
-	const pawns = (label.cp ?? 0) / 100;
-	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`.replace('-', '−');
-}
 
 // Context menu ----------------------------------------------------------------
 
