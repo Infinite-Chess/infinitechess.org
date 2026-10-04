@@ -111,7 +111,7 @@ function initEngineGame(options: {
 	if (engineregistry.REGISTRY[options.engine.name].hasGlue)
 		worker.postMessage({
 			engineUrl: options.engineAssets.engineUrl,
-			threads: getEngineThreadCount(),
+			threads: getEngineThreadCount(options.engine),
 		} satisfies EngineInitRequest);
 }
 
@@ -287,9 +287,12 @@ function requestGeneratedMoves(gamefile: GameFile): void {
 /**
  * Lazy SMP search threads for the engine: {@link enginewasm.defaultThreads}, reserving one
  * hardware thread for the main thread. Threading requires cross-origin isolation
- * (SharedArrayBuffer); without it the engine runs single-threaded.
+ * (SharedArrayBuffer); without it the engine runs single-threaded. Apeiron below its top
+ * level searches on one thread, so a pool there would only hold idle workers.
  */
-function getEngineThreadCount(): number {
+function getEngineThreadCount(engine: EngineAndConfig): number {
+	const maxLevel = engineregistry.REGISTRY[engine.name].maxStrengthLevel;
+	if (engine.name === 'apeiron' && engine.config.strengthLevel < maxLevel) return 1;
 	return enginewasm.defaultThreads(1);
 }
 
