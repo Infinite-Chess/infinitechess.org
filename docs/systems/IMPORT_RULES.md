@@ -130,16 +130,16 @@ dormant `views/editor/` and `views/checkmatepractice/`) and `SOCKET_PAGES` (`vie
 `views/game/`, `views/challenge/`). Reachability only sees pages listed in `ESMEntryPoints`, so a
 dormant page is never tested and its listing here stays inert until that entry lands.
 
-| Target                  | Allowed pages                                                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| client `game/`          | INTERACTIVE_BOARD_PAGES                                                                                                   |
-| client `board/`         | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`                                                               |
-| `shared/components/`    | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`, `components/header/`                                         |
-| `shared/chess/util/`    | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`, `components/header/`, engine workers (`game/chess/engines/`) |
-| `shared/chess/logic/`   | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`, engine workers                                               |
-| `shared/chess/engines/` | `views/index/` (engine card), `views/analysis/`                                                                           |
-| `shared/chess/game/`    | INTERACTIVE_BOARD_PAGES, `views/index/`                                                                                   |
-| `shared/transport/`     | SOCKET_PAGES                                                                                                              |
+| Target                  | Allowed pages                                                                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| client `game/`          | INTERACTIVE_BOARD_PAGES                                                                                                                          |
+| client `board/`         | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`                                                                                      |
+| `shared/components/`    | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`, `components/header/`                                                                |
+| `shared/chess/util/`    | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`, `components/header/`, engine workers (`game/chess/engines/`), `views/icnvalidator/` |
+| `shared/chess/logic/`   | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/challenge/`, engine workers, `views/icnvalidator/`                                               |
+| `shared/chess/engines/` | `views/index/` (engine card), `views/analysis/`                                                                                                  |
+| `shared/chess/game/`    | INTERACTIVE_BOARD_PAGES, `views/index/`, `views/icnvalidator/`                                                                                   |
+| `shared/transport/`     | SOCKET_PAGES                                                                                                                                     |
 
 Only rungs get reachability rules — the "any page" ranks fix direction only, so they need none. The
 rules come in two scopes: the client's own island rungs, and `src/shared`'s rungs — which of those a

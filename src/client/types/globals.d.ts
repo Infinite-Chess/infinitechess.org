@@ -82,6 +82,9 @@ declare global {
 	 */
 	var $downsamplerProcessorUrl: string;
 
+	/** Hashed URL for the ICN validator's worker script, injected by icnvalidator.njk via the asset manifest. */
+	var $icnValidatorWorkerUrl: string;
+
 	/** SSR→client data for the challenge page (/game/:id before its game exists), injected by challenge.njk. */
 	var challengePageData: ChallengePageData;
 

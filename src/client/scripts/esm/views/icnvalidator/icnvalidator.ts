@@ -191,9 +191,7 @@ async function validateGames(): Promise<void> {
 		}));
 
 		// Spawn Worker
-		const worker = new Worker('scripts/esm/icnvalidator/icnvalidator.worker.js', {
-			type: 'module',
-		});
+		const worker = new Worker(window.$icnValidatorWorkerUrl, { type: 'module' });
 		activeWorkers.push(worker);
 
 		// Handle Worker Loading Errors (e.g., 404, script syntax error)
