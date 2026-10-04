@@ -1,9 +1,9 @@
 // src/client/scripts/esm/views/analysis/moveevals.ts
 
 /**
- * Deepest known white-POV evaluation for every move-tree node on the analysis page.
- * Both normal interactive analysis and Game Review feed this store, so the move list
- * has one rendering path and never loses a deeper result to a shallower one.
+ * Deepest known white-POV evaluation for every move-tree node on the analysis page, fed by
+ * both normal analysis and Game Review so a deeper result is never lost to a shallower one.
+ * Also the one formatter every eval display on the page shares.
  */
 
 import ceval from './ceval.js';
