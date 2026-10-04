@@ -724,21 +724,22 @@ function dispatchNext(entry: ReviewWorker): void {
 	}
 }
 
+/** Whether position `index` is itself within the engine's safe coordinate range (evaluable). */
+function positionIsEvaluable(index: number): boolean {
+	// safeStartByIndex[index] > index exactly when ply `index` is the latest out-of-bounds position.
+	return safeStartByIndex[index]! <= index;
+}
+
 /**
  * The winner (or null for a draw) when the game's rules ended it at position `index`, which only
  * the final mainline position can be. Undefined when the game goes on, or ended off the board.
  */
 function terminalVictorAt(index: number): Player | null | undefined {
-	const conclusion = index === mainlineNodes.length ? mainlineNodes.at(-1)?.gameConclusion : undefined; // prettier-ignore
+	if (index !== mainlineNodes.length) return undefined;
+	const conclusion = mainlineNodes.at(-1)?.gameConclusion;
 	if (!conclusion || !winconutil.isConclusionMoveTriggered(conclusion.condition))
 		return undefined;
 	return conclusion.victor ?? null;
-}
-
-/** Whether position `index` is itself within the engine's safe coordinate range (evaluable). */
-function positionIsEvaluable(index: number): boolean {
-	// safeStartByIndex[index] > index exactly when ply `index` is the latest out-of-bounds position.
-	return safeStartByIndex[index]! <= index;
 }
 
 /** Canonical ICN for the position after `index` mainline plies. */
