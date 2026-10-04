@@ -84,7 +84,7 @@ function clearArrows(): void {
 	frametracker.onVisualChange();
 }
 
-/** Renders the engine arrows. Call each frame from a render hook. */
+/** Renders the engine arrows. */
 function render(): void {
 	if (arrows.length === 0) return;
 
@@ -99,6 +99,8 @@ function render(): void {
 
 	createRenderable(data, 2, 'TRIANGLES', 'color', true).render();
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	update,

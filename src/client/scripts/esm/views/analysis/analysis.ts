@@ -16,9 +16,8 @@ import guianalysisview from './gui/guianalysisview.js';
 import guianalysisactions from './gui/guianalysisactions.js';
 
 import './gui/guimovetree.js';
-import './rendering/reviewbadge.js';
 import '../../game/gui/guimaterial.js';
-import './rendering/analysisborderdebug.js';
+import './rendering/analysisoverlays.js';
 
 /** The analysis-page board canvas WebGL renders onto. */
 const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;

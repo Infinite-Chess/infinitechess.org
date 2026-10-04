@@ -169,7 +169,10 @@ function renders all items in the order:
 4. **Pieces** — All piece sprites
 5. **Above-piece overlays** — Arrows, animations, crosshair
 
-Call your script's render method in the appropriate section.
+Call your script's render method in the appropriate section. A visual only one page draws goes in
+that page's own overlays module instead (e.g.
+[`analysisoverlays.ts`](/src/client/scripts/esm/views/analysis/rendering/analysisoverlays.ts)),
+which draws through `GameBus`'s `render-below-pieces` / `render-above-pieces` hooks.
 
 ## Rendering Architecture: Render Contexts
 
