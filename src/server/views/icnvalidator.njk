@@ -11,7 +11,8 @@
 {% endblock %}
 
 {% block head %}
-<script>window.$icnValidatorWorkerUrl = "{{ manifest['scripts/esm/views/icnvalidator/icnvalidator.worker.ts'] }}";</script>
+{# SSR→client channel: the worker's and the engine's assets. #}
+<script>window.icnValidatorPageData = {{ icnValidatorPageData | json | safe }};</script>
 {% endblock %}
 
 {% block body %}
@@ -22,8 +23,9 @@
 		<p>
 			Checks the games output of an Apeiron engine SPRT run against the website's own chess
 			logic. Every game's ICN is replayed through the site's move generator and game-end
-			detection. Any disagreement (a parse failure, an illegal move, or a mismatched
-			conclusion) is a bug in either the engine or the website.
+			detection. Any disagreement (a parse failure, an illegal move, a mismatched
+			conclusion, or, with the movegen check, a different set of legal moves at any
+			position) is a bug in either the engine or the website.
 		</p>
 
 		<div class="upload-section" id="upload-section">
@@ -31,6 +33,11 @@
 			<p>Click to select, or drag and drop a JSON file containing an array of game notations.</p>
 			<label for="file-input" class="file-label">Choose File</label>
 			<input type="file" id="file-input" accept=".json" />
+			<label class="movegen-toggle">
+				<input type="checkbox" id="movegen-check" />
+				Movegen check: compare every position's legal moves with the engine (about 9× slower).
+				Tick before choosing a file.
+			</label>
 			<p class="file-name" id="file-name"></p>
 		</div>
 
@@ -67,6 +74,10 @@
 				<div class="stat-card">
 					<h3>Illegal Move Errors</h3>
 					<p class="stat-value error" id="illegal-move-errors">0</p>
+				</div>
+				<div class="stat-card">
+					<h3>Movegen Mismatch</h3>
+					<p class="stat-value error" id="movegen-mismatch-errors">0</p>
 				</div>
 				<div class="stat-card">
 					<h3>Termination Mismatch</h3>

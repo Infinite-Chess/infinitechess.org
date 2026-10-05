@@ -70,6 +70,7 @@ function displaySummary(results: ValidationResults): void {
 	updateStat('icnconverter-errors', results.icnconverterErrors);
 	updateStat('formulator-errors', results.formulatorErrors);
 	updateStat('illegal-move-errors', results.illegalMoveErrors);
+	updateStat('movegen-mismatch-errors', results.movegenMismatchErrors);
 	updateStat('termination-mismatch-errors', results.terminationMismatchErrors);
 
 	summarySection.style.display = 'block';
@@ -121,7 +122,8 @@ function createVariantItemVNode(variant: string, stats: VariantStats): VNode {
 			createStatVNode('ICN', stats.icn, true),
 			createStatVNode('Formulator', stats.formulator),
 			createStatVNode('Illegal', stats.illegal),
-			createStatVNode('Mismatch', stats.termination),
+			createStatVNode('Movegen', stats.movegen),
+			createStatVNode('Termination', stats.termination),
 		]),
 	]);
 }
@@ -134,7 +136,7 @@ function createStatVNode(
 ): VNode | null {
 	if (count === 0) return null;
 	const type = !isAlwaysWarn && count > 3 ? 'err' : 'warn';
-	return h(`div.v-stat.${type}.active`, [h('span', String(count)), ` ${label}`]);
+	return h(`div.v-stat.${type}`, [h('span', String(count)), ` ${label}`]);
 }
 
 // Failed Games ----------------------------------------------------------------

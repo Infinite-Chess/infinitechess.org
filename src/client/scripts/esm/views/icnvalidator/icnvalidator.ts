@@ -31,6 +31,7 @@ type LogType = 'info' | 'success' | 'warning' | 'error';
 const fileInput = document.querySelector<HTMLInputElement>('#file-input')!;
 const fileName = document.querySelector<HTMLParagraphElement>('#file-name')!;
 const uploadSection = document.querySelector<HTMLDivElement>('#upload-section')!;
+const movegenCheckbox = document.querySelector<HTMLInputElement>('#movegen-check')!;
 const progressSection = document.querySelector<HTMLDivElement>('#progress-section')!;
 const progressFill = document.querySelector<HTMLDivElement>('#progress-fill')!;
 const progressText = document.querySelector<HTMLParagraphElement>('#progress-text')!;
@@ -128,6 +129,7 @@ function validateGames(games: string[]): void {
 		icnconverterErrors: 0,
 		formulatorErrors: 0,
 		illegalMoveErrors: 0,
+		movegenMismatchErrors: 0,
 		terminationMismatchErrors: 0,
 		errors: [],
 		variantErrors: {},
@@ -136,7 +138,9 @@ function validateGames(games: string[]): void {
 	updateProgress(0, totalGames);
 	progressSection.style.display = 'block';
 
-	addLog(`Starting parallel validation with ${threadCount} workers...`, 'info');
+	const engineUrl = movegenCheckbox.checked ? window.icnValidatorPageData.engineUrl : undefined;
+	const movegenNote = engineUrl ? ', plus the movegen check' : '';
+	addLog(`Starting parallel validation with ${threadCount} workers${movegenNote}...`, 'info');
 
 	let gamesProcessed = 0;
 	let workersDone = 0;
@@ -158,12 +162,13 @@ function validateGames(games: string[]): void {
 			icn: game,
 		}));
 
-		const worker = new Worker(window.$icnValidatorWorkerUrl, { type: 'module' });
+		const worker = new Worker(window.icnValidatorPageData.workerUrl, { type: 'module' });
 		activeWorkers.push(worker);
 
 		// Loading errors (e.g., 404, script syntax error)
 		worker.onerror = (error) => {
-			if (runId === currentValidationId) abortRun(error);
+			const reason = error.message || 'Failed to load worker script';
+			if (runId === currentValidationId) abortRun(`Worker failed to start - ${reason}`);
 		};
 
 		// Track progress specific to this worker to avoid double-counting at the end
@@ -174,6 +179,10 @@ function validateGames(games: string[]): void {
 				itemsProcessedInChunk += e.data.count;
 				gamesProcessed += e.data.count;
 				updateProgress(gamesProcessed, totalGames);
+				return;
+			}
+			if (e.data.type === 'initerror') {
+				if (runId === currentValidationId) abortRun(e.data.message);
 				return;
 			}
 
@@ -190,7 +199,7 @@ function validateGames(games: string[]): void {
 			}
 		};
 
-		worker.postMessage({ chunkId: i, games: slice } satisfies ValidationRequest);
+		worker.postMessage({ chunkId: i, games: slice, engineUrl } satisfies ValidationRequest);
 	}
 }
 
@@ -202,12 +211,11 @@ function updateProgress(processed: number, total: number): void {
 	progressText.textContent = `Processed ${processed} / ${total}`;
 }
 
-/** Aborts the whole run when a worker fails to start. */
-function abortRun(error: ErrorEvent): void {
-	const msg = error.message || 'Failed to load worker script';
-	addLog(`✗ System Error: Worker failed to start - ${msg}`, 'error');
+/** Aborts the whole run when a worker can't start validating. */
+function abortRun(reason: string): void {
+	addLog(`✗ System Error: ${reason}`, 'error');
 
-	fileName.textContent = `❌ SYSTEM ERROR: Worker Script Failed`;
+	fileName.textContent = `❌ SYSTEM ERROR: Worker Failed`;
 	fileName.style.color = 'var(--danger-color)';
 
 	terminateWorkers();
@@ -222,6 +230,7 @@ function mergeChunkResults(globalResults: ValidationResults, results: ChunkResul
 	globalResults.icnconverterErrors += results.icnconverterErrors;
 	globalResults.formulatorErrors += results.formulatorErrors;
 	globalResults.illegalMoveErrors += results.illegalMoveErrors;
+	globalResults.movegenMismatchErrors += results.movegenMismatchErrors;
 	globalResults.terminationMismatchErrors += results.terminationMismatchErrors;
 
 	globalResults.errors.push(...results.errors);
@@ -236,6 +245,7 @@ function mergeChunkResults(globalResults: ValidationResults, results: ChunkResul
 		existing.icn += stats.icn;
 		existing.formulator += stats.formulator;
 		existing.illegal += stats.illegal;
+		existing.movegen += stats.movegen;
 		existing.termination += stats.termination;
 	}
 }

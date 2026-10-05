@@ -2,11 +2,13 @@
 
 /**
  * The ICN validator's worker. Takes one chunk of games and runs each through the
- * site's ICN parser, game builder and termination check, tallying every failure.
+ * site's ICN parser, game builder, optionally the movegen check against the engine,
+ * and the termination check, tallying every failure.
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { MovegenWasmModule } from './movegencheck.js';
 import type {
 	ChunkResults,
 	ValidationRequest,
@@ -19,19 +21,35 @@ import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 
+import enginewasm from '../../chess/enginewasm.js';
+import movegencheck from './movegencheck.js';
 import terminationcheck from './terminationcheck.js';
 
 // Message Handling ------------------------------------------------------------
 
 /** Validates the chunk of games the page sends, posting progress along the way and the tallies at the end. */
 self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
-	const { chunkId, games } = e.data;
+	const { chunkId, games, engineUrl } = e.data;
+
+	// One single-threaded engine per worker, for the movegen check
+	let wasm: MovegenWasmModule | undefined;
+	if (engineUrl !== undefined) {
+		try {
+			({ wasm } = await enginewasm.load<MovegenWasmModule>(engineUrl, 1));
+		} catch (error) {
+			console.error('[ICN Validator] Failed to initialize wasm', error);
+			const message = `Engine failed to load: ${jsutil.getErrorMessage(error)}`;
+			self.postMessage({ type: 'initerror', chunkId, message } satisfies ValidationResponse);
+			return;
+		}
+	}
 
 	const localResults: ChunkResults = {
 		successfulCount: 0,
 		icnconverterErrors: 0,
 		formulatorErrors: 0,
 		illegalMoveErrors: 0,
+		movegenMismatchErrors: 0,
 		terminationMismatchErrors: 0,
 		errors: [],
 		variantErrors: {},
@@ -45,6 +63,7 @@ self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
 				icn: 0,
 				formulator: 0,
 				illegal: 0,
+				movegen: 0,
 				termination: 0,
 			};
 		}
@@ -99,7 +118,25 @@ self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
 				continue;
 			}
 
-			// Stage 3: Termination Check
+			// Stage 3: Movegen Check, when requested
+			if (wasm) {
+				try {
+					movegencheck.validate(game, wasm);
+				} catch (error) {
+					localResults.movegenMismatchErrors++;
+					localResults.errors.push({
+						gameIndex: index,
+						phase: 'movegen-mismatch',
+						error: jsutil.getErrorMessage(error),
+						variant: variant,
+						icn: gameICN,
+					});
+					incrementVariantError(variant, 'movegen');
+					continue;
+				}
+			}
+
+			// Stage 4: Termination Check
 			try {
 				terminationcheck.validate(termination, result, game.gameConclusion);
 			} catch (error) {
@@ -139,6 +176,7 @@ self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
 				localResults.icnconverterErrors +
 				localResults.formulatorErrors +
 				localResults.illegalMoveErrors +
+				localResults.movegenMismatchErrors +
 				localResults.terminationMismatchErrors) %
 				10 ===
 			0

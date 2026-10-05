@@ -361,8 +361,9 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 - **A dev page validates ICNs in bulk** — `/icnvalidator`
   ([icnvalidator.worker.ts](/src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts))
   re-parses and re-formulates every logged game, reporting parse, construction, illegal-move and
-  termination-mismatch failures per variant. Pointed at the mass output of an engine SPRT run to
-  catch disagreements in legal-move or game-conclusion logic.
+  termination-mismatch failures per variant, plus, when ticked, positions where the site's and the
+  engine's legal moves differ. Pointed at the mass output of an engine SPRT run to catch
+  disagreements in legal-move or game-conclusion logic.
 
 ## File map
 

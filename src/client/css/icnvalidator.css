@@ -1,3 +1,12 @@
+/* src/client/css/icnvalidator.css */
+
+/* The ICN validator developer page: a dark, self-themed tool between the site header and footer.
+   Its colors are its own, independent of the site theme. */
+
+/* ==================================
+   Theme
+   ================================== */
+
 :root {
 	--bg-color: #191919;
 	--text-color: #d4d4d4;
@@ -11,6 +20,10 @@
 	--font-family:
 		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
+
+/* ==================================
+   Page
+   ================================== */
 
 main {
 	flex: 1;
@@ -41,6 +54,44 @@ h2 {
 	border-bottom: 2px solid var(--border-color);
 	padding-bottom: 0.5rem;
 }
+
+/* ==================================
+   Panels
+   ================================== */
+
+.progress-section,
+.summary-section,
+.details-section,
+.log-section {
+	background-color: var(--secondary-color);
+	border: 1px solid var(--border-color);
+	border-radius: 8px;
+	padding: 1.5rem;
+}
+
+/* Hidden until a run shows them. */
+.progress-section,
+.summary-section,
+.details-section {
+	display: none;
+}
+
+.progress-section,
+.summary-section {
+	margin-bottom: 2rem;
+}
+
+.details-section {
+	margin-bottom: 1rem;
+}
+
+.log-section {
+	margin-top: 2rem;
+}
+
+/* ==================================
+   Upload
+   ================================== */
 
 .upload-section {
 	background-color: var(--secondary-color);
@@ -80,22 +131,21 @@ input[type='file'] {
 	background-color: var(--accent-color);
 }
 
+.movegen-toggle {
+	display: block;
+	margin-top: 1rem;
+	cursor: pointer;
+}
+
 .file-name {
 	margin-top: 1rem;
-	color: var(--accent-color);
 }
 
-.progress-section {
-	background-color: var(--secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: 8px;
-	padding: 1.5rem;
-	margin-bottom: 2rem;
-	display: none;
-}
+/* ==================================
+   Progress
+   ================================== */
 
 .progress-bar {
-	width: 100%;
 	height: 30px;
 	background-color: var(--bg-color);
 	border-radius: 4px;
@@ -114,14 +164,9 @@ input[type='file'] {
 	font-weight: bold;
 }
 
-.summary-section {
-	background-color: var(--secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: 8px;
-	padding: 1.5rem;
-	margin-bottom: 2rem;
-	display: none;
-}
+/* ==================================
+   Summary
+   ================================== */
 
 .summary-hero {
 	display: flex;
@@ -149,7 +194,6 @@ input[type='file'] {
 }
 
 .hero-label {
-	color: var(--text-color);
 	opacity: 0.7;
 	font-size: 0.9rem;
 	font-weight: bold;
@@ -215,14 +259,66 @@ input[type='file'] {
 	color: var(--warning-color);
 }
 
-.details-section {
-	background-color: var(--secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: 8px;
-	padding: 1.5rem;
-	margin-bottom: 1rem;
-	display: none;
+/* ==================================
+   Variant Breakdown
+   ================================== */
+
+.variant-stats {
+	margin-top: 1rem;
 }
+
+.variant-item {
+	display: flex;
+	flex-direction: column;
+	padding: 0.75rem;
+	margin-bottom: 0.5rem;
+	background-color: var(--bg-color);
+	border-radius: 4px;
+}
+
+.variant-header {
+	display: flex;
+	justify-content: space-between;
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+}
+
+.variant-details {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	font-size: 0.85em;
+}
+
+.v-stat {
+	background-color: rgba(255, 255, 255, 0.1);
+	padding: 2px 8px;
+	border-radius: 4px;
+}
+
+.v-stat span {
+	font-weight: bold;
+}
+
+.v-stat.warn span {
+	color: var(--warning-color);
+}
+
+.v-stat.err span {
+	color: var(--danger-color);
+}
+
+.variant-errors.warn {
+	color: var(--warning-color);
+}
+
+.variant-errors.err {
+	color: var(--danger-color);
+}
+
+/* ==================================
+   Failed Games
+   ================================== */
 
 .error-list {
 	max-height: 800px;
@@ -242,12 +338,12 @@ input[type='file'] {
 	border-left-color: var(--warning-color);
 }
 
-.error-item.formulator {
-	border-left-color: var(--danger-color);
-}
-
 .error-item.illegal-move {
 	border-left-color: #e91e63;
+}
+
+.error-item.movegen-mismatch {
+	border-left-color: #009688;
 }
 
 .error-item.termination-mismatch {
@@ -284,6 +380,11 @@ input[type='file'] {
 	color: white;
 }
 
+.error-type.movegen-mismatch {
+	background-color: #009688;
+	color: white;
+}
+
 .error-type.termination-mismatch {
 	background-color: #9c27b0;
 	color: white;
@@ -315,72 +416,9 @@ input[type='file'] {
 	color: var(--accent-color);
 }
 
-.variant-stats {
-	margin-top: 1rem;
-}
-
-.variant-item {
-	display: flex;
-	flex-direction: column;
-	padding: 0.75rem;
-	margin-bottom: 0.5rem;
-	background-color: var(--bg-color);
-	border-radius: 4px;
-}
-
-.variant-header {
-	display: flex;
-	justify-content: space-between;
-	font-weight: bold;
-	margin-bottom: 0.5rem;
-}
-
-.variant-details {
-	display: flex;
-	gap: 0.5rem;
-	flex-wrap: wrap;
-	font-size: 0.85em;
-}
-
-.v-stat {
-	background-color: #333;
-	padding: 2px 8px;
-	border-radius: 4px;
-	color: #aaa;
-}
-
-.v-stat.active {
-	background-color: rgba(255, 255, 255, 0.1);
-	color: var(--text-color);
-}
-
-.v-stat span {
-	font-weight: bold;
-}
-
-.v-stat.warn span {
-	color: var(--warning-color);
-}
-
-.v-stat.err span {
-	color: var(--danger-color);
-}
-
-.variant-errors.warn {
-	color: var(--warning-color);
-}
-
-.variant-errors.err {
-	color: var(--danger-color);
-}
-
-.log-section {
-	background-color: var(--secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: 8px;
-	padding: 1.5rem;
-	margin-top: 2rem;
-}
+/* ==================================
+   Activity Log
+   ================================== */
 
 .log-output {
 	max-height: 300px;

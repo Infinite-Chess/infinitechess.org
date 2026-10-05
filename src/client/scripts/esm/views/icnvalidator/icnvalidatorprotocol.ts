@@ -16,6 +16,8 @@ export interface ValidationRequest {
 	chunkId: number;
 	/** `index` is 1-based, as the page displays it. */
 	games: { index: number; icn: string }[];
+	/** The engine glue to compare movegen against. Absent skips the movegen check. */
+	engineUrl?: string;
 }
 
 // Responses -------------------------------------------------------------------
@@ -25,7 +27,9 @@ export type ValidationResponse =
 	/** How many more games have been replayed since the last progress message. */
 	| { type: 'progress'; chunkId: number; count: number }
 	/** The chunk is finished, and these are its tallies. */
-	| { type: 'done'; chunkId: number; results: ChunkResults };
+	| { type: 'done'; chunkId: number; results: ChunkResults }
+	/** The engine failed to load, so the chunk wasn't validated. */
+	| { type: 'initerror'; chunkId: number; message: string };
 
 /** One worker's tallies for its whole chunk. */
 export interface ChunkResults {
@@ -33,6 +37,7 @@ export interface ChunkResults {
 	icnconverterErrors: number;
 	formulatorErrors: number;
 	illegalMoveErrors: number;
+	movegenMismatchErrors: number;
 	terminationMismatchErrors: number;
 	errors: ValidationError[];
 	variantErrors: Record<string, VariantStats>;
@@ -43,6 +48,7 @@ type ValidationPhase =
 	| 'icnconverter'
 	| 'formulator'
 	| 'illegal-move'
+	| 'movegen-mismatch'
 	| 'termination-mismatch'
 	| 'unknown';
 
@@ -63,6 +69,7 @@ interface VariantErrorCounts {
 	icn: number;
 	formulator: number;
 	illegal: number;
+	movegen: number;
 	termination: number;
 }
 
