@@ -5,17 +5,10 @@
  * used by both ends — the client to load a game, the server to inspect one.
  */
 
-import type { CoordsKey } from '../../util/coordutil.js';
 import type { GameConclusion } from '../util/typeschemas.js';
 import type { ClockValues, TimeControl } from '../util/clockutil.js';
 import type { LongFormatOut, PresetAnnotes } from '../logic/icn/icnconverter.js';
-import type {
-	Additional,
-	DatedVariant,
-	GameFile,
-	LoadedVariant,
-	VariantOptions,
-} from '../logic/gamefile.js';
+import type { Additional, DatedVariant, GameFile, VariantOptions } from '../logic/gamefile.js';
 
 import gamefile from '../logic/gamefile.js';
 import icnimport from '../logic/icn/icnimport.js';
@@ -98,7 +91,7 @@ function constructPosition(
  * Resolves a parsed ICN into everything its gamefile is constructed from:
  * the variant, the timestamps, and the position + moves as gamefile options.
  *
- * Loads the resolved variant module first, since the position is read off it whenever
+ * Loads the resolved variant module, since the position is read off it whenever
  * the ICN omits an explicit one (e.g. server-stored games carrying only Variant + moves).
  * An ICN with neither resolves to an empty position, left for position validation to reject.
  * That fallback is the sole reason this is async — see {@link constructionOptionsFromLongFormat}.
@@ -107,44 +100,32 @@ async function resolveConstructionOptions(
 	longFormat: LongFormatOut,
 	overrides?: ConstructionOverrides,
 ): Promise<GameConstructionOptions> {
-	const variant = await loadVariantOfLongFormat(longFormat);
+	const options = constructionOptionsFromLongFormat(longFormat, overrides);
+	if (options.variant === undefined) return options;
 
-	const positionSource = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant);
-	return constructionOptionsFromLongFormat(longFormat, overrides, positionSource);
-}
-
-/**
- * Loads the module of the variant an ICN declares, so the position can be read off
- * it when the ICN carries none. Undefined if the ICN names no recognized variant.
- */
-async function loadVariantOfLongFormat(
-	longFormat: LongFormatOut,
-): Promise<LoadedVariant | undefined> {
-	const code = variantregistry.resolveCode(longFormat.metadata.Variant);
-	if (code === undefined) return undefined;
-	await variantcache.ensureVariantLoaded(code);
-	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
-	return { code, dateTimestamp, mod: variantcache.getModule(code) };
+	await variantcache.ensureVariantLoaded(options.variant.code);
+	const variant = { ...options.variant, mod: variantcache.getModule(options.variant.code) };
+	const source = icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variant);
+	options.additional.variantOptions.position = source.position;
+	options.additional.variantOptions.state_global.specialRights = source.specialRights;
+	return options;
 }
 
 /**
  * The half of {@link resolveConstructionOptions} a parsed ICN determines on its own — everything
  * but the position fallback, which is the only part needing the variant module. Callers whose ICN
  * always carries an explicit position use this directly, and stay synchronous.
- * @param positionSource - The position to build from. Defaults to the ICN's own, or empty if it
- *   carries none — pass the variant's when you want a tag-only ICN to resolve to its position.
  */
 function constructionOptionsFromLongFormat(
 	longFormat: LongFormatOut,
 	overrides?: ConstructionOverrides,
-	positionSource?: { position: Map<CoordsKey, number>; specialRights: Set<CoordsKey> },
 ): PositionedConstructionOptions {
 	// The ICN's date is both the game's start and the variant revision it declares itself of.
 	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
 	const code = variantregistry.resolveCode(longFormat.metadata.Variant);
 
 	const additional: PositionedConstructionOptions['additional'] = {
-		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat, positionSource),
+		variantOptions: icnimport.variantOptionsFromLongFormat(longFormat),
 		...overrides,
 	};
 	// FUTURE: transfer the pasted move comments into the gamefile here, too.
