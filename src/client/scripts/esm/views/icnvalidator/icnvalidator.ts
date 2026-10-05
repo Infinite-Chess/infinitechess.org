@@ -9,16 +9,13 @@
  */
 
 import type { ValidationResults } from './gui/guivalidationresults.js';
-import type {
-	ChunkResults,
-	ValidationRequest,
-	ValidationResponse,
-} from './icnvalidatorprotocol.js';
+import type { ValidationRequest, ValidationResponse } from './icnvalidatorprotocol.js';
 
 import * as z from 'zod';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
+import chunkresults from './chunkresults.js';
 import guivalidationresults from './gui/guivalidationresults.js';
 
 // Types -----------------------------------------------------------------------
@@ -123,17 +120,7 @@ function validateGames(games: string[]): void {
 	const threadCount = navigator.hardwareConcurrency || 4;
 	const totalGames = games.length;
 
-	const globalResults: ValidationResults = {
-		total: totalGames,
-		successfulCount: 0,
-		icnconverterErrors: 0,
-		formulatorErrors: 0,
-		illegalMoveErrors: 0,
-		movegenMismatchErrors: 0,
-		terminationMismatchErrors: 0,
-		errors: [],
-		variantErrors: {},
-	};
+	const globalResults: ValidationResults = { total: totalGames, ...chunkresults.create() };
 
 	updateProgress(0, totalGames);
 	progressSection.style.display = 'block';
@@ -186,9 +173,9 @@ function validateGames(games: string[]): void {
 				return;
 			}
 
-			mergeChunkResults(globalResults, e.data.results);
+			chunkresults.merge(globalResults, e.data.results);
 
-			// Count the games that weren't reported in progress (errors, or the final batch < 10)
+			// Count the games of the final batch, too short to have been reported in progress
 			gamesProcessed += end - start - itemsProcessedInChunk;
 			workersDone++;
 			updateProgress(gamesProcessed, totalGames);
@@ -222,32 +209,6 @@ function abortRun(reason: string): void {
 	currentValidationId++; // Invalidate runId to stop loop/other callbacks
 
 	progressSection.style.display = 'none';
-}
-
-/** Adds one worker's chunk tallies into the run-wide totals. */
-function mergeChunkResults(globalResults: ValidationResults, results: ChunkResults): void {
-	globalResults.successfulCount += results.successfulCount;
-	globalResults.icnconverterErrors += results.icnconverterErrors;
-	globalResults.formulatorErrors += results.formulatorErrors;
-	globalResults.illegalMoveErrors += results.illegalMoveErrors;
-	globalResults.movegenMismatchErrors += results.movegenMismatchErrors;
-	globalResults.terminationMismatchErrors += results.terminationMismatchErrors;
-
-	globalResults.errors.push(...results.errors);
-
-	for (const [variant, stats] of Object.entries(results.variantErrors)) {
-		const existing = globalResults.variantErrors[variant];
-		if (!existing) {
-			globalResults.variantErrors[variant] = { ...stats };
-			continue;
-		}
-		existing.total += stats.total;
-		existing.icn += stats.icn;
-		existing.formulator += stats.formulator;
-		existing.illegal += stats.illegal;
-		existing.movegen += stats.movegen;
-		existing.termination += stats.termination;
-	}
 }
 
 /** Shows the run's results once every worker is done, unless the run was cancelled. */

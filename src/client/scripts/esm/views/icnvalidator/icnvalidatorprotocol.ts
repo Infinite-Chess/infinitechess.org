@@ -49,8 +49,7 @@ type ValidationPhase =
 	| 'formulator'
 	| 'illegal-move'
 	| 'movegen-mismatch'
-	| 'termination-mismatch'
-	| 'unknown';
+	| 'termination-mismatch';
 
 /** One game that failed, and where it failed. */
 export interface ValidationError {
