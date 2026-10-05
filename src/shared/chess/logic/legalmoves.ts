@@ -33,8 +33,9 @@ import typeutil, { players as p, rawTypes as r } from '../util/typeutil.js';
  * * For knightriders, one [2,1] hop is considered 1 step.
  * The range does NOT have to intersect the piece owning the slide (for example [8n, 12n],
  * which could be the case for colinear blocks), but limits[0] <= limits[1] is true ALWAYS.
+ * Read-only, since a moveset's limits are shared by every piece of its type.
  */
-export type SlideLimits = [bigint | null, bigint | null];
+export type SlideLimits = readonly [bigint | null, bigint | null];
 
 /** An object containing all the legal moves of a piece. */
 export interface LegalMoves {
@@ -254,7 +255,7 @@ function slide_CalcLegalLimit(
 
 	// For most we'll be comparing the x values, only exception is the vertical lines.
 	const axis = step[0] === 0n ? 1 : 0;
-	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
+	const limit: [bigint | null, bigint | null] = [...slideMoveset];
 
 	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
 	enforceWorldBorderOnSlideLimit(worldBorder, limit, coords, step); // Mutating
@@ -262,7 +263,7 @@ function slide_CalcLegalLimit(
 
 	// Iterate through all pieces on same line
 	for (const idx of line) {
-		const thisPiece = boardutil.getPieceFromIdx(o, idx)!; // { type, coords }
+		const thisPiece = boardutil.getDefinedPieceFromIdx(o, idx); // { type, coords }
 
 		/**
 		 * 0 => Piece doesn't block
@@ -301,7 +302,7 @@ function slide_CalcLegalLimit(
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
 function enforceWorldBorderOnSlideLimit(
 	worldBorder: UnboundedRectangle | undefined,
-	limit: SlideLimits,
+	limit: [bigint | null, bigint | null],
 	coords: Coords,
 	step: Vec2,
 ): void {

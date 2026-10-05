@@ -281,7 +281,7 @@ export function calcArrowsLineDraft(
 
 	const axis = slideDir[0] === 0n ? 1 : 0;
 
-	const firstPiece = boardutil.getPieceFromIdx(gamefile.pieces, organizedline[0]!)!;
+	const firstPiece = boardutil.getDefinedPieceFromIdx(gamefile.pieces, organizedline[0]!);
 
 	/**
 	 * The 2 intersections points of the whole organized line, consistent for every piece on it.
@@ -300,7 +300,7 @@ export function calcArrowsLineDraft(
 	const boundingBoxIntBD = bounds.castBoundingBoxToBigDecimal(boundingBoxInt!);
 
 	organizedline.forEach((idx) => {
-		const piece = boardutil.getPieceFromIdx(gamefile.pieces, idx)!;
+		const piece = boardutil.getDefinedPieceFromIdx(gamefile.pieces, idx);
 		const arrowPiece: ArrowPiece = {
 			type: piece.type,
 			coords: bdcoords.fromCoords(piece.coords),

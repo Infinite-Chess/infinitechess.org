@@ -8,7 +8,6 @@ import type { RawType, Player } from '../util/typeutil.js';
 import type { Coords, CoordsKey } from '../../util/coordutil.js';
 import type { OrganizedPieces, OrganizedPiecesBase, TypeRange } from './organizedpieces.js';
 
-import jsutil from '../../util/jsutil.js';
 import vectors from '../../util/math/vectors.js';
 import typeutil from '../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
@@ -283,11 +282,6 @@ function getCoordsFromIdx(o: OrganizedPiecesBase, idx: number): Coords {
 	return [o.XPositions[idx]!, o.YPositions[idx]!];
 }
 
-/** Whether an absolute index holds an undefined placeholder rather than a real piece. */
-function isIdxUndefinedPiece(o: OrganizedPiecesBase, idx: number): boolean {
-	return jsutil.binarySearch(o.typeRanges.get(o.types[idx]!)!.undefineds, idx).found;
-}
-
 /** The type of the piece on these coords, or undefined if the square is empty. */
 function getTypeFromCoords(o: OrganizedPiecesBase, coords: Coords): number | undefined {
 	const key = coordutil.getKeyFromCoords(coords);
@@ -331,20 +325,7 @@ function getAbsoluteIdx(o: OrganizedPiecesBase, piece: Piece): number {
 	return piece.index + o.typeRanges.get(piece.type)!.start;
 }
 
-/**
- * Returns the Piece object of the piece with given idx, or undefined if the
- * idx is an undefined placeholder (has to perform a search to find that out).
- * IF YOU KNOW it's not an undefined placeholder, use {@link getDefinedPieceFromIdx} instead for better performance.
- */
-function getPieceFromIdx(o: OrganizedPiecesBase, idx: number): Piece | undefined {
-	if (isIdxUndefinedPiece(o, idx)) return undefined;
-	return getDefinedPieceFromIdx(o, idx);
-}
-
-/**
- * Returns the Piece object of the piece with given idx. MORE PERFORMANT than {@link getPieceFromIdx}.
- * Only call if you know it's not an undefined placeholder.
- */
+/** The piece at an absolute index, which must hold a real piece, not an undefined placeholder. */
 function getDefinedPieceFromIdx(o: OrganizedPiecesBase, idx: number): Piece {
 	const type = o.types[idx]!;
 	return {
@@ -382,7 +363,6 @@ export default {
 	getPieceFromCoordsKey,
 	getRelativeIdx,
 	getAbsoluteIdx,
-	getPieceFromIdx,
 	getDefinedPieceFromIdx,
 	isPieceOnCoords,
 };

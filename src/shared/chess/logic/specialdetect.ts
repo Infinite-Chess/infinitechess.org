@@ -298,6 +298,8 @@ function appendPawnMoveAndAttachPromoteTag(
 ): void {
 	if (gameRules.promotion !== undefined) {
 		const teamPromotionRanks = gameRules.promotion.ranks[color];
+		// UI tag only. A real promotion tag would add a piece when check is simulated, which can
+		// regenerate the piece lists under walkers paused mid-iteration (checkmate.detect).
 		if (teamPromotionRanks?.includes(landCoords[1])) landCoords.promoteTrigger = true;
 	}
 
