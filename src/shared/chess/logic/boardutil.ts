@@ -207,6 +207,22 @@ function getBoundingBoxOfAllPieces(o: OrganizedPieces): BoundingBox | undefined 
 	return { left, right, bottom, top };
 }
 
+/** Yields every piece of the specified color, one at a time, so callers may stop early. */
+function* iteratePiecesOfColor(o: OrganizedPiecesBase, color: Player): Generator<Piece> {
+	for (const [type, range] of o.typeRanges) {
+		if (typeutil.getColorFromType(type) !== color) continue;
+		let undefinedidx = 0;
+		for (let idx = range.start; idx < range.end; idx++) {
+			if (idx === range.undefineds[undefinedidx]) {
+				// Is our next undefined piece entry, skip.
+				undefinedidx++;
+				continue;
+			}
+			yield getDefinedPieceFromIdx(o, idx);
+		}
+	}
+}
+
 /**
  * Efficiently iterates through every piece in a type range,
  * skipping over undefineds placeholders, executing callback
@@ -356,6 +372,7 @@ export default {
 	getCoordsOfAllPieces,
 	getRoyalCoordsOfColor,
 	getBoundingBoxOfAllPieces,
+	iteratePiecesOfColor,
 	iteratePiecesInTypeRange,
 	iteratePiecesInTypeRange_IncludeUndefineds,
 	// Getting A Single Piece
