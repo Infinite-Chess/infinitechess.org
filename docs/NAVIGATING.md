@@ -21,8 +21,8 @@ any that pop up should be patched as you go.
 
 ## Project Structure
 
-The entire source code of the project is located in [`src`](../src/). This contains all code that is
-ever run by either the server or client, and contains assets that are served to the client.
+The entire source code of the project is located in [`src`](../src/). This contains all code run by
+the server or client, the tests and developer tools that exercise it, and the client's assets.
 
 ```
 src/

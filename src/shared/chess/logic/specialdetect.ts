@@ -404,8 +404,8 @@ function roses(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 				else if (compareResult < 0)
 					individualMoves[i] = newCoord; // New move's path curves more towards the center
 				else {
-					// BOTH point equally point towards the origin.
-					// JUST pick a random one!
+					// Both curve equally towards the center: pick one at random. This makes the
+					// path tag nondeterministic, so the ICN validator's fingerprint hashes only its length.
 					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
 				}
 			}

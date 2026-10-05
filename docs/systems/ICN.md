@@ -358,12 +358,8 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
   trick). ICN is parsed from untrusted input on the server, and its stack of optional move parts is
   where catastrophic backtracking would bite. Keep new move patterns possessive.
 - **All coordinates are `BigInt`.** No coordinate is ever bounded or cast to `number`.
-- **A dev page validates ICNs in bulk** — `/icnvalidator`
-  ([icnvalidator.worker.ts](/src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts))
-  re-parses and re-formulates every logged game, reporting parse, construction, illegal-move and
-  termination-mismatch failures per variant, plus, when ticked, positions where the site's and the
-  engine's legal moves differ. Pointed at the mass output of an engine SPRT run to catch
-  disagreements in legal-move or game-conclusion logic.
+- **ICNs are validated in bulk** by the `/icnvalidator` dev page and `npm run validate-icn`, pointed
+  at an engine SPRT run's output to catch legal-move or game-conclusion bugs.
 
 ## File map
 
@@ -383,4 +379,4 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 | Logged-game ICN writer                             | [gamelogger.ts](/src/server/game/gamemanager/gamelogger.ts)                                                                             |
 | Live-game moves column                             | [liveGameValues.ts](/src/server/game/gamemanager/liveGameValues.ts), [LIVE_GAME_PERSISTENCE.md](/docs/systems/LIVE_GAME_PERSISTENCE.md) |
 | Custom-position seek validation                    | [createseek.ts](/src/server/game/seeksmanager/createseek.ts)                                                                            |
-| Bulk validation dev page                           | [icnvalidator.worker.ts](/src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts)                                             |
+| Bulk validation (dev page and command)             | [chunkvalidator.ts](/src/client/scripts/esm/views/icnvalidator/chunkvalidator.ts)                                                       |

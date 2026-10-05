@@ -20,6 +20,7 @@ function create(): ChunkResults {
 		terminationMismatchErrors: 0,
 		errors: [],
 		variantErrors: {},
+		fingerprint: 0,
 	};
 }
 
@@ -47,6 +48,8 @@ function merge(total: ChunkResults, chunk: ChunkResults): void {
 		existing.movegen += stats.movegen;
 		existing.termination += stats.termination;
 	}
+
+	total.fingerprint = (total.fingerprint + chunk.fingerprint) >>> 0;
 }
 
 // Exports ---------------------------------------------------------------------

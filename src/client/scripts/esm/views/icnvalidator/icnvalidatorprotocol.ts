@@ -1,13 +1,13 @@
 // src/client/scripts/esm/views/icnvalidator/icnvalidatorprotocol.ts
 
 /**
- * The message protocol between the ICN validator page and its workers.
- *
- * The page splits the uploaded games into one chunk per hardware thread, and each
- * worker replays its chunk and reports back the games the site disagreed with.
+ * The ICN validator's data contract: the messages between the page and its
+ * workers, and the games json it reads.
  */
 
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
+
+import * as z from 'zod';
 
 // Requests --------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ export type ValidationResponse =
 	/** The engine failed to load, so the chunk wasn't validated. */
 	| { type: 'initerror'; chunkId: number; message: string };
 
-/** One worker's tallies for its whole chunk. */
+/** One chunk's tallies. */
 export interface ChunkResults {
 	successfulCount: number;
 	icnconverterErrors: number;
@@ -41,6 +41,8 @@ export interface ChunkResults {
 	terminationMismatchErrors: number;
 	errors: ValidationError[];
 	variantErrors: Record<string, VariantStats>;
+	/** The sum, mod 2^32, of every position's move hash. 0 unless the fingerprint was requested. */
+	fingerprint: number;
 }
 
 /** The stage a game failed at. Doubles as the error item's CSS class on the page. */
@@ -79,3 +81,8 @@ export type VariantErrorType = keyof VariantErrorCounts;
 export interface VariantStats extends VariantErrorCounts {
 	total: number;
 }
+
+// Schemas ---------------------------------------------------------------------
+
+/** The games json an SPRT run writes: one ICN per game. */
+export const SPRTGamesSchema = z.array(z.string());

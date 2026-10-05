@@ -9,14 +9,12 @@
  */
 
 import type { ValidationResults } from './gui/guivalidationresults.js';
-import type { ValidationRequest, ValidationResponse } from './icnvalidatorprotocol.js';
-
-import * as z from 'zod';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import chunkresults from './chunkresults.js';
 import guivalidationresults from './gui/guivalidationresults.js';
+import { SPRTGamesSchema, ValidationRequest, ValidationResponse } from './icnvalidatorprotocol.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -33,11 +31,6 @@ const progressSection = document.querySelector<HTMLDivElement>('#progress-sectio
 const progressFill = document.querySelector<HTMLDivElement>('#progress-fill')!;
 const progressText = document.querySelector<HTMLParagraphElement>('#progress-text')!;
 const logOutput = document.querySelector<HTMLDivElement>('#log-output')!;
-
-// Schemas ---------------------------------------------------------------------
-
-/** The games json an SPRT run writes: one ICN per game. */
-const SPRTGamesSchema = z.array(z.string());
 
 // State -----------------------------------------------------------------------
 

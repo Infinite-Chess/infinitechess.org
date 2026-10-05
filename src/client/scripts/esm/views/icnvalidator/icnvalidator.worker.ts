@@ -32,7 +32,7 @@ self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
 		}
 	}
 
-	const results = await chunkvalidator.validate(games, wasm, (count) =>
+	const results = await chunkvalidator.validate(games, { wasm, fingerprint: false }, (count) =>
 		self.postMessage({ type: 'progress', chunkId, count } satisfies ValidationResponse),
 	);
 	self.postMessage({ type: 'done', chunkId, results } satisfies ValidationResponse);

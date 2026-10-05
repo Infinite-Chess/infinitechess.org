@@ -99,6 +99,7 @@
     "generate:types": "tsx scripts/generate-translation-types.ts && tsx scripts/generate-component-translation-types.ts",
     "setup:engine": "tsx scripts/setup-engine.ts",
     "optimize-images": "tsx scripts/optimize-images.ts",
+    "validate-icn": "tsx src/client/scripts/esm/views/icnvalidator/icnvalidator.cli.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:quiet": "o=$(npm test --silent 2>&1) || { printf '%s\\n' \"$o\"; exit 1; }",

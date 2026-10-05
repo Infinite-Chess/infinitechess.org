@@ -41,13 +41,19 @@ export type SlideLimits = readonly [bigint | null, bigint | null];
 export interface LegalMoves {
 	/** A list of the legal jumping move coordinates: `[[1,2], [2,1]]` */
 	individual: CoordsTagged[];
-	/** A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}` */
+	/** A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, null]}` */
 	sliding: Record<Vec2Key, SlideLimits>;
-	/** If provided, all sliding moves will brute-force test for check to see if their actually legal to move to. Use when our piece moves colinearly to a piece pinning it, or if our piece is a royal queen. */
+	/**
+	 * If set, every slide square is simulated for check before it counts as legal. Set for a
+	 * royal slider (royal queen), and for a piece moving colinearly with a piece pinning it.
+	 */
 	brute?: boolean;
 	/** The ignore function of the piece, to skip over moves. */
 	ignoreFunc: IgnoreFunction;
-	/** Whether the generated moves are for a colinear mover (huygen). */
+	/**
+	 * Whether the moves are a colinear mover's: one with a custom ignore or
+	 * blocking function (huygen), or a non-primitive slide vector (4D).
+	 */
 	colinear: boolean;
 }
 

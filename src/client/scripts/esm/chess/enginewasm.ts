@@ -15,8 +15,8 @@ import typeutil, { rawTypes as r } from '../../../../shared/chess/util/typeutil.
 
 /** The exports every engine glue module provides. */
 export interface EngineWasmModule {
-	/** wasm-bindgen's init. Compiles and instantiates the .wasm alongside the glue. */
-	default: () => Promise<EngineWasmInitOutput>;
+	/** wasm-bindgen's init. Compiles and instantiates the .wasm alongside the glue, unless handed its bytes. */
+	default: (init?: { module_or_path: BufferSource }) => Promise<EngineWasmInitOutput>;
 	/** Starts the rayon thread pool. Absent on single-threaded engine builds. */
 	initThreadPool?: (threads: number) => Promise<void>;
 }
