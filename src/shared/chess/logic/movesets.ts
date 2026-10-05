@@ -164,11 +164,8 @@ function generateLeaperMoves(m: bigint, n: bigint): Coords[] {
 
 /**
  * Returns the movesets of all the pieces, modified according to the specified slideLimit gamerule.
- *
- * These movesets are called as functions so that they return brand
- * new copies of each moveset so there's no risk of accidentally modifying the originals.
  * @param slideLimit - Optional. The slideLimit gamerule value.
- * @returns Object containing the movesets of all pieces except pawns.
+ * @returns The movesets of every piece type.
  */
 function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 	if (typeof slideLimit !== 'bigint' && slideLimit !== null)

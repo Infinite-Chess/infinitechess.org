@@ -14,8 +14,8 @@
 import type { Promotion } from '../util/gamerules.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { Coords, CoordsKey } from '../../util/coordutil.js';
-import type { PieceMoveset, SlideKey } from './movesets.js';
-import type { Player, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
+import type { Movesets, SlideKey } from './movesets.js';
+import type { Player, RawType, TypeGroup } from '../util/typeutil.js';
 
 import bimath from '../../util/math/bimath.js';
 import gamerules from '../util/gamerules.js';
@@ -636,10 +636,7 @@ function getXFromLine(step: Coords, coords: Coords): bigint {
  * Must be called after `typeutil.deleteUnusedFromRawTypeGroup` has trimmed
  * `pieceMovesets` to only existing types, so slide computation is correct.
  */
-function addSlideLines(
-	base: OrganizedPiecesBase,
-	pieceMovesets: RawTypeGroup<() => PieceMoveset>,
-): OrganizedPieces {
+function addSlideLines(base: OrganizedPiecesBase, pieceMovesets: Movesets): OrganizedPieces {
 	const slides = getPossibleSlides(pieceMovesets);
 	const hippogonalsPresent = areHippogonalsPresentInGame(slides);
 
@@ -665,10 +662,9 @@ function addSlideLines(
  * The `[1,0]` direction is always included so castling can work.
  * @param pieceMovesets - Must already be trimmed to only existing types.
  */
-function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec2[] {
+function getPossibleSlides(pieceMovesets: Movesets): Vec2[] {
 	const slides = new Set<SlideKey>(['1,0']); // '1,0' is required if castling is enabled.
-	for (const rawtype in pieceMovesets) {
-		const moveset = pieceMovesets[Number(rawtype) as RawType]!();
+	for (const moveset of Object.values(pieceMovesets)) {
 		if (!moveset.sliding) continue;
 		Object.keys(moveset.sliding).forEach((slide) => slides.add(slide as SlideKey));
 	}

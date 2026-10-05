@@ -67,15 +67,11 @@ const MAX_BRUTE_SIMULATIONS = 200n;
 
 // Reading a Moveset -----------------------------------------------------------
 
-/**
- * Gets the moveset of the type of piece specified.
- */
+/** Gets the moveset of the type of piece specified. */
 function getPieceMoveset(boardsim: Board, pieceType: number): PieceMoveset {
 	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
 	if (player === p.NEUTRAL) return { colinear: false }; // Neutral pieces CANNOT MOVE!
-	const movesetFunc = boardsim.pieceMovesets[rawType];
-	if (!movesetFunc) return { colinear: false }; // Safety net.
-	return movesetFunc(); // Calling these parameters as a function returns their moveset.
+	return boardsim.pieceMovesets[rawType]!; // Every existing type gets a moveset
 }
 
 /**

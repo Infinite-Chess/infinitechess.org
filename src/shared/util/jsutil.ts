@@ -110,13 +110,6 @@ function findIndexOfPointInOrganizedArray(sortedArray: number[], point: number):
 	return binarySearch(sortedArray, point).index;
 }
 
-/** Copies every own property of `objSrc` onto `objDest`, overwriting any that collide. */
-function copyPropertiesToObject(objSrc: Record<string, any>, objDest: Record<string, any>): void {
-	for (const [key, value] of Object.entries(objSrc)) {
-		objDest[key] = value;
-	}
-}
-
 /** Whether an object has no own enumerable properties. */
 function isEmpty(obj: object): boolean {
 	for (const prop in obj) {
@@ -161,7 +154,6 @@ export default {
 	binarySearch,
 	addElementToOrganizedArray,
 	findIndexOfPointInOrganizedArray,
-	copyPropertiesToObject,
 	isEmpty,
 	invertObj,
 	getErrorMessage,
