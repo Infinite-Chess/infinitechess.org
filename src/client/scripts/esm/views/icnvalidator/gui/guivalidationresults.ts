@@ -69,10 +69,10 @@ let resultsVNode: VNode | Element = document.querySelector('#results')!;
 let results: ValidationResults | undefined;
 /** The failure type the failed-game list is narrowed to, if any. */
 let filter: ValidationPhase | undefined;
-/** The games whose full ICN is unfolded. */
-const expandedIcns = new Set<number>();
-/** The game whose ICN was just copied, while its button confirms it. */
-let copiedGame: number | undefined;
+/** The failures whose full ICN is unfolded. */
+const expandedIcns = new Set<ValidationError>();
+/** The failure whose ICN was just copied, while its button confirms it. */
+let copiedFailure: ValidationError | undefined;
 let copiedTimer: number | undefined;
 
 // Rendering -------------------------------------------------------------------
@@ -211,14 +211,14 @@ function createVariantTableVNode(variantErrors: Record<string, VariantStats>): V
 
 // Failed Games ----------------------------------------------------------------
 
-/** Every failed game, narrowed to the filtered type if there is one. Nothing when every game passed. */
+/** Every failure, narrowed to the filtered type if there is one. Nothing when every game passed. */
 function createFailuresVNode(errors: ValidationError[]): VNode | null {
 	if (errors.length === 0) return null;
 	const shown = filter ? errors.filter((error) => error.phase === filter) : errors;
 
 	return h('section.failures', [
 		h('div.failures-head', [
-			h('h2.section-title', ['Failed games', h('span.section-count', String(shown.length))]),
+			h('h2.section-title', ['Failures', h('span.section-count', String(shown.length))]),
 			filter ? createFilterClearVNode(filter) : null,
 		]),
 		h(
@@ -237,11 +237,11 @@ function createFilterClearVNode(phase: ValidationPhase): VNode {
 	);
 }
 
-/** One failed game: where it failed, why, and its ICN. */
+/** One failure: its game, where it failed, why, and the ICN. A game may fail more than one check. */
 function createFailureVNode(error: ValidationError): VNode {
-	const copied = copiedGame === error.gameIndex;
-	const expanded = expandedIcns.has(error.gameIndex);
-	return h(`li.failure.phase-${error.phase}`, { key: error.gameIndex }, [
+	const copied = copiedFailure === error;
+	const expanded = expandedIcns.has(error);
+	return h(`li.failure.phase-${error.phase}`, { key: `${error.gameIndex}-${error.phase}` }, [
 		h('div.failure-head', [
 			h('span.failure-game', `#${error.gameIndex}`),
 			error.variant ? h('span.failure-variant', error.variant) : null,
@@ -262,7 +262,7 @@ function createFailureVNode(error: ValidationError): VNode {
 			h('code.failure-icn-text.scrollbar-thin', error.icn),
 			h(
 				'button.icn-toggle',
-				{ attrs: { type: 'button' }, on: { click: () => toggleIcn(error.gameIndex) } },
+				{ attrs: { type: 'button' }, on: { click: () => toggleIcn(error) } },
 				expanded ? 'Collapse' : 'Expand',
 			),
 		]),
@@ -281,21 +281,21 @@ function createTerminationVNode(error: ValidationError): VNode {
 	]);
 }
 
-/** Copies a failed game's ICN, then briefly confirms it on its button. */
+/** Copies a failure's ICN, then briefly confirms it on its button. */
 async function copyIcn(error: ValidationError): Promise<void> {
 	if (!(await docutil.copyToClipboard(error.icn))) return;
-	copiedGame = error.gameIndex;
+	copiedFailure = error;
 	render();
 	clearTimeout(copiedTimer);
 	copiedTimer = window.setTimeout(() => {
-		copiedGame = undefined;
+		copiedFailure = undefined;
 		render();
 	}, COPIED_CONFIRMATION_MS);
 }
 
-/** Unfolds a failed game's full ICN, or folds it back to one line. */
-function toggleIcn(gameIndex: number): void {
-	if (!expandedIcns.delete(gameIndex)) expandedIcns.add(gameIndex);
+/** Unfolds a failure's full ICN, or folds it back to one line. */
+function toggleIcn(error: ValidationError): void {
+	if (!expandedIcns.delete(error)) expandedIcns.add(error);
 	render();
 }
 
