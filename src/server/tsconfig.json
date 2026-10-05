@@ -5,6 +5,7 @@
   "compilerOptions": {
     "composite": true,
     "noEmit": true, // esbuild does the emitting; this project only type-checks.
+    "types": ["node"],
     "tsBuildInfoFile": "../../dist/tsconfig.server.tsbuildinfo"
   },
 
