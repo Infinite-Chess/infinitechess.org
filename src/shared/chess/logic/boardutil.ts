@@ -8,7 +8,6 @@ import type { RawType, Player } from '../util/typeutil.js';
 import type { Coords, CoordsKey } from '../../util/coordutil.js';
 import type { OrganizedPieces, OrganizedPiecesBase, TypeRange } from './organizedpieces.js';
 
-import vectors from '../../util/math/vectors.js';
 import typeutil from '../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
 import organizedpieces from './organizedpieces.js';
@@ -154,21 +153,11 @@ function getRoyalCoordsOfColor(o: OrganizedPiecesBase, color: Player): Coords[] 
 function getBoundingBoxOfAllPieces(o: OrganizedPieces): BoundingBox | undefined {
 	if (o.coords.size === 0) return undefined; // No pieces
 
-	const allSlides = Array.from(o.lines.keys());
+	const lineGroups = Array.from(o.lines.values());
+	const vertGroup = lineGroups.find((group) => group.step[0] === 0n); // A single vertical slide direction
+	const horzGroup = lineGroups.find((group) => group.step[1] === 0n); // A single horizontal slide direction
 
-	// Find a single vertical slide direction
-	const vertSlideKey = allSlides.find((slideKey) => {
-		const vec = vectors.getVec2FromKey(slideKey);
-		return vec[0] === 0n;
-	});
-
-	// Find a single horizontal slide direction
-	const horzSlideKey = allSlides.find((slideKey) => {
-		const vec = vectors.getVec2FromKey(slideKey);
-		return vec[1] === 0n;
-	});
-
-	if (vertSlideKey === undefined || horzSlideKey === undefined) {
+	if (vertGroup === undefined || horzGroup === undefined) {
 		// This can happen in practice checkmate 1K3NR-1k.
 		// Only console warn if there is a large number of pieces
 		if (o.coords.size > 1_000_000)
@@ -181,10 +170,9 @@ function getBoundingBoxOfAllPieces(o: OrganizedPieces): BoundingBox | undefined 
 	// Find the left-most and right-most vertical lines
 	let left: bigint | undefined = undefined;
 	let right: bigint | undefined = undefined;
-	const vertSlide = vectors.getVec2FromKey(vertSlideKey);
-	for (const lineKey of o.lines.get(vertSlideKey)!.keys()) {
+	for (const lineKey of vertGroup.lines.keys()) {
 		const C = organizedpieces.getCFromKey(lineKey);
-		const x = C / -vertSlide[1]; // Reverse engineered vectors.getLineCFromCoordsAndVec() to obtain x
+		const x = C / -vertGroup.step[1]; // Reverse engineered vectors.getLineCFromCoordsAndVec() to obtain x
 		if (left === undefined || x < left) left = x;
 		if (right === undefined || x > right) right = x;
 	}
@@ -192,10 +180,9 @@ function getBoundingBoxOfAllPieces(o: OrganizedPieces): BoundingBox | undefined 
 	// Find the bottom-most and top-most horizontal lines
 	let bottom: bigint | undefined = undefined;
 	let top: bigint | undefined = undefined;
-	const horzSlide = vectors.getVec2FromKey(horzSlideKey);
-	for (const lineKey of o.lines.get(horzSlideKey)!.keys()) {
+	for (const lineKey of horzGroup.lines.keys()) {
 		const C = organizedpieces.getCFromKey(lineKey);
-		const y = C / horzSlide[0]; // Reverse engineered vectors.getLineCFromCoordsAndVec() to obtain y
+		const y = C / horzGroup.step[0]; // Reverse engineered vectors.getLineCFromCoordsAndVec() to obtain y
 		if (bottom === undefined || y < bottom) bottom = y;
 		if (top === undefined || y > top) top = y;
 	}
@@ -284,17 +271,15 @@ function getCoordsFromIdx(o: OrganizedPiecesBase, idx: number): Coords {
 
 /** The type of the piece on these coords, or undefined if the square is empty. */
 function getTypeFromCoords(o: OrganizedPiecesBase, coords: Coords): number | undefined {
-	const key = coordutil.getKeyFromCoords(coords);
-	if (!o.coords.has(key)) return undefined;
-	const idx = o.coords.get(key)!;
+	const idx = o.coords.get(coordutil.getKeyFromCoords(coords));
+	if (idx === undefined) return undefined;
 	return o.types[idx]!;
 }
 
 /** The piece on these coords, or undefined if the square is empty. */
 function getPieceFromCoords(o: OrganizedPiecesBase, coords: Coords): Piece | undefined {
-	const key = coordutil.getKeyFromCoords(coords);
-	if (!o.coords.has(key)) return undefined;
-	const idx = o.coords.get(key)!;
+	const idx = o.coords.get(coordutil.getKeyFromCoords(coords));
+	if (idx === undefined) return undefined;
 	const type = o.types[idx]!;
 	return {
 		type,
@@ -305,8 +290,8 @@ function getPieceFromCoords(o: OrganizedPiecesBase, coords: Coords): Piece | und
 
 /** The piece on this coords key, or undefined if the square is empty. */
 function getPieceFromCoordsKey(o: OrganizedPiecesBase, coordsKey: CoordsKey): Piece | undefined {
-	if (!o.coords.has(coordsKey)) return undefined;
-	const idx = o.coords.get(coordsKey)!;
+	const idx = o.coords.get(coordsKey);
+	if (idx === undefined) return undefined;
 	const type = o.types[idx]!;
 	return {
 		type,

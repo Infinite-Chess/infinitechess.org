@@ -541,7 +541,7 @@ function getPiecesInBox(gamefile: GameFile, intBox: BoundingBox): Piece[] {
 	const step: Vec2 = axis === 0 ? [1n, 0n] : [0n, 1n];
 
 	const slideKey = vectors.getKeyFromVec2(step);
-	const lines = o.lines.get(slideKey)!; // All lines of pieces going in one vector direction
+	const lines = o.lines.get(slideKey)!.lines; // All lines of pieces going in one vector direction
 
 	/** Running list of all pieces within the box. */
 	const piecesInSelection: Piece[] = [];

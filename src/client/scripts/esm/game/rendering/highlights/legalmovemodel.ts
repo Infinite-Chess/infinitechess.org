@@ -567,7 +567,7 @@ function getOptimalPieceOnCoordsChecker(
 	const lineDir: Vec2 = vectors.absVector(step);
 	const lineGroup = o.lines.get(vectors.getKeyFromVec2(lineDir));
 	// All pieces on this exact line (empty if the line has no pieces at all).
-	const piecesLine: number[] = lineGroup?.get(organizedpieces.getKeyFromLine(lineDir, startCoords)) ?? []; // prettier-ignore
+	const piecesLine: number[] = lineGroup?.lines.get(organizedpieces.getKeyFromLine(lineDir, startCoords)) ?? []; // prettier-ignore
 	const digitCount: number =
 		bimath.countDigits(startCoords[0]) + bimath.countDigits(startCoords[1]);
 

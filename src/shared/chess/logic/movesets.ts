@@ -19,6 +19,11 @@ import specialdetect from './specialdetect.js';
 import { primalityTest } from '../../util/math/isprime.js';
 import { rawTypes as r } from '../util/typeutil.js';
 
+// Types -----------------------------------------------------------------------
+
+/** A slide direction `'dx,dy'`, canonical so each has one key: dx is never negative, and if it's 0, dy is positive. */
+export type SlideKey = Vec2Key;
+
 /** A Movesets object containing the movesets for every piece type in a game */
 export type Movesets = RawTypeGroup<PieceMoveset>;
 
@@ -43,10 +48,9 @@ interface RawPieceMoveset {
 	 *
 	 * The *key* is the step amount of each skip, and the *value* is the skip limit in the -x and +x directions (-y and +y if it's vertical).
 	 *
-	 * THE X-KEY SHOULD NEVER BE NEGATIVE!!! And if it's 0, then Y should be positive.
 	 * THE 0-INDEX LIMIT SHOULD ALWAYS BE NEGATIVE (OR NULL)!!!
 	 */
-	readonly sliding?: Readonly<Record<Vec2Key, SlideLimits>>;
+	readonly sliding?: Readonly<Record<SlideKey, SlideLimits>>;
 	/**
 	 * The initial function that determines how far a piece is legally able to slide
 	 * according to what pieces block it.
@@ -176,11 +180,11 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 	// Define common movesets to reduce duplication
 	const kingMoves: Coords[] = generateCompassMoves(1n);
 	const knightMoves = generateLeaperMoves(1n, 2n);
-	const rookMoves: Record<Vec2Key, SlideLimits> = {
+	const rookMoves: Record<SlideKey, SlideLimits> = {
 		'1,0': slideLimits,
 		'0,1': slideLimits,
 	};
-	const bishopMoves: Record<Vec2Key, SlideLimits> = {
+	const bishopMoves: Record<SlideKey, SlideLimits> = {
 		'1,1': slideLimits,
 		'1,-1': slideLimits,
 	};
@@ -318,7 +322,7 @@ function isMovesetColinear(moveset: RawPieceMoveset): boolean {
 	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
 	 */
 	if (moveset.sliding) {
-		const slides: Vec2[] = (Object.keys(moveset.sliding) as Vec2Key[]).map((s) =>
+		const slides: Vec2[] = (Object.keys(moveset.sliding) as SlideKey[]).map((s) =>
 			vectors.getVec2FromKey(s),
 		);
 		if (slides.some((s) => isVectorColinear(s))) return true; // Colinear

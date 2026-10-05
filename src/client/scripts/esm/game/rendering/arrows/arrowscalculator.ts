@@ -219,25 +219,23 @@ function generateArrowsDraft(): SlideArrowsDraft {
 	/** The running list of arrows that should be visible */
 	const slideArrowsDraft: SlideArrowsDraft = {};
 	const gamefile = gameslot.getGamefile()!;
-	gamefile.pieces.slides.forEach((slide: Vec2) => {
+	gamefile.pieces.lines.forEach(({ step, lines }, slideKey) => {
 		// For each slide direction in the game...
-		const slideKey: Vec2Key = vectors.getKeyFromVec2(slide);
 
 		// Find the 2 points on opposite sides of the bounding box
 		// that will contain all organized lines of the given vector
 		// intersecting the box between them.
 
-		const containingPoints = geometry.findCrossSectionalWidthPoints(slide, boundingBoxInt!);
+		const containingPoints = geometry.findCrossSectionalWidthPoints(step, boundingBoxInt!);
 		const containingPointsLineC = containingPoints.map((point) =>
-			vectors.getLineCFromCoordsAndVec(point, slide),
+			vectors.getLineCFromCoordsAndVec(point, step),
 		) as [bigint, bigint];
 		// Any line of this slope of which its C value is not within these 2 are outside of our screen,
 		// so no arrows will be visible for the piece.
 		containingPointsLineC.sort((a, b) => bimath.compare(a, b)); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
 
 		// For all our lines in the game with this slope...
-		const organizedLinesOfDir = gamefile.pieces.lines.get(slideKey)!;
-		for (const [lineKey, organizedLine] of organizedLinesOfDir) {
+		for (const [lineKey, organizedLine] of lines) {
 			// The C of the lineKey (`C|X`) with this slide at the very left & right sides of the screen.
 			const C: bigint = organizedpieces.getCFromKey(lineKey);
 			if (
@@ -247,7 +245,7 @@ function generateArrowsDraft(): SlideArrowsDraft {
 				continue; // Next line, this one is off-screen, so no piece arrows are visible
 
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
-			const arrowsLine = calcArrowsLineDraft(gamefile, slide, slideKey, organizedLine);
+			const arrowsLine = calcArrowsLineDraft(gamefile, step, slideKey, organizedLine);
 			if (arrowsLine === undefined) continue;
 			if (!slideArrowsDraft[slideKey]) slideArrowsDraft[slideKey] = {}; // Make sure this exists first
 			slideArrowsDraft[slideKey][lineKey] = arrowsLine; // Add this arrows line to our object containing all arrows for this frame
@@ -516,12 +514,12 @@ export function isAnimatedArrowUnnecessary(
 export function getSlideExceptions(mode: 0 | 1 | 2 | 3): Vec2Key[] {
 	const gamefile = gameslot.getGamefile()!;
 	// Mode 3 retains every slide direction, whether orthogonal, diagonal, or hippogonal+.
-	if (mode === 3) return gamefile.pieces.slides.map((v) => vectors.getKeyFromVec2(v));
+	if (mode === 3) return Array.from(gamefile.pieces.lines.keys());
 	// Mode 2 retains all orthogonals and diagonals, EVEN if they can't slide in that direction.
 	if (mode === 2)
-		return gamefile.pieces.slides
-			.filter((slideDir: Vec2) => vectors.chebyshevDistance([0n, 0n], slideDir) === 1n) // Filter out all hippogonal and greater vectors
-			.map((v) => vectors.getKeyFromVec2(v));
+		return Array.from(gamefile.pieces.lines)
+			.filter(([, { step }]) => vectors.chebyshevDistance([0n, 0n], step) === 1n) // Filter out all hippogonal and greater vectors
+			.map(([slideKey]) => slideKey);
 	return [];
 }
 

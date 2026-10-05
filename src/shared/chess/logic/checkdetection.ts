@@ -14,7 +14,6 @@ import type { Player, RawType } from '../util/typeutil.js';
 
 import typeutil from '../util/typeutil.js';
 import boardutil from './boardutil.js';
-import coordutil from '../../util/coordutil.js';
 import legalmoves from './legalmoves.js';
 import organizedpieces from './organizedpieces.js';
 import { players as p } from '../util/typeutil.js';
@@ -219,19 +218,10 @@ function doesSlideAttackSquare(
 ): boolean {
 	let atleast1Attacker = false;
 
-	for (const [directionkey, lineSet] of boardsim.pieces.lines) {
-		// [dx,dy]
-		const direction = coordutil.getCoordsFromKey(directionkey);
-		const key = organizedpieces.getKeyFromLine(direction, square);
+	for (const { step, lines } of boardsim.pieces.lines.values()) {
+		const lineKey = organizedpieces.getKeyFromLine(step, square);
 		if (
-			doesLineAttackSquare(
-				boardsim,
-				lineSet.get(key),
-				direction,
-				square,
-				friendlyColor,
-				checks,
-			)
+			doesLineAttackSquare(boardsim, lines.get(lineKey), step, square, friendlyColor, checks)
 		) {
 			if (!checks) return true; // Not keeping track of checks, exit early
 			atleast1Attacker = true;

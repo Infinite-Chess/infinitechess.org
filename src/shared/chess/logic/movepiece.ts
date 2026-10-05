@@ -217,7 +217,7 @@ function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit)
 	const isTrigger: boolean = typeutil.jumpingRoyals.includes(rawType); // Royals are the castling triggers
 
 	const key = organizedpieces.getKeyFromLine([1n, 0n], coords);
-	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
+	const row = boardsim.pieces.lines.get('1,0')!.lines.get(key)!;
 
 	// 2. Iterate through all pieces on this rank.
 	// If they can no longer castle with any valid partner, delete their special right too.
@@ -266,7 +266,7 @@ function hasCastlingPartner(
 	if (candRawType === r.PAWN) throw new Error('Cannot test if pawn has valid castling partner.');
 
 	const key = organizedpieces.getKeyFromLine([1n, 0n], candidate.coords);
-	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
+	const row = boardsim.pieces.lines.get('1,0')!.lines.get(key)!;
 
 	// Search: Does this candidate have ANY valid castling partner?
 	const hasValidPartner = row.some((partnerIdx) => {

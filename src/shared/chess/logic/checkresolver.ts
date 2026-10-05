@@ -20,7 +20,6 @@ import type { CoordsTagged, MoveTagged } from './movepiece.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
 import vectors from '../../util/math/vectors.js';
 import typeutil from '../util/typeutil.js';
@@ -532,9 +531,8 @@ function isMoveCheckInvalid(
 	destCoords: CoordsTagged,
 	color: Player,
 ): boolean {
-	// pieceSelected: { type, index, coords }
 	const moveTagged: MoveTagged = {
-		startCoords: jsutil.deepCopyObject(piece.coords),
+		startCoords: coordutil.copyCoords(piece.coords),
 		endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords),
 	};
 	specialdetect.transferSpecialTags_FromCoordsToMove(destCoords, moveTagged);

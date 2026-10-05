@@ -13,14 +13,14 @@
 
 import type { Promotion } from '../util/gamerules.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
-import type { PieceMoveset } from './movesets.js';
 import type { Coords, CoordsKey } from '../../util/coordutil.js';
+import type { PieceMoveset, SlideKey } from './movesets.js';
 import type { Player, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
 
 import bimath from '../../util/math/bimath.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
-import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
+import vectors, { Vec2 } from '../../util/math/vectors.js';
 import typeutil, { ext, players as p, rawTypes, neutralRawTypes } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
@@ -68,20 +68,24 @@ export interface OrganizedPiecesBase {
  * - By coordinate
  * - By line
  *
- * Also stores variables for all possible slide lines in the game,
- * and whether there are any hippogonal riders present.
+ * Also stores whether there are any hippogonal riders present.
  */
 export interface OrganizedPieces extends OrganizedPiecesBase {
 	/**
-	 * Pieces organized by line (rank/file/diagonal)
-	 * Map{ 'dx,dy' => Map { 'yint|xafter0' => [idx, idx, idx...] }}
-	 * dx is never negative. If dx is 0, dy cannot be negative either.
+	 * Pieces organized by line (rank/file/diagonal), one group per slide direction possible
+	 * in the game: Map { 'dx,dy' => LineGroup }. [1,0] guaranteed for castling to work.
 	 */
-	lines: Map<Vec2Key, Map<LineKey, number[]>>;
-	/** All slide directions possible in the game. [1,0] guaranteed for castling to work. */
-	slides: Vec2[];
+	lines: Map<SlideKey, LineGroup>;
 	/** Whether there are any hippogonal riders in the game (knightriders). */
 	hippogonalsPresent: boolean;
+}
+
+/** The organized lines of one slide direction. */
+interface LineGroup {
+	/** The slide direction its key names. */
+	step: Vec2;
+	/** Map { 'C|X' => [idx, idx, idx...] } */
+	lines: Map<LineKey, number[]>;
 }
 
 /** Contains start and end indices for where each type of piece begins and ends in the types array. */
@@ -338,7 +342,7 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotion?: Promot
 
 	// 5. Update indices in lines map
 	for (const lineGroup of o.lines.values()) {
-		for (const indicesArray of lineGroup.values()) {
+		for (const indicesArray of lineGroup.lines.values()) {
 			for (let i = 0; i < indicesArray.length; i++) {
 				const oldIdx = indicesArray[i]!;
 				const type = originalTypes[oldIdx]!;
@@ -379,7 +383,7 @@ function registerPieceInSpace(
 		XPositions: bigint[];
 		YPositions: bigint[];
 		coords: Map<CoordsKey, number>;
-		lines: Map<Vec2Key, Map<LineKey, number[]>>;
+		lines: Map<SlideKey, LineGroup>;
 	},
 ): void {
 	const coords: Coords = [o.XPositions[idx]!, o.YPositions[idx]!];
@@ -410,15 +414,15 @@ function registerPieceInLines(
 	o: {
 		XPositions: bigint[];
 		YPositions: bigint[];
-		lines: Map<Vec2Key, Map<LineKey, number[]>>;
+		lines: Map<SlideKey, LineGroup>;
 	},
 	coords: Coords,
 ): void {
-	for (const [strline, linegroup] of o.lines) {
-		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
+	for (const { step, lines } of o.lines.values()) {
+		const lineKey = getKeyFromLine(step, coords);
 		// Ensure line initialized
-		if (!linegroup.has(lkey)) linegroup.set(lkey, []);
-		linegroup.get(lkey)!.push(idx);
+		if (!lines.has(lineKey)) lines.set(lineKey, []);
+		lines.get(lineKey)!.push(idx);
 	}
 }
 
@@ -434,7 +438,7 @@ function removePieceFromSpace(
 		XPositions: bigint[];
 		YPositions: bigint[];
 		coords: Map<CoordsKey, number>;
-		lines: Map<Vec2Key, Map<LineKey, number[]>>;
+		lines: Map<SlideKey, LineGroup>;
 	},
 ): void {
 	const x = o.XPositions![idx];
@@ -444,12 +448,11 @@ function removePieceFromSpace(
 	if (!o.coords.has(key))
 		throw Error(`While removing a piece, there was no existing piece there!! ${key} idx ${idx}`); // prettier-ignore
 	o.coords.delete(key);
-	const lines = o.lines;
-	for (const [strline, linegroup] of lines) {
-		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
+	for (const { step, lines } of o.lines.values()) {
+		const lineKey = getKeyFromLine(step, coords);
 		// Is line initialized
-		if (linegroup.get(lkey) === undefined) continue;
-		removePieceFromLine(linegroup, lkey);
+		if (lines.get(lineKey) === undefined) continue;
+		removePieceFromLine(lines, lineKey);
 	}
 
 	// Takes a line from a property of an organized piece list, deletes the piece at specified coords
@@ -641,13 +644,12 @@ function addSlideLines(
 	const hippogonalsPresent = areHippogonalsPresentInGame(slides);
 
 	// Initialize the organized lines
-	const lines = new Map<Vec2Key, Map<LineKey, number[]>>();
-	for (const line of slides) {
-		const strline = vectors.getKeyFromVec2(line);
-		lines.set(strline, new Map());
+	const lines = new Map<SlideKey, LineGroup>();
+	for (const step of slides) {
+		lines.set(vectors.getKeyFromVec2(step), { step, lines: new Map() });
 	}
 
-	const pieces: OrganizedPieces = { ...base, slides, hippogonalsPresent, lines };
+	const pieces: OrganizedPieces = { ...base, hippogonalsPresent, lines };
 
 	// Register every real piece in the new line maps (using coords as the source of truth).
 	for (const [, idx] of pieces.coords) {
@@ -664,11 +666,11 @@ function addSlideLines(
  * @param pieceMovesets - Must already be trimmed to only existing types.
  */
 function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec2[] {
-	const slides = new Set<Vec2Key>(['1,0']); // '1,0' is required if castling is enabled.
+	const slides = new Set<SlideKey>(['1,0']); // '1,0' is required if castling is enabled.
 	for (const rawtype in pieceMovesets) {
 		const moveset = pieceMovesets[Number(rawtype) as RawType]!();
 		if (!moveset.sliding) continue;
-		Object.keys(moveset.sliding).forEach((slide) => slides.add(slide as Vec2Key));
+		Object.keys(moveset.sliding).forEach((slide) => slides.add(slide as SlideKey));
 	}
 	return Array.from(slides, vectors.getVec2FromKey);
 }
