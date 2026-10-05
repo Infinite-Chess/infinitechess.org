@@ -1,16 +1,30 @@
-// src/client/scripts/esm/views/icnvalidator/chunkresults.ts
+// src/client/scripts/esm/views/icnvalidator/chunks.ts
 
 /**
- * Creates and merges the ICN validator's failure tallies. Holds no chess
- * logic, so the page can merge its workers' tallies without bundling it.
+ * The chunks the ICN validator splits a games json into, one per worker or CLI
+ * child process, and the failure tallies they report back. Holds no chess logic,
+ * so the page can split and merge without bundling it.
  */
 
-import type { ChunkResults } from './icnvalidatorprotocol.js';
+import type { ChunkResults, ValidationRequest } from './icnvalidatorprotocol.js';
+
+// Splitting -------------------------------------------------------------------
+
+/** Splits the games into at most `count` chunks of near-equal size, tagging each game with its 1-based index. */
+function split(games: string[], count: number): ValidationRequest['games'][] {
+	const size = Math.ceil(games.length / count);
+	const chunks: ValidationRequest['games'][] = [];
+	for (let start = 0; start < games.length; start += size) {
+		const slice = games.slice(start, start + size);
+		chunks.push(slice.map((icn, i) => ({ index: start + i + 1, icn })));
+	}
+	return chunks;
+}
 
 // Tallies ---------------------------------------------------------------------
 
 /** Tallies with nothing counted yet. */
-function create(): ChunkResults {
+function createResults(): ChunkResults {
 	return {
 		successfulCount: 0,
 		icnconverterErrors: 0,
@@ -25,7 +39,7 @@ function create(): ChunkResults {
 }
 
 /** Adds one chunk's tallies into a running total. */
-function merge(total: ChunkResults, chunk: ChunkResults): void {
+function mergeResults(total: ChunkResults, chunk: ChunkResults): void {
 	total.successfulCount += chunk.successfulCount;
 	total.icnconverterErrors += chunk.icnconverterErrors;
 	total.formulatorErrors += chunk.formulatorErrors;
@@ -55,7 +69,9 @@ function merge(total: ChunkResults, chunk: ChunkResults): void {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Splitting
+	split,
 	// Tallies
-	create,
-	merge,
+	createResults,
+	mergeResults,
 };

@@ -45,8 +45,8 @@ export interface ChunkResults {
 	fingerprint: number;
 }
 
-/** The stage a game failed at. Doubles as the error item's CSS class on the page. */
-type ValidationPhase =
+/** The stage a game failed at. Doubles as its `phase-*` CSS class on the page. */
+export type ValidationPhase =
 	| 'icnconverter'
 	| 'formulator'
 	| 'illegal-move'
@@ -85,4 +85,4 @@ export interface VariantStats extends VariantErrorCounts {
 // Schemas ---------------------------------------------------------------------
 
 /** The games json an SPRT run writes: one ICN per game. */
-export const SPRTGamesSchema = z.array(z.string());
+export const SPRTGamesSchema = z.array(z.string()).min(1);

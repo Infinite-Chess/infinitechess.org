@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
-import chunkresults from './chunkresults.js';
+import chunks from './chunks.js';
 import chunkvalidator from './chunkvalidator.js';
 import { SPRTGamesSchema } from './icnvalidatorprotocol.js';
 
@@ -43,18 +43,13 @@ const ENGINE_DIR = new URL('../../../../pkg/apeiron/pkg/', import.meta.url);
 async function runParent(gamesPath: string | undefined): Promise<void> {
 	if (gamesPath === undefined) throw Error('Usage: npm run validate-icn -- <games.json>');
 	const games = SPRTGamesSchema.parse(JSON.parse(fs.readFileSync(gamesPath, 'utf8')));
-	const chunkSize = Math.ceil(games.length / os.availableParallelism());
-	const chunks: ValidationRequest['games'][] = [];
-	for (let start = 0; start < games.length; start += chunkSize) {
-		const slice = games.slice(start, start + chunkSize);
-		chunks.push(slice.map((icn, i) => ({ index: start + i + 1, icn })));
-	}
+	const gameChunks = chunks.split(games, os.availableParallelism());
 
-	console.log(`Validating ${games.length} games on ${chunks.length} processes...`);
+	console.log(`Validating ${games.length} games on ${gameChunks.length} processes...`);
 	const startTime = performance.now();
-	const results = chunkresults.create();
-	for (const chunk of await Promise.all(chunks.map((chunk) => runChild(chunk)))) {
-		chunkresults.merge(results, chunk);
+	const results = chunks.createResults();
+	for (const chunk of await Promise.all(gameChunks.map((chunk) => runChild(chunk)))) {
+		chunks.mergeResults(results, chunk);
 	}
 	printResults(results, games.length, performance.now() - startTime);
 	if (results.successfulCount < games.length) process.exitCode = 1;

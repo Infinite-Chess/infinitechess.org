@@ -28,7 +28,7 @@ import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 
-import chunkresults from './chunkresults.js';
+import chunks from './chunks.js';
 import movegencheck from './movegencheck.js';
 import movefingerprint from './movefingerprint.js';
 import terminationcheck from './terminationcheck.js';
@@ -59,7 +59,7 @@ async function validate(
 	options: ValidationOptions,
 	onProgress: (count: number) => void,
 ): Promise<ChunkResults> {
-	const results = chunkresults.create();
+	const results = chunks.createResults();
 	for (const [i, { index, icn }] of games.entries()) {
 		await validateGame(results, index, icn, options);
 		if ((i + 1) % PROGRESS_INTERVAL === 0) onProgress(PROGRESS_INTERVAL);

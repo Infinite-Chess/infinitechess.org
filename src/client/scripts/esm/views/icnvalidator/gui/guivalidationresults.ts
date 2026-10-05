@@ -1,14 +1,23 @@
 // src/client/scripts/esm/views/icnvalidator/gui/guivalidationresults.ts
 
 /**
- * The ICN validator's results panels: the pass-rate summary,
- * the per-variant error breakdown, and the list of every failed game.
+ * The ICN validator's results panel. Once a run finishes, it shows how many games
+ * passed, where the failures came from, and every failed game to inspect, keeping
+ * the panel's own view state (the filter, unfolded ICNs) between redraws.
  */
 
 import type { VNode } from 'snabbdom';
-import type { ChunkResults, ValidationError, VariantStats } from '../icnvalidatorprotocol.js';
+import type {
+	ChunkResults,
+	ValidationError,
+	ValidationPhase,
+	VariantErrorType,
+	VariantStats,
+} from '../icnvalidatorprotocol.js';
 
-import { h, init } from 'snabbdom';
+import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
+
+import docutil from '../../../util/docutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -16,176 +25,284 @@ import { h, init } from 'snabbdom';
 export interface ValidationResults extends ChunkResults {
 	/** How many games the run validated. */
 	total: number;
+	/** How long the run took, in milliseconds. */
+	ms: number;
+	/** Whether the run included the movegen check. */
+	movegen: boolean;
 }
 
-// Elements --------------------------------------------------------------------
-
-const summarySection = document.querySelector<HTMLElement>('#summary-section')!;
-const passRatio = document.querySelector<HTMLElement>('#pass-ratio')!;
-const passPercentage = document.querySelector<HTMLElement>('#pass-percentage')!;
-const variantSection = document.querySelector<HTMLElement>('#variant-section')!;
-const errorsSection = document.querySelector<HTMLElement>('#errors-section')!;
+/** How one failure type is labeled, and where its tallies are counted. */
+interface PhaseInfo {
+	label: string;
+	countKey:
+		| 'icnconverterErrors'
+		| 'formulatorErrors'
+		| 'illegalMoveErrors'
+		| 'movegenMismatchErrors'
+		| 'terminationMismatchErrors';
+	variantKey: VariantErrorType;
+}
 
 // Constants -------------------------------------------------------------------
 
-const patch = init([]);
+/** Every failure type, in the order games move through them. */
+const PHASES: Record<ValidationPhase, PhaseInfo> = {
+	icnconverter: { label: 'ICN parse', countKey: 'icnconverterErrors', variantKey: 'icn' },
+	formulator: { label: 'Build', countKey: 'formulatorErrors', variantKey: 'formulator' },
+	'illegal-move': { label: 'Illegal move', countKey: 'illegalMoveErrors', variantKey: 'illegal' },
+	'movegen-mismatch': { label: 'Movegen', countKey: 'movegenMismatchErrors', variantKey: 'movegen' }, // prettier-ignore
+	'termination-mismatch': { label: 'Termination', countKey: 'terminationMismatchErrors', variantKey: 'termination' }, // prettier-ignore
+};
+
+const PHASE_ORDER = Object.keys(PHASES) as ValidationPhase[];
+
+/** How long a copy button reads "Copied" after a click. */
+const COPIED_CONFIRMATION_MS = 1500;
+
+const patch = init([attributesModule, classModule, eventListenersModule]);
 
 // State -----------------------------------------------------------------------
 
-/** The variant breakdown's snabbdom tree, replaced by each patch. Starts as the element it renders into. */
-let variantStatsVNode: VNode | Element = document.querySelector('#variant-stats')!;
-/** The failed-game list's snabbdom tree, replaced by each patch. Starts as the element it renders into. */
-let errorListVNode: VNode | Element = document.querySelector('#error-list')!;
+/** The results' snabbdom tree, replaced by each patch. Starts as the element it renders into. */
+let resultsVNode: VNode | Element = document.querySelector('#results')!;
+/** The finished run on display, or undefined while there is none. */
+let results: ValidationResults | undefined;
+/** The failure type the failed-game list is narrowed to, if any. */
+let filter: ValidationPhase | undefined;
+/** The games whose full ICN is unfolded. */
+const expandedIcns = new Set<number>();
+/** The game whose ICN was just copied, while its button confirms it. */
+let copiedGame: number | undefined;
+let copiedTimer: number | undefined;
 
-// Panels ----------------------------------------------------------------------
+// Rendering -------------------------------------------------------------------
 
-/** Hides every results panel, ahead of a new run. */
+/** Clears the results, ahead of a new run. */
 function hide(): void {
-	summarySection.style.display = 'none';
-	variantSection.style.display = 'none';
-	errorsSection.style.display = 'none';
+	results = undefined;
+	render();
 }
 
 /** Shows the results of a finished run. */
-function display(results: ValidationResults): void {
-	displaySummary(results);
-	displayVariantStats(results.variantErrors);
-	displayErrorList(results.errors);
+function display(finished: ValidationResults): void {
+	results = finished;
+	filter = undefined;
+	expandedIcns.clear();
+	render();
+}
+
+/** Redraws the results from the current state. */
+function render(): void {
+	const children = results
+		? [
+				createSummaryVNode(results),
+				createVariantTableVNode(results.variantErrors),
+				createFailuresVNode(results.errors),
+			]
+		: [];
+	resultsVNode = patch(resultsVNode, h('div#results.results', children));
 }
 
 // Summary ---------------------------------------------------------------------
 
-/** Fills and shows the pass-rate summary and the per-phase error counts. */
-function displaySummary(results: ValidationResults): void {
-	const percentage = results.total > 0 ? (results.successfulCount / results.total) * 100 : 0;
-	passRatio.textContent = `${results.successfulCount} / ${results.total}`;
-	passPercentage.textContent = Number.isInteger(percentage)
-		? percentage.toString() + '%'
-		: percentage.toFixed(1) + '%';
+/** The pass-rate ring and headline, and a filter tile per failure type. A perfect run gets the celebration. */
+function createSummaryVNode(run: ValidationResults): VNode {
+	const percentage = run.total > 0 ? (run.successfulCount / run.total) * 100 : 0;
+	const rateClass = getPassRateClass(run, percentage);
+	const perfect = rateClass === 'perfect';
+	const headline = perfect
+		? 'Every game agrees'
+		: `${run.successfulCount} / ${run.total} games passed`;
+	const meta = [
+		perfect ? `${run.total} games` : null,
+		formatDuration(run.ms),
+		run.movegen ? 'movegen check on' : 'movegen check off',
+	];
 
-	const rateClass = getPassRateClass(results, percentage);
-	passRatio.className = `hero-value ${rateClass}`;
-	passPercentage.className = `hero-value ${rateClass}`;
-
-	updateStat('icnconverter-errors', results.icnconverterErrors);
-	updateStat('formulator-errors', results.formulatorErrors);
-	updateStat('illegal-move-errors', results.illegalMoveErrors);
-	updateStat('movegen-mismatch-errors', results.movegenMismatchErrors);
-	updateStat('termination-mismatch-errors', results.terminationMismatchErrors);
-
-	summarySection.style.display = 'block';
+	return h('section.card.summary', { class: { perfect } }, [
+		h(`div.pass-ring.${rateClass}`, { attrs: { style: `--pct: ${percentage}` } }, [
+			perfect
+				? h('svg.pass-ring-check', { attrs: { viewBox: '0 0 24 24' } }, [
+						h('use', { attrs: { href: '#glyph-check' } }),
+					])
+				: h('span.pass-ring-value', formatPercentage(percentage)),
+		]),
+		h('div.summary-body', [
+			h('div.summary-headline', headline),
+			h('div.summary-meta', meta.filter((part) => part !== null).join(' · ')),
+			perfect ? null : h('div.phase-tiles', PHASE_ORDER.map((phase) => createTileVNode(run, phase))), // prettier-ignore
+		]),
+	]);
 }
 
-/** The color class of the pass-rate figures. */
-function getPassRateClass(results: ValidationResults, percentage: number): string {
-	if (results.successfulCount === results.total && results.total > 0) return 'perfect';
+/** The color class of the pass rate. */
+function getPassRateClass(run: ValidationResults, percentage: number): string {
+	if (run.successfulCount === run.total && run.total > 0) return 'perfect';
 	if (percentage >= 90) return 'good';
 	if (percentage >= 80) return 'bad';
 	return 'terrible';
 }
 
-/** Sets one per-phase error count, colored by how many there are. */
-function updateStat(id: string, count: number): void {
-	const el = document.querySelector<HTMLElement>(`#${id}`)!;
-	el.textContent = String(count);
-	el.className = 'stat-value';
-	if (count === 0) el.classList.add('success');
-	else if (count < 10) el.classList.add('warning');
-	else el.classList.add('error');
+/** The pass rate to one decimal, rounded down so a run with any failure never reads 100%. */
+function formatPercentage(percentage: number): string {
+	return `${Math.floor(percentage * 10) / 10}%`;
+}
+
+/** A run's duration, as seconds under a minute and minutes plus seconds above. */
+function formatDuration(ms: number): string {
+	const seconds = Math.round(ms / 1000);
+	if (seconds < 60) return `${seconds} s`;
+	return `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+}
+
+/** One failure type's count, which narrows the failed-game list to it when clicked. */
+function createTileVNode(run: ValidationResults, phase: ValidationPhase): VNode {
+	const { label, countKey } = PHASES[phase];
+	const count = run[countKey];
+	return h(
+		`button.phase-tile.phase-${phase}`,
+		{
+			class: { active: filter === phase },
+			attrs: { type: 'button', disabled: count === 0 },
+			on: { click: () => toggleFilter(phase) },
+		},
+		[h('span.phase-tile-count', String(count)), h('span.phase-tile-label', label)],
+	);
+}
+
+/** Narrows the failed-game list to one failure type, or widens it back if it already was. */
+function toggleFilter(phase: ValidationPhase): void {
+	filter = filter === phase ? undefined : phase;
+	render();
 }
 
 // Variant Breakdown -----------------------------------------------------------
 
-/** Fills and shows the per-variant error breakdown, if any variant had errors. */
-function displayVariantStats(variantErrors: Record<string, VariantStats>): void {
-	if (Object.keys(variantErrors).length === 0) return;
-	const sortedVariants = Object.entries(variantErrors).sort((a, b) => b[1].total - a[1].total);
-	variantStatsVNode = patch(
-		variantStatsVNode,
-		h(
-			'div#variant-stats.variant-stats',
-			sortedVariants.map(([variant, stats]) => createVariantItemVNode(variant, stats)),
-		),
-	);
-	variantSection.style.display = 'block';
-}
+/** Each variant's failures per type, worst first. Nothing when no variant failed. */
+function createVariantTableVNode(variantErrors: Record<string, VariantStats>): VNode | null {
+	const variants = Object.entries(variantErrors).sort((a, b) => b[1].total - a[1].total);
+	if (variants.length === 0) return null;
 
-/** One variant's error total and its per-phase tallies. */
-function createVariantItemVNode(variant: string, stats: VariantStats): VNode {
-	const totalClass = stats.total > 4 ? 'err' : 'warn';
-	return h('div.variant-item', [
-		h('div.variant-header', [
-			h('span.variant-name', variant),
-			h(`span.variant-errors.${totalClass}`, `${stats.total} total error(s)`),
+	const header = h('tr', [
+		h('th', 'Variant'),
+		h('th.num', 'Total'),
+		...PHASE_ORDER.map((phase) =>
+			h(`th.num.phase-${phase}`, [h('span.phase-dot'), PHASES[phase].label]),
+		),
+	]);
+	const rows = variants.map(([variant, stats]) =>
+		h('tr', [
+			h('td.variant-name', variant),
+			h('td.num.variant-total', String(stats.total)),
+			...PHASE_ORDER.map((phase) => {
+				const count = stats[PHASES[phase].variantKey];
+				return h(`td.num.phase-count.phase-${phase}`, count > 0 ? String(count) : '');
+			}),
 		]),
-		h('div.variant-details', [
-			createStatVNode('ICN', stats.icn, true),
-			createStatVNode('Formulator', stats.formulator),
-			createStatVNode('Illegal', stats.illegal),
-			createStatVNode('Movegen', stats.movegen),
-			createStatVNode('Termination', stats.termination),
+	);
+
+	return h('section.card', [
+		h('h2.section-title', 'Failures by variant'),
+		h('div.variant-table-scroll', [
+			h('table.variant-table', [h('thead', [header]), h('tbody', rows)]),
 		]),
 	]);
 }
 
-/** One variant's tally for one phase, or nothing when it is zero. */
-function createStatVNode(
-	label: string,
-	count: number,
-	isAlwaysWarn: boolean = false,
-): VNode | null {
-	if (count === 0) return null;
-	const type = !isAlwaysWarn && count > 3 ? 'err' : 'warn';
-	return h(`div.v-stat.${type}`, [h('span', String(count)), ` ${label}`]);
-}
-
 // Failed Games ----------------------------------------------------------------
 
-/** Fills and shows the failed-game list, if any game failed. */
-function displayErrorList(errors: ValidationError[]): void {
-	if (errors.length === 0) return;
-	errorListVNode = patch(
-		errorListVNode,
+/** Every failed game, narrowed to the filtered type if there is one. Nothing when every game passed. */
+function createFailuresVNode(errors: ValidationError[]): VNode | null {
+	if (errors.length === 0) return null;
+	const shown = filter ? errors.filter((error) => error.phase === filter) : errors;
+
+	return h('section.failures', [
+		h('div.failures-head', [
+			h('h2.section-title', ['Failed games', h('span.section-count', String(shown.length))]),
+			filter ? createFilterClearVNode(filter) : null,
+		]),
 		h(
-			'div#error-list.error-list',
-			errors.map((error) => createErrorItemVNode(error)),
+			'ol.failure-list',
+			shown.map((error) => createFailureVNode(error)),
 		),
+	]);
+}
+
+/** The active filter, which shows every failed game again when clicked. */
+function createFilterClearVNode(phase: ValidationPhase): VNode {
+	return h(
+		`button.filter-clear.phase-${phase}`,
+		{ attrs: { type: 'button' }, on: { click: () => toggleFilter(phase) } },
+		`${PHASES[phase].label} only · Show all`,
 	);
-	errorsSection.style.display = 'block';
 }
 
 /** One failed game: where it failed, why, and its ICN. */
-function createErrorItemVNode(error: ValidationError): VNode {
-	return h(`div.error-item.${error.phase}`, [
-		h('div.error-header', [
-			h('span', `Game #${error.gameIndex}${error.variant ? ` - ${error.variant}` : ''}`),
-			h(`span.error-type.${error.phase}`, error.phase),
+function createFailureVNode(error: ValidationError): VNode {
+	const copied = copiedGame === error.gameIndex;
+	const expanded = expandedIcns.has(error.gameIndex);
+	return h(`li.failure.phase-${error.phase}`, { key: error.gameIndex }, [
+		h('div.failure-head', [
+			h('span.failure-game', `#${error.gameIndex}`),
+			error.variant ? h('span.failure-variant', error.variant) : null,
+			h('span.phase-badge', PHASES[error.phase].label),
+			h(
+				'button.copy-button',
+				{
+					class: { copied },
+					attrs: { type: 'button' },
+					on: { click: () => copyIcn(error) },
+				},
+				copied ? 'Copied ✓' : 'Copy ICN',
+			),
 		]),
-		h('div.error-message', error.error),
+		h('pre.failure-message', error.error),
 		error.phase === 'termination-mismatch' ? createTerminationVNode(error) : null,
-		h('details.error-icn', [
-			h('summary', 'View ICN snippet'),
-			h('div.error-message', error.icn),
+		h('div.failure-icn', { class: { expanded } }, [
+			h('code.failure-icn-text.scrollbar-thin', error.icn),
+			h(
+				'button.icn-toggle',
+				{ attrs: { type: 'button' }, on: { click: () => toggleIcn(error.gameIndex) } },
+				expanded ? 'Collapse' : 'Expand',
+			),
 		]),
 	]);
 }
 
 /** A termination mismatch's recorded metadata, beside the conclusion the site reached. */
 function createTerminationVNode(error: ValidationError): VNode {
-	return h('div.error-metadata', [
-		h('div', [h('strong', 'Termination:'), ` ${error.termination || 'undefined'}`]),
-		h('div', [h('strong', 'Result:'), ` ${error.result || 'undefined'}`]),
-		h('div', [
-			h('strong', 'Game Conclusion:'),
-			` ${JSON.stringify(error.gameConclusion) || 'undefined'}`,
-		]),
+	return h('dl.termination', [
+		h('dt', 'Termination'),
+		h('dd', error.termination ?? '—'),
+		h('dt', 'Result'),
+		h('dd', error.result ?? '—'),
+		h('dt', 'Site conclusion'),
+		h('dd', error.gameConclusion ? JSON.stringify(error.gameConclusion) : 'none'),
 	]);
+}
+
+/** Copies a failed game's ICN, then briefly confirms it on its button. */
+async function copyIcn(error: ValidationError): Promise<void> {
+	if (!(await docutil.copyToClipboard(error.icn))) return;
+	copiedGame = error.gameIndex;
+	render();
+	clearTimeout(copiedTimer);
+	copiedTimer = window.setTimeout(() => {
+		copiedGame = undefined;
+		render();
+	}, COPIED_CONFIRMATION_MS);
+}
+
+/** Unfolds a failed game's full ICN, or folds it back to one line. */
+function toggleIcn(gameIndex: number): void {
+	if (!expandedIcns.delete(gameIndex)) expandedIcns.add(gameIndex);
+	render();
 }
 
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// Panels
+	// Rendering
 	hide,
 	display,
 };
