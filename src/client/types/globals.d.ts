@@ -82,9 +82,6 @@ declare global {
 	 */
 	var $downsamplerProcessorUrl: string;
 
-	/** Hashed URL for the ICN validator's worker script, injected by icnvalidator.njk via the asset manifest. */
-	var $icnValidatorWorkerUrl: string;
-
 	/** SSR→client data for the challenge page (/game/:id before its game exists), injected by challenge.njk. */
 	var challengePageData: ChallengePageData;
 
@@ -99,6 +96,9 @@ declare global {
 
 	/** Engine assets for the checkmate-practice page. */
 	var checkmatePracticePageData: EngineAssets;
+
+	/** Engine assets for the ICN validator page. */
+	var icnValidatorPageData: EngineAssets;
 
 	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */
 	var turnstile: Turnstile;

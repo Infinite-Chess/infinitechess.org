@@ -13,5 +13,3 @@ harness-agnostic.
 - Links to code should use markdown link syntax, which the harness renders clickable. Paths resolve
   against the primary working directory; prefix `../<repo-folder>/` to reach an additional one. In a
   GitHub comment, relative paths break — use full `blob` URLs.
-- The active output style sets the _voice_ of a response. The rules above set the _contract_. If
-  they ever conflict, the rules win.

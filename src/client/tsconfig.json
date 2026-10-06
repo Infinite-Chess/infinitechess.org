@@ -5,6 +5,9 @@
   "compilerOptions": {
     "composite": true,
     "noEmit": true, // esbuild does the emitting; this project only type-checks.
+    // For icnvalidator.cli.ts, which runs in Node. Project-wide, since scoping it to that
+    // script would need a tsconfig project of its own.
+    "types": ["node"],
     "tsBuildInfoFile": "../../dist/tsconfig.client.tsbuildinfo"
   },
   "include": ["./**/*"],

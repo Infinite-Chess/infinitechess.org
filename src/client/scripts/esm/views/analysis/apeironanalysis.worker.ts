@@ -25,11 +25,7 @@
  * when the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
  */
 
-import type {
-	EngineWasmModule,
-	WasmEngine,
-	WasmMove,
-} from '../../game/chess/engines/enginewasm.js';
+import type { EngineWasmModule, WasmEngine, WasmMove } from '../../chess/enginewasm.js';
 import type {
 	AnalysisCommand,
 	AnalysisInfo,
@@ -40,7 +36,7 @@ import type {
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
-import enginewasm from '../../game/chess/engines/enginewasm.js';
+import enginewasm from '../../chess/enginewasm.js';
 
 // Types -----------------------------------------------------------------------
 

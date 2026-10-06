@@ -7,6 +7,8 @@
  */
 
 import type { Coords } from '../../../util/coordutil.js';
+import type { Vec2Key } from '../../../util/math/vectors.js';
+import type { SlideLimits } from '../../logic/legalmoves.js';
 import type { Movesets, RawMovesets } from '../../logic/movesets.js';
 
 import bimath from '../../../util/math/bimath.js';
@@ -35,18 +37,23 @@ function gen4DMoveset(
 ): Movesets {
 	const dim = gen4dposition.getDimensions(boards_x, boards_y, board_spacing);
 
+	// Filled in below, before the movesets are converted.
+	const queenSlides: Record<Vec2Key, SlideLimits> = {};
+	const bishopSlides: Record<Vec2Key, SlideLimits> = {};
+	const rookSlides: Record<Vec2Key, SlideLimits> = {};
+
 	const rawMovesets: RawMovesets = {
 		[r.QUEEN]: {
 			individual: [],
-			sliding: {},
+			sliding: queenSlides,
 		},
 		[r.BISHOP]: {
 			individual: [],
-			sliding: {},
+			sliding: bishopSlides,
 		},
 		[r.ROOK]: {
 			individual: [],
-			sliding: {},
+			sliding: rookSlides,
 		},
 		[r.KING]: {
 			individual: [],
@@ -73,21 +80,20 @@ function gen4DMoveset(
 		// Add the moves
 
 		// allow any queen move if STRONG_KINGS_AND_QUEENS, else group her with bishops and rooks
-		if (strong_kings_and_queens)
-			rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
+		if (strong_kings_and_queens) queenSlides[coordutil.getKeyFromCoords([x, y])] = [null, null];
 
 		const length = fourdimensionalmoves.lengthSquared(offset);
 		// Only add a bishop move if the move moves in two dimensions
 		if (length === 2n) {
-			rawMovesets[r.BISHOP]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
+			bishopSlides[coordutil.getKeyFromCoords([x, y])] = [null, null];
 			if (!strong_kings_and_queens)
-				rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
+				queenSlides[coordutil.getKeyFromCoords([x, y])] = [null, null];
 		}
 		// Only add a rook move if the move moves in one dimension
 		if (length === 1n) {
-			rawMovesets[r.ROOK]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
+			rookSlides[coordutil.getKeyFromCoords([x, y])] = [null, null];
 			if (!strong_kings_and_queens)
-				rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [null, null];
+				queenSlides[coordutil.getKeyFromCoords([x, y])] = [null, null];
 		}
 	}
 

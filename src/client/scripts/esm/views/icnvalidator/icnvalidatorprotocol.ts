@@ -1,13 +1,13 @@
 // src/client/scripts/esm/views/icnvalidator/icnvalidatorprotocol.ts
 
 /**
- * The message protocol between the ICN validator page and its workers.
- *
- * The page splits the uploaded games into one chunk per hardware thread, and each
- * worker replays its chunk and reports back the games the site disagreed with.
+ * The ICN validator's data contract: the messages between the page and its
+ * workers, and the games json it reads.
  */
 
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
+
+import * as z from 'zod';
 
 // Requests --------------------------------------------------------------------
 
@@ -16,6 +16,8 @@ export interface ValidationRequest {
 	chunkId: number;
 	/** `index` is 1-based, as the page displays it. */
 	games: { index: number; icn: string }[];
+	/** The engine glue to compare movegen against. Absent skips the movegen check. */
+	engineUrl?: string;
 }
 
 // Responses -------------------------------------------------------------------
@@ -25,26 +27,31 @@ export type ValidationResponse =
 	/** How many more games have been replayed since the last progress message. */
 	| { type: 'progress'; chunkId: number; count: number }
 	/** The chunk is finished, and these are its tallies. */
-	| { type: 'done'; chunkId: number; results: ChunkResults };
+	| { type: 'done'; chunkId: number; results: ChunkResults }
+	/** The engine failed to load, so the chunk wasn't validated. */
+	| { type: 'initerror'; chunkId: number; message: string };
 
-/** One worker's tallies for its whole chunk. */
+/** One chunk's tallies. */
 export interface ChunkResults {
 	successfulCount: number;
 	icnconverterErrors: number;
 	formulatorErrors: number;
 	illegalMoveErrors: number;
+	movegenMismatchErrors: number;
 	terminationMismatchErrors: number;
 	errors: ValidationError[];
 	variantErrors: Record<string, VariantStats>;
+	/** The sum, mod 2^32, of every position's move hash. 0 unless the fingerprint was requested. */
+	fingerprint: number;
 }
 
-/** The stage a game failed at. Doubles as the error item's CSS class on the page. */
-type ValidationPhase =
+/** The stage a game failed at. Doubles as its `phase-*` CSS class on the page. */
+export type ValidationPhase =
 	| 'icnconverter'
 	| 'formulator'
 	| 'illegal-move'
-	| 'termination-mismatch'
-	| 'unknown';
+	| 'movegen-mismatch'
+	| 'termination-mismatch';
 
 /** One game that failed, and where it failed. */
 export interface ValidationError {
@@ -63,6 +70,7 @@ interface VariantErrorCounts {
 	icn: number;
 	formulator: number;
 	illegal: number;
+	movegen: number;
 	termination: number;
 }
 
@@ -73,3 +81,8 @@ export type VariantErrorType = keyof VariantErrorCounts;
 export interface VariantStats extends VariantErrorCounts {
 	total: number;
 }
+
+// Schemas ---------------------------------------------------------------------
+
+/** The games json an SPRT run writes: one ICN per game. */
+export const SPRTGamesSchema = z.array(z.string()).min(1);

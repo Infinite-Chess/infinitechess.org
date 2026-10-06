@@ -7,18 +7,17 @@
  */
 
 import type { Player } from '../util/typeutil.js';
+import type { Coords } from '../../util/coordutil.js';
 import type { MoveFull } from './movepiece.js';
+import type { Movesets } from './movesets.js';
 import type { GameRules } from '../util/gamerules.js';
-import type { CoordsKey } from '../../util/coordutil.js';
 import type { VariantModule } from './variantmodule.js';
 import type { LoadedVariant } from './gamefile.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { RawType, RawTypeGroup } from '../util/typeutil.js';
-import type { Movesets, PieceMoveset } from './movesets.js';
 import type { BoardInitOptions, BoardPreview } from './boardpreviewer.js';
 import type { SpecialMoveFunction, SpecialVicinity } from './specialmove.js';
 
-import jsutil from '../../util/jsutil.js';
 import movesets from './movesets.js';
 import typeutil from '../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
@@ -37,15 +36,16 @@ export interface Board extends BoardPreview {
 	/** Fully-populated organized pieces, with slide lines and all. */
 	pieces: OrganizedPieces;
 	moves: MoveFull[];
-	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
+	pieceMovesets: Movesets;
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
-	specialVicinity: Record<CoordsKey, RawType[]>;
-	vicinity: Record<CoordsKey, RawType[]>;
+	specialVicinity: Vicinity;
+	vicinity: Vicinity;
 	/** The color whose turn it currently is at the front of the game. */
 	whosTurn: Player;
 }
 
-type Vicinity = Record<CoordsKey, RawType[]>;
+/** Each offset a piece can capture from, with the raw types that can, parsed once per board. */
+type Vicinity = { offset: Coords; types: RawType[] }[];
 
 // Board Construction ----------------------------------------------------------
 
@@ -90,49 +90,12 @@ function init(
 // Reading Variant Movement ----------------------------------------------------
 
 /**
- * Gets the piece movesets for the given variant module.
+ * Returns the default movesets, with any piece type the variant modifies replaced by its own.
  * @param mod - The loaded variant module, or `undefined` for pasted games with no variant.
- * @param slideLimit - If provided, overrides the slideLimit gamerule of the variant. Only meaningful for variants without a movesetGenerator (i.e. those that use default movesets), because custom movesets define their own slide ranges explicitly and don't inherit a global slide limit.
+ * @param slideLimit - The slideLimit gamerule. Applies only to default movesets, since modified ones define their own slide ranges.
  */
-function getMovesetsOfVariant(
-	mod: VariantModule | undefined,
-	slideLimit?: bigint,
-): RawTypeGroup<() => PieceMoveset> {
-	// Pasted games with no variant specified use the default movesets
-	if (mod === undefined) return getMovesets(undefined, slideLimit);
-
-	if (mod.genMovesetModifications) {
-		const movesetModifications = mod.genMovesetModifications();
-		return getMovesets(movesetModifications, slideLimit);
-	} else {
-		// No custom moveset generator, so just get the default movesets
-		return getMovesets(undefined, slideLimit);
-	}
-}
-
-/**
- * Returns default movesets with provided modifications such that each piece contains a function returning a copy of its moveset (to avoid modifying originals).
- * Any piece type present in the modifications will replace the default move that for that piece.
- * The slidelimit gamerule will only be applied to default movesets, not modified ones.
- * @param movesetModifications - The modifications to the default movesets.
- * @param defaultSlideLimitForOldVariants - Optional. The slidelimit to use for default movesets, if applicable.
- */
-function getMovesets(
-	movesetModifications: Movesets = {},
-	defaultSlideLimitForOldVariants?: bigint,
-): RawTypeGroup<() => PieceMoveset> {
-	const origMoveset = movesets.getPieceDefaultMovesets(defaultSlideLimitForOldVariants);
-	// The running piece movesets property of the gamefile.
-	const pieceMovesets: RawTypeGroup<() => PieceMoveset> = {};
-
-	for (const [piece, moves] of Object.entries(origMoveset)) {
-		const intPiece = Number(piece) as RawType;
-		pieceMovesets[intPiece] = movesetModifications[intPiece]
-			? (): PieceMoveset => jsutil.deepCopyObject(movesetModifications[intPiece]!)
-			: (): PieceMoveset => jsutil.deepCopyObject(moves);
-	}
-
-	return pieceMovesets;
+function getMovesetsOfVariant(mod: VariantModule | undefined, slideLimit?: bigint): Movesets {
+	return { ...movesets.getPieceDefaultMovesets(slideLimit), ...mod?.genMovesetModifications?.() };
 }
 
 /**
@@ -142,14 +105,7 @@ function getMovesets(
 function getSpecialMovesOfVariant(
 	mod: VariantModule | undefined,
 ): RawTypeGroup<SpecialMoveFunction> {
-	const defaultSpecialMoves = specialmove.getDefaultSpecialMoves();
-	// Pasted games with no variant specified use the default
-	if (mod === undefined) return defaultSpecialMoves;
-
-	const overrides = mod.getSpecialMoves?.();
-	if (overrides === undefined) return defaultSpecialMoves;
-	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
-	return defaultSpecialMoves;
+	return { ...specialmove.getDefaultSpecialMoves(), ...mod?.getSpecialMoves?.() };
 }
 
 /**
@@ -157,14 +113,7 @@ function getSpecialMovesOfVariant(
  * @param mod - The loaded variant module, or `undefined` for pasted games with no variant.
  */
 function getSpecialVicinityOfVariant(mod: VariantModule | undefined): SpecialVicinity {
-	const defaultSpecialVicinityByPiece = specialmove.getDefaultSpecialVicinitiesByPiece();
-	// Pasted games with no variant specified use the default
-	if (mod === undefined) return defaultSpecialVicinityByPiece;
-
-	const overrides = mod.getSpecialVicinity?.();
-	if (overrides === undefined) return defaultSpecialVicinityByPiece;
-	jsutil.copyPropertiesToObject(overrides, defaultSpecialVicinityByPiece);
-	return defaultSpecialVicinityByPiece;
+	return { ...specialmove.getDefaultSpecialVicinitiesByPiece(), ...mod?.getSpecialVicinity?.() };
 }
 
 // Vicinity Generation ---------------------------------------------------------
@@ -173,23 +122,19 @@ function getSpecialVicinityOfVariant(mod: VariantModule | undefined): SpecialVic
  * Calculates the area around you in which jumping pieces can land on you from that distance.
  * This is used for efficient calculating if a king move would put you in check.
  * Must be called after the piece movesets are initialized.
- * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
+ * In the format: `[{ offset: [1,2], types: [knight, chancellor] }, { offset: [1,0], types: [guard, king] }...]`
  * DOES NOT include pawn moves.
  * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
  * @returns The vicinity object
  */
-function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity {
-	const vicinity: Record<CoordsKey, RawType[]> = {};
+function genVicinity(pieceMovesets: Movesets): Vicinity {
+	const vicinity: Vicinity = [];
 
 	// For every type in the game...
-	for (const [rawTypeString, movesetFunc] of Object.entries(pieceMovesets)) {
+	for (const [rawTypeString, moveset] of Object.entries(pieceMovesets)) {
 		const rawType = Number(rawTypeString) as RawType;
-		const individualMoves = movesetFunc().individual ?? [];
-		individualMoves.forEach((coords) => {
-			const coordsKey = coordutil.getKeyFromCoords(coords);
-			if (!(coordsKey in vicinity)) vicinity[coordsKey] = []; // Make sure it's initialized
-			vicinity[coordsKey]!.push(rawType); // Make sure the key contains the piece type that can capture from that distance
-		});
+		const individualMoves = moveset.individual ?? [];
+		individualMoves.forEach((coords) => addVicinityType(vicinity, coords, rawType));
 	}
 
 	return vicinity;
@@ -204,24 +149,25 @@ function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity 
  * special piece in the game to see if they would check you.
  * @param mod - The loaded variant module, or `undefined` for custom/pasted positions.
  * @param existingRawTypes
- * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
+ * @returns The specialVicinity, in the format: `[{ offset: [1,1], types: [pawn] }, { offset: [1,2], types: [rose] }...]`
  */
 function genSpecialVicinity(mod: VariantModule | undefined, existingRawTypes: RawType[]): Vicinity {
 	const specialVicinityByPiece = getSpecialVicinityOfVariant(mod);
-	const vicinity: Vicinity = {};
+	const vicinity: Vicinity = [];
 	// Object keys are strings, so we need to cast the type to a number
 	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
 		const rawType = Number(rawTypeString) as RawType;
 		if (!existingRawTypes.includes(rawType)) continue; // This piece isn't present in our game
-		pieceVicinity.forEach((coords) => {
-			const coordsKey = coordutil.getKeyFromCoords(coords);
-			// typescript doesn't realize vicinity[coordsKey] is guaranteed to be defined
-			// after this statement if we use (coordsKey in vicinity) for some reason
-			if (!vicinity[coordsKey]) vicinity[coordsKey] = []; // Make sure it's initialized
-			vicinity[coordsKey].push(rawType);
-		});
+		pieceVicinity.forEach((coords) => addVicinityType(vicinity, coords, rawType));
 	}
 	return vicinity;
+}
+
+/** Records that `rawType` can capture from `offset`. */
+function addVicinityType(vicinity: Vicinity, offset: Coords, rawType: RawType): void {
+	const entry = vicinity.find((e) => coordutil.areCoordsEqual(e.offset, offset));
+	if (entry) entry.types.push(rawType);
+	else vicinity.push({ offset, types: [rawType] });
 }
 
 // Exports ---------------------------------------------------------------------

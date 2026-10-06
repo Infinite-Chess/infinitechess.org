@@ -197,28 +197,26 @@ export function executeArrowShifts(): void {
 			}; // Create a piece object for the arrow
 
 			// Add an arrow for every applicable direction
-			for (const lineKey of gamefile.pieces.lines.keys()) {
-				let line = vectors.getVec2FromKey(lineKey);
-
+			for (const [slideKey, { step }] of gamefile.pieces.lines) {
 				// prettier-ignore
-				if (arrowscalculator.isAnimatedArrowUnnecessary(gamefile, piece.type, line, lineKey, mode))
+				if (arrowscalculator.isAnimatedArrowUnnecessary(gamefile, piece.type, step, slideKey, mode))
 					continue; // Arrow mode isn't high enough, and the piece can't slide in the vector direction
 
 				// Determine the line's dot product with the screen box.
 				// Flip the vector if need be, to point it in the right direction.
-				const thisPieceIntersections = geometry.findLineBoxIntersectionsBD(piece.coords, line, boundingBoxFloat); // prettier-ignore
+				const thisPieceIntersections = geometry.findLineBoxIntersectionsBD(piece.coords, step, boundingBoxFloat); // prettier-ignore
 				if (thisPieceIntersections.length < 2) continue; // Slide direction doesn't intersect with screen box, no arrow needed
 
 				const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.
 				// Negate the vector if it is pointing AWAY from the screen (negative dot product side),
 				// so that `processPiece` always receives a vector pointing TOWARD the piece.
-				if (!positiveDotProduct) line = vectors.negateVector(line);
+				const direction = positiveDotProduct ? step : vectors.negateVector(step);
 				// At what point does it intersect the screen?
 				const intersect = positiveDotProduct
 					? thisPieceIntersections[0]!.coords
 					: thisPieceIntersections[1]!.coords;
 
-				const arrow: Arrow = arrowscalculator.processPiece(piece, line, intersect, 0, worldHalfWidth, pointerWorlds); // prettier-ignore
+				const arrow: Arrow = arrowscalculator.processPiece(piece, direction, intersect, 0, worldHalfWidth, pointerWorlds); // prettier-ignore
 				animatedArrows.push(arrow);
 			}
 		}
@@ -271,11 +269,9 @@ function recalculateLinesThroughCoords(
 	pointerWorlds: DoubleCoords[],
 	slideExceptions: Vec2Key[],
 ): void {
-	for (const [slideKey, linegroup] of gamefile.pieces.lines) {
+	for (const [slideKey, { step, lines }] of gamefile.pieces.lines) {
 		// For each slide direction in the game...
-		const slide = coordutil.getCoordsFromKey(slideKey);
-
-		const lineKey = organizedpieces.getKeyFromLine(slide, coords);
+		const lineKey = organizedpieces.getKeyFromLine(step, coords);
 
 		// Delete the original arrow line if it exists
 		if (slideKey in slideArrows) {
@@ -286,10 +282,10 @@ function recalculateLinesThroughCoords(
 		// Recalculate the arrow line...
 
 		// Fetch the organized line that our piece is on this direction.
-		const organizedLine = linegroup.get(lineKey);
+		const organizedLine = lines.get(lineKey);
 		if (organizedLine === undefined) continue; // No pieces on line, empty
 
-		const arrowsLineDraft = arrowscalculator.calcArrowsLineDraft(gamefile, slide, slideKey, organizedLine); // prettier-ignore
+		const arrowsLineDraft = arrowscalculator.calcArrowsLineDraft(gamefile, step, slideKey, organizedLine); // prettier-ignore
 		if (arrowsLineDraft === undefined) continue; // Only intersects the corner of our screen, not visible.
 
 		// Remove Unnecessary arrows...
@@ -299,7 +295,7 @@ function recalculateLinesThroughCoords(
 				continue; // No more pieces on this line
 		}
 
-		const { line } = arrowscalculator.convertLineDraftToLine(arrowsLineDraft, slide, slideKey, worldHalfWidth, pointerWorlds, false); // prettier-ignore
+		const { line } = arrowscalculator.convertLineDraftToLine(arrowsLineDraft, step, slideKey, worldHalfWidth, pointerWorlds, false); // prettier-ignore
 		slideArrows[slideKey] = slideArrows[slideKey] ?? {}; // Make sure this exists first.
 		slideArrows[slideKey][lineKey] = line;
 	}

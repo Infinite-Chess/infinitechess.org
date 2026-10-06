@@ -38,6 +38,9 @@ const AUTH_INPUT_MAX_LENGTHS = {
 /** The checkmate-practice engine's worker script, as keyed in the asset manifest. */
 const PRACTICE_WORKER_SOURCE = 'scripts/esm/game/chess/engines/enginecheckmatepractice.worker.ts';
 
+/** The ICN validator's worker script, as keyed in the asset manifest. */
+const ICN_VALIDATOR_WORKER_SOURCE = 'scripts/esm/views/icnvalidator/icnvalidator.worker.ts';
+
 // Helpers ---------------------------------------------------------------------
 
 /**
@@ -52,9 +55,9 @@ function attachRenderContext(req: Request, res: Response, next: NextFunction): v
 
 /**
  * Marks a response cross-origin isolated (COOP + COEP), which is what unlocks
- * `SharedArrayBuffer` — required by the multi-threaded (Lazy SMP) analysis engine build.
+ * `SharedArrayBuffer` — required by the engine build's shared wasm memory.
  *
- * Applied to analysis and game pages, whose engine assets are all same-origin.
+ * Applied to the pages that run the engine, whose engine assets are all same-origin.
  * Other pages may load cross-origin resources that don't send CORP.
  */
 function crossOriginIsolation(_req: Request, res: Response, next: NextFunction): void {
@@ -142,7 +145,11 @@ page('/terms(.html)?', (_req: Request, res: Response) => res.render('terms.njk')
 page('/privacy(.html)?', (_req: Request, res: Response) => res.render('privacy.njk'));
 page('/member(.html)?/:member', (_req: Request, res: Response) => res.render('member.njk'));
 page('/admin(.html)?', (_req: Request, res: Response) => res.render('admin.njk'));
-page('/icnvalidator(.html)?', (_req: Request, res: Response) => res.render('icnvalidator.njk')); // prettier-ignore
+page(
+	'/icnvalidator(.html)?',
+	(_req: Request, res: Response) => res.render('icnvalidator.njk', { icnValidatorPageData: manifest.getEngineAssets(ICN_VALIDATOR_WORKER_SOURCE) }), // prettier-ignore
+	crossOriginIsolation, // The movegen check runs the engine (SharedArrayBuffer) locally.
+);
 page('/tutorial(.html)?', (_req: Request, res: Response) => res.render('tutorial.njk'));
 page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render('checkmatepractice.njk', { checkmatePracticePageData: manifest.getEngineAssets(PRACTICE_WORKER_SOURCE) })); // prettier-ignore
 page('/editor(.html)?', (_req: Request, res: Response) => res.render('editor.njk'));

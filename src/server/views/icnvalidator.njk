@@ -11,84 +11,75 @@
 {% endblock %}
 
 {% block head %}
-<script>window.$icnValidatorWorkerUrl = "{{ manifest['scripts/esm/views/icnvalidator/icnvalidator.worker.ts'] }}";</script>
+{# SSR→client channel: the worker's and the engine's assets. #}
+<script>window.icnValidatorPageData = {{ icnValidatorPageData | json | safe }};</script>
 {% endblock %}
 
 {% block body %}
 {% include "components/header/header.njk" %}
-<main>
-	<div class="container">
-		<h1>ICN Validator (Developer Tool)</h1>
-		<p>
-			Checks the games output of an Apeiron engine SPRT run against the website's own chess
-			logic. Every game's ICN is replayed through the site's move generator and game-end
-			detection. Any disagreement (a parse failure, an illegal move, or a mismatched
-			conclusion) is a bug in either the engine or the website.
-		</p>
-
-		<div class="upload-section" id="upload-section">
-			<h2>Upload JSON File</h2>
-			<p>Click to select, or drag and drop a JSON file containing an array of game notations.</p>
-			<label for="file-input" class="file-label">Choose File</label>
-			<input type="file" id="file-input" accept=".json" />
-			<p class="file-name" id="file-name"></p>
-		</div>
-
-		<div class="progress-section" id="progress-section">
-			<h2>Processing...</h2>
-			<div class="progress-bar">
-				<div class="progress-fill" id="progress-fill">0%</div>
+<main class="validator bg-checkerboard-dimmed">
+	{# Glyphs the results script draws with <use>. #}
+	<svg class="hidden">
+		<symbol id="glyph-check" viewBox="0 0 24 24">
+			<path d="M5 12.5l4.5 4.5L19 7.5" />
+		</symbol>
+	</svg>
+	<div class="validator-column">
+		<header class="validator-head">
+			<div class="validator-title-row">
+				<h1 class="validator-title">ICN Validator</h1>
+				<span class="validator-tag">Developer tool</span>
 			</div>
-			<p id="progress-text">Processing game 0 of 0</p>
-		</div>
+			<p class="validator-lede">
+				Replays every game of an Apeiron SPRT run through the website's own chess logic.
+				Any disagreement (a parse failure, an illegal move, a mismatched ending, or, with the
+				movegen check, a different set of legal moves at any position) is a bug in either the
+				engine or the website.
+			</p>
+		</header>
 
-		<div class="summary-section" id="summary-section">
-			<h2>Validation Summary</h2>
-			<div class="summary-hero">
-				<div class="hero-stat">
-					<span class="hero-value" id="pass-ratio">0 / 0</span>
-					<span class="hero-label">GAMES PASSED</span>
-				</div>
-				<div class="hero-divider"></div>
-				<div class="hero-stat">
-					<span class="hero-value" id="pass-percentage">0%</span>
-					<span class="hero-label">SUCCESS RATE</span>
-				</div>
+		<section class="card">
+			<label class="dropzone" id="dropzone">
+				<svg class="dropzone-icon" viewBox="0 0 24 24">
+					<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+					<path d="M14 3v5h5" />
+					<path d="M10 12.5c-1 0-1.5.5-1.5 1.25v.5c0 .5-.5.75-1 .75.5 0 1 .25 1 .75v.5c0 .75.5 1.25 1.5 1.25" />
+					<path d="M14 12.5c1 0 1.5.5 1.5 1.25v.5c0 .5.5.75 1 .75-.5 0-1 .25-1 .75v.5c0 .75-.5 1.25-1.5 1.25" />
+				</svg>
+				<span class="dropzone-title" id="dropzone-title">Drop an SPRT games file</span>
+				<span class="dropzone-hint" id="dropzone-hint">or click to browse: a JSON array of ICNs</span>
+				<input type="file" id="file-input" accept=".json" hidden />
+			</label>
+
+			<div class="run-controls">
+				<label class="option-card">
+					<input type="checkbox" class="option-input" id="movegen-check" />
+					<span class="option-checkbox">
+						<svg viewBox="0 0 24 24"><use href="#glyph-check" /></svg>
+					</span>
+					<span class="option-text">
+						<span class="option-title">Movegen Check</span>
+						<span class="option-note">Also compares every position's legal moves with the engine's. About 9× slower.</span>
+					</span>
+				</label>
+				<button type="button" class="btn-primary run-button" id="run-button" disabled>Validate</button>
 			</div>
-			<div class="stat-grid">
-				<div class="stat-card">
-					<h3>ICN Converter Errors</h3>
-					<p class="stat-value warning" id="icnconverter-errors">0</p>
-				</div>
-				<div class="stat-card">
-					<h3>Formulator Errors</h3>
-					<p class="stat-value error" id="formulator-errors">0</p>
-				</div>
-				<div class="stat-card">
-					<h3>Illegal Move Errors</h3>
-					<p class="stat-value error" id="illegal-move-errors">0</p>
-				</div>
-				<div class="stat-card">
-					<h3>Termination Mismatch</h3>
-					<p class="stat-value error" id="termination-mismatch-errors">0</p>
+
+			<div class="run-progress hidden" id="run-progress">
+				<div class="lanes" id="lanes"></div>
+				<div class="run-progress-text">
+					<span class="progress-count" id="progress-count"></span>
+					<span id="progress-percent"></span>
 				</div>
 			</div>
-		</div>
+		</section>
 
-		<div class="details-section" id="variant-section">
-			<h2>Errors by Variant</h2>
-			<div class="variant-stats" id="variant-stats"></div>
-		</div>
+		<div id="results"></div>
 
-		<div class="details-section" id="errors-section">
-			<h2>Error Details</h2>
-			<div class="error-list" id="error-list"></div>
-		</div>
-
-		<div class="log-section">
-			<h2>Activity Log</h2>
-			<div class="log-output" id="log-output"></div>
-		</div>
+		<details class="card log-card" id="log-card">
+			<summary>Activity log <span class="section-count" id="log-count">0</span></summary>
+			<div class="log scrollbar-thin" id="log-output"></div>
+		</details>
 	</div>
 </main>
 {% include "components/footer/footer.njk" %}

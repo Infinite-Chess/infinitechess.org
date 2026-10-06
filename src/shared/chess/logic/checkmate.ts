@@ -8,11 +8,9 @@
 import type { Board } from './boardinit.js';
 import type { GameConclusion } from '../util/typeschemas.js';
 
-import typeutil from '../util/typeutil.js';
 import moveutil from './moveutil.js';
 import boardutil from './boardutil.js';
 import legalmoves from './legalmoves.js';
-import { rawTypes } from '../util/typeutil.js';
 import gamefileutility from './gamefileutility.js';
 
 // Constants -------------------------------------------------------------------
@@ -37,7 +35,7 @@ const MAX_ROYALS = 6;
 function isCompatible(boardsim: Board): boolean {
 	if (boardsim.editor) return false; // This prevents legal move calculation respecting check in the editor.
 	if (boardutil.getPieceCountOfGame(boardsim.pieces) > MAX_PIECES) return false; // Too many pieces (checkmate algorithm takes too long)
-	if (boardsim.pieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
+	if (boardsim.pieces.lines.size > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
 	if (gamefileutility.getPlayerCount(boardsim) > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
 	if (moveutil.doesAnyPlayerGet2TurnsInARow(boardsim.gameRules)) return false; // This also allows the capture of the king.
 	if (boardutil.getRoyalCountOfGame(boardsim.pieces) > MAX_ROYALS) return false; // Too many royals (check & checkmate algorithm takes too long)
@@ -55,16 +53,9 @@ function detect(boardsim: Board): GameConclusion | undefined {
 	// Iterate through every piece, calculating its legal moves. The first legal move we find, we
 	// know the game is not over yet...
 
-	for (const rType of Object.values(rawTypes)) {
-		const thisType = typeutil.buildType(rType, boardsim.whosTurn);
-		const thesePieces = boardsim.pieces.typeRanges.get(thisType);
-		if (!thesePieces) continue; // The game doesn't have this type of piece
-		for (let idx = thesePieces.start; idx < thesePieces.end; idx++) {
-			const thisPiece = boardutil.getPieceFromIdx(boardsim.pieces, idx);
-			if (!thisPiece) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-			const moves = legalmoves.calculateAll(boardsim, thisPiece);
-			if (legalmoves.hasAtleast1Move(moves, boardsim, thisPiece)) return undefined; // Not checkmate
-		}
+	for (const thisPiece of boardutil.iteratePiecesOfColor(boardsim.pieces, boardsim.whosTurn)) {
+		const moves = legalmoves.calculateAll(boardsim, thisPiece);
+		if (legalmoves.hasAtleast1Move(moves, boardsim, thisPiece)) return undefined; // Not checkmate
 	}
 
 	// We made it through every single piece without finding a single move.

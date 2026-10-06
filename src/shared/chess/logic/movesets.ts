@@ -7,6 +7,7 @@
 import type { Piece } from './boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
+import type { SlideLimits } from './legalmoves.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
@@ -18,68 +19,63 @@ import specialdetect from './specialdetect.js';
 import { primalityTest } from '../../util/math/isprime.js';
 import { rawTypes as r } from '../util/typeutil.js';
 
+// Types -----------------------------------------------------------------------
+
+/** A slide direction `'dx,dy'`, canonical so each has one key: dx is never negative, and if it's 0, dy is positive. */
+export type SlideKey = Vec2Key;
+
 /** A Movesets object containing the movesets for every piece type in a game */
 export type Movesets = RawTypeGroup<PieceMoveset>;
 
 /** {@link Movesets} but without the auto-generated colinear properties. */
 export type RawMovesets = RawTypeGroup<RawPieceMoveset>;
 
-/** {@link PieceMoveset} but without the auto-generated colinear property. */
+/**
+ * {@link PieceMoveset} but without the auto-generated colinear property.
+ * Read-only, since one moveset is shared by every piece of its type.
+ */
 interface RawPieceMoveset {
 	/**
 	 * Jumping moves immediately surrounding the piece where it can move to.
 	 *
 	 * TODO: Separate moving-moves from capturing-moves.
 	 */
-	individual?: Coords[];
+	readonly individual?: readonly Coords[];
 	/**
 	 * Sliding moves the piece can make.
 	 *
-	 * `"1,0": [null,null]` => Lets the piece slide horizontally infinitely in both directions.
+	 * `"1,0": [-5,null]` => Lets the piece slide 5 squares in the negative vector direction, or infinitely in the positive.
 	 *
 	 * The *key* is the step amount of each skip, and the *value* is the skip limit in the -x and +x directions (-y and +y if it's vertical).
 	 *
-	 * THE X-KEY SHOULD NEVER BE NEGATIVE!!! And if it's 0, then Y should be positive.
+	 * THE 0-INDEX LIMIT SHOULD ALWAYS BE NEGATIVE (OR NULL)!!!
 	 */
-	sliding?: SlidingMoves;
+	readonly sliding?: Readonly<Record<SlideKey, SlideLimits>>;
 	/**
 	 * The initial function that determines how far a piece is legally able to slide
 	 * according to what pieces block it.
 	 *
 	 * This should be provided if we're not using the default.
 	 */
-	blocking?: BlockingFunction;
+	readonly blocking?: BlockingFunction;
 	/**
 	 * The secondary function that *actually* determines whether each individual
 	 * square in a slide is legal to move to.
 	 *
 	 * This should be provided if we're not using the default.
 	 */
-	ignore?: IgnoreFunction;
+	readonly ignore?: IgnoreFunction;
 	/**
 	 * If present, the function to call for calculating legal special moves.
 	 */
-	special?: SpecialFunction;
+	readonly special?: SpecialFunction;
 }
 
 /** A moveset for an single piece type in a game */
 export interface PieceMoveset extends RawPieceMoveset {
 	/** Whether this moveset involves colinear sliding moves. Auto-generated property. */
-	colinear: boolean;
+	readonly colinear: boolean;
 }
-
-/**
- * Sliding moves the piece can make.
- *
- * `"1,0": [-5,null]` => Lets the piece slide 5 squares in the negative vector direction, or infinitely in the positive.
- *
- * The *key* is the step amount of each skip, and the *value* is the skip limit in the -x and +x directions (-y and +y if it's vertical).
- *
- * THE 0-INDEX KEY SHOULD ALWAYS BE NEGATIVE!!!
- */
-type SlidingMoves = {
-	[slideDirection: Vec2Key]: [bigint | null, bigint | null];
-};
 
 /**
  * This runs once for every square you can slide to that's visible on the screen.
@@ -168,30 +164,24 @@ function generateLeaperMoves(m: bigint, n: bigint): Coords[] {
 
 /**
  * Returns the movesets of all the pieces, modified according to the specified slideLimit gamerule.
- *
- * These movesets are called as functions so that they return brand
- * new copies of each moveset so there's no risk of accidentally modifying the originals.
  * @param slideLimit - Optional. The slideLimit gamerule value.
- * @returns Object containing the movesets of all pieces except pawns.
+ * @returns The movesets of every piece type.
  */
 function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 	if (typeof slideLimit !== 'bigint' && slideLimit !== null)
 		throw new Error('slideLimit gamerule is in an unsupported value.');
 
 	// Slide limits of all pieces. Negative the first index.
-	const slideLimits: [bigint | null, bigint | null] = [
-		slideLimit === null ? null : -slideLimit,
-		slideLimit,
-	];
+	const slideLimits: SlideLimits = [slideLimit === null ? null : -slideLimit, slideLimit];
 
 	// Define common movesets to reduce duplication
 	const kingMoves: Coords[] = generateCompassMoves(1n);
 	const knightMoves = generateLeaperMoves(1n, 2n);
-	const rookMoves: SlidingMoves = {
+	const rookMoves: Record<SlideKey, SlideLimits> = {
 		'1,0': slideLimits,
 		'0,1': slideLimits,
 	};
-	const bishopMoves: SlidingMoves = {
+	const bishopMoves: Record<SlideKey, SlideLimits> = {
 		'1,1': slideLimits,
 		'1,-1': slideLimits,
 	};
@@ -329,7 +319,7 @@ function isMovesetColinear(moveset: RawPieceMoveset): boolean {
 	 * A vector is considered primitive if the greatest common divisor (GCD) of its components is 1.
 	 */
 	if (moveset.sliding) {
-		const slides: Vec2[] = (Object.keys(moveset.sliding) as Vec2Key[]).map((s) =>
+		const slides: Vec2[] = (Object.keys(moveset.sliding) as SlideKey[]).map((s) =>
 			vectors.getVec2FromKey(s),
 		);
 		if (slides.some((s) => isVectorColinear(s))) return true; // Colinear
