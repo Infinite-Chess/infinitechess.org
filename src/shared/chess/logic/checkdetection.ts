@@ -7,14 +7,13 @@
  */
 
 import type { Board } from './boardinit.js';
+import type { Coords } from '../../util/coordutil.js';
 import type { CheckInfo } from './state.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { Player, RawType } from '../util/typeutil.js';
-import type { Coords, CoordsKey } from '../../util/coordutil.js';
 
 import typeutil from '../util/typeutil.js';
 import boardutil from './boardutil.js';
-import coordutil from '../../util/coordutil.js';
 import legalmoves from './legalmoves.js';
 import organizedpieces from './organizedpieces.js';
 import { players as p } from '../util/typeutil.js';
@@ -105,8 +104,8 @@ function doesVicinityAttackSquare(
 	friendlyColor: Player,
 	checks?: CheckInfo[],
 ): boolean {
-	for (const [coordsKey, thisVicinity] of Object.entries(boardsim.vicinity)) {
-		const actualSquare = findOpponentAttacker(boardsim, square, coordsKey as CoordsKey, thisVicinity, friendlyColor); // prettier-ignore
+	for (const { offset, types } of boardsim.vicinity) {
+		const actualSquare = findOpponentAttacker(boardsim, square, offset, types, friendlyColor);
 		if (actualSquare === undefined) continue;
 
 		checks?.push({ royal: square, attacker: actualSquare, slidingCheck: false });
@@ -119,19 +118,17 @@ function doesVicinityAttackSquare(
 /**
  * The square an opponent piece could attack from, if one of the given types sits at the vicinity
  * offset from `square`. Friendly and neutral pieces never attack.
- * @param coordsKey - The vicinity offset, from the attacker to `square`.
+ * @param offset - The vicinity offset, from the attacker to `square`.
  * @param attackerTypes - The piece types that can attack from that offset.
  */
 function findOpponentAttacker(
 	boardsim: Board,
 	square: Coords,
-	coordsKey: CoordsKey,
+	offset: Coords,
 	attackerTypes: RawType[],
 	friendlyColor: Player,
 ): Coords | undefined {
-	const thisSquare = coordutil.getCoordsFromKey(coordsKey); // [1,2], [2,1], ...
-	// Subtract the offset of our square
-	const actualSquare: Coords = [square[0] - thisSquare[0], square[1] - thisSquare[1]];
+	const actualSquare: Coords = [square[0] - offset[0], square[1] - offset[1]];
 
 	// Fetch the piece type currently on that square
 	const typeOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, actualSquare);
@@ -157,8 +154,8 @@ function doesSpecialAttackSquare(
 	friendlyColor: Player,
 	checks?: CheckInfo[],
 ): boolean {
-	for (const [coordsKey, thisVicinity] of Object.entries(boardsim.specialVicinity)) {
-		const actualSquare = findOpponentAttacker(boardsim, square, coordsKey as CoordsKey, thisVicinity, friendlyColor); // prettier-ignore
+	for (const { offset, types } of boardsim.specialVicinity) {
+		const actualSquare = findOpponentAttacker(boardsim, square, offset, types, friendlyColor);
 		if (actualSquare === undefined) continue;
 
 		// This square can POTENTIALLY be captured via special move...
@@ -221,19 +218,10 @@ function doesSlideAttackSquare(
 ): boolean {
 	let atleast1Attacker = false;
 
-	for (const [directionkey, lineSet] of boardsim.pieces.lines) {
-		// [dx,dy]
-		const direction = coordutil.getCoordsFromKey(directionkey);
-		const key = organizedpieces.getKeyFromLine(direction, square);
+	for (const { step, lines } of boardsim.pieces.lines.values()) {
+		const lineKey = organizedpieces.getKeyFromLine(step, square);
 		if (
-			doesLineAttackSquare(
-				boardsim,
-				lineSet.get(key),
-				direction,
-				square,
-				friendlyColor,
-				checks,
-			)
+			doesLineAttackSquare(boardsim, lines.get(lineKey), step, square, friendlyColor, checks)
 		) {
 			if (!checks) return true; // Not keeping track of checks, exit early
 			atleast1Attacker = true;
@@ -269,7 +257,7 @@ function doesLineAttackSquare(
 	// Iterate through every piece on the line, and test if they can attack our square
 	for (const thisPieceIdx of line) {
 		// { coords, type }
-		const thisPiece = boardutil.getPieceFromIdx(boardsim.pieces, thisPieceIdx)!;
+		const thisPiece = boardutil.getDefinedPieceFromIdx(boardsim.pieces, thisPieceIdx);
 		const thisPieceColor = typeutil.getColorFromType(thisPiece.type);
 		if (color === thisPieceColor) continue; // Same team, can't capture us, CONTINUE to next piece!
 		if (thisPieceColor === p.NEUTRAL) continue; // Neutrals can't move, that means they can't make captures, right?

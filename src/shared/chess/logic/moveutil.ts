@@ -45,10 +45,9 @@ export interface MoveSpecialTags {
 		coord: Coords;
 	};
 	/**
-	 * A special move tag that stores a list of all the waypoints along
-	 * the travel path of a piece. Inclusive to start and end.
-	 *
-	 * Used for Rose piece.
+	 * A special move tag for a piece that travels a route, like the rose: every waypoint,
+	 * start and end included. The rose's isn't deterministic: between equally good routes
+	 * it picks one at random (specialdetect.roses).
 	 */
 	path: Coords[];
 }

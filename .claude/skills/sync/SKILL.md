@@ -32,5 +32,3 @@ If the user has already provided their choice on all items you needed a decision
 new ones for the sake of having something. Only present new items if you genuinely think they are
 large enough to require a decision from the user. Otherwise, ask for the go-ahead to implement the
 plan. Do not start making changes without explicit approval.
-
-Remember to follow your output style.

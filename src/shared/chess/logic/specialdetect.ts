@@ -55,7 +55,7 @@ function kings(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 	const kingY = coords[1];
 	const oppositeColor = typeutil.invertPlayer(color);
 	const key = organizedpieces.getKeyFromLine([1n, 0n], coords);
-	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
+	const row = boardsim.pieces.lines.get('1,0')!.lines.get(key)!;
 
 	// Add legal Castling...
 
@@ -298,6 +298,8 @@ function appendPawnMoveAndAttachPromoteTag(
 ): void {
 	if (gameRules.promotion !== undefined) {
 		const teamPromotionRanks = gameRules.promotion.ranks[color];
+		// UI tag only. A real promotion tag would add a piece when check is simulated, which can
+		// regenerate the piece lists under walkers paused mid-iteration (checkmate.detect).
 		if (teamPromotionRanks?.includes(landCoords[1])) landCoords.promoteTrigger = true;
 	}
 
@@ -324,7 +326,7 @@ function roses(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 		for (const direction of directions) {
 			let currentCoord: CoordsTagged = coordutil.copyCoords(coords);
 			let b = i;
-			const path = [coords]; // The running path of travel for the current spiral. Used for animating.
+			const path = [coordutil.copyCoords(coords)]; // The running path of travel for the current spiral. Used for animating.
 			for (let c = 0; c < movements.length - 1; c++) {
 				// Iterate 7 times, since we can't land on the square we started
 				const movement = movements[math.posMod(b, movements.length)]!;
@@ -357,7 +359,7 @@ function roses(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 	 * @param newCoord - The coordinate to append [x, y].
 	 */
 	function appendCoordToIndividuals(newCoord: CoordsTagged, path: Coords[]): void {
-		newCoord.path = jsutil.deepCopyObject(path);
+		newCoord.path = path.slice(); // A snapshot, as the spiral keeps extending `path`. Waypoints are never edited in place.
 		for (let i = 0; i < individualMoves.length; i++) {
 			const coord = individualMoves[i]!;
 			if (!coordutil.areCoordsEqual(coord, newCoord)) continue;
@@ -402,8 +404,8 @@ function roses(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 				else if (compareResult < 0)
 					individualMoves[i] = newCoord; // New move's path curves more towards the center
 				else {
-					// BOTH point equally point towards the origin.
-					// JUST pick a random one!
+					// Both curve equally towards the center: pick one at random. This makes the
+					// path tag nondeterministic, so the ICN validator's fingerprint hashes only its length.
 					individualMoves[i] = Math.random() < 0.5 ? coord : newCoord;
 				}
 			}

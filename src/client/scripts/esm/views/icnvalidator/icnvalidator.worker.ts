@@ -1,205 +1,39 @@
 // src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts
 
 /**
- * The web worker script for the ICN Validator Tool.
+ * The ICN validator's worker. Loads the engine when the movegen check is
+ * requested, then validates the chunk of games the page sends.
  */
 
-import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
-import type {
-	ChunkResults,
-	ValidationRequest,
-	ValidationResponse,
-	VariantErrorType,
-} from './icnvalidatorprotocol.js';
+import type { MovegenWasmModule } from './movegencheck.js';
+import type { ValidationRequest, ValidationResponse } from './icnvalidatorprotocol.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
-import movepiece from '../../../../../shared/chess/logic/movepiece.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
-import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
+
+import enginewasm from '../../chess/enginewasm.js';
+import chunkvalidator from './chunkvalidator.js';
 
 // Message Handling ------------------------------------------------------------
 
-// Listen for the main thread to send data
+/** Validates the chunk of games the page sends, posting progress along the way and the tallies at the end. */
 self.onmessage = async (e: MessageEvent<ValidationRequest>) => {
-	const { chunkId, games } = e.data;
+	const { chunkId, games, engineUrl } = e.data;
 
-	const localResults: ChunkResults = {
-		successfulCount: 0,
-		icnconverterErrors: 0,
-		formulatorErrors: 0,
-		illegalMoveErrors: 0,
-		terminationMismatchErrors: 0,
-		errors: [],
-		variantErrors: {},
-	};
-
-	// Helper for variant stats
-	const incrementVariantError = (variantName: string, type: VariantErrorType): void => {
-		if (!localResults.variantErrors[variantName]) {
-			localResults.variantErrors[variantName] = {
-				total: 0,
-				icn: 0,
-				formulator: 0,
-				illegal: 0,
-				termination: 0,
-			};
-		}
-		localResults.variantErrors[variantName]!.total++;
-		localResults.variantErrors[variantName]![type]++;
-	};
-
-	// Process the batch
-	for (const item of games) {
-		const { index, icn: gameICN } = item;
+	// One single-threaded engine per worker, for the movegen check
+	let wasm: MovegenWasmModule | undefined;
+	if (engineUrl !== undefined) {
 		try {
-			// Stage 1: Convert ICN to long format
-			let longFormat: LongFormatOut;
-			try {
-				longFormat = icnconverter.ShortToLong_Format(gameICN);
-			} catch (error) {
-				const message = jsutil.getErrorMessage(error);
-				localResults.icnconverterErrors++;
-				localResults.errors.push({
-					gameIndex: index,
-					phase: 'icnconverter',
-					error: message,
-					icn: gameICN,
-				});
-				incrementVariantError('Unknown (ICN Parse Failed)', 'icn');
-				continue; // Move to next game
-			}
-
-			// Extract metadata
-			const variant = longFormat.metadata.Variant || 'Unknown';
-			const termination = longFormat.metadata.Termination;
-			const result = longFormat.metadata.Result;
-
-			// Stage 2: Formulate & validate the moves. An IllegalMoveError means the game
-			// built fine but a move was illegal; anything else means it wouldn't build.
-			let game: GameFile;
-			try {
-				game = await gameformulator.formulateGame(longFormat, undefined, true);
-			} catch (error) {
-				const message = jsutil.getErrorMessage(error);
-				const illegalMove = error instanceof movepiece.IllegalMoveError;
-				if (illegalMove) localResults.illegalMoveErrors++;
-				else localResults.formulatorErrors++;
-				localResults.errors.push({
-					gameIndex: index,
-					phase: illegalMove ? 'illegal-move' : 'formulator',
-					error: message,
-					variant: variant,
-					icn: gameICN,
-				});
-				incrementVariantError(variant, illegalMove ? 'illegal' : 'formulator');
-				continue;
-			}
-
-			// Stage 3: Termination Check
-			try {
-				validateTermination(termination, result, game.gameConclusion);
-			} catch (error) {
-				const message = jsutil.getErrorMessage(error);
-				localResults.terminationMismatchErrors++;
-				localResults.errors.push({
-					gameIndex: index,
-					phase: 'termination-mismatch',
-					error: message,
-					variant: variant,
-					termination: termination,
-					result: result,
-					gameConclusion: game.gameConclusion,
-					icn: gameICN,
-				});
-				incrementVariantError(variant, 'termination');
-				continue;
-			}
-
-			// If we got here, game is valid
-			localResults.successfulCount++;
+			({ wasm } = await enginewasm.load<MovegenWasmModule>(engineUrl, 1));
 		} catch (error) {
-			// Unexpected
-			const message = jsutil.getErrorMessage(error);
-			localResults.formulatorErrors++;
-			localResults.errors.push({
-				gameIndex: index,
-				phase: 'unknown',
-				error: message,
-				icn: gameICN,
-			});
-		}
-
-		// Report progress every 50 games (optional optimization to keep UI responsive)
-		if (
-			(localResults.successfulCount +
-				localResults.icnconverterErrors +
-				localResults.formulatorErrors +
-				localResults.illegalMoveErrors +
-				localResults.terminationMismatchErrors) %
-				10 ===
-			0
-		) {
-			self.postMessage({ type: 'progress', chunkId, count: 10 } satisfies ValidationResponse);
+			console.error('[ICN Validator] Failed to initialize wasm', error);
+			const message = `Engine failed to load: ${jsutil.getErrorMessage(error)}`;
+			self.postMessage({ type: 'initerror', chunkId, message } satisfies ValidationResponse);
+			return;
 		}
 	}
 
-	// Send final results for this chunk
-	self.postMessage({ type: 'done', chunkId, results: localResults } satisfies ValidationResponse);
+	const results = await chunkvalidator.validate(games, { wasm, fingerprint: false }, (count) =>
+		self.postMessage({ type: 'progress', chunkId, count } satisfies ValidationResponse),
+	);
+	self.postMessage({ type: 'done', chunkId, results } satisfies ValidationResponse);
 };
-
-// Termination Validation ------------------------------------------------------
-
-/** Throws if the game's Termination/Result metadata disagrees with how the game actually ended. */
-function validateTermination(
-	termination: string | undefined,
-	result: string | undefined,
-	gameConclusion: GameConclusion | undefined,
-): void {
-	if (termination === 'Maximum moves reached') {
-		if (gameConclusion !== undefined)
-			throw new Error(`Termination is "Maximum moves reached" but game is over: ${JSON.stringify(gameConclusion)}`); // prettier-ignore
-		return;
-	}
-	// Adjudication terminations are suffixed with their eval threshold, e.g. "Max-ply adjudication (|eval| >= 1000 cp)"
-	if (
-		termination &&
-		(termination.startsWith('Material adjudication') ||
-			termination.startsWith('Max-ply adjudication'))
-	) {
-		if (gameConclusion !== undefined)
-			throw new Error(`Termination is "${termination}", but game is over: ${JSON.stringify(gameConclusion)}`); // prettier-ignore
-		return;
-	}
-	if (gameConclusion === undefined) {
-		if (termination)
-			throw new Error(`Game isn't over, but Termination is specified: "${termination}"`);
-		return;
-	}
-
-	const { victor, condition } = gameConclusion;
-
-	const conditionMappings: Record<string, string> = {
-		Checkmate: 'checkmate',
-		'All pieces captured': 'allpiecescaptured',
-		'Royal capture': 'royalcapture',
-		'All royals captured': 'allroyalscaptured',
-		Stalemate: 'stalemate',
-		'Threefold repetition': 'repetition',
-		'50-move rule': 'moverule',
-		'Insufficient material': 'insuffmat',
-	};
-
-	if (termination && termination in conditionMappings) {
-		if (condition !== conditionMappings[termination])
-			throw new Error(`Game is over by ${condition}, but Termination is "${termination}"`);
-	} else if (termination) {
-		throw new Error(`Disallowed Termination metadata: "${termination}"`);
-	}
-
-	if (victor !== undefined && result && victor !== metadatautil.getVictorFromResult(result)) {
-		throw new Error(`Result "${result}" does not match victor ${victor}`);
-	}
-}

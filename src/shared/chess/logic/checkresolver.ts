@@ -20,7 +20,6 @@ import type { CoordsTagged, MoveTagged } from './movepiece.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
 import vectors from '../../util/math/vectors.js';
 import typeutil from '../util/typeutil.js';
@@ -59,11 +58,16 @@ function removeCheckInvalidMoves(boardsim: Board, pieceSelected: Piece, moves: L
 	if (!gamefileutility.isOpponentUsingWinCondition(boardsim, color, 'checkmate')) return;
 	if (boardutil.getRoyalCoordsOfColor(boardsim.pieces, color).length === 0) return; // No royals -> zero checks possible, ever.
 
+	// The stored checks are against whoever's turn it is at the viewed ply.
+	// The other player just moved, so can't be in check.
+	const whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex);
+	const existingChecks = color === whosTurn ? boardsim.state.local.checks : [];
+
 	// There's a couple type of moves that put you in check:
 
 	// 1. Sliding moves. Possible they can open a discovered check, or fail to address an existing check.
 	// Check these FIRST because in situations where we are in existing check, additional individual moves may be added, which are then simulated below to see if they're legal.
-	removeCheckInvalidMoves_Sliding(boardsim, moves, pieceSelected, color);
+	removeCheckInvalidMoves_Sliding(boardsim, moves, pieceSelected, color, existingChecks);
 
 	// 2. Individual moves. We can iterate through these and use checkdetection.detect() to test them.
 	removeCheckInvalidMoves_Individual(boardsim, moves.individual, pieceSelected, color);
@@ -103,12 +107,14 @@ function removeCheckInvalidMoves_Individual(
  * @param moves - The precalculated legalMoves object for a piece.
  * @param piece - The piece of which the running legal moves are for.
  * @param color - The color of the player the piece belongs to.
+ * @param existingChecks - The checks `color` is already in.
  */
 function removeCheckInvalidMoves_Sliding(
 	boardsim: Board,
 	moves: LegalMoves,
 	piece: Piece,
 	color: Player,
+	existingChecks: CheckInfo[],
 ): void {
 	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to being with.
 
@@ -121,10 +127,10 @@ function removeCheckInvalidMoves_Sliding(
 	if (isRoyal) moves.brute = true; // Flag the sliding moves to brute force check each move to see if it results in check, disallowing it if so.
 
 	// 2. By not blocking, dodging, or capturing the attacker of an already-existing check.
-	addressChecks(boardsim, moves, piece.coords, isRoyal);
+	addressChecks(moves, piece.coords, isRoyal, existingChecks);
 
 	// 3. By opening a new discovered attack on one of our royals.
-	addressPins(boardsim, moves, piece, color, isRoyal);
+	addressPins(boardsim, moves, piece, color, isRoyal, existingChecks);
 }
 
 /**
@@ -133,14 +139,14 @@ function removeCheckInvalidMoves_Sliding(
  * @param moves - The legal moves object of which to delete moves that don't address check.
  * @param selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
  * @param isRoyal - Whether the provided legal moves are for a royal piece.
+ * @param checks - The checks the piece's player is already in.
  */
 function addressChecks(
-	boardsim: Board,
 	moves: LegalMoves,
 	selectedPieceCoords: Coords,
 	isRoyal: boolean,
+	checks: CheckInfo[],
 ): void {
-	const checks = boardsim.state.local.checks;
 	if (checks.length === 0) return; // Nothing in check
 	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to collapse into more individuals that address the existing checks.
 
@@ -234,12 +240,12 @@ function addressChecks(
 /**
  * Deletes any sliding moves from the provided running legal moves that
  * open up a discovered attack on any of our royals.
- * Reads the current checks from the boardsim and ignores any that are already present —
- * only newly-exposed checks (from deleting the piece) are treated as pins.
+ * Only newly-exposed checks (from deleting the piece) are treated as pins.
  * @param moves - The running legal moves of the selected piece
  * @param pieceSelected - The piece with the provided running legal moves
  * @param color - The color of the player the piece belongs to.
  * @param isRoyal - Whether the provided legal moves are for a royal piece.
+ * @param preExistingChecks - The checks `color` is already in, which aren't pins.
  */
 function addressPins(
 	boardsim: Board,
@@ -247,11 +253,9 @@ function addressPins(
 	pieceSelected: Piece,
 	color: Player,
 	isRoyal: boolean,
+	preExistingChecks: CheckInfo[],
 ): void {
 	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to remove (may have already all been removed in addressChecks())
-	// Does not reflect checks for `color` if it's not currently their turn to move.
-	// This is fine because only for whoever's turn it is, moves are check-respected.
-	const preExistingChecks = boardsim.state.local.checks;
 
 	/**
 	 * To find out if our piece is pinned (or opens a discovered), we delete it, then test for check.
@@ -527,9 +531,8 @@ function isMoveCheckInvalid(
 	destCoords: CoordsTagged,
 	color: Player,
 ): boolean {
-	// pieceSelected: { type, index, coords }
 	const moveTagged: MoveTagged = {
-		startCoords: jsutil.deepCopyObject(piece.coords),
+		startCoords: coordutil.copyCoords(piece.coords),
 		endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords),
 	};
 	specialdetect.transferSpecialTags_FromCoordsToMove(destCoords, moveTagged);

@@ -31,6 +31,9 @@
 - Ad-hoc scripts — anything you write to answer a question rather than ship a change — go in the
   gitignored `sandbox/`, run from the repo root: `npx tsx sandbox/<name>.ts`. Written outside the
   repo they inherit no `node_modules` and no `"type": "module"`, so top-level `await` fails.
+- When changing legal-move, check, checkmate or game-end logic, run `npm run validate-icn` yourself
+  on the validator dataset (ask me for its path) before your first edit and after. For refactors and
+  speed-ups the fingerprint must not change.
 
 ## Agent rulebook
 
@@ -281,7 +284,7 @@ disagree, study more siblings before trusting either.
 ### File anatomy
 
 - Line 1 is the file-path comment (hook-written). Lines 3–7+: a doc-comment describing what the
-  script **is**, not where it's used.
+  script **is**.
 - Sections in order: imports → Types → Elements → Constants → Schemas → State → functional groups →
   Exports. Every section gets a `// Section name -------` divider — never `=====` bars, never
   `// --- Name ---`. Pad the dashes so the line is exactly 80 characters.

@@ -16,7 +16,7 @@
  * @author FirePlank
  */
 
-import type { EngineWasmModule, WasmEngine, WasmMove } from './enginewasm.js';
+import type { EngineWasmModule, WasmEngine, WasmMove } from '../../../chess/enginewasm.js';
 import type {
 	ApeironMoveRequest,
 	EngineInitRequest,
@@ -26,8 +26,8 @@ import type {
 
 import jsutil from '../../../../../../shared/util/jsutil.js';
 
-import engineicn from './engineicn.js';
-import enginewasm from './enginewasm.js';
+import engineicn from '../../../chess/engineicn.js';
+import enginewasm from '../../../chess/enginewasm.js';
 
 // Types -----------------------------------------------------------------------
 

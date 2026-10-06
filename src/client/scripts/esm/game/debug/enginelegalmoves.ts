@@ -12,7 +12,7 @@ import coordutil, { CoordsKey } from '../../../../../shared/util/coordutil.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
-import engineicn from '../chess/engines/engineicn.js';
+import engineicn from '../../chess/engineicn.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';

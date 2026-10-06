@@ -1,14 +1,14 @@
-// src/client/scripts/esm/game/chess/engines/engineicn.ts
+// src/client/scripts/esm/chess/engineicn.ts
 
 /**
  * Owns what an engine-bound ICN carries, so every engine entry point
- * (gameplay, local eval, game review) hands the engine the same thing.
+ * hands the engine the same thing.
  */
 
-import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { LongFormatIn } from '../../../../shared/chess/logic/icn/icnconverter.js';
 
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import apeironborder from '../../../../../../shared/chess/logic/apeironborder.js';
+import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
+import apeironborder from '../../../../shared/chess/logic/apeironborder.js';
 
 /**
  * Conforms a freshly compressed longform to what Apeiron reads, in place.

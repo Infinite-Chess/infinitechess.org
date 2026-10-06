@@ -1,422 +1,936 @@
-:root {
-	--bg-color: #191919;
-	--text-color: #d4d4d4;
-	--primary-color: #4a90e2;
-	--secondary-color: #252526;
-	--border-color: #333;
-	--accent-color: #569cd6;
-	--success-color: #4caf50;
-	--warning-color: #ff9800;
-	--danger-color: #f44336;
-	--font-family:
-		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+/* src/client/css/icnvalidator.css */
+
+/* The ICN validator developer page: a column of cards over the dimmed checkerboard, themed by
+   the site's variables. Each failure type owns one color, set as --phase by its .phase-* class. */
+
+/* ==================================
+   Failure types
+   ================================== */
+
+.phase-icnconverter {
+	--phase: var(--c-caution);
 }
 
-body {
-	font-family: var(--font-family);
-	background-color: var(--bg-color);
-	color: var(--text-color);
-	margin: 0;
-	padding: 2rem;
+.phase-formulator {
+	--phase: hsl(0, 72%, 62%);
+}
+
+.phase-illegal-move {
+	--phase: hsl(330, 78%, 62%);
+}
+
+.phase-movegen-mismatch {
+	--phase: hsl(172, 62%, 44%);
+}
+
+.phase-termination-mismatch {
+	--phase: hsl(268, 65%, 68%);
+}
+
+/* ==================================
+   Page
+   ================================== */
+
+.validator {
+	--mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	--c-pass: hsl(122, 45%, 50%);
+	--c-caution: hsl(38, 92%, 55%);
+	flex: 1;
 	display: flex;
 	justify-content: center;
+	padding: 48px 16px 64px;
+	/* Anchored to the top, so the checkerboard holds still as panels resize the page. */
+	background-position: center top;
 }
 
-.container {
+.validator-column {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
 	width: 100%;
-	max-width: 1200px;
+	max-width: 920px;
 }
 
-h1,
-h2 {
-	color: var(--primary-color);
-	border-bottom: 2px solid var(--border-color);
-	padding-bottom: 0.5rem;
+/* The global .card is a row; this page's cards stack their contents. */
+.validator .card {
+	flex-direction: column;
+	gap: 18px;
+	padding: 24px;
 }
 
-.upload-section {
-	background-color: var(--secondary-color);
-	border: 2px dashed var(--border-color);
-	border-radius: 8px;
-	padding: 2rem;
+.section-title {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--c-text-emphasis);
+	font-size: 1.15em;
+	font-weight: 800;
+}
+
+.section-count {
+	padding: 1px 9px;
+	border-radius: 999px;
+	background: var(--c-surface-2);
+	color: var(--c-text-muted);
+	font-size: 0.8em;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ==================================
+   Header
+   ================================== */
+
+.validator-head {
+	padding: 0 4px 8px;
+}
+
+.validator-title-row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px 14px;
+}
+
+.validator-title {
+	color: var(--c-text-emphasis);
+	font-size: clamp(2rem, 6vw, 2.75rem);
+	font-weight: 800;
+	line-height: 1.1;
+}
+
+.validator-tag {
+	padding: 3px 10px;
+	border: 1px solid var(--c-border-2);
+	border-radius: 999px;
+	color: var(--c-text-muted);
+	font-size: 0.75em;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.validator-lede {
+	margin-top: 10px;
+}
+
+/* ==================================
+   Drop zone
+   ================================== */
+
+.dropzone {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 36px 20px;
+	border: 2px dashed var(--c-border-2);
+	border-radius: 10px;
+	background: var(--c-surface-2);
 	text-align: center;
-	margin-bottom: 2rem;
-	transition: border-color 0.3s;
-}
-
-.upload-section:hover {
-	border-color: var(--primary-color);
-}
-
-.upload-section.drag-over {
-	border-color: var(--accent-color);
-	background-color: rgba(74, 144, 226, 0.1);
-}
-
-input[type='file'] {
-	display: none;
-}
-
-.file-label {
-	display: inline-block;
-	background-color: var(--primary-color);
-	color: white;
-	padding: 1rem 2rem;
-	border-radius: 4px;
 	cursor: pointer;
-	font-weight: bold;
-	transition: background-color 0.2s;
+	transition:
+		border-color 0.15s,
+		background-color 0.15s,
+		transform 0.15s;
 }
 
-.file-label:hover {
-	background-color: var(--accent-color);
+.dropzone:hover,
+.dropzone.drag-over {
+	border-color: var(--c-accent);
 }
 
-button {
-	background-color: var(--primary-color);
-	color: white;
-	border: none;
-	padding: 0.75rem 1.5rem;
-	font-weight: bold;
+.dropzone.drag-over {
+	background: color-mix(in srgb, var(--c-accent) 14%, var(--c-surface-2));
+	transform: scale(1.01);
+}
+
+.dropzone-icon {
+	width: 44px;
+	height: 44px;
+	margin-bottom: 8px;
+	fill: none;
+	stroke: var(--c-text-muted);
+	stroke-width: 1.6;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	transition:
+		stroke 0.15s,
+		transform 0.15s;
+}
+
+.dropzone:hover .dropzone-icon,
+.dropzone.drag-over .dropzone-icon {
+	stroke: var(--c-accent);
+	transform: translateY(-3px);
+}
+
+.dropzone-title {
+	color: var(--c-text-emphasis);
+	font-size: 1.1em;
+	font-weight: 700;
+	word-break: break-all;
+}
+
+.dropzone-hint {
+	color: var(--c-text-muted);
+	font-size: 0.9em;
+}
+
+.dropzone.ready {
+	border-style: solid;
+	border-color: var(--c-accent);
+}
+
+.dropzone.ready .dropzone-icon {
+	stroke: var(--c-accent);
+}
+
+.dropzone.invalid {
+	border-style: solid;
+	border-color: var(--c-error);
+	background: color-mix(in srgb, var(--c-error) 10%, var(--c-surface-2));
+}
+
+.dropzone.invalid .dropzone-icon {
+	stroke: var(--c-error);
+}
+
+.dropzone.invalid .dropzone-hint {
+	color: var(--c-error);
+}
+
+/* ==================================
+   Run controls
+   ================================== */
+
+.run-controls {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 16px;
+}
+
+.run-button {
+	width: auto;
+	padding: 11px 36px;
+}
+
+.run-button.cancel {
+	background: var(--c-surface-2);
+	box-shadow: inset 0 0 0 1px var(--c-border-2);
+	color: var(--c-text-emphasis);
+}
+
+/* ==================================
+   Movegen option
+   ================================== */
+
+/* An option as a large checkbox beside its title and description. */
+.option-card {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 14px;
+	min-width: 280px;
+	padding: 12px 16px;
+	border: 1px solid var(--c-border);
+	border-radius: 10px;
 	cursor: pointer;
-	transition: background-color 0.2s;
-	border-radius: 4px;
-	font-size: 1em;
+	transition: border-color 0.15s;
 }
 
-button:hover {
-	background-color: var(--accent-color);
+.option-card:hover {
+	border-color: var(--c-border-2);
 }
 
-button:disabled {
-	background-color: #666;
+.option-card:has(input:checked) {
+	border-color: var(--c-accent);
+}
+
+.option-card:has(input:disabled) {
+	opacity: 0.55;
 	cursor: not-allowed;
 }
 
-.progress-section {
-	background-color: var(--secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: 8px;
-	padding: 1.5rem;
-	margin-bottom: 2rem;
-	display: none;
+/* Hidden, but kept focusable so the checkbox still takes keyboard focus. */
+.option-input {
+	position: absolute;
+	opacity: 0;
 }
 
-.progress-bar {
-	width: 100%;
-	height: 30px;
-	background-color: var(--bg-color);
-	border-radius: 4px;
-	overflow: hidden;
-	margin: 1rem 0;
-}
-
-.progress-fill {
-	height: 100%;
-	background-color: var(--primary-color);
-	transition: width 0.3s;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: white;
-	font-weight: bold;
-}
-
-.summary-section {
-	background-color: var(--secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: 8px;
-	padding: 1.5rem;
-	margin-bottom: 2rem;
-	display: none;
-}
-
-.summary-hero {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background-color: var(--bg-color);
-	border: 1px solid var(--border-color);
-	border-radius: 8px;
-	padding: 2rem;
-	margin-bottom: 2rem;
-	gap: 3rem;
-}
-
-.hero-stat {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-}
-
-.hero-value {
-	font-size: 3.5rem;
-	font-weight: 800;
-	line-height: 1;
-	margin-bottom: 0.5rem;
-}
-
-.hero-label {
-	color: var(--text-color);
-	opacity: 0.7;
-	font-size: 0.9rem;
-	font-weight: bold;
-	letter-spacing: 1px;
-}
-
-.hero-divider {
-	width: 2px;
-	height: 60px;
-	background-color: var(--border-color);
-}
-
-/* Dynamic colors for the percentage */
-.hero-value.perfect {
-	color: var(--success-color);
-}
-.hero-value.good {
-	color: var(--accent-color);
-}
-.hero-value.bad {
-	color: var(--warning-color);
-}
-.hero-value.terrible {
-	color: var(--danger-color);
-}
-
-.stat-grid {
+.option-checkbox {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-	gap: 1rem;
-	margin-top: 1rem;
-}
-
-.stat-card {
-	background-color: var(--bg-color);
-	border: 1px solid var(--border-color);
-	border-radius: 4px;
-	padding: 1rem;
-}
-
-.stat-card h3 {
-	margin: 0 0 0.5rem 0;
-	color: var(--accent-color);
-	font-size: 0.9em;
-	text-transform: uppercase;
-}
-
-.stat-value {
-	font-size: 2em;
-	font-weight: bold;
-	margin: 0;
-}
-
-.stat-value.success {
-	color: var(--success-color);
-}
-
-.stat-value.error {
-	color: var(--danger-color);
-}
-
-.stat-value.warning {
-	color: var(--warning-color);
-}
-
-.details-section {
-	background-color: var(--secondary-color);
-	border: 1px solid var(--border-color);
+	place-items: center;
+	flex-shrink: 0;
+	width: 30px;
+	height: 30px;
+	border: 2px solid var(--c-border-2);
 	border-radius: 8px;
-	padding: 1.5rem;
-	margin-bottom: 1rem;
+	background: var(--c-surface-2);
+	/* Matches the card's border fade, so the two change together. */
+	transition:
+		border-color 0.15s,
+		background-color 0.15s;
 }
 
-.error-list {
-	max-height: 800px;
-	overflow-y: auto;
-	margin-top: 1rem;
+.option-card:hover .option-checkbox {
+	border-color: var(--c-accent);
 }
 
-.error-item {
-	background-color: var(--bg-color);
-	border-left: 4px solid var(--danger-color);
-	padding: 1rem;
-	margin-bottom: 1rem;
-	border-radius: 4px;
+.option-input:checked + .option-checkbox {
+	border-color: var(--c-accent);
+	background: var(--c-accent);
 }
 
-.error-item.icnconverter {
-	border-left-color: var(--warning-color);
+.option-input:focus-visible + .option-checkbox {
+	outline: 2px solid var(--c-accent);
+	outline-offset: 2px;
 }
 
-.error-item.formulator {
-	border-left-color: var(--danger-color);
+.option-checkbox svg {
+	visibility: hidden;
+	width: 72%;
+	fill: none;
+	stroke: #fff;
+	stroke-width: 3;
+	stroke-linecap: round;
+	stroke-linejoin: round;
 }
 
-.error-item.illegal-move {
-	border-left-color: #e91e63;
+.option-input:checked + .option-checkbox svg {
+	visibility: visible;
 }
 
-.error-item.termination-mismatch {
-	border-left-color: #9c27b0;
-}
-
-.error-header {
-	font-weight: bold;
-	margin-bottom: 0.5rem;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.error-type {
-	padding: 0.25rem 0.5rem;
-	border-radius: 4px;
-	font-size: 0.8em;
-	text-transform: uppercase;
-}
-
-.error-type.icnconverter {
-	background-color: var(--warning-color);
-	color: var(--bg-color);
-}
-
-.error-type.formulator {
-	background-color: var(--danger-color);
-	color: white;
-}
-
-.error-type.illegal-move {
-	background-color: #e91e63;
-	color: white;
-}
-
-.error-type.termination-mismatch {
-	background-color: #9c27b0;
-	color: white;
-}
-
-.error-message {
-	font-family: 'Courier New', Courier, monospace;
-	font-size: 0.9em;
-	white-space: pre-wrap;
-	word-break: break-all;
-	margin-top: 0.5rem;
-	padding: 0.5rem;
-	background-color: rgba(0, 0, 0, 0.3);
-	border-radius: 4px;
-}
-
-.variant-stats {
-	margin-top: 1rem;
-}
-
-.variant-item {
+.option-text {
 	display: flex;
 	flex-direction: column;
-	padding: 0.75rem;
-	margin-bottom: 0.5rem;
-	background-color: var(--bg-color);
-	border-radius: 4px;
+	gap: 3px;
 }
 
-.variant-header {
+.option-title {
+	color: var(--c-text-emphasis);
+	font-weight: 700;
+}
+
+.option-note {
+	color: var(--c-text-muted);
+	font-size: 0.85em;
+	line-height: 1.4;
+}
+
+/* ==================================
+   Progress lanes
+   ================================== */
+
+.run-progress {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+/* The flex display above outranks the equal-specificity .hidden utility. */
+.run-progress.hidden {
+	display: none;
+}
+
+.lanes {
+	display: grid;
+	grid-auto-columns: 1fr;
+	grid-auto-flow: column;
+	gap: 4px;
+	height: 10px;
+}
+
+.lane {
+	overflow: hidden;
+	border-radius: 999px;
+	background: var(--c-surface-2);
+}
+
+.lane-fill {
+	width: 0;
+	height: 100%;
+	background: linear-gradient(90deg, var(--c-accent), hsl(88, 62%, 52%), var(--c-accent)) 0 0 /
+		200% 100%;
+	animation: lane-shimmer 1.4s linear infinite;
+	transition: width 0.3s ease;
+}
+
+.lane-fill.done {
+	background: var(--c-accent);
+	animation: none;
+}
+
+@keyframes lane-shimmer {
+	to {
+		background-position: -200% 0;
+	}
+}
+
+.run-progress-text {
 	display: flex;
 	justify-content: space-between;
-	font-weight: bold;
-	margin-bottom: 0.5rem;
+	color: var(--c-text-muted);
+	font-size: 0.9em;
+	font-variant-numeric: tabular-nums;
 }
 
-.variant-details {
+.progress-count {
+	color: var(--c-text-emphasis);
+	font-weight: 600;
+}
+
+/* ==================================
+   Results
+   ================================== */
+
+.results {
 	display: flex;
-	gap: 0.5rem;
+	flex-direction: column;
+	gap: 20px;
+}
+
+/* An empty results container must not leave a gap in the column. */
+.results:empty {
+	display: none;
+}
+
+/* ==================================
+   Summary
+   ================================== */
+
+.validator .summary {
+	flex-direction: row;
 	flex-wrap: wrap;
-	font-size: 0.85em;
+	align-items: center;
+	gap: 28px;
 }
 
-.v-stat {
-	background-color: #333;
-	padding: 2px 8px;
-	border-radius: 4px;
-	color: #aaa;
+.summary-body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 260px;
 }
 
-.v-stat.active {
-	background-color: rgba(255, 255, 255, 0.1);
-	color: var(--text-color);
+.summary-headline {
+	color: var(--c-text-emphasis);
+	font-size: 1.4em;
+	font-weight: 800;
 }
 
-.v-stat span {
-	font-weight: bold;
-}
-
-.v-stat.warn span {
-	color: var(--warning-color);
-}
-
-.v-stat.err span {
-	color: var(--danger-color);
-}
-
-.variant-errors.warn {
-	color: var(--warning-color);
-}
-
-.variant-errors.err {
-	color: var(--danger-color);
-}
-
-pre {
-	background-color: #111;
-	border: 1px solid var(--border-color);
-	border-radius: 4px;
-	padding: 1rem;
-	white-space: pre-wrap;
-	word-break: break-all;
-	font-family: 'Courier New', Courier, monospace;
+.summary-meta {
+	color: var(--c-text-muted);
 	font-size: 0.9em;
 }
 
-.log-section {
-	background-color: var(--secondary-color);
-	border: 1px solid var(--border-color);
-	border-radius: 8px;
-	padding: 1.5rem;
-	margin-top: 2rem;
+/* ==================================
+   Pass ring
+   ================================== */
+
+/* Registered so the ring's fill can animate: an unregistered custom property only jumps. */
+@property --fill {
+	syntax: '<number>';
+	inherits: false;
+	initial-value: 0;
 }
 
-.log-output {
-	max-height: 300px;
-	overflow-y: auto;
-	background-color: #111;
-	border: 1px solid var(--border-color);
-	border-radius: 4px;
-	padding: 1rem;
-	font-family: 'Courier New', Courier, monospace;
+/* Sweeps its fill from empty up to the pass rate, --pct, which the script sets. */
+.pass-ring {
+	--ring: var(--c-error);
+	position: relative;
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	width: 132px;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background: conic-gradient(var(--ring) calc(var(--fill) * 1%), var(--c-surface-2) 0);
+	animation: ring-fill 1.1s cubic-bezier(0.25, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes ring-fill {
+	to {
+		--fill: var(--pct);
+	}
+}
+
+.pass-ring::before {
+	content: '';
+	position: absolute;
+	inset: 12px;
+	border-radius: 50%;
+	background: var(--c-surface);
+}
+
+.pass-ring.perfect {
+	--ring: var(--c-pass);
+}
+
+.pass-ring.good {
+	--ring: var(--c-link);
+}
+
+.pass-ring.bad {
+	--ring: var(--c-caution);
+}
+
+.pass-ring-value {
+	position: relative;
+	color: var(--ring);
+	font-size: 1.7em;
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ==================================
+   Perfect run
+   ================================== */
+
+/* A perfect run: a big green ring that pops in and glows, over a soft green wash. */
+.validator .summary.perfect {
+	justify-content: center;
+	gap: 36px;
+	padding: 40px 28px;
+	background:
+		radial-gradient(
+			circle at 30% 50%,
+			color-mix(in srgb, var(--c-pass) 22%, transparent),
+			transparent 60%
+		),
+		var(--c-surface);
+	border-color: color-mix(in srgb, var(--c-pass) 45%, var(--c-border));
+}
+
+.summary.perfect .pass-ring {
+	width: 168px;
+	animation:
+		ring-fill 0.6s ease-out forwards,
+		ring-pop 0.6s cubic-bezier(0.2, 0.9, 0.25, 1.3) both,
+		ring-glow 2.4s ease-in-out 0.6s infinite;
+}
+
+.summary.perfect .summary-body {
+	flex: 0 1 auto;
+}
+
+.summary.perfect .summary-headline {
+	font-size: clamp(1.8em, 5vw, 2.4em);
+	line-height: 1.15;
+}
+
+.summary.perfect .summary-meta {
+	font-size: 1em;
+}
+
+@keyframes ring-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.6) rotate(-30deg);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) rotate(0);
+	}
+}
+
+@keyframes ring-glow {
+	50% {
+		box-shadow: 0 0 36px color-mix(in srgb, var(--c-pass) 55%, transparent);
+	}
+}
+
+/* The check draws itself in as the ring pops. */
+.pass-ring-check {
+	position: relative;
+	width: 58%;
+	fill: none;
+	stroke: var(--ring);
+	stroke-width: 2.6;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke-dasharray: 22;
+	stroke-dashoffset: 22;
+	animation: check-draw 0.4s ease-out 0.15s forwards;
+}
+
+@keyframes check-draw {
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+/* ==================================
+   Failure tiles
+   ================================== */
+
+.phase-tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+	gap: 8px;
+	margin-top: 14px;
+}
+
+.phase-tile {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 2px;
+	padding: 10px 12px;
+	border: 1px solid transparent;
+	border-top: 3px solid var(--phase);
+	border-radius: 8px;
+	background: var(--c-surface-2);
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+	transition:
+		background-color 0.15s,
+		border-color 0.15s,
+		transform 0.15s;
+}
+
+.phase-tile:hover:not(:disabled) {
+	background: color-mix(in srgb, var(--phase) 12%, var(--c-surface-2));
+	transform: translateY(-1px);
+}
+
+.phase-tile.active {
+	border-color: var(--phase);
+	background: color-mix(in srgb, var(--phase) 20%, var(--c-surface-2));
+}
+
+.phase-tile-count {
+	color: var(--phase);
+	font-size: 1.6em;
+	font-weight: 800;
+	line-height: 1.1;
+	font-variant-numeric: tabular-nums;
+}
+
+.phase-tile:disabled .phase-tile-count {
+	color: var(--c-text-muted);
+}
+
+.phase-tile-label {
+	color: var(--c-text-muted);
+	font-size: 0.8em;
+	font-weight: 600;
+}
+
+/* ==================================
+   Variant breakdown
+   ================================== */
+
+.variant-table-scroll {
+	overflow-x: auto;
+}
+
+.variant-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.92em;
+	font-variant-numeric: tabular-nums;
+}
+
+.variant-table th {
+	padding: 6px 10px;
+	border-bottom: 1px solid var(--c-border);
+	color: var(--c-text-muted);
+	font-size: 0.78em;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-align: left;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.variant-table td {
+	padding: 8px 10px;
+	border-bottom: 1px solid var(--c-border-muted);
+}
+
+.variant-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.variant-table tbody tr:hover {
+	background: var(--c-hover-overlay);
+}
+
+.variant-table .num {
+	width: 1%;
+	text-align: right;
+}
+
+.variant-name,
+.variant-total {
+	color: var(--c-text-emphasis);
+	font-weight: 600;
+}
+
+.phase-count {
+	color: var(--phase);
+	font-weight: 700;
+}
+
+.phase-dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	margin-right: 6px;
+	border-radius: 50%;
+	background: var(--phase);
+}
+
+/* ==================================
+   Failed games
+   ================================== */
+
+.failures {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.failures-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 0 4px;
+}
+
+/* Slim enough not to grow its row past the title beside it. */
+.filter-clear {
+	padding: 2px 12px;
+	border: 1px solid var(--phase);
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--phase) 18%, var(--c-surface));
+	color: var(--c-text-emphasis);
+	font: inherit;
 	font-size: 0.85em;
+	cursor: pointer;
+	transition: background-color 0.15s;
+}
+
+.filter-clear:hover {
+	background: color-mix(in srgb, var(--phase) 32%, var(--c-surface));
+}
+
+.failure-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	list-style: none;
+}
+
+/* ==================================
+   Failure cards
+   ================================== */
+
+.failure {
+	position: relative;
+	overflow: hidden;
+	padding: 14px 16px 14px 20px;
+	border: 1px solid var(--c-border);
+	border-radius: 10px;
+	background: var(--c-surface);
+	box-shadow: 0 4px 14px var(--c-shadow-elev);
+}
+
+.failure::before {
+	content: '';
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: 4px;
+	background: var(--phase);
+}
+
+.failure-head {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.failure-game {
+	color: var(--c-text-emphasis);
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+}
+
+.failure-variant {
+	color: var(--c-text-muted);
+	font-weight: 600;
+}
+
+.phase-badge {
+	padding: 2px 9px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--phase) 20%, transparent);
+	color: var(--phase);
+	font-size: 0.72em;
+	font-weight: 800;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.copy-button {
+	margin-left: auto;
+	padding: 6px 14px;
+	border: 1px solid var(--c-border-2);
+	border-radius: 6px;
+	background: var(--elev-face-gradient);
+	color: var(--c-text-emphasis);
+	font: inherit;
+	font-size: 0.85em;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		border-color 0.15s,
+		color 0.15s;
+}
+
+.copy-button:hover,
+.copy-button.copied {
+	border-color: var(--c-accent);
+}
+
+.copy-button.copied {
+	color: var(--c-accent);
+}
+
+.failure-message {
+	margin-top: 10px;
+	padding: 10px 12px;
+	border-radius: 6px;
+	background: var(--c-surface-2);
+	color: var(--c-text-emphasis);
+	font-family: var(--mono);
+	font-size: 0.85em;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.termination {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 4px 14px;
+	margin-top: 10px;
+	font-size: 0.88em;
+}
+
+.termination dt {
+	color: var(--c-text-muted);
+	font-weight: 600;
+}
+
+.termination dd {
+	color: var(--c-text-emphasis);
+	font-family: var(--mono);
+	word-break: break-all;
+}
+
+.failure-icn {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin-top: 10px;
+}
+
+.failure-icn-text {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--c-text-muted);
+	font-family: var(--mono);
+	font-size: 0.8em;
+	white-space: nowrap;
+	mask-image: linear-gradient(to right, black 80%, transparent);
+}
+
+.failure-icn.expanded .failure-icn-text {
+	max-height: 240px;
+	overflow-y: auto;
+	white-space: pre-wrap;
+	word-break: break-all;
+	mask-image: none;
+}
+
+.icn-toggle {
+	flex-shrink: 0;
+	background: none;
+	color: var(--c-link);
+	font: inherit;
+	font-size: 0.8em;
+	cursor: pointer;
+}
+
+.icn-toggle:hover {
+	text-decoration: underline;
+}
+
+/* ==================================
+   Activity log
+   ================================== */
+
+.log-card summary {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--c-text-emphasis);
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.log-card summary::-webkit-details-marker {
+	display: none;
+}
+
+.log-card summary::before {
+	content: '▸';
+	color: var(--c-text-muted);
+	transition: transform 0.15s;
+}
+
+.log-card[open] summary::before {
+	transform: rotate(90deg);
+}
+
+.log {
+	max-height: 260px;
+	overflow-y: auto;
+	font-family: var(--mono);
+	font-size: 0.82em;
 }
 
 .log-entry {
-	padding: 0.25rem 0;
-	border-bottom: 1px solid #222;
+	padding: 3px 0;
+	border-bottom: 1px solid var(--c-border-muted);
 }
 
 .log-entry:last-child {
 	border-bottom: none;
 }
 
-.log-entry.error {
-	color: var(--danger-color);
-}
-
-.log-entry.warning {
-	color: var(--warning-color);
+.log-entry time {
+	margin-right: 10px;
+	color: var(--c-text-muted);
 }
 
 .log-entry.success {
-	color: var(--success-color);
+	color: var(--c-pass);
 }
 
-.log-entry.info {
-	color: var(--accent-color);
+.log-entry.warning {
+	color: var(--c-caution);
+}
+
+.log-entry.error {
+	color: var(--c-error);
 }

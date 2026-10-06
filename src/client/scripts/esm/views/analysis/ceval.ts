@@ -21,8 +21,8 @@ import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
-import engineicn from '../../game/chess/engines/engineicn.js';
-import enginewasm from '../../game/chess/engines/enginewasm.js';
+import engineicn from '../../chess/engineicn.js';
+import enginewasm from '../../chess/enginewasm.js';
 import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../chess/gamecompressor.js';
@@ -682,7 +682,15 @@ function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, termi
 	};
 
 	const cached = positionCache.get(analyzed.icn);
-	if (cached && update.depth < cached.depth && !allowDepthRegressionForCurrentSearch) return;
+	if (cached && update.depth < cached.depth && !allowDepthRegressionForCurrentSearch) {
+		// A search can finish shallower than the cache, e.g. a deeper review seed: keep the
+		// cached lines, but the search is still over.
+		if (done) {
+			latestUpdate = { ...retargetCachedUpdate(cached), done: true };
+			emitNow();
+		}
+		return;
+	}
 
 	latestUpdate = update;
 	if (shouldReplaceCachedUpdate(cached, update)) {

@@ -211,16 +211,18 @@ const RULES: Rule[] = [
 			'views/challenge/',
 			'components/header/',
 			'game/chess/engines/',
+			'views/icnvalidator/',
 		],
 	},
 	{
 		target: 'shared/chess/logic/',
-		audience: 'the interactive pages and the engine workers',
+		audience: 'the interactive pages, the engine workers, and the ICN validator',
 		allowedEntries: [
 			...INTERACTIVE_BOARD_PAGES,
 			'views/index/',
 			'views/challenge/',
 			'game/chess/engines/',
+			'views/icnvalidator/',
 		],
 	},
 	{
@@ -230,8 +232,8 @@ const RULES: Rule[] = [
 	},
 	{
 		target: 'shared/chess/game/',
-		audience: 'the interactive pages',
-		allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/'],
+		audience: 'the interactive pages and the ICN validator',
+		allowedEntries: [...INTERACTIVE_BOARD_PAGES, 'views/index/', 'views/icnvalidator/'],
 	},
 	{
 		target: 'shared/transport/',

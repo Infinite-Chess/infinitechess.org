@@ -97,6 +97,9 @@ declare global {
 	/** Engine assets for the checkmate-practice page. */
 	var checkmatePracticePageData: EngineAssets;
 
+	/** Engine assets for the ICN validator page. */
+	var icnValidatorPageData: EngineAssets;
+
 	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */
 	var turnstile: Turnstile;
 	/** Called by Turnstile's `api.js` (`?onload=…`) once ready; register.ts assigns it to render the widget. */

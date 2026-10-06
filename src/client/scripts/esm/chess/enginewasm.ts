@@ -1,22 +1,22 @@
-// src/client/scripts/esm/game/chess/engines/enginewasm.ts
+// src/client/scripts/esm/chess/enginewasm.ts
 
 /**
  * Loads an engine's wasm glue and shared-memory thread pool, and adapts the
  * engine's own piece codes to the site's ICN abbreviations.
  */
 
-import type { Player, RawType } from '../../../../../../shared/chess/util/typeutil.js';
+import type { Player, RawType } from '../../../../shared/chess/util/typeutil.js';
 
-import math from '../../../../../../shared/util/math/math.js';
-import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
-import typeutil, { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
+import math from '../../../../shared/util/math/math.js';
+import icnposition from '../../../../shared/chess/logic/icn/icnposition.js';
+import typeutil, { rawTypes as r } from '../../../../shared/chess/util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
 /** The exports every engine glue module provides. */
 export interface EngineWasmModule {
-	/** wasm-bindgen's init. Compiles and instantiates the .wasm alongside the glue. */
-	default: () => Promise<EngineWasmInitOutput>;
+	/** wasm-bindgen's init. Compiles and instantiates the .wasm alongside the glue, unless handed its bytes. */
+	default: (init?: { module_or_path: BufferSource }) => Promise<EngineWasmInitOutput>;
 	/** Starts the rayon thread pool. Absent on single-threaded engine builds. */
 	initThreadPool?: (threads: number) => Promise<void>;
 }

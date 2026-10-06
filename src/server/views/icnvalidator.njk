@@ -1,9 +1,90 @@
 {% extends "layout.njk" %}
 
+{# Developer-only page, linked from nowhere on the site — its English is hardcoded on purpose, not translated. #}
+
 {% set pageName = "ICN Validator" %}
+
+{% block bodyClass %}sticky-footer{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ manifest['css/icnvalidator.css'] }}" />
+{% endblock %}
+
+{% block head %}
+{# SSR→client channel: the worker's and the engine's assets. #}
+<script>window.icnValidatorPageData = {{ icnValidatorPageData | json | safe }};</script>
+{% endblock %}
 
 {% block body %}
 {% include "components/header/header.njk" %}
-<main></main>
+<main class="validator bg-checkerboard-dimmed">
+	{# Glyphs the results script draws with <use>. #}
+	<svg class="hidden">
+		<symbol id="glyph-check" viewBox="0 0 24 24">
+			<path d="M5 12.5l4.5 4.5L19 7.5" />
+		</symbol>
+	</svg>
+	<div class="validator-column">
+		<header class="validator-head">
+			<div class="validator-title-row">
+				<h1 class="validator-title">ICN Validator</h1>
+				<span class="validator-tag">Developer tool</span>
+			</div>
+			<p class="validator-lede">
+				Replays every game of an Apeiron SPRT run through the website's own chess logic.
+				Any disagreement (a parse failure, an illegal move, a mismatched ending, or, with the
+				movegen check, a different set of legal moves at any position) is a bug in either the
+				engine or the website.
+			</p>
+		</header>
+
+		<section class="card">
+			<label class="dropzone" id="dropzone">
+				<svg class="dropzone-icon" viewBox="0 0 24 24">
+					<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+					<path d="M14 3v5h5" />
+					<path d="M10 12.5c-1 0-1.5.5-1.5 1.25v.5c0 .5-.5.75-1 .75.5 0 1 .25 1 .75v.5c0 .75.5 1.25 1.5 1.25" />
+					<path d="M14 12.5c1 0 1.5.5 1.5 1.25v.5c0 .5.5.75 1 .75-.5 0-1 .25-1 .75v.5c0 .75-.5 1.25-1.5 1.25" />
+				</svg>
+				<span class="dropzone-title" id="dropzone-title">Drop an SPRT games file</span>
+				<span class="dropzone-hint" id="dropzone-hint">or click to browse: a JSON array of ICNs</span>
+				<input type="file" id="file-input" accept=".json" hidden />
+			</label>
+
+			<div class="run-controls">
+				<label class="option-card">
+					<input type="checkbox" class="option-input" id="movegen-check" />
+					<span class="option-checkbox">
+						<svg viewBox="0 0 24 24"><use href="#glyph-check" /></svg>
+					</span>
+					<span class="option-text">
+						<span class="option-title">Movegen Check</span>
+						<span class="option-note">Also compares every position's legal moves with the engine's. About 9× slower.</span>
+					</span>
+				</label>
+				<button type="button" class="btn-primary run-button" id="run-button" disabled>Validate</button>
+			</div>
+
+			<div class="run-progress hidden" id="run-progress">
+				<div class="lanes" id="lanes"></div>
+				<div class="run-progress-text">
+					<span class="progress-count" id="progress-count"></span>
+					<span id="progress-percent"></span>
+				</div>
+			</div>
+		</section>
+
+		<div id="results"></div>
+
+		<details class="card log-card" id="log-card">
+			<summary>Activity log <span class="section-count" id="log-count">0</span></summary>
+			<div class="log scrollbar-thin" id="log-output"></div>
+		</details>
+	</div>
+</main>
 {% include "components/footer/footer.njk" %}
+{% endblock %}
+
+{% block script %}
+<script type="module" src="{{ manifest['scripts/esm/views/icnvalidator/icnvalidator.ts'] }}"></script>
 {% endblock %}

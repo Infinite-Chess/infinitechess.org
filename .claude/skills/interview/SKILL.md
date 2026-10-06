@@ -73,5 +73,3 @@ A design document is read by an agent who must build the thing without re-asking
 Mirror the interview: behavior in one section, the design behind it in the next, every decision
 carrying its reason and the code evidence. Rejected alternatives get the one criterion that killed
 them, and never more room than the requirements they lost to.
-
-Remember to follow your output style.

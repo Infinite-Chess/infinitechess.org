@@ -4,15 +4,14 @@
  * This script calculates legal moves
  */
 
+import type { Vec2 } from '../../util/math/vectors.js';
 import type { Piece } from './boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { PieceMoveset } from './movesets.js';
-import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { CoordsTagged, MoveTagged } from './movepiece.js';
-import type { IgnoreFunction, BlockingFunction } from './movesets.js';
+import type { PieceMoveset, SlideKey, IgnoreFunction, BlockingFunction } from './movesets.js';
 
 import bimath from '../../util/math/bimath.js';
 import movesets from './movesets.js';
@@ -33,20 +32,27 @@ import typeutil, { players as p, rawTypes as r } from '../util/typeutil.js';
  * * For knightriders, one [2,1] hop is considered 1 step.
  * The range does NOT have to intersect the piece owning the slide (for example [8n, 12n],
  * which could be the case for colinear blocks), but limits[0] <= limits[1] is true ALWAYS.
+ * Read-only, since a moveset's limits are shared by every piece of its type.
  */
-export type SlideLimits = [bigint | null, bigint | null];
+export type SlideLimits = readonly [bigint | null, bigint | null];
 
 /** An object containing all the legal moves of a piece. */
 export interface LegalMoves {
 	/** A list of the legal jumping move coordinates: `[[1,2], [2,1]]` */
 	individual: CoordsTagged[];
-	/** A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}` */
-	sliding: Record<Vec2Key, SlideLimits>;
-	/** If provided, all sliding moves will brute-force test for check to see if their actually legal to move to. Use when our piece moves colinearly to a piece pinning it, or if our piece is a royal queen. */
+	/** A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, null]}` */
+	sliding: Record<SlideKey, SlideLimits>;
+	/**
+	 * If set, every slide square is simulated for check before it counts as legal. Set for a
+	 * royal slider (royal queen), and for a piece moving colinearly with a piece pinning it.
+	 */
 	brute?: boolean;
 	/** The ignore function of the piece, to skip over moves. */
 	ignoreFunc: IgnoreFunction;
-	/** Whether the generated moves are for a colinear mover (huygen). */
+	/**
+	 * Whether the moves are a colinear mover's: one with a custom ignore or
+	 * blocking function (huygen), or a non-primitive slide vector (4D).
+	 */
 	colinear: boolean;
 }
 
@@ -61,15 +67,11 @@ const MAX_BRUTE_SIMULATIONS = 200n;
 
 // Reading a Moveset -----------------------------------------------------------
 
-/**
- * Gets the moveset of the type of piece specified.
- */
+/** Gets the moveset of the type of piece specified. */
 function getPieceMoveset(boardsim: Board, pieceType: number): PieceMoveset {
 	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
 	if (player === p.NEUTRAL) return { colinear: false }; // Neutral pieces CANNOT MOVE!
-	const movesetFunc = boardsim.pieceMovesets[rawType];
-	if (!movesetFunc) return { colinear: false }; // Safety net.
-	return movesetFunc(); // Calling these parameters as a function returns their moveset.
+	return boardsim.pieceMovesets[rawType]!; // Every existing type gets a moveset
 }
 
 /**
@@ -198,24 +200,23 @@ function removeObstructedSlidingMoves(
 	boardsim: Board,
 	piece: Piece,
 	moveset: PieceMoveset,
-	slidingMoves: Record<Vec2Key, SlideLimits>,
+	slidingMoves: Record<SlideKey, SlideLimits>,
 	color: Player,
 	premove: boolean,
 ): void {
 	const blockingFunc = getBlockingFuncFromPieceMoveset(moveset);
-	for (const [linekey, limits] of Object.entries(slidingMoves)) {
-		const lines = boardsim.pieces.lines.get(linekey as Vec2Key);
-		if (lines === undefined) continue;
-		const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
-		const key = organizedpieces.getKeyFromLine(line, piece.coords);
-		const piecesLine = lines.get(key);
+	for (const [slideKey, limits] of Object.entries(slidingMoves)) {
+		const lineGroup = boardsim.pieces.lines.get(slideKey as SlideKey);
+		if (lineGroup === undefined) continue;
+		const lineKey = organizedpieces.getKeyFromLine(lineGroup.step, piece.coords);
+		const piecesLine = lineGroup.lines.get(lineKey);
 		if (piecesLine === undefined) continue; // No pieces on this line, so no obstructions. Needed so dragarrows feature doesn't crash on empty lines.
-		slidingMoves[linekey as Vec2Key] = slide_CalcLegalLimit(
+		slidingMoves[slideKey as SlideKey] = slide_CalcLegalLimit(
 			boardsim.gameRules.worldBorder,
 			blockingFunc,
 			boardsim.pieces,
 			piecesLine,
-			line,
+			lineGroup.step,
 			limits,
 			piece.coords,
 			color,
@@ -254,7 +255,7 @@ function slide_CalcLegalLimit(
 
 	// For most we'll be comparing the x values, only exception is the vertical lines.
 	const axis = step[0] === 0n ? 1 : 0;
-	const limit = [...slideMoveset] as SlideLimits; // Makes a copy
+	const limit: [bigint | null, bigint | null] = [...slideMoveset];
 
 	// First of all, if we're using a world border, immediately shorten our slide limit to not exceed it.
 	enforceWorldBorderOnSlideLimit(worldBorder, limit, coords, step); // Mutating
@@ -262,7 +263,7 @@ function slide_CalcLegalLimit(
 
 	// Iterate through all pieces on same line
 	for (const idx of line) {
-		const thisPiece = boardutil.getPieceFromIdx(o, idx)!; // { type, coords }
+		const thisPiece = boardutil.getDefinedPieceFromIdx(o, idx); // { type, coords }
 
 		/**
 		 * 0 => Piece doesn't block
@@ -301,7 +302,7 @@ function slide_CalcLegalLimit(
 /** Modifies the provided slide limit in a single step direction (positive & negative) to not exceed the world border. */
 function enforceWorldBorderOnSlideLimit(
 	worldBorder: UnboundedRectangle | undefined,
-	limit: SlideLimits,
+	limit: [bigint | null, bigint | null],
 	coords: Coords,
 	step: Vec2,
 ): void {
@@ -347,7 +348,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(
 	worldBorder: UnboundedRectangle | undefined,
 	piece: Piece,
 	slide: Vec2,
-	slideKey: Vec2Key,
+	slideKey: SlideKey,
 	organizedLine: number[],
 ): SlideLimits | undefined {
 	const thisPieceMoveset = getPieceMoveset(boardsim, piece.type); // Default piece moveset
@@ -518,8 +519,8 @@ function doSlideRangesContainSquare(
 ): boolean {
 	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false; // Can't slide to the square we're already on
 
-	for (const [strline, limits] of Object.entries(legalMoves.sliding)) {
-		const line = coordutil.getCoordsFromKey(strline as Vec2Key); // 'dx,dy'
+	for (const [slideKey, limits] of Object.entries(legalMoves.sliding)) {
+		const line = coordutil.getCoordsFromKey(slideKey as SlideKey); // 'dx,dy'
 
 		const selectedPieceLine = organizedpieces.getKeyFromLine(line, startCoords);
 		const clickedCoordsLine = organizedpieces.getKeyFromLine(line, endCoords);
@@ -571,8 +572,8 @@ function doesSlidingMovesetContainSquare(
  */
 function hasAtleast1Move(moves: LegalMoves, boardsim: Board, piece: Piece): boolean {
 	if (moves.individual.length > 0) return true;
-	for (const [lineKey, limits] of Object.entries(moves.sliding)) {
-		if (slideHasAtLeast1LegalMove(lineKey as Vec2Key, limits)) return true;
+	for (const [slideKey, limits] of Object.entries(moves.sliding)) {
+		if (slideHasAtLeast1LegalMove(slideKey as SlideKey, limits)) return true;
 	}
 	return false;
 
@@ -582,7 +583,7 @@ function hasAtleast1Move(moves: LegalMoves, boardsim: Board, piece: Piece): bool
 	 * squares are simulated for legality before assuming there may be a
 	 * legal move and returning true for safety to avoid hangs.
 	 */
-	function slideHasAtLeast1LegalMove(lineKey: Vec2Key, slide: SlideLimits): boolean {
+	function slideHasAtLeast1LegalMove(slideKey: SlideKey, slide: SlideLimits): boolean {
 		if (slide[0] === null || slide[1] === null) return true; // Infinite range
 
 		const rangeWidth = slide[1] - slide[0];
@@ -601,7 +602,7 @@ function hasAtleast1Move(moves: LegalMoves, boardsim: Board, piece: Piece): bool
 		// If the range width is greater than our cap, just assume there's at least one legal move to avoid hangs.
 		if (rangeWidth > MAX_BRUTE_SIMULATIONS) return true;
 
-		const step = coordutil.getCoordsFromKey(lineKey);
+		const step = coordutil.getCoordsFromKey(slideKey);
 		const color = typeutil.getColorFromType(piece.type);
 
 		/** Simulates a single candidate step. Returns true if it's a legal move, false otherwise. */

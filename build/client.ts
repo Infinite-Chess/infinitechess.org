@@ -39,6 +39,7 @@ export const ESMEntryPoints = [
 	'src/client/css/challenge.css',
 	'src/client/css/analysis.css',
 	'src/client/css/variantselector.css',
+	'src/client/css/icnvalidator.css',
 
 	// Scripts
 	'src/client/scripts/esm/components/header/header.ts',
@@ -52,9 +53,11 @@ export const ESMEntryPoints = [
 	'src/client/scripts/esm/views/game/game.ts',
 	'src/client/scripts/esm/views/challenge/challenge.ts',
 	'src/client/scripts/esm/views/analysis/analysis.ts',
+	'src/client/scripts/esm/views/icnvalidator/icnvalidator.ts',
 
 	// Workers
 	'src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts',
+	'src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts',
 	'src/client/scripts/esm/game/chess/engines/apeiron.worker.ts',
 	'src/client/scripts/esm/game/chess/engines/enginecheckmatepractice.worker.ts',
 
@@ -67,8 +70,6 @@ export const ESMEntryPoints = [
 	// 'src/client/scripts/esm/views/guide.ts',
 	// 'src/client/scripts/esm/views/admin.ts',
 	// 'src/client/scripts/esm/views/checkmatepractice/checkmatepractice.ts',
-	// 'src/client/scripts/esm/views/icnvalidator/icnvalidator.ts',
-	// 'src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts',
 ];
 
 /** CommonJS modules imported by html pages. */
