@@ -682,7 +682,15 @@ function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, termi
 	};
 
 	const cached = positionCache.get(analyzed.icn);
-	if (cached && update.depth < cached.depth && !allowDepthRegressionForCurrentSearch) return;
+	if (cached && update.depth < cached.depth && !allowDepthRegressionForCurrentSearch) {
+		// A search can finish shallower than the cache, e.g. a deeper review seed: keep the
+		// cached lines, but the search is still over.
+		if (done) {
+			latestUpdate = { ...retargetCachedUpdate(cached), done: true };
+			emitNow();
+		}
+		return;
+	}
 
 	latestUpdate = update;
 	if (shouldReplaceCachedUpdate(cached, update)) {
