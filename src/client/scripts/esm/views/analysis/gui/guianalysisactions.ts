@@ -19,6 +19,7 @@ import gameslot from '../../../game/chess/gameslot.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
 import editorhandoff from '../../../handoffs/editorhandoff.js';
+import analysisloader from '../analysisloader.js';
 import gamecompressor from '../../../chess/gamecompressor.js';
 import gamesetuphandoff from '../../../handoffs/gamesetuphandoff.js';
 
@@ -90,19 +91,11 @@ function init(): void {
 	});
 }
 
-/**
- * Serializes the game (position + move list) to canonical compact ICN. Moves are
- * truncated to the currently-viewed ply, so the export mirrors the position on the
- * board as you cycle through moves.
- */
+/** Serializes the active line's every move, regardless of the viewed ply, to compact ICN with the loaded game's record metadata. */
 function getGameICN(gamefile: GameFile): string {
 	const presetOverrides = annotations.getPresetOverrides();
 	const longformIn = gamecompressor.compressGamefile(gamefile, false, presetOverrides);
-	longformIn.metadata = metadatautil.trimToSourceVariantMetadata(longformIn.metadata);
-	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
-	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
-		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
-	}
+	longformIn.metadata = { ...longformIn.metadata, ...analysisloader.getRecordMetadata() };
 	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
 }
 
@@ -126,7 +119,10 @@ function exportCurrentPosition(): { icn: string; variantOptions: VariantOptions 
 		},
 	};
 
-	position.metadata = metadatautil.trimToSourceVariantMetadata(position.metadata);
+	position.metadata = metadatautil.trimTo(
+		position.metadata,
+		metadatautil.SOURCE_VARIANT_METADATA,
+	);
 	const icn = icnconverter.LongToShort_Format(position, icnconverter.COMPACT_FORMAT_OPTIONS);
 	return { icn, variantOptions };
 }
@@ -141,7 +137,7 @@ async function openCurrentPositionInEditor(): Promise<void> {
 	window.location.assign('/editor');
 }
 
-/** Copies the current game's ICN (position + moves up to the viewed ply) to the clipboard. */
+/** Copies the whole game's ICN to the clipboard. */
 async function exportIcnToClipboard(): Promise<void> {
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 	const gamefile = gameslot.getGamefile();

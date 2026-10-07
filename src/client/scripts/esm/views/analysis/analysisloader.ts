@@ -22,6 +22,7 @@ import modutil from '../../../../../shared/chess/util/modutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import metadatautil, { RecordMetaData } from '../../../../../shared/chess/util/metadatautil.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
@@ -32,20 +33,17 @@ import clientmetadatautil from '../../chess/clientmetadatautil.js';
 // State -----------------------------------------------------------------------
 
 /**
- * What produced the currently-loaded game: how to replay it, and the participants it carried.
+ * What produced the currently-loaded game: how to replay it, and the record metadata it carried.
  *
  * Each load path records itself here with the arguments it was given, so the pristine game can be
  * restored without asking whoever chose it (the variant setup panel, the URL) to derive it again.
- * The participants ride along because the gamefile doesn't retain them (construction drops
- * everything but the position, rules, and moves) and the Game Review's stat columns need them.
+ * The record metadata rides along because the gamefile can't derive it.
  */
-let lastLoad:
-	| { replay: () => Promise<void>; players: { White?: string; Black?: string } }
-	| undefined;
+let lastLoad: { replay: () => Promise<void>; recordMetadata: RecordMetaData } | undefined;
 
-/** The participants the currently-loaded game carried, empty for a fresh or custom position. */
-function getPastedPlayers(): { White?: string; Black?: string } {
-	return lastLoad?.players ?? {};
+/** The record metadata the currently-loaded game carried, empty for a fresh or custom position. */
+function getRecordMetadata(): RecordMetaData {
+	return lastLoad?.recordMetadata ?? {};
 }
 
 /** Reloads the pristine game, discarding whatever was edited onto it. Resolves once fully loaded. */
@@ -89,7 +87,7 @@ async function loadGameById(gameId: number): Promise<void> {
  * @param slideLimit - Optional Slide Limit modifier override (see the variant setup panel).
  */
 function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
-	lastLoad = { replay: () => loadVariant(variant, slideLimit), players: {} };
+	lastLoad = { replay: () => loadVariant(variant, slideLimit), recordMetadata: {} };
 	const dateTimestamp = Date.now();
 	return gamesession.loadGame({
 		kind: 'construct',
@@ -185,10 +183,10 @@ function pastePrebuiltGame(
 
 /**
  * Records a custom position's options so {@link reloadPristine} can rebuild it through
- * {@link loadVariantOptions}. Saved positions carry no participants.
+ * {@link loadVariantOptions}. Saved positions carry no record metadata.
  */
 function recordOptions(variantOptions: VariantOptions, slideLimit?: bigint): void {
-	lastLoad = { replay: () => loadVariantOptions(variantOptions, slideLimit), players: {} };
+	lastLoad = { replay: () => loadVariantOptions(variantOptions, slideLimit), recordMetadata: {} };
 }
 
 /**
@@ -205,10 +203,9 @@ function recordPaste(
 ): void {
 	// English display name, or dropped if unrecognized, so a rebuild carries canonical metadata.
 	clientmetadatautil.resolveAndNormalizeVariantFromMetadata(longFormat.metadata);
-	const { White, Black } = longFormat.metadata;
 	lastLoad = {
 		replay: () => pasteGame(longFormat, gameConclusion, viewWhitePerspective, slideLimit),
-		players: { White, Black },
+		recordMetadata: metadatautil.trimTo(longFormat.metadata, metadatautil.RECORD_METADATA),
 	};
 }
 
@@ -223,7 +220,7 @@ function resolveViewPerspective(override?: boolean): boolean {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	getPastedPlayers,
+	getRecordMetadata,
 	reloadPristine,
 	loadGameById,
 	loadVariant,

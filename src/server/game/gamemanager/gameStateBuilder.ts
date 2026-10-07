@@ -218,8 +218,9 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 					Variant: variantEnglishName,
 					...timeutil.convertTimestampToUTCDateUTCTime(match.timeCreated),
 				}
-			: metadatautil.trimToSourceVariantMetadata(
+			: metadatautil.trimTo(
 					icnconverter.ShortToLong_Format(match.variant.position).metadata,
+					metadatautil.SOURCE_VARIANT_METADATA,
 				);
 
 	const getPlayerName = (color: Player): string => {

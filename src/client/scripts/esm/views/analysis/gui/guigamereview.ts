@@ -289,7 +289,7 @@ function revealStats(): void {
 	} else {
 		// No meta panel to donate rows — name the SSR'd headers off the pasted ICN, which
 		// carries participants only if it declared them.
-		const { White, Black } = analysisloader.getPastedPlayers();
+		const { White, Black } = analysisloader.getRecordMetadata();
 		const guest = t.shared.user_status.guest_indicator;
 		setPlayerName(p.WHITE, White || guest);
 		setPlayerName(p.BLACK, Black || guest);

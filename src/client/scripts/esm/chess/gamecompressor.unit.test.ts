@@ -41,8 +41,6 @@ describe('gamecompressor', () => {
 
 			// Metadata is assembled on demand from the gamefile's source-of-truth props.
 			expect(result.metadata).toEqual({
-				Site: 'https://www.infinitechess.org/',
-				Round: '-',
 				TimeControl: '-',
 				UTCDate: '1987.06.27',
 				UTCTime: '12:00:00',

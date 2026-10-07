@@ -64,6 +64,9 @@ type MetadataKey = keyof MetaData;
 /** {@link MetaData} narrowed to the {@link SOURCE_VARIANT_METADATA} tags. */
 export type SourceVariantMetaData = Pick<MetaData, (typeof SOURCE_VARIANT_METADATA)[number]>;
 
+/** {@link MetaData} narrowed to the {@link RECORD_METADATA} tags. */
+export type RecordMetaData = Pick<MetaData, (typeof RECORD_METADATA)[number]>;
+
 // Constants -------------------------------------------------------------------
 
 /** Canonical display name used for guest players in ICN metadata. Metadata is always in English. */
@@ -76,6 +79,12 @@ const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
  */
 const SOURCE_VARIANT_METADATA = ['Variant', 'UTCDate', 'UTCTime'] as const satisfies readonly MetadataKey[]; // prettier-ignore
 
+/**
+ * The tags identifying a game's record — who played it, and where it's filed.
+ * No board state derives them, so a game rebuilt from an ICN must carry them over itself.
+ */
+const RECORD_METADATA = ['Event', 'Site', 'GameId', 'White', 'Black', 'WhiteID', 'BlackID', 'WhiteElo', 'BlackElo', 'WhiteRatingDiff', 'BlackRatingDiff'] as const satisfies readonly MetadataKey[]; // prettier-ignore
+
 // Schemas ---------------------------------------------------------------------
 
 /** A player's rating value and whether we are confident about it. */
@@ -87,13 +96,13 @@ const RatingSchema = z.strictObject({
 
 // Functions -------------------------------------------------------------------
 
-/**
- * Trims metadata down to the {@link SOURCE_VARIANT_METADATA} tags.
- * Everything else (player names, elo, result, ...) is bloat in an exported position.
- */
-function trimToSourceVariantMetadata(metadata: MetaData): SourceVariantMetaData {
-	const trimmed: SourceVariantMetaData = {};
-	for (const key of SOURCE_VARIANT_METADATA) {
+/** Trims metadata down to the given tags, such as {@link SOURCE_VARIANT_METADATA}. */
+function trimTo<K extends MetadataKey>(
+	metadata: MetaData,
+	tags: readonly K[],
+): Partial<Pick<MetaData, K>> {
+	const trimmed: Partial<Pick<MetaData, K>> = {};
+	for (const key of tags) {
 		if (metadata[key] !== undefined) trimmed[key] = metadata[key];
 	}
 	return trimmed;
@@ -157,10 +166,11 @@ export default {
 	// Constants
 	GUEST_NAME_ICN_METADATA,
 	SOURCE_VARIANT_METADATA,
+	RECORD_METADATA,
 	// Schemas
 	RatingSchema,
 	// Functions
-	trimToSourceVariantMetadata,
+	trimTo,
 	resolveTimestampFromMetadata,
 	getResultFromVictor,
 	getVictorFromResult,
