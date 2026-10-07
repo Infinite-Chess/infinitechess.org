@@ -5,6 +5,7 @@
  */
 
 import type { GameFile } from '../../../../shared/chess/logic/gamefile.js';
+import type { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
 import type {
 	MetaData,
 	Rating,
@@ -15,7 +16,6 @@ import timeutil from '../../../../shared/util/timeutil.js';
 import winconutil from '../../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../shared/chess/variants/variantregistry.js';
-import { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
 
 // Functions -------------------------------------------------------------------
 

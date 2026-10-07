@@ -103,6 +103,7 @@ function snapshotPristineMainline(): void {
 	pristineMainline = mainlineTokens(gameslot.getGamefile()!.moves);
 }
 
+/** Shows the Game Review button if the loaded game can be reviewed, else hides it. */
 function revealButtonIfReviewable(): void {
 	// An empty pristine mainline means the game arrived with no moves — a preset variant or an
 	// editor position on the bare /analysis page. Moves played by hand onto one aren't a game
@@ -203,6 +204,7 @@ function addLapseVariation(review: MoveReview): void {
 
 // Progress --------------------------------------------------------------------
 
+/** Repaints the progress bar from the review's evaluated position count. */
 function updateProgress(): void {
 	if (element_Progress.classList.contains('hidden')) return;
 	const { evaluated, total } = gamereview.getSummary();
@@ -211,6 +213,7 @@ function updateProgress(): void {
 	element_ProgressText.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total}`;
 }
 
+/** Swaps the progress bar for the eval graph on success, or tears the review UI down on failure. */
 function onReviewFinished(outcome: ReviewOutcome): void {
 	if (outcome === 'done') {
 		element_Progress.classList.add('hidden'); // Swapped out for the eval graph.
@@ -344,6 +347,7 @@ const CURRENT_POSITION_COLOR = '#d85000';
 
 let hoveredPosition: number | undefined;
 
+/** Whether the eval graph is currently shown. */
 function isGraphVisible(): boolean {
 	return !element_Graph.classList.contains('hidden');
 }
@@ -591,6 +595,7 @@ function renderPhaseMarkers(total: number): void {
 	}
 }
 
+/** Draws a full-height vertical line at position `index`, if it's on the graph. */
 function drawPositionMarker(
 	ctx: CanvasRenderingContext2D,
 	index: number,
@@ -641,6 +646,7 @@ function initGraphInteraction(canvas: HTMLCanvasElement): void {
 	});
 }
 
+/** Shows the hover tooltip for position `index`: its move, eval and classification. */
 function showGraphTooltip(event: MouseEvent, index: number): void {
 	const cp = gamereview.getWhiteCpAt(index);
 	const outOfBounds = cp === undefined && !gamereview.positionIsEvaluable(index);
@@ -687,5 +693,7 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 			? `${Math.max(TOOLTIP_TOP_MARGIN, graphHeight - tooltipHeight - TOOLTIP_BOTTOM_MARGIN)}px` // Point is up top — tooltip goes near the bottom.
 			: `${TOOLTIP_TOP_MARGIN}px`; // Point is down low — tooltip goes near the top.
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { init };

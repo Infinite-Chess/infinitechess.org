@@ -23,7 +23,7 @@ import analysisloader from '../analysisloader.js';
 import gamecompressor from '../../../chess/gamecompressor.js';
 import gamesetuphandoff from '../../../handoffs/gamesetuphandoff.js';
 
-// The "More actions" menu ==========================================================
+// Elements --------------------------------------------------------------------
 
 const element_ActionsButton = document.getElementById('btn-analysis-actions') as HTMLButtonElement;
 const element_ActionsMenu = document.getElementById('analysis-actions-menu')!;
@@ -43,6 +43,8 @@ const element_ContinueChallengeFriend = document.getElementById(
 	'continue-challenge-friend',
 ) as HTMLButtonElement;
 const element_ExportIcn = document.getElementById('btn-export-icn') as HTMLButtonElement;
+
+// The "More actions" menu -----------------------------------------------------
 
 /** Wires the "More actions" menu and its buttons. Called once by the page entry. */
 function init(): void {
@@ -200,5 +202,7 @@ function syncActionsToggle(): void {
 	element_ActionsButton.classList.toggle('active', anyOpen);
 	element_ActionsButton.setAttribute('aria-expanded', String(anyOpen));
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { init };
