@@ -93,7 +93,10 @@ function init(): void {
 	});
 }
 
-/** Serializes the active line's every move, regardless of the viewed ply, to compact ICN with the loaded game's record metadata. */
+/**
+ * Serializes the active line's every move, regardless of the viewed ply,
+ * to compact ICN with the loaded game's record metadata.
+ */
 function getGameICN(gamefile: GameFile): string {
 	const presetOverrides = annotations.getPresetOverrides();
 	const longformIn = gamecompressor.compressGamefile(gamefile, false, presetOverrides);
