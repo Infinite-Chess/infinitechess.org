@@ -174,7 +174,7 @@ followed, tell me.
     - The build system: `docs/systems/BUILD.md`. The build process does not change unless it must.
     - Render contexts, or adding graphics: `docs/systems/GRAPHICS.md`
     - Websockets, client or server: `docs/systems/WEBSOCKETS.md`
-    - ICN (Infinite Chess Notation): `docs/systems/ICN.md`
+    - ICN (Infinite Chess Notation): `docs/systems/ICN.md`. Read before creating ICNs.
     - The Apeiron engine's WASM build: `docs/systems/ENGINE.md`
     - Adding or moving a file in `src/`: `docs/systems/IMPORT_RULES.md`
     - Saving live games to the database: `docs/systems/LIVE_GAME_PERSISTENCE.md`
