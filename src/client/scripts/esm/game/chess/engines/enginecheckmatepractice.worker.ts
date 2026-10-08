@@ -23,7 +23,7 @@ import vectors from '../../../../../../shared/util/math/vectors.js';
 import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import { primalityTest } from '../../../../../../shared/util/math/isprime.js';
-import insufficientmaterial from '../../../../../../shared/chess/logic/insufficientmaterial.js';
+import insufficientmaterial from '../../../../../../shared/chess/logic/insuffmat/insufficientmaterial.js';
 import {
 	rawTypes as r,
 	ext as e,

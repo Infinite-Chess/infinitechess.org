@@ -228,6 +228,7 @@ function debugType(type: number): string {
 export default {
 	// Constants
 	jumpingRoyals,
+	slidingRoyals,
 	royals,
 	strcolors,
 	// Functions

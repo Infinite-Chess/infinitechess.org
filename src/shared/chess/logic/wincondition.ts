@@ -17,7 +17,7 @@ import checkmate from './checkmate.js';
 import repetition from './repetition.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from './gamefileutility.js';
-import insufficientmaterial from './insufficientmaterial.js';
+import insufficientmaterial from './insuffmat/insufficientmaterial.js';
 import typeutil, { RawType } from '../util/typeutil.js';
 import { rawTypes as r, Player } from '../util/typeutil.js';
 
