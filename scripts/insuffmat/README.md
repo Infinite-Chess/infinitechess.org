@@ -5,8 +5,8 @@ arranged into a legally reachable checkmate**, helpmates included, per board kin
 cap. A set is "smallest" when removing any one piece makes mate impossible.
 `insufficientmaterial.ts` declares a position drawn when its pieces fit within the cap and contain
 none of the listed sets. Above the cap it never declares a draw, except for the hand-proven draws in
-its `PROVEN_DRAWS`, each with its proof. Apart from the two assumptions under Known holes, any error
-in this table can only cost a draw going undeclared, never a false draw.
+its `PROVEN_DRAWS`, each with its proof. Apart from the assumptions under Known holes, any error in
+this table can only cost a draw going undeclared, never a false draw.
 
 ## Regenerating
 
@@ -27,8 +27,9 @@ then black (`K,R,CH,AR vs k,n`); `B0`/`B1` are bishop square colors. A set and i
 in the board layout, `@minX,maxX,minY,maxY` with `_` for no wall), the mate with the defender to
 move, the position before the last move, and the last move.
 
-## Terms
+## The search
 
+- **Caps:** 5 pieces unbounded, 4 bounded, counting both sides and the royals.
 - **Search window:** pieces are placed within 6 squares of the mated royal on unbounded boards, 7 on
   bounded ones (all of 8x8 fits), plus faraway huygen squares.
 - **Faraway huygens:** every distance falls into one of 104 patterns of which window squares lie at
@@ -43,30 +44,18 @@ move, the position before the last move, and the last move.
   number of royals (king, royal centaur, royal queen) per side.
 - **Reachability:** some attacker move could have produced the mate from a position where no
   defender royal was in check. The move may be a capture, restoring a piece the set's defender still
-  has unused (insufficient material is judged on the material before it), or a pawn's promotion. One
-  move back is enough: custom games start from any legal position, and the site checks insufficient
-  material from move 0, so a legal position with mate in one is a real game. About 0.9% of the saved
-  mates (173 of 19,675) have no legal earlier defender move, though their sets may mate another way.
-- **Pawns** stay pawns. The site handles promotion by checking every outcome of each pawn with one
-  of its side's promotion ranks ahead of it. The attacker's last move may be a double step or en
-  passant. A defender pawn never double steps, as a mate can do without its rights, and pawn files
-  are ignored.
-- **Obstacles** are not modelled. With any on the board, the site declares insufficient material
-  only if every piece and promotion option is classical (king, queen, rook, bishop, knight, pawn)
-  and each side has a king.
-- **Never declared** with voids on the board (they can shape a mate), under a slide limit (it
-  shortens the defender's escapes too, and mates thousands of the table's draws), or in a variant
-  with its own movement (4D), since the table models the default movesets.
+  has unused (insufficient material is judged on the material before it), or a pawn's promotion. It
+  starts within 12 squares of where it lands, or far back along a slide, or, for a huygen landing in
+  the window, far out where it attacks only that square of the window. One move back is enough:
+  custom games start from any legal position, and the site checks insufficient material from move 0,
+  so a legal position with mate in one is a real game. About 0.9% of the saved mates (173 of 19,675)
+  have no legal earlier defender move, though their sets may mate another way.
+- **Pawns** stay pawns. The attacker's last move may be a double step or en passant. A defender pawn
+  never double steps, as a mate can do without its rights, and pawn files are ignored.
 - **Bounded boards:** a set counts as mating if it mates on any square of an 8x8 board, or, with a
   huygen, with the mated royal near one edge or a corner of a large board (each wall 0-6 squares
   away, the other directions open). Such mates count for every bounded board. Layouts that are
-  mirror images under the set's symmetries are searched once. Boards narrower than 8 in either
-  direction never declare insufficient material: tiny boards would need their own tables. The site
-  uses the bounded table when a border lies within 1,000,000 squares, or at any distance if a royal
-  queen is on the board or a pawn could promote to one, since it reaches any wall in one move.
-- **8x8-only mates:** 216 sets mate on 8x8 but against no large board's edge or corner, all with a
-  royal queen, whose escape lines a small board cuts short. The first was two amazons vs a royal
-  queen (`b 1,8,1,8 rq1,3|AM3,3|AM3,8`).
+  mirror images under the set's symmetries are searched once.
 - **Skipped, proven by hand:** `generate.ts` never searches these draws, whose searches run for
   hours when the other side holds several royals:
     - One side is a lone huygen and every piece of the other slides orthogonally (royal queen,
@@ -76,7 +65,21 @@ move, the position before the last move, and the last move.
     - One side is a lone pawn or guard. It only attacks adjacent squares, so any royal it checks can
       capture it, leaving no attacker, and its side has no royal to be mated. This needs every royal
       kind to capture on all 8 adjacent squares. 9,402 unbounded and 1,268 bounded sets.
-- **Caps:** 5 pieces unbounded, 4 bounded, counting both sides and the royals.
+
+## Where the site uses it
+
+- **Board kind:** the site uses the bounded table when a border lies within 1,000,000 squares, or at
+  any distance if a royal queen is on the board or a pawn could promote to one, since it reaches any
+  wall in one move. Boards narrower than 8 in either direction never declare insufficient material:
+  tiny boards would need their own tables.
+- **Promotion:** the site checks every outcome of each pawn with one of its side's promotion ranks
+  ahead of it.
+- **Obstacles** are not modelled. With any on the board, the site declares insufficient material
+  only if every piece and promotion option is classical (king, queen, rook, bishop, knight, pawn)
+  and each side has a king.
+- **Never declared** with voids on the board (they can shape a mate), under a slide limit (it
+  shortens the defender's escapes too, and mates thousands of the table's draws), or in a variant
+  with its own movement (4D), since the table models the default movesets.
 
 ## Evidence
 
@@ -102,6 +105,9 @@ move, the position before the last move, and the last move.
   straight back, or attacks it, making the position illegal. Every mate against a large board's edge
   or corner (3,426, up to 4 pieces) or on an open board (1,759) also mates on 8x8, except 7 that
   need a huygen far out along an open side.
+- **8x8-only mates:** 216 sets mate on 8x8 but against no large board's edge or corner, all with a
+  royal queen, whose escape lines a small board cuts short. The first was two amazons vs a royal
+  queen (`b 1,8,1,8 rq1,3|AM3,3|AM3,8`).
 - **Every large-board mate has the mated royal touching a wall** (3,426 of 3,426, up to 4 pieces);
   only 3 needed the second wall off the corner. Layouts with no wall touching are still searched,
   since this is evidence, not proof.
