@@ -31,10 +31,11 @@ async function findProblems(mateIcn: string, priorIcn: string, move: string): Pr
 	if ((await build(flipTurn(priorIcn))).state.local.inCheck !== false)
 		problems.push('the defender was already in check before the last move');
 	const prior = await build(priorIcn);
-	const [from, to] = move.split('>').map((c) => coordutil.getCoordsFromKey(c as CoordsKey)) as [
-		Coords,
-		Coords,
-	];
+	// A promotion's "=X" names the piece the pawn became; the move itself is the pawn's.
+	const [from, to] = move
+		.replace(/=.*/, '')
+		.split('>')
+		.map((c) => coordutil.getCoordsFromKey(c as CoordsKey)) as [Coords, Coords];
 	const piece = boardutil.getPieceFromCoords(prior.pieces, from);
 	if (!piece) problems.push(`no piece on ${move.split('>')[0]} before the last move`);
 	else if (

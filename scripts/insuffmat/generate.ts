@@ -8,7 +8,8 @@
  *
  * Usage: npx tsx scripts/insuffmat/generate.ts <unbounded|bounded> <cap> <out dir> [threads]
  *
- * Writes <out dir>/<kind>/draws-N.txt and mates-N.tsv (witness lines, see verify.ts). The bounded
+ * Writes <out dir>/<kind>/draws-N.txt and mates-N.tsv (witness lines, see verify.ts), and
+ * durations-N.tsv (each searched set's label and milliseconds, for spotting slow ones). The bounded
  * run reuses <out dir>/unbounded's smallest mates, which are bounded mates too. README.md
  * documents the terms.
  */
@@ -58,6 +59,7 @@ const ROYAL_INDICES = (['K', 'RC', 'RQ'] as Kind[]).map((kind) => KINDS.indexOf(
 const P_INDEX = KINDS.indexOf('P');
 const HU_INDEX = KINDS.indexOf('HU');
 const ORTHOGONAL_SLIDER_INDICES = (['RQ', 'Q', 'R', 'AM', 'CH'] as Kind[]).map((kind) => KINDS.indexOf(kind)); // prettier-ignore
+const ADJACENT_ATTACKER_INDICES = (['P', 'GU'] as Kind[]).map((kind) => KINDS.indexOf(kind));
 
 /** Wall distances from the mated royal tried on bounded boards; _ is no wall. */
 const WALL_DISTANCES = ['_', 0, 1, 2, 3, 4, 5, 6] as const;
@@ -127,18 +129,15 @@ async function generate(
 	threads: number,
 ): Promise<void> {
 	const dir = `${outDir}/${boardKind}`;
+	// Bounded runs reuse the unbounded table's mates, so it must reach the cap, or its mates would be searched as bounded draws.
+	if (boardKind === 'bounded' && !fs.existsSync(`${outDir}/unbounded/mates-${cap}.tsv`))
+		throw Error(`Generate the unbounded table up to ${cap} first.`);
 	fs.mkdirSync(dir, { recursive: true });
 	let draws = new Set([canonicalKey([KINDS.map(() => 0), KINDS.map(() => 0)])]);
 	for (let level = 1; level <= cap; level++) {
 		const started = performance.now();
 		const candidates = nextCandidates(draws);
-		const results = await searchLevel(
-			[...candidates],
-			`${dir}/progress-${level}.tsv`,
-			boardKind,
-			outDir,
-			threads,
-		);
+		const results = await searchLevel([...candidates], dir, level, boardKind, outDir, threads);
 		draws = new Set([...results].filter(([, witness]) => witness === '').map(([key]) => key));
 		const mates = [...results.values()].filter((witness) => witness !== '');
 		fs.writeFileSync(
@@ -167,20 +166,27 @@ function nextCandidates(draws: Set<string>): Set<string> {
 
 /**
  * Searches a level's sets on worker threads, resolving with each key's witness line ('' for a
- * draw). Results already in the progress file are reused; new ones are appended as they arrive.
+ * draw). Results already in the level's progress file are reused; new ones are appended as they
+ * arrive, and each set's search time to its durations file.
  */
 function searchLevel(
 	keys: string[],
-	progressFile: string,
+	dir: string,
+	level: number,
 	boardKind: BoardKind,
 	outDir: string,
 	threads: number,
 ): Promise<Map<string, string>> {
+	const progressFile = `${dir}/progress-${level}.tsv`;
+	const durationsFile = `${dir}/durations-${level}.tsv`;
 	const results = new Map<string, string>();
+	const wanted = new Set(keys);
 	if (fs.existsSync(progressFile))
 		for (const line of fs.readFileSync(progressFile, 'utf8').split('\n').filter(Boolean)) {
 			const tab = line.indexOf('\t');
-			results.set(line.slice(0, tab), line.slice(tab + 1));
+			// A row for a set that is no longer a candidate (the level below changed) is stale.
+			if (wanted.has(line.slice(0, tab)))
+				results.set(line.slice(0, tab), line.slice(tab + 1));
 		}
 	const todo = keys.filter((key) => !results.has(key));
 	return new Promise((resolve) => {
@@ -197,11 +203,15 @@ function searchLevel(
 				if (next < todo.length) worker.postMessage(todo[next++]);
 				else void worker.terminate();
 			};
-			worker.on('message', ({ key, witness }: { key: string; witness: string }) => {
-				results.set(key, witness);
-				fs.appendFileSync(progressFile, `${key}\t${witness}\n`);
-				feed();
-			});
+			worker.on(
+				'message',
+				({ key, witness, ms }: { key: string; witness: string; ms: number }) => {
+					results.set(key, witness);
+					fs.appendFileSync(progressFile, `${key}\t${witness}\n`);
+					fs.appendFileSync(durationsFile, `${label(fromKey(key))}\t${ms}\n`);
+					feed();
+				},
+			);
 			worker.on('exit', () => {
 				if (--active === 0) resolve(results);
 			});
@@ -242,14 +252,30 @@ function isLoneHuygenDraw([white, black]: PieceSet): boolean {
 }
 
 /**
- * Whether the set can mate on a bounded board (a large board's edge or corner, or any square of
- * 8x8), as a witness line, or '' for a draw.
+ * Whether one side is a lone pawn or guard: a draw proven by hand, so never searched. It only attacks
+ * adjacent squares, so any royal it checks can capture it, leaving nothing to check with, and its side
+ * has no royal to be mated. Holds only while every royal kind can capture on all 8 adjacent squares.
+ */
+function isLoneAdjacentAttackerDraw([white, black]: PieceSet): boolean {
+	const isLoneAdjacentAttacker = (counts: number[]): boolean => ADJACENT_ATTACKER_INDICES.some((i) => counts.every((n, j) => n === (j === i ? 1 : 0))); // prettier-ignore
+	return isLoneAdjacentAttacker(white) || isLoneAdjacentAttacker(black);
+}
+
+/**
+ * Whether the set can mate on a bounded board (any square of 8x8, or with a huygen, a large board's
+ * edge or corner), as a witness line, or '' for a draw.
  */
 function boundedMate(set: PieceSet, unboundedMates: Map<string, string>): string {
 	const known = unboundedMates.get(canonicalKey(set));
 	if (known) return known;
 	const hasPawn = set[0][P_INDEX]! > 0 || set[1][P_INDEX]! > 0;
-	const layouts = distinctLayouts([...largeBoardLayouts(hasPawn), ...eightByEightLayouts()], set);
+	// Every bounded mate fits on 8x8, the cheaper search, except ones needing a huygen far out along a
+	// large board's open side (README).
+	const hasHuygen = set[0][HU_INDEX]! > 0 || set[1][HU_INDEX]! > 0;
+	const layouts = distinctLayouts(
+		[...eightByEightLayouts(), ...(hasHuygen ? largeBoardLayouts(hasPawn) : [])],
+		set,
+	);
 	try {
 		for (const layout of layouts) {
 			matesearch.setWalls(layout);
@@ -333,12 +359,14 @@ if (isMainThread) {
 	const unboundedMates =
 		boardKind === 'bounded' ? loadUnboundedMates(outDir) : new Map<string, string>();
 	parentPort!.on('message', (key: string) => {
+		const started = performance.now();
 		const set = fromKey(key);
-		const witness = isLoneHuygenDraw(set)
-			? ''
-			: boardKind === 'bounded'
-				? boundedMate(set, unboundedMates)
-				: unboundedMate(set);
-		parentPort!.postMessage({ key, witness });
+		const witness =
+			isLoneHuygenDraw(set) || isLoneAdjacentAttackerDraw(set)
+				? ''
+				: boardKind === 'bounded'
+					? boundedMate(set, unboundedMates)
+					: unboundedMate(set);
+		parentPort!.postMessage({ key, witness, ms: Math.round(performance.now() - started) });
 	});
 }
