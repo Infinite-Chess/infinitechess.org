@@ -47,7 +47,7 @@ type Material = Map<string, number>;
 
 /**
  * A world border closer than this in any direction counts toward insuffmat checks; a farther one
- * only does if a sliding royal could be on the board, since it can slide there in one move.
+ * only does if a sliding royal is on the board, since it can slide there in one move.
  *
  * Chosen to be as small as possible yet realistically never reached by a walking royal.
  */
@@ -162,20 +162,18 @@ function getBoardKind(boardsim: InsuffmatBoard): BoardKind | undefined {
 	const isNear = (edge: bigint | null): boolean => edge !== null && bimath.abs(edge) <= BOUND_FOR_WORLD_BORDER_CONSIDERATION; // prettier-ignore
 	const isAnyNear = [border.left, border.right, border.bottom, border.top].some((edge) => isNear(edge)); // prettier-ignore
 	// A sliding royal reaches a wall any distance away in one move, so for it no border is too far to help mate.
-	if (!isAnyNear && !mayHaveSlidingRoyal(boardsim)) return 'unbounded';
+	if (!isAnyNear && !hasSlidingRoyal(boardsim)) return 'unbounded';
 	const isTooNarrow = (low: bigint | null, high: bigint | null): boolean => low !== null && high !== null && high - low + 1n < MIN_BOUNDED_BOARD_WIDTH; // prettier-ignore
 	if (isTooNarrow(border.left, border.right) || isTooNarrow(border.bottom, border.top))
 		return undefined;
 	return 'bounded';
 }
 
-/** Whether a sliding royal is on the board or among the promotion options. */
-function mayHaveSlidingRoyal(boardsim: InsuffmatBoard): boolean {
-	const promotions = boardsim.gameRules.promotion?.pieces ?? [];
-	return typeutil.slidingRoyals.some(
-		(rawType) =>
-			promotions.includes(rawType) ||
-			[p.WHITE, p.BLACK].some((player) => boardutil.getPieceCountOfType(boardsim.pieces, typeutil.buildType(rawType, player)) > 0), // prettier-ignore
+/** Whether a sliding royal is on the board. */
+function hasSlidingRoyal(boardsim: InsuffmatBoard): boolean {
+	const countOf = (type: number): number => boardutil.getPieceCountOfType(boardsim.pieces, type);
+	return typeutil.slidingRoyals.some((rawType) =>
+		[p.WHITE, p.BLACK].some((player) => countOf(typeutil.buildType(rawType, player)) > 0),
 	);
 }
 

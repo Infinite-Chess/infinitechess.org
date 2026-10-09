@@ -69,9 +69,9 @@ move, the position before the last move, and the last move.
 ## Where the site uses it
 
 - **Board kind:** the site uses the bounded table when a border lies within 1,000,000 squares, or at
-  any distance if a royal queen is on the board or a pawn could promote to one, since it reaches any
-  wall in one move. Boards narrower than 8 in either direction never declare insufficient material:
-  tiny boards would need their own tables.
+  any distance if a royal queen is on the board, since it reaches any wall in one move. Boards
+  narrower than 8 in either direction never declare insufficient material: tiny boards would need
+  their own tables.
 - **Promotion:** the site checks every outcome of each pawn with one of its side's promotion ranks
   ahead of it.
 - **Obstacles** are not modelled. With any on the board, the site declares insufficient material
