@@ -10,6 +10,7 @@
 import type { Coords } from '../../../util/coordutil.js';
 import type { MoveFull } from '../movepiece.js';
 import type { GameRules } from '../../util/gamerules.js';
+import type { LoadedVariant } from '../gamefile.js';
 import type { GameConclusion } from '../../util/typeschemas.js';
 import type { OrganizedPiecesBase } from '../organizedpieces.js';
 
@@ -19,6 +20,7 @@ import boardutil from '../boardutil.js';
 import gamerules from '../../util/gamerules.js';
 import matingsets from './matingsets.js';
 import icnposition from '../icn/icnposition.js';
+import variantmodule from '../variantmodule.js';
 import typeutil, { Player, RawType } from '../../util/typeutil.js';
 import { rawTypes as r, ext as e, players as p } from '../../util/typeutil.js';
 
@@ -29,6 +31,7 @@ type InsuffmatBoard = {
 	gameRules: GameRules;
 	moves: MoveFull[];
 	pieces: OrganizedPiecesBase;
+	variant?: LoadedVariant;
 };
 
 /** Which table applies: bounded when the world border is close enough to assist checkmate. */
@@ -59,6 +62,9 @@ const MIN_BOUNDED_BOARD_WIDTH = 8n;
 /** The most promotable pawns whose every promotion outcome is checked. With more, insuffmat is never declared. */
 const MAX_PROMOTABLE_PAWNS = 2;
 
+/** The pieces of ordinary chess: with obstacles on the board, insuffmat is only declared when every piece is one. */
+const CLASSICAL_RAW_TYPES: RawType[] = [r.KING, r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT, r.PAWN];
+
 /** The smallest mating piece sets of each board kind, by canonical key. */
 const MATING_SETS: Record<BoardKind, Set<string>> = {
 	unbounded: new Set(matingsets.unbounded.split(' ')),
@@ -71,8 +77,9 @@ const MATING_SETS: Record<BoardKind, Set<string>> = {
  */
 const PROVEN_DRAWS: Record<BoardKind, readonly Record<string, number>[]> = {
 	unbounded: [
-		// For the practice checkmate 1K2N6B-1k losing a knight. Same-color bishops attack only their color, of which
-		// the king's 3x3 holds at most 5 squares, so at most 5 do work in any mate; the search proves no mate with 6.
+		// For the practice checkmate 1K2N6B-1k losing a knight. Bishops on the king's color never attack its 4
+		// orthogonal neighbors, of which the white king covers at most 1 and the knight 2. Bishops on the other
+		// color never check, so the knight must, covering at most 1 of the 4 diagonal neighbors to the king's 2.
 		{ K: 1, B0: Infinity, N: 1, k: 1 },
 	],
 	bounded: [],
@@ -123,8 +130,29 @@ function doesPositionSupportInsuffmat(boardsim: InsuffmatBoard): boolean {
 	const lastMove = moveutil.getLastMove(boardsim.moves);
 	if (lastMove && !(lastMove.flags.capture || lastMove.promotion !== undefined)) return false;
 
-	// Voids can shape a mate, which the table doesn't model.
-	return boardutil.getPieceCountOfType(boardsim.pieces, r.VOID + e.N) === 0;
+	// The table models default movement: no slide limit (which shortens the defender's escapes too) or variant
+	// movement. Voids can shape a mate, which it doesn't model either.
+	if (gameRules.slideLimit !== undefined) return false;
+	if (variantmodule.hasCustomMovement(boardsim.variant?.mod)) return false;
+	if (boardutil.getPieceCountOfType(boardsim.pieces, r.VOID + e.N) > 0) return false;
+	// Obstacles can too, but tests found no such mate in classical material with a king each (README).
+	if (boardutil.getPieceCountOfType(boardsim.pieces, r.OBSTACLE + e.N) === 0) return true;
+	return isClassicalWithKings(boardsim);
+}
+
+/** Whether every piece and promotion option is classical, and both players have a king. */
+function isClassicalWithKings(boardsim: InsuffmatBoard): boolean {
+	const promotions = boardsim.gameRules.promotion?.pieces ?? [];
+	if (!promotions.every((rawType) => CLASSICAL_RAW_TYPES.includes(rawType))) return false;
+	const countOf = (rawType: RawType, player: Player): number => boardutil.getPieceCountOfType(boardsim.pieces, typeutil.buildType(rawType, player)); // prettier-ignore
+	return [p.WHITE, p.BLACK].every(
+		(player) =>
+			countOf(r.KING, player) > 0 &&
+			(Object.values(r) as RawType[]).every(
+				(rawType) =>
+					CLASSICAL_RAW_TYPES.includes(rawType) || countOf(rawType, player) === 0,
+			),
+	);
 }
 
 /** Which table applies, or undefined when the board is too narrow for either. */
@@ -163,18 +191,22 @@ function readBoard(boardsim: InsuffmatBoard): { base: Material; promotablePlayer
 		const piece = boardutil.getDefinedPieceFromIdx(pieces, idx);
 		const [rawType, player] = typeutil.splitType(piece.type);
 		if (rawType === r.OBSTACLE) continue;
-		// ASSUME the pawn is behind a promotion rank. Worst case if it isn't: insuffmat isn't triggered when it could be.
-		if (
-			rawType === r.PAWN &&
-			(promotion?.pieces.length ?? 0) > 0 &&
-			(promotion?.ranks[player]?.length ?? 0) > 0
-		) {
+		if (rawType === r.PAWN && canPromote(promotion, player, piece.coords[1])) {
 			promotablePlayers.push(player);
 			continue;
 		}
 		addPiece(base, getCode(piece.type, piece.coords));
 	}
 	return { base, promotablePlayers };
+}
+
+/** Whether a pawn of the player on rank y has a promotion rank ahead of it: above for white, below for black. */
+function canPromote(promotion: GameRules['promotion'], player: Player, y: bigint): boolean {
+	if ((promotion?.pieces.length ?? 0) === 0) return false;
+	const ranks = promotion?.ranks[player] ?? [];
+	if (player === p.WHITE) return ranks.some((rank) => rank > y);
+	if (player === p.BLACK) return ranks.some((rank) => rank < y);
+	return ranks.length > 0; // Other players' directions are unknown, so any rank counts
 }
 
 /** The code of each piece a pawn could become. A promoted bishop's square color is unknown, so it is both. */

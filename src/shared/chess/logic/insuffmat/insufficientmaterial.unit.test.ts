@@ -1,21 +1,31 @@
 // src/shared/chess/logic/insuffmat/insufficientmaterial.unit.test.ts
 
+import type { LoadedVariant } from '../gamefile.js';
+
 import { describe, it, expect } from 'vitest';
 
 import icnconverter from '../icn/icnconverter.js';
 import organizedpieces from '../organizedpieces.js';
 import insufficientmaterial from './insufficientmaterial.js';
 
-/** Whether the site declares the ICN's position drawn by insufficient material. */
-function isDraw(icn: string): boolean {
-	const { position, gameRules } = icnconverter.ShortToLong_Format(icn);
+/** Whether the site declares the ICN's position drawn by insufficient material, optionally under a slide limit or a variant, which ICNs don't carry. */
+function isDraw(
+	icn: string,
+	options: { slideLimit?: bigint; variant?: LoadedVariant } = {},
+): boolean {
+	const { position, gameRules: icnRules } = icnconverter.ShortToLong_Format(icn);
+	const gameRules =
+		options.slideLimit === undefined
+			? icnRules
+			: { ...icnRules, slideLimit: options.slideLimit };
 	const { pieces } = organizedpieces.processInitialPosition(
 		position!,
 		gameRules.turnOrder,
 		false,
 		gameRules.promotion,
 	);
-	return insufficientmaterial.detect({ gameRules, moves: [], pieces })?.condition === 'insuffmat';
+	const board = { gameRules, moves: [], pieces, variant: options.variant };
+	return insufficientmaterial.detect(board)?.condition === 'insuffmat';
 }
 
 const BORDER = '-1000,1000,-1000,1000';
@@ -65,8 +75,32 @@ describe('insufficientmaterial', () => {
 			expect(isDraw('w (8|1) K0,0|k20,20|p40,5|p42,5')).toBe(false);
 		});
 
+		it('only promotes pawns with a promotion rank ahead of them', () => {
+			expect(isDraw('w (8|1) K0,0|k20,20|P40,9|P42,9')).toBe(true);
+			expect(isDraw('w (8,20|1) K0,0|k20,20|P40,12|P42,12')).toBe(false);
+			expect(isDraw('w (8,20|1) K0,0|k20,20|P40,20|P42,20')).toBe(true);
+		});
+
 		it('never declares a draw with voids on the board', () => {
 			expect(isDraw('w K0,0|R5,0|k20,20|vo30,30')).toBe(false);
+		});
+
+		it('never declares a draw under a slide limit', () => {
+			expect(isDraw('w rq0,0|rq-6,-6|HA-6,0')).toBe(true);
+			expect(isDraw('w rq0,0|rq-6,-6|HA-6,0', { slideLimit: 2n })).toBe(false);
+		});
+
+		it('never declares a draw in a variant with custom movement', () => {
+			const mod = { getPosition: () => ({ position: new Map() }), genMovesetModifications: () => ({}) }; // prettier-ignore
+			const variant: LoadedVariant = { code: '4x4x4x4_Chess', dateTimestamp: 0, mod };
+			expect(isDraw('w K0,0|N5,0|k20,20')).toBe(true);
+			expect(isDraw('w K0,0|N5,0|k20,20', { variant })).toBe(false);
+		});
+
+		it('with obstacles on the board, declares only classical material with a king each', () => {
+			expect(isDraw('w K0,0|N5,0|k20,20|ob30,30')).toBe(true);
+			expect(isDraw('w N5,0|k20,20|ob30,30')).toBe(false);
+			expect(isDraw('w K0,0|CA5,0|k20,20|ob30,30')).toBe(false);
 		});
 	});
 
@@ -81,8 +115,13 @@ describe('insufficientmaterial', () => {
 			expect(isDraw(`w ${BORDER} K0,0|k20,20|rc25,20`)).toBe(false);
 		});
 
+		it('never declares a mate an obstacle makes possible', () => {
+			expect(isDraw('w 0,_,0,_ rc0,0|R1,1|R0,2|ob0,1')).toBe(false);
+		});
+
 		it('never declares sets that can only mate on 8x8, on any bounded board', () => {
 			expect(isDraw(`w ${BORDER} AM0,0|AM3,0|rq20,20`)).toBe(false);
+			expect(isDraw(`w ${BORDER} RQ0,0|k20,20|ch25,20|ro30,20`)).toBe(false);
 		});
 
 		it('treats a border past the bound as unbounded, unless a sliding royal can reach it', () => {

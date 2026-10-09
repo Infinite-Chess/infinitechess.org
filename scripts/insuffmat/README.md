@@ -47,10 +47,16 @@ move, the position before the last move, and the last move.
   move back is enough: custom games start from any legal position, and the site checks insufficient
   material from move 0, so a legal position with mate in one is a real game. About 0.9% of the saved
   mates (173 of 19,675) have no legal earlier defender move, though their sets may mate another way.
-- **Pawns** stay pawns. The site handles promotion by checking every outcome. The attacker's last
-  move may be a double step or en passant. A defender pawn never double steps, as a mate can do
-  without its rights, and pawn files are ignored.
-- **Obstacles** are ignored, as on the site. **Voids** mean insufficient material is never declared.
+- **Pawns** stay pawns. The site handles promotion by checking every outcome of each pawn with one
+  of its side's promotion ranks ahead of it. The attacker's last move may be a double step or en
+  passant. A defender pawn never double steps, as a mate can do without its rights, and pawn files
+  are ignored.
+- **Obstacles** are not modelled. With any on the board, the site declares insufficient material
+  only if every piece and promotion option is classical (king, queen, rook, bishop, knight, pawn)
+  and each side has a king.
+- **Never declared** with voids on the board (they can shape a mate), under a slide limit (it
+  shortens the defender's escapes too, and mates thousands of the table's draws), or in a variant
+  with its own movement (4D), since the table models the default movesets.
 - **Bounded boards:** a set counts as mating if it mates on any square of an 8x8 board, or, with a
   huygen, with the mated royal near one edge or a corner of a large board (each wall 0-6 squares
   away, the other directions open). Such mates count for every bounded board. Layouts that are
@@ -101,6 +107,9 @@ move, the position before the last move, and the last move.
   since this is evidence, not proof.
 - **All 33 practice checkmates** are found as mates, and losing any one piece in each still declares
   the draw wherever it is one.
+- **Obstacles don't help classical material with a king each:** a search allowed to place up to 6
+  obstacles anywhere turned none of the 104 such draws (both tables, up to the caps) into a mate.
+  They do help otherwise: with just one, 57 sets of 3 pieces mate, mostly against a royal queen.
 
 ## Known holes
 
@@ -111,6 +120,10 @@ Assumptions that, if wrong, could declare a false draw:
   distance.
 - Bounded boards larger than 8x8 are assumed no easier to mate on than 8x8 without a huygen, or a
   large board's edge with one: tested on 9x9, 10x10 and large boards' edges and corners only.
+- Obstacles never let classical material with a king each mate: tested with up to 6, not proven.
+- A world border more than 1,000,000 squares from the origin is ignored unless a sliding royal could
+  reach it, assuming no royal ever walks that far. A custom position with pieces already near such a
+  border skips the walk, and can be declared a draw that mates against it.
 
 These can only leave a real draw undeclared:
 
