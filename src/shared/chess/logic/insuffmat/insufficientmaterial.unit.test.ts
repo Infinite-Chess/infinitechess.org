@@ -73,6 +73,7 @@ describe('insufficientmaterial', () => {
 		it('requires every promotion outcome to be a draw', () => {
 			expect(isDraw('w (8|1) K0,0|k20,20|p40,5')).toBe(true);
 			expect(isDraw('w (8|1) K0,0|k20,20|p40,5|p42,5')).toBe(false);
+			expect(isDraw('w (8|1;n) K0,0|k20,20|p40,5|p42,5|p44,5')).toBe(true);
 		});
 
 		it('only promotes pawns with a promotion rank ahead of them', () => {

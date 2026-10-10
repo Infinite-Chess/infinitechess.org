@@ -59,9 +59,6 @@ const BOUND_FOR_WORLD_BORDER_CONSIDERATION = 1_000_000n;
  */
 const MIN_BOUNDED_BOARD_WIDTH = 8n;
 
-/** The most promotable pawns whose every promotion outcome is checked. With more, insuffmat is never declared. */
-const MAX_PROMOTABLE_PAWNS = 2;
-
 /** The pieces of ordinary chess: with obstacles on the board, insuffmat is only declared when every piece is one. */
 const CLASSICAL_RAW_TYPES: RawType[] = [r.KING, r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT, r.PAWN];
 
@@ -74,6 +71,7 @@ const MATING_SETS: Record<BoardKind, Set<string>> = {
 /**
  * Proven draws with more pieces than the table's cap, each as the most of each piece it allows
  * (Infinity = any number). Black is the side to be mated. Each holds in either color orientation.
+ * An entry allowing pawns would let detect() enumerate promotions past the cap, needing a bound again.
  */
 const PROVEN_DRAWS: Record<BoardKind, readonly Record<string, number>[]> = {
 	unbounded: [
@@ -98,7 +96,6 @@ function detect(boardsim: InsuffmatBoard): GameConclusion | undefined {
 	if (boardKind === undefined) return undefined;
 
 	const { base, promotablePlayers } = readBoard(boardsim);
-	if (promotablePlayers.length > MAX_PROMOTABLE_PAWNS) return undefined;
 	const promotionPieces = boardsim.gameRules.promotion?.pieces ?? [];
 	const outcomes = promotablePlayers.map((player) =>
 		getPawnOutcomes([r.PAWN, ...promotionPieces], player),

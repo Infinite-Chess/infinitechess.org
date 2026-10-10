@@ -75,9 +75,9 @@ to move, the position before the last move, and the last move.
   any distance if a royal queen is on the board, since it reaches any wall in one move. Boards
   narrower than 8 in either direction never declare insufficient material: tiny boards would need
   their own tables.
-- **Promotion:** a pawn counts as promotable with one of its side's promotion ranks ahead of it.
-  With up to 2 such pawns, the site checks every combination of their outcomes, staying a pawn
-  included; with more, it never declares insufficient material.
+- **Promotion:** a pawn counts as promotable with one of its side's promotion ranks ahead of it. The
+  position is drawn only if every combination of their outcomes is, staying a pawn included. Above
+  the table's piece cap none is, so at most 4 pawns are ever enumerated.
 - **Obstacles** are not modelled. With any on the board, the site declares insufficient material
   only if every piece and promotion option is classical (king, queen, rook, bishop, knight, pawn)
   and each side has a king.
