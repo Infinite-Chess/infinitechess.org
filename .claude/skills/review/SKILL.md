@@ -107,7 +107,7 @@ recommendation instead.
 
 **Working tree or commits.** Make every fix that carries no design decision without asking, per
 rule 6. Fixes land uncommitted in the working tree for the user to review; get the checks passing
-per rule 33. Report briefly what you changed: one line per fix, linked to its file and line, grouped
+per rule 34. Report briefly what you changed: one line per fix, linked to its file and line, grouped
 so it scans.
 
 **PR.** Change nothing in the code. Write the full review to a markdown file in the project root and

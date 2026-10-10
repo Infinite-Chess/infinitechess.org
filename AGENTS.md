@@ -188,78 +188,81 @@ followed, tell me.
 27. Anything stored permanently needs a reason to be stored forever; anything identifying needs a
     reason to be identifying.
 
+28. Never write a memory without my okay. Memory lives on one device; what you learn about the repo
+    belongs in its docs or this file.
+
 ### Issues outside the work
 
-28. If, while we're working on changes, you notice an unrelated issue or bug somewhere else, do
+29. If, while we're working on changes, you notice an unrelated issue or bug somewhere else, do
     **not** distract me from the current work. Park it, and bring it up only after the current work
     has been committed; do not mention it before then. An issue with changes you made this session
     _should not be parked_: if you created the issue, you need to resolve it too, _before_ we
     commit.
 
-29. Park issues by appending them to a scratch file outside the repo. It has to be a written file,
+30. Park issues by appending them to a scratch file outside the repo. It has to be a written file,
     never a mental note: your reasoning from earlier turns isn't retained. Re-read that file every
     time we commit. If your reply ends the session, as in an `@claude` run, close it with every
     parked issue in full, inside a collapsed `<details>`.
 
-30. Raise parked issues one at a time. Once we've committed the current work, mention the single
+31. Raise parked issues one at a time. Once we've committed the current work, mention the single
     _next_ most pressing issue only. Per rule 3, do **not** flood me with multiple issues at once. I
     will decide if we should focus on it next from there. If I ask you for a prompt to have another
     agent look into it, after giving it to me, consider it delegated, and remove it from the scratch
     file.
 
-31. If you realize two implementations of one idea exist, park that per rule 30 too. If they
+32. If you realize two implementations of one idea exist, park that per rule 31 too. If they
     disagree, that's a live bug. If it only became a second implementation after your changes, then
-    per rule 28 you created it, so it also needs to be resolved before we commit.
+    per rule 29 you created it, so it also needs to be resolved before we commit.
 
 ### Finishing work
 
-32. After making changes, search for any JSDoc or comment they made false; make sure they aren't
+33. After making changes, search for any JSDoc or comment they made false; make sure they aren't
     stale. Make sure touched files' description headers have not become stale. Then go back over all
     documentation and comments you touched or added, _look for the signs_ of AI bloat listed in rule
     24, and _fix_ them.
 
-33. After finishing changes that modified at least one script, run `npm run check --silent` —
+34. After finishing changes that modified at least one script, run `npm run check --silent` —
     format, types, lint, import rules, and tests — and get it passing. Repeat after every subsequent
     fix, unless all you edited was a comment. Fix formatting-only failures with `npm run format`. If
     you can't get it passing, let me know.
 
-34. Consider whether any of your running sandbox scripts would actually be of use to future agents
+35. Consider whether any of your running sandbox scripts would actually be of use to future agents
     after we commit this work, being moved to a permanent location, even if they would need to be
     repurposed. If so, recommend that.
 
-35. If the changes affect what users see and experience, get confirmation from me that things work
+36. If the changes affect what users see and experience, get confirmation from me that things work
     as expected. Never spin up a dev server yourself to check; it costs too many tokens and too much
     time.
 
-36. After that point, I usually either choose to have you use the `review` skill on your own
+37. After that point, I usually either choose to have you use the `review` skill on your own
     changes, or go straight to directing you to commit.
 
 ### Committing
 
-37. Never commit until I explicitly ask you to. All changes are reviewed by me first. The exception
+38. Never commit until I explicitly ask you to. All changes are reviewed by me first. The exception
     is a branch of your own that is the only way the work reaches me — a worktree task branch, or a
     cloud run's branch. Commit there as normal without asking, then for a worktree deliver and clean
-    up per rule 39, and for a cloud run push, since I review it on GitHub. Otherwise, I stage files
+    up per rule 40, and for a cloud run push, since I review it on GitHub. Otherwise, I stage files
     as I review them, so expect your changes to move into the index mid-session — a clean `git diff`
     doesn't mean your edits vanished.
 
-38. When I _do_ ask you to commit, split unrelated changes into their own commits, then `git push`
+39. When I _do_ ask you to commit, split unrelated changes into their own commits, then `git push`
     immediately after. On a branch whose name won't match its remote's (`pr/<author>/<number>`, from
     `gh pr checkout` of a fork PR), bare `git push` aborts — read the remote and branch from
     `branch.<current>.remote` and `branch.<current>.merge` in `git config`, then push explicitly:
     `git push <remote> HEAD:<branch>`.
 
-39. When I ask for work in a worktree, run its whole lifecycle yourself — I never type any of these
+40. When I ask for work in a worktree, run its whole lifecycle yourself — I never type any of these
     commands. Create it in `.worktrees/`, branched from the branch I have checked out, never from
     `main`: `git worktree add .worktrees/<task> -b <task> <my-branch>`. Node walks up to the repo's
-    `node_modules`, so it needs no install. Commit there per rule 37. Only when requested, deliver
+    `node_modules`, so it needs no install. Commit there per rule 38. Only when requested, deliver
     it unstaged into my working tree with `git cherry-pick -n <task>` and `git reset`, so I review
     it in my own editor. Immediately remove the worktree and delete the branch — any revision I ask
     for afterwards is ordinary work in my tree.
 
-40. After committing, move to the trash (no irreversible delete) all remaining sandbox scripts you
+41. After committing, move to the trash (no irreversible delete) all remaining sandbox scripts you
     created that are deemed no longer needed. Any repurposed ones should have already been moved out
-    per rule 34. Any not added by you, belonging to other sessions, should be cleared _if_ those
+    per rule 35. Any not added by you, belonging to other sessions, should be cleared _if_ those
     sessions are not fresh.
 
 ## Module conventions
