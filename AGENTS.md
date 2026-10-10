@@ -334,7 +334,7 @@ disagree, study more siblings before trusting either.
 
 ### Comments & JSDoc
 
-- Every function gets at least one sentence of JSDoc. One-sentence docs stay on _one_ line:
+- Every function gets at least one sentence of JSDoc. Docs under 100 characters stay on _one_ line:
   `/** Like this. */` — never three.
 - Omit @param for self-evident args (req/res/next/ws). Explanations _about_ an argument belong on
   its @param line, not in the description body.
