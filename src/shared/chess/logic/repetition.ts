@@ -46,27 +46,15 @@ function detect(boardsim: Board): GameConclusion | undefined {
 
 	const startIndex: number = moveList.length - 1;
 	let indexOfLastEqualPositionFound: number = startIndex + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
-	outer: for (let index = startIndex; index >= 0; index--) {
+	for (let index = startIndex; index >= 0; index--) {
 		// WILL BE -1 if we've reached the beginning of the game!
 		const move: MoveFull = moveList[index]!;
 
-		// Did this move include a one-way action? Pawn push, special right loss..
-		// If so, no further equal positions, terminate the loop.
-		// 'capture' move changes are handled lower down, they are one-way too.
-		if (typeutil.getRawType(move.type) === r.PAWN) break; // Pawn pushes reset the repetition alg because we know they can't move back to their previous position.
-		if (
-			move.state.some(
-				(stateChange: StateChange) =>
-					stateChange.type === 'specialrights' && stateChange.future === false,
-			)
-		)
-			break; // specialright was lost, no way its equal to the current position, unless in the future it's possible to add specialrights mid-game.
+		// No position before a one-way move can equal the current one.
+		if (isOneWay(move)) break;
 
-		// Iterate through all move changes, adding the fluxes.
+		// Iterate through all move changes, adding the fluxes. All are two-way.
 		for (const change of move.changes) {
-			// Did this move change include a one-way action? (capture/deletion) If so, no further equal positions, terminate the loop.
-			if (boardchanges.ONE_WAY_ACTIONS.includes(change.action)) break outer; // One-way action, can't be undone, no further equal positions.
-			// The remaining actions are two-way, so we need to create fluxes for them..
 			if (change.action === 'move') {
 				// If this change was undo'd, there would be a DEFICIT on its endCoords
 				addDeficit(`${change.endCoords[0]},${change.endCoords[1]},${change.piece.type}`);
@@ -142,6 +130,26 @@ function detect(boardsim: Board): GameConclusion | undefined {
 	else return undefined;
 }
 
+/**
+ * Whether a move can never be undone, so no position before it can recur: a pawn push,
+ * a capture or other deletion, or a lost special right (none can be regained mid-game).
+ */
+function isOneWay(move: MoveFull): boolean {
+	if (typeutil.getRawType(move.type) === r.PAWN) return true;
+	if (move.state.some((change: StateChange) => change.type === 'specialrights' && change.future === false)) return true; // prettier-ignore
+	return move.changes.some((change) => boardchanges.ONE_WAY_ACTIONS.includes(change.action));
+}
+
+/**
+ * For each ply 0…moves.length, the earliest ply whose position can still recur there: just past
+ * the latest one-way move. Repetition never reaches further back, so an engine needs no history before it.
+ */
+function windowStarts(moves: MoveFull[]): number[] {
+	const starts = [0];
+	moves.forEach((move, i) => starts.push(isOneWay(move) ? i + 1 : starts[i]!));
+	return starts;
+}
+
 // Exports ---------------------------------------------------------------------
 
-export default { detect };
+export default { detect, windowStarts };
