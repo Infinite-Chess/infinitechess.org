@@ -265,10 +265,6 @@ export interface ScriptTranslations {
 					label: string;
 					message: string;
 				};
-				too_many_promotions: {
-					label: string;
-					message: string;
-				};
 				unsupported_piece: {
 					label: string;
 					message: string;

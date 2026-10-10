@@ -24,7 +24,6 @@ import typeutil, { RawType, rawTypes as r } from '../util/typeutil.js';
 export type EngineSupportCode =
 	| 'unsupported_variant'
 	| 'unsupported_win_rule'
-	| 'too_many_promotions'
 	| 'unsupported_piece'
 	| 'border_too_large'
 	| 'out_of_bounds';
@@ -34,11 +33,17 @@ type SupportedResult = { supported: true } | { supported: false; reason: EngineS
 // Constants -------------------------------------------------------------------
 
 /**
- * Adding a variant here obliges its module to declare `getPositionBox`, unless it declares a
- * `worldBorder` of its own — {@link worldBorderForVariant} has no other way to space a border
- * around it, and throws if neither is present.
+ * Variants the engine can't use: the 4D ones it can't replay, and Omega³/Omega⁴, whose thousands
+ * of pieces make it too slow to be of any use. Every other variant must declare `getPositionBox`,
+ * unless it declares a `worldBorder` of its own — `apeironborder.forVariant` has no other way to
+ * space a border around it, and throws if neither is present.
  */
-const SUPPORTED_VARIANTS: Set<VariantCode> = new Set(['Classical', 'Confined_Classical', 'Classical_Plus', 'Core', 'CoaIP', 'CoaIP_HO', 'CoaIP_RO', 'CoaIP_NO', 'Palace', 'Pawndard', 'Standarch', 'Space_Classic', 'Space', 'Pawn_Horde', 'Knightline', 'Obstocean', 'Chess', 'Omega']); // prettier-ignore
+const UNSUPPORTED_VARIANTS: Set<VariantCode> = new Set([
+	'4x4x4x4_Chess',
+	'5D_Chess',
+	'Omega_Cubed',
+	'Omega_Fourth',
+]);
 
 /**
  * Game modifiers the engine can play (none at the moment).
@@ -62,16 +67,6 @@ function checkWinConditions(gameRules: GameRules): SupportedResult {
 	for (const winCondition of used) {
 		if (!SUPPORTED_WIN_CONDITIONS.includes(winCondition))
 			return { supported: false, reason: 'unsupported_win_rule' };
-	}
-	return { supported: true };
-}
-
-/** At most one promotion line per player. */
-function checkPromotions(gameRules: GameRules): SupportedResult {
-	if (gameRules.promotion) {
-		for (const playerRanks of Object.values(gameRules.promotion.ranks)) {
-			if (playerRanks.length > 1) return { supported: false, reason: 'too_many_promotions' };
-		}
 	}
 	return { supported: true };
 }
@@ -115,9 +110,6 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 		return { supported: false, reason: 'out_of_bounds' };
 	}
 
-	const promotionsResult = checkPromotions(gamefile.gameRules);
-	if (!promotionsResult.supported) return promotionsResult;
-
 	const allRawTypes = new Set<RawType>();
 	for (const idx of gamefile.pieces.coords.values()) {
 		allRawTypes.add(typeutil.getRawType(gamefile.pieces.types[idx]!));
@@ -131,18 +123,15 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 
 /**
  * Game-level support that's independent of any single position's piece set: the variant's movement
- * rules (4D ones the engine can't replay), win conditions, and promotion lines. Unlike
- * {@link isPlaySupported} these require no bounded board — the
- * analysis engine handles out-of-range coordinates itself (blocking/re-basing).
+ * rules (4D ones the engine can't replay) and win conditions. Unlike {@link isPlaySupported} these
+ * require no bounded board — the analysis engine handles out-of-range coordinates itself
+ * (blocking/re-basing).
  */
 function checkGameRules(gamefile: GameFile): SupportedResult {
-	if (gamefile.variant !== undefined && !SUPPORTED_VARIANTS.has(gamefile.variant.code))
+	if (gamefile.variant !== undefined && UNSUPPORTED_VARIANTS.has(gamefile.variant.code))
 		return { supported: false, reason: 'unsupported_variant' };
 
-	const winConsResult = checkWinConditions(gamefile.gameRules);
-	if (!winConsResult.supported) return winConsResult;
-
-	return checkPromotions(gamefile.gameRules);
+	return checkWinConditions(gamefile.gameRules);
 }
 
 /**
@@ -180,7 +169,7 @@ function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 
 export default {
 	// Constants
-	SUPPORTED_VARIANTS,
+	UNSUPPORTED_VARIANTS,
 	SUPPORTED_MODIFIERS,
 	// Functions
 	isPlaySupported,

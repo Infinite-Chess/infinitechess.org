@@ -5,6 +5,7 @@
  */
 
 import type { CoordsKey } from '../../../../util/coordutil.js';
+import type { BoundingBox } from '../../../../util/math/bounds.js';
 import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
 import timeutil from '../../../../util/timeutil.js';
@@ -35,4 +36,8 @@ export function gameruleModifications(): GameRuleModifications {
 
 export function getPositionStringLength(timestamp: number = Date.now()): number {
 	return timeutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
+}
+
+export function getPositionBox(): BoundingBox {
+	return { left: 0n, right: 9n, bottom: 0n, top: 9n };
 }
