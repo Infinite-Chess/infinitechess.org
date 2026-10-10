@@ -59,7 +59,12 @@ const ROYAL_INDICES = (['K', 'RC', 'RQ'] as Kind[]).map((kind) => KINDS.indexOf(
 const P_INDEX = KINDS.indexOf('P');
 const HU_INDEX = KINDS.indexOf('HU');
 const ORTHOGONAL_SLIDER_INDICES = (['RQ', 'Q', 'R', 'AM', 'CH'] as Kind[]).map((kind) => KINDS.indexOf(kind)); // prettier-ignore
-const ADJACENT_ATTACKER_INDICES = (['P', 'GU'] as Kind[]).map((kind) => KINDS.indexOf(kind));
+/** Per royal kind, the non-royal kinds it can capture straight back from every square they check it from. */
+const CAPTURED_BACK: [Kind, Kind[]][] = [
+	['K', ['P', 'GU']],
+	['RC', ['P', 'GU', 'N', 'CE']],
+	['RQ', ['P', 'GU', 'Q', 'R', 'B0', 'B1']],
+];
 
 /** Wall distances from the mated royal tried on bounded boards; _ is no wall. */
 const WALL_DISTANCES = ['_', 0, 1, 2, 3, 4, 5, 6] as const;
@@ -243,22 +248,40 @@ function loadUnboundedMates(outDir: string): Map<string, string> {
  * piece nearest the huygen on its line of check can always capture it, leaving nothing to check with.
  */
 function isLoneHuygenDraw([white, black]: PieceSet): boolean {
-	const isLoneHuygen = (counts: number[]): boolean => counts.every((n, i) => n === (i === HU_INDEX ? 1 : 0)); // prettier-ignore
 	const slidesOrthogonally = (counts: number[]): boolean => counts.every((n, i) => n === 0 || ORTHOGONAL_SLIDER_INDICES.includes(i)); // prettier-ignore
 	return (
-		(isLoneHuygen(white) && slidesOrthogonally(black)) ||
-		(isLoneHuygen(black) && slidesOrthogonally(white))
+		(loneIndex(white) === HU_INDEX && slidesOrthogonally(black)) ||
+		(loneIndex(black) === HU_INDEX && slidesOrthogonally(white))
 	);
 }
 
+/** The kind index of a side's only piece, or -1 when it has none or several. */
+function loneIndex(counts: number[]): number {
+	return counts.reduce((sum, n) => sum + n) === 1 ? counts.indexOf(1) : -1;
+}
+
 /**
- * Whether one side is a lone pawn or guard: a draw proven by hand, so never searched. It only attacks
- * adjacent squares, so any royal it checks can capture it, leaving nothing to check with, and its side
- * has no royal to be mated. Holds only while every royal kind can capture on all 8 adjacent squares.
+ * Whether one side is a lone non-royal piece that every royal of the other side can capture straight
+ * back from any square it checks from: a draw proven by hand, so never searched. The checked royal
+ * captures it, leaving nothing to check with, and its side has no royal to be mated.
  */
-function isLoneAdjacentAttackerDraw([white, black]: PieceSet): boolean {
-	const isLoneAdjacentAttacker = (counts: number[]): boolean => ADJACENT_ATTACKER_INDICES.some((i) => counts.every((n, j) => n === (j === i ? 1 : 0))); // prettier-ignore
-	return isLoneAdjacentAttacker(white) || isLoneAdjacentAttacker(black);
+function isCaptureBackDraw([white, black]: PieceSet): boolean {
+	const isCapturedBack = (lone: number[], other: number[]): boolean => {
+		const i = loneIndex(lone);
+		return i !== -1 && !ROYAL_INDICES.includes(i) && CAPTURED_BACK.every(([royal, captured]) => other[KINDS.indexOf(royal)] === 0 || captured.includes(KINDS[i]!)); // prettier-ignore
+	};
+	return isCapturedBack(white, black) || isCapturedBack(black, white);
+}
+
+/**
+ * Whether every piece is a royal of one kind: a draw proven by hand, so never searched. Their movesets
+ * are symmetric, so a royal giving check is attacked back by the royal it checks, leaving its own side
+ * in check. No check is legal, so no mate.
+ */
+function isSameKindRoyalsDraw(set: PieceSet): boolean {
+	return ROYAL_INDICES.some((i) =>
+		set.every((counts) => counts.every((n, j) => n === 0 || j === i)),
+	);
 }
 
 /**
@@ -362,7 +385,7 @@ if (isMainThread) {
 		const started = performance.now();
 		const set = fromKey(key);
 		const witness =
-			isLoneHuygenDraw(set) || isLoneAdjacentAttackerDraw(set)
+			isLoneHuygenDraw(set) || isCaptureBackDraw(set) || isSameKindRoyalsDraw(set)
 				? ''
 				: boardKind === 'bounded'
 					? boundedMate(set, unboundedMates)

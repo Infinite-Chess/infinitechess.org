@@ -60,14 +60,19 @@ to move, the position before the last move, and the last move.
   away, the other directions open). Such mates count for every bounded board. Layouts that are
   mirror images under the set's symmetries are searched once.
 - **Skipped, proven by hand:** `generate.ts` never searches these draws, whose searches run for
-  hours when the other side holds several royals:
+  hours when a side holds several royals:
     - One side is a lone huygen and every piece of the other slides orthogonally (royal queen,
       queen, rook, amazon, chancellor). Only the huygen can give check, along a line, and the
       defending piece nearest it on that line can capture it, leaving no attacker. 56 unbounded and
       21 bounded sets.
-    - One side is a lone pawn or guard. It only attacks adjacent squares, so any royal it checks can
-      capture it, leaving no attacker, and its side has no royal to be mated. This needs every royal
-      kind to capture on all 8 adjacent squares. 9,402 unbounded and 1,268 bounded sets.
+    - One side is a lone non-royal piece that every royal of the other side captures straight back
+      from any square it checks from: a king against a pawn or guard, a royal centaur against those
+      or a knight or centaur, a royal queen against a pawn, guard, queen, rook or bishop. That
+      leaves no attacker, and the lone piece's side has no royal to be mated. 16,338 unbounded and
+      2,242 bounded sets.
+    - Every piece is a royal of one kind. Their movesets are symmetric, so a royal giving check is
+      attacked back by the royal it checks, leaving its own side in check: no check is legal. 33
+      unbounded and 24 bounded sets.
 
 ## Where the site uses it
 
