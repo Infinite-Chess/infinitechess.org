@@ -11,8 +11,8 @@ this table can only cost a draw going undeclared, never a false draw.
 ## Regenerating
 
 ```
-npx tsx scripts/insuffmat/generate.ts unbounded 5 <out>     # ~1 day on 12 cores (level 5 dominates)
-npx tsx scripts/insuffmat/generate.ts bounded 4 <out>       # ~1 day; reuses <out>/unbounded
+npx tsx scripts/insuffmat/generate.ts unbounded 5 <out>     # level 5 dominates the run time
+npx tsx scripts/insuffmat/generate.ts bounded 4 <out>       # reuses <out>/unbounded
 npx tsx scripts/insuffmat/verify.ts <out>/*/mates-*.tsv     # every mate, through the site's own code
 npx tsx scripts/insuffmat/writetable.ts <out>               # writes matingsets.ts
 ```
@@ -23,9 +23,9 @@ movement, check or checkmate rules change.
 
 Output: `draws-N.txt` and `mates-N.tsv` per level. Labels list comma-separated piece codes, white
 then black (`K,R,CH,AR vs k,n`); `B0`/`B1` are bishop square colors. A set and its mirror images
-(colors swapped, bishop colors swapped) appear once. `mates-N.tsv` columns: label (bounded ones end
-in the board layout, `@minX,maxX,minY,maxY` with `_` for no wall), the mate with the defender to
-move, the position before the last move, and the last move.
+(colors swapped, bishop colors swapped) appear once. `mates-N.tsv` columns: label (a mate found on a
+bounded layout ends in it, `@minX,maxX,minY,maxY` with `_` for no wall), the mate with the defender
+to move, the position before the last move, and the last move.
 
 ## The search
 
@@ -45,11 +45,12 @@ move, the position before the last move, and the last move.
 - **Reachability:** some attacker move could have produced the mate from a position where no
   defender royal was in check. The move may be a capture, restoring a piece the set's defender still
   has unused (insufficient material is judged on the material before it), or a pawn's promotion. It
-  starts within 12 squares of where it lands, or far back along a slide, or, for a huygen landing in
-  the window, far out where it attacks only that square of the window. One move back is enough:
-  custom games start from any legal position, and the site checks insufficient material from move 0,
-  so a legal position with mate in one is a real game. About 0.9% of the saved mates (173 of 19,675)
-  have no legal earlier defender move, though their sets may mate another way.
+  starts within 2 window radii of where it lands (12 squares unbounded, 14 bounded), or far back
+  along a slide, or, for a huygen landing in the window, far out where it attacks only that square
+  of the window. One move back is enough: custom games start from any legal position, and the site
+  checks insufficient material from move 0, so a legal position with mate in one is a real game.
+  About 0.9% of the saved mates (173 of 19,675) have no legal earlier defender move, though their
+  sets may mate another way.
 - **Pawns** stay pawns. The attacker's last move may be a double step or en passant. A defender pawn
   never double steps, as a mate can do without its rights, and pawn files are ignored.
 - **Bounded boards:** a set counts as mating if it mates on any square of an 8x8 board, or, with a
@@ -72,14 +73,15 @@ move, the position before the last move, and the last move.
   any distance if a royal queen is on the board, since it reaches any wall in one move. Boards
   narrower than 8 in either direction never declare insufficient material: tiny boards would need
   their own tables.
-- **Promotion:** the site checks every outcome of each pawn with one of its side's promotion ranks
-  ahead of it.
+- **Promotion:** a pawn counts as promotable with one of its side's promotion ranks ahead of it.
+  With up to 2 such pawns, the site checks every combination of their outcomes, staying a pawn
+  included; with more, it never declares insufficient material.
 - **Obstacles** are not modelled. With any on the board, the site declares insufficient material
   only if every piece and promotion option is classical (king, queen, rook, bishop, knight, pawn)
   and each side has a king.
 - **Never declared** with voids on the board (they can shape a mate), under a slide limit (it
-  shortens the defender's escapes too, and mates thousands of the table's draws), or in a variant
-  with its own movement (4D), since the table models the default movesets.
+  shortens the defender's escapes too: limits of 1 to 3 mate 1,568 unbounded draws of 3 or 4
+  pieces), or in a variant with its own movement (4D), since the table models the default movesets.
 
 ## Evidence
 
@@ -127,9 +129,9 @@ Assumptions that, if wrong, could declare a false draw:
 - Bounded boards larger than 8x8 are assumed no easier to mate on than 8x8 without a huygen, or a
   large board's edge with one: tested on 9x9, 10x10 and large boards' edges and corners only.
 - Obstacles never let classical material with a king each mate: tested with up to 6, not proven.
-- A world border more than 1,000,000 squares from the origin is ignored unless a sliding royal could
-  reach it, assuming no royal ever walks that far. A custom position with pieces already near such a
-  border skips the walk, and can be declared a draw that mates against it.
+- A world border more than 1,000,000 squares from the origin is ignored unless a sliding royal is on
+  the board, assuming no royal ever walks that far. A custom position with pieces already near such
+  a border skips the walk, and can be declared a draw that mates against it.
 
 These can only leave a real draw undeclared:
 
