@@ -78,9 +78,9 @@ function compressGamefile(
  * snapshot to that ply (carrying its halfmove clock, castling rights, en passant, turn, and
  * fullmove) and keeps only moves [startPly, endPly). MUTATES `longform` in place; a no-op at ply 0.
  *
- * Used to drop history the engine can't replay — positions whose coords left the safe i64 range.
- * The fifty-move counter survives (it rides in the snapshot's state); only repetition detection
- * across the cut is lost. `snapshotMoves` is the full move list the snapshot is advanced through.
+ * Used to drop the history repetition can no longer reach before handing a game to the engine.
+ * The fifty-move counter survives (it rides in the snapshot's state). `snapshotMoves` is the full
+ * move list the snapshot is advanced through.
  */
 function rebaseToPly(
 	longform: LongFormatIn,

@@ -9,6 +9,7 @@ import type { Color } from '../../../../../../shared/types/color.js';
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bimath from '../../../../../../shared/util/math/bimath.js';
+import apeironborder from '../../../../../../shared/chess/logic/apeironborder.js';
 
 import boardpos from '../../../board/rendering/boardpos.js';
 import gameslot from '../../../game/chess/gameslot.js';
@@ -16,7 +17,6 @@ import { GameBus } from '../../../board/GameBus.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
-import analysisenginebounds from '../analysisenginebounds.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -48,7 +48,7 @@ function render(): void {
 	if (!gamefile) return;
 
 	const visible = boardgeometry.gboundingBox(false);
-	const { left, right, bottom, top } = analysisenginebounds.getEngineWorldBorder(gamefile);
+	const { left, right, bottom, top } = apeironborder.clampToCap(gamefile.gameRules.worldBorder, Date.now()); // prettier-ignore
 	const data: number[] = [];
 
 	if (visible.left <= left && left <= visible.right) {

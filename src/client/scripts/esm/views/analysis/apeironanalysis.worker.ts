@@ -8,6 +8,9 @@
  * runs an ongoing MultiPV search of the current position and streams UCI-like
  * info updates back to the main thread after every completed depth.
  *
+ * Every position passes through enginecompression first, so one spread beyond the engine's i64
+ * coordinates is searched compressed, and every move handed back is on the original board.
+ *
  * Each search runs unbounded toward its target depth, blocking the worker thread.
  * Responsiveness comes not from time-slicing but from the shared stop flag: the page
  * writes it to abort the in-flight search, letting a queued position/settings/stop
@@ -25,6 +28,7 @@
  * when the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
  */
 
+import type { EnginePosition } from './compression/enginecompression.js';
 import type { EngineWasmModule, WasmEngine, WasmMove } from '../../chess/enginewasm.js';
 import type {
 	AnalysisCommand,
@@ -35,8 +39,10 @@ import type {
 } from './analysisprotocol.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import apeironborder from '../../../../../shared/chess/logic/apeironborder.js';
 
 import enginewasm from '../../chess/enginewasm.js';
+import enginecompression from './compression/enginecompression.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -105,8 +111,8 @@ let loopRunning = false;
 
 /** The position the page wants analyzed. */
 let currentIcn: string | undefined;
-/** The ICN the engine was last given. */
-let appliedIcn: string | undefined;
+/** The page's ICN the engine was last given, and the position the engine received for it. */
+let applied: { icn: string; position: EnginePosition } | undefined;
 /** Settings from the most recent `go` command. */
 let goOptions: GoOptions = { multiPv: 1, maxDepth: 13, requestId: 0 };
 /**
@@ -169,7 +175,7 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 			currentIcn = msg.icn;
 			generation++;
 			if (msg.resetSearch) {
-				appliedIcn = undefined;
+				applied = undefined;
 				reachedDepth = 0;
 			}
 			if (msg.newGame && wasmReady) {
@@ -180,7 +186,7 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 				engine = undefined;
 				evaluationEngine?.free();
 				evaluationEngine = undefined;
-				appliedIcn = undefined;
+				applied = undefined;
 			}
 			break;
 		case 'go':
@@ -216,7 +222,11 @@ async function runLoop(): Promise<void> {
 	loopRunning = true;
 	try {
 		while (analysing) {
-			syncPosition();
+			if (!syncPosition()) {
+				analysing = false;
+				postMessage({ type: 'blocked', requestId: goOptions.requestId } satisfies AnalysisResponse); // prettier-ignore
+				break;
+			}
 			// The engine clears the stop flag as each search starts, so a stop written while the
 			// position synced would be swallowed: take any queued command before searching.
 			const gen = generation;
@@ -229,6 +239,7 @@ async function runLoop(): Promise<void> {
 			// streaming each completed depth via the callback. It returns on completion or
 			// when the page writes the shared stop flag.
 			const startDepth = Math.min(reachedDepth + 1, opts.maxDepth);
+			const position = applied!.position;
 
 			const summary: AnalysisInfo | null = engine!.analyse(
 				{
@@ -239,7 +250,7 @@ async function runLoop(): Promise<void> {
 				},
 				(info: AnalysisInfo) => {
 					reachedDepth = Math.max(reachedDepth, info.depth);
-					postMessage({ type: 'info', requestId, info } satisfies AnalysisResponse);
+					postMessage({ type: 'info', requestId, info: liftInfo(info, position) } satisfies AnalysisResponse); // prettier-ignore
 				},
 			);
 
@@ -266,7 +277,7 @@ async function runLoop(): Promise<void> {
 					type: 'done',
 					requestId,
 					reason,
-					info: summary ?? { depth: 0, seldepth: 0, nodes: 0, nps: 0, timeMs: 0, hashfull: 0, lines: [] }, // prettier-ignore
+					info: summary ? liftInfo(summary, position) : { depth: 0, seldepth: 0, nodes: 0, nps: 0, timeMs: 0, hashfull: 0, lines: [] }, // prettier-ignore
 				} satisfies AnalysisResponse);
 				break;
 			}
@@ -287,16 +298,32 @@ async function runLoop(): Promise<void> {
 	}
 }
 
-/** Applies {@link currentIcn} to the engine if it isn't already. */
-function syncPosition(): void {
-	if (currentIcn === undefined || appliedIcn === currentIcn) return;
+/**
+ * Applies {@link currentIcn} to the engine if it isn't already. False when
+ * it can't be brought within the engine's coordinates, and so isn't applied.
+ */
+function syncPosition(): boolean {
+	if (currentIcn === undefined || applied?.icn === currentIcn) return true;
+	const position = prepare(currentIcn);
+	if (!position) return false;
 	if (!engine) {
-		engine = wasm.Engine.from_icn(currentIcn, {});
+		engine = wasm.Engine.from_icn(position.icn, {});
 	} else {
-		engine.set_position(currentIcn);
+		engine.set_position(position.icn);
 	}
-	appliedIcn = currentIcn;
+	applied = { icn: currentIcn, position };
 	reachedDepth = 0; // New position: iterative deepening restarts from depth 1.
+	return true;
+}
+
+/** The position `icn` describes as the engine takes it, or undefined when it can't be brought within its coordinates. */
+function prepare(icn: string): EnginePosition | undefined {
+	return enginecompression.prepare(icn, apeironborder.cap(Date.now()));
+}
+
+/** An info update with every line mapped back onto the original board. */
+function liftInfo(info: AnalysisInfo, position: EnginePosition): AnalysisInfo {
+	return { ...info, lines: info.lines.map((line) => ({ ...line, moves: position.liftLine(line.moves) })) }; // prettier-ignore
 }
 
 /** Yields one macrotask so queued messages (stop / position / go) are processed. */
@@ -312,18 +339,19 @@ function yieldToMessageQueue(): Promise<void> {
  * Independent of the ongoing search — used to drive the debug move overlay.
  */
 function postLegalMoves(requestId: number, icn: string): void {
-	if (!wasmReady) {
+	const position = wasmReady ? prepare(icn) : undefined;
+	if (!position) {
 		postMessage({ type: 'legalmoves', requestId, moves: [] } satisfies AnalysisResponse);
 		return;
 	}
 
 	let legalMoveEngine: AnalysisWasmEngine | undefined;
 	try {
-		legalMoveEngine = wasm.Engine.from_icn(icn, {});
+		legalMoveEngine = wasm.Engine.from_icn(position.icn, {});
 		const legalMoves: WasmMove[] = legalMoveEngine.get_legal_moves_js();
 		// Destinations only — the overlay highlights squares, so a promotion suffix would be dead
 		// weight (and this ICN carries no gameRules, so the engine never reports one anyway).
-		const moves = legalMoves.map((m) => `${m.from}>${m.to}`);
+		const moves = legalMoves.flatMap((m) => position.liftLine([`${m.from}>${m.to}`]));
 		postMessage({ type: 'legalmoves', requestId, moves } satisfies AnalysisResponse);
 	} catch (e) {
 		// A wasm throw here would otherwise leak the engine and hang the main thread's request
@@ -347,14 +375,20 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 		depth: 0,
 	};
 
+	const position = prepare(msg.icn);
+	if (!position) {
+		postMessage({ type: 'blocked', requestId: msg.requestId } satisfies AnalysisResponse);
+		return;
+	}
+
 	try {
 		if (msg.newChunk) {
 			wasm.reset_engine_state();
 			evaluationEngine?.free();
 			evaluationEngine = undefined;
 		}
-		if (!evaluationEngine) evaluationEngine = wasm.Engine.from_icn(msg.icn, {});
-		else evaluationEngine.set_position(msg.icn);
+		if (!evaluationEngine) evaluationEngine = wasm.Engine.from_icn(position.icn, {});
+		else evaluationEngine.set_position(position.icn);
 
 		const legalMoves: WasmMove[] = evaluationEngine.get_legal_moves_js();
 		result.legalMoveCount = legalMoves.length;
@@ -365,7 +399,7 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 			const promotion = move.promotion
 				? `=${enginewasm.getPromotionAbbr(move.promotion, msg.mover)}`
 				: '';
-			result.pv = [`${move.from}>${move.to}${promotion}`];
+			result.pv = position.liftLine([`${move.from}>${move.to}${promotion}`]);
 		} else if (legalMoves.length > 1) {
 			// The same search call the analysis loop uses. Its return value is deliberately
 			// discarded: the page scores the position from the deepest depth streamed here, so a
@@ -374,7 +408,7 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 			evaluationEngine.analyse(
 				{ multi_pv: 1, start_depth: 1, slice_ms: 0, max_nodes: msg.maxNodes },
 				(info: AnalysisInfo) => {
-					postMessage({ type: 'info', requestId: msg.requestId, info } satisfies AnalysisResponse); // prettier-ignore
+					postMessage({ type: 'info', requestId: msg.requestId, info: liftInfo(info, position) } satisfies AnalysisResponse); // prettier-ignore
 				},
 			);
 		}

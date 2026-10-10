@@ -28,6 +28,7 @@ import * as z from 'zod';
 import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
+import repetition from '../../../../../shared/chess/logic/repetition.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -42,7 +43,6 @@ import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import reviewdivision from './reviewdivision.js';
 import analysisworker from './analysisworker.js';
-import analysisenginebounds from './analysisenginebounds.js';
 import { EvaluateResultSchema } from './analysisprotocol.js';
 
 // Types -----------------------------------------------------------------------
@@ -225,7 +225,7 @@ const REVIEW_HASH_MB = 16;
  * zod can't reject (same shape, new meaning), NOT for interpretation changes — the cache
  * holds only raw engine results, and classifications are recomputed on restore.
  */
-const REVIEW_CACHE_SCHEMA_VERSION = 2;
+const REVIEW_CACHE_SCHEMA_VERSION = 3;
 const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
 /** How long a persisted review survives LocalStorage. */
 const REVIEW_CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
@@ -253,10 +253,10 @@ const positionAttempts = new Map<number, number>();
 
 /** The mainline nodes captured when the review started (moves[i] = nodes[i].move). */
 let mainlineNodes: AnalysisMoveNode[] = [];
-/** The mainline moves (nodes' moves), captured at review start for out-of-bounds history re-basing. */
+/** The mainline moves (nodes' moves), captured at review start for re-basing each position's history. */
 let mainlineMoves: MoveFull[] = [];
-/** Safe start ply per position index (analysisenginebounds.getSafeStartPlies); 0 = full history. */
-let safeStartByIndex: number[] = [];
+/** The first ply of history each position index carries (repetition.windowStarts). */
+let windowStartByIndex: number[] = [];
 /** The game serialized once at review start; `.moves` is re-sliced per position. */
 let longformIn: LongFormatIn | undefined;
 /** Turn order captured at review start, for mover resolution. */
@@ -429,7 +429,7 @@ function resetState(): void {
 	positionAttempts.clear();
 	mainlineNodes = [];
 	mainlineMoves = [];
-	safeStartByIndex = [];
+	windowStartByIndex = [];
 	longformIn = undefined;
 	turnOrder = [];
 	division = {};
@@ -450,9 +450,7 @@ function start(): void {
 	mainlineNodes = captureMainline();
 	mainlineMoves = mainlineNodes.map((node) => node.move!);
 	turnOrder = [...gamefile.gameRules.turnOrder];
-	// Per position, the ply to restart the encoded game from when earlier history left the engine's
-	// safe coordinate range (unreplayable). Precomputed in one pass; 0 = full history (common case).
-	safeStartByIndex = analysisenginebounds.getSafeStartPlies(gamefile, mainlineMoves);
+	windowStartByIndex = repetition.windowStarts(mainlineMoves);
 
 	// Serialize the game once; each position re-slices the move list.
 	longformIn = gamecompressor.compressGamefile(gamefile);
@@ -608,6 +606,12 @@ function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 			}
 			dispatchNext(entry);
 			break;
+		case 'blocked':
+			clearStallWatchdog(entry);
+			if (!entry.assignment?.warmup) receiveEvaluation({ requestId: msg.requestId, legalMoveCount: 2, depth: 0, uncompressible: true }); // prettier-ignore
+			delete entry.assignment;
+			dispatchNext(entry);
+			break;
 	}
 }
 
@@ -685,14 +689,6 @@ function dispatchNext(entry: ReviewWorker): void {
 		const work = entry.chunk.shift()!;
 		const index = work.index;
 
-		// A position with a piece outside the engine's safe coordinate range can't be evaluated
-		// (its coords overflow i64). Skip it — record an empty eval for real positions so it's
-		// treated like a failed one: its eval carries over and moves crossing it stay unclassified.
-		if (!positionIsEvaluable(index)) {
-			if (!work.warmup) receiveEvaluation({ requestId: index, legalMoveCount: 2, depth: 0 }); // prettier-ignore
-			if (status !== 'running') return; // receiveEvaluation may have finished the review.
-			continue; // Pull the next work item for this worker.
-		}
 		// The game's own rules ended it here: its result scores it, so there's nothing to search.
 		if (terminalVictorAt(index) !== undefined) {
 			if (!work.warmup) {
@@ -724,10 +720,9 @@ function dispatchNext(entry: ReviewWorker): void {
 	}
 }
 
-/** Whether position `index` is itself within the engine's safe coordinate range (evaluable). */
+/** Whether position `index` can be evaluated: false once its worker found it too spread out to compress. */
 function positionIsEvaluable(index: number): boolean {
-	// safeStartByIndex[index] > index exactly when ply `index` is the latest out-of-bounds position.
-	return safeStartByIndex[index]! <= index;
+	return !results[index]?.uncompressible;
 }
 
 /**
@@ -745,23 +740,18 @@ function terminalVictorAt(index: number): Player | null | undefined {
 /** Canonical ICN for the position after `index` mainline plies. */
 function serializePosition(index: number): string {
 	longformIn!.moves = mainlineMoves.slice(0, index);
+	const windowStart = windowStartByIndex[index]!;
+	if (windowStart === 0) return engineicn.serialize(longformIn!);
 
-	// Clamp to `index`: an out-of-bounds position's safe start is index+1 (unrepresentable). It's
-	// never dispatched to a worker (dispatchNext skips it), but cache callers still ask
-	// for its ICN — clamping keeps GameToPosition within the move list instead of overrunning it.
-	const safeStart = Math.min(safeStartByIndex[index]!, index);
-	if (safeStart === 0) return engineicn.serialize(longformIn!); // Common path.
-
-	// Earlier history left the engine's safe coordinate range: re-base past it (see
-	// analysisenginebounds.getSafeStartPlies). Rare, so we copy onto a fresh longform rather than
-	// mutate the shared base — the position/state GameToPosition rewrites must not leak across calls.
+	// Re-base past the history repetition can't reach, the way ceval does, so both key the same
+	// position by the same ICN. Copied, as the position/state GameToPosition rewrites must not leak.
 	const rebased: LongFormatIn = {
 		...longformIn!,
 		gameRules: { ...longformIn!.gameRules, turnOrder: [...longformIn!.gameRules.turnOrder] },
 		position: jsutil.deepCopyObject(longformIn!.position!),
 		state_global: jsutil.deepCopyObject(longformIn!.state_global),
 	};
-	gamecompressor.rebaseToPly(rebased, mainlineMoves, safeStart, index);
+	gamecompressor.rebaseToPly(rebased, mainlineMoves, windowStart, index);
 	return engineicn.serialize(rebased);
 }
 
@@ -900,8 +890,8 @@ function classifyReadyMoves(): void {
 /** The position's white-POV effective cp; forced/terminal/unevaluated positions derive it. */
 function resolveWhiteCp(index: number): number | undefined {
 	if (effectiveWhiteCp[index] !== undefined) return effectiveWhiteCp[index];
-	// Out-of-bounds positions are never evaluated: leave their cp undefined so the eval graph
-	// breaks into a disconnected segment here, rather than carrying a neighbor's eval across a
+	// Positions too spread out to compress are never evaluated: leave their cp undefined so the eval
+	// graph breaks into a disconnected segment here, rather than carrying a neighbor's eval across a
 	// region we couldn't analyze. Their moves stay unclassified regardless (see classifyMove).
 	if (!positionIsEvaluable(index)) return undefined;
 	const result = results[index];
