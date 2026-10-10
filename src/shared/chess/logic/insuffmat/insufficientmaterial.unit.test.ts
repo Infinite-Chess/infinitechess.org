@@ -98,10 +98,12 @@ describe('insufficientmaterial', () => {
 			expect(isDraw('w K0,0|N5,0|k20,20', { variant })).toBe(false);
 		});
 
-		it('with obstacles on the board, declares only classical material with a king each', () => {
+		it('with obstacles or gargoyles on the board, declares only classical material with a king each', () => {
 			expect(isDraw('w K0,0|N5,0|k20,20|ob30,30')).toBe(true);
 			expect(isDraw('w N5,0|k20,20|ob30,30')).toBe(false);
 			expect(isDraw('w K0,0|CA5,0|k20,20|ob30,30')).toBe(false);
+			expect(isDraw('w K0,0|N5,0|k20,20|0ca30,30')).toBe(true);
+			expect(isDraw('w N5,0|k20,20|0r30,30')).toBe(false);
 		});
 	});
 

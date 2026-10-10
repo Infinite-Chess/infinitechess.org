@@ -59,7 +59,7 @@ const BOUND_FOR_WORLD_BORDER_CONSIDERATION = 1_000_000n;
  */
 const MIN_BOUNDED_BOARD_WIDTH = 8n;
 
-/** The pieces of ordinary chess: with obstacles on the board, insuffmat is only declared when every piece is one. */
+/** The pieces of ordinary chess: with obstacles or gargoyles on the board, insuffmat is only declared when every piece is one. */
 const CLASSICAL_RAW_TYPES: RawType[] = [r.KING, r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT, r.PAWN];
 
 /** The smallest mating piece sets of each board kind, by canonical key. */
@@ -132,8 +132,9 @@ function doesPositionSupportInsuffmat(boardsim: InsuffmatBoard): boolean {
 	if (gameRules.slideLimit !== undefined) return false;
 	if (variantmodule.hasCustomMovement(boardsim.variant?.mod)) return false;
 	if (boardutil.getPieceCountOfType(boardsim.pieces, r.VOID + e.N) > 0) return false;
-	// Obstacles can too, but tests found no such mate in classical material with a king each (README).
-	if (boardutil.getPieceCountOfType(boardsim.pieces, r.OBSTACLE + e.N) === 0) return true;
+	// Obstacles and gargoyles, which act alike, can too, but tests found no such mate in classical material
+	// with a king each (README).
+	if (boardutil.getPieceCountOfColor(boardsim.pieces, p.NEUTRAL) === 0) return true;
 	return isClassicalWithKings(boardsim);
 }
 
@@ -185,7 +186,7 @@ function readBoard(boardsim: InsuffmatBoard): { base: Material; promotablePlayer
 	for (const idx of pieces.coords.values()) {
 		const piece = boardutil.getDefinedPieceFromIdx(pieces, idx);
 		const [rawType, player] = typeutil.splitType(piece.type);
-		if (rawType === r.OBSTACLE) continue;
+		if (player === p.NEUTRAL) continue;
 		if (rawType === r.PAWN && canPromote(promotion, player, piece.coords[1])) {
 			promotablePlayers.push(player);
 			continue;
