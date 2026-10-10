@@ -11,8 +11,8 @@ this table can only cost a draw going undeclared, never a false draw.
 ## Regenerating
 
 ```
-npx tsx scripts/insuffmat/generate.ts unbounded 5 <out>     # level 5 dominates the run time
-npx tsx scripts/insuffmat/generate.ts bounded 4 <out>       # reuses <out>/unbounded
+npx tsx scripts/insuffmat/generate.ts unbounded 5 <out>     # ~3 h on 12 cores (level 5 dominates)
+npx tsx scripts/insuffmat/generate.ts bounded 4 <out>       # ~12 min; reuses <out>/unbounded
 npx tsx scripts/insuffmat/verify.ts <out>/*/mates-*.tsv     # every mate, through the site's own code
 npx tsx scripts/insuffmat/writetable.ts <out>               # writes matingsets.ts
 ```
@@ -51,7 +51,7 @@ to move, the position before the last move, and the last move.
   along a slide, or, for a huygen landing in the window, far out where it attacks only that square
   of the window. One move back is enough: custom games start from any legal position, and the site
   checks insufficient material from move 0, so a legal position with mate in one is a real game.
-  About 0.9% of the saved mates (173 of 19,675) have no legal earlier defender move, though their
+  About 0.9% of the saved mates (175 of 19,733) have no legal earlier defender move, though their
   sets may mate another way.
 - **Pawns** stay pawns. The attacker's last move may be a double step or en passant. A defender pawn
   never double steps, as a mate can do without its rights, and pawn files are ignored.
@@ -89,7 +89,7 @@ to move, the position before the last move, and the last move.
 
 - **Every listed mate is a real position checked by the site's own code** (`verify.ts`): checkmate
   with the defender to move, legal with the attacker to move, and reached by a legal last move from
-  a position with the defender out of check. All 15,870 unbounded mates (up to 5 pieces) and 3,826
+  a position with the defender out of check. All 15,872 unbounded mates (up to 5 pieces) and 3,861
   bounded mates pass.
 - **Every level is complete:** each level's draws and mates match exactly the sets the level below
   calls for, and every mate's position holds exactly its label's pieces.
@@ -142,7 +142,7 @@ These can only leave a real draw undeclared:
 - A set whose only mates follow a promotion counts as mating even with no pawn left to promote. The
   site judges a promotable pawn by the material it could promote into, so that material must count
   the promotion itself as a way to reach mate, or the site would declare a draw that promoting
-  mates.
+  mates. 2 unbounded sets mate only this way, and 35 bounded ones.
 - A set containing a mating set counts as mating: spare pieces can stand out of the way, or be
   captured away (but a spare royal can't), and on a board of exactly 8x8 it may have no harmless
   square.
