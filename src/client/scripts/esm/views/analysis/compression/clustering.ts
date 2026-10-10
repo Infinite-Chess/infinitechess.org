@@ -21,9 +21,9 @@ import enginehorizons from './enginehorizons.js';
 export interface CompressionPoint {
 	coords: Coords;
 	/**
-	 * Present for a lone line (a promotion rank or a border edge) rather than a square: it takes
-	 * part only in its own form, and its other coordinate means nothing. A boundary (a border edge)
-	 * also keeps which side of it every crossing lands on.
+	 * Present for a lone line (a promotion rank, border edge or far-escape shell line) rather than
+	 * a square: it takes part only in its own form, and its other coordinate means nothing. A
+	 * boundary (a border edge) also keeps which side of it every crossing lands on.
 	 */
 	line?: { form: number; boundary: boolean };
 }

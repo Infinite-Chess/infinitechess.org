@@ -25,14 +25,12 @@ interface TreeEdge {
 	child: number;
 }
 
-// Constants -------------------------------------------------------------------
-
-/** The home cluster keeps its own coordinates within this reach of the origin; beyond, it's moved near it. */
-const HOME_REACH = 2n ** 40n;
-
 // Functions -------------------------------------------------------------------
 
-/** Every point's compressed coordinates, or undefined if a link cycle can't be closed exactly. */
+/**
+ * Every point's compressed coordinates, or undefined if a link cycle can't be closed exactly.
+ * The home cluster keeps its own coordinates.
+ */
 function place(
 	points: readonly CompressionPoint[],
 	forms: readonly LineForm[],
@@ -43,10 +41,7 @@ function place(
 	modulus: bigint,
 ): Coords[] | undefined {
 	const anchors = clustering.clusters.map((members) => points[members[0]!]!.coords);
-	const homeAnchor = anchors[home]!;
-	const homeAt: Coords = homeAnchor.every((v) => bimath.abs(v) <= HOME_REACH)
-		? homeAnchor
-		: nearestCongruent([0n, 0n], homeAnchor, modulus);
+	const homeAt = anchors[home]!;
 	const targets = anchors.map(
 		(_, c): Coords => [
 			homeAt[0] + BigInt(Math.round(layout.x[c]! * Number(unit))),
@@ -54,7 +49,14 @@ function place(
 		],
 	);
 
-	const { placed, tree, closures } = placeAlongTree(forms, clustering, anchors, targets, home, homeAt, modulus); // prettier-ignore
+	const { placed, tree, closures } = placeAlongTree(
+		forms,
+		clustering,
+		anchors,
+		targets,
+		home,
+		modulus,
+	);
 	if (!closeCycles(forms, anchors, placed, tree, closures, modulus)) return undefined;
 
 	return points.map((point, i) => {
@@ -74,7 +76,6 @@ function placeAlongTree(
 	anchors: Coords[],
 	targets: Coords[],
 	home: number,
-	homeAt: Coords,
 	modulus: bigint,
 ): { placed: Coords[]; tree: TreeEdge[]; closures: Link[] } {
 	const adjacency: Link[][] = anchors.map(() => []);
@@ -90,7 +91,9 @@ function placeAlongTree(
 	for (const root of roots) {
 		if (placed[root]) continue;
 		placed[root] =
-			root === home ? homeAt : nearestCongruent(targets[root]!, anchors[root]!, modulus);
+			root === home
+				? anchors[root]!
+				: nearestCongruent(targets[root]!, anchors[root]!, modulus);
 		for (const queue = [root]; queue.length > 0; ) {
 			const parent = queue.shift()!;
 			for (const link of adjacency[parent]!) {

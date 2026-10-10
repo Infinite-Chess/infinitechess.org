@@ -7,7 +7,6 @@
 
 import type { MoveFull } from '../../../../shared/chess/logic/movepiece.js';
 import type { MovePreprint } from '../../../../shared/chess/logic/icn/icnmoves.js';
-import type { GlobalGameState } from '../../../../shared/chess/logic/state.js';
 import type { GameFile, VariantOptions } from '../../../../shared/chess/logic/gamefile.js';
 
 import state from '../../../../shared/chess/logic/state.js';
@@ -71,39 +70,6 @@ function compressGamefile(
 	// console.log("Constructed LongFormatIn:", jsutil.deepCopyObject(long_format_in));
 
 	return long_format_in;
-}
-
-/**
- * Re-bases a compressed game to begin at ply `startPly` instead of ply 0: advances the position
- * snapshot to that ply (carrying its halfmove clock, castling rights, en passant, turn, and
- * fullmove) and keeps only moves [startPly, endPly). MUTATES `longform` in place; a no-op at ply 0.
- *
- * Used to drop the history repetition can no longer reach before handing a game to the engine.
- * The fifty-move counter survives (it rides in the snapshot's state). `snapshotMoves` is the full
- * move list the snapshot is advanced through.
- */
-function rebaseToPly(
-	longform: LongFormatIn,
-	snapshotMoves: MoveFull[],
-	startPly: number,
-	endPly: number,
-): void {
-	// The LongFormatIn fields are the same objects a VariantOptions holds, just typed looser.
-	// Only longforms from compressGamefile are re-based, so the position & specialRights are present.
-	const snapshot = GameToPosition(
-		{
-			position: longform.position!,
-			gameRules: longform.gameRules,
-			fullMove: longform.fullMove,
-			state_global: longform.state_global as GlobalGameState,
-		},
-		snapshotMoves,
-		startPly,
-	);
-	longform.position = snapshot.position;
-	longform.fullMove = snapshot.fullMove;
-	longform.state_global = snapshot.state_global;
-	longform.moves = (longform.moves ?? []).slice(startPly, endPly);
 }
 
 function convertMovesToICNConverterInMove(moves: MoveFull[]): MovePreprint[] {
@@ -184,7 +150,6 @@ function gamefileToPositionOptions(gamefile: GameFile): VariantOptions {
 
 export default {
 	compressGamefile,
-	rebaseToPly,
 	GameToPosition,
 	gamefileToPositionOptions,
 };

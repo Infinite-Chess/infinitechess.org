@@ -17,7 +17,6 @@ import * as z from 'zod';
 import math from '../../../../../shared/util/math/math.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
-import repetition from '../../../../../shared/chess/logic/repetition.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -448,15 +447,12 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 // Position tracking -----------------------------------------------------------
 
 /**
- * The compact ICN of the position under analysis, carrying the move history repetition can still
- * reach ({@link repetition.windowStarts}) so the engine detects threefold repetition.
+ * The compact ICN of the position under analysis, carrying its move history so the engine can
+ * detect threefold repetition and the fifty-move rule. Truncated to the viewed ply.
  */
 function getViewedPositionIcn(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile);
-	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
-	const windowStart = repetition.windowStarts(gamefile.moves)[viewedPlyCount]!;
-	gamecompressor.rebaseToPly(longformIn, gamefile.moves, windowStart, viewedPlyCount);
-
+	longformIn.moves = longformIn.moves?.slice(0, gamefile.state.local.moveIndex + 1);
 	engineicn.prepareForEngine(longformIn);
 	return engineicn.serialize(longformIn);
 }

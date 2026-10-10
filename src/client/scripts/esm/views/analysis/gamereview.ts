@@ -26,9 +26,7 @@ import type {
 import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import repetition from '../../../../../shared/chess/logic/repetition.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -253,10 +251,8 @@ const positionAttempts = new Map<number, number>();
 
 /** The mainline nodes captured when the review started (moves[i] = nodes[i].move). */
 let mainlineNodes: AnalysisMoveNode[] = [];
-/** The mainline moves (nodes' moves), captured at review start for re-basing each position's history. */
+/** The mainline moves (nodes' moves), captured at review start; position `i` carries the first `i`. */
 let mainlineMoves: MoveFull[] = [];
-/** The first ply of history each position index carries (repetition.windowStarts). */
-let windowStartByIndex: number[] = [];
 /** The game serialized once at review start; `.moves` is re-sliced per position. */
 let longformIn: LongFormatIn | undefined;
 /** Turn order captured at review start, for mover resolution. */
@@ -429,7 +425,6 @@ function resetState(): void {
 	positionAttempts.clear();
 	mainlineNodes = [];
 	mainlineMoves = [];
-	windowStartByIndex = [];
 	longformIn = undefined;
 	turnOrder = [];
 	division = {};
@@ -450,7 +445,6 @@ function start(): void {
 	mainlineNodes = captureMainline();
 	mainlineMoves = mainlineNodes.map((node) => node.move!);
 	turnOrder = [...gamefile.gameRules.turnOrder];
-	windowStartByIndex = repetition.windowStarts(mainlineMoves);
 
 	// Serialize the game once; each position re-slices the move list.
 	longformIn = gamecompressor.compressGamefile(gamefile);
@@ -740,19 +734,7 @@ function terminalVictorAt(index: number): Player | null | undefined {
 /** Canonical ICN for the position after `index` mainline plies. */
 function serializePosition(index: number): string {
 	longformIn!.moves = mainlineMoves.slice(0, index);
-	const windowStart = windowStartByIndex[index]!;
-	if (windowStart === 0) return engineicn.serialize(longformIn!);
-
-	// Re-base past the history repetition can't reach, the way ceval does, so both key the same
-	// position by the same ICN. Copied, as the position/state GameToPosition rewrites must not leak.
-	const rebased: LongFormatIn = {
-		...longformIn!,
-		gameRules: { ...longformIn!.gameRules, turnOrder: [...longformIn!.gameRules.turnOrder] },
-		position: jsutil.deepCopyObject(longformIn!.position!),
-		state_global: jsutil.deepCopyObject(longformIn!.state_global),
-	};
-	gamecompressor.rebaseToPly(rebased, mainlineMoves, windowStart, index);
-	return engineicn.serialize(rebased);
+	return engineicn.serialize(longformIn!);
 }
 
 /** The player to move at position `index` (= the mover of mainline move `index`). */

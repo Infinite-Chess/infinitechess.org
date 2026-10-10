@@ -51,15 +51,15 @@ const COMPACT_WIDTH = (enginehorizons.EXACT_SPAN - enginehorizons.NEAR_LINE_SPAN
 /**
  * Every crossing of a slider's line with a second point's line that passes within the near-line
  * span of a third point's line, under the given values (original or compressed) of each point.
- * @param ownPoints - Points from this index on are crossing points added to pin meetings in place,
- *   not pieces, so their own lines take no part.
+ * @param perceived - Only points before this index stand for lines the engine reads; the rest
+ *   (squares only the move history touches, added crossing points) take no part.
  */
 function find(
 	forms: readonly LineForm[],
 	sliders: readonly Slider[],
 	clustering: Clustering,
 	values: (bigint | undefined)[][],
-	ownPoints: number,
+	perceived: number,
 ): Meetings {
 	const approx = approximate(values);
 	const compact = findCompactClusters(forms, clustering, values);
@@ -77,7 +77,7 @@ function find(
 				if (f2 === fd) continue;
 				for (let f3 = 0; f3 < forms.length; f3++) {
 					if (f3 === fd || f3 === f2) continue;
-					const families = { p1: slider.point, fd, f2, f3, ownPoints };
+					const families = { p1: slider.point, fd, f2, f3, perceived };
 					findForFamilies(
 						forms,
 						clustering,
@@ -154,7 +154,7 @@ function findForFamilies(
 	approx: { scaled: Float64Array[]; shift: bigint },
 	{ compact, classClusters }: { compact: boolean[]; classClusters: Set<number>[][] },
 	meetings: Meetings,
-	{ p1, fd, f2, f3, ownPoints }: { p1: number; fd: number; f2: number; f3: number; ownPoints: number }, // prettier-ignore
+	{ p1, fd, f2, f3, perceived }: { p1: number; fd: number; f2: number; f3: number; perceived: number }, // prettier-ignore
 ): void {
 	const [formD, form2, form3] = [forms[fd]!, forms[f2]!, forms[f3]!];
 	const det = lineforms.determinant(formD, form2);
@@ -171,7 +171,7 @@ function findForFamilies(
 	const clusters1 = classClusters[fd]![classes[fd]![p1]!]!;
 
 	for (const p2 of clustering.orders[f2]!) {
-		if (p2 === p1 || p2 >= ownPoints) continue;
+		if (p2 === p1 || p2 >= perceived) continue;
 		if (clusterOf[p2] === clusterOf[p1] && compact[clusterOf[p1]!]) continue; // Moves as one with every line near it.
 		const [term1, term2] = [aN * c1N, bN * scaled2[p2]!];
 		const target = (term1 + term2) / detN;
@@ -182,7 +182,7 @@ function findForFamilies(
 		for (let k = lowerBound(order3, scaled3, target - window); k < order3.length; k++) {
 			const q = order3[k]!;
 			if (scaled3[q]! > target + window) break;
-			if (q >= ownPoints) continue;
+			if (q >= perceived) continue;
 			const clusters3 = classClusters[f3]![classes[f3]![q]!]!;
 			if ([...clusters1].some((c) => clusters2.has(c) && clusters3.has(c))) continue;
 			const offsetTimesDet = A * c1 + B * c2 - det * values[f3]![q]!;

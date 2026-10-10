@@ -61,7 +61,7 @@ function seeded(seed: number): () => number {
 }
 
 /**
- * A home army near the origin plus far pieces, each aligned with a piece or scattered, at distances
+ * A home army around the origin plus far pieces, each aligned with a piece or scattered, at distances
  * up to `maxExponent` digits. `forks` adds three far pieces whose lines meet at one far empty square.
  */
 function randomPosition(
@@ -168,20 +168,17 @@ describe('enginecompression', () => {
 		expect(enginecompression.prepare(icn, CAP)?.icn).toBe(icn);
 	});
 
-	it('only translates a compact position far from the origin, Huygen included', () => {
-		const far = 10n ** 40n;
-		const prepared = enginecompression.prepare(`w ${CAPPED_BORDER} K${far},${far}|k${far + 5n},${far + 5n}|HU${far + 3n},${far}|q${far + 1000n},${far + 7n}`, CAP); // prettier-ignore
-		expect(prepared).toBeDefined();
-		const squares = icnconverter.ShortToLong_Format(prepared!.icn).position!;
-		expect(
-			[...squares.keys()].every((key) => key.split(',').every((v) => BigInt(v) < 2n ** 54n)),
-		).toBe(true);
-	});
-
-	it('refuses a Huygen position whose gaps must shrink', () => {
-		expect(
-			enginecompression.prepare(`w ${CAPPED_BORDER} K0,0|k5,5|HU3,0|q${10n ** 30n},7`, CAP),
-		).toBeUndefined();
+	it('refuses a Huygen position that has to be compressed', () => {
+		const far = 10n ** 30n;
+		for (const pieces of [
+			`K0,0|k5,5|HU3,0|q${far},7`,
+			`K${far},${far}|k${far + 5n},${far + 5n}|HU${far + 3n},${far}`,
+		]) {
+			expect(
+				enginecompression.prepare(`w ${CAPPED_BORDER} ${pieces}`, CAP),
+				pieces,
+			).toBeUndefined();
+		}
 	});
 
 	it('keeps the engine legal moves identical on positions with far pieces', () => {
@@ -189,7 +186,7 @@ describe('enginecompression', () => {
 		for (let run = 0; run < 150; run++) {
 			const icn = `${randomRules(random, true)} ${positionText(randomPosition(random, 15, [], run % 3 === 2))}`;
 			expectSameLegalMoves(
-				random() < 0.5 ? withHistory(icn, random, 1 + Math.floor(random() * 5)) : icn,
+				random() < 0.5 ? withHistory(icn, random, 1 + Math.floor(random() * 30)) : icn,
 			);
 		}
 	}, 300_000);
@@ -199,6 +196,17 @@ describe('enginecompression', () => {
 		for (let run = 0; run < 60; run++) {
 			const icn = `${randomRules(random, true)} ${positionText(randomPosition(random, 15, ['NR', 'nr'], run % 3 === 2))}`;
 			expectSameLegalMoves(icn);
+		}
+	}, 300_000);
+
+	it('keeps the engine legal moves identical with the army far from the origin', () => {
+		const random = seeded(31);
+		for (let run = 0; run < 40; run++) {
+			const shift =
+				BigInt(1 + Math.floor(random() * 9)) * 10n ** 13n * (random() < 0.5 ? -1n : 1n);
+			const pieces = randomPosition(random, 15, [], false).map((p) => ({ ...p, x: p.x + shift, y: p.y - shift })); // prettier-ignore
+			const icn = `${randomRules(random, false)} ${positionText(pieces)}`;
+			expectSameLegalMoves(withHistory(icn, random, 10 + Math.floor(random() * 20)));
 		}
 	}, 300_000);
 

@@ -140,16 +140,6 @@ function isOneWay(move: MoveFull): boolean {
 	return move.changes.some((change) => boardchanges.ONE_WAY_ACTIONS.includes(change.action));
 }
 
-/**
- * For each ply 0…moves.length, the earliest ply whose position can still recur there: just past
- * the latest one-way move. Repetition never reaches further back, so an engine needs no history before it.
- */
-function windowStarts(moves: MoveFull[]): number[] {
-	const starts = [0];
-	moves.forEach((move, i) => starts.push(isOneWay(move) ? i + 1 : starts[i]!));
-	return starts;
-}
-
 // Exports ---------------------------------------------------------------------
 
-export default { detect, windowStarts };
+export default { detect };

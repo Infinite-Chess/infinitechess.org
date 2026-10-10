@@ -26,6 +26,7 @@ import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.
 
 import lineforms from './lineforms.js';
 import movelifter from './movelifter.js';
+import enginehorizons from './enginehorizons.js';
 import positioncompressor from './positioncompressor.js';
 
 // Types -----------------------------------------------------------------------
@@ -40,6 +41,8 @@ export interface EnginePosition {
 /** The points a compression keeps, and where each square and line sits among them. */
 interface PointSet {
 	points: CompressionPoint[];
+	/** How many leading points the engine reads lines through (see {@link collectPoints}). */
+	perceived: number;
 	squares: Map<CoordsKey, number>;
 	lines: Map<string, number>;
 }
@@ -68,16 +71,14 @@ function prepare(icn: string, limit: bigint): EnginePosition | undefined {
 	for (const type of longform.position.values()) rawTypes.add(typeutil.getRawType(type));
 	for (const piece of current.values()) rawTypes.add(typeutil.getRawType(piece.type));
 	const forms = formsFor(rawTypes);
-	const pointSet = collectPoints(longform, forms, limit);
-	const compressed = positioncompressor.compress(
-		{
-			points: pointSet.points,
-			forms,
-			sliders: findSliders(current, pointSet, forms),
-			readsExactDistances: [...rawTypes].some((type) => MOVESETS[type]?.blocking || MOVESETS[type]?.ignore), // prettier-ignore
-		},
-		limit,
-	);
+	const pointSet = collectPoints(longform, current, forms, limit);
+	const compressed = positioncompressor.compress({
+		points: pointSet.points,
+		perceived: pointSet.perceived,
+		forms,
+		sliders: findSliders(current, pointSet, forms),
+		readsExactDistances: [...rawTypes].some((type) => MOVESETS[type]?.blocking || MOVESETS[type]?.ignore), // prettier-ignore
+	});
 	if (!compressed) return undefined;
 
 	const toCompressed = (coords: Coords): Coords => compressed[pointSet.squares.get(coordutil.getKeyFromCoords(coords))!]!; // prettier-ignore
@@ -145,11 +146,18 @@ function formsFor(rawTypes: Set<RawType>): LineForm[] {
 }
 
 /**
- * Every square the position and its move history touch, plus each real world-border edge and
- * promotion rank as a lone line. A border edge at `limit` was clamped there, so it stands for none.
+ * First what the engine reads lines through: the board after the moves, the en passant squares,
+ * and each real world-border edge, promotion rank and far-escape shell line as a lone line. Then
+ * the squares only the move history touches, which it just replays. A border edge at `limit` was
+ * clamped there, so it stands for none.
  */
-function collectPoints(longform: LongFormatOut, forms: LineForm[], limit: bigint): PointSet {
-	const pointSet: PointSet = { points: [], squares: new Map(), lines: new Map() };
+function collectPoints(
+	longform: LongFormatOut,
+	current: LiftBoard,
+	forms: LineForm[],
+	limit: bigint,
+): PointSet {
+	const pointSet: PointSet = { points: [], perceived: 0, squares: new Map(), lines: new Map() };
 	const addSquare = (coords: Coords): void => {
 		const key = coordutil.getKeyFromCoords(coords);
 		if (pointSet.squares.has(key)) return;
@@ -166,11 +174,7 @@ function collectPoints(longform: LongFormatOut, forms: LineForm[], limit: bigint
 		});
 	};
 
-	for (const key of longform.position!.keys()) addSquare(coordutil.getCoordsFromKey(key));
-	for (const move of longform.moves ?? []) {
-		addSquare(move.startCoords);
-		addSquare(move.endCoords);
-	}
+	for (const piece of current.values()) addSquare(piece.original);
 	const enpassant = longform.state_global.enpassant;
 	if (enpassant) {
 		addSquare(enpassant.square);
@@ -188,6 +192,17 @@ function collectPoints(longform: LongFormatOut, forms: LineForm[], limit: bigint
 			addLine(form, edge, true);
 	}
 	for (const rank of Object.values(longform.gameRules.promotion?.ranks ?? {}).flat()) addLine(rankForm, rank, false); // prettier-ignore
+	for (const value of enginehorizons.FAR_SHELL) {
+		addLine(fileForm, value, false);
+		addLine(rankForm, value, false);
+	}
+	pointSet.perceived = pointSet.points.length;
+
+	for (const key of longform.position!.keys()) addSquare(coordutil.getCoordsFromKey(key));
+	for (const move of longform.moves ?? []) {
+		addSquare(move.startCoords);
+		addSquare(move.endCoords);
+	}
 	return pointSet;
 }
 

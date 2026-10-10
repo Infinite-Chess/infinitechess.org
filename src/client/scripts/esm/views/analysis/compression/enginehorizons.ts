@@ -1,8 +1,8 @@
 // src/client/scripts/esm/views/analysis/compression/enginehorizons.ts
 
 /**
- * How far Apeiron's perception reaches, in squares. Compression keeps every relation within
- * these horizons exact, and only the order of everything beyond them.
+ * How far Apeiron's perception reaches, in squares, and the absolute lines it reads. Compression
+ * keeps every relation within these horizons exact, and only the order of everything beyond them.
  */
 
 // Constants -------------------------------------------------------------------
@@ -19,9 +19,16 @@ const EXACT_SPAN = 2n ** 31n;
  */
 const NEAR_LINE_SPAN = 4096n;
 
+/**
+ * The files and ranks a slider's far-escape move lands on: one per ray running toward the origin,
+ * unless a world border is nearer. They sit just inside the box its TT encodes moves within.
+ */
+const FAR_SHELL = [-4064n, 4063n];
+
 // Exports ---------------------------------------------------------------------
 
 export default {
 	EXACT_SPAN,
 	NEAR_LINE_SPAN,
+	FAR_SHELL,
 };

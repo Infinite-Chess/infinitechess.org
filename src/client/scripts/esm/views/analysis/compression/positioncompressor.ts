@@ -9,7 +9,8 @@
  * coordinate keeps its residue, so lines still cross on the same squares. The few crossings where
  * a slider lands near a third line far from every piece are kept too ({@link crossings}).
  * Far gaps shrink to astronomically large but representable, jittered sizes, so the compressed
- * position is as free of accidental alignments as the original. Every result is verified.
+ * position is as free of accidental alignments as the original. The origin, which the engine
+ * anchors its far escapes and TT moves to, stays put. Every result is verified.
  */
 
 import type { Slider } from './crossings.js';
@@ -31,10 +32,15 @@ import enginehorizons from './enginehorizons.js';
 /** A position to compress, as the points whose relations must survive. */
 interface CompressionInput {
 	points: CompressionPoint[];
+	/**
+	 * How many leading points the engine reads lines through: the board it searches, the en passant
+	 * squares and every lone line. The rest are squares it only replays the move history over.
+	 */
+	perceived: number;
 	/** Every line form the position's pieces relate along. */
 	forms: LineForm[];
 	sliders: Slider[];
-	/** Whether a piece reads exact distances at every range (a Huygen), so only translating is faithful. */
+	/** Whether a piece reads exact distances at every range (a Huygen), which no compression keeps. */
 	readsExactDistances: boolean;
 }
 
@@ -62,15 +68,14 @@ const ATTEMPTS: { unit: bigint; seed: number }[] = [
 
 /**
  * Each point's compressed coordinates, or undefined when the position can't be brought within the
- * engine's reach faithfully. A position whose extent already fits within ±`limit` is only translated.
+ * engine's reach faithfully.
  */
-function compress(input: CompressionInput, limit: bigint): Coords[] | undefined {
+function compress(input: CompressionInput): Coords[] | undefined {
+	if (input.readsExactDistances) return undefined;
 	const modulus = lineforms.residueModulus(input.forms);
-	const translated = translate(input, limit - modulus, modulus);
-	if (translated || input.readsExactDistances) return translated;
-
-	const { points, structure, meetings } = withCrossingPoints(input, [...input.points, ...boundaryCrossings(input)]); // prettier-ignore
-	const home = pickHome(input, structure);
+	const origin = input.points.length;
+	const { points, structure, meetings } = withCrossingPoints(input, [...input.points, { coords: [0n, 0n] }, ...boundaryCrossings(input)]); // prettier-ignore
+	const home = structure.clusterOf[origin]!;
 	for (const { unit, seed } of ATTEMPTS) {
 		const layout = skeleton.lay(points, input.forms, structure, home, unit, 2n * RANGE, seededRandom(seed)); // prettier-ignore
 		if (!layout) continue;
@@ -82,22 +87,6 @@ function compress(input: CompressionInput, limit: bigint): Coords[] | undefined 
 	return undefined;
 }
 
-/** The points shifted, by a multiple of `modulus`, to center within ±`limit`, or undefined if they don't fit. */
-function translate(input: CompressionInput, limit: bigint, modulus: bigint): Coords[] | undefined {
-	const shift: [bigint, bigint] = [0n, 0n];
-	for (const axis of [0, 1] as const) {
-		const used = input.points.filter((point) => clustering.usesAxis(input.forms, point, axis));
-		if (used.length === 0) continue;
-		const values = used.map((point) => point.coords[axis]);
-		const min = values.reduce((a, b) => bimath.min(a, b));
-		const max = values.reduce((a, b) => bimath.max(a, b));
-		if (max - min > 2n * limit) return undefined;
-		const center = (min + max) / 2n;
-		shift[axis] = -(center - bimath.posMod(center, modulus));
-	}
-	return input.points.map((point) => [point.coords[0] + shift[0], point.coords[1] + shift[1]]);
-}
-
 /**
  * Where every square's lines cross every boundary (a border edge). A crossing of two lines lands
  * on a boundary's inner side exactly when those lines cross the boundary in a given order, so
@@ -105,7 +94,7 @@ function translate(input: CompressionInput, limit: bigint, modulus: bigint): Coo
  * squares is bracketed by both.
  */
 function boundaryCrossings(input: CompressionInput): CompressionPoint[] {
-	const squares = input.points.filter((point) => !point.line);
+	const squares = input.points.slice(0, input.perceived).filter((point) => !point.line);
 	const seen = new Set(squares.map((square) => `${square.coords[0]},${square.coords[1]}`));
 	const added: CompressionPoint[] = [];
 	for (const edge of input.points) {
@@ -148,13 +137,7 @@ function withCrossingPoints(
 	basePoints: CompressionPoint[],
 ): { points: CompressionPoint[]; structure: Clustering; meetings: Map<string, bigint> } {
 	const base = clustering.build(basePoints, input.forms);
-	const meetings = crossings.find(
-		input.forms,
-		input.sliders,
-		base,
-		base.values,
-		input.points.length,
-	);
+	const meetings = crossings.find(input.forms, input.sliders, base, base.values, input.perceived);
 	const added = new Map<string, Coords>();
 	for (const square of crossings.squares(input.forms, base.values, meetings)) {
 		if (!isNearAnyPoint(input.forms, base, square))
@@ -164,7 +147,7 @@ function withCrossingPoints(
 
 	const points = [...basePoints, ...[...added.values()].map((coords) => ({ coords }))];
 	const structure = clustering.build(points, input.forms);
-	return { points, structure, meetings: crossings.find(input.forms, input.sliders, structure, structure.values, input.points.length) }; // prettier-ignore
+	return { points, structure, meetings: crossings.find(input.forms, input.sliders, structure, structure.values, input.perceived) }; // prettier-ignore
 }
 
 /** Whether a square of `structure` lies within a quarter of the exact span of `square`, on both axes. */
@@ -189,15 +172,6 @@ function isNearAnyPoint(
 		if (y !== undefined && bimath.abs(y - square[1]) <= reach) return true;
 	}
 	return false;
-}
-
-/**
- * The cluster holding the most of the position's own squares stays put, the rest laid out around
- * it. Added crossing points don't count, nor do lone lines, which hold no squares.
- */
-function pickHome(input: CompressionInput, structure: Clustering): number {
-	const ownSquares = (c: number): number => structure.clusters[c]!.filter((i) => i < input.points.length && input.points[i]!.line === undefined).length; // prettier-ignore
-	return [...structure.clusters.keys()].reduce((best, c) => (ownSquares(c) > ownSquares(best) ? c : best)); // prettier-ignore
 }
 
 /** A deterministic [0, 1) generator, so the same position always compresses the same way. */
@@ -243,7 +217,7 @@ function verify(
 		input.sliders,
 		structure,
 		values,
-		input.points.length,
+		input.perceived,
 	);
 	if (compressedMeetings.size !== meetings.size) return false;
 	for (const [key, offset] of meetings) if (compressedMeetings.get(key) !== offset) return false;

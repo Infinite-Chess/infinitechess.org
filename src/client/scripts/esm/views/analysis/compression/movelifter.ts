@@ -27,7 +27,7 @@ interface LiftPiece {
 	readonly compressed: Coords;
 }
 
-/** A lone line (promotion rank, border edge) landings are also checked against. */
+/** A lone line (promotion rank, border edge, far-escape shell line) landings are also checked against. */
 interface LiftLine {
 	form: number;
 	original: bigint;
