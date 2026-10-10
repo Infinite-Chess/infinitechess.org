@@ -19,7 +19,9 @@ npx tsx scripts/insuffmat/writetable.ts <out>               # writes matingsets.
 
 `generate.ts` takes an optional thread count, and resumes a stopped level from its `progress-N.tsv`.
 Each table's cap is the highest level generated. The table must be regenerated whenever a piece's
-movement, check or checkmate rules change.
+movement, check or checkmate rules change. After any change to `matesearch.ts`, run
+`recheck.ts <unbounded|bounded> <out> [draw level]` on the current tables as a regression check: it
+re-searches their mates (and one level's unbounded draws) and lists every verdict that changed.
 
 Output: `draws-N.txt` and `mates-N.tsv` per level. Labels list comma-separated piece codes, white
 then black (`K,R,CH,AR vs k,n`); `B0`/`B1` are bishop square colors. A set and its mirror images
