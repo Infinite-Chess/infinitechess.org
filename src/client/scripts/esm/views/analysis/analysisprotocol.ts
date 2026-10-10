@@ -76,6 +76,8 @@ export type AnalysisResponse =
 			/** Echoed for an unreported TT-warming search. */
 			warmup?: true;
 	  } & EvaluateResult)
+	/** The `go` or `evaluate` position can't be brought within the engine's coordinates, so it won't be searched. */
+	| { type: 'blocked'; requestId: number }
 	/** The position is fully analyzed; `info` is the final summary. */
 	| {
 			type: 'done';
@@ -129,4 +131,6 @@ export const EvaluateResultSchema = z.strictObject({
 	legalMoveCount: z.int(),
 	/** The deepest depth the search completed (0 for terminal/forced/unevaluated positions). */
 	depth: z.int(),
+	/** The position can't be brought within the engine's coordinates, so nothing was searched. */
+	uncompressible: z.literal(true).optional(),
 });

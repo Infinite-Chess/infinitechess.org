@@ -27,7 +27,6 @@ import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import analysisworker from './analysisworker.js';
-import analysisenginebounds from './analysisenginebounds.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -164,8 +163,8 @@ let currentTargetDepth = DEFAULT_SETTINGS.depth;
 /** Allows an intentional same-position restart (e.g. adding PV lines) to repaint lower-depth rows. */
 let allowDepthRegressionForCurrentSearch = false;
 /**
- * Why the engine won't analyze the viewed position (piece out of Apeiron's safe coordinate range,
- * an unsupported variant/position, etc.), or undefined when analyzable.
+ * Why the engine won't analyze the viewed position (an unsupported variant/position, pieces
+ * spread too far to compress, etc.), or undefined when analyzable.
  */
 let blockReason: EngineSupportCode | undefined;
 
@@ -187,6 +186,9 @@ const scheduler: {
  * never fed to a worker again.
  */
 const crashCounts = new Map<string, number>();
+
+/** Positions, by ICN, the worker reported can't be brought within the engine's coordinates. */
+const uncompressibleIcns = new Set<string>();
 
 /** Per-page-session cache of every viewed position's deepest local analysis. */
 const positionCache = new Map<string, CevalUpdate>();
@@ -375,6 +377,7 @@ function resetEngineSession(): void {
 	allowDepthRegressionForCurrentSearch = false;
 	blockReason = undefined;
 	crashCounts.clear();
+	uncompressibleIcns.clear();
 	positionCache.clear();
 	queuedLegalMovesRequests.length = 0;
 	emitNow();
@@ -433,26 +436,23 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 			receiveInfo(msg.requestId, msg.info, true, msg.reason === 'terminal');
 			notifyStatus();
 			break;
+		case 'blocked':
+			if (!analyzed || msg.requestId !== analyzed.requestId) break;
+			uncompressibleIcns.add(analyzed.icn);
+			blockAnalysis('out_of_bounds');
+			break;
 	}
 }
 
 // Position tracking -----------------------------------------------------------
 
 /**
- * The compact ICN of the position under analysis, carrying move history so the engine can
- * detect threefold repetition and the fifty-move rule. Truncated to the viewed ply, and
- * re-based to {@link analysisenginebounds.getSafeStartPly} if an earlier ply left the engine's
- * safe coordinate range (unreplayable) — the fifty-move counter survives that cut, repetition
- * detection across it doesn't.
+ * The compact ICN of the position under analysis, carrying its move history so the engine can
+ * detect threefold repetition and the fifty-move rule. Truncated to the viewed ply.
  */
 function getViewedPositionIcn(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile);
-	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
-	const safeStartPly = analysisenginebounds.getSafeStartPly(gamefile);
-
-	// Re-base the start snapshot to safeStartPly (no-op at ply 0).
-	gamecompressor.rebaseToPly(longformIn, gamefile.moves, safeStartPly, viewedPlyCount);
-
+	longformIn.moves = longformIn.moves?.slice(0, gamefile.state.local.moveIndex + 1);
 	engineicn.prepareForEngine(longformIn);
 	return engineicn.serialize(longformIn);
 }
@@ -482,7 +482,8 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
-	const reason = computeBlockReason(gamefile);
+	const icn = getViewedPositionIcn(gamefile);
+	const reason = computeBlockReason(gamefile) ?? (uncompressibleIcns.has(icn) ? 'out_of_bounds' : undefined); // prettier-ignore
 	if (reason !== undefined) {
 		blockAnalysis(reason);
 		return;
@@ -492,8 +493,6 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		blockReason = undefined;
 		lastAnalyzedIcn = undefined;
 	}
-
-	const icn = getViewedPositionIcn(gamefile);
 
 	// This position crashed the engine too many times — never send it again (that just re-crashes
 	// the worker). Checked ahead of the spawn below, so a dead position never costs a wasm load.
@@ -583,16 +582,13 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 }
 
 /**
- * Why the engine can't analyze `gamefile`'s viewed position, or undefined when it can.
- * The engine can't handle some positions at all (4D/5D variants, unsupported pieces/win
- * conditions). Bounds are separate: an out-of-range VIEWED position blocks too, but
- * out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
+ * Why the engine can't analyze `gamefile`'s viewed position, or undefined when it can (4D/5D
+ * variants, unsupported pieces/win conditions). Coordinates beyond the engine's are compressed by
+ * the worker, which reports a position it can't compress ({@link uncompressibleIcns}).
  */
 function computeBlockReason(gamefile: GameFile): EngineSupportCode | undefined {
 	const result = apeironcard.isAnalysisSupported(gamefile);
-	if (!result.supported) return result.reason;
-	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) return 'out_of_bounds';
-	return undefined;
+	return result.supported ? undefined : result.reason;
 }
 
 /** Stops the engine and marks the viewed position un-analyzable, for the given `reason`. */

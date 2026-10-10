@@ -133,7 +133,7 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
  * Game-level support that's independent of any single position's piece set: the variant's movement
  * rules (4D ones the engine can't replay), win conditions, and promotion lines. Unlike
  * {@link isPlaySupported} these require no bounded board — the
- * analysis engine handles out-of-range coordinates itself (blocking/re-basing).
+ * analysis worker compresses coordinates beyond the engine's.
  */
 function checkGameRules(gamefile: GameFile): SupportedResult {
 	if (gamefile.variant !== undefined && !SUPPORTED_VARIANTS.has(gamefile.variant.code))
@@ -149,7 +149,7 @@ function checkGameRules(gamefile: GameFile): SupportedResult {
  * Whether the engine can analyze the CURRENTLY VIEWED position (analysis-board local eval).
  * The piece types checked are the current board's — a capture can bring a position that
  * was unplayable (an unsupported piece) back into range, so we don't disqualify a game
- * for something at another ply. Out-of-bounds is handled separately by the caller.
+ * for something at another ply. Coordinates beyond the engine's are the analysis worker's to compress.
  */
 function isAnalysisSupported(gamefile: GameFile): SupportedResult {
 	const gameRulesResult = checkGameRules(gamefile);
@@ -166,8 +166,8 @@ function isAnalysisSupported(gamefile: GameFile): SupportedResult {
 /**
  * Whether the engine can review the WHOLE game (Game Review evaluates every mainline position).
  * Uses every piece type that appears across the game (start pieces plus promotion targets).
- * Out-of-bounds positions are NOT disqualifying: the review skips those individually (pieces
- * can return in range), which is why this deliberately performs no world-border check.
+ * Coordinates beyond the engine's are compressed position by position, and the rare position that
+ * can't be is skipped on its own, which is why this deliberately performs no world-border check.
  */
 function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 	const gameRulesResult = checkGameRules(gamefile);
