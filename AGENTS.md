@@ -67,9 +67,10 @@ followed, tell me.
    recommendation. Decisions made without sufficient context are the greatest source of all wrong
    calls.
 
-6. Never proceed with a change that carries a design decision without my explicit approval. Present
-   me your recommendation, and why you recommend it. The exception is small changes — a comment
-   update, rename, reference update, or lint fix. Make those without asking and without telling me.
+6. Get my explicit approval of every behavior change first: how user experience, logic, or
+   conditions change, with no code, and why. Then get it for any design decision the implementation
+   carries. Small changes — a comment update, rename, reference update, or lint fix — need neither
+   approval nor mention.
 
 7. Follow the industry standards and best practices of today. Always opt for the _correct_
    architecture and design pattern, never the quickest or easiest one for that reason. The correct
