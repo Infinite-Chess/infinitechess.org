@@ -117,7 +117,8 @@ followed, tell me.
 17. Prefer deriving over storing. No flag, cache, copy or denormalized column that can disagree with
     the thing it mirrors.
 
-18. No hardcoded user-facing strings where the translation system should be used.
+18. User-facing strings go through the translation system, unless their page isn't localized yet;
+    those wait for it.
 
 19. Follow the module conventions below for every script, new ones _and_ whenever touching them.
 
