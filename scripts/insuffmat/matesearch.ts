@@ -44,8 +44,26 @@ type Candidate = { sq: Sq; side: Side; kinds: Kind[] };
 type Move = { from: Sq; to: Sq; path: Sq[] };
 /** Where an attacker's last move came from, whether it captured there, and the square of a pawn it took en passant. */
 type Origin = { from: Sq; capture: boolean; passed?: Sq };
+/** A position an attacker move could have produced the board from, and that move. */
+type Prior = { prior: Board; lastMove: [Sq, Sq] };
 /** A found checkmate, with the attacker's last move that reached it from a position where no defender royal was in check. */
-type Mate = { board: Board; prior: Board; lastMove: [Sq, Sq]; attackerIsWhite: boolean };
+type Mate = Prior & { board: Board; attackerIsWhite: boolean };
+type Transform = (x: number, y: number) => Sq;
+/** One findMate run's settings and the boards it has searched, shared by its search's functions. */
+type SearchContext = {
+	/** The kind of the mated royal at 0,0. */
+	royal: Kind;
+	/** The attacker's pawn direction; the defender's is the opposite. */
+	attackerPawnDir: number;
+	/** The faraway huygen stand-ins it places: just the lone-king ones when the king is alone. */
+	farHuygenStandins: number[][];
+	/** The rotations and reflections under which the search's boards are interchangeable. */
+	symmetries: Transform[];
+	/** Whether the royal at 0,0 is the defender's only one, as the flight-square bound needs. */
+	singleRoyal: boolean;
+	/** The canonical ids of the boards already searched. */
+	visited: Set<string>;
+};
 
 // Constants -------------------------------------------------------------------
 
@@ -182,6 +200,41 @@ const onBoard = (x: number, y: number): boolean =>
 		(walls[2] !== undefined && y < walls[2]) ||
 		(walls[3] !== undefined && y > walls[3])
 	);
+
+/** The step count k ≥ 1 with to = from + k·dir, or 0 if none. */
+function stepsAlong(fx: number, fy: number, tx: number, ty: number, [dx, dy]: Sq): number {
+	const k = dx !== 0 ? (tx - fx) / dx : (ty - fy) / dy;
+	return Number.isInteger(k) && k >= 1 && k * dx === tx - fx && k * dy === ty - fy ? k : 0;
+}
+
+/** The window squares strictly between from and k steps along dir whose step count passes keep. */
+function windowSquaresBetween(
+	fx: number,
+	fy: number,
+	[dx, dy]: Sq,
+	k: number,
+	keep: (step: number) => boolean,
+): Sq[] {
+	let [lo, hi] = [1, k - 1];
+	for (const [f, d] of [
+		[fx, dx],
+		[fy, dy],
+	] as const) {
+		if (d === 0) {
+			if (Math.abs(f) > R) return [];
+			continue;
+		}
+		const [a, b] = [(-R - f) / d, (R - f) / d];
+		lo = Math.max(lo, Math.ceil(Math.min(a, b)));
+		hi = Math.min(hi, Math.floor(Math.max(a, b)));
+	}
+	const out: Sq[] = [];
+	for (let i = lo; i <= hi; i++) if (keep(i)) out.push([fx + dx * i, fy + dy * i]);
+	return out;
+}
+
+// Faraway Huygens -------------------------------------------------------------
+
 /** Prime lookup, sieved past the faraway huygen stand-ins. */
 const PRIME_SIEVE: Uint8Array = (() => {
 	const sieve = new Uint8Array(3_000_000).fill(1);
@@ -268,41 +321,11 @@ const isPlaceable = (x: number, y: number): boolean =>
 		(Math.abs(y) <= R && FAR_HUYGEN_SET.has(Math.abs(x))) ||
 		(Math.abs(x) <= R && FAR_HUYGEN_SET.has(Math.abs(y))));
 
-/** The step count k ≥ 1 with to = from + k·dir, or 0 if none. */
-function stepsAlong(fx: number, fy: number, tx: number, ty: number, [dx, dy]: Sq): number {
-	const k = dx !== 0 ? (tx - fx) / dx : (ty - fy) / dy;
-	return Number.isInteger(k) && k >= 1 && k * dx === tx - fx && k * dy === ty - fy ? k : 0;
-}
-
 /** Whether a huygen on one square reaches the other, blockers aside: same row or column, a prime distance apart. */
 const isHuygenReach = ([fx, fy]: Sq, [tx, ty]: Sq): boolean =>
 	(fx === tx) !== (fy === ty) && isPrime(Math.abs(tx - fx + ty - fy));
 
-/** The window squares strictly between from and k steps along dir whose step count passes keep. */
-function windowSquaresBetween(
-	fx: number,
-	fy: number,
-	[dx, dy]: Sq,
-	k: number,
-	keep: (step: number) => boolean,
-): Sq[] {
-	let [lo, hi] = [1, k - 1];
-	for (const [f, d] of [
-		[fx, dx],
-		[fy, dy],
-	] as const) {
-		if (d === 0) {
-			if (Math.abs(f) > R) return [];
-			continue;
-		}
-		const [a, b] = [(-R - f) / d, (R - f) / d];
-		lo = Math.max(lo, Math.ceil(Math.min(a, b)));
-		hi = Math.min(hi, Math.floor(Math.max(a, b)));
-	}
-	const out: Sq[] = [];
-	for (let i = lo; i <= hi; i++) if (keep(i)) out.push([fx + dx * i, fy + dy * i]);
-	return out;
-}
+// Movement --------------------------------------------------------------------
 
 /**
  * Every alternative path by which a piece at from attacks to: each is the squares that must
@@ -401,7 +424,6 @@ function fitsSquare(kind: Kind, x: number, y: number): boolean {
 
 // Optimizations ---------------------------------------------------------------
 
-type Transform = (x: number, y: number) => Sq;
 /** The 8 rotations and reflections about 0,0. */
 const ALL_TRANSFORMS: Transform[] = [
 	(x, y) => [x, y],
@@ -495,680 +517,6 @@ function computeMaxCover(flights: Sq[]): Record<Kind, [number, number]> {
 	) as Record<Kind, [number, number]>;
 }
 
-// Search ----------------------------------------------------------------------
-
-/** Searches for a reachable checkmate with a defender royal of the given kind in check at 0,0. */
-function findMate(
-	attacker: Material,
-	defender: Material,
-	royal: Kind,
-	attackerPawnDir: number,
-): Mate | undefined {
-	let witness: { prior: Board; lastMove: [Sq, Sq] } | undefined; // Set by hasLegalLastMove
-	const pawnDir = (side: Side): number => (side === 'A' ? attackerPawnDir : -attackerPawnDir);
-	const visited = new Set<string>();
-	// The flight-square capacity bound only holds when the royal at 0,0 is the defender's only one.
-	const singleRoyal = !(Object.keys(defender) as Kind[]).some((k) => isRoyal(k));
-	const farHuygenStandins =
-		royal === 'K' && Object.keys(defender).length === 0
-			? FAR_HUYGEN_STANDINS_LONE_KING
-			: FAR_HUYGEN_STANDINS;
-
-	/**
-	 * Every clear path by which a piece at from attacks to, each as the squares that must be empty.
-	 * A reach past SPAN (only a slide or a huygen's) checks just the pieces on its line, and its
-	 * path lists only its window squares, the only ones a piece can be placed on.
-	 */
-	const clearPathsTo = (
-		board: Board,
-		p: Piece,
-		fx: number,
-		fy: number,
-		tx: number,
-		ty: number,
-	): Sq[][] => {
-		if (!onBoard(tx, ty)) return [];
-		if (DEFS[p.kind].huygen) return huygenPaths(board, fx, fy, tx, ty);
-		if (Math.abs(tx - fx) <= SPAN && Math.abs(ty - fy) <= SPAN)
-			return pathsTo(p.kind, pawnDir(p.side), fx, fy, tx, ty).filter((path) =>
-				path.every(([x, y]) => onBoard(x, y) && !board.has(key(x, y))),
-			);
-		for (const dir of DEFS[p.kind].slides ?? []) {
-			const k = stepsAlong(fx, fy, tx, ty, dir);
-			if (k === 0) continue;
-			if (piecesBetween(board, fx, fy, dir, k).length) return [];
-			return [windowSquaresBetween(fx, fy, dir, k, () => true)];
-		}
-		return [];
-	};
-
-	/** clearPathsTo for a huygen, whose path is the squares a prime distance along its line. */
-	const huygenPaths = (board: Board, fx: number, fy: number, tx: number, ty: number): Sq[][] => {
-		if (fx !== tx && fy !== ty) return [];
-		const n = Math.abs(tx - fx + ty - fy);
-		if (!isPrime(n)) return [];
-		const dir: Sq = [Math.sign(tx - fx), Math.sign(ty - fy)];
-		// A faraway huygen that can move out to another block-free distance is never blocked by a nearer faraway one (see spaceFarHuygens).
-		const isMovable = !inWindow(fx, fy) && isBlockFree(Math.max(Math.abs(fx), Math.abs(fy)));
-		const blocked = piecesBetween(board, fx, fy, dir, n).some(
-			([j, [bx, by], bp]) =>
-				isPrime(j) &&
-				!(isMovable && bp.kind === 'HU' && bp.side === 'A' && !inWindow(bx, by)),
-		);
-		return blocked ? [] : [windowSquaresBetween(fx, fy, dir, n, isPrime)];
-	};
-
-	/** The board's pieces strictly between from and k steps along dir, with their step counts. */
-	const piecesBetween = (
-		board: Board,
-		fx: number,
-		fy: number,
-		dir: Sq,
-		k: number,
-	): [number, Sq, Piece][] => {
-		const out: [number, Sq, Piece][] = [];
-		for (const [bk, bp] of board) {
-			const sq = parseKey(bk);
-			const j = stepsAlong(fx, fy, sq[0], sq[1], dir);
-			if (j > 0 && j < k) out.push([j, sq, bp]);
-		}
-		return out;
-	};
-
-	/** Whether a piece on the board attacks the square by some clear path. */
-	const pieceAttacks = (board: Board, k: number, p: Piece, tx: number, ty: number): boolean => {
-		const [fx, fy] = parseKey(k);
-		return clearPathsTo(board, p, fx, fy, tx, ty).length > 0;
-	};
-	/** Whether any piece of the side attacks the square. */
-	const attacks = (board: Board, side: Side, tx: number, ty: number): boolean => {
-		for (const [k, p] of board)
-			if (p.side === side && k !== key(tx, ty) && pieceAttacks(board, k, p, tx, ty))
-				return true;
-		return false;
-	};
-	/** The squares of the side's royals. */
-	const royalsOf = (board: Board, side: Side): Sq[] =>
-		[...board].filter(([, p]) => p.side === side && isRoyal(p.kind)).map(([k]) => parseKey(k));
-	/** Whether any royal of the side is attacked. */
-	const isAnyRoyalAttacked = (board: Board, side: Side): boolean =>
-		royalsOf(board, side).some(([x, y]) => attacks(board, side === 'A' ? 'D' : 'A', x, y));
-
-	/**
-	 * Every move of every defender piece. Slides stop at the window edge; a sliding royal's run
-	 * beyond it is handled separately.
-	 */
-	const defenderMoves = (board: Board): Move[] => {
-		const moves: Move[] = [];
-		for (const [k, p] of board) {
-			if (p.side !== 'D') continue;
-			const [fx, fy] = parseKey(k);
-			const def = DEFS[p.kind];
-			const tryTo = (tx: number, ty: number, path: Sq[]): void => {
-				if (!onBoard(tx, ty) || !path.every(([x, y]) => onBoard(x, y))) return;
-				if (board.get(key(tx, ty))?.side !== 'D')
-					moves.push({ from: [fx, fy], to: [tx, ty], path });
-			};
-			for (const [a, b] of def.leaps ?? []) tryTo(fx + a, fy + b, []);
-			for (const [a, b] of def.slides ?? []) {
-				const path: Sq[] = [];
-				for (let i = 1; inWindow(fx + a * i, fy + b * i); i++) {
-					const x = fx + a * i,
-						y = fy + b * i;
-					tryTo(x, y, [...path]);
-					if (board.has(key(x, y))) break;
-					path.push([x, y]);
-				}
-			}
-			if (def.huygen)
-				for (const [a, b] of ORTHO) {
-					const path: Sq[] = [];
-					for (let d = 2; inWindow(fx + a * d, fy + b * d); d++) {
-						if (!isPrime(d)) continue;
-						const x = fx + a * d,
-							y = fy + b * d;
-						tryTo(x, y, [...path]);
-						if (board.has(key(x, y))) break;
-						path.push([x, y]);
-					}
-				}
-			if (def.pawn) {
-				const dir = pawnDir('D');
-				if (onBoard(fx, fy + dir) && !board.has(key(fx, fy + dir)))
-					moves.push({ from: [fx, fy], to: [fx, fy + dir], path: [] });
-				for (const sx of [1, -1])
-					if (
-						onBoard(fx + sx, fy + dir) &&
-						board.get(key(fx + sx, fy + dir))?.side === 'A'
-					)
-						moves.push({ from: [fx, fy], to: [fx + sx, fy + dir], path: [] });
-			}
-			if (def.rose)
-				for (const spiral of ROSE_SPIRALS)
-					for (let h = 0; h < spiral.length; h++) {
-						const [x, y] = [fx + spiral[h]![0], fy + spiral[h]![1]];
-						tryTo(
-							x,
-							y,
-							spiral.slice(0, h).map(([sx, sy]) => [fx + sx, fy + sy] as Sq),
-						);
-						if (board.has(key(x, y))) break;
-					}
-			// Captures of attackers beyond the window (faraway huygens), which the window-bounded walks above miss.
-			for (const [ak, ap] of board) {
-				if (ap.side !== 'A') continue;
-				const [ax, ay] = parseKey(ak);
-				if (inWindow(ax, ay)) continue;
-				const [clearPath] = clearPathsTo(board, p, fx, fy, ax, ay);
-				if (clearPath) moves.push({ from: [fx, fy], to: [ax, ay], path: clearPath });
-				moves.push(...blocksBeyondWindow(board, p, fx, fy, ax, ay));
-			}
-		}
-		return moves;
-	};
-
-	/**
-	 * Moves of a defender sliding piece onto the line of a faraway attacker at (ax, ay), past the
-	 * window edge, landing a prime distance from it: a huygen is blocked there. Leapers and roses
-	 * need none of this, as their moves are generated without the window bound.
-	 */
-	const blocksBeyondWindow = (
-		board: Board,
-		p: Piece,
-		fx: number,
-		fy: number,
-		ax: number,
-		ay: number,
-	): Move[] => {
-		const alongX = Math.abs(ay) <= R; // The faraway piece's line is a row (else a column)
-		const [lineCoord, farCoord] = alongX ? [ay, ax] : [ax, ay];
-		const side = Math.sign(farCoord);
-		const isBlockSquare = (c: number): boolean =>
-			Math.abs(c) > R &&
-			Math.sign(c) === side &&
-			Math.abs(c) < Math.abs(farCoord) &&
-			isPrime(Math.abs(farCoord - c));
-		const toSq = (c: number): Sq => (alongX ? [c, lineCoord] : [lineCoord, c]);
-		const reachable = (c: number): Move | undefined => {
-			const [tx, ty] = toSq(c);
-			if (board.has(key(tx, ty))) return undefined;
-			const [path] = clearPathsTo(board, p, fx, fy, tx, ty);
-			return path && { from: [fx, fy], to: [tx, ty], path };
-		};
-		const def = DEFS[p.kind];
-		const moves: Move[] = [];
-		const [pLine, pAlong] = alongX ? [fy, fx] : [fx, fy];
-		for (const [dx, dy] of def.slides ?? []) {
-			const [dLine, dAlong] = alongX ? [dy, dx] : [dx, dy];
-			if (dLine === 0) {
-				// Sliding along the line itself: the first block square past the window edge serves.
-				if (pLine !== lineCoord || Math.sign(dAlong) !== side) continue;
-				let c = side * (R + 1);
-				while (Math.abs(c) < Math.abs(farCoord) && !isBlockSquare(c)) c += side;
-				const move = isBlockSquare(c) ? reachable(c) : undefined;
-				if (move) moves.push(move);
-				continue;
-			}
-			// Crossing the line: it lands on it at exactly one square.
-			const t = (lineCoord - pLine) / dLine;
-			if (!Number.isInteger(t) || t < 1) continue;
-			const c = pAlong + t * dAlong;
-			const move = isBlockSquare(c) ? reachable(c) : undefined;
-			if (move) moves.push(move);
-		}
-		// Hopping along the line: c must sit a prime distance from both huygens. With an odd gap
-		// between them one distance is 2, so c sits two from either huygen; two from this one is
-		// past the window only when it stands within 2 of the edge.
-		if (def.huygen && pLine === lineCoord) {
-			const gap = Math.abs(farCoord - pAlong);
-			const skipsToFar = gap % 2 === 1 && Math.abs(pAlong + 2 * side) <= R;
-			for (
-				let c = skipsToFar ? farCoord - 2 * side : side * (R + 1);
-				Math.abs(c) < Math.abs(farCoord);
-				c += side
-			) {
-				if (!isBlockSquare(c) || !isPrime(Math.abs(c - pAlong))) continue;
-				const move = reachable(c);
-				if (move) {
-					moves.push(move);
-					break;
-				}
-			}
-		}
-		return moves;
-	};
-
-	/** Faraway huygen squares on the row and column through (x, y): per pattern and line side, its first stand-in still free. */
-	const farSquares = (board: Board, standins: number[][], x: number, y: number): Sq[] => {
-		const out: Sq[] = [];
-		for (const ds of standins)
-			for (const side of [1, -1]) {
-				const onRow = ds.map((d): Sq => [side * d, y]).find((sq) => !board.has(key(...sq)));
-				const onColumn = ds
-					.map((d): Sq => [x, side * d])
-					.find((sq) => !board.has(key(...sq)));
-				if (Math.abs(y) <= R && onRow && onBoard(...onRow)) out.push(onRow);
-				if (Math.abs(x) <= R && onColumn && onBoard(...onColumn)) out.push(onColumn);
-			}
-		return out;
-	};
-
-	/** Every square from which some remaining attacker kind would attack the target along an empty path. */
-	const attackerCandidates = (
-		board: Board,
-		remaining: Material,
-		tx: number,
-		ty: number,
-	): Candidate[] => {
-		const out: Candidate[] = [];
-		for (let x = -R; x <= R; x++)
-			for (let y = -R; y <= R; y++) {
-				const kinds = (Object.keys(remaining) as Kind[]).filter(
-					(kind) =>
-						remaining[kind]! > 0 &&
-						fitsSquare(kind, x, y) &&
-						canAttack(kind, attackerPawnDir, tx - x, ty - y),
-				);
-				if (kinds.length) out.push({ sq: [x, y], side: 'A', kinds });
-			}
-		if (remaining.HU)
-			for (const sq of farSquares(board, farHuygenStandins, tx, ty))
-				if (isHuygenReach(sq, [tx, ty])) out.push({ sq, side: 'A', kinds: ['HU'] });
-		return out;
-	};
-	/** The material's remaining kinds that may stand on the square, optionally filtered. */
-	const kindsAt = (m: Material, [x, y]: Sq, filter?: (k: Kind) => boolean): Kind[] =>
-		(Object.keys(m) as Kind[]).filter(
-			(k) => m[k]! > 0 && fitsSquare(k, x, y) && (!filter || filter(k)),
-		);
-	/** Placements of any remaining piece of either side on the square. */
-	const anyPieceOn = (a: Material, d: Material, sq: Sq): Candidate[] => [
-		{ sq, side: 'A', kinds: kindsAt(a, sq) },
-		{ sq, side: 'D', kinds: kindsAt(d, sq) },
-	];
-	/** Placements on the board that would leave some defender royal attacked after a move: attack a royal there, or add another royal anywhere. */
-	const keepARoyalAttacked = (
-		board: Board,
-		after: Board,
-		a: Material,
-		d: Material,
-	): Candidate[] => {
-		const cands = royalsOf(after, 'D').flatMap(([x, y]) => attackerCandidates(board, a, x, y));
-		if ((Object.keys(d) as Kind[]).some((k) => isRoyal(k) && d[k]! > 0))
-			for (let x = -R; x <= R; x++)
-				for (let y = -R; y <= R; y++)
-					cands.push({ sq: [x, y], side: 'D', kinds: kindsAt(d, [x, y], isRoyal) });
-		return cands;
-	};
-
-	/** The board after a defender move. */
-	const applyMove = (board: Board, { from, to }: Move): Board => {
-		const after = new Map(board);
-		const piece = after.get(key(...from))!;
-		after.delete(key(...from));
-		after.set(key(...to), piece);
-		return after;
-	};
-
-	/** Every unmet condition of a reachable checkmate, each as the placements that could meet it. */
-	const unmetConditions = (board: Board, a: Material, d: Material): Candidate[][] => {
-		const unmet: Candidate[][] = [];
-		if (!attacks(board, 'A', 0, 0)) unmet.push(attackerCandidates(board, a, 0, 0));
-		for (const move of defenderMoves(board)) {
-			const after = applyMove(board, move);
-			if (isAnyRoyalAttacked(after, 'D')) continue;
-			const cands = [
-				...move.path.flatMap((sq) => anyPieceOn(a, d, sq)),
-				...keepARoyalAttacked(board, after, a, d),
-			];
-			if (!board.has(key(...move.to)))
-				cands.push({ sq: move.to, side: 'D', kinds: kindsAt(d, move.to) });
-			unmet.push(cands);
-		}
-		unmet.push(...runOffConditions(board, a, d));
-		if (unmet.length) return unmet;
-		// The defender is mated; what remains is that the position must be legal and reachable.
-		for (const [rk, rp] of board) {
-			if (rp.side !== 'A' || !isRoyal(rp.kind)) continue;
-			const [rx, ry] = parseKey(rk);
-			const checkers = [...board].filter(
-				([k, p]) => p.side === 'D' && pieceAttacks(board, k, p, rx, ry),
-			);
-			if (checkers.length) return [blockersOf(board, checkers, rx, ry, a, d)];
-		}
-		if (!hasLegalLastMove(board, d)) {
-			// Unreachable (e.g. an impossible double check). A piece blocks a check, either in this position or in
-			// the position before some last move, or an attacker not yet placed moved last, uncovering a check by
-			// stepping off its line.
-			const lines = checkBlockers(board, a, d);
-			return [
-				[
-					...lines,
-					...lines.flatMap(({ sq }) => steppedOffFrom(board, a, d, sq)),
-					...[...priorsOf(board, d)].flatMap(({ prior }) => checkBlockers(prior, a, d)),
-				],
-			];
-		}
-		return [];
-	};
-
-	/** Placements on every clear path of every check on the defender's royals. */
-	const checkBlockers = (board: Board, a: Material, d: Material): Candidate[] =>
-		royalsOf(board, 'D').flatMap(([x, y]) =>
-			blockersOf(
-				board,
-				[...board].filter(([k, p]) => p.side === 'A' && pieceAttacks(board, k, p, x, y)),
-				x,
-				y,
-				a,
-				d,
-			),
-		);
-
-	/**
-	 * Placements of an unplaced attacker on every square it could have moved to from the given square,
-	 * a huygen's faraway stand-ins included. A pawn may also double step; its diagonal step must have
-	 * captured one of the defender's unused pieces.
-	 */
-	const steppedOffFrom = (board: Board, a: Material, d: Material, [bx, by]: Sq): Candidate[] => {
-		const out: Candidate[] = [];
-		if (a.HU)
-			for (const sq of farSquares(board, FAR_HUYGEN_STANDINS, bx, by))
-				if (isHuygenReach([bx, by], sq)) out.push({ sq, side: 'A', kinds: ['HU'] });
-		for (let x = -R; x <= R; x++)
-			for (let y = -R; y <= R; y++) {
-				const kinds = (Object.keys(a) as Kind[]).filter(
-					(kind) =>
-						a[kind]! > 0 &&
-						fitsSquare(kind, x, y) &&
-						(DEFS[kind].pawn
-							? (x === bx &&
-									(y === by + attackerPawnDir ||
-										y === by + 2 * attackerPawnDir)) ||
-								(y === by + attackerPawnDir &&
-									Math.abs(x - bx) === 1 &&
-									kindsAt(d, [x, y], (k) => !isRoyal(k)).length > 0)
-							: canAttack(kind, attackerPawnDir, x - bx, y - by)),
-				);
-				if (kinds.length) out.push({ sq: [x, y], side: 'A', kinds });
-			}
-		return out;
-	};
-
-	/** Placements on every clear attack path of the given pieces to the square. */
-	const blockersOf = (
-		board: Board,
-		pieces: [number, Piece][],
-		tx: number,
-		ty: number,
-		a: Material,
-		d: Material,
-	): Candidate[] =>
-		pieces.flatMap(([k, p]) => {
-			const [fx, fy] = parseKey(k);
-			return clearPathsTo(board, p, fx, fy, tx, ty).flatMap((path) =>
-				path.flatMap((sq) => anyPieceOn(a, d, sq)),
-			);
-		});
-
-	/**
-	 * A sliding defender royal whose line runs clear past the window edge escapes along it to
-	 * infinitely many squares, unless an attacker slides along that same line from behind it
-	 * (attacking the whole line once the royal leaves), or another royal stays attacked.
-	 */
-	const runOffConditions = (board: Board, a: Material, d: Material): Candidate[][] => {
-		const unmet: Candidate[][] = [];
-		for (const [rk, rp] of board) {
-			if (rp.side !== 'D' || !isRoyal(rp.kind)) continue;
-			const [rx, ry] = parseKey(rk);
-			for (const [dx, dy] of DEFS[rp.kind].slides ?? []) {
-				const ray: Sq[] = [];
-				for (let i = 1; inWindow(rx + dx * i, ry + dy * i); i++)
-					ray.push([rx + dx * i, ry + dy * i]);
-				const past = ray.length + 1; // A wall at or inside the window edge leaves no run
-				if (!onBoard(rx + dx * past, ry + dy * past)) continue;
-				if (ray.some(([x, y]) => board.has(key(x, y)))) continue;
-				const behind: Sq[] = [];
-				for (let i = 1; inWindow(rx - dx * i, ry - dy * i); i++)
-					behind.push([rx - dx * i, ry - dy * i]);
-				const slidesAlong = (k: Kind): boolean =>
-					(DEFS[k].slides ?? []).some(([sx, sy]) => sx === dx && sy === dy);
-				const covered = behind.some(([x, y]) => {
-					const p = board.get(key(x, y));
-					return (
-						p?.side === 'A' &&
-						slidesAlong(p.kind) &&
-						pieceAttacks(board, key(x, y), p, rx, ry)
-					);
-				});
-				// Past the window the royal can stop on infinitely many squares, so only another royal can stay attacked.
-				const after = new Map(board);
-				after.delete(rk);
-				if (covered || isAnyRoyalAttacked(after, 'D')) continue;
-				const cands: Candidate[] = [
-					...ray.flatMap((sq) => anyPieceOn(a, d, sq)),
-					...behind.map(
-						(sq): Candidate => ({ sq, side: 'A', kinds: kindsAt(a, sq, slidesAlong) }),
-					),
-					...keepARoyalAttacked(board, after, a, d),
-				];
-				unmet.push(cands);
-			}
-		}
-		return unmet;
-	};
-
-	/** Whether some attacker move could have produced this position from one where no defender royal was in check. */
-	const hasLegalLastMove = (board: Board, d: Material): boolean => {
-		for (const candidate of priorsOf(board, d)) {
-			if (isAnyRoyalAttacked(candidate.prior, 'D')) continue;
-			witness = candidate;
-			return true;
-		}
-		return false;
-	};
-
-	/**
-	 * Every position an attacker move could have produced this one from, by un-making each attacker
-	 * move, a non-royal piece's promotion from a pawn included. A capture may only restore a piece
-	 * the defender still has unused, since insuffmat is judged on the material before that capture.
-	 */
-	const priorsOf = function* (
-		board: Board,
-		d: Material,
-	): Generator<{ prior: Board; lastMove: [Sq, Sq] }> {
-		for (const [k, p] of board) {
-			if (p.side !== 'A') continue;
-			const [sx, sy] = parseKey(k);
-			const capturable = (Object.keys(d) as Kind[]).filter(
-				(kind) => d[kind]! > 0 && !isRoyal(kind) && fitsSquare(kind, sx, sy),
-			);
-			const promoted = !isRoyal(p.kind) && !DEFS[p.kind].pawn;
-			const unmoves = [
-				...unmoveOrigins(board, p, sx, sy).map((origin) => ({ ...origin, mover: p })),
-				...(promoted ? pawnOrigins(board, sx, sy) : []).map((origin) => ({
-					...origin,
-					mover: PROMOTING_PAWN,
-				})),
-			];
-			for (const { from, capture, passed, mover } of unmoves) {
-				if (passed && !d.P) continue; // En passant captured a spare defender pawn
-				for (const captured of capture ? capturable : [undefined]) {
-					const prior = new Map(board);
-					prior.delete(k);
-					prior.set(key(...from), mover);
-					if (captured) prior.set(k, { kind: captured, side: 'D' });
-					if (passed) prior.set(key(...passed), { kind: 'P', side: 'D' });
-					yield { prior, lastMove: [from, [sx, sy]] };
-				}
-			}
-		}
-	};
-
-	/**
-	 * Every square an attacker pawn could have moved from to reach (sx, sy): a step, a double step,
-	 * or a capture, which en passant took from the passed square beside its origin.
-	 */
-	const pawnOrigins = (board: Board, sx: number, sy: number): Origin[] => {
-		const dir = pawnDir('A');
-		const isFree = (x: number, y: number): boolean => onBoard(x, y) && !board.has(key(x, y));
-		const isDefenderPawn = (x: number, y: number): boolean => board.get(key(x, y))?.kind === 'P' && board.get(key(x, y))?.side === 'D'; // prettier-ignore
-		/**
-		 * Whether a defender pawn at (px, sy) escapes the mate by taking a double-stepped pawn en
-		 * passant.
-		 */
-		const isEnPassantEscape = (px: number): boolean => {
-			if (!isDefenderPawn(px, sy)) return false;
-			const after = new Map(board);
-			after.delete(key(sx, sy));
-			after.delete(key(px, sy));
-			after.set(key(sx, sy - dir), { kind: 'P', side: 'D' });
-			return !isAnyRoyalAttacked(after, 'D');
-		};
-		const origins: Origin[] = [];
-		if (isFree(sx, sy - dir)) {
-			origins.push({ from: [sx, sy - dir], capture: false });
-			if (
-				isFree(sx, sy - 2 * dir) &&
-				!isEnPassantEscape(sx + 1) &&
-				!isEnPassantEscape(sx - 1)
-			)
-				origins.push({ from: [sx, sy - 2 * dir], capture: false });
-		}
-		for (const ox of [1, -1]) {
-			if (!isFree(sx + ox, sy - dir)) continue;
-			origins.push({ from: [sx + ox, sy - dir], capture: true });
-			if (isFree(sx, sy - dir))
-				origins.push({ from: [sx + ox, sy - dir], capture: false, passed: [sx, sy - dir] });
-		}
-		return origins;
-	};
-
-	/**
-	 * Every square an attacker piece could have moved from to reach (sx, sy), and whether that move
-	 * may have captured: within 2R of it, or from far away, FAR_ORIGIN steps back along a slide, or
-	 * for a huygen landing in the window, from where it attacks only that square of its line.
-	 */
-	const unmoveOrigins = (board: Board, p: Piece, sx: number, sy: number): Origin[] => {
-		if (DEFS[p.kind].pawn) return pawnOrigins(board, sx, sy);
-		const near: Sq[] = [];
-		for (let x = sx - 2 * R; x <= sx + 2 * R; x++)
-			for (let y = sy - 2 * R; y <= sy + 2 * R; y++) near.push([x, y]);
-		const far: Sq[] = (DEFS[p.kind].slides ?? []).map(([dx, dy]) => [
-			sx - dx * FAR_ORIGIN,
-			sy - dy * FAR_ORIGIN,
-		]);
-		if (DEFS[p.kind].huygen && inWindow(sx, sy)) {
-			const origin = (c: number): number => FAR_HUYGEN_ORIGINS[c + R]!;
-			far.push([origin(sx), sy], [-origin(-sx), sy], [sx, origin(sy)], [sx, -origin(-sy)]);
-		}
-		return [...near, ...far]
-			.filter(
-				([x, y]) =>
-					onBoard(x, y) &&
-					!board.has(key(x, y)) &&
-					clearPathsTo(board, p, x, y, sx, sy).length > 0,
-			)
-			.flatMap((from) => [
-				{ from, capture: false },
-				{ from, capture: true },
-			]);
-	};
-
-	// Walls break the symmetry about 0,0; generate.ts instead searches one layout per mirror-image family.
-	const symmetries = hasWalls
-		? [ALL_TRANSFORMS[0]!]
-		: allowedTransforms([
-				royal,
-				...(Object.keys(attacker) as Kind[]),
-				...(Object.keys(defender) as Kind[]),
-			]);
-
-	/** The board's key, minimized over every allowed symmetry so symmetric boards share one. */
-	const canonicalId = (board: Board): string => {
-		let best: Float64Array | undefined;
-		for (const t of symmetries) {
-			const entries = new Float64Array(board.size);
-			let i = 0;
-			for (const [k, p] of board)
-				entries[i++] =
-					key(...t(...parseKey(k))) * 64 +
-					(p.side === 'A' ? 0 : 32) +
-					KIND_INDEX.get(p.kind)!;
-			entries.sort();
-			if (best === undefined || isLess(entries, best)) best = entries;
-		}
-		return best!.join(',');
-	};
-	/** Whether a sorts before b, element by element. Both are the same length. */
-	const isLess = (a: Float64Array, b: Float64Array): boolean => {
-		for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i]! < b[i]!;
-		return false;
-	};
-
-	/** Whether the remaining pieces could still cover every free flight square of the mated royal, counted per square color. */
-	const canStillCover = (board: Board, a: Material, d: Material): boolean => {
-		const free: [number, number] = [0, 0];
-		const cover = maxCover(royal);
-		const withoutRoyal = new Map(board);
-		withoutRoyal.delete(key(0, 0));
-		for (const [sx, sy] of flightsOf(royal)) {
-			if (!onBoard(sx, sy) || board.get(key(sx, sy))?.side === 'D') continue;
-			if (attacks(withoutRoyal, 'A', sx, sy)) continue;
-			free[Math.abs(sx + sy) % 2]!++;
-		}
-		for (const parity of [0, 1] as const) {
-			let capacity = 0;
-			for (const [kind, n] of Object.entries(a) as [Kind, number][])
-				capacity += n * cover[kind][parity];
-			for (const [kind, n] of Object.entries(d) as [Kind, number][])
-				if ((kind !== 'B0' && kind !== 'B1') || Number(kind[1]) === parity) capacity += n;
-			if (capacity < free[parity]) return false;
-		}
-		return true;
-	};
-
-	/** How many placements the candidates offer on this board. */
-	const optionCount = (board: Board, cands: Candidate[]): number =>
-		cands.reduce(
-			(n, c) => n + (board.has(key(...c.sq)) || !isPlaceable(...c.sq) ? 0 : c.kinds.length),
-			0,
-		);
-
-	/** Depth-first search from the board, placing pieces until a reachable mate or every option fails. */
-	const search = (board: Board, a: Material, d: Material): Mate | undefined => {
-		const id = canonicalId(board);
-		if (visited.has(id)) return undefined;
-		visited.add(id);
-		if (singleRoyal && !canStillCover(board, a, d)) return undefined;
-		const unmet = unmetConditions(board, a, d);
-		if (unmet.length === 0)
-			return { board, ...witness!, attackerIsWhite: attackerPawnDir === 1 };
-		// Every unmet condition must be met, so meeting whichever has the fewest options stays complete.
-		const cands = unmet.reduce((best, c) =>
-			optionCount(board, c) < optionCount(board, best) ? c : best,
-		);
-		const tried = new Set<string>();
-		for (const { sq, side, kinds } of cands) {
-			if (board.has(key(...sq)) || !isPlaceable(...sq)) continue;
-			for (const kind of kinds) {
-				const placement = `${key(...sq)}${side}${kind}`;
-				if (tried.has(placement)) continue;
-				tried.add(placement);
-				const pool = side === 'A' ? a : d;
-				const next = new Map(board);
-				next.set(key(...sq), { kind, side });
-				const nextPool = { ...pool, [kind]: pool[kind]! - 1 };
-				const found = side === 'A' ? search(next, nextPool, d) : search(next, a, nextPool);
-				if (found) return found;
-			}
-		}
-		return undefined;
-	};
-
-	return search(new Map([[key(0, 0), { kind: royal, side: 'D' }]]), attacker, defender);
-}
-
 // Scenarios -------------------------------------------------------------------
 
 /** Whether a reachable checkmate exists in any arrangement: either side mated, any of its royals the checked one, either bishop-color assignment. */
@@ -1208,6 +556,737 @@ const materialKey = (m: Material): string =>
 		.map(([kind, n]) => `${kind}${n}`)
 		.join(',');
 
+// Search ----------------------------------------------------------------------
+
+/** Searches for a reachable checkmate with a defender royal of the given kind in check at 0,0. */
+function findMate(
+	attacker: Material,
+	defender: Material,
+	royal: Kind,
+	attackerPawnDir: number,
+): Mate | undefined {
+	const ctx: SearchContext = {
+		royal,
+		attackerPawnDir,
+		farHuygenStandins:
+			royal === 'K' && Object.keys(defender).length === 0
+				? FAR_HUYGEN_STANDINS_LONE_KING
+				: FAR_HUYGEN_STANDINS,
+		// Walls break the symmetry about 0,0; generate.ts instead searches one layout per mirror-image family.
+		symmetries: hasWalls
+			? [ALL_TRANSFORMS[0]!]
+			: allowedTransforms([
+					royal,
+					...(Object.keys(attacker) as Kind[]),
+					...(Object.keys(defender) as Kind[]),
+				]),
+		singleRoyal: !(Object.keys(defender) as Kind[]).some((k) => isRoyal(k)),
+		visited: new Set(),
+	};
+	return search(ctx, new Map([[key(0, 0), { kind: royal, side: 'D' }]]), attacker, defender);
+}
+
+/** Depth-first search from the board, placing pieces until a reachable mate or every option fails. */
+function search(ctx: SearchContext, board: Board, a: Material, d: Material): Mate | undefined {
+	const id = canonicalId(ctx, board);
+	if (ctx.visited.has(id)) return undefined;
+	ctx.visited.add(id);
+	if (ctx.singleRoyal && !canStillCover(ctx, board, a, d)) return undefined;
+	const unmet = unmetConditions(ctx, board, a, d);
+	// Nothing left unmet means a legal last move exists.
+	if (unmet.length === 0)
+		return {
+			board,
+			...legalLastMove(ctx, board, d)!,
+			attackerIsWhite: ctx.attackerPawnDir === 1,
+		};
+	// Every unmet condition must be met, so meeting whichever has the fewest options stays complete.
+	const cands = unmet.reduce((best, c) =>
+		optionCount(board, c) < optionCount(board, best) ? c : best,
+	);
+	const tried = new Set<string>();
+	for (const { sq, side, kinds } of cands) {
+		if (board.has(key(...sq)) || !isPlaceable(...sq)) continue;
+		for (const kind of kinds) {
+			const placement = `${key(...sq)}${side}${kind}`;
+			if (tried.has(placement)) continue;
+			tried.add(placement);
+			const pool = side === 'A' ? a : d;
+			const next = new Map(board);
+			next.set(key(...sq), { kind, side });
+			const nextPool = { ...pool, [kind]: pool[kind]! - 1 };
+			const found =
+				side === 'A' ? search(ctx, next, nextPool, d) : search(ctx, next, a, nextPool);
+			if (found) return found;
+		}
+	}
+	return undefined;
+}
+
+/** The board's key, minimized over every allowed symmetry so symmetric boards share one. */
+function canonicalId(ctx: SearchContext, board: Board): string {
+	let best: Float64Array | undefined;
+	for (const t of ctx.symmetries) {
+		const entries = new Float64Array(board.size);
+		let i = 0;
+		for (const [k, p] of board)
+			entries[i++] =
+				key(...t(...parseKey(k))) * 64 +
+				(p.side === 'A' ? 0 : 32) +
+				KIND_INDEX.get(p.kind)!;
+		entries.sort();
+		if (best === undefined || isLess(entries, best)) best = entries;
+	}
+	return best!.join(',');
+}
+/** Whether a sorts before b, element by element. Both are the same length. */
+function isLess(a: Float64Array, b: Float64Array): boolean {
+	for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i]! < b[i]!;
+	return false;
+}
+
+/** Whether the remaining pieces could still cover every free flight square of the mated royal, counted per square color. */
+function canStillCover(ctx: SearchContext, board: Board, a: Material, d: Material): boolean {
+	const free: [number, number] = [0, 0];
+	const cover = maxCover(ctx.royal);
+	const withoutRoyal = new Map(board);
+	withoutRoyal.delete(key(0, 0));
+	for (const [sx, sy] of flightsOf(ctx.royal)) {
+		if (!onBoard(sx, sy) || board.get(key(sx, sy))?.side === 'D') continue;
+		if (attacks(ctx, withoutRoyal, 'A', sx, sy)) continue;
+		free[Math.abs(sx + sy) % 2]!++;
+	}
+	for (const parity of [0, 1] as const) {
+		let capacity = 0;
+		for (const [kind, n] of Object.entries(a) as [Kind, number][])
+			capacity += n * cover[kind][parity];
+		for (const [kind, n] of Object.entries(d) as [Kind, number][])
+			if ((kind !== 'B0' && kind !== 'B1') || Number(kind[1]) === parity) capacity += n;
+		if (capacity < free[parity]) return false;
+	}
+	return true;
+}
+
+/** How many placements the candidates offer on this board. */
+function optionCount(board: Board, cands: Candidate[]): number {
+	return cands.reduce(
+		(n, c) => n + (board.has(key(...c.sq)) || !isPlaceable(...c.sq) ? 0 : c.kinds.length),
+		0,
+	);
+}
+
+// Conditions ------------------------------------------------------------------
+
+/** Every unmet condition of a reachable checkmate, each as the placements that could meet it. */
+function unmetConditions(
+	ctx: SearchContext,
+	board: Board,
+	a: Material,
+	d: Material,
+): Candidate[][] {
+	const unmet: Candidate[][] = [];
+	if (!attacks(ctx, board, 'A', 0, 0)) unmet.push(attackerCandidates(ctx, board, a, 0, 0));
+	for (const move of defenderMoves(ctx, board)) {
+		const after = applyMove(board, move);
+		if (isAnyRoyalAttacked(ctx, after, 'D')) continue;
+		const cands = [
+			...move.path.flatMap((sq) => anyPieceOn(a, d, sq)),
+			...keepARoyalAttacked(ctx, board, after, a, d),
+		];
+		if (!board.has(key(...move.to)))
+			cands.push({ sq: move.to, side: 'D', kinds: kindsAt(d, move.to) });
+		unmet.push(cands);
+	}
+	unmet.push(...runOffConditions(ctx, board, a, d));
+	if (unmet.length) return unmet;
+	// The defender is mated; what remains is that the position must be legal and reachable.
+	for (const [rk, rp] of board) {
+		if (rp.side !== 'A' || !isRoyal(rp.kind)) continue;
+		const [rx, ry] = parseKey(rk);
+		const checkers = [...board].filter(
+			([k, p]) => p.side === 'D' && pieceAttacks(ctx, board, k, p, rx, ry),
+		);
+		if (checkers.length) return [blockersOf(ctx, board, checkers, rx, ry, a, d)];
+	}
+	if (!legalLastMove(ctx, board, d)) {
+		// Unreachable (e.g. an impossible double check). A piece blocks a check, either in this position or in
+		// the position before some last move, or an attacker not yet placed moved last, uncovering a check by
+		// stepping off its line.
+		const lines = checkBlockers(ctx, board, a, d);
+		return [
+			[
+				...lines,
+				...lines.flatMap(({ sq }) => steppedOffFrom(ctx, board, a, d, sq)),
+				...[...priorsOf(ctx, board, d)].flatMap(({ prior }) =>
+					checkBlockers(ctx, prior, a, d),
+				),
+			],
+		];
+	}
+	return [];
+}
+
+/** Every square from which some remaining attacker kind would attack the target along an empty path. */
+function attackerCandidates(
+	ctx: SearchContext,
+	board: Board,
+	remaining: Material,
+	tx: number,
+	ty: number,
+): Candidate[] {
+	const out: Candidate[] = [];
+	for (let x = -R; x <= R; x++)
+		for (let y = -R; y <= R; y++) {
+			const kinds = (Object.keys(remaining) as Kind[]).filter(
+				(kind) =>
+					remaining[kind]! > 0 &&
+					fitsSquare(kind, x, y) &&
+					canAttack(kind, ctx.attackerPawnDir, tx - x, ty - y),
+			);
+			if (kinds.length) out.push({ sq: [x, y], side: 'A', kinds });
+		}
+	if (remaining.HU)
+		for (const sq of farSquares(board, ctx.farHuygenStandins, tx, ty))
+			if (isHuygenReach(sq, [tx, ty])) out.push({ sq, side: 'A', kinds: ['HU'] });
+	return out;
+}
+
+/** Faraway huygen squares on the row and column through (x, y): per pattern and line side, its first stand-in still free. */
+function farSquares(board: Board, standins: number[][], x: number, y: number): Sq[] {
+	const out: Sq[] = [];
+	for (const ds of standins)
+		for (const side of [1, -1]) {
+			const onRow = ds.map((d): Sq => [side * d, y]).find((sq) => !board.has(key(...sq)));
+			const onColumn = ds.map((d): Sq => [x, side * d]).find((sq) => !board.has(key(...sq)));
+			if (Math.abs(y) <= R && onRow && onBoard(...onRow)) out.push(onRow);
+			if (Math.abs(x) <= R && onColumn && onBoard(...onColumn)) out.push(onColumn);
+		}
+	return out;
+}
+
+/** Placements of any remaining piece of either side on the square. */
+function anyPieceOn(a: Material, d: Material, sq: Sq): Candidate[] {
+	return [
+		{ sq, side: 'A', kinds: kindsAt(a, sq) },
+		{ sq, side: 'D', kinds: kindsAt(d, sq) },
+	];
+}
+/** The material's remaining kinds that may stand on the square, optionally filtered. */
+function kindsAt(m: Material, [x, y]: Sq, filter?: (k: Kind) => boolean): Kind[] {
+	return (Object.keys(m) as Kind[]).filter(
+		(k) => m[k]! > 0 && fitsSquare(k, x, y) && (!filter || filter(k)),
+	);
+}
+
+/** Placements on the board that would leave some defender royal attacked after a move: attack a royal there, or add another royal anywhere. */
+function keepARoyalAttacked(
+	ctx: SearchContext,
+	board: Board,
+	after: Board,
+	a: Material,
+	d: Material,
+): Candidate[] {
+	const cands = royalsOf(after, 'D').flatMap(([x, y]) => attackerCandidates(ctx, board, a, x, y));
+	if ((Object.keys(d) as Kind[]).some((k) => isRoyal(k) && d[k]! > 0))
+		for (let x = -R; x <= R; x++)
+			for (let y = -R; y <= R; y++)
+				cands.push({ sq: [x, y], side: 'D', kinds: kindsAt(d, [x, y], isRoyal) });
+	return cands;
+}
+
+/**
+ * A sliding defender royal whose line runs clear past the window edge escapes along it to
+ * infinitely many squares, unless an attacker slides along that same line from behind it
+ * (attacking the whole line once the royal leaves), or another royal stays attacked.
+ */
+function runOffConditions(
+	ctx: SearchContext,
+	board: Board,
+	a: Material,
+	d: Material,
+): Candidate[][] {
+	const unmet: Candidate[][] = [];
+	for (const [rk, rp] of board) {
+		if (rp.side !== 'D' || !isRoyal(rp.kind)) continue;
+		const [rx, ry] = parseKey(rk);
+		for (const [dx, dy] of DEFS[rp.kind].slides ?? []) {
+			const ray: Sq[] = [];
+			for (let i = 1; inWindow(rx + dx * i, ry + dy * i); i++)
+				ray.push([rx + dx * i, ry + dy * i]);
+			const past = ray.length + 1; // A wall at or inside the window edge leaves no run
+			if (!onBoard(rx + dx * past, ry + dy * past)) continue;
+			if (ray.some(([x, y]) => board.has(key(x, y)))) continue;
+			const behind: Sq[] = [];
+			for (let i = 1; inWindow(rx - dx * i, ry - dy * i); i++)
+				behind.push([rx - dx * i, ry - dy * i]);
+			const slidesAlong = (k: Kind): boolean =>
+				(DEFS[k].slides ?? []).some(([sx, sy]) => sx === dx && sy === dy);
+			const covered = behind.some(([x, y]) => {
+				const p = board.get(key(x, y));
+				return (
+					p?.side === 'A' &&
+					slidesAlong(p.kind) &&
+					pieceAttacks(ctx, board, key(x, y), p, rx, ry)
+				);
+			});
+			// Past the window the royal can stop on infinitely many squares, so only another royal can stay attacked.
+			const after = new Map(board);
+			after.delete(rk);
+			if (covered || isAnyRoyalAttacked(ctx, after, 'D')) continue;
+			const cands: Candidate[] = [
+				...ray.flatMap((sq) => anyPieceOn(a, d, sq)),
+				...behind.map(
+					(sq): Candidate => ({ sq, side: 'A', kinds: kindsAt(a, sq, slidesAlong) }),
+				),
+				...keepARoyalAttacked(ctx, board, after, a, d),
+			];
+			unmet.push(cands);
+		}
+	}
+	return unmet;
+}
+
+/** Placements on every clear attack path of the given pieces to the square. */
+function blockersOf(
+	ctx: SearchContext,
+	board: Board,
+	pieces: [number, Piece][],
+	tx: number,
+	ty: number,
+	a: Material,
+	d: Material,
+): Candidate[] {
+	return pieces.flatMap(([k, p]) => {
+		const [fx, fy] = parseKey(k);
+		return clearPathsTo(ctx, board, p, fx, fy, tx, ty).flatMap((path) =>
+			path.flatMap((sq) => anyPieceOn(a, d, sq)),
+		);
+	});
+}
+
+/** Placements on every clear path of every check on the defender's royals. */
+function checkBlockers(ctx: SearchContext, board: Board, a: Material, d: Material): Candidate[] {
+	return royalsOf(board, 'D').flatMap(([x, y]) =>
+		blockersOf(
+			ctx,
+			board,
+			[...board].filter(([k, p]) => p.side === 'A' && pieceAttacks(ctx, board, k, p, x, y)),
+			x,
+			y,
+			a,
+			d,
+		),
+	);
+}
+
+/**
+ * Placements of an unplaced attacker on every square it could have moved to from the given square,
+ * a huygen's faraway stand-ins included. A pawn may also double step; its diagonal step must have
+ * captured one of the defender's unused pieces.
+ */
+function steppedOffFrom(
+	ctx: SearchContext,
+	board: Board,
+	a: Material,
+	d: Material,
+	[bx, by]: Sq,
+): Candidate[] {
+	const dir = ctx.attackerPawnDir;
+	const out: Candidate[] = [];
+	if (a.HU)
+		for (const sq of farSquares(board, FAR_HUYGEN_STANDINS, bx, by))
+			if (isHuygenReach([bx, by], sq)) out.push({ sq, side: 'A', kinds: ['HU'] });
+	for (let x = -R; x <= R; x++)
+		for (let y = -R; y <= R; y++) {
+			const kinds = (Object.keys(a) as Kind[]).filter(
+				(kind) =>
+					a[kind]! > 0 &&
+					fitsSquare(kind, x, y) &&
+					(DEFS[kind].pawn
+						? (x === bx && (y === by + dir || y === by + 2 * dir)) ||
+							(y === by + dir &&
+								Math.abs(x - bx) === 1 &&
+								kindsAt(d, [x, y], (k) => !isRoyal(k)).length > 0)
+						: canAttack(kind, dir, x - bx, y - by)),
+			);
+			if (kinds.length) out.push({ sq: [x, y], side: 'A', kinds });
+		}
+	return out;
+}
+
+// Defender Moves --------------------------------------------------------------
+
+/**
+ * Every move of every defender piece. Slides stop at the window edge; a sliding royal's run
+ * beyond it is handled separately.
+ */
+function defenderMoves(ctx: SearchContext, board: Board): Move[] {
+	const moves: Move[] = [];
+	for (const [k, p] of board) {
+		if (p.side !== 'D') continue;
+		const [fx, fy] = parseKey(k);
+		const def = DEFS[p.kind];
+		const tryTo = (tx: number, ty: number, path: Sq[]): void => {
+			if (!onBoard(tx, ty) || !path.every(([x, y]) => onBoard(x, y))) return;
+			if (board.get(key(tx, ty))?.side !== 'D')
+				moves.push({ from: [fx, fy], to: [tx, ty], path });
+		};
+		for (const [a, b] of def.leaps ?? []) tryTo(fx + a, fy + b, []);
+		for (const [a, b] of def.slides ?? []) {
+			const path: Sq[] = [];
+			for (let i = 1; inWindow(fx + a * i, fy + b * i); i++) {
+				const x = fx + a * i,
+					y = fy + b * i;
+				tryTo(x, y, [...path]);
+				if (board.has(key(x, y))) break;
+				path.push([x, y]);
+			}
+		}
+		if (def.huygen)
+			for (const [a, b] of ORTHO) {
+				const path: Sq[] = [];
+				for (let d = 2; inWindow(fx + a * d, fy + b * d); d++) {
+					if (!isPrime(d)) continue;
+					const x = fx + a * d,
+						y = fy + b * d;
+					tryTo(x, y, [...path]);
+					if (board.has(key(x, y))) break;
+					path.push([x, y]);
+				}
+			}
+		if (def.pawn) {
+			const dir = pawnDir(ctx, 'D');
+			if (onBoard(fx, fy + dir) && !board.has(key(fx, fy + dir)))
+				moves.push({ from: [fx, fy], to: [fx, fy + dir], path: [] });
+			for (const sx of [1, -1])
+				if (onBoard(fx + sx, fy + dir) && board.get(key(fx + sx, fy + dir))?.side === 'A')
+					moves.push({ from: [fx, fy], to: [fx + sx, fy + dir], path: [] });
+		}
+		if (def.rose)
+			for (const spiral of ROSE_SPIRALS)
+				for (let h = 0; h < spiral.length; h++) {
+					const [x, y] = [fx + spiral[h]![0], fy + spiral[h]![1]];
+					tryTo(
+						x,
+						y,
+						spiral.slice(0, h).map(([sx, sy]) => [fx + sx, fy + sy] as Sq),
+					);
+					if (board.has(key(x, y))) break;
+				}
+		// Captures of attackers beyond the window (faraway huygens), which the window-bounded walks above miss.
+		for (const [ak, ap] of board) {
+			if (ap.side !== 'A') continue;
+			const [ax, ay] = parseKey(ak);
+			if (inWindow(ax, ay)) continue;
+			const [clearPath] = clearPathsTo(ctx, board, p, fx, fy, ax, ay);
+			if (clearPath) moves.push({ from: [fx, fy], to: [ax, ay], path: clearPath });
+			moves.push(...blocksBeyondWindow(ctx, board, p, fx, fy, ax, ay));
+		}
+	}
+	return moves;
+}
+
+/** The pawn direction of the side. */
+function pawnDir(ctx: SearchContext, side: Side): number {
+	return side === 'A' ? ctx.attackerPawnDir : -ctx.attackerPawnDir;
+}
+
+/**
+ * Moves of a defender sliding piece onto the line of a faraway attacker at (ax, ay), past the
+ * window edge, landing a prime distance from it: a huygen is blocked there. Leapers and roses
+ * need none of this, as their moves are generated without the window bound.
+ */
+function blocksBeyondWindow(
+	ctx: SearchContext,
+	board: Board,
+	p: Piece,
+	fx: number,
+	fy: number,
+	ax: number,
+	ay: number,
+): Move[] {
+	const alongX = Math.abs(ay) <= R; // The faraway piece's line is a row (else a column)
+	const [lineCoord, farCoord] = alongX ? [ay, ax] : [ax, ay];
+	const side = Math.sign(farCoord);
+	const isBlockSquare = (c: number): boolean =>
+		Math.abs(c) > R &&
+		Math.sign(c) === side &&
+		Math.abs(c) < Math.abs(farCoord) &&
+		isPrime(Math.abs(farCoord - c));
+	const toSq = (c: number): Sq => (alongX ? [c, lineCoord] : [lineCoord, c]);
+	const reachable = (c: number): Move | undefined => {
+		const [tx, ty] = toSq(c);
+		if (board.has(key(tx, ty))) return undefined;
+		const [path] = clearPathsTo(ctx, board, p, fx, fy, tx, ty);
+		return path && { from: [fx, fy], to: [tx, ty], path };
+	};
+	const def = DEFS[p.kind];
+	const moves: Move[] = [];
+	const [pLine, pAlong] = alongX ? [fy, fx] : [fx, fy];
+	for (const [dx, dy] of def.slides ?? []) {
+		const [dLine, dAlong] = alongX ? [dy, dx] : [dx, dy];
+		if (dLine === 0) {
+			// Sliding along the line itself: the first block square past the window edge serves.
+			if (pLine !== lineCoord || Math.sign(dAlong) !== side) continue;
+			let c = side * (R + 1);
+			while (Math.abs(c) < Math.abs(farCoord) && !isBlockSquare(c)) c += side;
+			const move = isBlockSquare(c) ? reachable(c) : undefined;
+			if (move) moves.push(move);
+			continue;
+		}
+		// Crossing the line: it lands on it at exactly one square.
+		const t = (lineCoord - pLine) / dLine;
+		if (!Number.isInteger(t) || t < 1) continue;
+		const c = pAlong + t * dAlong;
+		const move = isBlockSquare(c) ? reachable(c) : undefined;
+		if (move) moves.push(move);
+	}
+	// Hopping along the line: c must sit a prime distance from both huygens. With an odd gap
+	// between them one distance is 2, so c sits two from either huygen; two from this one is
+	// past the window only when it stands within 2 of the edge.
+	if (def.huygen && pLine === lineCoord) {
+		const gap = Math.abs(farCoord - pAlong);
+		const skipsToFar = gap % 2 === 1 && Math.abs(pAlong + 2 * side) <= R;
+		for (
+			let c = skipsToFar ? farCoord - 2 * side : side * (R + 1);
+			Math.abs(c) < Math.abs(farCoord);
+			c += side
+		) {
+			if (!isBlockSquare(c) || !isPrime(Math.abs(c - pAlong))) continue;
+			const move = reachable(c);
+			if (move) {
+				moves.push(move);
+				break;
+			}
+		}
+	}
+	return moves;
+}
+
+/** The board after a defender move. */
+function applyMove(board: Board, { from, to }: Move): Board {
+	const after = new Map(board);
+	const piece = after.get(key(...from))!;
+	after.delete(key(...from));
+	after.set(key(...to), piece);
+	return after;
+}
+
+// Attacks ---------------------------------------------------------------------
+
+/** Whether any piece of the side attacks the square. */
+function attacks(ctx: SearchContext, board: Board, side: Side, tx: number, ty: number): boolean {
+	for (const [k, p] of board)
+		if (p.side === side && k !== key(tx, ty) && pieceAttacks(ctx, board, k, p, tx, ty))
+			return true;
+	return false;
+}
+/** Whether any royal of the side is attacked. */
+function isAnyRoyalAttacked(ctx: SearchContext, board: Board, side: Side): boolean {
+	return royalsOf(board, side).some(([x, y]) =>
+		attacks(ctx, board, side === 'A' ? 'D' : 'A', x, y),
+	);
+}
+/** The squares of the side's royals. */
+function royalsOf(board: Board, side: Side): Sq[] {
+	return [...board]
+		.filter(([, p]) => p.side === side && isRoyal(p.kind))
+		.map(([k]) => parseKey(k));
+}
+/** Whether a piece on the board attacks the square by some clear path. */
+function pieceAttacks(
+	ctx: SearchContext,
+	board: Board,
+	k: number,
+	p: Piece,
+	tx: number,
+	ty: number,
+): boolean {
+	const [fx, fy] = parseKey(k);
+	return clearPathsTo(ctx, board, p, fx, fy, tx, ty).length > 0;
+}
+
+/**
+ * Every clear path by which a piece at from attacks to, each as the squares that must be empty.
+ * A reach past SPAN (only a slide or a huygen's) checks just the pieces on its line, and its
+ * path lists only its window squares, the only ones a piece can be placed on.
+ */
+function clearPathsTo(
+	ctx: SearchContext,
+	board: Board,
+	p: Piece,
+	fx: number,
+	fy: number,
+	tx: number,
+	ty: number,
+): Sq[][] {
+	if (!onBoard(tx, ty)) return [];
+	if (DEFS[p.kind].huygen) return huygenPaths(board, fx, fy, tx, ty);
+	if (Math.abs(tx - fx) <= SPAN && Math.abs(ty - fy) <= SPAN)
+		return pathsTo(p.kind, pawnDir(ctx, p.side), fx, fy, tx, ty).filter((path) =>
+			path.every(([x, y]) => onBoard(x, y) && !board.has(key(x, y))),
+		);
+	for (const dir of DEFS[p.kind].slides ?? []) {
+		const k = stepsAlong(fx, fy, tx, ty, dir);
+		if (k === 0) continue;
+		if (piecesBetween(board, fx, fy, dir, k).length) return [];
+		return [windowSquaresBetween(fx, fy, dir, k, () => true)];
+	}
+	return [];
+}
+
+/** clearPathsTo for a huygen, whose path is the squares a prime distance along its line. */
+function huygenPaths(board: Board, fx: number, fy: number, tx: number, ty: number): Sq[][] {
+	if (fx !== tx && fy !== ty) return [];
+	const n = Math.abs(tx - fx + ty - fy);
+	if (!isPrime(n)) return [];
+	const dir: Sq = [Math.sign(tx - fx), Math.sign(ty - fy)];
+	// A faraway huygen that can move out to another block-free distance is never blocked by a nearer faraway one (see spaceFarHuygens).
+	const isMovable = !inWindow(fx, fy) && isBlockFree(Math.max(Math.abs(fx), Math.abs(fy)));
+	const blocked = piecesBetween(board, fx, fy, dir, n).some(
+		([j, [bx, by], bp]) =>
+			isPrime(j) && !(isMovable && bp.kind === 'HU' && bp.side === 'A' && !inWindow(bx, by)),
+	);
+	return blocked ? [] : [windowSquaresBetween(fx, fy, dir, n, isPrime)];
+}
+
+/** The board's pieces strictly between from and k steps along dir, with their step counts. */
+function piecesBetween(
+	board: Board,
+	fx: number,
+	fy: number,
+	dir: Sq,
+	k: number,
+): [number, Sq, Piece][] {
+	const out: [number, Sq, Piece][] = [];
+	for (const [bk, bp] of board) {
+		const sq = parseKey(bk);
+		const j = stepsAlong(fx, fy, sq[0], sq[1], dir);
+		if (j > 0 && j < k) out.push([j, sq, bp]);
+	}
+	return out;
+}
+
+// Reachability ----------------------------------------------------------------
+
+/**
+ * The first attacker move that could have produced this position from one where no defender royal
+ * was in check.
+ */
+function legalLastMove(ctx: SearchContext, board: Board, d: Material): Prior | undefined {
+	for (const candidate of priorsOf(ctx, board, d))
+		if (!isAnyRoyalAttacked(ctx, candidate.prior, 'D')) return candidate;
+	return undefined;
+}
+
+/**
+ * Every position an attacker move could have produced this one from, by un-making each attacker
+ * move, a non-royal piece's promotion from a pawn included. A capture may only restore a piece
+ * the defender still has unused, since insuffmat is judged on the material before that capture.
+ */
+function* priorsOf(ctx: SearchContext, board: Board, d: Material): Generator<Prior> {
+	for (const [k, p] of board) {
+		if (p.side !== 'A') continue;
+		const [sx, sy] = parseKey(k);
+		const capturable = (Object.keys(d) as Kind[]).filter(
+			(kind) => d[kind]! > 0 && !isRoyal(kind) && fitsSquare(kind, sx, sy),
+		);
+		const promoted = !isRoyal(p.kind) && !DEFS[p.kind].pawn;
+		const unmoves = [
+			...unmoveOrigins(ctx, board, p, sx, sy).map((origin) => ({ ...origin, mover: p })),
+			...(promoted ? pawnOrigins(ctx, board, sx, sy) : []).map((origin) => ({
+				...origin,
+				mover: PROMOTING_PAWN,
+			})),
+		];
+		for (const { from, capture, passed, mover } of unmoves) {
+			if (passed && !d.P) continue; // En passant captured a spare defender pawn
+			for (const captured of capture ? capturable : [undefined]) {
+				const prior = new Map(board);
+				prior.delete(k);
+				prior.set(key(...from), mover);
+				if (captured) prior.set(k, { kind: captured, side: 'D' });
+				if (passed) prior.set(key(...passed), { kind: 'P', side: 'D' });
+				yield { prior, lastMove: [from, [sx, sy]] };
+			}
+		}
+	}
+}
+
+/**
+ * Every square an attacker piece could have moved from to reach (sx, sy), and whether that move
+ * may have captured: within 2R of it, or from far away, FAR_ORIGIN steps back along a slide, or
+ * for a huygen landing in the window, from where it attacks only that square of its line.
+ */
+function unmoveOrigins(
+	ctx: SearchContext,
+	board: Board,
+	p: Piece,
+	sx: number,
+	sy: number,
+): Origin[] {
+	if (DEFS[p.kind].pawn) return pawnOrigins(ctx, board, sx, sy);
+	const near: Sq[] = [];
+	for (let x = sx - 2 * R; x <= sx + 2 * R; x++)
+		for (let y = sy - 2 * R; y <= sy + 2 * R; y++) near.push([x, y]);
+	const far: Sq[] = (DEFS[p.kind].slides ?? []).map(([dx, dy]) => [
+		sx - dx * FAR_ORIGIN,
+		sy - dy * FAR_ORIGIN,
+	]);
+	if (DEFS[p.kind].huygen && inWindow(sx, sy)) {
+		const origin = (c: number): number => FAR_HUYGEN_ORIGINS[c + R]!;
+		far.push([origin(sx), sy], [-origin(-sx), sy], [sx, origin(sy)], [sx, -origin(-sy)]);
+	}
+	return [...near, ...far]
+		.filter(
+			([x, y]) =>
+				onBoard(x, y) &&
+				!board.has(key(x, y)) &&
+				clearPathsTo(ctx, board, p, x, y, sx, sy).length > 0,
+		)
+		.flatMap((from) => [
+			{ from, capture: false },
+			{ from, capture: true },
+		]);
+}
+
+/**
+ * Every square an attacker pawn could have moved from to reach (sx, sy): a step, a double step,
+ * or a capture, which en passant took from the passed square beside its origin.
+ */
+function pawnOrigins(ctx: SearchContext, board: Board, sx: number, sy: number): Origin[] {
+	const dir = pawnDir(ctx, 'A');
+	const isFree = (x: number, y: number): boolean => onBoard(x, y) && !board.has(key(x, y));
+	const isDefenderPawn = (x: number, y: number): boolean => board.get(key(x, y))?.kind === 'P' && board.get(key(x, y))?.side === 'D'; // prettier-ignore
+	/**
+	 * Whether a defender pawn at (px, sy) escapes the mate by taking a double-stepped pawn en
+	 * passant.
+	 */
+	const isEnPassantEscape = (px: number): boolean => {
+		if (!isDefenderPawn(px, sy)) return false;
+		const after = new Map(board);
+		after.delete(key(sx, sy));
+		after.delete(key(px, sy));
+		after.set(key(sx, sy - dir), { kind: 'P', side: 'D' });
+		return !isAnyRoyalAttacked(ctx, after, 'D');
+	};
+	const origins: Origin[] = [];
+	if (isFree(sx, sy - dir)) {
+		origins.push({ from: [sx, sy - dir], capture: false });
+		if (isFree(sx, sy - 2 * dir) && !isEnPassantEscape(sx + 1) && !isEnPassantEscape(sx - 1))
+			origins.push({ from: [sx, sy - 2 * dir], capture: false });
+	}
+	for (const ox of [1, -1]) {
+		if (!isFree(sx + ox, sy - dir)) continue;
+		origins.push({ from: [sx + ox, sy - dir], capture: true });
+		if (isFree(sx, sy - dir))
+			origins.push({ from: [sx + ox, sy - dir], capture: false, passed: [sx, sy - dir] });
+	}
+	return origins;
+}
+
+// Notation --------------------------------------------------------------------
+
 /** Parses "K,Q vs k,b0,b1" style material: comma-separated piece codes per side, b0/b1 giving bishop parities. */
 function parse(spec: string): [Material, Material] {
 	const sides = spec.split(' vs').map((side) => {
@@ -1220,23 +1299,7 @@ function parse(spec: string): [Material, Material] {
 	});
 	return [sides[0] ?? {}, sides[1] ?? {}];
 }
-/** The board as an ICN with the given side to move. No promotion field, so pawns never promote. */
-function toIcn(
-	board: Board,
-	attackerIsWhite: boolean,
-	toMove: Side,
-	special: { doubleStepper?: number; enPassant?: Sq } = {},
-): string {
-	const pieces = [...board].map(([k, p]) => `${icnAbbr(p, attackerIsWhite)}${coordText(...parseKey(k))}${k === special.doubleStepper ? '+' : ''}`); // prettier-ignore
-	const enPassant = special.enPassant ? ` ${coordText(...special.enPassant)}` : '';
-	const border = hasWalls ? ` ${walls.map((w) => w ?? '_').join(',')}` : '';
-	return `${(toMove === 'A') === attackerIsWhite ? 'w' : 'b'}${enPassant}${border} ${pieces.join('|')}`;
-}
-/** The piece's ICN abbreviation: uppercase for white. */
-function icnAbbr(p: Piece, attackerIsWhite: boolean): string {
-	const abbr = p.kind === 'B0' || p.kind === 'B1' ? 'B' : p.kind;
-	return (p.side === 'A') === attackerIsWhite ? abbr : abbr.toLowerCase();
-}
+
 /** One line per found mate, for the site to verify: label, mate (defender to move), the prior position (attacker to move), and the last move. */
 function witnessLine(label: string, mate: Mate): string {
 	const m = spaceFarHuygens(mate);
@@ -1322,6 +1385,24 @@ function spaceFarHuygens(m: Mate): Mate {
 	};
 }
 
+/** The board as an ICN with the given side to move. No promotion field, so pawns never promote. */
+function toIcn(
+	board: Board,
+	attackerIsWhite: boolean,
+	toMove: Side,
+	special: { doubleStepper?: number; enPassant?: Sq } = {},
+): string {
+	const pieces = [...board].map(([k, p]) => `${icnAbbr(p, attackerIsWhite)}${coordText(...parseKey(k))}${k === special.doubleStepper ? '+' : ''}`); // prettier-ignore
+	const enPassant = special.enPassant ? ` ${coordText(...special.enPassant)}` : '';
+	const border = hasWalls ? ` ${walls.map((w) => w ?? '_').join(',')}` : '';
+	return `${(toMove === 'A') === attackerIsWhite ? 'w' : 'b'}${enPassant}${border} ${pieces.join('|')}`;
+}
+/** The piece's ICN abbreviation: uppercase for white. */
+function icnAbbr(p: Piece, attackerIsWhite: boolean): string {
+	const abbr = p.kind === 'B0' || p.kind === 'B1' ? 'B' : p.kind;
+	return (p.side === 'A') === attackerIsWhite ? abbr : abbr.toLowerCase();
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -1331,6 +1412,7 @@ export default {
 	allowedTransforms,
 	// Scenarios
 	isMatePossible,
+	// Notation
 	parse,
 	witnessLine,
 };
