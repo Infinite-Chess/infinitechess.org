@@ -300,8 +300,8 @@ disagree, study more siblings before trusting either.
   inside scripts.
 - One purpose per function — refactor it out into multiple functions even if called once. Aim under
   ~40 lines, not mandatory.
-- Functions read top-down in chronological usage order: a helper sits below the first function that
-  calls it, so reading top-down follows runtime order.
+- Functions sit with their relatives; within that, a helper sits below its first caller, so reading
+  top-down follows runtime order.
 
 ### Public surface
 
