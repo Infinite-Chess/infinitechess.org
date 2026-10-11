@@ -283,6 +283,21 @@ function interruptSearch(): void {
 	if (search) analysisworker.interrupt(search);
 }
 
+/** Ends the in-flight search for good (an interrupt alone resumes it), dropping its tail info. */
+function abandonSearch(): void {
+	interruptSearch();
+	send({ cmd: 'stop' });
+	activeRequestId++;
+	analyzed = undefined;
+}
+
+/** Stops the engine (keeps the worker warm). */
+function stopAnalysis(): void {
+	interruptSearch();
+	send({ cmd: 'stop' });
+	notifyStatus();
+}
+
 // Legal-moves helper worker ---------------------------------------------------
 
 /** Lazily spins up the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
@@ -498,7 +513,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	// This position crashed the engine too many times — never send it again (that just re-crashes
 	// the worker). Checked ahead of the spawn below, so a dead position never costs a wasm load.
 	if (isPositionDead(icn)) {
-		interruptSearch();
+		abandonSearch();
 		latestUpdate = undefined;
 		lastAnalyzedIcn = icn;
 		emitNow();
@@ -540,10 +555,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		cached.multiPv >= settings.multiPv &&
 		(cached.terminal || cached.depth >= currentTargetDepth)
 	) {
-		interruptSearch(); // Abort any prior slice instantly; keep the worker (and its warm hash).
-		send({ cmd: 'stop' });
-		activeRequestId++; // Drop any tail info from that stopped search.
-		analyzed = undefined;
+		abandonSearch(); // Keeps the worker (and its warm hash).
 		latestUpdate = retargetCachedUpdate(cached);
 		emitNow();
 		lastAnalyzedIcn = icn;
@@ -597,12 +609,9 @@ function computeBlockReason(gamefile: GameFile): EngineSupportCode | undefined {
 
 /** Stops the engine and marks the viewed position un-analyzable, for the given `reason`. */
 function blockAnalysis(reason: EngineSupportCode): void {
-	interruptSearch();
-	send({ cmd: 'stop' });
+	abandonSearch();
 	blockReason = reason;
 	goDeeperActive = false;
-	analyzed = undefined;
-	activeRequestId++;
 	lastAnalyzedIcn = undefined;
 	latestUpdate = undefined;
 	emitNow();
@@ -622,13 +631,6 @@ function retargetCachedUpdate(update: CevalUpdate): CevalUpdate {
 
 function areAllLinesConclusive(lines: CevalLine[]): boolean {
 	return lines.length > 0 && lines.every((line) => line.mate !== undefined);
-}
-
-/** Stops the engine (keeps the worker warm). */
-function stopAnalysis(): void {
-	interruptSearch();
-	send({ cmd: 'stop' });
-	notifyStatus();
 }
 
 function restartWorkerForSearch(): void {
