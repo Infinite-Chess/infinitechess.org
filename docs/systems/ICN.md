@@ -80,7 +80,9 @@ Colon-joined player codes, one full turn cycle: `w:b`. **`w` is shorthand for `w
 
 The turn order is what defines _which players are in the game_, so it also drives how many entries
 the promotion and win-condition fields must carry. Players may move more than once in a row
-(`w:w:b:b`).
+(`w:w:b:b`). A game is either white and black or all four colored players, never a mix, and every
+non-neutral piece must belong to one of its players
+([positionlegality.ts](/src/shared/chess/logic/positionlegality.ts)).
 
 The first player listed is the one to move — from the position this ICN carries, _before_ its move
 list, not after. Flattening a game into a position rotates the order one step per ply, so a mid-game
@@ -373,6 +375,7 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 | Comment embedded command sequences (`[%clk ...]`)  | [icncommentutils.ts](/src/shared/chess/logic/icn/icncommentutils.ts)                                                                    |
 | Parsed ICN → position / `VariantOptions` / packets | [icnimport.ts](/src/shared/chess/logic/icn/icnimport.ts)                                                                                |
 | Parsed ICN → constructed gamefile                  | [gameformulator.ts](/src/shared/chess/game/gameformulator.ts)                                                                           |
+| Whether a parsed position is legal and playable    | [positionlegality.ts](/src/shared/chess/logic/positionlegality.ts), [playability.ts](/src/shared/chess/game/playability.ts)             |
 | Gamefile → the converter's input shape             | [gamecompressor.ts](/src/client/scripts/esm/chess/gamecompressor.ts)                                                                    |
 | Gamerule + win-condition vocabularies              | [gamerules.ts](/src/shared/chess/util/gamerules.ts), [winconutil.ts](/src/shared/chess/util/winconutil.ts)                              |
 | Piece types and player numbers                     | [typeutil.ts](/src/shared/chess/util/typeutil.ts)                                                                                       |

@@ -136,7 +136,7 @@ function rank(material: Material): number {
 	const values: number[] = [];
 	for (const [code, count] of material) {
 		const value = RANKED_CODES.indexOf(code);
-		if (value === -1) return -1; // A code no listed set holds (a third player's piece): no rank matches
+		if (value === -1) return -1; // A piece missing from RANKED_CODES, which writetable.ts refuses
 		for (let i = 0; i < count; i++) values.push(value);
 	}
 	values.sort((a, b) => a - b);
