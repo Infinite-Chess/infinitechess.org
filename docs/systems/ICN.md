@@ -357,6 +357,8 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 - **The move regex is possessive throughout** (via the `possessive()` lookahead/backreference
   trick). ICN is parsed from untrusted input on the server, and its stack of optional move parts is
   where catastrophic backtracking would bite. Keep new move patterns possessive.
+- **The side not to move must not be in check**, or the position is refused on load
+  ([playability.ts](/src/shared/chess/game/playability.ts)).
 - **All coordinates are `BigInt`.** No coordinate is ever bounded or cast to `number`.
 - **ICNs are validated in bulk** by the `/icnvalidator` dev page and `npm run validate-icn`, pointed
   at an engine SPRT run's output to catch legal-move or game-conclusion bugs.
