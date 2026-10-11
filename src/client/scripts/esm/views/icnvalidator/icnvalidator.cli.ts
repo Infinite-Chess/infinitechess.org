@@ -85,19 +85,17 @@ Fingerprint: ${results.fingerprint}`);
 // Child Process ---------------------------------------------------------------
 
 /** Loads the engine, validates the chunk of games the parent sends, and replies with its tallies. */
-function runChildProcess(send: (response: ChildResponse) => void): void {
+function runChildProcess(reply: (response: ChildResponse) => void): void {
 	process.once('message', async (games: ValidationRequest['games']) => {
 		let wasm: MovegenWasmModule;
 		try {
 			wasm = await loadEngine();
 		} catch (error) {
-			send({ type: 'initerror', message: jsutil.getErrorMessage(error) });
-			process.disconnect();
+			reply({ type: 'initerror', message: jsutil.getErrorMessage(error) });
 			return;
 		}
 		const results = await chunkvalidator.validate(games, { wasm, fingerprint: true }, () => {});
-		send({ type: 'done', results });
-		process.disconnect();
+		reply({ type: 'done', results });
 	});
 }
 
@@ -114,5 +112,7 @@ async function loadEngine(): Promise<MovegenWasmModule> {
 // Entry -----------------------------------------------------------------------
 
 const sendToParent = process.send?.bind(process);
-if (sendToParent) runChildProcess((response) => sendToParent(response));
+// Disconnects only once the reply is sent: disconnecting first can drop a large one, leaving the parent waiting.
+if (sendToParent)
+	runChildProcess((response) => sendToParent(response, undefined, undefined, () => process.disconnect())); // prettier-ignore
 else await runParent(process.argv[2]);
