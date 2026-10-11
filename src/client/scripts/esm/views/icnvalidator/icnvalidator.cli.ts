@@ -2,12 +2,14 @@
 
 /**
  * The ICN validator as a command. Validates a games json on every core, with the
- * movegen check and the move fingerprint, so a change to legal-move, check,
- * checkmate or game-end logic can be checked against the same games before and after.
+ * movegen check and the fingerprint, so a change to legal-move, check, checkmate or
+ * game-end logic can be checked against the same games before and after.
  *
- * Usage: npm run validate-icn -- <games.json>
+ * Usage: npm run validate-icn -- <games.json> [--conclusions]
  *
- * Runs the movegen check against the engine package in src/client/pkg/apeiron/pkg/:
+ * --conclusions skips the movegen check and fingerprints only each game's outcome,
+ * enough for a change to game-end logic alone, in a fraction of the time. Otherwise it
+ * runs the movegen check against the engine package in src/client/pkg/apeiron/pkg/:
  * the release any build downloads, or a local engine build (docs/systems/ENGINE.md).
  */
 
@@ -27,6 +29,9 @@ import { SPRTGamesSchema } from './icnvalidatorprotocol.js';
 
 // Types -----------------------------------------------------------------------
 
+/** What the parent sends a child process. */
+type ChildRequest = { games: ValidationRequest['games']; conclusionsOnly: boolean };
+
 /** What a child process sends back to the parent. */
 type ChildResponse =
 	| { type: 'done'; results: ChunkResults }
@@ -40,23 +45,27 @@ const ENGINE_DIR = new URL('../../../../pkg/apeiron/pkg/', import.meta.url);
 // Parent Process --------------------------------------------------------------
 
 /** Splits the games across one child process per core, then prints their merged results. */
-async function runParent(gamesPath: string | undefined): Promise<void> {
-	if (gamesPath === undefined) throw Error('Usage: npm run validate-icn -- <games.json>');
+async function runParent(args: string[]): Promise<void> {
+	const [gamesPath, flag] = args;
+	if (gamesPath === undefined || (flag !== undefined && flag !== '--conclusions'))
+		throw Error('Usage: npm run validate-icn -- <games.json> [--conclusions]');
+	const conclusionsOnly = flag === '--conclusions';
 	const games = SPRTGamesSchema.parse(JSON.parse(fs.readFileSync(gamesPath, 'utf8')));
 	const gameChunks = chunks.split(games, os.availableParallelism());
 
 	console.log(`Validating ${games.length} games on ${gameChunks.length} processes...`);
 	const startTime = performance.now();
 	const results = chunks.createResults();
-	for (const chunk of await Promise.all(gameChunks.map((chunk) => runChild(chunk)))) {
+	const requests = gameChunks.map((chunk) => runChild({ games: chunk, conclusionsOnly }));
+	for (const chunk of await Promise.all(requests)) {
 		chunks.mergeResults(results, chunk);
 	}
-	printResults(results, games.length, performance.now() - startTime);
+	printResults(results, games.length, performance.now() - startTime, conclusionsOnly);
 	if (results.successfulCount < games.length) process.exitCode = 1;
 }
 
 /** Validates one chunk in a child process, resolving with its tallies. */
-function runChild(games: ValidationRequest['games']): Promise<ChunkResults> {
+function runChild(request: ChildRequest): Promise<ChunkResults> {
 	return new Promise((resolve, reject) => {
 		const child = fork(fileURLToPath(import.meta.url));
 		child.on('message', (response: ChildResponse) => {
@@ -66,12 +75,17 @@ function runChild(games: ValidationRequest['games']): Promise<ChunkResults> {
 		child.on('exit', (code) => {
 			if (code !== 0) reject(Error(`A child process exited with code ${code}`));
 		});
-		child.send(games);
+		child.send(request);
 	});
 }
 
-/** Prints every failed game, the tallies, and the fingerprint. */
-function printResults(results: ChunkResults, total: number, ms: number): void {
+/** Prints every failed game, the tallies, and the fingerprint, labelled by its kind. */
+function printResults(
+	results: ChunkResults,
+	total: number,
+	ms: number,
+	conclusionsOnly: boolean,
+): void {
 	results.errors.sort((a, b) => a.gameIndex - b.gameIndex);
 	for (const { gameIndex, variant, phase, error } of results.errors) {
 		console.log(`Game #${gameIndex} (${variant ?? 'unknown variant'}) ${phase}: ${error}`);
@@ -79,22 +93,26 @@ function printResults(results: ChunkResults, total: number, ms: number): void {
 	console.log(`
 ${results.successfulCount} / ${total} games passed in ${(ms / 1000).toFixed(0)} s
 Failures: ICN ${results.icnconverterErrors} | formulator ${results.formulatorErrors} | illegal move ${results.illegalMoveErrors} | movegen ${results.movegenMismatchErrors} | termination ${results.terminationMismatchErrors}
-Fingerprint: ${results.fingerprint}`);
+Fingerprint${conclusionsOnly ? ' (conclusions only)' : ''}: ${results.fingerprint}`);
 }
 
 // Child Process ---------------------------------------------------------------
 
-/** Loads the engine, validates the chunk of games the parent sends, and replies with its tallies. */
+/**
+ * Loads the engine if needed, validates the chunk of games the parent sends, and replies with
+ * its tallies.
+ */
 function runChildProcess(reply: (response: ChildResponse) => void): void {
-	process.once('message', async (games: ValidationRequest['games']) => {
-		let wasm: MovegenWasmModule;
+	process.once('message', async ({ games, conclusionsOnly }: ChildRequest) => {
+		let wasm: MovegenWasmModule | undefined;
 		try {
-			wasm = await loadEngine();
+			if (!conclusionsOnly) wasm = await loadEngine();
 		} catch (error) {
 			reply({ type: 'initerror', message: jsutil.getErrorMessage(error) });
 			return;
 		}
-		const results = await chunkvalidator.validate(games, { wasm, fingerprint: true }, () => {});
+		const fingerprint = conclusionsOnly ? 'conclusions' : 'full';
+		const results = await chunkvalidator.validate(games, { wasm, fingerprint }, () => {});
 		reply({ type: 'done', results });
 	});
 }
@@ -115,4 +133,4 @@ const sendToParent = process.send?.bind(process);
 // Disconnects only once the reply is sent: disconnecting first can drop a large one, leaving the parent waiting.
 if (sendToParent)
 	runChildProcess((response) => sendToParent(response, undefined, undefined, () => process.disconnect())); // prettier-ignore
-else await runParent(process.argv[2]);
+else await runParent(process.argv.slice(2));

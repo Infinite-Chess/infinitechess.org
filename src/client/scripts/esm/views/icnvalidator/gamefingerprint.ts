@@ -1,12 +1,12 @@
-// src/client/scripts/esm/views/icnvalidator/movefingerprint.ts
+// src/client/scripts/esm/views/icnvalidator/gamefingerprint.ts
 
 /**
- * Hashes the site's legal moves at one position, plus that position's game conclusion
- * (checkmate, stalemate…). Summed across a whole run, the hashes form a fingerprint
- * that changes if any legal move or conclusion anywhere changes, whatever order the
- * positions, pieces and moves are visited in. Its blind spots: a rose's route (only its
- * length counts), and a slide square excluded within its limits (a Huygen's non-prime,
- * a pin) further than {@link SLIDE_WINDOW} from its piece.
+ * Hashes the site's legal moves at each position of a game, plus the game's outcome (the
+ * conclusion it reaches, or why it wouldn't load). Summed across a whole run, the hashes form a
+ * fingerprint that changes if any legal move or outcome anywhere changes, whatever order the games,
+ * positions, pieces and moves are visited in. Its blind spots: a rose's route (only its length
+ * counts), and a slide square excluded within its limits (a Huygen's non-prime, a pin) further
+ * than {@link SLIDE_WINDOW} from its piece.
  */
 
 import type { Vec2Key } from '../../../../../shared/util/math/vectors.js';
@@ -18,7 +18,6 @@ import type { Coords, CoordsKey } from '../../../../../shared/util/coordutil.js'
 import vectors from '../../../../../shared/util/math/vectors.js';
 import jsonutil from '../../../../../shared/util/jsonutil.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
-import checkmate from '../../../../../shared/chess/logic/checkmate.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 
@@ -30,14 +29,14 @@ const FNV_PRIME = 0x01000193;
 /** How many squares along each slide, either side of its piece, are tested one by one. */
 const SLIDE_WINDOW = 16n;
 
-// Position Hashing ------------------------------------------------------------
+// Hashing ---------------------------------------------------------------------
 
 /**
- * The hash of the viewed position's legal moves and game conclusion.
+ * The hash of the viewed position's legal moves.
  * @param siteMoves - The side to move's legal moves, keyed by each piece's square.
  */
 function hashPosition(gamefile: GameFile, siteMoves: Map<CoordsKey, LegalMoves>): number {
-	let sum = hash(JSON.stringify(checkmate.detect(gamefile) ?? null));
+	let sum = 0;
 	for (const [from, legal] of siteMoves) {
 		for (const coords of legal.individual) {
 			sum += hash(`${from}>${coordutil.getKeyFromCoords(coords)} ${getTagsText(coords)}`);
@@ -82,6 +81,11 @@ function hashSlides(gamefile: GameFile, from: CoordsKey, legal: LegalMoves): num
 	return sum;
 }
 
+/** The hash of a game's outcome: its conclusion, or the error it failed to load with. */
+function hashOutcome(gameIndex: number, outcome: string): number {
+	return hash(`${gameIndex} ${outcome}`);
+}
+
 /** The 32-bit FNV-1a hash of a string. */
 function hash(text: string): number {
 	let h = FNV_OFFSET_BASIS;
@@ -92,6 +96,7 @@ function hash(text: string): number {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// Position Hashing
+	// Hashing
 	hashPosition,
+	hashOutcome,
 };

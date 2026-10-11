@@ -3,7 +3,7 @@
 /**
  * Validates a chunk of games: runs each through the site's ICN parser and game
  * builder, then the termination check and, optionally, the movegen check against
- * the engine and the move fingerprint, tallying every failure. Shared by the
+ * the engine and the fingerprint, tallying every failure. Shared by the
  * browser worker and the CLI.
  */
 
@@ -30,7 +30,7 @@ import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 
 import chunks from './chunks.js';
 import movegencheck from './movegencheck.js';
-import movefingerprint from './movefingerprint.js';
+import gamefingerprint from './gamefingerprint.js';
 import terminationcheck from './terminationcheck.js';
 
 // Types -----------------------------------------------------------------------
@@ -39,8 +39,11 @@ import terminationcheck from './terminationcheck.js';
 interface ValidationOptions {
 	/** The engine to compare movegen against. Absent skips the movegen check. */
 	wasm?: MovegenWasmModule;
-	/** Whether to fingerprint every position's legal moves. */
-	fingerprint: boolean;
+	/**
+	 * What to fingerprint: 'full' is every position's legal moves and every game's outcome,
+	 * 'conclusions' the outcomes alone. Absent skips it.
+	 */
+	fingerprint?: 'full' | 'conclusions';
 }
 
 // Constants -------------------------------------------------------------------
@@ -86,6 +89,7 @@ async function validateGame(
 			icn,
 		};
 		recordFailure(results, failure, 'icn');
+		fingerprintOutcome(results, index, failure.error, options);
 		return;
 	}
 
@@ -107,11 +111,24 @@ async function validateGame(
 			icn,
 		};
 		recordFailure(results, failure, illegalMove ? 'illegal' : 'formulator');
+		fingerprintOutcome(results, index, failure.error, options);
 		return;
 	}
+	fingerprintOutcome(results, index, JSON.stringify(game.gameConclusion ?? null), options);
 
 	if (runChecks(results, index, icn, variant, longFormat.metadata, game, options))
 		results.successfulCount++;
+}
+
+/** Adds a game's outcome to the fingerprint, if one was requested. */
+function fingerprintOutcome(
+	results: ChunkResults,
+	index: number,
+	outcome: string,
+	options: ValidationOptions,
+): void {
+	if (options.fingerprint === undefined) return;
+	results.fingerprint = (results.fingerprint + gamefingerprint.hashOutcome(index, outcome)) >>> 0;
 }
 
 /** Runs every check on a built game, so one game may fail several. Returns whether all passed. */
@@ -126,7 +143,7 @@ function runChecks(
 ): boolean {
 	let passed = true;
 
-	if (options.wasm || options.fingerprint) {
+	if (options.wasm || options.fingerprint === 'full') {
 		const replay = replayPositions(game, options);
 		results.fingerprint = (results.fingerprint + replay.fingerprint) >>> 0;
 		if (replay.mismatch !== undefined) {
@@ -191,8 +208,8 @@ function replayPositions(
 				count += mismatches.length;
 			}
 		}
-		if (options.fingerprint)
-			fingerprint = (fingerprint + movefingerprint.hashPosition(game, siteMoves)) >>> 0;
+		if (options.fingerprint === 'full')
+			fingerprint = (fingerprint + gamefingerprint.hashPosition(game, siteMoves)) >>> 0;
 		const move = game.moves[ply];
 		if (move === undefined) break;
 		movepiece.applyMove(game, move, true, true);
