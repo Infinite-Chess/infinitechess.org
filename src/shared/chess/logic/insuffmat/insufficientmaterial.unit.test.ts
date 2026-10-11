@@ -118,6 +118,11 @@ describe('insufficientmaterial', () => {
 			expect(isDraw(`w ${BORDER} K0,0|k20,20|rc25,20`)).toBe(false);
 		});
 
+		it("tells a camel's square color apart from a bishop's", () => {
+			expect(isDraw(`w ${BORDER} K0,0|B5,0|CA6,0|k20,20`)).toBe(false);
+			expect(isDraw(`w ${BORDER} K0,0|B5,0|CA7,0|k20,20`)).toBe(true);
+		});
+
 		it('never declares a mate an obstacle makes possible', () => {
 			expect(isDraw('w 0,_,0,_ rc0,0|R1,1|R0,2|ob0,1')).toBe(false);
 		});

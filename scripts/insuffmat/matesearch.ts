@@ -28,7 +28,8 @@ export type Kind =
 	| 'CH'
 	| 'AR'
 	| 'GU'
-	| 'CA'
+	| 'CA0'
+	| 'CA1'
 	| 'GI'
 	| 'ZE'
 	| 'CE'
@@ -142,7 +143,8 @@ const DEFS: Record<
 	GU: { leaps: KING_STEPS },
 	CE: { leaps: [...KING_STEPS, ...KNIGHT] },
 	N: { leaps: KNIGHT },
-	CA: { leaps: leapers(1, 3) },
+	CA0: { leaps: leapers(1, 3) },
+	CA1: { leaps: leapers(1, 3) },
 	GI: { leaps: leapers(1, 4) },
 	ZE: { leaps: leapers(2, 3) },
 	HA: { leaps: [...compass(2), ...compass(3)] },
@@ -160,6 +162,12 @@ const DEFS: Record<
 };
 /** Whether the kind is a royal, which can be checkmated. */
 const isRoyal = (kind: Kind): boolean => DEFS[kind].royal === true;
+/** Each colorbound kind, which keeps the square color its 0 or 1 suffix names, mapped to its twin on the other color. */
+const COLOR_TWINS: Partial<Record<Kind, Kind>> = { B0: 'B1', B1: 'B0', CA0: 'CA1', CA1: 'CA0' };
+/** The square color a colorbound kind keeps, or undefined for any other kind. */
+const squareColorOf = (kind: Kind): number | undefined => (COLOR_TWINS[kind] ? Number(kind.at(-1)) : undefined); // prettier-ignore
+/** The kind on the other square color: a colorbound kind's twin, any other kind itself. */
+const swapSquareColor = (kind: Kind): Kind => COLOR_TWINS[kind] ?? kind;
 /** The attacker pawn a piece stood as before promoting on the last move. */
 const PROMOTING_PAWN: Piece = { kind: 'P', side: 'A' };
 
@@ -415,11 +423,10 @@ const canAttack = (kind: Kind, pawnDir: number, dx: number, dy: number): boolean
 		? ATTACK_GRID.get(`${kind}${pawnDir}`)![(dx + SPAN) * (2 * SPAN + 1) + dy + SPAN] === 1
 		: relativePaths(kind, pawnDir, dx, dy).length > 0;
 
-/** Whether the kind may stand on the square (bishops keep their square parity). */
+/** Whether the kind may stand on the square (colorbound kinds keep their square color). */
 function fitsSquare(kind: Kind, x: number, y: number): boolean {
-	if (kind === 'B0') return Math.abs(x + y) % 2 === 0;
-	if (kind === 'B1') return Math.abs(x + y) % 2 === 1;
-	return true;
+	const color = squareColorOf(kind);
+	return color === undefined || Math.abs(x + y) % 2 === color;
 }
 
 // Optimizations ---------------------------------------------------------------
@@ -519,15 +526,15 @@ function computeMaxCover(flights: Sq[]): Record<Kind, [number, number]> {
 
 // Scenarios -------------------------------------------------------------------
 
-/** Whether a reachable checkmate exists in any arrangement: either side mated, any of its royals the checked one, either bishop-color assignment. */
+/** Whether a reachable checkmate exists in any arrangement: either side mated, any of its royals the checked one, on either square color. */
 function isMatePossible(white: Material, black: Material): Mate | undefined {
-	const swapBishops = (m: Material): Material => ({ ...m, B0: m.B1, B1: m.B0 });
+	const swapSquareColors = (m: Material): Material => Object.fromEntries((Object.entries(m) as [Kind, number][]).map(([kind, n]) => [swapSquareColor(kind), n])); // prettier-ignore
 	const hasPawns = (white.P ?? 0) + (black.P ?? 0) > 0;
-	// Symmetric bishops or equal armies repeat a scenario exactly; pawn direction only matters with pawns.
+	// Symmetric colorbound pieces or equal armies repeat a scenario exactly; pawn direction only matters with pawns.
 	const searched = new Set<string>();
 	for (const flip of [false, true]) {
-		const w = flip ? swapBishops(white) : white;
-		const b = flip ? swapBishops(black) : black;
+		const w = flip ? swapSquareColors(white) : white;
+		const b = flip ? swapSquareColors(black) : black;
 		for (const [att, def, attDir] of [
 			[w, b, 1],
 			[b, w, -1],
@@ -661,7 +668,7 @@ function canStillCover(ctx: SearchContext, board: Board, a: Material, d: Materia
 		for (const [kind, n] of Object.entries(a) as [Kind, number][])
 			capacity += n * cover[kind][parity];
 		for (const [kind, n] of Object.entries(d) as [Kind, number][])
-			if ((kind !== 'B0' && kind !== 'B1') || Number(kind[1]) === parity) capacity += n;
+			if ((squareColorOf(kind) ?? parity) === parity) capacity += n;
 		if (capacity < free[parity]) return false;
 	}
 	return true;
@@ -1287,7 +1294,7 @@ function pawnOrigins(ctx: SearchContext, board: Board, sx: number, sy: number): 
 
 // Notation --------------------------------------------------------------------
 
-/** Parses "K,Q vs k,b0,b1" style material: comma-separated piece codes per side, b0/b1 giving bishop parities. */
+/** Parses "K,Q vs k,b0,ca1" style material: comma-separated piece codes per side, a 0 or 1 suffix giving a colorbound piece's square color. */
 function parse(spec: string): [Material, Material] {
 	const sides = spec.split(' vs').map((side) => {
 		const m: Material = {};
@@ -1399,7 +1406,7 @@ function toIcn(
 }
 /** The piece's ICN abbreviation: uppercase for white. */
 function icnAbbr(p: Piece, attackerIsWhite: boolean): string {
-	const abbr = p.kind === 'B0' || p.kind === 'B1' ? 'B' : p.kind;
+	const abbr = squareColorOf(p.kind) === undefined ? p.kind : p.kind.slice(0, -1);
 	return (p.side === 'A') === attackerIsWhite ? abbr : abbr.toLowerCase();
 }
 
@@ -1408,6 +1415,8 @@ function icnAbbr(p: Piece, attackerIsWhite: boolean): string {
 export default {
 	// Geometry
 	setWalls,
+	// Constants
+	swapSquareColor,
 	// Optimizations
 	allowedTransforms,
 	// Scenarios

@@ -47,7 +47,8 @@ const KINDS: Kind[] = [
 	'CH',
 	'AR',
 	'GU',
-	'CA',
+	'CA0',
+	'CA1',
 	'GI',
 	'ZE',
 	'CE',
@@ -58,6 +59,8 @@ const KINDS: Kind[] = [
 const ROYAL_INDICES = (['K', 'RC', 'RQ'] as Kind[]).map((kind) => KINDS.indexOf(kind));
 const P_INDEX = KINDS.indexOf('P');
 const HU_INDEX = KINDS.indexOf('HU');
+/** Per kind index, the index of the kind on the other square color: a colorbound kind's twin, any other kind itself. */
+const SQUARE_COLOR_SWAPS = KINDS.map((kind) => KINDS.indexOf(matesearch.swapSquareColor(kind)));
 const ORTHOGONAL_SLIDER_INDICES = (['RQ', 'Q', 'R', 'AM', 'CH'] as Kind[]).map((kind) => KINDS.indexOf(kind)); // prettier-ignore
 /** Per royal kind, the non-royal kinds it can capture straight back from every square they check it from. */
 const CAPTURED_BACK: [Kind, Kind[]][] = [
@@ -81,11 +84,12 @@ function label([white, black]: PieceSet): string {
 	return `${side(white, true)} vs ${side(black, false)}`;
 }
 
-/** One key shared by a set and its mirror images (colors swapped, bishop colors swapped), which all mate equally. */
+/** One key shared by a set and its mirror images (colors swapped, square colors swapped), which all mate equally. */
 function canonicalKey(set: PieceSet): string {
-	const swapBishops = (counts: number[]): number[] => counts.map((n, i) => (KINDS[i] === 'B0' ? counts[i + 1]! : KINDS[i] === 'B1' ? counts[i - 1]! : n)); // prettier-ignore
+	const swapSquareColors = (counts: number[]): number[] =>
+		SQUARE_COLOR_SWAPS.map((i) => counts[i]!);
 	const [white, black] = set;
-	const variants: PieceSet[] = [set, [swapBishops(white), swapBishops(black)], [black, white], [swapBishops(black), swapBishops(white)]]; // prettier-ignore
+	const variants: PieceSet[] = [set, [swapSquareColors(white), swapSquareColors(black)], [black, white], [swapSquareColors(black), swapSquareColors(white)]]; // prettier-ignore
 	return variants.map(([w, b]) => `${w.join(',')}|${b.join(',')}`).sort()[0]!;
 }
 

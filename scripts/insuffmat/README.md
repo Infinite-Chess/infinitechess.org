@@ -24,10 +24,11 @@ movement, check or checkmate rules change. After any change to `matesearch.ts`, 
 re-searches their mates (and one level's unbounded draws) and lists every verdict that changed.
 
 Output: `draws-N.txt` and `mates-N.tsv` per level. Labels list comma-separated piece codes, white
-then black (`K,R,CH,AR vs k,n`); `B0`/`B1` are bishop square colors. A set and its mirror images
-(colors swapped, bishop colors swapped) appear once. `mates-N.tsv` columns: label (a mate found on a
-bounded layout ends in it, `@minX,maxX,minY,maxY` with `_` for no wall), the mate with the defender
-to move, the position before the last move, and the last move.
+then black (`K,R,CH,AR vs k,n`). Colorbound pieces (bishop, camel) carry their square color:
+`B0`/`B1`, `CA0`/`CA1`. A set and its mirror images (colors swapped, square colors swapped) appear
+once. `mates-N.tsv` columns: label (a mate found on a bounded layout ends in it,
+`@minX,maxX,minY,maxY` with `_` for no wall), the mate with the defender to move, the position
+before the last move, and the last move.
 
 ## The search
 
@@ -68,8 +69,8 @@ to move, the position before the last move, and the last move.
     - One side is a lone non-royal piece that every royal of the other side captures straight back
       from any square it checks from: a king against a pawn or guard, a royal centaur against those
       or a knight or centaur, a royal queen against a pawn, guard, queen, rook or bishop. That
-      leaves no attacker, and the lone piece's side has no royal to be mated. 16,338 unbounded and
-      2,242 bounded sets.
+      leaves no attacker, and the lone piece's side has no royal to be mated. 16,961 unbounded and
+      2,283 bounded sets.
     - Every piece is a royal of one kind. Their movesets are symmetric, so a royal giving check is
       attacked back by the royal it checks, leaving its own side in check: no check is legal. 33
       unbounded and 24 bounded sets.
@@ -94,7 +95,7 @@ to move, the position before the last move, and the last move.
 
 - **Every listed mate is a real position checked by the site's own code** (`verify.ts`): checkmate
   with the defender to move, legal with the attacker to move, and reached by a legal last move from
-  a position with the defender out of check. All 15,872 unbounded mates (up to 5 pieces) and 3,861
+  a position with the defender out of check. All 16,217 unbounded mates (up to 5 pieces) and 3,892
   bounded mates pass.
 - **Every level is complete:** each level's draws and mates match exactly the sets the level below
   calls for, and every mate's position holds exactly its label's pieces.

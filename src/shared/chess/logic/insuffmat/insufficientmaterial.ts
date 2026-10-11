@@ -39,7 +39,7 @@ type BoardKind = 'unbounded' | 'bounded';
 
 /**
  * A collection of pieces, counted by code: the piece's ICN abbreviation (uppercase white,
- * lowercase black), with bishops suffixed by their square color, 0 or 1.
+ * lowercase black), with colorbound pieces suffixed by their square color, 0 or 1.
  */
 type Material = Map<string, number>;
 
@@ -61,6 +61,9 @@ const MIN_BOUNDED_BOARD_WIDTH = 8n;
 
 /** The pieces of ordinary chess: with obstacles or gargoyles on the board, insuffmat is only declared when every piece is one. */
 const CLASSICAL_RAW_TYPES: RawType[] = [r.KING, r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT, r.PAWN];
+
+/** The pieces that only ever reach one square color, coded with that color appended. */
+const COLORBOUND_RAW_TYPES: RawType[] = [r.BISHOP, r.CAMEL];
 
 /** The smallest mating piece sets of each board kind, by canonical key. */
 const MATING_SETS: Record<BoardKind, Set<string>> = {
@@ -205,11 +208,11 @@ function canPromote(promotion: GameRules['promotion'], player: Player, y: bigint
 	return ranks.length > 0; // Other players' directions are unknown, so any rank counts
 }
 
-/** The code of each piece a pawn could become. A promoted bishop's square color is unknown, so it is both. */
+/** The code of each piece a pawn could become. A promoted colorbound piece's square color is unknown, so it is both. */
 function getPawnOutcomes(rawTypes: RawType[], player: Player): string[] {
 	return rawTypes.flatMap((rawType) => {
 		const type = typeutil.buildType(rawType, player);
-		if (rawType !== r.BISHOP) return [getCode(type, [0n, 0n])];
+		if (!COLORBOUND_RAW_TYPES.includes(rawType)) return [getCode(type, [0n, 0n])];
 		return [getCode(type, [0n, 0n]), getCode(type, [0n, 1n])];
 	});
 }
@@ -232,10 +235,10 @@ function addPiece(material: Material, code: string): void {
 	material.set(code, (material.get(code) ?? 0) + 1);
 }
 
-/** A piece's code: its ICN abbreviation, with a bishop's square color appended. */
+/** A piece's code: its ICN abbreviation, with a colorbound piece's square color appended. */
 function getCode(type: number, coords: Coords): string {
 	const abbr = icnposition.getAbbrFromType(type);
-	if (typeutil.getRawType(type) !== r.BISHOP) return abbr;
+	if (!COLORBOUND_RAW_TYPES.includes(typeutil.getRawType(type))) return abbr;
 	return abbr + String(bimath.abs(coords[0] + coords[1]) % 2n);
 }
 
@@ -292,16 +295,16 @@ function getCanonicalKey(material: Material): string {
 	return best!;
 }
 
-/** The material and its mirror images: colors swapped, bishop square colors swapped, and both. */
+/** The material and its mirror images: colors swapped, square colors swapped, and both. */
 function getOrientations(material: Material): Material[] {
 	const swapColors = (code: string): string => (code === code.toUpperCase() ? code.toLowerCase() : code.toUpperCase()); // prettier-ignore
-	const swapBishops = (code: string): string => (/^b[01]$/i.test(code) ? code[0]! + (code[1] === '0' ? '1' : '0') : code); // prettier-ignore
+	const swapSquareColors = (code: string): string => code.replace(/[01]$/, (color) => (color === '0' ? '1' : '0')); // prettier-ignore
 	const remap = (swap: (code: string) => string): Material => new Map([...material].map(([code, count]) => [swap(code), count])); // prettier-ignore
 	return [
 		material,
 		remap(swapColors),
-		remap(swapBishops),
-		remap((code) => swapBishops(swapColors(code))),
+		remap(swapSquareColors),
+		remap((code) => swapSquareColors(swapColors(code))),
 	];
 }
 
