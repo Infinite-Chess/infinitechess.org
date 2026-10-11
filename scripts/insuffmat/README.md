@@ -2,11 +2,11 @@
 
 `src/shared/chess/logic/insuffmat/matingsets.ts` lists every **smallest piece set that can be
 arranged into a legally reachable checkmate**, helpmates included, per board kind, up to a piece
-cap. A set is "smallest" when removing any one piece makes mate impossible.
-`insufficientmaterial.ts` declares a position drawn when its pieces fit within the cap and contain
-none of the listed sets. Above the cap it never declares a draw, except for the hand-proven draws in
-its `PROVEN_DRAWS`, each with its proof. Apart from the assumptions under Known holes, any error in
-this table can only cost a draw going undeclared, never a false draw.
+cap. A set is "smallest" when removing any one piece makes mate impossible. `materials.ts` calls a
+material drawn when its pieces fit within the cap and contain none of the listed sets. Above the cap
+it never does, except for the hand-proven draws in its `PROVEN_DRAWS`, each with its proof. Apart
+from the assumptions under Known holes, any error in this table can only cost a draw going
+undeclared, never a false draw.
 
 ## Regenerating
 
