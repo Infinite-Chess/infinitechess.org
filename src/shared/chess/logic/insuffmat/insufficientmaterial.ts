@@ -65,10 +65,19 @@ const CLASSICAL_RAW_TYPES: RawType[] = [r.KING, r.QUEEN, r.ROOK, r.BISHOP, r.KNI
 /** The pieces that only ever reach one square color, coded with that color appended. */
 const COLORBOUND_RAW_TYPES: RawType[] = [r.BISHOP, r.CAMEL];
 
-/** The smallest mating piece sets of each board kind, by canonical key. */
-const MATING_SETS: Record<BoardKind, Set<string>> = {
-	unbounded: new Set(matingsets.unbounded.split(' ')),
-	bounded: new Set(matingsets.bounded.split(' ')),
+/**
+ * Every piece code, in the order materials are ranked by. Royals come last, so the sets holding one,
+ * the only sets listed, rank together above the rest. Reordering it requires regenerating matingsets.ts.
+ */
+const RANKED_CODES = 'ro hu nr ce ze gi ca1 ca0 gu ar ch ha am p n b1 b0 r q RO HU NR CE ZE GI CA1 CA0 GU AR CH HA AM P N B1 B0 R Q rq rc k RQ RC K'.split(' '); // prettier-ignore
+
+/** The base-32 digits of matingsets.ts: a number's last digit is one of the first 32, its others of the last 32. */
+const RANK_DIGITS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_';
+
+/** The smallest mating piece sets of each board kind, by canonical rank. */
+const MATING_SETS: Record<BoardKind, Set<number>> = {
+	unbounded: decodeRanks(matingsets.unbounded),
+	bounded: decodeRanks(matingsets.bounded),
 };
 
 /**
@@ -261,13 +270,13 @@ function doesMaterialFitDraw(material: Material, draw: Record<string, number>): 
 }
 
 /** Whether some collection of the material's pieces is a listed smallest mating set. */
-function doesContainMatingSet(material: Material, matingSets: Set<string>): boolean {
+function doesContainMatingSet(material: Material, matingSets: Set<number>): boolean {
 	const codes = [...material.keys()];
 	const subset: Material = new Map();
 	/** Tries every count of each code from the index on, testing each finished subset. */
 	const tryFrom = (index: number): boolean => {
 		if (index === codes.length)
-			return subset.size > 0 && matingSets.has(getCanonicalKey(subset));
+			return subset.size > 0 && matingSets.has(getCanonicalRank(subset));
 		const code = codes[index]!;
 		for (let count = 0; count <= material.get(code)!; count++) {
 			if (count === 0) subset.delete(code);
@@ -280,19 +289,14 @@ function doesContainMatingSet(material: Material, matingSets: Set<string>): bool
 	return tryFrom(0);
 }
 
-// Canonical Keys --------------------------------------------------------------
+// Ranking ---------------------------------------------------------------------
 
 /**
- * One key shared by a material and its mirror images, which can all mate equally: the smallest
- * of their serializations. matingsets.ts is keyed by it.
+ * One rank shared by a material and its mirror images, which can all mate equally: the smallest
+ * of their ranks. matingsets.ts lists the smallest mating sets by it.
  */
-function getCanonicalKey(material: Material): string {
-	let best: string | undefined;
-	for (const variant of getOrientations(material)) {
-		const key = serialize(variant);
-		if (best === undefined || key < best) best = key;
-	}
-	return best!;
+function getCanonicalRank(material: Material): number {
+	return Math.min(...getOrientations(material).map((variant) => rank(variant)));
 }
 
 /** The material and its mirror images: colors swapped, square colors swapped, and both. */
@@ -308,22 +312,49 @@ function getOrientations(material: Material): Material[] {
 	];
 }
 
-/** The material as text: white's codes, then black's, each sorted and comma-separated. */
-function serialize(material: Material): string {
-	const white: string[] = [];
-	const black: string[] = [];
+/** The material's colex rank over RANKED_CODES: distinct per material, fewer pieces ranking lower. */
+function rank(material: Material): number {
+	const values: number[] = [];
 	for (const [code, count] of material) {
-		const side = code === code.toUpperCase() ? white : black;
-		for (let i = 0; i < count; i++) side.push(code);
+		const value = RANKED_CODES.indexOf(code);
+		if (value === -1) return -1; // A code no listed set holds (a third player's piece): no rank matches
+		for (let i = 0; i < count; i++) values.push(value);
 	}
-	return `${white.sort().join(',')}/${black.sort().join(',')}`;
+	values.sort((a, b) => a - b);
+	let result = binomial(RANKED_CODES.length - 1 + values.length, values.length - 1); // Materials of fewer pieces
+	values.forEach((value, i) => (result += binomial(value + i, i + 1)));
+	return result;
+}
+
+/** n choose k. */
+function binomial(n: number, k: number): number {
+	let result = 1;
+	for (let i = 0; i < k; i++) result = (result * (n - i)) / (i + 1);
+	return result;
+}
+
+/** One table of matingsets.ts as its ranks: the gaps between them, sorted, as base-32 RANK_DIGITS. */
+function decodeRanks(text: string): Set<number> {
+	const ranks = new Set<number>();
+	let rank = 0;
+	let gap = 0;
+	for (const char of text) {
+		const digit = RANK_DIGITS.indexOf(char);
+		gap = gap * 32 + (digit % 32);
+		if (digit >= 32) continue;
+		ranks.add((rank += gap));
+		gap = 0;
+	}
+	return ranks;
 }
 
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
+	RANK_DIGITS,
 	// Detection
 	detect,
-	// Canonical Keys
-	getCanonicalKey,
+	// Ranking
+	getCanonicalRank,
 };
