@@ -204,6 +204,16 @@ function doesAnyPlayerGet2TurnsInARow(gameRules: GameRules): boolean {
 	return false;
 }
 
+/** The move list row a ply sits on, from 0: two plies per row. */
+function getMoveListRow(plyIndex: number): number {
+	return Math.floor(plyIndex / 2);
+}
+
+/** Whether a ply takes its move list row's left cell. A game's first move always does, even black's. */
+function isLeftInMoveList(plyIndex: number): boolean {
+	return plyIndex % 2 === 0;
+}
+
 /**
  * Strips the coordinates of any special move properties. NON-MUTATING, returns new coords.
  */
@@ -229,5 +239,7 @@ export default {
 	getColorThatPlayedMoveIndex,
 	getWhosTurnAtMoveIndex,
 	doesAnyPlayerGet2TurnsInARow,
+	getMoveListRow,
+	isLeftInMoveList,
 	stripSpecialMoveTagsFromCoords,
 };

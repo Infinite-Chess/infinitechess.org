@@ -654,8 +654,7 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 	if (cp === undefined && !outOfBounds) return element_GraphTooltip.classList.add('hidden');
 
 	const node = index > 0 ? gamereview.getMainlineNodes()[index - 1] : undefined;
-	const moveNumber = index > 0 ? Math.floor((index - 1) / 2) + 1 : 0;
-	const prefix = index === 0 ? '' : `${moveNumber}${(index - 1) % 2 === 0 ? '.' : '...'} `;
+	const prefix = index === 0 ? '' : `${guimovetree.formatMoveIndex(index - 1)} `;
 	const move = node?.move
 		? icnmoves.getShortFormMoveFromMove(node.move, {
 				compact: false,

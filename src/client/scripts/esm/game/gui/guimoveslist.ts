@@ -288,9 +288,10 @@ function clearMovesTable(): void {
 }
 
 /**
- * Builds and inserts the ply for the move at `index` (white = new row, black = appended to the row).
+ * Builds and inserts the ply for the move at `index`: a left ply opens a new row, a right ply
+ * joins its row ({@link moveutil.isLeftInMoveList}).
  *
- * A full move-row ends up looking like (the second ply absent until black replies):
+ * A full move-row ends up looking like (the right ply absent until the second player replies):
  * ```
  * <div class="move-row">
  *   <span class="move-num">1</span>
@@ -315,15 +316,15 @@ function appendPly(move: MoveFull, index: number): void {
 		if (wasAlreadySelected) zoomToPlyDestination(gamefile, index);
 	});
 
-	if (index % 2 === 0) {
-		// White ply — start a new row: number + this ply. Insert before the result
+	const rowIndex = moveutil.getMoveListRow(index);
+	if (moveutil.isLeftInMoveList(index)) {
+		// Start a new row: number + this ply. Insert before the result
 		// banner so it always stays at the bottom of the table.
-		const row = createMoveRow(String(index / 2 + 1));
+		const row = createMoveRow(String(rowIndex + 1));
 		row.append(ply);
 		element_MovesTable.insertBefore(row, element_GameResult);
 	} else {
-		// Black ply — append to its (already-created) row.
-		getRow(Math.floor(index / 2))!.append(ply);
+		getRow(rowIndex)!.append(ply);
 	}
 }
 
@@ -380,11 +381,11 @@ function createMoveRow(numText: string, classes: string[] = []): HTMLElement {
 	return row;
 }
 
-/** Removes all rendered plies from `index` onward, resetting a dangling black slot to empty. */
+/** Removes all rendered plies from `index` onward, emptying a dangling right cell. */
 function truncatePliesFrom(index: number): void {
-	const startRow = Math.floor(index / 2);
-	if (index % 2 === 1) {
-		// Keep the white ply in this row but drop its black ply, then drop later rows.
+	const startRow = moveutil.getMoveListRow(index);
+	if (!moveutil.isLeftInMoveList(index)) {
+		// Keep this row's left ply but drop its right one, then drop later rows.
 		getRow(startRow)!.lastElementChild!.remove();
 		removeRowsFrom(startRow + 1);
 	} else {
@@ -405,9 +406,9 @@ function getRow(pair: number): HTMLElement | undefined {
 
 /** The ply element for the given move index, or undefined if not rendered. */
 function getPlyElement(index: number): HTMLElement | undefined {
-	const row = getRow(Math.floor(index / 2));
-	// Children: [move-num, white ply, black ply].
-	return row?.children[index % 2 === 0 ? 1 : 2] as HTMLElement | undefined;
+	const row = getRow(moveutil.getMoveListRow(index));
+	// Children: [move-num, left ply, right ply].
+	return row?.children[moveutil.isLeftInMoveList(index) ? 1 : 2] as HTMLElement | undefined;
 }
 
 /** Highlights the ply for the currently-viewed move. */

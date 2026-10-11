@@ -416,7 +416,8 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 
 /** A ply index as its ply number and its cell in the move list, e.g. "Ply 264 (move 132, right column)". */
 function describePly(index: number): string {
-	return `Ply ${index + 1} (move ${Math.floor(index / 2) + 1}, ${index % 2 === 0 ? 'left' : 'right'} column)`;
+	const column = moveutil.isLeftInMoveList(index) ? 'left' : 'right';
+	return `Ply ${index + 1} (move ${moveutil.getMoveListRow(index) + 1}, ${column} column)`;
 }
 
 /**
