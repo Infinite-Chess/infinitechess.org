@@ -234,7 +234,7 @@ followed, tell me.
 
 36. Consider whether any of your running sandbox scripts would actually be of use to future agents
     after we commit this work, being moved to a permanent location, even if they would need to be
-    repurposed. If so, recommend that.
+    repurposed. If so, recommend that — but never for tiny scripts that are easily rewritten.
 
 37. If the changes affect what users see and experience, get confirmation from me that things work
     as expected. Never spin up a dev server yourself to check; it costs too many tokens and too much
