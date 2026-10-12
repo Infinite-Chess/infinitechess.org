@@ -13,7 +13,6 @@ import type { MoveValidationResult } from '../../../../../shared/chess/logic/mov
 import type { OpponentsMoveMessage } from '../../../../../shared/transport/clientbound.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
-import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
@@ -104,13 +103,7 @@ function handleMove(
 		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
 
 		// For online games, the server is boss, so its conclusion is the one we adopt.
-		if (moveutil.areWeViewingLatestMove(gamefile)) {
-			// Normal case: play and animate the move.
-			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResult.tagged, message.gameConclusion); // prettier-ignore
-		} else {
-			// We're reviewing a past move. Silently append it, staying on our current view.
-			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged, message.gameConclusion); // prettier-ignore
-		}
+		movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged, message.gameConclusion); // prettier-ignore
 
 		// Edit the clocks
 

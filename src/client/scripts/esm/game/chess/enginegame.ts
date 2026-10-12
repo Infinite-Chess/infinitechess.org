@@ -19,7 +19,6 @@ import type {
 } from './engines/engineprotocol.js';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
-import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -245,13 +244,7 @@ function makeEngineMove(tokenMove: string | null): void {
 			return false; // Don't physically play next premove
 		}
 
-		if (moveutil.areWeViewingLatestMove(gamefile)) {
-			// Normal case: play and animate the move.
-			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResults.tagged, 'detect');
-		} else {
-			// We're reviewing a past move. Silently append it, staying on our current view.
-			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResults.tagged, 'detect'); // prettier-ignore
-		}
+		movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResults.tagged, 'detect');
 
 		GameBus.dispatch('engine-move-played');
 

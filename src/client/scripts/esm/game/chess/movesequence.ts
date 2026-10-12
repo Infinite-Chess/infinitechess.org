@@ -83,9 +83,9 @@ function makeMove(
 }
 
 /**
- * Makes a global forward move WITHOUT changing which move we're viewing, and without animating.
- * The logical board is temporarily fast-forwarded to the front to append the move (updating
- * game state, clocks, and the move-list GUI), then rewound to the move we're viewing.
+ * Makes a global forward move WITHOUT changing which move we're viewing. Viewing the front, we
+ * follow it there, animated. Otherwise, the logical board is temporarily fast-forwarded to the front
+ * to append the move silently (updating game state, clocks, and the move-list GUI), then rewound.
  */
 function makeMoveKeepingView(
 	gamefile: GameFile,
@@ -93,6 +93,9 @@ function makeMoveKeepingView(
 	moveTagged: MoveTagged,
 	conclusion: 'detect' | GameConclusion | undefined,
 ): MoveFull {
+	if (moveutil.areWeViewingLatestMove(gamefile))
+		return makeMoveAndAnimate(gamefile, mesh, moveTagged, conclusion);
+
 	const move = movepiece.runActionAtGameFront(gamefile, () =>
 		// Doesn't touch the mesh
 		commitMove(gamefile, moveTagged, conclusion),
