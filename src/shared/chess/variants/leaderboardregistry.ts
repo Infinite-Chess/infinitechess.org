@@ -56,6 +56,11 @@ function ofVariant(variant: SeekVariant): Leaderboard | undefined {
 	return variant.kind === 'preset' ? BY_VARIANT[variant.code] : undefined;
 }
 
+/** The leaderboard a player's rating in a variant is read from: its own, else INFINITY. */
+function ratingSourceOf(variant: SeekVariant): Leaderboard {
+	return ofVariant(variant) ?? IDS.INFINITY;
+}
+
 /** Returns `true` if the given seek options are eligible for a rated game. */
 function isRatedAllowed(
 	variant: SeekVariant | null,
@@ -82,5 +87,6 @@ export default {
 	BY_VARIANT,
 	// Functions
 	ofVariant,
+	ratingSourceOf,
 	isRatedAllowed,
 };

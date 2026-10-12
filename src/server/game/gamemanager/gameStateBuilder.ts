@@ -8,7 +8,6 @@
  * `deadGameState.ts` builds the same page state for games that only exist in the DB.
  */
 
-import type { RatingData } from '../../utility/ratingCalculation.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { ServerGame } from './serverGameTypes.js';
 import type { MovePacket } from '../../../shared/chess/util/typeschemas.js';
@@ -53,25 +52,21 @@ import drawOffers from './drawOffers.js';
 import gameUtility from './gameUtility.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
 import chatEntryMapper from './chatEntryMapper.js';
-import ratingCalculation from '../../utility/ratingCalculation.js';
 import chatEntriesManager from '../../database/chatEntriesManager.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
 
 // Ratings ---------------------------------------------------------------------
 
 /**
- * Returns the current elo of all players in the game on the leaderboard
- * of the variant being played, or the INFINITY leaderboard if the variant does not have a leaderboard.
- * @returns An object containing the rating for non-guests in the game, and whether we are confident in that rating, IF the variant has a leaderboard.
+ * Returns the current elo of all signed-in players in the game,
+ * read from the leaderboard of {@link leaderboardregistry.ratingSourceOf}.
  * @throws If a database error occurs (from {@link leaderboardsManager.getEloOfPlayer}).
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
 	variant: SeekVariant,
 ): PlayerGroup<Rating> {
-	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
-	const leaderboardId =
-		leaderboardregistry.ofVariant(variant) ?? leaderboardregistry.IDS.INFINITY;
+	const leaderboardId = leaderboardregistry.ratingSourceOf(variant);
 
 	const ratingData: PlayerGroup<Rating> = {};
 	for (const [color, { identifier }] of Object.entries(players)) {
@@ -185,26 +180,15 @@ function resolvePlayerNames(
  * Assembles the ICN {@link MetaData} of a game on demand from its properties
  * (`match`, `gameConclusion`, ratings). Built only for serialization (ICN logging)
  * — never stored on the game. Metadata is always in English.
- * @param ratingData - Present for a concluded rated game: supplies the pre-calc display
- *   elos + rating diffs. Absent otherwise, in which case display elos are read live from
- *   the leaderboard ("rating immediately before the new rating was calculated").
+ * @param ratings - Each signed-in player's rating going into the game.
+ * @param ratingChanges - Each player's rating change, present only for a rated game.
  */
-function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaData {
+function buildMetadata(
+	servergame: ServerGame,
+	ratings: PlayerGroup<Rating>,
+	ratingChanges?: PlayerGroup<number>,
+): MetaData {
 	const { match } = servergame;
-
-	// Resolve each player's display rating: from the pre-calc snapshot
-	// when logging a rated game, else read live from the leaderboard.
-	const ratings: PlayerGroup<Rating> = {};
-	if (ratingData) {
-		for (const [color, rd] of Object.entries(ratingData)) {
-			ratings[Number(color) as Player] = {
-				value: rd.elo_at_game,
-				confident: ratingCalculation.isRatingConfident(rd.rating_deviation_at_game),
-			};
-		}
-	} else {
-		Object.assign(ratings, getRatingDataForGamePlayers(match.playerData, match.variant));
-	}
 
 	const variantCode = gameUtility.getVariantCode(match.variant);
 	// Names the GAME: a custom game is a "Custom Variant" game no matter what it's a position of.
@@ -262,13 +246,9 @@ function buildMetadata(servergame: ServerGame, ratingData?: RatingData): MetaDat
 			servergame.gameConclusion.condition,
 		);
 	}
-	if (ratingData) {
-		metadata.WhiteRatingDiff = metadatautil.getWhiteBlackRatingDiff(
-			ratingData[p.WHITE]!.elo_change_from_game!,
-		);
-		metadata.BlackRatingDiff = metadatautil.getWhiteBlackRatingDiff(
-			ratingData[p.BLACK]!.elo_change_from_game!,
-		);
+	if (ratingChanges) {
+		metadata.WhiteRatingDiff = metadatautil.getWhiteBlackRatingDiff(ratingChanges[p.WHITE]!);
+		metadata.BlackRatingDiff = metadatautil.getWhiteBlackRatingDiff(ratingChanges[p.BLACK]!);
 	}
 
 	return metadata;

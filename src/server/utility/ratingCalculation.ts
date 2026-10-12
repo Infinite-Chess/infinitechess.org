@@ -2,8 +2,11 @@
 
 /**
  * Implementation of the Glicko-1 algorithm: the rating and rating-deviation changes
- * arising from a ranked game, and how a deviation grows again over an idle rating period.
+ * arising from a ranked game, how a deviation grows again over an idle rating period,
+ * and when a deviation is low enough for its rating to be shown as confident.
  */
+
+import type { Rating } from '../../shared/chess/util/metadatautil.js';
 
 import timeutil from '../../shared/util/timeutil.js';
 import { PlayerGroup, Player, players as p } from '../../shared/chess/util/typeutil.js';
@@ -62,6 +65,11 @@ const RD_UPDATE_FREQUENCY = 1000 * 60 * 60 * 24; // 24 hours
 // const RD_UPDATE_FREQUENCY = 1000 * 30; // 30s for dev testing
 
 // Functions -------------------------------------------------------------------
+
+/** The displayed {@link Rating} of a stored elo and rating deviation. */
+function toRating(elo: number, rating_deviation: number | null): Rating {
+	return { value: elo, confident: isRatingConfident(rating_deviation) };
+}
 
 /**
  * Derives whether a stored rating deviation is low enough for the rating to be
@@ -328,7 +336,7 @@ export default {
 	UNCERTAIN_LEADERBOARD_RD,
 	RD_UPDATE_FREQUENCY,
 	// Functions
-	isRatingConfident,
+	toRating,
 	getTrueRD,
 	computeChanges,
 };

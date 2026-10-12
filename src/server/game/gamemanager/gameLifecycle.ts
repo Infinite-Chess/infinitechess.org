@@ -206,12 +206,10 @@ function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingRes
 	const ratingResults: PlayerGroup<PlayerRatingResult> = {};
 	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
 		ratingResults[Number(playerStr) as Player] = {
-			ratingAtGame: {
-				value: playerRating.elo_at_game,
-				confident: ratingCalculation.isRatingConfident(
-					playerRating.rating_deviation_at_game,
-				),
-			},
+			ratingAtGame: ratingCalculation.toRating(
+				playerRating.elo_at_game,
+				playerRating.rating_deviation_at_game,
+			),
 			change: playerRating.elo_change_from_game!,
 		};
 	}

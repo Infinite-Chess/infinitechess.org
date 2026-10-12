@@ -11,11 +11,11 @@
  * cell-for-cell what the log side wrote, and shares three of its helpers. Apart they would drift.
  */
 
-import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { RatingData } from '../../utility/ratingCalculation.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
 import type { PlayerOutcome } from '../../database/playerStatsManager.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
+import type { MetaData, Rating } from '../../../shared/chess/util/metadatautil.js';
 import type { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
 import type { MatchInfo, PlayerData, ServerGame } from './serverGameTypes.js';
 
@@ -81,11 +81,14 @@ function log(servergame: ServerGame): RatingData | undefined {
  * Either ALL operations succeed, or NONE do.
  */
 function logGameInTransaction(servergame: ServerGame): RatingData | undefined {
+	const match = servergame.match;
 	const conclusion = servergame.gameConclusion!;
 	const victor = conclusion.victor;
 
-	// --- Part 1: Handle Rating Updates ---
-	const ratingData = updateLeaderboardsInTransaction(servergame.match, victor);
+	// --- Part 1: Snapshot ratings, updating them if the game counts ---
+	const ratingData = readCurrentRatings(match);
+	const changesRatings = match.rated && victor !== undefined; // Unrated and aborted games change no ratings
+	if (changesRatings) updateLeaderboardsInTransaction(match, ratingData, victor);
 
 	// --- Part 2: Create Game Records in games and player_games tables ---
 	addGameRecordsInTransaction(servergame, conclusion, ratingData);
@@ -93,34 +96,50 @@ function logGameInTransaction(servergame: ServerGame): RatingData | undefined {
 	// --- Part 3: Update Player Stats ---
 	updateAllPlayerStatsInTransaction(servergame, victor);
 
-	// If all steps succeed, return the rating data.
+	return changesRatings ? ratingData : undefined;
+}
+
+/**
+ * Reads each signed-in player's current rating from the leaderboard of {@link leaderboardregistry.ratingSourceOf},
+ * unchanged since the game began. A player not on it gets the default rating.
+ * @throws If a database error occurs.
+ */
+function readCurrentRatings(match: MatchInfo): RatingData {
+	const leaderboard_id = leaderboardregistry.ratingSourceOf(match.variant);
+
+	const ratingData: RatingData = {};
+	for (const playerStr in match.playerData) {
+		const player = Number(playerStr) as Player;
+		const user_id = getUserID(match.playerData[player]);
+		if (user_id === undefined) continue; // Guests have no rating.
+
+		const entry = leaderboardsManager.getPlayerRating(user_id, leaderboard_id);
+		ratingData[player] = {
+			elo_at_game: entry?.elo ?? ratingCalculation.DEFAULT_LEADERBOARD_ELO,
+			rating_deviation_at_game: entry?.rating_deviation ?? ratingCalculation.DEFAULT_LEADERBOARD_RD, // prettier-ignore
+			rd_last_update_date: entry?.rd_last_update_date ?? null,
+		};
+	}
 	return ratingData;
 }
 
 /**
- * Updates leaderboards within the transaction. It calculates rating changes
- * and calls the unsafe (error-throwing) _core functions to update the database.
- * @returns The final rating data object, or undefined if the game was not rated, or aborted.
- * @throws If a database error occurs.
+ * Computes a rated game's rating changes into its snapshot, and writes the new ratings to the leaderboard.
+ * @throws If either player is a guest, or a database error occurs.
  */
 function updateLeaderboardsInTransaction(
 	match: MatchInfo,
-	victor: Player | null | undefined,
-): RatingData | undefined {
-	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
-
+	ratingData: RatingData,
+	victor: Player | null,
+): void {
 	const leaderboard_id = leaderboardregistry.ofVariant(match.variant)!; // Will always be defined if the game is rated.
 
-	// 1. Build initial rating data by reading from the DB.
-	let ratingdata: RatingData = {};
-	for (const playerStr in match.playerData) {
-		const player: Player = Number(playerStr) as Player;
-		const user_id = getUserID(match.playerData[player]);
-		if (user_id === undefined)
-			throw new Error(`Attempted to process rating for player ${playerStr} in rated game ${match.id} without a user_id.`); // prettier-ignore
+	ratingCalculation.computeChanges(ratingData, victor);
 
-		// If a player isn't on the leaderboard, add them first.
-		// We use the _core (error-throwing) version because we are inside a transaction.
+	for (const playerStr in ratingData) {
+		const player = Number(playerStr) as Player;
+		const user_id = getUserID(match.playerData[player])!; // The snapshot holds only signed-in players.
+		const data = ratingData[player]!;
 		if (!leaderboardsManager.isPlayerIn(user_id, leaderboard_id)) {
 			leaderboardsManager.addUser(
 				user_id,
@@ -129,44 +148,20 @@ function updateLeaderboardsInTransaction(
 				ratingCalculation.DEFAULT_LEADERBOARD_RD,
 			);
 		}
-
-		// We can now safely assume the player has a rating record.
-		const leaderboard_data = leaderboardsManager.getPlayerRating(user_id, leaderboard_id);
-		if (leaderboard_data === undefined)
-			throw Error(`Unable to read leaderboard data for user_id ${user_id} in leaderboard ${leaderboard_id}. This should never happen, they should have been added!`); // prettier-ignore
-
-		ratingdata[player] = {
-			elo_at_game: leaderboard_data.elo,
-			rating_deviation_at_game: leaderboard_data.rating_deviation,
-			rd_last_update_date: leaderboard_data.rd_last_update_date,
-		};
-	}
-
-	// 2. Calculate the new ratings.
-	ratingdata = ratingCalculation.computeChanges(ratingdata, victor);
-
-	// 3. Write the new ratings to the database.
-	for (const playerStr in ratingdata) {
-		const player: Player = Number(playerStr) as Player;
-		// TS is annoying sometimes, we already know all the players have user_ids
-		const user_id = getUserID(match.playerData[player]);
-		const data = ratingdata[player]!;
 		leaderboardsManager.updatePlayerRating(
-			user_id!,
+			user_id,
 			leaderboard_id,
 			data.elo_after_game!,
 			data.rating_deviation_after_game!,
 		);
 	}
-
-	return ratingdata;
 }
 
 /** [INTERNAL] Adds the records to the `games`, `player_games` and `engine_games` tables. Throws on error. */
 function addGameRecordsInTransaction(
 	servergame: ServerGame,
 	conclusion: GameConclusion,
-	ratingData: RatingData | undefined,
+	ratingData: RatingData,
 ): void {
 	const match = servergame.match;
 	const victor = conclusion.victor;
@@ -174,7 +169,8 @@ function addGameRecordsInTransaction(
 		clockutil.splitTimeControl(match.clock);
 
 	// Assemble the ICN metadata once on demand from the game's source-of-truth props.
-	const metadata = gameStateBuilder.buildMetadata(servergame, ratingData);
+	const { ratings, ratingChanges } = splitRatingData(ratingData);
+	const metadata = gameStateBuilder.buildMetadata(servergame, ratings, ratingChanges);
 
 	// --- Prepare ICN ---
 	const icn = getICNOfGame(servergame, metadata); // This will throw on failure.
@@ -204,16 +200,17 @@ function addGameRecordsInTransaction(
 		const player = Number(playerStr) as Player;
 		const user_id = getUserID(match.playerData[player]);
 		if (!user_id) continue;
+		const rating = ratingData[player]!; // Every signed-in player has a snapshot.
 
 		playerGamesManager.insert({
 			user_id,
 			game_id: match.id,
 			player_number: player,
 			score: getScoreForPlayer(victor, player),
-			elo_at_game: ratingData?.[player]?.elo_at_game ?? null,
-			elo_change_from_game: ratingData?.[player]?.elo_change_from_game ?? null,
-			rating_deviation_at_game: ratingData?.[player]?.rating_deviation_at_game ?? null,
-			rating_deviation_after_game: ratingData?.[player]?.rating_deviation_after_game ?? null,
+			elo_at_game: rating.elo_at_game,
+			elo_change_from_game: rating.elo_change_from_game ?? null,
+			rating_deviation_at_game: rating.rating_deviation_at_game,
+			rating_deviation_after_game: rating.rating_deviation_after_game ?? null,
 		});
 	}
 	if (match.engineParticipant) {
@@ -261,6 +258,24 @@ function updateAllPlayerStatsInTransaction(
 function getUserID(data: PlayerData | undefined): number | undefined {
 	if (!data) return undefined;
 	return data.identifier.signedIn ? data.identifier.user_id : undefined;
+}
+
+/** Splits a rating snapshot into the ratings and, for a rated game, the rating changes its ICN records. */
+function splitRatingData(ratingData: RatingData): {
+	ratings: PlayerGroup<Rating>;
+	ratingChanges?: PlayerGroup<number>;
+} {
+	const ratings: PlayerGroup<Rating> = {};
+	let ratingChanges: PlayerGroup<number> | undefined;
+	for (const [playerStr, data] of Object.entries(ratingData)) {
+		const player = Number(playerStr) as Player;
+		ratings[player] = ratingCalculation.toRating(data.elo_at_game, data.rating_deviation_at_game); // prettier-ignore
+		if (data.elo_change_from_game !== undefined) {
+			ratingChanges ??= {};
+			ratingChanges[player] = data.elo_change_from_game;
+		}
+	}
+	return { ratings, ratingChanges };
 }
 
 /** The `games` columns a {@link GameConclusion} is logged as. deadGameState's `decodeConclusion` reverses it. */
@@ -414,7 +429,8 @@ function updateGameRecordForOverturn(servergame: ServerGame): void {
 	const match = servergame.match;
 
 	// Regenerate the ICN from the now-popped move list and the aborted metadata.
-	const metadata = gameStateBuilder.buildMetadata(servergame); // Unrated (no ratingData).
+	const ratings = readLoggedRatings(match.id);
+	const metadata = gameStateBuilder.buildMetadata(servergame, ratings);
 	const icn = getICNOfGame(servergame, metadata);
 
 	gamesManager.update(match.id, {
@@ -429,6 +445,17 @@ function updateGameRecordForOverturn(servergame: ServerGame): void {
 		if (!match.playerData[player]!.identifier.signedIn) continue; // Guests have no row.
 		playerGamesManager.update(match.id, player, { score: null });
 	}
+}
+
+/** The ratings a logged game's signed-in players went into it with. */
+function readLoggedRatings(game_id: number): PlayerGroup<Rating> {
+	const rows = playerGamesManager.getOfGame(game_id, ['player_number', 'elo_at_game', 'rating_deviation_at_game']); // prettier-ignore
+	const ratings: PlayerGroup<Rating> = {};
+	for (const row of rows) {
+		// Only legacy rows have a null elo_at_game, and those games are long finalized: never overturned.
+		ratings[row.player_number as Player] = ratingCalculation.toRating(row.elo_at_game!, row.rating_deviation_at_game); // prettier-ignore
+	}
+	return ratings;
 }
 
 /**

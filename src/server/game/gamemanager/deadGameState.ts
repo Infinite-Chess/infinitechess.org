@@ -206,10 +206,7 @@ function assembleStaticGameState(
 			username: member?.username ?? DELETED_USER_DISPLAY_NAME,
 		};
 		if (row.elo_at_game !== null)
-			container.rating = {
-				value: row.elo_at_game,
-				confident: ratingCalculation.isRatingConfident(row.rating_deviation_at_game),
-			};
+			container.rating = ratingCalculation.toRating(row.elo_at_game, row.rating_deviation_at_game); // prettier-ignore
 		playerContainers[color] = container;
 	}
 
