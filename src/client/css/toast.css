@@ -82,7 +82,7 @@
 }
 
 .toast-close:hover {
-	background-color: var(--c-hover-brighten);
+	background-color: var(--c-hover-overlay);
 	color: var(--c-text-emphasis);
 }
 

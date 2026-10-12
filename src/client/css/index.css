@@ -359,7 +359,7 @@ svg.bg-omega {
 }
 
 .seek-variant-anchor:hover {
-	background-color: var(--c-hover-brighten);
+	background-color: var(--c-hover-overlay);
 }
 
 .seek-row .lobby-cell:nth-child(2) .cell-flex span {
