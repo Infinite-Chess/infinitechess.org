@@ -1,5 +1,9 @@
 // src/shared/chess/variants/variantregistry.unit.test.ts
 
+/**
+ * Catches a variant whose declared position box no longer matches its starting position.
+ */
+
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import gamefile from '../logic/gamefile.js';

@@ -1,5 +1,10 @@
 // src/shared/chess/logic/insuffmat/insufficientmaterial.unit.test.ts
 
+/**
+ * Tests for insufficient-material detection on unbounded and bounded boards: it declares the
+ * draws its tables prove, and never one where a mate is still possible.
+ */
+
 import type { LoadedVariant } from '../gamefile.js';
 
 import { describe, it, expect } from 'vitest';

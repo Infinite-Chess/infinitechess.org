@@ -1,5 +1,10 @@
 // src/server/controllers/loginController.int.test.ts
 
+/**
+ * Integration tests for logging in (`POST /api/auth`): malformed bodies, wrong
+ * credentials, and the session cookies a successful login sets.
+ */
+
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import { testRequest } from '../../tests/testRequest.js';

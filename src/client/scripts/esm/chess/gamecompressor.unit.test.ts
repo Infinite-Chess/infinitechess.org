@@ -1,5 +1,10 @@
 // src/client/scripts/esm/chess/gamecompressor.unit.test.ts
 
+/**
+ * Tests for gamecompressor: the metadata a compressed gamefile is given,
+ * and that stepping a position forward zero halfmoves returns it untouched.
+ */
+
 import type { GameRules } from '../../../../shared/chess/util/gamerules.js';
 import type { GameFile, VariantOptions } from '../../../../shared/chess/logic/gamefile.js';
 

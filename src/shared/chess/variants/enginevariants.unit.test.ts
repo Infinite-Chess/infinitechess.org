@@ -1,5 +1,10 @@
 // src/shared/chess/variants/enginevariants.unit.test.ts
 
+/**
+ * Catches the engine card's UNSUPPORTED_VARIANTS drifting from what the engine actually accepts,
+ * and a supported variant that can't be played against the engine.
+ */
+
 import { describe, it, expect, beforeAll } from 'vitest';
 
 import gamefile from '../logic/gamefile.js';
