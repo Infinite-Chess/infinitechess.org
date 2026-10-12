@@ -208,7 +208,8 @@ function addLapseVariation(review: MoveReview): void {
 function updateProgress(): void {
 	if (element_Progress.classList.contains('hidden')) return;
 	const { evaluated, total } = gamereview.getSummary();
-	const pct = total > 0 ? (evaluated / total) * 100 : 0;
+	// Starting counts as the first step, so the bar never looks frozen before the first result.
+	const pct = ((evaluated + 1) / (total + 1)) * 100;
 	element_ProgressFill.style.width = `${pct}%`;
 	element_ProgressText.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total}`;
 }
