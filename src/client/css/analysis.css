@@ -317,7 +317,7 @@
 	border-top: 1px solid var(--c-border-muted);
 	border-bottom: 1px solid var(--c-border-muted);
 	background: var(--c-surface);
-	box-shadow: 0 4px 5px rgba(0, 0, 0, 0.4);
+	box-shadow: 0 4px 5px var(--c-shadow);
 	z-index: 1;
 }
 

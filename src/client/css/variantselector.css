@@ -94,7 +94,7 @@
 	background: var(--c-surface);
 	border: 1px solid var(--c-border-strong);
 	border-radius: 6px;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+	box-shadow: 0 4px 16px var(--c-shadow);
 	display: none;
 }
 
@@ -222,7 +222,7 @@
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);
 	border-radius: 8px;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+	box-shadow: 0 4px 16px var(--c-shadow);
 	-webkit-tap-highlight-color: transparent;
 }
 
