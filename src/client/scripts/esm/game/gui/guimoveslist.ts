@@ -138,7 +138,7 @@ function rewind(): void {
 	scrollToCurrentPly();
 }
 
-/** Forwards the game by 1 move. Cancels any premoves first. */
+/** Forwards the game by 1 move, unselecting any piece. Cancels any premoves first. */
 function forward(): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
@@ -147,6 +147,7 @@ function forward(): void {
 
 	if (!moveutil.isIncrementingLegal(gamefile)) return;
 	movesequence.navigateMove(gamefile, mesh, true);
+	selection.unselectPiece();
 	scrollToCurrentPly();
 }
 
