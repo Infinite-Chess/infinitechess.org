@@ -76,7 +76,7 @@ const DEFAULT_WIN_CONDITIONS: PlayerGroup<GameruleWinCondition[]> = Object.fromE
 /** The full-move number a game starts at when nothing declares otherwise. */
 const DEFAULT_FULL_MOVE = 1;
 
-// Functions -------------------------------------------------------------------
+// Win Conditions --------------------------------------------------------------
 
 /** Checks if a specified color has a given win condition. */
 function doesColorHaveWinCondition(
@@ -85,7 +85,6 @@ function doesColorHaveWinCondition(
 	winCondition: GameruleWinCondition,
 ): boolean {
 	return !!gameRules.winConditions[color]?.includes(winCondition);
-	// The `!!` converts the result (true/false/undefined) strictly to boolean (true/false).
 }
 
 /** Gets the count of win conditions for a specified color in the game rules. */
@@ -112,6 +111,15 @@ function swapCheckmateForRoyalCapture(gameRules: GameRules): void {
 	if (changeMade) console.log('Swapped checkmate win conditions for royalcapture.');
 }
 
+/** Whether any player in the turn order wins by checkmate. */
+function usesCheckmate(gameRules: GameRules): boolean {
+	return getUniquePlayersInTurnOrder(gameRules.turnOrder).some((player) =>
+		doesColorHaveWinCondition(gameRules, player, 'checkmate'),
+	);
+}
+
+// Turn Order ------------------------------------------------------------------
+
 /**
  * Returns a list of all unique players in the turn order.
  * Removes duplicates while preserving the order of first appearance.
@@ -120,12 +128,33 @@ function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
 	return [...new Set(turnOrder)];
 }
 
-/** Whether any player in the turn order wins by checkmate. */
-function usesCheckmate(gameRules: GameRules): boolean {
-	return getUniquePlayersInTurnOrder(gameRules.turnOrder).some((player) =>
-		doesColorHaveWinCondition(gameRules, player, 'checkmate'),
-	);
+/** Returns the color whose turn it is after the specified move index was played. */
+function getWhosTurnAtMoveIndex(gameRules: GameRules, moveIndex: number): Player {
+	return getColorThatPlayedMoveIndex(gameRules, moveIndex + 1);
 }
+
+/** Returns the color of the player that played the provided index within the moves list. */
+function getColorThatPlayedMoveIndex(gameRules: GameRules, index: number): Player {
+	const turnOrder = gameRules.turnOrder;
+	// If the starting position of the game is in check, then the player very last in the turnOrder is considered the one who *gave* the check.
+	if (index === -1) return turnOrder[turnOrder.length - 1]!;
+	return turnOrder[index % turnOrder.length]!;
+}
+
+/** Returns true if any player in the turn order ever gets two turns in a row. */
+function doesAnyPlayerGet2TurnsInARow(gameRules: GameRules): boolean {
+	// If one player ever gets 2 turns in a row, then that also allows the capture of the king.
+	const turnOrder = gameRules.turnOrder;
+	for (let i = 0; i < turnOrder.length; i++) {
+		const thisColor = turnOrder[i];
+		const nextColorIndex = i === turnOrder.length - 1 ? 0 : i + 1; // If the color is last, then the next color is the first color of the turn order.
+		const nextColor = turnOrder[nextColorIndex];
+		if (thisColor === nextColor) return true;
+	}
+	return false;
+}
+
+// Promotion -------------------------------------------------------------------
 
 /** Whether a pawn may EVER promote into the given piece. */
 function isValidPromotionPiece(rawType: RawType): boolean {
@@ -146,11 +175,16 @@ export default {
 	DEFAULT_TURN_ORDER,
 	DEFAULT_WIN_CONDITIONS,
 	DEFAULT_FULL_MOVE,
-	// Functions
+	// Win Conditions
 	doesColorHaveWinCondition,
 	getWinConditionCountOfColor,
 	swapCheckmateForRoyalCapture,
-	getUniquePlayersInTurnOrder,
 	usesCheckmate,
+	// Turn Order
+	getUniquePlayersInTurnOrder,
+	getWhosTurnAtMoveIndex,
+	getColorThatPlayedMoveIndex,
+	doesAnyPlayerGet2TurnsInARow,
+	// Promotion
 	isValidPromotionPiece,
 };

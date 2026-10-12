@@ -6,8 +6,6 @@
 
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
-import type { Player } from '../util/typeutil.js';
-import type { GameRules } from '../util/gamerules.js';
 import type { EnPassant } from './state.js';
 import type { MoveCoords } from './icn/icnmoves.js';
 import type { MoveFull, CoordsTagged, MoveRecord } from './movepiece.js';
@@ -160,40 +158,6 @@ function isGameResignable(game: { moves: MoveRecord[] }): boolean {
 	return game.moves.length > 1;
 }
 
-// Turn Order ------------------------------------------------------------------
-
-/**
- * Returns the color whose turn it is after the specified move index was played.
- * @param game - The gamefile with the gameRules
- */
-function getWhosTurnAtMoveIndex(game: { gameRules: GameRules }, moveIndex: number): Player {
-	return getColorThatPlayedMoveIndex(game, moveIndex + 1);
-}
-
-/**
- * Returns the color of the player that played the provided index within the moves list.
- * @param game - The gamefile with the gameRules
- */
-function getColorThatPlayedMoveIndex(game: { gameRules: GameRules }, index: number): Player {
-	const turnOrder = game.gameRules.turnOrder;
-	// If the starting position of the game is in check, then the player very last in the turnOrder is considered the one who *gave* the check.
-	if (index === -1) return turnOrder[turnOrder.length - 1]!;
-	return turnOrder[index % turnOrder.length]!;
-}
-
-/** Returns true if any player in the turn order ever gets two turns in a row. */
-function doesAnyPlayerGet2TurnsInARow(gameRules: GameRules): boolean {
-	// If one player ever gets 2 turns in a row, then that also allows the capture of the king.
-	const turnOrder = gameRules.turnOrder;
-	for (let i = 0; i < turnOrder.length; i++) {
-		const thisColor = turnOrder[i];
-		const nextColorIndex = i === turnOrder.length - 1 ? 0 : i + 1; // If the color is last, then the next color is the first color of the turn order.
-		const nextColor = turnOrder[nextColorIndex];
-		if (thisColor === nextColor) return true;
-	}
-	return false;
-}
-
 // Move List Cells -------------------------------------------------------------
 
 /** A ply index as its ply number and its cell in the move list, e.g. "Ply 264 (move 132, right column)". */
@@ -235,10 +199,6 @@ export default {
 	flagLastMoveAsMate,
 	getLastMove,
 	isGameResignable,
-	// Turn Order
-	getWhosTurnAtMoveIndex,
-	getColorThatPlayedMoveIndex,
-	doesAnyPlayerGet2TurnsInARow,
 	// Move List Cells
 	describePly,
 	getMoveListRow,

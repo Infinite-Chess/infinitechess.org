@@ -26,6 +26,7 @@ import typeutil from '../util/typeutil.js';
 import moveutil from './moveutil.js';
 import geometry from '../../util/math/geometry.js';
 import bdcoords from '../../util/bdcoords.js';
+import gamerules from '../util/gamerules.js';
 import boardutil from './boardutil.js';
 import coordutil from '../../util/coordutil.js';
 import movepiece from './movepiece.js';
@@ -60,7 +61,10 @@ function removeCheckInvalidMoves(boardsim: Board, pieceSelected: Piece, moves: L
 
 	// The stored checks are against whoever's turn it is at the viewed ply.
 	// The other player just moved, so can't be in check.
-	const whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex);
+	const whosTurn = gamerules.getWhosTurnAtMoveIndex(
+		boardsim.gameRules,
+		boardsim.state.local.moveIndex,
+	);
 	const existingChecks = color === whosTurn ? boardsim.state.local.checks : [];
 
 	// There's a couple type of moves that put you in check:

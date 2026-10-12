@@ -14,7 +14,6 @@ import type { EngineSupportCode } from '../engines/apeironcard.js';
 import type { PositionErrorCode } from '../logic/positionlegality.js';
 import type { ScriptTranslations } from '../../types/script-translations.js';
 
-import moveutil from '../logic/moveutil.js';
 import boardutil from '../logic/boardutil.js';
 import gamerules from '../util/gamerules.js';
 import checkmate from '../logic/checkmate.js';
@@ -84,7 +83,10 @@ function getRejection(
 	// --- Rule 1: King capture is not possible on turn 1 ---
 	if (gamerules.usesCheckmate(gamefile.gameRules)) {
 		// Whoever moves after the front position is the one its mover could take a royal from.
-		const secondToMove = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length);
+		const secondToMove = gamerules.getWhosTurnAtMoveIndex(
+			gamefile.gameRules,
+			gamefile.moves.length,
+		);
 		if (checkdetection.detect(gamefile, secondToMove, false).check) {
 			return { kind: 'position', code: 'king_capture_possible' };
 		}

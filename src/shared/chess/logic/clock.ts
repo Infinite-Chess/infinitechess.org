@@ -145,7 +145,7 @@ function clocksAtMoveIndex(
 	// as their last stamp predates all the time they burned up to the flag.
 	const flaggedPlayer =
 		basegame.gameConclusion?.condition === 'time' && moveIndex === basegame.moves.length - 1
-			? moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1)
+			? gamerules.getWhosTurnAtMoveIndex(basegame.gameRules, basegame.moves.length - 1)
 			: undefined;
 
 	const currentTime: PlayerGroup<number> = {};
@@ -158,7 +158,7 @@ function clocksAtMoveIndex(
 		currentTime[player] = basegame.clocks.startTime.millis; // Fallback if they never moved.
 		// Walk backwards to their most recent move.
 		for (let i = moveIndex; i >= 0; i--) {
-			if (moveutil.getColorThatPlayedMoveIndex(basegame, i) !== player) continue;
+			if (gamerules.getColorThatPlayedMoveIndex(basegame.gameRules, i) !== player) continue;
 			const stamp = basegame.moves[i]!.clockStamp;
 			// Moves added on the analysis board carry no clock; skip past them so the
 			// clock keeps this variation's last real value instead of dropping to 0.
@@ -183,7 +183,10 @@ function push(gamefile: {
 	gameRules: GameRules;
 }): number | undefined {
 	const clocks = gamefile.clocks;
-	const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
+	const prevcolor = gamerules.getWhosTurnAtMoveIndex(
+		gamefile.gameRules,
+		gamefile.moves.length - 2,
+	);
 
 	if (!moveutil.isGameResignable(gamefile)) return clocks.currentTime[prevcolor]!;
 

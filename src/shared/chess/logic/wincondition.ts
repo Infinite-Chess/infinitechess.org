@@ -14,12 +14,12 @@ import type { GameConclusion } from '../util/typeschemas.js';
 import moveutil from './moveutil.js';
 import boardutil from './boardutil.js';
 import checkmate from './checkmate.js';
+import gamerules from '../util/gamerules.js';
 import repetition from './repetition.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from './gamefileutility.js';
 import insufficientmaterial from './insuffmat/insufficientmaterial.js';
-import typeutil, { RawType } from '../util/typeutil.js';
-import { rawTypes as r, Player } from '../util/typeutil.js';
+import typeutil, { RawType, rawTypes as r, Player } from '../util/typeutil.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -72,8 +72,8 @@ function detectRoyalCapture(boardsim: Board): GameConclusion | undefined {
 
 	// Was the last move capturing a royal piece?
 	if (wasLastMoveARoyalCapture(boardsim)) {
-		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			boardsim,
+		const colorThatWon: Player = gamerules.getColorThatPlayedMoveIndex(
+			boardsim.gameRules,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'royalcapture' };
@@ -102,8 +102,8 @@ function detectAllroyalscaptured(boardsim: Board): GameConclusion | undefined {
 	);
 
 	if (royalCount.length === 0) {
-		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			boardsim,
+		const colorThatWon: Player = gamerules.getColorThatPlayedMoveIndex(
+			boardsim.gameRules,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'allroyalscaptured' };
@@ -127,8 +127,8 @@ function detectAllpiecescaptured(boardsim: Board): GameConclusion | undefined {
 	const count: number = boardutil.getPieceCountOfColor(boardsim.pieces, boardsim.whosTurn);
 
 	if (count === 0) {
-		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			boardsim,
+		const colorThatWon: Player = gamerules.getColorThatPlayedMoveIndex(
+			boardsim.gameRules,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'allpiecescaptured' };
@@ -149,8 +149,8 @@ function detectKoth(boardsim: Board): GameConclusion | undefined {
 
 	// The color that moved last (the last player in the turn order when flattened) wins if
 	// one of its kings sits on a center square.
-	const colorThatMovedLast: Player = moveutil.getColorThatPlayedMoveIndex(
-		boardsim,
+	const colorThatMovedLast: Player = gamerules.getColorThatPlayedMoveIndex(
+		boardsim.gameRules,
 		boardsim.moves.length - 1,
 	);
 

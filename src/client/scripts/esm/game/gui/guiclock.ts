@@ -14,6 +14,7 @@ import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeu
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
+import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -136,7 +137,7 @@ function showClocksAtViewedMove(basegame: GameFile): void {
  */
 function getTempoPlayer(basegame: GameFile): Player | undefined {
 	if (gamesession.getGameType() === 'analysis')
-		return moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1);
+		return gamerules.getWhosTurnAtMoveIndex(basegame.gameRules, basegame.moves.length - 1);
 	if (gamefileutility.isGameOver(basegame)) return undefined;
 	return basegame.clocks?.ticking?.color ?? basegame.whosTurn;
 }

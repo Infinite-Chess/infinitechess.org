@@ -19,6 +19,7 @@ import state from './state.js';
 import typeutil from '../util/typeutil.js';
 import moveutil from './moveutil.js';
 import icnmoves from './icn/icnmoves.js';
+import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
 import boardutil from './boardutil.js';
 import legalmoves from './legalmoves.js';
@@ -328,7 +329,7 @@ function makeMove(boardsim: Board, move: MoveFull): void {
 function applyMove(boardsim: Board, move: MoveFull, forward: boolean, updateTurn: boolean): void {
 	boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the boardsim moveIndex
 	// Needs to be after moveIndex is updated.
-	if (updateTurn) boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex); // prettier-ignore
+	if (updateTurn) boardsim.whosTurn = gamerules.getWhosTurnAtMoveIndex(boardsim.gameRules, boardsim.state.local.moveIndex); // prettier-ignore
 
 	// Stops stupid missing piece errors
 	const indexToApply = boardsim.state.local.moveIndex + Number(!forward);
@@ -354,8 +355,8 @@ function applyEdit(boardsim: Board, edit: Edit, forward: boolean): void {
  * then creates and set's the game state to reflect that.
  */
 function createCheckState(boardsim: Board, move: MoveFull): void {
-	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(
-		boardsim,
+	const whosTurnItWasAtMoveIndex = gamerules.getWhosTurnAtMoveIndex(
+		boardsim.gameRules,
 		boardsim.state.local.moveIndex,
 	);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;

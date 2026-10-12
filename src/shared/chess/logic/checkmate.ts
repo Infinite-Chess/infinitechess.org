@@ -8,7 +8,7 @@
 import type { Board } from './boardinit.js';
 import type { GameConclusion } from '../util/typeschemas.js';
 
-import moveutil from './moveutil.js';
+import gamerules from '../util/gamerules.js';
 import boardutil from './boardutil.js';
 import legalmoves from './legalmoves.js';
 import gamefileutility from './gamefileutility.js';
@@ -37,7 +37,7 @@ function isCompatible(boardsim: Board): boolean {
 	if (boardutil.getPieceCountOfGame(boardsim.pieces) > MAX_PIECES) return false; // Too many pieces (checkmate algorithm takes too long)
 	if (boardsim.pieces.lines.size > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
 	if (gamefileutility.getPlayerCount(boardsim) > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
-	if (moveutil.doesAnyPlayerGet2TurnsInARow(boardsim.gameRules)) return false; // This also allows the capture of the king.
+	if (gamerules.doesAnyPlayerGet2TurnsInARow(boardsim.gameRules)) return false; // This also allows the capture of the king.
 	if (boardutil.getRoyalCountOfGame(boardsim.pieces) > MAX_ROYALS) return false; // Too many royals (check & checkmate algorithm takes too long)
 	return true; // Checkmate compatible!
 }
@@ -67,8 +67,8 @@ function detect(boardsim: Board): GameConclusion | undefined {
 		'checkmate',
 	);
 	if (gamefileutility.isCurrentViewedPositionInCheck(boardsim) && usingCheckmate) {
-		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(
-			boardsim,
+		const colorThatWon = gamerules.getColorThatPlayedMoveIndex(
+			boardsim.gameRules,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'checkmate' };

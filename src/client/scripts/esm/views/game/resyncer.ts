@@ -15,8 +15,8 @@ import type { GameStateFull } from '../../../../../shared/transport/clientbound.
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 import type { MoveRecord, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
-import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
+import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
@@ -146,7 +146,7 @@ function synchronizeMovesList(
 		for (let i = latestMatchingMoveIndex + 1; i < moves.length; i++) {
 			// Incrementally add the server's correct moves to our own moves list
 			const isLastMove = i === moves.length - 1;
-			const playerOfMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
+			const playerOfMove = gamerules.getColorThatPlayedMoveIndex(gamefile.gameRules, i);
 			const isOpponentMove = playerOfMove !== ourColor;
 
 			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
@@ -210,7 +210,8 @@ function mayWeSubmitMovesFrom(gamefile: GameFile, startIndex: number): boolean {
 	if (window.gamePageData.engineGame) return true;
 	return (
 		startIndex === gamefile.moves.length - 1 &&
-		moveutil.getColorThatPlayedMoveIndex(gamefile, startIndex) === gamesession.getRole()
+		gamerules.getColorThatPlayedMoveIndex(gamefile.gameRules, startIndex) ===
+			gamesession.getRole()
 	);
 }
 

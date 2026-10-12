@@ -16,7 +16,7 @@ import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import type { GameStateMessage } from '../../../shared/transport/clientbound.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import moveutil from '../../../shared/chess/logic/moveutil.js';
+import gamerules from '../../../shared/chess/util/gamerules.js';
 import servervalidation from '../../../shared/chess/variants/servervalidation.js';
 
 import chat from './chat.js';
@@ -64,8 +64,8 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	}
 
 	const perpetratingMoveIndex = servergame.moves.length - 1;
-	const colorThatPlayedPerpetratingMove = moveutil.getColorThatPlayedMoveIndex(
-		servergame,
+	const colorThatPlayedPerpetratingMove = gamerules.getColorThatPlayedMoveIndex(
+		servergame.gameRules,
 		perpetratingMoveIndex,
 	);
 	if (colorThatPlayedPerpetratingMove === ourRole) {

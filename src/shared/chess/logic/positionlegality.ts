@@ -11,7 +11,6 @@ import type { RawType } from '../util/typeutil.js';
 import type { VariantOptions } from './gamefile.js';
 
 import bounds from '../../util/math/bounds.js';
-import moveutil from './moveutil.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
 import gamelimits from '../util/gamelimits.js';
@@ -138,7 +137,7 @@ export function validatePosition(
 		// 3+ players allows one to open a discovered attack and a second to capture the king.
 		if (isFourPlayerMode) return 'four_player_checkmate';
 		// If any player gets 2+ turns in a row, king capture is possible
-		if (moveutil.doesAnyPlayerGet2TurnsInARow(gameRules)) {
+		if (gamerules.doesAnyPlayerGet2TurnsInARow(gameRules)) {
 			return 'consecutive_turns_with_checkmate';
 		}
 	}

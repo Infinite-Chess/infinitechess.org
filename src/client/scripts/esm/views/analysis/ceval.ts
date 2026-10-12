@@ -16,7 +16,7 @@ import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
-import moveutil from '../../../../../shared/chess/logic/moveutil.js';
+import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -575,7 +575,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		requestId,
 		icn,
 		moveIndex,
-		turn: moveutil.getWhosTurnAtMoveIndex(gamefile, moveIndex),
+		turn: gamerules.getWhosTurnAtMoveIndex(gamefile.gameRules, moveIndex),
 		multiPv: settings.multiPv,
 	};
 
