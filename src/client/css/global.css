@@ -122,8 +122,8 @@ body {
 	--c-surface: rgb(255, 255, 255);
 	--c-surface-transparent: rgb(255, 255, 255, 0.4);
 	--c-surface-2: rgb(235, 235, 235);
-	--c-text: rgb(30, 30, 30);
-	--c-text-emphasis: rgb(0, 0, 0);
+	--c-text: rgb(60, 60, 60);
+	--c-text-emphasis: rgb(30, 30, 30);
 	--c-text-muted: rgb(100, 100, 100);
 	--c-accent: hsl(88, 62%, 37%);
 	--c-border: rgb(200, 200, 200);
