@@ -2,7 +2,8 @@
 
 /**
  * Logs real games into the in-memory database, checking what becomes permanent: each player's
- * pre-game rating snapshot, a rated game's rating changes, and the ICN's Elo and RatingDiff tags.
+ * pre-game rating snapshot, a rated game's rating changes, the ICN's Elo and RatingDiff tags,
+ * and a private game's privacy.
  */
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
@@ -26,6 +27,7 @@ import memberManager from '../../database/memberManager.js';
 import databaseTables from '../../database/databaseTables.js';
 import ratingCalculation from '../../utility/ratingCalculation.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
+import playerStatsManager from '../../database/playerStatsManager.js';
 import leaderboardsManager from '../../database/leaderboardsManager.js';
 
 type Member = { user_id: number; identity: AuthMemberInfo };
@@ -74,8 +76,9 @@ function buildGame(
 	white: AuthMemberInfo,
 	black: AuthMemberInfo,
 	conclusion: GameConclusion,
+	isPrivate = false,
 ): ServerGame {
-	const setup: GameSetup = { variant, time: '600+5', rated, private: false };
+	const setup: GameSetup = { variant, time: '600+5', rated, private: isPrivate };
 	const now = Date.now();
 	const construction = gameUtility.resolveGameConstruction(variant, now, undefined, false);
 	const game = gamefile.initGame(setup.time, now, construction.gameRules);
@@ -214,5 +217,22 @@ describe('gameLogger', () => {
 		expect(icn).toContain('[Result "*"]');
 		expect(icn).toContain('[Termination "Aborted"]');
 		expect(icn).not.toContain('1,7>1,5');
+	});
+
+	it("counts a private game as private, in its record and both players' stats", () => {
+		const original: GameConclusion = { condition: 'resignation', victor: 1 };
+		const game = buildGame(CLASSICAL, false, alice.identity, bob.identity, original, true);
+		const getPublicity = (member: Member): object | undefined =>
+			playerStatsManager.getData(member.user_id, ['game_count_public', 'game_count_private']);
+
+		gameLogger.log(game);
+		expect(gamesManager.getData(game.match.id, ['private'])).toEqual({ private: 1 });
+		expect(getPublicity(alice)).toEqual({ game_count_public: 0, game_count_private: 1 });
+		expect(getPublicity(bob)).toEqual({ game_count_public: 0, game_count_private: 1 });
+
+		// Overturning it un-counts it from the private tally.
+		game.gameConclusion = { condition: 'aborted' };
+		gameLogger.updateOverturned(game, original, 2);
+		expect(getPublicity(alice)).toEqual({ game_count_public: 0, game_count_private: 0 });
 	});
 });
