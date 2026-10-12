@@ -85,8 +85,6 @@ function openMeterAndDisplayLoading(): void {
 /** Hides the ping meter from the settings dropdown document element */
 function closeMeter(): void {
 	pingMeter.classList.add('hidden');
-	loadingAnim.classList.remove('hidden');
-	pingValue.textContent = '-';
 }
 
 export default {};
