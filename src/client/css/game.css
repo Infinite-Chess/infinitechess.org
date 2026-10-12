@@ -10,6 +10,16 @@
 	height: calc(100dvh - var(--header-height));
 }
 
+/* Shades the board's right edge, below whatever sits beside it (side bar, eval gauge).
+   Cast by a strip just past that edge, which the container's overflow clips away. */
+.game .canvas-container::after {
+	content: '';
+	position: absolute;
+	inset: 0 auto 0 100%;
+	width: 20px;
+	box-shadow: 0 0 8px var(--c-shadow-chrome);
+}
+
 /* ============================
    Side bar
    ============================ */
@@ -29,6 +39,7 @@
 	background: var(--c-surface);
 	border: 1px solid var(--c-border-muted);
 	border-radius: 6px;
+	box-shadow: 0 2px 7px var(--c-shadow-raised);
 	overflow: hidden;
 }
 

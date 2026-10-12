@@ -97,6 +97,10 @@ body {
 	--c-elev-face-2: rgb(35, 35, 35);
 	/* Drop shadow color tuned per theme (heavy on dark, soft on light backgrounds). */
 	--c-shadow-elev: rgba(0, 0, 0, 0.5);
+	/* Shadow colors for the header, footer and board edge, and for raised buttons and side bar
+	   cards. Light theme only. */
+	--c-shadow-chrome: transparent;
+	--c-shadow-raised: transparent;
 	/* Inset top-edge highlight on the same raised face. */
 	--c-elev-highlight: rgba(255, 255, 255, 0.06);
 	/* Hover-state overlay for opaque surfaces: brightens on dark, darkens on light.
@@ -140,6 +144,8 @@ body {
 	--c-elev-face: rgb(255, 255, 255);
 	--c-elev-face-2: rgb(236, 236, 236);
 	--c-shadow-elev: rgba(0, 0, 0, 0.22);
+	--c-shadow-chrome: rgba(0, 0, 0, 0.3);
+	--c-shadow-raised: rgba(0, 0, 0, 0.2);
 	--c-elev-highlight: rgba(255, 255, 255, 0.8);
 	--c-hover-overlay: rgba(0, 0, 0, 0.06);
 
@@ -256,7 +262,9 @@ button:disabled {
 	font-size: 16px;
 	font-weight: 700;
 	border-radius: 6px;
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		0 2px 7px var(--c-shadow-raised);
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
@@ -267,7 +275,9 @@ button:disabled {
 
 .btn-primary:active {
 	transform: translateY(1px);
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.15),
+		0 1px 3px var(--c-shadow-raised);
 }
 
 /* A compact primary submit nested at the end of an .auth-field
