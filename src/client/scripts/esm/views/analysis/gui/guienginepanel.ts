@@ -302,7 +302,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 
 	if (update.terminal) {
 		setGaugeVisible(true);
-		clearPanelReadout('Game Over', { gauge: terminalGaugeChances(), progress: update });
+		clearPanelReadout('Game Over', { gauge: terminalGaugeChances(update), progress: update });
 		return;
 	}
 
@@ -376,9 +376,10 @@ function updateGauge(chances: number): void {
  * A terminal position is always the front of its line, where gamefile.gameConclusion holds
  * that branch's own conclusion (each branch restores its conclusion when reselected).
  */
-function terminalGaugeChances(): number {
+function terminalGaugeChances(update: CevalUpdate): number {
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile || !moveutil.areWeViewingLatestMove(gamefile)) return 0; // Stale update | not on the front.
+	// Judged by the analyzed position, not the viewed one, which a load briefly rewinds to replay the last move.
+	if (!gamefile || update.moveIndex !== gamefile.moves.length - 1) return 0; // Stale update | not on the front.
 	const victor = gamefile.gameConclusion?.victor;
 	return victor === p.WHITE ? 1 : victor === p.BLACK ? -1 : 0;
 }
