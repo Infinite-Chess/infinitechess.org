@@ -134,6 +134,7 @@ function synchronizeMovesList(
 		winconutil.isConclusionMoveTriggered(claimedGameConclusion.condition)
 			? claimedGameConclusion
 			: undefined;
+	const validated = onlinegame.isValidated(gamefile);
 
 	let opponentPlayedIllegalMove: boolean = false;
 	/** Whether or not we forwarded at least one of OUR OWN moves the server had that we didn't. */
@@ -156,7 +157,8 @@ function synchronizeMovesList(
 			if (isOpponentMove) {
 				// Perform legality checks
 				// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
-				const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, isLastMove ? lastMoveConclusion : undefined); // prettier-ignore
+				const conclusion = validated ? 'trusted' : isLastMove ? lastMoveConclusion : undefined; // prettier-ignore
+				const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, conclusion); // prettier-ignore
 				// Report cheating if the server allows us
 				movesendreceive.checkAndReportIllegalOpponentMove(gamefile, moveValidationResult, thisShortmove.token, i + 1); // prettier-ignore
 				if (!moveValidationResult.valid) {

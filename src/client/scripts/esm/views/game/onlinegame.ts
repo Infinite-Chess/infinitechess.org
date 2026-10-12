@@ -6,8 +6,12 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { EngineGamePageInfo } from '../../../../../shared/transport/domain.js';
-import type { Additional, DatedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatOut, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
+import type {
+	Additional,
+	DatedVariant,
+	GameFile,
+} from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	GameStateFull,
 	LeanParticipantState,
@@ -17,6 +21,7 @@ import type {
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
+import servervalidation from '../../../../../shared/chess/variants/servervalidation.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import guichat from './gui/guichat.js';
@@ -83,6 +88,13 @@ function setInSync(value: boolean): void {
 	inSync = value;
 	// Being back in sync is what ends a disconnection from our perspective.
 	if (value) guidisconnect.onSelfReturn();
+}
+
+// Validation ------------------------------------------------------------------
+
+/** Whether the server validates this game's moves, computing its conclusions itself. */
+function isValidated(gamefile: GameFile): boolean {
+	return servervalidation.isGameValidated(window.gamePageData.variant, gamefile.variant);
 }
 
 // Life Cycle -----------------------------------------------------------
@@ -289,6 +301,8 @@ export default {
 	// Sync
 	areInSync,
 	setInSync,
+	// Validation
+	isValidated,
 	// Life Cycle
 	subscribeToGame,
 	onFinalized,
