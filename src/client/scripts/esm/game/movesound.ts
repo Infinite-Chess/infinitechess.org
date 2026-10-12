@@ -10,8 +10,6 @@ import type { Coords } from '../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import math from '../../../../shared/util/math/math.js';
-
 import camera from '../board/rendering/camera.js';
 import gamesound from '../board/gamesound.js';
 import WaterRipples from './rendering/WaterRipples.js';
@@ -71,16 +69,16 @@ const RIPPLE_CONFIG = {
 	volume: 0.8,
 } as const;
 
-/** Config for the screen shake effect for very large moves. */
+/** Config for the screen shake effect, which accompanies every bell move. */
 const SHAKE_CONFIG = {
-	/** The order of magnitude distance a piece needs to move for the screen shake to begin triggering. */
-	minDist: 4, // 10,000 squares => trauma begins increasing from 0
+	/** The shake trauma at the bell's minimum distance. */
+	minTrauma: 0.35,
 	/**
-	 * How much screen shake trauma is added per order of magnitude the piece moved.
-	 * 0.012 yields 1.0 shake trauma at about 1e90
+	 * How much more shake trauma is added per order of magnitude past the bell's minimum distance.
+	 * 0.008 yields max trauma at about 1e87
 	 */
-	traumaMultiplier: 0.012,
-};
+	traumaPerE: 0.008,
+} as const;
 
 /** Config for playing premove sound effects. */
 const PREMOVE_CONFIG = {
@@ -162,22 +160,17 @@ function playMove(
 		});
 		WaterRipples.addRipple(destination);
 		camera.shake.trigger(0.25);
-	} else {
-		// Apply screen shake for very large moves
-		const rawTrauma =
-			(bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
-		const trauma = math.clamp(rawTrauma, 0, 1);
-		if (trauma > 0) camera.shake.trigger(trauma);
+	} else if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
+		// Move is large enough for the bell and screen shake
+		const eAboveBell = bd.log10(distanceMoved) - bd.log10(BELL_CONFIG.minDist);
+		camera.shake.trigger(SHAKE_CONFIG.minTrauma + eAboveBell * SHAKE_CONFIG.traumaPerE);
 
-		if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
-			// Move is large enough to play the bell sound too
-			const bellVolume = volume * BELL_CONFIG.volume;
-			gamesound.playSoundEffect('bell', {
-				volume: bellVolume,
-				delay: delaySecs,
-				playbackRate,
-			});
-		}
+		const bellVolume = volume * BELL_CONFIG.volume;
+		gamesound.playSoundEffect('bell', {
+			volume: bellVolume,
+			delay: delaySecs,
+			playbackRate,
+		});
 	}
 }
 
