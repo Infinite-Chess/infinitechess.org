@@ -308,7 +308,6 @@ export default {
 	syncAfterMovesChanged,
 	setActiveLineToNode,
 	getActiveLineConclusion,
-	storeActiveLineConclusion,
 	getLineForNode,
 	promoteAtFork,
 	makeMainLine,

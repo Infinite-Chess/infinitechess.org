@@ -502,12 +502,6 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	const mesh = gameslot.getMesh();
 	premoves.cancelPremoves(gamefile, mesh);
 
-	// gameConclusion is a global state that belongs to the active line's front. Snapshot the
-	// branch we're leaving before swapping lines, then restore the target branch's own conclusion
-	// once its line is active — otherwise a decisive line's conclusion would bleed onto branches
-	// that don't end the game.
-	movetree.storeActiveLineConclusion(gamefile.gameConclusion);
-
 	const targetIndex = node.ply;
 	frametracker.onVisualChange();
 
