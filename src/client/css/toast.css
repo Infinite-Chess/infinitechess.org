@@ -19,7 +19,7 @@
 	border-radius: 10px;
 	border: 1px solid var(--toast-border, var(--c-border));
 	background-color: var(--c-surface);
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
 	overflow: hidden;
 	z-index: 10000;
@@ -82,8 +82,8 @@
 }
 
 .toast-close:hover {
-	background-color: var(--c-hover-overlay);
-	color: var(--c-text-emphasis);
+	background-color: var(--c-hover);
+	color: var(--c-text-strong);
 }
 
 .toast-close svg {

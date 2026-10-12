@@ -252,7 +252,7 @@ button {
 /* Buttons that can't receive the .active class (only 1 state): Give them an active state */
 .position-actions .instant:active,
 .selection-actions div:active {
-	background-color: var(--c-tile-2);
+	background-color: var(--c-board-accent-bright);
 }
 
 .position-actions div,
@@ -334,7 +334,7 @@ button {
 .active {
 	outline-offset: -0.125em;
 	outline: 0.25em solid black;
-	background-color: var(--c-tile-2);
+	background-color: var(--c-board-accent-bright);
 }
 
 .void {
@@ -1794,7 +1794,7 @@ svg.collapse {
 }
 
 .saved-position.active-position {
-	--mid: var(--c-tile-2);
+	--mid: var(--c-board-accent-bright);
 	--end: color-mix(in srgb, var(--mid), white 50%);
 	background: linear-gradient(var(--end), var(--mid), var(--end));
 }

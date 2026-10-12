@@ -41,7 +41,7 @@ main {
 	left: 50%;
 	width: clamp(135px, 19vw, 180px);
 	height: clamp(135px, 19vw, 180px);
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	transform: translate(-50%, -55%);
 	opacity: 0.09;
 	pointer-events: none;
@@ -63,7 +63,11 @@ main {
 	font-weight: 800;
 	letter-spacing: 0.04em;
 	line-height: 1.05;
-	background: linear-gradient(180deg, var(--c-text-elev-top) 0%, var(--c-text-elev-bottom) 100%);
+	background: linear-gradient(
+		180deg,
+		var(--c-raised-text-top) 0%,
+		var(--c-raised-text-bottom) 100%
+	);
 	-webkit-background-clip: text;
 	background-clip: text;
 	color: transparent;
@@ -97,7 +101,7 @@ main {
 	padding: 0.75em 1em;
 	margin-bottom: 0.5em;
 	font-size: 15px;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	max-height: 200px;
 	transition:
 		max-height 0.35s ease,
@@ -125,8 +129,8 @@ main {
 	border-radius: 0.4em;
 	font: inherit;
 	font-weight: 600;
-	color: var(--c-text-emphasis);
-	background: var(--c-surface-2);
+	color: var(--c-text-strong);
+	background: var(--c-surface-inset);
 	border: 1px solid var(--c-border);
 	text-decoration: none;
 	cursor: pointer;
@@ -134,7 +138,7 @@ main {
 }
 
 .new-prompt-btn:hover {
-	background: var(--c-elev-face);
+	background: var(--c-raised-top);
 }
 
 .new-prompt-btn.primary {
@@ -202,26 +206,25 @@ html[data-home-prompt='dismissed'] .new-prompt {
 	font-weight: 700;
 	letter-spacing: 0.01em;
 	cursor: pointer;
-	color: var(--c-text-emphasis);
-	background: var(--elev-face-gradient);
+	color: var(--c-text-strong);
+	background: var(--raised-gradient);
 	border: 1px solid var(--c-border);
 	box-shadow:
-		inset 0 1px 0 var(--c-elev-highlight),
-		0 3px 8px var(--c-shadow-elev);
+		inset 0 1px 0 var(--c-raised-highlight),
+		0 3px 8px var(--c-shadow);
 	-webkit-tap-highlight-color: transparent;
 }
 
 .lobby-btn:hover {
-	border-color: var(--c-border-2);
-	background:
-		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)), var(--elev-face-gradient);
+	border-color: var(--c-border-strong);
+	background: linear-gradient(var(--c-hover), var(--c-hover)), var(--raised-gradient);
 }
 
 .lobby-btn:active {
 	transform: translateY(1px);
 	box-shadow:
-		inset 0 1px 0 var(--c-elev-highlight),
-		0 1px 4px var(--c-shadow-elev);
+		inset 0 1px 0 var(--c-raised-highlight),
+		0 1px 4px var(--c-shadow);
 }
 
 .lobby-btn:disabled {
@@ -284,7 +287,7 @@ svg.bg-omega {
 	left: 50%;
 	transform: translate(-50%, -51%);
 	height: 94cqb;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	opacity: 0.08;
 	pointer-events: none;
 }
@@ -308,7 +311,7 @@ svg.bg-omega {
 	font-size: 0.75em;
 	color: var(--c-text-muted);
 	letter-spacing: 0.06em;
-	background-color: var(--c-surface-transparent);
+	background-color: var(--c-surface-translucent);
 }
 
 .lobby-header > div {
@@ -327,7 +330,7 @@ svg.bg-omega {
 	align-items: center;
 	cursor: pointer;
 	font-size: 0.9em;
-	background-color: var(--c-surface-transparent);
+	background-color: var(--c-surface-translucent);
 	border-bottom: 1px solid var(--c-border-muted);
 	-webkit-tap-highlight-color: transparent;
 }
@@ -359,7 +362,7 @@ svg.bg-omega {
 }
 
 .seek-variant-anchor:hover {
-	background-color: var(--c-hover-overlay);
+	background-color: var(--c-hover);
 }
 
 .seek-row .lobby-cell:nth-child(2) .cell-flex span {
@@ -371,13 +374,13 @@ svg.bg-omega {
 }
 
 .seek-row:hover:not([aria-disabled='true']) {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	background: rgb(255 88 0 / 40%);
 }
 
 .seek-row.ours {
 	background: rgba(0, 180, 15, 0.37);
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .seek-row.ours:hover:not([aria-disabled='true']) {
@@ -405,7 +408,7 @@ svg.bg-omega {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--c-surface-transparent);
+	background: var(--c-surface-translucent);
 	z-index: 1;
 	text-align: center;
 }
@@ -425,7 +428,7 @@ svg.bg-omega {
 }
 
 .lobby-ingame-banner p {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .lobby-ingame-banner .lobby-btn {
@@ -477,23 +480,23 @@ svg.bg-omega {
 }
 
 .seek-row:hover .side-dot {
-	background: var(--c-text-emphasis);
-	border-color: var(--c-text-emphasis);
+	background: var(--c-text-strong);
+	border-color: var(--c-text-strong);
 }
 
 .seek-row:hover .side-dot.black {
 	background: transparent;
-	border-color: var(--c-text-emphasis);
+	border-color: var(--c-text-strong);
 }
 
 [data-theme='light'] {
 	.seek-row:hover .side-dot {
 		background: transparent;
-		border-color: var(--c-text-emphasis);
+		border-color: var(--c-text-strong);
 	}
 
 	.seek-row:hover .side-dot.black {
-		background: var(--c-text-emphasis);
+		background: var(--c-text-strong);
 	}
 }
 
@@ -554,7 +557,7 @@ svg.bg-omega {
 	text-align: center;
 	font-size: 17px;
 	font-weight: 700;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .modal-close {
@@ -568,7 +571,7 @@ svg.bg-omega {
 }
 
 .modal-close:hover {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	transform: scale(1.15);
 }
 
@@ -676,7 +679,7 @@ svg.bg-omega {
 	color: var(--c-text-muted);
 	padding: 2px 6px;
 	font-size: 12px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	border: 1px solid var(--c-border);
 	border-radius: 4px;
 	cursor: pointer;
@@ -709,9 +712,9 @@ svg.bg-omega {
 	padding: 9px 12px;
 	font-size: 14px;
 	font-weight: 500;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	color: var(--c-text-muted);
-	box-shadow: inset 0 1px 0 var(--c-elev-highlight);
+	box-shadow: inset 0 1px 0 var(--c-raised-highlight);
 	cursor: pointer;
 	border-right: 1px solid var(--c-border);
 }
@@ -731,7 +734,7 @@ svg.bg-omega {
 }
 
 .option-btn:disabled:hover {
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	color: var(--c-text-muted);
 }
 

@@ -84,7 +84,7 @@
 
 .review-accuracy-value {
 	font-weight: 700;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .review-stat-row {
@@ -101,7 +101,7 @@
 }
 
 .review-stat-action:hover {
-	background: var(--c-hover-overlay);
+	background: var(--c-hover);
 }
 
 .review-stat-label {
@@ -194,7 +194,7 @@
 
 .engine-header {
 	display: flex;
-	background: color-mix(in srgb, var(--c-surface-2) 74%, transparent);
+	background: color-mix(in srgb, var(--c-surface-inset) 74%, transparent);
 }
 
 /* Everything left of the gear button; Carries padding. */
@@ -232,7 +232,7 @@
 	font-size: 1.35em;
 	font-weight: 700;
 	text-align: center;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-variant-numeric: tabular-nums;
 }
 
@@ -247,7 +247,7 @@
 .engine-name {
 	font-size: 0.9em;
 	font-weight: 600;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .engine-stats {
@@ -270,7 +270,7 @@
 }
 
 #btn-go-deeper:hover {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 #btn-go-deeper svg {
@@ -288,8 +288,8 @@
 
 #btn-engine-settings:hover,
 #btn-engine-settings.active {
-	color: var(--c-text-emphasis);
-	background: var(--c-hover-overlay);
+	color: var(--c-text-strong);
+	background: var(--c-hover);
 }
 
 #btn-engine-settings svg {
@@ -338,7 +338,7 @@
 
 .setting-value {
 	flex: 0 0 auto;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 /* ============================
@@ -373,7 +373,7 @@
 .line-eval {
 	flex: 0 0 3em;
 	font-weight: 700;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .line-moves {
@@ -389,8 +389,8 @@
 }
 
 .line-move:hover {
-	background: var(--c-hover-overlay);
-	color: var(--c-text-emphasis);
+	background: var(--c-hover);
+	color: var(--c-text-strong);
 }
 
 .line-pager {
@@ -458,12 +458,12 @@
 }
 
 .variation-line .ply:hover {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .variation-line .ply.current {
 	font-weight: normal;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .move-index {
@@ -510,13 +510,13 @@
 
 .analysis .moves-nav {
 	position: relative;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	border: none;
 }
 
 .analysis-actions-toggle[aria-expanded='true'] {
-	color: var(--c-text-emphasis);
-	background: var(--c-hover-overlay);
+	color: var(--c-text-strong);
+	background: var(--c-hover);
 }
 
 /* ============================
@@ -616,11 +616,11 @@
 .review-graph {
 	position: relative;
 	min-height: 150px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 }
 
 .review-graph canvas {
-	color: var(--c-text-emphasis); /* Read by the canvas code for the eval line. */
+	color: var(--c-text-strong); /* Read by the canvas code for the eval line. */
 }
 
 .review-phase-markers {
@@ -631,7 +631,7 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	border-left: 1px solid var(--c-border-2);
+	border-left: 1px solid var(--c-border-strong);
 }
 
 .review-phase-marker.current-position {
@@ -665,11 +665,11 @@
 	gap: 3px;
 	max-width: min(calc(100% - 12px), 220px);
 	padding: 6px 8px;
-	border: 1px solid var(--c-border-2);
+	border: 1px solid var(--c-border-strong);
 	border-radius: 5px;
 	background: var(--c-surface);
-	box-shadow: 0 2px 8px var(--c-shadow-elev);
-	color: var(--c-text-emphasis);
+	box-shadow: 0 2px 8px var(--c-shadow);
+	color: var(--c-text-strong);
 	font-size: 0.78em;
 	line-height: 1.25;
 	pointer-events: none;

@@ -17,7 +17,7 @@
 	position: absolute;
 	inset: 0 auto 0 100%;
 	width: 20px;
-	box-shadow: 0 0 8px var(--c-shadow-chrome);
+	box-shadow: 0 0 8px var(--c-shadow-edge);
 }
 
 /* ============================
@@ -31,7 +31,8 @@
 	gap: 15px;
 	padding: 15px;
 	overflow-y: auto;
-	background: linear-gradient(var(--c-bg-overlay), var(--c-bg-overlay)), var(--checkerboard);
+	background:
+		linear-gradient(var(--c-checkerboard-dim), var(--c-checkerboard-dim)), var(--checkerboard);
 	background-attachment: local;
 }
 
@@ -39,7 +40,7 @@
 	background: var(--c-surface);
 	border: 1px solid var(--c-border-muted);
 	border-radius: 6px;
-	box-shadow: 0 2px 7px var(--c-shadow-raised);
+	box-shadow: 0 2px 7px var(--c-shadow-lift);
 	overflow: hidden;
 }
 
@@ -59,7 +60,7 @@
 	justify-content: center;
 	width: 36px;
 	height: 36px;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .board-controls .icon-btn svg {
@@ -146,7 +147,7 @@
 	padding: 1px 4px;
 	font: inherit;
 	font-weight: 600;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	background: none;
 	border: 1px solid transparent;
 	border-radius: 4px;
@@ -243,7 +244,7 @@
 .result-score {
 	font-size: 1.1em;
 	font-weight: 800;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .result-text {
@@ -326,7 +327,7 @@
 .clock {
 	font-size: 1.4em;
 	font-weight: 700;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-family: monospace;
 	line-height: 1;
 }
@@ -360,8 +361,8 @@
 }
 
 .move-btn:hover:not(:disabled) {
-	color: var(--c-text-emphasis);
-	background: var(--c-hover-overlay);
+	color: var(--c-text-strong);
+	background: var(--c-hover);
 }
 
 .move-btn:disabled {
@@ -402,14 +403,14 @@
 }
 
 .ply:hover {
-	background: var(--c-hover-overlay);
-	color: var(--c-text-emphasis);
+	background: var(--c-hover);
+	color: var(--c-text-strong);
 }
 
 /* The position currently being viewed stands out. */
 .ply.current {
-	background: var(--c-surface-2);
-	color: var(--c-text-emphasis);
+	background: var(--c-surface-inset);
+	color: var(--c-text-strong);
 	font-weight: 600;
 }
 
@@ -466,7 +467,7 @@
 	font: inherit;
 	font-size: 14px;
 	font-weight: 600;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	text-decoration: none;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
@@ -486,8 +487,8 @@
 }
 
 .action-btn:hover:not(:disabled, [aria-disabled='true']) {
-	color: var(--c-text-emphasis);
-	background: var(--c-hover-overlay);
+	color: var(--c-text-strong);
+	background: var(--c-hover);
 }
 
 /* Disabled action buttons (e.g. offer-draw when offering is illegal): no not-allowed cursor. */
@@ -563,7 +564,7 @@
 
 .draw-offer-label {
 	font-size: 0.9em;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 /* The rematch button glows while our opponent has extended a rematch offer to us. */
@@ -586,26 +587,26 @@
 	100% {
 		background-color: color-mix(
 			in srgb,
-			var(--pulse-color, var(--c-text-emphasis)) var(--pulse-bg-min, 3%),
+			var(--pulse-color, var(--c-text-strong)) var(--pulse-bg-min, 3%),
 			transparent
 		);
 		box-shadow: inset 0 0 5px 1px
 			color-mix(
 				in srgb,
-				var(--pulse-color, var(--c-text-emphasis)) var(--pulse-glow-min, 6%),
+				var(--pulse-color, var(--c-text-strong)) var(--pulse-glow-min, 6%),
 				transparent
 			);
 	}
 	50% {
 		background-color: color-mix(
 			in srgb,
-			var(--pulse-color, var(--c-text-emphasis)) var(--pulse-bg-max, 8%),
+			var(--pulse-color, var(--c-text-strong)) var(--pulse-bg-max, 8%),
 			transparent
 		);
 		box-shadow: inset 0 0 12px 2px
 			color-mix(
 				in srgb,
-				var(--pulse-color, var(--c-text-emphasis)) var(--pulse-glow-max, 16%),
+				var(--pulse-color, var(--c-text-strong)) var(--pulse-glow-max, 16%),
 				transparent
 			);
 	}
@@ -637,17 +638,16 @@
 .disconnect-buttons .action-btn {
 	padding: 8px 12px;
 	border-radius: 6px;
-	background: var(--elev-face-gradient);
+	background: var(--raised-gradient);
 	border: 1px solid var(--c-border);
 	box-shadow:
-		inset 0 1px 0 var(--c-elev-highlight),
-		0 2px 5px var(--c-shadow-elev);
+		inset 0 1px 0 var(--c-raised-highlight),
+		0 2px 5px var(--c-shadow);
 }
 
 .disconnect-buttons .action-btn:hover {
-	border-color: var(--c-border-2);
-	background:
-		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)), var(--elev-face-gradient);
+	border-color: var(--c-border-strong);
+	background: linear-gradient(var(--c-hover), var(--c-hover)), var(--raised-gradient);
 }
 
 .disconnect-buttons .action-btn:active {
@@ -763,8 +763,8 @@
 
 .chat-input {
 	padding: 7px 12px;
-	background: var(--c-surface-2);
-	color: var(--c-text-emphasis);
+	background: var(--c-surface-inset);
+	color: var(--c-text-strong);
 	font-size: 14px;
 }
 

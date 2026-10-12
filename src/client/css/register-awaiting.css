@@ -22,5 +22,5 @@
 }
 
 .register-change-toggle:hover {
-	background: var(--c-hover-overlay);
+	background: var(--c-hover);
 }
