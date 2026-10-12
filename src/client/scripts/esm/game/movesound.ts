@@ -101,13 +101,13 @@ let timeLastMoveOrCaptureSound = 0;
  * @param distanceMoved - How far the piece moved.
  * @param capture - Whether this move made a capture.
  * @param premove - Whether this move is a premove.
- * @param destination - Optional. The destination coordinates of the piece move, for ripple effects.
+ * @param destination - The destination coordinates of the piece move, for ripple effects.
  */
 function playMove(
 	distanceMoved: BigDecimal,
 	capture: boolean,
 	premove: boolean,
-	destination?: Coords,
+	destination: Coords,
 ): void {
 	// Update the time since the last move sound was played
 	const now = Date.now();
@@ -139,7 +139,7 @@ function playMove(
 		playbackRate,
 	});
 
-	if (destination && bd.compare(distanceMoved, RIPPLE_CONFIG.minDist) >= 0) {
+	if (bd.compare(distanceMoved, RIPPLE_CONFIG.minDist) >= 0) {
 		// Trigger water dropplet ripple effect
 		const rippleVolume = volume * RIPPLE_CONFIG.volume;
 		// Calculate playback rate based on distance moved
