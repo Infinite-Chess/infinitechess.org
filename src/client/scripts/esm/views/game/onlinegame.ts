@@ -1,7 +1,8 @@
 // src/client/scripts/esm/views/game/onlinegame.ts
 
 /**
- * This module keeps trap of the data of the onlinegame we are currently in.
+ * The online game we're currently in: whether we're in sync with the server game, our standing
+ * with it, loading it from the server's state, and its session setup.
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
@@ -45,7 +46,7 @@ import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 /** The various stages of our standing with the server game. See {@link stage}. */
 type GameStage = 'active' | 'finalized' | 'detached';
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * Whether we are in sync with the server game, and the game isn't finalized yet (excludes rematch state).
@@ -80,24 +81,19 @@ SocketBus.addEventListener('reconnect', () => {
 
 // Sync ------------------------------------------------------------------------
 
+/** Whether we're in sync with the server game. See {@link inSync}. */
 function areInSync(): boolean {
 	return inSync;
 }
 
+/** Marks whether we're in sync with the server game. See {@link inSync}. */
 function setInSync(value: boolean): void {
 	inSync = value;
 	// Being back in sync is what ends a disconnection from our perspective.
 	if (value) guidisconnect.onSelfReturn();
 }
 
-// Validation ------------------------------------------------------------------
-
-/** Whether the server validates this game's moves, computing its conclusions itself. */
-function isValidated(gamefile: GameFile): boolean {
-	return servervalidation.isGameValidated(window.gamePageData.variant, gamefile.variant);
-}
-
-// Life Cycle -----------------------------------------------------------
+// Life Cycle ------------------------------------------------------------------
 
 /**
  * Requests to subscribe to the server game, and expects to receive a full game state.
@@ -134,7 +130,7 @@ function onDetached(): void {
 	setInSync(true);
 }
 
-// Loading --------------------------------------------------------------
+// Loading ---------------------------------------------------------------------
 
 /**
  * A fresh page load (not a reconnect, game live OR dead): Loads a game onto the
@@ -295,14 +291,19 @@ function startEngineGame(engineGame: EngineGamePageInfo, ourRole: Player): void 
 	});
 }
 
+// Validation ------------------------------------------------------------------
+
+/** Whether the server validates this game's moves, computing its conclusions itself. */
+function isValidated(gamefile: GameFile): boolean {
+	return servervalidation.isGameValidated(window.gamePageData.variant, gamefile.variant);
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
 	// Sync
 	areInSync,
 	setInSync,
-	// Validation
-	isValidated,
 	// Life Cycle
 	subscribeToGame,
 	onFinalized,
@@ -311,4 +312,6 @@ export default {
 	loadGameFromState,
 	setParticipantState,
 	setLeanParticipantState,
+	// Validation
+	isValidated,
 };
