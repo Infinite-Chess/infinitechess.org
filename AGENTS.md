@@ -127,8 +127,8 @@ followed, tell me.
 
 20. Design by contract and separation of concerns. A module's contract — what it accepts and
     promises — never names its callers, and nothing caller-specific lives inside it. It holds for
-    every input the contract allows, not just what today's callers send, and its tests cover all of
-    them.
+    every input the contract allows, not just what today's callers send. Non-trivial modules have
+    tests covering all of them.
 
 21. No unreachable guards. For all defensive checks, trace the call sites and prove whether the
     state is actually reachable. An unneeded guard tells a future developer "plan for this" and
