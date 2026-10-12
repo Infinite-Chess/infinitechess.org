@@ -17,6 +17,7 @@ import type { MoveRecord, MoveTagged } from '../../../../../shared/chess/logic/m
 
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 
@@ -128,6 +129,13 @@ function synchronizeMovesList(
 		aChangeWasMade = true;
 	}
 
+	/** The conclusion the server's last move reached. Non-move-triggered ones (e.g. resignation) came after it. */
+	const lastMoveConclusion =
+		claimedGameConclusion &&
+		winconutil.isConclusionMoveTriggered(claimedGameConclusion.condition)
+			? claimedGameConclusion
+			: undefined;
+
 	let opponentPlayedIllegalMove: boolean = false;
 	/** Whether or not we forwarded at least one of OUR OWN moves the server had that we didn't. */
 	let atleastOneOfOurMovesWasForwarded: boolean = false;
@@ -149,7 +157,7 @@ function synchronizeMovesList(
 			if (isOpponentMove) {
 				// Perform legality checks
 				// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
-				const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, claimedGameConclusion); // prettier-ignore
+				const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, isLastMove ? lastMoveConclusion : undefined); // prettier-ignore
 				// Report cheating if the server allows us
 				movesendreceive.checkAndReportIllegalOpponentMove(gamefile, moveValidationResult, thisShortmove.token, i + 1); // prettier-ignore
 				if (!moveValidationResult.valid) {
