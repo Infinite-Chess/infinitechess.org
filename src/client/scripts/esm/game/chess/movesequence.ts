@@ -8,6 +8,7 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 import type { Edit, MoveFull, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
@@ -32,19 +33,21 @@ import graphicalchanges from './graphicalchanges.js';
 /**
  * Commits a global forward move to the game: all logical, game-state,
  * clock, and move-list GUI changes — but NO piece-mesh update.
+ * @param conclusion - 'detect' to detect it on our board, or the conclusion the move reached if known.
  */
 function commitMove(
 	gamefile: GameFile,
 	moveTagged: MoveTagged,
-	{ doGameOverChecks = true }: { doGameOverChecks?: boolean } = {},
+	conclusion: 'detect' | GameConclusion | undefined,
 ): MoveFull {
 	const move = movepiece.generateMove(gamefile, moveTagged);
 
 	movepiece.makeMove(gamefile, move); // Logical changes
 
-	// Must run ABOVE 'moves-changed': the checks flag a checkmating move as mate, and the
+	// Must run ABOVE 'moves-changed': a checkmate conclusion flags the move as mate, and the
 	// move list renders each ply's notation (# vs +) once, from the flags it sees then.
-	if (doGameOverChecks) wincondition.doGameOverChecks(gamefile);
+	if (conclusion === 'detect') wincondition.doGameOverChecks(gamefile);
+	else wincondition.setGameConclusion(gamefile, conclusion);
 
 	// Forward chokepoint for the committed move list.
 	GameBus.dispatch('moves-changed');
@@ -52,9 +55,8 @@ function commitMove(
 	// Must stay BELOW 'moves-changed': the reconcile it triggers has to enqueue before
 	// 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
 	if (
-		doGameOverChecks &&
 		gamefileutility.isGameOver(gamefile) &&
-		// Only conclude the game if it's not an online game (in that scenario, server is boss)
+		// Online games conclude where the server's message is applied, alongside its clocks.
 		gamesession.getGameType() !== 'online' &&
 		gamesession.getGameType() !== 'analysis'
 	) {
@@ -71,9 +73,9 @@ function makeMove(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
-	options: { doGameOverChecks?: boolean } = {},
+	conclusion: 'detect' | GameConclusion | undefined,
 ): MoveFull {
-	const move = commitMove(gamefile, moveTagged, options);
+	const move = commitMove(gamefile, moveTagged, conclusion);
 	if (mesh) runMeshChanges(gamefile, mesh, move, true);
 	GameBus.dispatch('view-move'); // Committing a move at the front also advances the viewed position.
 	GameBus.dispatch('view-front'); // ...to the new front, so the moves panel follows it.
@@ -89,10 +91,11 @@ function makeMoveKeepingView(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
+	conclusion: 'detect' | GameConclusion | undefined,
 ): MoveFull {
 	const move = movepiece.runActionAtGameFront(gamefile, () =>
 		// Doesn't touch the mesh
-		commitMove(gamefile, moveTagged),
+		commitMove(gamefile, moveTagged, conclusion),
 	);
 	// Appending the move may have reallocated the piece arrays; if so, rebuild the
 	// mesh (now back on the viewed position) to match. REQUIRED.
@@ -106,9 +109,9 @@ function makeMoveAndAnimate(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
-	options: { doGameOverChecks?: boolean } = {},
+	conclusion: 'detect' | GameConclusion | undefined,
 ): MoveFull {
-	const move = makeMove(gamefile, mesh, moveTagged, options);
+	const move = makeMove(gamefile, mesh, moveTagged, conclusion);
 	if (mesh) graphicalchanges.animateMove(move.changes, true);
 	return move;
 }

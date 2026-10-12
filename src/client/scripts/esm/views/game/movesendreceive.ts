@@ -102,12 +102,13 @@ function handleMove(
 
 		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
 
+		// For online games, the server is boss, so its conclusion is the one we adopt.
 		if (moveutil.areWeViewingLatestMove(gamefile)) {
 			// Normal case: play and animate the move.
-			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResult.tagged);
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResult.tagged, message.gameConclusion); // prettier-ignore
 		} else {
 			// We're reviewing a past move. Silently append it, staying on our current view.
-			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged);
+			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged, message.gameConclusion); // prettier-ignore
 		}
 
 		// Edit the clocks
@@ -115,7 +116,6 @@ function handleMove(
 		// Adjust the timer whos turn it is depending on ping.
 		applyClockValues(gamefile, message.clockValues);
 
-		// For online games, the server is boss, so if they say the game is over, conclude it here.
 		if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 
 		GameBus.dispatch('opponent-move-played');

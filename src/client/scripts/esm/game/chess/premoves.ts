@@ -302,7 +302,7 @@ function processPremoves(gamefile: GameFile, mesh?: Mesh): void {
 		};
 		specialdetect.transferSpecialTags_FromCoordsToMove(results.endCoordsTagged, moveTagged);
 
-		const move = movesequence.makeMove(gamefile, mesh, moveTagged); // Make move
+		const move = movesequence.makeMove(gamefile, mesh, moveTagged, 'detect');
 
 		GameBus.dispatch('user-move-played');
 

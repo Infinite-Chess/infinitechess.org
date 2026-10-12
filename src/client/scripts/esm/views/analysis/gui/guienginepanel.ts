@@ -603,8 +603,9 @@ function playLine(tokens: string[], untilIndex: number): void {
 				break;
 			}
 			// Animate only the final move of the sequence.
-			if (i === untilIndex) movesequence.makeMoveAndAnimate(gamefile, mesh, result.tagged);
-			else movesequence.makeMove(gamefile, mesh, result.tagged);
+			if (i === untilIndex)
+				movesequence.makeMoveAndAnimate(gamefile, mesh, result.tagged, 'detect');
+			else movesequence.makeMove(gamefile, mesh, result.tagged, 'detect');
 			if (gamefile.gameConclusion) break; // The line ended the game.
 		}
 	}

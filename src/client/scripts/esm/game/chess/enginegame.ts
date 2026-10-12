@@ -247,10 +247,10 @@ function makeEngineMove(tokenMove: string | null): void {
 
 		if (moveutil.areWeViewingLatestMove(gamefile)) {
 			// Normal case: play and animate the move.
-			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResults.tagged);
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResults.tagged, 'detect');
 		} else {
 			// We're reviewing a past move. Silently append it, staying on our current view.
-			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResults.tagged);
+			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResults.tagged, 'detect'); // prettier-ignore
 		}
 
 		GameBus.dispatch('engine-move-played');

@@ -58,9 +58,8 @@ function handleGameState(
 
 	onlinegame.setParticipantState(message.participantState);
 
-	// Must be set before editing the clocks. Overwriting a conclusion we derived locally with
-	// undefined is intended — online games never conclude off ours (it's set only so the move
-	// list can render '#'); the server's own conclusion message follows right behind this.
+	// Forwarding sets only a forwarded move's conclusion. This also covers one reached after the
+	// last move (e.g. resignation), or when no moves were forwarded because ours already matched.
 	gamefile.gameConclusion = claimedGameConclusion;
 
 	// Adjust the timer whos turn it is depending on ping.
@@ -168,9 +167,8 @@ function synchronizeMovesList(
 				atleastOneOfOurMovesWasForwarded = true;
 			}
 
-			movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
-				doGameOverChecks: isLastMove,
-			}); // Automatically cancels animations of forwarded moves in previous loops
+			// Automatically cancels animations of forwarded moves in previous loops
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, isLastMove ? lastMoveConclusion : undefined); // prettier-ignore
 
 			// Our own moves aren't dispatched here: 'user-move-played' would
 			// wrongly re-trigger sendMove (we're already back in sync).
