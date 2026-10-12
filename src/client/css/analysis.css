@@ -463,7 +463,7 @@
 
 .variation-line .ply.current {
 	font-weight: normal;
-	color: #fff;
+	color: var(--c-text-emphasis);
 }
 
 .move-index {

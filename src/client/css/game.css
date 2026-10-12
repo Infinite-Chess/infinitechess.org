@@ -408,7 +408,7 @@
 
 /* The position currently being viewed stands out. */
 .ply.current {
-	background: var(--c-hover-brighten);
+	background: var(--c-surface-2);
 	color: var(--c-text-emphasis);
 	font-weight: 600;
 }
