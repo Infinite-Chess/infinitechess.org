@@ -78,6 +78,7 @@ body {
 	--c-text: rgb(170, 170, 170);
 	--c-text-emphasis: rgb(220, 220, 220);
 	--c-text-muted: rgb(135, 135, 135);
+	--c-text-faint: rgb(100, 100, 100);
 	--c-accent: hsl(88, 62%, 37%);
 	--c-border: rgb(60, 60, 60);
 	--c-border-2: rgb(100, 100, 100);
@@ -127,6 +128,7 @@ body {
 	--c-text: rgb(60, 60, 60);
 	--c-text-emphasis: rgb(30, 30, 30);
 	--c-text-muted: rgb(100, 100, 100);
+	--c-text-faint: rgb(150, 150, 150);
 	--c-accent: hsl(88, 62%, 37%);
 	--c-border: rgb(200, 200, 200);
 	--c-border-2: rgb(150, 150, 150);

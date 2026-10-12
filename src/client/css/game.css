@@ -724,7 +724,7 @@
 
 /* The report flag */
 #btn-report {
-	color: var(--c-border-2);
+	color: var(--c-text-faint);
 }
 
 #btn-report:disabled {
