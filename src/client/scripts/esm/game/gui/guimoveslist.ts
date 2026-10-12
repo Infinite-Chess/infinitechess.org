@@ -31,7 +31,6 @@ import holdrepeat from '../../components/holdrepeat.js';
 import Transition from '../rendering/transitions/Transition.js';
 import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
-import frametracker from '../../board/rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import { listener_document } from '../listeners.js';
 
@@ -132,7 +131,6 @@ function rewind(): void {
 
 	if (!moveutil.isDecrementingLegal(gamefile)) return;
 
-	frametracker.onVisualChange();
 	movesequence.navigateMove(gamefile, mesh, false);
 	selection.unselectPiece();
 	scrollToCurrentPly();
@@ -160,7 +158,6 @@ function jumpToStart(): void {
 
 	if (!moveutil.isDecrementingLegal(gamefile)) return;
 
-	frametracker.onVisualChange();
 	movesequence.viewStart(gamefile, mesh);
 	selection.unselectPiece();
 	scrollToCurrentPly();
@@ -176,7 +173,6 @@ function jumpToEnd(): void {
 
 	if (!moveutil.isIncrementingLegal(gamefile)) return;
 
-	frametracker.onVisualChange();
 	movesequence.viewFront(gamefile, mesh, false); // Dispatches 'view-front' → scrolls to the front.
 	selection.unselectPiece();
 }
@@ -476,7 +472,6 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 
 	premoves.cancelPremoves(gamefile, mesh);
 
-	frametracker.onVisualChange();
 	movesequence.viewIndex(gamefile, mesh, index, true); // Dispatches 'view-move' → re-highlights the current ply.
 	selection.unselectPiece();
 	scrollToCurrentPly(); // Clicking a ply in the flat list centers it, matching the nav controls.
