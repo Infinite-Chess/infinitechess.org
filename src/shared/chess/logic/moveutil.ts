@@ -92,7 +92,7 @@ const SPECIAL_TAGS = [...MOVE_SPECIAL_TAGS, ...UI_SPECIAL_TAGS] satisfies Readon
 	keyof SpecialTags
 >;
 
-// Functions -------------------------------------------------------------------
+// Viewed Move -----------------------------------------------------------------
 
 /**
  * Returns *true* if it is legal to forward the provided gamefile by 1 move, *false* if we're at the front of the game.
@@ -110,55 +110,45 @@ function isDecrementingLegal(boardsim: Board): boolean {
 	return !isIndexOutOfRange(boardsim.moves, decrementedIndex);
 }
 
-/**
- * Tests if the provided index is out of range of the moves list length
- */
+/** Tests if the provided index is out of range of the moves list length. */
 function isIndexOutOfRange(moves: MoveCoords[], index: number): boolean {
 	return index < -1 || index >= moves.length;
 }
 
-/**
- * Returns the very last move played in the moves list, if there is one. Otherwise, returns undefined.
- */
-function getLastMove(moves: MoveFull[]): MoveFull | undefined {
-	const finalIndex = moves.length - 1;
-	if (finalIndex < 0) return;
-	return moves[finalIndex];
-}
-
-/**
- * Returns the move we're currently viewing in the provided gamefile.
- */
+/** Returns the move we're currently viewing in the provided gamefile. */
 function getCurrentMove(boardsim: Board): MoveFull | undefined {
 	const index = boardsim.state.local.moveIndex;
 	if (index < 0) return;
 	return boardsim.moves[index];
 }
 
-/**
- * Gets the move from the moves list at the specified index
- */
-function getMoveFromIndex(moves: MoveFull[], index: number): MoveFull {
-	if (isIndexOutOfRange(moves, index)) throw Error('Cannot get next move when index overflow');
-	return moves[index]!;
-}
-
-/**
- * Tests if the provided gamefile is viewing the front of the game, or the latest move.
- */
+/** Tests if the provided gamefile is viewing the front of the game, or the latest move. */
 function areWeViewingLatestMove(boardsim: Board): boolean {
 	const moveIndex = boardsim.state.local.moveIndex;
 	const finalIndex = boardsim.moves.length - 1;
 	return moveIndex === finalIndex;
 }
 
-/**
- * Flags the gamefile's very last move as a "mate".
- */
+// Move List -------------------------------------------------------------------
+
+/** Gets the move from the moves list at the specified index. */
+function getMoveFromIndex(moves: MoveFull[], index: number): MoveFull {
+	if (isIndexOutOfRange(moves, index)) throw Error('Cannot get next move when index overflow');
+	return moves[index]!;
+}
+
+/** Flags the gamefile's very last move as a "mate". */
 function flagLastMoveAsMate(boardsim: Board): void {
 	const lastMove = getLastMove(boardsim.moves);
 	if (lastMove === undefined) return; // No moves, can't flag last move as mate (this can happen when pasting a game that's over)
 	lastMove.flags.mate = true;
+}
+
+/** Returns the very last move played in the moves list, if there is one. Otherwise, returns undefined. */
+function getLastMove(moves: MoveFull[]): MoveFull | undefined {
+	const finalIndex = moves.length - 1;
+	if (finalIndex < 0) return;
+	return moves[finalIndex];
 }
 
 /**
@@ -168,6 +158,16 @@ function flagLastMoveAsMate(boardsim: Board): void {
  */
 function isGameResignable(game: { moves: MoveRecord[] }): boolean {
 	return game.moves.length > 1;
+}
+
+// Turn Order ------------------------------------------------------------------
+
+/**
+ * Returns the color whose turn it is after the specified move index was played.
+ * @param game - The gamefile with the gameRules
+ */
+function getWhosTurnAtMoveIndex(game: { gameRules: GameRules }, moveIndex: number): Player {
+	return getColorThatPlayedMoveIndex(game, moveIndex + 1);
 }
 
 /**
@@ -181,17 +181,7 @@ function getColorThatPlayedMoveIndex(game: { gameRules: GameRules }, index: numb
 	return turnOrder[index % turnOrder.length]!;
 }
 
-/**
- * Returns the color whos turn it is after the specified move index was played.
- * @param game - The gamefile with the gameRules
- */
-function getWhosTurnAtMoveIndex(game: { gameRules: GameRules }, moveIndex: number): Player {
-	return getColorThatPlayedMoveIndex(game, moveIndex + 1);
-}
-
-/**
- * Returns true if any player in the turn order ever gets to turn in a row.
- */
+/** Returns true if any player in the turn order ever gets two turns in a row. */
 function doesAnyPlayerGet2TurnsInARow(gameRules: GameRules): boolean {
 	// If one player ever gets 2 turns in a row, then that also allows the capture of the king.
 	const turnOrder = gameRules.turnOrder;
@@ -204,6 +194,14 @@ function doesAnyPlayerGet2TurnsInARow(gameRules: GameRules): boolean {
 	return false;
 }
 
+// Move List Cells -------------------------------------------------------------
+
+/** A ply index as its ply number and its cell in the move list, e.g. "Ply 264 (move 132, right column)". */
+function describePly(plyIndex: number): string {
+	const column = isLeftInMoveList(plyIndex) ? 'left' : 'right';
+	return `Ply ${plyIndex + 1} (move ${getMoveListRow(plyIndex) + 1}, ${column} column)`;
+}
+
 /** The move list row a ply sits on, from 0: two plies per row. */
 function getMoveListRow(plyIndex: number): number {
 	return Math.floor(plyIndex / 2);
@@ -214,9 +212,9 @@ function isLeftInMoveList(plyIndex: number): boolean {
 	return plyIndex % 2 === 0;
 }
 
-/**
- * Strips the coordinates of any special move properties. NON-MUTATING, returns new coords.
- */
+// Special Tags ----------------------------------------------------------------
+
+/** Strips the coordinates of any special move properties. NON-MUTATING, returns new coords. */
 function stripSpecialMoveTagsFromCoords(coords: CoordsTagged): Coords {
 	return coordutil.copyCoords(coords); // Does not copy non-enumerable properties
 }
@@ -227,19 +225,24 @@ export default {
 	// Constants
 	MOVE_SPECIAL_TAGS,
 	SPECIAL_TAGS,
-	// Functions
+	// Viewed Move
 	isIncrementingLegal,
 	isDecrementingLegal,
-	getLastMove,
 	getCurrentMove,
-	getMoveFromIndex,
 	areWeViewingLatestMove,
+	// Move List
+	getMoveFromIndex,
 	flagLastMoveAsMate,
+	getLastMove,
 	isGameResignable,
-	getColorThatPlayedMoveIndex,
+	// Turn Order
 	getWhosTurnAtMoveIndex,
+	getColorThatPlayedMoveIndex,
 	doesAnyPlayerGet2TurnsInARow,
+	// Move List Cells
+	describePly,
 	getMoveListRow,
 	isLeftInMoveList,
+	// Special Tags
 	stripSpecialMoveTagsFromCoords,
 };

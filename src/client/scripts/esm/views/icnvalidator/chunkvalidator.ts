@@ -21,6 +21,7 @@ import type {
 } from './icnvalidatorprotocol.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
@@ -204,7 +205,11 @@ function replayPositions(
 		if (options.wasm) {
 			const mismatches = movegencheck.compare(game, siteMoves, options.wasm);
 			if (mismatches.length > 0) {
-				first ??= `ply ${ply}, ${mismatches[0]}`;
+				const position =
+					ply === 0
+						? 'at the starting position'
+						: `after ${moveutil.describePly(ply - 1)}`;
+				first ??= `${position}, ${mismatches[0]}`;
 				count += mismatches.length;
 			}
 		}
@@ -216,7 +221,7 @@ function replayPositions(
 	}
 
 	if (first === undefined) return { fingerprint };
-	return { mismatch: `${count} mismatch(es). First at ${first}`, fingerprint };
+	return { mismatch: `${count} mismatch(es). First ${first}`, fingerprint };
 }
 
 /** The side to move's legal moves at the viewed position, keyed by each piece's square. */

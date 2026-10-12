@@ -396,7 +396,7 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 		if (validateMoves) {
 			const validationResult = movevalidation.isTokenMoveLegal(boardsim, shortmove.token);
 			if (!validationResult.valid) {
-				throw new IllegalMoveError(`${describePly(i)} is illegal: ${shortmove.token}. Reason: ${validationResult.reason}`); // prettier-ignore
+				throw new IllegalMoveError(`${moveutil.describePly(i)} is illegal: ${shortmove.token}. Reason: ${validationResult.reason}`); // prettier-ignore
 			}
 		}
 
@@ -409,15 +409,9 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 		if (validateMoves && !isLastIteration) {
 			const conclusion = wincondition.getGameConclusion(boardsim);
 			if (conclusion)
-				throw new IllegalMoveError(`Moves cannot come after game ends. ${describePly(i)} should have concluded game by ${JSON.stringify(conclusion)}.`); // prettier-ignore
+				throw new IllegalMoveError(`Moves cannot come after game ends. ${moveutil.describePly(i)} should have concluded game by ${JSON.stringify(conclusion)}.`); // prettier-ignore
 		}
 	}
-}
-
-/** A ply index as its ply number and its cell in the move list, e.g. "Ply 264 (move 132, right column)". */
-function describePly(index: number): string {
-	const column = moveutil.isLeftInMoveList(index) ? 'left' : 'right';
-	return `Ply ${index + 1} (move ${moveutil.getMoveListRow(index) + 1}, ${column} column)`;
 }
 
 /**
