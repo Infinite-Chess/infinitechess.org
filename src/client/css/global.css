@@ -647,7 +647,7 @@ button:disabled {
 }
 
 /* ============================================================
-   Popup menu (shared by the game page's chat-report menus and the analysis page's)
+   Popup menu — the shared box look; each menu lays out its own rows
    ============================================================ */
 
 .popup-menu {
@@ -656,6 +656,12 @@ button:disabled {
 	border-radius: 4px;
 	background: var(--c-surface);
 	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+}
+
+/* Opens upward from the trigger, flush with the right edge of the trigger's container. */
+.popup-menu-above {
+	right: 2px;
+	bottom: calc(100% + 5px);
 }
 
 .popup-menu-title {

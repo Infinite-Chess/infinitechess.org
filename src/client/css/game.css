@@ -372,7 +372,6 @@
 .moves-table {
 	overflow-y: auto;
 	height: 104px; /* 4 rows of moves, each 26px tall. */
-	min-height: 104px; /* Needed for analysis page */
 }
 
 .move-row {
@@ -803,8 +802,6 @@
    ================================ */
 
 .report-menu {
-	right: 2px;
-	bottom: calc(100% + 5px);
 	min-width: 200px;
 }
 

@@ -148,6 +148,45 @@
 }
 
 /* ============================
+   Progress bars — engine depth + Game Review
+   ============================ */
+
+.progress-bar {
+	background: color-mix(in srgb, #000 18%, transparent);
+	container-type: inline-size; /* Let the sheen measure travel in cqw */
+}
+
+.progress-fill {
+	position: relative;
+	width: 0;
+	height: 100%;
+	overflow: hidden; /* Clip the sheen to the filled portion only. */
+	background: var(--c-accent);
+	transition: width 0.18s ease;
+}
+
+/* Computing: a sheen that sweeps across the filled portion. */
+.progress-bar.computing .progress-fill::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 35cqw;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+	animation: progress-sheen 1.1s linear infinite;
+}
+
+@keyframes progress-sheen {
+	from {
+		transform: translateX(calc(-1 * 35cqw));
+	}
+	to {
+		transform: translateX(100cqw);
+	}
+}
+
+/* ============================
    Engine panel
    ============================ */
 
@@ -158,38 +197,6 @@
 /* Depth progress bar */
 .engine-progress {
 	height: 3px;
-	background: color-mix(in srgb, #000 18%, transparent);
-	container-type: inline-size; /* Let the sheen measure travel in cqw */
-}
-
-.engine-progress-fill {
-	position: relative;
-	width: 0;
-	height: 100%;
-	overflow: hidden;
-	background: var(--c-accent, #6aa331);
-	transition: width 0.18s ease;
-}
-
-/* Computing: a sheen that sweeps across the filled portion. */
-.engine-progress.computing .engine-progress-fill::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	width: 35cqw;
-	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
-	animation: engine-progress-sheen 1.1s linear infinite;
-}
-
-@keyframes engine-progress-sheen {
-	from {
-		transform: translateX(calc(-1 * 35cqw));
-	}
-	to {
-		transform: translateX(100cqw);
-	}
 }
 
 .engine-header {
@@ -403,6 +410,7 @@
 
 .analysis .moves-table {
 	flex: 1 1 0;
+	min-height: 104px; /* Never shrinks below game.css's 4-row height. */
 	scroll-behavior: smooth;
 }
 
@@ -540,12 +548,7 @@
 	text-align: left;
 }
 
-/* Actions dropdown — anchored above the actions toggle in the nav bar. */
-.analysis-menu {
-	right: 2px;
-	bottom: calc(100% + 5px);
-}
-
+/* Actions dropdown — icon rows, anchored above the actions toggle in the nav bar. */
 .analysis-menu button {
 	display: flex;
 	width: 100%;
@@ -575,31 +578,9 @@
 }
 
 .review-progress-bar {
-	position: relative;
 	height: 4px;
 	overflow: hidden;
 	border-radius: 2px;
-	background: color-mix(in srgb, #000 18%, transparent);
-	container-type: inline-size; /* Let the sheen measure travel in cqw */
-}
-
-.review-progress-fill {
-	position: relative;
-	height: 100%;
-	overflow: hidden; /* Clip the shimmer to the filled portion only. */
-	background: var(--c-accent, #6aa331);
-	transition: width 0.18s ease;
-}
-
-.review-progress-fill::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	width: 35cqw;
-	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
-	animation: engine-progress-sheen 1.1s linear infinite;
 }
 
 .review-progress-text {
@@ -711,7 +692,7 @@
 
 .gauge-zero {
 	height: 8px;
-	background: color-mix(in srgb, var(--c-accent, #d64f00) 80%, transparent);
+	background: color-mix(in srgb, var(--c-accent) 80%, transparent);
 }
 
 /* Flipped board: white on top */
