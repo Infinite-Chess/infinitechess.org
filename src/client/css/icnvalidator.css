@@ -329,11 +329,6 @@
 	gap: 10px;
 }
 
-/* The flex display above outranks the equal-specificity .hidden utility. */
-.run-progress.hidden {
-	display: none;
-}
-
 .lanes {
 	display: grid;
 	grid-auto-columns: 1fr;

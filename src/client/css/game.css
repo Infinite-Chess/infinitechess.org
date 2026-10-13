@@ -835,13 +835,3 @@
 	color: var(--c-error);
 	font-weight: 600;
 }
-
-/* ========================
-   Utility classes
-   ======================== */
-
-/* Recommended for specificity, because `display` rules in
-here may overwrite the .hidden class from global.css */
-.hidden {
-	display: none;
-}

@@ -194,7 +194,8 @@ body {
    ================================== */
 
 .hidden {
-	display: none;
+	/* !important so no stylesheet's `display` rule can outrank it. */
+	display: none !important;
 }
 
 .visibility-hidden {
@@ -335,12 +336,6 @@ button:disabled {
 	align-items: center;
 	justify-content: center;
 	gap: 0.4em;
-}
-
-/* The flex display above outranks the equal-specificity .hidden utility, so restore hiding
-   for the verify page's toggled state headings. */
-.auth-title.hidden {
-	display: none;
 }
 
 /* Prevent text wrapping of titles on thin screens */

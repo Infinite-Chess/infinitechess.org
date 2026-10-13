@@ -795,13 +795,3 @@ svg.bg-omega {
 		padding-right: 0;
 	}
 }
-
-/* ==========================
-   Utility classes
-   ========================== */
-
-/* Recommended for specificity, because `display` rules in here may overwrite the .hidden
-   class from global.css. Without this, the time control settings don't hide. */
-.hidden {
-	display: none;
-}
