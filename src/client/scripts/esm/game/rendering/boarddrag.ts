@@ -354,14 +354,8 @@ function dragBoard(): void {
 
 		const pointer1Pos = listener_canvas.getPointerPos(pointer1Id!)!;
 		const pointer2Pos = listener_canvas.getPointerPos(pointer2Id!)!;
-		const pointer1World = mouse.convertMousePositionToWorldSpace(
-			pointer1Pos,
-			listener_canvas.element,
-		);
-		const pointer2World = mouse.convertMousePositionToWorldSpace(
-			pointer2Pos,
-			listener_canvas.element,
-		);
+		const pointer1World = mouse.convertMousePositionToWorldSpace(pointer1Pos);
+		const pointer2World = mouse.convertMousePositionToWorldSpace(pointer2Pos);
 
 		// Calculate the new scale by comparing the touches current distance in pixels to their distance when they first started pinching
 		const thisPixelDist = vectors.euclideanDistanceDoubles(pointer1Pos, pointer2Pos);

@@ -14,6 +14,28 @@ import perspective from './rendering/perspective.js';
 import { listener_document, listener_canvas } from './listeners.js';
 import input, { InputListener, Mouse, MouseButton } from './input.js';
 
+// World Space -----------------------------------------------------------------
+
+/**
+ * Returns the world space coordinates of the mouse pointer,
+ * or the crosshair if the mouse is locked (in perspective mode).
+ */
+function getMouseWorld(button: MouseButton = Mouse.LEFT): DoubleCoords | undefined {
+	if (!perspective.getEnabled()) {
+		// Before the first click there may be no button-associated pointer yet,
+		// but the physical 'mouse' pointer still tracks hover movement.
+		const physicalPointerId = listener_canvas.getMousePhysicalId(button) ?? 'mouse';
+		let mousePos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
+		if (!mousePos) {
+			// Pointer likely doesn't exist anymore (touch event lifted).
+			// This will return its last known position.
+			mousePos = listener_canvas.getMousePosition(button);
+		}
+		if (!mousePos) return undefined;
+		return convertMousePositionToWorldSpace(mousePos);
+	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
+}
+
 /**
  * This is capable of getting the mouse position, EVEN IF
  * it is off screen! Only the document's event listener is capable
@@ -38,49 +60,27 @@ function getPhysicalPointerPosition_Offscreen(physicalPointerId: string): Double
 }
 
 /**
- * Returns the world space coordinates of the mouse pointer,
- * or the crosshair if the mouse is locked (in perspective mode).
+ * Converts a position on the canvas, in virtual pixels from its top-left corner, to world space.
+ * Reads the canvas size from the camera, the same snapshot as its screen box, never the live DOM.
  */
-function getMouseWorld(button: MouseButton = Mouse.LEFT): DoubleCoords | undefined {
-	if (!perspective.getEnabled()) {
-		// Before the first click there may be no button-associated pointer yet,
-		// but the physical 'mouse' pointer still tracks hover movement.
-		const physicalPointerId = listener_canvas.getMousePhysicalId(button) ?? 'mouse';
-		let mousePos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
-		if (!mousePos) {
-			// Pointer likely doesn't exist anymore (touch event lifted).
-			// This will return its last known position.
-			mousePos = listener_canvas.getMousePosition(button);
-		}
-		if (!mousePos) return undefined;
-		return convertMousePositionToWorldSpace(mousePos, listener_canvas.element);
-	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
-}
-
-/**
- * Returns the world space coordinates of the given pointer,
- * or the crosshair if in perspective mode.
- */
-function getPointerWorld(pointerId: string): DoubleCoords | undefined {
-	if (!perspective.getEnabled()) {
-		const physicalPointerId = listener_canvas.getPhysicalPointerIdOfPointer(pointerId);
-		if (!physicalPointerId) return undefined;
-		const pointerPos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
-		if (!pointerPos) return undefined;
-		return convertMousePositionToWorldSpace(pointerPos, listener_canvas.element);
-	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
-}
-
-/**
- * Returns the world space coordinates of a PHYSICAL pointer,
- * or the crosshair if in perspective mode.
- */
-function getPhysicalPointerWorld(physicalPointerId: string): DoubleCoords | undefined {
-	if (!perspective.getEnabled()) {
-		const pointerPos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
-		if (!pointerPos) return undefined;
-		return convertMousePositionToWorldSpace(pointerPos, listener_canvas.element);
-	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
+function convertMousePositionToWorldSpace(mouse: DoubleCoords): DoubleCoords {
+	const screenBox = camera.getScreenBoundingBox();
+	const screenWidth = screenBox.right - screenBox.left;
+	const screenHeight = screenBox.top - screenBox.bottom;
+	const canvasWidth = camera.getCanvasWidthVirtualPixels();
+	const canvasHeight = camera.getCanvasHeightVirtualPixels();
+	// The world space coordinates are sensitive to whether we're viewing white's or black's perspective.
+	// prettier-ignore
+	const mouseWorldSpace: DoubleCoords = camera.getIsViewingBlackPerspective() ? [
+		screenBox.right - (mouse[0] / canvasWidth) * screenWidth,
+		// [0,0] is the top LEFT corner of the screen, according to mouse coordinates.
+		screenBox.bottom + (mouse[1] / canvasHeight) * screenHeight,
+	] : [
+		screenBox.left + (mouse[0] / canvasWidth) * screenWidth,
+		// [0,0] is the top LEFT corner of the screen, according to mouse coordinates.
+		screenBox.top - (mouse[1] / canvasHeight) * screenHeight,
+	];
+	return mouseWorldSpace;
 }
 
 /**
@@ -101,40 +101,60 @@ function getCrossHairWorld(): DoubleCoords | undefined {
 
 	const mouseWorld: DoubleCoords = [hyp * Math.sin(rotZ), hyp * Math.cos(rotZ)];
 
-	// console.log(mouseWorld);
 	return mouseWorld;
 }
 
-function convertMousePositionToWorldSpace(
-	mouse: DoubleCoords,
-	element: HTMLElement | typeof document,
-): DoubleCoords {
-	const mouseCopy: DoubleCoords = [...mouse];
-	const screenBox = camera.getScreenBoundingBox();
-	const screenWidth = screenBox.right - screenBox.left;
-	const screenHeight = screenBox.top - screenBox.bottom;
-	const clientWidth = element instanceof HTMLElement ? element.clientWidth : window.innerWidth;
-	const clientHeight = element instanceof HTMLElement ? element.clientHeight : window.innerHeight;
-	// The world space coordinates are sensitive to whether we're viewing white's or black's perspective.
-	// prettier-ignore
-	const mouseWorldSpace: DoubleCoords = camera.getIsViewingBlackPerspective() ? [
-		screenBox.right - (mouseCopy[0] / clientWidth) * screenWidth,
-		// [0,0] is the top LEFT corner of the screen, according to mouse coordinates.
-		screenBox.bottom + (mouseCopy[1] / clientHeight) * screenHeight,
-	] : [
-		screenBox.left + (mouseCopy[0] / clientWidth) * screenWidth,
-		// [0,0] is the top LEFT corner of the screen, according to mouse coordinates.
-		screenBox.top - (mouseCopy[1] / clientHeight) * screenHeight,
-	];
-	return mouseWorldSpace;
+/**
+ * Returns the world space coordinates of the given pointer,
+ * or the crosshair if in perspective mode.
+ */
+function getPointerWorld(pointerId: string): DoubleCoords | undefined {
+	if (!perspective.getEnabled()) {
+		const physicalPointerId = listener_canvas.getPhysicalPointerIdOfPointer(pointerId);
+		if (!physicalPointerId) return undefined;
+		const pointerPos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
+		if (!pointerPos) return undefined;
+		return convertMousePositionToWorldSpace(pointerPos);
+	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
 }
 
+/**
+ * Returns the world space coordinates of a PHYSICAL pointer,
+ * or the crosshair if in perspective mode.
+ */
+function getPhysicalPointerWorld(physicalPointerId: string): DoubleCoords | undefined {
+	if (!perspective.getEnabled()) {
+		const pointerPos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
+		if (!pointerPos) return undefined;
+		return convertMousePositionToWorldSpace(pointerPos);
+	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
+}
+
+/**
+ * Returns all the existing PHYSICAL pointers' world
+ * coordinates, depending on the relevant listener.
+ */
+function getAllPointerWorlds(): DoubleCoords[] {
+	const allPhysicalPointerIds = getRelevantListener().getAllPhysicalPointers();
+	const pointerWorlds: DoubleCoords[] = [];
+	for (const id of allPhysicalPointerIds) {
+		const world = getPhysicalPointerWorld(id);
+		// Only push them if their world coordinates exist (won't if looking into sky)
+		if (world) pointerWorlds.push(world);
+	}
+	return pointerWorlds;
+}
+
+// Tiles -----------------------------------------------------------------------
+
+/** Returns the floating point tile the mouse is over. */
 function getTileMouseOver_Float(button: MouseButton = Mouse.LEFT): BDCoords | undefined {
 	const mouseWorld = getMouseWorld(button);
 	if (!mouseWorld) return undefined;
 	return space.convertWorldSpaceToCoords(mouseWorld);
 }
 
+/** Returns the integer square the mouse is over. */
 function getTileMouseOver_Integer(button: MouseButton = Mouse.LEFT): Coords | undefined {
 	const mouseWorld = getMouseWorld(button);
 	if (!mouseWorld) return undefined;
@@ -145,11 +165,10 @@ function getTileMouseOver_Integer(button: MouseButton = Mouse.LEFT): Coords | un
 function getTilePointerOver_Float(pointerId: string): BDCoords | undefined {
 	const physicalPointerId = listener_canvas.getPhysicalPointerIdOfPointer(pointerId);
 	if (!physicalPointerId) return;
-	// const pointerCoords = listener_canvas.getPointerPos(pointerId)!;
 	const pointerCoords = getPhysicalPointerPosition_Offscreen(physicalPointerId);
 	if (!pointerCoords) return undefined;
 
-	const pointerWorld = convertMousePositionToWorldSpace(pointerCoords, listener_canvas.element);
+	const pointerWorld = convertMousePositionToWorldSpace(pointerCoords);
 	return space.convertWorldSpaceToCoords(pointerWorld);
 }
 
@@ -159,6 +178,8 @@ function getTilePointerOver_Integer(pointerId: string): Coords | undefined {
 	if (!pointerWorld) return undefined;
 	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
 }
+
+// Listener Wrappers -----------------------------------------------------------
 
 /**
  * Wrapper for reading the correct listener for whether the mouse button is down,
@@ -195,16 +216,6 @@ function isMouseDoubleClickDragged(button: MouseButton): boolean {
 	if (perspective.isMouseLocked()) return listener_document.isMouseDoubleClickDragged(button);
 	else return listener_canvas.isMouseDoubleClickDragged(button);
 }
-
-// /**
-//  * Wrapper for reading the correct listener for if the most recent
-//  * pointer for a specific mouse button action is a touch (not mouse),
-//  * depending on whether we're in perspective mode or not.
-//  */
-// function isMouseTouch(button: MouseButton): boolean {
-// 	if (perspective.isMouseLocked()) return listener_document.isMouseTouch(button);
-// 	else return listener_canvas.isMouseTouch(button);
-// }
 
 /**
  * Wrapper for reading the correct listener for the mouse wheel delta,
@@ -243,7 +254,7 @@ function cancelMouseClick(button: MouseButton): void {
 }
 
 /**
- * Wrapper for reading the correct listener for getting the mose recent mouse id
+ * Wrapper for reading the correct listener for getting the most recent mouse id
  * that performed the specified action, depending on whether we're in perspective mode or not.
  */
 function getMouseId(button: MouseButton): string | undefined {
@@ -260,40 +271,29 @@ function getRelevantListener(): InputListener {
 	else return listener_canvas;
 }
 
-/**
- * Returns all the existing PHYSICAL pointers' world
- * coordinates, depending on the relevant listener.
- */
-function getAllPointerWorlds(): DoubleCoords[] {
-	const allPhysicalPointerIds = getRelevantListener().getAllPhysicalPointers();
-	const pointerWorlds: DoubleCoords[] = [];
-	for (const id of allPhysicalPointerIds) {
-		const world = getPhysicalPointerWorld(id);
-		// Only push them if their world coordinates exist (won't if looking into sky)
-		if (world) pointerWorlds.push(world);
-	}
-	return pointerWorlds;
-}
+// Exports ---------------------------------------------------------------------
 
 export default {
+	// World Space
 	getMouseWorld,
+	convertMousePositionToWorldSpace,
 	getPointerWorld,
 	getPhysicalPointerWorld,
-	convertMousePositionToWorldSpace,
+	getAllPointerWorlds,
+	// Tiles
 	getTileMouseOver_Float,
 	getTileMouseOver_Integer,
 	getTilePointerOver_Float,
 	getTilePointerOver_Integer,
+	// Listener Wrappers
 	isMouseDown,
 	isMouseHeld,
 	isMouseClicked,
 	isMouseDoubleClickDragged,
-	// isMouseTouch,
 	getWheelDelta,
 	claimMouseDown,
 	claimMouseClick,
 	cancelMouseClick,
 	getMouseId,
 	getRelevantListener,
-	getAllPointerWorlds,
 };
