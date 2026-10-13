@@ -1,10 +1,9 @@
 // src/client/scripts/esm/game/gui/guigamemeta.ts
 
 /**
- * Manages the dynamic parts of the `.game-meta` panel, on both the game page and
- * `/analysis/:id`: the `#meta-started` "Started X ago" readout (re-derived on a
- * 1-minute interval), and revealing the `.result-banner` with the game's conclusion
- * once it ends.
+ * Manages the dynamic parts of the `.game-meta` panel: the `#meta-started` "Started
+ * X ago" readout (re-derived on a 1-minute interval), and revealing the
+ * `.result-banner` with the game's conclusion once it ends.
  *
  * The static parts (variant, time control, participants) are SSR-owned and
  * never touched here.

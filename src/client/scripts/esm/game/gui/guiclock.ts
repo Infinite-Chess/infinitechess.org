@@ -26,7 +26,7 @@ import { GameBus } from '../../board/GameBus.js';
 
 // Types -----------------------------------------------------------------------
 
-/** A player bar and the `.clock` it hosts. SSR'd by the game page, keyed by board POV. */
+/** A player bar and the `.clock` it hosts. SSR'd, keyed by board POV. */
 type BarElements = { bar: HTMLElement; timer: HTMLElement };
 
 // Elements --------------------------------------------------------------------

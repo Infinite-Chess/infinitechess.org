@@ -1,11 +1,11 @@
 // src/client/scripts/esm/game/gui/guimoveslist.ts
 
 /**
- * Manages the `.moves` panel on the game page: the four move-cycle buttons
- * (jump to start, previous, next, jump to latest) — including keyboard arrows
- * and press-and-hold auto-repeat — the scrolling `.moves-table` of played
- * moves (rendering, click-to-navigate, current-ply highlight & auto-scroll),
- * and revealing the `.game-result` banner with the game's conclusion once it ends.
+ * Manages the `.moves` panel: the four move-cycle buttons (jump to start, previous,
+ * next, jump to latest) — including keyboard arrows and press-and-hold auto-repeat —
+ * the scrolling `.moves-table` of played moves (rendering, click-to-navigate,
+ * current-ply highlight & auto-scroll), and revealing the `.game-result` banner with
+ * the game's conclusion once it ends.
  *
  * This module knows only the flat list. The analysis page layers a move TREE on top by
  * registering a {@link MovesListRenderer} (`views/analysis/gui/guimovetree.ts`); when one

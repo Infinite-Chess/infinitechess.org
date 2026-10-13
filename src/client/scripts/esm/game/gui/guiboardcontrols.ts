@@ -1,11 +1,10 @@
 // src/client/scripts/esm/game/gui/guiboardcontrols.ts
 
 /**
- * This script handles the buttons and coordinate fields within the
- * `.board-controls` element on the game page: view toggles (perspective,
- * arrow indicators), annotation tools (draw, erase/collapse — mobile only),
- * board-view navigation (undo transition, expand, recenter), and the
- * editable coordinate readout.
+ * This script handles the buttons and coordinate fields within the `.board-controls`
+ * element: view toggles (perspective, arrow indicators), annotation tools (draw,
+ * erase/collapse — mobile only), board-view navigation (undo transition, expand,
+ * recenter), and the editable coordinate readout.
  */
 
 import type { BDCoords } from '../../../../../shared/util/coordutil.js';
