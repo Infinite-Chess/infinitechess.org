@@ -383,13 +383,20 @@
 	color: var(--c-text-strong);
 }
 
+/* Moves may squeeze to fit, but guienginepanel.ts pages so none does, unless a single
+   move alone outgrows the row, which then truncates with an ellipsis. */
 .line-moves {
 	flex: 1 1 auto;
+	display: flex;
+	gap: 0.25em;
 	min-width: 0;
 	color: var(--c-text-muted);
 }
 
 .line-move {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	cursor: pointer;
 	padding: 1px 2px;
 	border-radius: 3px;
@@ -401,6 +408,7 @@
 }
 
 .line-pager {
+	flex-shrink: 0;
 	font-weight: 700;
 }
 
