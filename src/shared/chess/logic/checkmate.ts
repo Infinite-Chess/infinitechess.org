@@ -21,7 +21,7 @@ const MAX_PIECES = 50_000;
 /** The most royals in-game that still affords the checkmate algorithm. Above this uses "royalcapture". */
 const MAX_ROYALS = 6;
 
-// Functions -------------------------------------------------------------------
+// Compatibility ---------------------------------------------------------------
 
 /**
  * If the game is multiplayer, or if anyone gets multiple turns in a row, then that allows capturing
@@ -39,15 +39,12 @@ function isCompatible(boardsim: Board): boolean {
 	if (gamefileutility.getPlayerCount(boardsim) > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
 	if (gamerules.doesAnyPlayerGet2TurnsInARow(boardsim.gameRules)) return false; // This also allows the capture of the king.
 	if (boardutil.getRoyalCountOfGame(boardsim.pieces) > MAX_ROYALS) return false; // Too many royals (check & checkmate algorithm takes too long)
-	return true; // Checkmate compatible!
+	return true;
 }
 
-/**
- * Calculates if the provided boardsim is over by checkmate or stalemate
- * @returns The color of the player who won by checkmate.
- * `{ victor: 1, condition: 'checkmate' }`, `{ victor: 2, condition: 'checkmate' }`,
- * or `{ victor: 0, condition: 'stalemate' }`. Or *undefined* if the game isn't over.
- */
+// Detection -------------------------------------------------------------------
+
+/** The game's checkmate or stalemate conclusion, or undefined if the side to move has a legal move. */
 function detect(boardsim: Board): GameConclusion | undefined {
 	// The game will be over when the player has zero legal moves remaining, lose or draw.
 	// Iterate through every piece, calculating its legal moves. The first legal move we find, we
@@ -80,7 +77,8 @@ function detect(boardsim: Board): GameConclusion | undefined {
 export default {
 	// Constants
 	MAX_ROYALS,
-	// Functions
+	// Compatibility
 	isCompatible,
+	// Detection
 	detect,
 };

@@ -10,10 +10,9 @@
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MovePacket } from '../../../../../shared/chess/util/typeschemas.js';
 import type { GameStateFull } from '../../../../../shared/transport/clientbound.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 import type { MoveRecord, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
+import type { MovePacket, GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 
 import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
@@ -62,7 +61,7 @@ function handleGameState(
 	// last move (e.g. resignation), or when no moves were forwarded because ours already matched.
 	gamefile.gameConclusion = claimedGameConclusion;
 
-	// Adjust the timer whos turn it is depending on ping.
+	// Adjust the timer whose turn it is depending on ping.
 	movesendreceive.applyClockValues(gamefile, message.clockValues);
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
@@ -94,10 +93,8 @@ function synchronizeMovesList(
 	claimedGameConclusion: GameConclusion | undefined,
 	forceSync: boolean,
 ): boolean {
-	// console.log("Resyncing...");
-
-	/** The index of the lastest move in the game we agree with the server on. -1 = starting position. */
-	const latestMatchingMoveIndex = findLastestMatchingMoveIndex(gamefile.moves, moves);
+	/** The index of the latest move in the game we agree with the server on. -1 = starting position. */
+	const latestMatchingMoveIndex = findLatestMatchingMoveIndex(gamefile.moves, moves);
 
 	// Early exit case. If the server's moves list is a strict prefix of ours, and every move
 	// it's missing is one we're allowed to submit, don't modify our moves — just submit them.
@@ -111,7 +108,7 @@ function synchronizeMovesList(
 		serverIsBehindUs &&
 		mayWeSubmitMovesFrom(gamefile, moves.length)
 	) {
-		console.log(`Submitting the ${gamefile.moves.length - moves.length} move(s) the server is behind on after resyncing..`); // prettier-ignore
+		console.log(`Submitting the ${gamefile.moves.length - moves.length} move(s) the server is behind on after resyncing.`); // prettier-ignore
 		movesendreceive.submitMovesFrom(gamefile, moves.length);
 		return true;
 	}
@@ -151,7 +148,7 @@ function synchronizeMovesList(
 
 			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
 			// Convert the move from compact short format "x,y>x,y=N" to JSON.
-			// Gauranteed by the server to be parsable.
+			// Guaranteed by the server to be parsable.
 			const moveTagged: MoveTagged = icnmoves.parseTokenMove(thisShortmove.token);
 
 			if (isOpponentMove) {
@@ -202,6 +199,18 @@ function synchronizeMovesList(
 }
 
 /**
+ * Finds the latest move index at which our moves and the server's moves match. Returns -1 if we only agree on the starting position.
+ * @param serverMoves - The server's moves list in compact form: `[{ token: '1,2>3,4' }, { token: '5,6>7,8Q' }]`
+ */
+function findLatestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MovePacket[]): number {
+	if (ourMoves.length === 0) return -1; // We only agree with the starting position
+	for (let i = 0; i < ourMoves.length; i++) {
+		if (ourMoves[i]!.token !== serverMoves[i]?.token) return i - 1; // We agree up to the previous move, but not this one
+	}
+	return ourMoves.length - 1; // We agree with all
+}
+
+/**
  * Whether we're authorized to submit every one of our moves from `startIndex` onward.
  * In engine games we submit both colors' moves, so always. Otherwise only our own moves,
  * and since colors alternate that can only ever be the single trailing move.
@@ -213,19 +222,6 @@ function mayWeSubmitMovesFrom(gamefile: GameFile, startIndex: number): boolean {
 		gamerules.getColorThatPlayedMoveIndex(gamefile.gameRules, startIndex) ===
 			gamesession.getRole()
 	);
-}
-
-/**
- * Finds the latest move index at which our moves and the server's moves match. Returns -1 if we only agree on the starting position.
- * @param ourMoves - Our moves list in compact form: `['1,2>3,4','5,6>7,8Q']`
- * @param serverMoves - The server's moves list in compact form: `[{ token: '1,2>3,4' }, { token: '5,6>7,8Q' }]`
- */
-function findLastestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MovePacket[]): number {
-	if (ourMoves.length === 0) return -1; // We only agree with the starting position
-	for (let i = 0; i < ourMoves.length; i++) {
-		if (ourMoves[i]!.token !== serverMoves[i]?.token) return i - 1; // We agree up to the previous move, but not this one
-	}
-	return ourMoves.length - 1; // We agree with all
 }
 
 // Exports ---------------------------------------------------------------------

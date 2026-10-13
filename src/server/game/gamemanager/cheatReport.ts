@@ -28,6 +28,8 @@ import gameUtility from './gameUtility.js';
 import gameLifecycle from './gameLifecycle.js';
 import gameStateBuilder from './gameStateBuilder.js';
 
+// Functions -------------------------------------------------------------------
+
 /**
  * A client reports their opponent's last move as illegal. A valid report pops
  * that move and aborts the game; an invalid one is refused and logged to hackLog.
@@ -82,9 +84,9 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	}
 	// Remove the last move played.
 	const perpetratingMove = servergame.moves.pop();
-	if (!perpetratingMove) return;
+	if (!perpetratingMove) return; // A client can report before any move was played.
 
-	// Cheating report was valid, terminate the game..
+	// Cheating report was valid, terminate the game.
 
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
@@ -156,4 +158,6 @@ function concludeReportedGame(
 
 // Exports ---------------------------------------------------------------------
 
-export default { onReport };
+export default {
+	onReport,
+};

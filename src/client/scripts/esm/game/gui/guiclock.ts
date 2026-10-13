@@ -24,8 +24,12 @@ import gamesound from '../../board/gamesound.js';
 import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
 
+// Types -----------------------------------------------------------------------
+
 /** A player bar and the `.clock` it hosts. SSR'd by the game page, keyed by board POV. */
 type BarElements = { bar: HTMLElement; timer: HTMLElement };
+
+// Elements --------------------------------------------------------------------
 
 /** The two SSR'd player bars by board position. Bottom = you (or white for spectators). */
 const bars: { top: BarElements; bottom: BarElements } = {
@@ -39,10 +43,12 @@ const bars: { top: BarElements; bottom: BarElements } = {
 	},
 };
 
+// State -----------------------------------------------------------------------
+
 /** Player → bar elements for the loaded game, resolved by perspective in {@link set}. */
 let element_timers: PlayerGroup<BarElements> = {};
 
-/** Whether the low-time sound has already been played this game.. */
+/** Whether the low-time sound has already been played this game. */
 let hasPlayedLowtimeSound = false;
 /** Timeout ID for the scheduled low-time sound. */
 let lowtimeTimeoutID: number | undefined;
@@ -59,18 +65,18 @@ GameBus.addEventListener('moves-changed', () => {
 	updateTempo(basegame);
 });
 
-// Functions -------------------------------------------------------------------
+// Clocks ----------------------------------------------------------------------
 
-/** Stops clock sound and resets low-time state. */
-function stopClocks(basegame?: GameFile): void {
-	clearTimeout(lowtimeTimeoutID);
-	lowtimeTimeoutID = undefined;
-	hasPlayedLowtimeSound = false;
+/** Initializes the clock display when a game is loaded. */
+function set(basegame: GameFile): void {
+	// Map each player to a bar by perspective: bottom = our POV (or white for spectators).
+	const bottomPlayer = gameslot.areViewingWhite() ? p.WHITE : p.BLACK;
+	const topPlayer = bottomPlayer === p.WHITE ? p.BLACK : p.WHITE;
+	element_timers = { [bottomPlayer]: bars.bottom, [topPlayer]: bars.top };
 
-	if (basegame && !basegame.untimed) updateTextContent(basegame.clocks); // Ensures clock shows 0
-	for (const clockElements of Object.values(element_timers)) {
-		clockElements.bar.classList.remove('tempo'); // No side is on the move once stopped.
-	}
+	updateTempo(basegame); // Highlight whoever's turn it is.
+	if (basegame.untimed) return;
+	updateTextContent(basegame.clocks);
 }
 
 /** Updates clock text content each frame for timed, ongoing games. */
@@ -99,16 +105,16 @@ function push(clocks: ClockData): void {
 	rescheduleLowtime(clocks);
 }
 
-/** Initializes the clock display when a game is loaded. */
-function set(basegame: GameFile): void {
-	// Map each player to a bar by perspective: bottom = our POV (or white for spectators).
-	const bottomPlayer = gameslot.areViewingWhite() ? p.WHITE : p.BLACK;
-	const topPlayer = bottomPlayer === p.WHITE ? p.BLACK : p.WHITE;
-	element_timers = { [bottomPlayer]: bars.bottom, [topPlayer]: bars.top };
+/** Stops clock sound and resets low-time state. */
+function stopClocks(basegame?: GameFile): void {
+	clearTimeout(lowtimeTimeoutID);
+	lowtimeTimeoutID = undefined;
+	hasPlayedLowtimeSound = false;
 
-	updateTempo(basegame); // Highlight whoever's turn it is.
-	if (basegame.untimed) return;
-	updateTextContent(basegame.clocks);
+	if (basegame && !basegame.untimed) updateTextContent(basegame.clocks); // Ensures clock shows 0
+	for (const clockElements of Object.values(element_timers)) {
+		clockElements.bar.classList.remove('tempo'); // No side is on the move once stopped.
+	}
 }
 
 /** Shows the static clock values of the currently viewed position of a game being reviewed. */
@@ -130,6 +136,28 @@ function showClocksAtViewedMove(basegame: GameFile): void {
 	updateTextContent({ startTime: basegame.clocks.startTime, currentTime });
 }
 
+/** Updates the displayed time for both clocks, flagging any below the low-time threshold. */
+function updateTextContent(clocks: Pick<ClockData, 'startTime' | 'currentTime'>): void {
+	const lowtimeThreshold = clocks.startTime.millis / 8;
+	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
+		const player = Number(playerStr) as Player;
+		const timeRemaining = clocks.currentTime[player]!;
+		clockElements.timer.textContent = clockutil.getTextContentFromTimeRemain(timeRemaining);
+		clockElements.bar.classList.toggle('lowtime', timeRemaining < lowtimeThreshold);
+	}
+}
+
+// Tempo -----------------------------------------------------------------------
+
+/** Highlights the bar of the player whose turn it is via `.tempo`. */
+function updateTempo(basegame: GameFile): void {
+	const tempoPlayer = getTempoPlayer(basegame);
+	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
+		const player = Number(playerStr) as Player;
+		clockElements.bar.classList.toggle('tempo', player === tempoPlayer);
+	}
+}
+
 /**
  * The player the tempo highlight reflects: whoever is on the move, or undefined once the game
  * is over. Analysis is exempt from both — there it's the front of the active line (independent
@@ -142,14 +170,7 @@ function getTempoPlayer(basegame: GameFile): Player | undefined {
 	return basegame.clocks?.ticking?.color ?? basegame.whosTurn;
 }
 
-/** Highlights the bar of the player whose turn it is via `.tempo`. */
-function updateTempo(basegame: GameFile): void {
-	const tempoPlayer = getTempoPlayer(basegame);
-	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
-		const player = Number(playerStr) as Player;
-		clockElements.bar.classList.toggle('tempo', player === tempoPlayer);
-	}
-}
+// Low Time --------------------------------------------------------------------
 
 /**
  * Schedules the low-time sound to play exactly when our clock first hits 1/8th of our starting time.
@@ -167,33 +188,26 @@ function rescheduleLowtime(clocks: ClockData): void {
 
 	const timeUntilLowtime = timeRemaining - clocks.startTime.millis / 8;
 	if (timeUntilLowtime <= 0) playLowtimeSound();
-	else lowtimeTimeoutID = window.setTimeout(playLowtimeSound, timeUntilLowtime);
+	else lowtimeTimeoutID = window.setTimeout(() => playLowtimeSound(), timeUntilLowtime);
 }
 
-/** Plays the low-time sound and applies the low-time visual to our clock. */
+/** Plays the low-time sound, marking it played for this game. */
 function playLowtimeSound(): void {
 	hasPlayedLowtimeSound = true;
 	lowtimeTimeoutID = undefined;
 	gamesound.playLowtime();
 }
 
-/** Updates the displayed time for both clocks, flagging any below the low-time threshold. */
-function updateTextContent(clocks: Pick<ClockData, 'startTime' | 'currentTime'>): void {
-	const lowtimeThreshold = clocks.startTime.millis / 8;
-	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
-		const player = Number(playerStr) as Player;
-		const timeRemaining = clocks.currentTime[player]!;
-		clockElements.timer.textContent = clockutil.getTextContentFromTimeRemain(timeRemaining);
-		clockElements.bar.classList.toggle('lowtime', timeRemaining < lowtimeThreshold);
-	}
-}
+// Exports ---------------------------------------------------------------------
 
 export default {
+	// Clocks
 	set,
-	stopClocks,
+	update,
 	edit,
 	push,
-	update,
+	stopClocks,
 	showClocksAtViewedMove,
+	// Tempo
 	updateTempo,
 };

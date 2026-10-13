@@ -38,7 +38,7 @@ export type PositionErrorCode =
 /** All colored players required in a complete 4-player game's turn order. */
 const FOUR_PLAYER_COLORS: number[] = [p.RED, p.BLUE, p.YELLOW, p.GREEN];
 
-// Functions -------------------------------------------------------------------
+// Validation ------------------------------------------------------------------
 
 /**
  * Validates a VariantOptions object for semantic legality.
@@ -75,14 +75,14 @@ export function validatePosition(
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder);
 	const turnOrderSet = new Set<number>(uniquePlayers);
 
-	// --- Rule 1: Mode mutual exclusivity (white/black vs colored) ---
+	// Rule 1: Mode mutual exclusivity (white/black vs colored)
 	const hasColoredPlayers = uniquePlayers.some((up) => FOUR_PLAYER_COLORS.includes(up));
 	const hasTwoPlayerColors = uniquePlayers.some((up) => up === p.WHITE || up === p.BLACK);
 	if (hasColoredPlayers && hasTwoPlayerColors) return 'mixed_player_modes';
 
 	const isFourPlayerMode = hasColoredPlayers;
 
-	// --- Rule 2: Mode completeness ---
+	// Rule 2: Mode completeness
 	if (isFourPlayerMode) {
 		for (const up of FOUR_PLAYER_COLORS) {
 			if (!turnOrderSet.has(up)) return 'incomplete_turn_order';
@@ -91,7 +91,7 @@ export function validatePosition(
 		return 'incomplete_turn_order';
 	}
 
-	// --- Rule 3: ICN string length limit (seek-hardening only) ---
+	// Rule 3: ICN string length limit (seek-hardening only)
 	if (
 		icnString !== undefined &&
 		icnString.length > gamelimits.MAX_SERVER_VALIDATABLE_POSITION_LENGTH
@@ -99,7 +99,7 @@ export function validatePosition(
 		return 'position_too_large';
 	}
 
-	// --- Rules 4 & 5: World border containment, piece color and turn order consistency ---
+	// Rules 4 & 5: World border containment, piece color and turn order consistency
 	const neutralExemptRawTypes = new Set<RawType>(neutralRawTypes); // void and obstacle
 	const worldBorder = gameRules.worldBorder;
 
@@ -132,7 +132,7 @@ export function validatePosition(
 		}
 	}
 
-	// --- Rule 6: Checkmate incompatibility ---
+	// Rule 6: Checkmate incompatibility
 	if (gamerules.usesCheckmate(gameRules)) {
 		// 3+ players allows one to open a discovered attack and a second to capture the king.
 		if (isFourPlayerMode) return 'four_player_checkmate';
@@ -142,10 +142,10 @@ export function validatePosition(
 		}
 	}
 
-	// --- Rule 7: Promotion targets are pieces a pawn may become ---
+	// Rule 7: Promotion targets are pieces a pawn may become
 	for (const promotionPiece of gameRules.promotion?.pieces ?? []) {
 		if (!gamerules.isValidPromotionPiece(promotionPiece)) return 'invalid_promotion_piece';
 	}
 
-	return null; // Position is valid.
+	return null;
 }

@@ -49,7 +49,7 @@ export type PositionRejection =
 	| { kind: 'position'; code: PositionRejectionCode }
 	| { kind: 'engine'; code: EngineSupportCode };
 
-// Functions -------------------------------------------------------------------
+// Rejection -------------------------------------------------------------------
 
 /**
  * Why the given context can't start a game from an otherwise-legal position, or `null` if it can.
@@ -80,7 +80,7 @@ function getRejection(
 	gamefile: GameFile,
 	context: { seek: boolean; engine: boolean },
 ): PositionRejection | null {
-	// --- Rule 1: King capture is not possible on turn 1 ---
+	// Rule 1: King capture is not possible on turn 1
 	if (gamerules.usesCheckmate(gamefile.gameRules)) {
 		// Whoever moves after the front position is the one its mover could take a royal from.
 		const secondToMove = gamerules.getWhosTurnAtMoveIndex(
@@ -93,20 +93,20 @@ function getRejection(
 	}
 
 	if (context.seek) {
-		// --- Rule 2: No custom piece movement ---
+		// Rule 2: No custom piece movement
 		if (variantmodule.hasCustomMovement(gamefile.variant?.mod))
 			return { kind: 'position', code: 'no_4d_movement' };
 
-		// --- Rule 3: The game isn't already over ---
+		// Rule 3: The game isn't already over
 		if (gamefileutility.isGameOver(gamefile)) return { kind: 'position', code: 'game_over' };
 
-		// --- Rule 4: Every player has at least one piece ---
+		// Rule 4: Every player has at least one piece
 		for (const player of gamerules.getUniquePlayersInTurnOrder(gamefile.gameRules.turnOrder)) {
 			if (boardutil.getPieceCountOfColor(gamefile.pieces, player) === 0)
 				return { kind: 'position', code: 'player_missing_pieces' };
 		}
 
-		// --- Rule 5: Royal count is not too high for checkmate ---
+		// Rule 5: Royal count is not too high for checkmate
 		if (
 			gamerules.usesCheckmate(gamefile.gameRules) &&
 			boardutil.getRoyalCountOfGame(gamefile.pieces) > checkmate.MAX_ROYALS
@@ -115,13 +115,15 @@ function getRejection(
 		}
 	}
 
-	// --- Rule 6: The engine can handle the position ---
+	// Rule 6: The engine can handle the position
 	if (context.engine) {
 		const support = apeironcard.isPlaySupported(gamefile);
 		if (!support.supported) return { kind: 'engine', code: support.reason };
 	}
 	return null;
 }
+
+// Localization ----------------------------------------------------------------
 
 /** The display text for a rejection, in the language of the given translations. */
 function localizeRejection(t: ScriptTranslations, rejection: PositionRejection): string {
@@ -132,4 +134,9 @@ function localizeRejection(t: ScriptTranslations, rejection: PositionRejection):
 
 // Exports ---------------------------------------------------------------------
 
-export default { getRejection, localizeRejection };
+export default {
+	// Rejection
+	getRejection,
+	// Localization
+	localizeRejection,
+};
