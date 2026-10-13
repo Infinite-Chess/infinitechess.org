@@ -82,6 +82,12 @@
 					</div>
 				</div>
 
+				{# Our OWN connection-loss notice. The client writes the text and reveals it while we're
+				   disconnected, then swaps in a brief "Reconnected." (`.reconnected`) before hiding it. #}
+				{% if gamePageData.isLive %}
+				<div class="self-disconnect-status hidden"></div>
+				{% endif %}
+
 				{# Opponent-disconnect status — omitted once the game is over, as nobody can be claimed
 				   against in a concluded game. The client writes the countdown into `.disconnect-text`,
 				   then reveals `.disconnect-buttons` on expiry. #}
@@ -93,12 +99,6 @@
 						<button class="action-btn" id="btn-claim-draw">Call a draw</button>
 					</div>
 				</div>
-				{% endif %}
-
-				{# Our OWN connection-loss notice. The client writes the text and reveals it while we're
-				   disconnected, then swaps in a brief "Reconnected." (`.reconnected`) before hiding it. #}
-				{% if gamePageData.isLive %}
-				<div class="self-disconnect-status hidden"></div>
 				{% endif %}
 
 				{{ playerBar(meta, 'bottom') }}
