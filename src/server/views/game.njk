@@ -16,14 +16,12 @@
 
 {% from "components/gamegui.njk" import boardControls, gameMeta, playerBar, material, movesNav, movesTable, boardCanvas %}
 
-<main class="game">
+<main class="board-page game">
 
 	{# ── Left side bar ─────────────────────────────────────────────────── #}
 	<aside class="sidebar scrollbar-thin">
 
 		{{ boardControls() }}
-
-		{{ gameMeta(meta, spectators=true) }}
 
 		{# Material bars + match panel #}
 		<div class="play-group">
@@ -109,52 +107,60 @@
 
 		</div>{# .play-group #}
 
-		{# Chat window — participants of a non-engine game. Driven by guichat.ts. #}
-		{% if chat %}
-		<div class="chat panel">
-			{# The client toggles `.collapsed` on the .chat panel. #}
-			<div class="chat-bar">
-				<button class="btn-bare chat-toggle" id="btn-toggle-chat">
-					<svg class="chat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-					<span class="chat-title">Chat</span>
-				</button>
-				{# The browser's own `title` tooltip, NOT our `data-tooltip` system: the native one
-				   appears far more slowly, so nobody clicks the flag out of impulse or curiosity. #}
-				<button class="btn-bare icon-btn" id="btn-report" title="Report the chat">
-					<svg><use href="#svg-flag"/></svg>
-				</button>
-				{# The flag's two menus. Driven by guichatreport.ts #}
-				<div class="popup-menu popup-menu-above report-menu hidden" id="report-reason-menu">
-					<div class="popup-menu-title report-menu-title">Report chat</div>
-					{% for reason in chat.reportReasons %}
-					<button type="button" data-reason="{{ reason.code }}">{{ reason.label }}</button>
-					{% endfor %}
-				</div>
-				<div class="popup-menu popup-menu-above report-menu hidden" id="report-confirm-menu">
-					<div class="popup-menu-title report-menu-title">Report chat for "<span id="report-chosen-reason"></span>"?</div>
-					<div class="report-menu-actions">
-						<button type="button" id="btn-report-cancel">Cancel</button>
-						<button type="button" id="btn-report-submit">Report</button>
+		{# Game info + chat: one group, so stacked layouts can hang it below the first screen.
+		   Desktop shows the game info above the play group (see game.css). #}
+		<div class="secondary-panels">
+
+			{{ gameMeta(meta, spectators=true) }}
+
+			{# Chat window — participants of a non-engine game. Driven by guichat.ts. #}
+			{% if chat %}
+			<div class="chat panel">
+				{# The client toggles `.collapsed` on the .chat panel. #}
+				<div class="chat-bar">
+					<button class="btn-bare chat-toggle" id="btn-toggle-chat">
+						<svg class="chat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+						<span class="chat-title">Chat</span>
+					</button>
+					{# The browser's own `title` tooltip, NOT our `data-tooltip` system: the native one
+					   appears far more slowly, so nobody clicks the flag out of impulse or curiosity. #}
+					<button class="btn-bare icon-btn" id="btn-report" title="Report the chat">
+						<svg><use href="#svg-flag"/></svg>
+					</button>
+					{# The flag's two menus. Driven by guichatreport.ts #}
+					<div class="popup-menu popup-menu-above report-menu hidden" id="report-reason-menu">
+						<div class="popup-menu-title report-menu-title">Report chat</div>
+						{% for reason in chat.reportReasons %}
+						<button type="button" data-reason="{{ reason.code }}">{{ reason.label }}</button>
+						{% endfor %}
+					</div>
+					<div class="popup-menu popup-menu-above report-menu hidden" id="report-confirm-menu">
+						<div class="popup-menu-title report-menu-title">Report chat for "<span id="report-chosen-reason"></span>"?</div>
+						<div class="report-menu-actions">
+							<button type="button" id="btn-report-cancel">Cancel</button>
+							<button type="button" id="btn-report-submit">Report</button>
+						</div>
 					</div>
 				</div>
+				{# KEEP IN SYNC with `guichat.append`: identical markup, and nothing but
+				   entries may live here — it seeds its render count from these children. #}
+				<div class="chat-log scrollbar-thin">
+					{% for e in chat.entries %}
+					<div class="{{ e.cssClass }}">{% if e.prefix %}<span class="chat-sender">{{ e.prefix }}</span>{% endif %}{{ e.body }}</div>
+					{% endfor %}
+				</div>
+				{# `disabled` is the only thing stopping a guest sending; there is no JS check. #}
+				{% if chat.input %}
+				{# Why a predicted send was refused. #}
+				<div class="chat-error hidden"></div>
+				<input class="chat-input" type="text" maxlength="{{ chat.input.maxLength }}" id="chat-input"
+					{%- if not chat.input.disabled %} placeholder="Please be nice!"
+					{%- else %} disabled placeholder="Create an account to chat."{% endif %} />
+				{% endif %}
 			</div>
-			{# KEEP IN SYNC with `guichat.append`: identical markup, and nothing but
-			   entries may live here — it seeds its render count from these children. #}
-			<div class="chat-log scrollbar-thin">
-				{% for e in chat.entries %}
-				<div class="{{ e.cssClass }}">{% if e.prefix %}<span class="chat-sender">{{ e.prefix }}</span>{% endif %}{{ e.body }}</div>
-				{% endfor %}
-			</div>
-			{# `disabled` is the only thing stopping a guest sending; there is no JS check. #}
-			{% if chat.input %}
-			{# Why a predicted send was refused. #}
-			<div class="chat-error hidden"></div>
-			<input class="chat-input" type="text" maxlength="{{ chat.input.maxLength }}" id="chat-input"
-				{%- if not chat.input.disabled %} placeholder="Please be nice!"
-				{%- else %} disabled placeholder="Create an account to chat."{% endif %} />
 			{% endif %}
-		</div>
-		{% endif %}
+
+		</div>{# .secondary-panels #}
 
 	</aside>
 

@@ -1,9 +1,10 @@
 /* src/client/css/game.css */
 
-/* The game page (/game/:id): a fixed-width left side bar and a board canvas
-   filling the rest of the area below the site header. */
+/* The game page (/game/:id).
+   Desktop: a fixed-width side bar beside a board canvas filling the rest below the site header.
+   Stacked (phones, narrow windows): the side bar's contents stack around the canvas instead. */
 
-.game {
+.board-page {
 	display: flex;
 	/* One-liner for wapping the side bar to the right edge. */
 	flex-direction: row-reverse;
@@ -12,7 +13,7 @@
 
 /* Shades the board's right edge, below whatever sits beside it (side bar, eval gauge).
    Cast by a strip just past that edge, which the container's overflow clips away. */
-.game .canvas-container::after {
+.board-page .canvas-container::after {
 	content: '';
 	position: absolute;
 	inset: 0 auto 0 100%;
@@ -25,15 +26,28 @@
    ============================ */
 
 .sidebar {
-	flex: 0 0 380px;
+	--sidebar-width: 380px;
+	/* Between the side bar's cards, and around them. */
+	--sidebar-gap: 15px;
+	flex: 0 0 var(--sidebar-width);
 	display: flex;
 	flex-direction: column;
-	gap: 15px;
-	padding: 15px;
+	gap: var(--sidebar-gap);
+	padding: var(--sidebar-gap);
 	overflow-y: auto;
 	background:
 		linear-gradient(var(--c-checkerboard-dim), var(--c-checkerboard-dim)), var(--checkerboard);
 	background-attachment: local;
+}
+
+/* Game info shares a wrapper with chat for the stacked layout, but shows above the play group here. */
+.secondary-panels {
+	display: contents;
+}
+
+.play-group,
+.chat {
+	order: 1;
 }
 
 .panel {
@@ -256,6 +270,9 @@
    ================================================== */
 
 .play-group {
+	/* A player bar's spacing, which its material keeps to as one of its items. */
+	--bar-gap: 8px;
+	--bar-padding-inline: 12px;
 	flex: 0 0 auto;
 	display: flex;
 	flex-direction: column;
@@ -301,7 +318,21 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 8px 12px;
+	gap: var(--bar-gap);
+	min-width: 0;
+	padding: 8px var(--bar-padding-inline);
+}
+
+/* A long name truncates rather than overflowing the bar. */
+.player-bar .username-embed,
+.player-bar .username {
+	min-width: 0;
+}
+
+.player-bar .username {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* The side whose turn it is gets its whole bar highlighted */
@@ -580,14 +611,15 @@
 }
 
 /* Color and intensity are driven by custom properties (with the default values as fallbacks) so a
-   consumer can tint or brighten the pulse — e.g. the rematch button on hover — without a 2nd animation. */
+   consumer can tint or brighten the pulse — e.g. the rematch button on hover — without a 2nd animation.
+   --pulse-base is what the background mixes toward, for a consumer with nothing opaque behind it. */
 @keyframes attention-pulse {
 	0%,
 	100% {
 		background-color: color-mix(
 			in srgb,
 			var(--pulse-color, var(--c-text-strong)) var(--pulse-bg-min, 3%),
-			transparent
+			var(--pulse-base, transparent)
 		);
 		box-shadow: inset 0 0 5px 1px
 			color-mix(
@@ -600,7 +632,7 @@
 		background-color: color-mix(
 			in srgb,
 			var(--pulse-color, var(--c-text-strong)) var(--pulse-bg-max, 8%),
-			transparent
+			var(--pulse-base, transparent)
 		);
 		box-shadow: inset 0 0 12px 2px
 			color-mix(
@@ -834,4 +866,380 @@
 #btn-report-submit {
 	color: var(--c-error);
 	font-weight: 600;
+}
+
+/* ============================================================
+   Stacked layout — once the side bar would cramp the board (under 2.3 side bars
+   wide, or the board beside it 1.67× taller than wide), unless the screen is too
+   short for it. The side bar unwraps into a grid around the board, which takes the
+   screen less the fixed-height rows; the disconnect notices aren't counted, so they
+   push the rows below down instead of resizing the board mid-move. :where() keeps
+   specificity level with the rules above, so their state classes still win.
+   874px = 2.3 × --sidebar-width; 56px = --header-height.
+   ============================================================ */
+
+@media (height >= 420px) and ((width < 874px) or (height >= calc(56px + 1.67 * (100vw - 380px)))) {
+	/* The page's own background, so it runs unbroken under everything the page scrolls. Keeps
+	   the page color beneath, which mobile browsers tint their system bars from. */
+	body:has(> .game) {
+		background:
+			linear-gradient(var(--c-checkerboard-dim), var(--c-checkerboard-dim)),
+			var(--checkerboard);
+		background-color: var(--c-page);
+	}
+
+	/* The board edge's shade falls along its top and bottom instead. */
+	.game .canvas-container::before,
+	.game .canvas-container::after {
+		content: '';
+		position: absolute;
+		inset: 100% 0 auto;
+		width: auto;
+		height: 20px;
+		box-shadow: 0 0 8px var(--c-shadow-edge);
+	}
+	.game .canvas-container::before {
+		inset: auto 0 100%;
+	}
+
+	/* Too small a board to aim by coordinates. */
+	.game .coords {
+		display: none;
+	}
+
+	.game {
+		/* The first screen's fixed rows. The bars and actions are zoomed by --ui-zoom. */
+		--ui-zoom: 0.92;
+		--bar-height: 40px;
+		--actions-height: 41px;
+		--strip-height: 35px;
+		--controls-height: 42px;
+		/* The rows the bars and actions take of their own, and what the strip's row measures —
+		   see the wide layout below. The actions count only while they show anything. */
+		--bar-rows: 2;
+		--actions-rows: 1;
+		--has-actions: 0;
+		--strip-row: var(--strip-height);
+		position: relative; /* Anchors .secondary-panels just below the first screen. */
+		display: grid;
+		height: auto;
+		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-areas:
+			'opp opp'
+			'canvas canvas'
+			'me me'
+			'self-disconnect self-disconnect'
+			'disconnect disconnect'
+			'actions actions'
+			'moves moves'
+			'controls controls';
+	}
+	.game:has(.game-actions > :not(.hidden)) {
+		--has-actions: 1;
+	}
+
+	.game .canvas-container {
+		/* prettier-ignore */
+		height: max(0px, 100svh - var(--header-height) - var(--strip-row) - var(--controls-height) - (var(--bar-rows) * var(--bar-height) + var(--actions-rows) * var(--has-actions) * var(--actions-height)) * var(--ui-zoom));
+	}
+
+	:where(.game) {
+		/* Layout — the side bar unwraps, and each piece takes its grid area. */
+		.sidebar,
+		.play-group,
+		.match-panel {
+			display: contents;
+		}
+		.canvas-container {
+			grid-area: canvas;
+		}
+		#player-bar-top,
+		#material-top {
+			grid-area: opp;
+		}
+		#player-bar-bottom,
+		#material-bottom {
+			grid-area: me;
+		}
+		.self-disconnect-status {
+			grid-area: self-disconnect;
+		}
+		.disconnect-status {
+			grid-area: disconnect;
+		}
+		.game-actions {
+			grid-area: actions;
+		}
+		.moves {
+			grid-area: moves;
+		}
+		.board-controls {
+			grid-area: controls;
+		}
+
+		/* Zoom — a touch smaller than desktop, to suit a phone. Zoom does it in one go, except
+		   for the material and the moves strip, whose ply centering mixes on-screen rects with
+		   scroll offsets: those multiply their own sizes by --ui-zoom. */
+		.player-bar,
+		.self-disconnect-status,
+		.disconnect-status,
+		.game-actions {
+			zoom: var(--ui-zoom);
+		}
+
+		/* Player bars — each also anchors its material: by its clock, or by the bar itself when untimed. */
+		.player-bar {
+			height: var(--bar-height);
+			background: var(--c-surface);
+		}
+		.clock {
+			font-size: 1.25em;
+		}
+		#player-bar-top {
+			anchor-name: --bar-top;
+			border-bottom: 1px solid var(--c-border-muted);
+		}
+		#player-bar-bottom {
+			anchor-name: --bar-bottom;
+		}
+		#player-bar-top .clock {
+			anchor-name: --clock-top;
+		}
+		#player-bar-bottom .clock {
+			anchor-name: --clock-bottom;
+		}
+
+		/* Material — in its player's bar, snug against the clock however wide it reads. Scaled by
+		   hand rather than zoomed like the bar, as anchoring inside a zoomed box is untrustworthy. */
+		.material {
+			position: absolute;
+			top: anchor(top);
+			right: anchor(left);
+			bottom: anchor(bottom);
+			height: auto;
+			margin-right: calc(var(--bar-gap) * var(--ui-zoom));
+			font-size: calc(1em * var(--ui-zoom));
+		}
+		#material-top {
+			position-anchor: --clock-top;
+		}
+		#material-bottom {
+			position-anchor: --clock-bottom;
+		}
+		/* Untimed, so no clock: just inside the bar's inner edge instead. */
+		&:has(.clock.hidden) {
+			.material {
+				right: anchor(right);
+				margin-right: calc(var(--bar-padding-inline) * var(--ui-zoom));
+			}
+			#material-top {
+				position-anchor: --bar-top;
+			}
+			#material-bottom {
+				position-anchor: --bar-bottom;
+			}
+		}
+		.material-piece {
+			width: calc(22px * var(--ui-zoom));
+			height: calc(22px * var(--ui-zoom));
+		}
+		.material-lead {
+			margin-left: 0;
+		}
+		/* A step brighter over its bar's tempo highlight. */
+		&:has(#player-bar-top.tempo) #material-top > *,
+		&:has(#player-bar-bottom.tempo) #material-bottom > * {
+			color: var(--c-text);
+		}
+
+		/* Disconnect notices — opaque over the checkerboard; the self notice's pulse mixes in the
+		   same surface instead. */
+		.disconnect-status,
+		.self-disconnect-status {
+			--pulse-base: var(--c-surface);
+			background-color: var(--c-surface);
+		}
+
+		/* Game actions */
+		.game-actions {
+			height: var(--actions-height);
+			background: var(--c-surface);
+			border-top: 1px solid var(--c-border-muted);
+		}
+		.actions-over {
+			border-top: none;
+		}
+		/* Its own row only while it has something to show (a spectator's, only once the game ends). */
+		.game-actions:not(:has(> :not(.hidden))) {
+			display: none;
+		}
+
+		/* Moves strip — the moves list reflows into one sideways-scrolling strip between the jump buttons. */
+		.moves {
+			flex-direction: row;
+			min-height: var(--strip-height);
+			font-size: calc(1em * var(--ui-zoom));
+			background: var(--c-surface);
+			border-top: 1px solid var(--c-border-muted);
+		}
+		.moves-nav {
+			display: contents;
+		}
+		#btn-move-prev,
+		#btn-move-next {
+			display: none;
+		}
+		/* Square, however tall the strip's row. */
+		.move-btn {
+			flex: none;
+			aspect-ratio: 1;
+		}
+		.move-icon {
+			width: calc(25px * var(--ui-zoom));
+			height: calc(25px * var(--ui-zoom));
+		}
+		.move-piece {
+			width: calc(16px * var(--ui-zoom));
+			height: calc(16px * var(--ui-zoom));
+		}
+		/* Moves fade out toward both ends; the matching padding keeps the first and last clear
+		   of the fade once scrolled all the way to them. */
+		.moves-table {
+			--fade: 0.6em;
+			order: 1;
+			flex: 1 1 auto;
+			display: flex;
+			height: auto;
+			padding-inline: var(--fade);
+			overflow-x: auto;
+			overflow-y: hidden;
+			scrollbar-width: none;
+			mask-image: linear-gradient(
+				to right,
+				transparent,
+				black var(--fade),
+				black calc(100% - var(--fade)),
+				transparent
+			);
+		}
+		#btn-move-last {
+			order: 2;
+		}
+		.move-row {
+			display: flex;
+			flex: none;
+		}
+		.move-num {
+			padding: 0 2px 0 6px;
+		}
+		.move-num::after {
+			content: '.';
+		}
+		.ply {
+			flex: none;
+			height: auto;
+			max-width: 9em;
+		}
+		/* No room for it in the strip; the game info shows the conclusion. */
+		.game-result {
+			display: none;
+		}
+
+		/* Board controls */
+		.board-controls {
+			height: var(--controls-height);
+		}
+
+		/* Scroll anchoring — never anchors, so a notice appearing while scrolled pushes these down
+		   rather than the browser scrolling to hold them still, which would drag the board up. */
+		.game-actions,
+		.moves,
+		.board-controls,
+		.secondary-panels {
+			overflow-anchor: none;
+		}
+
+		/* Below the first screen — game info and chat. At most a side bar wide, or two once two
+		   fit (745px = 2 × --sidebar-width − --sidebar-gap). Lifted above the canvas, which the
+		   chat's upward-opening report menu could otherwise slip beneath. */
+		.secondary-panels {
+			position: absolute;
+			top: 100%;
+			inset-inline: 0;
+			z-index: 1;
+			display: grid;
+			align-items: start;
+			gap: var(--sidebar-gap);
+			width: min(100%, var(--sidebar-width));
+			margin-inline: auto;
+			padding: 0 var(--sidebar-gap) var(--sidebar-gap);
+		}
+		@media (width >= 745px) {
+			.secondary-panels {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				width: calc(2 * var(--sidebar-width) - var(--sidebar-gap));
+			}
+		}
+		.chat-log {
+			height: 240px;
+		}
+	}
+
+	/* Wider screens merge rows: both player bars share one under the board, and the game
+	   actions join the moves strip, whose row then takes the actions' height. Everything
+	   that depends on the merge lives here. */
+	@media (width >= 720px) {
+		.game {
+			--bar-rows: 1;
+			--actions-rows: 0;
+			--strip-row: max(var(--strip-height), var(--actions-height) * var(--ui-zoom));
+			grid-template-areas:
+				'canvas canvas'
+				'bars bars'
+				'self-disconnect self-disconnect'
+				'disconnect disconnect'
+				'moves actions'
+				'controls controls';
+		}
+
+		:where(.game) {
+			/* Player bars and material — us on the left, the opponent mirrored on the right: the
+			   clocks meet in the middle. */
+			#player-bar-top,
+			#player-bar-bottom,
+			#material-top,
+			#material-bottom {
+				grid-area: bars;
+			}
+			.player-bar {
+				width: 50%;
+			}
+			#player-bar-top {
+				justify-self: end;
+				flex-direction: row-reverse;
+				border-bottom: none;
+				border-inline-start: 1px solid var(--c-border-muted);
+			}
+			#material-top {
+				right: auto;
+				left: anchor(right);
+				margin-right: 0;
+				margin-left: calc(var(--bar-gap) * var(--ui-zoom));
+			}
+			&:has(.clock.hidden) #material-top {
+				left: anchor(left);
+				margin-left: calc(var(--bar-padding-inline) * var(--ui-zoom));
+			}
+
+			/* Game actions — kept even when empty, so the merged row's height never changes. */
+			.game-actions:not(:has(> :not(.hidden))) {
+				display: flex;
+			}
+			/* Room for an incoming draw offer, whenever there's an action to show at all. */
+			.game-actions:has(> :not(.hidden)) {
+				min-width: 290px;
+				border-inline-start: 1px solid var(--c-border-muted);
+			}
+		}
+	}
 }

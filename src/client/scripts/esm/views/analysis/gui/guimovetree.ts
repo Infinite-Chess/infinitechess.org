@@ -126,9 +126,9 @@ function highlightCurrentNode(): void {
 function scrollToCurrentNode(): void {
 	const current = getCurrentNodePly();
 	if (!current) {
-		// The root (start-of-game position) has no rendered ply button; scroll to the top.
+		// The root (start-of-game position) has no rendered ply button; scroll to the start.
 		if (gameslot.getGamefile()!.state.local.moveIndex === -1)
-			guimoveslist.scrollMovesTableToTop();
+			guimoveslist.scrollMovesTableToStart();
 		return;
 	}
 	guimoveslist.centerPly(current);

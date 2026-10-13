@@ -109,7 +109,7 @@ GameBus.addEventListener('view-move', () => {
 GameBus.addEventListener('view-front', () => scrollToCurrentPly());
 GameBus.addEventListener('game-concluded', () => {
 	showGameResult();
-	scrollMovesTableToBottom();
+	scrollMovesTableToEnd();
 });
 GameBus.addEventListener('game-unloaded', () => clearMovesTable());
 
@@ -428,35 +428,35 @@ function scrollToCurrentPly(): void {
 
 	const current = getPlyElement(moveIndex);
 	if (!current) {
-		// The start-of-game position (moveIndex -1) has no associated ply; scroll to the top.
-		if (moveIndex === -1) scrollMovesTableToTop();
+		// The start-of-game position (moveIndex -1) has no associated ply; scroll to the start.
+		if (moveIndex === -1) scrollMovesTableToStart();
 		return;
 	}
 
-	// On the final move with the result banner shown, scroll all the way down so the
-	// banner (which sits just below it) stays visible; otherwise center the ply.
+	// On the final move with the result banner shown, scroll all the way to the end so the
+	// banner (which sits just after it) stays visible; otherwise center the ply.
 	const onFinalMove = moveIndex === gamefile.moves.length - 1;
 	const bannerVisible = !element_GameResult.classList.contains('hidden');
-	if (onFinalMove && bannerVisible) scrollMovesTableToBottom();
+	if (onFinalMove && bannerVisible) scrollMovesTableToEnd();
 	else centerPly(current);
 }
 
-/** Scrolls the table so the given ply is vertically centered in the visible region. */
+/** Scrolls the table so the given ply is centered along whichever axes the table scrolls. */
 function centerPly(ply: HTMLElement): void {
 	const containerRect = element_MovesTable.getBoundingClientRect();
 	const plyRect = ply.getBoundingClientRect();
-	const delta = plyRect.top - containerRect.top - (element_MovesTable.clientHeight - plyRect.height) / 2; // prettier-ignore
-	element_MovesTable.scrollTop += delta;
+	element_MovesTable.scrollTop += plyRect.top - containerRect.top - (element_MovesTable.clientHeight - plyRect.height) / 2; // prettier-ignore
+	element_MovesTable.scrollLeft += plyRect.left - containerRect.left - (element_MovesTable.clientWidth - plyRect.width) / 2; // prettier-ignore
 }
 
-/** Scrolls the table as far down as possible (used when the result banner appears). */
-function scrollMovesTableToBottom(): void {
-	element_MovesTable.scrollTop = element_MovesTable.scrollHeight;
+/** Scrolls the table as far toward its end as possible (used when the result banner appears). */
+function scrollMovesTableToEnd(): void {
+	element_MovesTable.scrollTo(element_MovesTable.scrollWidth, element_MovesTable.scrollHeight);
 }
 
-/** Scrolls the table to the top (used at the start-of-game position, which has no ply). */
-function scrollMovesTableToTop(): void {
-	element_MovesTable.scrollTop = 0;
+/** Scrolls the table to its start (used at the start-of-game position, which has no ply). */
+function scrollMovesTableToStart(): void {
+	element_MovesTable.scrollTo(0, 0);
 }
 
 /** Starts a zoom transition to the move's destination square. */
@@ -486,6 +486,6 @@ export default {
 	update,
 	getPlyDisplay,
 	centerPly,
-	scrollMovesTableToTop,
+	scrollMovesTableToStart,
 	zoomToPlyDestination,
 };

@@ -565,7 +565,7 @@ button:disabled {
    (game, analysis, board editor, practice checkmate, tutorial)
    ============================================================ */
 
-/* Container must also share properties, or it isn't resized properly on window resize. */
+/* Container must also share properties, or it isn't resized properly. */
 .canvas-container,
 .board-canvas {
 	display: block;
@@ -577,6 +577,11 @@ button:disabled {
 	position: relative;
 	overflow: hidden;
 	container-type: inline-size; /* Enables container queries on this element */
+}
+
+/* The board pans and zooms itself, so a touch on it never scrolls or zooms the page. */
+.board-canvas {
+	touch-action: none;
 }
 
 /* ===============================================================
