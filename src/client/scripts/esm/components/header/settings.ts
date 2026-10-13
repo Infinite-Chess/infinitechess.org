@@ -4,8 +4,8 @@
  * Opens and closes the settings drop-down, and routes between it and its
  * sub-dropdowns.
  *
- * Also keeps the --c-tile and --c-tile-2 stylesheet colors matched to the
- * chosen board theme, which the rest of the site's accents are built from.
+ * Also keeps the --c-board-accent and --c-board-accent-bright stylesheet colors
+ * matched to the chosen board theme, which the rest of the site's accents are built from.
  */
 
 import math from '../../../../../shared/util/math/math.js';
@@ -82,8 +82,8 @@ const openHandlers = subDropdowns.map(({ module }) => () => {
 	document.addEventListener('click', closeSettingsDropdownIfClickedAway);
 	document.addEventListener('touchstart', closeSettingsDropdownIfClickedAway);
 
-	updateBackgroundColor();
-	SettingsBus.addEventListener('theme-change', updateBackgroundColor);
+	updateBoardAccent();
+	SettingsBus.addEventListener('theme-change', updateBoardAccent);
 
 	// [DEBUGGING] Instantly open the settings dropdown on page refresh
 	// openSettingsDropdown();
@@ -151,8 +151,8 @@ function didEventClickAnyDropdown(event: MouseEvent | TouchEvent): boolean {
 	return clickedDropdown;
 }
 
-/** Updates the stylesheet colors --c-tile and --c-tile-2 based on the current theme. */
-function updateBackgroundColor(): void {
+/** Matches --c-board-accent and --c-board-accent-bright to the current board theme. */
+function updateBoardAccent(): void {
 	const boardColor = preferences.getBoardColor();
 	const lightTiles = themes.getPropertyOfTheme(boardColor, 'lightTiles');
 	const darkTiles = themes.getPropertyOfTheme(boardColor, 'darkTiles');
@@ -167,7 +167,7 @@ function updateBackgroundColor(): void {
 
 	const cssSwitch = colorutil.rgbToCssString(switchR, switchG, switchB);
 
-	// Also set the --c-tile-2 property, which is just a slightly brightened version!
+	// Also set the --c-board-accent-bright property, which is just a slightly brightened version!
 	// The board editor uses this for the background of selected tools.
 
 	// Convert to HSL Color
@@ -184,8 +184,8 @@ function updateBackgroundColor(): void {
 	// Set CSS properties
 
 	const root = document.documentElement;
-	root.style.setProperty('--c-tile', cssSwitch);
-	root.style.setProperty('--c-tile-2', cssBackground);
+	root.style.setProperty('--c-board-accent', cssSwitch);
+	root.style.setProperty('--c-board-accent-bright', cssBackground);
 }
 
 export default {};

@@ -10,13 +10,13 @@
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MovePacket } from '../../../../../shared/chess/util/typeschemas.js';
 import type { GameStateFull } from '../../../../../shared/transport/clientbound.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 import type { MoveRecord, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
+import type { MovePacket, GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 
-import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
+import gamerules from '../../../../../shared/chess/util/gamerules.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 
@@ -57,12 +57,11 @@ function handleGameState(
 
 	onlinegame.setParticipantState(message.participantState);
 
-	// Must be set before editing the clocks. Overwriting a conclusion we derived locally with
-	// undefined is intended — online games never conclude off ours (it's set only so the move
-	// list can render '#'); the server's own conclusion message follows right behind this.
+	// Forwarding sets only a forwarded move's conclusion. This also covers one reached after the
+	// last move (e.g. resignation), or when no moves were forwarded because ours already matched.
 	gamefile.gameConclusion = claimedGameConclusion;
 
-	// Adjust the timer whos turn it is depending on ping.
+	// Adjust the timer whose turn it is depending on ping.
 	movesendreceive.applyClockValues(gamefile, message.clockValues);
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
@@ -94,10 +93,8 @@ function synchronizeMovesList(
 	claimedGameConclusion: GameConclusion | undefined,
 	forceSync: boolean,
 ): boolean {
-	// console.log("Resyncing...");
-
-	/** The index of the lastest move in the game we agree with the server on. -1 = starting position. */
-	const latestMatchingMoveIndex = findLastestMatchingMoveIndex(gamefile.moves, moves);
+	/** The index of the latest move in the game we agree with the server on. -1 = starting position. */
+	const latestMatchingMoveIndex = findLatestMatchingMoveIndex(gamefile.moves, moves);
 
 	// Early exit case. If the server's moves list is a strict prefix of ours, and every move
 	// it's missing is one we're allowed to submit, don't modify our moves — just submit them.
@@ -111,7 +108,7 @@ function synchronizeMovesList(
 		serverIsBehindUs &&
 		mayWeSubmitMovesFrom(gamefile, moves.length)
 	) {
-		console.log(`Submitting the ${gamefile.moves.length - moves.length} move(s) the server is behind on after resyncing..`); // prettier-ignore
+		console.log(`Submitting the ${gamefile.moves.length - moves.length} move(s) the server is behind on after resyncing.`); // prettier-ignore
 		movesendreceive.submitMovesFrom(gamefile, moves.length);
 		return true;
 	}
@@ -128,6 +125,14 @@ function synchronizeMovesList(
 		aChangeWasMade = true;
 	}
 
+	/** The conclusion the server's last move reached. Non-move-triggered ones (e.g. resignation) came after it. */
+	const lastMoveConclusion =
+		claimedGameConclusion &&
+		winconutil.isConclusionMoveTriggered(claimedGameConclusion.condition)
+			? claimedGameConclusion
+			: undefined;
+	const validated = onlinegame.isValidated(gamefile);
+
 	let opponentPlayedIllegalMove: boolean = false;
 	/** Whether or not we forwarded at least one of OUR OWN moves the server had that we didn't. */
 	let atleastOneOfOurMovesWasForwarded: boolean = false;
@@ -138,18 +143,19 @@ function synchronizeMovesList(
 		for (let i = latestMatchingMoveIndex + 1; i < moves.length; i++) {
 			// Incrementally add the server's correct moves to our own moves list
 			const isLastMove = i === moves.length - 1;
-			const playerOfMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
+			const playerOfMove = gamerules.getColorThatPlayedMoveIndex(gamefile.gameRules, i);
 			const isOpponentMove = playerOfMove !== ourColor;
 
 			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
 			// Convert the move from compact short format "x,y>x,y=N" to JSON.
-			// Gauranteed by the server to be parsable.
+			// Guaranteed by the server to be parsable.
 			const moveTagged: MoveTagged = icnmoves.parseTokenMove(thisShortmove.token);
 
 			if (isOpponentMove) {
 				// Perform legality checks
 				// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
-				const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, claimedGameConclusion); // prettier-ignore
+				const conclusion = validated ? 'trusted' : isLastMove ? lastMoveConclusion : undefined; // prettier-ignore
+				const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, conclusion); // prettier-ignore
 				// Report cheating if the server allows us
 				movesendreceive.checkAndReportIllegalOpponentMove(gamefile, moveValidationResult, thisShortmove.token, i + 1); // prettier-ignore
 				if (!moveValidationResult.valid) {
@@ -160,9 +166,8 @@ function synchronizeMovesList(
 				atleastOneOfOurMovesWasForwarded = true;
 			}
 
-			movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
-				doGameOverChecks: isLastMove,
-			}); // Automatically cancels animations of forwarded moves in previous loops
+			// Automatically cancels animations of forwarded moves in previous loops
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, isLastMove ? lastMoveConclusion : undefined); // prettier-ignore
 
 			// Our own moves aren't dispatched here: 'user-move-played' would
 			// wrongly re-trigger sendMove (we're already back in sync).
@@ -194,6 +199,18 @@ function synchronizeMovesList(
 }
 
 /**
+ * Finds the latest move index at which our moves and the server's moves match. Returns -1 if we only agree on the starting position.
+ * @param serverMoves - The server's moves list in compact form: `[{ token: '1,2>3,4' }, { token: '5,6>7,8Q' }]`
+ */
+function findLatestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MovePacket[]): number {
+	if (ourMoves.length === 0) return -1; // We only agree with the starting position
+	for (let i = 0; i < ourMoves.length; i++) {
+		if (ourMoves[i]!.token !== serverMoves[i]?.token) return i - 1; // We agree up to the previous move, but not this one
+	}
+	return ourMoves.length - 1; // We agree with all
+}
+
+/**
  * Whether we're authorized to submit every one of our moves from `startIndex` onward.
  * In engine games we submit both colors' moves, so always. Otherwise only our own moves,
  * and since colors alternate that can only ever be the single trailing move.
@@ -202,21 +219,9 @@ function mayWeSubmitMovesFrom(gamefile: GameFile, startIndex: number): boolean {
 	if (window.gamePageData.engineGame) return true;
 	return (
 		startIndex === gamefile.moves.length - 1 &&
-		moveutil.getColorThatPlayedMoveIndex(gamefile, startIndex) === gamesession.getRole()
+		gamerules.getColorThatPlayedMoveIndex(gamefile.gameRules, startIndex) ===
+			gamesession.getRole()
 	);
-}
-
-/**
- * Finds the latest move index at which our moves and the server's moves match. Returns -1 if we only agree on the starting position.
- * @param ourMoves - Our moves list in compact form: `['1,2>3,4','5,6>7,8Q']`
- * @param serverMoves - The server's moves list in compact form: `[{ token: '1,2>3,4' }, { token: '5,6>7,8Q' }]`
- */
-function findLastestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MovePacket[]): number {
-	if (ourMoves.length === 0) return -1; // We only agree with the starting position
-	for (let i = 0; i < ourMoves.length; i++) {
-		if (ourMoves[i]!.token !== serverMoves[i]?.token) return i - 1; // We agree up to the previous move, but not this one
-	}
-	return ourMoves.length - 1; // We agree with all
 }
 
 // Exports ---------------------------------------------------------------------

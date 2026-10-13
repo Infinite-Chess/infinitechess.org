@@ -22,10 +22,10 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bimath from '../../util/math/bimath.js';
 import vectors from '../../util/math/vectors.js';
-import typeutil from '../util/typeutil.js';
 import moveutil from './moveutil.js';
 import geometry from '../../util/math/geometry.js';
 import bdcoords from '../../util/bdcoords.js';
+import gamerules from '../util/gamerules.js';
 import boardutil from './boardutil.js';
 import coordutil from '../../util/coordutil.js';
 import movepiece from './movepiece.js';
@@ -34,10 +34,10 @@ import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from './gamefileutility.js';
-import { players as p } from '../util/typeutil.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
+import typeutil, { players as p } from '../util/typeutil.js';
 
-// Functions -------------------------------------------------------------------
+// Check Resolution ------------------------------------------------------------
 
 /**
  * Deletes individual and sliding moves from the provided LegalMoves object that,
@@ -60,7 +60,10 @@ function removeCheckInvalidMoves(boardsim: Board, pieceSelected: Piece, moves: L
 
 	// The stored checks are against whoever's turn it is at the viewed ply.
 	// The other player just moved, so can't be in check.
-	const whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex);
+	const whosTurn = gamerules.getWhosTurnAtMoveIndex(
+		boardsim.gameRules,
+		boardsim.state.local.moveIndex,
+	);
 	const existingChecks = color === whosTurn ? boardsim.state.local.checks : [];
 
 	// There's a couple type of moves that put you in check:
@@ -71,6 +74,41 @@ function removeCheckInvalidMoves(boardsim: Board, pieceSelected: Piece, moves: L
 
 	// 2. Individual moves. We can iterate through these and use checkdetection.detect() to test them.
 	removeCheckInvalidMoves_Individual(boardsim, moves.individual, pieceSelected, color);
+}
+
+/**
+ * Deletes sliding moves from the provided legal moves object that are illegal (i.e. they result in check).
+ * This can happen if they don't address an existing check, OR they open a discovered attack on your king.
+ *
+ * If finitely many moves of a slide protect against check, the slide is still deleted, and each
+ * one is added to the legal individual moves.
+ * @param moves - The precalculated legalMoves object for a piece.
+ * @param piece - The piece of which the running legal moves are for.
+ * @param color - The color of the player the piece belongs to.
+ * @param existingChecks - The checks `color` is already in.
+ */
+function removeCheckInvalidMoves_Sliding(
+	boardsim: Board,
+	moves: LegalMoves,
+	piece: Piece,
+	color: Player,
+	existingChecks: CheckInfo[],
+): void {
+	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to begin with.
+
+	const rawType = typeutil.getRawType(piece.type);
+	const isRoyal = typeutil.royals.includes(rawType);
+
+	// There are 3 ways a sliding move can put you in check...
+
+	// 1. The piece making the sliding move IS A ROYAL itself (royalqueen) and it moves into check.
+	if (isRoyal) moves.brute = true; // Flag the sliding moves to brute force check each move to see if it results in check, disallowing it if so.
+
+	// 2. By not blocking, dodging, or capturing the attacker of an already-existing check.
+	addressChecks(moves, piece.coords, isRoyal, existingChecks);
+
+	// 3. By opening a new discovered attack on one of our royals.
+	addressPins(boardsim, moves, piece, color, isRoyal, existingChecks);
 }
 
 /**
@@ -98,40 +136,7 @@ function removeCheckInvalidMoves_Individual(
 	}
 }
 
-/**
- * Deletes sliding moves from the provided legal moves object that are illegal (i.e. they result in check).
- * This can happen if they don't address an existing check, OR they open a discovered attack on your king.
- *
- * If finitely many moves of a slide protect against check, the slide is still deleted, and each
- * one is added to the legal individual moves.
- * @param moves - The precalculated legalMoves object for a piece.
- * @param piece - The piece of which the running legal moves are for.
- * @param color - The color of the player the piece belongs to.
- * @param existingChecks - The checks `color` is already in.
- */
-function removeCheckInvalidMoves_Sliding(
-	boardsim: Board,
-	moves: LegalMoves,
-	piece: Piece,
-	color: Player,
-	existingChecks: CheckInfo[],
-): void {
-	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to being with.
-
-	const rawType = typeutil.getRawType(piece.type);
-	const isRoyal = typeutil.royals.includes(rawType);
-
-	// There are 3 ways a sliding move can put you in check...
-
-	// 1. The piece making the sliding move IS A ROYAL itself (royalqueen) and it moves into check.
-	if (isRoyal) moves.brute = true; // Flag the sliding moves to brute force check each move to see if it results in check, disallowing it if so.
-
-	// 2. By not blocking, dodging, or capturing the attacker of an already-existing check.
-	addressChecks(moves, piece.coords, isRoyal, existingChecks);
-
-	// 3. By opening a new discovered attack on one of our royals.
-	addressPins(boardsim, moves, piece, color, isRoyal, existingChecks);
-}
+// Existing Checks -------------------------------------------------------------
 
 /**
  * Collapses all sliding moves that don't have a chance at addressing
@@ -225,8 +230,6 @@ function addressChecks(
 		}
 	}
 
-	// ---------------------------
-
 	// (Deferred) Add attacker captures as individual moves, but only for those whose slide was
 	// collapsed during steps 2 or 3. If the slide was retained (e.g. a colinear check on the royal),
 	// the slide already covers the capture — adding an individual would be a duplicate.
@@ -236,6 +239,8 @@ function addressChecks(
 		}
 	}
 }
+
+// Pins ------------------------------------------------------------------------
 
 /**
  * Deletes any sliding moves from the provided running legal moves that
@@ -340,49 +345,23 @@ function addressPins(
 	boardchanges.runChanges(boardsim, deleteChange, boardchanges.CHANGE_FUNCS, false); // Add the piece back
 }
 
+// Slide Collapsing ------------------------------------------------------------
+
 /**
- * Restricts the slide `slideDir` in `moves.sliding` to the zone strictly between `royal` and `attacker`,
- * intersected with the slide's current physical limits. Deletes the slide if no overlap remains.
- * Both the royal and attacker squares are excluded; captures are appended as individual moves by the caller.
- * @param direction - How much the piece moves in each step of the slide.
- * @param colinear - If true, sets `moves.brute` so every surviving square is verified by simulation.
+ * Sorts checks by `path` first (guaranteed non-arbitrary interpose squares),
+ * then non-colinear sliding checks (to avoid adding the `brute` flag whenever possible),
+ * then colinear sliding checks last.
+ * Mutating. Sorts in place.
  */
-function restrictSlideBetweenSquares(
-	moves: LegalMoves,
-	slideDir: Vec2Key,
-	direction: Vec2,
-	pieceCoords: Coords,
-	royal: Coords,
-	attacker: Coords,
-	colinear: boolean,
-): void {
-	const sliding = moves.sliding!;
-	const axis: 0 | 1 = direction[0] === 0n ? 1 : 0;
-	const stepsToRoyal: BigDecimal = bd.divide(
-		bd.fromBigInt(royal[axis] - pieceCoords[axis]),
-		bd.fromBigInt(direction[axis]),
-	);
-	const stepsToAttacker: BigDecimal = bd.divide(
-		bd.fromBigInt(attacker[axis] - pieceCoords[axis]),
-		bd.fromBigInt(direction[axis]),
-	);
-	// Both endpoints are excluded; captures are handled as individual moves.
-	// `floor(min) + 1` and `ceil(max) - 1` give correct integer bounds even when step counts are fractional (e.g. direction [2,0]).
-	const zoneMin = bd.toBigInt(bd.floor(bd.min(stepsToRoyal, stepsToAttacker))) + 1n;
-	const zoneMax = bd.toBigInt(bd.ceil(bd.max(stepsToRoyal, stepsToAttacker))) - 1n;
-	if (zoneMin > zoneMax) {
-		delete sliding[slideDir]; // Zone is empty.
-		return;
-	}
-	const currentLimits = sliding[slideDir]!;
-	const newMin = currentLimits[0] === null ? zoneMin : bimath.max(currentLimits[0], zoneMin);
-	const newMax = currentLimits[1] === null ? zoneMax : bimath.min(currentLimits[1], zoneMax);
-	if (newMin > newMax) {
-		delete sliding[slideDir]; // Slide can't reach the zone.
-		return;
-	}
-	sliding[slideDir] = [newMin, newMax];
-	if (colinear) moves.brute = true;
+function sortChecks(checks: CheckInfo[]): CheckInfo[] {
+	return checks.sort((a, b) => {
+		const rank = (c: CheckInfo): number => {
+			if (!c.slidingCheck) return 0; // path check
+			if (!c.colinear) return 1; // non-colinear sliding check
+			return 2; // colinear sliding check
+		};
+		return rank(a) - rank(b);
+	});
 }
 
 /**
@@ -462,12 +441,56 @@ function appendBlockingMoves(
 }
 
 /**
+ * Restricts the slide `slideDir` in `moves.sliding` to the zone strictly between `royal` and `attacker`,
+ * intersected with the slide's current physical limits. Deletes the slide if no overlap remains.
+ * Both the royal and attacker squares are excluded; captures are appended as individual moves by the caller.
+ * @param direction - How much the piece moves in each step of the slide.
+ * @param colinear - If true, sets `moves.brute` so every surviving square is verified by simulation.
+ */
+function restrictSlideBetweenSquares(
+	moves: LegalMoves,
+	slideDir: Vec2Key,
+	direction: Vec2,
+	pieceCoords: Coords,
+	royal: Coords,
+	attacker: Coords,
+	colinear: boolean,
+): void {
+	const sliding = moves.sliding!;
+	const axis: 0 | 1 = direction[0] === 0n ? 1 : 0;
+	const stepsToRoyal: BigDecimal = bd.divide(
+		bd.fromBigInt(royal[axis] - pieceCoords[axis]),
+		bd.fromBigInt(direction[axis]),
+	);
+	const stepsToAttacker: BigDecimal = bd.divide(
+		bd.fromBigInt(attacker[axis] - pieceCoords[axis]),
+		bd.fromBigInt(direction[axis]),
+	);
+	// Both endpoints are excluded; captures are handled as individual moves.
+	// `floor(min) + 1` and `ceil(max) - 1` give correct integer bounds even when step counts are fractional (e.g. direction [2,0]).
+	const zoneMin = bd.toBigInt(bd.floor(bd.min(stepsToRoyal, stepsToAttacker))) + 1n;
+	const zoneMax = bd.toBigInt(bd.ceil(bd.max(stepsToRoyal, stepsToAttacker))) - 1n;
+	if (zoneMin > zoneMax) {
+		delete sliding[slideDir]; // Zone is empty.
+		return;
+	}
+	const currentLimits = sliding[slideDir]!;
+	const newMin = currentLimits[0] === null ? zoneMin : bimath.max(currentLimits[0], zoneMin);
+	const newMax = currentLimits[1] === null ? zoneMax : bimath.min(currentLimits[1], zoneMax);
+	if (newMin > newMax) {
+		delete sliding[slideDir]; // Slide can't reach the zone.
+		return;
+	}
+	sliding[slideDir] = [newMin, newMax];
+	if (colinear) moves.brute = true;
+}
+
+/**
  * Takes a `path` special flag of a checking attacker piece, and appends any legal individual
  * blocking moves our selected piece can land on.
  * Should NOT be called if the piece with the legal moves is a royal piece.
  * @param path - Individual move's `path` special move flag, with guaranteed at least 3 waypoints within it.
  * @param legalMoves - The precalculated legal moves of the selected piece
- * @param selectedPieceCoords
  */
 function appendPathBlockingMoves(
 	path: MoveSpecialTags['path'],
@@ -477,9 +500,9 @@ function appendPathBlockingMoves(
 	/**
 	 * How do we tell if our selected piece can block an individual move with a path (Rose piece)?
 	 *
-	 * Whether it can move to any of the waypoints in the path (exluding start and end waypoints).
+	 * Whether it can move to any of the waypoints in the path (excluding start and end waypoints).
 	 * The reason we exclude the start waypoint is because we already check earlier
-	 * if it's legal to capure the attacker.
+	 * if it's legal to capture the attacker.
 	 */
 
 	for (let i = 1; i < path.length - 1; i++) {
@@ -500,22 +523,7 @@ function appendMoveToIndividualsAvoidDuplicates(individuals: CoordsTagged[], mov
 	}
 }
 
-/**
- * Sorts checks by `path` first (guaranteed non-arbitrary interpose squares),
- * then non-colinear sliding checks (to avoid adding the `brute` flag whenever possible),
- * then colinear sliding checks last.
- * Mutating. Sorts in place.
- */
-function sortChecks(checks: CheckInfo[]): CheckInfo[] {
-	return checks.sort((a, b) => {
-		const rank = (c: CheckInfo): number => {
-			if (!c.slidingCheck) return 0; // path check
-			if (!c.colinear) return 1; // non-colinear sliding check
-			return 2; // colinear sliding check
-		};
-		return rank(a) - rank(b);
-	});
-}
+// Move Simulation -------------------------------------------------------------
 
 /**
  * Simulates moving the piece to the destination coords,
@@ -539,10 +547,7 @@ function isMoveCheckInvalid(
 	return getSimulatedCheck(boardsim, moveTagged, color).check;
 }
 
-/**
- * Simulates a move to get the check
- * @returns false if the move does not result in check, otherwise a list of the coords of all the royals in check.
- */
+/** Simulates a move, then detects whether it leaves `colorToTestInCheck` in check. */
 function getSimulatedCheck(
 	boardsim: Board,
 	moveTagged: MoveTagged,
@@ -556,7 +561,9 @@ function getSimulatedCheck(
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Check Resolution
 	removeCheckInvalidMoves,
+	// Move Simulation
 	isMoveCheckInvalid,
 	getSimulatedCheck,
 };

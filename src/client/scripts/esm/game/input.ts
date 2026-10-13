@@ -571,9 +571,10 @@ function CreateInputListener(
 		// Scroll wheel tracking
 		addListener(element, 'wheel', ((e: WheelEvent): void => {
 			if (element instanceof HTMLElement && e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
+			// The board zooms itself, so a scrollable page mustn't scroll too.
+			if (element instanceof HTMLElement) e.preventDefault();
 			atleastOneInputThisFrame = true;
 			wheelDelta = e.deltaY;
-			// console.log("Scroll wheel: ", wheelDelta);
 		}) as EventListener);
 
 		// Prevent the context menu on right click

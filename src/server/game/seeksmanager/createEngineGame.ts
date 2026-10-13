@@ -42,7 +42,7 @@ function create(ws: CustomWebSocket, body: CreateEngineGameMessage): void {
 	// Unreachable via the client (it validates first), so reaching here is a hand-crafted message.
 	if (
 		body.strengthLevel > engineregistry.REGISTRY[ONLINE_ENGINE].maxStrengthLevel ||
-		(body.variant.kind === 'preset' && !apeironcard.SUPPORTED_VARIANTS.has(body.variant.code))
+		(body.variant.kind === 'preset' && apeironcard.UNSUPPORTED_VARIANTS.has(body.variant.code))
 	) {
 		logEvents.addAndPrint('Player tried to create an engine game with invalid properties!', 'errLog'); // prettier-ignore
 		return;

@@ -16,9 +16,9 @@ import type { MovePacket } from '../../chess/util/typeschemas.js';
 import type { MoveSpecialTags, SpecialTags } from './moveutil.js';
 
 import state from './state.js';
-import typeutil from '../util/typeutil.js';
 import moveutil from './moveutil.js';
 import icnmoves from './icn/icnmoves.js';
+import gamerules from '../util/gamerules.js';
 import coordutil from '../../util/coordutil.js';
 import boardutil from './boardutil.js';
 import legalmoves from './legalmoves.js';
@@ -29,7 +29,7 @@ import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
 import movevalidation from './movevalidation.js';
 import organizedpieces from './organizedpieces.js';
-import { rawTypes as r } from '../util/typeutil.js';
+import typeutil, { rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -287,9 +287,7 @@ function hasCastlingPartner(
 	return hasValidPartner;
 }
 
-/**
- * Increments the boardsim's moveRuleStatus property, if the move-rule is in use.
- */
+/** Queues the move's change to the move-rule counter, if the move-rule is in use. */
 function queueIncrementMoveRuleStateChange(boardsim: Board, move: MoveFull): void {
 	if (boardsim.gameRules.moveRule === undefined) return; // Not using the move-rule
 
@@ -328,7 +326,7 @@ function makeMove(boardsim: Board, move: MoveFull): void {
 function applyMove(boardsim: Board, move: MoveFull, forward: boolean, updateTurn: boolean): void {
 	boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the boardsim moveIndex
 	// Needs to be after moveIndex is updated.
-	if (updateTurn) boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex); // prettier-ignore
+	if (updateTurn) boardsim.whosTurn = gamerules.getWhosTurnAtMoveIndex(boardsim.gameRules, boardsim.state.local.moveIndex); // prettier-ignore
 
 	// Stops stupid missing piece errors
 	const indexToApply = boardsim.state.local.moveIndex + Number(!forward);
@@ -351,11 +349,11 @@ function applyEdit(boardsim: Board, edit: Edit, forward: boolean): void {
 
 /**
  * Tests if the boardsim is currently in check,
- * then creates and set's the game state to reflect that.
+ * then creates and sets the game state to reflect that.
  */
 function createCheckState(boardsim: Board, move: MoveFull): void {
-	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(
-		boardsim,
+	const whosTurnItWasAtMoveIndex = gamerules.getWhosTurnAtMoveIndex(
+		boardsim.gameRules,
 		boardsim.state.local.moveIndex,
 	);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
@@ -375,14 +373,12 @@ function createCheckState(boardsim: Board, move: MoveFull): void {
 }
 
 /**
- * Accepts a move list in the most comapact form: `['1,2>3,4','10,7>10,8Q']`,
- * reconstructs each move's properties, INCLUDING special tags, and makes that move
- * in the game. At each step it has to calculate what legal special
+ * Accepts a move list, reconstructs each move's properties, INCLUDING special tags,
+ * and makes that move in the game. At each step it has to calculate what legal special
  * moves are possible, so it can pass on those flags.
  *
  * **THROWS AN ERROR** if any move during the process is in an invalid format.
- * @param boardsim - The boardsim
- * @param moves - The list of moves to add to the game, each in the most compact format: `['1,2>3,4','10,7>10,8Q']`
+ * @param moves - The moves to add to the game, each carrying its compact token: `1,2>3,4`, `10,7>10,8=Q`
  * @param validateMoves - If true, throws an {@link IllegalMoveError} if any move is illegal.
  */
 function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?: boolean): void {
@@ -396,7 +392,7 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 		if (validateMoves) {
 			const validationResult = movevalidation.isTokenMoveLegal(boardsim, shortmove.token);
 			if (!validationResult.valid) {
-				throw new IllegalMoveError(`Move ${i + 1} is illegal: ${shortmove.token}. Reason: ${validationResult.reason}`); // prettier-ignore
+				throw new IllegalMoveError(`${moveutil.describePly(i)} is illegal: ${shortmove.token}. Reason: ${validationResult.reason}`); // prettier-ignore
 			}
 		}
 
@@ -409,19 +405,17 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 		if (validateMoves && !isLastIteration) {
 			const conclusion = wincondition.getGameConclusion(boardsim);
 			if (conclusion)
-				throw new IllegalMoveError(`Moves cannot come after game ends. Move ${i + 1} should have concluded game by ${JSON.stringify(conclusion)}.`); // prettier-ignore
+				throw new IllegalMoveError(`Moves cannot come after game ends. ${moveutil.describePly(i)} should have concluded game by ${JSON.stringify(conclusion)}.`); // prettier-ignore
 		}
 	}
 }
 
 /**
  * Accepts a move in the most compact short form, and constructs the whole MoveFull object.
- * This has to calculate the piece's legal special
- * moves to be able to deduce if the move was a special move.
- *
- * **Returns undefined** if there was an error anywhere in the conversion.
- *
+ * This has to calculate the piece's legal special moves to be able to deduce if the move
+ * was a special move.
  * This does NOT perform legality checks, so still do that afterward.
+ * @throws If we're not viewing the latest move, the token is malformed, or no piece stands on its start square.
  */
 function calculateMoveFromPacket(boardsim: Board, movePacket: MovePacket): MoveFull {
 	if (!moveutil.areWeViewingLatestMove(boardsim))
@@ -501,9 +495,7 @@ function goToMove(boardsim: Board, index: number, callback: (move: MoveFull) => 
 	}
 }
 
-/**
- * Starts with `s`, steps it by +-`progress` towards `e`, then returns that number.
- */
+/** Starts with `s`, steps it by +-`progress` towards `e`, then returns that number. */
 function moveTowards(s: number, e: number, progress: number): number {
 	return s + Math.sign(e - s) * Math.min(Math.abs(e - s), progress);
 }

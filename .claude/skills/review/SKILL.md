@@ -43,7 +43,7 @@ Cross-check your file and line counts against `--stat` (or the PR's numbers).
 
 Then read **in full** — an earlier read this session doesn't count — every file the diff touches,
 **plus the neighbouring code it should have reused**, so you judge against reality rather than the
-diff's framing. Read `docs/systems/IMPORT_RULES.md`, and any system doc rule 26 routes the touched
+diff's framing. Read `docs/systems/IMPORT_RULES.md`, and any system doc rule 27 routes the touched
 area to.
 
 ## 3. Judge the approach
@@ -59,6 +59,10 @@ Otherwise, before any line-level review, ask whether the change should exist in 
 - Does it build a parallel system where an existing one should have been extended, or a new
   abstraction where an existing mechanism already fits?
 - Is it the correct fix at the root, or a symptom patch?
+- Does each new module keep its contract (rule 20)? Judge what it is by what it does, not by who
+  calls it today: having one caller doesn't make it part of that caller. Write the contract in one
+  sentence without naming a caller, then build an input it allows that no current caller sends, and
+  trace it.
 
 Size is not an argument for merging; the author's effort is sunk cost. **If the approach is wrong,
 stop here.** Don't polish code that shouldn't exist. Report the verdict with the alternative and its
@@ -107,7 +111,7 @@ recommendation instead.
 
 **Working tree or commits.** Make every fix that carries no design decision without asking, per
 rule 6. Fixes land uncommitted in the working tree for the user to review; get the checks passing
-per rule 33. Report briefly what you changed: one line per fix, linked to its file and line, grouped
+per rule 35. Report briefly what you changed: one line per fix, linked to its file and line, grouped
 so it scans.
 
 **PR.** Change nothing in the code. Write the full review to a markdown file in the project root and

@@ -208,7 +208,8 @@ function addLapseVariation(review: MoveReview): void {
 function updateProgress(): void {
 	if (element_Progress.classList.contains('hidden')) return;
 	const { evaluated, total } = gamereview.getSummary();
-	const pct = total > 0 ? (evaluated / total) * 100 : 0;
+	// Starting counts as the first step, so the bar never looks frozen before the first result.
+	const pct = ((evaluated + 1) / (total + 1)) * 100;
 	element_ProgressFill.style.width = `${pct}%`;
 	element_ProgressText.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total}`;
 }
@@ -654,8 +655,7 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 	if (cp === undefined && !outOfBounds) return element_GraphTooltip.classList.add('hidden');
 
 	const node = index > 0 ? gamereview.getMainlineNodes()[index - 1] : undefined;
-	const moveNumber = index > 0 ? Math.floor((index - 1) / 2) + 1 : 0;
-	const prefix = index === 0 ? '' : `${moveNumber}${(index - 1) % 2 === 0 ? '.' : '...'} `;
+	const prefix = index === 0 ? '' : `${guimovetree.formatMoveIndex(index - 1)} `;
 	const move = node?.move
 		? icnmoves.getShortFormMoveFromMove(node.move, {
 				compact: false,

@@ -2,24 +2,22 @@
 
 /**
  * Detects draws by insufficient material: positions whose pieces can never be arranged into a
- * checkmate, helpmates included. Decided by the generated table of smallest mating piece sets in
- * matingsets.ts (how it was generated, what is proven, and its known holes:
- * scripts/insuffmat/README.md), plus a list of proven draws above the table's piece cap.
+ * checkmate, helpmates included. Decides when a position qualifies and reads its material, every
+ * promotion outcome included; whether that material can mate is materials.ts's.
  */
 
-import type { Coords } from '../../../util/coordutil.js';
 import type { MoveFull } from '../movepiece.js';
 import type { GameRules } from '../../util/gamerules.js';
 import type { LoadedVariant } from '../gamefile.js';
 import type { GameConclusion } from '../../util/typeschemas.js';
+import type { BoardKind, Material } from './materials.js';
 import type { OrganizedPiecesBase } from '../organizedpieces.js';
 
 import bimath from '../../../util/math/bimath.js';
 import moveutil from '../moveutil.js';
 import boardutil from '../boardutil.js';
 import gamerules from '../../util/gamerules.js';
-import matingsets from './matingsets.js';
-import icnposition from '../icn/icnposition.js';
+import materials from './materials.js';
 import variantmodule from '../variantmodule.js';
 import typeutil, { Player, RawType } from '../../util/typeutil.js';
 import { rawTypes as r, ext as e, players as p } from '../../util/typeutil.js';
@@ -33,15 +31,6 @@ type InsuffmatBoard = {
 	pieces: OrganizedPiecesBase;
 	variant?: LoadedVariant;
 };
-
-/** Which table applies: bounded when the world border is close enough to assist checkmate. */
-type BoardKind = 'unbounded' | 'bounded';
-
-/**
- * A collection of pieces, counted by code: the piece's ICN abbreviation (uppercase white,
- * lowercase black), with bishops suffixed by their square color, 0 or 1.
- */
-type Material = Map<string, number>;
 
 // Constants -------------------------------------------------------------------
 
@@ -59,31 +48,8 @@ const BOUND_FOR_WORLD_BORDER_CONSIDERATION = 1_000_000n;
  */
 const MIN_BOUNDED_BOARD_WIDTH = 8n;
 
-/** The most promotable pawns whose every promotion outcome is checked. With more, insuffmat is never declared. */
-const MAX_PROMOTABLE_PAWNS = 2;
-
-/** The pieces of ordinary chess: with obstacles on the board, insuffmat is only declared when every piece is one. */
+/** The pieces of ordinary chess: with obstacles or gargoyles on the board, insuffmat is only declared when every piece is one. */
 const CLASSICAL_RAW_TYPES: RawType[] = [r.KING, r.QUEEN, r.ROOK, r.BISHOP, r.KNIGHT, r.PAWN];
-
-/** The smallest mating piece sets of each board kind, by canonical key. */
-const MATING_SETS: Record<BoardKind, Set<string>> = {
-	unbounded: new Set(matingsets.unbounded.split(' ')),
-	bounded: new Set(matingsets.bounded.split(' ')),
-};
-
-/**
- * Proven draws with more pieces than the table's cap, each as the most of each piece it allows
- * (Infinity = any number). Black is the side to be mated. Each holds in either color orientation.
- */
-const PROVEN_DRAWS: Record<BoardKind, readonly Record<string, number>[]> = {
-	unbounded: [
-		// For the practice checkmate 1K2N6B-1k losing a knight. Bishops on the king's color never attack its 4
-		// orthogonal neighbors, of which the white king covers at most 1 and the knight 2. Bishops on the other
-		// color never check, so the knight must, covering at most 1 of the 4 diagonal neighbors to the king's 2.
-		{ K: 1, B0: Infinity, N: 1, k: 1 },
-	],
-	bounded: [],
-};
 
 // Detection -------------------------------------------------------------------
 
@@ -98,7 +64,6 @@ function detect(boardsim: InsuffmatBoard): GameConclusion | undefined {
 	if (boardKind === undefined) return undefined;
 
 	const { base, promotablePlayers } = readBoard(boardsim);
-	if (promotablePlayers.length > MAX_PROMOTABLE_PAWNS) return undefined;
 	const promotionPieces = boardsim.gameRules.promotion?.pieces ?? [];
 	const outcomes = promotablePlayers.map((player) =>
 		getPawnOutcomes([r.PAWN, ...promotionPieces], player),
@@ -106,7 +71,7 @@ function detect(boardsim: InsuffmatBoard): GameConclusion | undefined {
 
 	// A draw only if every promotion outcome is one.
 	for (const material of combineOutcomes(base, outcomes))
-		if (!isInsufficient(material, boardKind)) return undefined;
+		if (!materials.isInsufficient(material, boardKind)) return undefined;
 	return { victor: null, condition: 'insuffmat' };
 }
 
@@ -135,8 +100,9 @@ function doesPositionSupportInsuffmat(boardsim: InsuffmatBoard): boolean {
 	if (gameRules.slideLimit !== undefined) return false;
 	if (variantmodule.hasCustomMovement(boardsim.variant?.mod)) return false;
 	if (boardutil.getPieceCountOfType(boardsim.pieces, r.VOID + e.N) > 0) return false;
-	// Obstacles can too, but tests found no such mate in classical material with a king each (README).
-	if (boardutil.getPieceCountOfType(boardsim.pieces, r.OBSTACLE + e.N) === 0) return true;
+	// Obstacles and gargoyles, which act alike, can too, but tests found no such mate in classical material
+	// with a king each (README).
+	if (boardutil.getPieceCountOfColor(boardsim.pieces, p.NEUTRAL) === 0) return true;
 	return isClassicalWithKings(boardsim);
 }
 
@@ -188,12 +154,12 @@ function readBoard(boardsim: InsuffmatBoard): { base: Material; promotablePlayer
 	for (const idx of pieces.coords.values()) {
 		const piece = boardutil.getDefinedPieceFromIdx(pieces, idx);
 		const [rawType, player] = typeutil.splitType(piece.type);
-		if (rawType === r.OBSTACLE) continue;
+		if (player === p.NEUTRAL) continue;
 		if (rawType === r.PAWN && canPromote(promotion, player, piece.coords[1])) {
 			promotablePlayers.push(player);
 			continue;
 		}
-		addPiece(base, getCode(piece.type, piece.coords));
+		addPiece(base, materials.getCode(piece.type, piece.coords));
 	}
 	return { base, promotablePlayers };
 }
@@ -207,12 +173,11 @@ function canPromote(promotion: GameRules['promotion'], player: Player, y: bigint
 	return ranks.length > 0; // Other players' directions are unknown, so any rank counts
 }
 
-/** The code of each piece a pawn could become. A promoted bishop's square color is unknown, so it is both. */
+/** The code of each piece a pawn could become. A promoted colorbound piece's square color is unknown, so it is both. */
 function getPawnOutcomes(rawTypes: RawType[], player: Player): string[] {
 	return rawTypes.flatMap((rawType) => {
 		const type = typeutil.buildType(rawType, player);
-		if (rawType !== r.BISHOP) return [getCode(type, [0n, 0n])];
-		return [getCode(type, [0n, 0n]), getCode(type, [0n, 1n])];
+		return [...new Set([materials.getCode(type, [0n, 0n]), materials.getCode(type, [0n, 1n])])];
 	});
 }
 
@@ -234,95 +199,9 @@ function addPiece(material: Material, code: string): void {
 	material.set(code, (material.get(code) ?? 0) + 1);
 }
 
-/** A piece's code: its ICN abbreviation, with a bishop's square color appended. */
-function getCode(type: number, coords: Coords): string {
-	const abbr = icnposition.getAbbrFromType(type);
-	if (typeutil.getRawType(type) !== r.BISHOP) return abbr;
-	return abbr + String(bimath.abs(coords[0] + coords[1]) % 2n);
-}
-
-// Table Lookup ----------------------------------------------------------------
-
-/** Whether the material can never be arranged into a checkmate, on the given board kind. */
-function isInsufficient(material: Material, boardKind: BoardKind): boolean {
-	if (PROVEN_DRAWS[boardKind].some((draw) => doesMaterialFitDraw(material, draw))) return true;
-	let pieceCount = 0;
-	for (const count of material.values()) pieceCount += count;
-	if (pieceCount > matingsets.cap[boardKind]) return false; // Beyond the table: never declared a draw
-	return !doesContainMatingSet(material, MATING_SETS[boardKind]);
-}
-
-/** Whether every piece of the material fits within the proven draw, in some orientation. */
-function doesMaterialFitDraw(material: Material, draw: Record<string, number>): boolean {
-	return getOrientations(material).some((variant) =>
-		[...variant].every(([code, count]) => count <= (draw[code] ?? 0)),
-	);
-}
-
-/** Whether some collection of the material's pieces is a listed smallest mating set. */
-function doesContainMatingSet(material: Material, matingSets: Set<string>): boolean {
-	const codes = [...material.keys()];
-	const subset: Material = new Map();
-	/** Tries every count of each code from the index on, testing each finished subset. */
-	const tryFrom = (index: number): boolean => {
-		if (index === codes.length)
-			return subset.size > 0 && matingSets.has(getCanonicalKey(subset));
-		const code = codes[index]!;
-		for (let count = 0; count <= material.get(code)!; count++) {
-			if (count === 0) subset.delete(code);
-			else subset.set(code, count);
-			if (tryFrom(index + 1)) return true;
-		}
-		subset.delete(code);
-		return false;
-	};
-	return tryFrom(0);
-}
-
-// Canonical Keys --------------------------------------------------------------
-
-/**
- * One key shared by a material and its mirror images, which can all mate equally: the smallest
- * of their serializations. matingsets.ts is keyed by it.
- */
-function getCanonicalKey(material: Material): string {
-	let best: string | undefined;
-	for (const variant of getOrientations(material)) {
-		const key = serialize(variant);
-		if (best === undefined || key < best) best = key;
-	}
-	return best!;
-}
-
-/** The material and its mirror images: colors swapped, bishop square colors swapped, and both. */
-function getOrientations(material: Material): Material[] {
-	const swapColors = (code: string): string => (code === code.toUpperCase() ? code.toLowerCase() : code.toUpperCase()); // prettier-ignore
-	const swapBishops = (code: string): string => (/^b[01]$/i.test(code) ? code[0]! + (code[1] === '0' ? '1' : '0') : code); // prettier-ignore
-	const remap = (swap: (code: string) => string): Material => new Map([...material].map(([code, count]) => [swap(code), count])); // prettier-ignore
-	return [
-		material,
-		remap(swapColors),
-		remap(swapBishops),
-		remap((code) => swapBishops(swapColors(code))),
-	];
-}
-
-/** The material as text: white's codes, then black's, each sorted and comma-separated. */
-function serialize(material: Material): string {
-	const white: string[] = [];
-	const black: string[] = [];
-	for (const [code, count] of material) {
-		const side = code === code.toUpperCase() ? white : black;
-		for (let i = 0; i < count; i++) side.push(code);
-	}
-	return `${white.sort().join(',')}/${black.sort().join(',')}`;
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
 	// Detection
 	detect,
-	// Canonical Keys
-	getCanonicalKey,
 };

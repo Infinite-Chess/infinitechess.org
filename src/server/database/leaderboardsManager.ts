@@ -203,8 +203,7 @@ function getEloOfPlayer(user_id: number, leaderboard_id: Leaderboard): Rating {
 	if (!rating_values)
 		return { value: ratingCalculation.DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
-	const confident = ratingCalculation.isRatingConfident(rating_values.rating_deviation);
-	return { value: rating_values.elo, confident };
+	return ratingCalculation.toRating(rating_values.elo, rating_values.rating_deviation);
 }
 
 /**

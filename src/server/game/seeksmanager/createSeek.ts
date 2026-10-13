@@ -89,10 +89,7 @@ function getSeekFromWebsocketMessageContents(
 
 	let rating: Rating | undefined;
 	if (ws.metadata.memberInfo.signedIn) {
-		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
-		const leaderboardId =
-			leaderboardregistry.ofVariant(messageContents.variant) ??
-			leaderboardregistry.IDS.INFINITY;
+		const leaderboardId = leaderboardregistry.ratingSourceOf(messageContents.variant);
 		rating = leaderboardsManager.getEloOfPlayer(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 

@@ -140,8 +140,8 @@ export interface MatchInfo {
 
 	/**
 	 * The ID of the timer that finalizes (locks in) the game's result after it ends. Only used by
-	 * games without server-side validation, to give a cushion for cheat reports to overturn the
-	 * result first. Can be cancelled if the game is finalized/evicted early.
+	 * cheat-reportable games, to give a cushion for cheat reports to overturn the result first.
+	 * Can be cancelled if the game is finalized/evicted early.
 	 */
 	finalizeTimeoutID?: NodeJS.Timeout;
 

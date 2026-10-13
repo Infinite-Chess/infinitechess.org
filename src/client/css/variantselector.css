@@ -38,18 +38,18 @@
 	gap: 10px;
 	width: 100%;
 	padding: 10px 14px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	border: 1px solid var(--c-border);
 	border-radius: 6px;
-	box-shadow: inset 0 1px 0 var(--c-elev-highlight);
-	color: var(--c-text-emphasis);
+	box-shadow: inset 0 1px 0 var(--c-raised-highlight);
+	color: var(--c-text-strong);
 	font-size: 15px;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
 
 .variant-display:hover {
-	border-color: var(--c-border-2);
+	border-color: var(--c-border-strong);
 }
 
 .variant-display.open {
@@ -92,9 +92,9 @@
 	right: 0;
 	z-index: 1;
 	background: var(--c-surface);
-	border: 1px solid var(--c-border-2);
+	border: 1px solid var(--c-border-strong);
 	border-radius: 6px;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+	box-shadow: 0 4px 16px var(--c-shadow);
 	display: none;
 }
 
@@ -131,7 +131,7 @@
 .variant-group-item:hover,
 .variant-list-back:hover,
 .variant-item:hover {
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 }
 
 .group-icon {
@@ -144,7 +144,7 @@
 .group-name {
 	width: 75px;
 	flex-shrink: 0;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .group-desc {
@@ -169,11 +169,11 @@
    ============================================================ */
 
 .variant-list-back {
-	border-bottom: 1px solid var(--c-border-2);
+	border-bottom: 1px solid var(--c-border-strong);
 }
 
 .variant-item {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .variant-selector .svg-eye,
@@ -188,7 +188,7 @@
 .variant-selector .svg-eye:hover,
 .variant-display .svg-pencil:hover,
 .variant-display .modifier-add:hover {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	transform: scale(1.1);
 }
 
@@ -203,7 +203,7 @@
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
 	color: var(--c-text-muted);
-	border-top: 1px solid var(--c-border-2);
+	border-top: 1px solid var(--c-border-strong);
 }
 
 /* ============================================================
@@ -222,14 +222,14 @@
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);
 	border-radius: 8px;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+	box-shadow: 0 4px 16px var(--c-shadow);
 	-webkit-tap-highlight-color: transparent;
 }
 
 .preview-tooltip-name {
 	font-size: 13px;
 	font-weight: 600;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	text-align: center;
 }
 
@@ -251,7 +251,7 @@
 	position: relative;
 	flex: 1;
 	padding: 0 10px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	border: 1px solid var(--c-border);
 	border-radius: 6px;
 	overflow: hidden;
@@ -259,7 +259,7 @@
 }
 
 .icn-input-wrap:focus-within {
-	border-color: var(--c-border-2);
+	border-color: var(--c-border-strong);
 }
 
 .icn-input {
@@ -308,7 +308,7 @@
 }
 
 .icn-held-label {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-weight: 600;
 }
 
@@ -335,7 +335,7 @@
 
 .icn-held-copy:hover,
 .icn-held-clear:hover {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 /* The clipboard, and the checkmark that replaces it. */
@@ -347,7 +347,7 @@
 /* The copy confirmation. .glyph carries no rules of its own, so each holder strokes it. */
 .icn-held-copy .glyph {
 	display: none;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	fill: none;
 	stroke: currentColor;
 	stroke-width: 3;
@@ -392,7 +392,7 @@
 .modifier-dropdown .group-icon {
 	width: 23px;
 	height: 23px;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 /* ============================================================
@@ -421,7 +421,7 @@
 	width: 33px;
 	height: 33px;
 	cursor: pointer;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .modifier-chip svg {
@@ -465,14 +465,4 @@
 
 .slide-limit-name {
 	font-size: 15px;
-}
-
-/* ========================
-   Utility classes
-   ======================== */
-
-/* Recommended for specificity, because `display` rules in here may overwrite the .hidden
-   class from global.css. Without this, the variants the engine doesn't support are visible. */
-.hidden {
-	display: none;
 }

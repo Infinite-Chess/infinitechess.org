@@ -1,8 +1,8 @@
 // src/client/scripts/esm/game/gui/guimaterial.ts
 
 /**
- * Manages the two `.material` captured-material bars on the game page: the bottom
- * bar (our POV, or white for spectators) and the top bar (the opponent, or black).
+ * Manages the two `.material` captured-material bars: the bottom bar (our POV,
+ * or white for spectators) and the top bar (the opponent, or black).
  *
  * Each bar shows only its side's *surplus* silhouettes after canceling like piece
  * types against the other side, plus a `+X` estimated point lead on the side that's

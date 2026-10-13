@@ -1,13 +1,18 @@
 // src/client/scripts/esm/views/game/onlinegame.ts
 
 /**
- * This module keeps trap of the data of the onlinegame we are currently in.
+ * The online game we're currently in: whether we're in sync with the server game, our standing
+ * with it, loading it from the server's state, and its session setup.
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { EngineGamePageInfo } from '../../../../../shared/transport/domain.js';
-import type { Additional, DatedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LongFormatOut, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
+import type {
+	Additional,
+	DatedVariant,
+	GameFile,
+} from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	GameStateFull,
 	LeanParticipantState,
@@ -17,6 +22,7 @@ import type {
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
+import servervalidation from '../../../../../shared/chess/variants/servervalidation.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import guichat from './gui/guichat.js';
@@ -40,7 +46,7 @@ import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 /** The various stages of our standing with the server game. See {@link stage}. */
 type GameStage = 'active' | 'finalized' | 'detached';
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * Whether we are in sync with the server game, and the game isn't finalized yet (excludes rematch state).
@@ -75,17 +81,19 @@ SocketBus.addEventListener('reconnect', () => {
 
 // Sync ------------------------------------------------------------------------
 
+/** Whether we're in sync with the server game. See {@link inSync}. */
 function areInSync(): boolean {
 	return inSync;
 }
 
+/** Marks whether we're in sync with the server game. See {@link inSync}. */
 function setInSync(value: boolean): void {
 	inSync = value;
 	// Being back in sync is what ends a disconnection from our perspective.
 	if (value) guidisconnect.onSelfReturn();
 }
 
-// Life Cycle -----------------------------------------------------------
+// Life Cycle ------------------------------------------------------------------
 
 /**
  * Requests to subscribe to the server game, and expects to receive a full game state.
@@ -122,7 +130,7 @@ function onDetached(): void {
 	setInSync(true);
 }
 
-// Loading --------------------------------------------------------------
+// Loading ---------------------------------------------------------------------
 
 /**
  * A fresh page load (not a reconnect, game live OR dead): Loads a game onto the
@@ -283,6 +291,13 @@ function startEngineGame(engineGame: EngineGamePageInfo, ourRole: Player): void 
 	});
 }
 
+// Validation ------------------------------------------------------------------
+
+/** Whether the server validates this game's moves, computing its conclusions itself. */
+function isValidated(gamefile: GameFile): boolean {
+	return servervalidation.isGameValidated(window.gamePageData.variant, gamefile.variant);
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -297,4 +312,6 @@ export default {
 	loadGameFromState,
 	setParticipantState,
 	setLeanParticipantState,
+	// Validation
+	isValidated,
 };

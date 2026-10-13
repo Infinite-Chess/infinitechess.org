@@ -1,5 +1,10 @@
 // src/shared/chess/logic/insuffmat/insufficientmaterial.unit.test.ts
 
+/**
+ * Tests for insufficient-material detection on unbounded and bounded boards: it declares the
+ * draws its tables prove, and never one where a mate is still possible.
+ */
+
 import type { LoadedVariant } from '../gamefile.js';
 
 import { describe, it, expect } from 'vitest';
@@ -73,6 +78,7 @@ describe('insufficientmaterial', () => {
 		it('requires every promotion outcome to be a draw', () => {
 			expect(isDraw('w (8|1) K0,0|k20,20|p40,5')).toBe(true);
 			expect(isDraw('w (8|1) K0,0|k20,20|p40,5|p42,5')).toBe(false);
+			expect(isDraw('w (8|1;n) K0,0|k20,20|p40,5|p42,5|p44,5')).toBe(true);
 		});
 
 		it('only promotes pawns with a promotion rank ahead of them', () => {
@@ -97,10 +103,12 @@ describe('insufficientmaterial', () => {
 			expect(isDraw('w K0,0|N5,0|k20,20', { variant })).toBe(false);
 		});
 
-		it('with obstacles on the board, declares only classical material with a king each', () => {
+		it('with obstacles or gargoyles on the board, declares only classical material with a king each', () => {
 			expect(isDraw('w K0,0|N5,0|k20,20|ob30,30')).toBe(true);
 			expect(isDraw('w N5,0|k20,20|ob30,30')).toBe(false);
 			expect(isDraw('w K0,0|CA5,0|k20,20|ob30,30')).toBe(false);
+			expect(isDraw('w K0,0|N5,0|k20,20|0ca30,30')).toBe(true);
+			expect(isDraw('w N5,0|k20,20|0r30,30')).toBe(false);
 		});
 	});
 
@@ -113,6 +121,11 @@ describe('insufficientmaterial', () => {
 		it('never declares sets that can mate against a border', () => {
 			expect(isDraw(`w ${BORDER} K0,0|R5,0|k20,20`)).toBe(false);
 			expect(isDraw(`w ${BORDER} K0,0|k20,20|rc25,20`)).toBe(false);
+		});
+
+		it("tells a camel's square color apart from a bishop's", () => {
+			expect(isDraw(`w ${BORDER} K0,0|B5,0|CA6,0|k20,20`)).toBe(false);
+			expect(isDraw(`w ${BORDER} K0,0|B5,0|CA7,0|k20,20`)).toBe(true);
 		});
 
 		it('never declares a mate an obstacle makes possible', () => {

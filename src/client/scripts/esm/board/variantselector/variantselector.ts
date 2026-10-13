@@ -443,7 +443,7 @@ function onModalOpen(engineGame: boolean): void {
 		let anySupported = false;
 		panel.querySelectorAll<HTMLElement>('.variant-item[data-code]').forEach((btn) => {
 			const code = btn.getAttribute('data-code') as VariantCode;
-			const supported = apeironcard.SUPPORTED_VARIANTS.has(code);
+			const supported = !apeironcard.UNSUPPORTED_VARIANTS.has(code);
 			btn.classList.toggle('hidden', engineOnly && !supported);
 			if (supported) anySupported = true;
 		});
@@ -453,7 +453,7 @@ function onModalOpen(engineGame: boolean): void {
 	});
 
 	if (selection.kind === 'preset') {
-		if (engineOnly && !apeironcard.SUPPORTED_VARIANTS.has(selection.code))
+		if (engineOnly && apeironcard.UNSUPPORTED_VARIANTS.has(selection.code))
 			selectVariant('Classical');
 		return;
 	}

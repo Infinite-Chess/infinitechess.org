@@ -41,7 +41,10 @@ export interface ChunkResults {
 	terminationMismatchErrors: number;
 	errors: ValidationError[];
 	variantErrors: Record<string, VariantStats>;
-	/** The sum, mod 2^32, of every position's move hash. 0 unless the fingerprint was requested. */
+	/**
+	 * The sum, mod 2^32, of every position's move hash (full runs only) and every game's outcome
+	 * hash. 0 unless requested.
+	 */
 	fingerprint: number;
 }
 

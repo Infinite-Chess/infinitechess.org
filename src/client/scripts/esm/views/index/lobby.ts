@@ -400,12 +400,12 @@ function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<number>()): voi
 }
 
 /**
- * Clears the seek display, tracked state, and viewer count on a socket close,
- * but preserves the new-seek tracker so a reconnect doesn't replay arrival sounds.
+ * Clears the seek display, tracked state, and viewer count, but preserves
+ * the new-seek tracker so a reconnect doesn't replay arrival sounds.
  */
 function clearSeekList(): void {
 	onSeekListUpdate({ seekslist: [] }, true); // Don't clear seek tracker memory
-	element_lobbyViewerCount.textContent = '0';
+	element_lobbyViewerCount.textContent = 'ω';
 }
 
 /** Creates the keyed snabbdom div vnode for the current seek list. */

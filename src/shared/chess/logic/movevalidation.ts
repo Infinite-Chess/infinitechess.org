@@ -13,7 +13,6 @@ import type { Board } from './boardinit.js';
 import type { GameConclusion } from '../util/typeschemas.js';
 
 import jsutil from '../../util/jsutil.js';
-import winconutil from '../util/winconutil.js';
 import legalmoves from './legalmoves.js';
 import wincondition from './wincondition.js';
 import checkresolver from './checkresolver.js';
@@ -46,7 +45,7 @@ type ConclusionValidityResult = { valid: true } | { valid: false; reason: string
  * Also attaches and special move tags to the move coords.
  * @param boardsim - The boardsim
  * @param moveCoords - The move. Special move tags will be attached to them if it is legal.
- * @param claimedGameConclusion - The opponent's claimed game conclusion
+ * @param conclusion - 'trusted' to skip verifying it, or the conclusion the move claims to reach.
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special tags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
@@ -54,20 +53,16 @@ type ConclusionValidityResult = { valid: true } | { valid: false; reason: string
 function isOpponentsMoveLegal(
 	boardsim: Board,
 	moveCoords: MoveCoords,
-	claimedGameConclusion: GameConclusion | undefined,
+	conclusion: 'trusted' | GameConclusion | undefined,
 ): MoveValidationResult {
 	// We run both move and conclusion checks when at the front of the game
 	return movepiece.runActionAtGameFront(boardsim, () => {
 		// 1. Check Move Legality
 		const moveResult = validateMove(boardsim, moveCoords);
-		if (!moveResult.valid) return moveResult;
+		if (!moveResult.valid || conclusion === 'trusted') return moveResult;
 
 		// 2. Check Conclusion Validity (using the draft with special tags attached)
-		const conclusionResult = validateConclusion(
-			boardsim,
-			moveResult.tagged,
-			claimedGameConclusion,
-		);
+		const conclusionResult = validateConclusion(boardsim, moveResult.tagged, conclusion);
 
 		if (!conclusionResult.valid) return conclusionResult;
 
@@ -229,14 +224,6 @@ function validateConclusion(
 	moveTagged: MoveTagged,
 	claimedGameConclusion: GameConclusion | undefined,
 ): ConclusionValidityResult {
-	if (
-		claimedGameConclusion !== undefined &&
-		!winconutil.isConclusionMoveTriggered(claimedGameConclusion.condition)
-	) {
-		// Non-move-triggered (e.g. resignation, time, abort) conclusions are always valid since the server handles those.
-		return { valid: true };
-	}
-
 	const moveTaggedCopy = jsutil.deepCopyObject(moveTagged);
 	const simulatedConclusion = movepiece.simulateMoveWrapper(boardsim, moveTaggedCopy, () =>
 		wincondition.getGameConclusion(boardsim),

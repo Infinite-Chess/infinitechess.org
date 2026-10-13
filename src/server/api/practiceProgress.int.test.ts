@@ -1,5 +1,10 @@
 // src/server/api/practiceProgress.int.test.ts
 
+/**
+ * Integration tests for saving beaten practice checkmates (`PUT /api/checkmates-progress`):
+ * request validation, authentication, the stored list and its cookie, and ignoring duplicates.
+ */
+
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';

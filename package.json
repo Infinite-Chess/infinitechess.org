@@ -105,7 +105,7 @@
     "test:quiet": "o=$(npm test --silent 2>&1) || { printf '%s\\n' \"$o\"; exit 1; }",
     "format": "prettier . --write --cache",
     "format:check": "prettier . --check --cache",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "eslint . --max-warnings=0 --cache --cache-location node_modules/.cache/eslint/",
     "type-check": "tsc -b",
     "import-rules": "tsx scripts/modules/import-rules.ts",
     "check": "concurrently -m 100% --names format,types,lint,imports,test --prefix-colors \"grey,blue,magenta,cyan,green\" \"npm run format:check --silent\" \"npm run type-check --silent\" \"npm run lint --silent\" \"npm run import-rules --silent\" \"npm run test:quiet --silent\"",

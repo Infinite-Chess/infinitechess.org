@@ -5,12 +5,10 @@
  * when it is your turn and your in another tab.
  */
 
-import bd from '@naviary/bigdecimal';
-
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
-import movesound from '../../game/movesound.js';
+import gamesound from '../../board/gamesound.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from '../../game/chess/gamesession.js';
 
@@ -91,9 +89,8 @@ function cancelFlashTabTimer(): void {
 function scheduleMoveSound_timeoutID(): void {
 	if (!document.hidden) return; // Don't schedule it if the page is already visible
 	if (!moveutil.isGameResignable(gameslot.getGamefile()!)) return;
-	const ZERO = bd.fromBigInt(0n);
 	moveSound_timeoutID = setTimeout(
-		() => movesound.playMove(ZERO, false, false),
+		() => gamesound.playSoundEffect('move'),
 		MOVE_SOUND_REMINDER_MS,
 	);
 }

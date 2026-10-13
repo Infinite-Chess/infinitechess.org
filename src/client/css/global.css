@@ -50,101 +50,120 @@ html {
 
 body {
 	min-height: 100%;
-	background-color: var(--c-bg);
+	background-color: var(--c-page);
 	color: var(--c-text);
 }
 
 /* ============================================================
-   Theme: Dark (default) - STARTER VARIABLES, refine as we go
+   Theme-independent
    ============================================================ */
 
 :root {
-	/* Placeholder board-tile-theme variables, will be set by js */
-	--c-tile: rgb(97, 97, 97);
-	--c-tile-2: rgb(110, 110, 110);
+	/* Accent derived from the board theme. Placeholders, overwritten by settings.ts. */
+	--c-board-accent: rgb(97, 97, 97);
+	--c-board-accent-bright: rgb(110, 110, 110);
 
-	/* Error/danger red. Theme-independent (identical in light and dark). */
+	/* Error/danger red. */
 	--c-error: #e05555;
 
 	/* The raised face as one gradient. Needs no per-theme copy — its two colors are themed. */
-	--elev-face-gradient: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+	--raised-gradient: linear-gradient(180deg, var(--c-raised-top) 0%, var(--c-raised-bottom) 100%);
+}
+
+/* ============================================================
+   Theme: Dark (default)
+   ============================================================ */
+
+[data-theme='dark'] {
+	/* Surfaces */
+	--c-page: rgb(33, 33, 33);
+	--c-surface: rgb(35, 35, 35);
+	--c-surface-translucent: rgba(35, 35, 35, 0.4);
+	--c-surface-inset: rgb(55, 55, 55);
+	/* Hover-state overlay: brightens on dark, darkens on light. */
+	--c-hover: rgba(255, 255, 255, 0.08);
 
 	/* Tiled checkerboard backdrop pattern (home, login, game side bar, …). */
 	--checkerboard: repeating-conic-gradient(rgb(255, 217, 168) 0% 25%, rgb(222, 173, 117) 0% 50%)
 		50% / 200px 200px;
-}
+	--c-checkerboard-dim: rgba(0, 0, 0, 0.88);
 
-[data-theme='dark'] {
-	--c-bg: rgb(33, 33, 33);
-	--c-surface: rgb(35, 35, 35);
-	--c-surface-transparent: rgba(35, 35, 35, 0.4);
-	--c-surface-2: rgb(55, 55, 55);
+	/* Text */
+	--c-text-strong: rgb(220, 220, 220);
 	--c-text: rgb(170, 170, 170);
-	--c-text-emphasis: rgb(220, 220, 220);
 	--c-text-muted: rgb(135, 135, 135);
-	--c-accent: hsl(88, 62%, 37%);
+	--c-text-faint: rgb(100, 100, 100);
+
+	/* Borders */
+	--c-border-strong: rgb(100, 100, 100);
 	--c-border: rgb(60, 60, 60);
-	--c-border-2: rgb(100, 100, 100);
 	--c-border-muted: rgb(55 55 55);
 
+	/* Accents */
+	--c-accent: hsl(88, 62%, 37%);
 	--c-link: rgb(97, 169, 255);
 	--c-donate: hsl(37, 74%, 58%);
 	--c-donate-hover: hsl(37, 74%, 68%);
 	--c-donate-bg-hover: hsla(37, 74%, 43%, 0.14);
-	--c-bg-overlay: rgba(0, 0, 0, 0.88);
-	--c-hover-brighten: rgb(255 255 255 / 8%);
 
 	/* Raised face: top → bottom of a "lit-from-above" elevated surface (buttons, cards).
 	   In both themes the *top* stop is brighter than the bottom so the gradient
 	   direction reads consistently regardless of theme. */
-	--c-elev-face: rgb(50, 50, 50);
-	--c-elev-face-2: rgb(35, 35, 35);
-	/* Drop shadow color tuned per theme (heavy on dark, soft on light backgrounds). */
-	--c-shadow-elev: rgba(0, 0, 0, 0.5);
+	--c-raised-top: rgb(50, 50, 50);
+	--c-raised-bottom: rgb(35, 35, 35);
 	/* Inset top-edge highlight on the same raised face. */
-	--c-elev-highlight: rgba(255, 255, 255, 0.06);
-	/* Hover-state overlay for opaque surfaces: brightens on dark, darkens on light.
-	   Different from --c-hover-brighten, which only ever lightens. */
-	--c-hover-overlay: rgba(255, 255, 255, 0.08);
+	--c-raised-highlight: rgba(255, 255, 255, 0.06);
+	/* Raised-text gradient stops, lit from above like the face. */
+	--c-raised-text-top: rgb(220, 220, 220);
+	--c-raised-text-bottom: rgb(135, 135, 135);
 
-	/* Raised-text gradient stops. Direction stays consistent per theme so a
-	   top→bottom linear gradient always reads as "lit from above" / outset. */
-	--c-text-elev-top: rgb(220, 220, 220);
-	--c-text-elev-bottom: rgb(135, 135, 135);
+	/* Drop shadow color tuned per theme (heavy on dark, soft on light backgrounds). */
+	--c-shadow: rgba(0, 0, 0, 0.5);
+	/* Shadow colors for the header, footer and board edge, and for raised buttons and side bar
+	   cards. Light theme only. */
+	--c-shadow-edge: transparent;
+	--c-shadow-lift: transparent;
 }
 
 /* ============================================================
-   Theme: Light - STARTER VARIABLES, refine as we go
+   Theme: Light
    ============================================================ */
 
 [data-theme='light'] {
-	--c-bg: rgb(245, 245, 245);
+	--c-page: rgb(245, 245, 245);
 	--c-surface: rgb(255, 255, 255);
-	--c-surface-transparent: rgb(255, 255, 255, 0.4);
-	--c-surface-2: rgb(235, 235, 235);
-	--c-text: rgb(30, 30, 30);
-	--c-text-emphasis: rgb(0, 0, 0);
+	--c-surface-translucent: rgb(255, 255, 255, 0.4);
+	--c-surface-inset: rgb(235, 235, 235);
+	--c-hover: rgba(0, 0, 0, 0.06);
+
+	--checkerboard: repeating-conic-gradient(rgb(255 200 128) 0% 25%, rgb(191 114 0) 0% 50%) 50% /
+		200px 200px;
+	--c-checkerboard-dim: rgba(255, 255, 255, 0.68);
+
+	--c-text-strong: rgb(30, 30, 30);
+	--c-text: rgb(60, 60, 60);
 	--c-text-muted: rgb(100, 100, 100);
-	--c-accent: hsl(88, 62%, 37%);
+	--c-text-faint: rgb(150, 150, 150);
+
+	--c-border-strong: rgb(150, 150, 150);
 	--c-border: rgb(200, 200, 200);
-	--c-border-2: rgb(150, 150, 150);
 	--c-border-muted: rgb(215 215 215);
 
+	--c-accent: hsl(88, 62%, 37%);
 	--c-link: rgb(0, 102, 204);
 	--c-donate: hsl(37, 74%, 38%);
 	--c-donate-hover: hsl(37, 74%, 30%);
 	--c-donate-bg-hover: hsla(37, 74%, 43%, 0.12);
-	--c-bg-overlay: rgba(255, 255, 255, 0.68);
-	--c-hover-brighten: rgb(255 255 255 / 24%);
 
-	--c-elev-face: rgb(255, 255, 255);
-	--c-elev-face-2: rgb(236, 236, 236);
-	--c-shadow-elev: rgba(0, 0, 0, 0.22);
-	--c-elev-highlight: rgba(255, 255, 255, 0.8);
-	--c-hover-overlay: rgba(0, 0, 0, 0.06);
+	--c-raised-top: rgb(255, 255, 255);
+	--c-raised-bottom: rgb(236, 236, 236);
+	--c-raised-highlight: rgba(255, 255, 255, 0.8);
+	--c-raised-text-top: rgb(100, 100, 100);
+	--c-raised-text-bottom: rgb(0, 0, 0);
 
-	--c-text-elev-top: rgb(100, 100, 100);
-	--c-text-elev-bottom: rgb(0, 0, 0);
+	--c-shadow: rgba(0, 0, 0, 0.22);
+	--c-shadow-edge: rgba(0, 0, 0, 0.3);
+	--c-shadow-lift: rgba(0, 0, 0, 0.2);
 }
 
 /* ==================================
@@ -175,7 +194,8 @@ body {
    ================================== */
 
 .hidden {
-	display: none;
+	/* !important so no stylesheet's `display` rule can outrank it. */
+	display: none !important;
 }
 
 .visibility-hidden {
@@ -237,7 +257,8 @@ button:disabled {
 
 /* Tiled checkerboard backdrop with the shared overlay baked in as the top layer. */
 .bg-checkerboard-dimmed {
-	background: linear-gradient(var(--c-bg-overlay), var(--c-bg-overlay)), var(--checkerboard);
+	background:
+		linear-gradient(var(--c-checkerboard-dim), var(--c-checkerboard-dim)), var(--checkerboard);
 }
 
 /* ==========================================
@@ -253,7 +274,9 @@ button:disabled {
 	font-size: 16px;
 	font-weight: 700;
 	border-radius: 6px;
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.2),
+		0 2px 7px var(--c-shadow-lift);
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 }
@@ -264,7 +287,9 @@ button:disabled {
 
 .btn-primary:active {
 	transform: translateY(1px);
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.15),
+		0 1px 3px var(--c-shadow-lift);
 }
 
 /* A compact primary submit nested at the end of an .auth-field
@@ -285,7 +310,7 @@ button:disabled {
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);
 	border-radius: 12px;
-	box-shadow: 0 8px 30px var(--c-shadow-elev);
+	box-shadow: 0 8px 30px var(--c-shadow);
 	overflow: hidden;
 }
 
@@ -302,7 +327,7 @@ button:disabled {
 
 .auth-title {
 	margin-bottom: 4px;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-size: 1.75em;
 	font-weight: 800;
 	text-align: center;
@@ -311,12 +336,6 @@ button:disabled {
 	align-items: center;
 	justify-content: center;
 	gap: 0.4em;
-}
-
-/* The flex display above outranks the equal-specificity .hidden utility, so restore hiding
-   for the verify page's toggled state headings. */
-.auth-title.hidden {
-	display: none;
 }
 
 /* Prevent text wrapping of titles on thin screens */
@@ -351,7 +370,7 @@ button:disabled {
 
 .auth-input {
 	padding: 10px 12px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	border: 1px solid var(--c-border);
 	border-radius: 6px;
 	color: var(--c-text);
@@ -361,7 +380,7 @@ button:disabled {
 
 .auth-input:focus {
 	outline: none;
-	border-color: var(--c-border-2);
+	border-color: var(--c-border-strong);
 }
 
 /* Red outline on an input whose value failed validation. */
@@ -460,7 +479,7 @@ button:disabled {
 	font-size: 1em;
 	font-weight: bold;
 	text-decoration: none;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .username-embed .elo {
@@ -546,7 +565,7 @@ button:disabled {
    (game, analysis, board editor, practice checkmate, tutorial)
    ============================================================ */
 
-/* Container must also share properties, or it isn't resized properly on window resize. */
+/* Container must also share properties, or it isn't resized properly. */
 .canvas-container,
 .board-canvas {
 	display: block;
@@ -558,6 +577,11 @@ button:disabled {
 	position: relative;
 	overflow: hidden;
 	container-type: inline-size; /* Enables container queries on this element */
+}
+
+/* The board pans and zooms itself, so a touch on it never scrolls or zooms the page. */
+.board-canvas {
+	touch-action: none;
 }
 
 /* ===============================================================
@@ -623,7 +647,7 @@ button:disabled {
 }
 
 /* ============================================================
-   Popup menu (shared by the game page's chat-report menus and the analysis page's)
+   Popup menu — the shared box look; each menu lays out its own rows
    ============================================================ */
 
 .popup-menu {
@@ -634,11 +658,17 @@ button:disabled {
 	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
 }
 
+/* Opens upward from the trigger, flush with the right edge of the trigger's container. */
+.popup-menu-above {
+	right: 2px;
+	bottom: calc(100% + 5px);
+}
+
 .popup-menu-title {
 	padding: 7px 10px;
 	border-bottom: 1px solid var(--c-border-muted);
-	background: var(--elev-face-gradient);
-	color: var(--c-text-emphasis);
+	background: var(--raised-gradient);
+	color: var(--c-text-strong);
 	font-size: 0.84em;
 	font-weight: 700;
 	text-align: center;
@@ -652,8 +682,8 @@ button:disabled {
 }
 
 .popup-menu button:hover {
-	background: var(--c-hover-overlay);
-	color: var(--c-text-emphasis);
+	background: var(--c-hover);
+	color: var(--c-text-strong);
 }
 
 /* ==================================
@@ -783,7 +813,7 @@ button:disabled {
 	width: 100%;
 	height: 1em;
 	cursor: pointer;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	border-radius: 0.5em;
 }
 
@@ -791,14 +821,14 @@ button:disabled {
 	width: 100%;
 	height: 1em;
 	cursor: pointer;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	border-radius: 0.5em;
 }
 
 /* Thumb */
 .slider::-webkit-slider-thumb {
 	appearance: none;
-	border: 1px solid var(--c-border-2);
+	border: 1px solid var(--c-border-strong);
 	height: 1em;
 	width: 1.5em;
 	border-radius: 12px;
@@ -809,7 +839,7 @@ button:disabled {
 
 .slider::-moz-range-thumb {
 	box-sizing: border-box;
-	border: 1px solid var(--c-border-2);
+	border: 1px solid var(--c-border-strong);
 	height: 1em;
 	width: 1.5em;
 	border-radius: 12px;
@@ -844,14 +874,14 @@ button:disabled {
 }
 
 .error-code {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-size: clamp(4rem, 18vw, 7rem);
 	font-weight: 800;
 	line-height: 1;
 }
 
 .error-title {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-size: 1.5em;
 	font-weight: 700;
 }

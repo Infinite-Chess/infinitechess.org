@@ -7,7 +7,8 @@
  * While the opponent is gone it shows a 1-second countdown until we may claim, then
  * reveals the "Claim victory" / "Call a draw" buttons once the window opens. In a not-
  * yet-resignable game there's nothing to claim, so it only informs us they disconnected
- * (we can already abort at will). It hides the moment they reconnect or the game ends.
+ * (we can already abort at will). It hides the moment they reconnect, the game ends, or we
+ * disconnect ourselves.
  *
  * SSR omits `.disconnect-status` for a game that loaded concluded, and `.self-disconnect-status`
  * for one that loaded memory-evicted, so every element here may be absent.
@@ -48,8 +49,6 @@ let voluntary: boolean = false;
 let renderIntervalID: number | undefined;
 /** The hide timer's id, while the "Reconnected." confirmation is showing. */
 let reconnectedTimeoutID: number | undefined;
-/** Whether WE are currently disconnected. */
-let selfDisconnected: boolean = false;
 
 // Events ----------------------------------------------------------------------
 
@@ -70,7 +69,7 @@ function onOpponentDisconnect(info: DisconnectInfo): void {
 	renderIntervalID = window.setInterval(() => render(), 1000);
 }
 
-/** Called when our opponent reconnects, or the game ends. Hides and resets everything. */
+/** Hides and resets everything: our opponent reconnected, the game ended, or we disconnected. */
 function onOpponentReturn(): void {
 	claimableAt = undefined;
 	clearInterval(renderIntervalID);
@@ -137,14 +136,9 @@ element_ClaimDraw?.addEventListener('click', callback_ClaimDraw);
 // our opponent's claim timer is running against us.
 SocketBus.addEventListener('connection-lost', () => onSelfDisconnect());
 
-/** Whether we have lost connection and not yet come back in sync. */
-function isSelfDisconnected(): boolean {
-	return selfDisconnected;
-}
-
-/** Called when we lose connection. */
+/** Called when we lose connection. Drops the opponent's status until the resync restores it. */
 function onSelfDisconnect(): void {
-	selfDisconnected = true;
+	onOpponentReturn();
 	if (!element_SelfDisconnectStatus) return; // Memory-evicted game: block absent.
 	clearTimeout(reconnectedTimeoutID); // A fresh drop overrides a lingering "Reconnected."
 	reconnectedTimeoutID = undefined;
@@ -159,7 +153,6 @@ function onSelfDisconnect(): void {
  * Confirms with "Reconnected." for a moment before hiding.
  */
 function onSelfReturn(): void {
-	selfDisconnected = false;
 	if (!element_SelfDisconnectStatus) return; // Memory-evicted game: block absent.
 	// Also fires on the page-load sync and on desync recoveries, where we never dropped.
 	if (element_SelfDisconnectStatus.classList.contains('hidden')) return;
@@ -177,6 +170,5 @@ function onSelfReturn(): void {
 export default {
 	onOpponentDisconnect,
 	onOpponentReturn,
-	isSelfDisconnected,
 	onSelfReturn,
 };

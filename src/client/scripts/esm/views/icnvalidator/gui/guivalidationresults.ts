@@ -2,8 +2,8 @@
 
 /**
  * The ICN validator's results panel. Once a run finishes, it shows how many games
- * passed, where the failures came from, and every failed game to inspect, keeping
- * the panel's own view state (the filter, unfolded ICNs) between redraws.
+ * passed, where the failures came from, and every failed game to inspect or copy,
+ * keeping the panel's own view state (the filter, unfolded ICNs) between redraws.
  */
 
 import type { VNode } from 'snabbdom';
@@ -30,6 +30,9 @@ export interface ValidationResults extends ChunkResults {
 	/** Whether the run included the movegen check. */
 	movegen: boolean;
 }
+
+/** What a copy button copied: one failure's ICN, or every listed failure. */
+type CopyTarget = ValidationError | 'all';
 
 /** How one failure type is labeled, and where its tallies are counted. */
 interface PhaseInfo {
@@ -71,8 +74,8 @@ let results: ValidationResults | undefined;
 let filter: ValidationPhase | undefined;
 /** The failures whose full ICN is unfolded. */
 const expandedIcns = new Set<ValidationError>();
-/** The failure whose ICN was just copied, while its button confirms it. */
-let copiedFailure: ValidationError | undefined;
+/** What was just copied, while its button confirms it. */
+let copied: CopyTarget | undefined;
 let copiedTimer: number | undefined;
 
 // Rendering -------------------------------------------------------------------
@@ -97,7 +100,7 @@ function render(): void {
 		? [
 				createSummaryVNode(results),
 				createVariantTableVNode(results.variantErrors),
-				createFailuresVNode(results.errors),
+				createFailuresVNode(results),
 			]
 		: [];
 	resultsVNode = patch(resultsVNode, h('div#results.results', children));
@@ -212,14 +215,15 @@ function createVariantTableVNode(variantErrors: Record<string, VariantStats>): V
 // Failed Games ----------------------------------------------------------------
 
 /** Every failure, narrowed to the filtered type if there is one. Nothing when every game passed. */
-function createFailuresVNode(errors: ValidationError[]): VNode | null {
-	if (errors.length === 0) return null;
-	const shown = filter ? errors.filter((error) => error.phase === filter) : errors;
+function createFailuresVNode(run: ValidationResults): VNode | null {
+	if (run.errors.length === 0) return null;
+	const shown = filter ? run.errors.filter((error) => error.phase === filter) : run.errors;
 
 	return h('section.failures', [
 		h('div.failures-head', [
 			h('h2.section-title', ['Failures', h('span.section-count', String(shown.length))]),
 			filter ? createFilterClearVNode(filter) : null,
+			createCopyButtonVNode('all', 'Copy all', () => formatFailures(run, shown)),
 		]),
 		h(
 			'ol.failure-list',
@@ -239,22 +243,13 @@ function createFilterClearVNode(phase: ValidationPhase): VNode {
 
 /** One failure: its game, where it failed, why, and the ICN. A game may fail more than one check. */
 function createFailureVNode(error: ValidationError): VNode {
-	const copied = copiedFailure === error;
 	const expanded = expandedIcns.has(error);
 	return h(`li.failure.phase-${error.phase}`, { key: `${error.gameIndex}-${error.phase}` }, [
 		h('div.failure-head', [
 			h('span.failure-game', `#${error.gameIndex}`),
 			error.variant ? h('span.failure-variant', error.variant) : null,
 			h('span.phase-badge', PHASES[error.phase].label),
-			h(
-				'button.copy-button',
-				{
-					class: { copied },
-					attrs: { type: 'button' },
-					on: { click: () => copyIcn(error) },
-				},
-				copied ? 'Copied ✓' : 'Copy ICN',
-			),
+			createCopyButtonVNode(error, 'Copy ICN', () => error.icn),
 		]),
 		h('pre.failure-message', error.error),
 		error.phase === 'termination-mismatch' ? createTerminationVNode(error) : null,
@@ -271,26 +266,66 @@ function createFailureVNode(error: ValidationError): VNode {
 
 /** A termination mismatch's recorded metadata, beside the conclusion the site reached. */
 function createTerminationVNode(error: ValidationError): VNode {
-	return h('dl.termination', [
-		h('dt', 'Termination'),
-		h('dd', error.termination ?? '—'),
-		h('dt', 'Result'),
-		h('dd', error.result ?? '—'),
-		h('dt', 'Site conclusion'),
-		h('dd', error.gameConclusion ? JSON.stringify(error.gameConclusion) : 'none'),
-	]);
+	const fields = getTerminationFields(error);
+	return h(
+		'dl.termination',
+		fields.flatMap(([label, value]) => [h('dt', label), h('dd', value)]),
+	);
 }
 
-/** Copies a failure's ICN, then briefly confirms it on its button. */
-async function copyIcn(error: ValidationError): Promise<void> {
-	if (!(await docutil.copyToClipboard(error.icn))) return;
-	copiedFailure = error;
+/** A termination mismatch's details as label/value pairs, shared by its card and its copied text. */
+function getTerminationFields(error: ValidationError): [string, string][] {
+	return [
+		['Termination', error.termination ?? '—'],
+		['Result', error.result ?? '—'],
+		['Site conclusion', error.gameConclusion ? JSON.stringify(error.gameConclusion) : 'none'],
+	];
+}
+
+/** A button that copies `getText()`, reading "Copied ✓" for a moment after. */
+function createCopyButtonVNode(target: CopyTarget, label: string, getText: () => string): VNode {
+	const isCopied = copied === target;
+	return h(
+		'button.copy-button',
+		{
+			class: { copied: isCopied },
+			attrs: { type: 'button' },
+			on: { click: () => copy(target, getText()) },
+		},
+		isCopied ? 'Copied ✓' : label,
+	);
+}
+
+/** Copies the text, then briefly confirms it on the button of `target`. */
+async function copy(target: CopyTarget, text: string): Promise<void> {
+	if (!(await docutil.copyToClipboard(text))) return;
+	copied = target;
 	render();
 	clearTimeout(copiedTimer);
 	copiedTimer = window.setTimeout(() => {
-		copiedFailure = undefined;
+		copied = undefined;
 		render();
 	}, COPIED_CONFIRMATION_MS);
+}
+
+/** The listed failures as plain text for pasting into a chat, each with everything its card shows. */
+function formatFailures(run: ValidationResults, shown: ValidationError[]): string {
+	const movegen = run.movegen ? 'on' : 'off';
+	const only = filter ? ` · ${PHASES[filter].label} failures only` : '';
+	const header = `ICN validator failures — ${run.successfulCount} / ${run.total} games passed (movegen check ${movegen})${only}`; // prettier-ignore
+	return [header, ...shown.map((error) => formatFailure(error))].join('\n\n');
+}
+
+/** One failure as plain text: its game, where it failed, why, and the ICN. */
+function formatFailure(error: ValidationError): string {
+	const title = [`#${error.gameIndex}`, error.variant, PHASES[error.phase].label];
+	const lines = [title.filter((part) => part !== undefined).join(' · '), error.error];
+	if (error.phase === 'termination-mismatch') {
+		const fields = getTerminationFields(error);
+		lines.push(fields.map(([label, value]) => `${label}: ${value}`).join(' · '));
+	}
+	lines.push(`ICN: ${error.icn}`);
+	return lines.join('\n');
 }
 
 /** Unfolds a failure's full ICN, or folds it back to one line. */

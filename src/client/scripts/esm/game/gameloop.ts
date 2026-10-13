@@ -62,7 +62,7 @@ let onUpdate: (() => void) | undefined;
 function init(canvas: HTMLCanvasElement): void {
 	const gl = webgl.init(canvas); // Initiate the WebGL context. This is our web-based render engine.
 	camera.init(gl, canvas); // Initiates the camera/projection/model matrix uniforms.
-	camera.wireGlobalListeners(); // Keep the interactive camera synced to window resizes, FOV changes & game unloads.
+	camera.wireGlobalListeners(); // Keep the interactive camera synced to canvas resizes, FOV changes & game unloads.
 	boardpos.wireGlobalListeners(); // Erase board momentum when the game starts a transition.
 	gamescene.init(canvas);
 	listeners.init(canvas);

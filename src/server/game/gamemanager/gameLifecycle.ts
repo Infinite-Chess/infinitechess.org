@@ -20,12 +20,14 @@ import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
+import servervalidation from '../../../shared/chess/variants/servervalidation.js';
 
 import chat from './chat.js';
 import drawOffers from './drawOffers.js';
 import disconnect from './disconnect.js';
 import gameLogger from './gameLogger.js';
 import gameSockets from './gameSockets.js';
+import gameUtility from './gameUtility.js';
 import ratingAbuse from '../ratingabuse/ratingAbuse.js';
 import activeGames from './activeGames.js';
 import inGameStatus from '../seeksmanager/inGameStatus.js';
@@ -39,7 +41,7 @@ import chatEntriesManager from '../../database/chatEntriesManager.js';
 // Constants -------------------------------------------------------------------
 
 /**
- * The cushion time, after a non-server-validated game concludes, before its result is locked in
+ * The cushion time, after a cheat-reportable game concludes, before its result is locked in
  * (finalized). This gives the opponent a little time to overturn the conclusion with a cheat report
  * — which updates the already-logged database record. This only delays the finalized (locked) flag.
  */
@@ -153,15 +155,14 @@ function free(servergame: ServerGame): void {
 	}
 
 	// Log the game into the database the instant it concludes.
-	// Not final yet, as cheat reports can still update the record.
+	// A cheat report may still update the record until it's finalized.
 	logConcludedGame(servergame);
 
-	if (servergame.validateMoves) {
-		// Server validated every move — cheating is impossible. Lock in the result now.
-		finalize(servergame);
+	const engineGame = gameUtility.isEngineGame(servergame);
+	if (!servervalidation.isGameReportable(servergame.validateMoves, engineGame)) {
+		finalize(servergame); // Nothing can overturn the result. Lock it in now.
 	} else {
-		// No server-side validation (e.g. large variant, or custom position). Give the opponent
-		// a cushion to overturn the conclusion with a cheat report before locking it in.
+		// Give the opponent a cushion to overturn the result with a cheat report before locking it.
 		servergame.match.finalizeTimeoutID = setTimeout(() => {
 			finalize(servergame);
 			// Nothing evicts here: leaveRematchWindow does it as the last player leaves.
@@ -176,7 +177,7 @@ function free(servergame: ServerGame): void {
 /**
  * Logs a concluded game into the permanent database (computing rating changes for rated games)
  * and drops its live-game persistence row. Runs once, at conclusion, from {@link free}.
- * A non-validated game's result may still be overturned by a cheat report until it finalizes,
+ * A cheat-reportable game's result may still be overturned by a cheat report until it finalizes,
  * in which case the logged record is updated in place.
  */
 function logConcludedGame(servergame: ServerGame): void {
@@ -205,12 +206,10 @@ function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingRes
 	const ratingResults: PlayerGroup<PlayerRatingResult> = {};
 	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
 		ratingResults[Number(playerStr) as Player] = {
-			ratingAtGame: {
-				value: playerRating.elo_at_game,
-				confident: ratingCalculation.isRatingConfident(
-					playerRating.rating_deviation_at_game,
-				),
-			},
+			ratingAtGame: ratingCalculation.toRating(
+				playerRating.elo_at_game,
+				playerRating.rating_deviation_at_game,
+			),
 			change: playerRating.elo_change_from_game!,
 		};
 	}

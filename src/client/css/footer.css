@@ -9,11 +9,12 @@ footer {
 	flex-wrap: wrap;
 	justify-content: center;
 	align-items: center;
-	background: var(--c-bg);
+	background: var(--c-page);
 	z-index: 1;
 	gap: 0 0px;
 	padding: 16px 16px;
 	border-top: 1px solid var(--c-border);
+	box-shadow: 0 0 8px var(--c-shadow-edge);
 	color: var(--c-text-muted);
 }
 
@@ -31,7 +32,7 @@ footer a:hover {
 }
 
 footer .footer-sep {
-	color: var(--c-border-2);
+	color: var(--c-text-faint);
 	font-size: 12px;
 	user-select: none;
 }

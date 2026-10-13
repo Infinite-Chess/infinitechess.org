@@ -78,7 +78,8 @@ client `chess/` may not import client `components/`, though both ship everywhere
                              or judging a game.
  5  chess/variants/          The variant definitions and the registry/cache that load
                              them, plus the policy keyed off which variant a game is.
- 4  chess/engines/           What an engine can handle. Needs a whole GameFile.
+ 4  chess/engines/           What an engine can handle. Sits above logic because it
+                             judges whole GameFiles.
  3  chess/logic/             The data model and the rules engine: OrganizedPieces,
                              Board, Move, movesets, legal moves, check, notation (ICN),
                              the VariantModule contract. Works on a variant handed to it.

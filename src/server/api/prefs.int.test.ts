@@ -1,5 +1,10 @@
 // src/server/api/prefs.int.test.ts
 
+/**
+ * Integration tests for saving preferences (`PUT /api/preferences`): request validation,
+ * authentication, storing and overwriting, and the preferences cookie set on page requests.
+ */
+
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import { testRequest } from '../../tests/testRequest.js';

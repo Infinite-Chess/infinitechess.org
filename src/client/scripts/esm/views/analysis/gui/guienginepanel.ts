@@ -107,6 +107,7 @@ function init(): void {
 	});
 }
 
+/** Turns local evaluation on or off, persisting the choice. */
 function setEngineEnabled(value: boolean): void {
 	element_Toggle.checked = value;
 	localStorage.setItem(ENABLED_STORAGE_KEY, String(value));
@@ -121,15 +122,12 @@ function setEngineEnabled(value: boolean): void {
 
 /** Shows/hides the eval gauge. */
 function setGaugeVisible(visible: boolean): void {
-	const wasHidden = element_Gauge.classList.contains('hidden');
 	element_Gauge.classList.toggle('hidden', !visible);
-	// Toggling its visibility affects the canvas's width,
-	// emit a 'resize' event so it doesn't get stretched.
-	if (wasHidden === visible) window.dispatchEvent(new Event('resize'));
 }
 
 // Settings UI -----------------------------------------------------------------
 
+/** Seeds the settings drawer's sliders and labels from the saved engine settings. */
 function initSettingsUI(): void {
 	const settings = ceval.getSettings();
 
@@ -171,6 +169,7 @@ function applyThreadsCap(): void {
 	}
 }
 
+/** Wires the panel's toggle, settings drawer, sliders and "go deeper" button. */
 function initListeners(): void {
 	element_Toggle.addEventListener('change', () => setEngineEnabled(element_Toggle.checked));
 
@@ -235,6 +234,7 @@ function updateShortcuts(): void {
 	if (listener_document.isKeyDown('KeyL')) setEngineEnabled(!element_Toggle.checked);
 }
 
+/** Closes the settings drawer. */
 function closeSettings(): void {
 	element_Settings.classList.add('hidden');
 	element_SettingsBtn.classList.remove('active');
@@ -260,6 +260,7 @@ function clearPanelReadout(
 	updateProgress(opts.progress);
 }
 
+/** Reflects the engine's lifecycle status (loading, failed, blocked, crashed) in the panel. */
 function onEngineStatus(status: CevalStatus): void {
 	applyThreadsCap(); // Re-evaluate: the engine's threading capability arrives with its status.
 	const changed = status.kind !== lastStatusKind;
@@ -286,6 +287,7 @@ function onEngineStatus(status: CevalStatus): void {
 	}
 }
 
+/** Renders a search update: eval, stats, gauge, progress, lines and arrows. */
 function onEngineUpdate(update: CevalUpdate | undefined): void {
 	if (!ceval.isEnabled()) return;
 
@@ -302,7 +304,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 
 	if (update.terminal) {
 		setGaugeVisible(true);
-		clearPanelReadout('Game Over', { gauge: terminalGaugeChances(), progress: update });
+		clearPanelReadout('Game Over', { gauge: terminalGaugeChances(update), progress: update });
 		return;
 	}
 
@@ -376,15 +378,17 @@ function updateGauge(chances: number): void {
  * A terminal position is always the front of its line, where gamefile.gameConclusion holds
  * that branch's own conclusion (each branch restores its conclusion when reselected).
  */
-function terminalGaugeChances(): number {
+function terminalGaugeChances(update: CevalUpdate): number {
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile || !moveutil.areWeViewingLatestMove(gamefile)) return 0; // Stale update | not on the front.
+	// Judged by the analyzed position, not the viewed one, which a load briefly rewinds to replay the last move.
+	if (!gamefile || update.moveIndex !== gamefile.moves.length - 1) return 0; // Stale update | not on the front.
 	const victor = gamefile.gameConclusion?.victor;
 	return victor === p.WHITE ? 1 : victor === p.BLACK ? -1 : 0;
 }
 
 // PV lines --------------------------------------------------------------------
 
+/** Rebuilds the MultiPV line list, one row per line. */
 function renderLines(lines: CevalLine[]): void {
 	element_Lines.replaceChildren();
 	if (lines.length === 0) resetLineWindowState();
@@ -461,12 +465,11 @@ function resetLineWindowState(): void {
 }
 
 /**
- * Renders one PV's moves starting at that line's current window offset, fitting as many
- * as actually fit the line's rendered width — no fixed move count, exactly mirroring how
- * plain CSS ellipsis truncation used to size the line. Once it overflows, shrinks by one
- * move at a time (now reserving room for a '…' pager) until it fits. A '…' on the left
- * once paged forward, and on the right as long as more moves remain, make the pager an
- * actual "show next/previous set of moves" control instead of a dead-end truncation.
+ * Renders one PV's moves starting at that line's current window offset, showing as many as fit
+ * the line's rendered width in full. If they don't all fit, drops one move at a time, reserving
+ * room for a '…' pager, until they do. A '…' on the left once paged forward, and on the right
+ * while more moves remain, page to the previous/next set of moves. A single move too long for
+ * the line on its own is shown truncated.
  */
 function fitLineMovesWindow(
 	container: HTMLElement,
@@ -535,8 +538,9 @@ function fitBackwardWindowStart(
 	return Math.max(0, endExclusive - 1);
 }
 
+/** Whether every move in the rendered slice shows in full, none squeezed to fit the row. */
 function fitsWithinWidth(container: HTMLElement): boolean {
-	return container.scrollWidth <= container.clientWidth;
+	return [...container.children].every((child) => child.scrollWidth <= child.clientWidth);
 }
 
 /** Renders a specific slice of a PV line's moves (with optional pagers) into `container`. */
@@ -553,7 +557,6 @@ function renderMovesSlice(
 	container.replaceChildren();
 	if (showLeftPager) {
 		container.append(createLinePagerButton('Show earlier moves in this line', onGoBack));
-		container.append(' ');
 	}
 	for (let k = 0; k < count; k++) {
 		const i = start + k;
@@ -564,14 +567,13 @@ function renderMovesSlice(
 		// Use 'pointerdown', as with 'click' the line changing mid-click cancels the click.
 		moveSpan.addEventListener('pointerdown', () => playLine(line.moves, i));
 		container.append(moveSpan);
-		if (k < count - 1) container.append(' ');
 	}
 	if (showRightPager) {
-		container.append(' ');
 		container.append(createLinePagerButton('Show more moves in this line', onGoForward));
 	}
 }
 
+/** Builds a '…' pager that shows the next or previous moves of its line. */
 function createLinePagerButton(title: string, onClick: () => void): HTMLSpanElement {
 	const pager = document.createElement('span');
 	pager.className = 'line-move line-pager';
@@ -603,8 +605,9 @@ function playLine(tokens: string[], untilIndex: number): void {
 				break;
 			}
 			// Animate only the final move of the sequence.
-			if (i === untilIndex) movesequence.makeMoveAndAnimate(gamefile, mesh, result.tagged);
-			else movesequence.makeMove(gamefile, mesh, result.tagged);
+			if (i === untilIndex)
+				movesequence.makeMoveAndAnimate(gamefile, mesh, result.tagged, 'detect');
+			else movesequence.makeMove(gamefile, mesh, result.tagged, 'detect');
 			if (gamefile.gameConclusion) break; // The line ended the game.
 		}
 	}

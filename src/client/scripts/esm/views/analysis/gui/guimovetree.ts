@@ -17,6 +17,7 @@ import type { AnalysisMoveNode } from '../movetree.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
 
+import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
 import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import movepiece from '../../../../../../shared/chess/logic/movepiece.js';
 import wincondition from '../../../../../../shared/chess/logic/wincondition.js';
@@ -125,9 +126,9 @@ function highlightCurrentNode(): void {
 function scrollToCurrentNode(): void {
 	const current = getCurrentNodePly();
 	if (!current) {
-		// The root (start-of-game position) has no rendered ply button; scroll to the top.
+		// The root (start-of-game position) has no rendered ply button; scroll to the start.
 		if (gameslot.getGamefile()!.state.local.moveIndex === -1)
-			guimoveslist.scrollMovesTableToTop();
+			guimoveslist.scrollMovesTableToStart();
 		return;
 	}
 	guimoveslist.centerPly(current);
@@ -194,10 +195,10 @@ function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean, isMainline: b
 	);
 }
 
-/** Formats a ply index as a move label — `3.` for a white move, `3...` for a black one. */
+/** A ply index as a move label: `3.` for its move list row's left ply, `3...` for its right. */
 function formatMoveIndex(index: number): string {
-	const fullMove = Math.floor(index / 2) + 1;
-	return index % 2 === 0 ? `${fullMove}.` : `${fullMove}...`;
+	const moveNumber = moveutil.getMoveListRow(index) + 1;
+	return moveutil.isLeftInMoveList(index) ? `${moveNumber}.` : `${moveNumber}...`;
 }
 
 /**
@@ -206,8 +207,8 @@ function formatMoveIndex(index: number): string {
  */
 function buildMainline(from: AnalysisMoveNode): VNode[] {
 	const out: VNode[] = [];
-	// The open mainline row's children, or null between rows. A white ply's black reply joins
-	// this same row unless variations split the pair, so the row stays open across iterations.
+	// The open mainline row's children, or null between rows. A left ply's reply joins this
+	// same row unless variations split the pair, so the row stays open across iterations.
 	let rowChildren: VNode[] | null = null;
 	const flushRow = (): void => {
 		if (rowChildren) out.push(h('div.move-row.analysis-mainline-row', rowChildren));
@@ -215,9 +216,9 @@ function buildMainline(from: AnalysisMoveNode): VNode[] {
 	};
 
 	let node = getMainlineChild(from);
-	// Whether the white move just placed has variations rendered beneath it — its black
-	// reply must then start a fresh row so the variations stay ordered below their branch move.
-	let whiteHadVariations = false;
+	// Whether the left move just placed has variations rendered beneath it — its reply
+	// must then start a fresh row so the variations stay ordered below their branch move.
+	let leftHadVariations = false;
 	let last = from;
 	while (node) {
 		// The variations that branch off as alternatives to THIS move; they render
@@ -225,17 +226,19 @@ function buildMainline(from: AnalysisMoveNode): VNode[] {
 		const variations = getVariationChildren(node.parent!);
 		const ply = buildPlyVNode(node, false, true);
 
-		if (node.ply % 2 === 1 && !whiteHadVariations) {
-			// Black reply — join the open white move's row.
+		const isLeft = moveutil.isLeftInMoveList(node.ply);
+		if (!isLeft && !leftHadVariations) {
+			// A right ply joins the open row.
 			rowChildren!.push(ply);
 		} else {
-			// Begin a new mainline row. White always does; a black reply does too when its white
+			// Begin a new mainline row. A left ply always does; a right ply does too when the left
 			// move carried variations, splitting the pair so the reply sits below them.
 			flushRow();
-			const numText =
-				node.ply % 2 === 0 ? String(node.ply / 2 + 1) : formatMoveIndex(node.ply);
+			const numText = isLeft
+				? String(moveutil.getMoveListRow(node.ply) + 1)
+				: formatMoveIndex(node.ply);
 			rowChildren = [h('span.move-num', numText)];
-			if (node.ply % 2 === 1) rowChildren.push(h('span')); // Empty white cell.
+			if (!isLeft) rowChildren.push(h('span')); // Empty left cell.
 			rowChildren.push(ply);
 		}
 
@@ -244,7 +247,7 @@ function buildMainline(from: AnalysisMoveNode): VNode[] {
 			flushRow();
 			out.push(...buildVariationGroup(variations, 1));
 		}
-		whiteHadVariations = node.ply % 2 === 0 && variations.length > 0;
+		leftHadVariations = isLeft && variations.length > 0;
 		last = node;
 		node = getMainlineChild(node);
 	}
@@ -280,7 +283,9 @@ function buildVariationLine(head: AnalysisMoveNode, depth: number): VNode[] {
 	};
 
 	while (node) {
-		lineChildren.push(buildPlyVNode(node, showIndex || node.ply % 2 === 0, false));
+		lineChildren.push(
+			buildPlyVNode(node, showIndex || moveutil.isLeftInMoveList(node.ply), false),
+		);
 		showIndex = false;
 
 		// Alternatives to THIS move (its variation siblings). The head's are its fork-siblings,
@@ -497,12 +502,6 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	const mesh = gameslot.getMesh();
 	premoves.cancelPremoves(gamefile, mesh);
 
-	// gameConclusion is a global state that belongs to the active line's front. Snapshot the
-	// branch we're leaving before swapping lines, then restore the target branch's own conclusion
-	// once its line is active — otherwise a decisive line's conclusion would bleed onto branches
-	// that don't end the game.
-	movetree.storeActiveLineConclusion(gamefile.gameConclusion);
-
 	const targetIndex = node.ply;
 	frametracker.onVisualChange();
 
@@ -669,6 +668,7 @@ function scheduleReconcile(): void {
 }
 
 export default {
+	formatMoveIndex,
 	navigateToNode,
 	addVariation,
 };

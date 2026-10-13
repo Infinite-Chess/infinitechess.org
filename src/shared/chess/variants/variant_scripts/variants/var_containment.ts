@@ -5,6 +5,7 @@
  */
 
 import type { CoordsKey } from '../../../../util/coordutil.js';
+import type { BoundingBox } from '../../../../util/math/bounds.js';
 import type { GameRuleModifications } from '../../../logic/variantmodule.js';
 
 import icnposition from '../../../logic/icn/icnposition.js';
@@ -27,4 +28,8 @@ export function gameruleModifications(): GameRuleModifications {
 
 export function getPositionStringLength(): number {
 	return POSITION_STRING.length;
+}
+
+export function getPositionBox(): BoundingBox {
+	return { left: -9n, right: 18n, bottom: -8n, top: 17n };
 }

@@ -265,7 +265,7 @@ export interface ScriptTranslations {
 					label: string;
 					message: string;
 				};
-				too_many_promotions: {
+				too_many_pieces: {
 					label: string;
 					message: string;
 				};

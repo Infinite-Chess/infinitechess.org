@@ -5,9 +5,8 @@
  * it joins the game — format, turn, move number and distance cap, then either full
  * server-side validation or the client's own reported conclusion.
  *
- * Which of the two applies is the game's `validateMoves` flag; games without server-side
- * validation are the ones `cheatReport.ts` exists for. As there, a move-triggered
- * conclusion is broadcast from here rather than through `gameLifecycle.ts`.
+ * Which of the two applies is the game's `validateMoves` flag. As in `cheatReport.ts`, a
+ * move-triggered conclusion is broadcast from here rather than through `gameLifecycle.ts`.
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';

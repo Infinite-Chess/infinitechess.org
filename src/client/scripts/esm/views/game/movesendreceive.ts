@@ -13,7 +13,6 @@ import type { MoveValidationResult } from '../../../../../shared/chess/logic/mov
 import type { OpponentsMoveMessage } from '../../../../../shared/transport/clientbound.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
-import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
@@ -68,8 +67,8 @@ function submitMovesFrom(gamefile: GameFile, startIndex: number): void {
 }
 
 /**
- * Called when we received our opponents move. This verifies they're move
- * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
+ * Called when we received our opponents move. This verifies their move is legal, and their claimed
+ * conclusion if the server didn't validate it. If not, it reports them and doesn't forward their move.
  * If it is legal, it forwards the game to the front, then forwards their move.
  */
 function handleMove(
@@ -94,7 +93,8 @@ function handleMove(
 	premoves.performWithUnapplied(gamefile, mesh, () => {
 		// If not legal, this will be a string for why it is illegal.
 		// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
-		const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, message.gameConclusion); // prettier-ignore
+		const conclusion = onlinegame.isValidated(gamefile) ? 'trusted' : message.gameConclusion;
+		const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, conclusion); // prettier-ignore
 
 		// Report cheating if the server allows us
 		checkAndReportIllegalOpponentMove(gamefile, moveValidationResult, message.move.token, message.moveNumber); // prettier-ignore
@@ -102,20 +102,14 @@ function handleMove(
 
 		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
 
-		if (moveutil.areWeViewingLatestMove(gamefile)) {
-			// Normal case: play and animate the move.
-			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResult.tagged);
-		} else {
-			// We're reviewing a past move. Silently append it, staying on our current view.
-			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged);
-		}
+		// For online games, the server is boss, so its conclusion is the one we adopt.
+		movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged, message.gameConclusion); // prettier-ignore
 
 		// Edit the clocks
 
 		// Adjust the timer whos turn it is depending on ping.
 		applyClockValues(gamefile, message.clockValues);
 
-		// For online games, the server is boss, so if they say the game is over, conclude it here.
 		if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 
 		GameBus.dispatch('opponent-move-played');
@@ -149,8 +143,9 @@ function checkAndReportIllegalOpponentMove(
 	console.log(`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`); // prettier-ignore
 
 	if (gamesession.getRole() === undefined) return; // Spectators never report
-	if (window.gamePageData.engineGame) return; // If the engine plays an illegal move, we already force it to resign.
-	if (servervalidation.isGameValidated(window.gamePageData.variant, gamefile.variant)) return; // Server-validated game
+	const validated = onlinegame.isValidated(gamefile);
+	const engineGame = window.gamePageData.engineGame !== undefined;
+	if (!servervalidation.isGameReportable(validated, engineGame)) return;
 
 	reportOpponentsMove(moveValidationResult.reason);
 }

@@ -62,7 +62,7 @@
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-size: 1.15em;
 	font-weight: 800;
 }
@@ -70,7 +70,7 @@
 .section-count {
 	padding: 1px 9px;
 	border-radius: 999px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	color: var(--c-text-muted);
 	font-size: 0.8em;
 	font-weight: 700;
@@ -93,7 +93,7 @@
 }
 
 .validator-title {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-size: clamp(2rem, 6vw, 2.75rem);
 	font-weight: 800;
 	line-height: 1.1;
@@ -101,7 +101,7 @@
 
 .validator-tag {
 	padding: 3px 10px;
-	border: 1px solid var(--c-border-2);
+	border: 1px solid var(--c-border-strong);
 	border-radius: 999px;
 	color: var(--c-text-muted);
 	font-size: 0.75em;
@@ -124,9 +124,9 @@
 	align-items: center;
 	gap: 4px;
 	padding: 36px 20px;
-	border: 2px dashed var(--c-border-2);
+	border: 2px dashed var(--c-border-strong);
 	border-radius: 10px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	text-align: center;
 	cursor: pointer;
 	transition:
@@ -141,7 +141,7 @@
 }
 
 .dropzone.drag-over {
-	background: color-mix(in srgb, var(--c-accent) 14%, var(--c-surface-2));
+	background: color-mix(in srgb, var(--c-accent) 14%, var(--c-surface-inset));
 	transform: scale(1.01);
 }
 
@@ -166,7 +166,7 @@
 }
 
 .dropzone-title {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-size: 1.1em;
 	font-weight: 700;
 	word-break: break-all;
@@ -189,7 +189,7 @@
 .dropzone.invalid {
 	border-style: solid;
 	border-color: var(--c-error);
-	background: color-mix(in srgb, var(--c-error) 10%, var(--c-surface-2));
+	background: color-mix(in srgb, var(--c-error) 10%, var(--c-surface-inset));
 }
 
 .dropzone.invalid .dropzone-icon {
@@ -217,9 +217,9 @@
 }
 
 .run-button.cancel {
-	background: var(--c-surface-2);
-	box-shadow: inset 0 0 0 1px var(--c-border-2);
-	color: var(--c-text-emphasis);
+	background: var(--c-surface-inset);
+	box-shadow: inset 0 0 0 1px var(--c-border-strong);
+	color: var(--c-text-strong);
 }
 
 /* ==================================
@@ -241,7 +241,7 @@
 }
 
 .option-card:hover {
-	border-color: var(--c-border-2);
+	border-color: var(--c-border-strong);
 }
 
 .option-card:has(input:checked) {
@@ -265,9 +265,9 @@
 	flex-shrink: 0;
 	width: 30px;
 	height: 30px;
-	border: 2px solid var(--c-border-2);
+	border: 2px solid var(--c-border-strong);
 	border-radius: 8px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	/* Matches the card's border fade, so the two change together. */
 	transition:
 		border-color 0.15s,
@@ -309,7 +309,7 @@
 }
 
 .option-title {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-weight: 700;
 }
 
@@ -329,11 +329,6 @@
 	gap: 10px;
 }
 
-/* The flex display above outranks the equal-specificity .hidden utility. */
-.run-progress.hidden {
-	display: none;
-}
-
 .lanes {
 	display: grid;
 	grid-auto-columns: 1fr;
@@ -345,7 +340,7 @@
 .lane {
 	overflow: hidden;
 	border-radius: 999px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 }
 
 .lane-fill {
@@ -377,7 +372,7 @@
 }
 
 .progress-count {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-weight: 600;
 }
 
@@ -416,7 +411,7 @@
 }
 
 .summary-headline {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-size: 1.4em;
 	font-weight: 800;
 }
@@ -447,7 +442,7 @@
 	width: 132px;
 	aspect-ratio: 1;
 	border-radius: 50%;
-	background: conic-gradient(var(--ring) calc(var(--fill) * 1%), var(--c-surface-2) 0);
+	background: conic-gradient(var(--ring) calc(var(--fill) * 1%), var(--c-surface-inset) 0);
 	animation: ring-fill 1.1s cubic-bezier(0.25, 0.8, 0.3, 1) forwards;
 }
 
@@ -582,7 +577,7 @@
 	border: 1px solid transparent;
 	border-top: 3px solid var(--phase);
 	border-radius: 8px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	color: inherit;
 	font: inherit;
 	text-align: left;
@@ -594,13 +589,13 @@
 }
 
 .phase-tile:hover:not(:disabled) {
-	background: color-mix(in srgb, var(--phase) 12%, var(--c-surface-2));
+	background: color-mix(in srgb, var(--phase) 12%, var(--c-surface-inset));
 	transform: translateY(-1px);
 }
 
 .phase-tile.active {
 	border-color: var(--phase);
-	background: color-mix(in srgb, var(--phase) 20%, var(--c-surface-2));
+	background: color-mix(in srgb, var(--phase) 20%, var(--c-surface-inset));
 }
 
 .phase-tile-count {
@@ -658,7 +653,7 @@
 }
 
 .variant-table tbody tr:hover {
-	background: var(--c-hover-overlay);
+	background: var(--c-hover);
 }
 
 .variant-table .num {
@@ -668,7 +663,7 @@
 
 .variant-name,
 .variant-total {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-weight: 600;
 }
 
@@ -711,7 +706,7 @@
 	border: 1px solid var(--phase);
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--phase) 18%, var(--c-surface));
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font: inherit;
 	font-size: 0.85em;
 	cursor: pointer;
@@ -740,7 +735,7 @@
 	border: 1px solid var(--c-border);
 	border-radius: 10px;
 	background: var(--c-surface);
-	box-shadow: 0 4px 14px var(--c-shadow-elev);
+	box-shadow: 0 4px 14px var(--c-shadow);
 }
 
 .failure::before {
@@ -759,7 +754,7 @@
 }
 
 .failure-game {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-weight: 800;
 	font-variant-numeric: tabular-nums;
 }
@@ -783,10 +778,10 @@
 .copy-button {
 	margin-left: auto;
 	padding: 6px 14px;
-	border: 1px solid var(--c-border-2);
+	border: 1px solid var(--c-border-strong);
 	border-radius: 6px;
-	background: var(--elev-face-gradient);
-	color: var(--c-text-emphasis);
+	background: var(--raised-gradient);
+	color: var(--c-text-strong);
 	font: inherit;
 	font-size: 0.85em;
 	font-weight: 600;
@@ -809,8 +804,8 @@
 	margin-top: 10px;
 	padding: 10px 12px;
 	border-radius: 6px;
-	background: var(--c-surface-2);
-	color: var(--c-text-emphasis);
+	background: var(--c-surface-inset);
+	color: var(--c-text-strong);
 	font-family: var(--mono);
 	font-size: 0.85em;
 	white-space: pre-wrap;
@@ -831,7 +826,7 @@
 }
 
 .termination dd {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-family: var(--mono);
 	word-break: break-all;
 }
@@ -883,7 +878,7 @@
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-weight: 700;
 	cursor: pointer;
 }

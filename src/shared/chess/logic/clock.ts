@@ -1,10 +1,8 @@
 // src/shared/chess/logic/clock.ts
 
 /**
- * This script keeps track of both players timer,
- * updates them each frame,
- * and the update() method will return the loser
- * if somebody loses on time.
+ * The game clocks: setting them up, ticking them each frame and on every move, syncing them
+ * with the server, and reading a game's times back off its moves' clock stamps.
  */
 
 import type { GameRules } from '../util/gamerules.js';
@@ -23,15 +21,16 @@ import gamefileutility from './gamefileutility.js';
 
 // Types -----------------------------------------------------------------------
 
+/** A timed game's clocks. */
 export type ClockData = {
-	/** The time each player has remaining, in milliseconds.*/
+	/** The time each player has remaining, in milliseconds. */
 	currentTime: PlayerGroup<number>;
 
 	/** Contains information about the start time of the game. */
 	startTime: {
 		/** The number of minutes both sides started with. */
 		minutes: number;
-		/** The number of miliseconds both sides started with.  */
+		/** The number of milliseconds both sides started with. */
 		millis: number;
 		/** The increment used, in seconds. */
 		increment: number;
@@ -51,12 +50,9 @@ export type ClockData = {
 	};
 };
 
-// Functions -------------------------------------------------------------------
+// Setup -----------------------------------------------------------------------
 
-/**
- * Sets the clocks. If no current clock values are specified, clocks will
- * be set to the starting values, according to the game's TimeControl metadata.
- */
+/** The clocks a game starts with under the given time control, or untimed if it has none. */
 function init(players: Iterable<Player>, time_control: TimeControl): ClockDependant {
 	const untimed = clockutil.isClockValueInfinite(time_control);
 	if (untimed) return { untimed: true, clocks: undefined };
@@ -79,6 +75,122 @@ function init(players: Iterable<Player>, time_control: TimeControl): ClockDepend
 	return { untimed: false, clocks };
 }
 
+// Ticking ---------------------------------------------------------------------
+
+/**
+ * Call after flipping whosTurn. Flips the ticking color in local games.
+ * @param gamefile - The minimum properties needed from the gamefile to push the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
+ * @returns The time in milliseconds the player who just moved has remaining, if the clocks are ticking.
+ */
+function push(gamefile: {
+	moves: MoveRecord[];
+	whosTurn: Player;
+	clocks: ClockData;
+	gameRules: GameRules;
+}): number | undefined {
+	const clocks = gamefile.clocks;
+	const prevcolor = gamerules.getWhosTurnAtMoveIndex(
+		gamefile.gameRules,
+		gamefile.moves.length - 2,
+	);
+
+	if (!moveutil.isGameResignable(gamefile)) return clocks.currentTime[prevcolor]!;
+
+	// Add increment to the previous player's clock and capture their remaining time to later insert into move.
+	if (clocks.ticking !== undefined) {
+		// Update current values
+		const timePassedSinceTurnStart = Date.now() - clocks.ticking.startedAt;
+
+		clocks.currentTime[clocks.ticking.color] =
+			clocks.ticking.timeRemainingAtStart - timePassedSinceTurnStart;
+		// 3+ moves
+		clocks.currentTime[prevcolor]! += timeutil.toMillis(clocks.startTime.increment, 'seconds');
+	}
+
+	// Set up clocksticking for the new turn.
+	clocks.ticking = {
+		color: gamefile.whosTurn,
+		startedAt: Date.now(),
+		timeRemainingAtStart: clocks.currentTime[gamefile.whosTurn]!,
+	};
+
+	return clocks.currentTime[prevcolor];
+}
+
+/**
+ * Called every frame, updates values.
+ * @param basegame - The minimum properties needed from the gamefile to update the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
+ * @returns undefined if clocks still have time, otherwise it's the color who won.
+ */
+function update(
+	basegame: {
+		moves: MoveRecord[];
+		gameConclusion?: GameConclusion;
+	} & ClockDependant,
+): Player | undefined {
+	if (
+		basegame.untimed ||
+		gamefileutility.isGameOver(basegame) ||
+		!moveutil.isGameResignable(basegame)
+	)
+		return;
+
+	const clocks = basegame.clocks;
+	if (clocks.ticking === undefined) return;
+
+	// Update current values
+	const timePassedSinceTurnStart = Date.now() - clocks.ticking.startedAt;
+
+	clocks.currentTime[clocks.ticking.color] = Math.ceil(
+		clocks.ticking.timeRemainingAtStart - timePassedSinceTurnStart,
+	);
+
+	for (const [playerStr, time] of Object.entries(clocks.currentTime)) {
+		const player: Player = Number(playerStr) as Player;
+		if ((time as number) <= 0) {
+			clocks.currentTime[player] = 0;
+			return typeutil.invertPlayer(player); // The color who won on time
+		}
+	}
+
+	return;
+}
+
+/**
+ * Returns the true time remaining for the player whose clock is ticking.
+ * Independent of reading clocks.currentTime, because that isn't updated
+ * every frame if the user unfocuses the window.
+ */
+function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined {
+	if (clocks.ticking === undefined) return;
+	const timeElapsedSinceTurnStartMs = Date.now() - clocks.ticking.startedAt;
+	return clocks.ticking.timeRemainingAtStart - timeElapsedSinceTurnStartMs;
+}
+
+/** Stops the game's clocks, updates the current player's remaining time. Idempotent. */
+function stop(basegame: ClockDependant): void {
+	if (basegame.untimed) return;
+	const clocks = basegame.clocks;
+
+	if (clocks.ticking === undefined) return; // Clocks already stopped
+
+	const timeSpent = Date.now() - clocks.ticking.startedAt;
+	clocks.currentTime[clocks.ticking.color] = Math.max(
+		clocks.ticking.timeRemainingAtStart - timeSpent,
+		0,
+	);
+
+	endGame(basegame);
+}
+
+/** Stops the ticking clock, freezing both players' remaining time. */
+function endGame(basegame: ClockDependant): void {
+	if (basegame.untimed) return;
+	delete basegame.clocks.ticking;
+}
+
+// Server Sync -----------------------------------------------------------------
+
 /**
  * Updates the clocks with new information received from the server.
  * @param currentClocks - The clocks to update, modified in place.
@@ -89,9 +201,9 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 	const now = Date.now();
 
 	if (ticking !== undefined) {
-		// Adjust the clock value according to the precalculated time they will lost by timeout.
+		// Adjust the clock value according to the precalculated time they will lose by timeout.
 		if (ticking.losesAt === undefined)
-			throw Error('clockValues should have been modified to account for ping BEFORE editing the clocks. Use adjustClockValuesForPing() beore edit()'); // prettier-ignore
+			throw Error('clockValues should have been modified to account for ping BEFORE editing the clocks. Use adjustClockValuesForPing() before edit()'); // prettier-ignore
 		const timeRemainingAtStart = ticking.losesAt - now;
 		clockValues.clocks[ticking.color] = timeRemainingAtStart;
 		currentClocks.ticking = { color: ticking.color, startedAt: now, timeRemainingAtStart };
@@ -101,6 +213,17 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 
 	currentClocks.currentTime = { ...clockValues.clocks };
 }
+
+/**
+ * Snapshots the clocks into the {@link ClockValues} shape sent to clients.
+ * The flag deadline is deliberately omitted — only the receiver can stamp one.
+ */
+function createEdit(clocks: ClockData): ClockValues {
+	if (clocks.ticking === undefined) return { clocks: clocks.currentTime };
+	return { clocks: clocks.currentTime, ticking: { color: clocks.ticking.color } };
+}
+
+// Clock Stamps ----------------------------------------------------------------
 
 /**
  * Seeds the clocks of a game loaded from an ICN with the values it ended on, read
@@ -145,7 +268,7 @@ function clocksAtMoveIndex(
 	// as their last stamp predates all the time they burned up to the flag.
 	const flaggedPlayer =
 		basegame.gameConclusion?.condition === 'time' && moveIndex === basegame.moves.length - 1
-			? moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1)
+			? gamerules.getWhosTurnAtMoveIndex(basegame.gameRules, basegame.moves.length - 1)
 			: undefined;
 
 	const currentTime: PlayerGroup<number> = {};
@@ -158,7 +281,7 @@ function clocksAtMoveIndex(
 		currentTime[player] = basegame.clocks.startTime.millis; // Fallback if they never moved.
 		// Walk backwards to their most recent move.
 		for (let i = moveIndex; i >= 0; i--) {
-			if (moveutil.getColorThatPlayedMoveIndex(basegame, i) !== player) continue;
+			if (gamerules.getColorThatPlayedMoveIndex(basegame.gameRules, i) !== player) continue;
 			const stamp = basegame.moves[i]!.clockStamp;
 			// Moves added on the analysis board carry no clock; skip past them so the
 			// clock keeps this variation's last real value instead of dropping to 0.
@@ -171,135 +294,21 @@ function clocksAtMoveIndex(
 	return currentTime;
 }
 
-/**
- * Call after flipping whosTurn. Flips the ticking color in local games.
- * @param gamefile - The minimum properties needed from the gamefile to push the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
- * @returns The time in milliseconds the player who just moved has remaining, if the clocks are ticking.
- */
-function push(gamefile: {
-	moves: MoveRecord[];
-	whosTurn: Player;
-	clocks: ClockData;
-	gameRules: GameRules;
-}): number | undefined {
-	const clocks = gamefile.clocks;
-	const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
-
-	if (!moveutil.isGameResignable(gamefile)) return clocks.currentTime[prevcolor]!;
-
-	// Add increment to the previous player's clock and capture their remaining time to later insert into move.
-	if (clocks.ticking !== undefined) {
-		// Update current values
-		const timePassedSinceTurnStart = Date.now() - clocks.ticking.startedAt;
-
-		clocks.currentTime[clocks.ticking.color] =
-			clocks.ticking.timeRemainingAtStart - timePassedSinceTurnStart;
-		// 3+ moves
-		clocks.currentTime[prevcolor]! += timeutil.toMillis(clocks.startTime.increment, 'seconds');
-	}
-
-	// Set up clocksticking for the new turn.
-	clocks.ticking = {
-		color: gamefile.whosTurn,
-		startedAt: Date.now(),
-		timeRemainingAtStart: clocks.currentTime[gamefile.whosTurn]!,
-	};
-
-	return clocks.currentTime[prevcolor];
-}
-
-/** Stops the game's clocks, updates the current player's remaining time. Idempotent. */
-function stop(basegame: ClockDependant): void {
-	if (basegame.untimed) return;
-	const clocks = basegame.clocks;
-
-	if (clocks.ticking === undefined) return; // Clocks already stopped
-
-	const timeSpent = Date.now() - clocks.ticking.startedAt;
-	clocks.currentTime[clocks.ticking.color] = Math.max(
-		clocks.ticking.timeRemainingAtStart - timeSpent,
-		0,
-	);
-
-	endGame(basegame);
-}
-
-/** Stops the ticking clock, freezing both players' remaining time. */
-function endGame(basegame: ClockDependant): void {
-	if (basegame.untimed) return;
-	delete basegame.clocks.ticking;
-}
-
-/**
- * Called every frame, updates values.
- * @param basegame - The minimum properties needed from the gamefile to update the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
- * @returns undefined if clocks still have time, otherwise it's the color who won.
- */
-function update(
-	basegame: {
-		moves: MoveRecord[];
-		gameConclusion?: GameConclusion;
-	} & ClockDependant,
-): Player | undefined {
-	if (
-		basegame.untimed ||
-		gamefileutility.isGameOver(basegame) ||
-		!moveutil.isGameResignable(basegame)
-	)
-		return;
-
-	const clocks = basegame.clocks;
-	if (clocks.ticking === undefined) return;
-
-	// Update current values
-	const timePassedSinceTurnStart = Date.now() - clocks.ticking.startedAt;
-
-	clocks.currentTime[clocks.ticking.color] = Math.ceil(
-		clocks.ticking.timeRemainingAtStart - timePassedSinceTurnStart,
-	);
-
-	for (const [playerStr, time] of Object.entries(clocks.currentTime)) {
-		const player: Player = Number(playerStr) as Player;
-		if ((time as number) <= 0) {
-			clocks.currentTime[player] = 0;
-			return typeutil.invertPlayer(player); // The color who won on time
-		}
-	}
-
-	return; // Without this, typescript complains not all code paths return a value.
-}
-
-/**
- * Returns the true time remaining for the player whos clock is ticking.
- * Independant of reading clocks.currentTime, because that isn't updated
- * every frame if the user unfocuses the window.
- */
-function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined {
-	if (clocks.ticking === undefined) return;
-	const timeElapsedSinceTurnStartMs = Date.now() - clocks.ticking.startedAt;
-	return clocks.ticking.timeRemainingAtStart - timeElapsedSinceTurnStartMs;
-}
-
-/**
- * Snapshots the clocks into the {@link ClockValues} shape sent to clients.
- * The flag deadline is deliberately omitted — only the receiver can stamp one.
- */
-function createEdit(clocks: ClockData): ClockValues {
-	if (clocks.ticking === undefined) return { clocks: clocks.currentTime };
-	return { clocks: clocks.currentTime, ticking: { color: clocks.ticking.color } };
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Setup
 	init,
-	edit,
-	seedFromMoveStamps,
-	clocksAtMoveIndex,
+	// Ticking
 	push,
-	stop,
-	endGame,
 	update,
 	getColorTickingTrueTimeRemaining,
+	stop,
+	endGame,
+	// Server Sync
+	edit,
 	createEdit,
+	// Clock Stamps
+	seedFromMoveStamps,
+	clocksAtMoveIndex,
 };

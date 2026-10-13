@@ -84,7 +84,7 @@
 
 .review-accuracy-value {
 	font-weight: 700;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .review-stat-row {
@@ -101,7 +101,7 @@
 }
 
 .review-stat-action:hover {
-	background: var(--c-hover-overlay);
+	background: var(--c-hover);
 }
 
 .review-stat-label {
@@ -148,6 +148,45 @@
 }
 
 /* ============================
+   Progress bars — engine depth + Game Review
+   ============================ */
+
+.progress-bar {
+	background: color-mix(in srgb, #000 18%, transparent);
+	container-type: inline-size; /* Let the sheen measure travel in cqw */
+}
+
+.progress-fill {
+	position: relative;
+	width: 0;
+	height: 100%;
+	overflow: hidden; /* Clip the sheen to the filled portion only. */
+	background: var(--c-accent);
+	transition: width 0.18s ease;
+}
+
+/* Computing: a sheen that sweeps across the filled portion. */
+.progress-bar.computing .progress-fill::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 35cqw;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+	animation: progress-sheen 1.1s linear infinite;
+}
+
+@keyframes progress-sheen {
+	from {
+		transform: translateX(calc(-1 * 35cqw));
+	}
+	to {
+		transform: translateX(100cqw);
+	}
+}
+
+/* ============================
    Engine panel
    ============================ */
 
@@ -158,43 +197,11 @@
 /* Depth progress bar */
 .engine-progress {
 	height: 3px;
-	background: color-mix(in srgb, #000 18%, transparent);
-	container-type: inline-size; /* Let the sheen measure travel in cqw */
-}
-
-.engine-progress-fill {
-	position: relative;
-	width: 0;
-	height: 100%;
-	overflow: hidden;
-	background: var(--c-accent, #6aa331);
-	transition: width 0.18s ease;
-}
-
-/* Computing: a sheen that sweeps across the filled portion. */
-.engine-progress.computing .engine-progress-fill::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	width: 35cqw;
-	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
-	animation: engine-progress-sheen 1.1s linear infinite;
-}
-
-@keyframes engine-progress-sheen {
-	from {
-		transform: translateX(calc(-1 * 35cqw));
-	}
-	to {
-		transform: translateX(100cqw);
-	}
 }
 
 .engine-header {
 	display: flex;
-	background: color-mix(in srgb, var(--c-surface-2) 74%, transparent);
+	background: color-mix(in srgb, var(--c-surface-inset) 74%, transparent);
 }
 
 /* Everything left of the gear button; Carries padding. */
@@ -232,7 +239,7 @@
 	font-size: 1.35em;
 	font-weight: 700;
 	text-align: center;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 	font-variant-numeric: tabular-nums;
 }
 
@@ -247,7 +254,7 @@
 .engine-name {
 	font-size: 0.9em;
 	font-weight: 600;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .engine-stats {
@@ -270,7 +277,7 @@
 }
 
 #btn-go-deeper:hover {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 #btn-go-deeper svg {
@@ -288,8 +295,8 @@
 
 #btn-engine-settings:hover,
 #btn-engine-settings.active {
-	color: var(--c-text-emphasis);
-	background: var(--c-hover-overlay);
+	color: var(--c-text-strong);
+	background: var(--c-hover);
 }
 
 #btn-engine-settings svg {
@@ -317,7 +324,7 @@
 	border-top: 1px solid var(--c-border-muted);
 	border-bottom: 1px solid var(--c-border-muted);
 	background: var(--c-surface);
-	box-shadow: 0 4px 5px rgba(0, 0, 0, 0.4);
+	box-shadow: 0 4px 5px var(--c-shadow);
 	z-index: 1;
 }
 
@@ -338,7 +345,7 @@
 
 .setting-value {
 	flex: 0 0 auto;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 /* ============================
@@ -373,27 +380,35 @@
 .line-eval {
 	flex: 0 0 3em;
 	font-weight: 700;
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
+/* Moves may squeeze to fit, but guienginepanel.ts pages so none does, unless a single
+   move alone outgrows the row, which then truncates with an ellipsis. */
 .line-moves {
 	flex: 1 1 auto;
+	display: flex;
+	gap: 0.25em;
 	min-width: 0;
 	color: var(--c-text-muted);
 }
 
 .line-move {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	cursor: pointer;
 	padding: 1px 2px;
 	border-radius: 3px;
 }
 
 .line-move:hover {
-	background: var(--c-hover-overlay);
-	color: var(--c-text-emphasis);
+	background: var(--c-hover);
+	color: var(--c-text-strong);
 }
 
 .line-pager {
+	flex-shrink: 0;
 	font-weight: 700;
 }
 
@@ -403,6 +418,7 @@
 
 .analysis .moves-table {
 	flex: 1 1 0;
+	min-height: 104px; /* Never shrinks below game.css's 4-row height. */
 	scroll-behavior: smooth;
 }
 
@@ -458,12 +474,12 @@
 }
 
 .variation-line .ply:hover {
-	color: var(--c-text-emphasis);
+	color: var(--c-text-strong);
 }
 
 .variation-line .ply.current {
 	font-weight: normal;
-	color: #fff;
+	color: var(--c-text-strong);
 }
 
 .move-index {
@@ -510,13 +526,13 @@
 
 .analysis .moves-nav {
 	position: relative;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 	border: none;
 }
 
 .analysis-actions-toggle[aria-expanded='true'] {
-	color: var(--c-text-emphasis);
-	background: var(--c-hover-overlay);
+	color: var(--c-text-strong);
+	background: var(--c-hover);
 }
 
 /* ============================
@@ -540,12 +556,7 @@
 	text-align: left;
 }
 
-/* Actions dropdown — anchored above the actions toggle in the nav bar. */
-.analysis-menu {
-	right: 2px;
-	bottom: calc(100% + 5px);
-}
-
+/* Actions dropdown — icon rows, anchored above the actions toggle in the nav bar. */
 .analysis-menu button {
 	display: flex;
 	width: 100%;
@@ -575,31 +586,9 @@
 }
 
 .review-progress-bar {
-	position: relative;
 	height: 4px;
 	overflow: hidden;
 	border-radius: 2px;
-	background: color-mix(in srgb, #000 18%, transparent);
-	container-type: inline-size; /* Let the sheen measure travel in cqw */
-}
-
-.review-progress-fill {
-	position: relative;
-	height: 100%;
-	overflow: hidden; /* Clip the shimmer to the filled portion only. */
-	background: var(--c-accent, #6aa331);
-	transition: width 0.18s ease;
-}
-
-.review-progress-fill::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	width: 35cqw;
-	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
-	animation: engine-progress-sheen 1.1s linear infinite;
 }
 
 .review-progress-text {
@@ -616,11 +605,11 @@
 .review-graph {
 	position: relative;
 	min-height: 150px;
-	background: var(--c-surface-2);
+	background: var(--c-surface-inset);
 }
 
 .review-graph canvas {
-	color: var(--c-text-emphasis); /* Read by the canvas code for the eval line. */
+	color: var(--c-text-strong); /* Read by the canvas code for the eval line. */
 }
 
 .review-phase-markers {
@@ -631,7 +620,7 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	border-left: 1px solid var(--c-border-2);
+	border-left: 1px solid var(--c-border-strong);
 }
 
 .review-phase-marker.current-position {
@@ -665,11 +654,11 @@
 	gap: 3px;
 	max-width: min(calc(100% - 12px), 220px);
 	padding: 6px 8px;
-	border: 1px solid var(--c-border-2);
+	border: 1px solid var(--c-border-strong);
 	border-radius: 5px;
 	background: var(--c-surface);
-	box-shadow: 0 2px 8px var(--c-shadow-elev);
-	color: var(--c-text-emphasis);
+	box-shadow: 0 2px 8px var(--c-shadow);
+	color: var(--c-text-strong);
 	font-size: 0.78em;
 	line-height: 1.25;
 	pointer-events: none;
@@ -711,20 +700,10 @@
 
 .gauge-zero {
 	height: 8px;
-	background: color-mix(in srgb, var(--c-accent, #d64f00) 80%, transparent);
+	background: color-mix(in srgb, var(--c-accent) 80%, transparent);
 }
 
 /* Flipped board: white on top */
 .eval-gauge.flipped {
 	transform: rotate(180deg);
-}
-
-/* ==============================
-   Utility classes
-   ============================== */
-
-/* Recommended for specificity, because `display` rules in here may overwrite the .hidden
-   class from global.css. Without this, the engine setting drawer is always visible. */
-.hidden {
-	display: none;
 }
