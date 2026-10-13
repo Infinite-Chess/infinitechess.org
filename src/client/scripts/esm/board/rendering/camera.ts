@@ -98,9 +98,9 @@ export interface Camera {
 	getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 };
 	init(glContext: WebGL2RenderingContext, canvasElement: HTMLCanvasElement): void;
 	/**
-	 * Wires the window/document listeners that keep the camera synced with the
-	 * interactive game. The preview instance intentionally never calls this, so it
-	 * doesn't react to window resizes or global FOV changes.
+	 * Wires the listeners that keep the camera synced with the interactive game.
+	 * The preview instance intentionally never calls this, so it doesn't react to
+	 * canvas resizes or global FOV changes.
 	 */
 	wireGlobalListeners(): void;
 	setViewMatrix(newMatrix: Mat4): void;
@@ -379,7 +379,8 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 
 	function wireGlobalListeners(): void {
 		SettingsBus.addEventListener('fov-change', () => onFOVChange());
-		window.addEventListener('resize', () => syncCanvasDimensions());
+		// The canvas, not the window: page layout can resize it without the window changing.
+		new ResizeObserver(() => syncCanvasDimensions()).observe(canvas);
 		shake.wireGlobalListeners();
 	}
 
