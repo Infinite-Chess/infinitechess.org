@@ -35,6 +35,7 @@
   on the validator dataset (ask me for its path) before your first edit and after, adding
   `--conclusions` when only game-end logic changed. For refactors and speed-ups the fingerprint must
   not change.
+- To send me a test email: `npx tsx scripts/send-test-email.ts <verify|reset|changed> <to>`.
 
 ## Agent rulebook
 
