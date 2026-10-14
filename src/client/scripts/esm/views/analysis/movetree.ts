@@ -40,20 +40,6 @@ let activeLine: AnalysisMoveNode[] = [];
 /** Counter handing out the next node `id`; reset whenever the tree is rebuilt. */
 let nextNodeId = 1;
 
-function createNode(
-	move: MoveFull | undefined,
-	ply: number,
-	parent: AnalysisMoveNode | undefined,
-): AnalysisMoveNode {
-	return {
-		id: nextNodeId++,
-		ply,
-		move,
-		parent,
-		children: [],
-	};
-}
-
 /** (Re)builds the tree from scratch as a single trunk mirroring the flat `gamefile.moves`. */
 function initFromGame(gamefile: GameFile): void {
 	nextNodeId = 1;
@@ -68,6 +54,20 @@ function initFromGame(gamefile: GameFile): void {
 		parent = child;
 	}
 	loadedGameEnd = parent;
+}
+
+function createNode(
+	move: MoveFull | undefined,
+	ply: number,
+	parent: AnalysisMoveNode | undefined,
+): AnalysisMoveNode {
+	return {
+		id: nextNodeId++,
+		ply,
+		move,
+		parent,
+		children: [],
+	};
 }
 
 function clear(): void {
@@ -225,6 +225,23 @@ function extendWithMainline(line: AnalysisMoveNode[]): AnalysisMoveNode[] {
 	return extended;
 }
 
+function isSameMove(left: MoveFull | undefined, right: MoveFull): boolean {
+	return (
+		left !== undefined &&
+		left.token === right.token &&
+		left.generateIndex === right.generateIndex
+	);
+}
+
+/** Promotes `node` to the mainline by promoting it and every ancestor at each fork up to the root. */
+function makeMainLine(node: AnalysisMoveNode): void {
+	let current: AnalysisMoveNode | undefined = node;
+	while (current?.parent) {
+		promoteAtFork(current);
+		current = current.parent;
+	}
+}
+
 function promoteAtFork(node: AnalysisMoveNode): void {
 	const parent = node.parent;
 	if (!parent) return;
@@ -236,15 +253,6 @@ function promoteAtFork(node: AnalysisMoveNode): void {
 		parent.children.unshift(node);
 	}
 	node.forceVariation = false;
-}
-
-/** Promotes `node` to the mainline by promoting it and every ancestor at each fork up to the root. */
-function makeMainLine(node: AnalysisMoveNode): void {
-	let current: AnalysisMoveNode | undefined = node;
-	while (current?.parent) {
-		promoteAtFork(current);
-		current = current.parent;
-	}
 }
 
 /** Demotes a mainline `node` to a variation, so its parent's next child becomes the mainline. */
@@ -266,15 +274,6 @@ function removeChild(parent: AnalysisMoveNode, child: AnalysisMoveNode): void {
 	child.parent = undefined;
 }
 
-function getMovesFromLine(line: AnalysisMoveNode[]): MoveFull[] {
-	return line.slice(1).map((node) => node.move!);
-}
-
-/** The flat move list from the root up to (and including) `node`. */
-function getMovesToNode(node: AnalysisMoveNode): MoveFull[] {
-	return getMovesFromLine(getLineToNode(node));
-}
-
 /**
  * Grafts `moves` as a fresh variation branch beneath `parent`, recording the branch's
  * game-conclusion on its front node. Purely a tree edit — the active line is left untouched.
@@ -293,12 +292,13 @@ function appendVariation(
 	node.gameConclusion = conclusion;
 }
 
-function isSameMove(left: MoveFull | undefined, right: MoveFull): boolean {
-	return (
-		left !== undefined &&
-		left.token === right.token &&
-		left.generateIndex === right.generateIndex
-	);
+function getMovesFromLine(line: AnalysisMoveNode[]): MoveFull[] {
+	return line.slice(1).map((node) => node.move!);
+}
+
+/** The flat move list from the root up to (and including) `node`. */
+function getMovesToNode(node: AnalysisMoveNode): MoveFull[] {
+	return getMovesFromLine(getLineToNode(node));
 }
 
 export default {
