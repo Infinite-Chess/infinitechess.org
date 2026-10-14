@@ -3,7 +3,7 @@
   "version": "1.4.3",
   "description": "infinitechess.org server",
   "author": "Naviary",
-  "license": "AGPL",
+  "license": "AGPL-3.0",
   "main": "dist/server/server.js",
   "type": "module",
   "// SECURITY": "When auditing dependencies (npm audit), see docs/DEPENDENCY_SECURITY.md for knowingly-unpatched advisories and why.",
