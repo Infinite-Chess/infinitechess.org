@@ -8,8 +8,7 @@
 import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
 import gamereview from '../gamereview.js';
-import reviewarrow from './reviewarrow.js';
-import reviewbadge from './reviewbadge.js';
+import reviewlapse from './reviewlapse.js';
 import { GameBus } from '../../../board/GameBus.js';
 import enginearrows from './enginearrows.js';
 import frametracker from '../../../board/rendering/frametracker.js';
@@ -38,6 +37,5 @@ function renderBelowPieces(): void {
 /** Renders the analysis visuals above the pieces, later ones on top. */
 function renderAbovePieces(): void {
 	enginearrows.render();
-	reviewarrow.render();
-	reviewbadge.render();
+	reviewlapse.render();
 }
