@@ -9,7 +9,6 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { EngineAssets } from '../../../../../shared/chess/util/engineregistry.js';
 import type { EngineRefusal } from '../../../../../shared/chess/engines/apeironcard.js';
 import type { MoveEvalLabel } from './moveevals.js';
@@ -253,8 +252,6 @@ const positionAttempts = new Map<number, number>();
 
 /** The mainline nodes captured when the review started (moves[i] = nodes[i].move). */
 let mainlineNodes: AnalysisMoveNode[] = [];
-/** The mainline moves (nodes' moves), captured at review start. */
-let mainlineMoves: MoveFull[] = [];
 /** The game serialized once at review start; `.moves` is re-sliced per position. */
 let longformIn: LongFormatIn | undefined;
 /** Turn order captured at review start, for mover resolution. */
@@ -426,7 +423,6 @@ function resetState(): void {
 	chunkQueue = [];
 	positionAttempts.clear();
 	mainlineNodes = [];
-	mainlineMoves = [];
 	longformIn = undefined;
 	turnOrder = [];
 	division = {};
@@ -445,13 +441,15 @@ function start(): void {
 	const gamefile: GameFile = gameslot.getGamefile()!;
 
 	mainlineNodes = captureMainline();
-	mainlineMoves = mainlineNodes.map((node) => node.move!);
 	turnOrder = [...gamefile.gameRules.turnOrder];
 
 	// Serialize the game once; each position re-slices the move list.
 	longformIn = gamecompressor.compressGamefile(gamefile);
 	engineicn.prepareForEngine(longformIn);
-	division = reviewdivision.determine(longformIn.position, mainlineMoves);
+	division = reviewdivision.determine(
+		longformIn.position,
+		mainlineNodes.map((node) => node.move!),
+	);
 
 	const totalPositions = mainlineNodes.length + 1;
 	// All but one hardware thread, leaving the UI responsive.
@@ -724,7 +722,7 @@ function terminalVictorAt(index: number): Player | null | undefined {
 
 /** Canonical ICN for the position after `index` mainline plies. */
 function serializePosition(index: number): string {
-	longformIn!.moves = mainlineMoves.slice(0, index);
+	longformIn!.moves = mainlineNodes.slice(0, index).map((node) => node.move!);
 	return engineicn.serialize(longformIn!);
 }
 
