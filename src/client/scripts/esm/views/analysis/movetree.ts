@@ -10,6 +10,8 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 
+// Types -----------------------------------------------------------------------
+
 /** A single position in the analysis tree: one move plus its continuations. */
 export interface AnalysisMoveNode {
 	/** Unique, monotonically-assigned identifier for this node. */
@@ -31,14 +33,18 @@ export interface AnalysisMoveNode {
 	gameConclusion?: GameConclusion;
 }
 
+// State -----------------------------------------------------------------------
+
 /** Root of the tree (a placeholder node at ply -1), or `undefined` until built. */
 let root: AnalysisMoveNode | undefined;
 /** The loaded game's final node, where its recorded ending sits. */
 let loadedGameEnd: AnalysisMoveNode | undefined;
-/** The currently-selected branch, root-first; its node at index `i` sits at `gamefile` moveIndex `i - 1`. */
+/** The selected branch, root-first; its node at index `i` sits at `gamefile` moveIndex `i - 1`. */
 let activeLine: AnalysisMoveNode[] = [];
 /** Counter handing out the next node `id`; reset whenever the tree is rebuilt. */
 let nextNodeId = 1;
+
+// Building --------------------------------------------------------------------
 
 /** (Re)builds the tree from scratch as a single trunk mirroring the flat `gamefile.moves`. */
 function initFromGame(gamefile: GameFile): void {
@@ -56,6 +62,7 @@ function initFromGame(gamefile: GameFile): void {
 	loadedGameEnd = parent;
 }
 
+/** A fresh childless node, under the next `id`. */
 function createNode(
 	move: MoveFull | undefined,
 	ply: number,
@@ -70,6 +77,7 @@ function createNode(
 	};
 }
 
+/** Discards the tree, until the next game builds one. */
 function clear(): void {
 	root = undefined;
 	loadedGameEnd = undefined;
@@ -77,22 +85,29 @@ function clear(): void {
 	nextNodeId = 1;
 }
 
+// Queries ---------------------------------------------------------------------
+
+/** Whether the tree has been built. */
 function isReady(): boolean {
 	return root !== undefined;
 }
 
+/** The tree's root, or `undefined` until built. */
 function getRoot(): AnalysisMoveNode | undefined {
 	return root;
 }
 
+/** The loaded game's final node, or `undefined` until built. */
 function getLoadedGameEnd(): AnalysisMoveNode | undefined {
 	return loadedGameEnd;
 }
 
+/** The selected branch, root-first. */
 function getActiveLine(): AnalysisMoveNode[] {
 	return activeLine;
 }
 
+/** The node of the position being viewed. */
 function getCurrentNode(gamefile: GameFile): AnalysisMoveNode | undefined {
 	return activeLine[gamefile.state.local.moveIndex + 1];
 }
@@ -107,7 +122,7 @@ function isInSubtree(subtreeRoot: AnalysisMoveNode, node: AnalysisMoveNode): boo
 	return false;
 }
 
-/** The ply of the deepest node that is `a`, `b`, or a shared ancestor of both (their branch fork). */
+/** The ply of the deepest node that is `a`, `b`, or an ancestor of both (their branch fork). */
 function getCommonAncestorPly(a: AnalysisMoveNode, b: AnalysisMoveNode): number {
 	const bChain = new Set<AnalysisMoveNode>();
 	for (let n: AnalysisMoveNode | undefined = b; n; n = n.parent) bChain.add(n);
@@ -115,6 +130,7 @@ function getCommonAncestorPly(a: AnalysisMoveNode, b: AnalysisMoveNode): number 
 	return -1; // The root is always shared, so this is unreachable.
 }
 
+/** Whether every move from the root to `node` is its parent's mainline continuation. */
 function isMainLine(node: AnalysisMoveNode): boolean {
 	let current: AnalysisMoveNode | undefined = node;
 	while (current?.parent) {
@@ -123,6 +139,8 @@ function isMainLine(node: AnalysisMoveNode): boolean {
 	}
 	return true;
 }
+
+// Active line -----------------------------------------------------------------
 
 /**
  * Truncates the active line to the viewed position, discarding its continuation so
@@ -181,18 +199,17 @@ function syncAfterMovesChanged(gamefile: GameFile): void {
 	storeActiveLineConclusion(gamefile.gameConclusion);
 }
 
-function setActiveLineToNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
-	const line = getLineForNode(node);
-	activeLine = line;
-	return line;
+/** Selects `node`'s full line as the active branch. */
+function setActiveLineToNode(node: AnalysisMoveNode): void {
+	activeLine = getLineForNode(node);
 }
 
-/** The stored game-conclusion of the active line's front (terminal) node, if the branch ends the game. */
+/** The stored game-conclusion of the active line's front node, if the branch ends the game. */
 function getActiveLineConclusion(): GameConclusion | undefined {
 	return activeLine[activeLine.length - 1]?.gameConclusion;
 }
 
-/** Persists this branch's global game-conclusion onto its front node, so it survives switching branches. */
+/** Stores the branch's game-conclusion on its front node, so it survives switching branches. */
 function storeActiveLineConclusion(conclusion: GameConclusion | undefined): void {
 	const front = activeLine[activeLine.length - 1];
 	if (front) front.gameConclusion = conclusion;
@@ -203,6 +220,7 @@ function getLineForNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	return extendWithMainline(getLineToNode(node));
 }
 
+/** `node`'s path from the root, root-first. */
 function getLineToNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	const line: AnalysisMoveNode[] = [];
 	let current: AnalysisMoveNode | undefined = node;
@@ -214,7 +232,7 @@ function getLineToNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	return line;
 }
 
-/** Appends the mainline continuation past `line`'s end (first child of each node, until a fork or leaf). */
+/** Appends the mainline continuation past `line`'s end, until a forced variation or leaf. */
 function extendWithMainline(line: AnalysisMoveNode[]): AnalysisMoveNode[] {
 	const extended = [...line];
 	let current = extended[extended.length - 1];
@@ -225,6 +243,7 @@ function extendWithMainline(line: AnalysisMoveNode[]): AnalysisMoveNode[] {
 	return extended;
 }
 
+/** Whether two moves played from the same position are the same move. */
 function isSameMove(left: MoveFull | undefined, right: MoveFull): boolean {
 	return (
 		left !== undefined &&
@@ -233,7 +252,9 @@ function isSameMove(left: MoveFull | undefined, right: MoveFull): boolean {
 	);
 }
 
-/** Promotes `node` to the mainline by promoting it and every ancestor at each fork up to the root. */
+// Editing ---------------------------------------------------------------------
+
+/** Promotes `node` to the mainline, promoting it and each ancestor at every fork. */
 function makeMainLine(node: AnalysisMoveNode): void {
 	let current: AnalysisMoveNode | undefined = node;
 	while (current?.parent) {
@@ -242,6 +263,7 @@ function makeMainLine(node: AnalysisMoveNode): void {
 	}
 }
 
+/** Makes `node` its parent's mainline continuation. */
 function promoteAtFork(node: AnalysisMoveNode): void {
 	const parent = node.parent;
 	if (!parent) return;
@@ -261,6 +283,7 @@ function forceVariation(node: AnalysisMoveNode): void {
 	node.forceVariation = true;
 }
 
+/** Deletes `node` and its subtree, returning its parent, or `undefined` for the root. */
 function deleteNode(node: AnalysisMoveNode): AnalysisMoveNode | undefined {
 	const parent = node.parent;
 	if (!parent) return undefined;
@@ -269,6 +292,7 @@ function deleteNode(node: AnalysisMoveNode): AnalysisMoveNode | undefined {
 	return parent;
 }
 
+/** Detaches `child` from `parent`. */
 function removeChild(parent: AnalysisMoveNode, child: AnalysisMoveNode): void {
 	parent.children = parent.children.filter((node) => node !== child);
 	child.parent = undefined;
@@ -292,6 +316,9 @@ function appendVariation(
 	node.gameConclusion = conclusion;
 }
 
+// Move lists ------------------------------------------------------------------
+
+/** The flat move list a line of nodes plays. */
 function getMovesFromLine(line: AnalysisMoveNode[]): MoveFull[] {
 	return line.slice(1).map((node) => node.move!);
 }
@@ -301,9 +328,13 @@ function getMovesToNode(node: AnalysisMoveNode): MoveFull[] {
 	return getMovesFromLine(getLineToNode(node));
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
+	// Building
 	initFromGame,
 	clear,
+	// Queries
 	isReady,
 	getRoot,
 	getLoadedGameEnd,
@@ -312,16 +343,19 @@ export default {
 	isInSubtree,
 	getCommonAncestorPly,
 	isMainLine,
+	// Active line
 	beginBranchFromViewedPosition,
 	syncAfterMovesChanged,
 	setActiveLineToNode,
 	getActiveLineConclusion,
 	getLineForNode,
-	promoteAtFork,
+	// Editing
 	makeMainLine,
+	promoteAtFork,
 	forceVariation,
 	deleteNode,
+	appendVariation,
+	// Move lists
 	getMovesFromLine,
 	getMovesToNode,
-	appendVariation,
 };
