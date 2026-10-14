@@ -644,9 +644,8 @@ function branchFromViewedPosition(gamefile: GameFile): void {
 	movetree.beginBranchFromViewedPosition(gamefile);
 	// Slice all moves off the gamefile after the current ply.
 	gamefile.moves.length = gamefile.state.local.moveIndex + 1;
-	// Has a chance of being wrong. We would otherwise have to perform game-over
-	// checks again. We don't store gameConclusion as a global state change per move.
-	gamefile.gameConclusion = undefined;
+	// The viewed node is now the front, so its stored conclusion is the game's.
+	gamefile.gameConclusion = movetree.getActiveLineConclusion();
 	animation.clearAnimations();
 }
 

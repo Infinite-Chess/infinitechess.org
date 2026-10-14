@@ -4,10 +4,15 @@
  * Client entry for the game page (/game/:id).
  */
 
+import moveutil from '../../../../../shared/chess/logic/moveutil.js';
+
 import gameloop from '../../game/gameloop.js';
+import gameslot from '../../game/chess/gameslot.js';
 import onlinegame from './onlinegame.js';
+import { GameBus } from '../../board/GameBus.js';
 import gamesession from '../../game/chess/gamesession.js';
 import deadgameloader from './deadgameloader.js';
+import conclusionglyphs from '../../game/rendering/glyphs/conclusionglyphs.js';
 
 import './gui/guichat.js';
 import './onlinegamerouter.js';
@@ -32,6 +37,13 @@ function start(): void {
 	document.querySelectorAll<HTMLElement>('.btn-bare, .action-btn').forEach((btn) => {
 		btn.setAttribute('tabindex', '-1');
 		btn.addEventListener('click', () => btn.blur());
+	});
+
+	// The game's conclusion is marked on its final position.
+	GameBus.addEventListener('render-above-pieces', () => {
+		const gamefile = gameslot.getGamefile()!;
+		if (gamefile.gameConclusion && moveutil.areWeViewingLatestMove(gamefile))
+			conclusionglyphs.render(gamefile, gamefile.gameConclusion);
 	});
 
 	if (window.gamePageData.isLive) {

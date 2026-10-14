@@ -7,21 +7,8 @@
 
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
 
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
-
-// Constants -------------------------------------------------------------------
-
-/** Each Termination tag that ends a game, mapped to the site's conclusion condition. */
-const CONDITION_MAPPINGS: Record<string, GameConclusion['condition']> = {
-	Checkmate: 'checkmate',
-	'All pieces captured': 'allpiecescaptured',
-	'Royal capture': 'royalcapture',
-	'All royals captured': 'allroyalscaptured',
-	Stalemate: 'stalemate',
-	'Threefold repetition': 'repetition',
-	'50-move rule': 'moverule',
-	'Insufficient material': 'insuffmat',
-};
 
 // Termination Metadata --------------------------------------------------------
 
@@ -55,12 +42,8 @@ function validate(
 
 	const { victor, condition } = gameConclusion;
 
-	if (termination && termination in CONDITION_MAPPINGS) {
-		if (condition !== CONDITION_MAPPINGS[termination])
-			throw new Error(`Game is over by ${condition}, but Termination is "${termination}"`);
-	} else if (termination) {
-		throw new Error(`Disallowed Termination metadata: "${termination}"`);
-	}
+	if (termination && winconutil.getConditionFromTermination(termination, victor) !== condition)
+		throw new Error(`Game is over by ${condition}, but Termination is "${termination}"`);
 
 	if (victor !== undefined && result && victor !== metadatautil.getVictorFromResult(result)) {
 		throw new Error(`Result "${result}" does not match victor ${victor}`);

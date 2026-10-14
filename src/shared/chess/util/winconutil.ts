@@ -9,6 +9,8 @@
  * the condition names without bundling zod.
  */
 
+import type { Player } from './typeutil.js';
+
 // Types -----------------------------------------------------------------------
 
 /** Condition where one player wins. victor will be a Player. */
@@ -123,6 +125,23 @@ function getTerminationInEnglish(moveRule: number | undefined, condition: Condit
 	return TERMINATION_IN_ENGLISH[condition];
 }
 
+/**
+ * The condition a termination string names, or undefined if none.
+ * Inverse of {@link getTerminationInEnglish}.
+ * @param victor - The game's victor, telling apart the two conditions "Abandoned" names.
+ */
+function getConditionFromTermination(
+	termination: string,
+	victor: Player | null | undefined,
+): Condition | undefined {
+	if (termination === TERMINATION_IN_ENGLISH.abandonment)
+		return victor === null ? 'abandonment' : 'disconnect';
+	if (termination.endsWith(TERMINATION_IN_ENGLISH.moverule)) return 'moverule';
+	return (Object.keys(TERMINATION_IN_ENGLISH) as Condition[]).find(
+		(condition) => TERMINATION_IN_ENGLISH[condition] === termination,
+	);
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -133,4 +152,5 @@ export default {
 	// Functions
 	isConclusionMoveTriggered,
 	getTerminationInEnglish,
+	getConditionFromTermination,
 };

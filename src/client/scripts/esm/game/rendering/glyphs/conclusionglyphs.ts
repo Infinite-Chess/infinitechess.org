@@ -1,9 +1,9 @@
 // src/client/scripts/esm/game/rendering/glyphs/conclusionglyphs.ts
 
 /**
- * Renders the game-end glyph (lichess's) while the concluded game's final position is viewed: on
- * the loser's royals for a win, or every side's royals for a draw. Wins by capture mark the square
- * of the final capture instead, since the loser's last royal or piece is gone.
+ * Renders the game-end glyph (lichess's) of the conclusion the viewed position reached: on the
+ * loser's royals for a win, or every side's royals for a draw. Wins by capture mark the square of
+ * the final capture instead, since the loser's last royal or piece is gone.
  */
 
 import type { Glyph } from './boardglyphs.js';
@@ -51,11 +51,8 @@ GameBus.addEventListener('game-concluded', () => frametracker.onVisualChange());
 
 // Rendering -------------------------------------------------------------------
 
-/** Renders the conclusion's glyph, if the game has ended and its final position is in view. */
-function render(gamefile: GameFile): void {
-	const conclusion = gamefile.gameConclusion;
-	if (!conclusion || !moveutil.areWeViewingLatestMove(gamefile)) return;
-
+/** Renders the glyph of the conclusion the viewed position reached. */
+function render(gamefile: GameFile, conclusion: GameConclusion): void {
 	const glyph = CONCLUSION_GLYPHS[conclusion.condition];
 	if (glyph) boardglyphs.render(glyph, getGlyphSquares(gamefile, conclusion));
 }
@@ -63,8 +60,8 @@ function render(gamefile: GameFile): void {
 /** The squares a conclusion's glyph marks. */
 function getGlyphSquares(gamefile: GameFile, conclusion: GameConclusion): Coords[] {
 	if (CAPTURE_CONDITIONS.includes(conclusion.condition)) {
-		const lastMove = moveutil.getLastMove(gamefile.moves);
-		return lastMove ? [lastMove.endCoords] : []; // A pasted, already-concluded game may have no moves.
+		const viewedMove = moveutil.getCurrentMove(gamefile);
+		return viewedMove ? [viewedMove.endCoords] : []; // A pasted, already-concluded game may have no moves.
 	}
 
 	const players = gamerules.getUniquePlayersInTurnOrder(gamefile.gameRules.turnOrder);

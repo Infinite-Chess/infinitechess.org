@@ -25,15 +25,16 @@ export interface AnalysisMoveNode {
 	/** When set, this node is treated as a variation even if it's its parent's first child. */
 	forceVariation?: boolean;
 	/**
-	 * The global game-conclusion at this node's position, if it terminates the game. Only a
-	 * line's front node is ever terminal, so this lets each branch restore its own conclusion
-	 * when reselected instead of inheriting whatever was last on the shared gamefile.
+	 * The game-conclusion at this node's position, if it terminates the game. Kept even once
+	 * played past, so each branch restores its own conclusion when reselected.
 	 */
 	gameConclusion?: GameConclusion;
 }
 
 /** Root of the tree (a placeholder node at ply -1), or `undefined` until built. */
 let root: AnalysisMoveNode | undefined;
+/** The loaded game's final node, where its recorded ending sits. */
+let loadedGameEnd: AnalysisMoveNode | undefined;
 /** The currently-selected branch, root-first; its node at index `i` sits at `gamefile` moveIndex `i - 1`. */
 let activeLine: AnalysisMoveNode[] = [];
 /** Counter handing out the next node `id`; reset whenever the tree is rebuilt. */
@@ -66,10 +67,12 @@ function initFromGame(gamefile: GameFile): void {
 		activeLine.push(child);
 		parent = child;
 	}
+	loadedGameEnd = parent;
 }
 
 function clear(): void {
 	root = undefined;
+	loadedGameEnd = undefined;
 	activeLine = [];
 	nextNodeId = 1;
 }
@@ -80,6 +83,10 @@ function isReady(): boolean {
 
 function getRoot(): AnalysisMoveNode | undefined {
 	return root;
+}
+
+function getLoadedGameEnd(): AnalysisMoveNode | undefined {
+	return loadedGameEnd;
 }
 
 function getActiveLine(): AnalysisMoveNode[] {
@@ -299,6 +306,7 @@ export default {
 	clear,
 	isReady,
 	getRoot,
+	getLoadedGameEnd,
 	getActiveLine,
 	getCurrentNode,
 	isInSubtree,

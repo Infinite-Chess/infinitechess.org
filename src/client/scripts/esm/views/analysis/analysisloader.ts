@@ -19,6 +19,7 @@ import type {
 
 import uuid from '../../../../../shared/util/uuid.js';
 import modutil from '../../../../../shared/chess/util/modutil.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -168,8 +169,17 @@ function pastePrebuiltGame(
 	source: PrebuiltSource,
 	slideLimit?: bigint,
 ): Promise<void> {
-	if (source.kind === 'icn') recordPaste(source.longFormat, undefined, undefined, slideLimit);
-	else recordOptions(source.options, slideLimit);
+	if (source.kind === 'icn') {
+		// The moves decide any ending they can show. The tags only add one they can't, like a resignation.
+		const tagged = metadatautil.getConclusionFromMetadata(source.longFormat.metadata);
+		if (
+			!gamefile.gameConclusion &&
+			tagged &&
+			!winconutil.isConclusionMoveTriggered(tagged.condition)
+		)
+			gamefile.gameConclusion = tagged;
+		recordPaste(source.longFormat, gamefile.gameConclusion, undefined, slideLimit);
+	} else recordOptions(source.options, slideLimit);
 
 	return gamesession.loadGame({
 		kind: 'prebuilt',

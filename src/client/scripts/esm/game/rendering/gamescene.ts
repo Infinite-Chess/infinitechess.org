@@ -42,7 +42,6 @@ import draganimation from './dragging/draganimation.js';
 import webgl, { gl } from '../../board/rendering/webgl.js';
 import promotionlines from '../../board/rendering/promotionlines.js';
 import arrowsgraphics from './arrows/arrowsgraphics.js';
-import conclusionglyphs from './glyphs/conclusionglyphs.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from './effectzone/EffectZoneManager.js';
 import selectedpiecehighlightline from './highlights/selectedpiecehighlightline.js';
@@ -203,7 +202,6 @@ function renderScene(): void {
 		dragarrows.render();
 		arrowsgraphics.render();
 		GameBus.dispatch('render-above-pieces');
-		conclusionglyphs.render(gamefile);
 		annotations.render_abovePieces();
 		perspective.renderCrosshair();
 	});

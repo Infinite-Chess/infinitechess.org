@@ -10,10 +10,13 @@
 
 import type { Player } from './typeutil.js';
 import type { TimeControl } from './clockutil.js';
+import type { GameConclusion } from './typeschemas.js';
 
 import * as z from 'zod';
 
 import timeutil from '../../util/timeutil.js';
+import winconutil from './winconutil.js';
+import typeschemas from './typeschemas.js';
 import { players as p } from './typeutil.js';
 
 // Types -----------------------------------------------------------------------
@@ -119,6 +122,19 @@ function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): numbe
 }
 
 /**
+ * The conclusion a game's Termination and Result tags record, or undefined if they record no
+ * valid one. They're only a claim about the game, which its moves may contradict.
+ */
+function getConclusionFromMetadata(metadata: MetaData): GameConclusion | undefined {
+	if (metadata.Termination === undefined) return undefined;
+	const victor = [p.WHITE, p.BLACK, null].find((v) => getResultFromVictor(v) === metadata.Result);
+	const condition = winconutil.getConditionFromTermination(metadata.Termination, victor);
+	const candidate = { condition, victor } satisfies Record<keyof GameConclusion, unknown>;
+	const parsed = typeschemas.GameConclusionSchema.safeParse(candidate);
+	return parsed.success ? parsed.data : undefined;
+}
+
+/**
  * The game's Result metadata for a given victor: `'1-0'`, `'0-1'`,
  * `'1/2-1/2'` (draw, `null`), or `'*'` (aborted, `undefined`).
  * @throws If the victor is not one of the four valid values.
@@ -172,6 +188,7 @@ export default {
 	// Functions
 	trimTo,
 	resolveTimestampFromMetadata,
+	getConclusionFromMetadata,
 	getResultFromVictor,
 	getVictorFromResult,
 	getFormattedElo,
