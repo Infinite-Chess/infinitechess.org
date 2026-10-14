@@ -61,6 +61,117 @@ const AREA_MIN_HEIGHT_SQUARES: number = 10;
  */
 const PADDING_RECALC_ITERATIONS: number = 10;
 
+// Area Calculation ------------------------------------------------------------
+
+/**
+ * Calculates the area object that contains every coordinate in the provided list, *with padding added*.
+ * @param coordsList - An array of coordinates, typically of the pieces.
+ * @param entityWidthVPixels - The on-screen size of each mini image, in virtual pixels.
+ * @param cam - The camera to fit the area within. Defaults to the game camera.
+ * @returns The area object
+ */
+function calculateFromCoordsList(
+	coordsList: Coords[],
+	entityWidthVPixels: number,
+	cam: Camera = camera,
+): Area {
+	if (coordsList.length === 0) throw Error('Cannot calculate area from an empty coords list.');
+
+	const box = bounds.getBoxFromCoordsList(coordsList); // Unpadded
+	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
+
+	return calculateFromUnpaddedBox(boxFloating, entityWidthVPixels, cam);
+}
+
+/**
+ * Calculates the area object from the provided bounding box, *with padding added*.
+ * @param box - A BoundingBox object.
+ * @param entityWidthVPixels - The on-screen size of each mini image, in virtual pixels.
+ * @param cam - The camera to fit the area within. Defaults to the game camera.
+ * @returns The area object
+ */
+function calculateFromUnpaddedBox(
+	box: BoundingBoxBD,
+	entityWidthVPixels: number,
+	cam: Camera = camera,
+): Area {
+	const paddedBox = applyPaddingToBox(box, entityWidthVPixels, cam);
+	return calculateFromBox(paddedBox, cam);
+}
+
+/**
+ * Calculates an Area object from the given bounding box.
+ * The box must come PRE-PADDED.
+ * @param box - The bounding box
+ * @returns The area object
+ */
+function calculateFromBox(box: BoundingBoxBD, cam: Camera = camera): Area {
+	// The new boardPos is the middle point
+	const newBoardPos = bounds.calcCenterOfBoundingBox(box);
+
+	// What is the scale required to match the sides?
+	const newScale = calcScaleToMatchSides(box, cam);
+
+	// Now maximize the bounding box to fill entire screen when at position and scale, so that
+	// we don't have long thin slices of a bounding box that will fail the bounds.boxContainsSquare() function EVEN
+	// if the square is visible on screen!
+	const maximizedBox = boardgeometry.getBoundingBoxOfBoard(newBoardPos, newScale, false, cam);
+
+	return {
+		coords: newBoardPos,
+		scale: newScale,
+		boundingBox: maximizedBox,
+	};
+}
+
+/**
+ * Calculates the camera scale (zoom) needed to fit
+ * the provided board bounding box within the canvas.
+ * @param boundingBox - The bounding box
+ * @returns The scale (zoom) required
+ */
+function calcScaleToMatchSides(boundingBox: BoundingBoxBD, cam: Camera = camera): BigDecimal {
+	const { xHalfLength, yHalfLength } = getBoundingBoxHalfDimensions(boundingBox);
+
+	const screenBoundingBox = cam.getScreenBoundingBox(false); // Debug mode's zoomed-out view ignored
+	const screenBoundingBoxBD: BoundingBoxBD =
+		bounds.castDoubleBoundingBoxToBigDecimal(screenBoundingBox);
+
+	// What is the scale required to match the sides?
+	const xScale = bd.divideFloating(screenBoundingBoxBD.right, xHalfLength);
+	const yScale = bd.divideFloating(screenBoundingBoxBD.top, yHalfLength);
+	const screenHeight = screenBoundingBox.top - screenBoundingBox.bottom;
+	// Can afterward cast to BigDecimal since they are small numbers.
+
+	let newScale = bd.min(xScale, yScale);
+
+	// Cap the scale to AREA_MIN_HEIGHT_SQUARES
+	const capScale = bd.fromNumber(screenHeight / AREA_MIN_HEIGHT_SQUARES);
+	newScale = bd.min(newScale, capScale);
+
+	// Also cap the scale if squares would be too large visibly on screen
+	const tileWidthPixels = boardgeometry.getTileWidthPixels(false, newScale, cam);
+	if (bd.compare(tileWidthPixels, AREA_MAX_SQUARE_VPIXELS) > 0) {
+		const scaleFactor = bd.divideFloating(AREA_MAX_SQUARE_VPIXELS, tileWidthPixels);
+		newScale = bd.multiplyFloating(newScale, scaleFactor);
+	}
+
+	return newScale;
+}
+
+/** Returns half the width and height of the bounding box. */
+function getBoundingBoxHalfDimensions(boundingBox: BoundingBoxBD): {
+	xHalfLength: BigDecimal;
+	yHalfLength: BigDecimal;
+} {
+	const xDiff = bd.subtract(boundingBox.right, boundingBox.left);
+	const yDiff = bd.subtract(boundingBox.top, boundingBox.bottom);
+	return {
+		xHalfLength: bd.divide(xDiff, TWO),
+		yHalfLength: bd.divide(yDiff, TWO),
+	};
+}
+
 // Padding ---------------------------------------------------------------------
 
 /**
@@ -122,117 +233,6 @@ function calcPaddingPixels(
 	if (!zoomedOut) return canvasLength * PADDING;
 	const regionPadding = (canvasLength - MINIIMAGE_CONTENT_SIZE_VPIXELS) / 2;
 	return entityWidthVPixels / 2 + Math.max(MINIIMAGE_GAP_VPIXELS, regionPadding);
-}
-
-// Area Calculation ------------------------------------------------------------
-
-/**
- * Calculates an Area object from the given bounding box.
- * The box must come PRE-PADDED.
- * @param box - The bounding box
- * @returns The area object
- */
-function calculateFromBox(box: BoundingBoxBD, cam: Camera = camera): Area {
-	// The new boardPos is the middle point
-	const newBoardPos = bounds.calcCenterOfBoundingBox(box);
-
-	// What is the scale required to match the sides?
-	const newScale = calcScaleToMatchSides(box, cam);
-
-	// Now maximize the bounding box to fill entire screen when at position and scale, so that
-	// we don't have long thin slices of a bounding box that will fail the bounds.boxContainsSquare() function EVEN
-	// if the square is visible on screen!
-	const maximizedBox = boardgeometry.getBoundingBoxOfBoard(newBoardPos, newScale, false, cam);
-
-	return {
-		coords: newBoardPos,
-		scale: newScale,
-		boundingBox: maximizedBox,
-	};
-}
-
-/** Returns half the width and height of the bounding box. */
-function getBoundingBoxHalfDimensions(boundingBox: BoundingBoxBD): {
-	xHalfLength: BigDecimal;
-	yHalfLength: BigDecimal;
-} {
-	const xDiff = bd.subtract(boundingBox.right, boundingBox.left);
-	const yDiff = bd.subtract(boundingBox.top, boundingBox.bottom);
-	return {
-		xHalfLength: bd.divide(xDiff, TWO),
-		yHalfLength: bd.divide(yDiff, TWO),
-	};
-}
-
-/**
- * Calculates the camera scale (zoom) needed to fit
- * the provided board bounding box within the canvas.
- * @param boundingBox - The bounding box
- * @returns The scale (zoom) required
- */
-function calcScaleToMatchSides(boundingBox: BoundingBoxBD, cam: Camera = camera): BigDecimal {
-	const { xHalfLength, yHalfLength } = getBoundingBoxHalfDimensions(boundingBox);
-
-	const screenBoundingBox = cam.getScreenBoundingBox(false); // Debug mode's zoomed-out view ignored
-	const screenBoundingBoxBD: BoundingBoxBD =
-		bounds.castDoubleBoundingBoxToBigDecimal(screenBoundingBox);
-
-	// What is the scale required to match the sides?
-	const xScale = bd.divideFloating(screenBoundingBoxBD.right, xHalfLength);
-	const yScale = bd.divideFloating(screenBoundingBoxBD.top, yHalfLength);
-	const screenHeight = screenBoundingBox.top - screenBoundingBox.bottom;
-	// Can afterward cast to BigDecimal since they are small numbers.
-
-	let newScale = bd.min(xScale, yScale);
-
-	// Cap the scale to AREA_MIN_HEIGHT_SQUARES
-	const capScale = bd.fromNumber(screenHeight / AREA_MIN_HEIGHT_SQUARES);
-	newScale = bd.min(newScale, capScale);
-
-	// Also cap the scale if squares would be too large visibly on screen
-	const tileWidthPixels = boardgeometry.getTileWidthPixels(false, newScale, cam);
-	if (bd.compare(tileWidthPixels, AREA_MAX_SQUARE_VPIXELS) > 0) {
-		const scaleFactor = bd.divideFloating(AREA_MAX_SQUARE_VPIXELS, tileWidthPixels);
-		newScale = bd.multiplyFloating(newScale, scaleFactor);
-	}
-
-	return newScale;
-}
-
-/**
- * Calculates the area object that contains every coordinate in the provided list, *with padding added*.
- * @param coordsList - An array of coordinates, typically of the pieces.
- * @param entityWidthVPixels - The on-screen size of each mini image, in virtual pixels.
- * @param cam - The camera to fit the area within. Defaults to the game camera.
- * @returns The area object
- */
-function calculateFromCoordsList(
-	coordsList: Coords[],
-	entityWidthVPixels: number,
-	cam: Camera = camera,
-): Area {
-	if (coordsList.length === 0) throw Error('Cannot calculate area from an empty coords list.');
-
-	const box = bounds.getBoxFromCoordsList(coordsList); // Unpadded
-	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
-
-	return calculateFromUnpaddedBox(boxFloating, entityWidthVPixels, cam);
-}
-
-/**
- * Calculates the area object from the provided bounding box, *with padding added*.
- * @param box - A BoundingBox object.
- * @param entityWidthVPixels - The on-screen size of each mini image, in virtual pixels.
- * @param cam - The camera to fit the area within. Defaults to the game camera.
- * @returns The area object
- */
-function calculateFromUnpaddedBox(
-	box: BoundingBoxBD,
-	entityWidthVPixels: number,
-	cam: Camera = camera,
-): Area {
-	const paddedBox = applyPaddingToBox(box, entityWidthVPixels, cam);
-	return calculateFromBox(paddedBox, cam);
 }
 
 // Exports ---------------------------------------------------------------------
