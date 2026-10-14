@@ -31,8 +31,7 @@ import graphicalchanges from './graphicalchanges.js';
 // Global Moving ---------------------------------------------------------------
 
 /**
- * Commits a global forward move to the game: all logical, game-state,
- * clock, and move-list GUI changes — but NO piece-mesh update.
+ * Commits a global forward move to the game's logic and conclusion. Must run at the front.
  * @param conclusion - 'detect' to detect it on our board, or the conclusion the move reached if known.
  */
 function commitMove(
@@ -44,11 +43,16 @@ function commitMove(
 
 	movepiece.makeMove(gamefile, move); // Logical changes
 
-	// Must run ABOVE 'moves-changed': a checkmate conclusion flags the move as mate, and the
+	// Must run before announceMove(): a checkmate conclusion flags the move as mate, and the
 	// move list renders each ply's notation (# vs +) once, from the flags it sees then.
 	if (conclusion === 'detect') wincondition.doGameOverChecks(gamefile);
 	else wincondition.setGameConclusion(gamefile, conclusion);
 
+	return move;
+}
+
+/** Announces a committed move, concluding the game if it ended it. Must run on the viewed position. */
+function announceMove(gamefile: GameFile): void {
 	// Forward chokepoint for the committed move list.
 	GameBus.dispatch('moves-changed');
 
@@ -64,8 +68,6 @@ function commitMove(
 	}
 
 	GameBus.dispatch('physical-move');
-
-	return move;
 }
 
 /** Makes a global forward move in the game and syncs the mesh to it. Does not animate. */
@@ -76,6 +78,7 @@ function makeMove(
 	conclusion: 'detect' | GameConclusion | undefined,
 ): MoveFull {
 	const move = commitMove(gamefile, moveTagged, conclusion);
+	announceMove(gamefile);
 	if (mesh) runMeshChanges(gamefile, mesh, move, true);
 	GameBus.dispatch('view-move'); // Committing a move at the front also advances the viewed position.
 	GameBus.dispatch('view-front'); // ...to the new front, so the moves panel follows it.
@@ -85,7 +88,7 @@ function makeMove(
 /**
  * Makes a global forward move WITHOUT changing which move we're viewing. Viewing the front, we
  * follow it there, animated. Otherwise, the logical board is temporarily fast-forwarded to the front
- * to append the move silently (updating game state, clocks, and the move-list GUI), then rewound.
+ * to append the move, then rewound before the move is announced. Silent, as only animations play sound.
  */
 function makeMoveKeepingView(
 	gamefile: GameFile,
@@ -104,6 +107,7 @@ function makeMoveKeepingView(
 	// mesh (now back on the viewed position) to match. REQUIRED.
 	if (mesh && gamefile.pieces.newlyRegenerated)
 		piecemodels.regenAll(gamescene.getGameContext(), gamefile, mesh);
+	announceMove(gamefile);
 	return move;
 }
 
