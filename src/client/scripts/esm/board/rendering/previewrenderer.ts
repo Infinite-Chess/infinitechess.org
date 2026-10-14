@@ -76,7 +76,7 @@ function render(ctx: RenderContext, boardsim: BoardPreview): void {
 
 	const startBox = boardsim.startSnapshot.box;
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(startBox);
-	const centerArea = area.calculateFromUnpaddedBox(boxFloating, ctx.camera);
+	const centerArea = area.calculateFromUnpaddedBox(boxFloating, PREVIEW_ENTITY_WIDTH_VPIXELS, ctx.camera); // prettier-ignore
 
 	ctx.boardpos.setBoardPos(centerArea.coords);
 	ctx.boardpos.setBoardScale(centerArea.scale);

@@ -33,6 +33,7 @@ import { GameBus } from '../../../board/GameBus.js';
 import preferences from '../../../util/preferences.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import area, { Area } from '../../../board/rendering/area.js';
+import { ENTITY_WIDTH_VPIXELS } from '../highlights/snapping.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -106,11 +107,10 @@ const ZOOM_TRANSITION_CONFIG = {
 const ONE = bd.fromBigInt(1n);
 const NEGONE = bd.fromBigInt(-1n);
 
-// Variables -------------------------------------------------------------------
-
-const teleportHistory: Transition[] = [];
-
 // State -----------------------------------------------------------------------
+
+/** Past transitions, most recent last, for undoing them. */
+const teleportHistory: Transition[] = [];
 
 // The state of the current transition
 
@@ -277,8 +277,6 @@ function startZoomTransition(
 		setupCOne2StageModel(natural_duration_c_one_ms, edgeAccel);
 	else setupCOne3StageModel(edgeAccel, maxDuration); // Both other models would take too long. Use the fixed-duration 3-stage profile.
 
-	// console.log("Duration: " + durationMillis + "ms");
-
 	if (!ignoreHistory)
 		pushToTelHistory({
 			isZoom,
@@ -289,7 +287,7 @@ function startZoomTransition(
 
 /** Sets up the C-Infinity 1-Stage Model for the current zoom transition. */
 function setupCInfinityModel(natural_duration_c_inf_ms: number, maxDuration: number): void {
-	// console.log('Using C-Infinity 1-Stage Model');
+	// --- CASE A: C-INFINITY 1-STAGE MODEL ---
 	zoomModel = 'C_INF';
 
 	// Add the base duration to the natural duration, and cap at the long zoom duration.
@@ -310,7 +308,6 @@ function setupCInfinityModel(natural_duration_c_inf_ms: number, maxDuration: num
 /** Sets up the C¹ 2-Stage Model for the current zoom transition. */
 function setupCOne2StageModel(natural_duration_c_one_ms: number, edgeAccel: number): void {
 	// --- CASE B: C¹ 2-STAGE MODEL (Velocity Continuous) ---
-	// console.log('Using C¹ 2-Stage Model');
 	zoomModel = 'C_ONE_2_STAGE';
 
 	durationMillis = natural_duration_c_one_ms;
@@ -333,7 +330,6 @@ function setupCOne2StageModel(natural_duration_c_one_ms: number, edgeAccel: numb
 /** Sets up the C¹ 3-Stage Model for the current zoom transition. */
 function setupCOne3StageModel(edgeAccel: number, maxDuration: number): void {
 	// --- CASE C: 3-STAGE MODEL ---
-	// console.log('Using C¹ 3-Stage Model');
 	zoomModel = 'C_ONE_3_STAGE';
 
 	durationMillis = maxDuration;
@@ -422,7 +418,7 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 		// If our current screen isn't within the final area, create new area to teleport to first
 		if (!bounds.boxContainsSquareBD(thisAreaBox, startCoords)) {
 			bounds.expandBDBoxToContainSquare(thisAreaBox, startCoords); // Unpadded
-			firstArea = area.calculateFromUnpaddedBox(thisAreaBox);
+			firstArea = area.calculateFromUnpaddedBox(thisAreaBox, ENTITY_WIDTH_VPIXELS);
 		}
 		// Version that fits the entire screen on the zoom out
 		// if (!bounds.boxContainsBoxBD(thisAreaBox, currentBoardBoundingBox)) {
@@ -433,7 +429,7 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 		// zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
 		if (!bounds.boxContainsSquareBD(currentBoardBoundingBox, endCoords)) {
 			bounds.expandBDBoxToContainSquare(currentBoardBoundingBox, endCoords); // Unpadded
-			firstArea = area.calculateFromUnpaddedBox(currentBoardBoundingBox);
+			firstArea = area.calculateFromUnpaddedBox(currentBoardBoundingBox, ENTITY_WIDTH_VPIXELS); // prettier-ignore
 		}
 		// Version that fits the entire screen on the zoom out
 		// if (!bounds.boxContainsBoxBD(currentBoardBoundingBox, thisAreaBox)) {
@@ -460,7 +456,7 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
  */
 function zoomToCoordsBox(box: BoundingBox): void {
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
-	const thisArea = area.calculateFromUnpaddedBox(boxFloating);
+	const thisArea = area.calculateFromUnpaddedBox(boxFloating, ENTITY_WIDTH_VPIXELS);
 	initTransitionFromArea(thisArea, false);
 }
 
@@ -469,7 +465,7 @@ function zoomToCoordsBox(box: BoundingBox): void {
  * Will not incur an intermediate transition if all coords are not on screen originally.
  */
 function singleZoomToCoordsList(coordsList: Coords[]): void {
-	const transitionArea: Area = area.calculateFromCoordsList(coordsList);
+	const transitionArea: Area = area.calculateFromCoordsList(coordsList, ENTITY_WIDTH_VPIXELS);
 	zoomTransitionToArea(transitionArea);
 }
 
@@ -486,7 +482,7 @@ function singleZoomToBDCoords(coords: BDCoords): void {
 	};
 	const boxFloating: BoundingBoxBD =
 		meshes.expandTileBoundingBoxToEncompassWholeSquareBD(snapBoundingBox);
-	const transitionArea: Area = area.calculateFromUnpaddedBox(boxFloating);
+	const transitionArea: Area = area.calculateFromUnpaddedBox(boxFloating, ENTITY_WIDTH_VPIXELS);
 	zoomTransitionToArea(transitionArea);
 }
 
@@ -598,12 +594,10 @@ function updateCOne2StageTransition(t_sec: number, elapsedTime: number): number 
 function updateCOne3StageTransition(t_sec: number, elapsedTime: number): number {
 	if (elapsedTime <= stageEndTimes.stage1) {
 		// STAGE 1: Constant positive acceleration
-		// console.log("Stage 1");
 		const t = t_sec;
 		return originE + 0.5 * accel_stage1 * t * t;
 	} else if (elapsedTime <= stageEndTimes.stage2) {
 		// STAGE 2: Higher acceleration, then symmetrical deceleration.
-		// console.log("Stage 2");
 		const t_s2 = t_sec - stageEndTimes.stage1 / 1000;
 		const t_s2_half = (stageEndTimes.stage2 - stageEndTimes.stage1) / 2000;
 		if (t_s2 <= t_s2_half) {
@@ -618,7 +612,6 @@ function updateCOne3StageTransition(t_sec: number, elapsedTime: number): number 
 		}
 	} else {
 		// STAGE 3: Constant negative acceleration (symmetrical to stage 1)
-		// console.log("Stage 3");
 		const t_s3 = t_sec - stageEndTimes.stage2 / 1000;
 		return e_at_stage2_end + v_at_stage2_end * t_s3 - 0.5 * accel_stage1 * t_s3 * t_s3;
 	}

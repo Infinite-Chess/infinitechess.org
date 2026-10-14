@@ -1,10 +1,8 @@
 // src/client/scripts/esm/board/rendering/area.ts
 
 /**
- * This script handles the calculation of the "Area"s on screen that
- * will contain the desired list of piece coordinates when at a specific
- * camera position and scale (zoom), which can be used to tell
- * {@link Transition} where to teleport to.
+ * Calculates "Area"s: the camera position and scale (zoom) that
+ * frame a given region of the board on screen, with padding.
  */
 
 import type { Camera } from './camera.js';
@@ -12,7 +10,6 @@ import type { BDCoords, Coords } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
 import space from './space.js';
@@ -22,10 +19,7 @@ import boardgeometry from './boardgeometry.js';
 
 // Types -----------------------------------------------------------------------
 
-/**
- * An area object, containing the information {@link Transition} needs
- * to teleport/transition to this location on the board.
- */
+/** A camera position and scale framing a region of the board. */
 export interface Area {
 	/** The coordinates of the area. */
 	coords: BDCoords;
@@ -40,16 +34,17 @@ export interface Area {
 const TWO = bd.fromNumber(2.0);
 
 /**
- * Minimum padding between an area's pieces and the edge of
- * the screen, as a percentage of the screen WIDTH/HEIGHT.
+ * Minimum padding between a zoomed-in area's squares and the edge
+ * of the screen, as a percentage of the screen WIDTH/HEIGHT.
  */
 const PADDING: number = 0.04;
+/** Minimum gap between a zoomed-out area's mini images and the screen edge, in virtual pixels. */
+const MINIIMAGE_GAP_VPIXELS: number = 5;
 /**
- * When we're zoomed out (mini images visible), content is constrained within this
- * fixed-size virtual pixel region in the center of the screen, canvas-size-independent.
- * Falls back to standard {@link PADDING} when the canvas is smaller than this size.
+ * When zoomed out, mini images are constrained within this fixed-size virtual pixel
+ * region in the center of the screen, canvas-size-independent.
  */
-const MINIIMAGE_CONTENT_SIZE_VPIXELS: number = 600;
+const MINIIMAGE_CONTENT_SIZE_VPIXELS: number = 640;
 
 /** The maximum width (in virtual pixels) that a single square should take up on screen for an area. */
 const AREA_MAX_SQUARE_VPIXELS: BigDecimal = bd.fromNumber(70);
@@ -57,7 +52,7 @@ const AREA_MAX_SQUARE_VPIXELS: BigDecimal = bd.fromNumber(70);
  * The minimum number of squares that should be visible when transitioning somewhere.
  * Prevents variant preview tooltips from being too zoomed in.
  */
-const AREA_MIN_HEIGHT_SQUARES: number = 10; // Divided by screen width
+const AREA_MIN_HEIGHT_SQUARES: number = 10;
 
 /**
  * Just the action of adding padding, changes the required scale to have that
@@ -69,42 +64,28 @@ const PADDING_RECALC_ITERATIONS: number = 10;
 // Padding ---------------------------------------------------------------------
 
 /**
- * Returns a new bounding box, with added padding so the pieces
- * aren't too close to the edge or underneath the navigation bar.
+ * Returns a new bounding box, with added padding so the pieces aren't too close to the edge.
  * @param box - The source bounding box, floating point edges.
+ * @param entityWidthVPixels - The on-screen size of each mini image, in virtual pixels.
  * @param cam - The camera to fit the box within. Defaults to the game camera.
  * @returns The new bounding box
  */
-function applyPaddingToBox(box: BoundingBoxBD, cam: Camera = camera): BoundingBoxBD {
-	// { left, right, bottom, top }
-
-	const boxCopy: BoundingBoxBD = jsutil.deepCopyObject(box);
-
+function applyPaddingToBox(
+	box: BoundingBoxBD,
+	entityWidthVPixels: number,
+	cam: Camera = camera,
+): BoundingBoxBD {
 	const canvasWidth = cam.getCanvasWidthVirtualPixels();
 	const canvasHeight = cam.getCanvasHeightVirtualPixels();
 
-	/** Start with a copy with zero padding. */
-	let paddedBox: BoundingBoxBD = jsutil.deepCopyObject(boxCopy);
+	let paddedBox: BoundingBoxBD = box;
 	let scaleBD: BigDecimal = calcScaleToMatchSides(paddedBox, cam);
 
 	// Iterate until we have desired padding
 	for (let i = 0; i < PADDING_RECALC_ITERATIONS; i++) {
-		// Zoomed-in area: use standard padding, which is a percentage of the canvas size.
-		let paddingHorzPixels: number = canvasWidth * PADDING;
-		let paddingVertPixels: number = canvasHeight * PADDING;
-
-		if (bd.compare(scaleBD, cam.getScaleWhenZoomedOut()) < 0) {
-			// Zoomed-out area: constrain content to a fixed-size pixel region regardless of canvas
-			// size. Falls back to standard padding when the canvas is smaller than that region.
-			paddingHorzPixels = Math.max(
-				paddingHorzPixels,
-				(canvasWidth - MINIIMAGE_CONTENT_SIZE_VPIXELS) / 2,
-			);
-			paddingVertPixels = Math.max(
-				paddingVertPixels,
-				(canvasHeight - MINIIMAGE_CONTENT_SIZE_VPIXELS) / 2,
-			);
-		}
+		const zoomedOut = bd.compare(scaleBD, cam.getScaleWhenZoomedOut()) < 0;
+		const paddingHorzPixels = calcPaddingPixels(canvasWidth, zoomedOut, entityWidthVPixels);
+		const paddingVertPixels = calcPaddingPixels(canvasHeight, zoomedOut, entityWidthVPixels);
 
 		const paddingHorzWorldBD = bd.fromNumber(
 			space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels, cam),
@@ -116,10 +97,10 @@ function applyPaddingToBox(box: BoundingBoxBD, cam: Camera = camera): BoundingBo
 		const paddingVert: BigDecimal = bd.divide(paddingVertWorldBD, scaleBD);
 
 		paddedBox = {
-			left: bd.subtract(boxCopy.left, paddingHorz),
-			right: bd.add(boxCopy.right, paddingHorz),
-			bottom: bd.subtract(boxCopy.bottom, paddingVert),
-			top: bd.add(boxCopy.top, paddingVert),
+			left: bd.subtract(box.left, paddingHorz),
+			right: bd.add(box.right, paddingHorz),
+			bottom: bd.subtract(box.bottom, paddingVert),
+			top: bd.add(box.top, paddingVert),
 		};
 
 		// Prep for next iteration
@@ -127,6 +108,20 @@ function applyPaddingToBox(box: BoundingBoxBD, cam: Camera = camera): BoundingBo
 	}
 
 	return paddedBox;
+}
+
+/**
+ * Padding along one canvas dimension, in virtual pixels. Zoomed out, it's measured from
+ * the mini images' edges, which overhang their squares by half their width.
+ */
+function calcPaddingPixels(
+	canvasLength: number,
+	zoomedOut: boolean,
+	entityWidthVPixels: number,
+): number {
+	if (!zoomedOut) return canvasLength * PADDING;
+	const regionPadding = (canvasLength - MINIIMAGE_CONTENT_SIZE_VPIXELS) / 2;
+	return entityWidthVPixels / 2 + Math.max(MINIIMAGE_GAP_VPIXELS, regionPadding);
 }
 
 // Area Calculation ------------------------------------------------------------
@@ -138,7 +133,6 @@ function applyPaddingToBox(box: BoundingBoxBD, cam: Camera = camera): BoundingBo
  * @returns The area object
  */
 function calculateFromBox(box: BoundingBoxBD, cam: Camera = camera): Area {
-	// { left, right, bottom, top }
 	// The new boardPos is the middle point
 	const newBoardPos = bounds.calcCenterOfBoundingBox(box);
 
@@ -149,7 +143,6 @@ function calculateFromBox(box: BoundingBoxBD, cam: Camera = camera): Area {
 	// we don't have long thin slices of a bounding box that will fail the bounds.boxContainsSquare() function EVEN
 	// if the square is visible on screen!
 	const maximizedBox = boardgeometry.getBoundingBoxOfBoard(newBoardPos, newScale, false, cam);
-	// PROBLEM WITH this enabled is since it changes the size of the boundingBox, new coords are not centered.
 
 	return {
 		coords: newBoardPos,
@@ -158,6 +151,7 @@ function calculateFromBox(box: BoundingBoxBD, cam: Camera = camera): Area {
 	};
 }
 
+/** Returns half the width and height of the bounding box. */
 function getBoundingBoxHalfDimensions(boundingBox: BoundingBoxBD): {
 	xHalfLength: BigDecimal;
 	yHalfLength: BigDecimal;
@@ -179,7 +173,7 @@ function getBoundingBoxHalfDimensions(boundingBox: BoundingBoxBD): {
 function calcScaleToMatchSides(boundingBox: BoundingBoxBD, cam: Camera = camera): BigDecimal {
 	const { xHalfLength, yHalfLength } = getBoundingBoxHalfDimensions(boundingBox);
 
-	const screenBoundingBox = cam.getScreenBoundingBox(false); // Get the screen bounding box without the navigation bars
+	const screenBoundingBox = cam.getScreenBoundingBox(false); // Debug mode's zoomed-out view ignored
 	const screenBoundingBoxBD: BoundingBoxBD =
 		bounds.castDoubleBoundingBoxToBigDecimal(screenBoundingBox);
 
@@ -191,7 +185,7 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD, cam: Camera = camera)
 
 	let newScale = bd.min(xScale, yScale);
 
-	// Cap the scale to areaMinHeightSquares
+	// Cap the scale to AREA_MIN_HEIGHT_SQUARES
 	const capScale = bd.fromNumber(screenHeight / AREA_MIN_HEIGHT_SQUARES);
 	newScale = bd.min(newScale, capScale);
 
@@ -206,29 +200,38 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD, cam: Camera = camera)
 }
 
 /**
- * Calculates the area object that contains every coordinate in the provided list, *with padding added*,
- * and contains the optional {@link existingBox} bounding box.
+ * Calculates the area object that contains every coordinate in the provided list, *with padding added*.
  * @param coordsList - An array of coordinates, typically of the pieces.
+ * @param entityWidthVPixels - The on-screen size of each mini image, in virtual pixels.
  * @param cam - The camera to fit the area within. Defaults to the game camera.
  * @returns The area object
  */
-function calculateFromCoordsList(coordsList: Coords[], cam: Camera = camera): Area {
+function calculateFromCoordsList(
+	coordsList: Coords[],
+	entityWidthVPixels: number,
+	cam: Camera = camera,
+): Area {
 	if (coordsList.length === 0) throw Error('Cannot calculate area from an empty coords list.');
 
 	const box = bounds.getBoxFromCoordsList(coordsList); // Unpadded
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
 
-	return calculateFromUnpaddedBox(boxFloating, cam);
+	return calculateFromUnpaddedBox(boxFloating, entityWidthVPixels, cam);
 }
 
 /**
- * Calulates the area object from the provided bounding box, *with padding added*.
+ * Calculates the area object from the provided bounding box, *with padding added*.
  * @param box - A BoundingBox object.
+ * @param entityWidthVPixels - The on-screen size of each mini image, in virtual pixels.
  * @param cam - The camera to fit the area within. Defaults to the game camera.
  * @returns The area object
  */
-function calculateFromUnpaddedBox(box: BoundingBoxBD, cam: Camera = camera): Area {
-	const paddedBox = applyPaddingToBox(box, cam);
+function calculateFromUnpaddedBox(
+	box: BoundingBoxBD,
+	entityWidthVPixels: number,
+	cam: Camera = camera,
+): Area {
+	const paddedBox = applyPaddingToBox(box, entityWidthVPixels, cam);
 	return calculateFromBox(paddedBox, cam);
 }
 

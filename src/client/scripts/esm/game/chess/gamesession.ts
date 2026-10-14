@@ -20,6 +20,7 @@ import listeners from '../listeners.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import { GameBus } from '../../board/GameBus.js';
+import { ENTITY_WIDTH_VPIXELS } from '../rendering/highlights/snapping.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -46,7 +47,7 @@ type GameSession =
 	  }
 	| { type: 'analysis' | 'editor' };
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Every page must establish this at entry, before the game loop starts, so it is never read un-set. */
 let session: GameSession;
@@ -95,7 +96,6 @@ function setSessionGame(gameSession: GameSession): void {
  * — call it directly only to cover work that must precede the load, such as a fetch.
  */
 function markLoading(): void {
-	// console.log('START loading.');
 	loading = true;
 }
 
@@ -140,7 +140,6 @@ async function loadGame(loadOptions: LoadOptions, hooks?: LoadHooks): Promise<vo
  * clears the loading flag, plays the opening zoom-in.
  */
 function markLoadingDone(): void {
-	// console.log('Game fully loaded.');
 	loading = false;
 	// The canvas is visible exactly while a fully-loaded game exists: this is its only reveal.
 	listeners.getCanvas().classList.remove('visibility-hidden');
@@ -154,7 +153,7 @@ function centerView(): void {
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(
 		gameslot.getGamefile()!.startSnapshot.box,
 	);
-	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
+	const centerArea = area.calculateFromUnpaddedBox(boxFloating, ENTITY_WIDTH_VPIXELS);
 	boardpos.setBoardPos(centerArea.coords);
 	boardpos.setBoardScale(centerArea.scale);
 }
