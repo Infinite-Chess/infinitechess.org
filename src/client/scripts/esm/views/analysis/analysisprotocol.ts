@@ -115,10 +115,10 @@ interface AnalysisLine {
 
 // Schemas ---------------------------------------------------------------------
 
-/** The result of a one-shot `evaluate` command (see {@link EvaluateResultSchema}). */
-export type EvaluateResult = z.infer<typeof EvaluateResultSchema>;
 /** An `evaluate` result for a position the engine took (see {@link SearchedResultSchema}). */
 export type SearchedResult = z.infer<typeof SearchedResultSchema>;
+/** The result of a one-shot `evaluate` command (see {@link EvaluateResultSchema}). */
+export type EvaluateResult = z.infer<typeof EvaluateResultSchema>;
 
 /**
  * A position the engine took. Score is from the side-to-move's perspective; both absent on a

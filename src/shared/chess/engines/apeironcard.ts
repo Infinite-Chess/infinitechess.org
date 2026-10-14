@@ -39,12 +39,6 @@ type SupportedResult = { supported: true } | { supported: false; reason: EngineS
 // Constants -------------------------------------------------------------------
 
 /**
- * The engine's own refusals: pieces too far apart to bring within its coordinates, or a Huygen,
- * which reads exact distances, in a position that would need bringing within them.
- */
-const ENGINE_REFUSALS = ['too_spread_out', 'huygen_too_spread_out'] as const;
-
-/**
  * Variants the engine doesn't support, by name, for callers that must know before a variant loads.
  * The rules below never read it; enginevariants.unit.test.ts keeps the two in agreement.
  */
@@ -71,6 +65,12 @@ const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GI
 
 /** Most pieces a position may hold before the engine is too slow to be of any use. */
 const MAX_PIECES = 10_000;
+
+/**
+ * The engine's own refusals: pieces too far apart to bring within its coordinates, or a Huygen,
+ * which reads exact distances, in a position that would need bringing within them.
+ */
+const ENGINE_REFUSALS = ['too_spread_out', 'huygen_too_spread_out'] as const;
 
 // Individual rule checks ------------------------------------------------------
 
@@ -156,8 +156,7 @@ function checkGameRules(gamefile: GameFile): SupportedResult {
  * Whether the engine can analyze the CURRENTLY VIEWED position (analysis-board local eval).
  * The piece count and types checked are the current board's — a capture can bring a position that
  * was unplayable (too many pieces / an unsupported piece) back into range, so we don't disqualify
- * a game for something at another ply. The engine may still refuse the position itself
- * ({@link EngineRefusal}).
+ * a game for something at another ply. The engine may still refuse the position itself ({@link EngineRefusal}).
  */
 function isAnalysisSupported(gamefile: GameFile): SupportedResult {
 	const gameRulesResult = checkGameRules(gamefile);
@@ -194,9 +193,9 @@ function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 
 export default {
 	// Constants
-	ENGINE_REFUSALS,
 	UNSUPPORTED_VARIANTS,
 	SUPPORTED_MODIFIERS,
+	ENGINE_REFUSALS,
 	// Functions
 	isPlaySupported,
 	isAnalysisSupported,
