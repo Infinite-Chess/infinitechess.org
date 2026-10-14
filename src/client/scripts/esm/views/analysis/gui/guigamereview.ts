@@ -33,6 +33,11 @@ import { GameBus } from '../../../board/GameBus.js';
 import analysisloader from '../analysisloader.js';
 import { SettingsBus } from '../../../util/SettingsBus.js';
 
+// Types -----------------------------------------------------------------------
+
+/** A per-player stat cell in the review's stats columns. */
+type StatKey = 'accuracy' | 'inaccuracy' | 'mistake' | 'blunder' | 'acpl';
+
 // Elements --------------------------------------------------------------------
 
 const element_GameReviewBtn = document.getElementById('btn-game-review')!;
@@ -47,16 +52,38 @@ const element_GraphTooltipMove = document.getElementById('review-graph-tooltip-m
 const element_GraphTooltipEval = document.getElementById('review-graph-tooltip-eval')!;
 const element_PhaseMarkers = document.getElementById('review-phase-markers')!;
 
-/** The stat value cells per player, rebuilt when the stats columns are created. */
-const statCells: { [player: number]: Partial<Record<StatKey, HTMLElement>> } = {};
-
-type StatKey = 'accuracy' | 'inaccuracy' | 'mistake' | 'blunder' | 'acpl';
+// Constants -------------------------------------------------------------------
 
 /** Plies of the engine's best line grafted as a variation beneath a reviewed lapse. */
 const LAPSE_VARIATION_MAX_PLIES = 6;
 
+// --- Eval graph ---
+
+/**
+ * Symmetric top/bottom inset so the zero line sits at the exact vertical center (like lila).
+ * The phase labels overlap the plot's top rather than reserving a band that would offset zero.
+ */
+const GRAPH_VERTICAL_PADDING = 4;
+/** Vertical clearance the tooltip keeps from the graph's top/bottom edges when auto-positioning. */
+const TOOLTIP_TOP_MARGIN = 10;
+const TOOLTIP_BOTTOM_MARGIN = 6;
+const WHITE_FILL = 'rgba(255, 255, 255, 0.45)';
+const BLACK_FILL = 'rgba(0, 0, 0, 0.5)';
+/** Lila-style orange for the line marking the currently viewed position. */
+const CURRENT_POSITION_COLOR = '#d85000';
+
+// State -----------------------------------------------------------------------
+
+/** The stat value cells per player, rebuilt when the stats columns are created. */
+const statCells: { [player: number]: Partial<Record<StatKey, HTMLElement>> } = {};
+
 /** The loaded game's mainline, snapshotted at load (bar-delimited move tokens) for edit detection. */
 let pristineMainline = '';
+
+// --- Eval graph ---
+
+/** The graph position under the cursor, and the cursor's x for placing the tooltip. */
+let hover: { index: number; clientX: number } | undefined;
 
 // Initialization --------------------------------------------------------------
 
@@ -331,22 +358,6 @@ function updateStats(): void {
 }
 
 // Eval graph ------------------------------------------------------------------
-
-/**
- * Symmetric top/bottom inset so the zero line sits at the exact vertical center (like lila).
- * The phase labels overlap the plot's top rather than reserving a band that would offset zero.
- */
-const GRAPH_VERTICAL_PADDING = 4;
-/** Vertical clearance the tooltip keeps from the graph's top/bottom edges when auto-positioning. */
-const TOOLTIP_TOP_MARGIN = 10;
-const TOOLTIP_BOTTOM_MARGIN = 6;
-const WHITE_FILL = 'rgba(255, 255, 255, 0.45)';
-const BLACK_FILL = 'rgba(0, 0, 0, 0.5)';
-/** Lila-style orange for the line marking the currently viewed position. */
-const CURRENT_POSITION_COLOR = '#d85000';
-
-/** The graph position under the cursor, and the cursor's x for placing the tooltip. */
-let hover: { index: number; clientX: number } | undefined;
 
 /** Whether the eval graph is currently shown. */
 function isGraphVisible(): boolean {
