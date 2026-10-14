@@ -183,6 +183,14 @@ message = "The engine doesn't support a world border this large."
 label = "Out of bounds"
 message = "At least one piece is outside the engine's world border."
 
+[position_errors.engine.too_spread_out]
+label = "Too spread out"
+message = "The pieces are spread too far apart for the engine to analyze."
+
+[position_errors.engine.huygen_too_spread_out]
+label = "Huygen too spread out"
+message = "The engine can't analyze a Huygen in a position spread this far apart."
+
 [game_result] # Sentences shown when a game ends (the result banner).
 # {color} is filled in from [sides] above; {label} from [conditions] below.
 color_wins_by = "{color} wins by {label}." # Also reused in the variant preview tooltips to show how a specific color can win.

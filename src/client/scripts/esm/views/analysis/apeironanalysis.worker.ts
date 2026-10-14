@@ -25,6 +25,7 @@
  * when the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
  */
 
+import type { EngineRefusal } from '../../../../../shared/chess/engines/apeironcard.js';
 import type { EngineWasmModule, WasmEngine, WasmMove } from '../../chess/enginewasm.js';
 import type {
 	AnalysisCommand,
@@ -32,6 +33,7 @@ import type {
 	AnalysisResponse,
 	EvaluateResult,
 	GoOptions,
+	SearchedResult,
 } from './analysisprotocol.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
@@ -43,7 +45,7 @@ import enginewasm from '../../chess/enginewasm.js';
 /** The analysis engine glue's exports. */
 interface AnalysisWasmModule extends EngineWasmModule {
 	Engine: {
-		/** Constructs an engine at the position described by `icn`. */
+		/** Constructs an engine at the position described by `icn`. Throws a refusal ({@link asRefusal}). */
 		from_icn: (icn: string, config: Record<string, never>) => AnalysisWasmEngine;
 	};
 	/** Sizes the transposition table, in megabytes. Must be called before any search. */
@@ -58,7 +60,7 @@ interface AnalysisWasmModule extends EngineWasmModule {
 
 /** One wasm engine instance, holding the position it is searching. */
 interface AnalysisWasmEngine extends WasmEngine {
-	/** Moves the instance to a new position, keeping the warm transposition table. */
+	/** Moves the instance to a new position, keeping the warm transposition table. Throws like `from_icn`. */
 	set_position: (icn: string) => void;
 	/**
 	 * Runs iterative deepening from `start_depth` toward `max_depth` (default 64), invoking
@@ -216,7 +218,12 @@ async function runLoop(): Promise<void> {
 	loopRunning = true;
 	try {
 		while (analysing) {
-			syncPosition();
+			const refusal = syncPosition();
+			if (refusal !== undefined) {
+				analysing = false;
+				postMessage({ type: 'refused', requestId: goOptions.requestId, reason: refusal } satisfies AnalysisResponse); // prettier-ignore
+				break;
+			}
 			// The engine clears the stop flag as each search starts, so a stop written while the
 			// position synced would be swallowed: take any queued command before searching.
 			const gen = generation;
@@ -287,16 +294,41 @@ async function runLoop(): Promise<void> {
 	}
 }
 
-/** Applies {@link currentIcn} to the engine if it isn't already. */
-function syncPosition(): void {
-	if (currentIcn === undefined || appliedIcn === currentIcn) return;
-	if (!engine) {
-		engine = wasm.Engine.from_icn(currentIcn, {});
-	} else {
-		engine.set_position(currentIcn);
-	}
+/** Applies {@link currentIcn} to the engine if it isn't already, returning why the engine refused it. */
+function syncPosition(): EngineRefusal | undefined {
+	if (currentIcn === undefined || appliedIcn === currentIcn) return undefined;
+	const placed = placeEngine(engine, currentIcn);
+	if (typeof placed === 'string') return placed;
+	engine = placed;
 	appliedIcn = currentIcn;
 	reachedDepth = 0; // New position: iterative deepening restarts from depth 1.
+	return undefined;
+}
+
+/**
+ * `existing` moved to `icn`, or a new engine there when there is none — or why the engine refused
+ * the position, which leaves `existing` where it was. Any other throw is a crash, and propagates.
+ */
+function placeEngine(
+	existing: AnalysisWasmEngine | undefined,
+	icn: string,
+): AnalysisWasmEngine | EngineRefusal {
+	try {
+		if (!existing) return wasm.Engine.from_icn(icn, {});
+		existing.set_position(icn);
+		return existing;
+	} catch (e) {
+		const refusal = asRefusal(e);
+		if (refusal === undefined) throw e;
+		return refusal;
+	}
+}
+
+/** The engine's refusal of a position (it throws its `compression::Refusal` name), else undefined. */
+function asRefusal(e: unknown): EngineRefusal | undefined {
+	if (e === 'Uncompressible') return 'too_spread_out';
+	if (e === 'ReadsExactDistances') return 'huygen_too_spread_out';
+	return undefined;
 }
 
 /** Yields one macrotask so queued messages (stop / position / go) are processed. */
@@ -328,7 +360,7 @@ function postLegalMoves(requestId: number, icn: string): void {
 	} catch (e) {
 		// A wasm throw here would otherwise leak the engine and hang the main thread's request
 		// (no response ever posted). Reply empty so the debug overlay just shows nothing.
-		console.error('[Analysis Engine] Legal-move enumeration failed', e);
+		if (asRefusal(e) === undefined) console.error('[Analysis Engine] Legal-move enumeration failed', e); // prettier-ignore
 		postMessage({ type: 'legalmoves', requestId, moves: [] } satisfies AnalysisResponse);
 	} finally {
 		legalMoveEngine?.free();
@@ -341,42 +373,19 @@ function postLegalMoves(requestId: number, icn: string): void {
  * The first unreported search in each chunk warms a freshly-cleared hash.
  */
 function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): void {
-	const result: EvaluateResult = {
-		requestId: msg.requestId,
-		legalMoveCount: 0,
-		depth: 0,
-	};
-
+	let result: EvaluateResult;
 	try {
 		if (msg.newChunk) {
 			wasm.reset_engine_state();
 			evaluationEngine?.free();
 			evaluationEngine = undefined;
 		}
-		if (!evaluationEngine) evaluationEngine = wasm.Engine.from_icn(msg.icn, {});
-		else evaluationEngine.set_position(msg.icn);
-
-		const legalMoves: WasmMove[] = evaluationEngine.get_legal_moves_js();
-		result.legalMoveCount = legalMoves.length;
-
-		if (legalMoves.length === 1) {
-			// Forced move: don't search; the review carries the eval over from its neighbors.
-			const move = legalMoves[0]!;
-			const promotion = move.promotion
-				? `=${enginewasm.getPromotionAbbr(move.promotion, msg.mover)}`
-				: '';
-			result.pv = [`${move.from}>${move.to}${promotion}`];
-		} else if (legalMoves.length > 1) {
-			// The same search call the analysis loop uses. Its return value is deliberately
-			// discarded: the page scores the position from the deepest depth streamed here, so a
-			// search that never returns (wedged past the engine's stop-flag poll, and killed by
-			// gamereview's watchdog) still yields its best answer.
-			evaluationEngine.analyse(
-				{ multi_pv: 1, start_depth: 1, slice_ms: 0, max_nodes: msg.maxNodes },
-				(info: AnalysisInfo) => {
-					postMessage({ type: 'info', requestId: msg.requestId, info } satisfies AnalysisResponse); // prettier-ignore
-				},
-			);
+		const placed = placeEngine(evaluationEngine, msg.icn);
+		if (typeof placed === 'string') {
+			result = { requestId: msg.requestId, refused: placed };
+		} else {
+			evaluationEngine = placed;
+			result = evaluate(placed, msg);
 		}
 	} catch (e) {
 		// Likely a wasm panic (poisoned module) — tell the page so it can respawn this worker.
@@ -389,4 +398,41 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 	}
 
 	postMessage({ type: 'evaluated', warmup: msg.warmup, ...result } satisfies AnalysisResponse);
+}
+
+/**
+ * The position `engine` stands on: its legal move count, and its forced move or a search, whose
+ * score the page takes from the streamed infos.
+ */
+function evaluate(
+	engine: AnalysisWasmEngine,
+	msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>,
+): SearchedResult {
+	const legalMoves: WasmMove[] = engine.get_legal_moves_js();
+	const result: SearchedResult = {
+		requestId: msg.requestId,
+		legalMoveCount: legalMoves.length,
+		depth: 0,
+	};
+
+	if (legalMoves.length === 1) {
+		// Forced move: don't search; the review carries the eval over from its neighbors.
+		const move = legalMoves[0]!;
+		const promotion = move.promotion
+			? `=${enginewasm.getPromotionAbbr(move.promotion, msg.mover)}`
+			: '';
+		result.pv = [`${move.from}>${move.to}${promotion}`];
+	} else if (legalMoves.length > 1) {
+		// The same search call the analysis loop uses. Its return value is deliberately
+		// discarded: the page scores the position from the deepest depth streamed here, so a
+		// search that never returns (wedged past the engine's stop-flag poll, and killed by
+		// gamereview's watchdog) still yields its best answer.
+		engine.analyse(
+			{ multi_pv: 1, start_depth: 1, slice_ms: 0, max_nodes: msg.maxNodes },
+			(info: AnalysisInfo) => {
+				postMessage({ type: 'info', requestId: msg.requestId, info } satisfies AnalysisResponse); // prettier-ignore
+			},
+		);
+	}
+	return result;
 }

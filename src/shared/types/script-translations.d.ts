@@ -281,6 +281,14 @@ export interface ScriptTranslations {
 					label: string;
 					message: string;
 				};
+				too_spread_out: {
+					label: string;
+					message: string;
+				};
+				huygen_too_spread_out: {
+					label: string;
+					message: string;
+				};
 			};
 		};
 		game_result: {

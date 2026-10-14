@@ -10,8 +10,11 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { EngineRefusal } from '../../../../../shared/chess/engines/apeironcard.js';
 
 import * as z from 'zod';
+
+import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 
 // Requests --------------------------------------------------------------------
 
@@ -83,6 +86,8 @@ export type AnalysisResponse =
 			reason: 'depth' | 'mate' | 'terminal';
 			info: AnalysisInfo;
 	  }
+	/** The engine refused the position it was asked to analyze, so the search loop stopped. */
+	| { type: 'refused'; requestId: number; reason: EngineRefusal }
 	/** The search threw (likely a wasm panic, which poisons the module) — the main thread must respawn the worker. */
 	| { type: 'searcherror'; message: string };
 
@@ -112,12 +117,14 @@ interface AnalysisLine {
 
 /** The result of a one-shot `evaluate` command (see {@link EvaluateResultSchema}). */
 export type EvaluateResult = z.infer<typeof EvaluateResultSchema>;
+/** An `evaluate` result for a position the engine took (see {@link SearchedResultSchema}). */
+export type SearchedResult = z.infer<typeof SearchedResultSchema>;
+
 /**
- * The result of a one-shot `evaluate` command, and the source of truth for the
- * {@link EvaluateResult} type. Score is from the side-to-move's perspective; both
- * absent on a terminal position.
+ * A position the engine took. Score is from the side-to-move's perspective; both absent on a
+ * terminal position.
  */
-export const EvaluateResultSchema = z.strictObject({
+const SearchedResultSchema = z.strictObject({
 	requestId: z.int(),
 	/** Centipawns. Absent when mating or terminal. */
 	cp: z.number().optional(),
@@ -130,3 +137,12 @@ export const EvaluateResultSchema = z.strictObject({
 	/** The deepest depth the search completed (0 for terminal/forced/unevaluated positions). */
 	depth: z.int(),
 });
+
+/**
+ * The result of a one-shot `evaluate` command, and the source of truth for the
+ * {@link EvaluateResult} type: the position searched, or why the engine refused it.
+ */
+export const EvaluateResultSchema = z.union([
+	SearchedResultSchema,
+	z.strictObject({ requestId: z.int(), refused: z.enum(apeironcard.ENGINE_REFUSALS) }),
+]);
