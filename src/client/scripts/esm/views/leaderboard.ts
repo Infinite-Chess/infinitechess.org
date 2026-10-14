@@ -14,7 +14,8 @@ import validatorama from '../util/validatorama.js';
 import { serverfetch } from '../util/serverfetch.js';
 import usernamecontainer from '../components/usernamecontainer.js';
 
-// --- DOM Element Selection ---
+// Elements --------------------------------------------------------------------
+
 const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;
 const element_supportedVariants = document.getElementById('supported-variants')!;
 const element_ShowMoreButton: HTMLButtonElement = document.getElementById(
@@ -23,28 +24,30 @@ const element_ShowMoreButton: HTMLButtonElement = document.getElementById(
 const element_UserRankingText = document.getElementById('user_ranking_text')!;
 const element_UserRanking = document.getElementById('user_ranking')!;
 
-// --- Variables ---
+// Constants -------------------------------------------------------------------
 
 /** Number of players to be shown on leaderboard page load */
 const LEADERBOARD_LENGTH_ON_LOAD = 50;
 /** Number of players to be added on show more button press */
 const LEADERBOARD_SHOW_MORE_BUTTON_INCREMENT = 50;
 /** Leaderboard to be displayed */
-const leaderboard_id = leaderboardregistry.IDS.INFINITY;
+const LEADERBOARD_ID = leaderboardregistry.IDS.INFINITY;
+
+// State -----------------------------------------------------------------------
 
 /** Body of leaderboard table, as created in createEmptyLeaderboardTable() */
 let element_LeaderboardTableBody: HTMLTableSectionElement;
 /** Running start rank: highest leaderboard position not shown on leaderboard yet */
-let running_start_rank = 1;
+let runningStartRank = 1;
 /**
- * Username of the player, if he is logged in, else undefined,
+ * Username of the player, if they are logged in, else undefined,
  * AT THE TIME OF THE initial request for our world ranking.
  */
 let loggedInAs: string | undefined;
 /** Whether the page has already been initialized once */
 let initialized = false;
 
-// --- Initialization ---
+// Initialization --------------------------------------------------------------
 
 (async function loadLeaderboardData(): Promise<void> {
 	setSupportedVariantsDisplay();
@@ -58,23 +61,19 @@ let initialized = false;
 	element_ShowMoreButton.addEventListener('click', showMorePlayers);
 })();
 
-// --- Functions ---
+// Functions -------------------------------------------------------------------
 
-/**
- * Set the text below the leaderboard table, explaining which variants belong to it
- */
+/** Sets the text below the leaderboard table, explaining which variants belong to it. */
 function setSupportedVariantsDisplay(): void {
-	const variantslist: string[] = [];
+	const variantsList: string[] = [];
 	Object.entries(leaderboardregistry.BY_VARIANT).forEach(([variant, leaderboard]) => {
-		if (leaderboard !== leaderboard_id) return;
-		variantslist.push(variant in translations ? translations[variant as VariantCode] : variant);
+		if (leaderboard !== LEADERBOARD_ID) return;
+		variantsList.push(variant in translations ? translations[variant as VariantCode] : variant);
 	});
-	element_supportedVariants.textContent = `${translations.supported_variants} ${variantslist.join(', ')}.`;
+	element_supportedVariants.textContent = `${translations.supported_variants} ${variantsList.join(', ')}.`;
 }
 
-/**
- * Create an empty leaderboard table upon page initialization
- */
+/** Creates an empty leaderboard table upon page initialization. */
 function createEmptyLeaderboardTable(): void {
 	// Create table
 	const table = document.createElement('table');
@@ -98,23 +97,23 @@ function createEmptyLeaderboardTable(): void {
 /**
  * Populate the leaderboard table for the chosen leaderboard by adding the next top n players.
  * If initialized === false, then this function also populates the "global ranking" element at the top
- * @param n_players - number of players to add to table
+ * @param nPlayers - number of players to add to table
  */
-async function populateTable(n_players: number): Promise<void> {
+async function populateTable(nPlayers: number): Promise<void> {
 	const config: RequestInit = { method: 'GET' };
 
 	try {
 		// Make server request
-		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
+		// We need to fetch nPlayers + 1 and only display nPlayers in order to know whether the "Show more" button needs to be hidden
 		// If initialized === false and the player is logged in, we also request the requester's rank on the first page load
-		const include_requester_rank = !initialized && loggedInAs !== undefined;
+		const includeRequesterRank = !initialized && loggedInAs !== undefined;
 		const params = new URLSearchParams({
-			start_rank: String(running_start_rank),
-			n_players: String(n_players + 1),
-			include_requester_rank: String(include_requester_rank),
+			start_rank: String(runningStartRank),
+			n_players: String(nPlayers + 1),
+			include_requester_rank: String(includeRequesterRank),
 		});
 		const response = await serverfetch(
-			`/api/leaderboards/${leaderboard_id}/top?${params}`,
+			`/api/leaderboards/${LEADERBOARD_ID}/top?${params}`,
 			config,
 		);
 
@@ -132,9 +131,9 @@ async function populateTable(n_players: number): Promise<void> {
 		}
 
 		// Iterate through all results.leaderboardData and add a row to the table body for each of them
-		let rank = running_start_rank;
+		let rank = runningStartRank;
 		results.leaderboardData.forEach((player: { username: string; elo: string }) => {
-			if (rank >= running_start_rank + n_players) return;
+			if (rank >= runningStartRank + nPlayers) return;
 			const row = document.createElement('tr');
 
 			// Create and append <td> for rank
@@ -144,10 +143,10 @@ async function populateTable(n_players: number): Promise<void> {
 
 			// Create and append <td> for username
 			const usernameCell = document.createElement('td');
-			const username_item: UsernameItem = { value: player.username, openInNewWindow: false };
+			const usernameItem: UsernameItem = { value: player.username, openInNewWindow: false };
 			const usernameContainer = usernamecontainer.createUsernameContainer(
 				'player',
-				username_item,
+				usernameItem,
 			);
 			usernamecontainer.embedUsernameContainerDisplayIntoParent(
 				usernameContainer.element,
@@ -170,11 +169,11 @@ async function populateTable(n_players: number): Promise<void> {
 			rank++;
 		});
 
-		// Update running_start_rank
-		running_start_rank += n_players;
+		// Update runningStartRank
+		runningStartRank += nPlayers;
 
 		// Hide "show more" button if not enough players were returned by server
-		if (results.leaderboardData.length < n_players + 1)
+		if (results.leaderboardData.length < nPlayers + 1)
 			element_ShowMoreButton.classList.add('hidden');
 		else element_ShowMoreButton.classList.remove('hidden');
 	} catch (error) {
@@ -182,9 +181,7 @@ async function populateTable(n_players: number): Promise<void> {
 	}
 }
 
-/**
- * Populate the leaderboard table with the next highest rated players
- */
+/** Populates the leaderboard table with the next highest rated players. */
 async function showMorePlayers(): Promise<void> {
 	// disable the button so it can’t be clicked again while we’re fetching
 	element_ShowMoreButton.disabled = true;
