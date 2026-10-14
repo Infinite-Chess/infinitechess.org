@@ -1145,10 +1145,17 @@
 		.game-result {
 			flex: none;
 			flex-direction: row;
+			align-items: baseline;
 			align-self: center;
 			padding: 0 0 0 0.6em;
 			white-space: nowrap;
 			border-top: none;
+		}
+		.game-result .result-score {
+			font-size: 1em;
+		}
+		.game-result .result-text {
+			font-size: 0.9em;
 		}
 
 		/* Board controls */
