@@ -300,7 +300,7 @@ button:disabled {
 }
 
 /* ============================================================
-   Auth card (shared by the login & register pages)
+   Auth card (shared by the login, register, verify and password pages)
    ============================================================ */
 
 /* A raised panel lifted off the page. Generic - surface only. */
@@ -316,6 +316,9 @@ button:disabled {
 
 /* A card holding an auth form. */
 .auth-card {
+	/* Shrinks the whole card on phones. */
+	--ui-zoom: 1;
+	zoom: var(--ui-zoom);
 	flex-direction: column;
 	gap: 20px;
 	width: 100%;
@@ -323,6 +326,13 @@ button:disabled {
 	/* Side padding holds at 36px until ~464px wide — where the 440px card (inside main's 12px
 	   padding) stops being full-width — then shrinks quickly, hitting its 20px floor near 400px. */
 	padding: 40px clamp(20px, 25vw - 80px, 36px);
+}
+
+/* Phones: the auth card a touch smaller throughout. */
+@media (max-width: 390px) {
+	.auth-card {
+		--ui-zoom: 0.9;
+	}
 }
 
 .auth-title {
@@ -336,13 +346,6 @@ button:disabled {
 	align-items: center;
 	justify-content: center;
 	gap: 0.4em;
-}
-
-/* Prevent text wrapping of titles on thin screens */
-@media (max-width: 390px) {
-	.auth-title {
-		font-size: 1.5em;
-	}
 }
 
 .auth-title .glyph {

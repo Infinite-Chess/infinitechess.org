@@ -288,3 +288,10 @@
 		text-align: left;
 	}
 }
+
+/* Phones: the title a size down, so it doesn't wrap. */
+@media (max-width: 390px) {
+	.auth-title {
+		font-size: 1.5em;
+	}
+}
