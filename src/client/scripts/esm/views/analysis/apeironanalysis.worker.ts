@@ -327,7 +327,7 @@ function placeEngine(
 /** The engine's refusal of a position (it throws its `compression::Refusal` name), else undefined. */
 function asRefusal(e: unknown): EngineRefusal | undefined {
 	if (e === 'Uncompressible') return 'too_spread_out';
-	if (e === 'ReadsExactDistances') return 'huygen_too_spread_out';
+	if (e === 'ReadsExactDistances') return 'too_spread_out_for_huygens';
 	return undefined;
 }
 

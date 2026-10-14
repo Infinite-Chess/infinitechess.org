@@ -285,7 +285,7 @@ export interface ScriptTranslations {
 					label: string;
 					message: string;
 				};
-				huygen_too_spread_out: {
+				too_spread_out_for_huygens: {
 					label: string;
 					message: string;
 				};
