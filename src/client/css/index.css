@@ -520,12 +520,15 @@ svg.bg-omega {
    ============================================================ */
 
 .modal {
+	/* Shrinks the whole modal on phones. Zoom scales the height cap too, which the division undoes. */
+	--ui-zoom: 1;
+	zoom: var(--ui-zoom);
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);
 	border-radius: 10px;
 	width: 100%;
 	max-width: 540px;
-	max-height: 90vh;
+	max-height: calc(90vh / var(--ui-zoom));
 	overflow-y: auto;
 	overscroll-behavior: none contain;
 	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
@@ -780,7 +783,7 @@ svg.bg-omega {
 	}
 }
 
-/* Hide less-critical table columns on narrow screens */
+/* Narrow screens: the lobby buttons stack, and the page drops its side padding. */
 @media (max-width: 652px) {
 	/* Stack the three lobby buttons vertically instead of wrapping unevenly */
 	.lobby-actions {
@@ -793,5 +796,12 @@ svg.bg-omega {
 	main {
 		padding-left: 0;
 		padding-right: 0;
+	}
+}
+
+/* Phones: the game options modal a touch smaller throughout. */
+@media (max-width: 450px) {
+	.modal {
+		--ui-zoom: 0.9;
 	}
 }
