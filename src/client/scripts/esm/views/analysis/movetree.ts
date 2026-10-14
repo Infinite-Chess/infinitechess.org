@@ -159,7 +159,7 @@ function beginBranchFromViewedPosition(gamefile: GameFile): void {
  */
 function syncAfterMovesChanged(gamefile: GameFile): void {
 	if (!root) initFromGame(gamefile);
-	if (!root) return;
+	if (!root) return; // Never taken: only narrows `root` for TypeScript, as is the `?? root` below.
 
 	const activeMoveCount = activeLine.length - 1;
 	if (gamefile.moves.length < activeMoveCount) {
