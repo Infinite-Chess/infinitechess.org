@@ -1102,25 +1102,26 @@
 			width: calc(16px * var(--ui-zoom));
 			height: calc(16px * var(--ui-zoom));
 		}
-		/* Moves fade out toward both ends; the matching padding keeps the first and last clear
-		   of the fade once scrolled all the way to them. */
+		/* The padding keeps the first and last moves clear of the shadow once scrolled to them. */
 		.moves-table {
-			--fade: 0.6em;
+			anchor-name: --moves-table;
 			order: 1;
 			flex: 1 1 auto;
 			display: flex;
 			height: auto;
-			padding-inline: var(--fade);
+			padding-inline: 0.6em;
 			overflow-x: auto;
 			overflow-y: hidden;
 			scrollbar-width: none;
-			mask-image: linear-gradient(
-				to right,
-				transparent,
-				black var(--fade),
-				black calc(100% - var(--fade)),
-				transparent
-			);
+		}
+		/* Shades the moves inward from every edge; anchored from outside the table. */
+		.moves-table::after {
+			content: '';
+			position: absolute;
+			position-anchor: --moves-table;
+			inset: anchor(top) anchor(right) anchor(bottom) anchor(left);
+			box-shadow: inset 0 0 8px var(--c-shadow);
+			pointer-events: none;
 		}
 		#btn-move-last {
 			order: 2;
