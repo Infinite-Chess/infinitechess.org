@@ -468,8 +468,8 @@ function resetLineWindowState(): void {
  * Renders one PV's moves starting at that line's current window offset, showing as many as fit
  * the line's rendered width in full. If they don't all fit, drops one move at a time, reserving
  * room for a '…' pager, until they do. A '…' on the left once paged forward, and on the right
- * while more moves remain, page to the previous/next set of moves. A single move too long for
- * the line on its own is shown truncated.
+ * while more moves remain, page to the previous/next set of moves. Two moves too long to fit
+ * in full share the line, truncated.
  */
 function fitLineMovesWindow(
 	container: HTMLElement,
@@ -495,19 +495,17 @@ function fitLineMovesWindow(
 	// Try showing everything remaining first — if it fits, no right pager is needed at all.
 	let shown = total - offset;
 	renderMovesSlice(container, line, offset, shown, showLeftPager, false, goBack, () => {});
-	if (shown === 1 || fitsWithinWidth(container)) return;
+	if (shown <= 2 || fitsWithinWidth(container)) return;
 
 	// Doesn't all fit: shrink by one, now reserving room for a right pager, until it does.
 	shown--;
-	while (shown > 1) {
+	while (shown > 2) {
 		const forward = (): void => goForward(shown);
 		renderMovesSlice(container, line, offset, shown, showLeftPager, true, goBack, forward);
 		if (fitsWithinWidth(container)) return;
 		shown--;
 	}
-	renderMovesSlice(container, line, offset, 1, showLeftPager, offset + 1 < total, goBack, () =>
-		goForward(1),
-	);
+	renderMovesSlice(container, line, offset, 2, showLeftPager, true, goBack, () => goForward(2));
 }
 
 /**
@@ -520,7 +518,7 @@ function fitBackwardWindowStart(
 	endExclusive: number,
 ): number {
 	let count = endExclusive;
-	while (count > 1) {
+	while (count > 2) {
 		const start = endExclusive - count;
 		renderMovesSlice(
 			container,
@@ -535,7 +533,7 @@ function fitBackwardWindowStart(
 		if (fitsWithinWidth(container)) return start;
 		count--;
 	}
-	return Math.max(0, endExclusive - 1);
+	return Math.max(0, endExclusive - 2);
 }
 
 /** Whether every move in the rendered slice shows in full, none squeezed to fit the row. */
@@ -563,7 +561,7 @@ function renderMovesSlice(
 		const moveSpan = document.createElement('span');
 		moveSpan.className = 'line-move';
 		moveSpan.textContent = line.moves[i]!;
-		moveSpan.title = 'Play the line up to this move';
+		moveSpan.title = `${line.moves[i]!} — play the line up to this move`;
 		// Use 'pointerdown', as with 'click' the line changing mid-click cancels the click.
 		moveSpan.addEventListener('pointerdown', () => playLine(line.moves, i));
 		container.append(moveSpan);
