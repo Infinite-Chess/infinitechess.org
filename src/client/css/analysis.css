@@ -547,7 +547,15 @@
 .analysis-context-menu {
 	z-index: 1000;
 	min-width: 170px;
+	max-width: 200px;
 	user-select: none;
+}
+
+/* Its title is the move, which huge coordinates can make arbitrarily long. */
+.analysis-context-menu .popup-menu-title {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
 .analysis-context-menu button {

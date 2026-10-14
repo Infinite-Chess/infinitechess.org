@@ -358,8 +358,8 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 
 	const menu = document.createElement('div');
 	menu.classList.add('popup-menu', 'analysis-context-menu');
-	const title = document.createElement('div');
-	title.classList.add('popup-menu-title');
+	const heading = document.createElement('div');
+	heading.classList.add('popup-menu-title');
 	const moveIndex = formatMoveIndex(node.ply);
 	const moveText = icnmoves.getShortFormMoveFromMove(node.move!, {
 		compact: false,
@@ -367,8 +367,10 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 		comments: false,
 		abbrev: false,
 	});
-	title.textContent = `${moveIndex} ${moveText}`;
-	menu.append(title);
+	const label = `${moveIndex} ${moveText}`;
+	heading.textContent = label;
+	heading.title = label; // It truncates, so hovering shows the move in full.
+	menu.append(heading);
 
 	const parent = node.parent;
 	const isMainline = movetree.isMainLine(node);
