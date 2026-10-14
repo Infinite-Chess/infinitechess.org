@@ -1141,9 +1141,14 @@
 			height: auto;
 			max-width: 9em;
 		}
-		/* No room for it in the strip; the game info shows the conclusion. */
+		/* The result ends the strip on one line, keeping the stacked banner's tight gap to save room. */
 		.game-result {
-			display: none;
+			flex: none;
+			flex-direction: row;
+			align-self: center;
+			padding: 0 0 0 0.6em;
+			white-space: nowrap;
+			border-top: none;
 		}
 
 		/* Board controls */
