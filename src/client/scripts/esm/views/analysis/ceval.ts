@@ -8,7 +8,10 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineSupportCode } from '../../../../../shared/chess/engines/apeironcard.js';
+import type {
+	EngineRefusal,
+	EngineSupportCode,
+} from '../../../../../shared/chess/engines/apeironcard.js';
 import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
 import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './analysisprotocol.js';
 
@@ -27,7 +30,6 @@ import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import analysisworker from './analysisworker.js';
-import analysisenginebounds from './analysisenginebounds.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -164,8 +166,8 @@ let currentTargetDepth = DEFAULT_SETTINGS.depth;
 /** Allows an intentional same-position restart (e.g. adding PV lines) to repaint lower-depth rows. */
 let allowDepthRegressionForCurrentSearch = false;
 /**
- * Why the engine won't analyze the viewed position (piece out of Apeiron's safe coordinate range,
- * an unsupported variant/position, etc.), or undefined when analyzable.
+ * Why the engine won't analyze the viewed position (an unsupported variant/position, or the engine
+ * refusing it), or undefined when analyzable.
  */
 let blockReason: EngineSupportCode | undefined;
 
@@ -187,6 +189,9 @@ const scheduler: {
  * never fed to a worker again.
  */
 const crashCounts = new Map<string, number>();
+
+/** Positions the engine refused, by ICN, so they're blocked without ever being sent again. */
+const refusals = new Map<string, EngineRefusal>();
 
 /** Per-page-session cache of every viewed position's deepest local analysis. */
 const positionCache = new Map<string, CevalUpdate>();
@@ -305,6 +310,11 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 			receiveInfo(msg.requestId, msg.info, true, msg.reason === 'terminal');
 			notifyStatus();
 			break;
+		case 'refused':
+			if (!analyzed || msg.requestId !== analyzed.requestId) break;
+			refusals.set(analyzed.icn, msg.reason);
+			blockAnalysis(msg.reason);
+			break;
 	}
 }
 
@@ -356,6 +366,7 @@ function resetEngineSession(): void {
 	allowDepthRegressionForCurrentSearch = false;
 	blockReason = undefined;
 	crashCounts.clear();
+	refusals.clear();
 	positionCache.clear();
 	queuedLegalMovesRequests.length = 0;
 	emitNow();
@@ -510,12 +521,17 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		return;
 	}
 
+	const icn = getViewedPositionIcn(gamefile);
+	const refusal = refusals.get(icn);
+	if (refusal !== undefined) {
+		blockAnalysis(refusal);
+		return;
+	}
+
 	if (blockReason !== undefined) {
 		blockReason = undefined;
 		lastAnalyzedIcn = undefined;
 	}
-
-	const icn = getViewedPositionIcn(gamefile);
 
 	// This position crashed the engine too many times — never send it again (that just re-crashes
 	// the worker). Checked ahead of the spawn below, so a dead position never costs a wasm load.
@@ -602,16 +618,13 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 }
 
 /**
- * Why the engine can't analyze `gamefile`'s viewed position, or undefined when it can.
- * The engine can't handle some positions at all (4D/5D variants, too many pieces, unsupported
- * pieces/win conditions). Bounds are separate: an out-of-range VIEWED position blocks too, but
- * out-of-range HISTORY is handled by re-basing, not blocking (see getSafeStartPly).
+ * Why the engine can't analyze `gamefile`'s viewed position, as far as the page can tell without
+ * asking it (4D/5D variants, too many pieces, unsupported pieces/win conditions), or undefined.
+ * The engine may still refuse the position itself ({@link refusals}).
  */
 function computeBlockReason(gamefile: GameFile): EngineSupportCode | undefined {
 	const result = apeironcard.isAnalysisSupported(gamefile);
-	if (!result.supported) return result.reason;
-	if (!analysisenginebounds.areAllPiecesInBounds(gamefile)) return 'out_of_bounds';
-	return undefined;
+	return result.supported ? undefined : result.reason;
 }
 
 /** Stops the engine and marks the viewed position un-analyzable, for the given `reason`. */
@@ -626,20 +639,12 @@ function blockAnalysis(reason: EngineSupportCode): void {
 }
 
 /**
- * The compact ICN of the position under analysis, carrying move history so the engine can
- * detect threefold repetition and the fifty-move rule. Truncated to the viewed ply, and
- * re-based to {@link analysisenginebounds.getSafeStartPly} if an earlier ply left the engine's
- * safe coordinate range (unreplayable) — the fifty-move counter survives that cut, repetition
- * detection across it doesn't.
+ * The compact ICN of the position under analysis, carrying its move history up to the viewed ply
+ * so the engine can detect threefold repetition and the fifty-move rule.
  */
 function getViewedPositionIcn(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile);
-	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
-	const safeStartPly = analysisenginebounds.getSafeStartPly(gamefile);
-
-	// Re-base the start snapshot to safeStartPly (no-op at ply 0).
-	gamecompressor.rebaseToPly(longformIn, gamefile.moves, safeStartPly, viewedPlyCount);
-
+	longformIn.moves = longformIn.moves?.slice(0, gamefile.state.local.moveIndex + 1);
 	engineicn.prepareForEngine(longformIn);
 	return engineicn.serialize(longformIn);
 }

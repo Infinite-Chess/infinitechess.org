@@ -21,6 +21,9 @@ import typeutil, { RawType, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
+/** Why the engine refused a position it was handed, which only it can tell. */
+export type EngineRefusal = (typeof ENGINE_REFUSALS)[number];
+
 /** Why the engine can't handle a game. Keys into `position_errors.engine` in the shared translations. */
 export type EngineSupportCode =
 	| 'unsupported_variant'
@@ -28,7 +31,8 @@ export type EngineSupportCode =
 	| 'too_many_pieces'
 	| 'unsupported_piece'
 	| 'border_too_large'
-	| 'out_of_bounds';
+	| 'out_of_bounds'
+	| EngineRefusal;
 
 type SupportedResult = { supported: true } | { supported: false; reason: EngineSupportCode };
 
@@ -61,6 +65,12 @@ const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GI
 
 /** Most pieces a position may hold before the engine is too slow to be of any use. */
 const MAX_PIECES = 10_000;
+
+/**
+ * The engine's own refusals: pieces too far apart to bring within its coordinates, or any need to
+ * with Huygens in play (on the board or by promotion), which read exact distances.
+ */
+const ENGINE_REFUSALS = ['too_spread_out', 'too_spread_out_for_huygens'] as const;
 
 // Individual rule checks ------------------------------------------------------
 
@@ -133,8 +143,7 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 /**
  * Game-level support that's independent of any single position's piece set: the variant's custom
  * piece movement (4D) the engine can't replay, and win conditions. Unlike {@link isPlaySupported}
- * these require no bounded board — the analysis engine handles out-of-range coordinates itself
- * (blocking/re-basing).
+ * these require no bounded board — the engine takes coordinates of any size itself.
  */
 function checkGameRules(gamefile: GameFile): SupportedResult {
 	if (variantmodule.hasCustomMovement(gamefile.variant?.mod))
@@ -147,7 +156,7 @@ function checkGameRules(gamefile: GameFile): SupportedResult {
  * Whether the engine can analyze the CURRENTLY VIEWED position (analysis-board local eval).
  * The piece count and types checked are the current board's — a capture can bring a position that
  * was unplayable (too many pieces / an unsupported piece) back into range, so we don't disqualify
- * a game for something at another ply. Out-of-bounds is handled separately by the caller.
+ * a game for something at another ply. The engine may still refuse the position itself ({@link EngineRefusal}).
  */
 function isAnalysisSupported(gamefile: GameFile): SupportedResult {
 	const gameRulesResult = checkGameRules(gamefile);
@@ -168,8 +177,7 @@ function isAnalysisSupported(gamefile: GameFile): SupportedResult {
  * Whether the engine can review the WHOLE game (Game Review evaluates every mainline position).
  * Uses the STARTING position's piece count — the maximum, since pieces only ever decrease — and
  * every piece type that appears across the game (start pieces plus promotion targets).
- * Out-of-bounds positions are NOT disqualifying: the review skips those individually (pieces
- * can return in range), which is why this deliberately performs no world-border check.
+ * A position the engine refuses ({@link EngineRefusal}) is left as a gap in the review.
  */
 function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 	const gameRulesResult = checkGameRules(gamefile);
@@ -187,6 +195,7 @@ export default {
 	// Constants
 	UNSUPPORTED_VARIANTS,
 	SUPPORTED_MODIFIERS,
+	ENGINE_REFUSALS,
 	// Functions
 	isPlaySupported,
 	isAnalysisSupported,

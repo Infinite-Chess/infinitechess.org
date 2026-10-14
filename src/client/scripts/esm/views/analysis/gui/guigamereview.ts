@@ -528,9 +528,9 @@ function drawGraph(): void {
 		});
 	}
 	ctx.stroke();
-	// Dot the endpoints on either side of every gap — where the eval line disconnects because a
-	// stretch of positions had out-of-bounds pieces we couldn't evaluate — so the break reads as
-	// intentional. Also dots isolated points (no neighbor, so no line was drawn for them at all).
+	// Dot the endpoints on either side of every gap — where the eval line disconnects because the
+	// engine refused a stretch of positions — so the break reads as intentional. Also dots isolated
+	// points (no neighbor, so no line was drawn for them at all).
 	ctx.fillStyle = lineColor;
 	for (const segment of segments) {
 		const first = segment[0]!;
@@ -650,9 +650,9 @@ function initGraphInteraction(canvas: HTMLCanvasElement): void {
 /** Shows the hover tooltip for position `index`: its move, eval and classification. */
 function showGraphTooltip(event: MouseEvent, index: number): void {
 	const cp = gamereview.getWhiteCpAt(index);
-	const outOfBounds = cp === undefined && !gamereview.positionIsEvaluable(index);
-	// A gap that isn't out of bounds is a position still being evaluated — nothing to show yet.
-	if (cp === undefined && !outOfBounds) return element_GraphTooltip.classList.add('hidden');
+	const refusal = cp === undefined ? gamereview.getRefusalAt(index) : undefined;
+	// A gap the engine didn't refuse is a position still being evaluated — nothing to show yet.
+	if (cp === undefined && refusal === undefined) return element_GraphTooltip.classList.add('hidden'); // prettier-ignore
 
 	const node = index > 0 ? gamereview.getMainlineNodes()[index - 1] : undefined;
 	const prefix = index === 0 ? '' : `${guimovetree.formatMoveIndex(index - 1)} `;
@@ -666,8 +666,8 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 		: 'Starting position';
 	element_GraphTooltipMove.textContent = `${prefix}${move}`;
 
-	if (outOfBounds) {
-		element_GraphTooltipEval.textContent = 'Out of bounds — not evaluated';
+	if (refusal !== undefined) {
+		element_GraphTooltipEval.textContent = `${t.shared.position_errors.engine[refusal].label} — not evaluated`; // prettier-ignore
 	} else {
 		const review = node ? gamereview.getReviewForNode(node.id) : undefined;
 		const classification = review?.classification
@@ -684,7 +684,7 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 	element_GraphTooltip.style.left = `${math.clamp(localX - tooltipWidth / 2, 6, rect.width - tooltipWidth - 6)}px`;
 
 	// Auto-position vertically on whichever side of the hovered point has more room — so the
-	// tooltip never sits over the point it describes. An out-of-bounds gap has no point; treat it
+	// tooltip never sits over the point it describes. A refused gap has no point; treat it
 	// as centered, which sends the tooltip to the top.
 	const graphHeight = element_Graph.clientHeight;
 	const pointY = cp !== undefined ? graphY(cp, graphHeight) : graphHeight / 2;

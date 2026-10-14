@@ -9,8 +9,8 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { EngineAssets } from '../../../../../shared/chess/util/engineregistry.js';
+import type { EngineRefusal } from '../../../../../shared/chess/engines/apeironcard.js';
 import type { MoveEvalLabel } from './moveevals.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
@@ -21,12 +21,12 @@ import type {
 	AnalysisInfo,
 	AnalysisResponse,
 	EvaluateResult,
+	SearchedResult,
 } from './analysisprotocol.js';
 
 import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -42,7 +42,6 @@ import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import reviewdivision from './reviewdivision.js';
 import analysisworker from './analysisworker.js';
-import analysisenginebounds from './analysisenginebounds.js';
 import { EvaluateResultSchema } from './analysisprotocol.js';
 
 // Types -----------------------------------------------------------------------
@@ -225,7 +224,7 @@ const REVIEW_HASH_MB = 16;
  * zod can't reject (same shape, new meaning), NOT for interpretation changes — the cache
  * holds only raw engine results, and classifications are recomputed on restore.
  */
-const REVIEW_CACHE_SCHEMA_VERSION = 2;
+const REVIEW_CACHE_SCHEMA_VERSION = 3;
 const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
 /** How long a persisted review survives LocalStorage. */
 const REVIEW_CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
@@ -253,10 +252,6 @@ const positionAttempts = new Map<number, number>();
 
 /** The mainline nodes captured when the review started (moves[i] = nodes[i].move). */
 let mainlineNodes: AnalysisMoveNode[] = [];
-/** The mainline moves (nodes' moves), captured at review start for out-of-bounds history re-basing. */
-let mainlineMoves: MoveFull[] = [];
-/** Safe start ply per position index (analysisenginebounds.getSafeStartPlies); 0 = full history. */
-let safeStartByIndex: number[] = [];
 /** The game serialized once at review start; `.moves` is re-sliced per position. */
 let longformIn: LongFormatIn | undefined;
 /** Turn order captured at review start, for mover resolution. */
@@ -428,8 +423,6 @@ function resetState(): void {
 	chunkQueue = [];
 	positionAttempts.clear();
 	mainlineNodes = [];
-	mainlineMoves = [];
-	safeStartByIndex = [];
 	longformIn = undefined;
 	turnOrder = [];
 	division = {};
@@ -448,16 +441,15 @@ function start(): void {
 	const gamefile: GameFile = gameslot.getGamefile()!;
 
 	mainlineNodes = captureMainline();
-	mainlineMoves = mainlineNodes.map((node) => node.move!);
 	turnOrder = [...gamefile.gameRules.turnOrder];
-	// Per position, the ply to restart the encoded game from when earlier history left the engine's
-	// safe coordinate range (unreplayable). Precomputed in one pass; 0 = full history (common case).
-	safeStartByIndex = analysisenginebounds.getSafeStartPlies(gamefile, mainlineMoves);
 
 	// Serialize the game once; each position re-slices the move list.
 	longformIn = gamecompressor.compressGamefile(gamefile);
 	engineicn.prepareForEngine(longformIn);
-	division = reviewdivision.determine(longformIn.position, mainlineMoves);
+	division = reviewdivision.determine(
+		longformIn.position,
+		mainlineNodes.map((node) => node.move!),
+	);
 
 	const totalPositions = mainlineNodes.length + 1;
 	// All but one hardware thread, leaving the UI responsive.
@@ -604,7 +596,7 @@ function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 				// `type` and `warmup` tag the message; the rest IS the evaluation we store. Both
 				// must be dropped — the spread below would smuggle them past the parameter type.
 				const { type: _type, warmup: _warmup, ...evaluation } = msg;
-				receiveEvaluation({ ...evaluation, ...scoreFromInfo(entry.lastInfo) });
+				receiveEvaluation('refused' in evaluation ? evaluation : { ...evaluation, ...scoreFromInfo(entry.lastInfo) }); // prettier-ignore
 			}
 			dispatchNext(entry);
 			break;
@@ -685,14 +677,6 @@ function dispatchNext(entry: ReviewWorker): void {
 		const work = entry.chunk.shift()!;
 		const index = work.index;
 
-		// A position with a piece outside the engine's safe coordinate range can't be evaluated
-		// (its coords overflow i64). Skip it — record an empty eval for real positions so it's
-		// treated like a failed one: its eval carries over and moves crossing it stay unclassified.
-		if (!positionIsEvaluable(index)) {
-			if (!work.warmup) receiveEvaluation({ requestId: index, legalMoveCount: 2, depth: 0 }); // prettier-ignore
-			if (status !== 'running') return; // receiveEvaluation may have finished the review.
-			continue; // Pull the next work item for this worker.
-		}
 		// The game's own rules ended it here: its result scores it, so there's nothing to search.
 		if (terminalVictorAt(index) !== undefined) {
 			if (!work.warmup) {
@@ -724,12 +708,6 @@ function dispatchNext(entry: ReviewWorker): void {
 	}
 }
 
-/** Whether position `index` is itself within the engine's safe coordinate range (evaluable). */
-function positionIsEvaluable(index: number): boolean {
-	// safeStartByIndex[index] > index exactly when ply `index` is the latest out-of-bounds position.
-	return safeStartByIndex[index]! <= index;
-}
-
 /**
  * The winner (or null for a draw) when the game's rules ended it at position `index`, which only
  * the final mainline position can be. Undefined when the game goes on, or ended off the board.
@@ -744,25 +722,8 @@ function terminalVictorAt(index: number): Player | null | undefined {
 
 /** Canonical ICN for the position after `index` mainline plies. */
 function serializePosition(index: number): string {
-	longformIn!.moves = mainlineMoves.slice(0, index);
-
-	// Clamp to `index`: an out-of-bounds position's safe start is index+1 (unrepresentable). It's
-	// never dispatched to a worker (dispatchNext skips it), but cache callers still ask
-	// for its ICN — clamping keeps GameToPosition within the move list instead of overrunning it.
-	const safeStart = Math.min(safeStartByIndex[index]!, index);
-	if (safeStart === 0) return engineicn.serialize(longformIn!); // Common path.
-
-	// Earlier history left the engine's safe coordinate range: re-base past it (see
-	// analysisenginebounds.getSafeStartPlies). Rare, so we copy onto a fresh longform rather than
-	// mutate the shared base — the position/state GameToPosition rewrites must not leak across calls.
-	const rebased: LongFormatIn = {
-		...longformIn!,
-		gameRules: { ...longformIn!.gameRules, turnOrder: [...longformIn!.gameRules.turnOrder] },
-		position: jsutil.deepCopyObject(longformIn!.position!),
-		state_global: jsutil.deepCopyObject(longformIn!.state_global),
-	};
-	gamecompressor.rebaseToPly(rebased, mainlineMoves, safeStart, index);
-	return engineicn.serialize(rebased);
+	longformIn!.moves = mainlineNodes.slice(0, index).map((node) => node.move!);
+	return engineicn.serialize(longformIn!);
 }
 
 /** The player to move at position `index` (= the mover of mainline move `index`). */
@@ -808,7 +769,7 @@ function abortStalledSearch(entry: ReviewWorker): void {
  * A searched position's score, taken from the deepest depth its worker streamed.
  * Empty when the search completed none, which leaves the position unevaluated.
  */
-function scoreFromInfo(info: AnalysisInfo | undefined): Partial<EvaluateResult> {
+function scoreFromInfo(info: AnalysisInfo | undefined): Partial<SearchedResult> {
 	const line = info?.lines[0];
 	if (!info || !line) return {};
 	return {
@@ -835,7 +796,7 @@ function receiveEvaluation(result: EvaluateResult): void {
 /** Stores a review eval for move-list display and seeds ceval's position cache. */
 function cachePositionEvaluation(index: number, result: EvaluateResult): void {
 	const icn = icnByPosition[index];
-	if (!icn) return;
+	if (!icn || 'refused' in result) return;
 
 	const mover = moverAtPly(index);
 	const sign = mover === p.WHITE ? 1 : -1;
@@ -882,6 +843,8 @@ function classifyReadyMoves(): void {
 		if (
 			before === undefined ||
 			after === undefined ||
+			'refused' in before ||
+			'refused' in after ||
 			effectiveWhiteCp[i] === undefined ||
 			effectiveWhiteCp[i + 1] === undefined
 		)
@@ -900,12 +863,10 @@ function classifyReadyMoves(): void {
 /** The position's white-POV effective cp; forced/terminal/unevaluated positions derive it. */
 function resolveWhiteCp(index: number): number | undefined {
 	if (effectiveWhiteCp[index] !== undefined) return effectiveWhiteCp[index];
-	// Out-of-bounds positions are never evaluated: leave their cp undefined so the eval graph
-	// breaks into a disconnected segment here, rather than carrying a neighbor's eval across a
-	// region we couldn't analyze. Their moves stay unclassified regardless (see classifyMove).
-	if (!positionIsEvaluable(index)) return undefined;
 	const result = results[index];
-	if (!result) return undefined;
+	// A refused position stays undefined, breaking the eval graph here rather than carrying a
+	// neighbor's eval across it; the moves into and out of it stay unclassified.
+	if (!result || 'refused' in result) return undefined;
 	const mover = moverAtPly(index);
 
 	if (result.legalMoveCount === 0) {
@@ -927,12 +888,12 @@ function resolveWhiteCp(index: number): number | undefined {
 }
 
 /** A position's own score, or undefined when it carries the previous one's (forced or failed). */
-function searchedCp(result: EvaluateResult): number | undefined {
+function searchedCp(result: SearchedResult): number | undefined {
 	return result.legalMoveCount === 1 ? undefined : stmCp(result);
 }
 
 /** The result's score from the side-to-move's perspective, as an effective cp. */
-function stmCp(result: EvaluateResult): number | undefined {
+function stmCp(result: SearchedResult): number | undefined {
 	if (result.mate !== undefined) return result.mate > 0 ? MATE_CP : -MATE_CP;
 	return result.cp;
 }
@@ -944,7 +905,7 @@ function stmCp(result: EvaluateResult): number | undefined {
 function carrySourceIndex(index: number): number {
 	for (let i = index - 1; i >= 0; i--) {
 		const result = results[i];
-		if (!result || !positionIsEvaluable(i) || searchedCp(result) !== undefined) return i;
+		if (!result || 'refused' in result || searchedCp(result) !== undefined) return i;
 	}
 	return -1;
 }
@@ -953,11 +914,12 @@ function carrySourceIndex(index: number): number {
 function cacheForcedPositionEvaluation(index: number): void {
 	const result = results[index];
 	const icn = icnByPosition[index];
-	if (!result || result.legalMoveCount !== 1 || !icn) return;
-	const source = carrySourceIndex(index);
+	if (!result || 'refused' in result || result.legalMoveCount !== 1 || !icn) return;
+	const sourceIndex = carrySourceIndex(index);
+	const source = sourceIndex === -1 ? undefined : results[sourceIndex];
 	const label: MoveEvalLabel = {
 		cp: effectiveWhiteCp[index]!,
-		depth: source === -1 ? 0 : results[source]!.depth,
+		depth: source && !('refused' in source) ? source.depth : 0,
 	};
 	if (index > 0) {
 		const node = mainlineNodes[index - 1];
@@ -972,7 +934,7 @@ function cacheForcedPositionEvaluation(index: number): void {
 	});
 }
 
-function classifyMove(i: number, before: EvaluateResult, after: EvaluateResult): MoveReview {
+function classifyMove(i: number, before: SearchedResult, after: SearchedResult): MoveReview {
 	const node = mainlineNodes[i]!;
 	const mover = moverAtPly(i);
 
@@ -1090,6 +1052,12 @@ function getWhiteCpAt(index: number): number | undefined {
 	return effectiveWhiteCp[index];
 }
 
+/** Why the engine refused position `index`, if it did. */
+function getRefusalAt(index: number): EngineRefusal | undefined {
+	const result = results[index];
+	return result && 'refused' in result ? result.refused : undefined;
+}
+
 // Subscriptions ---------------------------------------------------------------
 
 function notifyProgress(): void {
@@ -1114,8 +1082,6 @@ export default {
 	canStart,
 	getStatus,
 	start,
-	// Worker pool
-	positionIsEvaluable,
 	// Summaries
 	getSummary,
 	// Queries for the renderers
@@ -1124,6 +1090,7 @@ export default {
 	getMainlineNodes,
 	getDivision,
 	getWhiteCpAt,
+	getRefusalAt,
 	// Subscriptions
 	onProgress,
 	onClassified,
