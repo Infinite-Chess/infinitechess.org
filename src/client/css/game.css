@@ -1165,26 +1165,23 @@
 			overflow-anchor: none;
 		}
 
-		/* Below the first screen — game info and chat. At most a side bar wide, or two once two
-		   fit (745px = 2 × --sidebar-width − --sidebar-gap). Lifted above the canvas, which the
-		   chat's upward-opening report menu could otherwise slip beneath. */
+		/* Below the first screen — game info and chat, in centered columns a side bar's content
+		   wide, side by side once two fit the page. Lifted above the canvas, which the chat's
+		   upward-opening report menu could otherwise slip beneath. */
 		.secondary-panels {
 			position: absolute;
 			top: 100%;
 			inset-inline: 0;
 			z-index: 1;
 			display: grid;
+			grid-template-columns: repeat(
+				auto-fit,
+				min(100%, calc(var(--sidebar-width) - 2 * var(--sidebar-gap)))
+			);
+			justify-content: center;
 			align-items: start;
 			gap: var(--sidebar-gap);
-			width: min(100%, var(--sidebar-width));
-			margin-inline: auto;
 			padding: 0 var(--sidebar-gap) var(--sidebar-gap);
-		}
-		@media (width >= 745px) {
-			.secondary-panels {
-				grid-template-columns: repeat(2, minmax(0, 1fr));
-				width: calc(2 * var(--sidebar-width) - var(--sidebar-gap));
-			}
 		}
 		.chat-log {
 			height: 240px;
