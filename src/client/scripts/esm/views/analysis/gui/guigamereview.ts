@@ -120,7 +120,7 @@ function hideReviewUI(): void {
 	element_Progress.classList.add('hidden');
 	element_Graph.classList.add('hidden');
 	element_PhaseMarkers.replaceChildren();
-	hoveredPosition = undefined; // Else a phantom hover dot draws on the next review's first frame.
+	hover = undefined; // Else a phantom hover dot draws on the next review's first frame.
 	element_GraphTooltip.classList.add('hidden');
 
 	// Hand the borrowed participant rows back to the meta panel (see revealStats).
@@ -345,7 +345,8 @@ const BLACK_FILL = 'rgba(0, 0, 0, 0.5)';
 /** Lila-style orange for the line marking the currently viewed position. */
 const CURRENT_POSITION_COLOR = '#d85000';
 
-let hoveredPosition: number | undefined;
+/** The graph position under the cursor, and the cursor's x for placing the tooltip. */
+let hover: { index: number; clientX: number } | undefined;
 
 /** Whether the eval graph is currently shown. */
 function isGraphVisible(): boolean {
@@ -555,15 +556,17 @@ function drawGraph(): void {
 	const selected = isViewingMainline() ? gameslot.getGamefile()!.state.local.moveIndex + 1 : -1;
 	updateCurrentPhaseMarker(selected);
 	drawPositionMarker(ctx, selected, width, height, total, CURRENT_POSITION_COLOR, 1);
-	if (hoveredPosition !== undefined) {
-		const cp = gamereview.getWhiteCpAt(hoveredPosition);
+	if (hover !== undefined) {
+		const cp = gamereview.getWhiteCpAt(hover.index);
 		if (cp !== undefined) {
 			ctx.beginPath();
-			ctx.arc(graphX(hoveredPosition, width, total), graphY(cp, height), 4, 0, Math.PI * 2);
+			ctx.arc(graphX(hover.index, width, total), graphY(cp, height), 4, 0, Math.PI * 2);
 			ctx.fillStyle = lineColor;
 			ctx.fill();
 		}
 	}
+	// Redrawn alongside the hover dot, so a position evaluated under a still cursor shows its readout.
+	renderGraphTooltip();
 }
 
 /** Hides a coincident phase line so it cannot double up with the current-position marker. */
@@ -634,20 +637,19 @@ function initGraphInteraction(canvas: HTMLCanvasElement): void {
 	});
 
 	canvas.addEventListener('mousemove', (e) => {
-		const index = indexAt(e);
-		hoveredPosition = index;
-		showGraphTooltip(e, index);
+		hover = { index: indexAt(e), clientX: e.clientX };
 		drawGraph();
 	});
 	canvas.addEventListener('mouseleave', () => {
-		hoveredPosition = undefined;
-		element_GraphTooltip.classList.add('hidden');
+		hover = undefined;
 		drawGraph();
 	});
 }
 
-/** Shows the hover tooltip for position `index`: its move, eval and classification. */
-function showGraphTooltip(event: MouseEvent, index: number): void {
+/** Shows the hovered position's move, eval and classification, or hides the tooltip. */
+function renderGraphTooltip(): void {
+	if (hover === undefined) return element_GraphTooltip.classList.add('hidden');
+	const { index, clientX } = hover;
 	const cp = gamereview.getWhiteCpAt(index);
 	// Still being evaluated, so nothing to show yet.
 	if (cp === undefined && !gamereview.isUnevaluatedAt(index)) return element_GraphTooltip.classList.add('hidden'); // prettier-ignore
@@ -679,7 +681,7 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 	const rect = element_Graph.getBoundingClientRect();
 	const tooltipWidth = element_GraphTooltip.offsetWidth;
 	const tooltipHeight = element_GraphTooltip.offsetHeight;
-	const localX = event.clientX - rect.left;
+	const localX = clientX - rect.left;
 	element_GraphTooltip.style.left = `${math.clamp(localX - tooltipWidth / 2, 6, rect.width - tooltipWidth - 6)}px`;
 
 	// Auto-position vertically on whichever side of the hovered point has more room — so the
