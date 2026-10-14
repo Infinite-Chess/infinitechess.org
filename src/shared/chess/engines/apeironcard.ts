@@ -178,7 +178,7 @@ function isAnalysisSupported(gamefile: GameFile): SupportedResult {
  * Whether the engine can review the WHOLE game (Game Review evaluates every mainline position).
  * Uses the STARTING position's piece count — the maximum, since pieces only ever decrease — and
  * every piece type that appears across the game (start pieces plus promotion targets).
- * A position the engine refuses ({@link EngineRefusal}) is skipped individually by the review.
+ * A position the engine refuses ({@link EngineRefusal}) is left as a gap in the review.
  */
 function isGameReviewSupported(gamefile: GameFile): SupportedResult {
 	const gameRulesResult = checkGameRules(gamefile);

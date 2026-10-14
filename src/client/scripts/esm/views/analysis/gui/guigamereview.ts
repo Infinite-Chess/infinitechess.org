@@ -528,9 +528,9 @@ function drawGraph(): void {
 		});
 	}
 	ctx.stroke();
-	// Dot the endpoints on either side of every gap — where the eval line disconnects because a
-	// stretch of positions had out-of-bounds pieces we couldn't evaluate — so the break reads as
-	// intentional. Also dots isolated points (no neighbor, so no line was drawn for them at all).
+	// Dot the endpoints on either side of every gap — where the eval line disconnects because the
+	// engine refused a stretch of positions — so the break reads as intentional. Also dots isolated
+	// points (no neighbor, so no line was drawn for them at all).
 	ctx.fillStyle = lineColor;
 	for (const segment of segments) {
 		const first = segment[0]!;

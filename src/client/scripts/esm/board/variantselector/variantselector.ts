@@ -872,8 +872,8 @@ function validateOptions(
 }
 
 /**
- * The position as it would be played against the engine: its own world border held to what the
- * engine can evaluate, or one spaced around it when it declares none. The single point a custom
+ * The position as it would be played against the engine: its own world border held to the
+ * engine-game play cap, or one spaced around it when it declares none. The single point a custom
  * seek's border is decided, so its validation, its preview, and the ICN sent all judge the exact
  * board the game loads on. Derived rather than written onto the caller's position, which stays
  * the pristine one the engine restriction may be lifted from later.

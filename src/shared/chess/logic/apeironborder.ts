@@ -1,8 +1,8 @@
 // src/shared/chess/logic/apeironborder.ts
 
 /**
- * The board an engine game is played on: how its world border is derived, and the
- * coordinate range the Apeiron engine can evaluate inside.
+ * The board an engine game is played on: how its world border is derived, and the play cap
+ * that holds every engine game's coordinates within i64.
  *
  * Split from apeironcard.ts, which judges whether the engine can handle a position and
  * therefore needs a whole GameFile. A border is decided while a game is still being built,
@@ -35,7 +35,7 @@ const PLAY_BORDER: Record<number, { dist: bigint; cap: bigint }> = {
 
 /**
  * The world border an engine game is played inside: spaced evenly around the starting position,
- * clamped to what the engine can evaluate. The single source of every engine game's border.
+ * clamped to the play cap. The single source of every engine game's border.
  * @param timestamp - The game's creation time, pinning its {@link PLAY_BORDER} revision.
  */
 function forBox(positionBox: BoundingBox, timestamp: number): BoundingBox {
@@ -65,8 +65,8 @@ function cap(timestamp: number): bigint {
 }
 
 /**
- * An explicit world border reduced to what the engine can evaluate: every
- * edge pulled inside the cap, and an unbounded (or absent) edge becoming it.
+ * An explicit world border held to the play cap: every edge
+ * pulled inside it, and an unbounded (or absent) edge becoming it.
  * @param timestamp - Pins the {@link PLAY_BORDER} revision.
  */
 function clampToCap(worldBorder: UnboundedRectangle | undefined, timestamp: number): BoundingBox {

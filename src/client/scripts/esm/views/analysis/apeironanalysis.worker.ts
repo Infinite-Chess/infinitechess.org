@@ -306,8 +306,8 @@ function syncPosition(): EngineRefusal | undefined {
 }
 
 /**
- * `existing` moved to `icn`, or a new engine there when there is none — or why the engine refused
- * the position, which leaves `existing` where it was. Any other throw is a crash, and propagates.
+ * Moves `existing` to `icn`, or builds an engine there, returning the engine's refusal instead if
+ * it refuses. Other throws propagate.
  */
 function placeEngine(
 	existing: AnalysisWasmEngine | undefined,
@@ -401,8 +401,8 @@ function postEvaluation(msg: Extract<AnalysisCommand, { cmd: 'evaluate' }>): voi
 }
 
 /**
- * The position `engine` stands on: its legal move count, and its forced move or a search, whose
- * score the page takes from the streamed infos.
+ * Counts the legal moves at `engine`'s position, and searches it unless the move is forced. The
+ * page reads the score from the streamed infos.
  */
 function evaluate(
 	engine: AnalysisWasmEngine,
