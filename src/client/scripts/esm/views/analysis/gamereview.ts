@@ -199,7 +199,7 @@ const MAX_PV_PLIES = 12;
 /** How many times a crashed worker's position is retried before being skipped. */
 const MAX_POSITION_ATTEMPTS = 2;
 /** How long a worker may search without completing a depth before we cut it short. */
-const SEARCH_STALL_TIMEOUT_MS = 50;
+const SEARCH_STALL_TIMEOUT_MS = 15_000;
 /**
  * How long a stalled search gets to honor its stop flag before the worker is killed instead.
  * The flag is polled every node batch, so a search that can see it at all stops in milliseconds.
