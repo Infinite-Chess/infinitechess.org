@@ -13,6 +13,14 @@
 - **`scripts/`** is a toolbox of developer and CI automation utilities. Maintain alongside `src/`.
 - **`dev-utils/`** is archived. Do not maintain it, and note that no source code imports from it.
 
+## Current status
+
+- **`redesign`** is the long-running website redesign, one page at a time. The game, analysis and
+  home pages are in their polish phase.
+- **Prod's engine is frozen** on an old HydroChess-era build: `main`'s build rejects releases with
+  the newer asset names, which is intended. The `Infinite-Chess/apeiron` fork that `redesign` builds
+  from lags upstream; sync it only right before `redesign` ships to prod.
+
 ## Useful notes
 
 - The shell is zsh locally, bash on runners: always quote glob patterns in command args (e.g.
