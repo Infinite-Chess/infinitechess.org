@@ -152,7 +152,7 @@ function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean, isMainline: b
 	let tooltip = title;
 	const classes: Record<string, boolean> = {};
 	const review = gamereview.getReviewForNode(node.id);
-	if (review?.classification) {
+	if (review) {
 		const display = gamereview.CLASSIFICATION_DISPLAY[review.classification];
 		tooltip += ` · ${display.label}`;
 		if (!review.isBestMove && review.bestMove) tooltip += ` — best was ${review.bestMove}`;

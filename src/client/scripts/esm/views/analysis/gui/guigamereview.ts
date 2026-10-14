@@ -69,8 +69,7 @@ function init(): void {
 	});
 	gamereview.onClassified((review) => {
 		updateStats();
-		if (review.classification && gamereview.isLapseKey(review.classification))
-			addLapseVariation(review);
+		if (gamereview.isLapseKey(review.classification)) addLapseVariation(review);
 		if (isGraphVisible()) drawGraph();
 	});
 	gamereview.onFinished(onReviewFinished);
@@ -528,8 +527,8 @@ function drawGraph(): void {
 		});
 	}
 	ctx.stroke();
-	// Dot the endpoints on either side of every gap — where the eval line disconnects because the
-	// engine refused a stretch of positions — so the break reads as intentional. Also dots isolated
+	// Dot the endpoints on either side of every gap — where the eval line disconnects across
+	// positions left unevaluated — so the break reads as intentional. Also dots isolated
 	// points (no neighbor, so no line was drawn for them at all).
 	ctx.fillStyle = lineColor;
 	for (const segment of segments) {
@@ -541,7 +540,7 @@ function drawGraph(): void {
 
 	// Lapse dots, at the position after the classified move.
 	for (const review of gamereview.getReviews()) {
-		if (!review.classification || !gamereview.isLapseKey(review.classification)) continue;
+		if (!gamereview.isLapseKey(review.classification)) continue;
 		const cp = gamereview.getWhiteCpAt(review.ply + 1);
 		if (cp === undefined) continue;
 		ctx.beginPath();
@@ -650,9 +649,8 @@ function initGraphInteraction(canvas: HTMLCanvasElement): void {
 /** Shows the hover tooltip for position `index`: its move, eval and classification. */
 function showGraphTooltip(event: MouseEvent, index: number): void {
 	const cp = gamereview.getWhiteCpAt(index);
-	const refusal = cp === undefined ? gamereview.getRefusalAt(index) : undefined;
-	// A gap the engine didn't refuse is a position still being evaluated — nothing to show yet.
-	if (cp === undefined && refusal === undefined) return element_GraphTooltip.classList.add('hidden'); // prettier-ignore
+	// Still being evaluated, so nothing to show yet.
+	if (cp === undefined && !gamereview.isUnevaluatedAt(index)) return element_GraphTooltip.classList.add('hidden'); // prettier-ignore
 
 	const node = index > 0 ? gamereview.getMainlineNodes()[index - 1] : undefined;
 	const prefix = index === 0 ? '' : `${guimovetree.formatMoveIndex(index - 1)} `;
@@ -666,11 +664,12 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 		: 'Starting position';
 	element_GraphTooltipMove.textContent = `${prefix}${move}`;
 
-	if (refusal !== undefined) {
-		element_GraphTooltipEval.textContent = `${t.shared.position_errors.engine[refusal].label} — not evaluated`; // prettier-ignore
+	if (cp === undefined) {
+		const refusal = gamereview.getRefusalAt(index);
+		element_GraphTooltipEval.textContent = refusal === undefined ? 'Not evaluated' : `${t.shared.position_errors.engine[refusal].label} — not evaluated`; // prettier-ignore
 	} else {
 		const review = node ? gamereview.getReviewForNode(node.id) : undefined;
-		const classification = review?.classification
+		const classification = review
 			? ` · ${gamereview.CLASSIFICATION_DISPLAY[review.classification].label}`
 			: '';
 		element_GraphTooltipEval.textContent = `Advantage: ${moveevals.format({ cp })}${classification}`;
@@ -684,7 +683,7 @@ function showGraphTooltip(event: MouseEvent, index: number): void {
 	element_GraphTooltip.style.left = `${math.clamp(localX - tooltipWidth / 2, 6, rect.width - tooltipWidth - 6)}px`;
 
 	// Auto-position vertically on whichever side of the hovered point has more room — so the
-	// tooltip never sits over the point it describes. A refused gap has no point; treat it
+	// tooltip never sits over the point it describes. A gap has no point; treat it
 	// as centered, which sends the tooltip to the top.
 	const graphHeight = element_Graph.clientHeight;
 	const pointY = cp !== undefined ? graphY(cp, graphHeight) : graphHeight / 2;

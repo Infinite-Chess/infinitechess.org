@@ -33,7 +33,7 @@ function render(): void {
 	if (!node?.move) return; // Root (starting position) has no move to review.
 
 	const review = gamereview.getReviewForNode(node.id);
-	if (!review?.classification || !gamereview.isLapseKey(review.classification)) return;
+	if (!review || !gamereview.isLapseKey(review.classification)) return;
 
 	if (review.bestMove !== undefined) renderBestMoveArrow(review.bestMove);
 	boardglyphs.render(review.classification, [node.move.endCoords]);

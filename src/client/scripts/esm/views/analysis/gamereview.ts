@@ -64,13 +64,12 @@ export interface MoveReview {
 	ply: number;
 	/** Who played the move. */
 	color: Player;
-	/** Absent when an engine failure left an endpoint of this move unevaluated. */
-	classification?: ClassificationKey;
+	classification: ClassificationKey;
 	/** Win-probability loss [0,1] from the mover's perspective. */
 	wpLoss: number;
 	/** Per-move accuracy percentage [0,100]. */
 	accuracy: number;
-	/** The engine's best move token ("x,y>x,y"); absent for forced/unevaluated moves. */
+	/** The engine's best move token ("x,y>x,y"). */
 	bestMove?: string;
 	/** Best continuation from the position before this move, capped to {@link MAX_PV_PLIES}. */
 	pv?: string[];
@@ -200,7 +199,7 @@ const MAX_PV_PLIES = 12;
 /** How many times a crashed worker's position is retried before being skipped. */
 const MAX_POSITION_ATTEMPTS = 2;
 /** How long a worker may search without completing a depth before we cut it short. */
-const SEARCH_STALL_TIMEOUT_MS = 15_000;
+const SEARCH_STALL_TIMEOUT_MS = 50;
 /**
  * How long a stalled search gets to honor its stop flag before the worker is killed instead.
  * The flag is polled every node batch, so a search that can see it at all stops in milliseconds.
@@ -260,7 +259,7 @@ let division: ReviewDivision = {};
 
 /** Per-position engine results, indexed 0 (start position) … N (final position). */
 let results: (EvaluateResult | undefined)[] = [];
-/** Effective white-POV cp per position (forced/failed positions carry their neighbor's). */
+/** Effective white-POV cp per position (forced positions carry the previous one's). */
 let effectiveWhiteCp: (number | undefined)[] = [];
 let evaluatedCount = 0;
 const classifiedMoves = new Set<number>();
@@ -636,7 +635,7 @@ function handleWorkerFault(entry: ReviewWorker, fault: AnalysisWorkerFault, reas
 		chunkQueue.unshift([{ ...assignment, newChunk: true }, ...chunk]);
 	} else {
 		// Settle for the depths it did complete, so the review continues. With none, the
-		// evaluation is empty: its eval carries over and adjacent moves classify as unknown.
+		// evaluation is empty, leaving a gap in the eval graph.
 		requeueChunk(chunk);
 		receiveEvaluation({ requestId: assignment.index, legalMoveCount: 2, depth: 0, ...scoreFromInfo(lastInfo) }); // prettier-ignore
 	}
@@ -830,7 +829,7 @@ function cachePositionEvaluation(index: number, result: EvaluateResult): void {
 
 /**
  * Classifies every move whose surrounding positions are now evaluated, strictly in
- * ply order — forced/unevaluated positions carry the previous position's eval, so
+ * ply order — forced positions carry the previous position's eval, so
  * the left-to-right pass keeps the effective evals consistent.
  */
 function classifyReadyMoves(): void {
@@ -839,12 +838,10 @@ function classifyReadyMoves(): void {
 	for (let i = 0; i < mainlineNodes.length; i++) {
 		if (classifiedMoves.has(i)) continue;
 		const before = results[i];
-		const after = results[i + 1];
+		// The first two checks only narrow `before`'s type: its effective cp being set implies them.
 		if (
 			before === undefined ||
-			after === undefined ||
 			'refused' in before ||
-			'refused' in after ||
 			effectiveWhiteCp[i] === undefined ||
 			effectiveWhiteCp[i + 1] === undefined
 		)
@@ -852,7 +849,7 @@ function classifyReadyMoves(): void {
 		cacheForcedPositionEvaluation(i);
 		cacheForcedPositionEvaluation(i + 1);
 
-		const review = classifyMove(i, before, after);
+		const review = classifyMove(i, before);
 		reviews[i] = review;
 		reviewsByNodeId.set(review.nodeId, review);
 		classifiedMoves.add(i);
@@ -860,14 +857,11 @@ function classifyReadyMoves(): void {
 	}
 }
 
-/** The position's white-POV effective cp; forced/terminal/unevaluated positions derive it. */
+/** The position's white-POV effective cp; forced and terminal positions derive it. */
 function resolveWhiteCp(index: number): number | undefined {
 	if (effectiveWhiteCp[index] !== undefined) return effectiveWhiteCp[index];
 	const result = results[index];
-	// A refused position stays undefined, breaking the eval graph here rather than carrying a
-	// neighbor's eval across it; the moves into and out of it stay unclassified.
 	if (!result || 'refused' in result) return undefined;
-	const mover = moverAtPly(index);
 
 	if (result.legalMoveCount === 0) {
 		// Terminal: the game's result scores it, a win as a mate.
@@ -876,20 +870,19 @@ function resolveWhiteCp(index: number): number | undefined {
 		return effectiveWhiteCp[index];
 	}
 
-	const cp = searchedCp(result);
-	if (cp === undefined) {
+	if (result.legalMoveCount === 1) {
 		const source = carrySourceIndex(index);
 		effectiveWhiteCp[index] = source === -1 ? 0 : resolveWhiteCp(source);
 		return effectiveWhiteCp[index];
 	}
 
-	effectiveWhiteCp[index] = mover === p.WHITE ? cp : -cp;
+	// Searched to no depth, it stays undefined like a refused one: the eval graph breaks there
+	// rather than carrying a neighbor's eval across it, and the moves into and out of it stay
+	// unclassified.
+	const cp = stmCp(result);
+	if (cp === undefined) return undefined;
+	effectiveWhiteCp[index] = moverAtPly(index) === p.WHITE ? cp : -cp;
 	return effectiveWhiteCp[index];
-}
-
-/** A position's own score, or undefined when it carries the previous one's (forced or failed). */
-function searchedCp(result: SearchedResult): number | undefined {
-	return result.legalMoveCount === 1 ? undefined : stmCp(result);
 }
 
 /** The result's score from the side-to-move's perspective, as an effective cp. */
@@ -905,7 +898,7 @@ function stmCp(result: SearchedResult): number | undefined {
 function carrySourceIndex(index: number): number {
 	for (let i = index - 1; i >= 0; i--) {
 		const result = results[i];
-		if (!result || 'refused' in result || searchedCp(result) !== undefined) return i;
+		if (!result || 'refused' in result || result.legalMoveCount !== 1) return i;
 	}
 	return -1;
 }
@@ -934,30 +927,23 @@ function cacheForcedPositionEvaluation(index: number): void {
 	});
 }
 
-function classifyMove(i: number, before: SearchedResult, after: SearchedResult): MoveReview {
+function classifyMove(i: number, before: SearchedResult): MoveReview {
 	const node = mainlineNodes[i]!;
 	const mover = moverAtPly(i);
 
+	// Starts as forced, the only legal move: no credit, no blame.
 	const review: MoveReview = {
 		nodeId: node.id,
 		ply: i,
 		color: mover,
+		classification: 'forced',
 		wpLoss: 0,
 		accuracy: 100,
 		bestMove: before.pv?.[0],
 		pv: before.pv ? before.pv.slice(0, MAX_PV_PLIES) : undefined,
-		isBestMove: false,
+		isBestMove: true,
 	};
-
-	if (before.legalMoveCount === 1) {
-		// The only legal move: no credit, no blame.
-		review.classification = 'forced';
-		review.isBestMove = true;
-		return review;
-	}
-	if (stmCp(before) === undefined || (after.legalMoveCount > 1 && stmCp(after) === undefined)) {
-		return review; // An endpoint failed to evaluate — leave the move unclassified.
-	}
+	if (before.legalMoveCount === 1) return review;
 
 	// Win probabilities from the mover's perspective, before and after their move.
 	const moverSign = mover === p.WHITE ? 1 : -1;
@@ -1005,7 +991,6 @@ function getSummary(): ReviewSummary {
 		if (!review) continue;
 		const summary = summaries[review.color];
 		if (!summary) continue; // A color outside white/black (multiplayer variants).
-		if (review.classification === undefined) continue;
 		summary.counts[review.classification]++;
 		if (review.classification === 'forced') continue; // Excluded from accuracy/acpl.
 
@@ -1052,6 +1037,21 @@ function getWhiteCpAt(index: number): number | undefined {
 	return effectiveWhiteCp[index];
 }
 
+/**
+ * Whether position `index` is settled without an eval: refused, searched to no depth, or forced
+ * after such a position. False while it, or the position a forced one carries, is still pending.
+ */
+function isUnevaluatedAt(index: number): boolean {
+	const result = results[index];
+	if (!result) return false;
+	if ('refused' in result) return true;
+	if (result.legalMoveCount === 1) {
+		const source = carrySourceIndex(index);
+		return source !== -1 && isUnevaluatedAt(source);
+	}
+	return result.legalMoveCount > 1 && stmCp(result) === undefined;
+}
+
 /** Why the engine refused position `index`, if it did. */
 function getRefusalAt(index: number): EngineRefusal | undefined {
 	const result = results[index];
@@ -1090,6 +1090,7 @@ export default {
 	getMainlineNodes,
 	getDivision,
 	getWhiteCpAt,
+	isUnevaluatedAt,
 	getRefusalAt,
 	// Subscriptions
 	onProgress,
