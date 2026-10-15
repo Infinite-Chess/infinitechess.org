@@ -7,7 +7,8 @@
  *   npx tsx scripts/modules/pkg-cost.ts [pkg] [--why] [--cost]
  *
  * Defaults to zod. --why prints the shortest import chain pulling it in; --cost bundles each
- * entry twice, once with the package stubbed empty, and diffs the minified bytes.
+ * entry twice, once with the package stubbed empty, and diffs the minified bytes — reading up
+ * to ~0.6 KB low, since the stub pulls esbuild's CommonJS interop helpers into the stubbed build.
  *
  * A heavy package is a placement constraint of its own — zod alone is ~60 KB. Before relocating
  * a schema, check its new home is reached only by pages already carrying it. Type-only imports
@@ -98,7 +99,7 @@ function stubPackage(pkg: string): esbuild.Plugin {
 		name: 'stub-pkg',
 		setup(build) {
 			build.onResolve({ filter: new RegExp(`^${pkg}(/|$)`) }, () => ({ path: pkg, namespace: 'stub' }));
-			build.onLoad({ filter: /.*/, namespace: 'stub' }, () => ({ contents: 'export {};' }));
+			build.onLoad({ filter: /.*/, namespace: 'stub' }, () => ({ contents: '', loader: 'empty' }));
 		},
 	}; // prettier-ignore
 }
