@@ -15,9 +15,10 @@
  * giving views/index/index.ts and shared/chess/util/typeutil.ts.
  */
 
+import type { Metafile } from 'esbuild';
+
 import fs from 'node:fs';
 import ts from 'typescript';
-import esbuild, { Metafile } from 'esbuild';
 
 import srcgraph from './srcgraph.js';
 import { ESMEntryPoints } from '../../build/client.js';
@@ -493,18 +494,7 @@ function checkGates(edges: Edge[]): CheckResult {
 
 /** An entry point's full transitive graph: every module it pulls in, and what each imports. */
 async function bundleGraph(entry: string): Promise<Metafile['inputs']> {
-	const result = await esbuild.build({
-		entryPoints: [entry],
-		bundle: true,
-		metafile: true,
-		write: false,
-		logLevel: 'silent',
-		format: 'esm',
-		loader: { '.wasm': 'file', '.glsl': 'text' },
-		external: ['/fonts/*'],
-		outdir: 'import-rules-virtual-out', // Never written (write: false).
-	});
-	return result.metafile.inputs;
+	return (await srcgraph.bundle([entry])).metafile.inputs;
 }
 
 /**

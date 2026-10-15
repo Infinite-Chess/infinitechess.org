@@ -15,8 +15,9 @@
  * skipped throughout, since esbuild erases them.
  */
 
+import type { Plugin } from 'esbuild';
+
 import fs from 'node:fs';
-import esbuild from 'esbuild';
 
 import srcgraph from './srcgraph.js';
 import { ESMEntryPoints } from '../../build/client.js';
@@ -79,23 +80,13 @@ function depsOf(f: string): { local: string[]; bare: string[] } {
 
 /** Minified byte size of one entry's bundle, optionally with `pkg` stubbed out. */
 async function sizeOf(entry: string, stub: string | undefined): Promise<number> {
-	const result = await esbuild.build({
-		entryPoints: [entry],
-		bundle: true,
-		minify: true,
-		write: false,
-		logLevel: 'silent',
-		format: 'esm',
-		loader: { '.wasm': 'file', '.glsl': 'text' },
-		external: ['/fonts/*'],
-		outdir: 'pkg-cost-virtual-out', // Never written (write: false).
-		plugins: stub ? [stubPackage(stub)] : [],
-	});
-	return result.outputFiles!.reduce((n, f) => n + f.contents.byteLength, 0);
+	const plugins = stub ? [stubPackage(stub)] : [];
+	const result = await srcgraph.bundle([entry], { minify: true, plugins });
+	return result.outputFiles.reduce((n, f) => n + f.contents.byteLength, 0);
 }
 
 /** Replaces `pkg` with an empty module, so its bytes drop out of the bundle. */
-function stubPackage(pkg: string): esbuild.Plugin {
+function stubPackage(pkg: string): Plugin {
 	return {
 		name: 'stub-pkg',
 		setup(build) {

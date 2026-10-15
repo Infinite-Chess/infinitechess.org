@@ -17,7 +17,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import esbuild from 'esbuild';
 
 import srcgraph from './srcgraph.js';
 
@@ -38,20 +37,7 @@ const entry = path.relative(process.cwd(), path.resolve(entryArg)).split(path.se
 /** Only modules under this prefix are studied; node_modules and assets elsewhere are ignored. */
 const SRC_PREFIX = 'src/';
 
-const result = await esbuild.build({
-	entryPoints: [entry],
-	bundle: true,
-	metafile: true,
-	write: false,
-	logLevel: 'silent',
-	format: 'esm',
-	// Mirror the real client build so resolution never errors on these.
-	loader: { '.wasm': 'file', '.glsl': 'text' },
-	external: ['/fonts/*'],
-	outdir: 'import-chain-virtual-out', // Never written (write: false).
-});
-
-const inputs = result.metafile.inputs;
+const inputs = (await srcgraph.bundle([entry])).metafile.inputs;
 
 if (!(entry in inputs)) {
 	console.error(`Entry point not found in build graph: ${entry}`);

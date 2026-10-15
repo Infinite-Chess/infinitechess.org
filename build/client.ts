@@ -1,5 +1,10 @@
 // build/client.ts
 
+/**
+ * The client build: bundles the ESM and CJS entry points with esbuild, writes the asset
+ * manifest, and in production further minifies the scripts with SWC and the CSS with lightningcss.
+ */
+
 import fs from 'fs';
 import swc from '@swc/core';
 import path from 'node:path';
@@ -14,7 +19,7 @@ import esbuild, { BuildOptions, Metafile, Plugin, PluginBuild } from 'esbuild';
 import { getESBuildLogStatusLogger } from './plugins.js';
 import { getEngineGlueUrl, getEngineVersion } from './engine-wasm.js';
 
-// ================================= CONSTANTS =================================
+// Constants -------------------------------------------------------------------
 
 // Targetted browsers for CSS transpilation
 // Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
@@ -75,7 +80,7 @@ export const ESMEntryPoints = [
 /** CommonJS modules imported by html pages. */
 const CJSEntryPoints = ['src/client/scripts/cjs/game/htmlscript.ts'];
 
-// ================================= PLUGINS ===================================
+// Plugins ---------------------------------------------------------------------
 
 const ESMBuildPlugin = getESBuildLogStatusLogger(
 	'✅ Client ESM Build successful.',
@@ -182,8 +187,21 @@ function writeManifest(metafile: Metafile): void {
 	fs.writeFileSync('./dist/manifest.json', JSON.stringify(manifest, null, 2));
 }
 
-const ESMBuildOptions: BuildOptions = {
+// Options ---------------------------------------------------------------------
+
+/** How the ESM build finds and loads modules — what any bundle needs to match the real build's. */
+export const ESMResolveOptions = {
 	bundle: true,
+	format: 'esm',
+	loader: { '.wasm': 'file' },
+	// Font URLs in CSS (e.g. @font-face url('/fonts/...')) are absolute web paths — mark them
+	// external so esbuild doesn't try to resolve them as files on disk.
+	external: ['/fonts/*'],
+	plugins: [GLSLMinifyPlugin],
+} satisfies BuildOptions;
+
+const ESMBuildOptions: BuildOptions = {
+	...ESMResolveOptions,
 	entryPoints: ESMEntryPoints,
 	outdir: './dist/client',
 	chunkNames: 'scripts/esm/[name]-[hash]',
@@ -196,13 +214,8 @@ const ESMBuildOptions: BuildOptions = {
 	 * each belonging to a separate entry point module.
 	 */
 	splitting: true,
-	format: 'esm',
 	sourcemap: true, // Enables sourcemaps for debugging in the browser.
-	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
-	loader: { '.wasm': 'file' },
-	// Font URLs in CSS (e.g. @font-face url('/fonts/...')) are absolute web paths — mark them
-	// external so esbuild doesn't try to resolve them as files on disk.
-	external: ['/fonts/*'],
+	// No esbuild minification: production minifies with SWC, which is more compact.
 	metafile: true, // Generate metadata about the build, which we use to create our own manifest.json
 };
 
@@ -215,12 +228,10 @@ const CJSBuildOptions: BuildOptions = {
 	sourcemap: true,
 };
 
-// ================================= BUILDING ===================================
+// Building --------------------------------------------------------------------
 
 /** Builds the client's scripts and minifies css. */
 export async function buildClient(isDev: boolean): Promise<void> {
-	// console.log(`Building client in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode...`);
-
 	// Create signaling plugins to wait for the initial build in watch mode
 	const { plugin: esmInitialBuildPlugin, initialBuild: esmInitialBuild } =
 		getInitialBuildPlugin();
@@ -231,7 +242,12 @@ export async function buildClient(isDev: boolean): Promise<void> {
 		...ESMBuildOptions,
 		entryNames: '[dir]/[name]-[hash]', // Content-hash output file names
 		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
-		plugins: [ESMBuildPlugin, GLSLMinifyPlugin, esmInitialBuildPlugin, ManifestPlugin],
+		plugins: [
+			ESMBuildPlugin,
+			...ESMResolveOptions.plugins,
+			esmInitialBuildPlugin,
+			ManifestPlugin,
+		],
 	});
 	const CJSContext = await esbuild.context({
 		...CJSBuildOptions,
@@ -262,7 +278,6 @@ export async function buildClient(isDev: boolean): Promise<void> {
 		CJSContext.dispose();
 
 		// Minify JS and CSS
-		// console.log('Minifying production assets...');
 		// Further minify them. This cuts off their size a further 60%!!!
 		await minifyScriptDirectory(
 			'./dist/client/scripts/cjs/',
@@ -307,7 +322,6 @@ async function minifyScriptDirectory(
 		// Write the minified file to the output directory
 		fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
 		fs.writeFileSync(outputFilePath, minified.code);
-		// console.log(`Minified: ${outputFilePath}`);
 	}
 }
 

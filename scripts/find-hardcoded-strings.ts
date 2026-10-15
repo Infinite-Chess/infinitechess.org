@@ -19,7 +19,8 @@
 import fs from 'node:fs';
 import ts from 'typescript';
 import path from 'node:path';
-import esbuild from 'esbuild';
+
+import srcgraph from './modules/srcgraph.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -96,7 +97,9 @@ function collectScriptEntries(templates: string[]): string[] {
 	const entries = new Set<string>();
 	for (const name of templates) {
 		const src = fs.readFileSync(path.join(VIEWS_DIR, name), 'utf8');
-		for (const m of src.matchAll(/manifest\['(scripts\/esm\/[^']+\.ts)'\]/g)) entries.add(`src/client/${m[1]!}`); // prettier-ignore
+		for (const m of src.matchAll(/manifest\['(scripts\/esm\/[^']+\.ts)'\]/g)) {
+			entries.add(`src/client/${m[1]!}`);
+		}
 	}
 	return [...entries];
 }
@@ -106,17 +109,7 @@ function collectScriptEntries(templates: string[]): string[] {
 /** Every first-party module the entries' bundles ship, resolved exactly as the build does. */
 async function collectModules(entryPoints: string[]): Promise<string[]> {
 	if (entryPoints.length === 0) return [];
-	const result = await esbuild.build({
-		entryPoints,
-		bundle: true,
-		metafile: true,
-		write: false,
-		logLevel: 'silent',
-		format: 'esm',
-		loader: { '.wasm': 'file', '.glsl': 'text' },
-		external: ['/fonts/*'],
-		outdir: 'hardcoded-strings-virtual-out', // Never written (write: false).
-	});
+	const result = await srcgraph.bundle(entryPoints);
 	return Object.keys(result.metafile.inputs)
 		.filter((f) => f.startsWith('src/') && /\.(ts|js)$/.test(f))
 		.sort();
@@ -124,7 +117,8 @@ async function collectModules(entryPoints: string[]): Promise<string[]> {
 
 /** Prints the module's prose-looking string literals that could reach the user. */
 function sweepModule(file: string): void {
-	const src = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true); // prettier-ignore
+	const source = fs.readFileSync(file, 'utf8');
+	const src = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
 	const visit = (node: ts.Node): void => {
 		const text = literalText(node);
 		if (text === undefined) return ts.forEachChild(node, visit);

@@ -23,7 +23,6 @@
  * See docs/systems/BUILD.md — that list is hand-maintained.
  */
 
-import esbuild from 'esbuild';
 import { globSync } from 'node:fs';
 
 import srcgraph from './srcgraph.js';
@@ -70,17 +69,7 @@ function label(entry: string): string {
 
 /** One page's bundle graph: every first-party input, and what each of them imports. */
 async function graphOf(entry: string): Promise<Record<string, string[]>> {
-	const result = await esbuild.build({
-		entryPoints: [entry],
-		bundle: true,
-		metafile: true,
-		write: false,
-		logLevel: 'silent',
-		format: 'esm',
-		loader: { '.wasm': 'file', '.glsl': 'text' },
-		external: ['/fonts/*'],
-		outdir: 'pagereach-virtual-out', // Never written (write: false).
-	});
+	const result = await srcgraph.bundle([entry]);
 	const out: Record<string, string[]> = {};
 	for (const [file, meta] of Object.entries(result.metafile.inputs)) {
 		if (!file.startsWith('src/')) continue;

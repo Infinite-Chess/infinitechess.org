@@ -2,13 +2,16 @@
 
 /**
  * Source-graph primitives the scripts/modules tools share: walking src/ for scripts,
- * resolving relative specifiers, telling runtime imports from type-only ones, and the
- * short paths every report prints.
+ * resolving relative specifiers, telling runtime imports from type-only ones, bundling
+ * entries as the real client build does, and the short paths every report prints.
  */
 
 import fs from 'node:fs';
 import ts from 'typescript';
 import path from 'node:path';
+import esbuild from 'esbuild';
+
+import { ESMResolveOptions } from '../../build/client.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -97,6 +100,25 @@ function literalText(node: ts.Expression | undefined): string | undefined {
 	return node && ts.isStringLiteral(node) ? node.text : undefined;
 }
 
+// Bundling --------------------------------------------------------------------
+
+/** Bundles client entries in memory, resolving exactly as the real client build does. */
+function bundle(
+	entryPoints: string[],
+	{ minify = false, plugins = [] }: { minify?: boolean; plugins?: esbuild.Plugin[] } = {},
+): Promise<esbuild.BuildResult<{ metafile: true; write: false }>> {
+	return esbuild.build({
+		...ESMResolveOptions,
+		entryPoints,
+		metafile: true,
+		write: false,
+		minify,
+		logLevel: 'silent',
+		outdir: 'srcgraph-virtual-out', // Never written (write: false).
+		plugins: [...ESMResolveOptions.plugins, ...plugins],
+	});
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -107,4 +129,6 @@ export default {
 	resolveRelative,
 	// Imports
 	runtimeSpecifiers,
+	// Bundling
+	bundle,
 };
