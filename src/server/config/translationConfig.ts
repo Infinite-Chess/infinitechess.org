@@ -4,8 +4,7 @@
  * Where the translation and news files live, which language is the source of truth,
  * and each supported language's date-fns locale.
  *
- * Pure configuration — the loaders that read it are `translationLoader.ts` (legacy)
- * and `componentTranslationLoader.ts` (current). See docs/systems/TRANSLATIONS.md.
+ * Pure configuration, read by `translationLoader.ts`. See docs/systems/TRANSLATIONS.md.
  */
 
 import type { Locale } from 'date-fns';

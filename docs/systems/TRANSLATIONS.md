@@ -4,9 +4,9 @@ How the redesign-era, per-component, TOML-based translation system works on the 
 templates. This is the dev reference — see [TRANSLATING.md](/docs/TRANSLATING.md) for translator
 workflow.
 
-> The legacy flat-file i18next system (one `translation/<lang>.toml` per language) still loads in
-> parallel via `translationLoader.ts`. The new system below is what all SSR Nunjucks pages use. New
-> code should use the new system.
+> The legacy flat `translation/en-US.toml` is no longer loaded at runtime. It survives only as the
+> source of the type for the client's legacy `translations` global, which dormant EJS-era pages
+> still reference.
 
 ## On-disk layout
 
@@ -17,7 +17,7 @@ translation/
 │   ├── de-DE.toml           optional per-language overrides
 │   └── ...
 ├── news/                    excluded from the loader (see EXCLUDED_DIRS)
-└── <lang>.toml              legacy flat i18next files (separate system)
+└── en-US.toml               legacy flat file, types only (see the note above)
 ```
 
 A component's TOML may include a top-level `[script]` sub-table. Everything **outside** `[script]`
@@ -31,9 +31,8 @@ Config lives in [src/server/config/translationConfig.ts](/src/server/config/tran
 
 ## Boot
 
-[src/server/config/i18n.ts](/src/server/config/i18n.ts) calls `componentTranslationLoader.load()`
-once at startup. That function
-([componentTranslationLoader.ts](/src/server/config/componentTranslationLoader.ts)):
+[src/server/app.ts](/src/server/app.ts) calls `translationLoader.load()` once at startup. That
+function ([translationLoader.ts](/src/server/config/translationLoader.ts)):
 
 1. Scans `translation/` for subdirectories (skipping `EXCLUDED_DIRS`).
 2. Parses every `<lang>.toml` and runs all string values through an XSS filter that whitelists only
@@ -132,7 +131,7 @@ each component lazily on first access.
 
 When the caller holds only a resolved language code (e.g. SSR template-render code, or a queued
 email sender that resolved the language from the DB), use the lower-level primitive
-`componentTranslationLoader.getScript(component, lang)` that the bound accessors delegate to.
+`translationLoader.getScript(component, lang)` that the bound accessors delegate to.
 
 There's nothing structurally special about `responses` — any component's script-facing strings are
 reachable the same way. The `responses` convention exists so server-emitted strings are visually
@@ -172,7 +171,7 @@ which produces
 in `shared/` so both sides can consume it: client scripts read `t.header.x.y` via the global
 declared in [src/client/types/globals.d.ts](/src/client/types/globals.d.ts); the server reads it
 through the request-bound `req.t` (typed as `ScriptTranslations`) or the underlying
-`componentTranslationLoader.getScript<C>(component, lang): ScriptTranslations[C]` primitive.
+`translationLoader.getScript<C>(component, lang): ScriptTranslations[C]` primitive.
 
 Re-run `npm run generate:types` whenever you add a script-facing key.
 
@@ -195,8 +194,8 @@ hardcoded English in the page's templates and in every module its bundle ships.
 4. Run `npm run generate:types` so `t.<component>` becomes typed in client scripts.
 5. Restart the server (the loader runs once at boot — TOML changes require a restart).
 6. To check nothing was missed, temporarily set `PSEUDO_LOC = true` in
-   [componentTranslationLoader.ts](/src/server/config/componentTranslationLoader.ts): every
-   translated string renders wrapped in `⟦…⟧`, so any plain text left on the page is hardcoded.
+   [translationLoader.ts](/src/server/config/translationLoader.ts): every translated string renders
+   wrapped in `⟦…⟧`, so any plain text left on the page is hardcoded.
 
 ## Fallback / missing-key semantics — quick reference
 
@@ -204,27 +203,16 @@ hardcoded English in the page's templates and in every module its bundle ships.
 | ---------------------------------- | ------------------------------------------------------------------------------------- |
 | Key missing in `<lang>.toml`       | Falls back to English via `deepMerge`                                                 |
 | Key stale (English source changed) | Rendered as-is (Weblate flags staleness elsewhere)                                    |
-| Whole `<lang>.toml` missing        | `componentTranslationLoader.getTemplate` / `.getScript` fall back to English          |
+| Whole `<lang>.toml` missing        | `translationLoader.getTemplate` / `.getScript` fall back to English                   |
 | Component folder missing English   | Loader throws at startup                                                              |
 | Key absent from English source     | Compile-time error (the property doesn't exist in the generated `ScriptTranslations`) |
 
 ## Target end state (post-refactor)
 
-The system today runs **alongside** the legacy i18next system. The redesign roadmap
-([todo.md § Translation System Refactor](/dev-utils/REDESIGN/todo.md)) removes the old system
-entirely. Once that work lands, expect the following differences from what's documented above:
+What remains of the legacy system exists only for the dormant EJS-era pages. The redesign roadmap
+([todo.md § Translation System Refactor](/dev-utils/REDESIGN/todo.md)) removes it once they're
+migrated. Expect then:
 
-- **`i18next` dependency dropped.** The package is removed from `package.json`. Language resolution
-  is handled by the `req.lang` lazy getter ([reqLanguage.ts](/src/server/config/reqLanguage.ts)).
-- **Legacy `translate.ts` functions deleted.** `getTranslation(key, lang)` is removed along with
-  i18next — they front the old monolith TOML system. Every current call site holds a `req` or a
-  `ws`, so they migrate onto the request/connection-bound translations accessors (`req.t` / `ws.t` —
-  see [Server-emitted response strings](#server-emitted-response-strings)); the rare future caller
-  that holds only a bare language code (e.g. a queued email sender resolving the language from the
-  DB) uses the exported `componentTranslationLoader.getScript(component, lang)` primitive directly.
-- **Legacy loader deleted.** `src/server/config/translationLoader.ts` is removed.
-  `componentTranslationLoader.ts` is renamed (e.g. to `translationLoader.ts`) since it's the only
-  one left.
 - **Legacy type generator removed.** `scripts/generate-translation-types.ts` is deleted and dropped
   from the `generate:types` npm script. Only `generate-component-translation-types.ts` remains.
 - **Legacy type files deleted.** `src/types/translations.ts` is removed, along with
@@ -234,12 +222,11 @@ entirely. Once that work lands, expect the following differences from what's doc
   declaration in [src/client/types/globals.d.ts](/src/client/types/globals.d.ts) are deleted (they
   only exist to type EJS-era pages still using the flat-file `translations` object);
   `const t: ScriptTranslations` stays.
-- **Legacy monolith TOMLs deleted.** All `translation/<lang>.toml` files at the top level are
-  removed once their keys have been migrated into per-component folders (or judged not worth
-  migrating).
+- **Legacy monolith TOML deleted.** `translation/en-US.toml` is removed once its keys have been
+  migrated into per-component folders, or deleted once no longer used.
 - **`translation/` contains only component folders** (plus `news/`) after the cleanup.
-- `componentTranslationLoader.ts`s (or its renamed successor) xss_options need to be tightened to
-  only those html tags that actually appear in template strings.
+- `translationLoader.ts`'s xss_options need to be tightened to only those html tags that actually
+  appear in template strings.
 - **[NAVIGATING.md](/docs/NAVIGATING.md) updated.** Its `src/client/views/` row still describes the
   legacy flow (EJS pages, the monolith `translation/en-US.toml`, and manual version bumps +
   `changes.json` entries). Rewrite it for the new system.
@@ -254,15 +241,13 @@ legacy infrastructure once nothing references it.
   [newsLoader.ts](/src/server/config/newsLoader.ts).
 - **Terms of Service / Privacy Policy** — English only; markdown is too hard to diff for
   translators.
-- **Legacy flat TOMLs** (`translation/<lang>.toml`) — still served by the old i18next path. Migrate
-  keys into per-component files as pages get redesigned.
 
 ## File pointers
 
 | Concern                                | File                                                                                                |
 | -------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Loader, getters, deepMerge, XSS        | [src/server/config/componentTranslationLoader.ts](/src/server/config/componentTranslationLoader.ts) |
-| Boot wiring                            | [src/server/config/i18n.ts](/src/server/config/i18n.ts)                                             |
+| Loader, getters, deepMerge, XSS        | [src/server/config/translationLoader.ts](/src/server/config/translationLoader.ts)                   |
+| Boot wiring                            | [src/server/app.ts](/src/server/app.ts)                                                             |
 | Constants (folder, default lang)       | [src/server/config/translationConfig.ts](/src/server/config/translationConfig.ts)                   |
 | Language resolution (`req.lang`)       | [src/server/config/reqLanguage.ts](/src/server/config/reqLanguage.ts)                               |
 | Request-bound translations (`req.t`)   | [src/server/config/reqTranslations.ts](/src/server/config/reqTranslations.ts)                       |

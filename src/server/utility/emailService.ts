@@ -27,7 +27,7 @@ import mailer from './mailer.js';
 import urlUtils from './urlUtils.js';
 import logEvents from './logEvents.js';
 import emailTemplates from './emailTemplates.js';
-import componentTranslationLoader from '../config/componentTranslationLoader.js';
+import translationLoader from '../config/translationLoader.js';
 
 // Email Senders ---------------------------------------------------------------
 
@@ -49,7 +49,7 @@ async function sendEmailConfirmation(
 		const baseUrl = urlUtils.getAppBase();
 		const verificationUrl = new URL(`${baseUrl}/verify/${verificationToken}`).toString();
 
-		const email = componentTranslationLoader.getScript('email', language);
+		const email = translationLoader.getScript('email', language);
 		const t = email.verify;
 		const { html, text } = emailTemplates.renderActionEmail({
 			preheader: t.preheader,
@@ -88,7 +88,7 @@ async function sendPasswordResetEmail(
 	language: string,
 ): Promise<void> {
 	try {
-		const email = componentTranslationLoader.getScript('email', language);
+		const email = translationLoader.getScript('email', language);
 		const t = email.reset;
 		const { html, text } = emailTemplates.renderActionEmail({
 			preheader: t.preheader,
@@ -123,7 +123,7 @@ async function sendPasswordChangedEmail(recipientEmail: string, language: string
 	const forgotPassUrl = new URL(`${baseUrl}/forgot-password`).toString();
 
 	try {
-		const email = componentTranslationLoader.getScript('email', language);
+		const email = translationLoader.getScript('email', language);
 		const t = email.reset_receipt;
 		const { html, text } = emailTemplates.renderPasswordChangedEmail({
 			preheader: t.preheader,

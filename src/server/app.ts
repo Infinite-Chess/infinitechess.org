@@ -10,7 +10,6 @@ import type { Express } from 'express';
 
 import express from 'express';
 
-import i18n from './config/i18n.js';
 import send404 from './middleware/send404.js';
 import security from './middleware/security.js';
 import nunjucks from './config/nunjucks.js';
@@ -27,6 +26,7 @@ import requestParsers from './middleware/requestParsers.js';
 import requestContext from './utility/requestContext.js';
 import reqTranslations from './config/reqTranslations.js';
 import htmlCacheControl from './middleware/htmlCacheControl.js';
+import translationLoader from './config/translationLoader.js';
 
 // Setup -----------------------------------------------------------------------
 
@@ -41,9 +41,8 @@ app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all 
 // Configure Nunjucks as the view engine.
 nunjucks.configure(app);
 
-// This is in here so integration tests work, as otherwise if
-// this is in server.js, i18next is never initialized for tests.
-i18n.init();
+// Loaded here rather than in server.ts so integration tests get translations too.
+translationLoader.load();
 
 // Precompute language-resolution structures from the now-loaded supported-language set.
 reqLanguage.init();

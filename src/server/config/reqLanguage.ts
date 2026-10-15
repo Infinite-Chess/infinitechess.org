@@ -20,7 +20,7 @@ import accepts from 'accepts';
 import { parse as parseCookie } from 'cookie';
 
 import tconfig from './translationConfig.js';
-import componentTranslationLoader from './componentTranslationLoader.js';
+import translationLoader from './translationLoader.js';
 
 /** The cookie storing the user's manual language override. */
 const LANGUAGE_COOKIE = 'lang';
@@ -45,15 +45,13 @@ function init(): void {
 	baseToRegional = new Map();
 	// Sort so the variant chosen per base is deterministic (not dependent on component
 	// load order) — e.g. for base "zh", "zh-CN" is picked over "zh-TW".
-	for (const tag of [...componentTranslationLoader.getSupportedLangs()].sort()) {
+	for (const tag of [...translationLoader.getSupportedLangs()].sort()) {
 		const base = tag.split('-')[0]!;
 		if (!baseToRegional.has(base)) baseToRegional.set(base, tag); // first (sorted) variant per base
 	}
 	// Full tags first, then base tags: offers are ordered most- to least-specific so the
 	// negotiator favors an explicit regional match over a base fallback on a quality tie.
-	offers = [
-		...new Set([...componentTranslationLoader.getSupportedLangs(), ...baseToRegional.keys()]),
-	];
+	offers = [...new Set([...translationLoader.getSupportedLangs(), ...baseToRegional.keys()])];
 }
 
 /**
@@ -64,10 +62,7 @@ function resolve(req: IncomingMessage): string {
 	// parse the cookie header manually (req.cookies isn't set for upgrade requests)
 	const override = parseCookie(req.headers.cookie ?? '')[LANGUAGE_COOKIE];
 	// The cookie is JavaScript-accessible, so don't trust it, make sure it's supported.
-	if (
-		typeof override === 'string' &&
-		componentTranslationLoader.getSupportedLangs().includes(override)
-	)
+	if (typeof override === 'string' && translationLoader.getSupportedLangs().includes(override))
 		return override;
 
 	// Identical to Express's req.acceptsLanguages, but supports websocket upgrade requests.

@@ -30,9 +30,9 @@ import memberManager from '../../database/memberManager.js';
 import emailTemplates from '../../utility/emailTemplates.js';
 import chatEntryMapper from './chatEntryMapper.js';
 import gameStateBuilder from './gameStateBuilder.js';
+import translationLoader from '../../config/translationLoader.js';
 import playerStatsManager from '../../database/playerStatsManager.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
-import componentTranslationLoader from '../../config/componentTranslationLoader.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -95,8 +95,8 @@ function submit(report: ChatReport): void {
 function buildView(report: ChatReport): ReportView {
 	const { reporterRole } = report;
 	// The report is read by Naviary alone, so it speaks the site's source language.
-	const sharedT = componentTranslationLoader.getScript('shared', tconfig.DEFAULT_LANGUAGE);
-	const gameT = componentTranslationLoader.getScript('game', tconfig.DEFAULT_LANGUAGE);
+	const sharedT = translationLoader.getScript('shared', tconfig.DEFAULT_LANGUAGE);
+	const gameT = translationLoader.getScript('game', tconfig.DEFAULT_LANGUAGE);
 
 	// Online games are strictly two-player, so the reported player is always the other one.
 	const reportedRole = typeutil.invertPlayer(reporterRole);

@@ -10,9 +10,7 @@ import type { Request } from 'express';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
 import logEvents from './logEvents.js';
-import componentTranslationLoader, {
-	LanguageOption,
-} from '../config/componentTranslationLoader.js';
+import translationLoader, { LanguageOption } from '../config/translationLoader.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -33,13 +31,12 @@ type BaseRenderContext = {
 function getBaseRenderContext(req: Request): BaseRenderContext {
 	return {
 		lang: req.lang,
-		templateT: (component: string) =>
-			componentTranslationLoader.getTemplate(component, req.lang),
+		templateT: (component: string) => translationLoader.getTemplate(component, req.lang),
 		scriptT: <C extends keyof ScriptTranslations>(component: C) =>
-			componentTranslationLoader.getScript(component, req.lang),
+			translationLoader.getScript(component, req.lang),
 		// Fallback to signed out state if memberInfo was forgotten to be set (or a crash happened before it was set)
 		memberInfo: req.memberInfo ?? { signedIn: false },
-		languageOptions: componentTranslationLoader.getLangOptions(),
+		languageOptions: translationLoader.getLangOptions(),
 	};
 }
 
@@ -59,7 +56,7 @@ function getErrorPageContext(
 	retryAfter?: number;
 } {
 	const base = getBaseRenderContext(req);
-	const t = componentTranslationLoader.getTemplate('error', base.lang);
+	const t = translationLoader.getTemplate('error', base.lang);
 	// Only codes with their own table in the TOML get their
 	// own page; any other code falls back to the 500 page.
 	let code = status;

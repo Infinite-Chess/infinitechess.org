@@ -16,13 +16,13 @@ import manifest from '../config/manifest.js';
 import turnstile from '../controllers/turnstile.js';
 import resolveAuth from '../middleware/resolveAuth.js';
 import renderContext from '../utility/renderContext.js';
+import translationLoader from '../config/translationLoader.js';
 import gamePageController from '../controllers/gamePageController.js';
 import registerController from '../controllers/registerController.js';
 import analysisPageController from '../controllers/analysisPageController.js';
 import challengePageController from '../controllers/challengePageController.js';
 import verifyAccountController from '../controllers/verifyAccountController.js';
 import passwordResetController from '../controllers/passwordResetController.js';
-import componentTranslationLoader from '../config/componentTranslationLoader.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -76,10 +76,7 @@ function page(path: string, handler: RequestHandler, ...before: RequestHandler[]
 
 /** Picks the home page's hero tagline at random, in the request's resolved language. */
 function getRandomSplashText(req: Request): string {
-	const splashes = componentTranslationLoader.getTemplate('splashes', req.lang) as Record<
-		string,
-		string
-	>;
+	const splashes = translationLoader.getTemplate('splashes', req.lang) as Record<string, string>;
 	const values = Object.values(splashes);
 	return values[Math.floor(Math.random() * values.length)]!;
 }

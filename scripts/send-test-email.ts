@@ -11,7 +11,7 @@
 
 import urlUtils from '../src/server/utility/urlUtils.js';
 import emailService from '../src/server/utility/emailService.js';
-import componentTranslationLoader from '../src/server/config/componentTranslationLoader.js';
+import translationLoader from '../src/server/config/translationLoader.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ if (sender === undefined || to === undefined) {
 
 // Send ------------------------------------------------------------------------
 
-componentTranslationLoader.load();
+translationLoader.load();
 await sender(to, lang);
 // emailService prints any failure itself; only a sent email is logged with SES's message id.
 console.log(`Done. If sent, the ${kind} email has a line in logs/sentEmailsLog.txt.`);

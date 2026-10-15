@@ -5,8 +5,8 @@
  * (one property per component that has a [script] sub-table).
  *
  * Output: src/shared/types/script-translations.d.ts
- * Lives in shared/ so the server can type getScriptTranslations() against the same
- * shape the client consumes via the global `t`.
+ * Lives in shared/ so the server's `req.t` / `ws.t` share the shape the client consumes
+ * via the global `t`.
  */
 
 import fs from 'fs';
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { parse, TomlTable } from 'smol-toml';
 
 import tconfig from '../src/server/config/translationConfig.js';
-import componentTranslationLoader from '../src/server/config/componentTranslationLoader.js';
+import translationLoader from '../src/server/config/translationLoader.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,7 +27,7 @@ const SCRIPT_OUTPUT_FILE = path.join(__dirname, '../src/shared/types/script-tran
 
 /** Generates the ScriptTranslations declaration file for components with [script] sections. */
 function generateScriptTranslations(): void {
-	const componentDirs = componentTranslationLoader.getComponentNames();
+	const componentDirs = translationLoader.getComponentNames();
 
 	const properties: string[] = [];
 
@@ -58,8 +58,7 @@ function generateScriptTranslations(): void {
 /**
  * Shape of all script-facing translation tables, keyed by component name.
  * Client scripts access these via the global \`t\` declared in
- * src/client/types/globals.d.ts; the server reads them through the typed
- * \`getScriptTranslations(component, lang)\` helper.
+ * src/client/types/globals.d.ts; the server through \`req.t\` / \`ws.t\`.
  */
 export interface ScriptTranslations {
 ${properties.join('\n')}

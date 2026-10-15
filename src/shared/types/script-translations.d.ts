@@ -8,8 +8,7 @@
 /**
  * Shape of all script-facing translation tables, keyed by component name.
  * Client scripts access these via the global `t` declared in
- * src/client/types/globals.d.ts; the server reads them through the typed
- * `getScriptTranslations(component, lang)` helper.
+ * src/client/types/globals.d.ts; the server through `req.t` / `ws.t`.
  */
 export interface ScriptTranslations {
 	awaiting: {

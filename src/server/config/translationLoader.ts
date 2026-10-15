@@ -1,32 +1,57 @@
 // src/server/config/translationLoader.ts
 
-// OLD TRANSLATION LOADER - DELETE ONCE FULLY MIGRATED
-
 /**
- * Handles loading and sanitizing translation TOML files.
+ * Loads and serves the per-component translation TOML files.
+ *
+ * Files live under translation/<component>/<lang>.toml.
+ * All components are loaded once at startup by load().
+ * Retrieve them per request.
+ *
+ * The [script] sub-table (if present) is excluded from the server-side template object —
+ * it is injected into the page separately via getScript(). Components
+ * whose keys are entirely script-facing can opt in to the `script_only = true` shorthand
+ * to skip the `script.` prefix on every subtable header.
  */
+
+import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
 import fs from 'fs';
 import path from 'path';
 import { parse } from 'smol-toml';
-import { fileURLToPath } from 'node:url';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 
 import tconfig from './translationConfig.js';
 
 // Types -----------------------------------------------------------------------
 
-/** All translations for every single language. */
-type Translations = Record<string, LanguageTranslations>;
-/** All translations for a single language. */
-type LanguageTranslations = { default: Record<string, any> };
+/**
+ * Stores all component translations at runtime.
+ * Map key: component name (e.g. "header").
+ * Value: map from language code to a ComponentEntry.
+ */
+type ComponentStore = Map<string, Map<string, ComponentEntry>>;
+
+/** A single component's translations for one language. */
+type ComponentEntry = {
+	/** The TOML object with [script] removed — used by SSR templates. */
+	template: Record<string, any>;
+	/** The [script] sub-table of the TOML, or {} if not present — read by browser/server JS. */
+	script: Record<string, any>;
+};
+
+/** A supported language's selectable entry for the header language dropdown. */
+export type LanguageOption = {
+	/** The language code, e.g. "de-DE". */
+	code: string;
+	/** The autonym (the language's name written in itself), e.g. "Deutsch". */
+	name: string;
+	/** The English exonym, e.g. "German". */
+	englishName: string;
+};
 
 // Constants -------------------------------------------------------------------
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/** The folder path containing translation TOML files. */
-const translationsFolder = path.join(__dirname, '../../../translation');
+const englishTOMLName = `${tconfig.DEFAULT_LANGUAGE}.toml`;
 
 const xss_options: IFilterXSSOptions = {
 	// Allows using these html tags in translation key strings for formatting.
@@ -36,41 +61,203 @@ const xss_options: IFilterXSSOptions = {
 		b: [],
 		i: [],
 		br: [],
+		// accepts a `class` attribute so styling hooks like `.lc` (lowercase-glyph
+		// opt-out from uppercase text-transform) survive sanitization.
+		span: ['class'],
 	},
 };
 const custom_xss = new FilterXSS(xss_options);
 
-// Functions -------------------------------------------------------------------
+/**
+ * Pseudo-localization debug flag. When `true`, every translated string
+ * is wrapped in ⟦…⟧ brackets at load time. Anything still showing plain
+ * English in the page is hardcoded and was missed by the translation pass.
+ */
+const PSEUDO_LOC = false;
 
-/** Loads and processes all translation TOML files into one object. */
-function load(): Translations {
-	const translations: Translations = {};
+// State -----------------------------------------------------------------------
 
-	const tomlFiles = fs.readdirSync(translationsFolder).filter((f) => f.endsWith('.toml'));
+/** Module-level store. */
+let componentStore: ComponentStore | null = null;
 
-	tomlFiles.forEach((file) => {
-		const languageCode = file.replace('.toml', '');
-		const tomlPath = path.join(translationsFolder, file);
-		const toml = fs.readFileSync(tomlPath).toString(); // Load
-		const toml_parsed = parse(toml); // Parse
-		const toml_sanitized = html_escape(toml_parsed); // Sanitize
+/** Supported-language list, computed from all languages present in any component. */
+let supportedLanguages: string[] = [];
 
-		translations[languageCode] = { default: toml_sanitized };
-	});
+/** Language-selector options (code + display names) for the header dropdown. */
+let languageOptions: LanguageOption[] = [];
 
-	// Deep-merge the English (fallback) translations into every other language so that
-	// missing nested keys are always present. i18next's fallbackLng only handles leaf-key
-	// lookups; when a Nunjucks template calls t('some.section', { returnObjects: true }) it
-	// receives the language's partial object with no further fallback for missing sub-trees.
-	const englishTranslations = translations[tconfig.DEFAULT_LANGUAGE]!.default;
-	for (const [languageCode, languageTranslations] of Object.entries(translations)) {
-		if (languageCode === tconfig.DEFAULT_LANGUAGE) continue;
-		translations[languageCode] = {
-			default: deepMerge(englishTranslations, languageTranslations.default),
-		};
+// Loading Translations --------------------------------------------------------
+
+/**
+ * Loads all component translation TOML files from translation/<component>/<lang>.toml
+ * and stores them in the module-level componentStore.
+ */
+function load(): void {
+	componentStore = new Map();
+
+	const componentDirs = getComponentNames();
+
+	for (const componentName of componentDirs) {
+		const componentDir = path.join(tconfig.TRANSLATION_FOLDER, componentName);
+		const tomlFiles = fs.readdirSync(componentDir).filter((f) => f.endsWith('.toml'));
+
+		// Throw error if English TOML missing
+		if (!tomlFiles.includes(englishTOMLName))
+			throw new Error(`Component "${componentName}" is missing the English source.`);
+
+		const englishRaw = parseToml(path.join(componentDir, englishTOMLName));
+
+		const { template: englishTemplateObj, script: englishScriptObj } = splitParsed(englishRaw);
+
+		const langMap = new Map<string, ComponentEntry>();
+		langMap.set(tconfig.DEFAULT_LANGUAGE, {
+			template: englishTemplateObj,
+			script: englishScriptObj,
+		});
+
+		for (const file of tomlFiles) {
+			const langCode = file.replace('.toml', '');
+			if (langCode === tconfig.DEFAULT_LANGUAGE) continue; // Already loaded English
+			const raw = parseToml(path.join(componentDir, file));
+			const { template: templateObj, script: scriptObj } = splitParsed(raw);
+			// Deep-merge English fallback so missing keys are always present
+			langMap.set(langCode, {
+				template: deepMerge(englishTemplateObj, templateObj),
+				script: deepMerge(englishScriptObj, scriptObj),
+			});
+		}
+
+		componentStore.set(componentName, langMap);
 	}
 
-	return translations;
+	// Compute the supported-language list once:
+	// the union of every language present in any component.
+	const langs = new Set<string>();
+	for (const langMap of componentStore.values()) {
+		for (const lang of langMap.keys()) langs.add(lang);
+	}
+	supportedLanguages = [...langs];
+
+	// Build the language-selector options once, joining each supported code with its display metadata.
+	languageOptions = supportedLanguages.map((code) => {
+		const meta = tconfig.LANGUAGE_METADATA[code];
+		if (!meta)
+			throw new Error(`Supported language "${code}" has no LANGUAGE_METADATA entry in translationConfig.ts.`); // prettier-ignore
+		return { code, name: meta.name, englishName: meta.englishName };
+	});
+}
+
+/**
+ * Returns the template translation object for a component in the requested language.
+ * Falls back to English if the language is not available.
+ * @param component - The component name, e.g. "header"
+ * @param lang - The language code, e.g. "de-DE"
+ */
+function getTemplate(component: string, lang: string): Record<string, any> {
+	if (!componentStore) throw new Error('load() has not been called yet.');
+	const langMap = componentStore.get(component);
+	if (!langMap) throw new Error(`No translation component "${component}" found.`);
+	return (langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.template ?? {};
+}
+
+/**
+ * Returns the [script] sub-table of a component for the requested language, promoted one
+ * level up (i.e. the keys of [script] become the top-level keys of the returned object).
+ * Returns an empty object if the component has no [script] section.
+ * @param component - The component name, e.g. "leaderboard"
+ * @param lang - The language code, e.g. "de-DE"
+ */
+function getScript<C extends keyof ScriptTranslations>(
+	component: C,
+	lang: string,
+): ScriptTranslations[C] {
+	if (!componentStore) throw new Error('load() has not been called yet.');
+	const langMap = componentStore.get(component);
+	if (!langMap) throw new Error(`No translation component "${component}" found.`);
+	return ((langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.script ??
+		{}) as ScriptTranslations[C];
+}
+
+/**
+ * Returns the list of language codes supported.
+ * Those with at least one component translation available.
+ */
+function getSupportedLangs(): string[] {
+	return supportedLanguages;
+}
+
+/**
+ * Returns the language-selector options — each supported language's
+ * code and display names — for rendering the header language dropdown.
+ */
+function getLangOptions(): LanguageOption[] {
+	return languageOptions;
+}
+
+// Utility ---------------------------------------------------------------------
+
+/** Returns the filtered list of component names from the translation folder. */
+function getComponentNames(): string[] {
+	return fs
+		.readdirSync(tconfig.TRANSLATION_FOLDER, { withFileTypes: true })
+		.filter((e) => e.isDirectory() && !tconfig.EXCLUDED_DIRS.includes(e.name))
+		.map((e) => e.name)
+		.sort();
+}
+
+/** Helper to load and parse a TOML file with XSS sanitization. */
+function parseToml(filePath: string): Record<string, any> {
+	return html_escape(parse(fs.readFileSync(filePath, 'utf-8')));
+}
+
+/**
+ * Recursively traverses a data structure (array or object) and sanitizes all contained
+ * strings using an XSS filter. This prevents malicious content from translation files
+ * from being rendered in a user's browser.
+ * @param value - The input value (e.g., the parsed content of a TOML file).
+ * @returns A deep copy of the input with all string values sanitized.
+ */
+function html_escape(value: any): any {
+	if (Array.isArray(value)) {
+		const escaped = [];
+		for (const member of value) {
+			escaped.push(html_escape(member));
+		}
+		return escaped;
+	}
+	if (value !== null && typeof value === 'object') {
+		const escaped: Record<any, any> = {};
+		for (const [valueKey, valueValue] of Object.entries(value)) {
+			escaped[valueKey] = html_escape(valueValue);
+		}
+		return escaped;
+	}
+	if (typeof value === 'string') {
+		const sanitized = custom_xss.process(value);
+		return PSEUDO_LOC ? `⟦${sanitized}⟧` : sanitized;
+	}
+	return value; // numbers, booleans, etc.
+}
+
+/**
+ * Splits a parsed TOML object into `{ template, script }` halves.
+ *
+ * Two modes:
+ * - `script_only = true` shorthand: the entire object (minus the flag itself) is treated
+ *   as the script half. The template half is empty. Lets authors of fully script-facing
+ *   components skip prefixing every subtable header with `script.`.
+ * - Otherwise: the `[script]` subtable becomes the script half, everything else is template.
+ */
+function splitParsed(parsed: Record<string, any>): {
+	template: Record<string, any>;
+	script: Record<string, any>;
+} {
+	if (parsed['script_only'] === true) {
+		const { script_only: _flag, ...rest } = parsed;
+		return { template: {}, script: rest };
+	}
+	const { script: scriptTable, ...rest } = parsed;
+	return { template: rest, script: scriptTable ?? {} };
 }
 
 /**
@@ -99,36 +286,13 @@ function deepMerge(source: Record<string, any>, target: Record<string, any>): Re
 	return result;
 }
 
-/**
- * Recursively traverses a data structure (array or object) and sanitizes all contained
- * strings using an XSS filter. This prevents malicious content from translation files
- * from being rendered in a user's browser.
- * @param value - The input value (e.g., the parsed content of a TOML file).
- * @returns A deep copy of the input with all string values sanitized.
- */
-function html_escape(value: any): any {
-	if (Array.isArray(value)) {
-		const escaped = [];
-		for (const member of value) {
-			escaped.push(html_escape(member));
-		}
-		return escaped;
-	}
-	if (value !== null && typeof value === 'object') {
-		const escaped: Record<any, any> = {};
-		for (const [valueKey, valueValue] of Object.entries(value)) {
-			escaped[valueKey] = html_escape(valueValue);
-		}
-		return escaped;
-	}
-	if (typeof value === 'string') {
-		return custom_xss.process(value);
-	}
-	return value; // numbers, booleans, etc.
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
 	load,
+	getTemplate,
+	getScript,
+	getSupportedLangs,
+	getLangOptions,
+	getComponentNames,
 };

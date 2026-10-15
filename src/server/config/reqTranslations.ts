@@ -15,7 +15,7 @@
 import type { Express, Request } from 'express';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
-import componentTranslationLoader from './componentTranslationLoader.js';
+import translationLoader from './translationLoader.js';
 
 /**
  * Builds a translations accessor for a resolved language: a Proxy that resolves each
@@ -26,10 +26,7 @@ function build(lang: string): ScriptTranslations {
 	return new Proxy({} as ScriptTranslations, {
 		get(_target, component): unknown {
 			if (typeof component !== 'string') return undefined; // ignore symbol access (inspect, etc.)
-			return componentTranslationLoader.getScript(
-				component as keyof ScriptTranslations,
-				lang,
-			);
+			return translationLoader.getScript(component as keyof ScriptTranslations, lang);
 		},
 	});
 }
