@@ -43,7 +43,7 @@ const EXCLUDED_DIRS = ['news'];
 /**
  * Static metadata for many known languages, keyed by language code.
  * `name` is the autonym (the language's name written in itself); `englishName` is its English exonym;
- * `dateLocale` is the date-fns locale used to format dates/relative times for that language.
+ * `dateLocale` is the date-fns locale used to format dates for that language.
  *
  * Used to render the language-selector dropdown, which lists every language regardless of the
  * page's current language. The *supported* subset (codes with at least one component TOML) comes

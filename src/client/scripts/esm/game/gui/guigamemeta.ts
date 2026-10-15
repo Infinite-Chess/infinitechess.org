@@ -47,7 +47,7 @@ const lang = document.documentElement.lang;
 
 // SSR painted the first value; just keep it fresh from here on.
 setInterval(() => {
-	element_Started.textContent = timeutil.getRelativeTimeStringIntl(createdMs, lang);
+	element_Started.textContent = timeutil.getRelativeTimeString(createdMs, lang);
 }, REFRESH_INTERVAL_MS);
 
 // Result Banner ---------------------------------------------------------------

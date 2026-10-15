@@ -21,7 +21,6 @@ import metadatautil from '../../shared/chess/util/metadatautil.js';
 import gameresultutil from '../../shared/chess/util/gameresultutil.js';
 import { players as p, Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
 
-import tconfig from '../config/translationConfig.js';
 import manifest from '../config/manifest.js';
 import chatReport from '../game/gamemanager/chatReport.js';
 import gameManager from '../game/gamemanager/gameManager.js';
@@ -247,14 +246,12 @@ function buildGameMetaViewModel(
 
 	const top = viewColor === p.WHITE ? p.BLACK : p.WHITE;
 
-	const locale = tconfig.getDateLocale(req.lang);
-
 	return {
 		seekProperties: seekProperties.build(setup, state.rated, deadIcn, req),
 		bars: { top, bottom: viewColor },
 		timed: !clockutil.isClockValueInfinite(setup.timeControl),
 		timeCreated: setup.timeCreated,
-		startedAgo: timeutil.getRelativeTimeString(setup.timeCreated, locale),
+		startedAgo: timeutil.getRelativeTimeString(setup.timeCreated, req.lang),
 		result: state.gameConclusion
 			? gameresultutil.getDisplay(state.gameConclusion, req.t.shared)
 			: undefined,

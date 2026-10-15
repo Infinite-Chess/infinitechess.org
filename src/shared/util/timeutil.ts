@@ -4,10 +4,6 @@
  * This script contains utility methods for working with dates and timestamps.
  */
 
-import type { Locale } from 'date-fns';
-
-import { formatDistanceToNow } from 'date-fns';
-
 // Types -----------------------------------------------------------------------
 
 /** A time unit convertible to milliseconds. */
@@ -37,7 +33,6 @@ const RELATIVE_UNITS: readonly [Intl.RelativeTimeFormatUnit, number][] = [
 	['day', MS_PER_UNIT.days],
 	['hour', MS_PER_UNIT.hours],
 	['minute', MS_PER_UNIT.minutes],
-	['second', MS_PER_UNIT.seconds],
 ];
 
 // Functions -------------------------------------------------------------------
@@ -144,33 +139,21 @@ function timestampToSqlite(timestamp: number): string {
 }
 
 /**
- * Formats an epoch-ms timestamp as a relative "time ago" string (e.g. "2 minutes ago").
- * @param timestampMs - Epoch milliseconds.
- * @param locale - date-fns locale.
- */
-function getRelativeTimeString(timestampMs: number, locale: Locale): string {
-	return formatDistanceToNow(timestampMs, { addSuffix: true, locale });
-}
-
-/**
- * Formats an epoch-ms timestamp as a localized relative "time ago" string (e.g. "2 minutes ago")
- * via the native `Intl` API — unlike {@link getRelativeTimeString}, it needs no date-fns locale,
- * so it's usable client-side. On the client, pass `document.documentElement.lang` as the locale.
- * @param timestampMs - Epoch milliseconds.
+ * Formats an epoch-ms timestamp as a localized relative "time ago" string (e.g. "2 minutes ago"),
+ * or "now" under a minute.
+ * @param timestampMs - Epoch milliseconds. One ahead of our clock reads "now".
  * @param locale - A BCP 47 language tag, e.g. "en-US".
  */
-function getRelativeTimeStringIntl(timestampMs: number, locale: string): string {
-	// Clamp clock skew to "0 seconds ago", in case the source clock is ahead of ours.
-	const elapsed = Math.max(0, Date.now() - timestampMs);
-	const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
+function getRelativeTimeString(timestampMs: number, locale: string): string {
+	const elapsed = Date.now() - timestampMs;
 	for (const [unit, unitMs] of RELATIVE_UNITS) {
 		// A unit only kicks in once fully crossed, so e.g. 59m stays "X minutes ago", not hours.
-		if (elapsed >= unitMs || unit === 'second') {
-			// Rounded, not floored: e.g. 1h30m reads "2 hours ago".
-			return formatter.format(-Math.round(elapsed / unitMs), unit);
-		}
+		if (elapsed < unitMs) continue;
+		// Rounded, not floored: e.g. 1h30m reads "2 hours ago".
+		const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
+		return formatter.format(-Math.round(elapsed / unitMs), unit);
 	}
-	return ''; // Unreachable: the 'second' branch always returns.
+	return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(0, 'second');
 }
 
 /**
@@ -195,6 +178,5 @@ export default {
 	sqliteToTimestamp,
 	timestampToSqlite,
 	getRelativeTimeString,
-	getRelativeTimeStringIntl,
 	resolveAtTimestamp,
 };
