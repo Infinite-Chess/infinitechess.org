@@ -154,7 +154,7 @@ function generateMove(boardsim: Board, moveTagged: MoveTagged): MoveFull {
 	if (!specialMoveMade) calcMovesChanges(boardsim, piece, moveTagged, move); // Move piece regularly (no special tag)
 
 	// Must be set before calling queueIncrementMoveRuleStateChange()
-	move.flags.capture = boardchanges.wasACapture(move);
+	move.flags.capture = boardchanges.isCapture(move);
 
 	// Delete all special rights that should be revoked from the move.
 	queueSpecialRightDeletionStateChanges(boardsim, move);

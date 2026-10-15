@@ -321,12 +321,8 @@ function getCapturedPieceTypes(move: MoveFull): Set<number> {
 	return pieceTypes;
 }
 
-/** Returns true if any piece was captured by the move, whether directly or by special actions. */
-function wasACapture(move: MoveFull): boolean {
-	// Safety net if we ever accidentally call this method too soon.
-	// There will never be a valid move with zero changes, that's just absurd.
-	if (move.changes.length === 0)
-		throw Error("Move doesn't have its changes calculated yet, do that before this.");
+/** Whether the move captured any piece, whether directly or by special actions. */
+function isCapture(move: MoveFull): boolean {
 	return move.changes.some((change) => change.action === 'capture');
 }
 
@@ -346,5 +342,5 @@ export default {
 	runChanges_Position,
 	// Helper Functions
 	getCapturedPieceTypes,
-	wasACapture,
+	isCapture,
 };
