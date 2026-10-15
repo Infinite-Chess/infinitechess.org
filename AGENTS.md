@@ -134,31 +134,26 @@ followed, tell me.
 
 ### Correctness and cost
 
-20. Design by contract and separation of concerns. A module's contract — what it accepts and
-    promises — never names its callers, and nothing caller-specific lives inside it. It holds for
-    every input the contract allows, not just what today's callers send. Non-trivial modules have
-    tests covering all of them.
-
-21. No unreachable guards. For all defensive checks, trace the call sites and prove whether the
+20. No unreachable guards. For all defensive checks, trace the call sites and prove whether the
     state is actually reachable. An unneeded guard tells a future developer "plan for this" and
     wastes their time forever, so it comes out. Check the inverse too: a guard that looks decorative
     but is load-bearing should say so in a comment. This never applies at a trust boundary, where
-    rule 22 wins.
+    rule 21 wins.
 
-22. Validate everything crossing the trust boundary. What can a hand-crafted client, request or
+21. Validate everything crossing the trust boundary. What can a hand-crafted client, request or
     message do? Is anything persisted or acted on without validation? Does anything downstream trust
     data that isn't trustworthy?
 
-23. Type honesty. No `any`, no cast that contradicts a declared type, no widened union or non-null
+22. Type honesty. No `any`, no cast that contradicts a declared type, no widened union or non-null
     assertion standing in for a real invariant. Values set, cleared or valid together share one
     discriminated union or object, so illegal combinations can't be typed.
 
-24. Judge hot-path code (per frame, move or piece) on cost, not just correctness. Optimize where we
+23. Judge hot-path code (per frame, move or piece) on cost, not just correctness. Optimize where we
     can.
 
 ### Comments
 
-25. Comment bloat is one of the largest weaknesses of LLMs; understand that about yourself.
+24. Comment bloat is one of the largest weaknesses of LLMs; understand that about yourself.
     Documentation is meant to be concise, only conveying the most important information. Signs of AI
     bloat are:
     - Comments and documentation getting **longer**. It's typical for an agent to have made things
@@ -179,13 +174,13 @@ followed, tell me.
       whole sections should be dropped, or if it covers unrelated things, consider splitting the doc
       as a whole.
 
-26. If how something's implemented makes you believe it's a bug, but I confirm it is intended
+25. If how something's implemented makes you believe it's a bug, but I confirm it is intended
     behavior, concisely explain that in a comment so future agents don't unnecessarily flag it
     again.
 
 ### System docs
 
-27. Before touching any system below, **read its doc in full first**. Each holds context about said
+26. Before touching any system below, **read its doc in full first**. Each holds context about said
     system otherwise scattered across many scripts; without it, you may make wrong calls.
     - Any TOML or translation: `docs/systems/TRANSLATIONS.md`. Only maintain English TOMLs.
     - The build system: `docs/systems/BUILD.md`. The build process does not change unless there's
@@ -201,84 +196,84 @@ followed, tell me.
 
 ### Stored data
 
-28. Anything stored permanently needs a reason to be stored forever; anything identifying needs a
+27. Anything stored permanently needs a reason to be stored forever; anything identifying needs a
     reason to be identifying.
 
-29. Never write a memory without my okay. Memory lives on one device; what you learn about the repo
+28. Never write a memory without my okay. Memory lives on one device; what you learn about the repo
     belongs in its docs or this file.
 
 ### Issues outside the work
 
-30. If, while we're working on changes, you notice an unrelated issue or bug somewhere else, do
+29. If, while we're working on changes, you notice an unrelated issue or bug somewhere else, do
     **not** distract me from the current work. Park it, and bring it up only after the current work
     has been committed; do not mention it before then. An issue with changes you made this session
     _should not be parked_: if you created the issue, you need to resolve it too, _before_ we
     commit.
 
-31. Park issues by appending them to a scratch file outside the repo. It has to be a written file,
+30. Park issues by appending them to a scratch file outside the repo. It has to be a written file,
     never a mental note: your reasoning from earlier turns isn't retained. Re-read that file every
     time we commit. If your reply ends the session, as in an `@claude` run, close it with every
     parked issue in full, inside a collapsed `<details>`.
 
-32. Raise parked issues one at a time. Once we've committed the current work, mention the single
+31. Raise parked issues one at a time. Once we've committed the current work, mention the single
     _next_ most pressing issue only. Per rule 3, do **not** flood me with multiple issues at once. I
     will decide if we should focus on it next from there. If I ask you for a prompt to have another
     agent look into it, after giving it to me, consider it delegated, and remove it from the scratch
     file.
 
-33. If you realize two implementations of one idea exist, park that per rule 32 too. If they
+32. If you realize two implementations of one idea exist, park that per rule 31 too. If they
     disagree, that's a live bug. If it only became a second implementation after your changes, then
-    per rule 30 you created it, so it also needs to be resolved before we commit.
+    per rule 29 you created it, so it also needs to be resolved before we commit.
 
 ### Finishing work
 
-34. After making changes, search for any JSDoc or comment they made false; make sure they aren't
+33. After making changes, search for any JSDoc or comment they made false; make sure they aren't
     stale. Make sure touched files' description headers have not become stale. Then go back over all
     documentation and comments you touched or added, _look for the signs_ of AI bloat listed in rule
-    25, and _fix_ them.
+    24, and _fix_ them.
 
-35. After finishing changes that modified at least one script, run `npm run check --silent` —
+34. After finishing changes that modified at least one script, run `npm run check --silent` —
     format, types, lint, import rules, and tests — and get it passing. Repeat after every subsequent
     fix, unless all you edited was a comment. Fix formatting-only failures with `npm run format`. If
     you can't get it passing, let me know.
 
-36. Consider whether any of your running sandbox scripts would actually be of use to future agents
+35. Consider whether any of your running sandbox scripts would actually be of use to future agents
     after we commit this work, being moved to a permanent location, even if they would need to be
     repurposed. If so, recommend that — but never for tiny scripts that are easily rewritten.
 
-37. If the changes affect what users see and experience, get confirmation from me that things work
+36. If the changes affect what users see and experience, get confirmation from me that things work
     as expected. Never spin up a dev server yourself to check; it costs too many tokens and too much
     time.
 
-38. After that point, I usually either choose to have you use the `review` skill on your own
+37. After that point, I usually either choose to have you use the `review` skill on your own
     changes, or go straight to directing you to commit.
 
 ### Committing
 
-39. Never commit until I explicitly ask you to. All changes are reviewed by me first. The exception
+38. Never commit until I explicitly ask you to. All changes are reviewed by me first. The exception
     is a branch of your own that is the only way the work reaches me — a worktree task branch, or a
     cloud run's branch. Commit there as normal without asking, then for a worktree deliver and clean
-    up per rule 41, and for a cloud run push, since I review it on GitHub. Otherwise, I stage files
+    up per rule 40, and for a cloud run push, since I review it on GitHub. Otherwise, I stage files
     as I review them, so expect your changes to move into the index mid-session — a clean `git diff`
     doesn't mean your edits vanished.
 
-40. When I _do_ ask you to commit, split unrelated changes into their own commits, then `git push`
+39. When I _do_ ask you to commit, split unrelated changes into their own commits, then `git push`
     immediately after. On a branch whose name won't match its remote's (`pr/<author>/<number>`, from
     `gh pr checkout` of a fork PR), bare `git push` aborts — read the remote and branch from
     `branch.<current>.remote` and `branch.<current>.merge` in `git config`, then push explicitly:
     `git push <remote> HEAD:<branch>`.
 
-41. When I ask for work in a worktree, run its whole lifecycle yourself — I never type any of these
+40. When I ask for work in a worktree, run its whole lifecycle yourself — I never type any of these
     commands. Create it in `.worktrees/`, branched from the branch I have checked out, never from
     `main`: `git worktree add .worktrees/<task> -b <task> <my-branch>`. Node walks up to the repo's
-    `node_modules`, so it needs no install. Commit there per rule 39. Only when requested, deliver
+    `node_modules`, so it needs no install. Commit there per rule 38. Only when requested, deliver
     it unstaged into my working tree with `git cherry-pick -n <task>` and `git reset`, so I review
     it in my own editor. Immediately remove the worktree and delete the branch — any revision I ask
     for afterwards is ordinary work in my tree.
 
-42. After committing, move to the trash (no irreversible delete) all remaining sandbox scripts you
+41. After committing, move to the trash (no irreversible delete) all remaining sandbox scripts you
     created that are deemed no longer needed. Any repurposed ones should have already been moved out
-    per rule 36. Any not added by you, belonging to other sessions, should be cleared _if_ those
+    per rule 35. Any not added by you, belonging to other sessions, should be cleared _if_ those
     sessions are not fresh.
 
 ## Module conventions
