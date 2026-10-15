@@ -11,10 +11,7 @@ type TimeUnit = keyof typeof MS_PER_UNIT;
 
 // Constants -------------------------------------------------------------------
 
-/**
- * The length of each time unit in milliseconds.
- * Months/years use the conventional 30- and 365-day approximations.
- */
+/** The length of each time unit in milliseconds. A year is 365 days, a month a twelfth of one. */
 const MS_PER_UNIT = {
 	milliseconds: 1,
 	seconds: 1000,
@@ -22,7 +19,7 @@ const MS_PER_UNIT = {
 	hours: 1000 * 60 * 60,
 	days: 1000 * 60 * 60 * 24,
 	weeks: 1000 * 60 * 60 * 24 * 7,
-	months: 1000 * 60 * 60 * 24 * 30,
+	months: (1000 * 60 * 60 * 24 * 365) / 12,
 	years: 1000 * 60 * 60 * 24 * 365,
 };
 
@@ -147,11 +144,9 @@ function timestampToSqlite(timestamp: number): string {
 function getRelativeTimeString(timestampMs: number, locale: string): string {
 	const elapsed = Date.now() - timestampMs;
 	for (const [unit, unitMs] of RELATIVE_UNITS) {
-		// A unit only kicks in once fully crossed, so e.g. 59m stays "X minutes ago", not hours.
 		if (elapsed < unitMs) continue;
-		// Rounded, not floored: e.g. 1h30m reads "2 hours ago".
 		const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
-		return formatter.format(-Math.round(elapsed / unitMs), unit);
+		return formatter.format(-Math.floor(elapsed / unitMs), unit);
 	}
 	return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(0, 'second');
 }
